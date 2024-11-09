@@ -1,12 +1,15 @@
 import { Component, signal, computed } from '@angular/core';
+import { ButtonModule } from 'primeng/button';
 
 @Component({
   selector: 'app-counter',
+  standalone: true,
+  imports: [ButtonModule],  
   template: `
     <div>
       <h2>Counter: {{ count() }}</h2>
-      <button (click)="increment()">Increment</button>
-      <button (click)="decrement()">Decrement</button>
+      <p-button (click)="increment()">Increment</p-button>
+      <p-button (click)="decrement()">Decrement</p-button>
     </div>
   `,
 })
