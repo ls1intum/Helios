@@ -8,6 +8,7 @@ on:
   push:
     branches:
       - main
+      - 7-setup-workflow-for-deployments
     paths:
       - 'docs/**'
       - '.github/workflows/docs.yml'
