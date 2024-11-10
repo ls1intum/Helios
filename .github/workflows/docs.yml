@@ -42,7 +42,7 @@ jobs:
           path: docs/_build/dirhtml/
   deploy:
     # TODO: Change branch name whenever this workflow is tested
-    if: github.ref == 'refs/heads/pages-test'
+    if: github.ref == 'refs/heads/7-setup-workflow-for-deployments'
     environment:
       name: github-pages
       url: "https://ls1intum.github.io/Helios/"
