@@ -8,16 +8,9 @@ on:
   push:
     branches:
       - main
-      - 7-setup-workflow-for-deployments
     paths:
       - 'docs/**'
       - '.github/workflows/docs.yml'
-  release:
-    types:
-      - created
-
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
@@ -42,8 +35,7 @@ jobs:
         with:
           path: docs/_build/dirhtml/
   deploy:
-    # TODO: Change branch name whenever this workflow is tested
-    if: github.ref == 'refs/heads/7-setup-workflow-for-deployments'
+    if: github.ref == 'refs/heads/main'
     environment:
       name: github-pages
       url: "https://ls1intum.github.io/Helios/"
