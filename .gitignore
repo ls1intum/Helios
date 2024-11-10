@@ -129,6 +129,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+*/venv/
 
 # Spyder project settings
 .spyderproject
@@ -166,7 +167,6 @@ CMakeCache.txt
 CMakeFiles
 CMakeScripts
 Testing
-Makefile
 cmake_install.cmake
 install_manifest.txt
 compile_commands.json
