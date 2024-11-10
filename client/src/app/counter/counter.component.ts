@@ -4,7 +4,7 @@ import { ButtonModule } from 'primeng/button';
 @Component({
   selector: 'app-counter',
   standalone: true,
-  imports: [ButtonModule],  
+  imports: [ButtonModule],
   template: `
     <div>
       <h2>Counter: {{ count() }}</h2>

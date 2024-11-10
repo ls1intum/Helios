@@ -14,6 +14,7 @@
     "sourceMap": true,
     "declaration": false,
     "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
     "moduleResolution": "bundler",
     "importHelpers": true,
     "target": "ES2022",
@@ -30,6 +31,8 @@
       // Spartan-NG paths (omitted)
     }
   },
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist", "out-tsc"],
   "angularCompilerOptions": {
     "enableI18nLegacyMessageIdFormat": false,
     "strictInjectionParameters": true,
