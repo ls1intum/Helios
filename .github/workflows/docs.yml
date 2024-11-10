@@ -1,0 +1,54 @@
+name: Documentation
+
+on:
+  pull_request:
+    paths:
+      - 'docs/**'
+      - '.github/workflows/docs.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'docs/**'
+      - '.github/workflows/docs.yml'
+  release:
+    types:
+      - created
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  docs:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: FelixTJDietrich/sphinx-action@java
+        with:
+          docs-folder: "docs/"
+          build-command: make html dirhtml
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Documentation
+          path: docs/_build/html/
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/_build/dirhtml/
+  deploy:
+    # TODO: Change branch name whenever this workflow is tested
+    if: github.ref == 'refs/heads/pages-test'
+    environment:
+      name: github-pages
+      url: "https://ls1intum.github.io/Helios/"
+    runs-on: ubuntu-22.04
+    needs: docs
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
