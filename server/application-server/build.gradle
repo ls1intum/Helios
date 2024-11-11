@@ -4,6 +4,8 @@ plugins {
 	id 'org.springframework.boot' version '3.3.4'
 	id 'io.spring.dependency-management' version '1.1.6'
 	id 'io.freefair.lombok' version '8.10.2'
+	id 'org.springdoc.openapi-gradle-plugin' version '1.9.0'
+	id 'org.openapi.generator' version '6.6.0'
 }
 
 group = 'de.tum.cit.aet'
@@ -19,9 +21,37 @@ repositories {
 	mavenCentral()
 }
 
+def loadEnvFile() {
+    def env = [:]
+    def envFile = file('.env')
+    if (envFile.exists()) {
+        envFile.eachLine { line ->
+            line = line.trim()
+            if (line && !line.startsWith('#')) {
+                def keyValue = line.split('=', 2)
+                if (keyValue.length == 2) {
+                    def key = keyValue[0].trim()
+                    def value = keyValue[1].trim()
+                    // Remove surrounding quotes if present
+                    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+                        value = value.substring(1, value.length() - 1)
+                    }
+                    env[key] = value
+                }
+            }
+        }
+    } else {
+        println ".env file not found in project root."
+    }
+    return env
+}
+
+
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0'
+	implementation 'org.openapitools:jackson-databind-nullable:0.2.6'
 	runtimeOnly 'org.postgresql:postgresql'
 	providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
@@ -30,4 +60,15 @@ dependencies {
 
 tasks.named('test') {
 	useJUnitPlatform()
+}
+
+openApi {
+    apiDocsUrl = 'http://localhost:8080/v3/api-docs.yaml'
+    outputDir = file('.')
+    outputFileName = 'openapi.yaml'
+	def envVars = loadEnvFile()
+	customBootRun {
+		args.set(["--spring.profiles.active=dev", "--DATASOURCE_URL=${envVars['DATASOURCE_URL'] ?: ''}", "--DATASOURCE_USERNAME=${envVars['DATASOURCE_USERNAME'] ?: ''}", "--DATASOURCE_PASSWORD=${envVars['DATASOURCE_PASSWORD'] ?: ''}"])
+	}
+
 }

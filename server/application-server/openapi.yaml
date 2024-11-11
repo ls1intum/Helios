@@ -1,0 +1,28 @@
+openapi: 3.0.1
+info:
+  title: Helios API
+  description: API documentation for the Helios application server.
+  contact:
+    name: Turker Koc
+    email: turker.koc@tum.de
+  license:
+    name: MIT License
+    url: https://github.com/ls1intum/Helios/blob/main/LICENSE
+  version: 0.0.1
+servers:
+- url: /
+  description: Default Server URL
+paths:
+  /status/health:
+    get:
+      tags:
+      - status-controller
+      operationId: healthCheck
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: string
+components: {}
