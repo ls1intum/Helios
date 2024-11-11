@@ -1,0 +1,17 @@
+server:
+  - changed-files:
+      - any-glob-to-any-file: server/**
+
+client:
+  - changed-files:
+      - any-glob-to-any-file: client/**
+
+documentation:
+  - changed-files:
+      - any-glob-to-any-file: docs/**
+
+feature:
+  - head-branch: ['^feature', '^feat']
+
+bug:
+  - head-branch: ['^fix', '^bug']
