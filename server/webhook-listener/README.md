@@ -31,12 +31,20 @@ Add Webhook in GitHub repository and set the secret:
 export WEBHOOK_SECRET=<webhook-secret>
 ```
 
+## Setup configuration and environment
+
+Copy the file `.env.example` to `.env` and adjust the values to your needs. It is set up to work with the Docker Compose setup for database. You need to adjust some fields for NATS server.
+
+```bash
+cp .env.example .env
+```
+
 ## Running with Docker Compose
 
 Build and run with Docker Compose:
 
 ```bash
-docker-compose up --build
+docker-compose --env-file ./.env up --build
 ```
 
 Service ports:

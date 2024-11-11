@@ -14,7 +14,7 @@ services:
       - common-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:4200/health"]
-      interval: 5s
+      interval: 30s
       timeout: 10s
       retries: 5
       start_period: 3s
