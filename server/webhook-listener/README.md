@@ -22,12 +22,13 @@ If you are using docker compose, you don't need to set NATS_URL for local develo
 Generate an AUTH TOKEN and Set the environment variable:
   
 ```bash
-export NATS_AUTH_TOKEN=$(openssl rand -hex 48)
+openssl rand -hex 48 # Generate a random token, save this token to use it in application-server
+export NATS_AUTH_TOKEN=<generated-token>
 ```
 
-Set Webhook secret
+Add Webhook in GitHub repository and set the secret:
 ```bash
-export WEBHOOK_SECRET=
+export WEBHOOK_SECRET=<webhook-secret>
 ```
 
 ## Running with Docker Compose

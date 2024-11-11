@@ -1,0 +1,21 @@
+spring:
+    application:
+        name: Helios
+
+springdoc:
+    default-produces-media-type: application/json
+
+nats:
+    enabled: true
+    timeframe: ${MONITORING_TIMEFRAME:7}
+    durableConsumerName: ""
+    server: ${NATS_SERVER}
+    auth:
+        token: ${NATS_AUTH_TOKEN}
+
+monitoring:
+    repositories: ${REPOSITORY_NAME}
+
+logging:
+    level:
+        org.kohsuke.github.GitHubClient: DEBUG
