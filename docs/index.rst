@@ -21,11 +21,3 @@ The Artemis open-source project relies on GitHub Actions for its CI/CD workflows
    :maxdepth: 3
 
    navigation_bar/architecture
-
-.. toctree::
-   :caption: Contributor Guide
-   :includehidden:
-   :maxdepth: 3
-
-   dev/setup
-   dev/guidelines
