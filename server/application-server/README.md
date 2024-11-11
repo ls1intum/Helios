@@ -55,3 +55,9 @@ The application will be accessible at [http://localhost:8080/status/health](http
 ```bash
 $ ./gradlew test
 ```
+
+### Generate OpenAPI YAML
+
+```bash
+$ ./gradlew generateOpenApiDocs
+```
