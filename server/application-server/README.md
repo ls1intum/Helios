@@ -5,7 +5,7 @@ Helios Application Server is a [Spring Boot application](https://spring.io/proje
 ## Prerequisites
 
 - [Java 22](https://www.oracle.com/java/technologies/downloads/) (or higher)
-- [Docker](https://docs.docker.com/engine/install/) (for automated database setup) or [Postgres 16](https://www.postgresql.org/download/)
+- [Postgres 16](https://www.postgresql.org/download/) (is automatically started with the provided Docker Compose setup)
 
 ## Getting Started
 
@@ -28,16 +28,10 @@ $ ./gradlew build
 
 **3. Setup configuration and environment**
 
-Copy the file `.env.example` to `.env` and adjust the values to your needs. It is set up to work with the Docker Compose setup for database. You need to adjust some fields for NATS server.
+Copy the file `.env.example` to `.env` and adjust the values to your needs. It is set up to work with the Docker Compose setup for the database and NATS server (see [here](../../README.md#development-setup)).
 
 ```bash
 $ cp .env.example .env
-```
-
-You can use the provided Docker Compose setup to start a local Postgres server. This is the easiest way to get started.
-
-```bash
-$ docker compose up -d
 ```
 
 **4. Run the Application**

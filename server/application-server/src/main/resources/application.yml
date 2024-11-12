@@ -1,6 +1,18 @@
 spring:
     application:
         name: Helios
+    config:
+        import: optional:file:.env[.properties]
+    datasource:
+        driver-class-name: org.postgresql.Driver
+        url: ${DATASOURCE_URL}
+        username: ${DATASOURCE_USERNAME}
+        password: ${DATASOURCE_PASSWORD}
+    jpa:
+        database: POSTGRESQL
+        show-sql: false
+        hibernate:
+            ddl-auto: create-drop
 
 springdoc:
     default-produces-media-type: application/json
