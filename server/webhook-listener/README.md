@@ -4,90 +4,68 @@
 
 A service to listen GitHub webhooks and publish the data to NATS JetStream.
 
-## Setup
+## Prerequisites
 
-### Prerequisites
+- Python 3.12 (or higher)
 
-- **Python 3.x.x**
-- **Docker** for containerization
+## Getting Started
 
-## Environment Variables
+### 1. Clone the Repository
 
+Clone the Helios repository to your local machine.
+
+```bash
+$ git clone https://github.com/ls1intum/Helios.git
+$ cd helios/server/webhook-listener
+```
+
+### 2. Create a virtual environment and install dependencies
+
+```bash
+$ python3 -m venv .venv
+$ source .venv/bin/activate
+$ pip install -r requirements.txt
+```
+
+### 3. Setup configuration and environment
+
+Copy the file `.env.example` to `.env` and adjust the values to your needs. It is set up to work with the Docker Compose setup (see [here](../../README.md#development-setup)).
+
+```bash
+$ cp .env.example .env
+```
+
+Environment variables to set:
 - `NATS_URL`: NATS server URL
 - `NATS_AUTH_TOKEN`: Authorization token for NATS server
 - `WEBHOOK_SECRET`: HMAC secret for verifying GitHub webhooks
 
-If you are using docker compose, you don't need to set NATS_URL for local development.
+You'll need to create a GitHub webhook in your repository and set the secret to the value of `WEBHOOK_SECRET`. The webhook should be set to send payloads to: `https://<server>:4200/github`.
 
-Generate an AUTH TOKEN and Set the environment variable:
-  
-```bash
-openssl rand -hex 48 # Generate a random token, save this token to use it in application-server
-export NATS_AUTH_TOKEN=<generated-token>
-```
+### 4. Set up Ngrok (optional)
 
-Add Webhook in GitHub repository and set the secret:
-```bash
-export WEBHOOK_SECRET=<webhook-secret>
-```
-
-## Setup configuration and environment
-
-Copy the file `.env.example` to `.env` and adjust the values to your needs. It is set up to work with the Docker Compose setup for database. You need to adjust some fields for NATS server.
+In case you are developing locally, you can use [ngrok](https://ngrok.com/) to expose your local server to the internet:
 
 ```bash
-cp .env.example .env
+$ ngrok http 4200
 ```
 
-## Running with Docker Compose
-
-Build and run with Docker Compose:
+### 5. Run the listener
 
 ```bash
-docker-compose --env-file ./.env up --build
+# For development (with auto-reload)
+$ fastapi dev
+# For production
+$ fastapi run
 ```
 
-Service ports:
-- **Webhook Service**: `4200`
-- **NATS Server**: `4222`
-
-
-## Usage
-
-Configure your GitHub webhooks to POST to:
-
-```
-https://<server>:4200/github
-```
-
-### Event Handling
-
-Events are published to NATS with the subject:
+Events will be published to NATS with the subject:
 
 ```
 github.<owner>.<repo>.<event_type>
 ```
 
-
-
-## Setup for Local Development
-### Installation
-
-Install dependencies:
-
-```bash
-pip install -r requirements.txt
-```
-
-### Running Service
-
-
-```bash
-fastapi dev #For Development
-fastapi run #For Production
-```
-
-### Important Notes
+## Important Notes
 
 - The service automatically sets up a NATS JetStream stream named `github` to store events.
 - Ensure your firewall allows traffic on port 4222 (NATS).
