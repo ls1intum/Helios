@@ -1,24 +1,24 @@
 plugins {
-	id 'java'
-	id 'war'
-	id 'org.springframework.boot' version '3.3.4'
-	id 'io.spring.dependency-management' version '1.1.6'
-	id 'io.freefair.lombok' version '8.10.2'
-	id 'org.springdoc.openapi-gradle-plugin' version '1.9.0'
-	id 'org.openapi.generator' version '6.6.0'
+    id 'java'
+    id 'war'
+    id 'org.springframework.boot' version '3.3.4'
+    id 'io.spring.dependency-management' version '1.1.6'
+    id 'io.freefair.lombok' version '8.10.2'
+    id 'org.springdoc.openapi-gradle-plugin' version '1.9.0'
+    id 'org.openapi.generator' version '6.6.0'
 }
 
 group = 'de.tum.cit.aet'
 version = '0.0.1-SNAPSHOT'
 
 java {
-	toolchain {
-		languageVersion = JavaLanguageVersion.of(22)
-	}
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(22)
+    }
 }
 
 repositories {
-	mavenCentral()
+    mavenCentral()
 }
 
 def loadEnvFile() {
@@ -48,27 +48,29 @@ def loadEnvFile() {
 
 
 dependencies {
-	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-	implementation 'org.springframework.boot:spring-boot-starter-web'
-	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0'
-	implementation 'org.openapitools:jackson-databind-nullable:0.2.6'
-	runtimeOnly 'org.postgresql:postgresql'
-	providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat'
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0'
+    implementation 'org.openapitools:jackson-databind-nullable:0.2.6'
+    implementation 'io.nats:jnats:2.20.4'
+    implementation 'org.kohsuke:github-api:1.326'
+    runtimeOnly 'org.postgresql:postgresql'
+    providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 tasks.named('test') {
-	useJUnitPlatform()
+    useJUnitPlatform()
 }
 
 openApi {
     apiDocsUrl = 'http://localhost:8080/v3/api-docs.yaml'
     outputDir = file('.')
     outputFileName = 'openapi.yaml'
-	def envVars = loadEnvFile()
-	customBootRun {
-		args.set(["--spring.profiles.active=dev", "--DATASOURCE_URL=${envVars['DATASOURCE_URL'] ?: ''}", "--DATASOURCE_USERNAME=${envVars['DATASOURCE_USERNAME'] ?: ''}", "--DATASOURCE_PASSWORD=${envVars['DATASOURCE_PASSWORD'] ?: ''}"])
-	}
+    def envVars = loadEnvFile()
+    customBootRun {
+        args.set(["--spring.profiles.active=dev", "--DATASOURCE_URL=${envVars['DATASOURCE_URL'] ?: ''}", "--DATASOURCE_USERNAME=${envVars['DATASOURCE_USERNAME'] ?: ''}", "--DATASOURCE_PASSWORD=${envVars['DATASOURCE_PASSWORD'] ?: ''}"])
+    }
 
 }

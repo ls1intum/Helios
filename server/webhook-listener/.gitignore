@@ -129,7 +129,6 @@ venv/
 ENV/
 env.bak/
 venv.bak/
-*/venv/
 
 # Spyder project settings
 .spyderproject
@@ -162,16 +161,4 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 .idea/
 
-CMakeLists.txt.user
-CMakeCache.txt
-CMakeFiles
-CMakeScripts
-Testing
-cmake_install.cmake
-install_manifest.txt
-compile_commands.json
-CTestTestfile.cmake
-_deps
-CMakeUserPresets.json
-
-.DS_STORE
+/nats_data
