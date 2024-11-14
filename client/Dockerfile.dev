@@ -1,0 +1,16 @@
+FROM alpine:3.18
+
+# Create app directory
+RUN mkdir -p /usr/src/app
+WORKDIR /usr/src/app
+
+# Install app dependencies
+RUN apk add --no-cache git yarn nodejs
+RUN yarn
+
+COPY yarn.lock package.json /usr/src/app/
+RUN yarn
+
+ENV HOST 0.0.0.0
+
+EXPOSE 4200

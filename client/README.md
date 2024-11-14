@@ -52,35 +52,10 @@ nvm alias default v20.18.0 # Sets the default node version to v20.18.0 system-wi
  ```bash
 npm install -g @angular/cli@19.0.0-rc.1
 ```
-## Development server
-First install all dependencies
-```bash
-npm install --force #Since we are using release candidate version of Angular we are getting dependency error. To avoid this please use --force
-```
 
-Make sure that you are using the right ng version with following command
-```bash
-> client % ng version
-
-     _                      _                 ____ _     ___
-    / \   _ __   __ _ _   _| | __ _ _ __     / ___| |   |_ _|
-   / △ \ | '_ \ / _` | | | | |/ _` | '__|   | |   | |    | |
-  / ___ \| | | | (_| | |_| | | (_| | |      | |___| |___ | |
- /_/   \_\_| |_|\__, |\__,_|_|\__,_|_|       \____|_____|___|
-                |___/
-    
-
-Angular CLI: 19.0.0-rc.1
-Node: 20.18.0
-```
-
-To start a local development server, run:
 
 ```bash
-ng serve
-```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
 
 ## Code scaffolding
 
@@ -96,15 +71,22 @@ For a complete list of available schematics (such as `components`, `directives`,
 ng generate --help
 ```
 
-## Building
 
-To build the project run:
 
-```bash
-ng build
+## Auto formatting on save using ESLint and VSCode:
+
+Add the following config to your user settings (settings.json):
+
+```json
+"eslint.format.enable": true,
+"editor.formatOnSave": true,
+"editor.codeActionsOnSave": {
+  "source.fixAll": "always"
+},
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+## Start Client
+See the root README.md for information about running the client in docker.
 
 ## Running unit tests
 
