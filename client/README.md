@@ -54,7 +54,6 @@ npm install -g @angular/cli@19.0.0-rc.1
 ```
 
 
-```bash
 
 
 ## Code scaffolding
