@@ -34,6 +34,7 @@ public class NatsNotificationConsumerService {
     private static final Logger logger = LoggerFactory.getLogger(NatsNotificationConsumerService.class);
 
     private static final int INITIAL_RECONNECT_DELAY_SECONDS = 2;
+    private static final int MAX_RETRIES = 10;
 
     @Value("${nats.enabled}")
     private boolean isNatsEnabled;
@@ -61,16 +62,25 @@ public class NatsNotificationConsumerService {
         validateConfigurations();
         Options options = buildNatsOptions();
 
-        // while (true) {
+        for (int attempt = 1; attempt <= MAX_RETRIES; attempt++) {
             try {
                 natsConnection = Nats.connect(options);
-                // createStreamIfNotExists();
                 setupConsumer(natsConnection);
                 return;
             } catch (IOException | InterruptedException e) {
-                logger.error("NATS connection error: {}", e.getMessage(), e);
+                logger.error("NATS connection error: {}. Attempt {}/{}", e.getMessage(), attempt, MAX_RETRIES);
+                if (attempt < MAX_RETRIES) {
+                    try {
+                        Thread.sleep(Duration.ofSeconds(INITIAL_RECONNECT_DELAY_SECONDS).toMillis());
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        return;
+                    }
+                } else {
+                    logger.error("Max retries reached. Failed to connect to NATS.");
+                }
             }
-        // }
+        }
     }
 
     private void validateConfigurations() {
@@ -88,31 +98,6 @@ public class NatsNotificationConsumerService {
                 .maxReconnects(-1)
                 .reconnectWait(Duration.ofSeconds(INITIAL_RECONNECT_DELAY_SECONDS))
                 .build();
-    }
-
-    private void createStreamIfNotExists() throws IOException, InterruptedException {
-        try {
-            StreamContext streamContext = natsConnection.getStreamContext("notification");
-            StreamInfo streamInfo = streamContext.getStreamInfo();
-            logger.info("Stream 'notification' already exists: {}", streamInfo);
-        } catch (JetStreamApiException e) {
-            if (e.getErrorCode() == 10059) { // Stream not found
-                logger.info("Stream 'notification' not found, creating it.");
-                StreamConfiguration streamConfig = StreamConfiguration.builder()
-                        .name("notification")
-                        .subjects("notification.>")
-                        .storageType(StorageType.File)
-                        .build();
-                try {
-                    natsConnection.jetStreamManagement().addStream(streamConfig);
-                    logger.info("Stream 'notification' created successfully.");
-                } catch (JetStreamApiException ex) {
-                    throw new IOException("Failed to create stream.", ex);
-                }
-            } else {
-                throw new IOException("Failed to check or create stream.", e);
-            }
-        }
     }
 
     private void setupConsumer(Connection connection) throws IOException, InterruptedException {
