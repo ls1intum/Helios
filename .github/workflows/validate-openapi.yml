@@ -26,10 +26,15 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Fetch all branches
+        run: |
+          git fetch origin ${{ github.base_ref }}:refs/remotes/origin/${{ github.base_ref }}
+          git fetch origin ${{ github.head_ref }}:refs/remotes/origin/${{ github.head_ref }}
+
       - name: Check for changes in specified paths
         id: check_changes
         run: |
-          CHANGED_PATHS=$(git diff --name-only origin/main ${{ github.head_ref }} | grep -E "^($(echo "$PATHS_TO_CHECK" | tr '\n' '|'))")
+          CHANGED_PATHS=$(git diff --name-only origin/${{ github.base_ref }} origin/${{ github.head_ref }} | grep -E "^($(echo "$PATHS_TO_CHECK" | tr '\n' '|'))")
           
           if [[ -z "$CHANGED_PATHS" ]]; then
             echo "CHANGE_DETECTED=true" >> "$GITHUB_OUTPUT"
