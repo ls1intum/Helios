@@ -1,0 +1,83 @@
+package de.tum.cit.aet.helios.gitprovider.issue;
+
+import de.tum.cit.aet.helios.gitprovider.common.github.BaseGitServiceEntity;
+import de.tum.cit.aet.helios.gitprovider.repository.Repository;
+import de.tum.cit.aet.helios.gitprovider.user.User;
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+import org.springframework.lang.NonNull;
+
+import java.time.OffsetDateTime;
+import java.util.HashSet;
+import java.util.Set;
+
+@Entity
+@Table(name = "issue")
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@DiscriminatorColumn(name = "issue_type", discriminatorType = DiscriminatorType.STRING)
+@DiscriminatorValue(value = "ISSUE")
+@Getter
+@Setter
+@NoArgsConstructor
+@ToString(callSuper = true)
+public class Issue extends BaseGitServiceEntity {
+
+    private int number;
+
+    @NonNull
+    @Enumerated(EnumType.STRING)
+    private State state;
+
+    @NonNull
+    private String title;
+
+    @Lob
+    private String body;
+
+    @NonNull    
+    private String htmlUrl;
+
+    private boolean isLocked;
+    
+    private OffsetDateTime closedAt;
+    
+    private int commentsCount;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "author_id")
+    @ToString.Exclude
+    private User author;
+    
+    @ManyToMany
+    @JoinTable(name = "issue_assignee", joinColumns = @JoinColumn(name = "issue_id"), inverseJoinColumns = @JoinColumn(name = "user_id"))
+    @ToString.Exclude
+    private Set<User> assignees = new HashSet<>();
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "repository_id")
+    private Repository repository;
+
+    public enum State {
+        OPEN, CLOSED
+    }
+
+    public boolean isPullRequest() {
+        return false;
+    }
+
+    // Missing properties
+    // - milestone
+    // - issue_comments
+    // - labels
+
+    // Ignored GitHub properties:
+    // - closed_by seems not to be used by webhooks
+    // - author_association (not provided by our GitHub API client)
+    // - state_reason
+    // - reactions
+    // - active_lock_reason
+    // - [remaining urls]
+}
