@@ -45,14 +45,12 @@ public class GitHubDataSyncService {
 
         // Get last sync time
         var lastSync = dataSyncStatusRepository.findTopByOrderByStartTimeDesc();
-        System.out.println("lastSync: " + lastSync);
         if (lastSync.isPresent()) {
             var lastSyncTime = lastSync.get().getStartTime();
             cutoffDate = lastSyncTime.isAfter(cutoffDate) ? lastSyncTime : cutoffDate;
         }
 
         var cooldownTime = OffsetDateTime.now().minusMinutes(runOnStartupCooldownInMinutes);
-        System.out.println("cooldownTime: " + cooldownTime);
         if (lastSync.isPresent() && lastSync.get().getStartTime().isAfter(cooldownTime)) {
             logger.info("Skipping sync, last sync was less than {} minutes ago", runOnStartupCooldownInMinutes);
             return;
