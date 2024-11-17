@@ -1,0 +1,207 @@
+package de.tum.cit.aet.helios.gitprovider.pullrequest.github;
+
+
+import de.tum.cit.aet.helios.gitprovider.common.github.DateUtil;
+import de.tum.cit.aet.helios.gitprovider.pullrequest.PullRequest;
+import de.tum.cit.aet.helios.gitprovider.pullrequest.PullRequestRepository;
+import de.tum.cit.aet.helios.gitprovider.repository.RepositoryRepository;
+import de.tum.cit.aet.helios.gitprovider.user.UserRepository;
+import de.tum.cit.aet.helios.gitprovider.user.User;
+import de.tum.cit.aet.helios.gitprovider.user.github.GitHubUserConverter;
+import jakarta.transaction.Transactional;
+import org.kohsuke.github.GHDirection;
+import org.kohsuke.github.GHIssueState;
+import org.kohsuke.github.GHPullRequest;
+import org.kohsuke.github.GHPullRequestQueryBuilder.Sort;
+import org.kohsuke.github.GHRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
+import java.io.IOException;
+import java.time.OffsetDateTime;
+import java.util.*;
+
+@Service
+public class GitHubPullRequestSyncService {
+
+    private static final Logger logger = LoggerFactory.getLogger(GitHubPullRequestSyncService.class);
+
+    private final PullRequestRepository pullRequestRepository;
+    private final RepositoryRepository repositoryRepository;
+    private final UserRepository userRepository;
+    private final GitHubPullRequestConverter pullRequestConverter;
+    private final GitHubUserConverter userConverter;
+
+    public GitHubPullRequestSyncService(
+            PullRequestRepository pullRequestRepository,
+            RepositoryRepository repositoryRepository,
+            UserRepository userRepository,
+            GitHubPullRequestConverter pullRequestConverter,
+            GitHubUserConverter userConverter) {
+        this.pullRequestRepository = pullRequestRepository;
+        this.repositoryRepository = repositoryRepository;
+        this.userRepository = userRepository;
+        this.pullRequestConverter = pullRequestConverter;
+        this.userConverter = userConverter;
+    }
+
+    /**
+     * Synchronizes all pull requests from the specified GitHub repositories.
+     *
+     * @param repositories the list of GitHub repositories to sync pull requests
+     *                     from
+     * @param since        an optional date to filter pull requests by their last
+     *                     update
+     * @return a list of GitHub pull requests that were successfully fetched and
+     *         processed
+     */
+    public List<GHPullRequest> syncPullRequestsOfAllRepositories(List<GHRepository> repositories,
+            Optional<OffsetDateTime> since) {
+        return repositories.stream()
+                .map(repository -> syncPullRequestsOfRepository(repository, since))
+                .flatMap(List::stream)
+                .toList();
+    }
+
+    /**
+     * Synchronizes all pull requests from a specific GitHub repository.
+     *
+     * @param repository the GitHub repository to sync pull requests from
+     * @param since      an optional date to filter pull requests by their last
+     *                   update
+     * @return a list of GitHub pull requests that were successfully fetched and
+     *         processed
+     */
+    public List<GHPullRequest> syncPullRequestsOfRepository(GHRepository repository, Optional<OffsetDateTime> since) {
+        var iterator = repository.queryPullRequests()
+                .state(GHIssueState.ALL)
+                .sort(Sort.UPDATED)
+                .direction(GHDirection.DESC)
+                .list()
+                .withPageSize(100)
+                .iterator();
+
+        var sinceDate = since.map(date -> Date.from(date.toInstant()));
+        
+        var pullRequests = new ArrayList<GHPullRequest>();
+        while (iterator.hasNext()) {
+            var ghPullRequests = iterator.nextPage();
+            var keepPullRequests = ghPullRequests.stream()
+                    .filter(pullRequest -> {
+                        try {
+                            return sinceDate.isEmpty() || pullRequest.getUpdatedAt().after(sinceDate.get());
+                        } catch (IOException e) {
+                            logger.error("Failed to filter pull request {}: {}", pullRequest.getId(), e.getMessage());
+                            return false;
+                        }
+                    })
+                    .toList();
+
+            pullRequests.addAll(keepPullRequests);
+            if (keepPullRequests.size() != ghPullRequests.size()) {
+                break;
+            }
+        }
+
+        pullRequests.forEach(this::processPullRequest);
+        return pullRequests;
+    }
+
+    /**
+     * Processes a single GitHub pull request by updating or creating it in the
+     * local repository.
+     * Manages associations with repositories, labels, milestones, authors,
+     * assignees, merged by users,
+     * and requested reviewers.
+     *
+     * @param ghPullRequest the GitHub pull request to process
+     * @return the updated or newly created PullRequest entity, or {@code null} if
+     *         an error occurred
+     */
+    @Transactional
+    public PullRequest processPullRequest(GHPullRequest ghPullRequest) {
+        var result = pullRequestRepository.findById(ghPullRequest.getId())
+                .map(pullRequest -> {
+                    try {
+                        if (pullRequest.getUpdatedAt() == null || pullRequest.getUpdatedAt()
+                                .isBefore(DateUtil.convertToOffsetDateTime(ghPullRequest.getUpdatedAt()))) {
+                            return pullRequestConverter.update(ghPullRequest, pullRequest);
+                        }
+                        return pullRequest;
+                    } catch (IOException e) {
+                        logger.error("Failed to update pull request {}: {}", ghPullRequest.getId(), e.getMessage());
+                        return null;
+                    }
+                }).orElseGet(() -> pullRequestConverter.convert(ghPullRequest));
+
+        if (result == null) {
+            return null;
+        }
+
+        // Link with existing repository if not already linked
+        if (result.getRepository() == null) {
+            // Extract name with owner from the repository URL
+            // Example: https://api.github.com/repos/ls1intum/Artemis/pulls/9463
+            var nameWithOwner = ghPullRequest.getUrl().toString().split("/repos/")[1].split("/pulls")[0];
+            var repository = repositoryRepository.findByNameWithOwner(nameWithOwner);
+            if (repository != null) {
+                result.setRepository(repository);
+            }
+        }
+
+        // Link author
+        try {
+            var author = ghPullRequest.getUser();
+            var resultAuthor = userRepository.findById(author.getId())
+                    .orElseGet(() -> userRepository.save(userConverter.convert(author)));
+            result.setAuthor(resultAuthor);
+        } catch (IOException e) {
+            logger.error("Failed to link author for pull request {}: {}", ghPullRequest.getId(), e.getMessage());
+        }
+
+        // Link assignees
+        var assignees = ghPullRequest.getAssignees();
+        var resultAssignees = new HashSet<User>();
+        assignees.forEach(assignee -> {
+            var resultAssignee = userRepository.findById(assignee.getId())
+                    .orElseGet(() -> userRepository.save(userConverter.convert(assignee)));
+            resultAssignees.add(resultAssignee);
+        });
+        result.getAssignees().clear();
+        result.getAssignees().addAll(resultAssignees);
+
+        // Link merged by
+        try {
+            var mergedByUser = ghPullRequest.getMergedBy();
+            if (mergedByUser != null) {
+                var resultMergedBy = userRepository.findById(ghPullRequest.getMergedBy().getId())
+                        .orElseGet(() -> userRepository.save(userConverter.convert(mergedByUser)));
+                result.setMergedBy(resultMergedBy);
+            } else {
+                result.setMergedBy(null);
+            }
+        } catch (IOException e) {
+            logger.error("Failed to link merged by user for pull request {}: {}", ghPullRequest.getId(),
+                    e.getMessage());
+        }
+
+        // Link requested reviewers
+        try {
+            var requestedReviewers = ghPullRequest.getRequestedReviewers();
+            var resultRequestedReviewers = new HashSet<User>();
+            requestedReviewers.forEach(requestedReviewer -> {
+                var resultRequestedReviewer = userRepository.findById(requestedReviewer.getId())
+                        .orElseGet(() -> userRepository.save(userConverter.convert(requestedReviewer)));
+                resultRequestedReviewers.add(resultRequestedReviewer);
+            });
+            result.getRequestedReviewers().clear();
+            result.getRequestedReviewers().addAll(resultRequestedReviewers);
+        } catch (IOException e) {
+            logger.error("Failed to link requested reviewers for pull request {}: {}", ghPullRequest.getId(),
+                    e.getMessage());
+        }
+
+        return pullRequestRepository.save(result);
+    }
+}
