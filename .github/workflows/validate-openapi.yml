@@ -12,31 +12,53 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
+    outputs:
+      CHANGE_DETECTED: ${{ steps.check_changes.outputs.CHANGE_DETECTED }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Check for changes in specified paths
+        id: check_changes
+        run: |
+          # Check whether server changes, openapi.yaml changes, or client openapi folder changes
+          CHANGED_PATHS=$(git diff --name-only ${{ github.base_ref }} ${{ github.head_ref }} | grep -E \
+          '^(server/application-server/src/main/java/|server/application-server/openapi.yaml|client/src/app/core/modules/openapi/)')
+          
+          if [[ -z "$CHANGED_PATHS" ]]; then
+            echo "CHANGE_DETECTED=true" >> "$GITHUB_OUTPUT"
+            echo "No OpenAPI changes detected."
+          else
+            echo "CHANGE_DETECTED=false" >> "$GITHUB_OUTPUT"
+            echo "OpenAPI changes detected in the following paths:"
+            echo "$CHANGED_PATHS"
+          fi
+
       - name: Set up Java
+        if: steps.check_changes.outputs.CHANGE_DETECTED == 'true'
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '21'
 
       - name: Run Gradle to generate OpenAPI docs
+        if: steps.check_changes.outputs.CHANGE_DETECTED == 'true'
         working-directory: ./server/application-server
         run: ./gradlew generateOpenApiDocs
 
       - name: Check for OpenAPI spec differences
-        id: check_openapi
+        if: steps.check_changes.outputs.CHANGE_DETECTED == 'true'
+        id: check_openapi_spec
         run: |
           if git diff --exit-code ./server/application-server/openapi.yml; then
             echo "OpenAPI spec is up-to-date."
           else
             echo "OpenAPI specs in openapi.yml differ from the generated version."
             exit 1
+          fi
 
       - name: Post comment about OpenAPI validation failure
-        if: failure()
+        if: failure() && steps.check_changes.outputs.CHANGE_DETECTED == 'true'
         uses: marocchino/sticky-pull-request-comment@v2
         with:
           header: openapi-validation-yml
@@ -52,7 +74,7 @@ jobs:
             Commit and push the updated file.
 
       - name: Remove sticky comment on OpenAPI validation success
-        if: success()
+        if: success() || steps.check_changes.outputs.CHANGE_DETECTED == 'false'
         uses: marocchino/sticky-pull-request-comment@v2
         with:
           header: openapi-validation-yml
@@ -65,25 +87,32 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
+    env:
+      CHANGE_DETECTED: ${{needs.validate-openapi.outputs.CHANGE_DETECTED}}
     steps:
       - name: Checkout code
+        if: env.CHANGE_DETECTED == 'true'
         uses: actions/checkout@v4
 
       - name: Set up Java
+        if: env.CHANGE_DETECTED == 'true'
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '21'
 
       - name: Set up Node.js
+        if: env.CHANGE_DETECTED == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: '22'
 
       - name: Install OpenAPI Generator CLI
+        if: env.CHANGE_DETECTED == 'true'
         run: npm install -g @openapitools/openapi-generator-cli
 
       - name: Generate client code
+        if: env.CHANGE_DETECTED == 'true'
         run: |
           npx openapi-generator-cli generate \
             -i ./server/application-server/openapi.yaml \
@@ -92,6 +121,7 @@ jobs:
             --additional-properties fileNaming=kebab-case,withInterfaces=true --generate-alias-as-model
 
       - name: Check for client code differences
+        if: env.CHANGE_DETECTED == 'true'
         id: check_client_code
         run: |
           if git diff --exit-code ./client/src/app/core/modules/openapi; then
@@ -101,7 +131,7 @@ jobs:
             exit 1
 
       - name: Post comment about client code validation failure
-        if: failure()
+        if: failure() && env.CHANGE_DETECTED == 'true'
         uses: marocchino/sticky-pull-request-comment@v2
         with:
           header: client-code-validation
@@ -112,13 +142,13 @@ jobs:
             Please regenerate the client code by running:
             ```bash
             npm install -g @openapitools/openapi-generator-cli
-            cd ./server/application-server
-            npx openapi-generator-cli generate -i ./server/application-server/openapi.yaml -g typescript-angular -o ../../client/src/app/core/modules/openapi --additional-properties fileNaming=kebab-case,withInterfaces=true --generate-alias-as-model
+            # In root directory
+            npx openapi-generator-cli generate -i ./server/application-server/openapi.yaml -g typescript-angular -o ./client/src/app/core/modules/openapi --additional-properties fileNaming=kebab-case,withInterfaces=true --generate-alias-as-model
             ```
             Commit and push the updated files.
 
       - name: Remove sticky comment on client code validation success
-        if: success()
+        if: success() || env.CHANGE_DETECTED == 'false'
         uses: marocchino/sticky-pull-request-comment@v2
         with:
           header: client-code-validation
