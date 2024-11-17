@@ -1,0 +1,107 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:base"
+  ],
+  "labels": [
+    "dependencies"
+  ],
+  "packageRules": [
+    {
+      "matchPaths": [
+        "server/application-server/**"
+      ],
+      "labels": [
+        "application-server"
+      ]
+    },
+    {
+      "matchPaths": [
+        "server/notification/**"
+      ],
+      "labels": [
+        "notification-server"
+      ]
+    },
+    {
+      "matchPaths": [
+        "server/webhook-listener/**"
+      ],
+      "labels": [
+        "webhook-listener"
+      ]
+    },
+    {
+      "matchPaths": [
+        "client/**"
+      ],
+      "labels": [
+        "client"
+      ]
+    },
+    {
+      "matchDatasources": [
+        "docker"
+      ],
+      "labels": [
+        "docker"
+      ]
+    },
+    {
+      "matchPackagePatterns": [
+        "*"
+      ],
+      "matchPaths": [
+        "server/application-server/**"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
+      "groupName": "all non-major application-server dependencies",
+      "groupSlug": "all-minor-patch-application-server"
+    },
+    {
+      "matchPackagePatterns": [
+        "*"
+      ],
+      "matchPaths": [
+        "server/notification/**"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
+      "groupName": "all non-major notification-server dependencies",
+      "groupSlug": "all-minor-patch-notification-server"
+    },
+    {
+      "matchPackagePatterns": [
+        "*"
+      ],
+      "matchPaths": [
+        "server/webhook-listener/**"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
+      "groupName": "all non-major webhook-listener dependencies",
+      "groupSlug": "all-minor-patch-webhook-listener"
+    },
+    {
+      "matchPackagePatterns": [
+        "*"
+      ],
+      "matchPaths": [
+        "client/**"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
+      "groupName": "all non-major client dependencies",
+      "groupSlug": "all-minor-patch-client"
+    }
+  ]
+}

@@ -1,6 +1,14 @@
-server:
+application-server:
   - changed-files:
-      - any-glob-to-any-file: server/**
+      - any-glob-to-any-file: server/application-server/**
+
+notification-server:
+  - changed-files:
+      - any-glob-to-any-file: server/notification/**
+
+webhook-listener:
+  - changed-files:
+      - any-glob-to-any-file: server/webhook-listener/**
 
 client:
   - changed-files:
