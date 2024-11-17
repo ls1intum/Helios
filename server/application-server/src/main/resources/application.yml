@@ -12,7 +12,7 @@ spring:
         database: POSTGRESQL
         show-sql: false
         hibernate:
-            ddl-auto: create-drop
+            ddl-auto: update
 
 springdoc:
     default-produces-media-type: application/json
@@ -25,8 +25,26 @@ nats:
     auth:
         token: ${NATS_AUTH_TOKEN}
 
+github:
+    organizationName: ${ORGANIZATION_NAME}
+    # Can be any OAuth token, such as the PAT
+    authToken: ${GITHUB_AUTH_TOKEN:}
+    cache:
+        enabled: true
+        ttl: 500
+        # in MB
+        size: 50
+
 monitoring:
+    # List of repositories to monitor in the format owner/repository
+    # Example: ls1intum/Helios or ls1intum/Helios,ls1intum/Artemis
     repositories: ${REPOSITORY_NAME}
+    runOnStartup: true
+    # Fetching timeframe in days
+    timeframe: 7
+    # Cooldown in minutes before running the monitoring again
+    runOnStartupCooldownInMinutes: 15
+    repository-sync-cron: "0 0 * * * *"
 
 logging:
     level:
