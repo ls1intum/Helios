@@ -167,6 +167,8 @@ cython_debug/
 npm-debug.log
 yarn-error.log
 
+.sdkmanrc
+
 CMakeLists.txt.user
 CMakeCache.txt
 CMakeFiles
