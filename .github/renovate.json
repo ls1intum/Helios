@@ -8,7 +8,7 @@
   ],
   "baseBranches": ["main"],
   "rebaseWhen": "conflicted",
-  "prHourlyLimit": 4,
+  "prHourlyLimit": 5,
   "packageRules": [
     {
       "matchPaths": [
