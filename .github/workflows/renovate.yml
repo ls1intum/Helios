@@ -9,6 +9,7 @@ on:
     paths:
       - ".github/renovate.json"
 
+concurrency: renovate
 jobs:
   renovate:
     runs-on: ubuntu-latest
@@ -24,3 +25,7 @@ jobs:
           token: ${{ secrets.RENOVATE_TOKEN }}
         env:
           LOG_LEVEL: 'debug'
+          # Repository taken from variable to keep configuration file generic
+          RENOVATE_REPOSITORIES: ${{ github.repository }}
+          # Onboarding not needed for self-hosted
+          RENOVATE_ONBOARDING: "false"

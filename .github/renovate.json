@@ -6,6 +6,9 @@
   "labels": [
     "dependencies"
   ],
+  "baseBranches": ["main"],
+  "rebaseWhen": "conflicted",
+  "prHourlyLimit": 4,
   "packageRules": [
     {
       "matchPaths": [
