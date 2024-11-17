@@ -6,7 +6,7 @@
   "labels": [
     "dependencies"
   ],
-  "baseBranches": ["25-addconfigure-dependabot-or-renovate"],
+  "baseBranches": ["main"],
   "rebaseWhen": "conflicted",
   "prHourlyLimit": 4,
   "packageRules": [
