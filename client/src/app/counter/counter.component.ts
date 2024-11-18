@@ -1,15 +1,17 @@
 import { Component, signal, computed } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
+import { IconsModule } from '../../icons.module';
 
 @Component({
   selector: 'app-counter',
   standalone: true,
-  imports: [ButtonModule],
+  imports: [ButtonModule, IconsModule],
   template: `
-    <div>
-      <h2>Counter: {{ count() }}</h2>
+    <h2 class="text-3xl mt-2">Counter: {{ count() }}</h2>
+    <div class="flex gap-4">
       <p-button (click)="increment()">Increment</p-button>
       <p-button (click)="decrement()">Decrement</p-button>
+      <i-tabler name="heart" class="text-red-500" />
     </div>
   `,
 })
