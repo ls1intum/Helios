@@ -3,9 +3,11 @@ name: Renovate Bot
 on:
   workflow_dispatch:
   schedule:
-    # Runs Renovate daily at midnight
-    - cron: "0 0 * * *"
+    # Runs Renovate daily at 11 AM
+    - cron: "0 11 * * *"
   push:
+    branches:
+      - main
     paths:
       - ".github/renovate.json"
       - ".github/workflows/renovate.yml"
@@ -20,13 +22,12 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run Renovate
-        uses: renovatebot/github-action@v41.0.2
+        uses: renovatebot/github-action@v41.0.3
         with:
           configurationFile: ".github/renovate.json"
           token: ${{ secrets.RENOVATE_TOKEN }}
         env:
           LOG_LEVEL: 'debug'
-          # Repository taken from variable to keep configuration file generic
           RENOVATE_REPOSITORIES: ${{ github.repository }}
-          # Onboarding not needed for self-hosted
           RENOVATE_ONBOARDING: "false"
+          RENOVATE_COMMIT_MESSAGE_PREFIX: "chore(deps):"

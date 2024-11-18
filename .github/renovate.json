@@ -8,7 +8,7 @@
   ],
   "baseBranches": ["main"],
   "rebaseWhen": "conflicted",
-  "prHourlyLimit": 5,
+  "prHourlyLimit": 10,
   "packageRules": [
     {
       "matchPaths": [
@@ -40,6 +40,14 @@
       ],
       "labels": [
         "client"
+      ]
+    },
+    {
+      "matchPaths": [
+        "docs/**"
+      ],
+      "labels": [
+        "documentation"
       ]
     },
     {
@@ -105,6 +113,34 @@
       ],
       "groupName": "all non-major client dependencies",
       "groupSlug": "all-minor-patch-client"
+    },
+    {
+      "matchPackagePatterns": [
+        "*"
+      ],
+      "matchPaths": [
+        "docs/**"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
+      "groupName": "all non-major documentation dependencies",
+      "groupSlug": "all-minor-patch-documentation"
+    },
+    {
+      "matchPackagePatterns": [
+        "*"
+      ],
+      "matchPaths": [
+        ".github/workflows/**"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
+      "groupName": "all non-major github-actions dependencies",
+      "groupSlug": "all-minor-patch-github-actions"
     }
   ]
 }
