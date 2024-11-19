@@ -1,8 +1,9 @@
 .gitignore
-.openapi-generator-ignore
 README.md
 api.module.ts
 api/api.ts
+api/pull-request-controller.service.ts
+api/pull-request-controller.serviceInterface.ts
 api/status-controller.service.ts
 api/status-controller.serviceInterface.ts
 configuration.ts
@@ -10,5 +11,8 @@ encoder.ts
 git_push.sh
 index.ts
 model/models.ts
+model/pull-request-info-dto.ts
+model/repository-info-dto.ts
+model/user-info-dto.ts
 param.ts
 variables.ts
