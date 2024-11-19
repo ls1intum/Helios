@@ -3,8 +3,8 @@ name: Renovate Bot
 on:
   workflow_dispatch:
   schedule:
-    # Runs Renovate daily at 11 AM
-    - cron: "0 11 * * *"
+    # Runs Renovate weekly on Mondays at 11 AM
+    - cron: "0 11 * * 1"
   push:
     branches:
       - main
