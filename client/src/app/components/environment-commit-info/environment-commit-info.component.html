@@ -1,0 +1,23 @@
+<div class="flex gap-4 items-center mb-4">
+  <p-tag severity="success" [rounded]="true"><i-tabler name="check" class="!h-4 !w-4 mr-0.5"></i-tabler> Success</p-tag>
+  <span class="font-semibold">{{ commit()?.message }}</span>
+  <div class="flex-grow"></div>
+  <div class="flex gap-1 items-center">
+    <i-tabler name="calendar" class="text-gray-600" />
+    <span>Deployed {{ commit()?.committer?.date }} ago</span>
+  </div>
+  <div class="flex gap-1 items-center">
+    <i-tabler name="user" class="text-gray-600" />
+    <span>{{ commit()?.committer?.name }}</span>
+  </div>
+</div>
+<div class="flex gap-4 items-center">
+  <div class="flex gap-1 items-center">
+    <i-tabler name="git-commit" class="text-gray-600" />
+    <span>{{ commit()?.commitHash }}</span>
+  </div>
+  <div class="flex gap-1 items-center">
+    <i-tabler name="git-branch" class="text-gray-600" />
+    <span>{{ commit()?.branch }}</span>
+  </div>
+</div>

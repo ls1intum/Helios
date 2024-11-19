@@ -1,17 +1,17 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { CounterComponent } from './counter.component';
+import { LockTagComponent } from './lock-tag.component';
 
-describe('CounterComponent', () => {
-  let component: CounterComponent;
-  let fixture: ComponentFixture<CounterComponent>;
+describe('LockTagComponent', () => {
+  let component: LockTagComponent;
+  let fixture: ComponentFixture<LockTagComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [CounterComponent],
+      imports: [LockTagComponent],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(CounterComponent);
+    fixture = TestBed.createComponent(LockTagComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

@@ -7,11 +7,12 @@ import { TooltipModule } from 'primeng/tooltip';
 import { HeliosIconComponent } from './helios-icon/helios-icon.component';
 import { DividerModule } from 'primeng/divider';
 import { AvatarModule } from 'primeng/avatar';
+import { ToastModule } from 'primeng/toast';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, IconsModule, ButtonModule, CommonModule, TooltipModule, HeliosIconComponent, DividerModule, AvatarModule],
+  imports: [RouterOutlet, RouterLink, ToastModule, RouterLinkActive, IconsModule, ButtonModule, CommonModule, TooltipModule, HeliosIconComponent, DividerModule, AvatarModule],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',
 })
