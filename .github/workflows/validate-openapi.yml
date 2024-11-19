@@ -63,7 +63,7 @@ jobs:
         run: |
           pwd
           ls
-          if git diff --exit-code ./server/application-server/openapi.yml; then
+          if git diff --exit-code ./server/application-server/openapi.yaml; then
             echo "OpenAPI spec is up-to-date."
           else
             echo "OpenAPI specs in openapi.yml differ from the generated version."
