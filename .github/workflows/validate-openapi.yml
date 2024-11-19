@@ -37,10 +37,10 @@ jobs:
           CHANGED_PATHS=$(git diff --name-only origin/${{ github.base_ref }} origin/${{ github.head_ref }} | grep -E "^($(echo "$PATHS_TO_CHECK" | tr '\n' '|'))")
           
           if [[ -z "$CHANGED_PATHS" ]]; then
-            echo "CHANGE_DETECTED=true" >> "$GITHUB_OUTPUT"
+            echo "CHANGE_DETECTED=false" >> "$GITHUB_OUTPUT"
             echo "No OpenAPI changes detected."
           else
-            echo "CHANGE_DETECTED=false" >> "$GITHUB_OUTPUT"
+            echo "CHANGE_DETECTED=true" >> "$GITHUB_OUTPUT"
             echo "OpenAPI changes detected in the following paths:"
             echo "$CHANGED_PATHS"
           fi
