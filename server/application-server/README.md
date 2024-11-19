@@ -4,7 +4,7 @@ Helios Application Server is a [Spring Boot application](https://spring.io/proje
 
 ## Prerequisites
 
-- [Java 22](https://www.oracle.com/java/technologies/downloads/) (or higher)
+- [Java 21](https://www.oracle.com/java/technologies/downloads/) (or higher)
 - [Postgres 16](https://www.postgresql.org/download/) (is automatically started with the provided Docker Compose setup)
 
 ## Getting Started
@@ -34,10 +34,10 @@ Copy the file `.env.example` to `.env` and adjust the values to your needs. It i
 $ cp .env.example .env
 ```
 
-**4. Run the Application**
+**4. Run the Application in Development Mode**
 
 ```bash
-$ ./gradlew bootRun
+$ ./gradlew bootRunDev
 ```
 
 The application will be accessible at [http://localhost:8080/status/health](http://localhost:8080/status/health)
