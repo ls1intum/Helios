@@ -61,6 +61,8 @@ jobs:
         if: steps.check_changes.outputs.CHANGE_DETECTED == 'true'
         id: check_openapi_spec
         run: |
+          pwd
+          ls
           if git diff --exit-code ./server/application-server/openapi.yml; then
             echo "OpenAPI spec is up-to-date."
           else
