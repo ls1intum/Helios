@@ -14,9 +14,10 @@ import io.nats.client.Nats;
 import io.nats.client.Options;
 import io.nats.client.StreamContext;
 import io.nats.client.api.ConsumerConfiguration;
-import io.nats.client.api.ConsumerInfo;
 import io.nats.client.api.DeliverPolicy;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
@@ -55,19 +56,28 @@ public class NatsConsumerService {
     @Value("${nats.auth.token}")
     private String natsAuthToken;
 
+    private final Environment environment;
+
     private Connection natsConnection;
     private ConsumerContext consumerContext;
 
     private final GitHubMessageHandlerRegistry handlerRegistry;
 
-    public NatsConsumerService(GitHubMessageHandlerRegistry handlerRegistry) {
+    @Autowired
+    public NatsConsumerService(Environment environment, GitHubMessageHandlerRegistry handlerRegistry) {
+        this.environment = environment;
         this.handlerRegistry = handlerRegistry;
     }
 
     @EventListener(ApplicationReadyEvent.class)
     public void init() {
+        if (environment.matchesProfiles("openapi")) {
+            logger.info("OpenAPI profile detected. Skipping NATS initialization.");
+            return;
+        }
+
         if (!isNatsEnabled) {
-            logger.info("NATS is disabled. Skipping initialization.");
+            logger.info("NATS is disabled. Skipping NATS initialization.");
             return;
         }
 
@@ -108,7 +118,7 @@ public class NatsConsumerService {
     private void setupConsumer(Connection connection) throws IOException, InterruptedException {
         try {
             StreamContext streamContext = connection.getStreamContext("github");
-            
+
             // Check if consumer already exists
             if (durableConsumerName != null && !durableConsumerName.isEmpty()) {
                 try {
@@ -121,13 +131,13 @@ public class NatsConsumerService {
             if (consumerContext == null) {
                 logger.info("Setting up consumer for subjects: {}", Arrays.toString(getSubjects()));
                 ConsumerConfiguration.Builder consumerConfigBuilder = ConsumerConfiguration.builder()
-                    .filterSubjects(getSubjects())
-                    .deliverPolicy(DeliverPolicy.ByStartTime)
-                    .startTime(ZonedDateTime.now().minusDays(timeframe));
-            
+                        .filterSubjects(getSubjects())
+                        .deliverPolicy(DeliverPolicy.ByStartTime)
+                        .startTime(ZonedDateTime.now().minusDays(timeframe));
+
                 if (durableConsumerName != null && !durableConsumerName.isEmpty()) {
                     consumerConfigBuilder.durable(durableConsumerName);
-                } 
+                }
 
                 ConsumerConfiguration consumerConfig = consumerConfigBuilder.build();
                 consumerContext = streamContext.createOrUpdateConsumer(consumerConfig);
@@ -170,7 +180,7 @@ public class NatsConsumerService {
 
     /**
      * Subjects to monitor.
-     * 
+     *
      * @return The subjects to monitor.
      */
     private String[] getSubjects() {
@@ -187,7 +197,7 @@ public class NatsConsumerService {
 
     /**
      * Get subject prefix from ownerWithName for the given repository.
-     * 
+     *
      * @param ownerWithName The owner and name of the repository.
      * @return The subject prefix, i.e. "github.owner.name" sanitized.
      * @throws IllegalArgumentException if the repository string is improperly
