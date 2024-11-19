@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: 'postgres:16'
+    image: 'postgres:16-alpine'
     environment:
       POSTGRES_DB: helios
       POSTGRES_PASSWORD: helios
@@ -42,6 +42,18 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+
+  client:
+    container_name: client
+    command: sh -c "yarn dev"
+    build:
+      context: ./client
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./client:/usr/src/app/
+      - /usr/src/app/node_modules/
+    ports:
+      - "80:4200"
 
 volumes:
   db-data:

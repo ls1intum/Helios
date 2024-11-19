@@ -14,7 +14,7 @@ Helios was also often depicted with a radiant crown, symbolizing the sun's light
 
 ## Development Setup
 
-Helios consists of multiple components and dependencies. Setting up the dependencies (e.g. PostgreSQL, NATS Server) is easy using the Docker `compose.dev.yaml` file.
+Helios consists of multiple components and dependencies. Setting up the dependencies (e.g. PostgreSQL, NATS Server, Angular Client) is easy using the Docker `compose.dev.yaml` file.
 
 ```bash
 # Set the webhook secret so the listener works (alternaitvely put the following within a .env file)
@@ -26,6 +26,6 @@ $ docker compose -f compose.dev.yaml up
 $ docker compose -f compose.dev.yaml up --scale webhook-listener=0
 ```
 
-Components such as the client and application server have to be started separately. Take a look at the `README.md` files in the respective directories for more information.
+Components such as the application server *have to* be started separately. Take a look at the `README.md` files in the respective directories for more information. 
 
 For more information on setting up the Webhook and running the listener locally with Ngrok, see [here](server/webhook-listener/README.md#4-set-up-ngrok-optional).

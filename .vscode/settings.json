@@ -1,0 +1,4 @@
+{
+    "java.debug.settings.hotCodeReplace": "auto",
+    "java.configuration.updateBuildConfiguration": "interactive"
+}
