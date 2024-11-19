@@ -6,6 +6,7 @@
   "labels": [
     "dependencies"
   ],
+  "draftPR": true,
   "baseBranches": ["main"],
   "rebaseWhen": "conflicted",
   "prHourlyLimit": 10,

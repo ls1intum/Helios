@@ -5,7 +5,7 @@ This project was generated using [Angular CLI](https://github.com/angular/angula
 
 ## Requirements
 Since this app is implemented using a release candidate version of Angular CLI please make sure that you have following versions
-* Node: 20.18.0
+* Node: 22.11.0
 * Angular CLI: 19.0.0-rc.1
 
 
@@ -44,9 +44,9 @@ If you have not installed nodejs or the node package manager, install it with nv
   Download and install nvm for Windows from the following GitHub repository: [nvm-windows](https://github.com/coreybutler/nvm-windows)
 ##### Install node using nvm
 ```bash
-nvm install v20.18.0
-nvm use v20.18.0
-nvm alias default v20.18.0 # Sets the default node version to v20.18.0 system-wide
+nvm install v22.11.0
+nvm use v22.11.0
+nvm alias default v22.11.0 # Sets the default node version to v22.11.0 system-wide
 ```
 ##### Installing Angular CLI
  ```bash
