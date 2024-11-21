@@ -1,9 +1,11 @@
+import org.springframework.boot.gradle.tasks.run.BootRun
+
 plugins {
     id 'java'
     id 'war'
-    id 'org.springframework.boot' version '3.3.4'
+    id 'org.springframework.boot' version '3.3.5'
     id 'io.spring.dependency-management' version '1.1.6'
-    id 'io.freefair.lombok' version '8.10.2'
+    id 'io.freefair.lombok' version '8.11'
     id 'org.springdoc.openapi-gradle-plugin' version '1.9.0'
     id 'org.openapi.generator' version '6.6.0'
 }
@@ -21,31 +23,16 @@ repositories {
     mavenCentral()
 }
 
-def loadEnvFile() {
-    def env = [:]
-    def envFile = file('.env')
-    if (envFile.exists()) {
-        envFile.eachLine { line ->
-            line = line.trim()
-            if (line && !line.startsWith('#')) {
-                def keyValue = line.split('=', 2)
-                if (keyValue.length == 2) {
-                    def key = keyValue[0].trim()
-                    def value = keyValue[1].trim()
-                    // Remove surrounding quotes if present
-                    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
-                        value = value.substring(1, value.length() - 1)
-                    }
-                    env[key] = value
-                }
-            }
+// Detect if the generateOpenApiDocs task is being executed
+gradle.taskGraph.whenReady { taskGraph ->
+    if (taskGraph.hasTask(':generateOpenApiDocs')) {
+        println "Generating OpenAPI documentation..."
+        // Add the H2 dependency dynamically
+        dependencies {
+            runtimeOnly 'com.h2database:h2'
         }
-    } else {
-        println ".env file not found in project root."
     }
-    return env
 }
-
 
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
@@ -62,17 +49,71 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
-tasks.named('test') {
-    useJUnitPlatform()
+springBoot {
+    mainClass = "de.tum.cit.aet.helios.HeliosApplication"
 }
+
+// Custom bootRun task to force the user to specify an active profile
+tasks.named("bootRun") {
+    doFirst {
+        def activeProfile = System.getProperty("spring.profiles.active")
+                ?: project.findProperty("spring.profiles.active")
+                ?: System.getenv("SPRING_PROFILES_ACTIVE")
+        if (!activeProfile) {
+            throw new GradleException("""
+    Error: 'spring.profiles.active' is not set.
+    
+    Please specify an active profile using one of the following methods:
+    
+    - Use a predefined task like 'bootRunDev'.
+    - Set the 'SPRING_PROFILES_ACTIVE' environment variable.                
+    - Use the '-Dspring.profiles.active=<profile>' JVM argument.
+    
+    Available profiles: dev, openapi (Don't use this profile directly).
+    
+    Examples:
+    
+    1. Using predefined task:
+       ./gradlew bootRunDev
+    
+    2. Setting environment variable:
+       export SPRING_PROFILES_ACTIVE=dev
+       ./gradlew bootRun
+    
+    3. Passing JVM argument:
+       ./gradlew -Dspring.profiles.active=dev bootRun
+    
+    4. Using project property:
+       ./gradlew bootRun -Pspring.profiles.active=dev
+                """
+            )
+        } else {
+            println "Running with profile: ${activeProfile}"
+            systemProperty "spring.profiles.active", activeProfile
+        }
+    }
+}
+
+tasks.register("bootRunDev", BootRun) {
+    group = "application"
+    description = "Runs the Spring Boot application with the dev profile"
+    // Set the active profile to 'dev'
+    systemProperty "spring.profiles.active", "dev"
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass.set("de.tum.cit.aet.helios.HeliosApplication")
+}
+
 
 openApi {
     apiDocsUrl = 'http://localhost:8080/v3/api-docs.yaml'
     outputDir = file('.')
     outputFileName = 'openapi.yaml'
-    def envVars = loadEnvFile()
+    // Set the active profile to 'openapi'
     customBootRun {
-        args.set(["--spring.profiles.active=dev", "--DATASOURCE_URL=${envVars['DATASOURCE_URL'] ?: ''}", "--DATASOURCE_USERNAME=${envVars['DATASOURCE_USERNAME'] ?: ''}", "--DATASOURCE_PASSWORD=${envVars['DATASOURCE_PASSWORD'] ?: ''}"])
+        args.set(["--spring.profiles.active=openapi"])
     }
+}
 
+tasks.named('test') {
+    useJUnitPlatform()
 }
