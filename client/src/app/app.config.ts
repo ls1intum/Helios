@@ -1,9 +1,11 @@
 import { provideAppInitializer, ApplicationConfig, inject, provideExperimentalZonelessChangeDetection } from '@angular/core';
 import { provideRouter, withComponentInputBinding, withRouterConfig } from '@angular/router';
 import { provideQueryClient, provideTanStackQuery, QueryClient } from '@tanstack/angular-query-experimental';
+import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
+import { providePrimeNG } from 'primeng/config';
+import Aura from '@primeng/themes/aura';
 
 import { routes } from './app.routes';
-import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { MessageService } from 'primeng/api';
 import { HTTP_INTERCEPTORS, provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import { provideAnimations } from '@angular/platform-browser/animations';
@@ -31,6 +33,9 @@ const queryClient = new QueryClient({
 export const appConfig: ApplicationConfig = {
   providers: [
     DatePipe,
+    providePrimeNG({
+      theme: Aura,
+    }),
     provideExperimentalZonelessChangeDetection(),
     provideRouter(routes, withComponentInputBinding(), withRouterConfig({ paramsInheritanceStrategy: 'always' })),
     provideAnimationsAsync(),
