@@ -1,4 +1,4 @@
-import { Component, computed, Input } from '@angular/core';
+import { Component, computed, input } from '@angular/core';
 import { TagModule } from 'primeng/tag';
 
 @Component({
@@ -8,8 +8,8 @@ import { TagModule } from 'primeng/tag';
   styleUrl: './lock-tag.component.css',
 })
 export class LockTagComponent {
-  @Input({ required: true }) isLocked!: boolean;
+  isLocked = input.required<boolean>();
 
-  title = computed(() => (this.isLocked ? 'Locked' : 'Free'));
-  severity = computed(() => (this.isLocked ? 'danger' : 'success'));
+  title = computed(() => (this.isLocked() ? 'Locked' : 'Free'));
+  severity = computed(() => (this.isLocked() ? 'danger' : 'success'));
 }

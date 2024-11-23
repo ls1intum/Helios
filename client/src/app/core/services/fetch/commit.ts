@@ -4,7 +4,7 @@ import { CreateQueryResult, injectQuery, QueryClient } from '@tanstack/angular-q
 import { MessageService } from 'primeng/api';
 // import { lastValueFrom } from 'rxjs';
 
-interface Commit {
+export interface Commit {
   commitHash: string;
   author: {
     name: string;

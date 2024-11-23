@@ -1,5 +1,5 @@
-import { Component, computed, inject, Input } from '@angular/core';
-import { FetchCommitService } from '@app/core/services/fetch/commit';
+import { Component, computed, inject, input } from '@angular/core';
+import { FetchCommitService, Commit } from '@app/core/services/fetch/commit';
 import { IconsModule } from 'icons.module';
 import { TagModule } from 'primeng/tag';
 
@@ -14,7 +14,7 @@ export class EnvironmentCommitInfoComponent {
   fetchEnvironments = inject(FetchCommitService);
 
   commits = this.fetchEnvironments.getCommits().data;
-  @Input({ required: true }) commitHash!: string;
+  commitHash = input.required<string>();
 
-  commit = computed(() => this.commits()?.find(commit => commit.commitHash === this.commitHash));
+  commit = computed(() => this.commits()?.find((commit: Commit) => commit.commitHash === this.commitHash()));
 }
