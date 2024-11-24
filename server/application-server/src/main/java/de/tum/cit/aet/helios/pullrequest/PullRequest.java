@@ -12,6 +12,7 @@ import java.util.Set;
 
 import de.tum.cit.aet.helios.issue.Issue;
 import de.tum.cit.aet.helios.user.User;
+import de.tum.cit.aet.helios.workflow.WorkflowRun;
 
 @Entity
 @DiscriminatorValue(value = "PULL_REQUEST")
@@ -62,6 +63,9 @@ public class PullRequest extends Issue {
     public boolean isPullRequest() {
         return true;
     }
+
+    @ManyToMany
+    private Set<WorkflowRun> workflowRuns;
 
     // Missing properties:
     // - PullRequestReview

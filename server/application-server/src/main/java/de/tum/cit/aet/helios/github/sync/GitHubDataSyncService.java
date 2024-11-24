@@ -4,9 +4,10 @@ package de.tum.cit.aet.helios.github.sync;
 import de.tum.cit.aet.helios.pullrequest.github.GitHubPullRequestSyncService;
 import de.tum.cit.aet.helios.gitrepo.github.GitHubRepositorySyncService;
 import de.tum.cit.aet.helios.user.github.GitHubUserSyncService;
+import de.tum.cit.aet.helios.workflow.github.GitHubWorkflowSyncService;
 import jakarta.transaction.Transactional;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.log4j.Log4j2;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -14,10 +15,8 @@ import java.time.OffsetDateTime;
 import java.util.Optional;
 
 @Service
+@Log4j2
 public class GitHubDataSyncService {
-
-    private static final Logger logger = LoggerFactory.getLogger(GitHubDataSyncService.class);
-
     @Value("${monitoring.timeframe}")
     private int timeframe;
 
@@ -28,15 +27,18 @@ public class GitHubDataSyncService {
     private final GitHubUserSyncService userSyncService;
     private final GitHubRepositorySyncService repositorySyncService;
     private final GitHubPullRequestSyncService pullRequestSyncService;
+    private final GitHubWorkflowSyncService workflowSyncService;
 
     public GitHubDataSyncService(
             DataSyncStatusRepository dataSyncStatusRepository, GitHubUserSyncService userSyncService,
             GitHubRepositorySyncService repositorySyncService,
-            GitHubPullRequestSyncService pullRequestSyncService) {
+            GitHubPullRequestSyncService pullRequestSyncService,
+            GitHubWorkflowSyncService workflowSyncService) {
         this.dataSyncStatusRepository = dataSyncStatusRepository;
         this.userSyncService = userSyncService;
         this.repositorySyncService = repositorySyncService;
         this.pullRequestSyncService = pullRequestSyncService;
+        this.workflowSyncService = workflowSyncService;
     }
 
     @Transactional
@@ -52,7 +54,7 @@ public class GitHubDataSyncService {
 
         var cooldownTime = OffsetDateTime.now().minusMinutes(runOnStartupCooldownInMinutes);
         if (lastSync.isPresent() && lastSync.get().getStartTime().isAfter(cooldownTime)) {
-            logger.info("Skipping sync, last sync was less than {} minutes ago", runOnStartupCooldownInMinutes);
+            log.info("Skipping sync, last sync was less than {} minutes ago", runOnStartupCooldownInMinutes);
             return;
         }
 
@@ -63,6 +65,7 @@ public class GitHubDataSyncService {
         
         pullRequestSyncService.syncPullRequestsOfAllRepositories(repositories, Optional.of(cutoffDate));
         userSyncService.syncAllExistingUsers();
+        workflowSyncService.syncRunsOfAllRepositories(repositories, Optional.of(cutoffDate));
 
         var endTime = OffsetDateTime.now();
 
