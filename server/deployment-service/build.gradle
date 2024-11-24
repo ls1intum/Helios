@@ -2,6 +2,8 @@ plugins {
 	id 'java'
 	id 'org.springframework.boot' version '3.3.6'
 	id 'io.spring.dependency-management' version '1.1.6'
+	id 'org.springdoc.openapi-gradle-plugin' version '1.9.0'
+    id 'org.openapi.generator' version '6.6.0'
 }
 
 group = 'de.tum.cit.aet'
@@ -26,11 +28,23 @@ repositories {
 dependencies {
   implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
   implementation 'org.springframework.boot:spring-boot-starter-web'
+  implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0'
+  implementation 'org.openapitools:jackson-databind-nullable:0.2.6'
   compileOnly 'org.projectlombok:lombok'
   runtimeOnly 'org.postgresql:postgresql'
   annotationProcessor 'org.projectlombok:lombok'
   testImplementation 'org.springframework.boot:spring-boot-starter-test'
   testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+openApi {
+    apiDocsUrl = 'http://localhost:8082/v3/api-docs.yaml'
+    outputDir = file('.')
+    outputFileName = 'openapi.yaml'
+    // Set the active profile to 'openapi'
+    customBootRun {
+        args.set(["--spring.profiles.active=openapi"])
+    }
 }
 
 tasks.named('test') {
