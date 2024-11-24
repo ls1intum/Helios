@@ -1,10 +1,10 @@
 package de.tum.cit.aet.helios.user.github;
 
 import jakarta.transaction.Transactional;
+import lombok.extern.log4j.Log4j2;
+
 import org.kohsuke.github.GHUser;
 import org.kohsuke.github.GitHub;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import de.tum.cit.aet.helios.user.User;
@@ -14,9 +14,8 @@ import de.tum.cit.aet.helios.util.DateUtil;
 import java.io.IOException;
 
 @Service
+@Log4j2
 public class GitHubUserSyncService {
-
-    private static final Logger logger = LoggerFactory.getLogger(GitHubUserSyncService.class);
 
     private final GitHub github;
     private final UserRepository userRepository;
@@ -52,7 +51,7 @@ public class GitHubUserSyncService {
         try {
             processUser(github.getUser(login));
         } catch (IOException e) {
-            logger.error("Failed to fetch user {}: {}", login, e.getMessage());
+            log.error("Failed to fetch user {}: {}", login, e.getMessage());
         }
     }
 
@@ -75,7 +74,7 @@ public class GitHubUserSyncService {
                         }
                         return user;
                     } catch (IOException e) {
-                        logger.error("Failed to update repository {}: {}", ghUser.getId(), e.getMessage());
+                        log.error("Failed to update repository {}: {}", ghUser.getId(), e.getMessage());
                         return null;
                     }
                 }).orElseGet(() -> userConverter.convert(ghUser));

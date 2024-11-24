@@ -2,20 +2,17 @@ package de.tum.cit.aet.helios.gitrepo.github;
 
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GHRepository.Visibility;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 
 import de.tum.cit.aet.helios.github.BaseGitServiceEntityConverter;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import de.tum.cit.aet.helios.util.DateUtil;
+import lombok.extern.log4j.Log4j2;
 
 @Component
+@Log4j2
 public class GitHubRepositoryConverter extends BaseGitServiceEntityConverter<GHRepository, GitRepository> {
-
-    private static final Logger logger = LoggerFactory.getLogger(GitHubRepositoryConverter.class);
-
     @Override
     public GitRepository convert(@NonNull GHRepository source) {
         return update(source, new GitRepository());
@@ -52,7 +49,7 @@ public class GitHubRepositoryConverter extends BaseGitServiceEntityConverter<GHR
             case INTERNAL:
                 return GitRepository.Visibility.INTERNAL;
             default:
-                logger.error("Unknown repository visibility: {}", visibility);
+                log.error("Unknown repository visibility: {}", visibility);
                 return GitRepository.Visibility.UNKNOWN;
         }
     }

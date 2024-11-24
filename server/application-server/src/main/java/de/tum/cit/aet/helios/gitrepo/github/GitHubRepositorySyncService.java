@@ -1,10 +1,10 @@
 package de.tum.cit.aet.helios.gitrepo.github;
 
 import jakarta.transaction.Transactional;
+import lombok.extern.log4j.Log4j2;
+
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GitHub;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -17,9 +17,8 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
+@Log4j2
 public class GitHubRepositorySyncService {
-
-    private static final Logger logger = LoggerFactory.getLogger(GitHubRepositorySyncService.class);
 
     @Value("${monitoring.repositories}")
     private String[] repositoriesToMonitor;
@@ -90,7 +89,7 @@ public class GitHubRepositorySyncService {
             processRepository(repository);
             return Optional.of(repository);
         } catch (IOException e) {
-            logger.error("Failed to fetch repository {}: {}", nameWithOwner, e.getMessage());
+            log.error("Failed to fetch repository {}: {}", nameWithOwner, e.getMessage());
             return Optional.empty();
         }
     }
@@ -114,7 +113,7 @@ public class GitHubRepositorySyncService {
                         }
                         return repository;
                     } catch (IOException e) {
-                        logger.error("Failed to update repository {}: {}", ghRepository.getId(), e.getMessage());
+                        log.error("Failed to update repository {}: {}", ghRepository.getId(), e.getMessage());
                         return null;
                     }
                 }).orElseGet(() -> repositoryConverter.convert(ghRepository));

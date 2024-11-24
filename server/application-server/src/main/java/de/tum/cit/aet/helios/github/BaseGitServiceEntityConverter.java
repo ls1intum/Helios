@@ -1,21 +1,19 @@
 package de.tum.cit.aet.helios.github;
 
 import org.kohsuke.github.GHObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.ReadingConverter;
 import org.springframework.lang.NonNull;
 
 import de.tum.cit.aet.helios.util.DateUtil;
+import lombok.extern.log4j.Log4j2;
 
 import java.io.IOException;
 
 @ReadingConverter
+@Log4j2
 public abstract class BaseGitServiceEntityConverter<S extends GHObject, T extends BaseGitServiceEntity>
         implements Converter<S, T> {
-
-    private static final Logger logger = LoggerFactory.getLogger(BaseGitServiceEntityConverter.class);
 
     abstract public T update(@NonNull S source, @NonNull T target);
 
@@ -30,14 +28,14 @@ public abstract class BaseGitServiceEntityConverter<S extends GHObject, T extend
         try {
             target.setCreatedAt(DateUtil.convertToOffsetDateTime(source.getCreatedAt()));
         } catch (IOException e) {
-            logger.error("Failed to convert createdAt field for source {}: {}", source.getId(), e.getMessage());
+            log.error("Failed to convert createdAt field for source {}: {}", source.getId(), e.getMessage());
             target.setCreatedAt(null);
         }
 
         try {
             target.setUpdatedAt(DateUtil.convertToOffsetDateTime(source.getUpdatedAt()));
         } catch (IOException e) {
-            logger.error("Failed to convert updatedAt field for source {}: {}", source.getId(), e.getMessage());
+            log.error("Failed to convert updatedAt field for source {}: {}", source.getId(), e.getMessage());
             target.setUpdatedAt(null);
         }
     }

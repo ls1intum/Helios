@@ -2,13 +2,13 @@ package de.tum.cit.aet.helios.pullrequest.github;
 
 
 import jakarta.transaction.Transactional;
+import lombok.extern.log4j.Log4j2;
+
 import org.kohsuke.github.GHDirection;
 import org.kohsuke.github.GHIssueState;
 import org.kohsuke.github.GHPullRequest;
 import org.kohsuke.github.GHPullRequestQueryBuilder.Sort;
 import org.kohsuke.github.GHRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
@@ -24,9 +24,8 @@ import java.time.OffsetDateTime;
 import java.util.*;
 
 @Service
+@Log4j2
 public class GitHubPullRequestSyncService {
-
-    private static final Logger logger = LoggerFactory.getLogger(GitHubPullRequestSyncService.class);
 
     private final PullRequestRepository pullRequestRepository;
     private final GitRepoRepository gitRepoRepository;
@@ -93,7 +92,7 @@ public class GitHubPullRequestSyncService {
                         try {
                             return sinceDate.isEmpty() || pullRequest.getUpdatedAt().after(sinceDate.get());
                         } catch (IOException e) {
-                            logger.error("Failed to filter pull request {}: {}", pullRequest.getId(), e.getMessage());
+                            log.error("Failed to filter pull request {}: {}", pullRequest.getId(), e.getMessage());
                             return false;
                         }
                     })
@@ -131,7 +130,7 @@ public class GitHubPullRequestSyncService {
                         }
                         return pullRequest;
                     } catch (IOException e) {
-                        logger.error("Failed to update pull request {}: {}", ghPullRequest.getId(), e.getMessage());
+                        log.error("Failed to update pull request {}: {}", ghPullRequest.getId(), e.getMessage());
                         return null;
                     }
                 }).orElseGet(() -> pullRequestConverter.convert(ghPullRequest));
@@ -158,7 +157,7 @@ public class GitHubPullRequestSyncService {
                     .orElseGet(() -> userRepository.save(userConverter.convert(author)));
             result.setAuthor(resultAuthor);
         } catch (IOException e) {
-            logger.error("Failed to link author for pull request {}: {}", ghPullRequest.getId(), e.getMessage());
+            log.error("Failed to link author for pull request {}: {}", ghPullRequest.getId(), e.getMessage());
         }
 
         // Link assignees
@@ -183,7 +182,7 @@ public class GitHubPullRequestSyncService {
                 result.setMergedBy(null);
             }
         } catch (IOException e) {
-            logger.error("Failed to link merged by user for pull request {}: {}", ghPullRequest.getId(),
+            log.error("Failed to link merged by user for pull request {}: {}", ghPullRequest.getId(),
                     e.getMessage());
         }
 
@@ -199,7 +198,7 @@ public class GitHubPullRequestSyncService {
             result.getRequestedReviewers().clear();
             result.getRequestedReviewers().addAll(resultRequestedReviewers);
         } catch (IOException e) {
-            logger.error("Failed to link requested reviewers for pull request {}: {}", ghPullRequest.getId(),
+            log.error("Failed to link requested reviewers for pull request {}: {}", ghPullRequest.getId(),
                     e.getMessage());
         }
 

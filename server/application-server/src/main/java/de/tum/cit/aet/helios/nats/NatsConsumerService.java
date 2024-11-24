@@ -15,6 +15,7 @@ import io.nats.client.Options;
 import io.nats.client.StreamContext;
 import io.nats.client.api.ConsumerConfiguration;
 import io.nats.client.api.DeliverPolicy;
+import lombok.extern.log4j.Log4j2;
 
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
@@ -26,16 +27,12 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
 import org.kohsuke.github.GHEvent;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 
 @Order(value = 1)
 @Service
+@Log4j2
 public class NatsConsumerService {
-
-    private static final Logger logger = LoggerFactory.getLogger(NatsConsumerService.class);
-
     private static final int INITIAL_RECONNECT_DELAY_SECONDS = 2;
 
     @Value("${nats.enabled}")
@@ -71,12 +68,12 @@ public class NatsConsumerService {
     @EventListener(ApplicationReadyEvent.class)
     public void init() {
         if (environment.matchesProfiles("openapi")) {
-            logger.info("OpenAPI profile detected. Skipping NATS initialization.");
+            log.info("OpenAPI profile detected. Skipping NATS initialization.");
             return;
         }
 
         if (!isNatsEnabled) {
-            logger.info("NATS is disabled. Skipping NATS initialization.");
+            log.info("NATS is disabled. Skipping NATS initialization.");
             return;
         }
 
@@ -89,7 +86,7 @@ public class NatsConsumerService {
                 setupConsumer(natsConnection);
                 return;
             } catch (IOException | InterruptedException e) {
-                logger.error("NATS connection error: {}", e.getMessage(), e);
+                log.error("NATS connection error: {}", e.getMessage(), e);
             }
         }
     }
@@ -107,7 +104,7 @@ public class NatsConsumerService {
         return Options.builder()
                 .server(natsServer)
                 .token(natsAuthToken.toCharArray())
-                .connectionListener((conn, type) -> logger.info("Connection event - Server: {}, {}",
+                .connectionListener((conn, type) -> log.info("Connection event - Server: {}, {}",
                         conn.getServerInfo().getPort(), type))
                 .maxReconnects(-1)
                 .reconnectWait(Duration.ofSeconds(INITIAL_RECONNECT_DELAY_SECONDS))
@@ -128,7 +125,7 @@ public class NatsConsumerService {
             }
 
             if (consumerContext == null) {
-                logger.info("Setting up consumer for subjects: {}", Arrays.toString(getSubjects()));
+                log.info("Setting up consumer for subjects: {}", Arrays.toString(getSubjects()));
                 ConsumerConfiguration.Builder consumerConfigBuilder = ConsumerConfiguration.builder()
                         .filterSubjects(getSubjects())
                         .deliverPolicy(DeliverPolicy.ByStartTime)
@@ -141,14 +138,14 @@ public class NatsConsumerService {
                 ConsumerConfiguration consumerConfig = consumerConfigBuilder.build();
                 consumerContext = streamContext.createOrUpdateConsumer(consumerConfig);
             } else {
-                logger.info("Consumer already exists. Skipping consumer setup.");
+                log.info("Consumer already exists. Skipping consumer setup.");
             }
 
             MessageHandler handler = this::handleMessage;
             consumerContext.consume(handler);
-            logger.info("Successfully started consuming messages.");
+            log.info("Successfully started consuming messages.");
         } catch (JetStreamApiException e) {
-            logger.error("JetStream API exception: {}", e.getMessage(), e);
+            log.error("JetStream API exception: {}", e.getMessage(), e);
             throw new IOException("Failed to set up consumer.", e);
         }
     }
@@ -161,7 +158,7 @@ public class NatsConsumerService {
             GitHubMessageHandler<?> eventHandler = handlerRegistry.getHandler(eventType);
 
             if (eventHandler == null) {
-                logger.warn("No handler found for event type: {}", eventType);
+                log.warn("No handler found for event type: {}", eventType);
                 msg.ack();
                 return;
             }
@@ -169,9 +166,9 @@ public class NatsConsumerService {
             eventHandler.onMessage(msg);
             msg.ack();
         } catch (IllegalArgumentException e) {
-            logger.error("Invalid event type in subject '{}': {}", msg.getSubject(), e.getMessage());
+            log.error("Invalid event type in subject '{}': {}", msg.getSubject(), e.getMessage());
         } catch (Exception e) {
-            logger.error("Error processing message: {}", e.getMessage(), e);
+            log.error("Error processing message: {}", e.getMessage(), e);
         } finally {
             msg.ack();
         }

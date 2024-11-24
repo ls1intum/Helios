@@ -7,18 +7,16 @@ import java.nio.charset.StandardCharsets;
 import org.kohsuke.github.GHEvent;
 import org.kohsuke.github.GHEventPayload;
 import org.kohsuke.github.GitHub;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import io.nats.client.Message;
 import io.nats.client.MessageHandler;
+import lombok.extern.log4j.Log4j2;
+
 import org.springframework.stereotype.Component;
 
 @Component
+@Log4j2
 public abstract class GitHubMessageHandler<T extends GHEventPayload> implements MessageHandler {
-
-    private static final Logger logger = LoggerFactory.getLogger(GitHubMessageHandler.class);
-
     private final Class<T> payloadType;
 
     protected GitHubMessageHandler(Class<T> payloadType) {
@@ -30,7 +28,7 @@ public abstract class GitHubMessageHandler<T extends GHEventPayload> implements 
         String eventType = getHandlerEvent().name().toLowerCase();
         String subject = msg.getSubject();
         if (!subject.endsWith(eventType)) {
-            logger.error("Received message on unexpected subject: {}, expected to end with {}", subject, eventType);
+            log.error("Received message on unexpected subject: {}, expected to end with {}", subject, eventType);
             return;
         }
 
@@ -40,9 +38,9 @@ public abstract class GitHubMessageHandler<T extends GHEventPayload> implements 
             T eventPayload = GitHub.offline().parseEventPayload(reader, payloadType);
             handleEvent(eventPayload);
         } catch (IOException e) {
-            logger.error("Failed to parse payload for subject {}: {}", subject, e.getMessage(), e);
+            log.error("Failed to parse payload for subject {}: {}", subject, e.getMessage(), e);
         } catch (Exception e) {
-            logger.error("Unexpected error while handling message for subject {}: {}", subject, e.getMessage(), e);
+            log.error("Unexpected error while handling message for subject {}: {}", subject, e.getMessage(), e);
         }
     }
 

@@ -4,19 +4,17 @@ import org.kohsuke.github.GHOrganization;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GHWorkflow;
 import org.kohsuke.github.GitHub;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+
+import lombok.extern.log4j.Log4j2;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
 @Service
+@Log4j2
 public class GitHubService {
-
-    private static final Logger logger = LoggerFactory.getLogger(GitHubService.class);
-
     private final GitHub github;
 
     private final GitHubConfig gitHubConfig;
@@ -38,7 +36,7 @@ public class GitHubService {
         if (gitHubOrganization == null) {
             final String organizationName = gitHubConfig.getOrganizationName();
             if (organizationName == null || organizationName.isEmpty()) {
-                logger.error("No organization name provided in the configuration. GitHub organization client will not be initialized.");
+                log.error("No organization name provided in the configuration. GitHub organization client will not be initialized.");
                 throw new RuntimeException("No organization name provided in the configuration.");
             }
             gitHubOrganization = github.getOrganization(organizationName);

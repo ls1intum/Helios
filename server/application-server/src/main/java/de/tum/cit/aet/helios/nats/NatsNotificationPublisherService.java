@@ -5,9 +5,8 @@ import io.nats.client.JetStream;
 import io.nats.client.Nats;
 import io.nats.client.Options;
 import io.nats.client.impl.NatsMessage;
+import lombok.extern.log4j.Log4j2;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -18,9 +17,8 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 
 @Service
+@Log4j2
 public class NatsNotificationPublisherService {
-
-    private static final Logger logger = LoggerFactory.getLogger(NatsNotificationPublisherService.class);
 
     private Connection natsConnection;
     private JetStream jetStream;
@@ -37,7 +35,7 @@ public class NatsNotificationPublisherService {
     @EventListener(ApplicationReadyEvent.class)
     public void init() {
         if (!isNatsEnabled) {
-            logger.info("NATS is disabled. Skipping initialization.");
+            log.info("NATS is disabled. Skipping initialization.");
             return;
         }
 
@@ -48,11 +46,11 @@ public class NatsNotificationPublisherService {
             try {
                 natsConnection = Nats.connect(options);
                 jetStream = natsConnection.jetStream();
-                logger.info("Connected to NATS at {}", natsServer);
+                log.info("Connected to NATS at {}", natsServer);
                 // publishDummyNotification();
                 return;
             } catch (IOException | InterruptedException e) {
-                logger.error("NATS connection error: {}", e.getMessage(), e);
+                log.error("NATS connection error: {}", e.getMessage(), e);
             }
         }
     }
@@ -67,7 +65,7 @@ public class NatsNotificationPublisherService {
         return Options.builder()
                 .server(natsServer)
                 .token(natsAuthToken.toCharArray())
-                .connectionListener((conn, type) -> logger.info("Connection event - Server: {}, {}",
+                .connectionListener((conn, type) -> log.info("Connection event - Server: {}, {}",
                         conn.getServerInfo().getPort(), type))
                 .maxReconnects(-1)
                 .reconnectWait(Duration.ofSeconds(2))
@@ -80,16 +78,16 @@ public class NatsNotificationPublisherService {
                 .data(message)
                 .build();
         natsConnection.publish(msg);
-        logger.info("Published message to subject '{}'", "notification." + subject);
+        log.info("Published message to subject '{}'", "notification." + subject);
     }
 
     private void publishDummyNotification() {
         String dummyMessage = "This is a dummy notification message.";
         try {
             publishNotification("dummy", dummyMessage.getBytes(StandardCharsets.UTF_8));
-            logger.info("Dummy notification message published successfully.");
+            log.info("Dummy notification message published successfully.");
         } catch (IOException | InterruptedException e) {
-            logger.error("Failed to publish dummy notification message: {}", e.getMessage(), e);
+            log.error("Failed to publish dummy notification message: {}", e.getMessage(), e);
         }
     }
 }
