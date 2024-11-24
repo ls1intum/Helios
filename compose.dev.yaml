@@ -9,7 +9,18 @@ services:
       - '5432:5432'
     volumes:
       - db-data:/var/lib/postgresql/data
-  
+
+  deployment-postgres:
+    image: 'postgres:16-alpine'
+    environment:
+      POSTGRES_DB: deployment_service
+      POSTGRES_PASSWORD: helios
+      POSTGRES_USER: deployment-service
+    ports:
+      - '5433:5432'
+    volumes:
+      - deployment-service-data:/var/lib/postgresql/data
+
   webhook-listener:
     build:
       context: server/webhook-listener
@@ -25,14 +36,14 @@ services:
     ports:
       - "4222:4222"
       - "8222:8222"
-    command: ["/bin/sh", "-c", "sed 's|{{NATS_AUTH_TOKEN}}|'\"$NATS_AUTH_TOKEN\"'|g' /etc/nats/nats-server.conf.template > /etc/nats/nats-server.conf && exec nats-server --config /etc/nats/nats-server.conf"]
+    command: [ "/bin/sh", "-c", "sed 's|{{NATS_AUTH_TOKEN}}|'\"$NATS_AUTH_TOKEN\"'|g' /etc/nats/nats-server.conf.template > /etc/nats/nats-server.conf && exec nats-server --config /etc/nats/nats-server.conf" ]
     environment:
       - NATS_AUTH_TOKEN=5760e8ae09adfb2756f9f8cd5cb2caa704cd3f549eaa9298be843ceb165185d815b81f90c680fa7f626b7cd63abf6ac9
     volumes:
       - nats-data:/data
       - ./config/nats-server.conf:/etc/nats/nats-server.conf.template
     healthcheck:
-      test: ["CMD", "wget", "--spider", "--quiet", "http://localhost:8222/healthz"]
+      test: [ "CMD", "wget", "--spider", "--quiet", "http://localhost:8222/healthz" ]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -58,3 +69,4 @@ services:
 volumes:
   db-data:
   nats-data:
+  deployment-service-data:

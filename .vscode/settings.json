@@ -11,6 +11,16 @@
             "database": "helios",
             "username": "helios",
             "password": "helios"
+        },
+        {
+            "previewLimit": 50,
+            "server": "localhost",
+            "port": 5433,
+            "driver": "PostgreSQL",
+            "name": "deployment-service",
+            "database": "deployment_service",
+            "username": "deployment-service",
+            "password": "helios"
         }
     ]
 }
