@@ -3,7 +3,7 @@ import org.springframework.boot.gradle.tasks.run.BootRun
 plugins {
     id 'java'
     id 'war'
-    id 'org.springframework.boot' version '3.3.5'
+    id 'org.springframework.boot' version '3.4.0'
     id 'io.spring.dependency-management' version '1.1.6'
     id 'io.freefair.lombok' version '8.11'
     id 'org.springdoc.openapi-gradle-plugin' version '1.9.0'
@@ -37,7 +37,7 @@ gradle.taskGraph.whenReady { taskGraph ->
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-web'
-    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0'
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0'
     implementation 'org.openapitools:jackson-databind-nullable:0.2.6'
     implementation 'io.nats:jnats:2.20.4'
     implementation 'org.kohsuke:github-api:1.326'
