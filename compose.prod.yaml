@@ -52,7 +52,8 @@ services:
   client:
     image: ghcr.io/ls1intum/helios/client:latest
     ports:
-      - "80:80"
+      # Do not expose the client to 80 or 443
+      - "90:80"
     restart: always
     networks:
       - helios-network
