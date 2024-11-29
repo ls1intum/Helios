@@ -14,7 +14,7 @@ Helios was also often depicted with a radiant crown, symbolizing the sun's light
 
 ## Development Setup
 
-Helios consists of multiple components and dependencies. Setting up the dependencies (e.g. PostgreSQL, NATS Server, Angular Client) is easy using the Docker `docker-compose.yaml` file.
+Helios consists of multiple components and dependencies. Setting up the dependencies (e.g. PostgreSQL, NATS Server, Angular Client) is easy using the Docker `compose.yaml` file.
 
 ```bash
 # Set the webhook secret so the listener works (alternatively put the following within a .env file)
