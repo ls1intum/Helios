@@ -11,14 +11,5 @@ jobs:
   build-prod-container:
     uses: ./.github/workflows/build_docker.yml
     secrets: inherit
-#  deploy-prod-container:
-#    needs:
-#      - run-tests
-#      - build-prod-container
-#    uses: ./.github/workflows/deploy_docker.yml
-#    secrets: inherit
     with:
       environment: production
-      client_image_tag: "${{ needs.build-prod-container.outputs.client_image_tag }}"
-      application_server_image_tag: "${{ needs.build-prod-container.outputs.application_server_image_tag }}"
-      webhook_listener_image_tag: "${{ needs.build-prod-container.outputs.webhook_listener_image_tag }}"
