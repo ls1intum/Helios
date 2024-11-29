@@ -1,4 +1,10 @@
 # Helios :sun_with_face:
+
+[![Build and Deploy to Prod](https://github.com/ls1intum/Helios/actions/workflows/prod.yml/badge.svg?branch=main)](https://github.com/ls1intum/Helios/actions/workflows/prod.yml)
+[![Documentation](https://github.com/ls1intum/Helios/actions/workflows/docs.yml/badge.svg?branch=main)](https://github.com/ls1intum/Helios/actions/workflows/docs.yml)
+[![Latest version)](https://img.shields.io/github/v/tag/ls1intum/Helios?label=%20Latest%20version&sort=semver)](https://github.com/ls1intum/Helios/releases/latest)
+
+
 The personification of the sun, symbolizing light, clarity, and visibility that this app brings to CI/CD processes and test reliability
 
 ### Empowering Developers with a Dynamic User Interface for GitHub Actions
