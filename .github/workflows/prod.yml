@@ -4,11 +4,15 @@ on:
   push:
     branches:
       - main
-      # TODO: remove below
-      - 66-setup-helios-deployment
+  # TODO: remove below
+  pull_request:
+    branches:
+        - main
+    types: [ opened, reopened, edited, synchronize ]
 
 jobs:
   build-prod-container:
+    if: github.event.pull_request.head.ref == '66-setup-helios-deployment'
     uses: ./.github/workflows/build_docker.yml
     secrets: inherit
     with:
