@@ -47,16 +47,13 @@ services:
         max-file: "3"
 
   client:
-    container_name: client
-    command: sh -c "yarn dev"
+    image: ghcr.io/ls1intum/helios/client:latest
     build:
       context: ./client
-      dockerfile: Dockerfile.dev
-    volumes:
-      - ./client:/usr/src/app/
-      - /usr/src/app/node_modules/
+      dockerfile: Dockerfile
     ports:
-      - "80:4200"
+      - "80:80"
+    restart: always
 
   application-server:
     image: ghcr.io/ls1intum/helios/application-server:latest
