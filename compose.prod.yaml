@@ -11,28 +11,31 @@ services:
       - db-data:/var/lib/postgresql/data
   
   webhook-listener:
+    image: ghcr.io/ls1intum/helios/webhook-listener:latest
     build:
       context: server/webhook-listener
     ports:
       - '4200:4200'
     environment:
-      - NATS_AUTH_TOKEN=5760e8ae09adfb2756f9f8cd5cb2caa704cd3f549eaa9298be843ceb165185d815b81f90c680fa7f626b7cd63abf6ac9
-      - WEBHOOK_SECRET=$WEBHOOK_SECRET
+      - NATS_AUTH_TOKEN
+      - WEBHOOK_SECRET
       - NATS_URL=nats-server
+    depends_on:
+      - nats-server
+
 
   nats-server:
     image: nats:alpine
     ports:
       - "4222:4222"
       - "8222:8222"
-    command: ["/bin/sh", "-c", "sed 's|{{NATS_AUTH_TOKEN}}|'\"$NATS_AUTH_TOKEN\"'|g' /etc/nats/nats-server.conf.template > /etc/nats/nats-server.conf && exec nats-server --config /etc/nats/nats-server.conf"]
+    command: [ "/bin/sh", "-c", "echo 'listen: \"0.0.0.0:4222\"\n\nhttp_port: 8222\n\njetstream {\n  store_dir: \"/data\"\n}\n\nauthorization {\n  token: \"${NATS_AUTH_TOKEN}\"\n}' > /etc/nats/nats-server.conf.template && sed 's|{{NATS_AUTH_TOKEN}}|'\"$NATS_AUTH_TOKEN\"'|g' /etc/nats/nats-server.conf.template > /etc/nats/nats-server.conf && exec nats-server --config /etc/nats/nats-server.conf" ]
     environment:
-      - NATS_AUTH_TOKEN=5760e8ae09adfb2756f9f8cd5cb2caa704cd3f549eaa9298be843ceb165185d815b81f90c680fa7f626b7cd63abf6ac9
+      - NATS_AUTH_TOKEN
     volumes:
       - nats-data:/data
-      - ./config/nats-server.conf:/etc/nats/nats-server.conf.template
     healthcheck:
-      test: ["CMD", "wget", "--spider", "--quiet", "http://localhost:8222/healthz"]
+      test: [ "CMD", "wget", "--spider", "--quiet", "http://localhost:8222/healthz" ]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -54,6 +57,27 @@ services:
       - /usr/src/app/node_modules/
     ports:
       - "80:4200"
+
+  application-server:
+    image: ghcr.io/ls1intum/helios/application-server:latest
+    build:
+      context: server/application-server
+    ports:
+      - '8080:8080'
+    environment:
+      - SPRING_PROFILES_ACTIVE
+      - DATASOURCE_URL
+      - DATASOURCE_USERNAME
+      - DATASOURCE_PASSWORD
+      - NATS_SERVER
+      - NATS_AUTH_TOKEN
+      - ORGANIZATION_NAME
+      - GITHUB_AUTH_TOKEN
+      - REPOSITORY_NAME
+    depends_on:
+      - postgres
+      - nats-server
+      - webhook-listener
 
 volumes:
   db-data:

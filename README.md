@@ -20,7 +20,7 @@ Helios consists of multiple components and dependencies. Setting up the dependen
 # Set the webhook secret so the listener works (alternatively put the following within a .env file)
 $ export WEBHOOK_SECRET=<your_webhook_secret>
 
-$ docker compose up
+$ docker compose up --build
 
 # In case you want to run the webhook listener without Docker (you'll have to set the WEBHOOK_SECRET in the respective .env file)
 $ docker compose --scale webhook-listener=0
