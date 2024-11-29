@@ -40,7 +40,7 @@ jobs:
             path: webhook-listener
     outputs:
       client_image_tag: "${{ steps.output-tag-client.outputs.client_image_tag }}"
-      application_server_image_tag: "${{ steps.output-tag-server.outputs.application_server_image_tag }}"
+      application_server_image_tag: "${{ steps.output-tag-application-server.outputs.application_server_image_tag }}"
       webhook_listener_image_tag: "${{ steps.output-tag-webhook-listener.outputs.webhook_listener_image_tag }}"
     steps:
       - name: Checkout
