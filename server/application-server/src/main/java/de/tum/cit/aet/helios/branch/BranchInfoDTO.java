@@ -14,23 +14,15 @@ import java.util.List;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public record BranchInfoDTO(
-        @NonNull Long id,
         @NonNull String name,
-        @NonNull Boolean isProtected,
-        UserInfoDTO author,
-        RepositoryInfoDTO repository,
-        OffsetDateTime createdAt,
-        OffsetDateTime updatedAt) {
+        RepositoryInfoDTO repository
+        ) {
 
     public static BranchInfoDTO fromBranch(Branch branch) {
         return new BranchInfoDTO(
-                branch.getId(),
                 branch.getName(),
-                branch.isProtected(),
-                UserInfoDTO.fromUser(branch.getAuthor()),
-                RepositoryInfoDTO.fromRepository(branch.getRepository()),
-                branch.getCreatedAt(),
-                branch.getUpdatedAt());
+                RepositoryInfoDTO.fromRepository(branch.getRepository())
+                );
     }
 
 }
