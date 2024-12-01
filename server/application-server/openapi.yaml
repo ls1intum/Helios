@@ -58,6 +58,20 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PullRequestInfoDTO"
+  /api/branches:
+    get:
+      tags:
+      - branch-controller
+      operationId: getAllBranches
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BranchInfoDTO"
 components:
   schemas:
     PullRequestInfoDTO:
@@ -161,3 +175,12 @@ components:
           type: string
         htmlUrl:
           type: string
+    BranchInfoDTO:
+      required:
+      - name
+      type: object
+      properties:
+        name:
+          type: string
+        repository:
+          $ref: "#/components/schemas/RepositoryInfoDTO"
