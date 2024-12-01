@@ -4,11 +4,9 @@ import { TableModule } from 'primeng/table';
 import { AvatarModule } from 'primeng/avatar';
 import { TagModule } from 'primeng/tag';
 import { injectQuery } from '@tanstack/angular-query-experimental';
-import { HttpClient } from '@angular/common/http';
-import { environment } from '../../../environments/environment';
 import { tap } from 'rxjs';
 import { IconsModule } from 'icons.module';
-import { PullRequestInfoDTO } from '@app/core/modules/openapi';
+import { PullRequestControllerService, PullRequestInfoDTO } from '@app/core/modules/openapi';
 
 
 @Component({
@@ -28,20 +26,17 @@ import { PullRequestInfoDTO } from '@app/core/modules/openapi';
   `]
 })
 export class PullRequestTableComponent {
-  private http = inject(HttpClient);
+  pullRequestService = inject(PullRequestControllerService);
 
-  pullRequests = signal<PullRequestInfoDTO[]>([
-   
-]);
+
+  pullRequests = signal<PullRequestInfoDTO[]>([]);
   isLoading = signal(true);
 
   query = injectQuery(() => ({
     queryKey: ['pullRequests'],
-    queryFn: () => 
-      this.http.get<PullRequestInfoDTO[]>(`${environment.githubServiceUrl}/pullrequests`)
+    queryFn: () => this.pullRequestService.getAllPullRequests()
         .pipe(
           tap(data => {
-            console.log(data);
             this.pullRequests.set(data);
             this.isLoading.set(false);
           })

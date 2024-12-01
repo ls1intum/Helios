@@ -7,6 +7,8 @@ import { provideAnimationsAsync } from '@angular/platform-browser/animations/asy
 import { MessageService } from 'primeng/api';
 import { provideHttpClient } from '@angular/common/http';
 import { provideAnimations } from '@angular/platform-browser/animations';
+import { BASE_PATH } from './core/modules/openapi';
+import { environment } from 'environments/environment';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -27,6 +29,7 @@ export const appConfig: ApplicationConfig = {
     MessageService,
     provideHttpClient(),
     provideAnimations(),
-    provideQueryClient(queryClient)
+    provideQueryClient(queryClient),
+    { provide: BASE_PATH, useValue: environment.serverUrl },
   ],
 };
