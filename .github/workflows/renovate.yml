@@ -2,9 +2,9 @@ name: Renovate Bot
 
 on:
   workflow_dispatch:
-  schedule:
-    # Runs Renovate weekly on Mondays at 11 AM
-    - cron: "0 11 * * 1"
+#  schedule:
+#    # Runs Renovate weekly on Mondays at 11 AM
+#    - cron: "0 11 * * 1"
 
 concurrency: renovate
 jobs:

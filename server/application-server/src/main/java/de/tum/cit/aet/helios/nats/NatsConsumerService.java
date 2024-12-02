@@ -27,6 +27,8 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
 import org.kohsuke.github.GHEvent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 
 @Order(value = 1)
@@ -96,7 +98,7 @@ public class NatsConsumerService {
             throw new IllegalArgumentException("NATS server configuration is missing.");
         }
         if (repositoriesToMonitor == null || repositoriesToMonitor.length == 0) {
-            throw new IllegalArgumentException("No repositories to monitor are configured.");
+            log.warn("No repositories to monitor are configured.");
         }
     }
 
