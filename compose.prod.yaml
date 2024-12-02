@@ -13,7 +13,7 @@ services:
       - helios-network
 
   webhook-listener:
-    image: ghcr.io/ls1intum/helios/webhook-listener:latest
+    image: "ghcr.io/ls1intum/helios/webhook-listener:${WEBHOOK_LISTENER_IMAGE_TAG}"
     ports:
       - '4200:4200'
     environment:
@@ -50,7 +50,7 @@ services:
       - helios-network
 
   client:
-    image: ghcr.io/ls1intum/helios/client:latest
+    image: "ghcr.io/ls1intum/helios/client:${CLIENT_IMAGE_TAG}"
     ports:
       # Do not expose the client to 80 or 443
       - "90:80"
@@ -59,7 +59,7 @@ services:
       - helios-network
 
   application-server:
-    image: ghcr.io/ls1intum/helios/application-server:latest
+    image: "ghcr.io/ls1intum/helios/application-server:${APPLICATION_SERVER_IMAGE_TAG}"
     ports:
       - '8080:8080'
     environment:
