@@ -37,5 +37,5 @@ monitoring:
     # Fetching timeframe in days
     timeframe: 7
     # Cooldown in minutes before running the monitoring again
-    runOnStartupCooldownInMinutes: 15
+    runOnStartupCooldownInMinutes: ${RUN_ON_STARTUP_COOLDOWN:15}
     repository-sync-cron: "0 0 * * * *"
