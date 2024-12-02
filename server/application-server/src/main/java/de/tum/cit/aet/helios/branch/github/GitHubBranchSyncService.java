@@ -15,6 +15,9 @@ import de.tum.cit.aet.helios.branch.Branch;
 import java.io.IOException;
 import java.util.*;
 
+/**
+ * Service for synchronizing branches from GitHub repositories.
+ */
 @Service
 @Log4j2
 public class GitHubBranchSyncService {
@@ -35,12 +38,8 @@ public class GitHubBranchSyncService {
     /**
      * Synchronizes all branches from the specified GitHub repositories.
      *
-     * @param repositories the list of GitHub repositories to sync pull requests
-     *                     from
-     * @param since        an optional date to filter pull requests by their last
-     *                     update
-     * @return a list of GitHub pull requests that were successfully fetched and
-     *         processed
+     * @param repositories the list of GitHub repositories to sync branches from
+     * @return a list of GitHub branches that were successfully fetched and processed
      */
     public List<GHBranch> syncBranchesOfAllRepositories(List<GHRepository> repositories) {
         return repositories.stream()
@@ -50,40 +49,34 @@ public class GitHubBranchSyncService {
     }
 
     /**
-     * Synchronizes all pull requests from a specific GitHub repository.
+     * Synchronizes all branches from a specific GitHub repository.
      *
-     * @param repository the GitHub repository to sync pull requests from
-     * @param since      an optional date to filter pull requests by their last
-     *                   update
-     * @return a list of GitHub pull requests that were successfully fetched and
-     *         processed
+     * @param repository the GitHub repository to sync branches from
+     * @return a list of GitHub branches that were successfully fetched and processed
      */
     public List<GHBranch> syncBranchesOfRepository(GHRepository repository) {
         try {
             var branches = repository.getBranches().values().stream().toList();
             branches.forEach(branch -> processBranch(branch, repository));
-            //Get all branches for current repo
-            var dbBranches = branchRepository.findByRepositoryId(repository.getId());      
-            //Delete each branch that exists in db and not in branches
+            // Get all branches for the current repository
+            var dbBranches = branchRepository.findByRepositoryId(repository.getId());
+            // Delete each branch that exists in the database and not in the fetched branches
             dbBranches.stream().filter(dbBranch -> branches.stream().noneMatch(b -> b.getName().equals(dbBranch.getName())))
                     .forEach(dbBranch -> branchRepository.delete(dbBranch));
             return branches;
         } catch (IOException e) {
             log.error("Failed to fetch branches of repository {}: {}", repository.getFullName(), e.getMessage());
             return Collections.emptyList();
-        }        
+        }
     }
 
     /**
-     * Processes a single GitHub pull request by updating or creating it in the
-     * local repository.
-     * Manages associations with repositories, labels, milestones, authors,
-     * assignees, merged by users,
-     * and requested reviewers.
+     * Processes a single GitHub branch by updating or creating it in the local repository.
+     * Manages associations with repositories.
      *
-     * @param ghPullRequest the GitHub pull request to process
-     * @return the updated or newly created PullRequest entity, or {@code null} if
-     *         an error occurred
+     * @param ghBranch the GitHub branch to process
+     * @param ghRepository the GitHub repository to which the branch belongs
+     * @return the updated or newly created Branch entity, or {@code null} if an error occurred
      */
     @Transactional
     public Branch processBranch(GHBranch ghBranch, GHRepository ghRepository) {
@@ -93,14 +86,14 @@ public class GitHubBranchSyncService {
         var result = branchRepository.findByNameAndRepositoryId(ghBranch.getName(), repository.getId())
                 .map(branch -> {
                     try {
-                        return branchConverter.update(ghBranch, branch);                        
+                        return branchConverter.update(ghBranch, branch);
                     } catch (Exception e) {
                         log.error("Failed to update branch {}: {}", ghBranch.getName(), e.getMessage());
                         return null;
                     }
-                }).orElseGet(() -> branchConverter.convert(ghBranch));                
-        
-                if (result == null) {
+                }).orElseGet(() -> branchConverter.convert(ghBranch));
+
+        if (result == null) {
             return null;
         }
 

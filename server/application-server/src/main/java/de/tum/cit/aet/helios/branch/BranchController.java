@@ -6,7 +6,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/branches")
@@ -21,10 +20,6 @@ public class BranchController {
     @GetMapping
     public ResponseEntity<List<BranchInfoDTO>> getAllBranches() {
         List<BranchInfoDTO> branches = branchService.getAllBranches();
-        if (branches.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        } else {
-            return ResponseEntity.ok(branches);
-        }
+        return ResponseEntity.ok(branches);
     }
 }

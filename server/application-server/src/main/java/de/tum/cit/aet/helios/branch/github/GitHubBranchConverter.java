@@ -28,7 +28,6 @@ public class GitHubBranchConverter implements Converter<GHBranch, Branch> {
             branch.setProtection(source.isProtected());
         } catch (Exception e) {
             log.error("Failed to convert fields for source {}: {}", source.getName(), e.getMessage());
-            throw e; // Rethrow exception to stop processing invalid data
         }
         return branch;
     }
