@@ -17,6 +17,7 @@ import {
   IconLockOpen,
   IconPencil,
   IconUser,
+  IconBrandGithub,
 } from 'angular-tabler-icons/icons';
 
 // Select some icons (use an object, not an array)
@@ -36,6 +37,7 @@ const icons = {
   IconExternalLink,
   IconPencil,
   IconHistory,
+  IconBrandGithub
 };
 
 @NgModule({

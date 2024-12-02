@@ -21,11 +21,7 @@ public class PullRequestController {
     @GetMapping
     public ResponseEntity<List<PullRequestInfoDTO>> getAllPullRequests() {
         List<PullRequestInfoDTO> pullRequests = pullRequestService.getAllPullRequests();
-        if (pullRequests.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        } else {
-            return ResponseEntity.ok(pullRequests);
-        }
+        return ResponseEntity.ok(pullRequests);
     }
 
     @GetMapping("/{id}")
@@ -34,5 +30,5 @@ public class PullRequestController {
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
-    
+
 }

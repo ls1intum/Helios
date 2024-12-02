@@ -25,7 +25,7 @@ export class AppComponent implements OnInit {
       {
         label: 'CI/CD',
         icon: 'arrow-guide',
-        path: '/pr/list',
+        path: '/ci-cd',
       },
       {
         label: 'Release Management',

@@ -99,3 +99,4 @@ jobs:
           script: |
             cd ${{ vars.WORKING_DIR }}
             docker compose -f compose.prod.yaml --env-file=.env up --pull=always -d
+            docker restart nginx
