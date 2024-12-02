@@ -44,6 +44,8 @@ The application will be accessible at [http://localhost:8080/status/health](http
 
 ## Development
 
+* For swagger-ui, use the following URL: http://localhost:8080/swagger-ui/index.html
+
 ### Run tests
 
 ```bash

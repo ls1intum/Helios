@@ -24,8 +24,8 @@ repositories {
 
 // Detect if the generateOpenApiDocs task is being executed
 gradle.taskGraph.whenReady { taskGraph ->
-    if (taskGraph.hasTask(':generateOpenApiDocs')) {
-        println "Generating OpenAPI documentation..."
+    if (taskGraph.hasTask(':generateOpenApiDocs') || taskGraph.hasTask(':bootRunOpenApi')) {
+        println "OpenAPI task detected. Adding H2 dependency."
         // Add the H2 dependency dynamically
         dependencies {
             runtimeOnly 'com.h2database:h2'
@@ -99,6 +99,14 @@ tasks.register("bootRunDev", BootRun) {
     description = "Runs the Spring Boot application with the dev profile"
     // Set the active profile to 'dev'
     systemProperty "spring.profiles.active", "dev"
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass.set("de.tum.cit.aet.helios.HeliosApplication")
+}
+
+tasks.register("bootRunOpenApi", BootRun) {
+    group = "application"
+    description = "Runs the Spring Boot application with the openapi profile"
+    systemProperty "spring.profiles.active", "openapi"
     classpath = sourceSets.main.runtimeClasspath
     mainClass.set("de.tum.cit.aet.helios.HeliosApplication")
 }
