@@ -2,6 +2,8 @@
 README.md
 api.module.ts
 api/api.ts
+api/branch-controller.service.ts
+api/branch-controller.serviceInterface.ts
 api/pull-request-controller.service.ts
 api/pull-request-controller.serviceInterface.ts
 api/status-controller.service.ts
@@ -10,6 +12,7 @@ configuration.ts
 encoder.ts
 git_push.sh
 index.ts
+model/branch-info-dto.ts
 model/models.ts
 model/pull-request-info-dto.ts
 model/repository-info-dto.ts
