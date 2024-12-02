@@ -1,4 +1,4 @@
 export const environment = {
-    production: true,
-    serverUrl: 'http://localhost:8080',
+  production: true,
+  serverUrl: 'https://helios.artemis.cit.tum.de',
 };
