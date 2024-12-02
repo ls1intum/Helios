@@ -2,6 +2,7 @@ package de.tum.cit.aet.helios.github.sync;
 
 
 import de.tum.cit.aet.helios.pullrequest.github.GitHubPullRequestSyncService;
+import de.tum.cit.aet.helios.branch.github.GitHubBranchSyncService;
 import de.tum.cit.aet.helios.gitrepo.github.GitHubRepositorySyncService;
 import de.tum.cit.aet.helios.user.github.GitHubUserSyncService;
 import de.tum.cit.aet.helios.workflow.github.GitHubWorkflowSyncService;
@@ -28,17 +29,20 @@ public class GitHubDataSyncService {
     private final GitHubRepositorySyncService repositorySyncService;
     private final GitHubPullRequestSyncService pullRequestSyncService;
     private final GitHubWorkflowSyncService workflowSyncService;
+    private final GitHubBranchSyncService branchSyncService;
 
     public GitHubDataSyncService(
             DataSyncStatusRepository dataSyncStatusRepository, GitHubUserSyncService userSyncService,
             GitHubRepositorySyncService repositorySyncService,
             GitHubPullRequestSyncService pullRequestSyncService,
-            GitHubWorkflowSyncService workflowSyncService) {
+            GitHubWorkflowSyncService workflowSyncService,
+            GitHubBranchSyncService branchSyncService) {
         this.dataSyncStatusRepository = dataSyncStatusRepository;
         this.userSyncService = userSyncService;
         this.repositorySyncService = repositorySyncService;
         this.pullRequestSyncService = pullRequestSyncService;
         this.workflowSyncService = workflowSyncService;
+        this.branchSyncService = branchSyncService;
     }
 
     @Transactional
@@ -66,6 +70,7 @@ public class GitHubDataSyncService {
         pullRequestSyncService.syncPullRequestsOfAllRepositories(repositories, Optional.of(cutoffDate));
         userSyncService.syncAllExistingUsers();
         workflowSyncService.syncRunsOfAllRepositories(repositories, Optional.of(cutoffDate));
+        branchSyncService.syncBranchesOfAllRepositories(repositories);
 
         var endTime = OffsetDateTime.now();
 
