@@ -2,20 +2,13 @@ name: Build and Deploy to Prod
 
 on:
   push:
-    branches:
-      - main
-  # TODO: remove below
-  pull_request:
-    branches:
-        - main
-    types: [ opened, reopened, edited, synchronize ]
+    branches: [main]
 
 jobs:
   build-prod-container:
     uses: ./.github/workflows/build_docker.yml
     secrets: inherit
   deploy-prod-container:
-    if: github.event.pull_request.head.ref == '66-setup-helios-deployment'
     needs: build-prod-container
     uses: ./.github/workflows/deploy_docker.yml
     secrets: inherit

@@ -88,9 +88,6 @@ jobs:
           tags: |
             # Apply 'latest' tag for default branch
             type=raw,value=latest,enable={{is_default_branch}}
-            # Apply 'latest' tag for a specific branch (e.g., staging)
-            # TODO: remove below
-            type=raw,value=latest,enable=${{ github.ref_name == '66-setup-helios-deployment' }}
             type=ref,event=branch
             type=ref,event=pr
 
