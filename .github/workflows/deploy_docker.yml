@@ -1,0 +1,101 @@
+name: Deploy Docker Image
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+      client_image_tag:
+        default: "latest"
+        type: string
+      application_server_image_tag:
+        default: "latest"
+        type: string
+      webhook_listener_image_tag:
+        default: "latest"
+        type: string
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ inputs.environment }}
+    steps:
+      - name: SSH to VM and Execute Docker-Compose Down
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ vars.VM_HOST }}
+          username: ${{ secrets.VM_USERNAME }}
+          key: ${{ secrets.VM_SSH_PRIVATE_KEY }}
+          proxy_host: ${{ vars.DEPLOYMENT_GATEWAY_HOST }}
+          proxy_username: ${{ vars.DEPLOYMENT_GATEWAY_USER }}
+          proxy_key: ${{ secrets.DEPLOYMENT_GATEWAY_SSH_KEY }}
+          proxy_port: ${{ vars.DEPLOYMENT_GATEWAY_PORT }}
+          script_stop: true
+          script: |
+            cd ${{ vars.WORKING_DIR }}
+            docker compose -f compose.prod.yaml down --remove-orphans --rmi all
+
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: Copy Docker Compose File From Repo to VM Host
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ vars.VM_HOST }}
+          username: ${{ secrets.VM_USERNAME }}
+          key: ${{ secrets.VM_SSH_PRIVATE_KEY }}
+          proxy_host: ${{ vars.DEPLOYMENT_GATEWAY_HOST }}
+          proxy_username: ${{ vars.DEPLOYMENT_GATEWAY_USER }}
+          proxy_key: ${{ secrets.DEPLOYMENT_GATEWAY_SSH_KEY }}
+          proxy_port: ${{ vars.DEPLOYMENT_GATEWAY_PORT }}
+          source: "./compose.prod.yaml"
+          target: ${{ vars.WORKING_DIR }}
+
+      - name: SSH to VM and create .env file
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ vars.VM_HOST }}
+          username: ${{ secrets.VM_USERNAME }}
+          key: ${{ secrets.VM_SSH_PRIVATE_KEY }}
+          proxy_host: ${{ vars.DEPLOYMENT_GATEWAY_HOST }}
+          proxy_username: ${{ vars.DEPLOYMENT_GATEWAY_USER }}
+          proxy_key: ${{ secrets.DEPLOYMENT_GATEWAY_SSH_KEY }}
+          proxy_port: ${{ vars.DEPLOYMENT_GATEWAY_PORT }}
+          script_stop: true
+          script: |
+            cd ${{ vars.WORKING_DIR }}
+            touch .env
+            echo "ENVIRONMENT=${{ vars.ENVIRONMENT }}" > .env
+            echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" >> .env
+            echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env
+            echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" >> .env
+            echo "SPRING_PROFILES_ACTIVE=${{ vars.SPRING_PROFILES_ACTIVE }}" >> .env
+            echo "DATASOURCE_URL=${{ secrets.DATASOURCE_URL }}" >> .env
+            echo "DATASOURCE_USERNAME=${{ secrets.DATASOURCE_USERNAME }}" >> .env
+            echo "DATASOURCE_PASSWORD=${{ secrets.DATASOURCE_PASSWORD }}" >> .env
+            echo "NATS_SERVER=${{ secrets.NATS_SERVER }}" >> .env
+            echo "NATS_AUTH_TOKEN=${{ secrets.NATS_AUTH_TOKEN }}" >> .env
+            echo "WEBHOOK_SECRET=${{ secrets.WEBHOOK_SECRET }}" >> .env
+            echo "REPOSITORY_NAME=${{ vars.REPOSITORY_NAME }}" >> .env
+            echo "ORGANIZATION_NAME=${{ vars.ORGANIZATION_NAME }}" >> .env
+            echo "GITHUB_AUTH_TOKEN=${{ secrets.GH_AUTH_TOKEN }}" >> .env
+
+            echo "CLIENT_IMAGE_TAG=${{ inputs.client_image_tag }}" >> .env
+            echo "APPLICATION_SERVER_IMAGE_TAG=${{ inputs.application_server_image_tag }}" >> .env
+            echo "WEBHOOK_LISTENER_IMAGE_TAG=${{ inputs.webhook_listener_image_tag }}" >> .env
+
+      - name: SSH to VM and Execute Docker-Compose Up
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ vars.VM_HOST }}
+          username: ${{ secrets.VM_USERNAME }}
+          key: ${{ secrets.VM_SSH_PRIVATE_KEY }}
+          proxy_host: ${{ vars.DEPLOYMENT_GATEWAY_HOST }}
+          proxy_username: ${{ vars.DEPLOYMENT_GATEWAY_USER }}
+          proxy_key: ${{ secrets.DEPLOYMENT_GATEWAY_SSH_KEY }}
+          proxy_port: ${{ vars.DEPLOYMENT_GATEWAY_PORT }}
+          script: |
+            cd ${{ vars.WORKING_DIR }}
+            docker compose -f compose.prod.yaml --env-file=.env up --pull=always -d

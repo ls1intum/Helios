@@ -1,0 +1,83 @@
+services:
+  postgres:
+    image: 'postgres:16-alpine'
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_USER=${POSTGRES_USER}
+    ports:
+      - '5432:5432'
+    volumes:
+      - db-data:/var/lib/postgresql/data
+  
+  webhook-listener:
+    build:
+      context: server/webhook-listener
+    ports:
+      - '4200:4200'
+    environment:
+      - NATS_AUTH_TOKEN=${NATS_AUTH_TOKEN}
+      - WEBHOOK_SECRET=${WEBHOOK_SECRET}
+      - NATS_URL=nats-server
+    depends_on:
+      - nats-server
+
+
+  nats-server:
+    image: nats:alpine
+    ports:
+      - "4222:4222"
+      - "8222:8222"
+    command: [ "/bin/sh", "-c", "echo 'listen: \"0.0.0.0:4222\"\n\nhttp_port: 8222\n\njetstream {\n  store_dir: \"/data\"\n}\n\nauthorization {\n  token: \"${NATS_AUTH_TOKEN}\"\n}' > /etc/nats/nats-server.conf.template && sed 's|{{NATS_AUTH_TOKEN}}|'\"$NATS_AUTH_TOKEN\"'|g' /etc/nats/nats-server.conf.template > /etc/nats/nats-server.conf && exec nats-server --config /etc/nats/nats-server.conf" ]
+    environment:
+      - NATS_AUTH_TOKEN=${NATS_AUTH_TOKEN}
+    volumes:
+      - nats-data:/data
+    healthcheck:
+      test: [ "CMD", "wget", "--spider", "--quiet", "http://localhost:8222/healthz" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 3s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  client:
+    container_name: client
+    command: sh -c "yarn dev"
+    build:
+      context: ./client
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./client:/usr/src/app/
+      - /usr/src/app/node_modules/
+    ports:
+      - "80:4200"
+
+  application-server:
+    build:
+      context: server/application-server
+    ports:
+      - '8080:8080'
+    environment:
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
+      - DATASOURCE_URL=${DATASOURCE_URL}
+      - DATASOURCE_USERNAME=${DATASOURCE_USERNAME}
+      - DATASOURCE_PASSWORD=${DATASOURCE_PASSWORD}
+      - NATS_SERVER=${NATS_SERVER}
+      - NATS_AUTH_TOKEN=${NATS_AUTH_TOKEN}
+      - ORGANIZATION_NAME=${ORGANIZATION_NAME}
+      - GITHUB_AUTH_TOKEN=${GITHUB_AUTH_TOKEN}
+      - REPOSITORY_NAME=${REPOSITORY_NAME}
+
+    depends_on:
+      - postgres
+      - nats-server
+      - webhook-listener
+
+volumes:
+  db-data:
+  nats-data:
