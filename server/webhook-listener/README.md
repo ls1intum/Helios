@@ -15,8 +15,8 @@ A service to listen GitHub webhooks and publish the data to NATS JetStream.
 Clone the Helios repository to your local machine.
 
 ```bash
-$ git clone https://github.com/ls1intum/Helios.git
-$ cd helios/server/webhook-listener
+git clone https://github.com/ls1intum/Helios.git
+cd helios/server/webhook-listener
 ```
 
 ### 2. Create a virtual environment and install dependencies
