@@ -20,6 +20,7 @@ module.exports = [
   },
   {
     files: ['src/**/*.ts'],
+    extends: [ 'prettier'],
     languageOptions: {
       parser: typescriptParser,
       parserOptions: {

@@ -96,7 +96,7 @@ public class NatsConsumerService {
             throw new IllegalArgumentException("NATS server configuration is missing.");
         }
         if (repositoriesToMonitor == null || repositoriesToMonitor.length == 0) {
-            throw new IllegalArgumentException("No repositories to monitor are configured.");
+            log.warn("No repositories to monitor are configured.");
         }
     }
 

@@ -1,4 +1,16 @@
 {
     "java.debug.settings.hotCodeReplace": "auto",
-    "java.configuration.updateBuildConfiguration": "interactive"
+    "java.configuration.updateBuildConfiguration": "interactive",
+    "sqltools.connections": [
+        {
+            "previewLimit": 50,
+            "server": "localhost",
+            "port": 5432,
+            "driver": "PostgreSQL",
+            "name": "application-service-dev",
+            "password": "helios",
+            "username": "helios",
+            "database": "helios"
+        }
+    ]
 }

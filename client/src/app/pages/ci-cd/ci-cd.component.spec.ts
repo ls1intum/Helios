@@ -1,17 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { PrListComponent } from './pr-list.component';
+import { CiCdComponent } from './ci-cd.component';
 
-describe('PrListComponent', () => {
-  let component: PrListComponent;
-  let fixture: ComponentFixture<PrListComponent>;
+describe('CiCdComponent', () => {
+  let component: CiCdComponent;
+  let fixture: ComponentFixture<CiCdComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [PrListComponent],
-    }).compileComponents();
+      imports: [CiCdComponent]
+    })
+    .compileComponents();
 
-    fixture = TestBed.createComponent(PrListComponent);
+    fixture = TestBed.createComponent(CiCdComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

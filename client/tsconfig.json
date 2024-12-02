@@ -31,11 +31,18 @@
       // Spartan-NG paths (omitted)
     }
   },
-  "include": ["src/**/*.ts"],
-  "exclude": ["node_modules", "dist", "out-tsc"],
+  "include": [
+    "src/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "out-tsc"
+  ],
   "angularCompilerOptions": {
     "enableI18nLegacyMessageIdFormat": false,
     "strictInjectionParameters": true,
+    "strictStandalone": true,
     "strictInputAccessModifiers": true,
     "strictTemplates": true
   }

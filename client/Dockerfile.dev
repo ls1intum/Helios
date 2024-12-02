@@ -1,4 +1,4 @@
-FROM alpine:3.18
+FROM alpine:3.20
 
 # Create app directory
 RUN mkdir -p /usr/src/app
