@@ -58,7 +58,6 @@ services:
       - "80:4200"
 
   application-server:
-    image: ghcr.io/ls1intum/helios/application-server:latest
     build:
       context: server/application-server
     ports:
