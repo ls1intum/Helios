@@ -1,0 +1,24 @@
+<p-table [value]="branches()" [loading]="isLoading()" styleClass="p-datatable-sm">
+  <ng-template pTemplate="header">
+    <tr>
+      <th>Name</th>
+      <th>Repository</th>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="body" let-branch>
+    <tr>
+      <td>
+        <div class="flex align-items-center gap-2">
+          <span class="font-bold">{{ branch.name }}</span>
+          <!-- <button pButton class="p-button-text p-button-sm" (click)="openPR(pr.htmlUrl)"><i-tabler name="external-link"></i-tabler></button> -->
+        </div>
+      </td>
+      <td>
+        <div class="flex align-items-center gap-2">
+          <span class="font-bold">{{ branch.repository.name }}</span>
+          <!-- <button pButton class="p-button-text p-button-sm" (click)="openPR(pr.htmlUrl)"><i-tabler name="external-link"></i-tabler></button> -->
+        </div>
+      </td>
+    </tr>
+  </ng-template>
+</p-table>
