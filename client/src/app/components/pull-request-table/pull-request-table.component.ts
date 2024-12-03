@@ -1,5 +1,5 @@
 import { Component, inject, Injectable, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { TableModule } from 'primeng/table';
 import { AvatarModule } from 'primeng/avatar';
 import { TagModule } from 'primeng/tag';
@@ -12,7 +12,7 @@ import { SkeletonModule } from 'primeng/skeleton';
 
 @Component({
   selector: 'app-pull-request-table',
-  imports: [CommonModule, TableModule, AvatarModule, TagModule, IconsModule, SkeletonModule],
+  imports: [TableModule, AvatarModule, TagModule, IconsModule, SkeletonModule],
   templateUrl: './pull-request-table.component.html',
   styles: [`
     :host ::ng-deep {
