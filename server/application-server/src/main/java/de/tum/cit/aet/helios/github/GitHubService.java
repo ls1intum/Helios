@@ -1,5 +1,6 @@
 package de.tum.cit.aet.helios.github;
 
+import de.tum.cit.aet.helios.deployment.GitHubDeployment;
 import jakarta.annotation.PostConstruct;
 import okhttp3.Request.Builder;
 
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Service;
 import lombok.extern.log4j.Log4j2;
 
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -156,5 +158,16 @@ public class GitHubService {
             log.error("Error occurred while fetching environments: {}", e.getMessage());
             throw e;
         }
+    }
+
+    /**
+     * Retrieves a GitHub deployment iterator for a given repository and environment.
+     *
+     * @param repository      the GitHub repository as a GHRepository object
+     * @param environmentName the environment name
+     * @return a GitHubDeploymentIterator object
+     */
+    public Iterator<GitHubDeployment> getDeploymentIterator(GHRepository repository, String environmentName) {
+        return new GitHubDeploymentIterator(repository, environmentName, okHttpClient, requestBuilder, objectMapper);
     }
 }

@@ -1,6 +1,7 @@
 package de.tum.cit.aet.helios.github.sync;
 
 
+import de.tum.cit.aet.helios.deployment.github.GitHubDeploymentSyncService;
 import de.tum.cit.aet.helios.environment.github.GitHubEnvironmentSyncService;
 import de.tum.cit.aet.helios.pullrequest.github.GitHubPullRequestSyncService;
 import de.tum.cit.aet.helios.branch.github.GitHubBranchSyncService;
@@ -32,6 +33,7 @@ public class GitHubDataSyncService {
     private final GitHubWorkflowSyncService workflowSyncService;
     private final GitHubBranchSyncService branchSyncService;
     private final GitHubEnvironmentSyncService environmentSyncService;
+    private final GitHubDeploymentSyncService deploymentSyncService;
 
     public GitHubDataSyncService(
             DataSyncStatusRepository dataSyncStatusRepository, GitHubUserSyncService userSyncService,
@@ -39,7 +41,7 @@ public class GitHubDataSyncService {
             GitHubPullRequestSyncService pullRequestSyncService,
             GitHubWorkflowSyncService workflowSyncService,
             GitHubBranchSyncService branchSyncService,
-            GitHubEnvironmentSyncService environmentSyncService) {
+            GitHubEnvironmentSyncService environmentSyncService, GitHubDeploymentSyncService deploymentSyncService) {
         this.dataSyncStatusRepository = dataSyncStatusRepository;
         this.userSyncService = userSyncService;
         this.repositorySyncService = repositorySyncService;
@@ -47,6 +49,7 @@ public class GitHubDataSyncService {
         this.workflowSyncService = workflowSyncService;
         this.branchSyncService = branchSyncService;
         this.environmentSyncService = environmentSyncService;
+        this.deploymentSyncService = deploymentSyncService;
     }
 
     @Transactional
@@ -76,6 +79,9 @@ public class GitHubDataSyncService {
 
         // Sync environments
         environmentSyncService.syncEnvironmentsOfAllRepositories(repositories);
+
+        // Sync deployments
+        deploymentSyncService.syncDeploymentsOfAllRepositories(repositories);
 
         // Sync users
         userSyncService.syncAllExistingUsers();
