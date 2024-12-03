@@ -21,21 +21,18 @@ export class PipelineComponent {
   pipeline = signal<Pipeline | null>(null);
   isLoading = signal(true);
 
-  commitSha: InputSignal<string> = input('');
   branchName: InputSignal<string> = input('');
   pullRequestId: InputSignal<number|undefined> = input();
 
   query = injectQuery(() => ({
-    queryKey: ['pipeline', this.commitSha(), this.branchName(), this.pullRequestId()],
-    enabled: !!this.commitSha() && (!!this.branchName() || !!this.pullRequestId()),
+    queryKey: ['pipeline', this.branchName(), this.pullRequestId()],
+    enabled: !!this.branchName() || !!this.pullRequestId(),
     queryFn: () => {
-      const commitSha = this.commitSha();
-      console.log('commitSha', commitSha);
       const branchName = this.branchName();
 
       const pipeline = branchName ?
-        this.pipelineService.getBranchPipeline(branchName, this.commitSha()) :
-        this.pipelineService.getPullRequestPipeline(this.pullRequestId() || 0, this.commitSha());
+        this.pipelineService.getBranchPipeline(branchName) :
+        this.pipelineService.getPullRequestPipeline(this.pullRequestId() || 0);
 
       return pipeline
         .pipe(
@@ -45,6 +42,6 @@ export class PipelineComponent {
           })
         ).subscribe()
       },
-    refetchInterval: 5000, // Refetch every 5 seconds
+    refetchInterval: 2000, // Refetch every 2 seconds
   }));
 }

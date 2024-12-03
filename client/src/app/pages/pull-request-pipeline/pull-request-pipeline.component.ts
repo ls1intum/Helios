@@ -20,8 +20,6 @@ import { InputTextModule } from 'primeng/inputtext';
 })
 export class PullRequestPipelineComponent {
   pullRequestId: Signal<number> = input.required();
-  commitSha: Signal<string> = input.required();
-
   fetchEnvironments = inject(FetchEnvironmentService);
   environments = this.fetchEnvironments.getEnvironments().data;
 }

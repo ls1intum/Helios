@@ -13,27 +13,23 @@ public class WorkflowRunController {
     @Autowired
     private WorkflowRunService workflowRunService;
 
-    @GetMapping("/pr/{pullRequestId}/commit/{commitSha}")
-    public ResponseEntity<List<WorkflowRunDTO>> getLatestWorkflowRunsByPullRequestIdAndHeadCommitSha(
-        @PathVariable Long pullRequestId,
-        @PathVariable String commitSha
+    @GetMapping("/pr/{pullRequestId}")
+    public ResponseEntity<List<WorkflowRunDTO>> getLatestWorkflowRunsByPullRequestIdAndHeadCommit(
+        @PathVariable Long pullRequestId
     ) {
-        var workflowRuns = workflowRunService.getLatestWorkflowRunsByPullRequestIdAndHeadCommitSha(
-            pullRequestId,    
-            commitSha
+        var workflowRuns = workflowRunService.getLatestWorkflowRunsByPullRequestIdAndHeadCommit(
+            pullRequestId    
         );
 
         return ResponseEntity.ok(workflowRuns);
     }
 
-    @GetMapping("/branch/{branch}/commit/{commitSha}")
-    public ResponseEntity<List<WorkflowRunDTO>> getLatestWorkflowRunsByBranchAndHeadCommitSha(
-        @PathVariable String branch,
-        @PathVariable String commitSha
+    @GetMapping("/branch/{branch}")
+    public ResponseEntity<List<WorkflowRunDTO>> getLatestWorkflowRunsByBranchAndHeadCommit(
+        @PathVariable String branch
     ) {
         var workflowRuns = workflowRunService.getLatestWorkflowRunsByBranchAndHeadCommitSha(
-            branch,
-            commitSha
+            branch
         );
 
         return ResponseEntity.ok(workflowRuns);

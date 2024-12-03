@@ -29,7 +29,7 @@ export const routes: Routes = [
   {
     path: 'pipeline',
     children: [
-      { path: 'pr/:pullRequestId/commit/:commitSha', component: PullRequestPipelineComponent },
+      { path: 'pr/:pullRequestId', component: PullRequestPipelineComponent },
     ]
   },
   {

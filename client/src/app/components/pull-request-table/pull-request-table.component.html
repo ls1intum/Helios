@@ -39,7 +39,7 @@
         {{ formatDate(pr.createdAt) }}
       </td>
       <td>
-        <a [routerLink]="'/pipeline/pr/' + pr.id + '/commit/' + pr.headSha" class="p-button font-bold p-button-sm">View pipeline</a>
+        <a [routerLink]="'/pipeline/pr/' + pr.id" class="p-button font-bold p-button-sm">View latest</a>
       </td>
     </tr>
   </ng-template>

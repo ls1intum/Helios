@@ -95,19 +95,15 @@ export class WorkflowRunControllerService implements WorkflowRunControllerServic
 
     /**
      * @param branch 
-     * @param commitSha 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
-    public getLatestWorkflowRunsByBranchAndHeadCommitSha(branch: string, commitSha: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<Array<WorkflowRunDTO>>;
-    public getLatestWorkflowRunsByBranchAndHeadCommitSha(branch: string, commitSha: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<Array<WorkflowRunDTO>>>;
-    public getLatestWorkflowRunsByBranchAndHeadCommitSha(branch: string, commitSha: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<Array<WorkflowRunDTO>>>;
-    public getLatestWorkflowRunsByBranchAndHeadCommitSha(branch: string, commitSha: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+    public getLatestWorkflowRunsByBranchAndHeadCommit(branch: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<Array<WorkflowRunDTO>>;
+    public getLatestWorkflowRunsByBranchAndHeadCommit(branch: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<Array<WorkflowRunDTO>>>;
+    public getLatestWorkflowRunsByBranchAndHeadCommit(branch: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<Array<WorkflowRunDTO>>>;
+    public getLatestWorkflowRunsByBranchAndHeadCommit(branch: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
         if (branch === null || branch === undefined) {
-            throw new Error('Required parameter branch was null or undefined when calling getLatestWorkflowRunsByBranchAndHeadCommitSha.');
-        }
-        if (commitSha === null || commitSha === undefined) {
-            throw new Error('Required parameter commitSha was null or undefined when calling getLatestWorkflowRunsByBranchAndHeadCommitSha.');
+            throw new Error('Required parameter branch was null or undefined when calling getLatestWorkflowRunsByBranchAndHeadCommit.');
         }
 
         let localVarHeaders = this.defaultHeaders;
@@ -146,7 +142,7 @@ export class WorkflowRunControllerService implements WorkflowRunControllerServic
             }
         }
 
-        let localVarPath = `/api/workflows/branch/${this.configuration.encodeParam({name: "branch", value: branch, in: "path", style: "simple", explode: false, dataType: "string", dataFormat: undefined})}/commit/${this.configuration.encodeParam({name: "commitSha", value: commitSha, in: "path", style: "simple", explode: false, dataType: "string", dataFormat: undefined})}`;
+        let localVarPath = `/api/workflows/branch/${this.configuration.encodeParam({name: "branch", value: branch, in: "path", style: "simple", explode: false, dataType: "string", dataFormat: undefined})}`;
         return this.httpClient.request<Array<WorkflowRunDTO>>('get', `${this.configuration.basePath}${localVarPath}`,
             {
                 context: localVarHttpContext,
@@ -162,19 +158,15 @@ export class WorkflowRunControllerService implements WorkflowRunControllerServic
 
     /**
      * @param pullRequestId 
-     * @param commitSha 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
-    public getLatestWorkflowRunsByPullRequestIdAndHeadCommitSha(pullRequestId: number, commitSha: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<Array<WorkflowRunDTO>>;
-    public getLatestWorkflowRunsByPullRequestIdAndHeadCommitSha(pullRequestId: number, commitSha: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<Array<WorkflowRunDTO>>>;
-    public getLatestWorkflowRunsByPullRequestIdAndHeadCommitSha(pullRequestId: number, commitSha: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<Array<WorkflowRunDTO>>>;
-    public getLatestWorkflowRunsByPullRequestIdAndHeadCommitSha(pullRequestId: number, commitSha: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+    public getLatestWorkflowRunsByPullRequestIdAndHeadCommit(pullRequestId: number, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<Array<WorkflowRunDTO>>;
+    public getLatestWorkflowRunsByPullRequestIdAndHeadCommit(pullRequestId: number, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<Array<WorkflowRunDTO>>>;
+    public getLatestWorkflowRunsByPullRequestIdAndHeadCommit(pullRequestId: number, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<Array<WorkflowRunDTO>>>;
+    public getLatestWorkflowRunsByPullRequestIdAndHeadCommit(pullRequestId: number, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
         if (pullRequestId === null || pullRequestId === undefined) {
-            throw new Error('Required parameter pullRequestId was null or undefined when calling getLatestWorkflowRunsByPullRequestIdAndHeadCommitSha.');
-        }
-        if (commitSha === null || commitSha === undefined) {
-            throw new Error('Required parameter commitSha was null or undefined when calling getLatestWorkflowRunsByPullRequestIdAndHeadCommitSha.');
+            throw new Error('Required parameter pullRequestId was null or undefined when calling getLatestWorkflowRunsByPullRequestIdAndHeadCommit.');
         }
 
         let localVarHeaders = this.defaultHeaders;
@@ -213,7 +205,7 @@ export class WorkflowRunControllerService implements WorkflowRunControllerServic
             }
         }
 
-        let localVarPath = `/api/workflows/pr/${this.configuration.encodeParam({name: "pullRequestId", value: pullRequestId, in: "path", style: "simple", explode: false, dataType: "number", dataFormat: "int64"})}/commit/${this.configuration.encodeParam({name: "commitSha", value: commitSha, in: "path", style: "simple", explode: false, dataType: "string", dataFormat: undefined})}`;
+        let localVarPath = `/api/workflows/pr/${this.configuration.encodeParam({name: "pullRequestId", value: pullRequestId, in: "path", style: "simple", explode: false, dataType: "number", dataFormat: "int64"})}`;
         return this.httpClient.request<Array<WorkflowRunDTO>>('get', `${this.configuration.basePath}${localVarPath}`,
             {
                 context: localVarHttpContext,

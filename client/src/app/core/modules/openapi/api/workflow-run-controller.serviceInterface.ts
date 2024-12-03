@@ -26,16 +26,14 @@ export interface WorkflowRunControllerServiceInterface {
      * 
      * 
      * @param branch 
-     * @param commitSha 
      */
-    getLatestWorkflowRunsByBranchAndHeadCommitSha(branch: string, commitSha: string, extraHttpRequestParams?: any): Observable<Array<WorkflowRunDTO>>;
+    getLatestWorkflowRunsByBranchAndHeadCommit(branch: string, extraHttpRequestParams?: any): Observable<Array<WorkflowRunDTO>>;
 
     /**
      * 
      * 
      * @param pullRequestId 
-     * @param commitSha 
      */
-    getLatestWorkflowRunsByPullRequestIdAndHeadCommitSha(pullRequestId: number, commitSha: string, extraHttpRequestParams?: any): Observable<Array<WorkflowRunDTO>>;
+    getLatestWorkflowRunsByPullRequestIdAndHeadCommit(pullRequestId: number, extraHttpRequestParams?: any): Observable<Array<WorkflowRunDTO>>;
 
 }

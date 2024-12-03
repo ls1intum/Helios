@@ -2,6 +2,9 @@ package de.tum.cit.aet.helios.workflow;
 
 import org.springframework.stereotype.Service;
 
+import de.tum.cit.aet.helios.branch.BranchRepository;
+import de.tum.cit.aet.helios.pullrequest.PullRequestRepository;
+
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -11,9 +14,15 @@ import java.util.stream.Stream;
 public class WorkflowRunService {
 
     private final WorkflowRunRepository workflowRunRepository;
+    private final PullRequestRepository pullRequestRepository;
+    private final BranchRepository branchRepository;
 
-    public WorkflowRunService(WorkflowRunRepository workflowRunRepository) {
+    public WorkflowRunService(WorkflowRunRepository workflowRunRepository,
+                              PullRequestRepository pullRequestRepository,
+                              BranchRepository branchRepository) {
         this.workflowRunRepository = workflowRunRepository;
+        this.pullRequestRepository = pullRequestRepository;
+        this.branchRepository = branchRepository;
     }
 
     public List<WorkflowRun> getAllWorkflowRuns() {
@@ -28,11 +37,11 @@ public class WorkflowRunService {
             .map(workflowRuns -> workflowRuns.stream().max(Comparator.comparing(WorkflowRun::getRunNumber)).get());
     }
 
-    public List<WorkflowRunDTO> getLatestWorkflowRunsByPullRequestIdAndHeadCommitSha(
-        Long pullRequestId,
-        String headCommitSha
+    public List<WorkflowRunDTO> getLatestWorkflowRunsByPullRequestIdAndHeadCommit(
+        Long pullRequestId
     ) {
-        var runs = workflowRunRepository.findByPullRequestsIdAndHeadSha(pullRequestId, headCommitSha);
+        var pullRequest = pullRequestRepository.findById(pullRequestId).orElseThrow();
+        var runs = workflowRunRepository.findByPullRequestsIdAndHeadSha(pullRequestId, pullRequest.getHeadSha());
         var latestRuns = getLatestWorkflowRuns(runs);
         
         return latestRuns
@@ -41,10 +50,11 @@ public class WorkflowRunService {
     }
 
     public List<WorkflowRunDTO> getLatestWorkflowRunsByBranchAndHeadCommitSha(
-        String branch,
-        String headCommitSha
+        String branchName
     ) {
-        var runs = workflowRunRepository.findByHeadBranchAndHeadShaAndPullRequestsIsNull(branch, headCommitSha);
+        var branch = branchRepository.findByName(branchName).orElseThrow();
+
+        var runs = workflowRunRepository.findByHeadBranchAndHeadShaAndPullRequestsIsNull(branchName, branch.getCommit_sha());
         var latestRuns = getLatestWorkflowRuns(runs);
         
         return latestRuns

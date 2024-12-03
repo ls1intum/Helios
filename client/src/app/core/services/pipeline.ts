@@ -20,14 +20,18 @@ const predefinedGroups: { label: string, matcher: Array<string> | ((name: string
     label: 'Helper',
     matcher: ['Pull Request Labeler']
   },
+  {
+    label: 'All',
+    matcher: () => true,
+  }
 ];
 
 @Injectable()
 export class PipelineService {
   private controllerService = inject(WorkflowRunControllerService);
 
-  getPullRequestPipeline(pullRequestId: number, commitSha: string): Observable<Pipeline | null> {
-    return this.controllerService.getLatestWorkflowRunsByPullRequestIdAndHeadCommitSha(pullRequestId, commitSha)
+  getPullRequestPipeline(pullRequestId: number): Observable<Pipeline | null> {
+    return this.controllerService.getLatestWorkflowRunsByPullRequestIdAndHeadCommit(pullRequestId)
       .pipe(
         map(runs => {
           const groups = this.groupRuns(runs);
@@ -43,8 +47,8 @@ export class PipelineService {
       );
   }
 
-  getBranchPipeline(branch: string, commitSha: string): Observable<Pipeline | null> {
-    return this.controllerService.getLatestWorkflowRunsByBranchAndHeadCommitSha(branch, commitSha)
+  getBranchPipeline(branch: string): Observable<Pipeline | null> {
+    return this.controllerService.getLatestWorkflowRunsByBranchAndHeadCommit(branch)
       .pipe(
         map(runs => {
           const groups = this.groupRuns(runs);

@@ -25,11 +25,11 @@ paths:
             application/json:
               schema:
                 type: string
-  /api/workflows/pr/{pullRequestId}/commit/{commitSha}:
+  /api/workflows/pr/{pullRequestId}:
     get:
       tags:
       - workflow-run-controller
-      operationId: getLatestWorkflowRunsByPullRequestIdAndHeadCommitSha
+      operationId: getLatestWorkflowRunsByPullRequestIdAndHeadCommit
       parameters:
       - name: pullRequestId
         in: path
@@ -37,11 +37,6 @@ paths:
         schema:
           type: integer
           format: int64
-      - name: commitSha
-        in: path
-        required: true
-        schema:
-          type: string
       responses:
         "200":
           description: OK
@@ -51,18 +46,13 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/WorkflowRunDTO"
-  /api/workflows/branch/{branch}/commit/{commitSha}:
+  /api/workflows/branch/{branch}:
     get:
       tags:
       - workflow-run-controller
-      operationId: getLatestWorkflowRunsByBranchAndHeadCommitSha
+      operationId: getLatestWorkflowRunsByBranchAndHeadCommit
       parameters:
       - name: branch
-        in: path
-        required: true
-        schema:
-          type: string
-      - name: commitSha
         in: path
         required: true
         schema:
