@@ -1,37 +1,50 @@
-<div class="card-container">
-    <p-card header="Connect your Repository" [style]="{ width: '360px' }">
-        <p>
+<div class="flex justify-start items-center min-h-screen mt-10 flex-col gap-x-40">
+    <p-card header="Connect your Repository" class="w-3/5">
+        <p class="mb-6">
             Paste the link to your GitHub repository and a personal access token to connect your repository to the
             platform.
         </p>
+        <div class="mb-1 gap-3">
+            <div class="pt-6">
+                <p-floatLabel>
+                    <input id="token" type="text" pInputText [value]="token()" class="w-full"
+                        (input)="token.set($any($event).target.value)" required />
+                    <label for="token">Personal Access Token</label>
+                </p-floatLabel>
+            </div>
+            <div class="pt-6">
+                <p-floatLabel>
+                    <input id="repoLink" type="text" pInputText [value]="repoLink()" class="w-full"
+                        (input)="repoLink.set($any($event).target.value)" required />
+                    <label for="repoLink">GitHub Repository Link</label>
+                </p-floatLabel>
+            </div>
+        </div>
         <ng-template pTemplate="footer">
-            <div class="flex gap-3 mt-1">
+            <div class="flex gap-3 mt-5">
                 <p-button label="Test connection" class="w-full" styleClass="w-full" (click)="fetchRepositoryInfo()"
                     [disabled]="!token() || !repoLink()" />
             </div>
         </ng-template>
-        <div fxLayout="column" fxLayoutAlign="space-around start" fxLayoutGap="20px">
-            <p-floatLabel class="mt-5">
-                <input id="token" type="text" pInputText [value]="token()" class="w-full"
-                    (input)="token.set($any($event).target.value)" required />
-                <label for="token">Personal Access Token</label>
-            </p-floatLabel>
-            <p-floatLabel class="mt-5">
-                <input id="repoLink" type="text" pInputText [value]="repoLink()" class="w-full"
-                    (input)="repoLink.set($any($event).target.value)" required />
-                <label for="repoLink">GitHub Repository Link</label>
-            </p-floatLabel>
-        </div>
     </p-card>
 
-    <div *ngIf="repositoryInfo()">
-        <h2>Repository Information:</h2>
-        <p><strong>Name:</strong> {{ repositoryInfo().name }}</p>
-        <p><strong>Description:</strong> {{ repositoryInfo().description }}</p>
-        <p><strong>Stars:</strong> {{ repositoryInfo().stargazers_count }}</p>
-        <p><strong>Language:</strong> {{ repositoryInfo().language }}</p>
-        <p><strong>URL:</strong> <a href="{{ repositoryInfo().html_url }}" target="_blank">{{
-                repositoryInfo().html_url }}</a></p>
+    <div *ngIf="repositoryInfo()" class="mt-10 p-6 bg-gray-100 rounded">
+        <h2 class="mb-4 text-xl font-bold">Repository Information:</h2>
+        <div class="mb-4">
+            <strong class="font-bold">Name:</strong> {{ repositoryInfo().name }}
+        </div>
+        <div class="mb-4">
+            <strong class="font-bold">Description:</strong> {{ repositoryInfo().description }}
+        </div>
+        <div class="mb-4">
+            <strong class="font-bold">Stars:</strong> {{ repositoryInfo().stargazers_count }}
+        </div>
+        <div class="mb-4">
+            <strong class="font-bold">Language:</strong> {{ repositoryInfo().language }}
+        </div>
+        <div class="mb-4">
+            <strong class="font-bold">URL:</strong> <a href="{{ repositoryInfo().html_url }}" target="_blank">{{
+                repositoryInfo().html_url }}</a>
+        </div>
     </div>
-
 </div>
