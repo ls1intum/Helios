@@ -45,20 +45,27 @@ export class BranchTableComponent {
     },
   }));
 
-  // openBranch(url: string): void {
-  //   window.open(url, '_blank');
-  // }
+  openLink(url: string): void {
+    window.open(url, '_blank');
+  }
 }
 
 @Injectable({
   providedIn: 'root'
 })
 export class BranchStoreService {
-  private branchesState = signal<BranchInfoDTO[]>([]);
+  private branchesState = signal<BranchInforWithLink[]>([]);
   get branches() {
     return this.branchesState.asReadonly();
   }
   setBranches(branches: BranchInfoDTO[]) {
-    this.branchesState.set(branches);
+    branches = branches.map(branch => ({
+      ...branch,
+      link: `https://github.com/${branch!.repository!.nameWithOwner}/tree/${branch.name}`,
+      lastCommitLink: `https://github.com/${branch!.repository!.nameWithOwner}/commit/${branch.commit_sha}`
+    }));
+    this.branchesState.set(branches as BranchInforWithLink[]);
   }
 }
+
+export type BranchInforWithLink = BranchInfoDTO & { link: string, lastCommitLink: string };

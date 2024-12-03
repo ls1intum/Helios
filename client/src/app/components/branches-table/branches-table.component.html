@@ -34,19 +34,21 @@
           <tr>
             <td>
               <div class="flex align-items-center gap-2">
-                <span class="font-bold">{{ branch.name }}</span>
-                <!-- <button pButton class="p-button-text p-button-sm" (click)="openPR(pr.htmlUrl)"><i-tabler name="external-link"></i-tabler></button> -->
+                <i-tabler name="git-branch"></i-tabler>
+                <span>{{ branch.name }}</span>
+                <button pButton class="p-button-text p-button-sm" (click)="openLink(branch.link)"><i-tabler name="external-link"></i-tabler></button>
               </div>
             </td>
             <td>
               <div class="flex align-items-center gap-2">
-                <span class="font-bold">{{ branch.commit_sha }}</span>
-                <!-- <button pButton class="p-button-text p-button-sm" (click)="openPR(pr.htmlUrl)"><i-tabler name="external-link"></i-tabler></button> -->
+                <i-tabler name="git-commit"></i-tabler>
+                <span>{{ branch.commit_sha.slice(0, 7) }}</span>
+                <button pButton class="p-button-text p-button-sm" (click)="openLink(branch.lastCommitLink)"><i-tabler name="external-link"></i-tabler></button>
               </div>
             </td>
             <td>
               <div class="flex align-items-center gap-2">
-                <span class="font-bold">{{ branch.repository.name }}</span>
+                <span>{{ branch.repository.nameWithOwner }}</span>
                 <!-- <button pButton class="p-button-text p-button-sm" (click)="openPR(pr.htmlUrl)"><i-tabler name="external-link"></i-tabler></button> -->
               </div>
             </td>
