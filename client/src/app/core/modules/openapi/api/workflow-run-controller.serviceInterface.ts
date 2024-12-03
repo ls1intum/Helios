@@ -11,7 +11,6 @@ import { HttpHeaders }                                       from '@angular/comm
 
 import { Observable }                                        from 'rxjs';
 
-import { WorkflowRun } from '../model/models';
 import { WorkflowRunDTO } from '../model/models';
 
 
@@ -22,12 +21,6 @@ import { Configuration }                                     from '../configurat
 export interface WorkflowRunControllerServiceInterface {
     defaultHeaders: HttpHeaders;
     configuration: Configuration;
-
-    /**
-     * 
-     * 
-     */
-    getAllWorkflowRuns(extraHttpRequestParams?: any): Observable<Array<WorkflowRun>>;
 
     /**
      * 
