@@ -33,7 +33,9 @@
   </ng-container>
 </div>
 <ng-template #noPipeline>
-  <ng-container *ngIf="!isLoading()">
-    <p>The pipeline could not be loaded yet. Make sure that workflows have been triggered for this commit.</p>
-  </ng-container>
+  @if (!isLoading()) {
+    <ng-container>
+      <p>The pipeline could not be loaded yet. Make sure that workflows have been triggered for this commit.</p>
+    </ng-container>
+  }
 </ng-template>
