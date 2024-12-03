@@ -1,0 +1,37 @@
+<div class="card-container">
+    <p-card header="Connect your Repository" [style]="{ width: '360px' }">
+        <p>
+            Paste the link to your GitHub repository and a personal access token to connect your repository to the
+            platform.
+        </p>
+        <ng-template pTemplate="footer">
+            <div class="flex gap-3 mt-1">
+                <p-button label="Test connection" class="w-full" styleClass="w-full" (click)="fetchRepositoryInfo()"
+                    [disabled]="!token() || !repoLink()" />
+            </div>
+        </ng-template>
+        <div fxLayout="column" fxLayoutAlign="space-around start" fxLayoutGap="20px">
+            <p-floatLabel class="mt-5">
+                <input id="token" type="text" pInputText [value]="token()" class="w-full"
+                    (input)="token.set($any($event).target.value)" required />
+                <label for="token">Personal Access Token</label>
+            </p-floatLabel>
+            <p-floatLabel class="mt-5">
+                <input id="repoLink" type="text" pInputText [value]="repoLink()" class="w-full"
+                    (input)="repoLink.set($any($event).target.value)" required />
+                <label for="repoLink">GitHub Repository Link</label>
+            </p-floatLabel>
+        </div>
+    </p-card>
+
+    <div *ngIf="repositoryInfo()">
+        <h2>Repository Information:</h2>
+        <p><strong>Name:</strong> {{ repositoryInfo().name }}</p>
+        <p><strong>Description:</strong> {{ repositoryInfo().description }}</p>
+        <p><strong>Stars:</strong> {{ repositoryInfo().stargazers_count }}</p>
+        <p><strong>Language:</strong> {{ repositoryInfo().language }}</p>
+        <p><strong>URL:</strong> <a href="{{ repositoryInfo().html_url }}" target="_blank">{{
+                repositoryInfo().html_url }}</a></p>
+    </div>
+
+</div>
