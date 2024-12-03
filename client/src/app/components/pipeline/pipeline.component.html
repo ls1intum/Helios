@@ -29,7 +29,9 @@
     </p-panel>
 
     <!-- Connection line -->
-    <div class="w-10 h-px bg-gray-300 mt-7" *ngIf="!isLast"></div>
+    @if (!isLast) {
+      <div class="w-10 h-px bg-gray-300 mt-7"></div>
+    }
   </ng-container>
 </div>
 <ng-template #noPipeline>
