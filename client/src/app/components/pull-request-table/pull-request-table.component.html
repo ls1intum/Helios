@@ -28,7 +28,7 @@
     @if (isEmpty()) {
       <p>No pull requests found.</p>
     } @else {
-      <p-table [value]="pullRequestStore.pullRequests()" styleClass="p-datatable-lg">
+      <p-table [rowHover]="true" [value]="pullRequestStore.pullRequests()" styleClass="p-datatable-lg">
         <ng-template pTemplate="header">
           <tr>
             <th>Title</th>
@@ -40,12 +40,11 @@
           </tr>
         </ng-template>
         <ng-template pTemplate="body" let-pr>
-          <tr>
+          <tr class="cursor-pointer" (click)="openPR(pr)">
             <td>
               <div class="flex align-items-center gap-2">
                 <span class="font-bold">{{ pr.title }}</span>
-                <button pButton class="p-button-text p-button-sm" (click)="openPR(pr.htmlUrl)"><i-tabler
-                name="external-link"></i-tabler></button>
+                <button pButton class="p-button-text p-button-sm" (click)="openPRExternal(pr)"><i-tabler name="external-link"></i-tabler></button>
               </div>
             </td>
             <td>
@@ -66,8 +65,7 @@
               @if (pr.assignees?.length) {
                 <div class="flex align-items-center gap-2">
                   @for (assignee of pr.assignees; track assignee) {
-                    <p-avatar [image]="assignee.avatarUrl" shape="circle"
-                    size="normal"></p-avatar>
+                    <p-avatar [image]="assignee.avatarUrl" shape="circle" size="normal"></p-avatar>
                   }
                 </div>
               }
@@ -81,6 +79,3 @@
     }
   }
 }
-
-
-

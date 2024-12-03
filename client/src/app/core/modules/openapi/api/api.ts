@@ -7,4 +7,7 @@ export * from './pull-request-controller.serviceInterface';
 export * from './status-controller.service';
 import { StatusControllerService } from './status-controller.service';
 export * from './status-controller.serviceInterface';
-export const APIS = [BranchControllerService, PullRequestControllerService, StatusControllerService];
+export * from './workflow-run-controller.service';
+import { WorkflowRunControllerService } from './workflow-run-controller.service';
+export * from './workflow-run-controller.serviceInterface';
+export const APIS = [BranchControllerService, PullRequestControllerService, StatusControllerService, WorkflowRunControllerService];

@@ -8,6 +8,8 @@ api/pull-request-controller.service.ts
 api/pull-request-controller.serviceInterface.ts
 api/status-controller.service.ts
 api/status-controller.serviceInterface.ts
+api/workflow-run-controller.service.ts
+api/workflow-run-controller.serviceInterface.ts
 configuration.ts
 encoder.ts
 git_push.sh
@@ -17,5 +19,6 @@ model/models.ts
 model/pull-request-info-dto.ts
 model/repository-info-dto.ts
 model/user-info-dto.ts
+model/workflow-run-dto.ts
 param.ts
 variables.ts

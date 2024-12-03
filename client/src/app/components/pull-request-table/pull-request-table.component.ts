@@ -8,11 +8,12 @@ import { catchError, tap } from 'rxjs';
 import { IconsModule } from 'icons.module';
 import { PullRequestControllerService, PullRequestInfoDTO } from '@app/core/modules/openapi';
 import { SkeletonModule } from 'primeng/skeleton';
+import { Router, RouterLink } from '@angular/router';
 
 
 @Component({
   selector: 'app-pull-request-table',
-  imports: [TableModule, AvatarModule, TagModule, IconsModule, SkeletonModule],
+  imports: [TableModule, AvatarModule, TagModule, IconsModule, SkeletonModule, RouterLink],
   templateUrl: './pull-request-table.component.html',
   styles: [`
     :host ::ng-deep {
@@ -32,7 +33,8 @@ export class PullRequestTableComponent {
 
   isError = signal(false);
   isEmpty = signal(false);
-  isLoading = signal(false)
+  isLoading = signal(false);
+  router = inject(Router);
 
   query = injectQuery(() => ({
     queryKey: ['pullRequests'],
@@ -74,8 +76,12 @@ export class PullRequestTableComponent {
     });
   }
 
-  openPR(url: string): void {
-    window.open(url, '_blank');
+  openPRExternal(pr: PullRequestInfoDTO): void {
+    window.open(pr.htmlUrl, '_blank');
+  }
+
+  openPR(pr: PullRequestInfoDTO): void {
+    this.router.navigate(['pipeline', 'pr', pr.id]);
   }
 }
 

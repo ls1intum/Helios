@@ -26,6 +26,8 @@ public class PullRequest extends Issue {
 
     private String mergeCommitSha;
 
+    private String headSha;
+
     private boolean isDraft;
 
     private boolean isMerged;

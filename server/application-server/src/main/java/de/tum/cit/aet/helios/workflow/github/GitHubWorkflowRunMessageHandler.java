@@ -34,6 +34,14 @@ public class GitHubWorkflowRunMessageHandler extends GitHubMessageHandler<GHEven
                 run.getUrl(),
                 action);
 
+        try {
+            eventPayload.getWorkflowRun().getPullRequests().forEach(pr -> {
+                log.info("PR: {}", pr.getUrl());
+            });
+        } catch (Exception e) {
+            log.error("Error: {}", e.getMessage());
+        }
+
         repositorySyncService.processRepository(eventPayload.getRepository());
         workflowSyncService.processRun(run);
     }
