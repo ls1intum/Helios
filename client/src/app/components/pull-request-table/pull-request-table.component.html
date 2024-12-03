@@ -7,14 +7,15 @@
       <th>Author</th>
       <th>Assignee</th>
       <th>Created</th>
+      <th>Actions</th>
     </tr>
   </ng-template>
   <ng-template pTemplate="body" let-pr>
     <tr>
       <td>
-        <div class="flex align-items-center gap-2">
+        <div class="flex items-center gap-2">
           <span class="font-bold">{{ pr.title }}</span>
-          <button pButton class="p-button-text p-button-sm" (click)="openPR(pr.htmlUrl)"><i-tabler name="external-link"></i-tabler></button>
+          <button (click)="openPR(pr.htmlUrl)"><i-tabler name="external-link"></i-tabler></button>
         </div>
       </td>
       <td>
@@ -24,18 +25,21 @@
         <p-tag [value]="getStatus(pr)" [severity]="getStatusSeverity(pr)"> </p-tag>
       </td>
       <td>
-        <div class="flex align-items-center gap-2">
+        <div class="flex items-center gap-2">
           <p-avatar [image]="pr.author.avatarUrl" shape="circle" size="normal"> </p-avatar>
           <span>{{ pr.author.name }}</span>
         </div>
       </td>
       <td>
-        <div class="flex align-items-center gap-2" *ngIf="pr.assignees?.length">
+        <div class="flex items-center gap-2" *ngIf="pr.assignees?.length">
           <p-avatar *ngFor="let assignee of pr.assignees" [image]="assignee.avatarUrl" shape="circle" size="normal"> </p-avatar>
         </div>
       </td>
       <td>
         {{ formatDate(pr.createdAt) }}
+      </td>
+      <td>
+        <a [routerLink]="'/pipeline/pr/' + pr.id + '/commit/' + pr.headSha" class="p-button font-bold p-button-sm">View pipeline</a>
       </td>
     </tr>
   </ng-template>

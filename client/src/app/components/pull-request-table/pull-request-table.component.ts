@@ -7,11 +7,13 @@ import { injectQuery } from '@tanstack/angular-query-experimental';
 import { tap } from 'rxjs';
 import { IconsModule } from 'icons.module';
 import { PullRequestControllerService, PullRequestInfoDTO } from '@app/core/modules/openapi';
+import { ButtonModule } from 'primeng/button';
+import { RouterLink } from '@angular/router';
 
 
 @Component({
   selector: 'app-pull-request-table',
-  imports: [CommonModule, TableModule, AvatarModule, TagModule, IconsModule],
+  imports: [CommonModule, TableModule, AvatarModule, TagModule, IconsModule, ButtonModule, RouterLink],
   templateUrl: './pull-request-table.component.html',
   styles: [`
     :host ::ng-deep {

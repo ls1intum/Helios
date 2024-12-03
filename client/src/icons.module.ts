@@ -18,6 +18,12 @@ import {
   IconPencil,
   IconUser,
   IconBrandGithub,
+  IconCircleCheck,
+  IconProgress,
+  IconReload,
+  IconProgressHelp,
+  IconCircleX,
+  IconCloudUpload,
 } from 'angular-tabler-icons/icons';
 
 // Select some icons (use an object, not an array)
@@ -37,7 +43,13 @@ const icons = {
   IconExternalLink,
   IconPencil,
   IconHistory,
-  IconBrandGithub
+  IconBrandGithub,
+  IconCircleCheck,
+  IconProgress,
+  IconReload,
+  IconProgressHelp,
+  IconCircleX,
+  IconCloudUpload,
 };
 
 @NgModule({
