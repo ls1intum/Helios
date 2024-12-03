@@ -1,42 +1,86 @@
-<p-table [value]="pullRequests()" [loading]="isLoading()" styleClass="p-datatable-sm">
-  <ng-template pTemplate="header">
-    <tr>
-      <th>Title</th>
-      <th>Draft</th>
-      <th>Status</th>
-      <th>Author</th>
-      <th>Assignee</th>
-      <th>Created</th>
-    </tr>
-  </ng-template>
-  <ng-template pTemplate="body" let-pr>
-    <tr>
-      <td>
-        <div class="flex align-items-center gap-2">
-          <span class="font-bold">{{ pr.title }}</span>
-          <button pButton class="p-button-text p-button-sm" (click)="openPR(pr.htmlUrl)"><i-tabler name="external-link"></i-tabler></button>
-        </div>
-      </td>
-      <td>
-        <p-tag *ngIf="pr.isDraft" value="Draft" severity="secondary"> </p-tag>
-      </td>
-      <td>
-        <p-tag [value]="getStatus(pr)" [severity]="getStatusSeverity(pr)"> </p-tag>
-      </td>
-      <td>
-        <div class="flex align-items-center gap-2">
-          <p-avatar [image]="pr.author.avatarUrl" shape="circle" size="normal"> </p-avatar>
-          <span>{{ pr.author.name }}</span>
-        </div>
-      </td>
-      <td>
-        <div class="flex align-items-center gap-2" *ngIf="pr.assignees?.length">
-          <p-avatar *ngFor="let assignee of pr.assignees" [image]="assignee.avatarUrl" shape="circle" size="normal"> </p-avatar>
-        </div>
-      </td>
-      <td>
-        {{ formatDate(pr.createdAt) }}
-      </td>
-    </tr>
-  </ng-template>
-</p-table>
+@if (isLoading()) {
+  <p-table [value]="[1, 2, 3, 4, 5]" styleClass="p-datatable-lg">
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Title</th>
+        <th>Draft</th>
+        <th>Status</th>
+        <th>Author</th>
+        <th>Assignee</th>
+        <th>Created</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body">
+      <tr>
+        <td><p-skeleton></p-skeleton></td>
+        <td></td>
+        <td><p-skeleton></p-skeleton></td>
+        <td><p-skeleton></p-skeleton></td>
+        <td><p-skeleton></p-skeleton></td>
+        <td><p-skeleton></p-skeleton></td>
+      </tr>
+    </ng-template>
+  </p-table>
+} @else {
+  @if (isError()) {
+    <p>Error occurred while fetching pull requests.</p>
+  } @else {
+    @if (isEmpty()) {
+      <p>No pull requests found.</p>
+    } @else {
+      <p-table [value]="pullRequestStore.pullRequests()" styleClass="p-datatable-lg">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Title</th>
+            <th>Draft</th>
+            <th>Status</th>
+            <th>Author</th>
+            <th>Assignee</th>
+            <th>Created</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-pr>
+          <tr>
+            <td>
+              <div class="flex align-items-center gap-2">
+                <span class="font-bold">{{ pr.title }}</span>
+                <button pButton class="p-button-text p-button-sm" (click)="openPR(pr.htmlUrl)"><i-tabler
+                name="external-link"></i-tabler></button>
+              </div>
+            </td>
+            <td>
+              @if (pr.isDraft) {
+                <p-tag value="Draft" severity="secondary"></p-tag>
+              }
+            </td>
+            <td>
+              <p-tag [value]="getStatus(pr)" [severity]="getStatusSeverity(pr)"></p-tag>
+            </td>
+            <td>
+              <div class="flex align-items-center gap-2">
+                <p-avatar [image]="pr.author.avatarUrl" shape="circle" size="normal"></p-avatar>
+                <span>{{ pr.author.name }}</span>
+              </div>
+            </td>
+            <td>
+              @if (pr.assignees?.length) {
+                <div class="flex align-items-center gap-2">
+                  @for (assignee of pr.assignees; track assignee) {
+                    <p-avatar [image]="assignee.avatarUrl" shape="circle"
+                    size="normal"></p-avatar>
+                  }
+                </div>
+              }
+            </td>
+            <td>
+              {{ formatDate(pr.createdAt) }}
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    }
+  }
+}
+
+
+
