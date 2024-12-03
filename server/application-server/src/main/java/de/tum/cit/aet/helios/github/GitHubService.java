@@ -1,9 +1,20 @@
 package de.tum.cit.aet.helios.github;
 
+import jakarta.annotation.PostConstruct;
+import okhttp3.Request.Builder;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import de.tum.cit.aet.helios.environment.GitHubEnvironment;
+import de.tum.cit.aet.helios.environment.GitHubEnvironmentResponse;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 import org.kohsuke.github.GHOrganization;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GHWorkflow;
 import org.kohsuke.github.GitHub;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import lombok.extern.log4j.Log4j2;
@@ -19,11 +30,30 @@ public class GitHubService {
 
     private final GitHubConfig gitHubConfig;
 
+    private final ObjectMapper objectMapper;
+
+    private final OkHttpClient okHttpClient;
+
+    @Value("${github.authToken}")
+    private String ghAuthToken;
+
+    // Request builder for GitHub API calls with authorization header
+    private Builder requestBuilder;
+
     private GHOrganization gitHubOrganization;
 
-    public GitHubService(GitHub github, GitHubConfig gitHubConfig) {
+    public GitHubService(GitHub github, GitHubConfig gitHubConfig, ObjectMapper objectMapper, OkHttpClient okHttpClient) {
         this.github = github;
         this.gitHubConfig = gitHubConfig;
+        this.objectMapper = objectMapper;
+        this.okHttpClient = okHttpClient;
+    }
+
+    @PostConstruct
+    public void init() {
+        this.requestBuilder = new Request.Builder()
+                .header("Authorization", "token " + ghAuthToken)
+                .header("Accept", "application/vnd.github+json");
     }
 
     /**
@@ -91,4 +121,40 @@ public class GitHubService {
         getRepository(repoNameWithOwners).getWorkflow(workflowFileNameOrId).dispatch(ref, inputs);
     }
 
+    /**
+     * Retrieves environments from a GitHub repository and maps them to the GitHubEnvironment.
+     *
+     * @param repository the GitHub repository as a GHRepository object
+     * @return a list of GitHubEnvironment objects
+     * @throws IOException if an I/O error occurs
+     */
+    public List<GitHubEnvironment> getEnvironments(GHRepository repository) throws IOException {
+        final String owner = repository.getOwnerName();
+        final String repoName = repository.getName();
+        final String url = String.format("https://api.github.com/repos/%s/%s/environments", owner, repoName);
+
+        Request request = requestBuilder
+                .url(url)
+                .build();
+
+        try (Response response = okHttpClient.newCall(request).execute()) {
+            if (!response.isSuccessful()) {
+                throw new IOException("GitHub API call failed with response code: " + response.code());
+            }
+
+            if (response.body() == null) {
+                throw new IOException("Response body is null");
+            }
+
+            String responseBody = response.body().string();
+            GitHubEnvironmentResponse envResponse = objectMapper.readValue(responseBody, GitHubEnvironmentResponse.class);
+            return envResponse.getEnvironments();
+        } catch (JsonProcessingException e) {
+            log.error("Error processing JSON response: {}", e.getMessage());
+            throw e;
+        } catch (IOException e) {
+            log.error("Error occurred while fetching environments: {}", e.getMessage());
+            throw e;
+        }
+    }
 }

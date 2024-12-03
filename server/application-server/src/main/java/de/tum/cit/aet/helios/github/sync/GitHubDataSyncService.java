@@ -1,6 +1,7 @@
 package de.tum.cit.aet.helios.github.sync;
 
 
+import de.tum.cit.aet.helios.environment.github.GitHubEnvironmentSyncService;
 import de.tum.cit.aet.helios.pullrequest.github.GitHubPullRequestSyncService;
 import de.tum.cit.aet.helios.branch.github.GitHubBranchSyncService;
 import de.tum.cit.aet.helios.gitrepo.github.GitHubRepositorySyncService;
@@ -30,19 +31,22 @@ public class GitHubDataSyncService {
     private final GitHubPullRequestSyncService pullRequestSyncService;
     private final GitHubWorkflowSyncService workflowSyncService;
     private final GitHubBranchSyncService branchSyncService;
+    private final GitHubEnvironmentSyncService environmentSyncService;
 
     public GitHubDataSyncService(
             DataSyncStatusRepository dataSyncStatusRepository, GitHubUserSyncService userSyncService,
             GitHubRepositorySyncService repositorySyncService,
             GitHubPullRequestSyncService pullRequestSyncService,
             GitHubWorkflowSyncService workflowSyncService,
-            GitHubBranchSyncService branchSyncService) {
+            GitHubBranchSyncService branchSyncService,
+            GitHubEnvironmentSyncService environmentSyncService) {
         this.dataSyncStatusRepository = dataSyncStatusRepository;
         this.userSyncService = userSyncService;
         this.repositorySyncService = repositorySyncService;
         this.pullRequestSyncService = pullRequestSyncService;
         this.workflowSyncService = workflowSyncService;
         this.branchSyncService = branchSyncService;
+        this.environmentSyncService = environmentSyncService;
     }
 
     @Transactional
@@ -66,10 +70,20 @@ public class GitHubDataSyncService {
         var startTime = OffsetDateTime.now();
 
         var repositories = repositorySyncService.syncAllMonitoredRepositories();
-        
+
+        // Sync pull requests
         pullRequestSyncService.syncPullRequestsOfAllRepositories(repositories, Optional.of(cutoffDate));
+
+        // Sync environments
+        environmentSyncService.syncEnvironmentsOfAllRepositories(repositories);
+
+        // Sync users
         userSyncService.syncAllExistingUsers();
+
+        // Sync workflows
         workflowSyncService.syncRunsOfAllRepositories(repositories, Optional.of(cutoffDate));
+
+        // Sync branches
         branchSyncService.syncBranchesOfAllRepositories(repositories);
 
         var endTime = OffsetDateTime.now();
