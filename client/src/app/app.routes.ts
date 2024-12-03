@@ -4,6 +4,7 @@ import { EnvironmentEditComponent } from './pages/environment-edit/environment-e
 import { EnvironmentListComponent } from './pages/environment-list/environment-list.component';
 import { PageNotFoundComponent } from './pages/page-not-found/page-not-found.component';
 import { ReleaseComponent } from './pages/release/release.component';
+import { ProjectSetupComponent } from './components/project-setup/project-setup.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'ci-cd', pathMatch: 'full' },
@@ -24,6 +25,10 @@ export const routes: Routes = [
     children: [
       { path: '', component: CiCdComponent },
     ],
+  },
+  {
+    path: "setup",
+    component: ProjectSetupComponent,
   },
   {
     path: '**',
