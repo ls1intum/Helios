@@ -270,10 +270,13 @@ components:
           type: string
     BranchInfoDTO:
       required:
+      - commit_sha
       - name
       type: object
       properties:
         name:
+          type: string
+        commit_sha:
           type: string
         repository:
           $ref: "#/components/schemas/RepositoryInfoDTO"

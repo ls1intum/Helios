@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { CiCdComponent } from './ci-cd.component';
+import { BranchTableComponent } from './branches-table.component';
 
-describe('CiCdComponent', () => {
-  let component: CiCdComponent;
-  let fixture: ComponentFixture<CiCdComponent>;
+describe('BranchTableComponent', () => {
+  let component: BranchTableComponent;
+  let fixture: ComponentFixture<BranchTableComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [CiCdComponent]
+      imports: [BranchTableComponent]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(CiCdComponent);
+    fixture = TestBed.createComponent(BranchTableComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

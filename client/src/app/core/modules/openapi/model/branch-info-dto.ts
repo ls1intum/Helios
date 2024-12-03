@@ -12,6 +12,7 @@ import { RepositoryInfoDTO } from './repository-info-dto';
 
 export interface BranchInfoDTO { 
     name: string;
+    commit_sha: string;
     repository?: RepositoryInfoDTO;
 }
 

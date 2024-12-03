@@ -43,8 +43,10 @@ export class PullRequestTableComponent {
       return this.pullRequestService.getAllPullRequests()
         .pipe(
           tap(data => {
-            this.pullRequestStore.setPullRequests(data);
-            this.isEmpty.set(data.length === 0);
+            // Filter to only include open pull requests
+            const openPullRequests = data.filter(pr => pr.state === 'OPEN');
+            this.pullRequestStore.setPullRequests(openPullRequests);            
+            this.isEmpty.set(openPullRequests.length === 0);
             this.isLoading.set(false);
           }),
           catchError(() => {
@@ -56,7 +58,6 @@ export class PullRequestTableComponent {
         ).subscribe()
     },
   }));
-
 
   getStatus(pr: PullRequestInfoDTO): string {
     if (pr.isMerged) return 'Merged';
