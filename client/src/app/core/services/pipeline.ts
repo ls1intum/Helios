@@ -13,16 +13,16 @@ export interface Pipeline {
 
 const predefinedGroups: { label: string, matcher: Array<string> | ((name: string) => boolean) }[] = [
   {
-    label: 'Validation',
-    matcher: ['Chore', 'Validate OpenAPI Spec and Generated Client Code']
+    label: 'Build',
+    matcher: ['Build', 'Pull Request Labeler']
   },
   {
-    label: 'Helper',
-    matcher: ['Pull Request Labeler']
+    label: 'Test',
+    matcher: ['Test', 'CodeQL', 'Validate PR Title', 'Check if German and English translations are consistent']
   },
   {
-    label: 'All',
-    matcher: () => true,
+    label: 'Deployment',
+    matcher: ['Testserver Locks', 'Deploy to Testserver']
   }
 ];
 
