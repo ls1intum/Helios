@@ -4,6 +4,7 @@ import de.tum.cit.aet.helios.deployment.github.DeploymentSource;
 import de.tum.cit.aet.helios.deployment.github.GitHubDeploymentDto;
 
 import java.time.OffsetDateTime;
+import java.util.Map;
 
 public class GitHubDeploymentSourceAdapter implements DeploymentSource {
 
@@ -30,6 +31,11 @@ public class GitHubDeploymentSourceAdapter implements DeploymentSource {
     }
 
     @Override
+    public String getStatusesUrl() {
+        return gitHubDeploymentDto.getStatusesUrl();
+    }
+
+    @Override
     public String getSha() {
         return gitHubDeploymentDto.getSha();
     }
@@ -42,11 +48,6 @@ public class GitHubDeploymentSourceAdapter implements DeploymentSource {
     @Override
     public String getTask() {
         return gitHubDeploymentDto.getTask();
-    }
-
-    @Override
-    public String getPayload() {
-        return gitHubDeploymentDto.getPayload().toString();
     }
 
     @Override

@@ -3,14 +3,12 @@ package de.tum.cit.aet.helios.github;
 import de.tum.cit.aet.helios.deployment.github.GitHubDeploymentDto;
 import de.tum.cit.aet.helios.environment.github.GitHubEnvironmentDTO;
 import jakarta.annotation.PostConstruct;
+import okhttp3.*;
 import okhttp3.Request.Builder;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.tum.cit.aet.helios.environment.github.GitHubEnvironmentApiResponse;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
 import org.kohsuke.github.GHOrganization;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GHWorkflow;
@@ -120,7 +118,26 @@ public class GitHubService {
      * @throws IOException if an I/O error occurs
      */
     public void dispatchWorkflow(String repoNameWithOwners, String workflowFileNameOrId, String ref, Map<String, Object> inputs) throws IOException {
-        getRepository(repoNameWithOwners).getWorkflow(workflowFileNameOrId).dispatch(ref, inputs);
+        final String url = String.format("https://api.github.com/repos/%s/actions/workflows/%s/dispatches", repoNameWithOwners, workflowFileNameOrId);
+
+        var payload = Map.of("ref", ref, "inputs", inputs);
+        String jsonPayload = objectMapper.writeValueAsString(payload);
+
+        RequestBody requestBody = RequestBody.create(jsonPayload, MediaType.get("application/json; charset=utf-8"));
+
+        Request request = requestBuilder
+                .url(url)
+                .post(requestBody)
+                .build();
+
+        try (Response response = okHttpClient.newCall(request).execute()) {
+            if (!response.isSuccessful()) {
+                throw new IOException("GitHub API call failed with response code: " + response.code());
+            }
+        } catch (IOException e) {
+            log.error("Error occurred while dispatching workflow: {}", e.getMessage());
+            throw e;
+        }
     }
 
     /**

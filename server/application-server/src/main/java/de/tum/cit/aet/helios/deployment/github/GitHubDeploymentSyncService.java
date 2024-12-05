@@ -83,12 +83,21 @@ public class GitHubDeploymentSyncService {
      */
     public void syncDeploymentsOfEnvironment(@NotNull GHRepository ghRepository, @NotNull Environment environment) {
         try {
+            GitRepository gitRepository = gitRepoRepository.findByNameWithOwner(ghRepository.getFullName());
+            if (gitRepository == null) {
+                // TODO: Process repository
+                log.error("Repository {} not found in database. Skipping deployments sync for environment {}.",
+                        ghRepository.getFullName(), environment.getName());
+                return;
+            }
+
             // Use the iterator from GitHubService to fetch deployments one by one
             Iterator<GitHubDeploymentDto> iterator = gitHubService.getDeploymentIterator(ghRepository, environment.getName());
 
             while (iterator.hasNext()) {
-                GitHubDeploymentDto ghDeployment = iterator.next();
-                processDeployment(ghDeployment, environment);
+                final GitHubDeploymentDto ghDeployment = iterator.next();
+                final DeploymentSource deploymentSource = deploymentSourceFactory.create(ghDeployment);
+                processDeployment(deploymentSource, gitRepository, environment);
             }
         } catch (Exception e) {
             log.error("Failed to sync deployments for environment {}: {}", environment.getName(), e.getMessage());
@@ -96,22 +105,21 @@ public class GitHubDeploymentSyncService {
     }
 
     /**
-     * Processes a single GitHubDeploymentDto by updating or creating it in the local repository.
+     * Processes a single DeploymentSource by updating or creating a Deployment in the local repository.
      *
-     * @param ghDeployment the GitHubDeploymentDto to process
-     * @param environment  the associated environment entity
+     * @param deploymentSource the source (GHDeployment or GitHubDeploymentDto) wrapped as a DeploymentSource
+     * @param environment      the associated environment entity
      */
-    private void processDeployment(@NotNull GitHubDeploymentDto ghDeployment, @NotNull Environment environment) {
-        Deployment deployment = deploymentRepository.findById(ghDeployment.getId())
+    void processDeployment(@NotNull DeploymentSource deploymentSource, @NotNull GitRepository gitRepository, @NotNull Environment environment) {
+        Deployment deployment = deploymentRepository.findById(deploymentSource.getId())
                 .orElseGet(Deployment::new);
-
-        // Convert the GitHubDeploymentDto to a DeploymentSource
-        DeploymentSource deploymentSource = deploymentSourceFactory.create(ghDeployment);
 
         deploymentConverter.update(deploymentSource, deployment);
 
         // Set the associated environment
         deployment.setEnvironmentEntity(environment);
+        // Set the repository
+        deployment.setRepository(gitRepository);
 
         // Save the deployment
         deploymentRepository.save(deployment);

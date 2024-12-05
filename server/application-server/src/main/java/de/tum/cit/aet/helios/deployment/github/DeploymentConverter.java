@@ -20,18 +20,13 @@ public class DeploymentConverter implements Converter<DeploymentSource, Deployme
     public Deployment update(@NonNull DeploymentSource source, @NonNull Deployment deployment) {
         deployment.setId(source.getId());
         deployment.setNodeId(source.getNodeId());
+        deployment.setUrl(source.getUrl());
+        deployment.setStatusesUrl(source.getStatusesUrl());
         deployment.setSha(source.getSha());
         deployment.setRef(source.getRef());
         deployment.setTask(source.getTask());
-
-        // Convert JsonNode payload to String or Map?
-        if (source.getPayload() != null) {
-            deployment.setPayload(source.getPayload());
-        } else {
-            deployment.setPayload(null);
-        }
-
         deployment.setEnvironment(source.getEnvironment());
+        deployment.setRepositoryUrl(source.getRepositoryUrl());
         try {
             deployment.setCreatedAt(source.getCreatedAt());
         } catch (IOException e) {

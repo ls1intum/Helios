@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.OffsetDateTime;
+import java.util.Map;
 
 @Getter
 @Setter
@@ -23,9 +24,6 @@ public class GitHubDeploymentDto {
     private String ref;
 
     private String task;
-
-    // JsonNode to handle dynamic payload types (object or string)
-    private JsonNode payload;
 
     @JsonProperty("original_environment")
     private String originalEnvironment;
@@ -55,4 +53,5 @@ public class GitHubDeploymentDto {
     // Missing fields
     // GithubApp
     // GithubUser
+    // payload
 }

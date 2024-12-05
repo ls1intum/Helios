@@ -5,6 +5,7 @@ import org.kohsuke.github.GHDeployment;
 
 import java.io.IOException;
 import java.time.OffsetDateTime;
+import java.util.Map;
 
 
 public class GHDeploymentSourceAdapter implements DeploymentSource {
@@ -31,6 +32,11 @@ public class GHDeploymentSourceAdapter implements DeploymentSource {
     }
 
     @Override
+    public String getStatusesUrl() {
+        return ghDeployment.getStatusesUrl().toString();
+    }
+
+    @Override
     public String getSha() {
         return ghDeployment.getSha();
     }
@@ -43,11 +49,6 @@ public class GHDeploymentSourceAdapter implements DeploymentSource {
     @Override
     public String getTask() {
         return ghDeployment.getTask();
-    }
-
-    @Override
-    public String getPayload() {
-        return ghDeployment.getPayload();
     }
 
     @Override

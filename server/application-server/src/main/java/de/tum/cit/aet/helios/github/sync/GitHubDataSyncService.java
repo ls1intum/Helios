@@ -14,6 +14,7 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.Optional;
 
@@ -69,31 +70,65 @@ public class GitHubDataSyncService {
             return;
         }
 
+        log.info("--------------------------------------------------");
+        log.info("        Starting Data Sync Job");
+        log.info("--------------------------------------------------");
+
         // Start new sync
         var startTime = OffsetDateTime.now();
 
+        log.info("--------------------------------------------------");
+        log.info("[Step 1/7] Syncing Monitored Repositories...");
         var repositories = repositorySyncService.syncAllMonitoredRepositories();
+        log.info("[Step 1/7] Completed Syncing {} repositories", repositories.size());
+
 
         // Sync pull requests
+        log.info("--------------------------------------------------");
+        log.info("[Step 2/7] Syncing Pull Requests (Cutoff: {})", cutoffDate);
         pullRequestSyncService.syncPullRequestsOfAllRepositories(repositories, Optional.of(cutoffDate));
+        log.info("[Step 2/7] Completed Pull Request Sync");
+
 
         // Sync environments
+        log.info("--------------------------------------------------");
+        log.info("[Step 3/7] Syncing Environments for Repositories...");
         environmentSyncService.syncEnvironmentsOfAllRepositories(repositories);
+        log.info("[Step 3/7] Completed Environment Sync");
+
 
         // Sync deployments
+        log.info("--------------------------------------------------");
+        log.info("[Step 4/7] Syncing Deployments for Repositories...");
         deploymentSyncService.syncDeploymentsOfAllRepositories(repositories);
+        log.info("[Step 4/7] Completed Deployment Sync");
 
         // Sync users
+        log.info("--------------------------------------------------");
+        log.info("[Step 5/7] Syncing Users...");
         userSyncService.syncAllExistingUsers();
+        log.info("[Step 5/7] Completed User Sync");
+
 
         // Sync workflows
+        log.info("--------------------------------------------------");
+        log.info("[Step 6/7] Syncing Workflows (Cutoff: {})", cutoffDate);
         workflowSyncService.syncRunsOfAllRepositories(repositories, Optional.of(cutoffDate));
+        log.info("[Step 6/7] Completed Workflow Sync");
 
         // Sync branches
+        log.info("--------------------------------------------------");
+        log.info("[Step 7/7] Syncing Branches...");
         branchSyncService.syncBranchesOfAllRepositories(repositories);
+        log.info("[Step 7/7] Completed Branch Sync");
+
 
         var endTime = OffsetDateTime.now();
-
+        log.info("--------------------------------------------------");
+        log.info("        Data Sync Job Completed Successfully");
+        log.info("--------------------------------------------------");
+        log.info("Total Duration: {} seconds", Duration.between(startTime, endTime).getSeconds());
+        log.info("--------------------------------------------------");
         // Store successful sync status
         var syncStatus = new DataSyncStatus();
         syncStatus.setStartTime(startTime);
