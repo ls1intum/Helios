@@ -1,7 +1,6 @@
 package de.tum.cit.aet.helios.environment.github;
 
 import de.tum.cit.aet.helios.environment.Environment;
-import de.tum.cit.aet.helios.environment.GitHubEnvironment;
 import de.tum.cit.aet.helios.environment.EnvironmentRepository;
 import de.tum.cit.aet.helios.github.GitHubService;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
@@ -49,10 +48,10 @@ public class GitHubEnvironmentSyncService {
      */
     public void syncEnvironmentsOfRepository(GHRepository ghRepository) {
         try {
-            List<GitHubEnvironment> gitHubEnvironments = gitHubService.getEnvironments(ghRepository);
+            List<GitHubEnvironmentDTO> gitHubEnvironmentDTOS = gitHubService.getEnvironments(ghRepository);
 
-            for (GitHubEnvironment gitHubEnvironment : gitHubEnvironments) {
-                processEnvironment(gitHubEnvironment, ghRepository);
+            for (GitHubEnvironmentDTO gitHubEnvironmentDTO : gitHubEnvironmentDTOS) {
+                processEnvironment(gitHubEnvironmentDTO, ghRepository);
             }
         } catch (IOException e) {
             log.error("Failed to sync environments for repository {}: {}", ghRepository.getFullName(), e.getMessage());
@@ -60,17 +59,17 @@ public class GitHubEnvironmentSyncService {
     }
 
     /**
-     * Processes a single GitHubEnvironment by updating or creating it in the local repository.
+     * Processes a single GitHubEnvironmentDTO by updating or creating it in the local repository.
      *
-     * @param gitHubEnvironment the GitHubEnvironment to process
+     * @param gitHubEnvironmentDTO the GitHubEnvironmentDTO to process
      * @param ghRepository   the GitHub repository the environment belongs to
      */
-    private void processEnvironment(@NotNull GitHubEnvironment gitHubEnvironment, @NotNull GHRepository ghRepository) {
-        Environment environment = environmentRepository.findById(gitHubEnvironment.getId())
+    private void processEnvironment(@NotNull GitHubEnvironmentDTO gitHubEnvironmentDTO, @NotNull GHRepository ghRepository) {
+        Environment environment = environmentRepository.findById(gitHubEnvironmentDTO.getId())
                 .orElseGet(Environment::new);
 
         // Convert DTO to Entity
-        environmentConverter.update(gitHubEnvironment, environment);
+        environmentConverter.update(gitHubEnvironmentDTO, environment);
 
         // Link the environment to the repository
         String fullName = ghRepository.getFullName();

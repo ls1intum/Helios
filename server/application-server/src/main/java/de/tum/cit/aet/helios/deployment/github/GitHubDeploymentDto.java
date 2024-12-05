@@ -1,4 +1,4 @@
-package de.tum.cit.aet.helios.deployment;
+package de.tum.cit.aet.helios.deployment.github;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -9,7 +9,7 @@ import java.time.OffsetDateTime;
 
 @Getter
 @Setter
-public class GitHubDeployment {
+public class GitHubDeploymentDto {
 
     private Long id;
 

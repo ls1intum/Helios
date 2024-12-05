@@ -1,13 +1,13 @@
 package de.tum.cit.aet.helios.github;
 
-import de.tum.cit.aet.helios.deployment.GitHubDeployment;
+import de.tum.cit.aet.helios.deployment.github.GitHubDeploymentDto;
+import de.tum.cit.aet.helios.environment.github.GitHubEnvironmentDTO;
 import jakarta.annotation.PostConstruct;
 import okhttp3.Request.Builder;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.tum.cit.aet.helios.environment.GitHubEnvironment;
-import de.tum.cit.aet.helios.environment.GitHubEnvironmentResponse;
+import de.tum.cit.aet.helios.environment.github.GitHubEnvironmentApiResponse;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -124,13 +124,13 @@ public class GitHubService {
     }
 
     /**
-     * Retrieves environments from a GitHub repository and maps them to the GitHubEnvironment.
+     * Retrieves environments from a GitHub repository and maps them to the GitHubEnvironmentDTO.
      *
      * @param repository the GitHub repository as a GHRepository object
-     * @return a list of GitHubEnvironment objects
+     * @return a list of GitHubEnvironmentDTO objects
      * @throws IOException if an I/O error occurs
      */
-    public List<GitHubEnvironment> getEnvironments(GHRepository repository) throws IOException {
+    public List<GitHubEnvironmentDTO> getEnvironments(GHRepository repository) throws IOException {
         final String owner = repository.getOwnerName();
         final String repoName = repository.getName();
         final String url = String.format("https://api.github.com/repos/%s/%s/environments", owner, repoName);
@@ -149,7 +149,7 @@ public class GitHubService {
             }
 
             String responseBody = response.body().string();
-            GitHubEnvironmentResponse envResponse = objectMapper.readValue(responseBody, GitHubEnvironmentResponse.class);
+            GitHubEnvironmentApiResponse envResponse = objectMapper.readValue(responseBody, GitHubEnvironmentApiResponse.class);
             return envResponse.getEnvironments();
         } catch (JsonProcessingException e) {
             log.error("Error processing JSON response: {}", e.getMessage());
@@ -167,7 +167,7 @@ public class GitHubService {
      * @param environmentName the environment name
      * @return a GitHubDeploymentIterator object
      */
-    public Iterator<GitHubDeployment> getDeploymentIterator(GHRepository repository, String environmentName) {
+    public Iterator<GitHubDeploymentDto> getDeploymentIterator(GHRepository repository, String environmentName) {
         return new GitHubDeploymentIterator(repository, environmentName, okHttpClient, requestBuilder, objectMapper);
     }
 }

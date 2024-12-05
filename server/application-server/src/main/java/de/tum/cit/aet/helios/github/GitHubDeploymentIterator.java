@@ -2,7 +2,7 @@ package de.tum.cit.aet.helios.github;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.tum.cit.aet.helios.deployment.GitHubDeployment;
+import de.tum.cit.aet.helios.deployment.github.GitHubDeploymentDto;
 import lombok.extern.log4j.Log4j2;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -19,7 +19,7 @@ import java.util.NoSuchElementException;
 import java.util.Queue;
 
 @Log4j2
-public class GitHubDeploymentIterator implements Iterator<GitHubDeployment> {
+public class GitHubDeploymentIterator implements Iterator<GitHubDeploymentDto> {
 
     private final GHRepository repository;
     private final String environmentName;
@@ -30,7 +30,7 @@ public class GitHubDeploymentIterator implements Iterator<GitHubDeployment> {
     private int currentPage = 1;
     private final int perPage = 100;
     private boolean hasMore = true;
-    private final Queue<GitHubDeployment> deploymentQueue = new LinkedList<>();
+    private final Queue<GitHubDeploymentDto> deploymentQueue = new LinkedList<>();
 
     public GitHubDeploymentIterator(GHRepository repository, String environmentName,
                                     OkHttpClient okHttpClient, Request.Builder requestBuilder,
@@ -51,7 +51,7 @@ public class GitHubDeploymentIterator implements Iterator<GitHubDeployment> {
     }
 
     @Override
-    public GitHubDeployment next() {
+    public GitHubDeploymentDto next() {
         if (!hasNext()) {
             throw new NoSuchElementException("No more deployments available.");
         }
@@ -81,7 +81,7 @@ public class GitHubDeploymentIterator implements Iterator<GitHubDeployment> {
             }
 
             String responseBody = response.body().string();
-            List<GitHubDeployment> deployments = objectMapper.readValue(responseBody, new TypeReference<>() {
+            List<GitHubDeploymentDto> deployments = objectMapper.readValue(responseBody, new TypeReference<>() {
             });
 
             if (deployments.size() < perPage) {

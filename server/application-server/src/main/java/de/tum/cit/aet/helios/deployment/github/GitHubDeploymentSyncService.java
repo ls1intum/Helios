@@ -2,7 +2,6 @@ package de.tum.cit.aet.helios.deployment.github;
 
 import de.tum.cit.aet.helios.deployment.Deployment;
 import de.tum.cit.aet.helios.deployment.DeploymentRepository;
-import de.tum.cit.aet.helios.deployment.GitHubDeployment;
 import de.tum.cit.aet.helios.environment.Environment;
 import de.tum.cit.aet.helios.environment.EnvironmentRepository;
 import de.tum.cit.aet.helios.github.GitHubService;
@@ -24,18 +23,21 @@ public class GitHubDeploymentSyncService {
     private final EnvironmentRepository environmentRepository;
     private final GitRepoRepository gitRepoRepository;
     private final GitHubService gitHubService;
-    private final GitHubDeploymentConverter deploymentConverter;
+    private final DeploymentConverter deploymentConverter;
+    private final DeploymentSourceFactory deploymentSourceFactory;
 
     public GitHubDeploymentSyncService(DeploymentRepository deploymentRepository,
                                        EnvironmentRepository environmentRepository,
                                        GitRepoRepository gitRepoRepository,
                                        GitHubService gitHubService,
-                                       GitHubDeploymentConverter deploymentConverter) {
+                                       DeploymentConverter deploymentConverter,
+                                       DeploymentSourceFactory deploymentSourceFactory) {
         this.deploymentRepository = deploymentRepository;
         this.environmentRepository = environmentRepository;
         this.gitRepoRepository = gitRepoRepository;
         this.gitHubService = gitHubService;
         this.deploymentConverter = deploymentConverter;
+        this.deploymentSourceFactory = deploymentSourceFactory;
     }
 
     /**
@@ -82,10 +84,10 @@ public class GitHubDeploymentSyncService {
     public void syncDeploymentsOfEnvironment(@NotNull GHRepository ghRepository, @NotNull Environment environment) {
         try {
             // Use the iterator from GitHubService to fetch deployments one by one
-            Iterator<GitHubDeployment> iterator = gitHubService.getDeploymentIterator(ghRepository, environment.getName());
+            Iterator<GitHubDeploymentDto> iterator = gitHubService.getDeploymentIterator(ghRepository, environment.getName());
 
             while (iterator.hasNext()) {
-                GitHubDeployment ghDeployment = iterator.next();
+                GitHubDeploymentDto ghDeployment = iterator.next();
                 processDeployment(ghDeployment, environment);
             }
         } catch (Exception e) {
@@ -94,16 +96,19 @@ public class GitHubDeploymentSyncService {
     }
 
     /**
-     * Processes a single GitHubDeployment by updating or creating it in the local repository.
+     * Processes a single GitHubDeploymentDto by updating or creating it in the local repository.
      *
-     * @param ghDeployment the GitHubDeployment to process
+     * @param ghDeployment the GitHubDeploymentDto to process
      * @param environment  the associated environment entity
      */
-    private void processDeployment(@NotNull GitHubDeployment ghDeployment, @NotNull Environment environment) {
+    private void processDeployment(@NotNull GitHubDeploymentDto ghDeployment, @NotNull Environment environment) {
         Deployment deployment = deploymentRepository.findById(ghDeployment.getId())
                 .orElseGet(Deployment::new);
 
-        deploymentConverter.update(ghDeployment, deployment);
+        // Convert the GitHubDeploymentDto to a DeploymentSource
+        DeploymentSource deploymentSource = deploymentSourceFactory.create(ghDeployment);
+
+        deploymentConverter.update(deploymentSource, deployment);
 
         // Set the associated environment
         deployment.setEnvironmentEntity(environment);

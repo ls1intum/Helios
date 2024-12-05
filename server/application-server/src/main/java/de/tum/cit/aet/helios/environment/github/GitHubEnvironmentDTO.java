@@ -1,4 +1,4 @@
-package de.tum.cit.aet.helios.environment;
+package de.tum.cit.aet.helios.environment.github;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
@@ -6,7 +6,7 @@ import lombok.Getter;
 import java.time.OffsetDateTime;
 
 @Getter
-public class GitHubEnvironment {
+public class GitHubEnvironmentDTO {
 
     private Long id;
     private String name;

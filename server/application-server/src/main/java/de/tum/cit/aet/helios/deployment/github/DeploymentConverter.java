@@ -1,20 +1,23 @@
 package de.tum.cit.aet.helios.deployment.github;
 
 import de.tum.cit.aet.helios.deployment.Deployment;
-import de.tum.cit.aet.helios.deployment.GitHubDeployment;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
+
+@Log4j2
 @Component
-public class GitHubDeploymentConverter implements Converter<GitHubDeployment, Deployment> {
+public class DeploymentConverter implements Converter<DeploymentSource, Deployment> {
 
     @Override
-    public Deployment convert(@NonNull GitHubDeployment source) {
+    public Deployment convert(@NonNull DeploymentSource source) {
         return update(source, new Deployment());
     }
 
-    public Deployment update(@NonNull GitHubDeployment source, @NonNull Deployment deployment) {
+    public Deployment update(@NonNull DeploymentSource source, @NonNull Deployment deployment) {
         deployment.setId(source.getId());
         deployment.setNodeId(source.getNodeId());
         deployment.setSha(source.getSha());
@@ -23,16 +26,22 @@ public class GitHubDeploymentConverter implements Converter<GitHubDeployment, De
 
         // Convert JsonNode payload to String or Map?
         if (source.getPayload() != null) {
-            deployment.setPayload(source.getPayload().toString());
+            deployment.setPayload(source.getPayload());
         } else {
             deployment.setPayload(null);
         }
 
         deployment.setEnvironment(source.getEnvironment());
-        deployment.setOriginalEnvironment(source.getOriginalEnvironment());
-        deployment.setDescription(source.getDescription());
-        deployment.setCreatedAt(source.getCreatedAt());
-        deployment.setUpdatedAt(source.getUpdatedAt());
+        try {
+            deployment.setCreatedAt(source.getCreatedAt());
+        } catch (IOException e) {
+            log.error("Error while converting deployment source to deployment, setting createdAt", e);
+        }
+        try {
+            deployment.setUpdatedAt(source.getUpdatedAt());
+        } catch (IOException e) {
+            log.error("Error while converting deployment source to deployment, setting updatedAt", e);
+        }
 
         return deployment;
     }
