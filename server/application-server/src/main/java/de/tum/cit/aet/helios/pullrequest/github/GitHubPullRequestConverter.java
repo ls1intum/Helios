@@ -88,6 +88,7 @@ public class GitHubPullRequestConverter extends BaseGitServiceEntityConverter<GH
         } catch (IOException e) {
             log.error("Failed to convert changedFiles field for source {}: {}", source.getId(), e.getMessage());
         }
+        pullRequest.setHeadSha(source.getHead().getSha());
 
         return pullRequest;
     }

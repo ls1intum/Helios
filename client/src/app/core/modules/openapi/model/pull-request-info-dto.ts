@@ -24,6 +24,7 @@ export interface PullRequestInfoDTO {
     repository?: RepositoryInfoDTO;
     additions: number;
     deletions: number;
+    headSha: string;
     mergedAt?: string;
     closedAt?: string;
     htmlUrl: string;

@@ -1,0 +1,60 @@
+@if (isLoading()) {
+  <p-table [value]="[1, 2, 3, 4, 5]" styleClass="p-datatable-lg">
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Name</th>
+        <th>Commit SHA</th>
+        <th>Repository</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body">
+      <tr>
+        <td><p-skeleton></p-skeleton></td>
+        <td><p-skeleton></p-skeleton></td>
+        <td><p-skeleton></p-skeleton></td>
+      </tr>
+    </ng-template>
+  </p-table>
+} @else {
+  @if (isError()) {
+    <p>Error occurred while fetching pull requests.</p>
+  } @else {
+    @if (isEmpty()) {
+      <p>No pull requests found.</p>
+    } @else {
+      <p-table [value]="branchStore.branches()" [loading]="isLoading()" styleClass="p-datatable-sm">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Name</th>
+            <th>Commit SHA</th>
+            <th>Repository</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-branch>
+          <tr>
+            <td>
+              <div class="flex align-items-center gap-2">
+                <i-tabler name="git-branch"></i-tabler>
+                <span>{{ branch.name }}</span>
+                <button pButton class="p-button-text p-button-sm" (click)="openLink(branch.link)"><i-tabler name="external-link"></i-tabler></button>
+              </div>
+            </td>
+            <td>
+              <div class="flex align-items-center gap-2">
+                <i-tabler name="git-commit"></i-tabler>
+                <span>{{ branch.commit_sha.slice(0, 7) }}</span>
+                <button pButton class="p-button-text p-button-sm" (click)="openLink(branch.lastCommitLink)"><i-tabler name="external-link"></i-tabler></button>
+              </div>
+            </td>
+            <td>
+              <div class="flex align-items-center gap-2">
+                <span>{{ branch.repository.nameWithOwner }}</span>
+                <!-- <button pButton class="p-button-text p-button-sm" (click)="openPR(pr.htmlUrl)"><i-tabler name="external-link"></i-tabler></button> -->
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    }
+  }
+}
