@@ -3,21 +3,17 @@ name: Build and Deploy to Prod
 on:
   push:
     branches: [main]
-  # TODO: remove the following line after build works with cache
-  pull_request:
-    branches: [main]
-    types: [opened, reopened, edited, synchronize]
 
 jobs:
   build-prod-container:
     uses: ./.github/workflows/build_docker.yml
     secrets: inherit
-#  deploy-prod-container:
-#    needs: build-prod-container
-#    uses: ./.github/workflows/deploy_docker.yml
-#    secrets: inherit
-#    with:
-#      environment: production
-#      client_image_tag: "latest"
-#      application_server_image_tag: "latest"
-#      webhook_listener_image_tag: "latest"
+  deploy-prod-container:
+    needs: build-prod-container
+    uses: ./.github/workflows/deploy_docker.yml
+    secrets: inherit
+    with:
+      environment: production
+      client_image_tag: "latest"
+      application_server_image_tag: "latest"
+      webhook_listener_image_tag: "latest"

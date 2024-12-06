@@ -1,4 +1,3 @@
-
 # Helios Application Server
 
 Helios Application Server is a [Spring Boot application](https://spring.io/projects/spring-boot). It provides a REST API for the Helios client to interact with the database and other services.
