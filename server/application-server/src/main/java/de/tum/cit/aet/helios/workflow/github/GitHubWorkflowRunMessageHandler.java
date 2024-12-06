@@ -12,10 +12,10 @@ import lombok.extern.log4j.Log4j2;
 @Component
 public class GitHubWorkflowRunMessageHandler extends GitHubMessageHandler<GHEventPayload.WorkflowRun> {
     private final GitHubRepositorySyncService repositorySyncService;
-    private final GitHubWorkflowSyncService workflowSyncService;
+    private final GitHubWorkflowRunSyncService workflowSyncService;
 
     private GitHubWorkflowRunMessageHandler(
-            GitHubWorkflowSyncService workflowSyncService,
+            GitHubWorkflowRunSyncService workflowSyncService,
             GitHubRepositorySyncService repositorySyncService) {
         super(GHEventPayload.WorkflowRun.class);
 
