@@ -1,19 +1,21 @@
 import { Component, inject, Injectable, signal } from '@angular/core';
 
-import { TableModule } from 'primeng/table';
-import { AvatarModule } from 'primeng/avatar';
-import { TagModule } from 'primeng/tag';
-import { injectQuery } from '@tanstack/angular-query-experimental';
-import { catchError, tap } from 'rxjs';
-import { IconsModule } from 'icons.module';
+import { Router } from '@angular/router';
 import { PullRequestControllerService, PullRequestInfoDTO } from '@app/core/modules/openapi';
+import { injectQuery } from '@tanstack/angular-query-experimental';
+import { IconsModule } from 'icons.module';
+import { AvatarModule } from 'primeng/avatar';
+import { AvatarGroupModule } from 'primeng/avatargroup';
 import { SkeletonModule } from 'primeng/skeleton';
-import { Router, RouterLink } from '@angular/router';
+import { TableModule } from 'primeng/table';
+import { TagModule } from 'primeng/tag';
+import { TooltipModule } from 'primeng/tooltip';
+import { catchError, tap } from 'rxjs';
 
 
 @Component({
   selector: 'app-pull-request-table',
-  imports: [TableModule, AvatarModule, TagModule, IconsModule, SkeletonModule, RouterLink],
+  imports: [TableModule, AvatarModule, TagModule, IconsModule, SkeletonModule, AvatarGroupModule, TooltipModule],
   templateUrl: './pull-request-table.component.html',
   styles: [`
     :host ::ng-deep {
@@ -45,7 +47,7 @@ export class PullRequestTableComponent {
           tap(data => {
             // Filter to only include open pull requests
             const openPullRequests = data.filter(pr => pr.state === 'OPEN');
-            this.pullRequestStore.setPullRequests(openPullRequests);            
+            this.pullRequestStore.setPullRequests(openPullRequests);
             this.isEmpty.set(openPullRequests.length === 0);
             this.isLoading.set(false);
           }),

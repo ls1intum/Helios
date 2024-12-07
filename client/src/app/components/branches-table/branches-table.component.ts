@@ -29,7 +29,7 @@ export class BranchTableComponent {
   isEmpty = signal(false);
   isLoading = signal(false);
 
-  specialBranches = ['master', 'main', 'dev', 'staging', 'development', 'prod', 'production'];
+  specialBranches = ['master', 'main', 'dev', 'staging', 'development', 'prod', 'production', 'develop'];
 
   getSpecialBranches() {
     return this.branchStore.branches().filter(branch =>
