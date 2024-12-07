@@ -20,7 +20,7 @@ permissions:
 
 jobs:
   docs:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: FelixTJDietrich/sphinx-action@java
@@ -39,7 +39,7 @@ jobs:
     environment:
       name: github-pages
       url: "https://ls1intum.github.io/Helios/"
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     needs: docs
     steps:
       - name: Deploy to GitHub Pages
