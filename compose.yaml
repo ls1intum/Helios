@@ -10,6 +10,25 @@ services:
     volumes:
       - db-data:/var/lib/postgresql/data
   
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    container_name: keycloak
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_DB: postgres
+      KC_DB_URL_HOST: postgres
+      KC_DB_USERNAME: ${POSTGRES_USER}
+      KC_DB_PASSWORD: ${POSTGRES_PASSWORD}
+      KC_HOSTNAME: keycloak
+    ports:
+      - '8081:8081' # Keycloak exposed on 8081 to avoid conflict with application-server
+    depends_on:
+      - postgres
+    volumes:
+      - keycloak_data:/opt/keycloak/data
+    command: start-dev --http-port=8081 --hostname=0.0.0.0
+
   webhook-listener:
     build:
       context: server/webhook-listener
@@ -81,3 +100,4 @@ services:
 volumes:
   db-data:
   nats-data:
+  keycloak_data:
