@@ -32,23 +32,40 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable) // Disable CSRF
                 .authorizeHttpRequests(auth -> {
 
-                            auth.requestMatchers("/api/**").permitAll();  // Allow API access
+                            auth.requestMatchers(
+                                "/auth/**",
+                                "/v2/api-docs",
+                                "/v3/api-docs",
+                                "/v3/api-docs/**",
+                                "/swagger-resources",
+                                "/swagger-resources/**",
+                                "/configuration/ui",
+                                "/configuration/security",
+                                "/swagger-ui/**",
+                                "/webjars/**",
+                                "/swagger-ui.html"
+                            )                                    
+                            .permitAll()
+                            .anyRequest()
+                            .authenticated();
 
                             if (environment.matchesProfiles("prod")) {
                                 auth.anyRequest().denyAll(); // Deny all other requests
-                            } else {
-                                log.info("Allowing OpenAPI and Swagger UI endpoints for development.");
-                                // Allow access to OpenAPI and Swagger UI
-                                auth
-                                        .requestMatchers("/bus/v3/api-docs/**").permitAll()
-                                        .requestMatchers("/v3/api-docs/**").permitAll()
-                                        .requestMatchers("/v3/api-docs.yaml").permitAll()
-                                        .requestMatchers("/swagger-ui/**").permitAll()
-                                        .requestMatchers("/swagger-ui.html").permitAll();
+                            } //else {
+                            //     log.info("Allowing OpenAPI and Swagger UI endpoints for development.");
+                            //     // Allow access to OpenAPI and Swagger UI
+                            //     auth
+                            //             .requestMatchers("/bus/v3/api-docs/**").permitAll()
+                            //             .requestMatchers("/v3/api-docs/**").permitAll()
+                            //             .requestMatchers("/v3/api-docs.yaml").permitAll()
+                            //             .requestMatchers("/swagger-ui/**").permitAll()
+                            //             .requestMatchers("/swagger-ui.html").permitAll();
 
-                            }
+                            // }
                         }
-                );
+                )
+                .oauth2ResourceServer(auth ->
+                    auth.jwt(token -> token.jwtAuthenticationConverter(new KeycloakJwtAuthenticationConverter())));
 
         return http.build();
     }
@@ -78,3 +95,4 @@ public class SecurityConfig {
         };
     }
 }
+
