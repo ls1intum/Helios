@@ -23,9 +23,9 @@ public class KeycloakJwtAuthenticationConverter implements Converter<Jwt, Abstra
         return new JwtAuthenticationToken(
                 source,
                 Stream.concat(
-                                new JwtGrantedAuthoritiesConverter().convert(source).stream(),
-                                extractResourceRoles(source).stream())
-                        .collect(toSet()));
+                        new JwtGrantedAuthoritiesConverter().convert(source).stream(),
+                        extractResourceRoles(source).stream())
+                .collect(toSet()));
     }
 
     private Collection<? extends GrantedAuthority> extractResourceRoles(Jwt jwt) {
@@ -34,7 +34,6 @@ public class KeycloakJwtAuthenticationConverter implements Converter<Jwt, Abstra
         var eternal = (Map<String, List<String>>) resourceAccess.get("account");
 
         var roles = eternal.get("roles");
-
         return roles.stream()
                 .map(role -> new SimpleGrantedAuthority("ROLE_" + role.replace("-", "_")))
                 .collect(toSet());

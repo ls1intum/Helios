@@ -34,9 +34,11 @@ public class SecurityConfig {
 
                             auth.requestMatchers(
                                 "/auth/**",
+                                "/bus/v3/api-docs/**",
                                 "/v2/api-docs",
                                 "/v3/api-docs",
                                 "/v3/api-docs/**",
+                                "/v3/api-docs.yaml",
                                 "/swagger-resources",
                                 "/swagger-resources/**",
                                 "/configuration/ui",
@@ -51,17 +53,7 @@ public class SecurityConfig {
 
                             if (environment.matchesProfiles("prod")) {
                                 auth.anyRequest().denyAll(); // Deny all other requests
-                            } //else {
-                            //     log.info("Allowing OpenAPI and Swagger UI endpoints for development.");
-                            //     // Allow access to OpenAPI and Swagger UI
-                            //     auth
-                            //             .requestMatchers("/bus/v3/api-docs/**").permitAll()
-                            //             .requestMatchers("/v3/api-docs/**").permitAll()
-                            //             .requestMatchers("/v3/api-docs.yaml").permitAll()
-                            //             .requestMatchers("/swagger-ui/**").permitAll()
-                            //             .requestMatchers("/swagger-ui.html").permitAll();
-
-                            // }
+                            }
                         }
                 )
                 .oauth2ResourceServer(auth ->
