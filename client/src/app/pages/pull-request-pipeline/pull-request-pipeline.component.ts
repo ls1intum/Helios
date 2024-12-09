@@ -12,12 +12,14 @@ import { EnvironmentCommitInfoComponent } from '@app/components/environment-comm
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { PullRequestStoreService } from '@app/core/services/pull-requests';
+import { MarkdownPipe } from '@app/core/modules/markdown/markdown.pipe';
 
 @Component({
   selector: 'app-pull-request-pipeline',
-  imports: [InputTextModule, AccordionModule, CommonModule, LockTagComponent, RouterLink, TagModule, IconsModule, EnvironmentCommitInfoComponent, ButtonModule, PipelineComponent],
+  imports: [InputTextModule, AccordionModule, CommonModule, LockTagComponent, RouterLink, TagModule, IconsModule, EnvironmentCommitInfoComponent, ButtonModule, PipelineComponent, MarkdownPipe],
   providers: [FetchEnvironmentService],
   templateUrl: './pull-request-pipeline.component.html',
+  styleUrl: './pull-request-pipeline.component.css'
 })
 export class PullRequestPipelineComponent {
   pullRequestId: Signal<number> = input.required();

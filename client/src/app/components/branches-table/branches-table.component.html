@@ -61,7 +61,7 @@
 <br />
 <!-- Feature Branches Table -->
 
-<p-table [value]="getFeatureBranches()" styleClass="p-datatable-sm">
+<p-table [value]="getFeatureBranches()" styleClass="p-datatable-sm" [paginator]="true" [rows]="20">
   <ng-template pTemplate="header">
     <tr>
       <th style="width: 70%">Name</th>

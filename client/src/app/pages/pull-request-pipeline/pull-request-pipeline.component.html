@@ -1,7 +1,7 @@
 <div class="flex items-center gap-4 mb-3">
   @if (currentPullRequest(); as pr) {
   <h2 class="text-3xl">
-    <span class="text-gray-500">#{{ pr.number }}</span> {{ pr.title }}
+    <span class="text-gray-500">#{{ pr.number }}</span> <span [innerHTML]="pr.title | markdown"></span>
   </h2>
   <div class="flex items-center gap-2">
     <p-tag [severity]="pr.state === 'OPEN' ? 'success' : 'danger'">

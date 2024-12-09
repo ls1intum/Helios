@@ -28,7 +28,8 @@
 @if (isEmpty()) {
 <p>No pull requests found.</p>
 } @else {
-<p-table [rowHover]="true" [value]="pullRequestStore.pullRequests()" styleClass="p-datatable-lg">
+<p-table [rowHover]="true" [value]="pullRequestStore.pullRequests()" styleClass="p-datatable-lg" [paginator]="true"
+  [rows]="20">
   <ng-template pTemplate="header">
     <tr>
       <th>Title</th>
@@ -44,7 +45,7 @@
       <td>
         <div class="flex align-items-center gap-2">
           <i-tabler name="git-pull-request"></i-tabler>
-          <span class="font-bold">{{ pr.title }}</span>
+          <span class="font-bold"><span [innerHTML]="pr.title | markdown"></span></span>
           <button pButton class="p-button-text p-button-sm" (click)="openPRExternal(pr)"><i-tabler
               name="external-link"></i-tabler></button>
         </div>

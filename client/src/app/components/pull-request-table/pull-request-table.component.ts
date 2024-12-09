@@ -1,6 +1,7 @@
 import { Component, inject } from '@angular/core';
 
 import { Router } from '@angular/router';
+import { MarkdownPipe } from '@app/core/modules/markdown/markdown.pipe';
 import { PullRequestInfoDTO } from '@app/core/modules/openapi';
 import { PullRequestStoreService } from '@app/core/services/pull-requests';
 import { injectQuery } from '@tanstack/angular-query-experimental';
@@ -15,7 +16,7 @@ import { TooltipModule } from 'primeng/tooltip';
 
 @Component({
   selector: 'app-pull-request-table',
-  imports: [TableModule, AvatarModule, TagModule, IconsModule, SkeletonModule, AvatarGroupModule, TooltipModule],
+  imports: [TableModule, AvatarModule, TagModule, IconsModule, SkeletonModule, AvatarGroupModule, TooltipModule, MarkdownPipe],
   templateUrl: './pull-request-table.component.html',
   styles: [`
     :host ::ng-deep {
