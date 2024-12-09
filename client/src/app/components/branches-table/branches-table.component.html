@@ -38,16 +38,14 @@
         <div class="flex align-items-center gap-2">
           <i-tabler name="git-branch"></i-tabler>
           <span>{{ branch.name }}</span>
-          <button pButton class="p-button-text p-button-sm" (click)="openLink(branch.link)"><i-tabler
-              name="external-link"></i-tabler></button>
+          <i-tabler name="external-link" (click)="openLink(branch.link)"></i-tabler>
         </div>
       </td>
       <td>
         <div class="flex align-items-center gap-2">
           <i-tabler name="git-commit"></i-tabler>
           <span>{{ branch.commit_sha.slice(0, 7) }}</span>
-          <button pButton class="p-button-text p-button-sm" (click)="openLink(branch.lastCommitLink)"><i-tabler
-              name="external-link"></i-tabler></button>
+          <i-tabler name="external-link" (click)="openLink(branch.lastCommitLink)"></i-tabler>
         </div>
       </td>
       <td>
@@ -61,8 +59,8 @@
 <br />
 
 
-<div class="flex justify-content-between align-items-center mb-3">
-  <h3>Feature Branches</h3>
+<div class="flex justify-between items-center mb-3 w-full">
+  <h3><strong>Feature Branches</strong></h3>
   <button pButton [icon]="viewPreference.viewMode() === 'Tree' ? 'pi pi-list' : 'pi pi-sitemap'" (click)="toggleView()"
     [label]="viewPreference.viewMode() === 'Tree' ? 'Switch to Table View' : 'Switch to Tree View'"
     class="p-button-outlined">
@@ -87,8 +85,7 @@
         <div class="flex align-items-center gap-2">
           <p-treeTableToggler [rowNode]="rowNode" />
           {{ rowData.name }}
-          @if (rowData.link) {<button pButton class="p-button-text p-button-sm"
-            (click)="openLink(rowData.link)"><i-tabler name="external-link"></i-tabler></button>}
+          <i-tabler name="external-link" (click)="openLink(rowData.link)"></i-tabler>
         </div>
 
       </td>
@@ -96,8 +93,7 @@
         <div *ngIf="rowData.commit_sha" class="flex align-items-center gap-2">
           <i-tabler name="git-commit"></i-tabler>
           <span>{{ rowData.commit_sha.slice(0, 7) }}</span>
-          <button pButton class="p-button-text p-button-sm" (click)="openLink(rowData.lastCommitLink)"><i-tabler
-              name="external-link"></i-tabler></button>
+          <i-tabler name="external-link" (click)="openLink(rowData.lastCommitLink)"></i-tabler>
         </div>
       </td>
       <td style="width: 15%">
@@ -125,16 +121,14 @@
         <div class="flex align-items-center gap-2">
           <i-tabler name="git-branch"></i-tabler>
           <span>{{ branch.name }}</span>
-          <button pButton class="p-button-text p-button-sm" (click)="openLink(branch.link)"><i-tabler
-              name="external-link"></i-tabler></button>
+          <i-tabler name="external-link" (click)="openLink(branch.link)"></i-tabler>
         </div>
       </td>
       <td>
         <div class="flex align-items-center gap-2">
           <i-tabler name="git-commit"></i-tabler>
           <span>{{ branch.commit_sha.slice(0, 7) }}</span>
-          <button pButton class="p-button-text p-button-sm" (click)="openLink(branch.lastCommitLink)"><i-tabler
-              name="external-link"></i-tabler></button>
+          <i-tabler name="external-link" (click)="openLink(branch.lastCommitLink)"></i-tabler>
         </div>
       </td>
       <td>
