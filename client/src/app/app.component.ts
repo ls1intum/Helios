@@ -8,6 +8,7 @@ import { HeliosIconComponent } from './helios-icon/helios-icon.component';
 import { DividerModule } from 'primeng/divider';
 import { AvatarModule } from 'primeng/avatar';
 import { ToastModule } from 'primeng/toast';
+import { KeycloakService } from './core/services/keycloak/keycloak.service';
 
 @Component({
   selector: 'app-root',
@@ -19,6 +20,8 @@ export class AppComponent implements OnInit {
   title = 'Helios';
 
   items!: { label: string; icon: string; path: string }[];
+
+  constructor(private keycloakService: KeycloakService) {}
 
   ngOnInit() {
     this.items = [
@@ -38,5 +41,9 @@ export class AppComponent implements OnInit {
         path: '/environment/list',
       },
     ];
+  }
+
+  logout() {
+    this.keycloakService.logout();
   }
 }

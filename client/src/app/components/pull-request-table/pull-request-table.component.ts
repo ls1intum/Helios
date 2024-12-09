@@ -13,7 +13,7 @@ import { Router, RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-pull-request-table',
-  imports: [TableModule, AvatarModule, TagModule, IconsModule, SkeletonModule, RouterLink],
+  imports: [TableModule, AvatarModule, TagModule, IconsModule, SkeletonModule],
   templateUrl: './pull-request-table.component.html',
   styles: [`
     :host ::ng-deep {
