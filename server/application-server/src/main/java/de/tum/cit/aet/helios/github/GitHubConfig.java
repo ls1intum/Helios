@@ -42,41 +42,49 @@ public class GitHubConfig {
         this.environment = environment;
     }
 
-    @Bean
-    public GitHub createGitHubClientWithCache() {
-        if (ghAuthToken == null || ghAuthToken.isEmpty()) {
-            log.error("GitHub auth token is not provided! GitHub client will be disabled.");
-            return GitHub.offline();
-        }
-
+    private OkHttpClient.Builder buildOkHttpClientBuilder() {
         // Set up a logging interceptor for debugging
         HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor();
-        if (environment.matchesProfiles("debug")) {
-            log.warn("The requests to GitHub will be logged with the full body. This exposes sensitive data such as OAuth tokens. Use only for debugging!");
+        if (environment.acceptsProfiles("debug")) {
+            log.warn("Requests to GitHub will be logged with full body. Use only for debugging!");
             loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
         } else {
-            log.info("The requests to GitHub will be logged with the basic information.");
+            log.info("Requests to GitHub will be logged with basic information.");
             loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BASIC);
         }
 
-        OkHttpClient.Builder builder = new OkHttpClient().newBuilder();
+        OkHttpClient.Builder builder = new OkHttpClient.Builder();
 
         if (cacheEnabled) {
             File cacheDir = new File("./build/github-cache");
             Cache cache = new Cache(cacheDir, cacheSize * 1024L * 1024L);
             builder.cache(cache);
-            log.info("Cache is enabled with TTL {} seconds and size {} MB", cacheTtl, cacheSize);
+            log.info("Cache enabled with TTL {} seconds and size {} MB", cacheTtl, cacheSize);
         } else {
             log.info("Cache is disabled");
         }
 
-        // Configure OkHttpClient with the cache and logging
-        OkHttpClient okHttpClient = builder
+        // Configure timeouts and add the logging interceptor
+        builder
                 .connectTimeout(15, TimeUnit.SECONDS)
                 .writeTimeout(15, TimeUnit.SECONDS)
                 .readTimeout(15, TimeUnit.SECONDS)
-                .addInterceptor(loggingInterceptor)
-                .build();
+                .addInterceptor(loggingInterceptor);
+
+        return builder;
+    }
+
+    @Bean
+    public OkHttpClient okHttpClient() {
+        return buildOkHttpClientBuilder().build();
+    }
+
+    @Bean
+    public GitHub createGitHubClientWithCache(OkHttpClient okHttpClient) {
+        if (ghAuthToken == null || ghAuthToken.isEmpty()) {
+            log.error("GitHub auth token is not provided! GitHub client will be disabled.");
+            return GitHub.offline();
+        }
 
         try {
             // Initialize GitHub client with OAuth token and custom OkHttpClient
