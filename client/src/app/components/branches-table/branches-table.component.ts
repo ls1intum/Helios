@@ -38,7 +38,7 @@ export class BranchTableComponent {
   branchService = inject(BranchControllerService);
   branchStore = inject(BranchStoreService);
 
-  featureBranchesTree = computed(() => this.convertBranchesToTreeNodes(this.branchStore.branches()));
+  featureBranchesTree = computed(() => this.convertBranchesToTreeNodes(this.getFeatureBranches()));
   isError = signal(false);
   isEmpty = signal(false);
   isLoading = signal(false);
@@ -55,7 +55,6 @@ export class BranchTableComponent {
     const featureBranches = this.branchStore.branches().filter(branch =>
       !this.specialBranches.includes(branch.name.toLowerCase())
     );
-    this.convertBranchesToTreeNodes(featureBranches);
     return featureBranches
   }
 
