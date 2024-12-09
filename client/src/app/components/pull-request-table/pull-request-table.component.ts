@@ -2,6 +2,7 @@ import { Component, inject, Injectable, signal } from '@angular/core';
 
 import { Router } from '@angular/router';
 import { PullRequestControllerService, PullRequestInfoDTO } from '@app/core/modules/openapi';
+import { PullRequestStoreService } from '@app/core/services/pull-requests';
 import { injectQuery } from '@tanstack/angular-query-experimental';
 import { IconsModule } from 'icons.module';
 import { AvatarModule } from 'primeng/avatar';
@@ -88,17 +89,3 @@ export class PullRequestTableComponent {
   }
 }
 
-@Injectable({
-  providedIn: 'root'
-})
-export class PullRequestStoreService {
-  private pullRequestsState = signal<PullRequestInfoDTO[]>([]);
-
-  get pullRequests() {
-    return this.pullRequestsState.asReadonly();
-  }
-
-  setPullRequests(pullRequests: PullRequestInfoDTO[]) {
-    this.pullRequestsState.set(pullRequests);
-  }
-}

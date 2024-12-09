@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, input, Signal } from '@angular/core';
+import { Component, computed, inject, input, signal, Signal } from '@angular/core';
 import { Pipeline, PipelineService } from '@app/core/services/pipeline';
 import { PipelineComponent } from '@app/components/pipeline/pipeline.component';
 import { FetchEnvironmentService } from '@app/core/services/fetch/environment';
@@ -11,6 +11,7 @@ import { IconsModule } from 'icons.module';
 import { EnvironmentCommitInfoComponent } from '@app/components/environment-commit-info/environment-commit-info.component';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
+import { PullRequestStoreService } from '@app/core/services/pull-requests';
 
 @Component({
   selector: 'app-pull-request-pipeline',
@@ -22,4 +23,11 @@ export class PullRequestPipelineComponent {
   pullRequestId: Signal<number> = input.required();
   fetchEnvironments = inject(FetchEnvironmentService);
   environments = this.fetchEnvironments.getEnvironments().data;
+  pullRequestStore = inject(PullRequestStoreService);
+  currentPullRequest = computed(() => {
+    const prs = this.pullRequestStore.pullRequests();
+    const id = this.pullRequestId();
+    const found = prs.find(pr => pr.id.toString() === id.toString());
+    return found;
+  });
 }
