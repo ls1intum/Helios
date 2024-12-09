@@ -12,4 +12,6 @@ public interface EnvironmentRepository extends JpaRepository<Environment, Long> 
     List<Environment> findByRepository(GitRepository repository);
 
     Environment findByNameAndRepository(String environmentName, GitRepository repository);
+
+    List<Environment> findByRepositoryIdOrderByCreatedAtDesc(Long repositoryId);
 }
