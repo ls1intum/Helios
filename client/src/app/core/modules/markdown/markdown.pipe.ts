@@ -19,9 +19,26 @@ export class MarkdownPipe implements PipeTransform {
         marked.setOptions({ renderer });
     }
 
+    private hasMarkdownSyntax(text: string): boolean {
+        // Common markdown patterns
+        const markdownPatterns = [
+            /`[^`]+`/,          // inline code
+            /\*\*[^*]+\*\*/,    // bold
+            /\*[^*]+\*/,        // italic
+            /\[[^\]]+\]\([^)]+\)/, // links
+            /```[\s\S]*?```/,   // code blocks
+            /#{1,6}\s.+/,       // headers
+        ];
+
+        return markdownPatterns.some(pattern => pattern.test(text));
+    }
+
     transform(value: string): SafeHtml {
         if (!value) return '';
-        const html = marked.parse(value).toString();
-        return this.sanitizer.bypassSecurityTrustHtml(html || '');
+        if (this.hasMarkdownSyntax(value)) {
+            const html = marked.parse(value).toString();
+            return this.sanitizer.bypassSecurityTrustHtml(html || '');
+        }
+        return this.sanitizer.sanitize(SecurityContext.HTML, value) || '';
     }
 }
