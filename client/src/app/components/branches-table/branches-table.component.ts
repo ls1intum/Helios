@@ -1,4 +1,4 @@
-import { Component, inject, Injectable, signal, ViewChild } from '@angular/core';
+import { Component, computed, inject, Injectable, signal, ViewChild } from '@angular/core';
 
 import { Table, TableModule } from 'primeng/table';
 import { AvatarModule } from 'primeng/avatar';
@@ -11,11 +11,24 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { InputIconModule } from 'primeng/inputicon';
 import { InputTextModule } from 'primeng/inputtext';
 import { IconFieldModule } from 'primeng/iconfield';
+import { TreeTableModule } from 'primeng/treetable';
+import { ButtonModule } from 'primeng/button';
+import { CommonModule } from '@angular/common';
+import { BranchViewPreferenceService } from '@app/core/services/branches-table/branch-view-preference';
 
 
 @Component({
   selector: 'app-branches-table',
-  imports: [TableModule, AvatarModule, TagModule, IconsModule, SkeletonModule, InputTextModule,
+  imports: [
+    TableModule,
+    AvatarModule,
+    TagModule,
+    IconsModule,
+    SkeletonModule,
+    InputTextModule,
+    TreeTableModule,
+    CommonModule,
+    ButtonModule,
     IconFieldModule,
     InputIconModule],
   templateUrl: './branches-table.component.html',
@@ -25,6 +38,7 @@ export class BranchTableComponent {
   branchService = inject(BranchControllerService);
   branchStore = inject(BranchStoreService);
 
+  featureBranchesTree = computed(() => this.convertBranchesToTreeNodes(this.branchStore.branches()));
   isError = signal(false);
   isEmpty = signal(false);
   isLoading = signal(false);
@@ -38,9 +52,11 @@ export class BranchTableComponent {
   }
 
   getFeatureBranches() {
-    return this.branchStore.branches().filter(branch =>
+    const featureBranches = this.branchStore.branches().filter(branch =>
       !this.specialBranches.includes(branch.name.toLowerCase())
     );
+    this.convertBranchesToTreeNodes(featureBranches);
+    return featureBranches
   }
 
 
@@ -68,6 +84,62 @@ export class BranchTableComponent {
   openLink(url: string): void {
     window.open(url, '_blank');
   }
+
+  convertBranchesToTreeNodes(branches: BranchInfoWithLink[]): TreeNode[] {
+    const rootNodes: TreeNode[] = [];
+    const nodeMap = new Map<string, TreeNode>();
+
+    branches.forEach(branch => {
+      const pathParts = branch.name.split('/');
+      let currentPath = '';
+
+      pathParts.forEach((part, index) => {
+        const isLeaf = index === pathParts.length - 1;
+        currentPath = currentPath ? `${currentPath}/${part}` : part;
+
+        if (!nodeMap.has(currentPath)) {
+          const newNode: TreeNode = {
+            data: {
+              name: part,
+            }
+          };
+
+          // If it's a leaf node, add the branch info
+          if (isLeaf) {
+            newNode.data.commit_sha = branch.commit_sha;
+            newNode.data.repository = branch.repository;
+            newNode.data.lastCommitLink = branch.lastCommitLink;
+            newNode.data.link = branch.link;
+          } else {
+            newNode.children = [];
+          }
+
+          nodeMap.set(currentPath, newNode);
+
+          // If it's the first level, add to root nodes
+          if (index === 0) {
+            rootNodes.push(newNode);
+          } else {
+            // Add as child to parent node
+            const parentPath = pathParts.slice(0, index).join('/');
+            const parentNode = nodeMap.get(parentPath);
+            if (parentNode && parentNode.children) {
+              parentNode.children.push(newNode);
+            }
+          }
+        }
+      });
+    });
+    console.log("root nodes", JSON.stringify(rootNodes, null, 2));
+    return rootNodes;
+  }
+
+  viewPreference = inject(BranchViewPreferenceService);
+  toggleView() {
+    this.viewPreference.toggleViewMode();
+  }
+
+
 }
 
 @Injectable({
@@ -89,3 +161,16 @@ export class BranchStoreService {
 }
 
 export type BranchInfoWithLink = BranchInfoDTO & { link: string, lastCommitLink: string };
+
+interface TreeNode {
+  data: {
+    name: string;
+    commit_sha?: string;
+    repository?: any;
+    link?: string;
+    lastCommitLink?: string;
+    type?: 'Branch' | 'Folder';
+  };
+  children?: TreeNode[];
+}
+

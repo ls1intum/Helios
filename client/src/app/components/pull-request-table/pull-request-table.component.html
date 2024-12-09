@@ -1,5 +1,5 @@
 @if (isLoading()) {
-<p-table [value]="[1, 2, 3, 4, 5]" styleClass="p-datatable-lg">
+<p-table [value]="[1, 2, 3, 4, 5]">
   <ng-template pTemplate="header">
     <tr>
       <th>Title</th>
@@ -28,8 +28,7 @@
 @if (isEmpty()) {
 <p>No pull requests found.</p>
 } @else {
-<p-table [rowHover]="true" [value]="pullRequestStore.pullRequests()" styleClass="p-datatable-lg" [paginator]="true"
-  [rows]="20">
+<p-table [rowHover]="true" [value]="pullRequestStore.pullRequests()" [paginator]="true" [rows]="20">
   <ng-template pTemplate="header">
     <tr>
       <th>Title</th>
