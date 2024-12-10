@@ -1,20 +1,17 @@
-<main>
-  <div class="flex h-screen py-3 pl-3 w-screen">
-    <div class="rounded-2xl p-5 mr-3 bg-slate-100 flex flex-col items-center justify-between h-full">
+<main class="h-screen overflow-hidden">
+  <div class="flex h-full p-3">
+    <!-- Fixed Navigation Bar -->
+    <div class="rounded-2xl p-5 mr-3 bg-slate-100 flex flex-col items-center justify-between h-full sticky top-3">
       <app-helios-icon routerLink="/" size="3rem" class="rounded-xl w-12 cursor-pointer" />
       <p-divider />
       <p-avatar label="A" pTooltip="Artemis" size="large" />
       <p-divider />
       <div class="flex flex-col gap-3">
         @for (item of items; track item.label) {
-          <a
-            class="rounded-xl p-2 flex items-center text-slate-500 hover:text-slate-700"
-            [routerLink]="item.path"
-            [routerLinkActive]="'!bg-slate-800 !text-slate-100 !hover:text-slate-100'"
-            [pTooltip]="item.label"
-          >
-            <i-tabler [name]="item.icon" class="!size-10 !stroke-1" />
-          </a>
+        <a class="rounded-xl p-2 flex items-center text-slate-500 hover:text-slate-700" [routerLink]="item.path"
+          [routerLinkActive]="'!bg-slate-800 !text-slate-100 !hover:text-slate-100'" [pTooltip]="item.label">
+          <i-tabler [name]="item.icon" class="!size-10 !stroke-1" />
+        </a>
         }
       </div>
       <span class="flex-grow"></span>
@@ -23,8 +20,12 @@
       <p-avatar label="U" size="large" />
       <button pButton label="" icon="pi pi-sign-out" class="p-button-danger mt-3 w-full" (click)="logout()"></button>
     </div>
-    <div class="flex-grow">
-      <router-outlet />
+
+    <!-- Scrollable Content Area -->
+    <div class="flex-grow overflow-auto h-full">
+      <div class="p-3">
+        <router-outlet />
+      </div>
     </div>
     <p-toast></p-toast>
   </div>
