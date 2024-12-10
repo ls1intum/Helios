@@ -31,4 +31,11 @@ public class PullRequestController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    // TODO: Generalize filtering with repositoryId
+    @GetMapping("/repository/{id}")
+    public ResponseEntity<List<PullRequestInfoDTO>> getPullRequestByRepositoryId(@PathVariable Long id) {
+        List<PullRequestInfoDTO> pullRequests = pullRequestService.getPullRequestByRepositoryId(id);
+        return ResponseEntity.ok(pullRequests);
+    }
+
 }
