@@ -1,8 +1,8 @@
-<p-tabView>
-  <p-tabPanel header="Pull Requests">
-    <app-pull-request-table></app-pull-request-table>
-  </p-tabPanel>
-  <p-tabPanel header="Branches">
-    <app-branches-table></app-branches-table>
-  </p-tabPanel>
-</p-tabView>
+<p-tabMenu [model]="tabs()" [activeItem]="activeTab()" (activeItemChange)="onTabChange($event)"></p-tabMenu>
+
+@if (isTabActive('pr')) {
+<app-pull-request-table />
+}
+@if (isTabActive('branches')) {
+<app-branches-table />
+}

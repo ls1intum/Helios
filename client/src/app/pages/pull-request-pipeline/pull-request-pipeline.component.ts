@@ -1,5 +1,9 @@
+import { Component, computed, inject, input, Signal } from '@angular/core';
+import { LockTagComponent } from '@app/components/lock-tag/lock-tag.component';
+import { EnvironmentCommitInfoComponent } from '@app/components/environment-commit-info/environment-commit-info.component';
+import { PullRequestStoreService } from '@app/core/services/pull-requests';
+import { MarkdownPipe } from '@app/core/modules/markdown/markdown.pipe';
 import {CommonModule} from '@angular/common';
-import {Component, input, Signal} from '@angular/core';
 import {PipelineComponent} from '@app/components/pipeline/pipeline.component';
 import {FetchEnvironmentService} from '@app/core/services/fetch/environment';
 import {AccordionModule} from 'primeng/accordion';
@@ -12,10 +16,18 @@ import {EnvironmentListComponent} from '@app/pages/environment-list/environment-
 
 @Component({
   selector: 'app-pull-request-pipeline',
-  imports: [InputTextModule, AccordionModule, CommonModule, RouterLink, TagModule, IconsModule, ButtonModule, PipelineComponent, EnvironmentListComponent],
+  imports: [InputTextModule, AccordionModule, CommonModule, LockTagComponent, RouterLink, TagModule, IconsModule, EnvironmentCommitInfoComponent, ButtonModule, PipelineComponent, MarkdownPipe, EnvironmentListComponent],
   providers: [FetchEnvironmentService],
   templateUrl: './pull-request-pipeline.component.html',
+  styleUrl: './pull-request-pipeline.component.css'
 })
 export class PullRequestPipelineComponent {
   pullRequestId: Signal<number> = input.required();
+  pullRequestStore = inject(PullRequestStoreService);
+  currentPullRequest = computed(() => {
+    const prs = this.pullRequestStore.pullRequests();
+    const id = this.pullRequestId();
+    const found = prs.find(pr => pr.id.toString() === id.toString());
+    return found;
+  });
 }
