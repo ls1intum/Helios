@@ -15,7 +15,7 @@ services:
   webhook-listener:
     image: "ghcr.io/ls1intum/helios/webhook-listener:${WEBHOOK_LISTENER_IMAGE_TAG}"
     ports:
-      - '4201:4200'
+      - '4200:4200'
     environment:
       - NATS_AUTH_TOKEN=${NATS_AUTH_TOKEN}
       - WEBHOOK_SECRET=${WEBHOOK_SECRET}
@@ -53,7 +53,7 @@ services:
     image: "ghcr.io/ls1intum/helios/client:${CLIENT_IMAGE_TAG}"
     ports:
       # Do not expose the client to 80 or 443
-      - "4200:80"
+      - "90:80"
     restart: always
     networks:
       - helios-network
