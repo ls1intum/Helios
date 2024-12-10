@@ -92,11 +92,12 @@ export class ConnectRepoComponent {
 
     this.repositoryService.connectRepository({
       name: repo.name,
+      id: repo.id,
       description: repo.description || undefined,
       nameWithOwner: repo.full_name,
       htmlUrl: repo.html_url
     }).pipe(
-      finalize(() => this.connectingRepoId.set(null))
+      finalize(() => this.connectingRepoId.set(repo.id))
     ).subscribe({
       next: () => {
         // Handle success (show toast or message)
