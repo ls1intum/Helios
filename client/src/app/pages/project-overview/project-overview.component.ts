@@ -1,6 +1,8 @@
 import { CommonModule } from '@angular/common';
-import { Component, signal } from '@angular/core';
+import { Component, signal, ViewChild } from '@angular/core';
+import { ConnectRepoComponent } from '@app/components/connect-repo/connect-repo.component';
 import { RepositoryInfoDTO } from '@app/core/modules/openapi';
+import { RepositoryService } from '@app/core/services/repository';
 import { IconsModule } from 'icons.module';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
@@ -11,29 +13,28 @@ import { Tag, TagModule } from 'primeng/tag';
 
 @Component({
   selector: 'app-project-overview',
-  imports: [DataViewModule, ButtonModule, TagModule, CommonModule, CardModule, ChipModule, IconsModule],
+  imports: [DataViewModule, ButtonModule, TagModule, CommonModule, CardModule, ChipModule, IconsModule, ConnectRepoComponent],
   templateUrl: './project-overview.component.html',
   styleUrl: './project-overview.component.css'
 })
 export class ProjectOverviewComponent {
+  @ViewChild(ConnectRepoComponent)
+  repositoryConnection!: ConnectRepoComponent;
 
-  repositories = signal<RepositoryInfoDTO[]>([{
-    "id": 69562331,
-    "name": "Artemis",
-    "nameWithOwner": "ls1intum/Artemis",
-    "description": "Artemis - Interactive Learning with Automated Feedback",
-    "htmlUrl": "https://github.com/ls1intum/Artemis"
-  }, {
-    "id": 69562332,
-    "name": "Thesis Track",
-    "nameWithOwner": "ls1intum/ThesisTrack",
-    "description": "Thesis Track - A tool for managing theses",
-    "htmlUrl": "https://github.com/ls1intum/ThesisTrack"
-  }]);
+  repositories;
+  loading;
+
+  constructor(private repositoryService: RepositoryService) {
+    this.repositories = this.repositoryService.repositories;
+    this.loading = this.repositoryService.loading;
+  }
 
   showDialog() {
-    console.log('show dialog');
+    this.repositoryConnection.show();
+  }
 
+  refreshRepositories() {
+    this.repositoryService.refreshRepositories().subscribe();
   }
 
 }

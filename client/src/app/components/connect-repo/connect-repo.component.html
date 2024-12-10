@@ -1,0 +1,15 @@
+<p-dialog header="Connect Repository" [(visible)]="visible" [modal]="true" [style]="{ width: '50vw' }"
+    [draggable]="false" [resizable]="false">
+    <div class="p-4">
+        <!-- Add repository connection form here -->
+        <div class="flex flex-column gap-4">
+            <div class="text-xl">Select a repository provider:</div>
+            <div class="flex gap-3">
+                <p-button label="GitHub" icon="pi pi-github" (click)="connectGithub()">
+                </p-button>
+                <p-button label="GitLab" icon="pi pi-gitlab" (click)="connectGitlab()">
+                </p-button>
+            </div>
+        </div>
+    </div>
+</p-dialog>
