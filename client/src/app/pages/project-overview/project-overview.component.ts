@@ -1,15 +1,13 @@
 import { CommonModule } from '@angular/common';
-import { Component, signal, ViewChild } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
 import { ConnectRepoComponent } from '@app/components/connect-repo/connect-repo.component';
-import { RepositoryInfoDTO } from '@app/core/modules/openapi';
-import { RepositoryService } from '@app/core/services/repository';
+import { RepositoryService } from '@app/core/services/repository.service';
 import { IconsModule } from 'icons.module';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { ChipModule } from 'primeng/chip';
-import { DataViewModule, DataView } from 'primeng/dataview';
-import { SelectButton, SelectButtonModule } from 'primeng/selectbutton';
-import { Tag, TagModule } from 'primeng/tag';
+import { DataViewModule } from 'primeng/dataview';
+import { TagModule } from 'primeng/tag';
 
 @Component({
   selector: 'app-project-overview',

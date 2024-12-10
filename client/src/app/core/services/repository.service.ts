@@ -16,7 +16,8 @@ export class RepositoryService {
     public loading = this._loading.asReadonly();
 
     constructor(private http: HttpClient) {
-        this.fetchRepositories().subscribe();
+        this.loadFromStorage();
+        // this.fetchRepositories().subscribe();
     }
 
     // private fetchRepositories(): Observable<RepositoryInfoDTO[]> {
@@ -47,21 +48,56 @@ export class RepositoryService {
             })
         );
     }
-    connectRepository(provider: 'github' | 'gitlab', repoData: Partial<RepositoryInfoDTO>): Observable<RepositoryInfoDTO> {
+    connectRepository(repoData: Partial<RepositoryInfoDTO>): Observable<RepositoryInfoDTO> {
         this._loading.set(true);
 
-        return this.http.post<RepositoryInfoDTO>(`${this.API_URL}/connect`, {
-            provider,
-            ...repoData
-        }).pipe(
+        // return this.http.post<RepositoryInfoDTO>(`${this.API_URL}/connect`, {
+        //     provider,
+        //     ...repoData
+        // }).pipe(
+        //     tap({
+        //         next: (newRepo) => {
+        //             this._repositories.update(repos => [...repos, newRepo]);
+        //             this._loading.set(false);
+        //         },
+        //         error: () => this._loading.set(false)
+        //     })
+        // );
+
+        // Create mock repository data
+        const newRepo: RepositoryInfoDTO = {
+            id: Number(repoData.id),
+            name: repoData.name || '',
+            description: repoData.description,
+            htmlUrl: repoData.htmlUrl || '',
+            nameWithOwner: repoData.nameWithOwner || ''
+        };
+
+        // Simulate API delay
+        return of(newRepo).pipe(
+            delay(1000),
             tap({
-                next: (newRepo) => {
-                    this._repositories.update(repos => [...repos, newRepo]);
+                next: (repo) => {
+                    this._repositories.update(repos => {
+                        const updatedRepos = [...repos, repo];
+                        this.saveToStorage(updatedRepos);
+                        return updatedRepos;
+                    });
                     this._loading.set(false);
                 },
                 error: () => this._loading.set(false)
             })
         );
+    }
+
+    private saveToStorage(repositories: RepositoryInfoDTO[]) {
+        localStorage.setItem('connected-repositories', JSON.stringify(repositories));
+    }
+    private loadFromStorage() {
+        const stored = localStorage.getItem('connected-repositories');
+        if (stored) {
+            this._repositories.set(JSON.parse(stored));
+        }
     }
 
     disconnectRepository(id: string): Observable<void> {
