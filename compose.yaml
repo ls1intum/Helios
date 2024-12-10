@@ -16,20 +16,20 @@ services:
     image: quay.io/keycloak/keycloak:latest
     container_name: keycloak
     environment:
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: admin
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
       KC_DB: postgres
       KC_DB_URL_HOST: postgres
       KC_DB_USERNAME: ${POSTGRES_USER}
       KC_DB_PASSWORD: ${POSTGRES_PASSWORD}
-      KC_HOSTNAME: localhost
+      KC_HOSTNAME: ${KC_HOSTNAME}
     ports:
       - '8081:8081'
     depends_on:
       - postgres
     volumes:
-      - keycloak_data:/opt/keycloak/data
-    command: start-dev --http-port=8081
+      - ./helios-example-realm.json:/opt/keycloak/data/import/dev-realm-export.json
+    command: start-dev --import-realm --http-port=8081
     networks:
       - helios-network
 

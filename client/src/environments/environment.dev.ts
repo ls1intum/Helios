@@ -3,8 +3,8 @@ export const environment = {
   serverUrl: 'http://localhost:8080',
   keycloak: {
     url: 'http://localhost:8081',
-    realm: 'helios',
-    clientId: 'helios-app',
+    realm: 'helios-example',
+    clientId: 'helios-app-example',
     skipLoginPage: true
   },
   clientUrl: 'http://localhost:4200'

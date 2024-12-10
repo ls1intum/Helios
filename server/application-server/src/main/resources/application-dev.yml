@@ -13,7 +13,7 @@ spring:
         oauth2:
             resourceserver:
                 jwt:
-                    issuer-uri: http://localhost:8081/realms/helios
+                    issuer-uri: ${OAUTH_ISSUER_URL}
 
 nats:
     enabled: true
