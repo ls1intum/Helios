@@ -3,6 +3,20 @@
 
     <div class="flex flex-column gap-4 p-4">
         <!-- Step 1: Organization Selection -->
+        @if (currentStep() === 'token_input') {
+        <div class="flex flex-col gap-4">
+            <p>Please enter your GitHub personal access token:</p>
+            <input pInputText type="password" [(ngModel)]="githubToken" placeholder="ghp_xxxxxxxxxxxx"
+                [disabled]="loading()" />
+            <small class="text-gray-600">
+                The token needs repo and org permissions.
+                <a href="https://github.com/settings/tokens/new" target="_blank">
+                    Generate a new token
+                </a>
+            </small>
+            <p-button label="Continue" [loading]="loading()" (onClick)="validateAndSetToken()"></p-button>
+        </div>
+        }
         @if (currentStep() === 'org_selection') {
         <div class="flex flex-col gap-3">
             <div class="text-xl">Select an organization:</div>

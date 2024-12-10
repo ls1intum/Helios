@@ -3,6 +3,7 @@ import { Component, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { GithubOrg, GithubRepo, GithubService } from '@app/core/services/github.service';
 import { RepositoryService } from '@app/core/services/repository.service';
+import { IconsModule } from 'icons.module';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { DialogModule } from 'primeng/dialog';
@@ -17,6 +18,7 @@ import { finalize } from 'rxjs';
     DialogModule,
     DropdownModule,
     CardModule,
+    IconsModule,
     FormsModule],
   templateUrl: './connect-repo.component.html',
   styleUrl: './connect-repo.component.css'
@@ -24,8 +26,8 @@ import { finalize } from 'rxjs';
 export class ConnectRepoComponent {
   visible = false;
   loading = signal(false);
-  currentStep = signal<'org_selection' | 'repo_selection'>('org_selection');
-
+  currentStep = signal<'token_input' | 'org_selection' | 'repo_selection'>('token_input');
+  githubToken = '';
   organizations = signal<GithubOrg[]>([]);
   repositories = signal<GithubRepo[]>([]);
   selectedOrg = signal<GithubOrg | null>(null);
@@ -47,7 +49,8 @@ export class ConnectRepoComponent {
   }
 
   private reset() {
-    this.currentStep.set('org_selection');
+    this.currentStep.set('token_input');
+    this.githubToken = '';
     this.organizations.set([]);
     this.repositories.set([]);
     this.selectedOrg.set(null);
@@ -65,6 +68,30 @@ export class ConnectRepoComponent {
       error: (error) => {
         console.error('Failed to fetch organizations:', error);
         // Handle error (show toast or message)
+      }
+    });
+  }
+
+  validateAndSetToken() {
+    if (!this.githubToken) return;
+
+    this.loading.set(true);
+    this.githubService.validateToken(this.githubToken).pipe(
+      finalize(() => this.loading.set(false))
+    ).subscribe({
+      next: (isValid) => {
+        if (isValid) {
+          this.githubService.setToken(this.githubToken);
+          this.currentStep.set('org_selection');
+          this.loadOrganizations();
+        } else {
+          console.log('Invalid token');
+          // Show error message (invalid token)
+        }
+      },
+      error: () => {
+        console.error('Failed to validate token');
+        // Show error message
       }
     });
   }

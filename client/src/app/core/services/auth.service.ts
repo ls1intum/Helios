@@ -8,6 +8,6 @@ import { Observable, of, delay } from 'rxjs';
 export class AuthService {
     // Mock GitHub token
     getGithubToken(): Observable<string> {
-        return of(environment.githubToken).pipe(delay(500));
+        return of("github_token").pipe(delay(500));
     }
 }
