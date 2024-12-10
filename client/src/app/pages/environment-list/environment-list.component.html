@@ -8,10 +8,10 @@
         <!-- TODO: Refactor after adding lock functionality -->
         <app-lock-tag [isLocked]="false"></app-lock-tag>
         <div class="flex-grow"></div>
-<!--        @if (environment.locked) {-->
-<!--        <a *ngIf="environment.locked" [href]="environment.url" class="p-button p-button-danger p-2"><i-tabler-->
-<!--            name="lock-open" class="mr-1" />Unlock</a>-->
-<!--        }-->
+        <!--        @if (environment.locked) {-->
+        <!--        <a *ngIf="environment.locked" [href]="environment.url" class="p-button p-button-danger p-2"><i-tabler-->
+        <!--            name="lock-open" class="mr-1" />Unlock</a>-->
+        <!--        }-->
         <a [href]="environment.url" class="p-button p-button-secondary p-2"><i-tabler name="external-link"
             class="mr-1" />Open</a>
         <a icon [routerLink]="'/environment/' + environment.id + '/edit'"
@@ -21,8 +21,8 @@
     <app-environment-commit-info [environmentId]="environment.id" />
     <div class="flex gap-4 items-center justify-between">
       <div class="flex gap-1 mt-2 items-center">
-        <a icon [routerLink]="'/environment/' + environment.id + '/history'" class="p-button p-button-text text-gray-500 p-2"><i-tabler
-            class="mr-1" name="history" />View History</a>
+        <a icon [routerLink]="['/project', 'projectid', 'environment', environment.id, 'history']"
+          class="p-button p-button-text text-gray-500 p-2"><i-tabler class="mr-1" name="history" />View History</a>
       </div>
 
       <!-- TODO: Add Connected Systems -->
