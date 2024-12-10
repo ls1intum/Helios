@@ -25,4 +25,10 @@ public class PullRequestService {
         return pullRequestRepository.findById(id)
                 .map(PullRequestInfoDTO::fromPullRequest);
     }
+
+    public List<PullRequestInfoDTO> getPullRequestByRepositoryId(Long repositoryId) {
+        return pullRequestRepository.findByRepositoryId(repositoryId).stream()
+                .map(PullRequestInfoDTO::fromPullRequest)
+                .collect(Collectors.toList());
+    }
 }
