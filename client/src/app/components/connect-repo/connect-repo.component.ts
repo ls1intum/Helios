@@ -21,7 +21,6 @@ import { finalize } from 'rxjs';
     IconsModule,
     FormsModule],
   templateUrl: './connect-repo.component.html',
-  styleUrl: './connect-repo.component.css'
 })
 export class ConnectRepoComponent {
   visible = false;
