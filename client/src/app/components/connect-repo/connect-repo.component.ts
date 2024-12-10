@@ -24,7 +24,7 @@ import { finalize } from 'rxjs';
 export class ConnectRepoComponent {
   visible = false;
   loading = signal(false);
-  currentStep = signal<'initial' | 'org_selection' | 'repo_selection'>('initial');
+  currentStep = signal<'org_selection' | 'repo_selection'>('org_selection');
 
   organizations = signal<GithubOrg[]>([]);
   repositories = signal<GithubRepo[]>([]);
@@ -38,7 +38,7 @@ export class ConnectRepoComponent {
 
   show() {
     this.visible = true;
-    this.reset();
+    this.loadOrganizations();
   }
 
   hide() {
@@ -47,21 +47,20 @@ export class ConnectRepoComponent {
   }
 
   private reset() {
-    this.currentStep.set('initial');
+    this.currentStep.set('org_selection');
     this.organizations.set([]);
     this.repositories.set([]);
     this.selectedOrg.set(null);
     this.loading.set(false);
   }
 
-  connectGithub() {
+  private loadOrganizations() {
     this.loading.set(true);
     this.githubService.getOrganizations().pipe(
       finalize(() => this.loading.set(false))
     ).subscribe({
       next: (orgs) => {
         this.organizations.set(orgs);
-        this.currentStep.set('org_selection');
       },
       error: (error) => {
         console.error('Failed to fetch organizations:', error);
@@ -101,6 +100,7 @@ export class ConnectRepoComponent {
     ).subscribe({
       next: () => {
         // Handle success (show toast or message)
+        this.hide();
       },
       error: (error) => {
         console.error('Failed to connect repository:', error);

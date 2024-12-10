@@ -1,22 +1,16 @@
-<p-dialog header="Connect Repository" [(visible)]="visible" [modal]="true" [style]="{ width: '50vw' }"
+<p-dialog header="Connect GitHub Repository" [(visible)]="visible" [modal]="true" [style]="{ width: '50vw' }"
     [draggable]="false" [resizable]="false">
 
     <div class="flex flex-column gap-4 p-4">
-        <!-- Step 1: Initial -->
-        @if (currentStep() === 'initial') {
-        <div class="flex flex-column gap-3">
-            <div class="text-xl">Select a repository provider:</div>
-            <div class="flex gap-3">
-                <p-button label="GitHub" icon="pi pi-github" [loading]="loading()" (click)="connectGithub()">
-                </p-button>
-            </div>
-        </div>
-        }
-
-        <!-- Step 2: Organization Selection -->
+        <!-- Step 1: Organization Selection -->
         @if (currentStep() === 'org_selection') {
         <div class="flex flex-col gap-3">
             <div class="text-xl">Select an organization:</div>
+            @if (loading()) {
+            <div class="flex justify-center">
+                <i class="pi pi-spin pi-spinner text-2xl"></i>
+            </div>
+            } @else {
             <div class="grid">
                 @for (org of organizations(); track org.id) {
                 <div class="mb-2">
@@ -32,10 +26,11 @@
                 </div>
                 }
             </div>
+            }
         </div>
         }
 
-        <!-- Step 3: Repository Selection -->
+        <!-- Step 2: Repository Selection -->
         @if (currentStep() === 'repo_selection') {
         <div class="flex flex-col gap-3">
             <div class="flex align-items-center gap-2">
