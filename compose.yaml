@@ -9,6 +9,8 @@ services:
       - '5432:5432'
     volumes:
       - db-data:/var/lib/postgresql/data
+    networks:
+      - helios-network
   
   keycloak:
     image: quay.io/keycloak/keycloak:latest
@@ -20,27 +22,30 @@ services:
       KC_DB_URL_HOST: postgres
       KC_DB_USERNAME: ${POSTGRES_USER}
       KC_DB_PASSWORD: ${POSTGRES_PASSWORD}
-      KC_HOSTNAME: keycloak
+      KC_HOSTNAME: localhost
     ports:
-      - '8081:8081' # Keycloak exposed on 8081 to avoid conflict with application-server
+      - '8081:8081'
     depends_on:
       - postgres
     volumes:
       - keycloak_data:/opt/keycloak/data
-    command: start-dev --http-port=8081 --hostname=0.0.0.0
+    command: start-dev --http-port=8081
+    networks:
+      - helios-network
 
   webhook-listener:
     build:
       context: server/webhook-listener
     ports:
-      - '4200:4200'
+      - '4201:4200'
     environment:
       - NATS_AUTH_TOKEN=${NATS_AUTH_TOKEN}
       - WEBHOOK_SECRET=${WEBHOOK_SECRET}
       - NATS_URL=nats-server
     depends_on:
       - nats-server
-
+    networks:
+      - helios-network
 
   nats-server:
     image: nats:alpine
@@ -63,6 +68,8 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+    networks:
+      - helios-network
 
   client:
     container_name: client
@@ -74,30 +81,17 @@ services:
       - ./client:/usr/src/app/
       - /usr/src/app/node_modules/
     ports:
-      - "80:4200"
-
-  application-server:
-    build:
-      context: server/application-server
-    ports:
-      - '8080:8080'
-    environment:
-      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
-      - DATASOURCE_URL=${DATASOURCE_URL}
-      - DATASOURCE_USERNAME=${DATASOURCE_USERNAME}
-      - DATASOURCE_PASSWORD=${DATASOURCE_PASSWORD}
-      - NATS_SERVER=${NATS_SERVER}
-      - NATS_AUTH_TOKEN=${NATS_AUTH_TOKEN}
-      - ORGANIZATION_NAME=${ORGANIZATION_NAME}
-      - GITHUB_AUTH_TOKEN=${GITHUB_AUTH_TOKEN}
-      - REPOSITORY_NAME=${REPOSITORY_NAME}
-
+      - "4200:4200"
     depends_on:
-      - postgres
-      - nats-server
-      - webhook-listener
+      - keycloak
+    networks:
+      - helios-network
 
 volumes:
   db-data:
   nats-data:
   keycloak_data:
+
+networks:
+  helios-network:
+    name: helios-network

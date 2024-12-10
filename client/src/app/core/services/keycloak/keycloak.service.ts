@@ -1,7 +1,7 @@
 import {Injectable} from '@angular/core';
 import Keycloak from 'keycloak-js';
 import {UserProfile} from './user-profile';
-
+import { environment } from 'environments/environment';
 @Injectable({
   providedIn: 'root'
 })
@@ -10,11 +10,7 @@ export class KeycloakService {
 
   get keycloak() {
     if (!this._keycloak) {
-      this._keycloak = new Keycloak({
-        url: 'http://0.0.0.0:8081',
-        realm: 'my-app-realm',
-        clientId: 'my-spring-app'
-      });
+      this._keycloak = new Keycloak(environment.keycloak);
     }
     return this._keycloak;
   }
@@ -42,6 +38,6 @@ export class KeycloakService {
 
   logout() {
     // this.keycloak.accountManagement();
-    return this.keycloak.logout({redirectUri: 'http://localhost:4200'});
+    return this.keycloak.logout({redirectUri: environment.clientUrl});
   }
 }

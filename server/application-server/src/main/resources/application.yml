@@ -3,11 +3,6 @@ spring:
         name: Helios
     config:
         import: optional:file:.env[.properties]
-    security:
-        oauth2:
-            resourceserver:
-                jwt:
-                    issuer-uri: http://0.0.0.0:8081/realms/my-app-realm
 
 springdoc:
     default-produces-media-type: application/json
@@ -15,11 +10,3 @@ springdoc:
 logging:
     level:
         org.kohsuke.github.GitHubClient: DEBUG
-
-keycloak:
-  realm: my-app-realm # Replace with your realm name
-  auth-server-url: http://localhost:8081 # Keycloak base URL
-  resource: my-spring-app # Your client ID
-  public-client: false # If 'confidential' access type
-  credentials:
-    secret: <client-secret> # Get from the Keycloak admin console
