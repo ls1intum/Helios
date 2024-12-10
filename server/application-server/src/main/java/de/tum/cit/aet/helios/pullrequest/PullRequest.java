@@ -26,6 +26,10 @@ public class PullRequest extends Issue {
 
     private String mergeCommitSha;
 
+    // PR's head branch name
+    private String headRefName;
+
+    // PR's head commit SHA
     private String headSha;
 
     private boolean isDraft;

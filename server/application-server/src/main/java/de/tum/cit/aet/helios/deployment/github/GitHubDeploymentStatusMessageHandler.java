@@ -1,5 +1,6 @@
 package de.tum.cit.aet.helios.deployment.github;
 
+import de.tum.cit.aet.helios.deployment.Deployment;
 import de.tum.cit.aet.helios.environment.Environment;
 import de.tum.cit.aet.helios.environment.EnvironmentRepository;
 import de.tum.cit.aet.helios.environment.github.GitHubEnvironmentSyncService;
@@ -7,10 +8,7 @@ import de.tum.cit.aet.helios.github.GitHubMessageHandler;
 import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import lombok.extern.log4j.Log4j2;
-import org.kohsuke.github.GHDeployment;
-import org.kohsuke.github.GHEvent;
-import org.kohsuke.github.GHEventPayload;
-import org.kohsuke.github.GHRepository;
+import org.kohsuke.github.*;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -76,8 +74,11 @@ public class GitHubDeploymentStatusMessageHandler extends GitHubMessageHandler<G
             }
         }
 
+        // Get the deployment state, such as "success", "error", "pending"
+        GHDeploymentState deploymentState = eventPayload.getDeploymentStatus().getState();
+
         // Convert GHDeployment to DeploymentSource
-        DeploymentSource deploymentSource = deploymentSourceFactory.create(ghDeployment);
+        DeploymentSource deploymentSource = deploymentSourceFactory.create(ghDeployment, Deployment.mapToState(deploymentState));
 
         // Process this single deployment
         deploymentSyncService.processDeployment(deploymentSource, repository, environment);

@@ -11,31 +11,6 @@
       <a [routerLink]="'/environment/list'" class="p-button p-2 p-button-secondary self-end">Go to environments</a>
     </div>
 
-    <p-accordion>
-      <p-accordionTab *ngFor="let environment of environments()">
-        <ng-template pTemplate="header">
-          <div class="flex gap-2 items-center w-full">
-            <span>{{ environment.name }}</span>
-            <app-lock-tag [isLocked]="environment.locked"></app-lock-tag>
-            <div class="flex-grow"></div>
-            @if (environment.locked) {
-              <a [href]="environment.url" class="p-button p-button-secondary p-2"><i-tabler name="external-link" class="mr-1" />Open</a>
-            } @else {
-              <a href="#" class="p-button p-button-primary p-2"><i-tabler name="cloud-upload" class="mr-1" />Deploy</a>
-            }
-          </div>
-        </ng-template>
-        <app-environment-commit-info [commitHash]="environment.commitHash" />
-        <div class="flex gap-4 items-center justify-between">
-          <div class="flex gap-1 mt-2 items-center">
-            <a icon [routerLink]="'/'" class="p-button p-button-text pointer-events-none text-gray-500 p-2"><i-tabler class="mr-1" name="history" />View History</a>
-          </div>
-
-          <div class="flex gap-1">
-            <p-tag *ngFor="let connectedSystem of environment.connectedSystems"> {{ connectedSystem.name }}</p-tag>
-          </div>
-        </div>
-      </p-accordionTab>
-    </p-accordion>
+    <app-environment-list></app-environment-list>
   </div>
 </div>

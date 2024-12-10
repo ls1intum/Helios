@@ -7,6 +7,8 @@ import de.tum.cit.aet.helios.environment.EnvironmentRepository;
 import de.tum.cit.aet.helios.github.GitHubService;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
+import de.tum.cit.aet.helios.pullrequest.PullRequest;
+import de.tum.cit.aet.helios.pullrequest.PullRequestRepository;
 import lombok.extern.log4j.Log4j2;
 import org.jetbrains.annotations.NotNull;
 import org.kohsuke.github.GHRepository;
@@ -14,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Log4j2
@@ -22,6 +25,7 @@ public class GitHubDeploymentSyncService {
     private final DeploymentRepository deploymentRepository;
     private final EnvironmentRepository environmentRepository;
     private final GitRepoRepository gitRepoRepository;
+    private final PullRequestRepository pullRequestRepository;
     private final GitHubService gitHubService;
     private final DeploymentConverter deploymentConverter;
     private final DeploymentSourceFactory deploymentSourceFactory;
@@ -29,12 +33,14 @@ public class GitHubDeploymentSyncService {
     public GitHubDeploymentSyncService(DeploymentRepository deploymentRepository,
                                        EnvironmentRepository environmentRepository,
                                        GitRepoRepository gitRepoRepository,
+                                       PullRequestRepository pullRequestRepository,
                                        GitHubService gitHubService,
                                        DeploymentConverter deploymentConverter,
                                        DeploymentSourceFactory deploymentSourceFactory) {
         this.deploymentRepository = deploymentRepository;
         this.environmentRepository = environmentRepository;
         this.gitRepoRepository = gitRepoRepository;
+        this.pullRequestRepository = pullRequestRepository;
         this.gitHubService = gitHubService;
         this.deploymentConverter = deploymentConverter;
         this.deploymentSourceFactory = deploymentSourceFactory;
@@ -96,7 +102,11 @@ public class GitHubDeploymentSyncService {
 
             while (iterator.hasNext()) {
                 final GitHubDeploymentDto ghDeployment = iterator.next();
-                final DeploymentSource deploymentSource = deploymentSourceFactory.create(ghDeployment);
+                // Set state as UNKNOWN as the state is not provided by the GitHub API
+                // We can make a separate API call to fetch the deployment state
+                // But that would be an overkill for now
+                // Webhook handler sets the state of the deployment
+                final DeploymentSource deploymentSource = deploymentSourceFactory.create(ghDeployment, Deployment.State.UNKNOWN);
                 processDeployment(deploymentSource, gitRepository, environment);
             }
         } catch (Exception e) {
@@ -120,6 +130,16 @@ public class GitHubDeploymentSyncService {
         deployment.setEnvironmentEntity(environment);
         // Set the repository
         deployment.setRepository(gitRepository);
+
+        // Set the PR associated with the deployment
+        Optional<PullRequest> optionalPullRequest = pullRequestRepository.findByRepositoryIdAndHeadRefNameOrHeadSha(
+                gitRepository.getId(),
+                deployment.getRef(),
+                deployment.getSha()
+        );
+
+        optionalPullRequest.ifPresent(deployment::setPullRequest);
+
 
         // Save the deployment
         deploymentRepository.save(deployment);

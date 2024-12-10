@@ -1,5 +1,6 @@
 package de.tum.cit.aet.helios.deployment.github.adapter;
 
+import de.tum.cit.aet.helios.deployment.Deployment;
 import de.tum.cit.aet.helios.deployment.github.DeploymentSource;
 import org.kohsuke.github.GHDeployment;
 
@@ -11,9 +12,11 @@ import java.util.Map;
 public class GHDeploymentSourceAdapter implements DeploymentSource {
 
     private final GHDeployment ghDeployment;
+    private final Deployment.State state;
 
-    public GHDeploymentSourceAdapter(GHDeployment ghDeployment) {
+    public GHDeploymentSourceAdapter(GHDeployment ghDeployment, Deployment.State state) {
         this.ghDeployment = ghDeployment;
+        this.state = state;
     }
 
     @Override
@@ -29,6 +32,11 @@ public class GHDeploymentSourceAdapter implements DeploymentSource {
     @Override
     public String getUrl() {
         return ghDeployment.getUrl().toString();
+    }
+
+    @Override
+    public Deployment.State getState() {
+        return state;
     }
 
     @Override

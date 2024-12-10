@@ -557,6 +557,17 @@ components:
           $ref: "#/components/schemas/RepositoryInfoDTO"
         url:
           type: string
+        state:
+          type: string
+          enum:
+          - PENDING
+          - SUCCESS
+          - ERROR
+          - FAILURE
+          - IN_PROGRESS
+          - QUEUED
+          - INACTIVE
+          - UNKNOWN
         statusesUrl:
           type: string
         sha:

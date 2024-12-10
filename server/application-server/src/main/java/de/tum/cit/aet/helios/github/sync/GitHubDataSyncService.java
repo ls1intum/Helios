@@ -39,12 +39,15 @@ public class GitHubDataSyncService {
     private final GitHubDeploymentSyncService deploymentSyncService;
 
     public GitHubDataSyncService(
-            DataSyncStatusRepository dataSyncStatusRepository, GitHubUserSyncService userSyncService,
+            DataSyncStatusRepository dataSyncStatusRepository,
+            GitHubUserSyncService userSyncService,
             GitHubRepositorySyncService repositorySyncService,
             GitHubPullRequestSyncService pullRequestSyncService,
-            GitHubWorkflowRunSyncService workflowRunSyncService, GitHubWorkflowSyncService workflowSyncService,
+            GitHubWorkflowRunSyncService workflowRunSyncService,
+            GitHubWorkflowSyncService workflowSyncService,
             GitHubBranchSyncService branchSyncService,
-            GitHubEnvironmentSyncService environmentSyncService, GitHubDeploymentSyncService deploymentSyncService) {
+            GitHubEnvironmentSyncService environmentSyncService,
+            GitHubDeploymentSyncService deploymentSyncService) {
         this.dataSyncStatusRepository = dataSyncStatusRepository;
         this.userSyncService = userSyncService;
         this.repositorySyncService = repositorySyncService;

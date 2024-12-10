@@ -21,6 +21,7 @@ public class DeploymentConverter implements Converter<DeploymentSource, Deployme
         deployment.setId(source.getId());
         deployment.setNodeId(source.getNodeId());
         deployment.setUrl(source.getUrl());
+        deployment.setState(source.getState());
         deployment.setStatusesUrl(source.getStatusesUrl());
         deployment.setSha(source.getSha());
         deployment.setRef(source.getRef());

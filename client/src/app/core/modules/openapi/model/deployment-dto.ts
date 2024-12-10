@@ -14,6 +14,7 @@ export interface DeploymentDTO {
     id: number;
     repository?: RepositoryInfoDTO;
     url: string;
+    state?: DeploymentDTO.StateEnum;
     statusesUrl: string;
     sha: string;
     ref: string;
@@ -22,4 +23,18 @@ export interface DeploymentDTO {
     createdAt?: string;
     updatedAt?: string;
 }
+export namespace DeploymentDTO {
+    export type StateEnum = 'PENDING' | 'SUCCESS' | 'ERROR' | 'FAILURE' | 'IN_PROGRESS' | 'QUEUED' | 'INACTIVE' | 'UNKNOWN';
+    export const StateEnum = {
+        Pending: 'PENDING' as StateEnum,
+        Success: 'SUCCESS' as StateEnum,
+        Error: 'ERROR' as StateEnum,
+        Failure: 'FAILURE' as StateEnum,
+        InProgress: 'IN_PROGRESS' as StateEnum,
+        Queued: 'QUEUED' as StateEnum,
+        Inactive: 'INACTIVE' as StateEnum,
+        Unknown: 'UNKNOWN' as StateEnum
+    };
+}
+
 

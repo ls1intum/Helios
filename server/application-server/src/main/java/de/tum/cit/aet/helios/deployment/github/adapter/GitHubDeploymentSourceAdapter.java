@@ -1,5 +1,6 @@
 package de.tum.cit.aet.helios.deployment.github.adapter;
 
+import de.tum.cit.aet.helios.deployment.Deployment;
 import de.tum.cit.aet.helios.deployment.github.DeploymentSource;
 import de.tum.cit.aet.helios.deployment.github.GitHubDeploymentDto;
 
@@ -10,8 +11,11 @@ public class GitHubDeploymentSourceAdapter implements DeploymentSource {
 
     private final GitHubDeploymentDto gitHubDeploymentDto;
 
-    public GitHubDeploymentSourceAdapter(GitHubDeploymentDto gitHubDeploymentDto) {
+    private final Deployment.State state;
+
+    public GitHubDeploymentSourceAdapter(GitHubDeploymentDto gitHubDeploymentDto, Deployment.State state) {
         this.gitHubDeploymentDto = gitHubDeploymentDto;
+        this.state = state;
     }
 
 
@@ -28,6 +32,11 @@ public class GitHubDeploymentSourceAdapter implements DeploymentSource {
     @Override
     public String getUrl() {
         return gitHubDeploymentDto.getUrl();
+    }
+
+    @Override
+    public Deployment.State getState() {
+        return state;
     }
 
     @Override

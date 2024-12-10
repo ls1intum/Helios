@@ -1,8 +1,9 @@
 package de.tum.cit.aet.helios.deployment.github;
 
+import de.tum.cit.aet.helios.deployment.Deployment;
+
 import java.io.IOException;
 import java.time.OffsetDateTime;
-import java.util.Map;
 
 /**
  * Interface representing a source of deployment data.
@@ -17,6 +18,8 @@ public interface DeploymentSource {
     String getNodeId();
 
     String getUrl();
+
+    Deployment.State getState();
 
     String getStatusesUrl();
 
