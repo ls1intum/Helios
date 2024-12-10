@@ -1,14 +1,17 @@
-import { ApplicationConfig, provideExperimentalZonelessChangeDetection } from '@angular/core';
+import { provideAppInitializer, ApplicationConfig, inject, provideExperimentalZonelessChangeDetection } from '@angular/core';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { provideQueryClient, provideTanStackQuery, QueryClient } from '@tanstack/angular-query-experimental';
 
 import { routes } from './app.routes';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { MessageService } from 'primeng/api';
-import { provideHttpClient } from '@angular/common/http';
+import { HTTP_INTERCEPTORS, provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { BASE_PATH } from './core/modules/openapi';
 import { environment } from 'environments/environment';
+import { KeycloakService } from './core/services/keycloak/keycloak.service';
+import { BearerInterceptor } from './core/services/keycloak/bearer-interceptor';
+
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -27,9 +30,14 @@ export const appConfig: ApplicationConfig = {
     provideAnimationsAsync(),
     provideTanStackQuery(new QueryClient()),
     MessageService,
-    provideHttpClient(),
+    provideHttpClient(withInterceptorsFromDi()),
     provideAnimations(),
     provideQueryClient(queryClient),
     { provide: BASE_PATH, useValue: environment.serverUrl },
+    provideAppInitializer(() => {
+      const keycloakService = inject(KeycloakService);
+      return keycloakService.init();
+    }),
+    { provide: HTTP_INTERCEPTORS, useClass: BearerInterceptor, multi: true },
   ],
 };
