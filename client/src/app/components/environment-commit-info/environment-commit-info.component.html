@@ -1,5 +1,4 @@
 <div class="flex gap-4 items-center mb-4">
-
   <!-- TODO: the icons are not showing up -->
   <!-- State-Based Tag -->
   <ng-container [ngSwitch]="state()">
@@ -22,7 +21,7 @@
     </p-tag>
 
     <!-- Queued State -->
-    <p-tag *ngSwitchCase="'QUEUED'" severity="warning" [rounded]="true">
+    <p-tag *ngSwitchCase="'QUEUED'" severity="warn" [rounded]="true">
       <i-tabler name="progress" class="!h-4 !w-4 mr-0.5"></i-tabler>
       Queued
     </p-tag>

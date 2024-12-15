@@ -25,7 +25,16 @@ const queryClient = new QueryClient({
 export const appConfig: ApplicationConfig = {
   providers: [
     providePrimeNG({
-      theme: Aura,
+      theme: {
+        preset: Aura,
+        options: {
+          darkModeSelector: '.dark-selector',
+          cssLayer: {
+            name: 'primeng',
+            order: 'tailwind-base, primeng, tailwind-utilities'
+          }
+        }
+      }
     }),
     provideExperimentalZonelessChangeDetection(),
     provideRouter(routes, withComponentInputBinding()),
