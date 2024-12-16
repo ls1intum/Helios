@@ -4,60 +4,70 @@
     <!-- Title -->
     <h2 class="text-3xl font-bold">Project Settings</h2>
     <!-- 'Add New Group' Button -->
-    <button
-      *ngIf="!isLoading() && !isError()"
-      pButton
-      label="Add New Group"
-      class="p-button-sm"
-      (click)="showAddGroupDialog = true"
-    ></button>
+    @if (!isLoading() && !isError()) {
+      <button
+        pButton
+        label="Add New Group"
+        class="p-button-sm"
+        (click)="showAddGroupDialog = true"
+      ></button>
+    }
   </div>
 
   <!-- Error and Loading Messages -->
-  <p *ngIf="isError()" class="text-red-600 mb-4">An error occurred while fetching workflows.</p>
-  <p *ngIf="isLoading()" class="text-center mb-4">Loading workflows...</p>
+  @if (isError()) {
+    <p class="text-red-600 mb-4">An error occurred while fetching workflows.</p>
+  }
+
+  @if (isLoading()) {
+    <p class="text-center mb-4">Loading workflows...</p>
+  }
 
   <!-- Main Content -->
-  <div *ngIf="!isLoading() && !isError()">
+  @if (!isLoading() && !isError()) {
     <!-- Grouped Workflows Panels -->
     <h3 class="text-2xl font-semibold mb-2">Grouped Workflows</h3>
 
     <!-- Drag & Drop Hint -->
-    <ng-container *ngIf="groupedWorkflowsArray().length > 0">
+    @if (groupedWorkflowsArray().length > 0) {
       <p class="text-sm text-gray-600 mb-4">
         Drag and drop the groups to reorder them.
       </p>
-    </ng-container>
+    }
 
     <!-- Grouped Workflows if available -->
-    <ng-container *ngIf="groupedWorkflowsArray().length > 0; else noGroupsTemplate">
+    @if (groupedWorkflowsArray().length > 0) {
       <div class="flex items-start gap-4 mb-8">
-        <div
-          class="flex items-center"
-          *ngFor="let group of groupedWorkflowsArray(); index as i"
-          pDraggable="groups"
-          pDroppable="groups"
-          (onDragStart)="dragStart(i)"
-          (onDrop)="drop(i)"
-        >
-          <!-- The panel for this group -->
-          <p-panel [header]="group.groupName" class="mr-2 min-w-[250px]">
-            <div class="flex flex-col gap-4">
-              <div *ngFor="let wf of group.workflows" class="flex items-center space-x-2">
-                <i-tabler name="circle-check" class="text-green-500"></i-tabler>
-                <span class="font-medium w-36 flex items-center">{{ wf.name }}</span>
+        @for (group of groupedWorkflowsArray(); track group.groupName; let index = $index) {
+          <div
+            class="flex items-center"
+            pDraggable="groups"
+            pDroppable="groups"
+            (onDragStart)="dragStart(index)"
+            (onDrop)="drop(index)"
+          >
+            <!-- The panel for this group -->
+            <p-panel [header]="group.groupName" class="mr-2 min-w-[250px]">
+              <div class="flex flex-col gap-4">
+                @for (wf of group.workflows; track wf.id) {
+                  <div class="flex items-center space-x-2">
+                    <i-tabler name="circle-check" class="text-green-500"></i-tabler>
+                    <span class="font-medium w-36 flex items-center">{{ wf.name }}</span>
+                  </div>
+                }
               </div>
-            </div>
-          </p-panel>
+            </p-panel>
 
-          <!-- Horizontal line between panels -->
-          <div *ngIf="i < groupedWorkflowsArray().length - 1" class="w-10 h-px bg-gray-300 mt-7"></div>
-        </div>
+            <!-- Horizontal line between panels -->
+            @if (group !== groupedWorkflowsArray()[groupedWorkflowsArray().length - 1]) {
+              <div class="w-10 h-px bg-gray-300 mt-7"></div>
+            }
+          </div>
+        }
       </div>
-    </ng-container>
-
-    <!-- Fallback Template: No Grouping Available -->
-    <ng-template #noGroupsTemplate>
+    }
+    @else {
+      <!-- No Grouping Available -->
       <div class="flex justify-center items-center h-40 mb-8">
         <p-panel header="No Groups Available" class="min-w-[250px]">
           <p class="text-center">No workflows are currently grouped.</p>
@@ -65,7 +75,7 @@
           <p class="text-center">And then assign workflows to the group.</p>
         </p-panel>
       </div>
-    </ng-template>
+    }
 
     <!-- Workflow Table -->
     <p-table [value]="workflows()" styleClass="w-full mb-6">
@@ -95,7 +105,7 @@
         </tr>
       </ng-template>
     </p-table>
-  </div>
+  }
 
   <!-- Dialog for Adding New Group -->
   <p-dialog
