@@ -40,6 +40,7 @@ public class Environment {
     @JoinColumn(name = "repository_id", nullable = false)
     private GitRepository repository;
 
+    // Helios specific fields
     @ElementCollection
     @CollectionTable(name = "installed_apps", joinColumns = @JoinColumn(name = "environment_id"))
     @Column(name = "app_name")

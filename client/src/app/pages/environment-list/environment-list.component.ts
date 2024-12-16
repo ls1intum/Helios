@@ -83,6 +83,13 @@ export class EnvironmentListComponent {
 
     await Promise.all(deploymentRequests);
   }
+
+  getFullUrl(url: string): string {
+    if (url && (!url.startsWith('http') && !url.startsWith('https'))) {
+      return 'http://' + url;
+    }
+    return url;
+  }
 }
 
 @Injectable({
