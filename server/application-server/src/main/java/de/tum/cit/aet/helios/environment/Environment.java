@@ -9,6 +9,7 @@ import lombok.ToString;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "environment")
@@ -38,6 +39,11 @@ public class Environment {
     @ManyToOne
     @JoinColumn(name = "repository_id", nullable = false)
     private GitRepository repository;
+
+    @ElementCollection
+    @CollectionTable(name = "installed_apps", joinColumns = @JoinColumn(name = "environment_id"))
+    @Column(name = "app_name")
+    private List<String> installedApps;
 
     // Missing properties
     // nodeId --> GraphQl ID

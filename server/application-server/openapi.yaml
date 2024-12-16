@@ -13,6 +13,49 @@ servers:
 - url: /
   description: Default Server URL
 paths:
+  /api/environments/{id}:
+    get:
+      tags:
+      - environment-controller
+      operationId: getEnvironmentById
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EnvironmentDTO"
+    put:
+      tags:
+      - environment-controller
+      operationId: updateEnvironment
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EnvironmentDTO"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EnvironmentDTO"
   /status/health:
     get:
       tags:
@@ -215,25 +258,6 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/EnvironmentDTO"
-  /api/environments/{id}:
-    get:
-      tags:
-      - environment-controller
-      operationId: getEnvironmentById
-      parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: integer
-          format: int64
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/EnvironmentDTO"
   /api/environments/repository/{repositoryId}:
     get:
       tags:
@@ -344,6 +368,33 @@ paths:
                   $ref: "#/components/schemas/BranchInfoDTO"
 components:
   schemas:
+    EnvironmentDTO:
+      required:
+      - id
+      - name
+      type: object
+      properties:
+        repository:
+          $ref: "#/components/schemas/RepositoryInfoDTO"
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        url:
+          type: string
+        htmlUrl:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        installedApps:
+          type: array
+          items:
+            type: string
     RepositoryInfoDTO:
       required:
       - htmlUrl
@@ -537,29 +588,6 @@ components:
           type: string
         htmlUrl:
           type: string
-    EnvironmentDTO:
-      required:
-      - id
-      - name
-      type: object
-      properties:
-        repository:
-          $ref: "#/components/schemas/RepositoryInfoDTO"
-        id:
-          type: integer
-          format: int64
-        name:
-          type: string
-        url:
-          type: string
-        htmlUrl:
-          type: string
-        createdAt:
-          type: string
-          format: date-time
-        updatedAt:
-          type: string
-          format: date-time
     DeploymentDTO:
       required:
       - environment
