@@ -352,27 +352,6 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/EnvironmentDTO"
-  /api/environments/repository/{repositoryId}:
-    get:
-      tags:
-      - environment-controller
-      operationId: getEnvironmentsByRepositoryId
-      parameters:
-      - name: repositoryId
-        in: path
-        required: true
-        schema:
-          type: integer
-          format: int64
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/EnvironmentDTO"
   /api/deployments:
     get:
       tags:
