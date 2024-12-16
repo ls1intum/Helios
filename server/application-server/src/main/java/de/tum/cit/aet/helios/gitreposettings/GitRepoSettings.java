@@ -28,4 +28,6 @@ public class GitRepoSettings {
     // Automatically orders groups by orderIndex defined in WorkflowGroup
     @OrderBy("orderIndex ASC")
     private List<WorkflowGroup> groups;
+
+
 }

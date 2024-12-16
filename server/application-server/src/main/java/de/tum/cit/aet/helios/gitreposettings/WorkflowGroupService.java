@@ -9,10 +9,7 @@ import jakarta.validation.Valid;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -22,12 +19,14 @@ public class WorkflowGroupService {
     private final GitRepoSettingsRepository gitRepoSettingsRepository;
     private final GitRepoRepository gitRepoRepository;
     private final WorkflowRepository workflowRepository;
+    private final WorkflowGroupMembershipRepository workflowGroupMembershipRepository;
 
-    public WorkflowGroupService(WorkflowGroupRepository workflowGroupRepository, GitRepoSettingsRepository gitRepoSettingsRepository, GitRepoRepository gitRepoRepository, WorkflowRepository workflowRepository) {
+    public WorkflowGroupService(WorkflowGroupRepository workflowGroupRepository, GitRepoSettingsRepository gitRepoSettingsRepository, GitRepoRepository gitRepoRepository, WorkflowRepository workflowRepository, WorkflowGroupMembershipRepository workflowGroupMembershipRepository) {
         this.workflowGroupRepository = workflowGroupRepository;
         this.gitRepoSettingsRepository = gitRepoSettingsRepository;
         this.gitRepoRepository = gitRepoRepository;
         this.workflowRepository = workflowRepository;
+        this.workflowGroupMembershipRepository = workflowGroupMembershipRepository;
     }
 
     @Transactional
@@ -104,9 +103,12 @@ public class WorkflowGroupService {
 
         // Validate all workflow IDs in the request
         Set<Long> providedWorkflowIds = workflowGroups.stream()
-                .flatMap(group -> group.memberships().stream())
+                .flatMap(group -> Optional.ofNullable(group.memberships())
+                        .orElse(Collections.emptyList())
+                        .stream())
                 .map(WorkflowMembershipDTO::workflowId)
                 .collect(Collectors.toSet());
+
 
         Set<Long> existingWorkflowIds = workflowRepository.findAllById(providedWorkflowIds).stream()
                 .map(Workflow::getId)
@@ -129,15 +131,23 @@ public class WorkflowGroupService {
 
         // Validate workflow orderIndex values for each group
         for (WorkflowGroupDTO groupDTO : workflowGroups) {
-            List<Integer> workflowOrderIndexes = groupDTO.memberships().stream()
+            // Safely handle null memberships
+            List<WorkflowMembershipDTO> memberships = groupDTO.memberships() != null
+                    ? groupDTO.memberships()
+                    : List.of();
+
+            List<Integer> workflowOrderIndexes = memberships.stream()
                     .map(WorkflowMembershipDTO::orderIndex)
                     .sorted()
                     .toList();
 
             if (!isValidOrderIndexSequence(workflowOrderIndexes)) {
-                throw new IllegalArgumentException("Workflow orderIndex values in group " + groupDTO.id() + " must start from 0 and be contiguous.");
+                throw new IllegalArgumentException(
+                        "Workflow orderIndex values in group " + groupDTO.id() + " must start from 0 and be contiguous."
+                );
             }
         }
+
 
         // Set temporary negative orderIndex values for all groups
         int tempOrderIndex = -100;
@@ -145,6 +155,7 @@ public class WorkflowGroupService {
             group.setOrderIndex(tempOrderIndex--);
         }
         workflowGroupRepository.saveAll(existingGroups);
+        workflowGroupMembershipRepository.deleteAllByRepositoryId(repositoryId);
         // Flush to persist changes immediately
         workflowGroupRepository.flush();
 
@@ -155,32 +166,38 @@ public class WorkflowGroupService {
                 throw new IllegalArgumentException("WorkflowGroup with id " + groupDTO.id() + " not found.");
             }
 
+            // Update group meta
             group.setName(groupDTO.name());
             group.setOrderIndex(groupDTO.orderIndex());
 
-            // Update memberships
-            Map<Long, WorkflowGroupMembership> membershipMap = group.getMemberships().stream()
-                    .collect(Collectors.toMap(m -> m.getWorkflow().getId(), m -> m));
+            // Build final membership set
+            Map<Long, WorkflowMembershipDTO> incoming = Optional.ofNullable(groupDTO.memberships())
+                    .orElse(Collections.emptyList())
+                    .stream()
+                    .collect(Collectors.toMap(WorkflowMembershipDTO::workflowId, memDTO -> memDTO));
 
-            // Prepare updated memberships list
-            List<WorkflowGroupMembership> updatedMemberships = new ArrayList<>();
-            for (WorkflowMembershipDTO membershipDTO : groupDTO.memberships()) {
-                WorkflowGroupMembership membership = membershipMap.get(membershipDTO.workflowId());
-                if (membership == null) {
-                    // Workflow is being reassigned to this group
-                    Workflow workflow = workflowRepository.findById(membershipDTO.workflowId())
-                            .orElseThrow(() -> new IllegalArgumentException("Workflow with id " + membershipDTO.workflowId() + " not found."));
-                    membership = new WorkflowGroupMembership();
-                    membership.setWorkflow(workflow);
-                    membership.setWorkflowGroup(group);
-                }
-                membership.setOrderIndex(membershipDTO.orderIndex());
-                updatedMemberships.add(membership);
+            // Remove old memberships not in incoming
+            group.getMemberships().removeIf(existingMem ->
+                    !incoming.containsKey(existingMem.getWorkflow().getId())
+            );
+
+            // For each new membership, either update or create
+            for (WorkflowMembershipDTO memDTO : incoming.values()) {
+                WorkflowGroupMembership membership = group.getMemberships().stream()
+                        .filter(m -> m.getWorkflow().getId().equals(memDTO.workflowId()))
+                        .findFirst()
+                        .orElseGet(() -> {
+                            // create a new membership
+                            Workflow w = workflowRepository.findById(memDTO.workflowId())
+                                    .orElseThrow(() -> new IllegalArgumentException("Not found"));
+                            WorkflowGroupMembership newMem = new WorkflowGroupMembership();
+                            newMem.setWorkflow(w);
+                            newMem.setWorkflowGroup(group);
+                            group.getMemberships().add(newMem);
+                            return newMem;
+                        });
+                membership.setOrderIndex(memDTO.orderIndex());
             }
-
-            // Clear existing memberships and add updated ones in place
-            group.getMemberships().clear();
-            group.getMemberships().addAll(updatedMemberships);
         }
 
         workflowGroupRepository.saveAll(existingGroups);
