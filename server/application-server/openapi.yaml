@@ -395,6 +395,10 @@ components:
           type: array
           items:
             type: string
+        description:
+          type: string
+        serverUrl:
+          type: string
     RepositoryInfoDTO:
       required:
       - htmlUrl

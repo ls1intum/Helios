@@ -36,32 +36,19 @@ public class EnvironmentService {
 
     public Optional<EnvironmentDTO> updateEnvironment(Long id, EnvironmentDTO environmentDTO) {
         return environmentRepository.findById(id).map(environment -> {
-            if (environmentDTO.name() != null) {
-                environment.setName(environmentDTO.name());
-            }
-            if (environmentDTO.url() != null) {
-                environment.setUrl(environmentDTO.url());
-            }
-            if (environmentDTO.htmlUrl() != null) {
-                environment.setHtmlUrl(environmentDTO.htmlUrl());
-            }
-            if (environmentDTO.createdAt() != null) {
-                environment.setCreatedAt(environmentDTO.createdAt());
-            }
             if (environmentDTO.updatedAt() != null) {
                 environment.setUpdatedAt(environmentDTO.updatedAt());
             }
             if (environmentDTO.installedApps() != null) {
                 environment.setInstalledApps(environmentDTO.installedApps());
             }
-            environmentRepository.save(environment);
-            return EnvironmentDTO.fromEnvironment(environment);
-        });
-    }
+            if (environmentDTO.description() != null) {
+                environment.setDescription(environmentDTO.description());
+            }
+            if (environmentDTO.serverUrl() != null) {
+                environment.setServerUrl(environmentDTO.serverUrl());
+            }
 
-    public Optional<EnvironmentDTO> updateInstalledApps(Long id, List<String> installedApps) {
-        return environmentRepository.findById(id).map(environment -> {
-            environment.setInstalledApps(installedApps);
             environmentRepository.save(environment);
             return EnvironmentDTO.fromEnvironment(environment);
         });

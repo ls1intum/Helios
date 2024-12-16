@@ -19,5 +19,7 @@ export interface EnvironmentDTO {
     createdAt?: string;
     updatedAt?: string;
     installedApps?: Array<string>;
+    description?: string;
+    serverUrl?: string;
 }
 

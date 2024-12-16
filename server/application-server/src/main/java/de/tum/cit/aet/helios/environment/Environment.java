@@ -45,6 +45,12 @@ public class Environment {
     @Column(name = "app_name")
     private List<String> installedApps;
 
+    @Column(name = "description")
+    private String description;
+
+    @Column(name = "server_url")
+    private String serverUrl;
+
     // Missing properties
     // nodeId --> GraphQl ID
     // ProtectionRule

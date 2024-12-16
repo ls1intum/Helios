@@ -16,7 +16,9 @@ public record EnvironmentDTO(
         String htmlUrl,
         OffsetDateTime createdAt,
         OffsetDateTime updatedAt,
-        List<String> installedApps) {
+        List<String> installedApps,
+        String description,
+        String serverUrl) {
 
     public static EnvironmentDTO fromEnvironment(Environment environment) {
         return new EnvironmentDTO(
@@ -27,7 +29,9 @@ public record EnvironmentDTO(
                 environment.getHtmlUrl(),
                 environment.getCreatedAt(),
                 environment.getUpdatedAt(),
-                environment.getInstalledApps()
+                environment.getInstalledApps(),
+                environment.getDescription(),
+                environment.getServerUrl()
         );
     }
 }
