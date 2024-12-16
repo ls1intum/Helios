@@ -35,17 +35,6 @@ export class EnvironmentListComponent {
   readonly latestDeployments = this.deploymentStore.latestDeployments;
 
 
-  mockConnectedSystems = [
-    {id: 'sys1', name: 'Integrated Code Lifecycle'},
-    {id: 'sys2', name: 'MySQL'},
-    {id: 'sys3', name: 'Iris'},
-    {id: 'sys4', name: 'LTI'},
-    {id: 'sys5', name: 'GitHub'},
-    {id: 'sys6', name: 'GitLab'},
-    {id: 'sys7', name: 'Jenkins'},
-  ];
-
-
   isError = signal(false);
   isEmpty = signal(false);
   isLoading = signal(false);
@@ -93,6 +82,13 @@ export class EnvironmentListComponent {
     });
 
     await Promise.all(deploymentRequests);
+  }
+
+  getFullUrl(url: string): string {
+    if (url && (!url.startsWith('http') && !url.startsWith('https'))) {
+      return 'http://' + url;
+    }
+    return url;
   }
 }
 
