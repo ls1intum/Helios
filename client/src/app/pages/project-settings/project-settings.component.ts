@@ -218,4 +218,49 @@ export class ProjectSettingsComponent {
 
     this.dragIndex = null;
   }
+
+  private dragWorkflow: { id: number; groupName: string } | null = null;
+
+
+  dragWorkflowStart(groupIndex: number, workflowIndex: number) {
+    const group = this.groupedWorkflowsArray()[groupIndex];
+    const workflow = group.workflows[workflowIndex];
+    this.dragWorkflow = { id: workflow.id, groupName: group.groupName };
+  }
+
+  dropWorkflow(targetGroupIndex: number, targetWorkflowIndex: number) {
+    if (!this.dragWorkflow) return;
+
+    const { id: draggedWorkflowId, groupName: draggedGroupName } = this.dragWorkflow;
+    const groupedWorkflows = this.groupedWorkflowsArray();
+
+    // Get the target group and workflow IDs
+    const targetGroup = groupedWorkflows[targetGroupIndex];
+    if (!targetGroup || targetGroup.groupName !== draggedGroupName) {
+      console.warn('Dragging between groups is not supported in this implementation.');
+      return;
+    }
+
+    const workflows = [...targetGroup.workflows];
+    const draggedIndex = workflows.findIndex(wf => wf.id === draggedWorkflowId);
+    if (draggedIndex === -1) return;
+
+    // Reorder within the group
+    const [draggedWorkflow] = workflows.splice(draggedIndex, 1);
+    workflows.splice(targetWorkflowIndex, 0, draggedWorkflow);
+
+    // Update workflows order
+    const updatedWorkflows = this.workflows().map(wf => {
+      if (workflows.some(w => w.id === wf.id)) {
+        return workflows.find(w => w.id === wf.id)!; // Preserve the updated order
+      }
+      return wf;
+    });
+
+    this.workflows.set(updatedWorkflows);
+
+    this.dragWorkflow = null; // Clear drag state
+  }
+
+
 }

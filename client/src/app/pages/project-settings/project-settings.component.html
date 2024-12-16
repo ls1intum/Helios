@@ -16,11 +16,11 @@
 
   <!-- Error and Loading Messages -->
   @if (isError()) {
-    <p class="text-red-600 mb-4">An error occurred while fetching workflows.</p>
+    <p class="text-red-600 mb-4">An error occurred while fetching settings.</p>
   }
 
   @if (isLoading()) {
-    <p class="text-center mb-4">Loading workflows...</p>
+    <p class="text-center mb-4">Loading settings...</p>
   }
 
   <!-- Main Content -->
@@ -49,8 +49,14 @@
             <!-- The panel for this group -->
             <p-panel [header]="group.groupName" class="mr-2 min-w-[250px]">
               <div class="flex flex-col gap-4">
-                @for (wf of group.workflows; track wf.id) {
-                  <div class="flex items-center space-x-2">
+                @for (wf of group.workflows; track wf.id; let wfIndex = $index) {
+                  <div
+                    class="flex items-center space-x-2"
+                    pDraggable="workflow"
+                    pDroppable="workflow"
+                    (onDragStart)="dragWorkflowStart(index, wfIndex)"
+                    (onDrop)="dropWorkflow(index, wfIndex)"
+                  >
                     <i-tabler name="circle-check" class="text-green-500"></i-tabler>
                     <span class="font-medium w-36 flex items-center">{{ wf.name }}</span>
                   </div>
