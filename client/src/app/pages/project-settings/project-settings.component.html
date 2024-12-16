@@ -5,6 +5,7 @@
     <h2 class="text-3xl font-bold">Project Settings</h2>
     <!-- 'Add New Group' Button -->
     <button
+      *ngIf="!isLoading() && !isError()"
       pButton
       label="Add New Group"
       class="p-button-sm"
