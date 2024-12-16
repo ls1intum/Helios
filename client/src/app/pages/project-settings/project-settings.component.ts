@@ -1,22 +1,21 @@
-// project-settings.component.ts
+import {Component, signal, computed, inject} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {FormsModule} from '@angular/forms';
+import {injectQuery} from '@tanstack/angular-query-experimental';
 
-import { Component, signal, computed, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { injectQuery } from '@tanstack/angular-query-experimental';
+import {TableModule} from 'primeng/table';
+import {DropdownModule} from 'primeng/dropdown';
+import {ButtonModule} from 'primeng/button';
+import {PanelModule} from 'primeng/panel';
+import {DialogModule} from 'primeng/dialog';
+import {InputTextModule} from 'primeng/inputtext';
+import {CheckboxModule} from 'primeng/checkbox';
+import {IconsModule} from 'icons.module';
+import {DragDropModule} from 'primeng/dragdrop';
 
-import { TableModule } from 'primeng/table';
-import { DropdownModule } from 'primeng/dropdown';
-import { ButtonModule } from 'primeng/button';
-import { PanelModule } from 'primeng/panel';
-import { DialogModule } from 'primeng/dialog';
-import { InputTextModule } from 'primeng/inputtext';
-import { IconsModule } from 'icons.module';
-import { DragDropModule } from 'primeng/dragdrop';
-
-import { WorkflowControllerService } from '@app/core/modules/openapi/api/workflow-controller.service';
-import { WorkflowDTO } from '@app/core/modules/openapi/model/workflow-dto';
-import { firstValueFrom } from 'rxjs';
+import {WorkflowControllerService} from '@app/core/modules/openapi/api/workflow-controller.service';
+import {WorkflowDTO} from '@app/core/modules/openapi/model/workflow-dto';
+import {firstValueFrom} from 'rxjs';
 
 interface GroupedWorkflows {
   groupName: string;
@@ -33,10 +32,11 @@ interface GroupedWorkflows {
     DropdownModule,
     ButtonModule,
     PanelModule,
-    IconsModule,
-    DragDropModule,
     DialogModule,
     InputTextModule,
+    CheckboxModule,
+    IconsModule,
+    DragDropModule,
   ],
   templateUrl: './project-settings.component.html',
   styleUrls: ['./project-settings.component.css'],
@@ -44,31 +44,48 @@ interface GroupedWorkflows {
 export class ProjectSettingsComponent {
   private workflowService = inject(WorkflowControllerService);
 
+  // State management
   workflows = signal<WorkflowDTO[]>([]);
   isLoading = signal(false);
   isError = signal(false);
 
+  // Initially, no groups assigned
   workflowGroupsMap = signal<Record<number, string>>({});
-  groupOrder = signal<string[]>(['Frontend', 'Backend', 'Database', 'DevOps', 'Ungrouped']);
+  // Define your group order
+  groupOrder = signal<string[]>(['Frontend', 'Backend', 'Database', 'DevOps']);
+  // Available groups
   availableGroups = signal<string[]>(['Frontend', 'Backend', 'Database', 'DevOps']);
 
+  // UI Controls
   showAddGroupDialog = false;
   newGroupName = '';
 
+  // Dropdown options including 'Ungrouped'
   get groupDropdownOptions() {
-    return this.availableGroups().map(g => ({ label: g, value: g }));
+    return [
+      {label: 'Ungrouped', value: 'Ungrouped'}, // Option to ungroup
+      ...this.availableGroups().map(g => ({label: g, value: g})),
+    ];
   }
 
-  // Sort and group logic
+  // Computed property to group workflows
   readonly groupedWorkflowsArray = computed<GroupedWorkflows[]>(() => {
     const map = this.workflowGroupsMap();
     const wfs = this.workflows();
     const record: Record<string, WorkflowDTO[]> = {};
 
     wfs.forEach(wf => {
-      const group = map[wf.id] ?? 'Ungrouped';
-      if (!record[group]) record[group] = [];
-      record[group].push(wf);
+      const groupName = map[wf.id] ?? 'Ungrouped';
+
+      // If 'Ungrouped' workflows should not be shown in grouped panels
+      if (groupName === 'Ungrouped') {
+        return;
+      }
+
+      if (!record[groupName]) {
+        record[groupName] = [];
+      }
+      record[groupName].push(wf);
     });
 
     let entries = Object.entries(record).map(([groupName, workflows]) => ({
@@ -76,7 +93,7 @@ export class ProjectSettingsComponent {
       workflows,
     }));
 
-    // Sort by groupOrder
+    // Sort groups based on groupOrder
     const orderArr = this.groupOrder();
     entries.sort((a, b) => {
       const idxA = orderArr.indexOf(a.groupName);
@@ -90,26 +107,27 @@ export class ProjectSettingsComponent {
     return entries;
   });
 
+  // Data fetching with Angular Query
   query = injectQuery(() => ({
     queryKey: ['allWorkflows'],
     queryFn: async () => {
       this.isLoading.set(true);
       try {
         const data = await firstValueFrom(this.workflowService.getAllWorkflows());
-        // Example custom sorting logic
+
+        // Custom sorting logic (optional)
         data.sort((a, b) => {
-          // "Active" on top, then alphabetical by state, then by ID
+          // Example: "Active" workflows first, then by state alphabetically, then by ID
           if (a.state === WorkflowDTO.StateEnum.Active && b.state !== WorkflowDTO.StateEnum.Active) return -1;
           if (a.state !== WorkflowDTO.StateEnum.Active && b.state === WorkflowDTO.StateEnum.Active) return 1;
           if (a.state !== b.state) return a.state.localeCompare(b.state);
           return a.id - b.id;
         });
+
         this.workflows.set(data);
 
-        // Default each workflow to 'Frontend'
-        const newMap: Record<number, string> = {};
-        data.forEach(wf => { newMap[wf.id] = 'Frontend'; });
-        this.workflowGroupsMap.set(newMap);
+        // Initially, no groups assigned; all workflows are ungrouped
+        this.workflowGroupsMap.set({});
 
         this.isLoading.set(false);
         return data;
@@ -126,56 +144,76 @@ export class ProjectSettingsComponent {
     cacheTime: 60_000,
   }));
 
+  // Handle group changes from the dropdown
   onChangeGroup(workflow: WorkflowDTO, newGroup: string) {
-    const oldMap = this.workflowGroupsMap();
-    const updatedMap = { ...oldMap, [workflow.id]: newGroup };
-    this.workflowGroupsMap.set(updatedMap);
+    if (newGroup === 'Ungrouped') {
+      // Remove the workflow from any group
+      const {[workflow.id]: _, ...newMap} = this.workflowGroupsMap();
+      this.workflowGroupsMap.set(newMap);
+    } else {
+      // Assign to a new group
+      const oldMap = this.workflowGroupsMap();
+      const updatedMap = {...oldMap, [workflow.id]: newGroup};
+      this.workflowGroupsMap.set(updatedMap);
 
-    if (!this.availableGroups().includes(newGroup)) {
-      this.availableGroups.update(groups => [...groups, newGroup]);
-      this.groupOrder.update(order => [...order, newGroup]);
+      // If the group is new, add it to availableGroups and groupOrder
+      if (!this.availableGroups().includes(newGroup)) {
+        this.availableGroups.update(groups => [...groups, newGroup]);
+        this.groupOrder.update(order => [...order, newGroup]);
+      }
     }
   }
 
+  // Add a new group using PrimeNG dialog
   addNewGroup() {
-    // If empty or whitespace, just close
-    if (!this.newGroupName.trim()) {
-      this.resetDialog();
+    const groupName = this.newGroupName.trim();
+    if (!groupName) {
       return;
     }
 
-    const g = this.newGroupName.trim();
-    if (!this.availableGroups().includes(g)) {
-      this.availableGroups.update(arr => [...arr, g]);
-      this.groupOrder.update(order => [...order, g]);
+    if (!this.availableGroups().includes(groupName)) {
+      this.availableGroups.update(groups => [...groups, groupName]);
+      this.groupOrder.update(order => [...order, groupName]);
     }
+
     this.resetDialog();
   }
 
-  // Clear the newGroupName when p-dialog is hidden or the user presses Cancel
+  // Reset dialog state
   resetDialog() {
     this.newGroupName = '';
     this.showAddGroupDialog = false;
   }
 
-  // Drag & drop logic
+  // Drag & Drop logic
   private dragIndex: number | null = null;
 
+  /**
+   * Called when user starts dragging a panel
+   */
   dragStart(fromIndex: number) {
     this.dragIndex = fromIndex;
   }
 
+  /**
+   * Called when dropping onto a new position
+   */
   drop(targetIndex: number) {
-    if (this.dragIndex === null || this.dragIndex === targetIndex) return;
+    if (this.dragIndex === null || this.dragIndex === targetIndex) {
+      return;
+    }
 
     const current = this.groupedWorkflowsArray();
     if (!current) return;
 
     const newArray = [...current];
+    // Remove the dragged group
     const [dragged] = newArray.splice(this.dragIndex, 1);
+    // Insert at the target position
     newArray.splice(targetIndex, 0, dragged);
 
-    const newOrder = newArray.map(g => g.groupName);
+    // Update groupOrder based on new array
+    const newOrder = newArray.map(group => group.groupName);
     this.groupOrder.set(newOrder);
 
     this.dragIndex = null;
