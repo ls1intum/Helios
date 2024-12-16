@@ -60,6 +60,7 @@ export class EnvironmentEditFormComponent implements OnInit {
   submitForm = () => {
     if (this.environmentForm && this.environmentForm.valid) {
       this.environmentService.updateEnvironment(this.environment.id, this.environmentForm.value).subscribe();
+      window.location.href = 'project/projectId/environment/list'; // Redirect to environment list
     }
   };
 }
