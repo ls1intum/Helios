@@ -1,0 +1,66 @@
+<div class="container mx-auto p-4">
+  <h2 class="text-3xl font-bold mb-4">Project Settings</h2>
+
+  <p *ngIf="isError()" class="text-red-600 mb-4">An error occurred while fetching workflows.</p>
+  <p *ngIf="isLoading()" class="text-center mb-4">Loading workflows...</p>
+
+  <div *ngIf="!isLoading() && !isError()">
+    <button pButton label="Add New Group" class="mb-4" (click)="addNewGroup()"></button>
+
+    <!-- Grouped Workflows displayed as horizontally draggable panels -->
+    <h3 class="text-2xl font-semibold mb-2">Grouped Workflows</h3>
+
+    <div class="flex items-start gap-4 mb-8">
+      <div
+        class="flex items-center"
+        *ngFor="let group of groupedWorkflowsArray(); index as i"
+        pDraggable="groups"
+        pDroppable="groups"
+        (onDragStart)="dragStart(i)"
+        (onDrop)="drop(i)"
+      >
+        <!-- The panel for this group -->
+        <p-panel [header]="group.groupName" class="mr-2 min-w-[250px]">
+          <div class="flex flex-col gap-4">
+            <div *ngFor="let wf of group.workflows" class="flex items-center space-x-2">
+              <i-tabler name="circle-check" class="text-green-500"></i-tabler>
+              <span class="font-medium w-36 flex items-center">{{ wf.name }}</span>
+            </div>
+          </div>
+        </p-panel>
+
+        <!-- Horizontal line between panels -->
+        <div *ngIf="i < groupedWorkflowsArray().length - 1" class="w-10 h-px bg-gray-300 mt-7"></div>
+      </div>
+    </div>
+
+    <!-- Workflow Table -->
+    <p-table [value]="workflows()" styleClass="w-full mb-6">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Workflow ID</th>
+          <th>Status</th>
+          <th>File Name</th>
+          <th>Workflow Name</th>
+          <th>Assign Group</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-workflow>
+        <tr>
+          <td>{{ workflow.id }}</td>
+          <td>{{ workflow.state }}</td>
+          <td>{{ workflow.fileNameWithExtension }}</td>
+          <td>{{ workflow.name }}</td>
+          <td>
+            <p-dropdown
+              [options]="groupDropdownOptions"
+              [ngModel]="workflowGroupsMap()[workflow.id]"
+              (onChange)="onChangeGroup(workflow, $event.value)"
+              [appendTo]="'body'"
+            ></p-dropdown>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>

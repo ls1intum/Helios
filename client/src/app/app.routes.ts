@@ -11,6 +11,7 @@ import {
   EnvironmentDeploymentHistoryComponent
 } from '@app/pages/environment-deployment-history/environment-deployment-history.component';
 import { ProjectOverviewComponent } from './pages/project-overview/project-overview.component';
+import {ProjectSettingsComponent} from '@app/pages/project-settings/project-settings.component';
 
 
 export const routes: Routes = [
@@ -54,7 +55,11 @@ export const routes: Routes = [
         children: [
           { path: 'pr/:pullRequestId', component: PullRequestPipelineComponent },
         ]
-      }
+      },
+      {
+        path: 'settings',
+        component: ProjectSettingsComponent
+      },
     ]
   },
   {
