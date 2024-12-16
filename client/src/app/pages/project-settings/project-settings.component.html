@@ -1,13 +1,22 @@
+<!-- project-settings.component.html -->
+
 <div class="container mx-auto p-4">
-  <h2 class="text-3xl font-bold mb-4">Project Settings</h2>
+  <div class="flex justify-between items-center mb-4">
+    <h2 class="text-3xl font-bold">Project Settings</h2>
+    <!-- Button at top-right corner -->
+    <button
+      pButton
+      label="Add New Group"
+      class="p-button-sm"
+      (click)="showAddGroupDialog = true"
+    ></button>
+  </div>
 
   <p *ngIf="isError()" class="text-red-600 mb-4">An error occurred while fetching workflows.</p>
   <p *ngIf="isLoading()" class="text-center mb-4">Loading workflows...</p>
 
   <div *ngIf="!isLoading() && !isError()">
-    <button pButton label="Add New Group" class="mb-4" (click)="addNewGroup()"></button>
-
-    <!-- Grouped Workflows displayed as horizontally draggable panels -->
+    <!-- Draggable grouping panels -->
     <h3 class="text-2xl font-semibold mb-2">Grouped Workflows</h3>
 
     <div class="flex items-start gap-4 mb-8">
@@ -19,7 +28,6 @@
         (onDragStart)="dragStart(i)"
         (onDrop)="drop(i)"
       >
-        <!-- The panel for this group -->
         <p-panel [header]="group.groupName" class="mr-2 min-w-[250px]">
           <div class="flex flex-col gap-4">
             <div *ngFor="let wf of group.workflows" class="flex items-center space-x-2">
@@ -28,14 +36,12 @@
             </div>
           </div>
         </p-panel>
-
-        <!-- Horizontal line between panels -->
         <div *ngIf="i < groupedWorkflowsArray().length - 1" class="w-10 h-px bg-gray-300 mt-7"></div>
       </div>
     </div>
 
-    <!-- Workflow Table -->
-    <p-table [value]="workflows()" styleClass="w-full mb-6">
+    <!-- Table of workflows -->
+    <p-table [value]="workflows()" styleClass="w-full">
       <ng-template pTemplate="header">
         <tr>
           <th>Workflow ID</th>
@@ -63,4 +69,32 @@
       </ng-template>
     </p-table>
   </div>
+
+  <!-- Dialog to add a new group -->
+  <p-dialog
+    header="Add New Group"
+    [(visible)]="showAddGroupDialog"
+    [modal]="true"
+    [closable]="true"
+    [dismissableMask]="true"
+    [draggable]="false"
+    [style]="{ width: '350px' }"
+    (onHide)="resetDialog()"
+  >
+    <div class="flex flex-col gap-2 p-2">
+      <label class="font-semibold" for="groupNameInput">Group Name</label>
+      <input
+        id="groupNameInput"
+        type="text"
+        pInputText
+        [(ngModel)]="newGroupName"
+        class="w-full p-2 border border-gray-300 rounded"
+      />
+
+      <div class="flex justify-end gap-2 mt-4">
+        <button pButton label="Cancel" class="p-button-text" (click)="showAddGroupDialog = false"></button>
+        <button pButton label="Add" class="p-button-primary" (click)="addNewGroup()"></button>
+      </div>
+    </div>
+  </p-dialog>
 </div>
