@@ -1,0 +1,80 @@
+<p-dialog header="Connect GitHub Repository" [(visible)]="visible" [modal]="true" [style]="{ width: '50vw' }"
+    [draggable]="false" [resizable]="false">
+
+    <div class="flex flex-column gap-4 p-4">
+        <!-- Step 1: Organization Selection -->
+        @if (currentStep() === 'token_input') {
+        <div class="flex flex-col gap-4">
+            <p>Please enter your GitHub personal access token:</p>
+            <input pInputText type="password" [(ngModel)]="githubToken" placeholder="ghp_xxxxxxxxxxxx"
+                [disabled]="loading()" />
+            <small class="text-gray-600">
+                The token needs repo and org permissions.
+                <a href="https://github.com/settings/tokens/new" target="_blank">
+                    Generate a new token
+                </a>
+            </small>
+            <p-button label="Continue" [loading]="loading()" (onClick)="validateAndSetToken()"></p-button>
+        </div>
+        }
+        @if (currentStep() === 'org_selection') {
+        <div class="flex flex-col gap-3">
+            <div class="text-xl">Select an organization:</div>
+            @if (loading()) {
+            <div class="flex justify-center">
+                <i class="pi pi-spin pi-spinner text-2xl"></i>
+            </div>
+            } @else {
+            <div class="grid">
+                @for (org of organizations(); track org.id) {
+                <div class="mb-2">
+                    <p-card [style]="{ cursor: 'pointer' }" (click)="selectOrganization(org)">
+                        <div class="flex align-items-center gap-3">
+                            <img [src]="org.avatar_url" style="width: 40px; height: 40px; border-radius: 4px;">
+                            <div>
+                                <div class="font-bold">{{org.login}}</div>
+                                <div class="text-sm text-500">{{org.description}}</div>
+                            </div>
+                        </div>
+                    </p-card>
+                </div>
+                }
+            </div>
+            }
+        </div>
+        }
+
+        <!-- Step 2: Repository Selection -->
+        @if (currentStep() === 'repo_selection') {
+        <div class="flex flex-col gap-3">
+            <div class="flex align-items-center gap-2">
+                <button pButton icon="pi pi-arrow-left" class="p-button-text"
+                    (click)="currentStep.set('org_selection')">
+                </button>
+                <div class="text-xl">Select repositories from {{selectedOrg()?.login}}</div>
+            </div>
+
+            @if (loading()) {
+            <div class="flex justify-center">
+                <i class="pi pi-spin pi-spinner text-2xl"></i>
+            </div>
+            } @else {
+            <div class="flex flex-col gap-2">
+                @for (repo of repositories(); track repo.id) {
+                <p-card [style]="{ cursor: 'pointer' }" (click)="selectRepository(repo)">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <div class="font-bold">{{repo.name}}</div>
+                            <div class="text-sm text-500">{{repo.description}}</div>
+                        </div>
+                        <p-button icon="pi pi-plus" [loading]="connectingRepoId() === repo.id" severity="secondary">
+                        </p-button>
+                    </div>
+                </p-card>
+                }
+            </div>
+            }
+        </div>
+        }
+    </div>
+</p-dialog>

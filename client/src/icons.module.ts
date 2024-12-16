@@ -25,6 +25,10 @@ import {
   IconCircleX,
   IconCloudUpload,
   IconGitPullRequest,
+  IconChevronRight,
+  IconChevronDown,
+  IconChevronUp,
+  IconChevronLeft,
 } from 'angular-tabler-icons/icons';
 
 // Select some icons (use an object, not an array)
@@ -51,11 +55,15 @@ const icons = {
   IconProgressHelp,
   IconCircleX,
   IconCloudUpload,
-  IconGitPullRequest
+  IconGitPullRequest,
+  IconChevronRight,
+  IconChevronDown,
+  IconChevronUp,
+  IconChevronLeft,
 };
 
 @NgModule({
   imports: [TablerIconsModule.pick(icons)],
   exports: [TablerIconsModule],
 })
-export class IconsModule {}
+export class IconsModule { }
