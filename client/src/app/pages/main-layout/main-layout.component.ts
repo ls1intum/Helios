@@ -8,6 +8,7 @@ import { HeliosIconComponent } from '../../helios-icon/helios-icon.component';
 import { DividerModule } from 'primeng/divider';
 import { AvatarModule } from 'primeng/avatar';
 import { ToastModule } from 'primeng/toast';
+import {KeycloakService} from '@app/core/services/keycloak/keycloak.service';
 
 @Component({
   selector: 'app-main-layout',
@@ -37,6 +38,7 @@ import { ToastModule } from 'primeng/toast';
                     <i-tabler name="settings" pTooltip="Settings" class="!size-10 text-slate-500 hover:text-slate-700 !stroke-1" />
                     <p-divider />
                     <p-avatar label="U" size="large" />
+                    <button pButton label="" icon="pi pi-sign-out" class="p-button-danger mt-3 w-full" (click)="logout()"></button>
                 </div>
                 <div class="flex-grow">
                     <router-outlet />
@@ -48,6 +50,13 @@ import { ToastModule } from 'primeng/toast';
 })
 export class MainLayoutComponent implements OnInit {
   items!: { label: string; icon: string; path: string }[];
+
+
+  constructor(private keycloakService: KeycloakService) {}
+
+  logout() {
+    this.keycloakService.logout();
+  }
 
   ngOnInit() {
     this.items = [

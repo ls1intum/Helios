@@ -84,10 +84,15 @@ export class EnvironmentListComponent {
     await Promise.all(deploymentRequests);
   }
 
-  getFullUrl(url: string): string {
+  getFullUrl(url: string | undefined): string {
+    if (!url) {
+      return '';
+    }
+
     if (url && (!url.startsWith('http') && !url.startsWith('https'))) {
       return 'http://' + url;
     }
+
     return url;
   }
 }

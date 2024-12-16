@@ -8,12 +8,4 @@ import { KeycloakService } from './core/services/keycloak/keycloak.service';
   imports: [RouterOutlet],
   template: '<router-outlet />'
 })
-export class AppComponent {
-
-  constructor(private keycloakService: KeycloakService) {}
-
-  logout() {
-    this.keycloakService.logout();
-  }
-
-}
+export class AppComponent {}
