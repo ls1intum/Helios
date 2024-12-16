@@ -13,6 +13,54 @@ servers:
 - url: /
   description: Default Server URL
 paths:
+  /api/settings/{repositoryId}/groups/update:
+    put:
+      tags:
+      - git-repo-settings-controller
+      operationId: updateWorkflowGroups
+      parameters:
+      - name: repositoryId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "#/components/schemas/WorkflowGroupDTO"
+        required: true
+      responses:
+        "200":
+          description: OK
+  /api/settings/{repositoryId}/groups/create:
+    post:
+      tags:
+      - git-repo-settings-controller
+      operationId: createWorkflowGroup
+      parameters:
+      - name: repositoryId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WorkflowGroupDTO"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkflowGroupDTO"
   /status/health:
     get:
       tags:
@@ -147,6 +195,27 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/WorkflowRunDTO"
+  /api/settings/{repositoryId}/groups:
+    get:
+      tags:
+      - git-repo-settings-controller
+      operationId: getGroupsWithWorkflows
+      parameters:
+      - name: repositoryId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WorkflowGroupDTO"
   /api/pullrequests:
     get:
       tags:
@@ -342,8 +411,60 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/BranchInfoDTO"
+  /api/settings/{repositoryId}/groups/{groupId}:
+    delete:
+      tags:
+      - git-repo-settings-controller
+      operationId: deleteWorkflowGroup
+      parameters:
+      - name: repositoryId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: groupId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
 components:
   schemas:
+    WorkflowGroupDTO:
+      required:
+      - id
+      - name
+      - orderIndex
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        orderIndex:
+          type: integer
+          format: int32
+        memberships:
+          type: array
+          items:
+            $ref: "#/components/schemas/WorkflowMembershipDTO"
+    WorkflowMembershipDTO:
+      required:
+      - orderIndex
+      - workflowId
+      type: object
+      properties:
+        workflowId:
+          type: integer
+          format: int64
+        orderIndex:
+          type: integer
+          format: int32
     RepositoryInfoDTO:
       required:
       - htmlUrl
