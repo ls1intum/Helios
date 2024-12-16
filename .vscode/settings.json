@@ -13,7 +13,7 @@
       "database": "helios"
     }
   ],
-  "java.checkstyle.configuration": "https://raw.githubusercontent.com/checkstyle/checkstyle/refs/heads/master/src/main/resources/google_checks.xml",
+  "java.checkstyle.configuration": "${workspaceFolder}/server/checkstyle.xml",
   "java.checkstyle.version": "10.21.0",
   "java.completion.importOrder": ["#"],
   "[java]": {
