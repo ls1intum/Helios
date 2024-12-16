@@ -1,16 +1,22 @@
 {
-    "java.debug.settings.hotCodeReplace": "auto",
-    "java.configuration.updateBuildConfiguration": "interactive",
-    "sqltools.connections": [
-        {
-            "previewLimit": 50,
-            "server": "localhost",
-            "port": 5432,
-            "driver": "PostgreSQL",
-            "name": "application-service-dev",
-            "password": "helios",
-            "username": "helios",
-            "database": "helios"
-        }
-    ]
+  "java.debug.settings.hotCodeReplace": "auto",
+  "java.configuration.updateBuildConfiguration": "interactive",
+  "sqltools.connections": [
+    {
+      "previewLimit": 50,
+      "server": "localhost",
+      "port": 5432,
+      "driver": "PostgreSQL",
+      "name": "application-service-dev",
+      "password": "helios",
+      "username": "helios",
+      "database": "helios"
+    }
+  ],
+  "java.checkstyle.configuration": "https://raw.githubusercontent.com/checkstyle/checkstyle/refs/heads/master/src/main/resources/google_checks.xml",
+  "java.checkstyle.version": "10.21.0",
+  "java.completion.importOrder": ["#"],
+  "[java]": {
+    "editor.defaultFormatter": "josevseb.google-java-format-for-vs-code",
+  },
 }
