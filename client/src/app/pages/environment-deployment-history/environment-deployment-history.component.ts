@@ -1,26 +1,20 @@
-import {Component, computed, inject, Injectable, signal} from '@angular/core';
-import {DeploymentControllerService, DeploymentDTO} from '@app/core/modules/openapi';
-import {ActivatedRoute} from '@angular/router';
-import {injectQuery} from '@tanstack/angular-query-experimental';
-import {PrimeTemplate} from 'primeng/api';
-import {SkeletonModule} from 'primeng/skeleton';
-import {DatePipe, NgIf} from '@angular/common';
-import {TableModule} from 'primeng/table';
-import {IconsModule} from 'icons.module';
-import {catchError, tap} from 'rxjs';
+import { Component, computed, inject, Injectable, signal } from '@angular/core';
+import { DeploymentControllerService, DeploymentDTO } from '@app/core/modules/openapi';
+import { ActivatedRoute } from '@angular/router';
+import { injectQuery } from '@tanstack/angular-query-experimental';
+import { PrimeTemplate } from 'primeng/api';
+import { SkeletonModule } from 'primeng/skeleton';
+import { DatePipe, NgIf } from '@angular/common';
+import { TableModule } from 'primeng/table';
+import { IconsModule } from 'icons.module';
+import { catchError, tap } from 'rxjs';
 
 @Component({
   selector: 'app-environment-deployment-history',
-  imports: [
-    IconsModule,
-    PrimeTemplate,
-    SkeletonModule,
-    NgIf,
-    TableModule
-  ],
+  imports: [IconsModule, PrimeTemplate, SkeletonModule, NgIf, TableModule],
   providers: [DatePipe],
   templateUrl: './environment-deployment-history.component.html',
-  styleUrl: './environment-deployment-history.component.css'
+  styleUrl: './environment-deployment-history.component.css',
 })
 export class EnvironmentDeploymentHistoryComponent {
   private datePipe = inject(DatePipe);
@@ -55,7 +49,8 @@ export class EnvironmentDeploymentHistoryComponent {
       const id = this.environmentId();
       if (id !== null) {
         this.isLoading.set(true);
-        return this.deploymentService.getDeploymentsByEnvironmentId(id)
+        return this.deploymentService
+          .getDeploymentsByEnvironmentId(id)
           .pipe(
             tap(data => {
               console.log('Deployments:', data);
@@ -64,26 +59,24 @@ export class EnvironmentDeploymentHistoryComponent {
               this.isLoading.set(false);
             }),
             catchError(() => {
-                this.isError.set(true);
-                this.isLoading.set(false);
-                return [];
-              }
-            )
-          ).subscribe()
+              this.isError.set(true);
+              this.isLoading.set(false);
+              return [];
+            })
+          )
+          .subscribe();
       }
       throw new Error('Invalid environment ID');
-    }
+    },
   }));
-
 
   formatDate(date: string): string | null {
     return date ? this.datePipe.transform(date, 'd MMMM y, h:mm a') : null;
   }
-
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class EnvironmentDeploymentHistoryStoreService {
   private deploymentsState = signal<DeploymentDTO[]>([]);

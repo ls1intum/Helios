@@ -1,147 +1,144 @@
 @if (isLoading()) {
-<p-table [value]="[1, 2, 3, 4, 5]" styleClass="p-datatable-lg">
-  <ng-template pTemplate="header">
-    <tr>
-      <th style="width: 70%">Name</th>
-      <th style="width: 15%">Commit SHA</th>
-      <th style="width: 15%">Repository</th>
-    </tr>
-  </ng-template>
-  <ng-template pTemplate="body">
-    <tr>
-      <td><p-skeleton></p-skeleton></td>
-      <td><p-skeleton></p-skeleton></td>
-      <td><p-skeleton></p-skeleton></td>
-    </tr>
-  </ng-template>
-</p-table>
+  <p-table [value]="[1, 2, 3, 4, 5]" styleClass="p-datatable-lg">
+    <ng-template pTemplate="header">
+      <tr>
+        <th style="width: 70%">Name</th>
+        <th style="width: 15%">Commit SHA</th>
+        <th style="width: 15%">Repository</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body">
+      <tr>
+        <td><p-skeleton></p-skeleton></td>
+        <td><p-skeleton></p-skeleton></td>
+        <td><p-skeleton></p-skeleton></td>
+      </tr>
+    </ng-template>
+  </p-table>
 } @else {
-@if (isError()) {
-<p>Error occurred while fetching pull requests.</p>
-} @else {
-@if (isEmpty()) {
-<p>No pull requests found.</p>
-} @else {
-<!-- Special Branches Table -->
+  @if (isError()) {
+    <p>Error occurred while fetching pull requests.</p>
+  } @else {
+    @if (isEmpty()) {
+      <p>No pull requests found.</p>
+    } @else {
+      <!-- Special Branches Table -->
 
-<p-table [value]="getSpecialBranches()" styleClass="p-datatable-sm mb-4">
-  <ng-template pTemplate="header">
-    <tr>
-      <th style="width: 70%">Name</th>
-      <th style="width: 15%">Commit SHA</th>
-      <th style="width: 15%">Repository</th>
-    </tr>
-  </ng-template>
-  <ng-template pTemplate="body" let-branch>
-    <tr>
-      <td>
-        <div class="flex align-items-center gap-2">
-          <i-tabler name="git-branch"></i-tabler>
-          <span>{{ branch.name }}</span>
-          <i-tabler name="external-link" (click)="openLink(branch.link)"></i-tabler>
-        </div>
-      </td>
-      <td>
-        <div class="flex align-items-center gap-2">
-          <i-tabler name="git-commit"></i-tabler>
-          <span>{{ branch.commit_sha.slice(0, 7) }}</span>
-          <i-tabler name="external-link" (click)="openLink(branch.lastCommitLink)"></i-tabler>
-        </div>
-      </td>
-      <td>
-        <div class="flex align-items-center gap-2">
-          <span>{{ branch.repository.nameWithOwner }}</span>
-        </div>
-      </td>
-    </tr>
-  </ng-template>
-</p-table>
-<br />
+      <p-table [value]="getSpecialBranches()" styleClass="p-datatable-sm mb-4">
+        <ng-template pTemplate="header">
+          <tr>
+            <th style="width: 70%">Name</th>
+            <th style="width: 15%">Commit SHA</th>
+            <th style="width: 15%">Repository</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-branch>
+          <tr>
+            <td>
+              <div class="flex align-items-center gap-2">
+                <i-tabler name="git-branch"></i-tabler>
+                <span>{{ branch.name }}</span>
+                <i-tabler name="external-link" (click)="openLink(branch.link)"></i-tabler>
+              </div>
+            </td>
+            <td>
+              <div class="flex align-items-center gap-2">
+                <i-tabler name="git-commit"></i-tabler>
+                <span>{{ branch.commit_sha.slice(0, 7) }}</span>
+                <i-tabler name="external-link" (click)="openLink(branch.lastCommitLink)"></i-tabler>
+              </div>
+            </td>
+            <td>
+              <div class="flex align-items-center gap-2">
+                <span>{{ branch.repository.nameWithOwner }}</span>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+      <br />
 
+      <div class="flex justify-between items-center mb-3 w-full">
+        <h3><strong>Feature Branches</strong></h3>
+        <button
+          pButton
+          [icon]="viewPreference.viewMode() === 'Tree' ? 'pi pi-list' : 'pi pi-sitemap'"
+          (click)="toggleView()"
+          [label]="viewPreference.viewMode() === 'Tree' ? 'Switch to Table View' : 'Switch to Tree View'"
+          class="p-button-outlined"
+        ></button>
+      </div>
 
-<div class="flex justify-between items-center mb-3 w-full">
-  <h3><strong>Feature Branches</strong></h3>
-  <button pButton [icon]="viewPreference.viewMode() === 'Tree' ? 'pi pi-list' : 'pi pi-sitemap'" (click)="toggleView()"
-    [label]="viewPreference.viewMode() === 'Tree' ? 'Switch to Table View' : 'Switch to Tree View'"
-    class="p-button-outlined">
-  </button>
-</div>
+      @if (viewPreference.viewMode() === 'Tree') {
+        <!-- Feature Branches Tree Table -->
+        <p-treeTable [value]="featureBranchesTree()" [scrollable]="true" styleClass="p-treetable-sm">
+          <ng-template pTemplate="header">
+            <tr>
+              <th style="width: 70%">Name</th>
+              <th style="width: 15%">Commit SHA</th>
+              <th style="width: 15%">Repository</th>
+            </tr>
+          </ng-template>
 
-
-@if (viewPreference.viewMode() === 'Tree') {
-<!-- Feature Branches Tree Table -->
-<p-treeTable [value]="featureBranchesTree()" [scrollable]="true" styleClass="p-treetable-sm">
-  <ng-template pTemplate="header">
-    <tr>
-      <th style="width: 70%">Name</th>
-      <th style="width: 15%">Commit SHA</th>
-      <th style="width: 15%">Repository</th>
-    </tr>
-  </ng-template>
-
-  <ng-template pTemplate="body" let-rowNode let-rowData="rowData">
-    <tr [ttRow]="rowNode">
-      <td style="width: 70%">
-        <div class="flex align-items-center gap-2">
-          <p-treeTableToggler [rowNode]="rowNode" />
-          {{ rowData.name }}
-          <i-tabler name="external-link" (click)="openLink(rowData.link)"></i-tabler>
-        </div>
-
-      </td>
-      <td style="width: 15%">
-        <div *ngIf="rowData.commit_sha" class="flex align-items-center gap-2">
-          <i-tabler name="git-commit"></i-tabler>
-          <span>{{ rowData.commit_sha.slice(0, 7) }}</span>
-          <i-tabler name="external-link" (click)="openLink(rowData.lastCommitLink)"></i-tabler>
-        </div>
-      </td>
-      <td style="width: 15%">
-        <div class="flex align-items-center gap-2" *ngIf="rowData.repository?.nameWithOwner">
-          {{ rowData.repository.nameWithOwner }}
-        </div>
-      </td>
-    </tr>
-  </ng-template>
-</p-treeTable>
-} @else {
-
-<!-- Feature Branches Table -->
-<p-table [value]="getFeatureBranches()" styleClass="p-datatable-sm" [paginator]="true" [rows]="20">
-  <ng-template pTemplate="header">
-    <tr>
-      <th style="width: 70%">Name</th>
-      <th style="width: 15%">Commit SHA</th>
-      <th style="width: 15%">Repository</th>
-    </tr>
-  </ng-template>
-  <ng-template pTemplate="body" let-branch>
-    <tr>
-      <td>
-        <div class="flex align-items-center gap-2">
-          <i-tabler name="git-branch"></i-tabler>
-          <span>{{ branch.name }}</span>
-          <i-tabler name="external-link" (click)="openLink(branch.link)"></i-tabler>
-        </div>
-      </td>
-      <td>
-        <div class="flex align-items-center gap-2">
-          <i-tabler name="git-commit"></i-tabler>
-          <span>{{ branch.commit_sha.slice(0, 7) }}</span>
-          <i-tabler name="external-link" (click)="openLink(branch.lastCommitLink)"></i-tabler>
-        </div>
-      </td>
-      <td>
-        <div class="flex align-items-center gap-2">
-          <span>{{ branch.repository.nameWithOwner }}</span>
-        </div>
-      </td>
-    </tr>
-  </ng-template>
-</p-table>
-}
-
-
-}
-}
+          <ng-template pTemplate="body" let-rowNode let-rowData="rowData">
+            <tr [ttRow]="rowNode">
+              <td style="width: 70%">
+                <div class="flex align-items-center gap-2">
+                  <p-treeTableToggler [rowNode]="rowNode" />
+                  {{ rowData.name }}
+                  <i-tabler name="external-link" (click)="openLink(rowData.link)"></i-tabler>
+                </div>
+              </td>
+              <td style="width: 15%">
+                <div *ngIf="rowData.commit_sha" class="flex align-items-center gap-2">
+                  <i-tabler name="git-commit"></i-tabler>
+                  <span>{{ rowData.commit_sha.slice(0, 7) }}</span>
+                  <i-tabler name="external-link" (click)="openLink(rowData.lastCommitLink)"></i-tabler>
+                </div>
+              </td>
+              <td style="width: 15%">
+                <div class="flex align-items-center gap-2" *ngIf="rowData.repository?.nameWithOwner">
+                  {{ rowData.repository.nameWithOwner }}
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+        </p-treeTable>
+      } @else {
+        <!-- Feature Branches Table -->
+        <p-table [value]="getFeatureBranches()" styleClass="p-datatable-sm" [paginator]="true" [rows]="20">
+          <ng-template pTemplate="header">
+            <tr>
+              <th style="width: 70%">Name</th>
+              <th style="width: 15%">Commit SHA</th>
+              <th style="width: 15%">Repository</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-branch>
+            <tr>
+              <td>
+                <div class="flex align-items-center gap-2">
+                  <i-tabler name="git-branch"></i-tabler>
+                  <span>{{ branch.name }}</span>
+                  <i-tabler name="external-link" (click)="openLink(branch.link)"></i-tabler>
+                </div>
+              </td>
+              <td>
+                <div class="flex align-items-center gap-2">
+                  <i-tabler name="git-commit"></i-tabler>
+                  <span>{{ branch.commit_sha.slice(0, 7) }}</span>
+                  <i-tabler name="external-link" (click)="openLink(branch.lastCommitLink)"></i-tabler>
+                </div>
+              </td>
+              <td>
+                <div class="flex align-items-center gap-2">
+                  <span>{{ branch.repository.nameWithOwner }}</span>
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      }
+    }
+  }
 }

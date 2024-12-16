@@ -1,4 +1,3 @@
-
 import { Routes } from '@angular/router';
 import { MainLayoutComponent } from './pages/main-layout/main-layout.component';
 import { CiCdComponent } from './pages/ci-cd/ci-cd.component';
@@ -7,22 +6,19 @@ import { EnvironmentListComponent } from './pages/environment-list/environment-l
 import { PageNotFoundComponent } from './pages/page-not-found/page-not-found.component';
 import { ReleaseComponent } from './pages/release/release.component';
 import { PullRequestPipelineComponent } from './pages/pull-request-pipeline/pull-request-pipeline.component';
-import {
-  EnvironmentDeploymentHistoryComponent
-} from '@app/pages/environment-deployment-history/environment-deployment-history.component';
+import { EnvironmentDeploymentHistoryComponent } from '@app/pages/environment-deployment-history/environment-deployment-history.component';
 import { ProjectOverviewComponent } from './pages/project-overview/project-overview.component';
-import {ProjectSettingsComponent} from '@app/pages/project-settings/project-settings.component';
-
+import { ProjectSettingsComponent } from '@app/pages/project-settings/project-settings.component';
 
 export const routes: Routes = [
   {
     path: '',
     pathMatch: 'full',
-    redirectTo: 'projects'
+    redirectTo: 'projects',
   },
   {
     path: 'projects',
-    component: ProjectOverviewComponent
+    component: ProjectOverviewComponent,
   },
   {
     path: 'project/:projectId',
@@ -31,7 +27,7 @@ export const routes: Routes = [
       {
         path: '',
         redirectTo: 'ci-cd',
-        pathMatch: 'full'
+        pathMatch: 'full',
       },
       {
         path: 'environment',
@@ -44,23 +40,21 @@ export const routes: Routes = [
       },
       {
         path: 'release',
-        component: ReleaseComponent
+        component: ReleaseComponent,
       },
       {
         path: 'ci-cd',
-        component: CiCdComponent
+        component: CiCdComponent,
       },
       {
         path: 'pipeline',
-        children: [
-          { path: 'pr/:pullRequestId', component: PullRequestPipelineComponent },
-        ]
+        children: [{ path: 'pr/:pullRequestId', component: PullRequestPipelineComponent }],
       },
       {
         path: 'settings',
-        component: ProjectSettingsComponent
+        component: ProjectSettingsComponent,
       },
-    ]
+    ],
   },
   {
     path: '**',

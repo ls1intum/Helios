@@ -13,22 +13,23 @@ import { IconsModule } from 'icons.module';
 import { SkeletonModule } from 'primeng/skeleton';
 import { Router } from '@angular/router';
 
-
 @Component({
   selector: 'app-pull-request-table',
   imports: [TableModule, AvatarModule, TagModule, IconsModule, SkeletonModule, AvatarGroupModule, TooltipModule, MarkdownPipe],
   templateUrl: './pull-request-table.component.html',
-  styles: [`
-    :host ::ng-deep {
-      .p-avatar {
-        img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
+  styles: [
+    `
+      :host ::ng-deep {
+        .p-avatar {
+          img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+          }
         }
       }
-    }
-  `]
+    `,
+  ],
 })
 export class PullRequestTableComponent {
   pullRequestService = inject(PullRequestControllerService);
@@ -43,7 +44,8 @@ export class PullRequestTableComponent {
     queryKey: ['pullRequests'],
     queryFn: () => {
       this.isLoading.set(true);
-      return this.pullRequestService.getAllPullRequests()
+      return this.pullRequestService
+        .getAllPullRequests()
         .pipe(
           tap(data => {
             // Filter to only include open pull requests
@@ -56,9 +58,9 @@ export class PullRequestTableComponent {
             this.isError.set(true);
             this.isLoading.set(false);
             return [];
-          }
-          )
-        ).subscribe()
+          })
+        )
+        .subscribe();
     },
   }));
 
@@ -67,7 +69,7 @@ export class PullRequestTableComponent {
     return pr.state === 'OPEN' ? 'Open' : 'Closed';
   }
 
-  getStatusSeverity(pr: PullRequestInfoDTO): ('success' | 'danger' | 'info') {
+  getStatusSeverity(pr: PullRequestInfoDTO): 'success' | 'danger' | 'info' {
     if (pr.isMerged) return 'info';
     return pr.state === 'OPEN' ? 'success' : 'danger';
   }
@@ -76,7 +78,7 @@ export class PullRequestTableComponent {
     return new Date(date).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
-      day: 'numeric'
+      day: 'numeric',
     });
   }
 
@@ -89,4 +91,3 @@ export class PullRequestTableComponent {
     this.router.navigate(['project', 'projectid', 'pipeline', 'pr', pr.id]);
   }
 }
-

@@ -8,9 +8,8 @@ describe('ConnectRepoComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ConnectRepoComponent]
-    })
-    .compileComponents();
+      imports: [ConnectRepoComponent],
+    }).compileComponents();
 
     fixture = TestBed.createComponent(ConnectRepoComponent);
     component = fixture.componentInstance;

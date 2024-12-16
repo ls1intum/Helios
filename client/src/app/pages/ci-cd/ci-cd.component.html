@@ -1,8 +1,8 @@
 <p-tabMenu [model]="tabs()" [activeItem]="activeTab()" (activeItemChange)="onTabChange($event)"></p-tabMenu>
 
 @if (isTabActive('pr')) {
-<app-pull-request-table />
+  <app-pull-request-table />
 }
 @if (isTabActive('branches')) {
-<app-branches-table />
+  <app-branches-table />
 }

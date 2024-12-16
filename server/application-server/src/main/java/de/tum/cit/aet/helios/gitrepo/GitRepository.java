@@ -1,15 +1,16 @@
 package de.tum.cit.aet.helios.gitrepo;
 
-import jakarta.persistence.*;
+import de.tum.cit.aet.helios.github.BaseGitServiceEntity;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Table;
+import java.time.OffsetDateTime;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import org.springframework.lang.NonNull;
-
-import de.tum.cit.aet.helios.github.BaseGitServiceEntity;
-
-import java.time.OffsetDateTime;
 
 @Entity
 @Table(name = "repository")
@@ -19,78 +20,76 @@ import java.time.OffsetDateTime;
 @ToString(callSuper = true)
 public class GitRepository extends BaseGitServiceEntity {
 
-    @NonNull
-    private String name;
+  @NonNull private String name;
 
-    @NonNull
-    private String nameWithOwner;
+  @NonNull private String nameWithOwner;
 
-    // Whether the repository is private or public.
-    private boolean isPrivate;
+  // Whether the repository is private or public.
+  private boolean isPrivate;
 
-    @NonNull
-    private String htmlUrl;
+  @NonNull private String htmlUrl;
 
-    private String description;
+  private String description;
 
-    private String homepage;
+  private String homepage;
 
-    @NonNull
-    private OffsetDateTime pushedAt;
+  @NonNull private OffsetDateTime pushedAt;
 
-    private boolean isArchived;
+  private boolean isArchived;
 
-    // Returns whether this repository disabled.
-    private boolean isDisabled;
+  // Returns whether this repository disabled.
+  private boolean isDisabled;
 
-    @NonNull
-    @Enumerated(EnumType.STRING)
-    private Visibility visibility;
+  @NonNull
+  @Enumerated(EnumType.STRING)
+  private Visibility visibility;
 
-    private int stargazersCount;
+  private int stargazersCount;
 
-    private int watchersCount;
+  private int watchersCount;
 
-    @NonNull
-    private String defaultBranch;
+  @NonNull private String defaultBranch;
 
-    private boolean hasIssues;
+  private boolean hasIssues;
 
-    private boolean hasProjects;
+  private boolean hasProjects;
 
-    private boolean hasWiki;
+  private boolean hasWiki;
 
-    public enum Visibility {
-        PUBLIC, PRIVATE, INTERNAL, UNKNOWN
-    }
+  public enum Visibility {
+    PUBLIC,
+    PRIVATE,
+    INTERNAL,
+    UNKNOWN
+  }
 
-    // Missing properties:
-    // Issue, Label, Milestone
-    // owner
-    // organization
+  // Missing properties:
+  // Issue, Label, Milestone
+  // owner
+  // organization
 
-    // Ignored GitHub properties:
-    // - subscribersCount
-    // - hasPages
-    // - hasDownloads
-    // - hasDiscussions
-    // - topics
-    // - size
-    // - fork
-    // - forks_count
-    // - default_branch
-    // - open_issues_count (cached number)
-    // - is_template
-    // - permissions
-    // - allow_rebase_merge
-    // - template_repository
-    // - allow_squash_merge
-    // - allow_auto_merge
-    // - delete_branch_on_merge
-    // - allow_merge_commit
-    // - allow_forking
-    // - network_count
-    // - license
-    // - parent
-    // - source
+  // Ignored GitHub properties:
+  // - subscribersCount
+  // - hasPages
+  // - hasDownloads
+  // - hasDiscussions
+  // - topics
+  // - size
+  // - fork
+  // - forks_count
+  // - default_branch
+  // - open_issues_count (cached number)
+  // - is_template
+  // - permissions
+  // - allow_rebase_merge
+  // - template_repository
+  // - allow_squash_merge
+  // - allow_auto_merge
+  // - delete_branch_on_merge
+  // - allow_merge_commit
+  // - allow_forking
+  // - network_count
+  // - license
+  // - parent
+  // - source
 }
