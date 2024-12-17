@@ -3,15 +3,16 @@ import { BranchTableComponent } from '@app/components/branches-table/branches-ta
 import { PullRequestTableComponent } from '@app/components/pull-request-table/pull-request-table.component';
 import { MenuItem } from 'primeng/api';
 import { TabMenuModule } from 'primeng/tabmenu';
+import { TabsModule } from 'primeng/tabs';
 @Component({
   selector: 'app-ci-cd',
-  imports: [PullRequestTableComponent, BranchTableComponent, TabMenuModule],
+  imports: [PullRequestTableComponent, BranchTableComponent, TabMenuModule, TabsModule],
   templateUrl: './ci-cd.component.html',
 })
 export class CiCdComponent {
   private stateService = inject(CiCdStateService);
 
-  tabs = signal<MenuItem[]>([
+  tabs = signal<{label: string, id: string}[]>([
     { label: 'Pull Requests', id: 'pr' },
     { label: 'Branches', id: 'branches' }
   ]);

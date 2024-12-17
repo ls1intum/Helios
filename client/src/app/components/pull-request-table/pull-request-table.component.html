@@ -42,10 +42,10 @@
         <ng-template pTemplate="body" let-pr>
           <tr class="cursor-pointer" (click)="openPR(pr)">
             <td>
-              <div class="flex align-items-center gap-2">
+              <div class="flex items-center gap-2">
                 <i-tabler name="git-pull-request"></i-tabler>
                 <span class="font-bold"><span [innerHTML]="pr.title | markdown"></span></span>
-                <button pButton class="p-button-text p-button-sm" (click)="openPRExternal(pr)"><i-tabler name="external-link"></i-tabler></button>
+                <p-button [link]="true" (click)="openPRExternal(pr)"><i-tabler name="external-link"></i-tabler></p-button>
               </div>
             </td>
             <td>
@@ -74,7 +74,11 @@
               }
             </td>
             <td>
+              <<<<<<< HEAD
               {{ dateService.formatDate(pr.createdAt, 'd. MMM y') }}
+              =======
+              {{ formatDate(pr.createdAt) }}
+              >>>>>>> ab496d4 (fix: remove deprecated modules)
             </td>
           </tr>
         </ng-template>
