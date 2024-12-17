@@ -37,9 +37,17 @@ export class ProjectOverviewComponent {
     this.repositoryService.refreshRepositories().subscribe();
   }
 
-  navigateToProject(repository: RepositoryInfoDTO) {
-    console.log('Navigating to project', repository);
-    this.router.navigate(['/project', repository.id.toString(), 'ci-cd']);
+  getOrgName(repository: RepositoryInfoDTO): string {
+    return repository.nameWithOwner.split('/')[0];
   }
 
+  getRepoName(repository: RepositoryInfoDTO): string {
+    return repository.nameWithOwner.split('/')[1];
+  }
+
+  navigateToProject(repository: RepositoryInfoDTO) {
+    const orgName = this.getOrgName(repository);
+    const repoName = this.getRepoName(repository);
+    this.router.navigate([`/${orgName}/${repoName}`]);
+  }
 }

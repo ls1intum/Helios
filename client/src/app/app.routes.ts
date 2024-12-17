@@ -1,4 +1,3 @@
-
 import { Routes } from '@angular/router';
 import { MainLayoutComponent } from './pages/main-layout/main-layout.component';
 import { CiCdComponent } from './pages/ci-cd/ci-cd.component';
@@ -12,53 +11,49 @@ import {
 } from '@app/pages/environment-deployment-history/environment-deployment-history.component';
 import { ProjectOverviewComponent } from './pages/project-overview/project-overview.component';
 
-
 export const routes: Routes = [
   {
     path: '',
-    pathMatch: 'full',
-    redirectTo: 'projects'
-  },
-  {
-    path: 'projects',
     component: ProjectOverviewComponent
   },
   {
-    path: 'project/:projectId',
+    path: ':orgName/:repoName',
     component: MainLayoutComponent,
     children: [
       {
         path: '',
-        redirectTo: 'ci-cd',
-        pathMatch: 'full'
+        component: CiCdComponent
       },
       {
-        path: 'environment',
-        children: [
-          { path: '', redirectTo: 'list', pathMatch: 'full' },
-          { path: 'list', component: EnvironmentListComponent },
-          { path: ':id/edit', component: EnvironmentEditComponent },
-          { path: ':id/history', component: EnvironmentDeploymentHistoryComponent },
-        ],
+        path: 'branch/:branchName',
+        component: PullRequestPipelineComponent,
+        data: { type: 'branch' }
+      },
+      {
+        path: 'pr/:prNumber',
+        component: PullRequestPipelineComponent,
+        data: { type: 'pr' }
       },
       {
         path: 'release',
         component: ReleaseComponent
       },
       {
-        path: 'ci-cd',
-        component: CiCdComponent
+        path: 'environments',
+        children: [
+          { path: '', component: EnvironmentListComponent },
+          { path: ':id/edit', component: EnvironmentEditComponent },
+          { path: ':id/history', component: EnvironmentDeploymentHistoryComponent },
+        ]
       },
       {
         path: 'pipeline',
-        children: [
-          { path: 'pr/:pullRequestId', component: PullRequestPipelineComponent },
-        ]
+        component: PullRequestPipelineComponent
       }
     ]
   },
   {
     path: '**',
     component: PageNotFoundComponent,
-  },
+  }
 ];

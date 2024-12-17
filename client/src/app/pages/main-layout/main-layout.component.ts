@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { Component, Input, OnInit } from '@angular/core';
+import { ActivatedRoute, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { IconsModule } from 'icons.module';
 import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
@@ -19,15 +19,18 @@ import { ToastModule } from 'primeng/toast';
                 <div class="rounded-2xl p-5 mr-3 bg-slate-100 flex flex-col items-center justify-between h-full">
                     <app-helios-icon routerLink="/" size="3rem" class="rounded-xl w-12 cursor-pointer" />
                     <p-divider />
-                    <p-avatar label="A" pTooltip="Artemis" size="large" />
+                    <div class="text-center">
+                        <p-avatar [label]="getInitial(repoName)" [pTooltip]="repoName" size="large" />
+                    </div>
                     <p-divider />
                     <div class="flex flex-col gap-3">
                         @for (item of items; track item.label) {
                             <a
                                 class="rounded-xl p-2 flex items-center text-slate-500 hover:text-slate-700"
-                                [routerLink]="item.path"
+                                [routerLink]="getRouterLink(item)"
                                 [routerLinkActive]="'!bg-slate-800 !text-slate-100 !hover:text-slate-100'"
                                 [pTooltip]="item.label"
+                                [routerLinkActiveOptions]="{exact: item.path === ''}"
                             >
                                 <i-tabler [name]="item.icon" class="!size-10 !stroke-1" />
                             </a>
@@ -47,6 +50,27 @@ import { ToastModule } from 'primeng/toast';
     `
 })
 export class MainLayoutComponent implements OnInit {
+  @Input()
+  set orgName(value: string) {
+    this._orgName = value;
+    this.updateBaseUrl();
+  }
+  get orgName(): string {
+    return this._orgName;
+  }
+
+  @Input()
+  set repoName(value: string) {
+    this._repoName = value;
+    this.updateBaseUrl();
+  }
+  get repoName(): string {
+    return this._repoName;
+  }
+
+  private _orgName: string = '';
+  private _repoName: string = '';
+  baseUrl: string = '';
   items!: { label: string; icon: string; path: string }[];
 
   ngOnInit() {
@@ -54,7 +78,7 @@ export class MainLayoutComponent implements OnInit {
       {
         label: 'CI/CD',
         icon: 'arrow-guide',
-        path: 'ci-cd',
+        path: '',
       },
       {
         label: 'Release Management',
@@ -64,9 +88,21 @@ export class MainLayoutComponent implements OnInit {
       {
         label: 'Environments',
         icon: 'server-cog',
-        path: 'environment/list',
+        path: 'environments',
       },
     ];
   }
 
+  private updateBaseUrl() {
+    this.baseUrl = `/${this._orgName}/${this._repoName}`;
+  }
+
+  getRouterLink(item: { path: string }): string[] {
+    return item.path ? [this.baseUrl, item.path] : [this.baseUrl];
+  }
+
+
+  getInitial(name: string): string {
+    return name ? name.charAt(0).toUpperCase() : 'A';
+  }
 }
