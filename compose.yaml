@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: 'postgres:16-alpine'
+    image: 'postgres:16'
     environment:
       - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
@@ -9,19 +9,63 @@ services:
       - '5432:5432'
     volumes:
       - db-data:/var/lib/postgresql/data
+    command: >
+      bash -c "
+        set -m
+      
+        # Start default entrypoint in the background:
+        docker-entrypoint.sh postgres &
   
+        # Wait for Postgres to come up (pg_isready blocks until server is accepting connections)
+        until pg_isready -h localhost -p 5432 --timeout=0; do
+          echo 'Waiting for Postgres to be ready...';
+          sleep 1;
+        done;
+  
+        # Create 'keycloak' DB if it doesn’t exist
+        psql -v ON_ERROR_STOP=1 -U ${POSTGRES_USER} -tc \"SELECT 1 FROM pg_database WHERE datname = 'keycloak'\" | grep -q 1 || psql -U ${POSTGRES_USER} -c \"CREATE DATABASE keycloak;\"
+
+        # Bring Postgres (still running in background) to the foreground
+        fg %1
+      "
+    networks:
+      - helios-network
+
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    container_name: keycloak
+    environment:
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+      KC_DB: postgres
+      KC_DB_URL_HOST: postgres
+      KC_DB_USERNAME: ${POSTGRES_USER}
+      KC_DB_PASSWORD: ${POSTGRES_PASSWORD}
+      KC_HOSTNAME: ${KC_HOSTNAME}
+    ports:
+      - '8081:8081'
+    depends_on:
+      - postgres
+    volumes:
+      - ./helios-example-realm.json:/opt/keycloak/data/import/dev-realm-export.json
+    command: start-dev --import-realm --http-port=8081
+    networks:
+      - helios-network
+
   webhook-listener:
     build:
       context: server/webhook-listener
     ports:
-      - '4200:4200'
+      - '4201:4200'
     environment:
       - NATS_AUTH_TOKEN=${NATS_AUTH_TOKEN}
       - WEBHOOK_SECRET=${WEBHOOK_SECRET}
       - NATS_URL=nats-server
     depends_on:
       - nats-server
-
+    networks:
+      - helios-network
 
   nats-server:
     image: nats:alpine
@@ -44,6 +88,8 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+    networks:
+      - helios-network
 
   client:
     container_name: client
@@ -55,29 +101,17 @@ services:
       - ./client:/usr/src/app/
       - /usr/src/app/node_modules/
     ports:
-      - "80:4200"
-
-  application-server:
-    build:
-      context: server/application-server
-    ports:
-      - '8080:8080'
-    environment:
-      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
-      - DATASOURCE_URL=${DATASOURCE_URL}
-      - DATASOURCE_USERNAME=${DATASOURCE_USERNAME}
-      - DATASOURCE_PASSWORD=${DATASOURCE_PASSWORD}
-      - NATS_SERVER=${NATS_SERVER}
-      - NATS_AUTH_TOKEN=${NATS_AUTH_TOKEN}
-      - ORGANIZATION_NAME=${ORGANIZATION_NAME}
-      - GITHUB_AUTH_TOKEN=${GITHUB_AUTH_TOKEN}
-      - REPOSITORY_NAME=${REPOSITORY_NAME}
-
+      - "4200:4200"
     depends_on:
-      - postgres
-      - nats-server
-      - webhook-listener
+      - keycloak
+    networks:
+      - helios-network
 
 volumes:
   db-data:
   nats-data:
+  keycloak_data:
+
+networks:
+  helios-network:
+    name: helios-network
