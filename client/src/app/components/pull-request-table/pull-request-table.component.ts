@@ -12,11 +12,12 @@ import { catchError, tap } from 'rxjs';
 import { IconsModule } from 'icons.module';
 import { SkeletonModule } from 'primeng/skeleton';
 import { Router } from '@angular/router';
+import { ButtonModule } from 'primeng/button';
 
 
 @Component({
   selector: 'app-pull-request-table',
-  imports: [TableModule, AvatarModule, TagModule, IconsModule, SkeletonModule, AvatarGroupModule, TooltipModule, MarkdownPipe],
+  imports: [TableModule, AvatarModule, TagModule, IconsModule, SkeletonModule, AvatarGroupModule, TooltipModule, MarkdownPipe, ButtonModule],
   templateUrl: './pull-request-table.component.html',
   styles: [`
     :host ::ng-deep {

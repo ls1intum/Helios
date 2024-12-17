@@ -8,11 +8,11 @@ import { EnvironmentControllerService } from '@app/core/modules/openapi/api/envi
 import { EnvironmentDTO } from '@app/core/modules/openapi';
 import { catchError, tap } from 'rxjs';
 import { CommonModule } from '@angular/common';
-import { ChipsModule } from 'primeng/chips';
+import { AutoCompleteModule } from 'primeng/autocomplete';
 
 @Component({
   selector: 'app-environment-edit-form',
-  imports: [CommonModule, ReactiveFormsModule, InputTextModule, InputSwitchModule, ButtonModule, ChipsModule],
+  imports: [CommonModule, ReactiveFormsModule, InputTextModule, InputSwitchModule, ButtonModule, AutoCompleteModule],
   templateUrl: './environment-edit-form.component.html',
   styleUrls: ['./environment-edit-form.component.css'],
 })
@@ -28,7 +28,7 @@ export class EnvironmentEditFormComponent implements OnInit {
     description: '',
     installedApps: [] as string[],
   });
-  environmentForm!: FormGroup; 
+  environmentForm!: FormGroup;
 
   ngOnInit(): void {
     if (!this.id) {
@@ -49,7 +49,7 @@ export class EnvironmentEditFormComponent implements OnInit {
           this.environment = data;
           this.environmentForm.patchValue(this.environment);
         }),
-        catchError((error) => {          
+        catchError((error) => {
           alert('Environment not found');
           window.location.href = 'project/projectId/environment/list'; // Redirect to environment list
           return [];
@@ -59,7 +59,7 @@ export class EnvironmentEditFormComponent implements OnInit {
 
   submitForm = () => {
     if (this.environmentForm && this.environmentForm.valid) {
-      this.environmentService.updateEnvironment(this.environment.id, this.environmentForm.value).subscribe();
+        this.environmentService.updateEnvironment(this.environment.id, this.environmentForm.value).subscribe();
       window.location.href = 'project/projectId/environment/list'; // Redirect to environment list
     }
   };
