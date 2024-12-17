@@ -222,6 +222,25 @@ export class ProjectSettingsComponent {
         this.workflowGroupsMap.set(newMap);
     }
 
+    getWorkflowLabelOptions() {
+        return Object.values(WorkflowDTO.LabelEnum);
+    }
+
+    onChangeLabel(workflow: WorkflowDTO) {
+        this.isLoading.set(true);
+
+        this.workflowService.updateWorkflowLabel(workflow.id, JSON.stringify(workflow.label)).subscribe({
+            next: () => {
+                this.isLoading.set(false);
+                console.log('Label updated!')
+            },
+            error: (err) => {
+                this.isLoading.set(false);
+                console.error('Error:', err)
+            },
+        });
+    }
+
 
     // Distinguish the actual server groups for the dropdown
     get groupDropdownOptions() {
