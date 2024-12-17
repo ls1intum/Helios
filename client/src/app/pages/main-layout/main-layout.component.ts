@@ -66,12 +66,11 @@ export class MainLayoutComponent implements OnInit {
         icon: 'server-cog',
         path: 'environment/list',
       },
-      // TODO: Change icon for environments & settings
       {
         label: 'Project Settings',
-        icon: 'server-cog',
+        icon: 'adjustments-alt',
         path: 'settings',
-      },
+      },      
     ];
   }
 
