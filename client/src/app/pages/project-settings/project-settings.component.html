@@ -55,14 +55,9 @@
             <!-- Panel for this group -->
             <p-panel [header]="group.groupName" class="mr-2 min-w-[250px]">
               <div class="flex flex-col gap-4">
-                @for (wf of group.workflows; track wf.id; let wfIndex = $index) {
+                @for (wf of group.workflows; track wf.id) {
                   <div
-                    class="flex items-center space-x-2"
-                    pDraggable="workflow"
-                    pDroppable="workflow"
-                    (onDragStart)="dragWorkflowStart(gIndex, wfIndex)"
-                    (onDrop)="dropWorkflow(gIndex, wfIndex)"
-                  >
+                    class="flex items-center space-x-2">
                     <i-tabler name="circle-check" class="text-green-500"></i-tabler>
                     <span class="font-medium w-36 flex items-center">{{ wf.name }}</span>
                   </div>
