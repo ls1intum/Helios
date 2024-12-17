@@ -487,6 +487,7 @@ components:
     WorkflowDTO:
       required:
       - id
+      - label
       - name
       - path
       - state
@@ -518,6 +519,12 @@ components:
           type: string
         badgeUrl:
           type: string
+        label:
+          type: string
+          enum:
+          - BUILD
+          - DEPLOYMENT
+          - NONE
         createdAt:
           type: string
           format: date-time

@@ -20,6 +20,7 @@ export interface WorkflowDTO {
     url?: string;
     htmlUrl?: string;
     badgeUrl?: string;
+    label: WorkflowDTO.LabelEnum;
     createdAt?: string;
     updatedAt?: string;
 }
@@ -32,6 +33,12 @@ export namespace WorkflowDTO {
         DisabledInactivity: 'DISABLED_INACTIVITY' as StateEnum,
         DisabledManually: 'DISABLED_MANUALLY' as StateEnum,
         Unknown: 'UNKNOWN' as StateEnum
+    };
+    export type LabelEnum = 'BUILD' | 'DEPLOYMENT' | 'NONE';
+    export const LabelEnum = {
+        Build: 'BUILD' as LabelEnum,
+        Deployment: 'DEPLOYMENT' as LabelEnum,
+        None: 'NONE' as LabelEnum
     };
 }
 

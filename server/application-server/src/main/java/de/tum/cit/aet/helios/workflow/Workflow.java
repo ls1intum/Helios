@@ -35,6 +35,11 @@ public class Workflow extends BaseGitServiceEntity {
 
     private String badgeUrl;
 
+    // Custom field for Repository Settings
+    @NonNull
+    @Enumerated(EnumType.STRING)
+    private Label label = Label.NONE;
+
     public enum State {
         ACTIVE,
         DELETED,
@@ -42,5 +47,11 @@ public class Workflow extends BaseGitServiceEntity {
         DISABLED_INACTIVITY,
         DISABLED_MANUALLY,
         UNKNOWN,
+    }
+
+    public enum Label {
+        BUILD,
+        DEPLOYMENT,
+        NONE
     }
 }
