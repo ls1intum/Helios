@@ -19,7 +19,7 @@ import { ToastModule } from 'primeng/toast';
                 <div class="rounded-2xl p-5 mr-3 bg-slate-100 flex flex-col items-center justify-between h-full">
                     <app-helios-icon routerLink="/" size="3rem" class="rounded-xl w-12 cursor-pointer" />
                     <p-divider />
-                    <p-avatar label="A" pTooltip="Artemis" size="large" />
+                    <p-avatar label="H" pTooltip="Helios" size="large" />
                     <p-divider />
                     <div class="flex flex-col gap-3">
                         @for (item of items; track item.label) {

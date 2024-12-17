@@ -69,7 +69,8 @@ export class ProjectSettingsComponent {
 
     ngOnInit(): void {
         this.route.parent?.paramMap.subscribe((params) => {
-            const repoId = params.get('projectId');
+            //TODO Change this
+            const repoId = 880304517;
             if (repoId) {
                 this.repositoryId.set(+repoId);
                 this.fetchWorkflowsQuery.refetch();
