@@ -7,6 +7,7 @@ import de.tum.cit.aet.helios.gitrepo.RepositoryInfoDTO;
 import org.springframework.lang.NonNull;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public record EnvironmentDTO(
@@ -19,7 +20,10 @@ public record EnvironmentDTO(
         OffsetDateTime createdAt,
         OffsetDateTime updatedAt,
         BranchInfoDTO lockingBranch,
-        boolean deploying) {
+        boolean deploying,
+        List<String> installedApps,
+        String description,
+        String serverUrl) {
 
     public static EnvironmentDTO fromEnvironment(Environment environment) {
         return new EnvironmentDTO(
@@ -32,7 +36,10 @@ public record EnvironmentDTO(
                 environment.getCreatedAt(),
                 environment.getUpdatedAt(),
                 (environment.getLockingBranch() != null ? BranchInfoDTO.fromBranch(environment.getLockingBranch()) : null),
-                environment.isDeploying()
+                environment.isDeploying(),
+                environment.getInstalledApps(),
+                environment.getDescription(),
+                environment.getServerUrl()
         );
     }
 }

@@ -22,5 +22,8 @@ export interface EnvironmentDTO {
     updatedAt?: string;
     lockingBranch?: BranchInfoDTO;
     deploying?: boolean;
+    installedApps?: Array<string>;
+    description?: string;
+    serverUrl?: string;
 }
 

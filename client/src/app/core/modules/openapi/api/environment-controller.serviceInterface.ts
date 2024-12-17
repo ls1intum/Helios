@@ -49,4 +49,12 @@ export interface EnvironmentControllerServiceInterface {
      */
     unlockEnvironment(id: number, extraHttpRequestParams?: any): Observable<EnvironmentDTO>;
 
+    /**
+     * 
+     * 
+     * @param id 
+     * @param environmentDTO 
+     */
+    updateEnvironment(id: number, environmentDTO: EnvironmentDTO, extraHttpRequestParams?: any): Observable<EnvironmentDTO>;
+
 }

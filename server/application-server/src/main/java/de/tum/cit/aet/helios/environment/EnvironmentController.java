@@ -41,4 +41,11 @@ public class EnvironmentController {
         EnvironmentDTO environment = environmentService.unlockEnvironment(id);
         return ResponseEntity.ok(environment);
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<EnvironmentDTO> updateEnvironment(@PathVariable Long id, @RequestBody EnvironmentDTO environmentDTO) {
+        Optional<EnvironmentDTO> updatedEnvironment = environmentService.updateEnvironment(id, environmentDTO);
+        return updatedEnvironment.map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
 }

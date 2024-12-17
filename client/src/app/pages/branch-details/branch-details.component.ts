@@ -1,21 +1,19 @@
-import { Component, computed, inject, input, Signal } from '@angular/core';
-import { MarkdownPipe } from '@app/core/modules/markdown/markdown.pipe';
+import { Component, computed, inject, input, signal, Signal } from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {PipelineComponent, PipelineSelector} from '@app/components/pipeline/pipeline.component';
-import {RouterLink} from '@angular/router';
 import {TagModule} from 'primeng/tag';
 import {IconsModule} from 'icons.module';
 import {ButtonModule} from 'primeng/button';
 import {InputTextModule} from 'primeng/inputtext';
 import { DeploymentSelectionComponent } from '@app/components/deployment-selection/deployment-selection.component';
 import { injectQuery } from '@tanstack/angular-query-experimental';
-import { lastValueFrom } from 'rxjs';
+import { lastValueFrom, map } from 'rxjs';
 import { BranchControllerService } from '@app/core/modules/openapi';
 import { SkeletonModule } from 'primeng/skeleton';
 
 @Component({
   selector: 'app-branch-details',
-  imports: [DeploymentSelectionComponent, InputTextModule, CommonModule, RouterLink, TagModule, IconsModule, ButtonModule, PipelineComponent, MarkdownPipe, SkeletonModule],
+  imports: [DeploymentSelectionComponent, InputTextModule, CommonModule, TagModule, IconsModule, ButtonModule, PipelineComponent, SkeletonModule],
   templateUrl: './branch-details.component.html',
 })
 export class BranchDetailsComponent {
@@ -27,7 +25,7 @@ export class BranchDetailsComponent {
   query = injectQuery(() => ({
     queryKey: ['branch', this.repositoryId(), this.branchName()],
     queryFn: () => lastValueFrom(
-      this.branchService.getBranchByRepositoryIdAndName(this.repositoryId(), this.branchName())
+      this.branchService.getBranchByRepositoryIdAndName(this.repositoryId()!, this.branchName())
     ),
     refetchInterval: 5000,
   }));
@@ -40,7 +38,7 @@ export class BranchDetailsComponent {
     }
 
     return {
-      repositoryId: this.repositoryId(),
+      repositoryId: this.repositoryId()!,
       branchName: branch.name,
     };
   });

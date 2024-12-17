@@ -1,17 +1,17 @@
 import { MarkdownPipe } from '@app/core/modules/markdown/markdown.pipe';
-import {PullRequestControllerService, PullRequestInfoDTO} from '@app/core/modules/openapi';
+import { PullRequestControllerService, PullRequestInfoDTO } from '@app/core/modules/openapi';
 import { PullRequestStoreService } from '@app/core/services/pull-requests';
 import { AvatarGroupModule } from 'primeng/avatargroup';
 import { TooltipModule } from 'primeng/tooltip';
-import {Component, inject, signal} from '@angular/core';
-import {TableModule} from 'primeng/table';
-import {AvatarModule} from 'primeng/avatar';
-import {TagModule} from 'primeng/tag';
-import {injectQuery} from '@tanstack/angular-query-experimental';
-import {catchError, tap} from 'rxjs';
-import {IconsModule} from 'icons.module';
-import {SkeletonModule} from 'primeng/skeleton';
-import {Router} from '@angular/router';
+import { Component, inject, signal } from '@angular/core';
+import { TableModule } from 'primeng/table';
+import { AvatarModule } from 'primeng/avatar';
+import { TagModule } from 'primeng/tag';
+import { injectQuery } from '@tanstack/angular-query-experimental';
+import { catchError, tap } from 'rxjs';
+import { IconsModule } from 'icons.module';
+import { SkeletonModule } from 'primeng/skeleton';
+import { Router } from '@angular/router';
 
 
 @Component({
@@ -53,10 +53,10 @@ export class PullRequestTableComponent {
             this.isLoading.set(false);
           }),
           catchError(() => {
-              this.isError.set(true);
-              this.isLoading.set(false);
-              return [];
-            }
+            this.isError.set(true);
+            this.isLoading.set(false);
+            return [];
+          }
           )
         ).subscribe()
     },
