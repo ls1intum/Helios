@@ -90,6 +90,11 @@ export class MainLayoutComponent implements OnInit {
         icon: 'server-cog',
         path: 'environments',
       },
+      {
+        label: 'Project Settings',
+        icon: 'adjustments-alt',
+        path: 'settings',
+      },
     ];
   }
 

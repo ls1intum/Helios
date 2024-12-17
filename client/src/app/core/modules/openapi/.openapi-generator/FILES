@@ -8,6 +8,8 @@ api/deployment-controller.service.ts
 api/deployment-controller.serviceInterface.ts
 api/environment-controller.service.ts
 api/environment-controller.serviceInterface.ts
+api/git-repo-settings-controller.service.ts
+api/git-repo-settings-controller.serviceInterface.ts
 api/pull-request-controller.service.ts
 api/pull-request-controller.serviceInterface.ts
 api/status-controller.service.ts
@@ -28,6 +30,8 @@ model/pull-request-info-dto.ts
 model/repository-info-dto.ts
 model/user-info-dto.ts
 model/workflow-dto.ts
+model/workflow-group-dto.ts
+model/workflow-membership-dto.ts
 model/workflow-run-dto.ts
 param.ts
 variables.ts

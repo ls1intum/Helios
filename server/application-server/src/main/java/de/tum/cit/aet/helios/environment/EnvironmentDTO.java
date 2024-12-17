@@ -5,6 +5,7 @@ import de.tum.cit.aet.helios.gitrepo.RepositoryInfoDTO;
 import org.springframework.lang.NonNull;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public record EnvironmentDTO(
@@ -14,7 +15,10 @@ public record EnvironmentDTO(
         String url,
         String htmlUrl,
         OffsetDateTime createdAt,
-        OffsetDateTime updatedAt) {
+        OffsetDateTime updatedAt,
+        List<String> installedApps,
+        String description,
+        String serverUrl) {
 
     public static EnvironmentDTO fromEnvironment(Environment environment) {
         return new EnvironmentDTO(
@@ -24,7 +28,10 @@ public record EnvironmentDTO(
                 environment.getUrl(),
                 environment.getHtmlUrl(),
                 environment.getCreatedAt(),
-                environment.getUpdatedAt()
+                environment.getUpdatedAt(),
+                environment.getInstalledApps(),
+                environment.getDescription(),
+                environment.getServerUrl()
         );
     }
 }

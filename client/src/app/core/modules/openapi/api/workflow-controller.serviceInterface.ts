@@ -49,4 +49,12 @@ export interface WorkflowControllerServiceInterface {
      */
     getWorkflowsByState(state: 'ACTIVE' | 'DELETED' | 'DISABLED_FORK' | 'DISABLED_INACTIVITY' | 'DISABLED_MANUALLY' | 'UNKNOWN', extraHttpRequestParams?: any): Observable<Array<WorkflowDTO>>;
 
+    /**
+     * 
+     * 
+     * @param workflowId 
+     * @param body 
+     */
+    updateWorkflowLabel(workflowId: number, body: string, extraHttpRequestParams?: any): Observable<{}>;
+
 }

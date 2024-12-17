@@ -1,21 +1,21 @@
-import {Component, inject, Injectable, signal} from '@angular/core';
-import {AccordionModule} from 'primeng/accordion';
-import {CommonModule} from '@angular/common';
-import {LockTagComponent} from '@app/components/lock-tag/lock-tag.component';
-import {TagModule} from 'primeng/tag';
-import {IconsModule} from 'icons.module';
+import { Component, inject, Injectable, signal } from '@angular/core';
+import { AccordionModule } from 'primeng/accordion';
+import { CommonModule } from '@angular/common';
+import { LockTagComponent } from '@app/components/lock-tag/lock-tag.component';
+import { TagModule } from 'primeng/tag';
+import { IconsModule } from 'icons.module';
 import {
   EnvironmentCommitInfoComponent
 } from '../../components/environment-commit-info/environment-commit-info.component';
-import {ButtonModule} from 'primeng/button';
-import {RouterLink} from '@angular/router';
-import {FetchEnvironmentService} from '@app/core/services/fetch/environment';
-import {EnvironmentControllerService} from '@app/core/modules/openapi/api/environment-controller.service';
-import {injectQuery} from '@tanstack/angular-query-experimental';
-import {catchError, firstValueFrom, tap} from 'rxjs';
-import {EnvironmentDTO} from '@app/core/modules/openapi/model/environment-dto';
-import {DeploymentControllerService} from '@app/core/modules/openapi/api/deployment-controller.service';
-import {DeploymentDTO} from '@app/core/modules/openapi/model/deployment-dto';
+import { ButtonModule } from 'primeng/button';
+import { ActivatedRoute, RouterLink } from '@angular/router';
+import { FetchEnvironmentService } from '@app/core/services/fetch/environment';
+import { EnvironmentControllerService } from '@app/core/modules/openapi/api/environment-controller.service';
+import { injectQuery } from '@tanstack/angular-query-experimental';
+import { catchError, firstValueFrom, tap } from 'rxjs';
+import { EnvironmentDTO } from '@app/core/modules/openapi/model/environment-dto';
+import { DeploymentControllerService } from '@app/core/modules/openapi/api/deployment-controller.service';
+import { DeploymentDTO } from '@app/core/modules/openapi/model/deployment-dto';
 
 @Component({
   selector: 'app-environment-list',
@@ -26,6 +26,17 @@ import {DeploymentDTO} from '@app/core/modules/openapi/model/deployment-dto';
 export class EnvironmentListComponent {
   environmentService = inject(EnvironmentControllerService);
   deploymentService = inject(DeploymentControllerService);
+  route = inject(ActivatedRoute);
+  get projectId(): string {
+    let currentRoute = this.route;
+    while (currentRoute.parent) {
+      if (currentRoute.snapshot.params['projectId']) {
+        return currentRoute.snapshot.params['projectId'];
+      }
+      currentRoute = currentRoute.parent;
+    }
+    return currentRoute.snapshot.params['projectId'];
+  }
 
   environmentStore = inject(EnvironmentStoreService);
   deploymentStore = inject(DeploymentStoreService);
@@ -33,17 +44,6 @@ export class EnvironmentListComponent {
   // Expose environments/deployments as a signal to the template
   readonly environments = this.environmentStore.environments;
   readonly latestDeployments = this.deploymentStore.latestDeployments;
-
-
-  mockConnectedSystems = [
-    {id: 'sys1', name: 'Integrated Code Lifecycle'},
-    {id: 'sys2', name: 'MySQL'},
-    {id: 'sys3', name: 'Iris'},
-    {id: 'sys4', name: 'LTI'},
-    {id: 'sys5', name: 'GitHub'},
-    {id: 'sys6', name: 'GitLab'},
-    {id: 'sys7', name: 'Jenkins'},
-  ];
 
 
   isError = signal(false);
@@ -93,6 +93,20 @@ export class EnvironmentListComponent {
     });
 
     await Promise.all(deploymentRequests);
+  }
+  openExternalUrl(event: Event, url: string): void {
+    event.stopPropagation();
+    const fullUrl = this.getFullUrl(url);
+    window.open(fullUrl, '_blank');
+  }
+  getFullUrl(url: string | undefined): string {
+    if (!url) {
+      return '';
+    }
+    if (url && (!url.startsWith('http') && !url.startsWith('https'))) {
+      return 'http://' + url;
+    }
+    return url;
   }
 }
 

@@ -29,6 +29,7 @@ import {
   IconChevronDown,
   IconChevronUp,
   IconChevronLeft,
+  IconAdjustmentsAlt,
 } from 'angular-tabler-icons/icons';
 
 // Select some icons (use an object, not an array)
@@ -60,6 +61,7 @@ const icons = {
   IconChevronDown,
   IconChevronUp,
   IconChevronLeft,
+  IconAdjustmentsAlt,
 };
 
 @NgModule({

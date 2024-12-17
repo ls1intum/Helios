@@ -17,21 +17,21 @@ import { CustomHttpParameterCodec }                          from '../encoder';
 import { Observable }                                        from 'rxjs';
 
 // @ts-ignore
-import { WorkflowDTO } from '../model/workflow-dto';
+import { WorkflowGroupDTO } from '../model/workflow-group-dto';
 
 // @ts-ignore
 import { BASE_PATH, COLLECTION_FORMATS }                     from '../variables';
 import { Configuration }                                     from '../configuration';
 import {
-    WorkflowControllerServiceInterface
-} from './workflow-controller.serviceInterface';
+    GitRepoSettingsControllerServiceInterface
+} from './git-repo-settings-controller.serviceInterface';
 
 
 
 @Injectable({
   providedIn: 'root'
 })
-export class WorkflowControllerService implements WorkflowControllerServiceInterface {
+export class GitRepoSettingsControllerService implements GitRepoSettingsControllerServiceInterface {
 
     protected basePath = 'http://localhost';
     public defaultHeaders = new HttpHeaders();
@@ -94,13 +94,21 @@ export class WorkflowControllerService implements WorkflowControllerServiceInter
     }
 
     /**
+     * @param repositoryId 
+     * @param workflowGroupDTO 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
-    public getAllWorkflows(observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<Array<WorkflowDTO>>;
-    public getAllWorkflows(observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<Array<WorkflowDTO>>>;
-    public getAllWorkflows(observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<Array<WorkflowDTO>>>;
-    public getAllWorkflows(observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+    public createWorkflowGroup(repositoryId: number, workflowGroupDTO: WorkflowGroupDTO, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<WorkflowGroupDTO>;
+    public createWorkflowGroup(repositoryId: number, workflowGroupDTO: WorkflowGroupDTO, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<WorkflowGroupDTO>>;
+    public createWorkflowGroup(repositoryId: number, workflowGroupDTO: WorkflowGroupDTO, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<WorkflowGroupDTO>>;
+    public createWorkflowGroup(repositoryId: number, workflowGroupDTO: WorkflowGroupDTO, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+        if (repositoryId === null || repositoryId === undefined) {
+            throw new Error('Required parameter repositoryId was null or undefined when calling createWorkflowGroup.');
+        }
+        if (workflowGroupDTO === null || workflowGroupDTO === undefined) {
+            throw new Error('Required parameter workflowGroupDTO was null or undefined when calling createWorkflowGroup.');
+        }
 
         let localVarHeaders = this.defaultHeaders;
 
@@ -127,6 +135,15 @@ export class WorkflowControllerService implements WorkflowControllerServiceInter
         }
 
 
+        // to determine the Content-Type header
+        const consumes: string[] = [
+            'application/json'
+        ];
+        const httpContentTypeSelected: string | undefined = this.configuration.selectHeaderContentType(consumes);
+        if (httpContentTypeSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Content-Type', httpContentTypeSelected);
+        }
+
         let responseType_: 'text' | 'json' | 'blob' = 'json';
         if (localVarHttpHeaderAcceptSelected) {
             if (localVarHttpHeaderAcceptSelected.startsWith('text')) {
@@ -138,10 +155,11 @@ export class WorkflowControllerService implements WorkflowControllerServiceInter
             }
         }
 
-        let localVarPath = `/api/workflows`;
-        return this.httpClient.request<Array<WorkflowDTO>>('get', `${this.configuration.basePath}${localVarPath}`,
+        let localVarPath = `/api/settings/${this.configuration.encodeParam({name: "repositoryId", value: repositoryId, in: "path", style: "simple", explode: false, dataType: "number", dataFormat: "int64"})}/groups/create`;
+        return this.httpClient.request<WorkflowGroupDTO>('post', `${this.configuration.basePath}${localVarPath}`,
             {
                 context: localVarHttpContext,
+                body: workflowGroupDTO,
                 responseType: <any>responseType_,
                 withCredentials: this.configuration.withCredentials,
                 headers: localVarHeaders,
@@ -153,16 +171,20 @@ export class WorkflowControllerService implements WorkflowControllerServiceInter
     }
 
     /**
-     * @param id 
+     * @param repositoryId 
+     * @param groupId 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
-    public getWorkflowById(id: number, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<WorkflowDTO>;
-    public getWorkflowById(id: number, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<WorkflowDTO>>;
-    public getWorkflowById(id: number, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<WorkflowDTO>>;
-    public getWorkflowById(id: number, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
-        if (id === null || id === undefined) {
-            throw new Error('Required parameter id was null or undefined when calling getWorkflowById.');
+    public deleteWorkflowGroup(repositoryId: number, groupId: number, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: undefined, context?: HttpContext, transferCache?: boolean}): Observable<any>;
+    public deleteWorkflowGroup(repositoryId: number, groupId: number, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: undefined, context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<any>>;
+    public deleteWorkflowGroup(repositoryId: number, groupId: number, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: undefined, context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<any>>;
+    public deleteWorkflowGroup(repositoryId: number, groupId: number, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: undefined, context?: HttpContext, transferCache?: boolean}): Observable<any> {
+        if (repositoryId === null || repositoryId === undefined) {
+            throw new Error('Required parameter repositoryId was null or undefined when calling deleteWorkflowGroup.');
+        }
+        if (groupId === null || groupId === undefined) {
+            throw new Error('Required parameter groupId was null or undefined when calling deleteWorkflowGroup.');
         }
 
         let localVarHeaders = this.defaultHeaders;
@@ -171,7 +193,6 @@ export class WorkflowControllerService implements WorkflowControllerServiceInter
         if (localVarHttpHeaderAcceptSelected === undefined) {
             // to determine the Accept header
             const httpHeaderAccepts: string[] = [
-                'application/json'
             ];
             localVarHttpHeaderAcceptSelected = this.configuration.selectHeaderAccept(httpHeaderAccepts);
         }
@@ -201,8 +222,8 @@ export class WorkflowControllerService implements WorkflowControllerServiceInter
             }
         }
 
-        let localVarPath = `/api/workflows/${this.configuration.encodeParam({name: "id", value: id, in: "path", style: "simple", explode: false, dataType: "number", dataFormat: "int64"})}`;
-        return this.httpClient.request<WorkflowDTO>('get', `${this.configuration.basePath}${localVarPath}`,
+        let localVarPath = `/api/settings/${this.configuration.encodeParam({name: "repositoryId", value: repositoryId, in: "path", style: "simple", explode: false, dataType: "number", dataFormat: "int64"})}/groups/${this.configuration.encodeParam({name: "groupId", value: groupId, in: "path", style: "simple", explode: false, dataType: "number", dataFormat: "int64"})}`;
+        return this.httpClient.request<any>('delete', `${this.configuration.basePath}${localVarPath}`,
             {
                 context: localVarHttpContext,
                 responseType: <any>responseType_,
@@ -220,12 +241,12 @@ export class WorkflowControllerService implements WorkflowControllerServiceInter
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
-    public getWorkflowsByRepositoryId(repositoryId: number, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<Array<WorkflowDTO>>;
-    public getWorkflowsByRepositoryId(repositoryId: number, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<Array<WorkflowDTO>>>;
-    public getWorkflowsByRepositoryId(repositoryId: number, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<Array<WorkflowDTO>>>;
-    public getWorkflowsByRepositoryId(repositoryId: number, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+    public getGroupsWithWorkflows(repositoryId: number, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<Array<WorkflowGroupDTO>>;
+    public getGroupsWithWorkflows(repositoryId: number, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<Array<WorkflowGroupDTO>>>;
+    public getGroupsWithWorkflows(repositoryId: number, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<Array<WorkflowGroupDTO>>>;
+    public getGroupsWithWorkflows(repositoryId: number, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
         if (repositoryId === null || repositoryId === undefined) {
-            throw new Error('Required parameter repositoryId was null or undefined when calling getWorkflowsByRepositoryId.');
+            throw new Error('Required parameter repositoryId was null or undefined when calling getGroupsWithWorkflows.');
         }
 
         let localVarHeaders = this.defaultHeaders;
@@ -264,8 +285,8 @@ export class WorkflowControllerService implements WorkflowControllerServiceInter
             }
         }
 
-        let localVarPath = `/api/workflows/repository/${this.configuration.encodeParam({name: "repositoryId", value: repositoryId, in: "path", style: "simple", explode: false, dataType: "number", dataFormat: "int64"})}`;
-        return this.httpClient.request<Array<WorkflowDTO>>('get', `${this.configuration.basePath}${localVarPath}`,
+        let localVarPath = `/api/settings/${this.configuration.encodeParam({name: "repositoryId", value: repositoryId, in: "path", style: "simple", explode: false, dataType: "number", dataFormat: "int64"})}/groups`;
+        return this.httpClient.request<Array<WorkflowGroupDTO>>('get', `${this.configuration.basePath}${localVarPath}`,
             {
                 context: localVarHttpContext,
                 responseType: <any>responseType_,
@@ -279,83 +300,20 @@ export class WorkflowControllerService implements WorkflowControllerServiceInter
     }
 
     /**
-     * @param state 
+     * @param repositoryId 
+     * @param workflowGroupDTO 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
-    public getWorkflowsByState(state: 'ACTIVE' | 'DELETED' | 'DISABLED_FORK' | 'DISABLED_INACTIVITY' | 'DISABLED_MANUALLY' | 'UNKNOWN', observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<Array<WorkflowDTO>>;
-    public getWorkflowsByState(state: 'ACTIVE' | 'DELETED' | 'DISABLED_FORK' | 'DISABLED_INACTIVITY' | 'DISABLED_MANUALLY' | 'UNKNOWN', observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<Array<WorkflowDTO>>>;
-    public getWorkflowsByState(state: 'ACTIVE' | 'DELETED' | 'DISABLED_FORK' | 'DISABLED_INACTIVITY' | 'DISABLED_MANUALLY' | 'UNKNOWN', observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<Array<WorkflowDTO>>>;
-    public getWorkflowsByState(state: 'ACTIVE' | 'DELETED' | 'DISABLED_FORK' | 'DISABLED_INACTIVITY' | 'DISABLED_MANUALLY' | 'UNKNOWN', observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
-        if (state === null || state === undefined) {
-            throw new Error('Required parameter state was null or undefined when calling getWorkflowsByState.');
+    public updateWorkflowGroups(repositoryId: number, workflowGroupDTO: Array<WorkflowGroupDTO>, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: undefined, context?: HttpContext, transferCache?: boolean}): Observable<any>;
+    public updateWorkflowGroups(repositoryId: number, workflowGroupDTO: Array<WorkflowGroupDTO>, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: undefined, context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<any>>;
+    public updateWorkflowGroups(repositoryId: number, workflowGroupDTO: Array<WorkflowGroupDTO>, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: undefined, context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<any>>;
+    public updateWorkflowGroups(repositoryId: number, workflowGroupDTO: Array<WorkflowGroupDTO>, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: undefined, context?: HttpContext, transferCache?: boolean}): Observable<any> {
+        if (repositoryId === null || repositoryId === undefined) {
+            throw new Error('Required parameter repositoryId was null or undefined when calling updateWorkflowGroups.');
         }
-
-        let localVarHeaders = this.defaultHeaders;
-
-        let localVarHttpHeaderAcceptSelected: string | undefined = options && options.httpHeaderAccept;
-        if (localVarHttpHeaderAcceptSelected === undefined) {
-            // to determine the Accept header
-            const httpHeaderAccepts: string[] = [
-                'application/json'
-            ];
-            localVarHttpHeaderAcceptSelected = this.configuration.selectHeaderAccept(httpHeaderAccepts);
-        }
-        if (localVarHttpHeaderAcceptSelected !== undefined) {
-            localVarHeaders = localVarHeaders.set('Accept', localVarHttpHeaderAcceptSelected);
-        }
-
-        let localVarHttpContext: HttpContext | undefined = options && options.context;
-        if (localVarHttpContext === undefined) {
-            localVarHttpContext = new HttpContext();
-        }
-
-        let localVarTransferCache: boolean | undefined = options && options.transferCache;
-        if (localVarTransferCache === undefined) {
-            localVarTransferCache = true;
-        }
-
-
-        let responseType_: 'text' | 'json' | 'blob' = 'json';
-        if (localVarHttpHeaderAcceptSelected) {
-            if (localVarHttpHeaderAcceptSelected.startsWith('text')) {
-                responseType_ = 'text';
-            } else if (this.configuration.isJsonMime(localVarHttpHeaderAcceptSelected)) {
-                responseType_ = 'json';
-            } else {
-                responseType_ = 'blob';
-            }
-        }
-
-        let localVarPath = `/api/workflows/state/${this.configuration.encodeParam({name: "state", value: state, in: "path", style: "simple", explode: false, dataType: "'ACTIVE' | 'DELETED' | 'DISABLED_FORK' | 'DISABLED_INACTIVITY' | 'DISABLED_MANUALLY' | 'UNKNOWN'", dataFormat: undefined})}`;
-        return this.httpClient.request<Array<WorkflowDTO>>('get', `${this.configuration.basePath}${localVarPath}`,
-            {
-                context: localVarHttpContext,
-                responseType: <any>responseType_,
-                withCredentials: this.configuration.withCredentials,
-                headers: localVarHeaders,
-                observe: observe,
-                transferCache: localVarTransferCache,
-                reportProgress: reportProgress
-            }
-        );
-    }
-
-    /**
-     * @param workflowId 
-     * @param body 
-     * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
-     * @param reportProgress flag to report request and response progress.
-     */
-    public updateWorkflowLabel(workflowId: number, body: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: undefined, context?: HttpContext, transferCache?: boolean}): Observable<any>;
-    public updateWorkflowLabel(workflowId: number, body: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: undefined, context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<any>>;
-    public updateWorkflowLabel(workflowId: number, body: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: undefined, context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<any>>;
-    public updateWorkflowLabel(workflowId: number, body: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: undefined, context?: HttpContext, transferCache?: boolean}): Observable<any> {
-        if (workflowId === null || workflowId === undefined) {
-            throw new Error('Required parameter workflowId was null or undefined when calling updateWorkflowLabel.');
-        }
-        if (body === null || body === undefined) {
-            throw new Error('Required parameter body was null or undefined when calling updateWorkflowLabel.');
+        if (workflowGroupDTO === null || workflowGroupDTO === undefined) {
+            throw new Error('Required parameter workflowGroupDTO was null or undefined when calling updateWorkflowGroups.');
         }
 
         let localVarHeaders = this.defaultHeaders;
@@ -402,11 +360,11 @@ export class WorkflowControllerService implements WorkflowControllerServiceInter
             }
         }
 
-        let localVarPath = `/api/workflows/${this.configuration.encodeParam({name: "workflowId", value: workflowId, in: "path", style: "simple", explode: false, dataType: "number", dataFormat: "int64"})}/label`;
+        let localVarPath = `/api/settings/${this.configuration.encodeParam({name: "repositoryId", value: repositoryId, in: "path", style: "simple", explode: false, dataType: "number", dataFormat: "int64"})}/groups/update`;
         return this.httpClient.request<any>('put', `${this.configuration.basePath}${localVarPath}`,
             {
                 context: localVarHttpContext,
-                body: body,
+                body: workflowGroupDTO,
                 responseType: <any>responseType_,
                 withCredentials: this.configuration.withCredentials,
                 headers: localVarHeaders,

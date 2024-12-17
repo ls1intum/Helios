@@ -34,4 +34,24 @@ public class EnvironmentService {
                 .collect(Collectors.toList());
     }
 
+    public Optional<EnvironmentDTO> updateEnvironment(Long id, EnvironmentDTO environmentDTO) {
+        return environmentRepository.findById(id).map(environment -> {
+            if (environmentDTO.updatedAt() != null) {
+                environment.setUpdatedAt(environmentDTO.updatedAt());
+            }
+            if (environmentDTO.installedApps() != null) {
+                environment.setInstalledApps(environmentDTO.installedApps());
+            }
+            if (environmentDTO.description() != null) {
+                environment.setDescription(environmentDTO.description());
+            }
+            if (environmentDTO.serverUrl() != null) {
+                environment.setServerUrl(environmentDTO.serverUrl());
+            }
+
+            environmentRepository.save(environment);
+            return EnvironmentDTO.fromEnvironment(environment);
+        });
+    }
+
 }
