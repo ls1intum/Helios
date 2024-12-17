@@ -29,6 +29,15 @@ public class WorkflowController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @PutMapping("/{workflowId}/label")
+    public ResponseEntity<Void> updateWorkflowLabel(
+            @PathVariable Long workflowId,
+            @RequestBody Workflow.Label label
+    ) {
+        workflowService.updateWorkflowLabel(workflowId, label);
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/repository/{repositoryId}")
     public ResponseEntity<List<WorkflowDTO>> getWorkflowsByRepositoryId(@PathVariable Long repositoryId) {
         List<WorkflowDTO> workflows = workflowService.getWorkflowsByRepositoryId(repositoryId);
