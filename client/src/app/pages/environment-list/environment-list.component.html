@@ -7,17 +7,13 @@
         <app-lock-tag [isLocked]="false"></app-lock-tag>
         <div class="flex-grow"></div>
 
-        <!-- External URL Button -->
-        <button class="p-button p-button-secondary p-2" (click)="openExternalUrl($event, environment.url!)">
-          <i-tabler name="external-link" class="mr-1"></i-tabler>
-          Open
-        </button>
 
-        <!-- Edit Button -->
-        <button class="p-button p-button-secondary p-2" [routerLink]="['..', environment.id, 'edit']"
-          [relativeTo]="route">
-          <i-tabler name="pencil" />
-        </button>
+        <a [href]="getFullUrl(environment.serverUrl)" target="_blank" class="p-button p-button-secondary p-2"
+          (click)="$event.stopPropagation()">
+          <i-tabler name="external-link" class="mr-1"></i-tabler>Open
+        </a>
+        <a icon [routerLink]="'/project/projectId/environment/' + environment.id + '/edit'"
+          class="p-button p-button-secondary p-2"><i-tabler name="pencil" /></a>
       </div>
     </ng-template>
 
