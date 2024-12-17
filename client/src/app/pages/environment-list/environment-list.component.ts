@@ -103,9 +103,11 @@ export class EnvironmentListComponent {
     if (!url) {
       return '';
     }
+
     if (url && (!url.startsWith('http') && !url.startsWith('https'))) {
       return 'http://' + url;
     }
+
     return url;
   }
 }

@@ -9,8 +9,12 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
+
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -32,25 +36,40 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable) // Disable CSRF
                 .authorizeHttpRequests(auth -> {
 
-                            auth.requestMatchers("/api/**").permitAll();  // Allow API access
-
-                            if (environment.matchesProfiles("prod")) {
-                                auth.anyRequest().denyAll(); // Deny all other requests
-                            } else {
-                                log.info("Allowing OpenAPI and Swagger UI endpoints for development.");
-                                // Allow access to OpenAPI and Swagger UI
-                                auth
-                                        .requestMatchers("/bus/v3/api-docs/**").permitAll()
-                                        .requestMatchers("/v3/api-docs/**").permitAll()
-                                        .requestMatchers("/v3/api-docs.yaml").permitAll()
-                                        .requestMatchers("/swagger-ui/**").permitAll()
-                                        .requestMatchers("/swagger-ui.html").permitAll();
-
-                            }
+                            auth.requestMatchers(
+                                "/auth/**",
+                                "/bus/v3/api-docs/**",
+                                "/v2/api-docs",
+                                "/v3/api-docs",
+                                "/v3/api-docs/**",
+                                "/v3/api-docs.yaml",
+                                "/swagger-resources",
+                                "/swagger-resources/**",
+                                "/configuration/ui",
+                                "/configuration/security",
+                                "/swagger-ui/**",
+                                "/webjars/**",
+                                "/swagger-ui.html"
+                            )                                    
+                            .permitAll()
+                            .anyRequest()
+                            .authenticated();
                         }
-                );
+                )
+                .oauth2ResourceServer(auth ->
+                    auth.jwt(token -> token.jwtAuthenticationConverter(new KeycloakJwtAuthenticationConverter())));
 
         return http.build();
+    }
+
+    @Bean
+    public WebSecurityCustomizer webSecurityCustomizer() {
+        return (web) -> web.ignoring().requestMatchers(
+                "/v3/api-docs/**",
+                "/v3/api-docs.yaml",
+                "/swagger-ui/**",
+                "/swagger-ui.html"
+        );
     }
 
     @Bean
@@ -78,3 +97,4 @@ public class SecurityConfig {
         };
     }
 }
+
