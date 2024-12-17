@@ -42,4 +42,11 @@ export interface EnvironmentControllerServiceInterface {
      */
     getEnvironmentsByRepositoryId(repositoryId: number, extraHttpRequestParams?: any): Observable<Array<EnvironmentDTO>>;
 
+    /**
+     * 
+     * 
+     * @param id 
+     */
+    unlockEnvironment(id: number, extraHttpRequestParams?: any): Observable<EnvironmentDTO>;
+
 }

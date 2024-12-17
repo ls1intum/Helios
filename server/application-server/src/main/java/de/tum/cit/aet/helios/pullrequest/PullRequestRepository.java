@@ -13,4 +13,6 @@ public interface PullRequestRepository extends JpaRepository<PullRequest, Long> 
     Optional<PullRequest> findByRepositoryIdAndHeadRefNameOrHeadSha(Long id, String ref, String sha);
 
     List<PullRequest> findByRepositoryId(Long repositoryId);
+
+    Optional<PullRequest> findByRepositoryIdAndNumber(Long repositoryId, Integer number);
 }

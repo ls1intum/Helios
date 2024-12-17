@@ -85,7 +85,7 @@ export class PullRequestTableComponent {
   }
 
   openPR(pr: PullRequestInfoDTO): void {
-    this.router.navigate(['pipeline', 'pr', pr.id]);
+    this.router.navigate(['repo', pr.repository?.id, 'pr', pr.number]);
   }
 }
 

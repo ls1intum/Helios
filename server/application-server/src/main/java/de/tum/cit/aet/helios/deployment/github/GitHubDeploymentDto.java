@@ -1,12 +1,10 @@
 package de.tum.cit.aet.helios.deployment.github;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.JsonNode;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.time.OffsetDateTime;
-import java.util.Map;
 
 @Getter
 @Setter

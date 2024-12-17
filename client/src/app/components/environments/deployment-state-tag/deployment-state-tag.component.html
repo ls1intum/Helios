@@ -1,0 +1,72 @@
+@switch (state()) {
+  @case ('SUCCESS') {
+    <!-- Success State -->
+    <p-tag severity="success" [rounded]="true">
+      <i-tabler name="check" class="!h-4 !w-4 mr-0.5"></i-tabler>
+      Deployment successful
+    </p-tag>
+  }
+
+  @case ('PENDING') {
+    <!-- Pending State -->
+    <p-tag severity="info" [rounded]="true">
+      <i-tabler name="progress" class="!h-4 !w-4 mr-0.5"></i-tabler>
+      Pending
+    </p-tag>
+  }
+
+  @case ('IN_PROGRESS') {
+    <!-- In Progress State -->
+    <p-tag severity="info" [rounded]="true">
+      <i-tabler name="progress" class="!h-4 !w-4 mr-0.5 animate-spin"></i-tabler>
+      Deployment in progress
+    </p-tag>
+  }
+
+  @case ('QUEUED') {
+    <!-- Queued State -->
+    <p-tag severity="warning" [rounded]="true">
+      <i-tabler name="progress" class="!h-4 !w-4 mr-0.5"></i-tabler>
+      Queued
+    </p-tag>
+  }
+
+  @case ('ERROR') {
+    <!-- Error State -->
+    <p-tag severity="danger" [rounded]="true">
+      <i-tabler name="exclamation-circle" class="!h-4 !w-4 mr-0.5"></i-tabler>
+      Error
+    </p-tag>
+  }
+
+  @case ('FAILURE') {
+    <!-- Failure State -->
+    <p-tag severity="danger" [rounded]="true">
+      <i-tabler name="exclamation-mark" class="!h-4 !w-4 mr-0.5"></i-tabler>
+      Failure
+    </p-tag>
+  }
+
+  @case ('INACTIVE') {
+    <!-- Inactive State -->
+    <p-tag severity="secondary" [rounded]="true">
+      <i-tabler name="time-duration-off" class="!h-4 !w-4 mr-0.5"></i-tabler>
+      Inactive
+    </p-tag>
+  }
+
+  @case ('UNKNOWN') {
+    <!-- Unknown State -->
+    <p-tag severity="secondary" [rounded]="true">
+      <i-tabler name="question-mark" class="!h-4 !w-4 mr-0.5"></i-tabler>
+      Unknown
+    </p-tag>
+  }
+
+  @default {
+    <p-tag *ngSwitchDefault severity="secondary" [rounded]="true">
+      <i-tabler name="question-mark" class="!h-4 !w-4 mr-0.5"></i-tabler>
+      Unrecognized State
+    </p-tag>
+  }
+}

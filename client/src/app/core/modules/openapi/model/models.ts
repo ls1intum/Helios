@@ -1,4 +1,5 @@
 export * from './branch-info-dto';
+export * from './deploy-request';
 export * from './deployment-dto';
 export * from './environment-dto';
 export * from './pull-request-info-dto';

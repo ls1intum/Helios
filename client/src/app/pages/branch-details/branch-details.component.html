@@ -1,0 +1,20 @@
+<div>
+  @if (query.data(); as branch) {
+    <div class="flex flex-col items-start mb-3">
+      <span class="text-gray-500 text-sm uppercase font-semibold tracking-wider mb-1">Branch</span>
+      <div class="flex items-center gap-4">
+        <h2 class="text-3xl">{{ branch.name }}</h2>
+      </div>
+    </div>
+  } @else {
+    <div class="flex flex-col items-start mb-3 gap-2">
+      <p-skeleton width="8rem" height="1rem" />
+      <p-skeleton width="10rem" height="2rem" />
+    </div>
+  }
+</div>
+
+<div class="flex flex-col gap-6 max-w-6xl mr-4">
+  <app-pipeline [selector]="pipelineSelector()" />
+  <app-deployment-selection />
+</div>

@@ -13,6 +13,39 @@ servers:
 - url: /
   description: Default Server URL
 paths:
+  /api/environments/{id}/unlock:
+    put:
+      tags:
+      - environment-controller
+      operationId: unlockEnvironment
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EnvironmentDTO"
+  /api/deployments/deploy:
+    post:
+      tags:
+      - deployment-controller
+      operationId: deployToEnvironment
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeployRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
   /status/health:
     get:
       tags:
@@ -173,6 +206,31 @@ paths:
         schema:
           type: integer
           format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PullRequestInfoDTO"
+  /api/pullrequests/repository/{repoId}/pr/{number}:
+    get:
+      tags:
+      - pull-request-controller
+      operationId: getPullRequestByRepositoryIdAndNumber
+      parameters:
+      - name: repoId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: number
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
       responses:
         "200":
           description: OK
@@ -342,8 +400,73 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/BranchInfoDTO"
+  /api/branches/repository/{repoId}/name/{name}:
+    get:
+      tags:
+      - branch-controller
+      operationId: getBranchByRepositoryIdAndName
+      parameters:
+      - name: repoId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: name
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BranchInfoDTO"
 components:
   schemas:
+    BranchInfoDTO:
+      required:
+      - commit_sha
+      - name
+      type: object
+      properties:
+        name:
+          type: string
+        commit_sha:
+          type: string
+        repository:
+          $ref: "#/components/schemas/RepositoryInfoDTO"
+    EnvironmentDTO:
+      required:
+      - id
+      - name
+      type: object
+      properties:
+        repository:
+          $ref: "#/components/schemas/RepositoryInfoDTO"
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        locked:
+          type: boolean
+        url:
+          type: string
+        htmlUrl:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        lockingBranch:
+          $ref: "#/components/schemas/BranchInfoDTO"
+        deploying:
+          type: boolean
     RepositoryInfoDTO:
       required:
       - htmlUrl
@@ -362,6 +485,17 @@ components:
         description:
           type: string
         htmlUrl:
+          type: string
+    DeployRequest:
+      required:
+      - branchName
+      - environmentId
+      type: object
+      properties:
+        environmentId:
+          type: integer
+          format: int64
+        branchName:
           type: string
     WorkflowDTO:
       required:
@@ -537,29 +671,6 @@ components:
           type: string
         htmlUrl:
           type: string
-    EnvironmentDTO:
-      required:
-      - id
-      - name
-      type: object
-      properties:
-        repository:
-          $ref: "#/components/schemas/RepositoryInfoDTO"
-        id:
-          type: integer
-          format: int64
-        name:
-          type: string
-        url:
-          type: string
-        htmlUrl:
-          type: string
-        createdAt:
-          type: string
-          format: date-time
-        updatedAt:
-          type: string
-          format: date-time
     DeploymentDTO:
       required:
       - environment
@@ -598,22 +709,10 @@ components:
         task:
           type: string
         environment:
-          type: string
+          $ref: "#/components/schemas/EnvironmentDTO"
         createdAt:
           type: string
           format: date-time
         updatedAt:
           type: string
           format: date-time
-    BranchInfoDTO:
-      required:
-      - commit_sha
-      - name
-      type: object
-      properties:
-        name:
-          type: string
-        commit_sha:
-          type: string
-        repository:
-          $ref: "#/components/schemas/RepositoryInfoDTO"

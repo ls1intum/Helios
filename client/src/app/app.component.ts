@@ -35,7 +35,7 @@ export class AppComponent implements OnInit {
       {
         label: 'Environments',
         icon: 'server-cog',
-        path: '/environment/list',
+        path: '/environments',
       },
     ];
   }

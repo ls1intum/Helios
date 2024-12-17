@@ -8,15 +8,19 @@
  * Do not edit the class manually.
  */
 import { RepositoryInfoDTO } from './repository-info-dto';
+import { BranchInfoDTO } from './branch-info-dto';
 
 
 export interface EnvironmentDTO { 
     repository?: RepositoryInfoDTO;
     id: number;
     name: string;
+    locked?: boolean;
     url?: string;
     htmlUrl?: string;
     createdAt?: string;
     updatedAt?: string;
+    lockingBranch?: BranchInfoDTO;
+    deploying?: boolean;
 }
 

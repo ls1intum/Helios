@@ -10,7 +10,7 @@ import { provideAnimations } from '@angular/platform-browser/animations';
 import { BASE_PATH } from './core/modules/openapi';
 import { environment } from 'environments/environment';
 
-const queryClient = new QueryClient({
+export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       refetchOnWindowFocus: false, // default true
