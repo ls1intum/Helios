@@ -1,7 +1,1 @@
-<span class="text-3xl mb-10 ml-4">Mutate Environment</span>
-@if (environmentQuery.isLoading()) {
-  Loading...
-}
-@if (environmentQuery.data(); as data) {
-  <div class="m-4"><app-environment-edit-form [environment]="data" /></div>
-}
+<app-environment-edit-form [id]="id"></app-environment-edit-form>
