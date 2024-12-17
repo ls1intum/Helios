@@ -54,10 +54,6 @@ public class SecurityConfig {
                             .permitAll()
                             .anyRequest()
                             .authenticated();
-
-                            if (environment.matchesProfiles("prod")) {
-                                auth.anyRequest().denyAll(); // Deny all other requests
-                            }
                         }
                 )
                 .oauth2ResourceServer(auth ->
