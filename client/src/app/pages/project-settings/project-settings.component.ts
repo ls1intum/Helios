@@ -1,24 +1,24 @@
-import {Component, signal, computed, inject} from '@angular/core';
-import {CommonModule} from '@angular/common';
-import {FormsModule} from '@angular/forms';
-import {ActivatedRoute} from '@angular/router';
-import {injectQuery} from '@tanstack/angular-query-experimental';
-import {firstValueFrom} from 'rxjs';
+import { Component, signal, computed, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
+import { injectQuery } from '@tanstack/angular-query-experimental';
+import { firstValueFrom } from 'rxjs';
 
-import {TableModule} from 'primeng/table';
-import {DropdownModule} from 'primeng/dropdown';
-import {ButtonModule} from 'primeng/button';
-import {PanelModule} from 'primeng/panel';
-import {DialogModule} from 'primeng/dialog';
-import {InputTextModule} from 'primeng/inputtext';
-import {IconsModule} from 'icons.module';
-import {DragDropModule} from 'primeng/dragdrop';
+import { TableModule } from 'primeng/table';
+import { DropdownModule } from 'primeng/dropdown';
+import { ButtonModule } from 'primeng/button';
+import { PanelModule } from 'primeng/panel';
+import { DialogModule } from 'primeng/dialog';
+import { InputTextModule } from 'primeng/inputtext';
+import { IconsModule } from 'icons.module';
+import { DragDropModule } from 'primeng/dragdrop';
 
-import {GitRepoSettingsControllerService} from '@app/core/modules/openapi';
-import {WorkflowControllerService} from '@app/core/modules/openapi/api/workflow-controller.service';
-import {WorkflowDTO} from '@app/core/modules/openapi/model/workflow-dto';
-import {WorkflowGroupDTO} from '@app/core/modules/openapi/model/workflow-group-dto';
-import {WorkflowMembershipDTO} from '@app/core/modules/openapi/model/workflow-membership-dto';
+import { GitRepoSettingsControllerService } from '@app/core/modules/openapi';
+import { WorkflowControllerService } from '@app/core/modules/openapi/api/workflow-controller.service';
+import { WorkflowDTO } from '@app/core/modules/openapi/model/workflow-dto';
+import { WorkflowGroupDTO } from '@app/core/modules/openapi/model/workflow-group-dto';
+import { WorkflowMembershipDTO } from '@app/core/modules/openapi/model/workflow-membership-dto';
 
 @Component({
     selector: 'app-project-settings',
@@ -70,7 +70,7 @@ export class ProjectSettingsComponent {
     ngOnInit(): void {
         this.route.parent?.paramMap.subscribe((params) => {
             //TODO Change this
-            const repoId = 880304517;
+            const repoId = params.get('projectId');
             if (repoId) {
                 this.repositoryId.set(+repoId);
                 this.fetchWorkflowsQuery.refetch();
@@ -132,7 +132,7 @@ export class ProjectSettingsComponent {
                 if (wf) workflowsForGroup.push(wf);
             });
 
-            record.push({groupName, workflows: workflowsForGroup});
+            record.push({ groupName, workflows: workflowsForGroup });
         });
 
         // (Optional) If you also want "Ungrouped" logic, handle it here
@@ -245,10 +245,10 @@ export class ProjectSettingsComponent {
 
     // Distinguish the actual server groups for the dropdown
     get groupDropdownOptions() {
-        const groups = this.workflowGroups().map(g => ({label: g.name, value: g.name}));
+        const groups = this.workflowGroups().map(g => ({ label: g.name, value: g.name }));
         // Add the "Ungrouped" option
         return [
-            {label: 'Ungrouped', value: 'Ungrouped'},
+            { label: 'Ungrouped', value: 'Ungrouped' },
             ...groups,
         ];
     }
@@ -289,12 +289,12 @@ export class ProjectSettingsComponent {
     // Handle group assignment via dropdown
     onChangeGroup(workflow: WorkflowDTO, newGroup: string) {
         if (newGroup === 'Ungrouped') {
-            const {[workflow.id]: _, ...rest} = this.workflowGroupsMap();
+            const { [workflow.id]: _, ...rest } = this.workflowGroupsMap();
             // new object => rerender
             this.workflowGroupsMap.set(rest);
         } else {
             const oldMap = this.workflowGroupsMap();
-            const updatedMap = {...oldMap, [workflow.id]: newGroup};
+            const updatedMap = { ...oldMap, [workflow.id]: newGroup };
             // new object => rerender
             this.workflowGroupsMap.set(updatedMap);
         }

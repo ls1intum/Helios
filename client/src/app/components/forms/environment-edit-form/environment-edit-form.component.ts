@@ -9,6 +9,7 @@ import { EnvironmentDTO } from '@app/core/modules/openapi';
 import { catchError, tap } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { ChipsModule } from 'primeng/chips';
+import { ActivatedRoute, Router } from '@angular/router';
 
 @Component({
   selector: 'app-environment-edit-form',
@@ -19,6 +20,8 @@ import { ChipsModule } from 'primeng/chips';
 export class EnvironmentEditFormComponent implements OnInit {
   private formBuilder = inject(FormBuilder);
   environmentService = inject(EnvironmentControllerService);
+  private router = inject(Router);
+  private route = inject(ActivatedRoute);
 
   @Input() id!: string; // This is the environment id
   environment = <EnvironmentDTO>({ // This is the environment object
@@ -28,12 +31,12 @@ export class EnvironmentEditFormComponent implements OnInit {
     description: '',
     installedApps: [] as string[],
   });
-  environmentForm!: FormGroup; 
+  environmentForm!: FormGroup;
 
   ngOnInit(): void {
     if (!this.id) {
       alert('Environment id is required');
-      window.location.href = 'project/projectId/environment/list'; // Redirect to environment list
+      this.router.navigate(['../list'], { relativeTo: this.route.parent });
       return;
     }
     this.environmentForm = this.formBuilder.group({
@@ -49,9 +52,9 @@ export class EnvironmentEditFormComponent implements OnInit {
           this.environment = data;
           this.environmentForm.patchValue(this.environment);
         }),
-        catchError((error) => {          
+        catchError((error) => {
           alert('Environment not found');
-          window.location.href = 'project/projectId/environment/list'; // Redirect to environment list
+          this.router.navigate(['../list'], { relativeTo: this.route.parent });
           return [];
         })
       ).subscribe();
@@ -59,8 +62,12 @@ export class EnvironmentEditFormComponent implements OnInit {
 
   submitForm = () => {
     if (this.environmentForm && this.environmentForm.valid) {
-      this.environmentService.updateEnvironment(this.environment.id, this.environmentForm.value).subscribe();
-      window.location.href = 'project/projectId/environment/list'; // Redirect to environment list
+      this.environmentService.updateEnvironment(this.environment.id, this.environmentForm.value)
+        .pipe(
+          tap(() => {
+            this.router.navigate(['../list'], { relativeTo: this.route.parent });
+          })
+        ).subscribe();
     }
   };
 }
