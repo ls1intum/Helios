@@ -26,7 +26,6 @@ export const routes: Routes = [
   },
   {
     path: 'project/:projectId',
-    component: MainLayoutComponent,
     children: [
       {
         path: '',
