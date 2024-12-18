@@ -15,7 +15,7 @@ import { TagModule } from 'primeng/tag';
   selector: 'app-project-overview',
   imports: [DataViewModule, ButtonModule, TagModule, CommonModule, CardModule, ChipModule, IconsModule, ConnectRepoComponent],
   templateUrl: './project-overview.component.html',
-  styleUrl: './project-overview.component.css'
+  styleUrl: './project-overview.component.css',
 })
 export class ProjectOverviewComponent {
   @ViewChild(ConnectRepoComponent)
@@ -24,7 +24,10 @@ export class ProjectOverviewComponent {
   repositories;
   loading;
 
-  constructor(private repositoryService: RepositoryService, private router: Router) {
+  constructor(
+    private repositoryService: RepositoryService,
+    private router: Router
+  ) {
     this.repositories = this.repositoryService.repositories;
     this.loading = this.repositoryService.loading;
   }
@@ -41,5 +44,4 @@ export class ProjectOverviewComponent {
     console.log('Navigating to project', repository);
     this.router.navigate(['/project', repository.id.toString(), 'ci-cd']);
   }
-
 }

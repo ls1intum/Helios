@@ -1,9 +1,9 @@
-import {Component, computed, inject, input} from '@angular/core';
-import {IconsModule} from 'icons.module';
-import {TagModule} from 'primeng/tag';
-import {DeploymentStoreService} from '@app/pages/environment-list/environment-list.component';
-import {DeploymentDTO} from '@app/core/modules/openapi';
-import {DatePipe, NgSwitch, NgSwitchCase, NgSwitchDefault} from '@angular/common';
+import { Component, computed, inject, input } from '@angular/core';
+import { IconsModule } from 'icons.module';
+import { TagModule } from 'primeng/tag';
+import { DeploymentStoreService } from '@app/pages/environment-list/environment-list.component';
+import { DeploymentDTO } from '@app/core/modules/openapi';
+import { DatePipe, NgSwitch, NgSwitchCase, NgSwitchDefault } from '@angular/common';
 
 @Component({
   selector: 'app-environment-commit-info',

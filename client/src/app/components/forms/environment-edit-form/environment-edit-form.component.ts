@@ -1,6 +1,5 @@
-import { Component, inject, Input, input, OnInit, Signal } from '@angular/core';
+import { Component, inject, Input, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Environment, FetchEnvironmentService } from '@app/core/services/fetch/environment';
 import { ButtonModule } from 'primeng/button';
 import { InputSwitchModule } from 'primeng/inputswitch';
 import { InputTextModule } from 'primeng/inputtext';
@@ -21,14 +20,15 @@ export class EnvironmentEditFormComponent implements OnInit {
   environmentService = inject(EnvironmentControllerService);
 
   @Input() id!: string; // This is the environment id
-  environment = <EnvironmentDTO>({ // This is the environment object
+  environment = <EnvironmentDTO>{
+    // This is the environment object
     id: 0,
     name: '',
     serverUrl: '',
     description: '',
     installedApps: [] as string[],
-  });
-  environmentForm!: FormGroup; 
+  };
+  environmentForm!: FormGroup;
 
   ngOnInit(): void {
     if (!this.id) {
@@ -43,18 +43,20 @@ export class EnvironmentEditFormComponent implements OnInit {
       serverUrl: [this.environment.serverUrl || ''],
     });
 
-    this.environmentService.getEnvironmentById(Number(this.id))
+    this.environmentService
+      .getEnvironmentById(Number(this.id))
       .pipe(
         tap((data: EnvironmentDTO) => {
           this.environment = data;
           this.environmentForm.patchValue(this.environment);
         }),
-        catchError((error) => {          
+        catchError(() => {
           alert('Environment not found');
           window.location.href = 'project/projectId/environment/list'; // Redirect to environment list
           return [];
         })
-      ).subscribe();
+      )
+      .subscribe();
   }
 
   submitForm = () => {

@@ -18,14 +18,10 @@
   </p-table>
 
   <!-- Error State -->
-  <div *ngIf="!isLoading() && isError()" class="text-red-500">
-    Error occurred while fetching deployments.
-  </div>
+  <div *ngIf="!isLoading() && isError()" class="text-red-500">Error occurred while fetching deployments.</div>
 
   <!-- Empty State -->
-  <div *ngIf="isEmpty()" class="text-gray-500">
-    No deployments found.
-  </div>
+  <div *ngIf="isEmpty()" class="text-gray-500">No deployments found.</div>
 
   <!-- Data Table -->
   <p-table *ngIf="!isLoading() && !isError() && !isEmpty()" [value]="deployments()" styleClass="p-datatable-sm">

@@ -1,6 +1,6 @@
-import { Component, computed, inject, Injectable, signal, ViewChild } from '@angular/core';
+import { Component, computed, inject, Injectable, signal } from '@angular/core';
 
-import { Table, TableModule } from 'primeng/table';
+import { TableModule } from 'primeng/table';
 import { AvatarModule } from 'primeng/avatar';
 import { TagModule } from 'primeng/tag';
 import { injectQuery } from '@tanstack/angular-query-experimental';
@@ -16,25 +16,12 @@ import { ButtonModule } from 'primeng/button';
 import { CommonModule } from '@angular/common';
 import { BranchViewPreferenceService } from '@app/core/services/branches-table/branch-view-preference';
 
-
 @Component({
   selector: 'app-branches-table',
-  imports: [
-    TableModule,
-    AvatarModule,
-    TagModule,
-    IconsModule,
-    SkeletonModule,
-    InputTextModule,
-    TreeTableModule,
-    CommonModule,
-    ButtonModule,
-    IconFieldModule,
-    InputIconModule],
+  imports: [TableModule, AvatarModule, TagModule, IconsModule, SkeletonModule, InputTextModule, TreeTableModule, CommonModule, ButtonModule, IconFieldModule, InputIconModule],
   templateUrl: './branches-table.component.html',
 })
 export class BranchTableComponent {
-
   branchService = inject(BranchControllerService);
   branchStore = inject(BranchStoreService);
 
@@ -46,24 +33,20 @@ export class BranchTableComponent {
   specialBranches = ['master', 'main', 'dev', 'staging', 'development', 'prod', 'production', 'develop'];
 
   getSpecialBranches() {
-    return this.branchStore.branches().filter(branch =>
-      this.specialBranches.includes(branch.name.toLowerCase())
-    );
+    return this.branchStore.branches().filter(branch => this.specialBranches.includes(branch.name.toLowerCase()));
   }
 
   getFeatureBranches() {
-    const featureBranches = this.branchStore.branches().filter(branch =>
-      !this.specialBranches.includes(branch.name.toLowerCase())
-    );
-    return featureBranches
+    const featureBranches = this.branchStore.branches().filter(branch => !this.specialBranches.includes(branch.name.toLowerCase()));
+    return featureBranches;
   }
-
 
   query = injectQuery(() => ({
     queryKey: ['branches'],
     queryFn: () => {
       this.isLoading.set(true);
-      return this.branchService.getAllBranches()
+      return this.branchService
+        .getAllBranches()
         .pipe(
           tap(data => {
             this.branchStore.setBranches(data);
@@ -74,9 +57,9 @@ export class BranchTableComponent {
             this.isError.set(true);
             this.isLoading.set(false);
             return [];
-          }
-          )
-        ).subscribe()
+          })
+        )
+        .subscribe();
     },
   }));
 
@@ -100,7 +83,7 @@ export class BranchTableComponent {
           const newNode: TreeNode = {
             data: {
               name: part,
-            }
+            },
           };
 
           // If it's a leaf node, add the branch info
@@ -129,7 +112,7 @@ export class BranchTableComponent {
         }
       });
     });
-    console.log("root nodes", JSON.stringify(rootNodes, null, 2));
+    console.log('root nodes', JSON.stringify(rootNodes, null, 2));
     return rootNodes;
   }
 
@@ -137,12 +120,10 @@ export class BranchTableComponent {
   toggleView() {
     this.viewPreference.toggleViewMode();
   }
-
-
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class BranchStoreService {
   private branchesState = signal<BranchInfoWithLink[]>([]);
@@ -153,18 +134,19 @@ export class BranchStoreService {
     branches = branches.map(branch => ({
       ...branch,
       link: `https://github.com/${branch!.repository!.nameWithOwner}/tree/${branch.name}`,
-      lastCommitLink: `https://github.com/${branch!.repository!.nameWithOwner}/commit/${branch.commit_sha}`
+      lastCommitLink: `https://github.com/${branch!.repository!.nameWithOwner}/commit/${branch.commit_sha}`,
     }));
     this.branchesState.set(branches as BranchInfoWithLink[]);
   }
 }
 
-export type BranchInfoWithLink = BranchInfoDTO & { link: string, lastCommitLink: string };
+export type BranchInfoWithLink = BranchInfoDTO & { link: string; lastCommitLink: string };
 
 interface TreeNode {
   data: {
     name: string;
     commit_sha?: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     repository?: any;
     link?: string;
     lastCommitLink?: string;
@@ -172,4 +154,3 @@ interface TreeNode {
   };
   children?: TreeNode[];
 }
-

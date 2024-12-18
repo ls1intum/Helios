@@ -7,12 +7,12 @@ import { TabMenuModule } from 'primeng/tabmenu';
   selector: 'app-ci-cd',
   imports: [PullRequestTableComponent, BranchTableComponent, TabMenuModule],
   templateUrl: './ci-cd.component.html',
-  styleUrl: './ci-cd.component.css'
+  styleUrl: './ci-cd.component.css',
 })
 export class CiCdComponent {
   tabs = signal<MenuItem[]>([
     { label: 'Pull Requests', id: 'pr' },
-    { label: 'Branches', id: 'branches' }
+    { label: 'Branches', id: 'branches' },
   ]);
 
   activeTab = computed(() => {
@@ -20,7 +20,7 @@ export class CiCdComponent {
     return this.tabs().find(tab => tab.id === activeTabId) || this.tabs()[0];
   });
 
-  constructor(private stateService: CiCdStateService) { }
+  constructor(private stateService: CiCdStateService) {}
 
   onTabChange(event: MenuItem) {
     if (event.id) {
@@ -33,9 +33,8 @@ export class CiCdComponent {
   }
 }
 
-
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class CiCdStateService {
   private activeTabId = signal<string>('pr');

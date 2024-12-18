@@ -2,9 +2,12 @@ package de.tum.cit.aet.helios.github;
 
 import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
-import lombok.*;
-
 import java.time.OffsetDateTime;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
 @MappedSuperclass
 @Getter
@@ -13,10 +16,9 @@ import java.time.OffsetDateTime;
 @AllArgsConstructor
 @ToString
 public abstract class BaseGitServiceEntity {
-    @Id
-    protected Long id;
+  @Id protected Long id;
 
-    protected OffsetDateTime createdAt;
+  protected OffsetDateTime createdAt;
 
-    protected OffsetDateTime updatedAt;
+  protected OffsetDateTime updatedAt;
 }

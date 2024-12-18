@@ -6,6 +6,6 @@ import { KeycloakService } from './core/services/keycloak/keycloak.service';
   selector: 'app-root',
   standalone: true,
   imports: [RouterOutlet],
-  template: '<router-outlet />'
+  template: '<router-outlet />',
 })
 export class AppComponent {}

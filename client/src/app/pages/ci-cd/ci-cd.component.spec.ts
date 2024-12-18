@@ -8,9 +8,8 @@ describe('CiCdComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [CiCdComponent]
-    })
-    .compileComponents();
+      imports: [CiCdComponent],
+    }).compileComponents();
 
     fixture = TestBed.createComponent(CiCdComponent);
     component = fixture.componentInstance;

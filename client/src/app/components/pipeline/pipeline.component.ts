@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, input, InputSignal, Signal, signal } from '@angular/core';
+import { Component, inject, input, InputSignal, signal } from '@angular/core';
 import { injectQuery } from '@tanstack/angular-query-experimental';
 import { TableModule } from 'primeng/table';
 import { tap } from 'rxjs';
@@ -22,7 +22,7 @@ export class PipelineComponent {
   isLoading = signal(true);
 
   branchName: InputSignal<string> = input('');
-  pullRequestId: InputSignal<number|undefined> = input();
+  pullRequestId: InputSignal<number | undefined> = input();
 
   query = injectQuery(() => ({
     queryKey: ['pipeline', this.branchName(), this.pullRequestId()],
@@ -30,9 +30,7 @@ export class PipelineComponent {
     queryFn: () => {
       const branchName = this.branchName();
 
-      const pipeline = branchName ?
-        this.pipelineService.getBranchPipeline(branchName) :
-        this.pipelineService.getPullRequestPipeline(this.pullRequestId() || 0);
+      const pipeline = branchName ? this.pipelineService.getBranchPipeline(branchName) : this.pipelineService.getPullRequestPipeline(this.pullRequestId() || 0);
 
       return pipeline
         .pipe(
@@ -40,8 +38,9 @@ export class PipelineComponent {
             this.pipeline.set(pipeline);
             this.isLoading.set(false);
           })
-        ).subscribe()
-      },
+        )
+        .subscribe();
+    },
     refetchInterval: 2000, // Refetch every 2 seconds
   }));
 }

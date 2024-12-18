@@ -1,21 +1,19 @@
-import {Component, inject, Injectable, signal} from '@angular/core';
-import {AccordionModule} from 'primeng/accordion';
-import {CommonModule} from '@angular/common';
-import {LockTagComponent} from '@app/components/lock-tag/lock-tag.component';
-import {TagModule} from 'primeng/tag';
-import {IconsModule} from 'icons.module';
-import {
-  EnvironmentCommitInfoComponent
-} from '../../components/environment-commit-info/environment-commit-info.component';
-import {ButtonModule} from 'primeng/button';
-import {RouterLink} from '@angular/router';
-import {FetchEnvironmentService} from '@app/core/services/fetch/environment';
-import {EnvironmentControllerService} from '@app/core/modules/openapi/api/environment-controller.service';
-import {injectQuery} from '@tanstack/angular-query-experimental';
-import {catchError, firstValueFrom, tap} from 'rxjs';
-import {EnvironmentDTO} from '@app/core/modules/openapi/model/environment-dto';
-import {DeploymentControllerService} from '@app/core/modules/openapi/api/deployment-controller.service';
-import {DeploymentDTO} from '@app/core/modules/openapi/model/deployment-dto';
+import { Component, inject, Injectable, signal } from '@angular/core';
+import { AccordionModule } from 'primeng/accordion';
+import { CommonModule } from '@angular/common';
+import { LockTagComponent } from '@app/components/lock-tag/lock-tag.component';
+import { TagModule } from 'primeng/tag';
+import { IconsModule } from 'icons.module';
+import { EnvironmentCommitInfoComponent } from '../../components/environment-commit-info/environment-commit-info.component';
+import { ButtonModule } from 'primeng/button';
+import { RouterLink } from '@angular/router';
+import { FetchEnvironmentService } from '@app/core/services/fetch/environment';
+import { EnvironmentControllerService } from '@app/core/modules/openapi/api/environment-controller.service';
+import { injectQuery } from '@tanstack/angular-query-experimental';
+import { catchError, firstValueFrom, tap } from 'rxjs';
+import { EnvironmentDTO } from '@app/core/modules/openapi/model/environment-dto';
+import { DeploymentControllerService } from '@app/core/modules/openapi/api/deployment-controller.service';
+import { DeploymentDTO } from '@app/core/modules/openapi/model/deployment-dto';
 
 @Component({
   selector: 'app-environment-list',
@@ -34,7 +32,6 @@ export class EnvironmentListComponent {
   readonly environments = this.environmentStore.environments;
   readonly latestDeployments = this.deploymentStore.latestDeployments;
 
-
   isError = signal(false);
   isEmpty = signal(false);
   isLoading = signal(false);
@@ -43,7 +40,8 @@ export class EnvironmentListComponent {
     queryKey: ['environments'],
     queryFn: () => {
       this.isLoading.set(true);
-      return this.environmentService.getAllEnvironments()
+      return this.environmentService
+        .getAllEnvironments()
         .pipe(
           tap(data => {
             this.environmentStore.setEnvironments(data);
@@ -56,24 +54,21 @@ export class EnvironmentListComponent {
                 this.isError.set(true);
               })
               .finally(() => this.isLoading.set(false));
-
-
           }),
           catchError(() => {
             this.isError.set(true);
             this.isLoading.set(false);
             return [];
           })
-        ).subscribe()
+        )
+        .subscribe();
     },
   }));
 
   private async fetchLatestDeployments(environments: EnvironmentDTO[]) {
-    const deploymentRequests = environments.map(async (env) => {
+    const deploymentRequests = environments.map(async env => {
       try {
-        const latestDeployment = await firstValueFrom(
-          this.deploymentService.getLatestDeploymentByEnvironmentId(env.id)
-        );
+        const latestDeployment = await firstValueFrom(this.deploymentService.getLatestDeploymentByEnvironmentId(env.id));
         this.deploymentStore.setLatestDeployment(env.id, latestDeployment || null);
       } catch (error) {
         console.error(`Failed to fetch latest deployment for environment ${env.id}`, error);
@@ -89,7 +84,7 @@ export class EnvironmentListComponent {
       return '';
     }
 
-    if (url && (!url.startsWith('http') && !url.startsWith('https'))) {
+    if (url && !url.startsWith('http') && !url.startsWith('https')) {
       return 'http://' + url;
     }
 
@@ -98,7 +93,7 @@ export class EnvironmentListComponent {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class EnvironmentStoreService {
   private environmentsState = signal<EnvironmentDTO[]>([]);

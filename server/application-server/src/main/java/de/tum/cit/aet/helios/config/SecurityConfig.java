@@ -7,6 +7,7 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
+import org.springframework.lang.NonNull;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
@@ -23,18 +24,19 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    private final Environment environment;
+  private final Environment environment;
 
-    public SecurityConfig(Environment environment) {
-        this.environment = environment;
-    }
+  public SecurityConfig(Environment environment) {
+    this.environment = environment;
+  }
 
-    @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http
-                .cors(withDefaults()) // Enable CORS
-                .csrf(AbstractHttpConfigurer::disable) // Disable CSRF
-                .authorizeHttpRequests(auth -> {
+  @Bean
+  public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    http.cors(withDefaults()) // Enable CORS
+        .csrf(AbstractHttpConfigurer::disable) // Disable CSRF
+        .authorizeHttpRequests(
+            auth -> {
+              auth.requestMatchers("/api/**").permitAll(); // Allow API access
 
                             auth.requestMatchers(
                                 "/auth/**",

@@ -68,4 +68,4 @@ const icons = {
   imports: [TablerIconsModule.pick(icons)],
   exports: [TablerIconsModule],
 })
-export class IconsModule { }
+export class IconsModule {}

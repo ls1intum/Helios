@@ -1,6 +1,6 @@
-import { inject, Injectable } from "@angular/core";
-import { WorkflowRunControllerService, WorkflowRunDTO } from "@app/core/modules/openapi";
-import { map, Observable } from "rxjs";
+import { inject, Injectable } from '@angular/core';
+import { WorkflowRunControllerService, WorkflowRunDTO } from '@app/core/modules/openapi';
+import { map, Observable } from 'rxjs';
 
 export interface WorkflowRunGroup {
   label: string;
@@ -11,19 +11,19 @@ export interface Pipeline {
   groups: WorkflowRunGroup[];
 }
 
-const predefinedGroups: { label: string, matcher: Array<string> | ((name: string) => boolean) }[] = [
+const predefinedGroups: { label: string; matcher: Array<string> | ((name: string) => boolean) }[] = [
   {
     label: 'Build',
-    matcher: ['Build', 'Pull Request Labeler']
+    matcher: ['Build', 'Pull Request Labeler'],
   },
   {
     label: 'Test',
-    matcher: ['Test', 'CodeQL', 'Validate PR Title', 'Check if German and English translations are consistent']
+    matcher: ['Test', 'CodeQL', 'Validate PR Title', 'Check if German and English translations are consistent'],
   },
   {
     label: 'Deployment',
-    matcher: ['Testserver Locks', 'Deploy to Testserver']
-  }
+    matcher: ['Testserver Locks', 'Deploy to Testserver'],
+  },
 ];
 
 @Injectable()
@@ -31,37 +31,35 @@ export class PipelineService {
   private controllerService = inject(WorkflowRunControllerService);
 
   getPullRequestPipeline(pullRequestId: number): Observable<Pipeline | null> {
-    return this.controllerService.getLatestWorkflowRunsByPullRequestIdAndHeadCommit(pullRequestId)
-      .pipe(
-        map(runs => {
-          const groups = this.groupRuns(runs);
+    return this.controllerService.getLatestWorkflowRunsByPullRequestIdAndHeadCommit(pullRequestId).pipe(
+      map(runs => {
+        const groups = this.groupRuns(runs);
 
-          if (groups.length === 0) {
-            return null;
-          }
+        if (groups.length === 0) {
+          return null;
+        }
 
-          return {
-            groups,
-          }
-        })
-      );
+        return {
+          groups,
+        };
+      })
+    );
   }
 
   getBranchPipeline(branch: string): Observable<Pipeline | null> {
-    return this.controllerService.getLatestWorkflowRunsByBranchAndHeadCommit(branch)
-      .pipe(
-        map(runs => {
-          const groups = this.groupRuns(runs);
+    return this.controllerService.getLatestWorkflowRunsByBranchAndHeadCommit(branch).pipe(
+      map(runs => {
+        const groups = this.groupRuns(runs);
 
-          if (groups.length === 0) {
-            return null;
-          }
+        if (groups.length === 0) {
+          return null;
+        }
 
-          return {
-            groups,
-          }
-        })
-      );
+        return {
+          groups,
+        };
+      })
+    );
   }
 
   private groupRuns(runs: WorkflowRunDTO[]): WorkflowRunGroup[] {
