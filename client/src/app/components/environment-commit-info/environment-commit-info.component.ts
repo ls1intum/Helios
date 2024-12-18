@@ -10,7 +10,6 @@ import {DatePipe, NgSwitch, NgSwitchCase, NgSwitchDefault} from '@angular/common
   imports: [TagModule, IconsModule, NgSwitchCase, NgSwitch, NgSwitchDefault],
   providers: [DatePipe],
   templateUrl: './environment-commit-info.component.html',
-  styleUrl: './environment-commit-info.component.css',
 })
 export class EnvironmentCommitInfoComponent {
   private datePipe = inject(DatePipe);

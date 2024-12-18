@@ -15,11 +15,10 @@ import { toSignal } from '@angular/core/rxjs-interop';
   imports: [CommonModule, EnvironmentEditFormComponent],
   providers: [FetchEnvironmentService],
   templateUrl: './environment-edit.component.html',
-  styleUrl: './environment-edit.component.css',
 })
 export class EnvironmentEditComponent {
   route = inject(ActivatedRoute);
-  id!: string  
+  id!: string
 
   constructor() {
     const routeId = this.route.snapshot.paramMap.get('id');
