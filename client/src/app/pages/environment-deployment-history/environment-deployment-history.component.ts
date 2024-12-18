@@ -20,7 +20,6 @@ import {catchError, tap} from 'rxjs';
   ],
   providers: [DatePipe],
   templateUrl: './environment-deployment-history.component.html',
-  styleUrl: './environment-deployment-history.component.css'
 })
 export class EnvironmentDeploymentHistoryComponent {
   private datePipe = inject(DatePipe);

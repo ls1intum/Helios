@@ -7,7 +7,6 @@ import { TabMenuModule } from 'primeng/tabmenu';
   selector: 'app-ci-cd',
   imports: [PullRequestTableComponent, BranchTableComponent, TabMenuModule],
   templateUrl: './ci-cd.component.html',
-  styleUrl: './ci-cd.component.css'
 })
 export class CiCdComponent {
   tabs = signal<MenuItem[]>([

@@ -15,7 +15,6 @@ import { ActivatedRoute, Router } from '@angular/router';
   selector: 'app-environment-edit-form',
   imports: [CommonModule, ReactiveFormsModule, InputTextModule, InputSwitchModule, ButtonModule, ChipsModule],
   templateUrl: './environment-edit-form.component.html',
-  styleUrls: ['./environment-edit-form.component.css'],
 })
 export class EnvironmentEditFormComponent implements OnInit {
   private formBuilder = inject(FormBuilder);

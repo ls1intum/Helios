@@ -10,7 +10,6 @@ import { EnvironmentEditFormComponent } from '@app/components/forms/environment-
   imports: [CommonModule, EnvironmentEditFormComponent],
   providers: [FetchEnvironmentService],
   templateUrl: './environment-edit.component.html',
-  styleUrl: './environment-edit.component.css',
 })
 export class EnvironmentEditComponent {
   route = inject(ActivatedRoute);

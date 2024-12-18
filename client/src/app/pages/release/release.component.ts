@@ -4,6 +4,5 @@ import { Component } from '@angular/core';
   selector: 'app-release',
   imports: [],
   templateUrl: './release.component.html',
-  styleUrl: './release.component.css',
 })
 export class ReleaseComponent {}

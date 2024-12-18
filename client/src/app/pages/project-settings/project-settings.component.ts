@@ -36,7 +36,6 @@ import { WorkflowMembershipDTO } from '@app/core/modules/openapi/model/workflow-
         DragDropModule,
     ],
     templateUrl: './project-settings.component.html',
-    styleUrls: ['./project-settings.component.css'],
 })
 export class ProjectSettingsComponent {
     private route = inject(ActivatedRoute);

@@ -15,7 +15,6 @@ import { TagModule } from 'primeng/tag';
   selector: 'app-project-overview',
   imports: [DataViewModule, ButtonModule, TagModule, CommonModule, CardModule, ChipModule, IconsModule, ConnectRepoComponent],
   templateUrl: './project-overview.component.html',
-  styleUrl: './project-overview.component.css'
 })
 export class ProjectOverviewComponent {
   @ViewChild(ConnectRepoComponent)
