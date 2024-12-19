@@ -1,4 +1,4 @@
-import { Component, inject } from "@angular/core";
+import { Component, inject, input } from "@angular/core";
 import { EnvironmentListViewComponent } from "../environments/environment-list/environment-list-view.component";
 import { DeploymentControllerService, EnvironmentDTO } from "@app/core/modules/openapi";
 import { injectMutation } from "@tanstack/angular-query-experimental";
@@ -13,10 +13,12 @@ import { lastValueFrom } from "rxjs";
 export class DeploymentSelectionComponent {
   deploymentService = inject(DeploymentControllerService);
 
+  sourceRef = input.required<string>();
+
   deployEnvironment = injectMutation(() => ({
     mutationFn: (environment: EnvironmentDTO) =>
      lastValueFrom(this.deploymentService.deployToEnvironment({
-        branchName: 'main',
+        branchName: this.sourceRef(),
         environmentId: environment.id,
       })),
     onSuccess: () => {

@@ -802,6 +802,8 @@ components:
       - additions
       - commentsCount
       - deletions
+      - headRefName
+      - headRefRepoNameWithOwner
       - headSha
       - htmlUrl
       - id
@@ -847,6 +849,10 @@ components:
           type: integer
           format: int32
         headSha:
+          type: string
+        headRefName:
+          type: string
+        headRefRepoNameWithOwner:
           type: string
         mergedAt:
           type: string
