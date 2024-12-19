@@ -4,7 +4,6 @@ import {ActivatedRoute} from '@angular/router';
 import {injectQuery} from '@tanstack/angular-query-experimental';
 import {PrimeTemplate} from 'primeng/api';
 import {SkeletonModule} from 'primeng/skeleton';
-import {NgIf} from '@angular/common';
 import {TableModule} from 'primeng/table';
 import {IconsModule} from 'icons.module';
 import {catchError, tap} from 'rxjs';
@@ -16,9 +15,8 @@ import { DateService } from '@app/core/services/date.service';
     IconsModule,
     PrimeTemplate,
     SkeletonModule,
-    NgIf,
     TableModule
-  ],
+],
   templateUrl: './environment-deployment-history.component.html',
 })
 export class EnvironmentDeploymentHistoryComponent {

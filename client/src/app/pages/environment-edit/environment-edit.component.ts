@@ -1,4 +1,3 @@
-import { CommonModule } from '@angular/common';
 import { Component, inject, input, Signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { FetchEnvironmentService } from '@app/core/services/fetch/environment';
@@ -12,7 +11,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-environment-edit',
-  imports: [CommonModule, EnvironmentEditFormComponent],
+  imports: [EnvironmentEditFormComponent],
   providers: [FetchEnvironmentService],
   templateUrl: './environment-edit.component.html',
 })

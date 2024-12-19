@@ -1,4 +1,3 @@
-import { CommonModule } from '@angular/common';
 import { Component, inject, input, signal } from '@angular/core';
 import { injectQuery } from '@tanstack/angular-query-experimental';
 import { TableModule } from 'primeng/table';
@@ -11,7 +10,7 @@ import { TooltipModule } from 'primeng/tooltip';
 
 @Component({
   selector: 'app-pipeline',
-  imports: [CommonModule, TableModule, ProgressSpinnerModule, PanelModule, IconsModule, TooltipModule],
+  imports: [TableModule, ProgressSpinnerModule, PanelModule, IconsModule, TooltipModule],
   providers: [PipelineService],
   templateUrl: './pipeline.component.html',
 })

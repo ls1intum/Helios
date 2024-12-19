@@ -7,12 +7,11 @@ import { InputTextModule } from 'primeng/inputtext';
 import { EnvironmentControllerService } from '@app/core/modules/openapi/api/environment-controller.service';
 import { EnvironmentDTO } from '@app/core/modules/openapi';
 import { catchError, tap } from 'rxjs';
-import { CommonModule } from '@angular/common';
 import { ChipsModule } from 'primeng/chips';
 
 @Component({
   selector: 'app-environment-edit-form',
-  imports: [CommonModule, ReactiveFormsModule, InputTextModule, InputSwitchModule, ButtonModule, ChipsModule],
+  imports: [ReactiveFormsModule, InputTextModule, InputSwitchModule, ButtonModule, ChipsModule],
   templateUrl: './environment-edit-form.component.html',
 })
 export class EnvironmentEditFormComponent implements OnInit {

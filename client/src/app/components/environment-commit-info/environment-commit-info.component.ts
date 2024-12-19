@@ -3,12 +3,11 @@ import {IconsModule} from 'icons.module';
 import {TagModule} from 'primeng/tag';
 import {DeploymentStoreService} from '@app/pages/environment-list/environment-list.component';
 import {DeploymentDTO} from '@app/core/modules/openapi';
-import { NgSwitch, NgSwitchCase, NgSwitchDefault} from '@angular/common';
 import { DateService } from '@app/core/services/date.service';
 
 @Component({
   selector: 'app-environment-commit-info',
-  imports: [TagModule, IconsModule, NgSwitchCase, NgSwitch, NgSwitchDefault],
+  imports: [TagModule, IconsModule],
   templateUrl: './environment-commit-info.component.html',
 })
 export class EnvironmentCommitInfoComponent {

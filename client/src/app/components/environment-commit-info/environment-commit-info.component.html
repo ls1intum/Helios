@@ -2,61 +2,71 @@
 
   <!-- TODO: the icons are not showing up -->
   <!-- State-Based Tag -->
-  <ng-container [ngSwitch]="state()">
+  @switch (state()) {
     <!-- Success State -->
-    <p-tag *ngSwitchCase="'SUCCESS'" severity="success" [rounded]="true">
-      <i-tabler name="check" class="!h-4 !w-4 mr-0.5"></i-tabler>
-      Success
-    </p-tag>
-
+    @case ('SUCCESS') {
+      <p-tag severity="success" [rounded]="true">
+        <i-tabler name="check" class="!h-4 !w-4 mr-0.5"></i-tabler>
+        Success
+      </p-tag>
+    }
     <!-- Pending State -->
-    <p-tag *ngSwitchCase="'PENDING'" severity="info" [rounded]="true">
-      <i-tabler name="progress" class="!h-4 !w-4 mr-0.5"></i-tabler>
-      Pending
-    </p-tag>
-
+    @case ('PENDING') {
+      <p-tag severity="info" [rounded]="true">
+        <i-tabler name="progress" class="!h-4 !w-4 mr-0.5"></i-tabler>
+        Pending
+      </p-tag>
+    }
     <!-- In Progress State -->
-    <p-tag *ngSwitchCase="'IN_PROGRESS'" severity="info" [rounded]="true">
-      <i-tabler name="progress" class="!h-4 !w-4 mr-0.5"></i-tabler>
-      In Progress
-    </p-tag>
-
+    @case ('IN_PROGRESS') {
+      <p-tag severity="info" [rounded]="true">
+        <i-tabler name="progress" class="!h-4 !w-4 mr-0.5"></i-tabler>
+        In Progress
+      </p-tag>
+    }
     <!-- Queued State -->
-    <p-tag *ngSwitchCase="'QUEUED'" severity="warning" [rounded]="true">
-      <i-tabler name="progress" class="!h-4 !w-4 mr-0.5"></i-tabler>
-      Queued
-    </p-tag>
-
+    @case ('QUEUED') {
+      <p-tag severity="warning" [rounded]="true">
+        <i-tabler name="progress" class="!h-4 !w-4 mr-0.5"></i-tabler>
+        Queued
+      </p-tag>
+    }
     <!-- Error State -->
-    <p-tag *ngSwitchCase="'ERROR'" severity="danger" [rounded]="true">
-      <i-tabler name="exclamation-circle" class="!h-4 !w-4 mr-0.5"></i-tabler>
-      Error
-    </p-tag>
-
+    @case ('ERROR') {
+      <p-tag severity="danger" [rounded]="true">
+        <i-tabler name="exclamation-circle" class="!h-4 !w-4 mr-0.5"></i-tabler>
+        Error
+      </p-tag>
+    }
     <!-- Failure State -->
-    <p-tag *ngSwitchCase="'FAILURE'" severity="danger" [rounded]="true">
-      <i-tabler name="exclamation-mark" class="!h-4 !w-4 mr-0.5"></i-tabler>
-      Failure
-    </p-tag>
-
+    @case ('FAILURE') {
+      <p-tag severity="danger" [rounded]="true">
+        <i-tabler name="exclamation-mark" class="!h-4 !w-4 mr-0.5"></i-tabler>
+        Failure
+      </p-tag>
+    }
     <!-- Inactive State -->
-    <p-tag *ngSwitchCase="'INACTIVE'" severity="secondary" [rounded]="true">
-      <i-tabler name="time-duration-off" class="!h-4 !w-4 mr-0.5"></i-tabler>
-      Inactive
-    </p-tag>
-
+    @case ('INACTIVE') {
+      <p-tag severity="secondary" [rounded]="true">
+        <i-tabler name="time-duration-off" class="!h-4 !w-4 mr-0.5"></i-tabler>
+        Inactive
+      </p-tag>
+    }
     <!-- Unknown State -->
-    <p-tag *ngSwitchCase="'UNKNOWN'" severity="secondary" [rounded]="true">
-      <i-tabler name="question-mark" class="!h-4 !w-4 mr-0.5"></i-tabler>
-      Unknown
-    </p-tag>
-
+    @case ('UNKNOWN') {
+      <p-tag severity="secondary" [rounded]="true">
+        <i-tabler name="question-mark" class="!h-4 !w-4 mr-0.5"></i-tabler>
+        Unknown
+      </p-tag>
+    }
     <!-- Default (Fallback) State -->
-    <p-tag *ngSwitchDefault severity="secondary" [rounded]="true">
-      <i-tabler name="question-mark" class="!h-4 !w-4 mr-0.5"></i-tabler>
-      Unrecognized State
-    </p-tag>
-  </ng-container>
+    @default {
+      <p-tag severity="secondary" [rounded]="true">
+        <i-tabler name="question-mark" class="!h-4 !w-4 mr-0.5"></i-tabler>
+        Unrecognized State
+      </p-tag>
+    }
+  }
 
   <span class="font-semibold">{{ commitMessage() }}</span>
   <div class="flex-grow"></div>
