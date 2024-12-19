@@ -61,7 +61,7 @@
 
       <div class="flex gap-4 items-center justify-between">
         <div class="flex gap-1 mt-2 items-center">
-          <a icon [routerLink]="'/environments/' + environment.id + '/history'" class="p-button p-button-text text-gray-500 p-2"
+          <a icon [routerLink]="'/repo/' + environment.repository?.id + '/environment/' + environment.id + '/history'" class="p-button p-button-text text-gray-500 p-2"
             ><i-tabler class="mr-1" name="history" />View Deployment History</a
           >
         </div>
