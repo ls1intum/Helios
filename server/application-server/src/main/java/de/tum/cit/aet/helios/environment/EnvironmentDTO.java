@@ -2,7 +2,6 @@ package de.tum.cit.aet.helios.environment;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
-import de.tum.cit.aet.helios.branch.BranchInfoDTO;
 import de.tum.cit.aet.helios.deployment.Deployment;
 import de.tum.cit.aet.helios.gitrepo.RepositoryInfoDTO;
 import org.springframework.lang.NonNull;
@@ -21,8 +20,6 @@ public record EnvironmentDTO(
         String htmlUrl,
         OffsetDateTime createdAt,
         OffsetDateTime updatedAt,
-        BranchInfoDTO lockingBranch,
-        boolean deploying,
         List<String> installedApps,
         String description,
         String serverUrl,
@@ -64,9 +61,6 @@ public record EnvironmentDTO(
                 environment.getHtmlUrl(),
                 environment.getCreatedAt(),
                 environment.getUpdatedAt(),
-                (environment.getLockingBranch() != null ? BranchInfoDTO.fromBranch(environment.getLockingBranch())
-                        : null),
-                environment.isDeploying(),
                 environment.getInstalledApps(),
                 environment.getDescription(),
                 environment.getServerUrl(),

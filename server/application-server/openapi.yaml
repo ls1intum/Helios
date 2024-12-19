@@ -596,18 +596,6 @@ components:
         orderIndex:
           type: integer
           format: int32
-    BranchInfoDTO:
-      required:
-      - commit_sha
-      - name
-      type: object
-      properties:
-        name:
-          type: string
-        commit_sha:
-          type: string
-        repository:
-          $ref: "#/components/schemas/RepositoryInfoDTO"
     EnvironmentDTO:
       required:
       - id
@@ -633,10 +621,6 @@ components:
         updatedAt:
           type: string
           format: date-time
-        lockingBranch:
-          $ref: "#/components/schemas/BranchInfoDTO"
-        deploying:
-          type: boolean
         installedApps:
           type: array
           items:
@@ -943,3 +927,15 @@ components:
         updatedAt:
           type: string
           format: date-time
+    BranchInfoDTO:
+      required:
+      - commit_sha
+      - name
+      type: object
+      properties:
+        name:
+          type: string
+        commit_sha:
+          type: string
+        repository:
+          $ref: "#/components/schemas/RepositoryInfoDTO"

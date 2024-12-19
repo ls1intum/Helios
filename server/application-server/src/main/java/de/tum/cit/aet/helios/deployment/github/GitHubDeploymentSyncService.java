@@ -142,16 +142,5 @@ public class GitHubDeploymentSyncService {
 
         // Save the deployment
         deploymentRepository.save(deployment);
-
-        // TODO: This is a temporary solution to set the deploying flag
-        // we should find a better way to handle this
-        if (environment.isDeploying()) {
-            environment.setDeploying(
-                deployment.getState() == Deployment.State.PENDING ||
-                deployment.getState() == Deployment.State.IN_PROGRESS ||
-                deployment.getState() == Deployment.State.QUEUED
-            );
-            environmentRepository.save(environment);
-        }
     }
 }

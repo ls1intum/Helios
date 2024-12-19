@@ -5,7 +5,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import de.tum.cit.aet.helios.branch.Branch;
 import de.tum.cit.aet.helios.deployment.Deployment;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
 
@@ -47,18 +46,7 @@ public class Environment {
     @OrderBy("createdAt ASC")
     private List<Deployment> deployments;
 
-    private boolean deploying;
-
-    @ManyToOne
-    @JoinColumns({
-            @JoinColumn(name = "locking_repository_id", referencedColumnName = "repository_id"),
-            @JoinColumn(name = "locking_branch_name", referencedColumnName = "name")
-    })
-    private Branch lockingBranch;
-
-    public boolean isLocked() {
-        return lockingBranch != null;
-    }
+    private boolean locked;
 
     @ElementCollection
     @CollectionTable(name = "installed_apps", joinColumns = @JoinColumn(name = "environment_id"))

@@ -24,12 +24,8 @@
 
           <app-lock-tag [isLocked]="!!environment.locked"></app-lock-tag>
 
-          @if (environment.locked) {
-            @if (environment.deploying) {
-              <app-deployment-state-tag [state]="'IN_PROGRESS'" />
-            } @else {
-              <app-deployment-state-tag [state]="'SUCCESS'" />
-            }
+          @if (environment.latestDeployment; as deployment) {
+            <app-deployment-state-tag [state]="deployment.state || 'IN_PROGRESS'" />
           }
 
           <div class="flex-grow"></div>
@@ -58,14 +54,6 @@
           }
         </div>
       </ng-template>
-      @if (!environment.locked) {
-        <p>This environment is not locked. It is free to be deployed to.</p>
-      }
-      @if (environment.lockingBranch; as lockingBranch) {
-        <a [routerLink]="'/repo/' + environment.repository?.id + '/branch/' + lockingBranch.name" class="p-button p-button-secondary"
-          ><i-tabler name="git-branch" class="text-white mr-1" /> Locked by "{{ lockingBranch.name }}"</a
-        >
-      }
 
       @if (environment.latestDeployment; as deployment) {
         <app-environment-deployment-info [deployment]="deployment" />

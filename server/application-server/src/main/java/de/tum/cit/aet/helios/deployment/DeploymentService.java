@@ -60,18 +60,7 @@ public class DeploymentService {
     }
 
     public void deployToEnvironment(DeployRequest deployRequest) {
-        EnvironmentDTO env = this.environmentService.getEnvironmentById(deployRequest.environmentId()).orElseThrow(
-            () -> new DeploymentException("Environment not found")
-        );
-
-        Branch branch = this.branchService.getBranchByRepositoryIdAndName(
-            env.repository().id(),
-            deployRequest.branchName()
-        ).orElseThrow(
-            () -> new DeploymentException("Branch not found")
-        );
-
-        Environment environment = this.environmentService.lockEnvironment(deployRequest.environmentId(), branch).orElseThrow(
+        Environment environment = this.environmentService.lockEnvironment(deployRequest.environmentId()).orElseThrow(
             () -> new DeploymentException("Environment was already locked")
         );
 

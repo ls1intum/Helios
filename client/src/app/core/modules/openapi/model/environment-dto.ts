@@ -8,7 +8,6 @@
  * Do not edit the class manually.
  */
 import { RepositoryInfoDTO } from './repository-info-dto';
-import { BranchInfoDTO } from './branch-info-dto';
 import { EnvironmentDeployment } from './environment-deployment';
 
 
@@ -21,8 +20,6 @@ export interface EnvironmentDTO {
     htmlUrl?: string;
     createdAt?: string;
     updatedAt?: string;
-    lockingBranch?: BranchInfoDTO;
-    deploying?: boolean;
     installedApps?: Array<string>;
     description?: string;
     serverUrl?: string;
