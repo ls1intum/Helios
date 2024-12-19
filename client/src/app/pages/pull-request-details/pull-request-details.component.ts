@@ -1,6 +1,6 @@
 import { Component, computed, inject, input, Signal } from '@angular/core';
 import { MarkdownPipe } from '@app/core/modules/markdown/markdown.pipe';
-import {CommonModule} from '@angular/common';
+
 import {PipelineComponent, PipelineSelector} from '@app/components/pipeline/pipeline.component';
 import {TagModule} from 'primeng/tag';
 import {IconsModule} from 'icons.module';
@@ -14,7 +14,7 @@ import { SkeletonModule } from 'primeng/skeleton';
 
 @Component({
   selector: 'app-branch-details',
-  imports: [InputTextModule, CommonModule, TagModule, IconsModule, ButtonModule, PipelineComponent, MarkdownPipe, DeploymentSelectionComponent, SkeletonModule],
+  imports: [InputTextModule, TagModule, IconsModule, ButtonModule, PipelineComponent, MarkdownPipe, DeploymentSelectionComponent, SkeletonModule],
   templateUrl: './pull-request-details.component.html',
 })
 export class PullRequestDetailsComponent {

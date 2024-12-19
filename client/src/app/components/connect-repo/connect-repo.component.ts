@@ -1,4 +1,3 @@
-import { CommonModule } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { GithubOrg, GithubRepo, GithubService } from '@app/core/services/github.service';
@@ -13,13 +12,13 @@ import { finalize } from 'rxjs';
 @Component({
   selector: 'app-connect-repo',
   imports: [
-    CommonModule,
     ButtonModule,
     DialogModule,
     DropdownModule,
     CardModule,
     IconsModule,
-    FormsModule],
+    FormsModule,
+],
   templateUrl: './connect-repo.component.html',
 })
 export class ConnectRepoComponent {

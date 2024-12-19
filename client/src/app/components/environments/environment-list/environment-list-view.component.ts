@@ -1,6 +1,6 @@
 import {Component, computed, inject, Injectable, input, output, signal} from '@angular/core';
 import {AccordionModule} from 'primeng/accordion';
-import {CommonModule} from '@angular/common';
+
 import {TagModule} from 'primeng/tag';
 import {IconsModule} from 'icons.module';
 import {ButtonModule} from 'primeng/button';
@@ -19,7 +19,7 @@ import { EnvironmentDeploymentInfoComponent } from '../deployment-info/environme
 
 @Component({
   selector: 'app-environment-list-view',
-  imports: [InputTextModule, AccordionModule, CommonModule, LockTagComponent, RouterLink, TagModule, IconsModule,  ButtonModule, DeploymentStateTagComponent, EnvironmentDeploymentInfoComponent],
+  imports: [InputTextModule, AccordionModule, LockTagComponent, RouterLink, TagModule, IconsModule, ButtonModule, DeploymentStateTagComponent, EnvironmentDeploymentInfoComponent],
   providers: [FetchEnvironmentService],
   templateUrl: './environment-list-view.component.html',
 })

@@ -1,4 +1,3 @@
-import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { IconsModule } from 'icons.module';
@@ -13,7 +12,7 @@ import {KeycloakService} from '@app/core/services/keycloak/keycloak.service';
 @Component({
   selector: 'app-main-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, ToastModule, RouterLinkActive, IconsModule, ButtonModule, CommonModule, TooltipModule, HeliosIconComponent, DividerModule, AvatarModule],
+  imports: [RouterOutlet, RouterLink, ToastModule, RouterLinkActive, IconsModule, ButtonModule, TooltipModule, HeliosIconComponent, DividerModule, AvatarModule],
   templateUrl: './main-layout.component.html',
 })
 export class MainLayoutComponent implements OnInit {

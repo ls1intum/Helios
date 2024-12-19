@@ -1,5 +1,4 @@
 import { Component, signal, computed, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { injectQuery } from '@tanstack/angular-query-experimental';
@@ -24,17 +23,16 @@ import { WorkflowMembershipDTO } from '@app/core/modules/openapi/model/workflow-
     selector: 'app-project-settings',
     standalone: true,
     imports: [
-        CommonModule,
-        FormsModule,
-        TableModule,
-        DropdownModule,
-        ButtonModule,
-        PanelModule,
-        DialogModule,
-        InputTextModule,
-        IconsModule,
-        DragDropModule,
-    ],
+    FormsModule,
+    TableModule,
+    DropdownModule,
+    ButtonModule,
+    PanelModule,
+    DialogModule,
+    InputTextModule,
+    IconsModule,
+    DragDropModule,
+],
     templateUrl: './project-settings.component.html',
 })
 export class ProjectSettingsComponent {

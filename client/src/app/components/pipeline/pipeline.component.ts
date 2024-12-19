@@ -1,4 +1,3 @@
-import { CommonModule } from '@angular/common';
 import { Component, inject, input, signal } from '@angular/core';
 import { injectQuery } from '@tanstack/angular-query-experimental';
 import { TableModule } from 'primeng/table';
@@ -18,7 +17,7 @@ export type PipelineSelector = { repositoryId: number } & ({
 
 @Component({
   selector: 'app-pipeline',
-  imports: [CommonModule, TableModule, ProgressSpinnerModule, PanelModule, IconsModule, TooltipModule, SkeletonModule],
+  imports: [TableModule, ProgressSpinnerModule, PanelModule, IconsModule, TooltipModule, SkeletonModule],
   providers: [PipelineService],
   templateUrl: './pipeline.component.html',
 })

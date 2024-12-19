@@ -1,4 +1,3 @@
-import { CommonModule } from '@angular/common';
 import { Component, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
 import { ConnectRepoComponent } from '@app/components/connect-repo/connect-repo.component';
@@ -13,7 +12,7 @@ import { TagModule } from 'primeng/tag';
 
 @Component({
   selector: 'app-project-overview',
-  imports: [DataViewModule, ButtonModule, TagModule, CommonModule, CardModule, ChipModule, IconsModule, ConnectRepoComponent],
+  imports: [DataViewModule, ButtonModule, TagModule, CardModule, ChipModule, IconsModule, ConnectRepoComponent],
   templateUrl: './project-overview.component.html',
 })
 export class ProjectOverviewComponent {

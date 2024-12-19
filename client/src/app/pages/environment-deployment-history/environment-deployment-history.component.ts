@@ -16,7 +16,7 @@ import { DateService } from '@app/core/services/date.service';
     PrimeTemplate,
     SkeletonModule,
     TableModule
-  ],
+],
   templateUrl: './environment-deployment-history.component.html',
 })
 export class EnvironmentDeploymentHistoryComponent {
