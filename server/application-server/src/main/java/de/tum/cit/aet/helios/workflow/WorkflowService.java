@@ -39,4 +39,11 @@ public class WorkflowService {
                 .map(WorkflowDTO::fromWorkflow)
                 .collect(Collectors.toList());
     }
+
+    public void updateWorkflowLabel(Long workflowId, Workflow.Label label) {
+        Workflow workflow = workflowRepository.findById(workflowId)
+                .orElseThrow(() -> new IllegalArgumentException("Workflow not found!"));
+        workflow.setLabel(label);
+        workflowRepository.save(workflow);
+    }
 }

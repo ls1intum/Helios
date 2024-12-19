@@ -8,6 +8,7 @@ import { HeliosIconComponent } from '../../helios-icon/helios-icon.component';
 import { DividerModule } from 'primeng/divider';
 import { AvatarModule } from 'primeng/avatar';
 import { ToastModule } from 'primeng/toast';
+import {KeycloakService} from '@app/core/services/keycloak/keycloak.service';
 
 @Component({
   selector: 'app-main-layout',
@@ -19,7 +20,7 @@ import { ToastModule } from 'primeng/toast';
                 <div class="rounded-2xl p-5 mr-3 bg-slate-100 flex flex-col items-center justify-between h-full">
                     <app-helios-icon routerLink="/" size="3rem" class="rounded-xl w-12 cursor-pointer" />
                     <p-divider />
-                    <p-avatar label="A" pTooltip="Artemis" size="large" />
+                    <p-avatar label="H" pTooltip="Helios" size="large" />
                     <p-divider />
                     <div class="flex flex-col gap-3">
                         @for (item of items; track item.label) {
@@ -37,6 +38,7 @@ import { ToastModule } from 'primeng/toast';
                     <i-tabler name="settings" pTooltip="Settings" class="!size-10 text-slate-500 hover:text-slate-700 !stroke-1" />
                     <p-divider />
                     <p-avatar label="U" size="large" />
+                    <button pButton label="" icon="pi pi-sign-out" class="p-button-danger mt-3 w-full" (click)="logout()"></button>
                 </div>
                 <div class="flex-grow">
                     <router-outlet />
@@ -48,6 +50,13 @@ import { ToastModule } from 'primeng/toast';
 })
 export class MainLayoutComponent implements OnInit {
   items!: { label: string; icon: string; path: string }[];
+
+
+  constructor(private keycloakService: KeycloakService) {}
+
+  logout() {
+    this.keycloakService.logout();
+  }
 
   ngOnInit() {
     this.items = [
@@ -66,6 +75,11 @@ export class MainLayoutComponent implements OnInit {
         icon: 'server-cog',
         path: 'environment/list',
       },
+      {
+        label: 'Project Settings',
+        icon: 'adjustments-alt',
+        path: 'settings',
+      },      
     ];
   }
 

@@ -12,6 +12,7 @@ import {
 import { ProjectOverviewComponent } from './pages/project-overview/project-overview.component';
 import { PullRequestDetailsComponent } from './pages/pull-request-details/pull-request-details.component';
 import { BranchDetailsComponent } from './pages/branch-details/branch-details.component';
+import {ProjectSettingsComponent} from '@app/pages/project-settings/project-settings.component';
 
 
 export const routes: Routes = [
@@ -62,6 +63,10 @@ export const routes: Routes = [
       {
         path: 'ci-cd',
         component: CiCdComponent
+      },
+      {
+        path: 'settings',
+        component: ProjectSettingsComponent
       },
     ]
   },
