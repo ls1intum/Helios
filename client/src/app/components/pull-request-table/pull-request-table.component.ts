@@ -85,8 +85,7 @@ export class PullRequestTableComponent {
   }
 
   openPR(pr: PullRequestInfoDTO): void {
-    console.log('Navigating to PR', pr, this.router.getCurrentNavigation()?.finalUrl);
-    this.router.navigate(['project', 'projectid', 'pipeline', 'pr', pr.id]);
+    this.router.navigate(['repo', pr.repository?.id, 'pr', pr.number]);
   }
 }
 

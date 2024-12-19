@@ -127,7 +127,7 @@ public class GitHubDeploymentSyncService {
         deploymentConverter.update(deploymentSource, deployment);
 
         // Set the associated environment
-        deployment.setEnvironmentEntity(environment);
+        deployment.setEnvironment(environment);
         // Set the repository
         deployment.setRepository(gitRepository);
 
@@ -139,7 +139,6 @@ public class GitHubDeploymentSyncService {
         );
 
         optionalPullRequest.ifPresent(deployment::setPullRequest);
-
 
         // Save the deployment
         deploymentRepository.save(deployment);

@@ -22,7 +22,7 @@ const predefinedGroups: { label: string, matcher: Array<string> | ((name: string
   },
   {
     label: 'Deployment',
-    matcher: ['Testserver Locks', 'Deploy to Testserver']
+    matcher: ['Testserver Locks', 'Deploy to Testserver', 'Deploy']
   }
 ];
 

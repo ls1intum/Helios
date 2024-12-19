@@ -40,13 +40,24 @@ public class WorkflowRunService {
     public List<WorkflowRunDTO> getLatestWorkflowRunsByPullRequestIdAndHeadCommit(
         Long pullRequestId
     ) {
+        
         var pullRequest = pullRequestRepository.findById(pullRequestId).orElseThrow();
         var runs = workflowRunRepository.findByPullRequestsIdAndHeadSha(pullRequestId, pullRequest.getHeadSha());
-        var latestRuns = getLatestWorkflowRuns(runs);
+        var latestRuns = getLatestWorkflowRuns(runs)
+            .map(WorkflowRunDTO::fromWorkflowRun)
+            .toList();
+
+        // Combine pull request workflow runs with branch workflows runs if we are on the same
+        // repository
+        if (pullRequest.getHeadRefRepoNameWithOwner().equals(pullRequest.getRepository().getNameWithOwner())) {
+            return Stream.concat(
+                latestRuns.stream(),
+                getLatestWorkflowRunsByBranchAndHeadCommitSha(pullRequest.getHeadRefName())
+                    .stream()
+            ).collect(Collectors.toList());
+        }
         
-        return latestRuns
-                .map(WorkflowRunDTO::fromWorkflowRun)
-                .toList();
+        return latestRuns;
     }
 
     public List<WorkflowRunDTO> getLatestWorkflowRunsByBranchAndHeadCommitSha(

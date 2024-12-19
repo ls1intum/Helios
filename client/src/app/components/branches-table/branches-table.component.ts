@@ -15,6 +15,7 @@ import { TreeTableModule } from 'primeng/treetable';
 import { ButtonModule } from 'primeng/button';
 import { CommonModule } from '@angular/common';
 import { BranchViewPreferenceService } from '@app/core/services/branches-table/branch-view-preference';
+import { Router } from '@angular/router';
 
 
 @Component({
@@ -37,6 +38,7 @@ export class BranchTableComponent {
 
   branchService = inject(BranchControllerService);
   branchStore = inject(BranchStoreService);
+  router = inject(Router);
 
   featureBranchesTree = computed(() => this.convertBranchesToTreeNodes(this.getFeatureBranches()));
   isError = signal(false);
@@ -82,6 +84,10 @@ export class BranchTableComponent {
 
   openLink(url: string): void {
     window.open(url, '_blank');
+  }
+
+  openBranch(branch: BranchInfoDTO): void {
+    this.router.navigate(['repo', branch.repository?.id, 'branch', branch.name]);
   }
 
   convertBranchesToTreeNodes(branches: BranchInfoWithLink[]): TreeNode[] {

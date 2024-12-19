@@ -42,4 +42,12 @@ export interface PullRequestControllerServiceInterface {
      */
     getPullRequestByRepositoryId(id: number, extraHttpRequestParams?: any): Observable<Array<PullRequestInfoDTO>>;
 
+    /**
+     * 
+     * 
+     * @param repoId 
+     * @param number 
+     */
+    getPullRequestByRepositoryIdAndNumber(repoId: number, number: number, extraHttpRequestParams?: any): Observable<PullRequestInfoDTO>;
+
 }

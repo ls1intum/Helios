@@ -6,11 +6,12 @@ import { EnvironmentEditComponent } from './pages/environment-edit/environment-e
 import { EnvironmentListComponent } from './pages/environment-list/environment-list.component';
 import { PageNotFoundComponent } from './pages/page-not-found/page-not-found.component';
 import { ReleaseComponent } from './pages/release/release.component';
-import { PullRequestPipelineComponent } from './pages/pull-request-pipeline/pull-request-pipeline.component';
 import {
   EnvironmentDeploymentHistoryComponent
 } from '@app/pages/environment-deployment-history/environment-deployment-history.component';
 import { ProjectOverviewComponent } from './pages/project-overview/project-overview.component';
+import { PullRequestDetailsComponent } from './pages/pull-request-details/pull-request-details.component';
+import { BranchDetailsComponent } from './pages/branch-details/branch-details.component';
 import {ProjectSettingsComponent} from '@app/pages/project-settings/project-settings.component';
 
 
@@ -25,9 +26,22 @@ export const routes: Routes = [
     component: ProjectOverviewComponent
   },
   {
-    path: 'project/:projectId',
+    path: 'repo/:repositoryId',
     component: MainLayoutComponent,
     children: [
+      { path: '', component: CiCdComponent },
+      {
+        path: 'pr',
+        children: [
+          { path: ':pullRequestNumber', component: PullRequestDetailsComponent },
+        ]
+      },
+      {
+        path: 'branch',
+        children: [
+          { path: ':branchName', component: BranchDetailsComponent },
+        ]
+      },
       {
         path: '',
         redirectTo: 'ci-cd',
@@ -49,12 +63,6 @@ export const routes: Routes = [
       {
         path: 'ci-cd',
         component: CiCdComponent
-      },
-      {
-        path: 'pipeline',
-        children: [
-          { path: 'pr/:pullRequestId', component: PullRequestPipelineComponent },
-        ]
       },
       {
         path: 'settings',

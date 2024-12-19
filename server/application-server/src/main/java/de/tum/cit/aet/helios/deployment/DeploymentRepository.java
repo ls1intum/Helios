@@ -9,7 +9,7 @@ import java.util.Optional;
 
 @Repository
 public interface DeploymentRepository extends JpaRepository<Deployment, Long> {
-    List<Deployment> findByEnvironmentEntityIdOrderByCreatedAtDesc(Long environmentId);
-    Optional<Deployment> findFirstByEnvironmentEntityIdOrderByCreatedAtDesc(Long environmentId);
+    List<Deployment> findByEnvironmentIdOrderByCreatedAtDesc(Long environmentId);
+    Optional<Deployment> findFirstByEnvironmentIdOrderByCreatedAtDesc(Long environmentId);
 
 }

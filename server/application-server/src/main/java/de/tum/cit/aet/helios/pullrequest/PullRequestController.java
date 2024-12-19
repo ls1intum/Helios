@@ -38,4 +38,11 @@ public class PullRequestController {
         return ResponseEntity.ok(pullRequests);
     }
 
+    @GetMapping("/repository/{repoId}/pr/{number}")
+    public ResponseEntity<PullRequestInfoDTO> getPullRequestByRepositoryIdAndNumber(@PathVariable Long repoId, @PathVariable Integer number) {
+        return pullRequestService.getPullRequestByRepositoryIdAndNumber(repoId, number)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
 }

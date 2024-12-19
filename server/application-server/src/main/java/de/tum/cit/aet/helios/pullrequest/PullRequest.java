@@ -29,6 +29,8 @@ public class PullRequest extends Issue {
     // PR's head branch name
     private String headRefName;
 
+    private String headRefRepoNameWithOwner;
+
     // PR's head commit SHA
     private String headSha;
 

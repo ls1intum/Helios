@@ -13,4 +13,5 @@ public interface BranchRepository extends JpaRepository<Branch, Long> {
     Optional<Branch> findByNameAndRepositoryId(String name, Long repositoryId);
     void deleteByNameAndRepositoryId(String name, Long repositoryId);
     List<Branch> findByRepositoryId(Long repositoryId);
+    Optional<Branch> findByRepositoryIdAndName(Long repositoryId, String name);
 }

@@ -23,7 +23,9 @@ encoder.ts
 git_push.sh
 index.ts
 model/branch-info-dto.ts
+model/deploy-request.ts
 model/deployment-dto.ts
+model/environment-deployment.ts
 model/environment-dto.ts
 model/models.ts
 model/pull-request-info-dto.ts

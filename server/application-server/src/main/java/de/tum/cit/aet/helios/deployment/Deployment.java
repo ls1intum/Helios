@@ -25,7 +25,7 @@ public class Deployment extends BaseGitServiceEntity {
 
     @ManyToOne
     @JoinColumn(name = "environment_id", nullable = false)
-    private Environment environmentEntity;
+    private Environment environment;
 
     // PR associated with this deployment
     @ManyToOne(fetch = FetchType.LAZY)
@@ -51,7 +51,7 @@ public class Deployment extends BaseGitServiceEntity {
 
     private String task;
 
-    private String environment;
+    private String environmentName;
 
     @Column(name = "repository_url")
     private String repositoryUrl;

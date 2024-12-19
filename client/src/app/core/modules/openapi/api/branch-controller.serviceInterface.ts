@@ -28,4 +28,12 @@ export interface BranchControllerServiceInterface {
      */
     getAllBranches(extraHttpRequestParams?: any): Observable<Array<BranchInfoDTO>>;
 
+    /**
+     * 
+     * 
+     * @param repoId 
+     * @param name 
+     */
+    getBranchByRepositoryIdAndName(repoId: number, name: string, extraHttpRequestParams?: any): Observable<BranchInfoDTO>;
+
 }

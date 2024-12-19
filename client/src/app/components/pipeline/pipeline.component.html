@@ -1,10 +1,29 @@
 <h3 class="text-2xl mb-2">Pipeline</h3>
 
-@if (isLoading()) {
-  <p-progressSpinner class="w-12 h-12 mx-auto my-4"></p-progressSpinner>
+@if (query.isPending()) {
+  <div class="flex items-start mt-2 gap-4">
+    <p-panel>
+      <ng-template pTemplate="header">
+        <p-skeleton width="10rem" />
+      </ng-template>
+      <div class="flex flex-col gap-4">
+        <p-skeleton width="5rem" />
+        <p-skeleton width="7rem" />
+      </div>
+    </p-panel>
+    <p-panel>
+      <ng-template pTemplate="header">
+        <p-skeleton width="8rem" />
+      </ng-template>
+      <div class="flex flex-col gap-4">
+        <p-skeleton width="6rem" />
+        <p-skeleton width="4rem" />
+      </div>
+    </p-panel>
+  </div>
 }
 
-@if (pipeline(); as pipeline) {
+@if (query.data(); as pipeline) {
   <div class="flex items-start mt-2">
     <ng-container *ngFor="let group of pipeline.groups; last as isLast">
       <p-panel [header]="group.label">
@@ -23,7 +42,7 @@
                 }
               }
             } @else if (['IN_PROGRESS', 'QUEUED', 'PENDING', 'WAITING', 'REQUESTED'].includes(workflowRun.status)) {
-              <i-tabler name="progress" class="text-yellow-500" pTooltip="In progress"></i-tabler>
+              <i-tabler name="progress" class="text-yellow-500 animate-spin" pTooltip="In progress"></i-tabler>
             } @else {
               <i-tabler name="progress-help" class="text-gray-500" pTooltip="Unknown"></i-tabler>
             }
@@ -43,10 +62,6 @@
       }
     </ng-container>
   </div>
-} @else if (!isLoading()) {
-  @if (!isLoading()) {
-    <ng-container>
-      <p>The pipeline could not be loaded yet. Make sure that workflows have been triggered for this commit.</p>
-    </ng-container>
-  }
+} @else if (!query.isPending()) {
+  <p>Currently there are no workflows available for the latest commit.</p>
 }

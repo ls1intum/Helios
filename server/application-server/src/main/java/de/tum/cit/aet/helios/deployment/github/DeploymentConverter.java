@@ -26,7 +26,7 @@ public class DeploymentConverter implements Converter<DeploymentSource, Deployme
         deployment.setSha(source.getSha());
         deployment.setRef(source.getRef());
         deployment.setTask(source.getTask());
-        deployment.setEnvironment(source.getEnvironment());
+        deployment.setEnvironmentName(source.getEnvironment());
         deployment.setRepositoryUrl(source.getRepositoryUrl());
         try {
             deployment.setCreatedAt(source.getCreatedAt());

@@ -1,6 +1,8 @@
 package de.tum.cit.aet.helios.deployment;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+
+import de.tum.cit.aet.helios.environment.EnvironmentDTO;
 import de.tum.cit.aet.helios.gitrepo.RepositoryInfoDTO;
 import org.springframework.lang.NonNull;
 
@@ -16,7 +18,7 @@ public record DeploymentDTO(
         @NonNull String sha,
         @NonNull String ref,
         @NonNull String task,
-        @NonNull String environment,
+        @NonNull EnvironmentDTO environment,
         OffsetDateTime createdAt,
         OffsetDateTime updatedAt) {
 
@@ -30,7 +32,7 @@ public record DeploymentDTO(
                 deployment.getSha(),
                 deployment.getRef(),
                 deployment.getTask(),
-                deployment.getEnvironment(),
+                EnvironmentDTO.fromEnvironment(deployment.getEnvironment()),
                 deployment.getCreatedAt(),
                 deployment.getUpdatedAt());
     }
