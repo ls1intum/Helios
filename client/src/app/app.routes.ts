@@ -38,7 +38,7 @@ export const routes: Routes = [
           { path: '', redirectTo: 'list', pathMatch: 'full' },
           { path: 'list', component: EnvironmentListComponent },
           { path: ':id/edit', component: EnvironmentEditComponent },
-          { path: ':id/history', component: EnvironmentDeploymentHistoryComponent },
+          { path: ':environmentId/history', component: EnvironmentDeploymentHistoryComponent },
         ],
       },
       {

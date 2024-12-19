@@ -1,14 +1,14 @@
-import { Component, inject, Input, input, OnInit, Signal } from '@angular/core';
+import { Component, computed, effect, inject, input, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Environment, FetchEnvironmentService } from '@app/core/services/fetch/environment';
 import { ButtonModule } from 'primeng/button';
 import { InputSwitchModule } from 'primeng/inputswitch';
 import { InputTextModule } from 'primeng/inputtext';
-import { EnvironmentControllerService } from '@app/core/modules/openapi/api/environment-controller.service';
-import { EnvironmentDTO } from '@app/core/modules/openapi';
-import { catchError, tap } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { ChipsModule } from 'primeng/chips';
+import { injectMutation, injectQuery, QueryClient } from '@tanstack/angular-query-experimental';
+import { getAllEnvironmentsQueryKey, getEnvironmentByIdOptions, getEnvironmentByIdQueryKey, updateEnvironmentMutation } from '@app/core/modules/openapi2/@tanstack/angular-query-experimental.gen';
+import { MessageService } from 'primeng/api';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-environment-edit-form',
@@ -17,49 +17,58 @@ import { ChipsModule } from 'primeng/chips';
 })
 export class EnvironmentEditFormComponent implements OnInit {
   private formBuilder = inject(FormBuilder);
-  environmentService = inject(EnvironmentControllerService);
+  private queryClient = inject(QueryClient);
+  private router = inject(Router);
 
-  @Input() id!: string; // This is the environment id
-  environment = <EnvironmentDTO>({ // This is the environment object
-    id: 0,
-    name: '',
-    serverUrl: '',
-    description: '',
-    installedApps: [] as string[],
-  });
+  constructor(private messageService: MessageService) {
+    // This effect is needed, because the form is initialized before the data is fetched.
+    // As soon as the data is fetched, the form is updated with the fetched data.
+    effect(() => {
+      if (this.environment()) {
+        this.environmentForm.patchValue(this.environment() || {});
+        console.log(this.environment());
+      }
+    });
+  }
+
+  environmentId = input<number>(0); // This is the environment id
   environmentForm!: FormGroup;
 
-  ngOnInit(): void {
-    if (!this.id) {
-      alert('Environment id is required');
-      window.location.href = 'project/projectId/environment/list'; // Redirect to environment list
-      return;
-    }
-    this.environmentForm = this.formBuilder.group({
-      name: [this.environment.name || '', Validators.required],
-      installedApps: [this.environment.installedApps || []],
-      description: [this.environment.description || ''],
-      serverUrl: [this.environment.serverUrl || ''],
-    });
+  environmentQuery = injectQuery(() => ({
+    ...getEnvironmentByIdOptions({ path: {id: this.environmentId() } }),
+    placeholderData: {
+      id: 0,
+      name: '',
+      serverUrl: '',
+      description: '',
+      installedApps: [] as string[],
+    },
+  }));
 
-    this.environmentService.getEnvironmentById(Number(this.id))
-      .pipe(
-        tap((data: EnvironmentDTO) => {
-          this.environment = data;
-          this.environmentForm.patchValue(this.environment);
-        }),
-        catchError((error) => {
-          alert('Environment not found');
-          window.location.href = 'project/projectId/environment/list'; // Redirect to environment list
-          return [];
-        })
-      ).subscribe();
+  mutateEnvironment = injectMutation(() => ({
+    ...updateEnvironmentMutation(),
+    onSuccess: () => {
+      this.queryClient.invalidateQueries({ queryKey: getEnvironmentByIdQueryKey({ path: { id: this.environmentId() }})});
+      this.queryClient.invalidateQueries({ queryKey: getAllEnvironmentsQueryKey()});
+      this.messageService.add({severity: 'success', summary: 'Success', detail: 'Environment updated successfully'});
+      this.router.navigate(['project', 'projectid', 'environment', 'list']);
+    }
+  }));
+
+  environment = computed(() => this.environmentQuery.data());
+
+  ngOnInit(): void {
+    this.environmentForm = this.formBuilder.group({
+      name: [this.environment()?.name || '', Validators.required],
+      installedApps: [this.environment()?.installedApps || []],
+      description: [this.environment()?.description || ''],
+      serverUrl: [this.environment()?.serverUrl || ''],
+    });
   }
 
   submitForm = () => {
     if (this.environmentForm && this.environmentForm.valid) {
-      this.environmentService.updateEnvironment(this.environment.id, this.environmentForm.value).subscribe();
-      window.location.href = 'project/projectId/environment/list'; // Redirect to environment list
+      this.mutateEnvironment.mutate({ path: {id: this.environmentId()}, body: this.environmentForm.value });
     }
   };
 }
