@@ -19,7 +19,7 @@ import { EnvironmentListComponent } from '@app/pages/environment-list/environmen
   templateUrl: './pull-request-pipeline.component.html',
 })
 export class PullRequestPipelineComponent {
-  pullRequestId: Signal<number> = input.required();
+  pullRequestId = input.required<number>();
   pullRequestStore = inject(PullRequestStoreService);
   currentPullRequest = computed(() => {
     const prs = this.pullRequestStore.pullRequests();
