@@ -1,4 +1,4 @@
-import { Pipe, PipeTransform, SecurityContext } from '@angular/core';
+import { Pipe, PipeTransform, SecurityContext, inject } from '@angular/core';
 import { marked } from 'marked';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
@@ -7,7 +7,9 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
     standalone: true
 })
 export class MarkdownPipe implements PipeTransform {
-    constructor(private sanitizer: DomSanitizer) {
+    private sanitizer = inject(DomSanitizer);
+
+    constructor() {
         // Configure marked renderer
         const renderer = new marked.Renderer();
         renderer.code = (code) => {

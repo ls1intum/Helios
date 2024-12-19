@@ -1,4 +1,4 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { catchError, map, Observable, of, switchMap } from 'rxjs';
 import { AuthService } from './auth.service';
@@ -23,6 +23,9 @@ export interface GithubRepo {
     providedIn: 'root'
 })
 export class GithubService {
+    private http = inject(HttpClient);
+    private authService = inject(AuthService);
+
     private token = signal<string | null>(null);
 
     setToken(token: string) {
@@ -30,11 +33,6 @@ export class GithubService {
     }
 
     private readonly API_BASE = 'https://api.github.com';
-
-    constructor(
-        private http: HttpClient,
-        private authService: AuthService
-    ) { }
 
     validateToken(token: string): Observable<boolean> {
         return this.http.get('https://api.github.com/user', {

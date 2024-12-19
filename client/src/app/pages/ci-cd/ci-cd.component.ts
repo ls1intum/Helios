@@ -1,4 +1,4 @@
-import { Component, computed, Injectable, signal } from '@angular/core';
+import { Component, computed, Injectable, signal, inject } from '@angular/core';
 import { BranchTableComponent } from '@app/components/branches-table/branches-table.component';
 import { PullRequestTableComponent } from '@app/components/pull-request-table/pull-request-table.component';
 import { MenuItem } from 'primeng/api';
@@ -9,6 +9,8 @@ import { TabMenuModule } from 'primeng/tabmenu';
   templateUrl: './ci-cd.component.html',
 })
 export class CiCdComponent {
+  private stateService = inject(CiCdStateService);
+
   tabs = signal<MenuItem[]>([
     { label: 'Pull Requests', id: 'pr' },
     { label: 'Branches', id: 'branches' }
@@ -18,8 +20,6 @@ export class CiCdComponent {
     const activeTabId = this.stateService.getActiveTab()();
     return this.tabs().find(tab => tab.id === activeTabId) || this.tabs()[0];
   });
-
-  constructor(private stateService: CiCdStateService) { }
 
   onTabChange(event: MenuItem) {
     if (event.id) {

@@ -1,4 +1,4 @@
-import { Component, ViewChild } from '@angular/core';
+import { Component, ViewChild, computed, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { ConnectRepoComponent } from '@app/components/connect-repo/connect-repo.component';
 import { RepositoryInfoDTO } from '@app/core/modules/openapi';
@@ -16,16 +16,14 @@ import { TagModule } from 'primeng/tag';
   templateUrl: './project-overview.component.html',
 })
 export class ProjectOverviewComponent {
+  private repositoryService = inject(RepositoryService);
+  private router = inject(Router);
+
   @ViewChild(ConnectRepoComponent)
   repositoryConnection!: ConnectRepoComponent;
 
-  repositories;
-  loading;
-
-  constructor(private repositoryService: RepositoryService, private router: Router) {
-    this.repositories = this.repositoryService.repositories;
-    this.loading = this.repositoryService.loading;
-  }
+  repositories = computed(() => this.repositoryService.repositories());
+  loading = computed(() => this.repositoryService.loading());
 
   showDialog() {
     this.repositoryConnection.show();

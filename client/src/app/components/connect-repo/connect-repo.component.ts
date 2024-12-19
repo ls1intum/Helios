@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { GithubOrg, GithubRepo, GithubService } from '@app/core/services/github.service';
 import { RepositoryService } from '@app/core/services/repository.service';
@@ -22,6 +22,9 @@ import { finalize } from 'rxjs';
   templateUrl: './connect-repo.component.html',
 })
 export class ConnectRepoComponent {
+  private githubService = inject(GithubService);
+  private repositoryService = inject(RepositoryService);
+
   visible = false;
   loading = signal(false);
   currentStep = signal<'token_input' | 'org_selection' | 'repo_selection'>('token_input');
@@ -30,11 +33,6 @@ export class ConnectRepoComponent {
   repositories = signal<GithubRepo[]>([]);
   selectedOrg = signal<GithubOrg | null>(null);
   connectingRepoId = signal<number | null>(null);
-
-  constructor(
-    private githubService: GithubService,
-    private repositoryService: RepositoryService
-  ) { }
 
   show() {
     this.visible = true;
