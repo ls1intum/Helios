@@ -9,6 +9,7 @@
  */
 import { RepositoryInfoDTO } from './repository-info-dto';
 import { BranchInfoDTO } from './branch-info-dto';
+import { EnvironmentDeployment } from './environment-deployment';
 
 
 export interface EnvironmentDTO { 
@@ -25,5 +26,6 @@ export interface EnvironmentDTO {
     installedApps?: Array<string>;
     description?: string;
     serverUrl?: string;
+    latestDeployment?: EnvironmentDeployment;
 }
 

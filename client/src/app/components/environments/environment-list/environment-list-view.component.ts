@@ -15,10 +15,11 @@ import { LockTagComponent } from '../lock-tag/lock-tag.component';
 import { DeploymentStateTagComponent } from '../deployment-state-tag/deployment-state-tag.component';
 import { InputTextModule } from 'primeng/inputtext';
 import { queryClient } from '@app/app.config';
+import { EnvironmentDeploymentInfoComponent } from '../deployment-info/environment-deployment-info.component';
 
 @Component({
   selector: 'app-environment-list-view',
-  imports: [InputTextModule, AccordionModule, CommonModule, LockTagComponent, RouterLink, TagModule, IconsModule,  ButtonModule, DeploymentStateTagComponent],
+  imports: [InputTextModule, AccordionModule, CommonModule, LockTagComponent, RouterLink, TagModule, IconsModule,  ButtonModule, DeploymentStateTagComponent, EnvironmentDeploymentInfoComponent],
   providers: [FetchEnvironmentService],
   templateUrl: './environment-list-view.component.html',
 })

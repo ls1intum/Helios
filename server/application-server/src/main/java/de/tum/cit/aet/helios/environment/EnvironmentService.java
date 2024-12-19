@@ -27,9 +27,11 @@ public class EnvironmentService {
 
     public List<EnvironmentDTO> getAllEnvironments() {
         return environmentRepository.findAll()
-                .stream()
-                .map(EnvironmentDTO::fromEnvironment)
-                .collect(Collectors.toList());
+            .stream()
+            .map(environment -> {
+                return EnvironmentDTO.fromEnvironment(environment, environment.getDeployments().stream().findFirst());
+            })
+            .collect(Collectors.toList());
     }
 
     public List<EnvironmentDTO> getEnvironmentsByRepositoryId(Long repositoryId) {

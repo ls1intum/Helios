@@ -2,6 +2,7 @@ export * from './branch-info-dto';
 export * from './deploy-request';
 export * from './deployment-dto';
 export * from './environment-dto';
+export * from './environment-deployment';
 export * from './pull-request-info-dto';
 export * from './repository-info-dto';
 export * from './user-info-dto';

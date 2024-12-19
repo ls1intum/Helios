@@ -66,6 +66,11 @@
           ><i-tabler name="git-branch" class="text-white mr-1" /> Locked by "{{ lockingBranch.name }}"</a
         >
       }
+
+      @if (environment.latestDeployment; as deployment) {
+        <app-environment-deployment-info [deployment]="deployment" />
+      }
+
       <div class="flex gap-4 items-center justify-between">
         <div class="flex gap-1 mt-2 items-center">
           <a icon [routerLink]="'/environments/' + environment.id + '/history'" class="p-button p-button-text text-gray-500 p-2"

@@ -44,6 +44,7 @@ public class Environment {
     private Integer version;
 
     @OneToMany(fetch = FetchType.EAGER, mappedBy = "environment")
+    @OrderBy("createdAt ASC")
     private List<Deployment> deployments;
 
     private boolean deploying;
