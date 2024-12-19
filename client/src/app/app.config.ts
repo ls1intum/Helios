@@ -1,5 +1,5 @@
-import { provideAppInitializer, ApplicationConfig, inject, provideExperimentalZonelessChangeDetection, withRouterConfig } from '@angular/core';
-import { provideRouter, withComponentInputBinding } from '@angular/router';
+import { provideAppInitializer, ApplicationConfig, inject, provideExperimentalZonelessChangeDetection } from '@angular/core';
+import { provideRouter, withComponentInputBinding, withRouterConfig } from '@angular/router';
 import { provideQueryClient, provideTanStackQuery, QueryClient } from '@tanstack/angular-query-experimental';
 
 import { routes } from './app.routes';

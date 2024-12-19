@@ -5495,6 +5495,11 @@ karma@~6.4.0:
     ua-parser-js "^0.7.30"
     yargs "^16.1.1"
 
+keycloak-js@^26.0.7:
+  version "26.0.7"
+  resolved "https://registry.yarnpkg.com/keycloak-js/-/keycloak-js-26.0.7.tgz#2025256f7c519df654240648052ea06344e2377e"
+  integrity sha512-vKCk1ISMiouYRLjMzi5fKp58RnYxKEBS29BoDgVfYwVW94IXchj9jLqBvIet31VD1v79l3WaWT+WMX7fH8O4wA==
+
 keyv@^4.5.4:
   version "4.5.4"
   resolved "https://registry.yarnpkg.com/keyv/-/keyv-4.5.4.tgz#a879a99e29452f942439f2a405e3af8b31d4de93"
