@@ -90,16 +90,20 @@
                 </div>
               </td>
               <td style="width: 15%">
-                <div *ngIf="rowData.commit_sha" class="flex align-items-center gap-2">
-                  <i-tabler name="git-commit"></i-tabler>
-                  <span>{{ rowData.commit_sha.slice(0, 7) }}</span>
-                  <i-tabler name="external-link" (click)="openLink(rowData.lastCommitLink)"></i-tabler>
-                </div>
+                @if (rowData.commit_sha) {
+                  <div class="flex align-items-center gap-2">
+                    <i-tabler name="git-commit"></i-tabler>
+                    <span>{{ rowData.commit_sha.slice(0, 7) }}</span>
+                    <i-tabler name="external-link" (click)="openLink(rowData.lastCommitLink)"></i-tabler>
+                  </div>
+                }
               </td>
               <td style="width: 15%">
-                <div class="flex align-items-center gap-2" *ngIf="rowData.repository?.nameWithOwner">
-                  {{ rowData.repository.nameWithOwner }}
-                </div>
+                @if (rowData.repository?.nameWithOwner) {
+                  <div class="flex align-items-center gap-2">
+                    {{ rowData.repository.nameWithOwner }}
+                  </div>
+                }
               </td>
             </tr>
           </ng-template>
