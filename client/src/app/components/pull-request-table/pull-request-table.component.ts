@@ -1,6 +1,4 @@
 import { MarkdownPipe } from '@app/core/modules/markdown/markdown.pipe';
-import { PullRequestControllerService, PullRequestInfoDTO } from '@app/core/modules/openapi';
-import { PullRequestStoreService } from '@app/core/services/pull-requests';
 import { AvatarGroupModule } from 'primeng/avatargroup';
 import { TooltipModule } from 'primeng/tooltip';
 import { Component, inject, signal } from '@angular/core';
@@ -13,6 +11,8 @@ import { IconsModule } from 'icons.module';
 import { SkeletonModule } from 'primeng/skeleton';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DateService } from '@app/core/services/date.service';
+import { getAllPullRequestsOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
+import { PullRequestInfoDto } from '@app/core/modules/openapi';
 
 
 @Component({
@@ -32,45 +32,18 @@ import { DateService } from '@app/core/services/date.service';
   `]
 })
 export class PullRequestTableComponent {
-  pullRequestService = inject(PullRequestControllerService);
-  pullRequestStore = inject(PullRequestStoreService);
   dateService = inject(DateService);
-
-  isError = signal(false);
-  isEmpty = signal(false);
-  isLoading = signal(false);
   router = inject(Router);
   route = inject(ActivatedRoute)
 
-  query = injectQuery(() => ({
-    queryKey: ['pullRequests'],
-    queryFn: () => {
-      this.isLoading.set(true);
-      return this.pullRequestService.getAllPullRequests()
-        .pipe(
-          tap(data => {
-            // Filter to only include open pull requests
-            const openPullRequests = data.filter(pr => pr.state === 'OPEN');
-            this.pullRequestStore.setPullRequests(openPullRequests);
-            this.isEmpty.set(openPullRequests.length === 0);
-            this.isLoading.set(false);
-          }),
-          catchError(() => {
-            this.isError.set(true);
-            this.isLoading.set(false);
-            return [];
-          }
-          )
-        ).subscribe()
-    },
-  }));
+  query = injectQuery(() => getAllPullRequestsOptions());
 
-  getStatus(pr: PullRequestInfoDTO): string {
+  getStatus(pr: PullRequestInfoDto): string {
     if (pr.isMerged) return 'Merged';
     return pr.state === 'OPEN' ? 'Open' : 'Closed';
   }
 
-  getStatusSeverity(pr: PullRequestInfoDTO): ('success' | 'danger' | 'info') {
+  getStatusSeverity(pr: PullRequestInfoDto): ('success' | 'danger' | 'info') {
     if (pr.isMerged) return 'info';
     return pr.state === 'OPEN' ? 'success' : 'danger';
   }
@@ -83,11 +56,11 @@ export class PullRequestTableComponent {
     });
   }
 
-  openPRExternal(pr: PullRequestInfoDTO): void {
+  openPRExternal(pr: PullRequestInfoDto): void {
     window.open(pr.htmlUrl, '_blank');
   }
 
-  openPR(pr: PullRequestInfoDTO): void {
+  openPR(pr: PullRequestInfoDto): void {
     this.router.navigate(['pr', pr.number], {
       relativeTo: this.route.parent
     });

@@ -7,14 +7,18 @@ import { provideAnimationsAsync } from '@angular/platform-browser/animations/asy
 import { MessageService } from 'primeng/api';
 import { HTTP_INTERCEPTORS, provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import { provideAnimations } from '@angular/platform-browser/animations';
-import { BASE_PATH } from './core/modules/openapi';
+import { client } from './core/modules/openapi';
 import { environment } from 'environments/environment';
 import { KeycloakService } from './core/services/keycloak/keycloak.service';
 import { BearerInterceptor } from './core/services/keycloak/bearer-interceptor';
 import { DatePipe } from '@angular/common';
 
 
-export const queryClient = new QueryClient({
+client.setConfig({
+  baseUrl: environment.serverUrl,
+})
+
+const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       refetchOnWindowFocus: false, // default true
@@ -35,7 +39,6 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(withInterceptorsFromDi()),
     provideAnimations(),
     provideQueryClient(queryClient),
-    { provide: BASE_PATH, useValue: environment.serverUrl },
     provideAppInitializer(() => {
       const keycloakService = inject(KeycloakService);
       return keycloakService.init();

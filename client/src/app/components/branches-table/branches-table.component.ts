@@ -1,12 +1,9 @@
-import { Component, computed, inject, Injectable, signal, ViewChild } from '@angular/core';
-
-import { Table, TableModule } from 'primeng/table';
+import { Component, computed, inject } from '@angular/core';
+import { TableModule } from 'primeng/table';
 import { AvatarModule } from 'primeng/avatar';
 import { TagModule } from 'primeng/tag';
 import { injectQuery } from '@tanstack/angular-query-experimental';
-import { catchError, tap } from 'rxjs';
 import { IconsModule } from 'icons.module';
-import { BranchControllerService, BranchInfoDTO } from '@app/core/modules/openapi';
 import { SkeletonModule } from 'primeng/skeleton';
 import { InputIconModule } from 'primeng/inputicon';
 import { InputTextModule } from 'primeng/inputtext';
@@ -15,7 +12,11 @@ import { TreeTableModule } from 'primeng/treetable';
 import { ButtonModule } from 'primeng/button';
 import { BranchViewPreferenceService } from '@app/core/services/branches-table/branch-view-preference';
 import { Router } from '@angular/router';
+import { getAllBranchesOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
+import { BranchInfoDto } from '@app/core/modules/openapi';
 
+
+type BranchInfoWithLink = BranchInfoDto & { link: string, lastCommitLink: string };
 
 @Component({
   selector: 'app-branches-table',
@@ -34,57 +35,36 @@ import { Router } from '@angular/router';
 })
 export class BranchTableComponent {
 
-  branchService = inject(BranchControllerService);
-  branchStore = inject(BranchStoreService);
   router = inject(Router);
-
   featureBranchesTree = computed(() => this.convertBranchesToTreeNodes(this.getFeatureBranches()));
-  isError = signal(false);
-  isEmpty = signal(false);
-  isLoading = signal(false);
 
   specialBranches = ['master', 'main', 'dev', 'staging', 'development', 'prod', 'production', 'develop'];
 
   getSpecialBranches() {
-    return this.branchStore.branches().filter(branch =>
+    return this.branches().filter(branch =>
       this.specialBranches.includes(branch.name.toLowerCase())
     );
   }
 
   getFeatureBranches() {
-    const featureBranches = this.branchStore.branches().filter(branch =>
+    return this.branches().filter(branch =>
       !this.specialBranches.includes(branch.name.toLowerCase())
     );
-    return featureBranches
   }
 
+  query = injectQuery(() => getAllBranchesOptions());
 
-  query = injectQuery(() => ({
-    queryKey: ['branches'],
-    queryFn: () => {
-      this.isLoading.set(true);
-      return this.branchService.getAllBranches()
-        .pipe(
-          tap(data => {
-            this.branchStore.setBranches(data);
-            this.isEmpty.set(data.length === 0);
-            this.isLoading.set(false);
-          }),
-          catchError(() => {
-            this.isError.set(true);
-            this.isLoading.set(false);
-            return [];
-          }
-          )
-        ).subscribe()
-    },
-  }));
+  branches = computed<BranchInfoWithLink[]>(() => this.query.data()?.map(branch => ({
+    ...branch,
+    link: `https://github.com/${branch!.repository!.nameWithOwner}/tree/${branch.name}`,
+    lastCommitLink: `https://github.com/${branch!.repository!.nameWithOwner}/commit/${branch.commit_sha}`
+  })) || []);
 
   openLink(url: string): void {
     window.open(url, '_blank');
   }
 
-  openBranch(branch: BranchInfoDTO): void {
+  openBranch(branch: BranchInfoDto): void {
     this.router.navigate(['repo', branch.repository?.id, 'branch', branch.name]);
   }
 
@@ -145,26 +125,6 @@ export class BranchTableComponent {
 
 }
 
-@Injectable({
-  providedIn: 'root'
-})
-export class BranchStoreService {
-  private branchesState = signal<BranchInfoWithLink[]>([]);
-  get branches() {
-    return this.branchesState.asReadonly();
-  }
-  setBranches(branches: BranchInfoDTO[]) {
-    branches = branches.map(branch => ({
-      ...branch,
-      link: `https://github.com/${branch!.repository!.nameWithOwner}/tree/${branch.name}`,
-      lastCommitLink: `https://github.com/${branch!.repository!.nameWithOwner}/commit/${branch.commit_sha}`
-    }));
-    this.branchesState.set(branches as BranchInfoWithLink[]);
-  }
-}
-
-export type BranchInfoWithLink = BranchInfoDTO & { link: string, lastCommitLink: string };
-
 interface TreeNode {
   data: {
     name: string;
@@ -176,4 +136,3 @@ interface TreeNode {
   };
   children?: TreeNode[];
 }
-

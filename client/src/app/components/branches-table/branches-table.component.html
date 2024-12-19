@@ -1,4 +1,4 @@
-@if (isLoading()) {
+@if (query.isPending()) {
   <p-table [value]="[1, 2, 3, 4, 5]" styleClass="p-datatable-lg">
     <ng-template pTemplate="header">
       <tr>
@@ -16,10 +16,10 @@
     </ng-template>
   </p-table>
 } @else {
-  @if (isError()) {
+  @if (query.isError()) {
     <p>Error occurred while fetching pull requests.</p>
   } @else {
-    @if (isEmpty()) {
+    @if (query.data()?.length === 0) {
       <p>No pull requests found.</p>
     } @else {
       <!-- Special Branches Table -->

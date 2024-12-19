@@ -1,8 +1,6 @@
-import { Component, signal, computed, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
-import { injectQuery } from '@tanstack/angular-query-experimental';
-import { firstValueFrom } from 'rxjs';
+import {Component, signal, computed, input, numberAttribute, effect} from '@angular/core';
+import {injectMutation, injectQuery, injectQueryClient} from '@tanstack/angular-query-experimental';
 
 import { TableModule } from 'primeng/table';
 import { DropdownModule } from 'primeng/dropdown';
@@ -13,11 +11,10 @@ import { InputTextModule } from 'primeng/inputtext';
 import { IconsModule } from 'icons.module';
 import { DragDropModule } from 'primeng/dragdrop';
 
-import { GitRepoSettingsControllerService } from '@app/core/modules/openapi';
-import { WorkflowControllerService } from '@app/core/modules/openapi/api/workflow-controller.service';
-import { WorkflowDTO } from '@app/core/modules/openapi/model/workflow-dto';
-import { WorkflowGroupDTO } from '@app/core/modules/openapi/model/workflow-group-dto';
-import { WorkflowMembershipDTO } from '@app/core/modules/openapi/model/workflow-membership-dto';
+import { createWorkflowGroupMutation, deleteWorkflowGroupMutation, getGroupsWithWorkflowsOptions, getGroupsWithWorkflowsQueryKey, getWorkflowsByRepositoryIdOptions, updateWorkflowGroupsMutation, updateWorkflowLabelMutation } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
+import { WorkflowDto, WorkflowGroupDto, WorkflowMembershipDto } from '@app/core/modules/openapi';
+import { WorkflowDTOSchema } from '@app/core/modules/openapi/schemas.gen';
+
 
 @Component({
     selector: 'app-project-settings',
@@ -36,20 +33,15 @@ import { WorkflowMembershipDTO } from '@app/core/modules/openapi/model/workflow-
     templateUrl: './project-settings.component.html',
 })
 export class ProjectSettingsComponent {
-    private route = inject(ActivatedRoute);
-    private settingsService = inject(GitRepoSettingsControllerService);
-    private workflowService = inject(WorkflowControllerService);
+    queryClient = injectQueryClient();
 
     // Signals for repository ID, workflows, and workflow groups
-    repositoryId = signal<number | null>(null);
-    workflows = signal<WorkflowDTO[]>([]);
-    workflowGroups = signal<WorkflowGroupDTO[]>([]);
+    projectId = input.required({ transform: numberAttribute });
 
-    // For UI state
-    isLoading = signal(false);
-    isError = signal(false);
-    errorMessage = signal('');
-
+    workflowGroups = signal<WorkflowGroupDto[]>([]);
+    repositoryId = computed(() => this.projectId());
+    isPending = computed(() => this.fetchWorkflowsQuery.isPending() || this.groupsQuery.isPending());
+    isError = computed(() => this.fetchWorkflowsQuery.isError() || this.groupsQuery.isError());
     // For creating a new group
     showAddGroupDialog = false;
     newGroupName = '';
@@ -63,18 +55,26 @@ export class ProjectSettingsComponent {
     // This is recalculated from drag&drop logic in updateGroups()
     workflowGroupsMap = signal<Record<number, string>>({});
 
+    constructor() {
+      effect(() => {
+        const workflowGroups = this.groupsQuery.data() || [];
+        this.workflowGroups.set(workflowGroups);
+        // Clear previous map
+        const newMap: Record<number, string> = {};
 
-    ngOnInit(): void {
-        this.route.parent?.paramMap.subscribe((params) => {
-            //TODO Change this
-            const repoId = params.get('projectId');
-            if (repoId) {
-                this.repositoryId.set(+repoId);
-                this.fetchWorkflowsQuery.refetch();
-                this.fetchGroupsQuery.refetch();
-            }
+        // Loop each group
+        workflowGroups.forEach((group) => {
+            const memberships = group.memberships ?? [];
+            memberships.forEach((mem: WorkflowMembershipDto) => {
+                newMap[mem.workflowId] = group.name; // map workflowId -> groupName
+            });
         });
+
+        // Set the signal
+        this.workflowGroupsMap.set(newMap);
+      });
     }
+
 
     // Computed property to show 'Grouped Workflows' in the UI
     readonly localGroupedWorkflowsArray = computed(() => {
@@ -86,7 +86,7 @@ export class ProjectSettingsComponent {
         const localMap = this.workflowGroupsMap();
 
 
-        const record: Record<string, WorkflowDTO[]> = {};
+        const record: Record<string, WorkflowDto[]> = {};
         serverGroups.forEach(serverGroup => {
             // ensures empty groups appear in UI
             record[serverGroup.name] = [];
@@ -118,11 +118,11 @@ export class ProjectSettingsComponent {
     readonly groupedWorkflowsArray = computed(() => {
         // Start with an array from the actual `workflowGroups` signal
         const allGroups = this.workflowGroups();
-        const record: { groupName: string; workflows: WorkflowDTO[] }[] = [];
+        const record: { groupName: string; workflows: WorkflowDto[] }[] = [];
 
         allGroups.forEach(group => {
             const groupName = group.name;
-            const workflowsForGroup: WorkflowDTO[] = [];
+            const workflowsForGroup: WorkflowDto[] = [];
 
             (group.memberships || []).forEach(mem => {
                 const wf = this.workflows().find(w => w.id === mem.workflowId);
@@ -137,106 +137,64 @@ export class ProjectSettingsComponent {
     });
 
 
-    // Angular Query to fetch workflows by repository ID
     fetchWorkflowsQuery = injectQuery(() => ({
-        queryKey: ['workflows', this.repositoryId],
-        queryFn: async () => {
-            if (!this.repositoryId()) return [];
-            this.isLoading.set(true);
-            this.isError.set(false);
-
-            try {
-                // Fetch all workflows for this repository
-                const data = await firstValueFrom(
-                    this.workflowService.getWorkflowsByRepositoryId(this.repositoryId()!)
-                );
-
-                // Sort the workflows
-                // Show "Active" workflows first, then by state alphabetically, withing the same state by ID
-                data.sort((a, b) => {
-                    // Example: "Active" workflows first, then by state alphabetically, then by ID
-                    if (a.state === WorkflowDTO.StateEnum.Active && b.state !== WorkflowDTO.StateEnum.Active) return -1;
-                    if (a.state !== WorkflowDTO.StateEnum.Active && b.state === WorkflowDTO.StateEnum.Active) return 1;
-                    if (a.state !== b.state) return a.state.localeCompare(b.state);
-                    return a.id - b.id;
-                });
-
-                this.workflows.set(data);
-                this.isLoading.set(false);
-                return data;
-            } catch (error: any) {
-                this.isLoading.set(false);
-                this.isError.set(true);
-                this.errorMessage.set(error.message || 'Error fetching workflows');
-                throw error;
-            }
-        },
-        enabled: () => !!this.repositoryId(),
-        refetchOnWindowFocus: false,
+      ...getWorkflowsByRepositoryIdOptions({path: { repositoryId: this.repositoryId() }}),
+      enabled: () => !!this.repositoryId(),
+      refetchOnWindowFocus: false,
     }));
 
-    // Angular Query to fetch workflow groups (with memberships)
-    fetchGroupsQuery = injectQuery(() => ({
-        queryKey: ['workflowGroups', this.repositoryId],
-        queryFn: async () => {
-            if (!this.repositoryId()) return [];
-            this.isLoading.set(true);
-            this.isError.set(false);
+    workflows = computed(() => {
+      // Sort the workflows
+      // Show "Active" workflows first, then by state alphabetically, withing the same state by ID
+      const workflows = this.fetchWorkflowsQuery.data() || [];
+      workflows.sort((a, b) => {
+        // Example: "Active" workflows first, then by state alphabetically, then by ID
+        if (a.state === 'ACTIVE' && b.state !== 'ACTIVE') return -1;
+        if (a.state !== 'ACTIVE' && b.state === 'ACTIVE') return 1;
+        if (a.state !== b.state) return a.state.localeCompare(b.state);
+        return a.id - b.id;
+      });
+      return workflows;
+    });
 
-            try {
-                const groupsData = await firstValueFrom(
-                    this.settingsService.getGroupsWithWorkflows(this.repositoryId()!)
-                );
-                this.workflowGroups.set(groupsData);
-                this.isLoading.set(false);
-                // Recalculate workflow->group mapping
-                this.handleDataMerge(groupsData, this.workflows());
-                return groupsData;
-            } catch (error: any) {
-                this.isLoading.set(false);
-                this.isError.set(true);
-                this.errorMessage.set(error.message || 'Error fetching groups');
-                throw error;
-            }
-        },
-        enabled: () => !!this.repositoryId(),
-        refetchOnWindowFocus: false,
+    groupsQuery = injectQuery(() => ({
+      ...getGroupsWithWorkflowsOptions({path: { repositoryId: this.repositoryId() }}),
+      enabled: () => !!this.repositoryId(),
     }));
 
-    // Merges workflow membership data with the local workflow map
-    private handleDataMerge(groups: WorkflowGroupDTO[], workflows: WorkflowDTO[]) {
-        // Clear previous map
-        const newMap: Record<number, string> = {};
-
-        // Loop each group
-        groups.forEach((group) => {
-            const memberships = group.memberships ?? [];
-            memberships.forEach((mem: WorkflowMembershipDTO) => {
-                newMap[mem.workflowId] = group.name; // map workflowId -> groupName
-            });
-        });
-
-        // Set the signal
-        this.workflowGroupsMap.set(newMap);
-    }
+    workflowLabelMutation = injectMutation(() => ({
+      ...updateWorkflowLabelMutation(),
+      onSuccess: () => {
+        this.queryClient.invalidateQueries({ queryKey: getWorkflowsByRepositoryIdOptions({path: { repositoryId: this.repositoryId() }})});
+      },
+    }));
+    deleteWorkflowGroupMutation = injectMutation(() => ({
+      ...deleteWorkflowGroupMutation(),
+      onSuccess: () => {
+        this.queryClient.invalidateQueries({ queryKey: getGroupsWithWorkflowsQueryKey({ path: { repositoryId: this.repositoryId() } })});
+      },
+  }));
+    createWorkflowGroupMutation = injectMutation(() => ({
+      ...createWorkflowGroupMutation(),
+      onSuccess: () => {
+        this.showAddGroupDialog = false;
+        this.newGroupName = '';
+        this.queryClient.invalidateQueries({ queryKey: getGroupsWithWorkflowsQueryKey({ path: { repositoryId: this.repositoryId() } })});
+      },
+    }));
+    updateWorkflowGroupMutation = injectMutation(() => ({
+      ...updateWorkflowGroupsMutation(),
+      onSuccess: () => {
+        this.queryClient.invalidateQueries({ queryKey: getGroupsWithWorkflowsQueryKey({ path: { repositoryId: this.repositoryId() } })});
+      }
+    }));
 
     getWorkflowLabelOptions() {
-        return Object.values(WorkflowDTO.LabelEnum);
+        return Object.values(WorkflowDTOSchema.properties.label.enum);
     }
 
-    onChangeLabel(workflow: WorkflowDTO) {
-        this.isLoading.set(true);
-
-        this.workflowService.updateWorkflowLabel(workflow.id, JSON.stringify(workflow.label)).subscribe({
-            next: () => {
-                this.isLoading.set(false);
-                console.log('Label updated!')
-            },
-            error: (err) => {
-                this.isLoading.set(false);
-                console.error('Error:', err)
-            },
-        });
+    onChangeLabel(workflow: WorkflowDto) {
+        this.workflowLabelMutation.mutate({ path: { workflowId: workflow.id }, body: workflow.label });
     }
 
 
@@ -251,40 +209,26 @@ export class ProjectSettingsComponent {
     }
 
     // Delete a group if it's empty
-    deleteGroup(group: { groupName: string; workflows: WorkflowDTO[] }) {
-        this.isLoading.set(true);
-
+    deleteGroup(group: { groupName: string; workflows: WorkflowDto[] }) {
         // Find the actual WorkflowGroupDTO by name (or store ID in your record)
         const foundGroup = this.workflowGroups().find(g => g.name === group.groupName);
         if (!foundGroup || !(foundGroup.id > 0)) {
             console.error('No matching group found or invalid ID.');
-            this.isLoading.set(false);
             return;
         }
 
         // Ensure the group is empty
         if (foundGroup.memberships && foundGroup.memberships.length > 0) {
             console.warn('Group is not empty, cannot delete.');
-            this.isLoading.set(false);
             return;
         }
 
-        this.settingsService.deleteWorkflowGroup(this.repositoryId()!, foundGroup.id).subscribe({
-            next: () => {
-                console.log('Group deleted:', foundGroup.name);
-                this.fetchGroupsQuery.refetch();
-                this.isLoading.set(false);
-            },
-            error: (err) => {
-                console.error('Error deleting group', err);
-                this.isLoading.set(false);
-            },
-        });
+        this.deleteWorkflowGroupMutation.mutate({ path: { repositoryId: this.repositoryId(), groupId: foundGroup.id } });
     }
 
 
     // Handle group assignment via dropdown
-    onChangeGroup(workflow: WorkflowDTO, newGroup: string) {
+    onChangeGroup(workflow: WorkflowDto, newGroup: string) {
         if (newGroup === 'Ungrouped') {
             const { [workflow.id]: _, ...rest } = this.workflowGroupsMap();
             // new object => rerender
@@ -301,24 +245,14 @@ export class ProjectSettingsComponent {
     addNewGroup() {
         if (!this.repositoryId() || !this.newGroupName.trim()) return;
 
-        const newGroup: WorkflowGroupDTO = {
+        const newGroup: WorkflowGroupDto = {
             id: 0, // Doesn't matter, will be calculated on the server
             name: this.newGroupName.trim(),
             orderIndex: this.workflowGroups().length, // Doesn't matter, will be calculated on the server
             memberships: [], // Empty group
         };
 
-        this.settingsService.createWorkflowGroup(this.repositoryId()!, newGroup).subscribe({
-            next: (created) => {
-                console.log('Created group:', created);
-                this.showAddGroupDialog = false;
-                this.newGroupName = '';
-                this.fetchGroupsQuery.refetch();
-            },
-            error: (err) => {
-                console.error('Error creating group', err);
-            },
-        });
+        this.createWorkflowGroupMutation.mutate({ path: { repositoryId: this.repositoryId() }, body: newGroup });
     }
 
     // Reset the dialog state
@@ -330,11 +264,10 @@ export class ProjectSettingsComponent {
     // Update the groups on the server
     updateGroups() {
         if (!this.repositoryId()) return;
-        this.isLoading.set(true);
 
         const finalGroups = this.workflowGroups().map((group, idx) => {
             // Rebuild the memberships array
-            const membershipArr: WorkflowMembershipDTO[] = [];
+            const membershipArr: WorkflowMembershipDto[] = [];
 
             for (const [wfIdStr, groupName] of Object.entries(this.workflowGroupsMap())) {
                 if (groupName === group.name) {
@@ -354,17 +287,7 @@ export class ProjectSettingsComponent {
         });
 
         // Save to server
-        this.settingsService.updateWorkflowGroups(this.repositoryId()!, finalGroups).subscribe({
-            next: () => {
-                this.isLoading.set(false);
-                console.log('Groups updated successfully.');
-                this.fetchGroupsQuery.refetch();
-            },
-            error: (err) => {
-                this.isLoading.set(false);
-                console.error('Error updating groups', err);
-            },
-        });
+        this.updateWorkflowGroupMutation.mutate({ path: { repositoryId: this.repositoryId() }, body: finalGroups });
     }
 
     dragStart(fromIndex: number) {
@@ -393,5 +316,4 @@ export class ProjectSettingsComponent {
         // Reset drag state
         this.dragIndex = null;
     }
-
 }

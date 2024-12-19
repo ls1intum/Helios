@@ -1,5 +1,4 @@
-import { Component, inject } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { Component, input, numberAttribute } from '@angular/core';
 import { FetchEnvironmentService } from '@app/core/services/fetch/environment';
 import { EnvironmentEditFormComponent } from '@app/components/forms/environment-edit-form/environment-edit-form.component';
 
@@ -11,13 +10,5 @@ import { EnvironmentEditFormComponent } from '@app/components/forms/environment-
   templateUrl: './environment-edit.component.html',
 })
 export class EnvironmentEditComponent {
-  route = inject(ActivatedRoute);
-  id!: string
-
-  constructor() {
-    const routeId = this.route.snapshot.paramMap.get('id');
-    if (routeId) {
-      this.id = routeId;
-    }
-  }
+  id = input.required({ transform: numberAttribute });
 }

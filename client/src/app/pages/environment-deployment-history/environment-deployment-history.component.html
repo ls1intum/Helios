@@ -1,6 +1,6 @@
 <div class="p-4">
   <!-- Loading State -->
-  @if (isLoading()) {
+  @if (deploymentsQuery.isPending()) {
     <p-table [value]="[1, 2, 3, 4, 5]" styleClass="p-datatable-lg">
       <ng-template pTemplate="header">
         <tr>
@@ -17,21 +17,15 @@
         </tr>
       </ng-template>
     </p-table>
-  }
-
-  <!-- Error State -->
-  @if (!isLoading() && isError()) {
+  } @else if (deploymentsQuery.isError()) {
+    <!-- Error State -->
     <div class="text-red-500">Error occurred while fetching deployments.</div>
-  }
-
-  <!-- Empty State -->
-  @if (isEmpty()) {
+  } @else if (deploymentsQuery.data.length === 0) {
+    <!-- Empty State -->
     <div class="text-gray-500">No deployments found.</div>
-  }
-
-  <!-- Data Table -->
-  @if (!isLoading() && !isError() && !isEmpty()) {
-    <p-table [value]="deployments()" styleClass="p-datatable-sm">
+  } @else {
+    <!-- Data Table -->
+    <p-table [value]="deployments() || []" styleClass="p-datatable-sm">
       <ng-template pTemplate="header">
         <tr>
           <th>Name</th>

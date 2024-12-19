@@ -1,7 +1,7 @@
 import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { delay, Observable, of, tap } from 'rxjs';
-import { RepositoryInfoDTO } from '../modules/openapi';
+import { RepositoryInfoDto } from '../modules/openapi';
 
 @Injectable({
     providedIn: 'root'
@@ -11,7 +11,7 @@ export class RepositoryService {
 
     private readonly API_URL = 'your-api-url/repositories';
 
-    private _repositories = signal<RepositoryInfoDTO[]>([]);
+    private _repositories = signal<RepositoryInfoDto[]>([]);
     public repositories = this._repositories.asReadonly();
 
     private _loading = signal<boolean>(false);
@@ -35,7 +35,7 @@ export class RepositoryService {
     //         })
     //     );
     // }
-    private fetchRepositories(): Observable<RepositoryInfoDTO[]> {
+    private fetchRepositories(): Observable<RepositoryInfoDto[]> {
         this._loading.set(true);
 
         // Mock API call with delay
@@ -50,7 +50,7 @@ export class RepositoryService {
             })
         );
     }
-    connectRepository(repoData: Partial<RepositoryInfoDTO>): Observable<RepositoryInfoDTO> {
+    connectRepository(repoData: Partial<RepositoryInfoDto>): Observable<RepositoryInfoDto> {
         this._loading.set(true);
 
         // return this.http.post<RepositoryInfoDTO>(`${this.API_URL}/connect`, {
@@ -67,7 +67,7 @@ export class RepositoryService {
         // );
 
         // Create mock repository data
-        const newRepo: RepositoryInfoDTO = {
+        const newRepo: RepositoryInfoDto = {
             id: Number(repoData.id),
             name: repoData.name || '',
             description: repoData.description,
@@ -92,7 +92,7 @@ export class RepositoryService {
         );
     }
 
-    private saveToStorage(repositories: RepositoryInfoDTO[]) {
+    private saveToStorage(repositories: RepositoryInfoDto[]) {
         localStorage.setItem('connected-repositories', JSON.stringify(repositories));
     }
     private loadFromStorage() {
@@ -118,12 +118,12 @@ export class RepositoryService {
         );
     }
 
-    refreshRepositories(): Observable<RepositoryInfoDTO[]> {
+    refreshRepositories(): Observable<RepositoryInfoDto[]> {
         return this.fetchRepositories();
     }
 }
 
-const mockRepositories: RepositoryInfoDTO[] = [{
+const mockRepositories: RepositoryInfoDto[] = [{
     "id": 69562331,
     "name": "Artemis",
     "nameWithOwner": "ls1intum/Artemis",

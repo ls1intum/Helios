@@ -1,4 +1,4 @@
-@if (isLoading()) {
+@if (query.isPending()) {
   <p-table [value]="[1, 2, 3, 4, 5]">
     <ng-template pTemplate="header">
       <tr>
@@ -22,13 +22,13 @@
     </ng-template>
   </p-table>
 } @else {
-  @if (isError()) {
+  @if (query.isError()) {
     <p>Error occurred while fetching pull requests.</p>
   } @else {
-    @if (isEmpty()) {
+    @if (query.data()?.length === 0) {
       <p>No pull requests found.</p>
     } @else {
-      <p-table [rowHover]="true" [value]="pullRequestStore.pullRequests()" [paginator]="true" [rows]="20">
+      <p-table [rowHover]="true" [value]="query.data() || []" [paginator]="true" [rows]="20">
         <ng-template pTemplate="header">
           <tr>
             <th>Title</th>
