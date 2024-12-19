@@ -1,18 +1,9 @@
 
 import { Routes } from '@angular/router';
-import { MainLayoutComponent } from './pages/main-layout/main-layout.component';
-import { CiCdComponent } from './pages/ci-cd/ci-cd.component';
-import { EnvironmentEditComponent } from './pages/environment-edit/environment-edit.component';
-import { EnvironmentListComponent } from './pages/environment-list/environment-list.component';
-import { PageNotFoundComponent } from './pages/page-not-found/page-not-found.component';
-import { ReleaseComponent } from './pages/release/release.component';
-import {
-  EnvironmentDeploymentHistoryComponent
-} from '@app/pages/environment-deployment-history/environment-deployment-history.component';
-import { ProjectOverviewComponent } from './pages/project-overview/project-overview.component';
-import { PullRequestDetailsComponent } from './pages/pull-request-details/pull-request-details.component';
-import { BranchDetailsComponent } from './pages/branch-details/branch-details.component';
-import {ProjectSettingsComponent} from '@app/pages/project-settings/project-settings.component';
+
+
+
+
 
 
 export const routes: Routes = [
@@ -23,23 +14,23 @@ export const routes: Routes = [
   },
   {
     path: 'projects',
-    component: ProjectOverviewComponent
+    loadComponent: () => import('./pages/project-overview/project-overview.component').then(m => m.ProjectOverviewComponent)
   },
   {
     path: 'repo/:repositoryId',
-    component: MainLayoutComponent,
+    loadComponent: () => import('./pages/main-layout/main-layout.component').then(m => m.MainLayoutComponent),
     children: [
-      { path: '', component: CiCdComponent },
+      { path: '', loadComponent: () => import('./pages/ci-cd/ci-cd.component').then(m => m.CiCdComponent) },
       {
         path: 'pr',
         children: [
-          { path: ':pullRequestNumber', component: PullRequestDetailsComponent },
+          { path: ':pullRequestNumber', loadComponent: () => import('./pages/pull-request-details/pull-request-details.component').then(m => m.PullRequestDetailsComponent) },
         ]
       },
       {
         path: 'branch',
         children: [
-          { path: ':branchName', component: BranchDetailsComponent },
+          { path: ':branchName', loadComponent: () => import('./pages/branch-details/branch-details.component').then(m => m.BranchDetailsComponent) },
         ]
       },
       {
@@ -51,27 +42,27 @@ export const routes: Routes = [
         path: 'environment',
         children: [
           { path: '', redirectTo: 'list', pathMatch: 'full' },
-          { path: 'list', component: EnvironmentListComponent },
-          { path: ':id/edit', component: EnvironmentEditComponent },
-          { path: ':id/history', component: EnvironmentDeploymentHistoryComponent },
+          { path: 'list', loadComponent: () => import('./pages/environment-list/environment-list.component').then(m => m.EnvironmentListComponent) },
+          { path: ':id/edit', loadComponent: () => import('./pages/environment-edit/environment-edit.component').then(m => m.EnvironmentEditComponent) },
+          { path: ':id/history', loadComponent: () => import('./pages/environment-deployment-history/environment-deployment-history.component').then(m => m.EnvironmentDeploymentHistoryComponent) },
         ],
       },
       {
         path: 'release',
-        component: ReleaseComponent
+        loadComponent: () => import('./pages/release/release.component').then(m => m.ReleaseComponent)
       },
       {
         path: 'ci-cd',
-        component: CiCdComponent
+        loadComponent: () => import('./pages/ci-cd/ci-cd.component').then(m => m.CiCdComponent)
       },
       {
         path: 'settings',
-        component: ProjectSettingsComponent
+        loadComponent: () => import('./pages/project-settings/project-settings.component').then(m => m.ProjectSettingsComponent)
       },
     ]
   },
   {
     path: '**',
-    component: PageNotFoundComponent,
+    loadComponent: () => import('./pages/page-not-found/page-not-found.component').then(m => m.PageNotFoundComponent),
   },
 ];
