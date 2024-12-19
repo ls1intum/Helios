@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { IconsModule } from 'icons.module';
 import { ButtonModule } from 'primeng/button';
@@ -16,10 +16,9 @@ import {KeycloakService} from '@app/core/services/keycloak/keycloak.service';
   templateUrl: './main-layout.component.html',
 })
 export class MainLayoutComponent implements OnInit {
+  private keycloakService = inject(KeycloakService);
+
   items!: { label: string; icon: string; path: string }[];
-
-
-  constructor(private keycloakService: KeycloakService) {}
 
   logout() {
     this.keycloakService.logout();
