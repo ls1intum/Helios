@@ -11,6 +11,7 @@ import { BASE_PATH } from './core/modules/openapi';
 import { environment } from 'environments/environment';
 import { KeycloakService } from './core/services/keycloak/keycloak.service';
 import { BearerInterceptor } from './core/services/keycloak/bearer-interceptor';
+import { DatePipe } from '@angular/common';
 
 
 export const queryClient = new QueryClient({
@@ -25,6 +26,7 @@ export const queryClient = new QueryClient({
 
 export const appConfig: ApplicationConfig = {
   providers: [
+    DatePipe,
     provideExperimentalZonelessChangeDetection(),
     provideRouter(routes, withComponentInputBinding(), withRouterConfig({ paramsInheritanceStrategy: 'always' })),
     provideAnimationsAsync(),

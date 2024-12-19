@@ -60,7 +60,7 @@
             </div>
           </td>
           <td>
-            <span>{{ formatDate(deployment.updatedAt) }}</span>
+            <span>{{ dateService.formatDate(deployment.updatedAt, 'd MMMM y, h:mm a') }}</span>
           </td>
         </tr>
       </ng-template>
