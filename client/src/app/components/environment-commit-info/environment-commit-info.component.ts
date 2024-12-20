@@ -1,27 +1,23 @@
 import {Component, computed, inject, input} from '@angular/core';
 import {IconsModule} from 'icons.module';
 import {TagModule} from 'primeng/tag';
-import {DeploymentStoreService} from '@app/pages/environment-list/environment-list.component';
-import {DeploymentDTO} from '@app/core/modules/openapi';
-import {DatePipe, NgSwitch, NgSwitchCase, NgSwitchDefault} from '@angular/common';
+import { DateService } from '@app/core/services/date.service';
+import { injectQuery } from '@tanstack/angular-query-experimental';
+import { DeploymentDto } from '@app/core/modules/openapi2';
+import { getLatestDeploymentByEnvironmentIdOptions } from '@app/core/modules/openapi2/@tanstack/angular-query-experimental.gen';
 
 @Component({
   selector: 'app-environment-commit-info',
-  imports: [TagModule, IconsModule, NgSwitchCase, NgSwitch, NgSwitchDefault],
-  providers: [DatePipe],
+  imports: [TagModule, IconsModule],
   templateUrl: './environment-commit-info.component.html',
-  styleUrl: './environment-commit-info.component.css',
 })
 export class EnvironmentCommitInfoComponent {
-  private datePipe = inject(DatePipe);
-  private deploymentStore = inject(DeploymentStoreService);
+  private dateService = inject(DateService)
 
   environmentId = input.required<number>();
+  deploymentQuery = injectQuery(() => getLatestDeploymentByEnvironmentIdOptions({ path: { environmentId: this.environmentId() }}));
 
-  latestDeployment = computed<DeploymentDTO | null>(() => {
-    const id = this.environmentId();
-    return this.deploymentStore.getLatestDeploymentWithEnvironmentId(id);
-  });
+  latestDeployment = computed<DeploymentDto | undefined>(() => this.deploymentQuery.data());
 
   // TODO: discuss with team if we should display the commit information in the UI
 
@@ -31,8 +27,5 @@ export class EnvironmentCommitInfoComponent {
   commitMessage = computed(() => 'Placeholder commit text');
   branch = computed(() => this.latestDeployment()?.ref);
   committerName = computed(() => 'Unknown');
-  commitDate = computed(() => {
-    const date = this.latestDeployment()?.createdAt;
-    return date ? this.datePipe.transform(date, 'd MMMM y, h:mm a') : null; // Format date
-  });
+  commitDate = computed(() => this.dateService.formatDate(this.latestDeployment()?.createdAt, 'd. MMMM y, h:mm a'));
 }

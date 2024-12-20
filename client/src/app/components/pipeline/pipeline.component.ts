@@ -1,5 +1,4 @@
-import { CommonModule } from '@angular/common';
-import { Component, inject, input, InputSignal, Signal, signal } from '@angular/core';
+import { Component, inject, input, signal } from '@angular/core';
 import { injectQuery } from '@tanstack/angular-query-experimental';
 import { TableModule } from 'primeng/table';
 import { tap } from 'rxjs';
@@ -11,7 +10,7 @@ import { TooltipModule } from 'primeng/tooltip';
 
 @Component({
   selector: 'app-pipeline',
-  imports: [CommonModule, TableModule, ProgressSpinnerModule, PanelModule, IconsModule, TooltipModule],
+  imports: [TableModule, ProgressSpinnerModule, PanelModule, IconsModule, TooltipModule],
   providers: [PipelineService],
   templateUrl: './pipeline.component.html',
 })
@@ -21,8 +20,8 @@ export class PipelineComponent {
   pipeline = signal<Pipeline | null>(null);
   isLoading = signal(true);
 
-  branchName: InputSignal<string> = input('');
-  pullRequestId: InputSignal<number|undefined> = input();
+  branchName = input<string>('');
+  pullRequestId = input<number>();
 
   query = injectQuery(() => ({
     queryKey: ['pipeline', this.branchName(), this.pullRequestId()],

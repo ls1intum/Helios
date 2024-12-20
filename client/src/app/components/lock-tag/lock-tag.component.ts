@@ -5,7 +5,6 @@ import { TagModule } from 'primeng/tag';
   selector: 'app-lock-tag',
   imports: [TagModule],
   templateUrl: './lock-tag.component.html',
-  styleUrl: './lock-tag.component.css',
 })
 export class LockTagComponent {
   isLocked = input.required<boolean>();

@@ -1,13 +1,12 @@
-import {Injectable} from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import {HttpEvent, HttpHandler, HttpHeaders, HttpInterceptor, HttpRequest} from '@angular/common/http';
 import {Observable} from 'rxjs';
 import {KeycloakService} from '../keycloak/keycloak.service';
 
 @Injectable()
 export class BearerInterceptor implements HttpInterceptor {
-    constructor(
-        private keycloakService: KeycloakService
-    ) {}
+    private keycloakService = inject(KeycloakService);
+
 
     intercept(request: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
         const token = this.keycloakService.keycloak.token;
