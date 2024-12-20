@@ -7,14 +7,12 @@ import { InputTextModule } from 'primeng/inputtext';
 import { EnvironmentControllerService } from '@app/core/modules/openapi/api/environment-controller.service';
 import { EnvironmentDTO } from '@app/core/modules/openapi';
 import { catchError, tap } from 'rxjs';
-import { CommonModule } from '@angular/common';
 import { ChipsModule } from 'primeng/chips';
 
 @Component({
   selector: 'app-environment-edit-form',
-  imports: [CommonModule, ReactiveFormsModule, InputTextModule, InputSwitchModule, ButtonModule, ChipsModule],
+  imports: [ReactiveFormsModule, InputTextModule, InputSwitchModule, ButtonModule, ChipsModule],
   templateUrl: './environment-edit-form.component.html',
-  styleUrls: ['./environment-edit-form.component.css'],
 })
 export class EnvironmentEditFormComponent implements OnInit {
   private formBuilder = inject(FormBuilder);
@@ -28,7 +26,7 @@ export class EnvironmentEditFormComponent implements OnInit {
     description: '',
     installedApps: [] as string[],
   });
-  environmentForm!: FormGroup; 
+  environmentForm!: FormGroup;
 
   ngOnInit(): void {
     if (!this.id) {
@@ -49,7 +47,7 @@ export class EnvironmentEditFormComponent implements OnInit {
           this.environment = data;
           this.environmentForm.patchValue(this.environment);
         }),
-        catchError((error) => {          
+        catchError((error) => {
           alert('Environment not found');
           window.location.href = 'project/projectId/environment/list'; // Redirect to environment list
           return [];

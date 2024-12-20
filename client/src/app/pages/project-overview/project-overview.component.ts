@@ -1,5 +1,4 @@
-import { CommonModule } from '@angular/common';
-import { Component, ViewChild } from '@angular/core';
+import { Component, computed, inject, viewChild } from '@angular/core';
 import { Router } from '@angular/router';
 import { ConnectRepoComponent } from '@app/components/connect-repo/connect-repo.component';
 import { RepositoryInfoDTO } from '@app/core/modules/openapi';
@@ -13,24 +12,20 @@ import { TagModule } from 'primeng/tag';
 
 @Component({
   selector: 'app-project-overview',
-  imports: [DataViewModule, ButtonModule, TagModule, CommonModule, CardModule, ChipModule, IconsModule, ConnectRepoComponent],
+  imports: [DataViewModule, ButtonModule, TagModule, CardModule, ChipModule, IconsModule, ConnectRepoComponent],
   templateUrl: './project-overview.component.html',
-  styleUrl: './project-overview.component.css'
 })
 export class ProjectOverviewComponent {
-  @ViewChild(ConnectRepoComponent)
-  repositoryConnection!: ConnectRepoComponent;
+  private repositoryService = inject(RepositoryService);
+  private router = inject(Router);
 
-  repositories;
-  loading;
+  readonly repositoryConnection = viewChild.required(ConnectRepoComponent);
 
-  constructor(private repositoryService: RepositoryService, private router: Router) {
-    this.repositories = this.repositoryService.repositories;
-    this.loading = this.repositoryService.loading;
-  }
+  repositories = computed(() => this.repositoryService.repositories());
+  loading = computed(() => this.repositoryService.loading());
 
   showDialog() {
-    this.repositoryConnection.show();
+    this.repositoryConnection().show();
   }
 
   refreshRepositories() {

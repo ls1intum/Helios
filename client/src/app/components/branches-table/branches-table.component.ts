@@ -13,7 +13,6 @@ import { InputTextModule } from 'primeng/inputtext';
 import { IconFieldModule } from 'primeng/iconfield';
 import { TreeTableModule } from 'primeng/treetable';
 import { ButtonModule } from 'primeng/button';
-import { CommonModule } from '@angular/common';
 import { BranchViewPreferenceService } from '@app/core/services/branches-table/branch-view-preference';
 
 
@@ -27,7 +26,6 @@ import { BranchViewPreferenceService } from '@app/core/services/branches-table/b
     SkeletonModule,
     InputTextModule,
     TreeTableModule,
-    CommonModule,
     ButtonModule,
     IconFieldModule,
     InputIconModule],

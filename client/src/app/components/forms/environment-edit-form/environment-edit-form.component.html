@@ -1,28 +1,31 @@
-<div *ngIf="environmentForm; else notFound">
-  <form [formGroup]="environmentForm" (ngSubmit)="submitForm()" class="flex flex-col gap-4 w-1/3">
-    <div class="flex flex-col gap-2">
-      <label for="name">Environment Name</label>
-      <input pInputText id="name" type="text" formControlName="name" placeholder="Your Environment" readonly />
-    </div>
+@if (environmentForm) {
+  <div>
+    <form [formGroup]="environmentForm" (ngSubmit)="submitForm()" class="flex flex-col gap-4 w-1/3">
+      <div class="flex flex-col gap-2">
+        <label for="name">Environment Name</label>
+        <input pInputText id="name" type="text" formControlName="name" placeholder="Your Environment" readonly />
+      </div>
 
-    <div class="flex flex-col gap-2">
-      <label for="server-url">Server URL</label>
-      <input pInputText id="server-url" type="text" formControlName="serverUrl" />
-    </div>
+      <div class="flex flex-col gap-2">
+        <label for="server-url">Server URL</label>
+        <input pInputText id="server-url" type="text" formControlName="serverUrl" />
+      </div>
 
-    <div class="flex flex-col gap-2">
-      <label for="description">Description</label>
-      <input pInputText id="description" type="text" formControlName="description" />
-    </div>
+      <div class="flex flex-col gap-2">
+        <label for="description">Description</label>
+        <input pInputText id="description" type="text" formControlName="description" />
+      </div>
 
-    <div class="flex flex-col gap-2">
-      <label for="installed-apps">Installed Apps</label>
-      <p-chips id="installed-apps" formControlName="installedApps"></p-chips>
-    </div>
+      <div class="flex flex-col gap-2">
+        <label for="installed-apps">Installed Apps</label>
+        <p-chips id="installed-apps" formControlName="installedApps"></p-chips>
+      </div>
 
-    <p-button type="submit">Update</p-button>
-  </form>
-</div>
-<ng-template #notFound>
-  <p>Environment not found.</p>
-</ng-template>
+      <p-button type="submit">Update</p-button>
+    </form>
+  </div>
+} @else {
+  <ng-template #notFound>
+    <p>Environment not found.</p>
+  </ng-template>
+}

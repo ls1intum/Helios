@@ -1,6 +1,5 @@
 import {Component, inject, Injectable, signal} from '@angular/core';
 import {AccordionModule} from 'primeng/accordion';
-import {CommonModule} from '@angular/common';
 import {LockTagComponent} from '@app/components/lock-tag/lock-tag.component';
 import {TagModule} from 'primeng/tag';
 import {IconsModule} from 'icons.module';
@@ -19,7 +18,7 @@ import {DeploymentDTO} from '@app/core/modules/openapi/model/deployment-dto';
 
 @Component({
   selector: 'app-environment-list',
-  imports: [AccordionModule, CommonModule, LockTagComponent, RouterLink, TagModule, IconsModule, EnvironmentCommitInfoComponent, ButtonModule],
+  imports: [AccordionModule, LockTagComponent, RouterLink, TagModule, IconsModule, EnvironmentCommitInfoComponent, ButtonModule],
   providers: [FetchEnvironmentService],
   templateUrl: './environment-list.component.html',
 })
