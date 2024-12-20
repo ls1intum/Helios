@@ -1,4 +1,4 @@
-import { Component, ViewChild, computed, inject } from '@angular/core';
+import { Component, computed, inject, viewChild } from '@angular/core';
 import { Router } from '@angular/router';
 import { ConnectRepoComponent } from '@app/components/connect-repo/connect-repo.component';
 import { RepositoryInfoDTO } from '@app/core/modules/openapi';
@@ -19,14 +19,13 @@ export class ProjectOverviewComponent {
   private repositoryService = inject(RepositoryService);
   private router = inject(Router);
 
-  @ViewChild(ConnectRepoComponent)
-  repositoryConnection!: ConnectRepoComponent;
+  readonly repositoryConnection = viewChild.required(ConnectRepoComponent);
 
   repositories = computed(() => this.repositoryService.repositories());
   loading = computed(() => this.repositoryService.loading());
 
   showDialog() {
-    this.repositoryConnection.show();
+    this.repositoryConnection().show();
   }
 
   refreshRepositories() {
