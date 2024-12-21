@@ -8,6 +8,7 @@
  * Do not edit the class manually.
  */
 import { RepositoryInfoDTO } from './repository-info-dto';
+import { EnvironmentDTO } from './environment-dto';
 
 
 export interface DeploymentDTO { 
@@ -19,7 +20,7 @@ export interface DeploymentDTO {
     sha: string;
     ref: string;
     task: string;
-    environment: string;
+    environment: EnvironmentDTO;
     createdAt?: string;
     updatedAt?: string;
 }

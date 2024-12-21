@@ -39,7 +39,7 @@ export class ProjectOverviewComponent {
 
   navigateToProject(repository: RepositoryInfoDTO) {
     console.log('Navigating to project', repository);
-    this.router.navigate(['/project', repository.id.toString(), 'ci-cd']);
+    this.router.navigate(['repo', repository.id.toString(), 'ci-cd']);
   }
 
 }

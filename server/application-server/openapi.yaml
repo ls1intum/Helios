@@ -104,6 +104,25 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/EnvironmentDTO"
+  /api/environments/{id}/unlock:
+    put:
+      tags:
+      - environment-controller
+      operationId: unlockEnvironment
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EnvironmentDTO"
   /api/settings/{repositoryId}/groups/create:
     post:
       tags:
@@ -129,6 +148,20 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/WorkflowGroupDTO"
+  /api/deployments/deploy:
+    post:
+      tags:
+      - deployment-controller
+      operationId: deployToEnvironment
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeployRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
   /status/health:
     get:
       tags:
@@ -317,6 +350,31 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PullRequestInfoDTO"
+  /api/pullrequests/repository/{repoId}/pr/{number}:
+    get:
+      tags:
+      - pull-request-controller
+      operationId: getPullRequestByRepositoryIdAndNumber
+      parameters:
+      - name: repoId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: number
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PullRequestInfoDTO"
   /api/pullrequests/repository/{id}:
     get:
       tags:
@@ -460,6 +518,30 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/BranchInfoDTO"
+  /api/branches/repository/{repoId}/name/{name}:
+    get:
+      tags:
+      - branch-controller
+      operationId: getBranchByRepositoryIdAndName
+      parameters:
+      - name: repoId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: name
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BranchInfoDTO"
   /api/settings/{repositoryId}/groups/{groupId}:
     delete:
       tags:
@@ -527,6 +609,8 @@ components:
           format: int64
         name:
           type: string
+        locked:
+          type: boolean
         url:
           type: string
         htmlUrl:
@@ -545,6 +629,48 @@ components:
           type: string
         serverUrl:
           type: string
+        latestDeployment:
+          $ref: "#/components/schemas/EnvironmentDeployment"
+    EnvironmentDeployment:
+      required:
+      - id
+      - ref
+      - sha
+      - statusesUrl
+      - task
+      - url
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        url:
+          type: string
+        state:
+          type: string
+          enum:
+          - PENDING
+          - SUCCESS
+          - ERROR
+          - FAILURE
+          - IN_PROGRESS
+          - QUEUED
+          - INACTIVE
+          - UNKNOWN
+        statusesUrl:
+          type: string
+        sha:
+          type: string
+        ref:
+          type: string
+        task:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
     RepositoryInfoDTO:
       required:
       - htmlUrl
@@ -563,6 +689,17 @@ components:
         description:
           type: string
         htmlUrl:
+          type: string
+    DeployRequest:
+      required:
+      - branchName
+      - environmentId
+      type: object
+      properties:
+        environmentId:
+          type: integer
+          format: int64
+        branchName:
           type: string
     WorkflowDTO:
       required:
@@ -665,6 +802,8 @@ components:
       - additions
       - commentsCount
       - deletions
+      - headRefName
+      - headRefRepoNameWithOwner
       - headSha
       - htmlUrl
       - id
@@ -710,6 +849,10 @@ components:
           type: integer
           format: int32
         headSha:
+          type: string
+        headRefName:
+          type: string
+        headRefRepoNameWithOwner:
           type: string
         mergedAt:
           type: string
@@ -783,7 +926,7 @@ components:
         task:
           type: string
         environment:
-          type: string
+          $ref: "#/components/schemas/EnvironmentDTO"
         createdAt:
           type: string
           format: date-time

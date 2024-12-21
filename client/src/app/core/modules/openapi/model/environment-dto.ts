@@ -8,12 +8,14 @@
  * Do not edit the class manually.
  */
 import { RepositoryInfoDTO } from './repository-info-dto';
+import { EnvironmentDeployment } from './environment-deployment';
 
 
 export interface EnvironmentDTO { 
     repository?: RepositoryInfoDTO;
     id: number;
     name: string;
+    locked?: boolean;
     url?: string;
     htmlUrl?: string;
     createdAt?: string;
@@ -21,5 +23,6 @@ export interface EnvironmentDTO {
     installedApps?: Array<string>;
     description?: string;
     serverUrl?: string;
+    latestDeployment?: EnvironmentDeployment;
 }
 

@@ -1,0 +1,25 @@
+<div class="flex-col items-start mb-2">
+  <span class="text-xs uppercase tracking-tighter font-bold text-gray-500">Latest deployment</span>
+  <div class="flex gap-4 items-center mb-4 mt-2">
+    <span class="font-semibold">{{ commitMessage() }}</span>
+    <div class="flex-grow"></div>
+    <div class="flex gap-1 items-center">
+      <i-tabler name="calendar" class="text-gray-600" />
+      <span>Deployed {{ commitDate() }}</span>
+    </div>
+    <div class="flex gap-1 items-center">
+      <i-tabler name="user" class="text-gray-600" />
+      <span>{{ committerName() }}</span>
+    </div>
+  </div>
+  <div class="flex gap-4 items-center">
+    <div class="flex gap-1 items-center">
+      <i-tabler name="git-commit" class="text-gray-600" />
+      <span>{{ commitHash() }}</span>
+    </div>
+    <div class="flex gap-1 items-center">
+      <i-tabler name="git-branch" class="text-gray-600" />
+      <span>{{ branch() }}</span>
+    </div>
+  </div>
+</div>

@@ -37,4 +37,13 @@ public class BranchService {
                 .map(BranchInfoDTO::fromBranch)
                 .collect(Collectors.toList());
     }
+
+    public Optional<BranchInfoDTO> getBranchInfo(Long repositoryId, String name) {
+        return branchRepository.findByRepositoryIdAndName(repositoryId, name)
+                .map(BranchInfoDTO::fromBranch);
+    }
+
+    public Optional<Branch> getBranchByRepositoryIdAndName(Long repositoryId, String name) {
+        return branchRepository.findByRepositoryIdAndName(repositoryId, name);
+    }
 }

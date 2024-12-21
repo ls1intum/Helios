@@ -2,46 +2,43 @@ import { CommonModule } from '@angular/common';
 import { Component, inject, input, InputSignal, Signal, signal } from '@angular/core';
 import { injectQuery } from '@tanstack/angular-query-experimental';
 import { TableModule } from 'primeng/table';
-import { tap } from 'rxjs';
+import { lastValueFrom, tap } from 'rxjs';
 import { Pipeline, PipelineService } from '@app/core/services/pipeline';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { PanelModule } from 'primeng/panel';
 import { IconsModule } from 'icons.module';
 import { TooltipModule } from 'primeng/tooltip';
+import { SkeletonModule } from 'primeng/skeleton';
+
+export type PipelineSelector = { repositoryId: number } & ({
+  branchName: string;
+} | {
+  pullRequestId: number;
+});
 
 @Component({
   selector: 'app-pipeline',
-  imports: [CommonModule, TableModule, ProgressSpinnerModule, PanelModule, IconsModule, TooltipModule],
+  imports: [CommonModule, TableModule, ProgressSpinnerModule, PanelModule, IconsModule, TooltipModule, SkeletonModule],
   providers: [PipelineService],
   templateUrl: './pipeline.component.html',
 })
 export class PipelineComponent {
   pipelineService = inject(PipelineService);
 
-  pipeline = signal<Pipeline | null>(null);
-  isLoading = signal(true);
-
-  branchName: InputSignal<string> = input('');
-  pullRequestId: InputSignal<number|undefined> = input();
+  selector = input<PipelineSelector | null>();
 
   query = injectQuery(() => ({
-    queryKey: ['pipeline', this.branchName(), this.pullRequestId()],
-    enabled: !!this.branchName() || !!this.pullRequestId(),
+    queryKey: ['pipeline', this.selector()],
+    enabled: !!this.selector(),
     queryFn: () => {
-      const branchName = this.branchName();
+      const selector = this.selector()!;
 
-      const pipeline = branchName ?
-        this.pipelineService.getBranchPipeline(branchName) :
-        this.pipelineService.getPullRequestPipeline(this.pullRequestId() || 0);
+      const pipeline = 'branchName' in selector ?
+        this.pipelineService.getBranchPipeline(selector.branchName) :
+        this.pipelineService.getPullRequestPipeline(selector.pullRequestId);
 
-      return pipeline
-        .pipe(
-          tap(pipeline => {
-            this.pipeline.set(pipeline);
-            this.isLoading.set(false);
-          })
-        ).subscribe()
-      },
+      return lastValueFrom(pipeline);
+    },
     refetchInterval: 2000, // Refetch every 2 seconds
   }));
 }

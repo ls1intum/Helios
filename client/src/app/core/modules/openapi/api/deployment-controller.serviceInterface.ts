@@ -11,6 +11,7 @@ import { HttpHeaders }                                       from '@angular/comm
 
 import { Observable }                                        from 'rxjs';
 
+import { DeployRequest } from '../model/models';
 import { DeploymentDTO } from '../model/models';
 
 
@@ -21,6 +22,13 @@ import { Configuration }                                     from '../configurat
 export interface DeploymentControllerServiceInterface {
     defaultHeaders: HttpHeaders;
     configuration: Configuration;
+
+    /**
+     * 
+     * 
+     * @param deployRequest 
+     */
+    deployToEnvironment(deployRequest: DeployRequest, extraHttpRequestParams?: any): Observable<{}>;
 
     /**
      * 

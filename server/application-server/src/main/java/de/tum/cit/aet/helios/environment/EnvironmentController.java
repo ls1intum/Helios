@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Optional;
 
+
 @RestController
 @RequestMapping("/api/environments")
 public class EnvironmentController {
@@ -33,6 +34,12 @@ public class EnvironmentController {
     public ResponseEntity<List<EnvironmentDTO>> getEnvironmentsByRepositoryId(@PathVariable Long repositoryId) {
         List<EnvironmentDTO> environments = environmentService.getEnvironmentsByRepositoryId(repositoryId);
         return ResponseEntity.ok(environments);
+    }
+
+    @PutMapping("/{id}/unlock")
+    public ResponseEntity<EnvironmentDTO> unlockEnvironment(@PathVariable Long id) {
+        EnvironmentDTO environment = environmentService.unlockEnvironment(id);
+        return ResponseEntity.ok(environment);
     }
 
     @PutMapping("/{id}")

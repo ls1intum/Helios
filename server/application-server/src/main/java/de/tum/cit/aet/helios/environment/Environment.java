@@ -5,7 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-
+import de.tum.cit.aet.helios.deployment.Deployment;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
 
 import java.time.OffsetDateTime;
@@ -18,7 +18,6 @@ import java.util.List;
 @NoArgsConstructor
 @ToString
 public class Environment {
-
     @Id
     private Long id;
 
@@ -40,7 +39,15 @@ public class Environment {
     @JoinColumn(name = "repository_id", nullable = false)
     private GitRepository repository;
 
-    // Helios specific fields
+    @Version
+    private Integer version;
+
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "environment")
+    @OrderBy("createdAt ASC")
+    private List<Deployment> deployments;
+
+    private boolean locked;
+
     @ElementCollection
     @CollectionTable(name = "installed_apps", joinColumns = @JoinColumn(name = "environment_id"))
     @Column(name = "app_name")

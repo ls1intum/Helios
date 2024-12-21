@@ -31,4 +31,9 @@ public class PullRequestService {
                 .map(PullRequestInfoDTO::fromPullRequest)
                 .collect(Collectors.toList());
     }
+
+    public Optional<PullRequestInfoDTO> getPullRequestByRepositoryIdAndNumber(Long repoId, Integer number) {
+        return pullRequestRepository.findByRepositoryIdAndNumber(repoId, number)
+                .map(PullRequestInfoDTO::fromPullRequest);
+    }
 }
