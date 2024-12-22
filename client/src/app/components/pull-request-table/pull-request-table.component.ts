@@ -12,7 +12,7 @@ import { catchError, tap } from 'rxjs';
 import { IconsModule } from 'icons.module';
 import { SkeletonModule } from 'primeng/skeleton';
 import { ActivatedRoute, Router } from '@angular/router';
-
+import { DateService } from '@app/core/services/date.service';
 
 
 @Component({
@@ -34,6 +34,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 export class PullRequestTableComponent {
   pullRequestService = inject(PullRequestControllerService);
   pullRequestStore = inject(PullRequestStoreService);
+  dateService = inject(DateService);
 
   isError = signal(false);
   isEmpty = signal(false);

@@ -1,5 +1,5 @@
 import { Component, computed, inject, input, signal, Signal } from '@angular/core';
-import {CommonModule} from '@angular/common';
+
 import {PipelineComponent, PipelineSelector} from '@app/components/pipeline/pipeline.component';
 import {TagModule} from 'primeng/tag';
 import {IconsModule} from 'icons.module';
@@ -13,7 +13,7 @@ import { SkeletonModule } from 'primeng/skeleton';
 
 @Component({
   selector: 'app-branch-details',
-  imports: [DeploymentSelectionComponent, InputTextModule, CommonModule, TagModule, IconsModule, ButtonModule, PipelineComponent, SkeletonModule],
+  imports: [DeploymentSelectionComponent, InputTextModule, TagModule, IconsModule, ButtonModule, PipelineComponent, SkeletonModule],
   templateUrl: './branch-details.component.html',
 })
 export class BranchDetailsComponent {

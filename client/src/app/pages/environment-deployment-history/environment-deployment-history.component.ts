@@ -4,10 +4,10 @@ import {ActivatedRoute} from '@angular/router';
 import {injectQuery} from '@tanstack/angular-query-experimental';
 import {PrimeTemplate} from 'primeng/api';
 import {SkeletonModule} from 'primeng/skeleton';
-import {DatePipe, NgIf} from '@angular/common';
 import {TableModule} from 'primeng/table';
 import {IconsModule} from 'icons.module';
 import {catchError, tap} from 'rxjs';
+import { DateService } from '@app/core/services/date.service';
 
 @Component({
   selector: 'app-environment-deployment-history',
@@ -15,18 +15,15 @@ import {catchError, tap} from 'rxjs';
     IconsModule,
     PrimeTemplate,
     SkeletonModule,
-    NgIf,
     TableModule
-  ],
-  providers: [DatePipe],
+],
   templateUrl: './environment-deployment-history.component.html',
-  styleUrl: './environment-deployment-history.component.css'
 })
 export class EnvironmentDeploymentHistoryComponent {
-  private datePipe = inject(DatePipe);
   private route = inject(ActivatedRoute);
   private deploymentService = inject(DeploymentControllerService);
   private deploymentHistoryStore = inject(EnvironmentDeploymentHistoryStoreService);
+  dateService = inject(DateService);
 
   environmentId = signal<number | null>(null);
 
@@ -75,10 +72,6 @@ export class EnvironmentDeploymentHistoryComponent {
     }
   }));
 
-
-  formatDate(date: string): string | null {
-    return date ? this.datePipe.transform(date, 'd MMMM y, h:mm a') : null;
-  }
 
 }
 

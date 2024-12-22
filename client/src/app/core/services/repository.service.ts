@@ -1,4 +1,4 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { delay, Observable, of, tap } from 'rxjs';
 import { RepositoryInfoDTO } from '../modules/openapi';
@@ -7,6 +7,8 @@ import { RepositoryInfoDTO } from '../modules/openapi';
     providedIn: 'root'
 })
 export class RepositoryService {
+    private http = inject(HttpClient);
+
     private readonly API_URL = 'your-api-url/repositories';
 
     private _repositories = signal<RepositoryInfoDTO[]>([]);
@@ -15,7 +17,7 @@ export class RepositoryService {
     private _loading = signal<boolean>(false);
     public loading = this._loading.asReadonly();
 
-    constructor(private http: HttpClient) {
+    constructor() {
         this.loadFromStorage();
         // this.fetchRepositories().subscribe();
     }

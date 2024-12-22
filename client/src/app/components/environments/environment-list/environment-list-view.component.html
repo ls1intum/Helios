@@ -67,7 +67,9 @@
         </div>
 
         <div class="flex gap-1">
-          <p-tag *ngFor="let installedApp of environment.installedApps"> {{ installedApp }}</p-tag>
+          @for (installedApp of environment.installedApps; track installedApp) {
+            <p-tag> {{ installedApp }}</p-tag>
+          }
         </div>
       </div>
     </p-accordionTab>
