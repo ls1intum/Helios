@@ -87,7 +87,7 @@ export class PullRequestTableComponent {
   }
 
   openPR(pr: PullRequestInfoDTO): void {
-    this.router.navigate(['pipeline', 'pr', pr.id], {
+    this.router.navigate(['pr', pr.number], {
       relativeTo: this.route.parent
     });
   }
