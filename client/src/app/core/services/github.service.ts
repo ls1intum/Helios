@@ -1,6 +1,6 @@
 import { Injectable, signal } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { catchError, map, Observable, of, switchMap } from 'rxjs';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
+import { catchError, EMPTY, expand, map, Observable, of, reduce, switchMap } from 'rxjs';
 import { AuthService } from './auth.service';
 
 export interface GithubOrg {
@@ -30,7 +30,7 @@ export class GithubService {
     }
 
     private readonly API_BASE = 'https://api.github.com';
-
+    private readonly PER_PAGE = 100;
     constructor(
         private http: HttpClient,
         private authService: AuthService
@@ -61,12 +61,43 @@ export class GithubService {
 
     getOrgRepositories(orgName: string): Observable<GithubRepo[]> {
         return this.authService.getGithubToken().pipe(
-            switchMap(() =>
-                this.http.get<GithubRepo[]>(
-                    `${this.API_BASE}/orgs/${orgName}/repos`,
-                    { headers: this.getHeaders() }
-                )
-            )
+            switchMap(() => this.getPaginatedResults<GithubRepo>(
+                `${this.API_BASE}/orgs/${orgName}/repos`
+            ))
+        );
+    }
+
+    private getPaginatedResults<T>(url: string): Observable<T[]> {
+        const getPage = (pageUrl: string, page: number): Observable<{
+            data: T[],
+            nextPage: number | null
+        }> => {
+            const params = new HttpParams()
+                .set('per_page', this.PER_PAGE)
+                .set('page', page);
+
+            return this.http.get<T[]>(pageUrl, {
+                headers: this.getHeaders(),
+                params,
+                observe: 'response'
+            }).pipe(
+                map(response => {
+                    const linkHeader = response.headers.get('link');
+                    const hasNext = linkHeader?.includes('rel="next"') ?? false;
+                    return {
+                        data: response.body as T[],
+                        nextPage: hasNext ? page + 1 : null
+                    };
+                })
+            );
+        };
+
+        return getPage(url, 1).pipe(
+            expand(response =>
+                response.nextPage ? getPage(url, response.nextPage) : EMPTY
+            ),
+            map(response => response.data),
+            reduce((acc: T[], current: T[]) => [...acc, ...current], [])
         );
     }
 

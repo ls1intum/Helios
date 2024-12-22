@@ -11,7 +11,8 @@ import { injectQuery } from '@tanstack/angular-query-experimental';
 import { catchError, tap } from 'rxjs';
 import { IconsModule } from 'icons.module';
 import { SkeletonModule } from 'primeng/skeleton';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
+
 
 
 @Component({
@@ -38,6 +39,7 @@ export class PullRequestTableComponent {
   isEmpty = signal(false);
   isLoading = signal(false);
   router = inject(Router);
+  route = inject(ActivatedRoute)
 
   query = injectQuery(() => ({
     queryKey: ['pullRequests'],
@@ -85,7 +87,9 @@ export class PullRequestTableComponent {
   }
 
   openPR(pr: PullRequestInfoDTO): void {
-    this.router.navigate(['repo', pr.repository?.id, 'pr', pr.number]);
+    this.router.navigate(['pr', pr.number], {
+      relativeTo: this.route.parent
+    });
   }
 }
 

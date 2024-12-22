@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { GithubOrg, GithubRepo, GithubService } from '@app/core/services/github.service';
 import { RepositoryService } from '@app/core/services/repository.service';
@@ -32,14 +32,11 @@ export class ConnectRepoComponent {
   selectedOrg = signal<GithubOrg | null>(null);
   connectingRepoId = signal<number | null>(null);
 
-  constructor(
-    private githubService: GithubService,
-    private repositoryService: RepositoryService
-  ) { }
+  githubService = inject(GithubService);
+  repositoryService = inject(RepositoryService);
 
   show() {
     this.visible = true;
-    this.loadOrganizations();
   }
 
   hide() {

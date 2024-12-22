@@ -9,7 +9,7 @@ import { EnvironmentDTO } from '@app/core/modules/openapi';
 import { catchError, tap } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { ChipsModule } from 'primeng/chips';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 
 @Component({
   selector: 'app-environment-edit-form',
@@ -20,7 +20,8 @@ import { Router } from '@angular/router';
 export class EnvironmentEditFormComponent implements OnInit {
   private formBuilder = inject(FormBuilder);
   environmentService = inject(EnvironmentControllerService);
-  router = inject(Router);
+  private router = inject(Router);
+  private route = inject(ActivatedRoute);
 
   @Input() id!: string; // This is the environment id
   environment = <EnvironmentDTO>({ // This is the environment object
@@ -35,7 +36,7 @@ export class EnvironmentEditFormComponent implements OnInit {
   ngOnInit(): void {
     if (!this.id) {
       alert('Environment id is required');
-      window.location.href = 'project/projectId/environment/list'; // Redirect to environment list
+      this.router.navigate(['../list'], { relativeTo: this.route.parent });
       return;
     }
     this.environmentForm = this.formBuilder.group({
@@ -60,7 +61,7 @@ export class EnvironmentEditFormComponent implements OnInit {
   }
 
   redirectToEnvironmentList = () => {
-    this.router.navigate(['repo', this.environment.repository?.id, 'environment', 'list']);
+    this.router.navigate(['../list'], { relativeTo: this.route.parent });
   }
 
   submitForm = () => {
