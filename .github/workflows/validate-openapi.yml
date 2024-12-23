@@ -124,7 +124,7 @@ jobs:
 
       - name: Install The OpenAPI to TypeScript codegen
         if: env.CHANGE_DETECTED == 'true'
-        run: yarn global add @hey-api/openapi-ts typescript
+        run: yarn add -D @hey-api/openapi-ts typescript
 
       - name: Generate client code
         if: env.CHANGE_DETECTED == 'true'
