@@ -121,8 +121,8 @@ jobs:
           cache: 'yarn'
 
       - name: Enable Corepack
-        working-directory: ./client
         if: env.CHANGE_DETECTED == 'true'
+        working-directory: ./client
         run: corepack enable
 
       - name: Install Dependencies
