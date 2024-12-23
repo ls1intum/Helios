@@ -128,8 +128,9 @@ jobs:
 
       - name: Generate client code
         if: env.CHANGE_DETECTED == 'true'
-        working-directory: ./client
-        run: yarn generate:openapi
+        run: |
+          cd ./client
+          yarn generate:openapi
 
       - name: Check for client code differences
         if: env.CHANGE_DETECTED == 'true'
