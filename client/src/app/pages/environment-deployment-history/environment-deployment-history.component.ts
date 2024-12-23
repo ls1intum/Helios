@@ -22,9 +22,6 @@ export class EnvironmentDeploymentHistoryComponent {
 
   environmentId = input.required({ transform: numberAttribute });
 
-  // TODO: Fix the query to fetch deployments by environment ID
-  // Switching from one history page to another causes this query not called for the new environment ID
-  // Thus we see the previous environment's deployment history
   deploymentsQuery = injectQuery(() => getDeploymentsByEnvironmentIdOptions({ path: { environmentId: this.environmentId() } }));
   deployments = computed(() => this.deploymentsQuery.data());
 }

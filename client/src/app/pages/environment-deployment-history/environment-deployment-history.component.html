@@ -20,7 +20,7 @@
   } @else if (deploymentsQuery.isError()) {
     <!-- Error State -->
     <div class="text-red-500">Error occurred while fetching deployments.</div>
-  } @else if (deploymentsQuery.data.length === 0) {
+  } @else if (deploymentsQuery.data()?.length === 0) {
     <!-- Empty State -->
     <div class="text-gray-500">No deployments found.</div>
   } @else {

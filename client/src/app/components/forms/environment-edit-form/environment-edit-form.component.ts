@@ -5,7 +5,7 @@ import { InputSwitchModule } from 'primeng/inputswitch';
 import { InputTextModule } from 'primeng/inputtext';
 import { ChipsModule } from 'primeng/chips';
 import { ActivatedRoute, Router } from '@angular/router';
-import { injectMutation, injectQuery, QueryClient } from '@tanstack/angular-query-experimental';
+import { injectMutation, injectQuery, injectQueryClient } from '@tanstack/angular-query-experimental';
 import { getAllEnvironmentsQueryKey, getEnvironmentByIdOptions, getEnvironmentByIdQueryKey, updateEnvironmentMutation } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { MessageService } from 'primeng/api';
 
@@ -16,7 +16,7 @@ import { MessageService } from 'primeng/api';
 })
 export class EnvironmentEditFormComponent implements OnInit {
   private formBuilder = inject(FormBuilder);
-  private queryClient = inject(QueryClient);
+  private queryClient = injectQueryClient();
   private router = inject(Router);
   private route = inject(ActivatedRoute);
 
@@ -26,7 +26,6 @@ export class EnvironmentEditFormComponent implements OnInit {
     effect(() => {
       if (this.environment()) {
         this.environmentForm.patchValue(this.environment() || {});
-        console.log(this.environment());
       }
     });
   }
