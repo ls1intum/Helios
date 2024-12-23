@@ -122,15 +122,10 @@ jobs:
         if: env.CHANGE_DETECTED == 'true'
         run: corepack enable
 
-      - name: Install The OpenAPI to TypeScript codegen Globally
+      - name: Install Dependencies
         if: env.CHANGE_DETECTED == 'true'
-        run: yarn global add @hey-api/openapi-ts typescript
-
-      - name: Configure Environment for Global Modules
-        if: env.CHANGE_DETECTED == 'true'
-        run: |
-          echo "NODE_PATH=$(yarn global dir)/node_modules" >> $GITHUB_ENV
-          echo "PATH=$(yarn global dir)/bin:$PATH" >> $GITHUB_ENV
+        working-directory: ./client
+        run: yarn install --frozen-lockfile
 
       - name: Generate client code
         if: env.CHANGE_DETECTED == 'true'
