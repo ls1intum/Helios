@@ -5,7 +5,6 @@ import {TagModule} from 'primeng/tag';
 import {IconsModule} from 'icons.module';
 import {ButtonModule} from 'primeng/button';
 import {RouterLink} from '@angular/router';
-import {FetchEnvironmentService} from '@app/core/services/fetch/environment';
 import {injectMutation, injectQuery, injectQueryClient} from '@tanstack/angular-query-experimental';
 import { LockTagComponent } from '../lock-tag/lock-tag.component';
 import { DeploymentStateTagComponent } from '../deployment-state-tag/deployment-state-tag.component';
@@ -17,7 +16,6 @@ import { EnvironmentDto } from '@app/core/modules/openapi';
 @Component({
   selector: 'app-environment-list-view',
   imports: [InputTextModule, AccordionModule, LockTagComponent, RouterLink, TagModule, IconsModule, ButtonModule, DeploymentStateTagComponent, EnvironmentDeploymentInfoComponent],
-  providers: [FetchEnvironmentService],
   templateUrl: './environment-list-view.component.html',
 })
 export class EnvironmentListViewComponent {
@@ -41,6 +39,11 @@ export class EnvironmentListViewComponent {
       this.queryClient.invalidateQueries({ queryKey: getAllEnvironmentsQueryKey() });
     }
   }));
+
+  onUnlockEnvironment(event: Event, environment: EnvironmentDto) {
+    this.unlockEnvironment.mutate({ path: { id: environment.id }});
+    event.stopPropagation();
+  }
 
   deployEnvironment(environment: EnvironmentDto) {
     this.onDeploy.emit(environment);

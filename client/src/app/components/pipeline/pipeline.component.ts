@@ -18,20 +18,33 @@ export type PipelineSelector = { repositoryId: number } & ({
 @Component({
   selector: 'app-pipeline',
   imports: [TableModule, ProgressSpinnerModule, PanelModule, IconsModule, TooltipModule, SkeletonModule],
+  providers: [PipelineService],
   templateUrl: './pipeline.component.html',
 })
 export class PipelineComponent {
   pipelineService = inject(PipelineService);
 
-  branchName = input<string>('');
-  pullRequestId = input<number>();
+  selector = input<PipelineSelector | null>();
+
+  branchName = computed(() => {
+    const selector = this.selector();
+    if (!selector) return null;
+    return 'branchName' in selector ? selector.branchName : null
+  });
+  pullRequestId = computed(() => {
+    const selector = this.selector();
+    if (!selector) return null;
+    return 'pullRequestId' in selector ? selector.pullRequestId : null
+  });
 
   branchQuery = injectQuery(() => ({
-    ...getLatestWorkflowRunsByBranchAndHeadCommitOptions({ path: { branch: this.branchName() }}),
+    ...getLatestWorkflowRunsByBranchAndHeadCommitOptions({ path: { branch: this.branchName()! }}),
+    enabled: this.branchName() !== null,
     refetchInterval: 2000,
   }));
   pullRequestQuery = injectQuery(() => ({
     ...getLatestWorkflowRunsByPullRequestIdAndHeadCommitOptions({path: { pullRequestId: this.pullRequestId() || 0 }}),
+    enabled: this.pullRequestId() !== null,
     refetchInterval: 2000,
   }));
 

@@ -11,7 +11,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { IconsModule } from 'icons.module';
 import { DragDropModule } from 'primeng/dragdrop';
 
-import { createWorkflowGroupMutation, deleteWorkflowGroupMutation, getGroupsWithWorkflowsOptions, getGroupsWithWorkflowsQueryKey, getWorkflowsByRepositoryIdOptions, updateWorkflowGroupsMutation, updateWorkflowLabelMutation } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
+import { createWorkflowGroupMutation, deleteWorkflowGroupMutation, getGroupsWithWorkflowsOptions, getGroupsWithWorkflowsQueryKey, getWorkflowsByRepositoryIdOptions, getWorkflowsByRepositoryIdQueryKey, updateWorkflowGroupsMutation, updateWorkflowLabelMutation } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { WorkflowDto, WorkflowGroupDto, WorkflowMembershipDto } from '@app/core/modules/openapi';
 import { WorkflowDTOSchema } from '@app/core/modules/openapi/schemas.gen';
 
@@ -36,10 +36,9 @@ export class ProjectSettingsComponent {
     queryClient = injectQueryClient();
 
     // Signals for repository ID, workflows, and workflow groups
-    projectId = input.required({ transform: numberAttribute });
+    repositoryId = input.required({ transform: numberAttribute });
 
     workflowGroups = signal<WorkflowGroupDto[]>([]);
-    repositoryId = computed(() => this.projectId());
     isPending = computed(() => this.fetchWorkflowsQuery.isPending() || this.groupsQuery.isPending());
     isError = computed(() => this.fetchWorkflowsQuery.isError() || this.groupsQuery.isError());
     // For creating a new group
@@ -165,7 +164,7 @@ export class ProjectSettingsComponent {
     workflowLabelMutation = injectMutation(() => ({
       ...updateWorkflowLabelMutation(),
       onSuccess: () => {
-        this.queryClient.invalidateQueries({ queryKey: getWorkflowsByRepositoryIdOptions({path: { repositoryId: this.repositoryId() }})});
+        this.queryClient.invalidateQueries({ queryKey: getWorkflowsByRepositoryIdQueryKey({path: { repositoryId: this.repositoryId() }})});
       },
     }));
     deleteWorkflowGroupMutation = injectMutation(() => ({

@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, Signal } from '@angular/core';
+import { Component, computed, input } from '@angular/core';
 import { MarkdownPipe } from '@app/core/modules/markdown/markdown.pipe';
 
 import {PipelineComponent, PipelineSelector} from '@app/components/pipeline/pipeline.component';
@@ -8,9 +8,8 @@ import {ButtonModule} from 'primeng/button';
 import {InputTextModule} from 'primeng/inputtext';
 import { DeploymentSelectionComponent } from '@app/components/deployment-selection/deployment-selection.component';
 import { injectQuery } from '@tanstack/angular-query-experimental';
-import { PullRequestControllerService } from '@app/core/modules/openapi';
-import { lastValueFrom } from 'rxjs';
 import { SkeletonModule } from 'primeng/skeleton';
+import { getPullRequestByRepositoryIdAndNumberOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 
 @Component({
   selector: 'app-branch-details',
@@ -18,16 +17,11 @@ import { SkeletonModule } from 'primeng/skeleton';
   templateUrl: './pull-request-details.component.html',
 })
 export class PullRequestDetailsComponent {
-  pullRequestService = inject(PullRequestControllerService);
-
   repositoryId = input.required<number>();
   pullRequestNumber = input.required<number>();
 
   query = injectQuery(() => ({
-    queryKey: ['pullRequest', this.repositoryId(), this.pullRequestNumber()],
-    queryFn: () => lastValueFrom(
-      this.pullRequestService.getPullRequestByRepositoryIdAndNumber(this.repositoryId(), this.pullRequestNumber())
-    ),
+    ...getPullRequestByRepositoryIdAndNumberOptions({ path: { repoId: this.repositoryId(), number: this.pullRequestNumber() }}),
     refetchInterval: 5000,
   }));
 

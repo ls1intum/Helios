@@ -6,8 +6,8 @@
 </div>
 
 <p-accordion [multiple]="true">
-  @if (!query.isPending() && filteredEnvironments().length === 0) {
-    @if (query.isError()) {
+  @if (!environmentQuery.isPending() && filteredEnvironments().length === 0) {
+    @if (environmentQuery.isError()) {
       <p>Failed to load environments. Please try again later.</p>
     } @else if (searchInput().length === 0) {
       <p>No environments found. Create a new environment to get started.</p>
@@ -42,9 +42,7 @@
                 ><i-tabler name="external-link" class="mr-1" />Open</a
               >
             }
-            <button (click)="unlockEnvironment.mutate(environment); $event.stopPropagation()" class="p-button p-button-danger p-2">
-              <i-tabler name="lock-open" class="mr-1" />Unlock
-            </button>
+            <button (click)="onUnlockEnvironment($event, environment)" class="p-button p-button-danger p-2"><i-tabler name="lock-open" class="mr-1" />Unlock</button>
           }
 
           @if (editable()) {
