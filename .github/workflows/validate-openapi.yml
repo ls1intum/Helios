@@ -117,14 +117,18 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "22"
+          cache: 'yarn'
+          cache-dependency-path: "client"
 
-      - name: Install Yarn
+      - name: Enable Corepack
         if: env.CHANGE_DETECTED == 'true'
+        working-directory: ./client
         run: corepack enable
 
-      - name: Install The OpenAPI to TypeScript codegen
+      - name: Install Dependencies
         if: env.CHANGE_DETECTED == 'true'
-        run: yarn add @hey-api/openapi-ts --dev
+        working-directory: ./client
+        run: yarn install --frozen-lockfile
 
       - name: Generate client code
         if: env.CHANGE_DETECTED == 'true'
