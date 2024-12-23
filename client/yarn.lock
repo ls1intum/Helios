@@ -2100,10 +2100,10 @@
   resolved "https://registry.yarnpkg.com/@pkgr/core/-/core-0.1.1.tgz#1ec17e2edbec25c8306d424ecfbf13c7de1aaa31"
   integrity sha512-cq8o4cWH0ibXh9VGi5P20Tu9XF/0fFXl9EUinr9QfTM7a7p0oTA4iJRCQWppXR1Pg8dSM0UCItCkPwsk9qWWYA==
 
-"@primeng/themes@19.0.0-rc.1":
-  version "19.0.0-rc.1"
-  resolved "https://registry.yarnpkg.com/@primeng/themes/-/themes-19.0.0-rc.1.tgz#068aa4cf02837fd9aa7a09014515b2c545f67841"
-  integrity sha512-Cr03iZA4N4DYWYUoQgMJFwvfRA3FPkP/H0HScJP4nMG111Yjp8ljdjST65mWEh9Yrq74+CH+0cGQT0T0xCZgEg==
+"@primeng/themes@19.0.1":
+  version "19.0.1"
+  resolved "https://registry.yarnpkg.com/@primeng/themes/-/themes-19.0.1.tgz#2ef5437adeeef7a6010c72b0064b773af10c4bf8"
+  integrity sha512-vssxWAqnIGU5kweP07M+rk8TNKYlRjTm2XBGBFCo54OI+0+DL6GkTzbkwQ80nUzJMj8tl+KEgc+Qt/7CRbfnbg==
   dependencies:
     "@primeuix/styled" "^0.3.2"
 
@@ -6990,10 +6990,10 @@ primeicons@^7.0.0:
   resolved "https://registry.yarnpkg.com/primeicons/-/primeicons-7.0.0.tgz#6b25c3fdcb29bb745a3035bdc1ed5902f4a419cf"
   integrity sha512-jK3Et9UzwzTsd6tzl2RmwrVY/b8raJ3QZLzoDACj+oTJ0oX7L9Hy+XnVwgo4QVKlKpnP/Ur13SXV/pVh4LzaDw==
 
-primeng@19.0.0-rc.1:
-  version "19.0.0-rc.1"
-  resolved "https://registry.yarnpkg.com/primeng/-/primeng-19.0.0-rc.1.tgz#ff394590fd9d08f2e7c253c23d71631572ffe696"
-  integrity sha512-y8SwXmp/kMaNbZpgaB3rz/8sG0Mn9HMc04nbN5c9dqSdFBNFu3EmhuDI25jYoYKHRWs8j3ZGzb5bXho9DMjCjg==
+primeng@19.0.1:
+  version "19.0.1"
+  resolved "https://registry.yarnpkg.com/primeng/-/primeng-19.0.1.tgz#2a163e52406651b51a91810b4a58280020c611a5"
+  integrity sha512-YMShhmnIZUArZpg2BeBGkocjsFship2c8LIX6oDICMRSBjX3VJ2T+RDEVwEZgCsv7UK8BVBTOjPoeETv76XTKg==
   dependencies:
     "@primeuix/styled" "^0.3.2"
     "@primeuix/utils" "^0.3.2"
