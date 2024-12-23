@@ -6,5 +6,4 @@ import { EnvironmentListViewComponent } from '@app/components/environments/envir
   imports: [EnvironmentListViewComponent],
   templateUrl: './environment-list.component.html',
 })
-export class EnvironmentListComponent {
-}
+export class EnvironmentListComponent {}

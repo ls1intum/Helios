@@ -1,174 +1,127 @@
 <div class="container mx-auto p-4">
-    <!-- Title and 'Add New Group' Button -->
-    <div class="flex justify-between items-center mb-4">
-        <h2 class="text-3xl font-bold">Project Settings</h2>
-        @if (!isLoading() && !isError()) {
-            <div class="space-x-2">
-                <button
-                        pButton
-                        label="Add New Group"
-                        class="p-button-sm"
-                        (click)="showAddGroupDialog = true"
-                ></button>
-                <button
-                        pButton
-                        label="Update Groups"
-                        class="p-button-success p-button-sm"
-                        (click)="updateGroups()"
-                        [disabled]="isLoading()"
-                ></button>
-            </div>
-        }
-    </div>
+  <!-- Title and 'Add New Group' Button -->
+  <div class="flex justify-between items-center mb-4">
+    <h2 class="text-3xl font-bold">Project Settings</h2>
+    @if (!isPending() && !isError()) {
+      <div class="space-x-2">
+        <button pButton label="Add New Group" class="p-button-sm" (click)="showAddGroupDialog = true"></button>
+        <button pButton label="Update Groups" class="p-button-success p-button-sm" (click)="updateGroups()" [disabled]="isPending()"></button>
+      </div>
+    }
+  </div>
 
-    <!-- Error and Loading Messages -->
-    @if (isError()) {
-        <p class="text-red-600 mb-4">{{ errorMessage() }}</p>
+  <!-- Loading Indicator -->
+  @if (isPending()) {
+    <p class="text-center mb-4">Loading settings...</p>
+  }
+
+  <!-- Main Content -->
+  @if (!isPending() && !isError()) {
+    <!-- Grouped Workflows Panels -->
+    <h3 class="text-2xl font-semibold mb-2">Grouped Workflows</h3>
+
+    <!-- Drag & Drop Hint -->
+    @if (groupedWorkflowsArray().length > 0) {
+      <p class="text-sm text-gray-600 mb-4">Drag and drop the groups to reorder them.</p>
     }
 
-    @if (isLoading()) {
-        <p class="text-center mb-4">Loading settings...</p>
-    }
-
-    <!-- Main Content -->
-    @if (!isLoading() && !isError()) {
-        <!-- Grouped Workflows Panels -->
-        <h3 class="text-2xl font-semibold mb-2">Grouped Workflows</h3>
-
-        <!-- Drag & Drop Hint -->
-        @if (groupedWorkflowsArray().length > 0) {
-            <p class="text-sm text-gray-600 mb-4">
-                Drag and drop the groups to reorder them.
-            </p>
-        }
-
-        @if (groupedWorkflowsArray().length > 0) {
-            <div class="flex flex-wrap items-start gap-4 mb-8">
-                @for (group of localGroupedWorkflowsArray(); track group.groupName; let gIndex = $index) {
-                    <div
-                            class="flex items-center"
-                            pDraggable="groups"
-                            pDroppable="groups"
-                            (onDragStart)="dragStart(gIndex)"
-                            (onDrop)="drop(gIndex)"
-                    >
-                        <!-- Panel for this group -->
-                        <p-panel [header]="group.groupName" class="mr-2 min-w-[250px]">
-                            <div class="flex flex-col gap-4">
-                                @for (wf of group.workflows; track wf.id) {
-                                    <div
-                                            class="flex items-center space-x-2">
-                                        <i-tabler name="circle-check" class="text-green-500"></i-tabler>
-                                        <span class="font-medium w-36 flex items-center">{{ wf.name }}</span>
-                                    </div>
-                                }
-                                <!-- Delete Group Button -->
-                                @if (group.workflows.length === 0) {
-                                    <button
-                                            pButton
-                                            label="Delete Group"
-                                            class="p-button-danger p-button-sm self"
-                                            (click)="deleteGroup(group)"
-                                    ></button>
-                                }
-                            </div>
-                        </p-panel>
-
-                        <!-- Horizontal line between panels -->
-                        @if (group !== localGroupedWorkflowsArray()[localGroupedWorkflowsArray().length - 1]) {
-                            <div class="w-10 h-px bg-gray-300 mt-7"></div>
-                        }
-                    </div>
+    @if (groupedWorkflowsArray().length > 0) {
+      <div class="flex flex-wrap items-start gap-4 mb-8">
+        @for (group of localGroupedWorkflowsArray(); track group.groupName; let gIndex = $index) {
+          <div class="flex items-center" pDraggable="groups" pDroppable="groups" (onDragStart)="dragStart(gIndex)" (onDrop)="drop(gIndex)">
+            <!-- Panel for this group -->
+            <p-panel [header]="group.groupName" class="mr-2 min-w-[250px]">
+              <div class="flex flex-col gap-4">
+                @for (wf of group.workflows; track wf.id) {
+                  <div class="flex items-center space-x-2">
+                    <i-tabler name="circle-check" class="text-green-500"></i-tabler>
+                    <span class="font-medium w-36 flex items-center">{{ wf.name }}</span>
+                  </div>
                 }
-            </div>
-        } @else {
-            <!-- No Grouping Available -->
-            <div class="flex justify-center items-center h-40 mb-8">
-                <p-panel header="No Groups Available" class="min-w-[250px]">
-                    <p class="text-center">No workflows are currently grouped.</p>
-                    <p class="text-center">Click "Add New Group" to create a new group.</p>
-                    <p class="text-center">And then assign workflows to the group.</p>
-                </p-panel>
-            </div>
+                <!-- Delete Group Button -->
+                @if (group.workflows.length === 0) {
+                  <button pButton label="Delete Group" class="p-button-danger p-button-sm self" (click)="deleteGroup(group)"></button>
+                }
+              </div>
+            </p-panel>
+
+            <!-- Horizontal line between panels -->
+            @if (group !== localGroupedWorkflowsArray()[localGroupedWorkflowsArray().length - 1]) {
+              <div class="w-10 h-px bg-gray-300 mt-7"></div>
+            }
+          </div>
         }
-
-        <!-- Workflow Table -->
-        <p-table [value]="workflows()" styleClass="w-full mb-6">
-            <ng-template pTemplate="header">
-                <tr>
-                    <th>Workflow ID</th>
-                    <th>Status</th>
-                    <th>File Name</th>
-                    <th>Workflow Name</th>
-                    <th>Assign Group</th>
-                    <th>Label</th>
-                </tr>
-            </ng-template>
-            <ng-template pTemplate="body" let-workflow>
-                <tr>
-                    <td>{{ workflow.id }}</td>
-                    <td>{{ workflow.state }}</td>
-                    <td>{{ workflow.fileNameWithExtension }}</td>
-                    <td>{{ workflow.name }}</td>
-                    <td>
-                        <p-dropdown
-                                [options]="groupDropdownOptions"
-                                [ngModel]="workflowGroupsMap()[workflow.id] || 'Ungrouped'"
-                                (onChange)="onChangeGroup(workflow, $event.value)"
-                                [appendTo]="'body'"
-                        ></p-dropdown>
-                    </td>
-                    <td>
-                        <p-dropdown
-                                [options]="getWorkflowLabelOptions()"
-                                [(ngModel)]="workflow.label"
-                                placeholder="Select Label"
-                                (onChange)="onChangeLabel(workflow)"
-                                [appendTo]="'body'"
-                        ></p-dropdown>
-                    </td>
-
-                </tr>
-            </ng-template>
-        </p-table>
+      </div>
+    } @else {
+      <!-- No Grouping Available -->
+      <div class="flex justify-center items-center h-40 mb-8">
+        <p-panel header="No Groups Available" class="min-w-[250px]">
+          <p class="text-center">No workflows are currently grouped.</p>
+          <p class="text-center">Click "Add New Group" to create a new group.</p>
+          <p class="text-center">And then assign workflows to the group.</p>
+        </p-panel>
+      </div>
     }
 
-    <!-- Dialog for Adding New Group -->
-    <p-dialog
-            header="Add New Group"
-            [(visible)]="showAddGroupDialog"
-            [modal]="true"
-            [closable]="true"
-            [dismissableMask]="true"
-            [draggable]="false"
-            [style]="{ width: '350px' }"
-            (onHide)="resetDialog()"
-    >
-        <div class="flex flex-col gap-2 p-2">
-            <label class="font-semibold" for="groupNameInput">Group Name</label>
-            <input
-                    id="groupNameInput"
-                    type="text"
-                    pInputText
-                    [(ngModel)]="newGroupName"
-                    class="w-full p-2 border border-gray-300 rounded"
-                    placeholder="Enter new group name"
-            />
+    <!-- Workflow Table -->
+    <p-table [value]="workflows()" styleClass="w-full mb-6">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Workflow ID</th>
+          <th>Status</th>
+          <th>File Name</th>
+          <th>Workflow Name</th>
+          <th>Assign Group</th>
+          <th>Label</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-workflow>
+        <tr>
+          <td>{{ workflow.id }}</td>
+          <td>{{ workflow.state }}</td>
+          <td>{{ workflow.fileNameWithExtension }}</td>
+          <td>{{ workflow.name }}</td>
+          <td>
+            <p-dropdown
+              [options]="groupDropdownOptions"
+              [ngModel]="workflowGroupsMap()[workflow.id] || 'Ungrouped'"
+              (onChange)="onChangeGroup(workflow, $event.value)"
+              [appendTo]="'body'"
+            ></p-dropdown>
+          </td>
+          <td>
+            <p-dropdown
+              [options]="getWorkflowLabelOptions()"
+              [(ngModel)]="workflow.label"
+              placeholder="Select Label"
+              (onChange)="onChangeLabel(workflow)"
+              [appendTo]="'body'"
+            ></p-dropdown>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  }
 
-            <div class="flex justify-end gap-2 mt-4">
-                <button
-                        pButton
-                        label="Cancel"
-                        class="p-button-text"
-                        (click)="showAddGroupDialog = false"
-                ></button>
-                <button
-                        pButton
-                        label="Add"
-                        class="p-button-primary"
-                        (click)="addNewGroup()"
-                ></button>
-            </div>
-        </div>
-    </p-dialog>
+  <!-- Dialog for Adding New Group -->
+  <p-dialog
+    header="Add New Group"
+    [(visible)]="showAddGroupDialog"
+    [modal]="true"
+    [closable]="true"
+    [dismissableMask]="true"
+    [draggable]="false"
+    [style]="{ width: '350px' }"
+    (onHide)="resetDialog()"
+  >
+    <div class="flex flex-col gap-2 p-2">
+      <label class="font-semibold" for="groupNameInput">Group Name</label>
+      <input id="groupNameInput" type="text" pInputText [(ngModel)]="newGroupName" class="w-full p-2 border border-gray-300 rounded" placeholder="Enter new group name" />
+
+      <div class="flex justify-end gap-2 mt-4">
+        <button pButton label="Cancel" class="p-button-text" (click)="showAddGroupDialog = false"></button>
+        <button pButton label="Add" class="p-button-primary" (click)="addNewGroup()"></button>
+      </div>
+    </div>
+  </p-dialog>
 </div>

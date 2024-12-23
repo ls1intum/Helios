@@ -2,10 +2,6 @@
 import { Routes } from '@angular/router';
 
 
-
-
-
-
 export const routes: Routes = [
   {
     path: '',
@@ -44,7 +40,7 @@ export const routes: Routes = [
           { path: '', redirectTo: 'list', pathMatch: 'full' },
           { path: 'list', loadComponent: () => import('./pages/environment-list/environment-list.component').then(m => m.EnvironmentListComponent) },
           { path: ':id/edit', loadComponent: () => import('./pages/environment-edit/environment-edit.component').then(m => m.EnvironmentEditComponent) },
-          { path: ':id/history', loadComponent: () => import('./pages/environment-deployment-history/environment-deployment-history.component').then(m => m.EnvironmentDeploymentHistoryComponent) },
+          { path: ':environmentId/history', loadComponent: () => import('./pages/environment-deployment-history/environment-deployment-history.component').then(m => m.EnvironmentDeploymentHistoryComponent) },
         ],
       },
       {

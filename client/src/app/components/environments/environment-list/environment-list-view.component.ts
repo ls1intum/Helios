@@ -5,51 +5,47 @@ import {TagModule} from 'primeng/tag';
 import {IconsModule} from 'icons.module';
 import {ButtonModule} from 'primeng/button';
 import {RouterLink} from '@angular/router';
-import {FetchEnvironmentService} from '@app/core/services/fetch/environment';
-import {EnvironmentControllerService} from '@app/core/modules/openapi/api/environment-controller.service';
-import {injectMutation, injectQuery} from '@tanstack/angular-query-experimental';
-import {lastValueFrom, } from 'rxjs';
-import {EnvironmentDTO} from '@app/core/modules/openapi/model/environment-dto';
-import {DeploymentDTO} from '@app/core/modules/openapi/model/deployment-dto';
+import {injectMutation, injectQuery, injectQueryClient} from '@tanstack/angular-query-experimental';
 import { LockTagComponent } from '../lock-tag/lock-tag.component';
 import { DeploymentStateTagComponent } from '../deployment-state-tag/deployment-state-tag.component';
 import { InputTextModule } from 'primeng/inputtext';
-import { queryClient } from '@app/app.config';
 import { EnvironmentDeploymentInfoComponent } from '../deployment-info/environment-deployment-info.component';
+import { getAllEnvironmentsOptions, getAllEnvironmentsQueryKey, unlockEnvironmentMutation } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
+import { EnvironmentDto } from '@app/core/modules/openapi';
 
 @Component({
   selector: 'app-environment-list-view',
   imports: [InputTextModule, AccordionModule, LockTagComponent, RouterLink, TagModule, IconsModule, ButtonModule, DeploymentStateTagComponent, EnvironmentDeploymentInfoComponent],
-  providers: [FetchEnvironmentService],
   templateUrl: './environment-list-view.component.html',
 })
 export class EnvironmentListViewComponent {
-  environmentService = inject(EnvironmentControllerService);
+  private queryClient = injectQueryClient();
 
   editable = input<boolean | undefined>();
   deployable = input<boolean | undefined>();
   hideLinkToList = input<boolean | undefined>();
 
-  onDeploy = output<EnvironmentDTO>();
+  onDeploy = output<EnvironmentDto>();
 
   searchInput = signal<string>('');
 
-  query = injectQuery(() => ({
-    queryKey: ['environments'],
-    queryFn: () => lastValueFrom(this.environmentService.getAllEnvironments()),
-    refetchInterval: 5000,
-  }));
+  environmentQuery = injectQuery(() => getAllEnvironmentsOptions());
+
+  environments = computed(() => this.environmentQuery.data());
 
   unlockEnvironment = injectMutation(() => ({
-    mutationFn: (environment: EnvironmentDTO) => {
-      return lastValueFrom(this.environmentService.unlockEnvironment(environment.id));
-    },
+    ...unlockEnvironmentMutation(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['environments'] });
+      this.queryClient.invalidateQueries({ queryKey: getAllEnvironmentsQueryKey() });
     }
   }));
 
-  deployEnvironment(environment: EnvironmentDTO) {
+  onUnlockEnvironment(event: Event, environment: EnvironmentDto) {
+    this.unlockEnvironment.mutate({ path: { id: environment.id }});
+    event.stopPropagation();
+  }
+
+  deployEnvironment(environment: EnvironmentDto) {
     this.onDeploy.emit(environment);
   }
 
@@ -59,7 +55,7 @@ export class EnvironmentListViewComponent {
   }
 
   filteredEnvironments = computed(() => {
-    const environments = this.query.data();
+    const environments = this.environmentQuery.data();
     const search = this.searchInput();
 
     if (!environments) {
@@ -76,31 +72,5 @@ export class EnvironmentListViewComponent {
       return 'http://' + url;
     }
     return url;
-  }
-}
-
-@Injectable({
-  providedIn: 'root',
-})
-export class DeploymentStoreService {
-  private latestDeploymentsState = signal<{ [environmentId: number]: DeploymentDTO | null }>({});
-
-  get latestDeployments() {
-    return this.latestDeploymentsState.asReadonly();
-  }
-
-  setLatestDeployment(environmentId: number, deployment: DeploymentDTO | null) {
-    this.latestDeploymentsState.update(state => ({
-      ...state,
-      [environmentId]: deployment,
-    }));
-  }
-
-  getLatestDeploymentWithEnvironmentId(environmentId: number): DeploymentDTO | null {
-    return this.latestDeploymentsState()[environmentId] || null;
-  }
-
-  clearLatestDeployments() {
-    this.latestDeploymentsState.set({});
   }
 }

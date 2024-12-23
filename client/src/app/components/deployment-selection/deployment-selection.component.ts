@@ -1,9 +1,8 @@
 import { Component, inject, input } from "@angular/core";
 import { EnvironmentListViewComponent } from "../environments/environment-list/environment-list-view.component";
-import { DeploymentControllerService, EnvironmentDTO } from "@app/core/modules/openapi";
-import { injectMutation } from "@tanstack/angular-query-experimental";
-import { queryClient } from "@app/app.config";
-import { lastValueFrom } from "rxjs";
+import { injectMutation, injectQueryClient } from "@tanstack/angular-query-experimental";
+import { deployToEnvironmentMutation, getAllEnvironmentsQueryKey } from "@app/core/modules/openapi/@tanstack/angular-query-experimental.gen";
+import { EnvironmentDto } from "@app/core/modules/openapi";
 
 @Component({
     selector: 'app-deployment-selection',
@@ -11,22 +10,18 @@ import { lastValueFrom } from "rxjs";
     imports: [EnvironmentListViewComponent],
 })
 export class DeploymentSelectionComponent {
-  deploymentService = inject(DeploymentControllerService);
+  queryClient = injectQueryClient();
 
   sourceRef = input.required<string>();
 
   deployEnvironment = injectMutation(() => ({
-    mutationFn: (environment: EnvironmentDTO) =>
-     lastValueFrom(this.deploymentService.deployToEnvironment({
-        branchName: this.sourceRef(),
-        environmentId: environment.id,
-      })),
+    ...deployToEnvironmentMutation(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['environments'] });
+      this.queryClient.invalidateQueries({ queryKey: getAllEnvironmentsQueryKey });
     }
   }));
 
-  handleDeploy = (environment: EnvironmentDTO) => {
-    this.deployEnvironment.mutate(environment);
+  handleDeploy = (environment: EnvironmentDto) => {
+    this.deployEnvironment.mutate({ body: { environmentId: environment.id, branchName: this.sourceRef() }});
   }
 }

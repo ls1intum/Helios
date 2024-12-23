@@ -7,9 +7,8 @@ import {ButtonModule} from 'primeng/button';
 import {InputTextModule} from 'primeng/inputtext';
 import { DeploymentSelectionComponent } from '@app/components/deployment-selection/deployment-selection.component';
 import { injectQuery } from '@tanstack/angular-query-experimental';
-import { lastValueFrom, map } from 'rxjs';
-import { BranchControllerService } from '@app/core/modules/openapi';
 import { SkeletonModule } from 'primeng/skeleton';
+import { getBranchByRepositoryIdAndNameOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 
 @Component({
   selector: 'app-branch-details',
@@ -17,16 +16,11 @@ import { SkeletonModule } from 'primeng/skeleton';
   templateUrl: './branch-details.component.html',
 })
 export class BranchDetailsComponent {
-  branchService = inject(BranchControllerService);
-
   repositoryId = input.required<number>();
   branchName = input.required<string>();
 
   query = injectQuery(() => ({
-    queryKey: ['branch', this.repositoryId(), this.branchName()],
-    queryFn: () => lastValueFrom(
-      this.branchService.getBranchByRepositoryIdAndName(this.repositoryId()!, this.branchName())
-    ),
+    ...getBranchByRepositoryIdAndNameOptions({ path: { name: this.branchName(), repoId: this.repositoryId() }}),
     refetchInterval: 5000,
   }));
 

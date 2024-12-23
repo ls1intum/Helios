@@ -1,7 +1,7 @@
 import { Component, computed, inject, viewChild } from '@angular/core';
 import { Router } from '@angular/router';
 import { ConnectRepoComponent } from '@app/components/connect-repo/connect-repo.component';
-import { RepositoryInfoDTO } from '@app/core/modules/openapi';
+import { RepositoryInfoDto } from '@app/core/modules/openapi';
 import { RepositoryService } from '@app/core/services/repository.service';
 import { IconsModule } from 'icons.module';
 import { ButtonModule } from 'primeng/button';
@@ -32,7 +32,7 @@ export class ProjectOverviewComponent {
     this.repositoryService.refreshRepositories().subscribe();
   }
 
-  navigateToProject(repository: RepositoryInfoDTO) {
+  navigateToProject(repository: RepositoryInfoDto) {
     console.log('Navigating to project', repository);
     this.router.navigate(['repo', repository.id.toString(), 'ci-cd']);
   }
