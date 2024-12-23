@@ -118,15 +118,18 @@ jobs:
         with:
           node-version: "22"
 
+      - name: Install Yarn
+        if: env.CHANGE_DETECTED == 'true'
+        run: corepack enable
+
       - name: Install The OpenAPI to TypeScript codegen
         if: env.CHANGE_DETECTED == 'true'
-        run: npm install -g @hey-api/openapi-ts
+        run: yarn add @hey-api/openapi-ts --dev
 
       - name: Generate client code
         if: env.CHANGE_DETECTED == 'true'
         working-directory: ./client
-        run: |
-          npm run generate:openapi
+        run: yarn generate:openapi
 
       - name: Check for client code differences
         if: env.CHANGE_DETECTED == 'true'
