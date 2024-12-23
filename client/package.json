@@ -21,7 +21,6 @@
     "@angular/platform-browser-dynamic": "^19.0.4",
     "@angular/router": "^19.0.4",
     "@primeng/themes": "19.0.1",
-    "@tanstack/angular-query-experimental": "^5.60.5",
     "angular-tabler-icons": "^3.1.0",
     "eslint-config-prettier": "^9.1.0",
     "keycloak-js": "^26.0.7",
