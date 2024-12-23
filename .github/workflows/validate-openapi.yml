@@ -35,7 +35,7 @@ jobs:
         id: check_changes
         run: |
           CHANGED_PATHS=$(git diff --name-only origin/${{ github.base_ref }} origin/${{ github.head_ref }} | grep -E "^($(echo "$PATHS_TO_CHECK" | tr '\n' '|'))")
-          
+
           if [[ -z "$CHANGED_PATHS" ]]; then
             echo "CHANGE_DETECTED=false" >> "$GITHUB_OUTPUT"
             echo "No OpenAPI changes detected."
@@ -49,8 +49,8 @@ jobs:
         if: steps.check_changes.outputs.CHANGE_DETECTED == 'true'
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
-          java-version: '21'
+          distribution: "temurin"
+          java-version: "21"
 
       - name: Run Gradle to generate OpenAPI docs
         if: steps.check_changes.outputs.CHANGE_DETECTED == 'true'
@@ -109,27 +109,20 @@ jobs:
         if: env.CHANGE_DETECTED == 'true'
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
-          java-version: '21'
+          distribution: "temurin"
+          java-version: "21"
 
       - name: Set up Node.js
         if: env.CHANGE_DETECTED == 'true'
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
-
-      - name: Install OpenAPI Generator CLI
-        if: env.CHANGE_DETECTED == 'true'
-        run: npm install -g @openapitools/openapi-generator-cli
+          node-version: "22"
 
       - name: Generate client code
         if: env.CHANGE_DETECTED == 'true'
+        working-directory: ./client
         run: |
-          npx openapi-generator-cli generate \
-            -i ./server/application-server/openapi.yaml \
-            -g typescript-angular \
-            -o ./client/src/app/core/modules/openapi \
-            --additional-properties fileNaming=kebab-case,withInterfaces=true --generate-alias-as-model
+          npm run generate:openapi
 
       - name: Check for client code differences
         if: env.CHANGE_DETECTED == 'true'
@@ -153,9 +146,8 @@ jobs:
             The client code in `/client/src/app/core/modules/openapi` is not up-to-date.
             Please regenerate the client code by running:
             ```bash
-            npm install -g @openapitools/openapi-generator-cli
-            # In root directory
-            npx openapi-generator-cli generate -i ./server/application-server/openapi.yaml -g typescript-angular -o ./client/src/app/core/modules/openapi --additional-properties fileNaming=kebab-case,withInterfaces=true --generate-alias-as-model
+            cd ./client
+            yarn generate:openapi
             ```
             Commit and push the updated files.
 
