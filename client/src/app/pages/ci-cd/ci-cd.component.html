@@ -1,10 +1,11 @@
-<!-- TODO: IMPROVE THIS TO <p-tabs> WHEN NAVIGATION IS READY-->
+<p-tabs [(value)]="activeTabId">
+  <p-tablist>
+    @for (tab of tabs(); track tab.id) {
+      <p-tab [value]="tab.id" [routerLink]="tab.id">
+        {{ tab.label }}
+      </p-tab>
+    }
+  </p-tablist>
+</p-tabs>
 
-<p-tabMenu [model]="tabs()" [activeItem]="activeTab()" (activeItemChange)="onTabChange($event)"></p-tabMenu>
-
-@if (isTabActive('pr')) {
-  <app-pull-request-table />
-}
-@if (isTabActive('branches')) {
-  <app-branches-table />
-}
+<router-outlet />

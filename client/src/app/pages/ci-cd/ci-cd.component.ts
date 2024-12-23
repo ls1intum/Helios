@@ -1,50 +1,26 @@
 import { Component, computed, Injectable, signal, inject } from '@angular/core';
-import { BranchTableComponent } from '@app/components/branches-table/branches-table.component';
-import { PullRequestTableComponent } from '@app/components/pull-request-table/pull-request-table.component';
+import { ActivatedRoute, NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { MenuItem } from 'primeng/api';
 import { TabMenuModule } from 'primeng/tabmenu';
 import { TabsModule } from 'primeng/tabs';
+import { filter, last, map } from 'rxjs';
 @Component({
   selector: 'app-ci-cd',
-  imports: [PullRequestTableComponent, BranchTableComponent, TabMenuModule, TabsModule],
+  imports: [RouterLink, RouterOutlet, TabMenuModule, TabsModule],
   templateUrl: './ci-cd.component.html',
 })
 export class CiCdComponent {
-  private stateService = inject(CiCdStateService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
 
   tabs = signal<{label: string, id: string}[]>([
     { label: 'Pull Requests', id: 'pr' },
-    { label: 'Branches', id: 'branches' }
+    { label: 'Branches', id: 'branch' }
   ]);
 
-  activeTab = computed(() => {
-    const activeTabId = this.stateService.getActiveTab()();
-    return this.tabs().find(tab => tab.id === activeTabId) || this.tabs()[0];
-  });
+  activeTabId = this.tabs()[0].id;
 
-  onTabChange(event: MenuItem) {
-    if (event.id) {
-      this.stateService.setActiveTab(event.id);
-    }
-  }
-
-  isTabActive(tabId: string): boolean {
-    return this.activeTab()?.id === tabId;
-  }
-}
-
-
-@Injectable({
-  providedIn: 'root'
-})
-export class CiCdStateService {
-  private activeTabId = signal<string>('pr');
-
-  setActiveTab(tabId: string) {
-    this.activeTabId.set(tabId);
-  }
-
-  getActiveTab() {
-    return this.activeTabId;
+  ngOnInit() {
+    this.activeTabId = this.route.snapshot.firstChild?.url[0].path || this.tabs()[0].id;
   }
 }
