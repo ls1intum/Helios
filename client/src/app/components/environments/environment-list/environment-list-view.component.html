@@ -1,7 +1,7 @@
 <div class="flex items-center justify-between mb-3">
   <input pInputText id="commit-hash" (input)="onSearch($event)" [value]="searchInput()" type="text" placeholder="Search for installed systems" class="w-1/3" />
   @if (!hideLinkToList()) {
-    <a [routerLink]="'/environments'" class="p-button p-2 p-button-secondary self-end">Manage environments</a>
+    <a [routerLink]="'/environments'" class="p-button p-2 self-end">Manage environments</a>
   }
 </div>
 
@@ -17,8 +17,8 @@
   }
 
   @for (environment of filteredEnvironments(); track environment.id) {
-    <p-accordionTab>
-      <ng-template pTemplate="header">
+    <p-accordion-panel [value]="environment.id">
+      <p-accordion-header>
         <div class="flex gap-2 items-center w-full">
           <span>{{ environment.name }}</span>
 
@@ -50,26 +50,28 @@
               ><i-tabler name="pencil"
             /></a>
           }
+          <span class="w-2"></span>
         </div>
-      </ng-template>
+      </p-accordion-header>
+      <p-accordion-content>
+        @if (environment.latestDeployment; as deployment) {
+          <app-environment-deployment-info [deployment]="deployment" />
+        }
 
-      @if (environment.latestDeployment; as deployment) {
-        <app-environment-deployment-info [deployment]="deployment" />
-      }
+        <div class="flex gap-4 items-center justify-between">
+          <div class="flex gap-1 mt-2 items-center">
+            <a icon [routerLink]="'/repo/' + environment.repository?.id + '/environment/' + environment.id + '/history'" class="p-button p-button-text text-gray-500 p-2"
+              ><i-tabler class="mr-1" name="history" />View Deployment History</a
+            >
+          </div>
 
-      <div class="flex gap-4 items-center justify-between">
-        <div class="flex gap-1 mt-2 items-center">
-          <a icon [routerLink]="'/repo/' + environment.repository?.id + '/environment/' + environment.id + '/history'" class="p-button p-button-text text-gray-500 p-2"
-            ><i-tabler class="mr-1" name="history" />View Deployment History</a
-          >
+          <div class="flex gap-1">
+            @for (installedApp of environment.installedApps; track installedApp) {
+              <p-tag> {{ installedApp }}</p-tag>
+            }
+          </div>
         </div>
-
-        <div class="flex gap-1">
-          @for (installedApp of environment.installedApps; track installedApp) {
-            <p-tag> {{ installedApp }}</p-tag>
-          }
-        </div>
-      </div>
-    </p-accordionTab>
+      </p-accordion-content>
+    </p-accordion-panel>
   }
 </p-accordion>

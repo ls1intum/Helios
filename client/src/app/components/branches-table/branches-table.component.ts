@@ -65,7 +65,7 @@ export class BranchTableComponent {
   }
 
   openBranch(branch: BranchInfoDto): void {
-    this.router.navigate(['repo', branch.repository?.id, 'branch', branch.name]);
+    this.router.navigate(['repo', branch.repository?.id, 'ci-cd', 'branch', branch.name]);
   }
 
   convertBranchesToTreeNodes(branches: BranchInfoWithLink[]): TreeNode[] {
@@ -113,7 +113,6 @@ export class BranchTableComponent {
         }
       });
     });
-    console.log("root nodes", JSON.stringify(rootNodes, null, 2));
     return rootNodes;
   }
 

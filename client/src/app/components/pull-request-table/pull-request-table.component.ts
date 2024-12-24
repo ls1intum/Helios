@@ -6,18 +6,18 @@ import { TableModule } from 'primeng/table';
 import { AvatarModule } from 'primeng/avatar';
 import { TagModule } from 'primeng/tag';
 import { injectQuery } from '@tanstack/angular-query-experimental';
-import { catchError, tap } from 'rxjs';
 import { IconsModule } from 'icons.module';
 import { SkeletonModule } from 'primeng/skeleton';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DateService } from '@app/core/services/date.service';
 import { getAllPullRequestsOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { PullRequestInfoDto } from '@app/core/modules/openapi';
+import { ButtonModule } from 'primeng/button';
 
 
 @Component({
   selector: 'app-pull-request-table',
-  imports: [TableModule, AvatarModule, TagModule, IconsModule, SkeletonModule, AvatarGroupModule, TooltipModule, MarkdownPipe],
+  imports: [TableModule, AvatarModule, TagModule, IconsModule, SkeletonModule, AvatarGroupModule, TooltipModule, MarkdownPipe, ButtonModule],
   templateUrl: './pull-request-table.component.html',
   styles: [`
     :host ::ng-deep {

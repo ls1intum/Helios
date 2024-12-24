@@ -18,18 +18,6 @@ export const routes: Routes = [
     children: [
       { path: '', loadComponent: () => import('./pages/ci-cd/ci-cd.component').then(m => m.CiCdComponent) },
       {
-        path: 'pr',
-        children: [
-          { path: ':pullRequestNumber', loadComponent: () => import('./pages/pull-request-details/pull-request-details.component').then(m => m.PullRequestDetailsComponent) },
-        ]
-      },
-      {
-        path: 'branch',
-        children: [
-          { path: ':branchName', loadComponent: () => import('./pages/branch-details/branch-details.component').then(m => m.BranchDetailsComponent) },
-        ]
-      },
-      {
         path: '',
         redirectTo: 'ci-cd',
         pathMatch: 'full'
@@ -49,7 +37,28 @@ export const routes: Routes = [
       },
       {
         path: 'ci-cd',
-        loadComponent: () => import('./pages/ci-cd/ci-cd.component').then(m => m.CiCdComponent)
+        loadComponent: () => import('./pages/ci-cd/ci-cd.component').then(m => m.CiCdComponent),
+        children: [
+          {
+            path: '',
+            redirectTo: 'pr',
+            pathMatch: 'full',
+          },
+          {
+            path: 'pr',
+            children: [
+              { path: '', loadComponent: () => import('./pages/pull-request-list/pull-request-list.component').then(m => m.PullRequestListComponent), },
+              { path: ':pullRequestNumber', loadComponent: () => import('./pages/pull-request-details/pull-request-details.component').then(m => m.PullRequestDetailsComponent) },
+            ]
+          },
+          {
+            path: 'branch',
+            children: [
+              { path: '', loadComponent: () => import('./pages/branch-list/branch-list.component').then(m => m.BranchListComponent),},
+              { path: ':branchName', loadComponent: () => import('./pages/branch-details/branch-details.component').then(m => m.BranchDetailsComponent) },
+            ]
+          },
+        ]
       },
       {
         path: 'settings',

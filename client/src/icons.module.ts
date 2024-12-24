@@ -31,6 +31,7 @@ import {
   IconChevronLeft,
   IconAdjustmentsAlt,
   IconLogout,
+  IconQuestionMark,
 } from 'angular-tabler-icons/icons';
 
 // Select some icons (use an object, not an array)
@@ -64,6 +65,7 @@ const icons = {
   IconChevronLeft,
   IconAdjustmentsAlt,
   IconLogout,
+  IconQuestionMark,
 };
 
 @NgModule({

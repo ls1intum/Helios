@@ -20,7 +20,7 @@
 
       <div class="flex flex-col gap-2">
         <label for="installed-apps">Installed Apps</label>
-        <p-chips id="installed-apps" formControlName="installedApps"></p-chips>
+        <p-autoComplete id="installed-apps" formControlName="installedApps" [multiple]="true" [minLength]="1" fluid [typeahead]="false"> </p-autoComplete>
       </div>
 
       <p-button type="submit">Update</p-button>
