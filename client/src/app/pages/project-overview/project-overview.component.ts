@@ -25,6 +25,7 @@ export class ProjectOverviewComponent {
   loading = computed(() => this.repositoryService.loading());
 
   showDialog() {
+    console.log(this.repositories())
     this.repositoryConnection().show();
   }
 
