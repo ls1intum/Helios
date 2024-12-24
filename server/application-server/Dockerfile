@@ -10,5 +10,7 @@ EXPOSE 8080
 RUN mkdir /app
 
 COPY --from=build /home/gradle/src/build/libs/*.jar /app/server.jar
+COPY spring-instrument*.jar /app/spring-instrument.jar
+COPY aspectjweaver*.jar /app/aspectjweaver.jar
 
-ENTRYPOINT ["java", "-Djava.security.egd=file:/dev/./urandom","-jar","/app/server.jar"]
+ENTRYPOINT ["java", "-javaagent:/app/spring-instrument", "-javaagent:/app/aspectjweaver.jar", "-Djava.security.egd=file:/dev/./urandom","-jar","/app/server.jar"]
