@@ -1,11 +1,13 @@
 package de.tum.cit.aet.helios.workflow;
 
+import jakarta.transaction.Transactional;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 
 @Service
+@Transactional
 public class WorkflowService {
 
   private final WorkflowRepository workflowRepository;

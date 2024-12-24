@@ -6,6 +6,7 @@ import de.tum.cit.aet.helios.deployment.github.GitHubDeploymentDto;
 import de.tum.cit.aet.helios.environment.github.GitHubEnvironmentApiResponse;
 import de.tum.cit.aet.helios.environment.github.GitHubEnvironmentDto;
 import jakarta.annotation.PostConstruct;
+import jakarta.transaction.Transactional;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
@@ -26,6 +27,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @Log4j2
+@Transactional
 public class GitHubService {
   private final GitHub github;
 

@@ -2,7 +2,7 @@ package de.tum.cit.aet.helios.config;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
-import de.tum.cit.aet.helios.HibernateInterceptor;
+import de.tum.cit.aet.helios.filters.RepositoryInterceptor;
 import lombok.extern.log4j.Log4j2;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -76,11 +76,11 @@ public class SecurityConfig {
   public WebMvcConfigurer corsConfigurer() {
 
     return new WebMvcConfigurer() {
-      @Autowired private HibernateInterceptor requestInterceptor;
+      @Autowired private RepositoryInterceptor requestInterceptor;
 
       @Override
       public void addInterceptors(@NonNull InterceptorRegistry registry) {
-        registry.addInterceptor(requestInterceptor);
+        registry.addWebRequestInterceptor(requestInterceptor);
       }
 
       @Override

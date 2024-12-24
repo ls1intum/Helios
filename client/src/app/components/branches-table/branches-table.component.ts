@@ -76,7 +76,7 @@ export class BranchTableComponent {
 
           // If it's a leaf node, add the branch info
           if (isLeaf) {
-            newNode.data.commit_sha = branch.commitSha;
+            newNode.data.commitSha = branch.commitSha;
             newNode.data.repository = branch.repository;
             newNode.data.lastCommitLink = branch.lastCommitLink;
             newNode.data.link = branch.link;
@@ -112,7 +112,7 @@ export class BranchTableComponent {
 interface TreeNode {
   data: {
     name: string;
-    commit_sha?: string;
+    commitSha?: string;
     repository?: RepositoryInfoDto;
     link?: string;
     lastCommitLink?: string;

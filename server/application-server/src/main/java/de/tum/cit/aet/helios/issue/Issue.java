@@ -1,7 +1,6 @@
 package de.tum.cit.aet.helios.issue;
 
 import de.tum.cit.aet.helios.github.BaseGitServiceEntity;
-import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import de.tum.cit.aet.helios.user.User;
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.DiscriminatorType;
@@ -68,10 +67,6 @@ public class Issue extends BaseGitServiceEntity {
       inverseJoinColumns = @JoinColumn(name = "user_id"))
   @ToString.Exclude
   private Set<User> assignees = new HashSet<>();
-
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "repository_id")
-  private GitRepository repository;
 
   public enum State {
     OPEN,
