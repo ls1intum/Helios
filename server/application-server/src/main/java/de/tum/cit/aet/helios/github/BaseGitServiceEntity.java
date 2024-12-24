@@ -1,5 +1,6 @@
 package de.tum.cit.aet.helios.github;
 
+import de.tum.cit.aet.helios.filters.RepositoryFilterEntity;
 import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
 import java.time.OffsetDateTime;
@@ -15,7 +16,7 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-public abstract class BaseGitServiceEntity {
+public abstract class BaseGitServiceEntity extends RepositoryFilterEntity {
   @Id protected Long id;
 
   protected OffsetDateTime createdAt;

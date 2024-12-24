@@ -44,7 +44,7 @@
             <td>
               <div class="flex align-items-center gap-2">
                 <i-tabler name="git-commit"></i-tabler>
-                <span>{{ branch.commit_sha.slice(0, 7) }}</span>
+                <span>{{ branch.commitSha.slice(0, 7) }}</span>
                 <i-tabler name="external-link" (click)="openLink(branch.lastCommitLink)"></i-tabler>
               </div>
             </td>
@@ -90,10 +90,10 @@
                 </div>
               </td>
               <td style="width: 15%">
-                @if (rowData.commit_sha) {
+                @if (rowData.commitSha) {
                   <div class="flex align-items-center gap-2">
                     <i-tabler name="git-commit"></i-tabler>
-                    <span>{{ rowData.commit_sha.slice(0, 7) }}</span>
+                    <span>{{ rowData.commitSha.slice(0, 7) }}</span>
                     <i-tabler name="external-link" (click)="openLink(rowData.lastCommitLink)"></i-tabler>
                   </div>
                 }
@@ -130,7 +130,7 @@
               <td>
                 <div class="flex align-items-center gap-2">
                   <i-tabler name="git-commit"></i-tabler>
-                  <span>{{ branch.commit_sha.slice(0, 7) }}</span>
+                  <span>{{ branch.commitSha.slice(0, 7) }}</span>
                   <i-tabler name="external-link" (click)="openLink(branch.lastCommitLink)"></i-tabler>
                 </div>
               </td>

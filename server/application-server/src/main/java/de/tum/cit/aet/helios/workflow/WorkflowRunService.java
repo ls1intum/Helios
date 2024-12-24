@@ -2,6 +2,7 @@ package de.tum.cit.aet.helios.workflow;
 
 import de.tum.cit.aet.helios.branch.BranchRepository;
 import de.tum.cit.aet.helios.pullrequest.PullRequestRepository;
+import jakarta.transaction.Transactional;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -9,6 +10,7 @@ import java.util.stream.Stream;
 import org.springframework.stereotype.Service;
 
 @Service
+@Transactional
 public class WorkflowRunService {
 
   private final WorkflowRunRepository workflowRunRepository;

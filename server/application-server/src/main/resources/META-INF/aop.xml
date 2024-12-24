@@ -1,0 +1,9 @@
+<aspectj>
+  <weaver options="-Xreweavable -Xset:weaveJavaxPackages=true">
+        <include within="de.tum.cit.aet.helios.filters.RepositoryFilterAspect"/>
+        <include within="org.hibernate.internal.SessionFactoryImpl.SessionBuilderImpl"/>
+    </weaver>
+  <aspects>
+    <aspect name="de.tum.cit.aet.helios.filters.RepositoryFilterAspect"/>
+  </aspects>
+</aspectj>

@@ -33,7 +33,14 @@ gradle.taskGraph.whenReady { taskGraph ->
     }
 }
 
+configurations {
+    // Configuration that tracks the agents added to the JVM at run-time
+    runtimeAgent1
+    runtimeAgent2
+}
+
 dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-aop'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
@@ -48,6 +55,8 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    runtimeAgent1 "org.springframework:spring-instrument:6.2.1"
+    runtimeAgent2 "org.aspectj:aspectjweaver:1.9.7"
 }
 
 springBoot {
@@ -96,6 +105,7 @@ tasks.named("bootRun") {
 }
 
 tasks.register("bootRunDev", BootRun) {
+    jvmArgs = ["-javaagent:${configurations.runtimeAgent1.asPath}", "-javaagent:${configurations.runtimeAgent2.asPath}"]
     group = "application"
     description = "Runs the Spring Boot application with the dev profile"
     // Set the active profile to 'dev'
@@ -112,14 +122,14 @@ tasks.register("bootRunOpenApi", BootRun) {
     mainClass.set("de.tum.cit.aet.helios.HeliosApplication")
 }
 
-
 openApi {
     apiDocsUrl = 'http://localhost:8080/v3/api-docs.yaml'
     outputDir = file('.')
     outputFileName = 'openapi.yaml'
     // Set the active profile to 'openapi'
     customBootRun {
-        args.set(["--spring.profiles.active=openapi"])
+        args.set(["--spring.profiles.active=openapi", "-javaagent:${configurations.runtimeAgent1.asPath}", "-javaagent:${configurations.runtimeAgent2.asPath}"])
+        jvmArgs.set(["-javaagent:${configurations.runtimeAgent1.asPath}", "-javaagent:${configurations.runtimeAgent2.asPath}"])
     }
 }
 

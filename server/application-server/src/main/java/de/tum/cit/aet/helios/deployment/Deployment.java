@@ -2,7 +2,6 @@ package de.tum.cit.aet.helios.deployment;
 
 import de.tum.cit.aet.helios.environment.Environment;
 import de.tum.cit.aet.helios.github.BaseGitServiceEntity;
-import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import de.tum.cit.aet.helios.pullrequest.PullRequest;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -25,11 +24,6 @@ import org.kohsuke.github.GHDeploymentState;
 @NoArgsConstructor
 @ToString
 public class Deployment extends BaseGitServiceEntity {
-
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "repository_id", nullable = false)
-  private GitRepository repository;
-
   @ManyToOne
   @JoinColumn(name = "environment_id", nullable = false)
   private Environment environment;
