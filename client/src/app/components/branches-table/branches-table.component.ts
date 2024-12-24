@@ -43,7 +43,7 @@ export class BranchTableComponent {
       this.query.data()?.map(branch => ({
         ...branch,
         link: `https://github.com/${branch!.repository!.nameWithOwner}/tree/${branch.name}`,
-        lastCommitLink: `https://github.com/${branch!.repository!.nameWithOwner}/commit/${branch.commit_sha}`,
+        lastCommitLink: `https://github.com/${branch!.repository!.nameWithOwner}/commit/${branch.commitSha}`,
       })) || []
   );
 
@@ -76,7 +76,7 @@ export class BranchTableComponent {
 
           // If it's a leaf node, add the branch info
           if (isLeaf) {
-            newNode.data.commit_sha = branch.commit_sha;
+            newNode.data.commit_sha = branch.commitSha;
             newNode.data.repository = branch.repository;
             newNode.data.lastCommitLink = branch.lastCommitLink;
             newNode.data.link = branch.link;

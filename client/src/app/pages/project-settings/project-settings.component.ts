@@ -22,7 +22,7 @@ import {
   updateWorkflowLabelMutation,
 } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { WorkflowDto, WorkflowGroupDto, WorkflowMembershipDto } from '@app/core/modules/openapi';
-import { WorkflowDTOSchema } from '@app/core/modules/openapi/schemas.gen';
+import { WorkflowDtoSchema } from '@app/core/modules/openapi/schemas.gen';
 
 @Component({
   selector: 'app-project-settings',
@@ -184,7 +184,7 @@ export class ProjectSettingsComponent {
   }));
 
   getWorkflowLabelOptions() {
-    return Object.values(WorkflowDTOSchema.properties.label.enum);
+    return Object.values(WorkflowDtoSchema.properties.label.enum);
   }
 
   onChangeLabel(workflow: WorkflowDto) {
