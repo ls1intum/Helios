@@ -6,12 +6,12 @@ import java.io.IOException;
 import java.time.OffsetDateTime;
 import org.kohsuke.github.GHDeployment;
 
-public class GHDeploymentSourceAdapter implements DeploymentSource {
+public class GhDeploymentSourceAdapter implements DeploymentSource {
 
   private final GHDeployment ghDeployment;
   private final Deployment.State state;
 
-  public GHDeploymentSourceAdapter(GHDeployment ghDeployment, Deployment.State state) {
+  public GhDeploymentSourceAdapter(GHDeployment ghDeployment, Deployment.State state) {
     this.ghDeployment = ghDeployment;
     this.state = state;
   }

@@ -18,8 +18,12 @@ public class BranchId implements Serializable {
   // Equals and hashCode
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
     BranchId branchId = (BranchId) o;
     return Objects.equals(name, branchId.name) && Objects.equals(repository, branchId.repository);
   }

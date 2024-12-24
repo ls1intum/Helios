@@ -38,14 +38,14 @@ public class WorkflowRunService {
                 workflowRuns.stream().max(Comparator.comparing(WorkflowRun::getRunNumber)).get());
   }
 
-  public List<WorkflowRunDTO> getLatestWorkflowRunsByPullRequestIdAndHeadCommit(
+  public List<WorkflowRunDto> getLatestWorkflowRunsByPullRequestIdAndHeadCommit(
       Long pullRequestId) {
 
     var pullRequest = pullRequestRepository.findById(pullRequestId).orElseThrow();
     var runs =
         workflowRunRepository.findByPullRequestsIdAndHeadSha(
             pullRequestId, pullRequest.getHeadSha());
-    var latestRuns = getLatestWorkflowRuns(runs).map(WorkflowRunDTO::fromWorkflowRun).toList();
+    var latestRuns = getLatestWorkflowRuns(runs).map(WorkflowRunDto::fromWorkflowRun).toList();
 
     // Combine pull request workflow runs with branch workflows runs if we are on the same
     // repository
@@ -61,14 +61,14 @@ public class WorkflowRunService {
     return latestRuns;
   }
 
-  public List<WorkflowRunDTO> getLatestWorkflowRunsByBranchAndHeadCommitSha(String branchName) {
+  public List<WorkflowRunDto> getLatestWorkflowRunsByBranchAndHeadCommitSha(String branchName) {
     var branch = branchRepository.findByName(branchName).orElseThrow();
 
     var runs =
         workflowRunRepository.findByHeadBranchAndHeadShaAndPullRequestsIsNull(
-            branchName, branch.getCommit_sha());
+            branchName, branch.getCommitSha());
     var latestRuns = getLatestWorkflowRuns(runs);
 
-    return latestRuns.map(WorkflowRunDTO::fromWorkflowRun).toList();
+    return latestRuns.map(WorkflowRunDto::fromWorkflowRun).toList();
   }
 }

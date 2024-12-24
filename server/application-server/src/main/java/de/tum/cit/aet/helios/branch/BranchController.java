@@ -18,13 +18,13 @@ public class BranchController {
   }
 
   @GetMapping
-  public ResponseEntity<List<BranchInfoDTO>> getAllBranches() {
-    List<BranchInfoDTO> branches = branchService.getAllBranches();
+  public ResponseEntity<List<BranchInfoDto>> getAllBranches() {
+    List<BranchInfoDto> branches = branchService.getAllBranches();
     return ResponseEntity.ok(branches);
   }
 
   @GetMapping("/repository/{repoId}/name/{name}")
-  public ResponseEntity<BranchInfoDTO> getBranchByRepositoryIdAndName(
+  public ResponseEntity<BranchInfoDto> getBranchByRepositoryIdAndName(
       @PathVariable Long repoId, @PathVariable String name) {
     return branchService
         .getBranchInfo(repoId, name)

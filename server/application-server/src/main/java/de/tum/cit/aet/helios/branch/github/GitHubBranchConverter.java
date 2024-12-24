@@ -22,7 +22,7 @@ public class GitHubBranchConverter implements Converter<GHBranch, Branch> {
       } else {
         throw new IllegalArgumentException("Branch name cannot be null");
       }
-      branch.setCommit_sha(source.getSHA1());
+      branch.setCommitSha(source.getSHA1());
       branch.setProtection(source.isProtected());
     } catch (Exception e) {
       log.error("Failed to convert fields for source {}: {}", source.getName(), e.getMessage());

@@ -18,13 +18,13 @@ public class PullRequestController {
   }
 
   @GetMapping
-  public ResponseEntity<List<PullRequestInfoDTO>> getAllPullRequests() {
-    List<PullRequestInfoDTO> pullRequests = pullRequestService.getAllPullRequests();
+  public ResponseEntity<List<PullRequestInfoDto>> getAllPullRequests() {
+    List<PullRequestInfoDto> pullRequests = pullRequestService.getAllPullRequests();
     return ResponseEntity.ok(pullRequests);
   }
 
   @GetMapping("/{id}")
-  public ResponseEntity<PullRequestInfoDTO> getPullRequestById(@PathVariable Long id) {
+  public ResponseEntity<PullRequestInfoDto> getPullRequestById(@PathVariable Long id) {
     return pullRequestService
         .getPullRequestById(id)
         .map(ResponseEntity::ok)
@@ -33,14 +33,14 @@ public class PullRequestController {
 
   // TODO: Generalize filtering with repositoryId
   @GetMapping("/repository/{id}")
-  public ResponseEntity<List<PullRequestInfoDTO>> getPullRequestByRepositoryId(
+  public ResponseEntity<List<PullRequestInfoDto>> getPullRequestByRepositoryId(
       @PathVariable Long id) {
-    List<PullRequestInfoDTO> pullRequests = pullRequestService.getPullRequestByRepositoryId(id);
+    List<PullRequestInfoDto> pullRequests = pullRequestService.getPullRequestByRepositoryId(id);
     return ResponseEntity.ok(pullRequests);
   }
 
   @GetMapping("/repository/{repoId}/pr/{number}")
-  public ResponseEntity<PullRequestInfoDTO> getPullRequestByRepositoryIdAndNumber(
+  public ResponseEntity<PullRequestInfoDto> getPullRequestByRepositoryIdAndNumber(
       @PathVariable Long repoId, @PathVariable Integer number) {
     return pullRequestService
         .getPullRequestByRepositoryIdAndNumber(repoId, number)

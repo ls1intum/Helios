@@ -1,6 +1,5 @@
 package de.tum.cit.aet.helios.deployment;
 
-import de.tum.cit.aet.helios.branch.BranchService;
 import de.tum.cit.aet.helios.environment.Environment;
 import de.tum.cit.aet.helios.environment.EnvironmentService;
 import de.tum.cit.aet.helios.github.GitHubService;
@@ -15,41 +14,38 @@ import org.springframework.stereotype.Service;
 public class DeploymentService {
 
   private final DeploymentRepository deploymentRepository;
-  private final BranchService branchService;
   private final GitHubService gitHubService;
   private final EnvironmentService environmentService;
 
   public DeploymentService(
       DeploymentRepository deploymentRepository,
       GitHubService gitHubService,
-      BranchService branchService,
       EnvironmentService environmentService) {
     this.deploymentRepository = deploymentRepository;
     this.gitHubService = gitHubService;
     this.environmentService = environmentService;
-    this.branchService = branchService;
   }
 
-  public Optional<DeploymentDTO> getDeploymentById(Long id) {
-    return deploymentRepository.findById(id).map(DeploymentDTO::fromDeployment);
+  public Optional<DeploymentDto> getDeploymentById(Long id) {
+    return deploymentRepository.findById(id).map(DeploymentDto::fromDeployment);
   }
 
-  public List<DeploymentDTO> getAllDeployments() {
+  public List<DeploymentDto> getAllDeployments() {
     return deploymentRepository.findAll().stream()
-        .map(DeploymentDTO::fromDeployment)
+        .map(DeploymentDto::fromDeployment)
         .collect(Collectors.toList());
   }
 
-  public List<DeploymentDTO> getDeploymentsByEnvironmentId(Long environmentId) {
+  public List<DeploymentDto> getDeploymentsByEnvironmentId(Long environmentId) {
     return deploymentRepository.findByEnvironmentIdOrderByCreatedAtDesc(environmentId).stream()
-        .map(DeploymentDTO::fromDeployment)
+        .map(DeploymentDto::fromDeployment)
         .collect(Collectors.toList());
   }
 
-  public Optional<DeploymentDTO> getLatestDeploymentByEnvironmentId(Long environmentId) {
+  public Optional<DeploymentDto> getLatestDeploymentByEnvironmentId(Long environmentId) {
     return deploymentRepository
         .findFirstByEnvironmentIdOrderByCreatedAtDesc(environmentId)
-        .map(DeploymentDTO::fromDeployment);
+        .map(DeploymentDto::fromDeployment);
   }
 
   public void deployToEnvironment(DeployRequest deployRequest) {

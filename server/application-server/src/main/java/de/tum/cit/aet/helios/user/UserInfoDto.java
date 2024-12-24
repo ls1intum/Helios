@@ -4,15 +4,15 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import org.springframework.lang.NonNull;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-public record UserInfoDTO(
+public record UserInfoDto(
     @NonNull Long id,
     @NonNull String login,
     @NonNull String avatarUrl,
     @NonNull String name,
     @NonNull String htmlUrl) {
 
-  public static UserInfoDTO fromUser(User user) {
-    return new UserInfoDTO(
+  public static UserInfoDto fromUser(User user) {
+    return new UserInfoDto(
         user.getId(), user.getLogin(), user.getAvatarUrl(), user.getName(), user.getHtmlUrl());
   }
 }

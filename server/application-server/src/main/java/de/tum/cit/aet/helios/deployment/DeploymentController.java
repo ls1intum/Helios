@@ -22,29 +22,29 @@ public class DeploymentController {
   }
 
   @GetMapping
-  public ResponseEntity<List<DeploymentDTO>> getAllDeployments() {
-    List<DeploymentDTO> deployments = deploymentService.getAllDeployments();
+  public ResponseEntity<List<DeploymentDto>> getAllDeployments() {
+    List<DeploymentDto> deployments = deploymentService.getAllDeployments();
     return ResponseEntity.ok(deployments);
   }
 
   @GetMapping("/{id}")
-  public ResponseEntity<DeploymentDTO> getDeploymentById(@PathVariable Long id) {
-    Optional<DeploymentDTO> deployment = deploymentService.getDeploymentById(id);
+  public ResponseEntity<DeploymentDto> getDeploymentById(@PathVariable Long id) {
+    Optional<DeploymentDto> deployment = deploymentService.getDeploymentById(id);
     return deployment.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
   }
 
   @GetMapping("/environment/{environmentId}")
-  public ResponseEntity<List<DeploymentDTO>> getDeploymentsByEnvironmentId(
+  public ResponseEntity<List<DeploymentDto>> getDeploymentsByEnvironmentId(
       @PathVariable Long environmentId) {
-    List<DeploymentDTO> deployments =
+    List<DeploymentDto> deployments =
         deploymentService.getDeploymentsByEnvironmentId(environmentId);
     return ResponseEntity.ok(deployments);
   }
 
   @GetMapping("/environment/{environmentId}/latest")
-  public ResponseEntity<DeploymentDTO> getLatestDeploymentByEnvironmentId(
+  public ResponseEntity<DeploymentDto> getLatestDeploymentByEnvironmentId(
       @PathVariable Long environmentId) {
-    Optional<DeploymentDTO> deployment =
+    Optional<DeploymentDto> deployment =
         deploymentService.getLatestDeploymentByEnvironmentId(environmentId);
     return deployment.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
   }

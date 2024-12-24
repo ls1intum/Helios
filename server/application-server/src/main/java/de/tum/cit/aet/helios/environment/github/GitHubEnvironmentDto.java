@@ -5,7 +5,7 @@ import java.time.OffsetDateTime;
 import lombok.Getter;
 
 @Getter
-public class GitHubEnvironmentDTO {
+public class GitHubEnvironmentDto {
 
   private Long id;
   private String name;

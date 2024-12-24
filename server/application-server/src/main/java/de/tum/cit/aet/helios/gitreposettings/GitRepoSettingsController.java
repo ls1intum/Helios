@@ -4,7 +4,14 @@ import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @Validated
 @RestController
@@ -18,24 +25,24 @@ public class GitRepoSettingsController {
   }
 
   @GetMapping("/groups")
-  public ResponseEntity<List<WorkflowGroupDTO>> getGroupsWithWorkflows(
+  public ResponseEntity<List<WorkflowGroupDto>> getGroupsWithWorkflows(
       @PathVariable Long repositoryId) {
-    List<WorkflowGroupDTO> workflowGroupDTOS =
+    List<WorkflowGroupDto> workflowGroupDtoS =
         workflowGroupService.getAllWorkflowGroupsByRepositoryId(repositoryId);
-    return ResponseEntity.ok(workflowGroupDTOS);
+    return ResponseEntity.ok(workflowGroupDtoS);
   }
 
   @PostMapping("/groups/create")
-  public ResponseEntity<WorkflowGroupDTO> createWorkflowGroup(
-      @PathVariable Long repositoryId, @Valid @RequestBody WorkflowGroupDTO workflowGroupDTO) {
-    WorkflowGroupDTO createdWorkflowGroup =
-        workflowGroupService.createWorkflowGroup(repositoryId, workflowGroupDTO);
+  public ResponseEntity<WorkflowGroupDto> createWorkflowGroup(
+      @PathVariable Long repositoryId, @Valid @RequestBody WorkflowGroupDto workflowGroupDto) {
+    WorkflowGroupDto createdWorkflowGroup =
+        workflowGroupService.createWorkflowGroup(repositoryId, workflowGroupDto);
     return ResponseEntity.ok(createdWorkflowGroup);
   }
 
   @PutMapping("/groups/update")
   public ResponseEntity<Void> updateWorkflowGroups(
-      @PathVariable Long repositoryId, @Valid @RequestBody List<WorkflowGroupDTO> workflowGroups) {
+      @PathVariable Long repositoryId, @Valid @RequestBody List<WorkflowGroupDto> workflowGroups) {
     workflowGroupService.updateWorkflowGroups(repositoryId, workflowGroups);
     return ResponseEntity.noContent().build();
   }

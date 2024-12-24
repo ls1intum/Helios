@@ -1,16 +1,16 @@
 package de.tum.cit.aet.helios.pullrequest;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import de.tum.cit.aet.helios.gitrepo.RepositoryInfoDTO;
+import de.tum.cit.aet.helios.gitrepo.RepositoryInfoDto;
 import de.tum.cit.aet.helios.issue.Issue.State;
-import de.tum.cit.aet.helios.user.UserInfoDTO;
+import de.tum.cit.aet.helios.user.UserInfoDto;
 import java.time.OffsetDateTime;
 import java.util.Comparator;
 import java.util.List;
 import org.springframework.lang.NonNull;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-public record PullRequestInfoDTO(
+public record PullRequestInfoDto(
     @NonNull Long id,
     @NonNull Integer number,
     @NonNull String title,
@@ -18,9 +18,9 @@ public record PullRequestInfoDTO(
     @NonNull Boolean isDraft,
     @NonNull Boolean isMerged,
     @NonNull Integer commentsCount,
-    UserInfoDTO author,
-    List<UserInfoDTO> assignees,
-    RepositoryInfoDTO repository,
+    UserInfoDto author,
+    List<UserInfoDto> assignees,
+    RepositoryInfoDto repository,
     @NonNull Integer additions,
     @NonNull Integer deletions,
     @NonNull String headSha,
@@ -32,8 +32,8 @@ public record PullRequestInfoDTO(
     OffsetDateTime createdAt,
     OffsetDateTime updatedAt) {
 
-  public static PullRequestInfoDTO fromPullRequest(PullRequest pullRequest) {
-    return new PullRequestInfoDTO(
+  public static PullRequestInfoDto fromPullRequest(PullRequest pullRequest) {
+    return new PullRequestInfoDto(
         pullRequest.getId(),
         pullRequest.getNumber(),
         pullRequest.getTitle(),
@@ -41,12 +41,12 @@ public record PullRequestInfoDTO(
         pullRequest.isDraft(),
         pullRequest.isMerged(),
         pullRequest.getCommentsCount(),
-        UserInfoDTO.fromUser(pullRequest.getAuthor()),
+        UserInfoDto.fromUser(pullRequest.getAuthor()),
         pullRequest.getAssignees().stream()
-            .map(UserInfoDTO::fromUser)
-            .sorted(Comparator.comparing(UserInfoDTO::login))
+            .map(UserInfoDto::fromUser)
+            .sorted(Comparator.comparing(UserInfoDto::login))
             .toList(),
-        RepositoryInfoDTO.fromRepository(pullRequest.getRepository()),
+        RepositoryInfoDto.fromRepository(pullRequest.getRepository()),
         pullRequest.getAdditions(),
         pullRequest.getDeletions(),
         pullRequest.getHeadSha(),

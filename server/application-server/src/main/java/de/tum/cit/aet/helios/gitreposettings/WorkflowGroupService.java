@@ -4,7 +4,11 @@ import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import de.tum.cit.aet.helios.workflow.Workflow;
 import de.tum.cit.aet.helios.workflow.WorkflowRepository;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,10 +36,10 @@ public class WorkflowGroupService {
   }
 
   @Transactional
-  public WorkflowGroupDTO createWorkflowGroup(
-      Long repositoryId, WorkflowGroupDTO workflowGroupDTO) {
+  public WorkflowGroupDto createWorkflowGroup(
+      Long repositoryId, WorkflowGroupDto workflowGroupDto) {
     // Validate input, check if name or orderIndex is empty
-    if (workflowGroupDTO.name() == null || workflowGroupDTO.name().isEmpty()) {
+    if (workflowGroupDto.name() == null || workflowGroupDto.name().isEmpty()) {
       throw new IllegalArgumentException(
           "Name or orderIndex is empty while creating workflow group.");
     }
@@ -48,10 +52,10 @@ public class WorkflowGroupService {
 
     // Create new group and save it
     WorkflowGroup workflowGroup = new WorkflowGroup();
-    workflowGroup.setName(workflowGroupDTO.name());
+    workflowGroup.setName(workflowGroupDto.name());
     workflowGroup.setGitRepoSettings(gitRepoSettings);
     workflowGroup.setOrderIndex(latestOrderIndex + 1);
-    return WorkflowGroupDTO.fromWorkflowGroup(workflowGroupRepository.save(workflowGroup));
+    return WorkflowGroupDto.fromWorkflowGroup(workflowGroupRepository.save(workflowGroup));
   }
 
   @Transactional
@@ -88,14 +92,14 @@ public class WorkflowGroupService {
         deletedOrderIndex, workflowGroup.getGitRepoSettings());
   }
 
-  public List<WorkflowGroupDTO> getAllWorkflowGroupsByRepositoryId(Long repositoryId) {
+  public List<WorkflowGroupDto> getAllWorkflowGroupsByRepositoryId(Long repositoryId) {
     return workflowGroupRepository.findAllByRepositoryId(repositoryId).stream()
-        .map(WorkflowGroupDTO::fromWorkflowGroup)
+        .map(WorkflowGroupDto::fromWorkflowGroup)
         .collect(Collectors.toList());
   }
 
   @Transactional
-  public void updateWorkflowGroups(Long repositoryId, List<WorkflowGroupDTO> workflowGroups) {
+  public void updateWorkflowGroups(Long repositoryId, List<WorkflowGroupDto> workflowGroups) {
     GitRepoSettings gitRepoSettings = getOrCreateGitRepoSettings(repositoryId);
 
     // Fetch all existing groups for the repository
@@ -106,7 +110,7 @@ public class WorkflowGroupService {
 
     // Validate all group IDs in the request
     Set<Long> providedGroupIds =
-        workflowGroups.stream().map(WorkflowGroupDTO::id).collect(Collectors.toSet());
+        workflowGroups.stream().map(WorkflowGroupDto::id).collect(Collectors.toSet());
 
     if (!groupMap.keySet().containsAll(providedGroupIds)) {
       providedGroupIds.removeAll(groupMap.keySet());
@@ -121,7 +125,7 @@ public class WorkflowGroupService {
                     Optional.ofNullable(group.memberships())
                         .orElse(Collections.emptyList())
                         .stream())
-            .map(WorkflowMembershipDTO::workflowId)
+            .map(WorkflowMembershipDto::workflowId)
             .collect(Collectors.toSet());
 
     Set<Long> existingWorkflowIds =
@@ -137,7 +141,7 @@ public class WorkflowGroupService {
 
     // Validate group orderIndex values
     List<Integer> groupOrderIndexes =
-        workflowGroups.stream().map(WorkflowGroupDTO::orderIndex).sorted().toList();
+        workflowGroups.stream().map(WorkflowGroupDto::orderIndex).sorted().toList();
 
     if (!isValidOrderIndexSequence(groupOrderIndexes)) {
       throw new IllegalArgumentException(
@@ -145,18 +149,18 @@ public class WorkflowGroupService {
     }
 
     // Validate workflow orderIndex values for each group
-    for (WorkflowGroupDTO groupDTO : workflowGroups) {
+    for (WorkflowGroupDto groupDto : workflowGroups) {
       // Safely handle null memberships
-      List<WorkflowMembershipDTO> memberships =
-          groupDTO.memberships() != null ? groupDTO.memberships() : List.of();
+      List<WorkflowMembershipDto> memberships =
+          groupDto.memberships() != null ? groupDto.memberships() : List.of();
 
       List<Integer> workflowOrderIndexes =
-          memberships.stream().map(WorkflowMembershipDTO::orderIndex).sorted().toList();
+          memberships.stream().map(WorkflowMembershipDto::orderIndex).sorted().toList();
 
       if (!isValidOrderIndexSequence(workflowOrderIndexes)) {
         throw new IllegalArgumentException(
             "Workflow orderIndex values in group "
-                + groupDTO.id()
+                + groupDto.id()
                 + " must start from 0 and be contiguous.");
       }
     }
@@ -172,21 +176,21 @@ public class WorkflowGroupService {
     workflowGroupRepository.flush();
 
     // Update groups and their memberships
-    for (WorkflowGroupDTO groupDTO : workflowGroups) {
-      WorkflowGroup group = groupMap.get(groupDTO.id());
+    for (WorkflowGroupDto groupDto : workflowGroups) {
+      WorkflowGroup group = groupMap.get(groupDto.id());
       if (group == null) {
         throw new IllegalArgumentException(
-            "WorkflowGroup with id " + groupDTO.id() + " not found.");
+            "WorkflowGroup with id " + groupDto.id() + " not found.");
       }
 
       // Update group meta
-      group.setName(groupDTO.name());
-      group.setOrderIndex(groupDTO.orderIndex());
+      group.setName(groupDto.name());
+      group.setOrderIndex(groupDto.orderIndex());
 
       // Build final membership set
-      Map<Long, WorkflowMembershipDTO> incoming =
-          Optional.ofNullable(groupDTO.memberships()).orElse(Collections.emptyList()).stream()
-              .collect(Collectors.toMap(WorkflowMembershipDTO::workflowId, memDTO -> memDTO));
+      Map<Long, WorkflowMembershipDto> incoming =
+          Optional.ofNullable(groupDto.memberships()).orElse(Collections.emptyList()).stream()
+              .collect(Collectors.toMap(WorkflowMembershipDto::workflowId, memDto -> memDto));
 
       // Remove old memberships not in incoming
       group
@@ -194,17 +198,17 @@ public class WorkflowGroupService {
           .removeIf(existingMem -> !incoming.containsKey(existingMem.getWorkflow().getId()));
 
       // For each new membership, either update or create
-      for (WorkflowMembershipDTO memDTO : incoming.values()) {
+      for (WorkflowMembershipDto memDto : incoming.values()) {
         WorkflowGroupMembership membership =
             group.getMemberships().stream()
-                .filter(m -> m.getWorkflow().getId().equals(memDTO.workflowId()))
+                .filter(m -> m.getWorkflow().getId().equals(memDto.workflowId()))
                 .findFirst()
                 .orElseGet(
                     () -> {
                       // create a new membership
                       Workflow w =
                           workflowRepository
-                              .findById(memDTO.workflowId())
+                              .findById(memDto.workflowId())
                               .orElseThrow(() -> new IllegalArgumentException("Not found"));
                       WorkflowGroupMembership newMem = new WorkflowGroupMembership();
                       newMem.setWorkflow(w);
@@ -212,7 +216,7 @@ public class WorkflowGroupService {
                       group.getMemberships().add(newMem);
                       return newMem;
                     });
-        membership.setOrderIndex(memDTO.orderIndex());
+        membership.setOrderIndex(memDto.orderIndex());
       }
     }
 

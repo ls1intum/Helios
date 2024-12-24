@@ -3,7 +3,11 @@ package de.tum.cit.aet.helios.github;
 import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
 import java.time.OffsetDateTime;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
 @MappedSuperclass
 @Getter

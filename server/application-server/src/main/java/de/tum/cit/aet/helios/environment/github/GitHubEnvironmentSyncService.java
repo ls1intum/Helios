@@ -48,11 +48,11 @@ public class GitHubEnvironmentSyncService {
    */
   public void syncEnvironmentsOfRepository(GHRepository ghRepository) {
     try {
-      List<GitHubEnvironmentDTO> gitHubEnvironmentDTOS =
+      List<GitHubEnvironmentDto> gitHubEnvironmentDtoS =
           gitHubService.getEnvironments(ghRepository);
 
-      for (GitHubEnvironmentDTO gitHubEnvironmentDTO : gitHubEnvironmentDTOS) {
-        processEnvironment(gitHubEnvironmentDTO, ghRepository);
+      for (GitHubEnvironmentDto gitHubEnvironmentDto : gitHubEnvironmentDtoS) {
+        processEnvironment(gitHubEnvironmentDto, ghRepository);
       }
     } catch (IOException e) {
       log.error(
@@ -63,18 +63,18 @@ public class GitHubEnvironmentSyncService {
   }
 
   /**
-   * Processes a single GitHubEnvironmentDTO by updating or creating it in the local repository.
+   * Processes a single GitHubEnvironmentDto by updating or creating it in the local repository.
    *
-   * @param gitHubEnvironmentDTO the GitHubEnvironmentDTO to process
+   * @param gitHubEnvironmentDto the GitHubEnvironmentDto to process
    * @param ghRepository the GitHub repository the environment belongs to
    */
   private void processEnvironment(
-      @NotNull GitHubEnvironmentDTO gitHubEnvironmentDTO, @NotNull GHRepository ghRepository) {
+      @NotNull GitHubEnvironmentDto gitHubEnvironmentDto, @NotNull GHRepository ghRepository) {
     Environment environment =
-        environmentRepository.findById(gitHubEnvironmentDTO.getId()).orElseGet(Environment::new);
+        environmentRepository.findById(gitHubEnvironmentDto.getId()).orElseGet(Environment::new);
 
-    // Convert DTO to Entity
-    environmentConverter.update(gitHubEnvironmentDTO, environment);
+    // Convert Dto to Entity
+    environmentConverter.update(gitHubEnvironmentDto, environment);
 
     // Link the environment to the repository
     String fullName = ghRepository.getFullName();

@@ -7,6 +7,7 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
+import org.springframework.lang.NonNull;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
@@ -72,7 +73,7 @@ public class SecurityConfig {
   public WebMvcConfigurer corsConfigurer() {
     return new WebMvcConfigurer() {
       @Override
-      public void addCorsMappings(@NotNull CorsRegistry registry) {
+      public void addCorsMappings(@NotNull @NonNull CorsRegistry registry) {
         if (environment.matchesProfiles("prod")) {
           // Allow production domain
           registry

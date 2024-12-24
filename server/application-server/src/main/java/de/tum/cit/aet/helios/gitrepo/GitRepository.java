@@ -1,7 +1,10 @@
 package de.tum.cit.aet.helios.gitrepo;
 
 import de.tum.cit.aet.helios.github.BaseGitServiceEntity;
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Table;
 import java.time.OffsetDateTime;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

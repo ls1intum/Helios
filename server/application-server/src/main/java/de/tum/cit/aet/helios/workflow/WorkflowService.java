@@ -14,25 +14,25 @@ public class WorkflowService {
     this.workflowRepository = workflowRepository;
   }
 
-  public Optional<WorkflowDTO> getWorkflowById(Long id) {
-    return workflowRepository.findById(id).map(WorkflowDTO::fromWorkflow);
+  public Optional<WorkflowDto> getWorkflowById(Long id) {
+    return workflowRepository.findById(id).map(WorkflowDto::fromWorkflow);
   }
 
-  public List<WorkflowDTO> getAllWorkflows() {
+  public List<WorkflowDto> getAllWorkflows() {
     return workflowRepository.findAll().stream()
-        .map(WorkflowDTO::fromWorkflow)
+        .map(WorkflowDto::fromWorkflow)
         .collect(Collectors.toList());
   }
 
-  public List<WorkflowDTO> getWorkflowsByRepositoryId(Long repositoryId) {
+  public List<WorkflowDto> getWorkflowsByRepositoryId(Long repositoryId) {
     return workflowRepository.findByRepositoryIdOrderByCreatedAtDesc(repositoryId).stream()
-        .map(WorkflowDTO::fromWorkflow)
+        .map(WorkflowDto::fromWorkflow)
         .collect(Collectors.toList());
   }
 
-  public List<WorkflowDTO> getWorkflowsByState(Workflow.State state) {
+  public List<WorkflowDto> getWorkflowsByState(Workflow.State state) {
     return workflowRepository.findByStateOrderByCreatedAtDesc(state).stream()
-        .map(WorkflowDTO::fromWorkflow)
+        .map(WorkflowDto::fromWorkflow)
         .collect(Collectors.toList());
   }
 

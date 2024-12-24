@@ -1,14 +1,14 @@
 package de.tum.cit.aet.helios.workflow;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import de.tum.cit.aet.helios.gitrepo.RepositoryInfoDTO;
+import de.tum.cit.aet.helios.gitrepo.RepositoryInfoDto;
 import java.time.OffsetDateTime;
 import org.springframework.lang.NonNull;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-public record WorkflowDTO(
+public record WorkflowDto(
     @NonNull Long id,
-    RepositoryInfoDTO repository,
+    RepositoryInfoDto repository,
     @NonNull String name,
     @NonNull String path,
     String fileNameWithExtension,
@@ -20,10 +20,10 @@ public record WorkflowDTO(
     OffsetDateTime createdAt,
     OffsetDateTime updatedAt) {
 
-  public static WorkflowDTO fromWorkflow(Workflow workflow) {
-    return new WorkflowDTO(
+  public static WorkflowDto fromWorkflow(Workflow workflow) {
+    return new WorkflowDto(
         workflow.getId(),
-        RepositoryInfoDTO.fromRepository(workflow.getRepository()),
+        RepositoryInfoDto.fromRepository(workflow.getRepository()),
         workflow.getName(),
         workflow.getPath(),
         workflow.getFileNameWithExtension(),

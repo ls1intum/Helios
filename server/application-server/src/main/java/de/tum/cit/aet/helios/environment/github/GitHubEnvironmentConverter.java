@@ -6,15 +6,15 @@ import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 
 @Component
-public class GitHubEnvironmentConverter implements Converter<GitHubEnvironmentDTO, Environment> {
+public class GitHubEnvironmentConverter implements Converter<GitHubEnvironmentDto, Environment> {
 
   @Override
-  public Environment convert(@NonNull GitHubEnvironmentDTO source) {
+  public Environment convert(@NonNull GitHubEnvironmentDto source) {
     return update(source, new Environment());
   }
 
   public Environment update(
-      @NonNull GitHubEnvironmentDTO source, @NonNull Environment environment) {
+      @NonNull GitHubEnvironmentDto source, @NonNull Environment environment) {
     environment.setId(source.getId());
     environment.setName(source.getName());
     environment.setUrl(source.getUrl());

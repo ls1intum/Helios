@@ -15,14 +15,14 @@ public class BranchService {
     this.branchRepository = branchRepository;
   }
 
-  public List<BranchInfoDTO> getAllBranches() {
+  public List<BranchInfoDto> getAllBranches() {
     return branchRepository.findAll().stream()
-        .map(BranchInfoDTO::fromBranch)
+        .map(BranchInfoDto::fromBranch)
         .collect(Collectors.toList());
   }
 
-  public Optional<BranchInfoDTO> getBranchById(Long id) {
-    return branchRepository.findById(id).map(BranchInfoDTO::fromBranch);
+  public Optional<BranchInfoDto> getBranchById(Long id) {
+    return branchRepository.findById(id).map(BranchInfoDto::fromBranch);
   }
 
   @Transactional
@@ -30,16 +30,16 @@ public class BranchService {
     branchRepository.deleteByNameAndRepositoryId(name, repositoryId);
   }
 
-  public List<BranchInfoDTO> getBranchesByRepositoryId(Long repositoryId) {
+  public List<BranchInfoDto> getBranchesByRepositoryId(Long repositoryId) {
     return branchRepository.findByRepositoryId(repositoryId).stream()
-        .map(BranchInfoDTO::fromBranch)
+        .map(BranchInfoDto::fromBranch)
         .collect(Collectors.toList());
   }
 
-  public Optional<BranchInfoDTO> getBranchInfo(Long repositoryId, String name) {
+  public Optional<BranchInfoDto> getBranchInfo(Long repositoryId, String name) {
     return branchRepository
         .findByRepositoryIdAndName(repositoryId, name)
-        .map(BranchInfoDTO::fromBranch);
+        .map(BranchInfoDto::fromBranch);
   }
 
   public Optional<Branch> getBranchByRepositoryIdAndName(Long repositoryId, String name) {

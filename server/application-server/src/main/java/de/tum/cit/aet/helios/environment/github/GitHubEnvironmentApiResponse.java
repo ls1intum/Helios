@@ -10,5 +10,5 @@ public class GitHubEnvironmentApiResponse {
   @JsonProperty("total_count")
   private int totalCount;
 
-  private List<GitHubEnvironmentDTO> environments;
+  private List<GitHubEnvironmentDto> environments;
 }

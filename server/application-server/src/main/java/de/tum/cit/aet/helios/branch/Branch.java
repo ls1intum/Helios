@@ -2,7 +2,11 @@ package de.tum.cit.aet.helios.branch;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.IdClass;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import java.time.OffsetDateTime;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -25,7 +29,7 @@ public class Branch {
   @ToString.Exclude
   private GitRepository repository;
 
-  private String commit_sha;
+  private String commitSha;
 
   @JsonProperty("protected")
   private boolean protection;

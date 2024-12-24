@@ -8,7 +8,11 @@ import de.tum.cit.aet.helios.github.GitHubMessageHandler;
 import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import lombok.extern.log4j.Log4j2;
-import org.kohsuke.github.*;
+import org.kohsuke.github.GHDeployment;
+import org.kohsuke.github.GHDeploymentState;
+import org.kohsuke.github.GHEvent;
+import org.kohsuke.github.GHEventPayload;
+import org.kohsuke.github.GHRepository;
 import org.springframework.stereotype.Component;
 
 @Component

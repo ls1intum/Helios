@@ -6,19 +6,19 @@ import java.util.List;
 import org.springframework.lang.NonNull;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-public record WorkflowGroupDTO(
+public record WorkflowGroupDto(
     @NonNull Long id,
     @NotBlank String name,
     @NonNull Integer orderIndex,
-    List<WorkflowMembershipDTO> memberships) {
+    List<WorkflowMembershipDto> memberships) {
 
-  public static WorkflowGroupDTO fromWorkflowGroup(WorkflowGroup workflowGroup) {
-    return new WorkflowGroupDTO(
+  public static WorkflowGroupDto fromWorkflowGroup(WorkflowGroup workflowGroup) {
+    return new WorkflowGroupDto(
         workflowGroup.getId(),
         workflowGroup.getName(),
         workflowGroup.getOrderIndex(),
         workflowGroup.getMemberships().stream()
-            .map(WorkflowMembershipDTO::fromMembership)
+            .map(WorkflowMembershipDto::fromMembership)
             .toList());
   }
 }

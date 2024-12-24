@@ -6,15 +6,15 @@ import de.tum.cit.aet.helios.workflow.WorkflowRun.Status;
 import org.springframework.lang.NonNull;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-public record WorkflowRunDTO(
+public record WorkflowRunDto(
     @NonNull Long id,
     @NonNull String name,
     @NonNull String displayTitle,
     @NonNull Status status,
     Conclusion conclusion,
     @NonNull String htmlUrl) {
-  public static WorkflowRunDTO fromWorkflowRun(WorkflowRun run) {
-    return new WorkflowRunDTO(
+  public static WorkflowRunDto fromWorkflowRun(WorkflowRun run) {
+    return new WorkflowRunDto(
         run.getId(),
         run.getName(),
         run.getDisplayTitle(),

@@ -2,15 +2,15 @@ package de.tum.cit.aet.helios.environment;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import de.tum.cit.aet.helios.deployment.Deployment;
-import de.tum.cit.aet.helios.gitrepo.RepositoryInfoDTO;
+import de.tum.cit.aet.helios.gitrepo.RepositoryInfoDto;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.lang.NonNull;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-public record EnvironmentDTO(
-    RepositoryInfoDTO repository,
+public record EnvironmentDto(
+    RepositoryInfoDto repository,
     @NonNull Long id,
     @NonNull String name,
     boolean locked,
@@ -48,10 +48,10 @@ public record EnvironmentDTO(
     }
   }
 
-  public static EnvironmentDTO fromEnvironment(
+  public static EnvironmentDto fromEnvironment(
       Environment environment, Optional<Deployment> latestDeployment) {
-    return new EnvironmentDTO(
-        RepositoryInfoDTO.fromRepository(environment.getRepository()),
+    return new EnvironmentDto(
+        RepositoryInfoDto.fromRepository(environment.getRepository()),
         environment.getId(),
         environment.getName(),
         environment.isLocked(),
@@ -65,7 +65,7 @@ public record EnvironmentDTO(
         latestDeployment.map(EnvironmentDeployment::fromDeployment).orElse(null));
   }
 
-  public static EnvironmentDTO fromEnvironment(Environment environment) {
-    return EnvironmentDTO.fromEnvironment(environment, Optional.empty());
+  public static EnvironmentDto fromEnvironment(Environment environment) {
+    return EnvironmentDto.fromEnvironment(environment, Optional.empty());
   }
 }

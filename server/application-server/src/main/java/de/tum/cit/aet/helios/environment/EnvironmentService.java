@@ -17,23 +17,23 @@ public class EnvironmentService {
     this.environmentRepository = environmentRepository;
   }
 
-  public Optional<EnvironmentDTO> getEnvironmentById(Long id) {
-    return environmentRepository.findById(id).map(EnvironmentDTO::fromEnvironment);
+  public Optional<EnvironmentDto> getEnvironmentById(Long id) {
+    return environmentRepository.findById(id).map(EnvironmentDto::fromEnvironment);
   }
 
-  public List<EnvironmentDTO> getAllEnvironments() {
+  public List<EnvironmentDto> getAllEnvironments() {
     return environmentRepository.findAll().stream()
         .map(
             environment -> {
-              return EnvironmentDTO.fromEnvironment(
+              return EnvironmentDto.fromEnvironment(
                   environment, environment.getDeployments().reversed().stream().findFirst());
             })
         .collect(Collectors.toList());
   }
 
-  public List<EnvironmentDTO> getEnvironmentsByRepositoryId(Long repositoryId) {
+  public List<EnvironmentDto> getEnvironmentsByRepositoryId(Long repositoryId) {
     return environmentRepository.findByRepositoryIdOrderByCreatedAtDesc(repositoryId).stream()
-        .map(EnvironmentDTO::fromEnvironment)
+        .map(EnvironmentDto::fromEnvironment)
         .collect(Collectors.toList());
   }
 
@@ -84,7 +84,7 @@ public class EnvironmentService {
    * @throws EntityNotFoundException if no environment is found with the specified ID
    */
   @Transactional
-  public EnvironmentDTO unlockEnvironment(Long id) {
+  public EnvironmentDto unlockEnvironment(Long id) {
     Environment environment =
         environmentRepository
             .findById(id)
@@ -93,29 +93,29 @@ public class EnvironmentService {
     environment.setLocked(false);
     environmentRepository.save(environment);
 
-    return EnvironmentDTO.fromEnvironment(environment);
+    return EnvironmentDto.fromEnvironment(environment);
   }
 
-  public Optional<EnvironmentDTO> updateEnvironment(Long id, EnvironmentDTO environmentDTO) {
+  public Optional<EnvironmentDto> updateEnvironment(Long id, EnvironmentDto environmentDto) {
     return environmentRepository
         .findById(id)
         .map(
             environment -> {
-              if (environmentDTO.updatedAt() != null) {
-                environment.setUpdatedAt(environmentDTO.updatedAt());
+              if (environmentDto.updatedAt() != null) {
+                environment.setUpdatedAt(environmentDto.updatedAt());
               }
-              if (environmentDTO.installedApps() != null) {
-                environment.setInstalledApps(environmentDTO.installedApps());
+              if (environmentDto.installedApps() != null) {
+                environment.setInstalledApps(environmentDto.installedApps());
               }
-              if (environmentDTO.description() != null) {
-                environment.setDescription(environmentDTO.description());
+              if (environmentDto.description() != null) {
+                environment.setDescription(environmentDto.description());
               }
-              if (environmentDTO.serverUrl() != null) {
-                environment.setServerUrl(environmentDTO.serverUrl());
+              if (environmentDto.serverUrl() != null) {
+                environment.setServerUrl(environmentDto.serverUrl());
               }
 
               environmentRepository.save(environment);
-              return EnvironmentDTO.fromEnvironment(environment);
+              return EnvironmentDto.fromEnvironment(environment);
             });
   }
 }

@@ -79,7 +79,9 @@ public class GitHubDataSyncService {
     log.info("--------------------------------------------------");
 
     // Start new sync
+    // CHECKSTYLE.OFF: VariableDeclarationUsageDistance
     var startTime = OffsetDateTime.now();
+    // CHECKSTYLE.ON: VariableDeclarationUsageDistance
 
     log.info("--------------------------------------------------");
     log.info("[Step 1/8] Syncing Monitored Repositories...");

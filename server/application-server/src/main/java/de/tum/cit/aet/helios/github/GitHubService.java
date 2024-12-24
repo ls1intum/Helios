@@ -4,15 +4,19 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.tum.cit.aet.helios.deployment.github.GitHubDeploymentDto;
 import de.tum.cit.aet.helios.environment.github.GitHubEnvironmentApiResponse;
-import de.tum.cit.aet.helios.environment.github.GitHubEnvironmentDTO;
+import de.tum.cit.aet.helios.environment.github.GitHubEnvironmentDto;
 import jakarta.annotation.PostConstruct;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import lombok.extern.log4j.Log4j2;
-import okhttp3.*;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
 import okhttp3.Request.Builder;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 import org.kohsuke.github.GHOrganization;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GHWorkflow;
@@ -152,13 +156,13 @@ public class GitHubService {
   }
 
   /**
-   * Retrieves environments from a GitHub repository and maps them to the GitHubEnvironmentDTO.
+   * Retrieves environments from a GitHub repository and maps them to the GitHubEnvironmentDto.
    *
    * @param repository the GitHub repository as a GHRepository object
-   * @return a list of GitHubEnvironmentDTO objects
+   * @return a list of GitHubEnvironmentDto objects
    * @throws IOException if an I/O error occurs
    */
-  public List<GitHubEnvironmentDTO> getEnvironments(GHRepository repository) throws IOException {
+  public List<GitHubEnvironmentDto> getEnvironments(GHRepository repository) throws IOException {
     final String owner = repository.getOwnerName();
     final String repoName = repository.getName();
     final String url =

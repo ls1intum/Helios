@@ -1,36 +1,36 @@
 package de.tum.cit.aet.helios.deployment;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import de.tum.cit.aet.helios.environment.EnvironmentDTO;
-import de.tum.cit.aet.helios.gitrepo.RepositoryInfoDTO;
+import de.tum.cit.aet.helios.environment.EnvironmentDto;
+import de.tum.cit.aet.helios.gitrepo.RepositoryInfoDto;
 import java.time.OffsetDateTime;
 import org.springframework.lang.NonNull;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-public record DeploymentDTO(
+public record DeploymentDto(
     @NonNull Long id,
-    RepositoryInfoDTO repository,
+    RepositoryInfoDto repository,
     @NonNull String url,
     Deployment.State state,
     @NonNull String statusesUrl,
     @NonNull String sha,
     @NonNull String ref,
     @NonNull String task,
-    @NonNull EnvironmentDTO environment,
+    @NonNull EnvironmentDto environment,
     OffsetDateTime createdAt,
     OffsetDateTime updatedAt) {
 
-  public static DeploymentDTO fromDeployment(Deployment deployment) {
-    return new DeploymentDTO(
+  public static DeploymentDto fromDeployment(Deployment deployment) {
+    return new DeploymentDto(
         deployment.getId(),
-        RepositoryInfoDTO.fromRepository(deployment.getRepository()),
+        RepositoryInfoDto.fromRepository(deployment.getRepository()),
         deployment.getUrl(),
         deployment.getState(),
         deployment.getStatusesUrl(),
         deployment.getSha(),
         deployment.getRef(),
         deployment.getTask(),
-        EnvironmentDTO.fromEnvironment(deployment.getEnvironment()),
+        EnvironmentDto.fromEnvironment(deployment.getEnvironment()),
         deployment.getCreatedAt(),
         deployment.getUpdatedAt());
   }

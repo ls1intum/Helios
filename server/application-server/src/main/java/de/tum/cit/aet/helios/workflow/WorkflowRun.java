@@ -14,7 +14,11 @@ import jakarta.persistence.Table;
 import java.time.OffsetDateTime;
 import java.util.Optional;
 import java.util.Set;
-import lombok.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.NonNull;
+import lombok.Setter;
+import lombok.ToString;
 
 @Entity
 @Table(name = "workflow_run")
@@ -127,7 +131,7 @@ public class WorkflowRun extends BaseGitServiceEntity {
     STALE,
     /** The timed out. */
     TIMED_OUT,
-    /** Start up fail */
+    /** Start up fail. */
     STARTUP_FAILURE,
     /** The unknown. */
     UNKNOWN;

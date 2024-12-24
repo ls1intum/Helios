@@ -14,26 +14,26 @@ public class PullRequestService {
     this.pullRequestRepository = pullRequestRepository;
   }
 
-  public List<PullRequestInfoDTO> getAllPullRequests() {
+  public List<PullRequestInfoDto> getAllPullRequests() {
     return pullRequestRepository.findAll().stream()
-        .map(PullRequestInfoDTO::fromPullRequest)
+        .map(PullRequestInfoDto::fromPullRequest)
         .collect(Collectors.toList());
   }
 
-  public Optional<PullRequestInfoDTO> getPullRequestById(Long id) {
-    return pullRequestRepository.findById(id).map(PullRequestInfoDTO::fromPullRequest);
+  public Optional<PullRequestInfoDto> getPullRequestById(Long id) {
+    return pullRequestRepository.findById(id).map(PullRequestInfoDto::fromPullRequest);
   }
 
-  public List<PullRequestInfoDTO> getPullRequestByRepositoryId(Long repositoryId) {
+  public List<PullRequestInfoDto> getPullRequestByRepositoryId(Long repositoryId) {
     return pullRequestRepository.findByRepositoryId(repositoryId).stream()
-        .map(PullRequestInfoDTO::fromPullRequest)
+        .map(PullRequestInfoDto::fromPullRequest)
         .collect(Collectors.toList());
   }
 
-  public Optional<PullRequestInfoDTO> getPullRequestByRepositoryIdAndNumber(
+  public Optional<PullRequestInfoDto> getPullRequestByRepositoryIdAndNumber(
       Long repoId, Integer number) {
     return pullRequestRepository
         .findByRepositoryIdAndNumber(repoId, number)
-        .map(PullRequestInfoDTO::fromPullRequest);
+        .map(PullRequestInfoDto::fromPullRequest);
   }
 }
