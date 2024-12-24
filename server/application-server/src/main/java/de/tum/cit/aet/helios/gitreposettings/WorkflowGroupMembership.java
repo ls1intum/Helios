@@ -14,18 +14,18 @@ import lombok.ToString;
 @NoArgsConstructor
 @ToString
 public class WorkflowGroupMembership {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "workflow_group_id")
-    private WorkflowGroup workflowGroup;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "workflow_group_id")
+  private WorkflowGroup workflowGroup;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "workflow_id")
-    private Workflow workflow;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "workflow_id")
+  private Workflow workflow;
 
-    // Ordering for workflows within a group
-    private int orderIndex;
+  // Ordering for workflows within a group
+  private int orderIndex;
 }

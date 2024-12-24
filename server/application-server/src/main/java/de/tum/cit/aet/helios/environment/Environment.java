@@ -1,15 +1,14 @@
 package de.tum.cit.aet.helios.environment;
 
+import de.tum.cit.aet.helios.deployment.Deployment;
+import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import jakarta.persistence.*;
+import java.time.OffsetDateTime;
+import java.util.List;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import de.tum.cit.aet.helios.deployment.Deployment;
-import de.tum.cit.aet.helios.gitrepo.GitRepository;
-
-import java.time.OffsetDateTime;
-import java.util.List;
 
 @Entity
 @Table(name = "environment")
@@ -18,49 +17,47 @@ import java.util.List;
 @NoArgsConstructor
 @ToString
 public class Environment {
-    @Id
-    private Long id;
+  @Id private Long id;
 
-    @Column(nullable = false)
-    private String name;
+  @Column(nullable = false)
+  private String name;
 
-    private String url;
+  private String url;
 
-    @Column(name = "html_url")
-    private String htmlUrl;
+  @Column(name = "html_url")
+  private String htmlUrl;
 
-    @Column(name = "created_at")
-    private OffsetDateTime createdAt;
+  @Column(name = "created_at")
+  private OffsetDateTime createdAt;
 
-    @Column(name = "updated_at")
-    private OffsetDateTime updatedAt;
+  @Column(name = "updated_at")
+  private OffsetDateTime updatedAt;
 
-    @ManyToOne
-    @JoinColumn(name = "repository_id", nullable = false)
-    private GitRepository repository;
+  @ManyToOne
+  @JoinColumn(name = "repository_id", nullable = false)
+  private GitRepository repository;
 
-    @Version
-    private Integer version;
+  @Version private Integer version;
 
-    @OneToMany(fetch = FetchType.EAGER, mappedBy = "environment")
-    @OrderBy("createdAt ASC")
-    private List<Deployment> deployments;
+  @OneToMany(fetch = FetchType.EAGER, mappedBy = "environment")
+  @OrderBy("createdAt ASC")
+  private List<Deployment> deployments;
 
-    private boolean locked;
+  private boolean locked;
 
-    @ElementCollection
-    @CollectionTable(name = "installed_apps", joinColumns = @JoinColumn(name = "environment_id"))
-    @Column(name = "app_name")
-    private List<String> installedApps;
+  @ElementCollection
+  @CollectionTable(name = "installed_apps", joinColumns = @JoinColumn(name = "environment_id"))
+  @Column(name = "app_name")
+  private List<String> installedApps;
 
-    @Column(name = "description")
-    private String description;
+  @Column(name = "description")
+  private String description;
 
-    @Column(name = "server_url")
-    private String serverUrl;
+  @Column(name = "server_url")
+  private String serverUrl;
 
-    // Missing properties
-    // nodeId --> GraphQl ID
-    // ProtectionRule
-    // DeploymentBranchPolicy
+  // Missing properties
+  // nodeId --> GraphQl ID
+  // ProtectionRule
+  // DeploymentBranchPolicy
 }

@@ -13,52 +13,39 @@ import { ButtonModule } from 'primeng/button';
 import { BranchViewPreferenceService } from '@app/core/services/branches-table/branch-view-preference';
 import { Router } from '@angular/router';
 import { getAllBranchesOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
-import { BranchInfoDto } from '@app/core/modules/openapi';
+import { BranchInfoDto, RepositoryInfoDto } from '@app/core/modules/openapi';
 
-
-type BranchInfoWithLink = BranchInfoDto & { link: string, lastCommitLink: string };
+type BranchInfoWithLink = BranchInfoDto & { link: string; lastCommitLink: string };
 
 @Component({
   selector: 'app-branches-table',
-  imports: [
-    TableModule,
-    AvatarModule,
-    TagModule,
-    IconsModule,
-    SkeletonModule,
-    InputTextModule,
-    TreeTableModule,
-    ButtonModule,
-    IconFieldModule,
-    InputIconModule],
+  imports: [TableModule, AvatarModule, TagModule, IconsModule, SkeletonModule, InputTextModule, TreeTableModule, ButtonModule, IconFieldModule, InputIconModule],
   templateUrl: './branches-table.component.html',
 })
 export class BranchTableComponent {
-
   router = inject(Router);
   featureBranchesTree = computed(() => this.convertBranchesToTreeNodes(this.getFeatureBranches()));
 
   specialBranches = ['master', 'main', 'dev', 'staging', 'development', 'prod', 'production', 'develop'];
 
   getSpecialBranches() {
-    return this.branches().filter(branch =>
-      this.specialBranches.includes(branch.name.toLowerCase())
-    );
+    return this.branches().filter(branch => this.specialBranches.includes(branch.name.toLowerCase()));
   }
 
   getFeatureBranches() {
-    return this.branches().filter(branch =>
-      !this.specialBranches.includes(branch.name.toLowerCase())
-    );
+    return this.branches().filter(branch => !this.specialBranches.includes(branch.name.toLowerCase()));
   }
 
   query = injectQuery(() => getAllBranchesOptions());
 
-  branches = computed<BranchInfoWithLink[]>(() => this.query.data()?.map(branch => ({
-    ...branch,
-    link: `https://github.com/${branch!.repository!.nameWithOwner}/tree/${branch.name}`,
-    lastCommitLink: `https://github.com/${branch!.repository!.nameWithOwner}/commit/${branch.commit_sha}`
-  })) || []);
+  branches = computed<BranchInfoWithLink[]>(
+    () =>
+      this.query.data()?.map(branch => ({
+        ...branch,
+        link: `https://github.com/${branch!.repository!.nameWithOwner}/tree/${branch.name}`,
+        lastCommitLink: `https://github.com/${branch!.repository!.nameWithOwner}/commit/${branch.commit_sha}`,
+      })) || []
+  );
 
   openLink(url: string): void {
     window.open(url, '_blank');
@@ -84,7 +71,7 @@ export class BranchTableComponent {
           const newNode: TreeNode = {
             data: {
               name: part,
-            }
+            },
           };
 
           // If it's a leaf node, add the branch info
@@ -120,15 +107,13 @@ export class BranchTableComponent {
   toggleView() {
     this.viewPreference.toggleViewMode();
   }
-
-
 }
 
 interface TreeNode {
   data: {
     name: string;
     commit_sha?: string;
-    repository?: any;
+    repository?: RepositoryInfoDto;
     link?: string;
     lastCommitLink?: string;
     type?: 'Branch' | 'Folder';

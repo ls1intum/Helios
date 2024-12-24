@@ -6,15 +6,15 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-
 @Repository
-public interface WorkflowGroupMembershipRepository extends JpaRepository<WorkflowGroupMembership, Long> {
+public interface WorkflowGroupMembershipRepository
+    extends JpaRepository<WorkflowGroupMembership, Long> {
 
-    /**
-     * Deletes all membership rows where the workflow's repository id matches the given repositoryId.
-     */
-    @Modifying
-    @Query("DELETE FROM WorkflowGroupMembership m " +
-            "WHERE m.workflow.repository.id = :repositoryId")
-    void deleteAllByRepositoryId(@Param("repositoryId") Long repositoryId);
+  /**
+   * Deletes all membership rows where the workflow's repository id matches the given repositoryId.
+   */
+  @Modifying
+  @Query(
+      "DELETE FROM WorkflowGroupMembership m " + "WHERE m.workflow.repository.id = :repositoryId")
+  void deleteAllByRepositoryId(@Param("repositoryId") Long repositoryId);
 }

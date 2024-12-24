@@ -13,80 +13,92 @@ import org.springframework.stereotype.Component;
 
 @Component
 @Log4j2
-public class GitHubDeploymentStatusMessageHandler extends GitHubMessageHandler<GHEventPayload.DeploymentStatus> {
+public class GitHubDeploymentStatusMessageHandler
+    extends GitHubMessageHandler<GHEventPayload.DeploymentStatus> {
 
-    private final GitHubDeploymentSyncService deploymentSyncService;
-    private final GitRepoRepository gitRepoRepository;
-    private final EnvironmentRepository environmentRepository;
-    private final GitHubEnvironmentSyncService environmentSyncService;
-    private final DeploymentSourceFactory deploymentSourceFactory;
+  private final GitHubDeploymentSyncService deploymentSyncService;
+  private final GitRepoRepository gitRepoRepository;
+  private final EnvironmentRepository environmentRepository;
+  private final GitHubEnvironmentSyncService environmentSyncService;
+  private final DeploymentSourceFactory deploymentSourceFactory;
 
-    private GitHubDeploymentStatusMessageHandler(
-            GitHubDeploymentSyncService deploymentSyncService,
-            GitRepoRepository gitRepoRepository,
-            EnvironmentRepository environmentRepository,
-            GitHubEnvironmentSyncService environmentSyncService,
-            DeploymentSourceFactory deploymentSourceFactory) {
-        super(GHEventPayload.DeploymentStatus.class);
-        this.deploymentSyncService = deploymentSyncService;
-        this.gitRepoRepository = gitRepoRepository;
-        this.environmentRepository = environmentRepository;
-        this.environmentSyncService = environmentSyncService;
-        this.deploymentSourceFactory = deploymentSourceFactory;
+  private GitHubDeploymentStatusMessageHandler(
+      GitHubDeploymentSyncService deploymentSyncService,
+      GitRepoRepository gitRepoRepository,
+      EnvironmentRepository environmentRepository,
+      GitHubEnvironmentSyncService environmentSyncService,
+      DeploymentSourceFactory deploymentSourceFactory) {
+    super(GHEventPayload.DeploymentStatus.class);
+    this.deploymentSyncService = deploymentSyncService;
+    this.gitRepoRepository = gitRepoRepository;
+    this.environmentRepository = environmentRepository;
+    this.environmentSyncService = environmentSyncService;
+    this.deploymentSourceFactory = deploymentSourceFactory;
+  }
+
+  @Override
+  protected void handleEvent(GHEventPayload.DeploymentStatus eventPayload) {
+    log.info(
+        "Received deployment status event for repository: {}, deployment: {}, action: {}",
+        eventPayload.getRepository().getFullName(),
+        eventPayload.getDeployment().getId(),
+        eventPayload.getAction());
+
+    GHDeployment ghDeployment = eventPayload.getDeployment();
+
+    // Extract environment name
+    String environmentName = ghDeployment.getEnvironment();
+    if (environmentName == null || environmentName.isEmpty()) {
+      log.error("Deployment {} has no environment name", ghDeployment.getId());
+      return;
     }
 
-    @Override
-    protected void handleEvent(GHEventPayload.DeploymentStatus eventPayload) {
-        log.info("Received deployment status event for repository: {}, deployment: {}, action: {}",
-                eventPayload.getRepository().getFullName(),
-                eventPayload.getDeployment().getId(),
-                eventPayload.getAction());
-
-        GHDeployment ghDeployment = eventPayload.getDeployment();
-
-        // Extract environment name
-        String environmentName = ghDeployment.getEnvironment();
-        if (environmentName == null || environmentName.isEmpty()) {
-            log.error("Deployment {} has no environment name", ghDeployment.getId());
-            return;
-        }
-
-        // Get the repository entity
-        GHRepository ghRepository = eventPayload.getRepository();
-        final GitRepository repository = gitRepoRepository.findById(ghRepository.getId()).orElse(null);
-        if (repository == null) {
-            log.warn("Repository {} not found in the database. Skipping deployment event.", ghRepository.getFullName());
-            return;
-        }
-
-        // Find the corresponding Environment entity
-        Environment environment = environmentRepository.findByNameAndRepository(environmentName, repository);
-        if (environment == null) {
-            log.warn("Environment {} not found for repository {}. Syncing environments for the repository started.", environmentName, repository.getNameWithOwner());
-            // Sync environments of the repository
-            environmentSyncService.syncEnvironmentsOfRepository(eventPayload.getRepository());
-
-            // Re-check for the environment after syncing
-            environment = environmentRepository.findByNameAndRepository(environmentName, repository);
-            if (environment == null) {
-                log.error("Environment {} not found for repository {}. Deployment event is ignored.", environmentName, repository.getNameWithOwner());
-                return;
-            }
-        }
-
-        // Get the deployment state, such as "success", "error", "pending"
-        GHDeploymentState deploymentState = eventPayload.getDeploymentStatus().getState();
-
-        // Convert GHDeployment to DeploymentSource
-        DeploymentSource deploymentSource = deploymentSourceFactory.create(ghDeployment, Deployment.mapToState(deploymentState));
-
-        // Process this single deployment
-        deploymentSyncService.processDeployment(deploymentSource, repository, environment);
-
+    // Get the repository entity
+    GHRepository ghRepository = eventPayload.getRepository();
+    final GitRepository repository = gitRepoRepository.findById(ghRepository.getId()).orElse(null);
+    if (repository == null) {
+      log.warn(
+          "Repository {} not found in the database. Skipping deployment event.",
+          ghRepository.getFullName());
+      return;
     }
 
-    @Override
-    protected GHEvent getHandlerEvent() {
-        return GHEvent.DEPLOYMENT_STATUS;
+    // Find the corresponding Environment entity
+    Environment environment =
+        environmentRepository.findByNameAndRepository(environmentName, repository);
+    if (environment == null) {
+      log.warn(
+          "Environment {} not found for repository {}. Syncing environments for the repository"
+              + " started.",
+          environmentName,
+          repository.getNameWithOwner());
+      // Sync environments of the repository
+      environmentSyncService.syncEnvironmentsOfRepository(eventPayload.getRepository());
+
+      // Re-check for the environment after syncing
+      environment = environmentRepository.findByNameAndRepository(environmentName, repository);
+      if (environment == null) {
+        log.error(
+            "Environment {} not found for repository {}. Deployment event is ignored.",
+            environmentName,
+            repository.getNameWithOwner());
+        return;
+      }
     }
+
+    // Get the deployment state, such as "success", "error", "pending"
+    GHDeploymentState deploymentState = eventPayload.getDeploymentStatus().getState();
+
+    // Convert GHDeployment to DeploymentSource
+    DeploymentSource deploymentSource =
+        deploymentSourceFactory.create(ghDeployment, Deployment.mapToState(deploymentState));
+
+    // Process this single deployment
+    deploymentSyncService.processDeployment(deploymentSource, repository, environment);
+  }
+
+  @Override
+  protected GHEvent getHandlerEvent() {
+    return GHEvent.DEPLOYMENT_STATUS;
+  }
 }

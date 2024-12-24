@@ -5,7 +5,7 @@ export const environment = {
     url: '',
     realm: '',
     clientId: '',
-    skipLoginPage: true
+    skipLoginPage: true,
   },
-  clientUrl: ''
+  clientUrl: '',
 };

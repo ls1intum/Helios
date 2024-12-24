@@ -1,8 +1,8 @@
-import {Component, computed, inject, input} from '@angular/core';
-import {IconsModule} from 'icons.module';
-import {TagModule} from 'primeng/tag';
-import {EnvironmentDeployment} from '@app/core/modules/openapi';
-import {DatePipe} from '@angular/common';
+import { Component, computed, inject, input } from '@angular/core';
+import { IconsModule } from 'icons.module';
+import { TagModule } from 'primeng/tag';
+import { EnvironmentDeployment } from '@app/core/modules/openapi';
+import { DatePipe } from '@angular/common';
 
 @Component({
   selector: 'app-environment-deployment-info',

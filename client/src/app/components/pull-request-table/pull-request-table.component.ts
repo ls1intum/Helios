@@ -1,7 +1,7 @@
 import { MarkdownPipe } from '@app/core/modules/markdown/markdown.pipe';
 import { AvatarGroupModule } from 'primeng/avatargroup';
 import { TooltipModule } from 'primeng/tooltip';
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { TableModule } from 'primeng/table';
 import { AvatarModule } from 'primeng/avatar';
 import { TagModule } from 'primeng/tag';
@@ -14,27 +14,28 @@ import { getAllPullRequestsOptions } from '@app/core/modules/openapi/@tanstack/a
 import { PullRequestInfoDto } from '@app/core/modules/openapi';
 import { ButtonModule } from 'primeng/button';
 
-
 @Component({
   selector: 'app-pull-request-table',
   imports: [TableModule, AvatarModule, TagModule, IconsModule, SkeletonModule, AvatarGroupModule, TooltipModule, MarkdownPipe, ButtonModule],
   templateUrl: './pull-request-table.component.html',
-  styles: [`
-    :host ::ng-deep {
-      .p-avatar {
-        img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
+  styles: [
+    `
+      :host ::ng-deep {
+        .p-avatar {
+          img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+          }
         }
       }
-    }
-  `]
+    `,
+  ],
 })
 export class PullRequestTableComponent {
   dateService = inject(DateService);
   router = inject(Router);
-  route = inject(ActivatedRoute)
+  route = inject(ActivatedRoute);
 
   query = injectQuery(() => getAllPullRequestsOptions());
 
@@ -43,7 +44,7 @@ export class PullRequestTableComponent {
     return pr.state === 'OPEN' ? 'Open' : 'Closed';
   }
 
-  getStatusSeverity(pr: PullRequestInfoDto): ('success' | 'danger' | 'info') {
+  getStatusSeverity(pr: PullRequestInfoDto): 'success' | 'danger' | 'info' {
     if (pr.isMerged) return 'info';
     return pr.state === 'OPEN' ? 'success' : 'danger';
   }
@@ -52,7 +53,7 @@ export class PullRequestTableComponent {
     return new Date(date).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
-      day: 'numeric'
+      day: 'numeric',
     });
   }
 
@@ -62,8 +63,7 @@ export class PullRequestTableComponent {
 
   openPR(pr: PullRequestInfoDto): void {
     this.router.navigate(['pr', pr.number], {
-      relativeTo: this.route.parent
+      relativeTo: this.route.parent,
     });
   }
 }
-

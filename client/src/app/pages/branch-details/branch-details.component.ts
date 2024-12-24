@@ -1,10 +1,10 @@
-import { Component, computed, inject, input, signal, Signal } from '@angular/core';
+import { Component, computed, input } from '@angular/core';
 
-import {PipelineComponent, PipelineSelector} from '@app/components/pipeline/pipeline.component';
-import {TagModule} from 'primeng/tag';
-import {IconsModule} from 'icons.module';
-import {ButtonModule} from 'primeng/button';
-import {InputTextModule} from 'primeng/inputtext';
+import { PipelineComponent, PipelineSelector } from '@app/components/pipeline/pipeline.component';
+import { TagModule } from 'primeng/tag';
+import { IconsModule } from 'icons.module';
+import { ButtonModule } from 'primeng/button';
+import { InputTextModule } from 'primeng/inputtext';
 import { DeploymentSelectionComponent } from '@app/components/deployment-selection/deployment-selection.component';
 import { injectQuery } from '@tanstack/angular-query-experimental';
 import { SkeletonModule } from 'primeng/skeleton';
@@ -20,7 +20,7 @@ export class BranchDetailsComponent {
   branchName = input.required<string>();
 
   query = injectQuery(() => ({
-    ...getBranchByRepositoryIdAndNameOptions({ path: { name: this.branchName(), repoId: this.repositoryId() }}),
+    ...getBranchByRepositoryIdAndNameOptions({ path: { name: this.branchName(), repoId: this.repositoryId() } }),
     refetchInterval: 5000,
   }));
 

@@ -1,9 +1,5 @@
 package de.tum.cit.aet.helios.workflow;
 
-import java.time.OffsetDateTime;
-import java.util.Optional;
-import java.util.Set;
-
 import de.tum.cit.aet.helios.github.BaseGitServiceEntity;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import de.tum.cit.aet.helios.pullrequest.PullRequest;
@@ -15,6 +11,9 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import java.time.OffsetDateTime;
+import java.util.Optional;
+import java.util.Set;
 import lombok.*;
 
 @Entity
@@ -25,117 +24,116 @@ import lombok.*;
 @ToString(callSuper = true)
 public class WorkflowRun extends BaseGitServiceEntity {
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "repository_id")
-    private GitRepository repository;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "repository_id")
+  private GitRepository repository;
 
-    @ManyToMany
-    private Set<PullRequest> pullRequests;
+  @ManyToMany private Set<PullRequest> pullRequests;
 
-    private String name;
+  private String name;
 
-    private String displayTitle;
+  private String displayTitle;
 
-    private long runNumber;
+  private long runNumber;
 
-    private long workflowId;
+  private long workflowId;
 
-    private long runAttempt;
+  private long runAttempt;
 
-    private OffsetDateTime runStartedAt;
+  private OffsetDateTime runStartedAt;
 
-    private String htmlUrl;
+  private String htmlUrl;
 
-    private String jobsUrl;
+  private String jobsUrl;
 
-    private String logsUrl;
+  private String logsUrl;
 
-    private String checkSuiteUrl;
+  private String checkSuiteUrl;
 
-    private String artifactsUrl;
+  private String artifactsUrl;
 
-    private String cancelUrl;
+  private String cancelUrl;
 
-    private String rerunUrl;
+  private String rerunUrl;
 
-    private String workflowUrl;
+  private String workflowUrl;
 
-    private String headBranch;
+  private String headBranch;
 
-    private String headSha;
+  private String headSha;
 
-    @NonNull
-    @Enumerated(EnumType.STRING)
-    private Status status;
+  @NonNull
+  @Enumerated(EnumType.STRING)
+  private Status status;
 
-    @Enumerated(EnumType.STRING)
-    private Conclusion conclusion;
+  @Enumerated(EnumType.STRING)
+  private Conclusion conclusion;
 
-    public Optional<Conclusion> getConclusion() {
-        return Optional.ofNullable(conclusion);
-    }
-    
-    public void setConclusion(Optional<Conclusion> conclusion) {
-        this.conclusion = conclusion.orElse(null);
-    }
+  public Optional<Conclusion> getConclusion() {
+    return Optional.ofNullable(conclusion);
+  }
 
-    public enum Status {
-        /** The queued. */
-        QUEUED,
-        /** The in progress. */
-        IN_PROGRESS,
-        /** The completed. */
-        COMPLETED,
-        /** The action required. */
-        ACTION_REQUIRED,
-        /** The cancelled. */
-        CANCELLED,
-        /** The failure. */
-        FAILURE,
-        /** The neutral. */
-        NEUTRAL,
-        /** The skipped. */
-        SKIPPED,
-        /** The stale. */
-        STALE,
-        /** The success. */
-        SUCCESS,
-        /** The timed out. */
-        TIMED_OUT,
-        /** The requested. */
-        REQUESTED,
-        /** The waiting. */
-        WAITING,
-        /** The pending. */
-        PENDING,
-        /** The unknown. */
-        UNKNOWN;
-    }
+  public void setConclusion(Optional<Conclusion> conclusion) {
+    this.conclusion = conclusion.orElse(null);
+  }
 
-    public enum Conclusion {
-        /** The action required. */
-        ACTION_REQUIRED,
-        /** The cancelled. */
-        CANCELLED,
-        /** The failure. */
-        FAILURE,
-        /** The neutral. */
-        NEUTRAL,
-        /** The success. */
-        SUCCESS,
-        /** The skipped. */
-        SKIPPED,
-        /** The stale. */
-        STALE,
-        /** The timed out. */
-        TIMED_OUT,
-        /** Start up fail */
-        STARTUP_FAILURE,
-        /** The unknown. */
-        UNKNOWN;
-    }
+  public enum Status {
+    /** The queued. */
+    QUEUED,
+    /** The in progress. */
+    IN_PROGRESS,
+    /** The completed. */
+    COMPLETED,
+    /** The action required. */
+    ACTION_REQUIRED,
+    /** The cancelled. */
+    CANCELLED,
+    /** The failure. */
+    FAILURE,
+    /** The neutral. */
+    NEUTRAL,
+    /** The skipped. */
+    SKIPPED,
+    /** The stale. */
+    STALE,
+    /** The success. */
+    SUCCESS,
+    /** The timed out. */
+    TIMED_OUT,
+    /** The requested. */
+    REQUESTED,
+    /** The waiting. */
+    WAITING,
+    /** The pending. */
+    PENDING,
+    /** The unknown. */
+    UNKNOWN;
+  }
 
-    // Missing:
-    // - event
+  public enum Conclusion {
+    /** The action required. */
+    ACTION_REQUIRED,
+    /** The cancelled. */
+    CANCELLED,
+    /** The failure. */
+    FAILURE,
+    /** The neutral. */
+    NEUTRAL,
+    /** The success. */
+    SUCCESS,
+    /** The skipped. */
+    SKIPPED,
+    /** The stale. */
+    STALE,
+    /** The timed out. */
+    TIMED_OUT,
+    /** Start up fail */
+    STARTUP_FAILURE,
+    /** The unknown. */
+    UNKNOWN;
+  }
+
+  // Missing:
+  // - event
 
 }

@@ -5,7 +5,7 @@ export const environment = {
     url: 'http://localhost:8081',
     realm: 'helios-example',
     clientId: 'helios-app-example',
-    skipLoginPage: true
+    skipLoginPage: true,
   },
-  clientUrl: 'http://localhost:4200'
+  clientUrl: 'http://localhost:4200',
 };

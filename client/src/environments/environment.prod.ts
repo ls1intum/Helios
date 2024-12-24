@@ -5,7 +5,7 @@ export const environment = {
     url: 'https://helios.artemis.cit.tum.de',
     realm: 'helios',
     clientId: 'helios-app',
-    skipLoginPage: true
+    skipLoginPage: true,
   },
-  clientUrl: 'https://helios.artemis.cit.tum.de'
+  clientUrl: 'https://helios.artemis.cit.tum.de',
 };

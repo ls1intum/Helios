@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import {KeycloakService} from '@app/core/services/keycloak/keycloak.service';
+import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 import { client } from './core/modules/openapi/sdk.gen';
 import { environment } from '../environments/environment';
 
@@ -11,7 +11,6 @@ import { environment } from '../environments/environment';
   templateUrl: './app.component.html',
 })
 export class AppComponent {
-
   constructor(private keycloakService: KeycloakService) {
     const token = this.keycloakService.keycloak.token;
 
@@ -19,7 +18,7 @@ export class AppComponent {
       baseUrl: environment.serverUrl,
     });
 
-    client.interceptors.request.use((request, options) => {
+    client.interceptors.request.use(request => {
       request.headers.set('Authorization', `Bearer ${token}`);
       return request;
     });
