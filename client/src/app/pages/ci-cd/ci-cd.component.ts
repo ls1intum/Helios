@@ -1,21 +1,19 @@
-import { Component, computed, Injectable, signal, inject } from '@angular/core';
-import { ActivatedRoute, NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { MenuItem } from 'primeng/api';
+import { Component, signal, inject, OnInit } from '@angular/core';
+import { ActivatedRoute, Router, RouterLink, RouterOutlet } from '@angular/router';
 import { TabMenuModule } from 'primeng/tabmenu';
 import { TabsModule } from 'primeng/tabs';
-import { filter, last, map } from 'rxjs';
 @Component({
   selector: 'app-ci-cd',
   imports: [RouterLink, RouterOutlet, TabMenuModule, TabsModule],
   templateUrl: './ci-cd.component.html',
 })
-export class CiCdComponent {
+export class CiCdComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
 
-  tabs = signal<{label: string, id: string}[]>([
+  tabs = signal<{ label: string; id: string }[]>([
     { label: 'Pull Requests', id: 'pr' },
-    { label: 'Branches', id: 'branch' }
+    { label: 'Branches', id: 'branch' },
   ]);
 
   activeTabId = this.tabs()[0].id;

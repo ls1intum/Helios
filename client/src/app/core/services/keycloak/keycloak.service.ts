@@ -1,9 +1,9 @@
-import {Injectable} from '@angular/core';
+import { Injectable } from '@angular/core';
 import Keycloak from 'keycloak-js';
-import {UserProfile} from './user-profile';
+import { UserProfile } from './user-profile';
 import { environment } from 'environments/environment';
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class KeycloakService {
   private _keycloak: Keycloak | undefined;
@@ -38,6 +38,6 @@ export class KeycloakService {
 
   logout() {
     // this.keycloak.accountManagement();
-    return this.keycloak.logout({redirectUri: environment.clientUrl});
+    return this.keycloak.logout({ redirectUri: environment.clientUrl });
   }
 }

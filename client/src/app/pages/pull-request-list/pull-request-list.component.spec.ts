@@ -8,9 +8,8 @@ describe('PullRequestListComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [PullRequestListComponent]
-    })
-    .compileComponents();
+      imports: [PullRequestListComponent],
+    }).compileComponents();
 
     fixture = TestBed.createComponent(PullRequestListComponent);
     component = fixture.componentInstance;

@@ -11,14 +11,7 @@ import { finalize } from 'rxjs';
 
 @Component({
   selector: 'app-connect-repo',
-  imports: [
-    ButtonModule,
-    DialogModule,
-    DropdownModule,
-    CardModule,
-    IconsModule,
-    FormsModule,
-],
+  imports: [ButtonModule, DialogModule, DropdownModule, CardModule, IconsModule, FormsModule],
   templateUrl: './connect-repo.component.html',
 })
 export class ConnectRepoComponent {
@@ -54,81 +47,85 @@ export class ConnectRepoComponent {
 
   private loadOrganizations() {
     this.loading.set(true);
-    this.githubService.getOrganizations().pipe(
-      finalize(() => this.loading.set(false))
-    ).subscribe({
-      next: (orgs) => {
-        this.organizations.set(orgs);
-      },
-      error: (error) => {
-        console.error('Failed to fetch organizations:', error);
-        // Handle error (show toast or message)
-      }
-    });
+    this.githubService
+      .getOrganizations()
+      .pipe(finalize(() => this.loading.set(false)))
+      .subscribe({
+        next: orgs => {
+          this.organizations.set(orgs);
+        },
+        error: error => {
+          console.error('Failed to fetch organizations:', error);
+          // Handle error (show toast or message)
+        },
+      });
   }
 
   validateAndSetToken() {
     if (!this.githubToken) return;
 
     this.loading.set(true);
-    this.githubService.validateToken(this.githubToken).pipe(
-      finalize(() => this.loading.set(false))
-    ).subscribe({
-      next: (isValid) => {
-        if (isValid) {
-          this.githubService.setToken(this.githubToken);
-          this.currentStep.set('org_selection');
-          this.loadOrganizations();
-        } else {
-          console.log('Invalid token');
-          // Show error message (invalid token)
-        }
-      },
-      error: () => {
-        console.error('Failed to validate token');
-        // Show error message
-      }
-    });
+    this.githubService
+      .validateToken(this.githubToken)
+      .pipe(finalize(() => this.loading.set(false)))
+      .subscribe({
+        next: isValid => {
+          if (isValid) {
+            this.githubService.setToken(this.githubToken);
+            this.currentStep.set('org_selection');
+            this.loadOrganizations();
+          } else {
+            console.log('Invalid token');
+            // Show error message (invalid token)
+          }
+        },
+        error: () => {
+          console.error('Failed to validate token');
+          // Show error message
+        },
+      });
   }
 
   selectOrganization(org: GithubOrg) {
     this.selectedOrg.set(org);
     this.loading.set(true);
 
-    this.githubService.getOrgRepositories(org.login).pipe(
-      finalize(() => this.loading.set(false))
-    ).subscribe({
-      next: (repos) => {
-        this.repositories.set(repos);
-        this.currentStep.set('repo_selection');
-      },
-      error: (error) => {
-        console.error('Failed to fetch repositories:', error);
-        // Handle error (show toast or message)
-      }
-    });
+    this.githubService
+      .getOrgRepositories(org.login)
+      .pipe(finalize(() => this.loading.set(false)))
+      .subscribe({
+        next: repos => {
+          this.repositories.set(repos);
+          this.currentStep.set('repo_selection');
+        },
+        error: error => {
+          console.error('Failed to fetch repositories:', error);
+          // Handle error (show toast or message)
+        },
+      });
   }
 
   selectRepository(repo: GithubRepo) {
     this.connectingRepoId.set(repo.id);
 
-    this.repositoryService.connectRepository({
-      name: repo.name,
-      id: repo.id,
-      description: repo.description || undefined,
-      nameWithOwner: repo.full_name,
-      htmlUrl: repo.html_url
-    }).pipe(
-      finalize(() => this.connectingRepoId.set(repo.id))
-    ).subscribe({
-      next: () => {
-        // Handle success (show toast or message)
-        this.hide();
-      },
-      error: (error) => {
-        console.error('Failed to connect repository:', error);
-        // Handle error (show toast or message)
-      }
-    });
+    this.repositoryService
+      .connectRepository({
+        name: repo.name,
+        id: repo.id,
+        description: repo.description || undefined,
+        nameWithOwner: repo.full_name,
+        htmlUrl: repo.html_url,
+      })
+      .pipe(finalize(() => this.connectingRepoId.set(repo.id)))
+      .subscribe({
+        next: () => {
+          // Handle success (show toast or message)
+          this.hide();
+        },
+        error: error => {
+          console.error('Failed to connect repository:', error);
+          // Handle error (show toast or message)
+        },
+      });
   }
 }

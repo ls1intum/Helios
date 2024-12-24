@@ -1,5 +1,5 @@
-import { Injectable } from "@angular/core";
-import { WorkflowDto, WorkflowRunDto } from "../modules/openapi";
+import { Injectable } from '@angular/core';
+import { WorkflowRunDto } from '../modules/openapi';
 
 export interface WorkflowRunGroup {
   label: string;
@@ -10,19 +10,19 @@ export interface Pipeline {
   groups: WorkflowRunGroup[];
 }
 
-const predefinedGroups: { label: string, matcher: Array<string> | ((name: string) => boolean) }[] = [
+const predefinedGroups: { label: string; matcher: Array<string> | ((name: string) => boolean) }[] = [
   {
     label: 'Build',
-    matcher: ['Build', 'Pull Request Labeler']
+    matcher: ['Build', 'Pull Request Labeler'],
   },
   {
     label: 'Test',
-    matcher: ['Test', 'CodeQL', 'Validate PR Title', 'Check if German and English translations are consistent']
+    matcher: ['Test', 'CodeQL', 'Validate PR Title', 'Check if German and English translations are consistent'],
   },
   {
     label: 'Deployment',
-    matcher: ['Testserver Locks', 'Deploy to Testserver', 'Deploy']
-  }
+    matcher: ['Testserver Locks', 'Deploy to Testserver', 'Deploy'],
+  },
 ];
 
 @Injectable()

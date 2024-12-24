@@ -8,9 +8,8 @@ describe('EnvironmentDeploymentHistoryComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [EnvironmentDeploymentHistoryComponent]
-    })
-    .compileComponents();
+      imports: [EnvironmentDeploymentHistoryComponent],
+    }).compileComponents();
 
     fixture = TestBed.createComponent(EnvironmentDeploymentHistoryComponent);
     component = fixture.componentInstance;

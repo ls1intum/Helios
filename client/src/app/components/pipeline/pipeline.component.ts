@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, signal } from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
 import { injectQuery } from '@tanstack/angular-query-experimental';
 import { TableModule } from 'primeng/table';
 import { PipelineService } from '@app/core/services/pipeline';
@@ -6,14 +6,20 @@ import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { PanelModule } from 'primeng/panel';
 import { IconsModule } from 'icons.module';
 import { TooltipModule } from 'primeng/tooltip';
-import { getLatestWorkflowRunsByBranchAndHeadCommitOptions, getLatestWorkflowRunsByPullRequestIdAndHeadCommitOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
+import {
+  getLatestWorkflowRunsByBranchAndHeadCommitOptions,
+  getLatestWorkflowRunsByPullRequestIdAndHeadCommitOptions,
+} from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { SkeletonModule } from 'primeng/skeleton';
 
-export type PipelineSelector = { repositoryId: number } & ({
-  branchName: string;
-} | {
-  pullRequestId: number;
-});
+export type PipelineSelector = { repositoryId: number } & (
+  | {
+      branchName: string;
+    }
+  | {
+      pullRequestId: number;
+    }
+);
 
 @Component({
   selector: 'app-pipeline',
@@ -29,21 +35,21 @@ export class PipelineComponent {
   branchName = computed(() => {
     const selector = this.selector();
     if (!selector) return null;
-    return 'branchName' in selector ? selector.branchName : null
+    return 'branchName' in selector ? selector.branchName : null;
   });
   pullRequestId = computed(() => {
     const selector = this.selector();
     if (!selector) return null;
-    return 'pullRequestId' in selector ? selector.pullRequestId : null
+    return 'pullRequestId' in selector ? selector.pullRequestId : null;
   });
 
   branchQuery = injectQuery(() => ({
-    ...getLatestWorkflowRunsByBranchAndHeadCommitOptions({ path: { branch: this.branchName()! }}),
+    ...getLatestWorkflowRunsByBranchAndHeadCommitOptions({ path: { branch: this.branchName()! } }),
     enabled: this.branchName() !== null,
     refetchInterval: 2000,
   }));
   pullRequestQuery = injectQuery(() => ({
-    ...getLatestWorkflowRunsByPullRequestIdAndHeadCommitOptions({path: { pullRequestId: this.pullRequestId() || 0 }}),
+    ...getLatestWorkflowRunsByPullRequestIdAndHeadCommitOptions({ path: { pullRequestId: this.pullRequestId() || 0 } }),
     enabled: this.pullRequestId() !== null,
     refetchInterval: 2000,
   }));
@@ -58,6 +64,6 @@ export class PipelineComponent {
 
     return {
       groups,
-    }
+    };
   });
 }

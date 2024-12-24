@@ -25,7 +25,7 @@ export class ProjectOverviewComponent {
   loading = computed(() => this.repositoryService.loading());
 
   showDialog() {
-    console.log(this.repositories())
+    console.log(this.repositories());
     this.repositoryConnection().show();
   }
 
@@ -37,5 +37,4 @@ export class ProjectOverviewComponent {
     console.log('Navigating to project', repository);
     this.router.navigate(['repo', repository.id.toString(), 'ci-cd']);
   }
-
 }

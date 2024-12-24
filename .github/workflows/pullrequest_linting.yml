@@ -1,0 +1,26 @@
+name: Linting
+on: [pull_request]
+jobs:
+  checkstyle:
+    name: Linting Server (Java)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dbelyaev/action-checkstyle@master
+        with:
+          github_token: ${{ secrets.github_token }}
+          reporter: github-pr-review
+          checkstyle_config: ./server/checkstyle.xml
+          checkstyle_version: 10.21.0
+          fail_on_error: true
+  build:
+    name: Linting Client (Angular)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install modules
+        working-directory: ./client
+        run: yarn
+      - name: Run ESLint
+        working-directory: ./client
+        run: npx eslint --max-warnings 0 .

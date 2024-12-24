@@ -5,5 +5,7 @@
         "vscjava.vscode-java-pack",
         "vmware.vscode-boot-dev-pack",
         "bradlc.vscode-tailwindcss",
+        "shengchen.vscode-checkstyle",
+        "josevseb.google-java-format-for-vs-code",
     ]
 }

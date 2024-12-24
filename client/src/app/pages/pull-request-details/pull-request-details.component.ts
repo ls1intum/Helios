@@ -1,11 +1,11 @@
 import { Component, computed, input } from '@angular/core';
 import { MarkdownPipe } from '@app/core/modules/markdown/markdown.pipe';
 
-import {PipelineComponent, PipelineSelector} from '@app/components/pipeline/pipeline.component';
-import {TagModule} from 'primeng/tag';
-import {IconsModule} from 'icons.module';
-import {ButtonModule} from 'primeng/button';
-import {InputTextModule} from 'primeng/inputtext';
+import { PipelineComponent, PipelineSelector } from '@app/components/pipeline/pipeline.component';
+import { TagModule } from 'primeng/tag';
+import { IconsModule } from 'icons.module';
+import { ButtonModule } from 'primeng/button';
+import { InputTextModule } from 'primeng/inputtext';
 import { DeploymentSelectionComponent } from '@app/components/deployment-selection/deployment-selection.component';
 import { injectQuery } from '@tanstack/angular-query-experimental';
 import { SkeletonModule } from 'primeng/skeleton';
@@ -21,7 +21,7 @@ export class PullRequestDetailsComponent {
   pullRequestNumber = input.required<number>();
 
   query = injectQuery(() => ({
-    ...getPullRequestByRepositoryIdAndNumberOptions({ path: { repoId: this.repositoryId(), number: this.pullRequestNumber() }}),
+    ...getPullRequestByRepositoryIdAndNumberOptions({ path: { repoId: this.repositoryId(), number: this.pullRequestNumber() } }),
     refetchInterval: 5000,
   }));
 

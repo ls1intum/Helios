@@ -6,7 +6,12 @@ import { InputTextModule } from 'primeng/inputtext';
 import { AutoCompleteModule } from 'primeng/autocomplete';
 import { ActivatedRoute, Router } from '@angular/router';
 import { injectMutation, injectQuery, injectQueryClient } from '@tanstack/angular-query-experimental';
-import { getAllEnvironmentsQueryKey, getEnvironmentByIdOptions, getEnvironmentByIdQueryKey, updateEnvironmentMutation } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
+import {
+  getAllEnvironmentsQueryKey,
+  getEnvironmentByIdOptions,
+  getEnvironmentByIdQueryKey,
+  updateEnvironmentMutation,
+} from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { MessageService } from 'primeng/api';
 
 @Component({
@@ -34,7 +39,7 @@ export class EnvironmentEditFormComponent implements OnInit {
   environmentForm!: FormGroup;
 
   environmentQuery = injectQuery(() => ({
-    ...getEnvironmentByIdOptions({ path: {id: this.environmentId() } }),
+    ...getEnvironmentByIdOptions({ path: { id: this.environmentId() } }),
     placeholderData: {
       id: 0,
       name: '',
@@ -47,11 +52,11 @@ export class EnvironmentEditFormComponent implements OnInit {
   mutateEnvironment = injectMutation(() => ({
     ...updateEnvironmentMutation(),
     onSuccess: () => {
-      this.queryClient.invalidateQueries({ queryKey: getEnvironmentByIdQueryKey({ path: { id: this.environmentId() }})});
-      this.queryClient.invalidateQueries({ queryKey: getAllEnvironmentsQueryKey()});
-      this.messageService.add({severity: 'success', summary: 'Success', detail: 'Environment updated successfully'});
+      this.queryClient.invalidateQueries({ queryKey: getEnvironmentByIdQueryKey({ path: { id: this.environmentId() } }) });
+      this.queryClient.invalidateQueries({ queryKey: getAllEnvironmentsQueryKey() });
+      this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Environment updated successfully' });
       this.redirectToEnvironmentList();
-    }
+    },
   }));
 
   environment = computed(() => this.environmentQuery.data());
@@ -67,11 +72,11 @@ export class EnvironmentEditFormComponent implements OnInit {
 
   redirectToEnvironmentList = () => {
     this.router.navigate(['list'], { relativeTo: this.route.parent });
-  }
+  };
 
   submitForm = () => {
     if (this.environmentForm && this.environmentForm.valid) {
-      this.mutateEnvironment.mutate({ path: {id: this.environmentId()}, body: this.environmentForm.value });
+      this.mutateEnvironment.mutate({ path: { id: this.environmentId() }, body: this.environmentForm.value });
     }
   };
 }

@@ -7,7 +7,7 @@ import { HeliosIconComponent } from '../../components/helios-icon/helios-icon.co
 import { DividerModule } from 'primeng/divider';
 import { AvatarModule } from 'primeng/avatar';
 import { ToastModule } from 'primeng/toast';
-import {KeycloakService} from '@app/core/services/keycloak/keycloak.service';
+import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 
 @Component({
   selector: 'app-main-layout',
@@ -48,5 +48,4 @@ export class MainLayoutComponent implements OnInit {
       },
     ];
   }
-
 }

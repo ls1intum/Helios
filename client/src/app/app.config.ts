@@ -16,10 +16,9 @@ import { KeycloakService } from './core/services/keycloak/keycloak.service';
 import { BearerInterceptor } from './core/services/keycloak/bearer-interceptor';
 import { DatePipe } from '@angular/common';
 
-
 client.setConfig({
   baseUrl: environment.serverUrl,
-})
+});
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -49,18 +48,18 @@ export const appConfig: ApplicationConfig = {
               700: '{gray.700}',
               800: '{gray.800}',
               900: '{gray.900}',
-              950: '{gray.950}'
-            }
-          }
+              950: '{gray.950}',
+            },
+          },
         }),
         options: {
           darkModeSelector: '.dark-selector',
           cssLayer: {
             name: 'primeng',
-            order: 'tailwind-base, primeng, tailwind-utilities'
-          }
-        }
-      }
+            order: 'tailwind-base, primeng, tailwind-utilities',
+          },
+        },
+      },
     }),
     provideExperimentalZonelessChangeDetection(),
     provideRouter(routes, withComponentInputBinding(), withRouterConfig({ paramsInheritanceStrategy: 'always' })),

@@ -1,6 +1,6 @@
-import { Component, input } from "@angular/core";
-import { IconsModule } from "icons.module";
-import { TagModule } from "primeng/tag";
+import { Component, input } from '@angular/core';
+import { IconsModule } from 'icons.module';
+import { TagModule } from 'primeng/tag';
 
 @Component({
   selector: 'app-deployment-state-tag',

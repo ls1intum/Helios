@@ -1,11 +1,11 @@
-import {Component, computed, inject, Injectable, input, output, signal} from '@angular/core';
-import {AccordionModule} from 'primeng/accordion';
+import { Component, computed, input, output, signal } from '@angular/core';
+import { AccordionModule } from 'primeng/accordion';
 
-import {TagModule} from 'primeng/tag';
-import {IconsModule} from 'icons.module';
-import {ButtonModule} from 'primeng/button';
-import {RouterLink} from '@angular/router';
-import {injectMutation, injectQuery, injectQueryClient} from '@tanstack/angular-query-experimental';
+import { TagModule } from 'primeng/tag';
+import { IconsModule } from 'icons.module';
+import { ButtonModule } from 'primeng/button';
+import { RouterLink } from '@angular/router';
+import { injectMutation, injectQuery, injectQueryClient } from '@tanstack/angular-query-experimental';
 import { LockTagComponent } from '../lock-tag/lock-tag.component';
 import { DeploymentStateTagComponent } from '../deployment-state-tag/deployment-state-tag.component';
 import { InputTextModule } from 'primeng/inputtext';
@@ -25,7 +25,7 @@ export class EnvironmentListViewComponent {
   deployable = input<boolean | undefined>();
   hideLinkToList = input<boolean | undefined>();
 
-  onDeploy = output<EnvironmentDto>();
+  deploy = output<EnvironmentDto>();
 
   searchInput = signal<string>('');
 
@@ -37,16 +37,16 @@ export class EnvironmentListViewComponent {
     ...unlockEnvironmentMutation(),
     onSuccess: () => {
       this.queryClient.invalidateQueries({ queryKey: getAllEnvironmentsQueryKey() });
-    }
+    },
   }));
 
   onUnlockEnvironment(event: Event, environment: EnvironmentDto) {
-    this.unlockEnvironment.mutate({ path: { id: environment.id }});
+    this.unlockEnvironment.mutate({ path: { id: environment.id } });
     event.stopPropagation();
   }
 
   deployEnvironment(environment: EnvironmentDto) {
-    this.onDeploy.emit(environment);
+    this.deploy.emit(environment);
   }
 
   onSearch(event: Event) {
@@ -62,13 +62,13 @@ export class EnvironmentListViewComponent {
       return [];
     }
 
-    return environments.filter((environment) => {
+    return environments.filter(environment => {
       return environment.name.toLowerCase().includes(search.toLowerCase());
     });
   });
 
   getFullUrl(url: string): string {
-    if (url && (!url.startsWith('http') && !url.startsWith('https'))) {
+    if (url && !url.startsWith('http') && !url.startsWith('https')) {
       return 'http://' + url;
     }
     return url;
