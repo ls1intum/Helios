@@ -12,6 +12,18 @@ export type WorkflowMembershipDto = {
   orderIndex: number;
 };
 
+export type EnvironmentDeployment = {
+  id: number;
+  url: string;
+  state?: 'PENDING' | 'SUCCESS' | 'ERROR' | 'FAILURE' | 'IN_PROGRESS' | 'QUEUED' | 'INACTIVE' | 'UNKNOWN';
+  statusesUrl: string;
+  sha: string;
+  ref: string;
+  task: string;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
 export type EnvironmentDto = {
   repository?: RepositoryInfoDto;
   id: number;
@@ -25,18 +37,6 @@ export type EnvironmentDto = {
   description?: string;
   serverUrl?: string;
   latestDeployment?: EnvironmentDeployment;
-};
-
-export type EnvironmentDeployment = {
-  id: number;
-  url: string;
-  state?: 'PENDING' | 'SUCCESS' | 'ERROR' | 'FAILURE' | 'IN_PROGRESS' | 'QUEUED' | 'INACTIVE' | 'UNKNOWN';
-  statusesUrl: string;
-  sha: string;
-  ref: string;
-  task: string;
-  createdAt?: string;
-  updatedAt?: string;
 };
 
 export type RepositoryInfoDto = {
@@ -138,7 +138,7 @@ export type DeploymentDto = {
 
 export type BranchInfoDto = {
   name: string;
-  commit_sha: string;
+  commitSha: string;
   repository?: RepositoryInfoDto;
 };
 
