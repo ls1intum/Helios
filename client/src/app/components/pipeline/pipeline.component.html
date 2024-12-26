@@ -25,11 +25,11 @@
 
 @if (pipeline(); as pipeline) {
   <div class="flex items-start mt-2">
-    @for (group of pipeline.groups; track group.label; let isLast = $last) {
+    @for (group of pipeline.groups; track group.name; let isLast = $last) {
       <ng-container>
-        <p-panel [header]="group.label">
+        <p-panel [header]="group.name">
           <div class="flex flex-col gap-4">
-            @for (workflowRun of group.runs; track workflowRun.id) {
+            @for (workflowRun of group.workflows; track workflowRun.id) {
               <div class="flex items-center space-x-2">
                 @if (workflowRun.status === 'COMPLETED') {
                   @switch (workflowRun.conclusion) {
