@@ -1,4 +1,4 @@
-import { Component, computed, inject, input } from '@angular/core';
+import { Component, computed, input } from '@angular/core';
 import { injectQuery } from '@tanstack/angular-query-experimental';
 import { TableModule } from 'primeng/table';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
@@ -27,7 +27,6 @@ export type PipelineSelector = { repositoryId: number } & (
   templateUrl: './pipeline.component.html',
 })
 export class PipelineComponent {
-
   selector = input<PipelineSelector | null>();
 
   branchName = computed(() => {
@@ -59,7 +58,7 @@ export class PipelineComponent {
   }));
 
   groupsQuery = injectQuery(() => ({
-    ...getGroupsWithWorkflowsOptions({ path: { repositoryId: this.repositoryId() || 0 } }),    
+    ...getGroupsWithWorkflowsOptions({ path: { repositoryId: this.repositoryId() || 0 } }),
   }));
 
   pipeline = computed(() => {
