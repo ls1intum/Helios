@@ -8,7 +8,6 @@ public class RepositoryContext {
       new InheritableThreadLocal<>();
 
   public static void setRepositoryId(String repositoryId) {
-    System.out.println("Setting tenantId to " + repositoryId);
     currentRepository.set(repositoryId);
   }
 
