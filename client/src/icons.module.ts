@@ -32,6 +32,7 @@ import {
   IconAdjustmentsAlt,
   IconLogout,
   IconQuestionMark,
+  IconPoint,
 } from 'angular-tabler-icons/icons';
 
 // Select some icons (use an object, not an array)
@@ -66,6 +67,7 @@ const icons = {
   IconAdjustmentsAlt,
   IconLogout,
   IconQuestionMark,
+  IconPoint,
 };
 
 @NgModule({

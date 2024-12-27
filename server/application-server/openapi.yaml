@@ -504,6 +504,30 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DeploymentDto"
+  /api/commits/repository/{repoId}/commit/{sha}:
+    get:
+      tags:
+      - commit-controller
+      operationId: getCommitByRepositoryIdAndName
+      parameters:
+      - name: repoId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: sha
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CommitInfoDto"
   /api/branches:
     get:
       tags:
@@ -933,6 +957,22 @@ components:
         updatedAt:
           type: string
           format: date-time
+    CommitInfoDto:
+      required:
+      - sha
+      type: object
+      properties:
+        sha:
+          type: string
+        author:
+          $ref: "#/components/schemas/UserInfoDto"
+        message:
+          type: string
+        authoredAt:
+          type: string
+          format: date-time
+        repository:
+          $ref: "#/components/schemas/RepositoryInfoDto"
     BranchInfoDto:
       required:
       - commitSha

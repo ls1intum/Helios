@@ -136,6 +136,14 @@ export type DeploymentDto = {
   updatedAt?: string;
 };
 
+export type CommitInfoDto = {
+  sha: string;
+  author?: UserInfoDto;
+  message?: string;
+  authoredAt?: string;
+  repository?: RepositoryInfoDto;
+};
+
 export type BranchInfoDto = {
   name: string;
   commitSha: string;
@@ -575,6 +583,25 @@ export type GetLatestDeploymentByEnvironmentIdResponses = {
 };
 
 export type GetLatestDeploymentByEnvironmentIdResponse = GetLatestDeploymentByEnvironmentIdResponses[keyof GetLatestDeploymentByEnvironmentIdResponses];
+
+export type GetCommitByRepositoryIdAndNameData = {
+  body?: never;
+  path: {
+    repoId: number;
+    sha: string;
+  };
+  query?: never;
+  url: '/api/commits/repository/{repoId}/commit/{sha}';
+};
+
+export type GetCommitByRepositoryIdAndNameResponses = {
+  /**
+   * OK
+   */
+  200: CommitInfoDto;
+};
+
+export type GetCommitByRepositoryIdAndNameResponse = GetCommitByRepositoryIdAndNameResponses[keyof GetCommitByRepositoryIdAndNameResponses];
 
 export type GetAllBranchesData = {
   body?: never;

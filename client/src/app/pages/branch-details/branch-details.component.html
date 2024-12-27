@@ -1,9 +1,9 @@
 <div>
   @if (query.data(); as branch) {
     <div class="flex flex-col items-start mb-3">
-      <span class="text-gray-500 text-sm uppercase font-semibold tracking-wider mb-1">Branch</span>
+      <span class="text-gray-500 text-sm uppercase font-semibold tracking-wider mb-1">Branch {{ branch.name }}</span>
       <div class="flex items-center gap-4">
-        <h2 class="text-3xl">{{ branch.name }}</h2>
+        <h2 class="text-3xl">{{ commit()?.message }}</h2>
       </div>
     </div>
   } @else {
