@@ -55,7 +55,9 @@ public class DeploymentController {
       deploymentService.deployToEnvironment(deployRequest);
       return ResponseEntity.ok().build();
     } catch (DeploymentException e) {
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Deployment failed: " + e.getMessage());
+      return ResponseEntity
+          .status(HttpStatus.INTERNAL_SERVER_ERROR)
+          .body("Deployment failed: " + e.getMessage());
     }
   }
 }

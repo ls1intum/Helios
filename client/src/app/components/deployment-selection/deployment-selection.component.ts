@@ -23,9 +23,8 @@ export class DeploymentSelectionComponent {
       this.queryClient.invalidateQueries({ queryKey: getAllEnvironmentsQueryKey });
       this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Deployment started successfully' });
     },
-    onError: (error: any) => {
-      console.log(error);
-      this.messageService.add({ severity: 'error', summary: 'Error', detail: error });
+    onError: (error: Error) => {
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: String(error) });
     },
   }));
 

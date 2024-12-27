@@ -46,7 +46,9 @@ public class WorkflowService {
   }
 
   public Workflow getDeploymentWorkflow() {
-    Workflow workflow = workflowRepository.findFirstByLabelOrderByCreatedAtDesc(Workflow.Label.DEPLOYMENT);
+    Workflow workflow = 
+        workflowRepository
+            .findFirstByLabelOrderByCreatedAtDesc(Workflow.Label.DEPLOYMENT);
     return workflow;
   }
 }
