@@ -3,6 +3,7 @@ import { EnvironmentListViewComponent } from '../environments/environment-list/e
 import { injectMutation, injectQueryClient } from '@tanstack/angular-query-experimental';
 import { deployToEnvironmentMutation, getAllEnvironmentsQueryKey } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { EnvironmentDto } from '@app/core/modules/openapi';
+import { MessageService } from 'primeng/api';
 
 @Component({
   selector: 'app-deployment-selection',
@@ -10,6 +11,8 @@ import { EnvironmentDto } from '@app/core/modules/openapi';
   imports: [EnvironmentListViewComponent],
 })
 export class DeploymentSelectionComponent {
+  constructor(private messageService: MessageService) {}
+
   queryClient = injectQueryClient();
 
   sourceRef = input.required<string>();
@@ -18,6 +21,11 @@ export class DeploymentSelectionComponent {
     ...deployToEnvironmentMutation(),
     onSuccess: () => {
       this.queryClient.invalidateQueries({ queryKey: getAllEnvironmentsQueryKey });
+      this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Deployment started successfully' });
+    },
+    onError: (error: any) => {
+      console.log(error);
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: error });
     },
   }));
 
