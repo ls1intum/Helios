@@ -16,9 +16,9 @@ public class PullRequestService {
     this.pullRequestRepository = pullRequestRepository;
   }
 
-  public List<PullRequestInfoDto> getAllPullRequests() {
+  public List<PullRequestBaseInfoDto> getAllPullRequests() {
     return pullRequestRepository.findAll().stream()
-        .map(PullRequestInfoDto::fromPullRequest)
+        .map(PullRequestBaseInfoDto::fromPullRequest)
         .collect(Collectors.toList());
   }
 

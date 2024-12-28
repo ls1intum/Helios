@@ -32,6 +32,9 @@ import {
   IconAdjustmentsAlt,
   IconLogout,
   IconQuestionMark,
+  IconGitPullRequestClosed,
+  IconGitPullRequestDraft,
+  IconGitMerge,
   IconPoint,
 } from 'angular-tabler-icons/icons';
 
@@ -60,6 +63,9 @@ const icons = {
   IconCircleX,
   IconCloudUpload,
   IconGitPullRequest,
+  IconGitPullRequestClosed,
+  IconGitPullRequestDraft,
+  IconGitMerge,
   IconChevronRight,
   IconChevronDown,
   IconChevronUp,
