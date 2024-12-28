@@ -22,7 +22,7 @@ pydantic-settings==2.6.1
 pydantic==2.9.2
 pygments==2.18.0
 python-dotenv==1.0.1
-python-multipart==0.0.17
+python-multipart==0.0.18
 pyyaml==6.0.2
 rich==13.9.4
 shellingham==1.5.4
