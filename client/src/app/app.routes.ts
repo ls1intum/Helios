@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { HeaderGuard } from './core/middlewares/header.service';
 
 export const routes: Routes = [
   {
@@ -13,6 +14,7 @@ export const routes: Routes = [
   {
     path: 'repo/:repositoryId',
     loadComponent: () => import('./pages/main-layout/main-layout.component').then(m => m.MainLayoutComponent),
+    canActivateChild: [HeaderGuard],
     children: [
       { path: '', loadComponent: () => import('./pages/ci-cd/ci-cd.component').then(m => m.CiCdComponent) },
       {
