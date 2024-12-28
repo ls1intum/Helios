@@ -7,26 +7,20 @@ import { definePreset } from '@primeng/themes';
 import Aura from '@primeng/themes/aura';
 
 import { routes } from './app.routes';
-import { MessageService } from 'primeng/api';
+import { ConfirmationService, MessageService } from 'primeng/api';
 import { HTTP_INTERCEPTORS, provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import { provideAnimations } from '@angular/platform-browser/animations';
-import { client } from './core/modules/openapi';
-import { environment } from 'environments/environment';
 import { KeycloakService } from './core/services/keycloak/keycloak.service';
 import { BearerInterceptor } from './core/services/keycloak/bearer-interceptor';
 import { DatePipe } from '@angular/common';
 import { HeaderGuard } from './core/middlewares/header.service';
-
-client.setConfig({
-  baseUrl: environment.serverUrl,
-});
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       refetchOnWindowFocus: false, // default true
       staleTime: 1000 * 60 * 5, // 5 minutes
-      retry: 2,
+      retry: false,
     },
   },
 });
@@ -68,6 +62,7 @@ export const appConfig: ApplicationConfig = {
     provideTanStackQuery(new QueryClient()),
     HeaderGuard,
     MessageService,
+    ConfirmationService,
     provideHttpClient(withInterceptorsFromDi()),
     provideAnimations(),
     provideQueryClient(queryClient),

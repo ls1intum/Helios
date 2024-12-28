@@ -1,15 +1,15 @@
 <main class="h-screen overflow-hidden">
   <div class="flex h-full p-3">
     <!-- Fixed Navigation Bar -->
-    <div class="rounded-2xl p-5 mr-3 bg-slate-100 flex flex-col items-center justify-between h-full sticky top-3">
+    <div class="rounded-2xl p-5 mr-3 bg-gray-100 flex flex-col items-center justify-between h-full sticky top-3">
       <app-helios-icon routerLink="/" size="3rem" class="rounded-xl w-12 cursor-pointer" />
       <p-divider />
-      <p-avatar label="A" pTooltip="Artemis" size="large" />
+      <p-avatar label="{{ repositoryQuery.data()?.name | slice: 0 : 1 }}" pTooltip="{{ repositoryQuery.data()?.nameWithOwner }}" size="large" />
       <p-divider />
       <div class="flex flex-col gap-3">
         @for (item of items; track item.label) {
           <a
-            class="rounded-xl p-2 flex items-center text-slate-500 hover:text-slate-700"
+            class="rounded-xl p-2 flex items-center text-gray-500 hover:text-gray-700"
             [routerLink]="item.path"
             [routerLinkActive]="'!bg-slate-800 !text-slate-100 !hover:text-slate-100'"
             [pTooltip]="item.label"
@@ -19,7 +19,7 @@
         }
       </div>
       <span class="flex-grow"></span>
-      <i-tabler name="settings" pTooltip="Settings" class="!size-10 text-slate-500 hover:text-slate-700 !stroke-1" />
+      <i-tabler name="settings" pTooltip="Settings" class="!size-10 text-gray-500 hover:text-gray-700 !stroke-1" />
       <p-divider />
       <p-avatar label="U" size="large" />
       <p-divider />
@@ -29,8 +29,8 @@
     </div>
 
     <!-- Scrollable Content Area -->
-    <div class="flex-grow overflow-auto h-full">
-      <div class="p-3">
+    <div class="flex-grow overflow-hidden h-full border border-gray-200 rounded-2xl">
+      <div class="h-full overflow-auto p-6 mx-auto">
         <router-outlet />
       </div>
     </div>

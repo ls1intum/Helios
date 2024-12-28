@@ -26,12 +26,24 @@ import {
 import { WorkflowDto, WorkflowGroupDto, WorkflowMembershipDto } from '@app/core/modules/openapi';
 import { WorkflowDtoSchema } from '@app/core/modules/openapi/schemas.gen';
 import { MessageService } from 'primeng/api';
+import { PageHeadingComponent } from '@app/components/page-heading/page-heading.component';
 
 @Component({
   selector: 'app-project-settings',
   standalone: true,
-  imports: [FormsModule, TableModule, DropdownModule, ButtonModule, PanelModule, DialogModule, InputTextModule, IconsModule, DragDropModule, ConfirmDialogModule],
-  providers: [ConfirmationService],
+  imports: [
+    FormsModule,
+    TableModule,
+    DropdownModule,
+    ButtonModule,
+    PageHeadingComponent,
+    PanelModule,
+    DialogModule,
+    InputTextModule,
+    IconsModule,
+    DragDropModule,
+    ConfirmDialogModule,
+  ],
   templateUrl: './project-settings.component.html',
 })
 export class ProjectSettingsComponent {
