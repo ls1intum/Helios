@@ -21,6 +21,7 @@ import org.kohsuke.github.GHIssueState;
 import org.kohsuke.github.GHPullRequest;
 import org.kohsuke.github.GHPullRequestQueryBuilder.Sort;
 import org.kohsuke.github.GHRepository;
+import org.kohsuke.github.GHUser;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -209,7 +210,23 @@ public class GitHubPullRequestSyncService {
 
     // Link requested reviewers
     try {
-      var requestedReviewers = ghPullRequest.getRequestedReviewers();
+      List<GHUser> requestedReviewers = new ArrayList<>(ghPullRequest.getRequestedReviewers());
+
+      // Add indirectly requested reviewers by team
+      var requestedReviewersByTeam = ghPullRequest.getRequestedTeams();
+      requestedReviewersByTeam.forEach(
+          requestedTeam -> {
+          try {
+            requestedReviewers.addAll(requestedTeam.getMembers());
+          } catch (IOException e) {
+            log.error(
+                "Failed to link requested reviewers (by team) for pull request {}: {}",
+                ghPullRequest.getId(),
+                e.getMessage());
+          }
+        }
+      );
+
       var resultRequestedReviewers = new HashSet<User>();
       requestedReviewers.forEach(
           requestedReviewer -> {
