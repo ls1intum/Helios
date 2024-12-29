@@ -9,10 +9,10 @@ import { DividerModule } from 'primeng/divider';
   templateUrl: './page-heading.component.html',
 })
 export class PageHeadingComponent {
-  repositoryId = input.required<number>();
+  repositoryId = input<number>();
 
   repositoryQuery = injectQuery(() => ({
-    ...getRepositoryByIdOptions({ path: { id: this.repositoryId() } }),
+    ...getRepositoryByIdOptions({ path: { id: this.repositoryId() || 0 } }),
     enabled: () => !!this.repositoryId(),
   }));
 }

@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { ProjectOverviewComponent } from './project-overview.component';
+import { ProjectOverviewComponent } from './repository-overview.component';
 
 describe('ProjectOverviewComponent', () => {
   let component: ProjectOverviewComponent;
