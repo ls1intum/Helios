@@ -212,7 +212,7 @@ export const WorkflowDtoSchema = {
 } as const;
 
 export const WorkflowRunDtoSchema = {
-  required: ['displayTitle', 'htmlUrl', 'id', 'name', 'status'],
+  required: ['displayTitle', 'htmlUrl', 'id', 'name', 'status', 'workflowId'],
   type: 'object',
   properties: {
     id: {
@@ -244,6 +244,10 @@ export const WorkflowRunDtoSchema = {
         'PENDING',
         'UNKNOWN',
       ],
+    },
+    workflowId: {
+      type: 'integer',
+      format: 'int64',
     },
     conclusion: {
       type: 'string',

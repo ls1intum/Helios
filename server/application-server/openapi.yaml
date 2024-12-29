@@ -755,6 +755,7 @@ components:
       - id
       - name
       - status
+      - workflowId
       type: object
       properties:
         id:
@@ -782,6 +783,9 @@ components:
           - WAITING
           - PENDING
           - UNKNOWN
+        workflowId:
+          type: integer
+          format: int64
         conclusion:
           type: string
           enum:

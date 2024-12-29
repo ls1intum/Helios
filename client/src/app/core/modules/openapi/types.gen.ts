@@ -87,6 +87,7 @@ export type WorkflowRunDto = {
     | 'WAITING'
     | 'PENDING'
     | 'UNKNOWN';
+  workflowId: number;
   conclusion?: 'ACTION_REQUIRED' | 'CANCELLED' | 'FAILURE' | 'NEUTRAL' | 'SUCCESS' | 'SKIPPED' | 'STALE' | 'TIMED_OUT' | 'STARTUP_FAILURE' | 'UNKNOWN';
   htmlUrl: string;
 };
