@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { Component, inject, input } from '@angular/core';
 import { EnvironmentListViewComponent } from '../environments/environment-list/environment-list-view.component';
 import { injectMutation, injectQueryClient } from '@tanstack/angular-query-experimental';
 import { deployToEnvironmentMutation, getAllEnvironmentsQueryKey } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
@@ -11,7 +11,7 @@ import { MessageService } from 'primeng/api';
   imports: [EnvironmentListViewComponent],
 })
 export class DeploymentSelectionComponent {
-  constructor(private messageService: MessageService) {}
+  private messageService = inject(MessageService);
 
   queryClient = injectQueryClient();
 
