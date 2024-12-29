@@ -59,6 +59,7 @@ export class PipelineComponent {
 
   groupsQuery = injectQuery(() => ({
     ...getGroupsWithWorkflowsOptions({ path: { repositoryId: this.repositoryId() || 0 } }),
+    refetchInterval: 2000,
   }));
 
   pipeline = computed(() => {
