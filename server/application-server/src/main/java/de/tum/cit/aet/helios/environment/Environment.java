@@ -1,7 +1,7 @@
 package de.tum.cit.aet.helios.environment;
 
 import de.tum.cit.aet.helios.deployment.Deployment;
-import de.tum.cit.aet.helios.gitrepo.GitRepository;
+import de.tum.cit.aet.helios.filters.RepositoryFilterEntity;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -9,7 +9,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
@@ -27,7 +26,7 @@ import lombok.ToString;
 @Setter
 @NoArgsConstructor
 @ToString
-public class Environment {
+public class Environment extends RepositoryFilterEntity {
   @Id private Long id;
 
   @Column(nullable = false)
@@ -43,10 +42,6 @@ public class Environment {
 
   @Column(name = "updated_at")
   private OffsetDateTime updatedAt;
-
-  @ManyToOne
-  @JoinColumn(name = "repository_id", nullable = false)
-  private GitRepository repository;
 
   @Version private Integer version;
 

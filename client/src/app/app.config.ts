@@ -15,6 +15,7 @@ import { environment } from 'environments/environment';
 import { KeycloakService } from './core/services/keycloak/keycloak.service';
 import { BearerInterceptor } from './core/services/keycloak/bearer-interceptor';
 import { DatePipe } from '@angular/common';
+import { HeaderGuard } from './core/middlewares/header.service';
 
 client.setConfig({
   baseUrl: environment.serverUrl,
@@ -65,6 +66,7 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes, withComponentInputBinding(), withRouterConfig({ paramsInheritanceStrategy: 'always' })),
     provideAnimationsAsync(),
     provideTanStackQuery(new QueryClient()),
+    HeaderGuard,
     MessageService,
     provideHttpClient(withInterceptorsFromDi()),
     provideAnimations(),
