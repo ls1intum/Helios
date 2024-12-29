@@ -34,7 +34,7 @@ We recommend the lightweight `Visual Studio Code <https://code.visualstudio.com/
 
 Alternatively, you can use `IntelliJ IDEA <https://www.jetbrains.com/idea/download/>`__ (or other IDE's).
 
-In case you use **VS Code**, install the recommended extensions when opening the project for the first time. Alternatively you can find them in ``.vscode/extension.json`` and install them manually.
+In case you use **VS Code**, install the recommended extensions when opening the project for the first time. Alternatively you can find them in ``.vscode/extension.json`` and install them manually via the extension manager in the menu on the left.
 
 Clone the Repository
 --------------------

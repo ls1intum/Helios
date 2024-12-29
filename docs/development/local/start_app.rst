@@ -9,7 +9,7 @@ Running Docker
 
 To run the docker containers, you can use the following command: ``docker compose up --build``. 
 
-This command will start the postgres container, the server container, the nats-server and the webhook-listener.
+This command will start the postgres container, the server container, the nats-server, the webhook-listener as well as the client.
 
 To expose the webhook listener port to the internet, you have to start ngrok by running the command ``ngrok http 4222`` in a separate terminal.
 
