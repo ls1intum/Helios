@@ -31,7 +31,6 @@ export class PipelineComponent {
 
   branchName = computed(() => {
     const selector = this.selector();
-    console.log(selector);
     if (!selector) return null;
     return 'branchName' in selector ? selector.branchName : null;
   });
