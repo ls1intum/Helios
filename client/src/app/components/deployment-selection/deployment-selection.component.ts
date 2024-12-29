@@ -20,7 +20,7 @@ export class DeploymentSelectionComponent {
   deployEnvironment = injectMutation(() => ({
     ...deployToEnvironmentMutation(),
     onSuccess: () => {
-      this.queryClient.invalidateQueries({ queryKey: getAllEnvironmentsQueryKey });
+      this.queryClient.invalidateQueries({ queryKey: getAllEnvironmentsQueryKey() });
       this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Deployment started successfully' });
     },
     onError: (error: Error) => {
