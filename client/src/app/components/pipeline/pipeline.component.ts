@@ -44,21 +44,21 @@ export class PipelineComponent {
     if (!selector) return null;
     return selector.repositoryId;
   });
-
+  //TODO instead of refetching every 15 seconds, we should use websockets to get real-time updates
   branchQuery = injectQuery(() => ({
     ...getLatestWorkflowRunsByBranchAndHeadCommitOptions({ path: { branch: this.branchName()! } }),
     enabled: this.branchName() !== null,
-    refetchInterval: 2000,
+    refetchInterval: 15000,
   }));
   pullRequestQuery = injectQuery(() => ({
     ...getLatestWorkflowRunsByPullRequestIdAndHeadCommitOptions({ path: { pullRequestId: this.pullRequestId() || 0 } }),
     enabled: this.pullRequestId() !== null,
-    refetchInterval: 2000,
+    refetchInterval: 15000,
   }));
 
   groupsQuery = injectQuery(() => ({
     ...getGroupsWithWorkflowsOptions({ path: { repositoryId: this.repositoryId() || 0 } }),
-    refetchInterval: 2000,
+    refetchInterval: 15000,
   }));
 
   pipeline = computed(() => {
