@@ -23,6 +23,7 @@ import {
 } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { WorkflowDto, WorkflowGroupDto, WorkflowMembershipDto } from '@app/core/modules/openapi';
 import { WorkflowDtoSchema } from '@app/core/modules/openapi/schemas.gen';
+import { MessageService } from 'primeng/api';
 
 @Component({
   selector: 'app-project-settings',
@@ -52,7 +53,7 @@ export class ProjectSettingsComponent {
   // This is recalculated from drag&drop logic in updateGroups()
   workflowGroupsMap = signal<Record<number, string>>({});
 
-  constructor() {
+  constructor(private messageService: MessageService) {
     effect(() => {
       const workflowGroups = this.groupsQuery.data() || [];
       this.workflowGroups.set(workflowGroups);
@@ -160,6 +161,10 @@ export class ProjectSettingsComponent {
     ...updateWorkflowLabelMutation(),
     onSuccess: () => {
       this.queryClient.invalidateQueries({ queryKey: getWorkflowsByRepositoryIdQueryKey({ path: { repositoryId: this.repositoryId() } }) });
+      this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Workflow Label updated successfully' });
+    },
+    onError: (error: Error) => {
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: String(error) });
     },
   }));
   deleteWorkflowGroupMutation = injectMutation(() => ({
@@ -180,15 +185,32 @@ export class ProjectSettingsComponent {
     ...updateWorkflowGroupsMutation(),
     onSuccess: () => {
       this.queryClient.invalidateQueries({ queryKey: getGroupsWithWorkflowsQueryKey({ path: { repositoryId: this.repositoryId() } }) });
+      this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Workflow groups updated successfully' });
+    },
+    onError: (error: Error) => {
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: String(error) });
     },
   }));
 
-  getWorkflowLabelOptions() {
-    return Object.values(WorkflowDtoSchema.properties.label.enum);
+  getWorkflowLabelOptions(currentLabel: string) {
+    const assignedLabels = this.workflows().map(wf => wf.label);
+    return Object.values(WorkflowDtoSchema.properties.label.enum).filter(label => {
+      const isDeployment = label === 'DEPLOYMENT' && assignedLabels.includes('DEPLOYMENT');
+      const isBuild = label === 'BUILD' && assignedLabels.includes('BUILD');
+      return label === currentLabel || (!isDeployment && !isBuild);
+    });
   }
 
   onChangeLabel(workflow: WorkflowDto) {
-    this.workflowLabelMutation.mutate({ path: { workflowId: workflow.id }, body: workflow.label });
+    const label = workflow.label;
+    if (label === 'DEPLOYMENT' || label === 'BUILD') {
+      const existingLabel = this.workflows().find(wf => wf.label === label && wf.id !== workflow.id);
+      if (existingLabel) {
+        console.warn(`Only one workflow can be labeled as ${label}.`);
+        return;
+      }
+    }
+    this.workflowLabelMutation.mutate({ path: { workflowId: workflow.id }, body: label });
   }
 
   // Distinguish the actual server groups for the dropdown
