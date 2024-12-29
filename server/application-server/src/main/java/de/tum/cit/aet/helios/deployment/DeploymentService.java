@@ -5,6 +5,7 @@ import de.tum.cit.aet.helios.environment.EnvironmentService;
 import de.tum.cit.aet.helios.workflow.Workflow;
 import de.tum.cit.aet.helios.workflow.WorkflowService;
 import de.tum.cit.aet.helios.github.GitHubService;
+import jakarta.transaction.Transactional;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
@@ -13,6 +14,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 
 @Service
+@Transactional
 public class DeploymentService {
 
   private final DeploymentRepository deploymentRepository;
