@@ -1,5 +1,5 @@
 import { FormsModule } from '@angular/forms';
-import { Component, signal, computed, input, numberAttribute, effect } from '@angular/core';
+import { Component, signal, computed, input, numberAttribute, effect, inject } from '@angular/core';
 import { injectMutation, injectQuery, injectQueryClient } from '@tanstack/angular-query-experimental';
 
 import { TableModule } from 'primeng/table';
@@ -32,6 +32,7 @@ import { MessageService } from 'primeng/api';
   templateUrl: './project-settings.component.html',
 })
 export class ProjectSettingsComponent {
+  private messageService = inject(MessageService);
   queryClient = injectQueryClient();
 
   // Signals for repository ID, workflows, and workflow groups
@@ -53,7 +54,7 @@ export class ProjectSettingsComponent {
   // This is recalculated from drag&drop logic in updateGroups()
   workflowGroupsMap = signal<Record<number, string>>({});
 
-  constructor(private messageService: MessageService) {
+  constructor() {
     effect(() => {
       const workflowGroups = this.groupsQuery.data() || [];
       this.workflowGroups.set(workflowGroups);
@@ -163,9 +164,6 @@ export class ProjectSettingsComponent {
       this.queryClient.invalidateQueries({ queryKey: getWorkflowsByRepositoryIdQueryKey({ path: { repositoryId: this.repositoryId() } }) });
       this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Workflow Label updated successfully' });
     },
-    onError: (error: Error) => {
-      this.messageService.add({ severity: 'error', summary: 'Error', detail: String(error) });
-    },
   }));
   deleteWorkflowGroupMutation = injectMutation(() => ({
     ...deleteWorkflowGroupMutation(),
@@ -186,9 +184,6 @@ export class ProjectSettingsComponent {
     onSuccess: () => {
       this.queryClient.invalidateQueries({ queryKey: getGroupsWithWorkflowsQueryKey({ path: { repositoryId: this.repositoryId() } }) });
       this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Workflow groups updated successfully' });
-    },
-    onError: (error: Error) => {
-      this.messageService.add({ severity: 'error', summary: 'Error', detail: String(error) });
     },
   }));
 
