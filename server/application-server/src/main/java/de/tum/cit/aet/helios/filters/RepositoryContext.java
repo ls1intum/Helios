@@ -1,23 +1,26 @@
 package de.tum.cit.aet.helios.filters;
 
+import lombok.extern.log4j.Log4j2;
+
+@Log4j2
 public class RepositoryContext {
 
   private RepositoryContext() {}
 
-  private static final InheritableThreadLocal<String> currentRepository =
+  private static final InheritableThreadLocal<Long> currentRepository =
       new InheritableThreadLocal<>();
 
   public static void setRepositoryId(String repositoryId) {
-    currentRepository.set(repositoryId);
+    try {
+      currentRepository.set(Long.parseLong(repositoryId));
+    } catch (NumberFormatException e) {
+      currentRepository.set(null);
+      log.warn("Warning: Repository id could not be formatted - skipping filter activation");
+    }
   }
 
   public static Long getRepositoryId() {
-    try {
-      return Long.parseLong(currentRepository.get());
-    } catch (NumberFormatException e) {
-      System.out.println("Error formatting repository id - skipping filter");
-    }
-    return null;
+    return currentRepository.get();
   }
 
   public static void clear() {
