@@ -31,6 +31,7 @@ import type {
   GetDeploymentByIdData,
   GetDeploymentsByEnvironmentIdData,
   GetLatestDeploymentByEnvironmentIdData,
+  GetCommitByRepositoryIdAndNameData,
   GetAllBranchesData,
   GetBranchByRepositoryIdAndNameData,
   DeleteWorkflowGroupData,
@@ -62,6 +63,7 @@ import {
   getDeploymentById,
   getDeploymentsByEnvironmentId,
   getLatestDeploymentByEnvironmentId,
+  getCommitByRepositoryIdAndName,
   getAllBranches,
   getBranchByRepositoryIdAndName,
   deleteWorkflowGroup,
@@ -540,6 +542,23 @@ export const getLatestDeploymentByEnvironmentIdOptions = (options: Options<GetLa
       return data;
     },
     queryKey: getLatestDeploymentByEnvironmentIdQueryKey(options),
+  });
+};
+
+export const getCommitByRepositoryIdAndNameQueryKey = (options: Options<GetCommitByRepositoryIdAndNameData>) => [createQueryKey('getCommitByRepositoryIdAndName', options)];
+
+export const getCommitByRepositoryIdAndNameOptions = (options: Options<GetCommitByRepositoryIdAndNameData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getCommitByRepositoryIdAndName({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: getCommitByRepositoryIdAndNameQueryKey(options),
   });
 };
 

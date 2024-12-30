@@ -8,7 +8,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { DeploymentSelectionComponent } from '@app/components/deployment-selection/deployment-selection.component';
 import { injectQuery } from '@tanstack/angular-query-experimental';
 import { SkeletonModule } from 'primeng/skeleton';
-import { getBranchByRepositoryIdAndNameOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
+import { getBranchByRepositoryIdAndNameOptions, getCommitByRepositoryIdAndNameOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 
 @Component({
   selector: 'app-branch-details',
@@ -23,6 +23,12 @@ export class BranchDetailsComponent {
     ...getBranchByRepositoryIdAndNameOptions({ path: { name: this.branchName(), repoId: this.repositoryId() } }),
     refetchInterval: 5000,
   }));
+
+  commitQuery = injectQuery(() => ({
+    ...getCommitByRepositoryIdAndNameOptions({ path: { repoId: this.repositoryId(), sha: this.query.data()?.commitSha || '' } }),
+    enabled: !!this.repositoryId() && !!this.query.data(),
+  }));
+  commit = computed(() => this.commitQuery.data());
 
   pipelineSelector = computed<PipelineSelector | null>(() => {
     const branch = this.query.data();

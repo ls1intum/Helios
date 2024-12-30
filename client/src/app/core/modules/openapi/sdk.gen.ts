@@ -49,6 +49,8 @@ import type {
   GetDeploymentsByEnvironmentIdResponse,
   GetLatestDeploymentByEnvironmentIdData,
   GetLatestDeploymentByEnvironmentIdResponse,
+  GetCommitByRepositoryIdAndNameData,
+  GetCommitByRepositoryIdAndNameResponse,
   GetAllBranchesData,
   GetAllBranchesResponse,
   GetBranchByRepositoryIdAndNameData,
@@ -254,6 +256,13 @@ export const getLatestDeploymentByEnvironmentId = <ThrowOnError extends boolean 
   return (options?.client ?? client).get<GetLatestDeploymentByEnvironmentIdResponse, unknown, ThrowOnError>({
     ...options,
     url: '/api/deployments/environment/{environmentId}/latest',
+  });
+};
+
+export const getCommitByRepositoryIdAndName = <ThrowOnError extends boolean = false>(options: Options<GetCommitByRepositoryIdAndNameData, ThrowOnError>) => {
+  return (options?.client ?? client).get<GetCommitByRepositoryIdAndNameResponse, unknown, ThrowOnError>({
+    ...options,
+    url: '/api/commits/repository/{repoId}/commit/{sha}',
   });
 };
 

@@ -1,25 +1,40 @@
 <div class="flex-col items-start mb-2">
   <span class="text-xs uppercase tracking-tighter font-bold text-gray-500">Latest deployment</span>
-  <div class="flex gap-4 items-center mb-4 mt-2">
-    <span class="font-semibold">{{ commitMessage() }}</span>
-    <div class="flex-grow"></div>
-    <div class="flex gap-1 items-center">
-      <i-tabler name="calendar" class="text-gray-600" />
-      <span>Deployed {{ commitDate() }}</span>
+  @if (commit(); as commit) {
+    <div class="flex gap-4 items-center mb-4 mt-2">
+      <span class="font-semibold text-lg">{{ commit.message }}</span>
+      <div class="flex-grow"></div>
+      <div class="flex gap-1 items-center">
+        <span>{{ deployment().ref }}</span>
+        <i-tabler name="git-branch" class="w-6 h-6 text-gray-500" />
+      </div>
     </div>
-    <div class="flex gap-1 items-center">
-      <i-tabler name="user" class="text-gray-600" />
-      <span>{{ committerName() }}</span>
+    <div class="flex gap-2 items-center text-sm">
+      <div class="flex gap-1 items-center">
+        @if (commit.author?.avatarUrl) {
+          <p-avatar class="w-6 h-6" shape="circle" [image]="commit.author?.avatarUrl"></p-avatar>
+        } @else {
+          <i-tabler name="user" class="w-6 h-6 text-gray-600" />
+        }
+        <span>
+          {{ commit.author?.name }} authored <span [pTooltip]="commitDate() || ''">{{ commit.authoredAt || '' | timeAgo }}</span>
+        </span>
+      </div>
+      <i-tabler name="point" class="!w-3 !h-3" />
+      <div class="flex items-center">
+        <!-- <i-tabler name="git-commit" class="text-gray-600" /> -->
+        <span [pTooltip]="deployment().sha">{{ deployment().sha | slice: 0 : 8 }}</span>
+      </div>
+      <div class="flex flex-grow"></div>
+      <div>
+        <div class="flex gap-2">
+          @for (installedApp of installedApps(); track installedApp) {
+            <p-tag class="bg-gray-300 gap-0">{{ installedApp }}</p-tag>
+          }
+        </div>
+      </div>
     </div>
-  </div>
-  <div class="flex gap-4 items-center">
-    <div class="flex gap-1 items-center">
-      <i-tabler name="git-commit" class="text-gray-600" />
-      <span>{{ commitHash() }}</span>
-    </div>
-    <div class="flex gap-1 items-center">
-      <i-tabler name="git-branch" class="text-gray-600" />
-      <span>{{ branch() }}</span>
-    </div>
-  </div>
+  } @else {
+    Commit info could not be loaded.
+  }
 </div>

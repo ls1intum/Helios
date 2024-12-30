@@ -406,6 +406,29 @@ export const DeploymentDtoSchema = {
   },
 } as const;
 
+export const CommitInfoDtoSchema = {
+  required: ['sha'],
+  type: 'object',
+  properties: {
+    sha: {
+      type: 'string',
+    },
+    author: {
+      $ref: '#/components/schemas/UserInfoDto',
+    },
+    message: {
+      type: 'string',
+    },
+    authoredAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+    repository: {
+      $ref: '#/components/schemas/RepositoryInfoDto',
+    },
+  },
+} as const;
+
 export const BranchInfoDtoSchema = {
   required: ['commitSha', 'name'],
   type: 'object',
