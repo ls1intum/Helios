@@ -10,6 +10,8 @@ import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { IconsModule } from 'icons.module';
 import { DragDropModule } from 'primeng/dragdrop';
+import { ConfirmationService } from 'primeng/api';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
 
 import {
   createWorkflowGroupMutation,
@@ -28,11 +30,13 @@ import { MessageService } from 'primeng/api';
 @Component({
   selector: 'app-project-settings',
   standalone: true,
-  imports: [FormsModule, TableModule, DropdownModule, ButtonModule, PanelModule, DialogModule, InputTextModule, IconsModule, DragDropModule],
+  imports: [FormsModule, TableModule, DropdownModule, ButtonModule, PanelModule, DialogModule, InputTextModule, IconsModule, DragDropModule, ConfirmDialogModule],
+  providers: [ConfirmationService],
   templateUrl: './project-settings.component.html',
 })
 export class ProjectSettingsComponent {
   private messageService = inject(MessageService);
+  private confirmationService = inject(ConfirmationService);
   queryClient = injectQueryClient();
 
   // Signals for repository ID, workflows, and workflow groups
@@ -205,7 +209,13 @@ export class ProjectSettingsComponent {
         return;
       }
     }
-    this.workflowLabelMutation.mutate({ path: { workflowId: workflow.id }, body: label });
+    this.confirmationService.confirm({
+      message: `Are you sure you want to change the label?<br/><br/>
+      Note: Only one workflow can be labeled as 'DEPLOYMENT' and one as 'BUILD'.`,
+      accept: () => {
+        this.workflowLabelMutation.mutate({ path: { workflowId: workflow.id }, body: label });
+      },
+    });
   }
 
   // Distinguish the actual server groups for the dropdown
