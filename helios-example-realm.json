@@ -67,6 +67,9 @@
             "uma_authorization"
           ],
           "client": {
+            "broker": [
+              "read-token"
+            ],
             "account": [
               "view-profile",
               "manage-account"
@@ -1529,7 +1532,32 @@
   "enabledEventTypes": [],
   "adminEventsEnabled": false,
   "adminEventsDetailsEnabled": false,
-  "identityProviders": [],
+  "identityProviders": [
+    {
+      "alias": "github",
+      "displayName": "GitHub",
+      "internalId": "8aef9828-e67a-470b-975a-413a723e2870",
+      "providerId": "github",
+      "enabled": true,
+      "updateProfileFirstLoginMode": "on",
+      "trustEmail": false,
+      "storeToken": true,
+      "addReadTokenRoleOnCreate": false,
+      "authenticateByDefault": false,
+      "linkOnly": false,
+      "hideOnLogin": false,
+      "config": {
+        "acceptsPromptNoneForwardFromClient": "false",
+        "clientId": "Ov23liT5agMa7tdTOkjT",
+        "disableUserInfo": "false",
+        "filteredByClaim": "false",
+        "syncMode": "FORCE",
+        "clientSecret": "ca90f41b07413ce96c91b06a2c5a47db5d6b3327",
+        "caseSensitiveOriginalUsername": "false",
+        "defaultScope": "read:user workflow"
+      }
+    }
+  ],
   "identityProviderMappers": [],
   "components": {
     "org.keycloak.services.clientregistration.policy.ClientRegistrationPolicy": [
