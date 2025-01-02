@@ -1,112 +1,114 @@
-@if (query.isPending()) {
+@if (query.isPending() || query.isError()) {
   <p-table [value]="[1, 2, 3, 4, 5]" styleClass="p-datatable-lg">
+    <ng-template pTemplate="caption">
+      <div class="flex items-center gap-2">
+        <i-tabler name="git-branch" class="!h-8 !w-8 text-primary-800" />
+        <span class="font-semibold text-xl">Branches</span>
+      </div>
+    </ng-template>
     <ng-template pTemplate="header">
       <tr>
         <th>
           <div class="flex items-center gap-2 w-full">
-            <input pInputText disabled type="text" placeholder="Search" />
+            <input pInputText disabled type="text" pSize="small" class="w-full" placeholder="Search" />
           </div>
         </th>
         <th>Last Update</th>
-        <th class="text-center">Behind | Ahead</th>
-        <th>Head</th>
+        <th class="text-center w-36">Behind | Ahead</th>
+        <th class="w-32">Head</th>
       </tr>
     </ng-template>
     <ng-template pTemplate="body">
       <tr>
         <td><p-skeleton></p-skeleton></td>
         <td><p-skeleton></p-skeleton></td>
-        <td><p-skeleton></p-skeleton></td>
-        <td><p-skeleton></p-skeleton></td>
+        <td class="w-36"><p-skeleton></p-skeleton></td>
+        <td class="w-32"><p-skeleton></p-skeleton></td>
       </tr>
     </ng-template>
   </p-table>
 } @else {
-  @if (query.data()?.length === 0) {
-    <p>No pull requests found.</p>
-  } @else {
-    <br />
+  <!-- Branches Tree Table -->
+  <p-treetable #tt [value]="featureBranchesTree()" [globalFilterFields]="globalFilterFields" [scrollable]="true" styleClass="p-treetable-sm">
+    <ng-template pTemplate="caption">
+      <div class="flex items-center gap-2">
+        <i-tabler name="git-branch" class="!h-8 !w-8 text-primary-800" />
+        <span class="font-semibold text-xl">Branches</span>
+      </div>
+    </ng-template>
+    <ng-template pTemplate="header">
+      <tr>
+        <th>
+          <div class="flex items-center gap-2">
+            <input pInputText [(ngModel)]="searchValue" type="text" pSize="small" placeholder="Search" class="w-full" (input)="onInput(tt, $event)" />
+          </div>
+        </th>
+        <th>Last Update</th>
+        <th class="text-center w-36">Behind | Ahead</th>
+        <th class="w-32">Head</th>
+      </tr>
+    </ng-template>
 
-    <div class="flex justify-between items-center mb-3 w-full"></div>
+    <ng-template pTemplate="body" let-rowNode let-branch="rowData">
+      <tr [ttRow]="rowNode" class="cursor-pointer" (click)="openBranch(branch)">
+        <td>
+          <div class="flex items-center gap-2">
+            <p-treeTableToggler [rowNode]="rowNode" />
+            <p-tag [value]="branch.name" />
+            <i-tabler name="external-link" (click)="openLink($event, branch.link)"></i-tabler>
+          </div>
+        </td>
+        <td class="whitespace-nowrap">
+          @if (branch.updatedBy && branch.updatedAt) {
+            <div class="flex gap-1 items-center text-sm">
+              <p-avatar [image]="branch.updatedBy?.avatarUrl" shape="circle" class="h-5 w-5" />
+              <span>{{ branch.updatedBy?.name }} updated {{ branch.updatedAt | timeAgo }}</span>
+            </div>
+          }
+        </td>
 
-    @if (viewPreference.viewMode() === 'Tree') {
-      <!-- Branches Tree Table -->
-      <p-treetable #tt [value]="featureBranchesTree()" [globalFilterFields]="globalFilterFields" [scrollable]="true" styleClass="p-treetable-sm">
-        <ng-template pTemplate="header">
-          <tr>
-            <th>
-              <div class="flex items-center gap-2">
-                <input pInputText [(ngModel)]="searchValue" type="text" placeholder="Search" class="w-1/2" (input)="onInput(tt, $event)" />
+        <td class="w-36 whitespace-nowrap">
+          @if (branch.isDefault) {
+            <div class="w-full flex justify-center">
+              <p-tag value="Default Branch" />
+            </div>
+          } @else if (branch.behindBy && branch.aheadBy) {
+            <div class="w-full flex items-center">
+              <div class="w-1/2">
+                <div class="text-end text-sm mr-2">{{ branch.behindBy || 0 }}</div>
+                <p-progressbar [style]="{ direction: 'rtl' }" styleClass="h-3 rounded-r-none" [value]="calculateProgress(branch.behindBy)" [showValue]="false" />
               </div>
-            </th>
-            <th>Last Update</th>
-            <th class="text-center">Behind | Ahead</th>
-            <th>Head</th>
-          </tr>
-        </ng-template>
-
-        <ng-template pTemplate="body" let-rowNode let-branch="rowData">
-          <tr [ttRow]="rowNode" class="cursor-pointer" (click)="openBranch(branch)">
-            <td>
-              <div class="flex items-center gap-2">
-                <p-treeTableToggler [rowNode]="rowNode" />
-                <p-tag [value]="branch.name" />
-                <i-tabler name="external-link" (click)="openLink($event, branch.link)"></i-tabler>
+              <p-divider layout="vertical" class="m-0 z-20" styleClass="before:border-black" />
+              <div class="w-1/2">
+                <div class="text-sm ml-2">{{ branch.aheadBy || 0 }}</div>
+                <p-progressbar styleClass="h-3 rounded-l-none" [value]="calculateProgress(branch.aheadBy)" [showValue]="false" />
               </div>
-            </td>
-            <td>
-              @if (branch.updatedBy && branch.updatedAt) {
-                <div class="flex gap-1 items-center text-sm">
-                  <p-avatar [image]="branch.updatedBy?.avatarUrl" shape="circle" class="h-5 w-5" />
-                  <span>{{ branch.updatedBy?.name }} updated an hour ago</span>
-                </div>
-              }
-            </td>
+            </div>
+          }
+        </td>
+        <td class="w-32 whitespace-nowrap">
+          @if (branch.commitSha) {
+            <div class="flex items-center gap-2">
+              <i-tabler name="git-commit" class="-mr-2"></i-tabler>
+              <span>{{ branch.commitSha.slice(0, 7) }}</span>
+              <i-tabler name="external-link" (click)="openLink($event, branch.lastCommitLink)"></i-tabler>
+            </div>
+          }
+        </td>
+      </tr>
+    </ng-template>
 
-            <td>
-              @if (branch.isDefault) {
-                <div class="w-full flex justify-center">
-                  <p-tag value="Default Branch" />
-                </div>
-              } @else if (branch.behindBy && branch.aheadBy) {
-                <div class="w-full flex items-center">
-                  <div class="w-1/2">
-                    <div class="text-end text-sm mr-2">{{ branch.behindBy || 0 }}</div>
-                    <p-progressbar [style]="{ direction: 'rtl' }" styleClass="h-3 rounded-r-none" [value]="calculateProgress(branch.behindBy)" [showValue]="false" />
-                  </div>
-                  <p-divider layout="vertical" class="m-0 z-20" styleClass="before:border-black" />
-                  <div class="w-1/2">
-                    <div class="text-sm ml-2">{{ branch.aheadBy || 0 }}</div>
-                    <p-progressbar styleClass="h-3 rounded-l-none" [value]="calculateProgress(branch.aheadBy)" [showValue]="false" />
-                  </div>
-                </div>
-              }
-            </td>
-            <td>
-              @if (branch.commitSha) {
-                <div class="flex items-center gap-2">
-                  <i-tabler name="git-commit" class="-mr-2"></i-tabler>
-                  <span>{{ branch.commitSha.slice(0, 7) }}</span>
-                  <i-tabler name="external-link" (click)="openLink($event, branch.lastCommitLink)"></i-tabler>
-                </div>
-              }
-            </td>
-          </tr>
-        </ng-template>
-
-        <ng-template pTemplate="emptymessage">
-          <tr>
-            <td colspan="4">
-              <div class="flex flex-col gap-2 p-20 justify-center items-center">
-                <i-tabler name="git-branch" class="!h-20 !w-20 text-red-500" />
-                <span class="font-semibold text-xl">There are no branches found matching your filter criteria.</span>
-                <span>Try clearing the filter or reloading the page.</span>
-                <p-button (click)="clearFilter(tt)">Clear Filter</p-button>
-              </div>
-            </td>
-          </tr>
-        </ng-template>
-      </p-treetable>
-    }
-  }
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="4">
+          <div class="flex flex-col gap-2 p-20 justify-center items-center">
+            <i-tabler name="git-branch" class="!h-20 !w-20 text-red-500" />
+            <span class="font-semibold text-xl">There are no branches found matching your filter criteria.</span>
+            <span>Try clearing the filter or reloading the page.</span>
+            <p-button (click)="clearFilter(tt)">Clear Filter</p-button>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+  </p-treetable>
 }
