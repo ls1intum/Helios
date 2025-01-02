@@ -33,6 +33,8 @@ import {
   IconLogout,
   IconQuestionMark,
   IconPoint,
+  IconList,
+  IconBinaryTree,
 } from 'angular-tabler-icons/icons';
 
 // Select some icons (use an object, not an array)
@@ -66,6 +68,8 @@ const icons = {
   IconChevronLeft,
   IconAdjustmentsAlt,
   IconLogout,
+  IconList,
+  IconBinaryTree,
   IconQuestionMark,
   IconPoint,
 };
