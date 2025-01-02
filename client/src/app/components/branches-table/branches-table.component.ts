@@ -1,4 +1,4 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { TableModule } from 'primeng/table';
 import { AvatarModule } from 'primeng/avatar';
 import { TagModule } from 'primeng/tag';
@@ -8,35 +8,51 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { InputIconModule } from 'primeng/inputicon';
 import { InputTextModule } from 'primeng/inputtext';
 import { IconFieldModule } from 'primeng/iconfield';
-import { TreeTableModule } from 'primeng/treetable';
+import { TreeTable, TreeTableModule } from 'primeng/treetable';
 import { ButtonModule } from 'primeng/button';
 import { BranchViewPreferenceService } from '@app/core/services/branches-table/branch-view-preference';
 import { Router } from '@angular/router';
 import { getAllBranchesOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
-import { BranchInfoDto, RepositoryInfoDto } from '@app/core/modules/openapi';
+import { BranchInfoDto } from '@app/core/modules/openapi';
+import { ProgressBarModule } from 'primeng/progressbar';
+import { DividerModule } from 'primeng/divider';
+import { TooltipModule } from 'primeng/tooltip';
+import { FormsModule } from '@angular/forms';
 
 type BranchInfoWithLink = BranchInfoDto & { link: string; lastCommitLink: string };
 
 @Component({
   selector: 'app-branches-table',
-  imports: [TableModule, AvatarModule, TagModule, IconsModule, SkeletonModule, InputTextModule, TreeTableModule, ButtonModule, IconFieldModule, InputIconModule],
+  imports: [
+    TableModule,
+    AvatarModule,
+    TagModule,
+    DividerModule,
+    IconsModule,
+    TooltipModule,
+    SkeletonModule,
+    ProgressBarModule,
+    InputTextModule,
+    TreeTableModule,
+    ButtonModule,
+    IconFieldModule,
+    InputIconModule,
+    InputTextModule,
+    FormsModule,
+  ],
   templateUrl: './branches-table.component.html',
 })
 export class BranchTableComponent {
   router = inject(Router);
-  featureBranchesTree = computed(() => this.convertBranchesToTreeNodes(this.getFeatureBranches()));
+  viewPreference = inject(BranchViewPreferenceService);
 
-  specialBranches = ['master', 'main', 'dev', 'staging', 'development', 'prod', 'production', 'develop'];
-
-  getSpecialBranches() {
-    return this.branches().filter(branch => this.specialBranches.includes(branch.name.toLowerCase()));
-  }
-
-  getFeatureBranches() {
-    return this.branches().filter(branch => !this.specialBranches.includes(branch.name.toLowerCase()));
-  }
+  featureBranchesTree = computed(() => this.convertBranchesToTreeNodes(this.branches()));
 
   query = injectQuery(() => getAllBranchesOptions());
+
+  globalFilterFields = ['name', 'commitSha'];
+
+  searchValue = signal<string>('');
 
   branches = computed<BranchInfoWithLink[]>(
     () =>
@@ -47,12 +63,30 @@ export class BranchTableComponent {
       })) || []
   );
 
-  openLink(url: string): void {
+  maxAheadBehindBy = computed(() => Math.max(...this.branches().map(branch => Math.max(branch.aheadBy || 0, branch.behindBy || 0))));
+
+  openLink(event: Event, url: string): void {
     window.open(url, '_blank');
+    event.stopPropagation();
+  }
+
+  clearFilter(tt: TreeTable): void {
+    tt.filterGlobal('', 'contains');
+    this.searchValue.set('');
+  }
+
+  calculateProgress(value: number): number {
+    return (value * 100) / this.maxAheadBehindBy();
   }
 
   openBranch(branch: BranchInfoDto): void {
-    this.router.navigate(['repo', branch.repository?.id, 'ci-cd', 'branch', branch.name]);
+    if (branch.repository?.id) {
+      this.router.navigate(['repo', branch.repository?.id, 'ci-cd', 'branch', branch.name]);
+    }
+  }
+
+  onInput(tt: TreeTable, event: Event): void {
+    tt.filterGlobal((event.target as HTMLInputElement).value, 'contains');
   }
 
   convertBranchesToTreeNodes(branches: BranchInfoWithLink[]): TreeNode[] {
@@ -76,10 +110,7 @@ export class BranchTableComponent {
 
           // If it's a leaf node, add the branch info
           if (isLeaf) {
-            newNode.data.commitSha = branch.commitSha;
-            newNode.data.repository = branch.repository;
-            newNode.data.lastCommitLink = branch.lastCommitLink;
-            newNode.data.link = branch.link;
+            newNode.data = branch;
           } else {
             newNode.children = [];
           }
@@ -102,20 +133,10 @@ export class BranchTableComponent {
     });
     return rootNodes;
   }
-
-  viewPreference = inject(BranchViewPreferenceService);
-  toggleView() {
-    this.viewPreference.toggleViewMode();
-  }
 }
 
 interface TreeNode {
-  data: {
-    name: string;
-    commitSha?: string;
-    repository?: RepositoryInfoDto;
-    link?: string;
-    lastCommitLink?: string;
+  data: Partial<BranchInfoWithLink> & {
     type?: 'Branch' | 'Folder';
   };
   children?: TreeNode[];

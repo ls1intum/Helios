@@ -496,6 +496,24 @@ export const BranchInfoDtoSchema = {
     commitSha: {
       type: 'string',
     },
+    aheadBy: {
+      type: 'integer',
+      format: 'int32',
+    },
+    behindBy: {
+      type: 'integer',
+      format: 'int32',
+    },
+    isDefault: {
+      type: 'boolean',
+    },
+    updatedAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+    updatedBy: {
+      $ref: '#/components/schemas/UserInfoDto',
+    },
     repository: {
       $ref: '#/components/schemas/RepositoryInfoDto',
     },
