@@ -7,6 +7,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
 
 @Service
 @Transactional
@@ -59,11 +61,15 @@ public class EnvironmentService {
             .findById(id)
             .orElseThrow(() -> new EntityNotFoundException("Environment not found with ID: " + id));
 
+    var authentication = SecurityContextHolder.getContext().getAuthentication();
+    var principal = (Jwt) authentication.getPrincipal();
+    var currentUserId = principal.getSubject();
     if (environment.isLocked()) {
       return Optional.empty();
     }
 
     environment.setLocked(true);
+    environment.setLockedBy(currentUserId);
 
     try {
       environmentRepository.save(environment);
@@ -91,7 +97,16 @@ public class EnvironmentService {
             .findById(id)
             .orElseThrow(() -> new EntityNotFoundException("Environment not found with ID: " + id));
 
+    var authentication = SecurityContextHolder.getContext().getAuthentication();
+    var principal = (Jwt) authentication.getPrincipal();
+    var currentUserId = principal.getSubject();
+    if (!environment.isLocked() || !currentUserId.equals(environment.getLockedBy())) {
+      // Handle unauthorized unlock attempt return error
+      return EnvironmentDto.fromEnvironment(environment);
+    }
+
     environment.setLocked(false);
+    environment.setLockedBy(null);
     environmentRepository.save(environment);
 
     return EnvironmentDto.fromEnvironment(environment);

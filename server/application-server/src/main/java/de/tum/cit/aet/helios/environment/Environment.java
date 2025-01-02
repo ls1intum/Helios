@@ -51,6 +51,8 @@ public class Environment extends RepositoryFilterEntity {
 
   private boolean locked;
 
+  private String lockedBy;
+
   @ElementCollection
   @CollectionTable(name = "installed_apps", joinColumns = @JoinColumn(name = "environment_id"))
   @Column(name = "app_name")
