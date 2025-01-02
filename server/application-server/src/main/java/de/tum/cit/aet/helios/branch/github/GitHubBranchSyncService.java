@@ -3,6 +3,9 @@ package de.tum.cit.aet.helios.branch.github;
 import de.tum.cit.aet.helios.branch.Branch;
 import de.tum.cit.aet.helios.branch.BranchRepository;
 import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
+import de.tum.cit.aet.helios.user.UserRepository;
+import de.tum.cit.aet.helios.user.github.GitHubUserConverter;
+import de.tum.cit.aet.helios.util.DateUtil;
 import jakarta.transaction.Transactional;
 import java.io.IOException;
 import java.util.Collections;
@@ -19,15 +22,21 @@ public class GitHubBranchSyncService {
 
   private final BranchRepository branchRepository;
   private final GitRepoRepository gitRepoRepository;
+  private final UserRepository userRepository;
   private final GitHubBranchConverter branchConverter;
+  private final GitHubUserConverter userConverter;
 
   public GitHubBranchSyncService(
       BranchRepository branchRepository,
       GitRepoRepository gitRepoRepository,
-      GitHubBranchConverter branchConverter) {
+      GitHubBranchConverter branchConverter,
+      UserRepository userRepository,
+      GitHubUserConverter userConverter) {
     this.branchRepository = branchRepository;
     this.gitRepoRepository = gitRepoRepository;
     this.branchConverter = branchConverter;
+    this.userRepository = userRepository;
+    this.userConverter = userConverter;
   }
 
   /**
@@ -104,6 +113,36 @@ public class GitHubBranchSyncService {
     if (repository != null) {
       result.setRepository(repository);
     }
+
+    result.setDefault(ghRepository.getDefaultBranch().equals(ghBranch.getName()));
+
+    // Set branch comparison (to main) data
+    try {
+      var branchCompare =
+          ghRepository.getCompare(ghRepository.getDefaultBranch(), ghBranch.getName());
+      result.setAheadBy(branchCompare.getAheadBy());
+      result.setBehindBy(branchCompare.getBehindBy());
+    } catch (IOException e) {
+      log.error(
+          "Failed to update branch comparison data {}: {}", ghBranch.getName(), e.getMessage());
+    }
+
+    // Link updatedBy user
+    try {
+      var updatedBy = ghRepository.getCommit(ghBranch.getSHA1()).getCommitter();
+      var resultUpdatedBy =
+          userRepository
+              .findById(updatedBy.getId())
+              .orElseGet(() -> userRepository.save(userConverter.convert(updatedBy)));
+      result.setUpdatedBy(resultUpdatedBy);
+      result.setUpdatedAt(DateUtil.convertToOffsetDateTime(updatedBy.getUpdatedAt()));
+    } catch (IOException e) {
+      log.error(
+          "Failed to link updatedBy user for pull request {}: {}",
+          ghBranch.getName(),
+          e.getMessage());
+    }
+
     return branchRepository.save(result);
   }
 }
