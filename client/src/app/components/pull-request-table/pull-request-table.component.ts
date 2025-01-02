@@ -17,6 +17,7 @@ import { DividerModule } from 'primeng/divider';
 import { SelectModule } from 'primeng/select';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 import { FormsModule } from '@angular/forms';
+import { TimeAgoPipe } from '@app/pipes/time-ago.pipe';
 
 @Component({
   selector: 'app-pull-request-table',
@@ -24,6 +25,7 @@ import { FormsModule } from '@angular/forms';
     TableModule,
     AvatarModule,
     TagModule,
+    TimeAgoPipe,
     FormsModule,
     SelectModule,
     IconsModule,

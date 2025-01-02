@@ -50,9 +50,9 @@
               </div>
               <div class="flex gap-2 items-center text-xs">
                 <p-avatar [image]="pr.author?.avatarUrl" shape="circle" class="h-5 w-5" />
-                <span>{{ pr.author?.name }} opened #{{ pr.number }} an hour ago</span>
+                <span>{{ pr.author?.name }} opened #{{ pr.number }} {{ pr.createdAt | timeAgo }}</span>
                 <i-tabler name="point" class="!h-3 !w-3" />
-                <span>updated 30 minutes ago</span>
+                <span>updated {{ pr.updatedAt | timeAgo }}</span>
               </div>
             </td>
 
