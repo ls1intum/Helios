@@ -46,4 +46,11 @@ public class WorkflowService {
     workflow.setLabel(label);
     workflowRepository.save(workflow);
   }
+
+  public Workflow getDeploymentWorkflow() {
+    Workflow workflow = 
+        workflowRepository
+            .findFirstByLabelOrderByCreatedAtDesc(Workflow.Label.DEPLOYMENT);
+    return workflow;
+  }
 }

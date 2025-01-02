@@ -50,12 +50,14 @@ public class DeploymentController {
   }
 
   @PostMapping("/deploy")
-  public ResponseEntity<Void> deployToEnvironment(@RequestBody DeployRequest deployRequest) {
+  public ResponseEntity<String> deployToEnvironment(@RequestBody DeployRequest deployRequest) {
     try {
       deploymentService.deployToEnvironment(deployRequest);
       return ResponseEntity.ok().build();
     } catch (DeploymentException e) {
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+      return ResponseEntity
+          .status(HttpStatus.INTERNAL_SERVER_ERROR)
+          .body("Deployment failed: " + e.getMessage());
     }
   }
 }

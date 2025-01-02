@@ -13,6 +13,7 @@ import type {
   CreateWorkflowGroupData,
   CreateWorkflowGroupResponse,
   DeployToEnvironmentData,
+  DeployToEnvironmentResponse,
   HealthCheckData,
   HealthCheckResponse,
   GetAllWorkflowsData,
@@ -119,7 +120,7 @@ export const createWorkflowGroup = <ThrowOnError extends boolean = false>(option
 };
 
 export const deployToEnvironment = <ThrowOnError extends boolean = false>(options: Options<DeployToEnvironmentData, ThrowOnError>) => {
-  return (options?.client ?? client).post<unknown, unknown, ThrowOnError>({
+  return (options?.client ?? client).post<DeployToEnvironmentResponse, unknown, ThrowOnError>({
     ...options,
     headers: {
       'Content-Type': 'application/json',

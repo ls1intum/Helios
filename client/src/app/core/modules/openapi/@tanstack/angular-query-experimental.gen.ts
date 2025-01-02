@@ -13,6 +13,7 @@ import type {
   CreateWorkflowGroupData,
   CreateWorkflowGroupResponse,
   DeployToEnvironmentData,
+  DeployToEnvironmentResponse,
   HealthCheckData,
   GetAllWorkflowsData,
   GetWorkflowByIdData,
@@ -218,7 +219,7 @@ export const deployToEnvironmentOptions = (options: Options<DeployToEnvironmentD
 };
 
 export const deployToEnvironmentMutation = (options?: Partial<Options<DeployToEnvironmentData>>) => {
-  const mutationOptions: MutationOptions<unknown, DefaultError, Options<DeployToEnvironmentData>> = {
+  const mutationOptions: MutationOptions<DeployToEnvironmentResponse, DefaultError, Options<DeployToEnvironmentData>> = {
     mutationFn: async localOptions => {
       const { data } = await deployToEnvironment({
         ...options,

@@ -2,6 +2,8 @@ package de.tum.cit.aet.helios.deployment;
 
 import de.tum.cit.aet.helios.environment.Environment;
 import de.tum.cit.aet.helios.environment.EnvironmentService;
+import de.tum.cit.aet.helios.workflow.Workflow;
+import de.tum.cit.aet.helios.workflow.WorkflowService;
 import de.tum.cit.aet.helios.github.GitHubService;
 import jakarta.transaction.Transactional;
 import java.io.IOException;
@@ -18,14 +20,17 @@ public class DeploymentService {
   private final DeploymentRepository deploymentRepository;
   private final GitHubService gitHubService;
   private final EnvironmentService environmentService;
+  private final WorkflowService workflowService;
 
   public DeploymentService(
       DeploymentRepository deploymentRepository,
       GitHubService gitHubService,
-      EnvironmentService environmentService) {
+      EnvironmentService environmentService,
+      WorkflowService workflowService) {
     this.deploymentRepository = deploymentRepository;
     this.gitHubService = gitHubService;
     this.environmentService = environmentService;
+    this.workflowService = workflowService;
   }
 
   public Optional<DeploymentDto> getDeploymentById(Long id) {
@@ -57,9 +62,15 @@ public class DeploymentService {
             .orElseThrow(() -> new DeploymentException("Environment was already locked"));
 
     try {
+      //Get the deployment workflow set by the managers
+      Workflow deploymentWorkflow = this.workflowService.getDeploymentWorkflow();
+      if (deploymentWorkflow == null) {
+        this.environmentService.unlockEnvironment(environment.getId());
+        throw new DeploymentException("No deployment workflow found");
+      }
       this.gitHubService.dispatchWorkflow(
           environment.getRepository().getNameWithOwner(),
-          "deploy.yml",
+          deploymentWorkflow.getFileNameWithExtension(),
           deployRequest.branchName(),
           new HashMap<>());
     } catch (IOException e) {
