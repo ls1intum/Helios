@@ -18,6 +18,7 @@ import { ProgressBarModule } from 'primeng/progressbar';
 import { DividerModule } from 'primeng/divider';
 import { TooltipModule } from 'primeng/tooltip';
 import { FormsModule } from '@angular/forms';
+import { TimeAgoPipe } from '@app/pipes/time-ago.pipe';
 
 type BranchInfoWithLink = BranchInfoDto & { link: string; lastCommitLink: string };
 
@@ -30,6 +31,7 @@ type BranchInfoWithLink = BranchInfoDto & { link: string; lastCommitLink: string
     DividerModule,
     IconsModule,
     TooltipModule,
+    TimeAgoPipe,
     SkeletonModule,
     ProgressBarModule,
     InputTextModule,
