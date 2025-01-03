@@ -4,8 +4,10 @@
       <tr>
         <th>
           <div class="flex items-center gap-2">
-            <span>Filter: </span>
-            <p-skeleton styleClass="!w-52 !h-10" />
+            <p-button type="button" outlined disabled size="small">
+              <i-tabler name="filter-plus" />
+            </p-button>
+            <input pInputText type="text" pSize="small" placeholder="Search" class="w-full" disabled />
           </div>
         </th>
         <th>Assignee</th>
@@ -38,10 +40,12 @@
     </ng-template>
   </p-table>
 } @else {
-  <p-table [rowHover]="true" [value]="filteredPrs()" [paginator]="true" [rows]="20">
+  <p-table #table [rowHover]="true" [value]="filteredPrs()" [paginator]="true" [rows]="20" [globalFilterFields]="['title', 'id']">
     <ng-template #header>
       <tr>
-        <th>Filter: <p-select [options]="filterOptions" [(ngModel)]="activeFilter" optionLabel="name" placeholder="Filter" class="ml-2" /></th>
+        <th>
+          <app-table-filter [table]="table" [searchTableService]="searchTableService" />
+        </th>
         <th>Assignee</th>
         <th>Reviewers</th>
         <th></th>
@@ -51,7 +55,7 @@
       <tr class="cursor-pointer" (click)="openPR(pr)">
         <td>
           <div class="flex items-center gap-2">
-            <i-tabler [name]="getPrIconInfo(pr).icon" [class]="getPrIconInfo(pr).color" />
+            <i-tabler [pTooltip]="getPrIconInfo(pr).tooltip" [name]="getPrIconInfo(pr).icon" [class]="getPrIconInfo(pr).color" />
             <span class="font-bold"><span [innerHTML]="pr.title | markdown"></span></span>
             <i-tabler name="check" class="!h-4 !w-4 text-green-600" />
             @for (label of labels; track label.id) {
@@ -102,7 +106,7 @@
             <i-tabler name="git-pull-request" class="!h-20 !w-20 text-red-500" />
             <span class="font-semibold text-xl">There are no pull requests found matching your filter criteria.</span>
             <span>Try clearing the filter or reloading the page.</span>
-            <p-button (click)="clearFilter()">Clear Filter</p-button>
+            <p-button (click)="searchTableService.clearFilter(table)">Clear Filter</p-button>
           </div>
         </td>
       </tr>

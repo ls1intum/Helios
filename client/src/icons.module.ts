@@ -36,6 +36,8 @@ import {
   IconGitPullRequestDraft,
   IconGitMerge,
   IconPoint,
+  IconFilter,
+  IconFilterPlus,
 } from 'angular-tabler-icons/icons';
 
 // Select some icons (use an object, not an array)
@@ -74,6 +76,8 @@ const icons = {
   IconLogout,
   IconQuestionMark,
   IconPoint,
+  IconFilter,
+  IconFilterPlus,
 };
 
 @NgModule({
