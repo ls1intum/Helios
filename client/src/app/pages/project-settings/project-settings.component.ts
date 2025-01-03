@@ -3,7 +3,6 @@ import { Component, signal, computed, input, numberAttribute, effect, inject } f
 import { injectMutation, injectQuery, injectQueryClient } from '@tanstack/angular-query-experimental';
 
 import { TableModule } from 'primeng/table';
-import { DropdownModule } from 'primeng/dropdown';
 import { ButtonModule } from 'primeng/button';
 import { PanelModule } from 'primeng/panel';
 import { DialogModule } from 'primeng/dialog';
@@ -28,6 +27,7 @@ import { WorkflowDtoSchema } from '@app/core/modules/openapi/schemas.gen';
 import { MessageService } from 'primeng/api';
 import { PageHeadingComponent } from '@app/components/page-heading/page-heading.component';
 import { TooltipModule } from 'primeng/tooltip';
+import { SelectModule } from 'primeng/select';
 
 @Component({
   selector: 'app-project-settings',
@@ -35,12 +35,12 @@ import { TooltipModule } from 'primeng/tooltip';
   imports: [
     FormsModule,
     TableModule,
-    DropdownModule,
     ButtonModule,
     PageHeadingComponent,
     PanelModule,
     DialogModule,
     TooltipModule,
+    SelectModule,
     InputTextModule,
     IconsModule,
     DragDropModule,
@@ -187,6 +187,7 @@ export class ProjectSettingsComponent {
     ...deleteWorkflowGroupMutation(),
     onSuccess: () => {
       this.queryClient.invalidateQueries({ queryKey: getGroupsWithWorkflowsQueryKey({ path: { repositoryId: this.repositoryId() } }) });
+      this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Workflow group deleted successfully' });
     },
   }));
   createWorkflowGroupMutation = injectMutation(() => ({
@@ -195,6 +196,7 @@ export class ProjectSettingsComponent {
       this.showAddGroupDialog = false;
       this.newGroupName = '';
       this.queryClient.invalidateQueries({ queryKey: getGroupsWithWorkflowsQueryKey({ path: { repositoryId: this.repositoryId() } }) });
+      this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Workflow group created successfully' });
     },
   }));
   updateWorkflowGroupMutation = injectMutation(() => ({

@@ -56,15 +56,20 @@
     } @else {
       <!-- No Grouping Available -->
       <div class="flex justify-center items-center h-40 mb-8">
-        <p-panel header="No Groups Available" class="min-w-[250px]">
+        <p-panel class="min-w-[250px]">
+          <ng-template #header>
+            <div class="w-full flex justify-between items-center">
+              <div class="font-semibold">No Groups Available</div>
+              <div pTooltip="Create New Group">
+                <p-button text class="text-center self-end" (click)="showAddGroupDialog = true">
+                  <i-tabler name="plus"></i-tabler>
+                </p-button>
+              </div>
+            </div>
+          </ng-template>
           <p class="text-center">No workflows are currently grouped.</p>
           <p class="text-center">Click "Add New Group" to create a new group.</p>
           <p class="text-center">And then assign workflows to the group.</p>
-          <div>
-            <p-button text class="text-center self-end" (click)="showAddGroupDialog = true">
-              <i-tabler name="plus"></i-tabler>
-            </p-button>
-          </div>
         </p-panel>
       </div>
     }
@@ -90,21 +95,21 @@
           <td>{{ workflow.fileNameWithExtension }}</td>
           <td>{{ workflow.name }}</td>
           <td>
-            <p-dropdown
+            <p-select
               [options]="groupDropdownOptions"
               [ngModel]="workflowGroupsMap()[workflow.id] || 'Ungrouped'"
               (onChange)="onChangeGroup(workflow, $event.value)"
               [appendTo]="'body'"
-            ></p-dropdown>
+            />
           </td>
           <td>
-            <p-dropdown
+            <p-select
               [options]="getWorkflowLabelOptions(workflow.label)"
               [(ngModel)]="workflow.label"
               placeholder="Select Label"
               (onChange)="onChangeLabel(workflow)"
               [appendTo]="'body'"
-            ></p-dropdown>
+            />
           </td>
         </tr>
       </ng-template>
