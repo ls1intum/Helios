@@ -1,8 +1,13 @@
 <div class="container mx-auto p-4">
-  <div class="flex justify-between items-center mb-4">
-    <h1 class="text-2xl font-bold">Your Repositories</h1>
-    <p-button label="Connect Repository" icon="pi pi-plus" (click)="showDialog()" size="small" class="p-button-success" [loading]="loading()"></p-button>
-  </div>
+  <app-page-heading>
+    <div subheading></div>
+    <div class="flex justify-between items-center w-full" heading>
+      <div>Your Repositories</div>
+      <!-- TODO: Remove and replace by update handlers directly on dropdowns -->
+      <p-button label="Connect Repository" (click)="showDialog()" size="small" [loading]="loading()"></p-button>
+    </div>
+    <span description> In the repository list you can find all of the repositories of your organization connected to Helios and are able to connect new ones. </span>
+  </app-page-heading>
 
   <div class="card">
     <div class="border rounded-md">

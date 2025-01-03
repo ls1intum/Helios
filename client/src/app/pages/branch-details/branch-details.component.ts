@@ -21,7 +21,7 @@ export class BranchDetailsComponent {
 
   query = injectQuery(() => ({
     ...getBranchByRepositoryIdAndNameOptions({ path: { name: this.branchName(), repoId: this.repositoryId() } }),
-    refetchInterval: 5000,
+    refetchInterval: 30000,
   }));
 
   commitQuery = injectQuery(() => ({

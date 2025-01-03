@@ -1,6 +1,7 @@
 import { Component, computed, inject, viewChild } from '@angular/core';
 import { Router } from '@angular/router';
 import { ConnectRepoComponent } from '@app/components/connect-repo/connect-repo.component';
+import { PageHeadingComponent } from '@app/components/page-heading/page-heading.component';
 import { RepositoryInfoDto } from '@app/core/modules/openapi';
 import { RepositoryService } from '@app/core/services/repository.service';
 import { IconsModule } from 'icons.module';
@@ -11,9 +12,9 @@ import { DataViewModule } from 'primeng/dataview';
 import { TagModule } from 'primeng/tag';
 
 @Component({
-  selector: 'app-project-overview',
-  imports: [DataViewModule, ButtonModule, TagModule, CardModule, ChipModule, IconsModule, ConnectRepoComponent],
-  templateUrl: './project-overview.component.html',
+  selector: 'app-repository-overview',
+  imports: [DataViewModule, ButtonModule, TagModule, CardModule, ChipModule, IconsModule, ConnectRepoComponent, PageHeadingComponent],
+  templateUrl: './repository-overview.component.html',
 })
 export class ProjectOverviewComponent {
   private repositoryService = inject(RepositoryService);

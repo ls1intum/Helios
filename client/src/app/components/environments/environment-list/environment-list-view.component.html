@@ -7,9 +7,7 @@
 
 <p-accordion [multiple]="true">
   @if (!environmentQuery.isPending() && filteredEnvironments().length === 0) {
-    @if (environmentQuery.isError()) {
-      <p>Failed to load environments. Please try again later.</p>
-    } @else if (searchInput().length === 0) {
+    @if (searchInput().length === 0) {
       <p>No environments found. Create a new environment to get started.</p>
     } @else {
       <p>No environments found for the search term, try something else.</p>

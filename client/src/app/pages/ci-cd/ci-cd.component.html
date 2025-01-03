@@ -1,3 +1,10 @@
+<app-page-heading [repositoryId]="repositoryId()">
+  <div class="flex justify-between items-center w-full" heading>
+    <div>Continous Integration and Deployment</div>
+  </div>
+  <span description> Here you can get insights about the status of your CI/CD pipelines and deployments. You can also trigger new deployments to test servers. </span>
+</app-page-heading>
+
 <p-tabs [(value)]="activeTabId">
   <p-tablist>
     @for (tab of tabs(); track tab.id) {

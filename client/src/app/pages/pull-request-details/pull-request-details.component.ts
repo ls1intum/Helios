@@ -22,7 +22,7 @@ export class PullRequestDetailsComponent {
 
   query = injectQuery(() => ({
     ...getPullRequestByRepositoryIdAndNumberOptions({ path: { repoId: this.repositoryId(), number: this.pullRequestNumber() } }),
-    refetchInterval: 5000,
+    refetchInterval: 30000,
   }));
 
   pipelineSelector = computed<PipelineSelector | null>(() => {
