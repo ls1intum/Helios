@@ -27,6 +27,7 @@ import { WorkflowDto, WorkflowGroupDto, WorkflowMembershipDto } from '@app/core/
 import { WorkflowDtoSchema } from '@app/core/modules/openapi/schemas.gen';
 import { MessageService } from 'primeng/api';
 import { PageHeadingComponent } from '@app/components/page-heading/page-heading.component';
+import { TooltipModule } from 'primeng/tooltip';
 
 @Component({
   selector: 'app-project-settings',
@@ -39,6 +40,7 @@ import { PageHeadingComponent } from '@app/components/page-heading/page-heading.
     PageHeadingComponent,
     PanelModule,
     DialogModule,
+    TooltipModule,
     InputTextModule,
     IconsModule,
     DragDropModule,
