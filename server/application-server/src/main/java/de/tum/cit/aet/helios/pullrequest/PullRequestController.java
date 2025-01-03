@@ -18,8 +18,8 @@ public class PullRequestController {
   }
 
   @GetMapping
-  public ResponseEntity<List<PullRequestInfoDto>> getAllPullRequests() {
-    List<PullRequestInfoDto> pullRequests = pullRequestService.getAllPullRequests();
+  public ResponseEntity<List<PullRequestBaseInfoDto>> getAllPullRequests() {
+    List<PullRequestBaseInfoDto> pullRequests = pullRequestService.getAllPullRequests();
     return ResponseEntity.ok(pullRequests);
   }
 

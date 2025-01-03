@@ -21,6 +21,7 @@ import org.kohsuke.github.GHIssueState;
 import org.kohsuke.github.GHPullRequest;
 import org.kohsuke.github.GHPullRequestQueryBuilder.Sort;
 import org.kohsuke.github.GHRepository;
+import org.kohsuke.github.GHUser;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -185,8 +186,7 @@ public class GitHubPullRequestSyncService {
                   .orElseGet(() -> userRepository.save(userConverter.convert(assignee)));
           resultAssignees.add(resultAssignee);
         });
-    result.getAssignees().clear();
-    result.getAssignees().addAll(resultAssignees);
+    result.setAssignees(resultAssignees);
 
     // Link merged by
     try {
@@ -209,18 +209,33 @@ public class GitHubPullRequestSyncService {
 
     // Link requested reviewers
     try {
-      var requestedReviewers = ghPullRequest.getRequestedReviewers();
-      var resultRequestedReviewers = new HashSet<User>();
-      requestedReviewers.forEach(
-          requestedReviewer -> {
-            var resultRequestedReviewer =
-                userRepository
-                    .findById(requestedReviewer.getId())
-                    .orElseGet(() -> userRepository.save(userConverter.convert(requestedReviewer)));
-            resultRequestedReviewers.add(resultRequestedReviewer);
+      List<GHUser> requestedReviewers = new ArrayList<>(ghPullRequest.getRequestedReviewers());
+
+      // Add indirectly requested reviewers by team
+      var requestedReviewersByTeam = ghPullRequest.getRequestedTeams();
+      requestedReviewersByTeam.forEach(
+          requestedTeam -> {
+            try {
+              requestedReviewers.addAll(requestedTeam.getMembers());
+            } catch (IOException e) {
+              log.error(
+                  "Failed to link requested reviewers (by team) for pull request {}: {}",
+                  ghPullRequest.getId(),
+                  e.getMessage());
+            }
           });
-      result.getRequestedReviewers().clear();
-      result.getRequestedReviewers().addAll(resultRequestedReviewers);
+
+      var resultRequestedReviewers = new HashSet<User>();
+
+      resultRequestedReviewers.addAll(
+          requestedReviewers.stream()
+              .map(
+                  user ->
+                      userRepository
+                          .findById(user.getId())
+                          .orElseGet(() -> userRepository.save(userConverter.convert(user))))
+              .toList());
+      result.setRequestedReviewers(resultRequestedReviewers);
     } catch (IOException e) {
       log.error(
           "Failed to link requested reviewers for pull request {}: {}",

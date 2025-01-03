@@ -55,6 +55,10 @@ public class User extends BaseGitServiceEntity {
     BOT
   }
 
+  @Override
+  public boolean equals(Object o) {
+    return this.getId().equals(((User) o).getId());
+  }
   // Missing properties:
   // - createdIssues
   // - assignedIssues

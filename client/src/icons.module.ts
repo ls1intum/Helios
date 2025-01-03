@@ -32,7 +32,12 @@ import {
   IconAdjustmentsAlt,
   IconLogout,
   IconQuestionMark,
+  IconGitPullRequestClosed,
+  IconGitPullRequestDraft,
+  IconGitMerge,
   IconPoint,
+  IconFilter,
+  IconFilterPlus,
 } from 'angular-tabler-icons/icons';
 
 // Select some icons (use an object, not an array)
@@ -60,6 +65,9 @@ const icons = {
   IconCircleX,
   IconCloudUpload,
   IconGitPullRequest,
+  IconGitPullRequestClosed,
+  IconGitPullRequestDraft,
+  IconGitMerge,
   IconChevronRight,
   IconChevronDown,
   IconChevronUp,
@@ -68,6 +76,8 @@ const icons = {
   IconLogout,
   IconQuestionMark,
   IconPoint,
+  IconFilter,
+  IconFilterPlus,
 };
 
 @NgModule({
