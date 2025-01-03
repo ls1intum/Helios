@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -21,7 +22,8 @@ public class EnvironmentController {
   }
 
   @GetMapping
-  public ResponseEntity<List<EnvironmentDto>> getAllEnvironments() {
+  public ResponseEntity<List<EnvironmentDto>> getAllEnvironments(
+      @RequestHeader("Authorization") String token) {
     List<EnvironmentDto> environments = environmentService.getAllEnvironments();
     return ResponseEntity.ok(environments);
   }

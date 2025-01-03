@@ -45,6 +45,9 @@ public class GitHubService {
 
   private GHOrganization gitHubOrganization;
 
+  @Value("${keycloak.tokenExchangeUrl}")
+  private String tokenExchangeUrl;
+
   public GitHubService(
       GitHub github,
       GitHubConfig gitHubConfig,
@@ -132,8 +135,10 @@ public class GitHubService {
       String repoNameWithOwners,
       String workflowFileNameOrId,
       String ref,
-      Map<String, Object> inputs)
+      Map<String, Object> inputs,
+      String token)
       throws IOException {
+    String gitHubToken = exchangeGitHubToken(token);
     final String url =
         String.format(
             "https://api.github.com/repos/%s/actions/workflows/%s/dispatches",
@@ -145,8 +150,13 @@ public class GitHubService {
     RequestBody requestBody =
         RequestBody.create(jsonPayload, MediaType.get("application/json; charset=utf-8"));
 
-    Request request = requestBuilder.url(url).post(requestBody).build();
-
+    Request request =
+        new Request.Builder()
+            .url(url)
+            .post(requestBody)
+            .header("Authorization", "token " + gitHubToken)
+            .header("Accept", "application/vnd.github+json")
+            .build();
     try (Response response = okHttpClient.newCall(request).execute()) {
       if (!response.isSuccessful()) {
         throw new IOException("GitHub API call failed with response code: " + response.code());
@@ -205,5 +215,30 @@ public class GitHubService {
       GHRepository repository, String environmentName) {
     return new GitHubDeploymentIterator(
         repository, environmentName, okHttpClient, requestBuilder, objectMapper);
+  }
+
+  /**
+   * Exchanges JWT token from keycloak for github identity provider token.
+   *
+   * @param JWT keycloakToken
+   * @return GitHub token
+   * @throws RuntimeException GitHub token exchange failed
+   */
+  private String exchangeGitHubToken(String keycloakToken) {
+    OkHttpClient client = new OkHttpClient().newBuilder().build();
+    Request request =
+        new Request.Builder()
+            .url(tokenExchangeUrl)
+            .method("GET", null)
+            .addHeader("Authorization", keycloakToken)
+            .build();
+    try {
+      Response response = client.newCall(request).execute();
+      String responseBody = response.body().string();
+      return responseBody.split("&")[0].split("=")[1];
+    } catch (IOException e) {
+      log.error("Error occurred while exchanging GitHub token: {}", e.getMessage());
+      throw new RuntimeException("GitHub token exchange failed", e);
+    }
   }
 }
