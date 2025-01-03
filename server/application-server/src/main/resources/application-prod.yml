@@ -34,6 +34,10 @@ github:
         # in MB
         size: 50
 
+keycloak:
+    realm: ${KEYCLOAK_REALM}        
+    tokenExchangeUrl: ${GITHUB_TOKEN_EXCHANGE_URL}
+
 monitoring:
     # List of repositories to monitor in the format owner/repository
     # Example: ls1intum/Helios or ls1intum/Helios,ls1intum/Artemis

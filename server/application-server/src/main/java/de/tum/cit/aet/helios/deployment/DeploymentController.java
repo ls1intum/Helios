@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -50,13 +51,13 @@ public class DeploymentController {
   }
 
   @PostMapping("/deploy")
-  public ResponseEntity<String> deployToEnvironment(@RequestBody DeployRequest deployRequest) {
+  public ResponseEntity<String> deployToEnvironment(
+      @RequestHeader("Authorization") String token, @RequestBody DeployRequest deployRequest) {
     try {
-      deploymentService.deployToEnvironment(deployRequest);
+      deploymentService.deployToEnvironment(deployRequest, token);
       return ResponseEntity.ok().build();
     } catch (DeploymentException e) {
-      return ResponseEntity
-          .status(HttpStatus.INTERNAL_SERVER_ERROR)
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
           .body("Deployment failed: " + e.getMessage());
     }
   }

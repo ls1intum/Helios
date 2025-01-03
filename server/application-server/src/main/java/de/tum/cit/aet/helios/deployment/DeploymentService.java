@@ -2,9 +2,9 @@ package de.tum.cit.aet.helios.deployment;
 
 import de.tum.cit.aet.helios.environment.Environment;
 import de.tum.cit.aet.helios.environment.EnvironmentService;
+import de.tum.cit.aet.helios.github.GitHubService;
 import de.tum.cit.aet.helios.workflow.Workflow;
 import de.tum.cit.aet.helios.workflow.WorkflowService;
-import de.tum.cit.aet.helios.github.GitHubService;
 import jakarta.transaction.Transactional;
 import java.io.IOException;
 import java.util.HashMap;
@@ -55,14 +55,14 @@ public class DeploymentService {
         .map(DeploymentDto::fromDeployment);
   }
 
-  public void deployToEnvironment(DeployRequest deployRequest) {
+  public void deployToEnvironment(DeployRequest deployRequest, String token) {
     Environment environment =
         this.environmentService
             .lockEnvironment(deployRequest.environmentId())
             .orElseThrow(() -> new DeploymentException("Environment was already locked"));
 
     try {
-      //Get the deployment workflow set by the managers
+      // Get the deployment workflow set by the managers
       Workflow deploymentWorkflow = this.workflowService.getDeploymentWorkflow();
       if (deploymentWorkflow == null) {
         this.environmentService.unlockEnvironment(environment.getId());
@@ -72,7 +72,8 @@ public class DeploymentService {
           environment.getRepository().getNameWithOwner(),
           deploymentWorkflow.getFileNameWithExtension(),
           deployRequest.branchName(),
-          new HashMap<>());
+          new HashMap<>(),
+          token);
     } catch (IOException e) {
       // We want to make sure that the environment is unlocked in case of an error
       this.environmentService.unlockEnvironment(environment.getId());
