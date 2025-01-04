@@ -123,6 +123,13 @@ export const EnvironmentDtoSchema = {
     latestDeployment: {
       $ref: '#/components/schemas/EnvironmentDeployment',
     },
+    lockedBy: {
+      type: 'string',
+    },
+    lockedAt: {
+      type: 'string',
+      format: 'date-time',
+    },
   },
 } as const;
 

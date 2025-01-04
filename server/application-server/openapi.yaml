@@ -699,6 +699,11 @@ components:
           type: string
         latestDeployment:
           $ref: "#/components/schemas/EnvironmentDeployment"
+        lockedBy:
+          type: string
+        lockedAt:
+          type: string
+          format: date-time
     RepositoryInfoDto:
       required:
       - htmlUrl

@@ -37,6 +37,8 @@ export type EnvironmentDto = {
   description?: string;
   serverUrl?: string;
   latestDeployment?: EnvironmentDeployment;
+  lockedBy?: string;
+  lockedAt?: string;
 };
 
 export type RepositoryInfoDto = {
