@@ -10,7 +10,7 @@ import { ToastModule } from 'primeng/toast';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 import { CardModule } from 'primeng/card';
 import { injectQuery } from '@tanstack/angular-query-experimental';
-import { getRepositoryByIdOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
+import { getEnvironmentsByUserLockingOptions, getRepositoryByIdOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { SlicePipe } from '@angular/common';
 
 @Component({
@@ -41,6 +41,8 @@ export class MainLayoutComponent implements OnInit {
     ...getRepositoryByIdOptions({ path: { id: this.repositoryId() } }),
     enabled: () => !!this.repositoryId(),
   }));
+
+  lockQuery = injectQuery(() => getEnvironmentsByUserLockingOptions());
 
   items!: { label: string; icon: string; path: string }[];
 

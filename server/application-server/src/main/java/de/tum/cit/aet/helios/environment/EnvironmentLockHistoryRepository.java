@@ -15,4 +15,8 @@ public interface EnvironmentLockHistoryRepository
       Environment environment,
       String lockedBy
   );
+
+  EnvironmentLockHistory findTopByLockedByAndUnlockedAtIsNullOrderByLockedAtDesc(
+      String lockedBy
+  );
 }

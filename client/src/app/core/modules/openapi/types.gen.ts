@@ -141,6 +141,13 @@ export type PullRequestInfoDto = {
   updatedAt?: string;
 };
 
+export type EnvironmentLockHistoryDto = {
+  id: number;
+  lockedBy?: string;
+  lockedAt?: string;
+  unlockedAt?: string;
+};
+
 export type DeploymentDto = {
   id: number;
   repository?: RepositoryInfoDto;
@@ -536,6 +543,22 @@ export type GetAllEnvironmentsResponses = {
 };
 
 export type GetAllEnvironmentsResponse = GetAllEnvironmentsResponses[keyof GetAllEnvironmentsResponses];
+
+export type GetEnvironmentsByUserLockingData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/api/environments/user_locking';
+};
+
+export type GetEnvironmentsByUserLockingResponses = {
+  /**
+   * OK
+   */
+  200: EnvironmentLockHistoryDto;
+};
+
+export type GetEnvironmentsByUserLockingResponse = GetEnvironmentsByUserLockingResponses[keyof GetEnvironmentsByUserLockingResponses];
 
 export type GetEnvironmentsByRepositoryIdData = {
   body?: never;

@@ -426,6 +426,28 @@ export const PullRequestInfoDtoSchema = {
   },
 } as const;
 
+export const EnvironmentLockHistoryDtoSchema = {
+  required: ['id'],
+  type: 'object',
+  properties: {
+    id: {
+      type: 'integer',
+      format: 'int64',
+    },
+    lockedBy: {
+      type: 'string',
+    },
+    lockedAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+    unlockedAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+  },
+} as const;
+
 export const DeploymentDtoSchema = {
   required: ['environment', 'id', 'ref', 'sha', 'statusesUrl', 'task', 'url'],
   type: 'object',

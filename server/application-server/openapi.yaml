@@ -433,6 +433,18 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/EnvironmentDto"
+  /api/environments/user_locking:
+    get:
+      tags:
+      - environment-controller
+      operationId: getEnvironmentsByUserLocking
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EnvironmentLockHistoryDto"
   /api/environments/repository/{repositoryId}:
     get:
       tags:
@@ -990,6 +1002,22 @@ components:
           type: string
           format: date-time
         updatedAt:
+          type: string
+          format: date-time
+    EnvironmentLockHistoryDto:
+      required:
+      - id
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        lockedBy:
+          type: string
+        lockedAt:
+          type: string
+          format: date-time
+        unlockedAt:
           type: string
           format: date-time
     DeploymentDto:

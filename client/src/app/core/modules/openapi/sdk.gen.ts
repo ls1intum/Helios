@@ -42,6 +42,8 @@ import type {
   GetPullRequestByRepositoryIdResponse,
   GetAllEnvironmentsData,
   GetAllEnvironmentsResponse,
+  GetEnvironmentsByUserLockingData,
+  GetEnvironmentsByUserLockingResponse,
   GetEnvironmentsByRepositoryIdData,
   GetEnvironmentsByRepositoryIdResponse,
   GetAllDeploymentsData,
@@ -231,6 +233,13 @@ export const getAllEnvironments = <ThrowOnError extends boolean = false>(options
   return (options?.client ?? client).get<GetAllEnvironmentsResponse, unknown, ThrowOnError>({
     ...options,
     url: '/api/environments',
+  });
+};
+
+export const getEnvironmentsByUserLocking = <ThrowOnError extends boolean = false>(options?: Options<GetEnvironmentsByUserLockingData, ThrowOnError>) => {
+  return (options?.client ?? client).get<GetEnvironmentsByUserLockingResponse, unknown, ThrowOnError>({
+    ...options,
+    url: '/api/environments/user_locking',
   });
 };
 

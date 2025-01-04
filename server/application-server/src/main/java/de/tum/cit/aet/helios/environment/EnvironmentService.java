@@ -169,4 +169,17 @@ public class EnvironmentService {
               return EnvironmentDto.fromEnvironment(environment);
             });
   }
+
+  public EnvironmentLockHistoryDto getUsersCurrentLock() {
+    final String currentUserId = authService.getUserId();
+    EnvironmentLockHistory lockHistory =
+        lockHistoryRepository
+            .findTopByLockedByAndUnlockedAtIsNullOrderByLockedAtDesc(currentUserId);            
+
+    if (lockHistory == null) {
+      return null;
+    }
+
+    return EnvironmentLockHistoryDto.fromEnvironmentLockHistory(lockHistory);
+  }
 }
