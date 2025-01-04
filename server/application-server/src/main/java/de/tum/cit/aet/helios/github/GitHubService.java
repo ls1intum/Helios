@@ -1,6 +1,7 @@
 package de.tum.cit.aet.helios.github;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.tum.cit.aet.helios.deployment.github.GitHubDeploymentDto;
 import de.tum.cit.aet.helios.environment.github.GitHubEnvironmentApiResponse;
@@ -19,6 +20,7 @@ import okhttp3.Request.Builder;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 import org.kohsuke.github.GHOrganization;
+import org.kohsuke.github.GHPermissionType;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GHWorkflow;
 import org.kohsuke.github.GitHub;
@@ -217,6 +219,24 @@ public class GitHubService {
         repository, environmentName, okHttpClient, requestBuilder, objectMapper);
   }
 
+  public GHPermissionType getPermissionForRepository(Long repoId, String keycloakToken) {
+    try {
+      String username = getUsernameFromToken(keycloakToken);
+      System.out.println("username got: " + username);
+      GHRepository repository = github.getRepositoryById(repoId);
+      System.err.println("repository found: " + repository);
+      System.err.println("Repository found: " + repository.getFullName());
+      System.err.println("Permissions: " + repository.getPermission(username));
+      return repository.getPermission(username);
+    } catch (IOException e) {
+      log.error("Error occurred while fetching repository permissions: {}", e.getMessage());
+      return GHPermissionType.NONE;
+    } catch (IllegalArgumentException e) {
+      log.error("JWT token does not contain preferred_username claim: {}", e.getMessage());
+      return GHPermissionType.NONE;
+    }
+  }
+
   /**
    * Exchanges JWT token from keycloak for github identity provider token.
    *
@@ -239,6 +259,31 @@ public class GitHubService {
     } catch (IOException e) {
       log.error("Error occurred while exchanging GitHub token: {}", e.getMessage());
       throw new RuntimeException("GitHub token exchange failed", e);
+    }
+  }
+
+  private String getUsernameFromToken(String token) throws IOException {
+    String gitHubToken = exchangeGitHubToken(token);
+    final String url = String.format("https://api.github.com/user");
+
+    Request request =
+        new Request.Builder()
+            .url(url)
+            .get()
+            .header("Authorization", "token " + gitHubToken)
+            .header("Accept", "application/vnd.github+json")
+            .build();
+    try (Response response = okHttpClient.newCall(request).execute()) {
+      if (response.isSuccessful() && response.body() != null) {
+        JsonNode jsonNode = objectMapper.readTree(response.body().string());
+        return jsonNode.get("login").asText();
+      } else {
+        log.error("Failed to fetch GitHub user info: {}", response.message());
+        return null;
+      }
+    } catch (IOException e) {
+      log.error("Error occurred while dispatching workflow: {}", e.getMessage());
+      throw e;
     }
   }
 }
