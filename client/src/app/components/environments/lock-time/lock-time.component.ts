@@ -13,7 +13,7 @@ export class LockTimeComponent implements OnInit, OnDestroy {
   timeNow = signal<Date>(new Date());
 
   // store the interval ID so we can clear it later
-  private intervalId: any;
+  private intervalId?: ReturnType<typeof setInterval>;
 
   ngOnInit() {
     // Update timeNow every second
