@@ -78,8 +78,8 @@ public class DeploymentService {
       throw new DeploymentException("Environment ID and branch name must not be null");
     }
 
-    // Get the username of the user who triggered the deployment
-    final String username = this.authService.getPreferredUsername();
+    // Get the user ID of the user who triggered the deployment
+    final String user = this.authService.getUserId();
 
     // Get the deployment workflow set by the managers
     Workflow deploymentWorkflow = this.workflowService.getDeploymentWorkflow();
@@ -102,7 +102,7 @@ public class DeploymentService {
     // Create a new HeliosDeployment record
     HeliosDeployment heliosDeployment = new HeliosDeployment();
     heliosDeployment.setEnvironment(environment);
-    heliosDeployment.setUsername(username);
+    heliosDeployment.setUser(user);
     heliosDeployment.setStatus(HeliosDeployment.Status.WAITING);
     heliosDeployment.setBranchName(deployRequest.branchName());
     heliosDeployment = heliosDeploymentRepository.save(heliosDeployment);
@@ -117,7 +117,7 @@ public class DeploymentService {
 
     // Build parameters for the workflow
     Map<String, Object> workflowParams = new HashMap<>();
-    workflowParams.put("HELIOS_TRIGGERED_BY", username);
+    workflowParams.put("HELIOS_TRIGGERED_BY", user);
     workflowParams.put("HELIOS_BRANCH_NAME", deployRequest.branchName());
     workflowParams.put("HELIOS_ENVIRONMENT_NAME", environment.getName());
     if (optionalPr.isPresent()) {

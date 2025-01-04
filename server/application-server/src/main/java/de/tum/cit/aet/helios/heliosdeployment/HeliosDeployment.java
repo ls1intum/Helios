@@ -40,9 +40,9 @@ public class HeliosDeployment {
   @JoinColumn(name = "environment_id", nullable = false)
   private Environment environment;
 
-  // GitHub username of the triggering user
-  @Column(nullable = false)
-  private String username;
+  // user ID of the triggering user
+  @Column(name = "triggering_user", nullable = false)
+  private String user;
 
   @Enumerated(EnumType.STRING)
   @Column(nullable = false)

@@ -53,7 +53,7 @@ public class Environment extends RepositoryFilterEntity {
 
   private boolean locked;
 
-  // GitHub username
+  // user ID
   @Column(name = "locked_by")
   private String lockedBy;
 
