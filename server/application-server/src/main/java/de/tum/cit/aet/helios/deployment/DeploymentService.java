@@ -1,18 +1,27 @@
 package de.tum.cit.aet.helios.deployment;
 
+import de.tum.cit.aet.helios.auth.AuthService;
 import de.tum.cit.aet.helios.environment.Environment;
 import de.tum.cit.aet.helios.environment.EnvironmentService;
+import de.tum.cit.aet.helios.github.GitHubService;
+import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
+import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
+import de.tum.cit.aet.helios.pullrequest.PullRequest;
+import de.tum.cit.aet.helios.pullrequest.PullRequestRepository;
 import de.tum.cit.aet.helios.workflow.Workflow;
 import de.tum.cit.aet.helios.workflow.WorkflowService;
-import de.tum.cit.aet.helios.github.GitHubService;
 import jakarta.transaction.Transactional;
 import java.io.IOException;
+import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 
+@Log4j2
 @Service
 @Transactional
 public class DeploymentService {
@@ -21,16 +30,24 @@ public class DeploymentService {
   private final GitHubService gitHubService;
   private final EnvironmentService environmentService;
   private final WorkflowService workflowService;
+  private final AuthService authService;
+  private final HeliosDeploymentRepository heliosDeploymentRepository;
+  private final PullRequestRepository pullRequestRepository;
 
   public DeploymentService(
       DeploymentRepository deploymentRepository,
       GitHubService gitHubService,
       EnvironmentService environmentService,
-      WorkflowService workflowService) {
+      WorkflowService workflowService, AuthService authService,
+      HeliosDeploymentRepository heliosDeploymentRepository,
+      PullRequestRepository pullRequestRepository) {
     this.deploymentRepository = deploymentRepository;
     this.gitHubService = gitHubService;
     this.environmentService = environmentService;
     this.workflowService = workflowService;
+    this.authService = authService;
+    this.heliosDeploymentRepository = heliosDeploymentRepository;
+    this.pullRequestRepository = pullRequestRepository;
   }
 
   public Optional<DeploymentDto> getDeploymentById(Long id) {
@@ -56,27 +73,109 @@ public class DeploymentService {
   }
 
   public void deployToEnvironment(DeployRequest deployRequest) {
+    // TODO: Check DeployRequest validity before calling this method
+    if (deployRequest.environmentId() == null || deployRequest.branchName() == null) {
+      throw new DeploymentException("Environment ID and branch name must not be null");
+    }
+
+    // Get the username of the user who triggered the deployment
+    final String username = this.authService.getPreferredUsername();
+
+    // Get the deployment workflow set by the managers
+    Workflow deploymentWorkflow = this.workflowService.getDeploymentWorkflow();
+    if (deploymentWorkflow == null) {
+      throw new DeploymentException("No deployment workflow found");
+    }
+
+
     Environment environment =
         this.environmentService
             .lockEnvironment(deployRequest.environmentId())
             .orElseThrow(() -> new DeploymentException("Environment was already locked"));
 
+    // 10 minutes timeout for redeployment
+    if (!canRedeploy(environment, 10)) {
+      throw new DeploymentException("Deployment is still in progress, please wait.");
+    }
+
+
+    // Create a new HeliosDeployment record
+    HeliosDeployment heliosDeployment = new HeliosDeployment();
+    heliosDeployment.setEnvironment(environment);
+    heliosDeployment.setUsername(username);
+    heliosDeployment.setStatus(HeliosDeployment.Status.WAITING);
+    heliosDeployment.setBranchName(deployRequest.branchName());
+    heliosDeployment = heliosDeploymentRepository.save(heliosDeployment);
+
+
+    // Check if a PR exists for the branch
+    final Optional<PullRequest> optionalPr = pullRequestRepository
+        .findByRepositoryIdAndHeadRefName(
+            environment.getRepository().getId(),
+            deployRequest.branchName());
+
+
+    // Build parameters for the workflow
+    Map<String, Object> workflowParams = new HashMap<>();
+    workflowParams.put("HELIOS_TRIGGERED_BY", username);
+    workflowParams.put("HELIOS_BRANCH_NAME", deployRequest.branchName());
+    workflowParams.put("HELIOS_ENVIRONMENT_NAME", environment.getName());
+    if (optionalPr.isPresent()) {
+      workflowParams.put("HELIOS_BUILD", "false");
+    } else {
+      workflowParams.put("HELIOS_BUILD", "true");
+      workflowParams.put("HELIOS_BUILD_TAG", "branch-" + heliosDeployment.getId().toString());
+    }
+
+    heliosDeployment.setWorkflowParams(workflowParams);
+    heliosDeploymentRepository.save(heliosDeployment);
+
     try {
-      //Get the deployment workflow set by the managers
-      Workflow deploymentWorkflow = this.workflowService.getDeploymentWorkflow();
-      if (deploymentWorkflow == null) {
-        this.environmentService.unlockEnvironment(environment.getId());
-        throw new DeploymentException("No deployment workflow found");
-      }
       this.gitHubService.dispatchWorkflow(
           environment.getRepository().getNameWithOwner(),
           deploymentWorkflow.getFileNameWithExtension(),
           deployRequest.branchName(),
-          new HashMap<>());
+          workflowParams);
     } catch (IOException e) {
       // We want to make sure that the environment is unlocked in case of an error
       this.environmentService.unlockEnvironment(environment.getId());
+      heliosDeployment.setStatus(HeliosDeployment.Status.IO_ERROR);
+      heliosDeploymentRepository.save(heliosDeployment);
       throw new DeploymentException("Failed to dispatch workflow due to IOException", e);
     }
   }
+
+  public boolean canRedeploy(Environment environment, long timeoutMinutes) {
+    // Fetch the most recent deployment for the environment
+    Optional<HeliosDeployment> latestDeployment = heliosDeploymentRepository
+        .findTopByEnvironmentOrderByCreatedAtDesc(environment);
+
+    if (latestDeployment.isEmpty()) {
+      // No prior deployments, safe to deploy
+      return true;
+    }
+
+    HeliosDeployment deployment = latestDeployment.get();
+
+    // Allow redeployment if the previous deployment failed
+    if (deployment.getStatus() == HeliosDeployment.Status.FAILED
+        || deployment.getStatus() == HeliosDeployment.Status.IO_ERROR
+        || deployment.getStatus() == HeliosDeployment.Status.UNKNOWN) {
+      return true;
+    }
+
+    // Check if timeout has elapsed
+    if (deployment.getStatus() == HeliosDeployment.Status.IN_PROGRESS
+        || deployment.getStatus() == HeliosDeployment.Status.WAITING) {
+      OffsetDateTime now = OffsetDateTime.now();
+      if (deployment.getStatusUpdatedAt().plusMinutes(timeoutMinutes).isAfter(now)) {
+        throw new DeploymentException("Deployment is still in progress, please wait.");
+      }
+
+      deployment.setStatus(HeliosDeployment.Status.UNKNOWN);
+      heliosDeploymentRepository.save(deployment);
+    }
+    return true;
+  }
+
 }
