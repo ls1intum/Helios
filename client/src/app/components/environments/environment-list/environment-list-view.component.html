@@ -35,6 +35,9 @@
           }
 
           @if (environment.locked) {
+            @if (environment.lockedAt) {
+              <app-lock-time [lockedAt]="environment.lockedAt"></app-lock-time>
+            }
             @if (environment.serverUrl) {
               <a [href]="getFullUrl(environment.serverUrl)" target="_blank" class="p-button p-button-secondary p-2" (click)="$event.stopPropagation()"
                 ><i-tabler name="external-link" class="mr-1" />Open</a

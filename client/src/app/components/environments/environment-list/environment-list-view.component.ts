@@ -12,10 +12,22 @@ import { InputTextModule } from 'primeng/inputtext';
 import { EnvironmentDeploymentInfoComponent } from '../deployment-info/environment-deployment-info.component';
 import { getAllEnvironmentsOptions, getAllEnvironmentsQueryKey, unlockEnvironmentMutation } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { EnvironmentDto } from '@app/core/modules/openapi';
+import { LockTimeComponent } from '../lock-time/lock-time.component';
 
 @Component({
   selector: 'app-environment-list-view',
-  imports: [InputTextModule, AccordionModule, LockTagComponent, RouterLink, TagModule, IconsModule, ButtonModule, DeploymentStateTagComponent, EnvironmentDeploymentInfoComponent],
+  imports: [
+    InputTextModule,
+    AccordionModule,
+    LockTagComponent,
+    RouterLink,
+    TagModule,
+    IconsModule,
+    ButtonModule,
+    DeploymentStateTagComponent,
+    EnvironmentDeploymentInfoComponent,
+    LockTimeComponent,
+  ],
   templateUrl: './environment-list-view.component.html',
 })
 export class EnvironmentListViewComponent {
