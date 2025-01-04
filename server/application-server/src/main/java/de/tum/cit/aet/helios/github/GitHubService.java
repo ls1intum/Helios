@@ -222,11 +222,7 @@ public class GitHubService {
   public GHPermissionType getPermissionForRepository(Long repoId, String keycloakToken) {
     try {
       String username = getUsernameFromToken(keycloakToken);
-      System.out.println("username got: " + username);
       GHRepository repository = github.getRepositoryById(repoId);
-      System.err.println("repository found: " + repository);
-      System.err.println("Repository found: " + repository.getFullName());
-      System.err.println("Permissions: " + repository.getPermission(username));
       return repository.getPermission(username);
     } catch (IOException e) {
       log.error("Error occurred while fetching repository permissions: {}", e.getMessage());
