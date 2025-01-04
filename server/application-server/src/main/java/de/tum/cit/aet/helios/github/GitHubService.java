@@ -1,6 +1,7 @@
 package de.tum.cit.aet.helios.github;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.tum.cit.aet.helios.deployment.github.GitHubDeploymentDto;
 import de.tum.cit.aet.helios.environment.github.GitHubEnvironmentApiResponse;
@@ -8,6 +9,8 @@ import de.tum.cit.aet.helios.environment.github.GitHubEnvironmentDto;
 import jakarta.annotation.PostConstruct;
 import jakarta.transaction.Transactional;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -19,6 +22,7 @@ import okhttp3.Request.Builder;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 import org.kohsuke.github.GHOrganization;
+import org.kohsuke.github.GHPermissionType;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GHWorkflow;
 import org.kohsuke.github.GitHub;
@@ -218,6 +222,20 @@ public class GitHubService {
         repository, environmentName, okHttpClient, requestBuilder, objectMapper);
   }
 
+  public GHPermissionType getPermissionForRepository(Long repoId, String keycloakToken) {
+    try {
+      String username = getUsernameFromToken(keycloakToken);
+      GHRepository repository = github.getRepositoryById(repoId);
+      return repository.getPermission(username);
+    } catch (IOException e) {
+      log.error("Error occurred while fetching repository permissions: {}", e.getMessage());
+      return GHPermissionType.NONE;
+    } catch (IllegalArgumentException e) {
+      log.error("JWT token does not contain preferred_username claim: {}", e.getMessage());
+      return GHPermissionType.NONE;
+    }
+  }
+
   /**
    * Exchanges JWT token from keycloak for github identity provider token.
    *
@@ -241,5 +259,21 @@ public class GitHubService {
       log.error("Error occurred while exchanging GitHub token: {}", e.getMessage());
       throw new RuntimeException("GitHub token exchange failed", e);
     }
+  }
+
+  private String getUsernameFromToken(String bearerToken) throws IOException {
+
+    String token = bearerToken.replace("Bearer", "").trim();
+    String[] jwtParts = token.split("\\.");
+    if (jwtParts.length < 2) {
+      throw new IllegalArgumentException("Invalid JWT token format.");
+    }
+    String base64Payload = jwtParts[1];
+    byte[] decodedBytes = Base64.getUrlDecoder().decode(base64Payload);
+    String payloadJson = new String(decodedBytes, StandardCharsets.UTF_8);
+
+    ObjectMapper payloadObjectMapper = new ObjectMapper();
+    JsonNode jsonNode = payloadObjectMapper.readTree(payloadJson);
+    return jsonNode.get("preferred_username").asText();
   }
 }
