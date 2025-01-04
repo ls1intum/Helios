@@ -22,63 +22,59 @@
     </ng-template>
   </p-table>
 } @else {
-  @if (query.isError()) {
-    <p>Error occurred while fetching pull requests.</p>
+  @if (query.data()?.length === 0) {
+    <p>No pull requests found.</p>
   } @else {
-    @if (query.data()?.length === 0) {
-      <p>No pull requests found.</p>
-    } @else {
-      <p-table [rowHover]="true" [value]="query.data() || []" [paginator]="true" [rows]="20">
-        <ng-template pTemplate="header">
-          <tr>
-            <th>Title</th>
-            <th>Draft</th>
-            <th>Status</th>
-            <th>Author</th>
-            <th>Assignee</th>
-            <th>Created</th>
-          </tr>
-        </ng-template>
-        <ng-template pTemplate="body" let-pr>
-          <tr class="cursor-pointer" (click)="openPR(pr)">
-            <td>
-              <div class="flex items-center gap-2">
-                <i-tabler name="git-pull-request"></i-tabler>
-                <span class="font-bold"><span [innerHTML]="pr.title | markdown"></span></span>
-                <p-button [link]="true" (click)="openPRExternal(pr)"><i-tabler name="external-link"></i-tabler></p-button>
-              </div>
-            </td>
-            <td>
-              @if (pr.isDraft) {
-                <p-tag value="Draft" severity="secondary"></p-tag>
-              }
-            </td>
-            <td>
-              <p-tag [value]="getStatus(pr)" [severity]="getStatusSeverity(pr)"></p-tag>
-            </td>
-            <td>
+    <p-table [rowHover]="true" [value]="query.data() || []" [paginator]="true" [rows]="20">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Title</th>
+          <th>Draft</th>
+          <th>Status</th>
+          <th>Author</th>
+          <th>Assignee</th>
+          <th>Created</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-pr>
+        <tr class="cursor-pointer" (click)="openPR(pr)">
+          <td>
+            <div class="flex items-center gap-2">
+              <i-tabler name="git-pull-request"></i-tabler>
+              <span class="font-bold"><span [innerHTML]="pr.title | markdown"></span></span>
+              <p-button [link]="true" (click)="openPRExternal(pr)"><i-tabler name="external-link"></i-tabler></p-button>
+            </div>
+          </td>
+          <td>
+            @if (pr.isDraft) {
+              <p-tag value="Draft" severity="secondary"></p-tag>
+            }
+          </td>
+          <td>
+            <p-tag [value]="getStatus(pr)" [severity]="getStatusSeverity(pr)"></p-tag>
+          </td>
+          <td>
+            <div class="flex align-items-center gap-2">
+              <p-avatar [image]="pr.author.avatarUrl" shape="circle" size="normal"></p-avatar>
+              <span>{{ pr.author.name }}</span>
+            </div>
+          </td>
+          <td>
+            @if (pr.assignees?.length) {
               <div class="flex align-items-center gap-2">
-                <p-avatar [image]="pr.author.avatarUrl" shape="circle" size="normal"></p-avatar>
-                <span>{{ pr.author.name }}</span>
+                <p-avatarGroup>
+                  @for (assignee of pr.assignees; track assignee) {
+                    <p-avatar [image]="assignee.avatarUrl" [pTooltip]="assignee.name" shape="circle" size="normal"></p-avatar>
+                  }
+                </p-avatarGroup>
               </div>
-            </td>
-            <td>
-              @if (pr.assignees?.length) {
-                <div class="flex align-items-center gap-2">
-                  <p-avatarGroup>
-                    @for (assignee of pr.assignees; track assignee) {
-                      <p-avatar [image]="assignee.avatarUrl" [pTooltip]="assignee.name" shape="circle" size="normal"></p-avatar>
-                    }
-                  </p-avatarGroup>
-                </div>
-              }
-            </td>
-            <td>
-              {{ dateService.formatDate(pr.createdAt, 'd. MMM y') }}
-            </td>
-          </tr>
-        </ng-template>
-      </p-table>
-    }
+            }
+          </td>
+          <td>
+            {{ dateService.formatDate(pr.createdAt, 'd. MMM y') }}
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
   }
 }
