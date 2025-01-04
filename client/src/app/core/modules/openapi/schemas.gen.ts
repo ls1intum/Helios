@@ -259,6 +259,86 @@ export const WorkflowRunDtoSchema = {
   },
 } as const;
 
+export const PullRequestBaseInfoDtoSchema = {
+  required: ['htmlUrl', 'id', 'isDraft', 'isMerged', 'number', 'state', 'title'],
+  type: 'object',
+  properties: {
+    id: {
+      type: 'integer',
+      format: 'int64',
+    },
+    number: {
+      type: 'integer',
+      format: 'int32',
+    },
+    title: {
+      type: 'string',
+    },
+    state: {
+      type: 'string',
+      enum: ['OPEN', 'CLOSED'],
+    },
+    isDraft: {
+      type: 'boolean',
+    },
+    isMerged: {
+      type: 'boolean',
+    },
+    repository: {
+      $ref: '#/components/schemas/RepositoryInfoDto',
+    },
+    htmlUrl: {
+      type: 'string',
+    },
+    createdAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+    updatedAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+    author: {
+      $ref: '#/components/schemas/UserInfoDto',
+    },
+    assignees: {
+      type: 'array',
+      items: {
+        $ref: '#/components/schemas/UserInfoDto',
+      },
+    },
+    reviewers: {
+      type: 'array',
+      items: {
+        $ref: '#/components/schemas/UserInfoDto',
+      },
+    },
+  },
+} as const;
+
+export const UserInfoDtoSchema = {
+  required: ['avatarUrl', 'htmlUrl', 'id', 'login', 'name'],
+  type: 'object',
+  properties: {
+    id: {
+      type: 'integer',
+      format: 'int64',
+    },
+    login: {
+      type: 'string',
+    },
+    avatarUrl: {
+      type: 'string',
+    },
+    name: {
+      type: 'string',
+    },
+    htmlUrl: {
+      type: 'string',
+    },
+  },
+} as const;
+
 export const PullRequestInfoDtoSchema = {
   required: ['additions', 'commentsCount', 'deletions', 'headRefName', 'headRefRepoNameWithOwner', 'headSha', 'htmlUrl', 'id', 'isDraft', 'isMerged', 'number', 'state', 'title'],
   type: 'object',
@@ -335,29 +415,6 @@ export const PullRequestInfoDtoSchema = {
     updatedAt: {
       type: 'string',
       format: 'date-time',
-    },
-  },
-} as const;
-
-export const UserInfoDtoSchema = {
-  required: ['avatarUrl', 'htmlUrl', 'id', 'login', 'name'],
-  type: 'object',
-  properties: {
-    id: {
-      type: 'integer',
-      format: 'int64',
-    },
-    login: {
-      type: 'string',
-    },
-    avatarUrl: {
-      type: 'string',
-    },
-    name: {
-      type: 'string',
-    },
-    htmlUrl: {
-      type: 'string',
     },
   },
 } as const;
