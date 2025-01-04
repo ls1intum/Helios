@@ -9,8 +9,11 @@
     <ng-template pTemplate="header">
       <tr>
         <th>
-          <div class="flex items-center gap-2 w-full">
-            <input pInputText disabled type="text" pSize="small" class="w-full" placeholder="Search" />
+          <div class="flex items-center gap-2">
+            <p-button type="button" outlined disabled size="small">
+              <i-tabler name="filter-plus" />
+            </p-button>
+            <input pInputText type="text" pSize="small" placeholder="Search" class="w-full" disabled />
           </div>
         </th>
         <th>Last Update</th>
@@ -29,7 +32,7 @@
   </p-table>
 } @else {
   <!-- Branches Tree Table -->
-  <p-treetable #tt [value]="featureBranchesTree()" [globalFilterFields]="globalFilterFields" [scrollable]="true" styleClass="p-treetable-sm">
+  <p-treetable #table [value]="featureBranchesTree()" [globalFilterFields]="globalFilterFields" [scrollable]="true" styleClass="p-treetable-sm">
     <ng-template pTemplate="caption">
       <div class="flex items-center gap-2">
         <i-tabler name="git-branch" class="!h-8 !w-8 text-primary-800" />
@@ -39,9 +42,7 @@
     <ng-template pTemplate="header">
       <tr>
         <th>
-          <div class="flex items-center gap-2">
-            <input pInputText [(ngModel)]="searchValue" type="text" pSize="small" placeholder="Search" class="w-full" (input)="onInput(tt, $event)" />
-          </div>
+          <app-table-filter [table]="table" [searchTableService]="searchTableService" />
         </th>
         <th>Last Update</th>
         <th class="text-center w-36">Behind | Ahead</th>
@@ -55,6 +56,9 @@
           <div class="flex items-center gap-2">
             <p-treeTableToggler [rowNode]="rowNode" />
             <p-tag [value]="branch.name" />
+            @if (branch.isProtected) {
+              <i-tabler name="shield-half" pTooltip="Protected Branch" />
+            }
             <i-tabler name="external-link" (click)="openLink($event, branch.link)"></i-tabler>
           </div>
         </td>
@@ -105,7 +109,7 @@
             <i-tabler name="git-branch" class="!h-20 !w-20 text-red-500" />
             <span class="font-semibold text-xl">There are no branches found matching your filter criteria.</span>
             <span>Try clearing the filter or reloading the page.</span>
-            <p-button (click)="clearFilter(tt)">Clear Filter</p-button>
+            <p-button (click)="searchTableService.clearFilter(table)">Clear Filter</p-button>
           </div>
         </td>
       </tr>

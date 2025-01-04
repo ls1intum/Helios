@@ -13,6 +13,7 @@ public record BranchInfoDto(
     int aheadBy,
     int behindBy,
     boolean isDefault,
+    boolean isProtected,
     OffsetDateTime updatedAt,
     UserInfoDto updatedBy,
     RepositoryInfoDto repository) {
@@ -24,6 +25,7 @@ public record BranchInfoDto(
         branch.getAheadBy(),
         branch.getBehindBy(),
         branch.isDefault(),
+        branch.isProtection(),
         branch.getUpdatedAt(),
         UserInfoDto.fromUser(branch.getUpdatedBy()),
         RepositoryInfoDto.fromRepository(branch.getRepository()));

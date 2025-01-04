@@ -507,6 +507,9 @@ export const BranchInfoDtoSchema = {
     isDefault: {
       type: 'boolean',
     },
+    isProtected: {
+      type: 'boolean',
+    },
     updatedAt: {
       type: 'string',
       format: 'date-time',

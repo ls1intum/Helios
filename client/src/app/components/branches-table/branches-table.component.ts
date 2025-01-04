@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { TableModule } from 'primeng/table';
 import { AvatarModule } from 'primeng/avatar';
 import { TagModule } from 'primeng/tag';
@@ -8,7 +8,7 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { InputIconModule } from 'primeng/inputicon';
 import { InputTextModule } from 'primeng/inputtext';
 import { IconFieldModule } from 'primeng/iconfield';
-import { TreeTable, TreeTableModule } from 'primeng/treetable';
+import { TreeTableModule } from 'primeng/treetable';
 import { ButtonModule } from 'primeng/button';
 import { BranchViewPreferenceService } from '@app/core/services/branches-table/branch-view-preference';
 import { Router } from '@angular/router';
@@ -19,8 +19,38 @@ import { DividerModule } from 'primeng/divider';
 import { TooltipModule } from 'primeng/tooltip';
 import { FormsModule } from '@angular/forms';
 import { TimeAgoPipe } from '@app/pipes/time-ago.pipe';
+import { FILTER_OPTIONS_TOKEN, SearchTableService } from '@app/core/services/search-table.service';
+import { TableFilterComponent } from '../table-filter/table-filter.component';
 
 type BranchInfoWithLink = BranchInfoDto & { link: string; lastCommitLink: string };
+
+const FILTER_OPTIONS = [
+  { name: 'All Branches', filter: (branches: BranchInfoWithLink[]) => branches },
+  { name: 'Default Branch', filter: (branches: BranchInfoWithLink[]) => branches.filter(branch => branch.isDefault) },
+  { name: 'Protected Branches', filter: (branches: BranchInfoWithLink[]) => branches.filter(branch => branch.isProtected) },
+  {
+    name: 'Active Branches',
+    filter: (branches: BranchInfoWithLink[]) =>
+      branches.filter(branch => {
+        const date = new Date(branch.updatedAt || '');
+        const staleThreshold = new Date();
+        staleThreshold.setDate(staleThreshold.getDate() - 30);
+
+        return date >= staleThreshold;
+      }),
+  },
+  {
+    name: 'Stale Branches',
+    filter: (branches: BranchInfoWithLink[]) =>
+      branches.filter(branch => {
+        const date = new Date(branch.updatedAt || '');
+        const staleThreshold = new Date();
+        staleThreshold.setDate(staleThreshold.getDate() - 30);
+
+        return date < staleThreshold;
+      }),
+  },
+];
 
 @Component({
   selector: 'app-branches-table',
@@ -38,23 +68,24 @@ type BranchInfoWithLink = BranchInfoDto & { link: string; lastCommitLink: string
     TreeTableModule,
     ButtonModule,
     IconFieldModule,
+    TableFilterComponent,
     InputIconModule,
     InputTextModule,
     FormsModule,
   ],
+  providers: [SearchTableService, { provide: FILTER_OPTIONS_TOKEN, useValue: FILTER_OPTIONS }],
   templateUrl: './branches-table.component.html',
 })
 export class BranchTableComponent {
   router = inject(Router);
   viewPreference = inject(BranchViewPreferenceService);
+  searchTableService = inject(SearchTableService<BranchInfoWithLink>);
 
-  featureBranchesTree = computed(() => this.convertBranchesToTreeNodes(this.branches()));
+  featureBranchesTree = computed(() => this.convertBranchesToTreeNodes(this.searchTableService.activeFilter().filter(this.branches())));
 
   query = injectQuery(() => getAllBranchesOptions());
 
   globalFilterFields = ['name', 'commitSha'];
-
-  searchValue = signal<string>('');
 
   branches = computed<BranchInfoWithLink[]>(
     () =>
@@ -72,11 +103,6 @@ export class BranchTableComponent {
     event.stopPropagation();
   }
 
-  clearFilter(tt: TreeTable): void {
-    tt.filterGlobal('', 'contains');
-    this.searchValue.set('');
-  }
-
   calculateProgress(value: number): number {
     return (value * 100) / this.maxAheadBehindBy();
   }
@@ -85,10 +111,6 @@ export class BranchTableComponent {
     if (branch.repository?.id) {
       this.router.navigate(['repo', branch.repository?.id, 'ci-cd', 'branch', branch.name]);
     }
-  }
-
-  onInput(tt: TreeTable, event: Event): void {
-    tt.filterGlobal((event.target as HTMLInputElement).value, 'contains');
   }
 
   convertBranchesToTreeNodes(branches: BranchInfoWithLink[]): TreeNode[] {

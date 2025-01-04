@@ -1066,6 +1066,8 @@ components:
           format: int32
         isDefault:
           type: boolean
+        isProtected:
+          type: boolean
         updatedAt:
           type: string
           format: date-time

@@ -167,6 +167,7 @@ export type BranchInfoDto = {
   aheadBy?: number;
   behindBy?: number;
   isDefault?: boolean;
+  isProtected?: boolean;
   updatedAt?: string;
   updatedBy?: UserInfoDto;
   repository?: RepositoryInfoDto;
