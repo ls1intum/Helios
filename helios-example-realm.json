@@ -1548,11 +1548,11 @@
       "hideOnLogin": false,
       "config": {
         "acceptsPromptNoneForwardFromClient": "false",
-        "clientId": "Ov23liT5agMa7tdTOkjT",
+        "clientId": "Iv23lixQlqcu7YydQArM",
         "disableUserInfo": "false",
         "filteredByClaim": "false",
         "syncMode": "FORCE",
-        "clientSecret": "ca90f41b07413ce96c91b06a2c5a47db5d6b3327",
+        "clientSecret": "d4465624691ff36b973e8b53bbc0f1896cb62067",
         "caseSensitiveOriginalUsername": "false",
         "defaultScope": "read:user workflow"
       }
