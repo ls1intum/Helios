@@ -39,6 +39,7 @@ import {
   IconPlus,
   IconFilter,
   IconFilterPlus,
+  IconLock,
 } from 'angular-tabler-icons/icons';
 
 // Select some icons (use an object, not an array)
@@ -80,6 +81,7 @@ const icons = {
   IconPlus,
   IconFilter,
   IconFilterPlus,
+  IconLock,
 };
 
 @NgModule({
