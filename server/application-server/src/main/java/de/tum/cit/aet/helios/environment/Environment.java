@@ -27,7 +27,8 @@ import lombok.ToString;
 @NoArgsConstructor
 @ToString
 public class Environment extends RepositoryFilterEntity {
-  @Id private Long id;
+  @Id
+  private Long id;
 
   @Column(nullable = false)
   private String name;
@@ -43,7 +44,8 @@ public class Environment extends RepositoryFilterEntity {
   @Column(name = "updated_at")
   private OffsetDateTime updatedAt;
 
-  @Version private Integer version;
+  @Version
+  private Integer version;
 
   @OneToMany(fetch = FetchType.EAGER, mappedBy = "environment")
   @OrderBy("createdAt ASC")
@@ -51,7 +53,15 @@ public class Environment extends RepositoryFilterEntity {
 
   private boolean locked;
 
+  // GitHub username
+  @Column(name = "locked_by")
   private String lockedBy;
+
+  @Column(name = "locked_at")
+  private OffsetDateTime lockedAt;
+
+  @Column(name = "deployed_at")
+  private OffsetDateTime deployedAt;
 
   @ElementCollection
   @CollectionTable(name = "installed_apps", joinColumns = @JoinColumn(name = "environment_id"))
@@ -63,6 +73,9 @@ public class Environment extends RepositoryFilterEntity {
 
   @Column(name = "server_url")
   private String serverUrl;
+
+  @OneToMany(mappedBy = "environment", fetch = FetchType.LAZY)
+  private List<EnvironmentLockHistory> lockHistory;
 
   // Missing properties
   // nodeId --> GraphQl ID

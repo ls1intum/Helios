@@ -1,5 +1,6 @@
 package de.tum.cit.aet.helios.environment;
 
+import de.tum.cit.aet.helios.auth.AuthService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import java.time.OffsetDateTime;
@@ -8,20 +9,24 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.jwt.Jwt;
 
 @Service
 @Transactional
 public class EnvironmentService {
 
   private final EnvironmentRepository environmentRepository;
+
+  private final AuthService authService;
+
   private final EnvironmentLockHistoryRepository lockHistoryRepository;
+  
 
   public EnvironmentService(EnvironmentRepository environmentRepository,
-                            EnvironmentLockHistoryRepository lockHistoryRepository) {
+                            EnvironmentLockHistoryRepository lockHistoryRepository,
+                            AuthService authService) {
     this.environmentRepository = environmentRepository;
     this.lockHistoryRepository = lockHistoryRepository;
+    this.authService = authService;
   }
 
   public Optional<EnvironmentDto> getEnvironmentById(Long id) {
@@ -60,20 +65,23 @@ public class EnvironmentService {
    */
   @Transactional
   public Optional<Environment> lockEnvironment(Long id) {
+    final String currentUserId = authService.getUserId();
+
     Environment environment =
         environmentRepository
             .findById(id)
             .orElseThrow(() -> new EntityNotFoundException("Environment not found with ID: " + id));
-
-    var authentication = SecurityContextHolder.getContext().getAuthentication();
-    var principal = (Jwt) authentication.getPrincipal();
-    var currentUserId = principal.getSubject();
+    
     if (environment.isLocked()) {
+      if(currentUserId.equals(environment.getLockedBy())) {
+        return Optional.of(environment);
+      }
+
       return Optional.empty();
     }
-
-    environment.setLocked(true);
     environment.setLockedBy(currentUserId);
+    environment.setLockedAt(OffsetDateTime.now());
+    environment.setLocked(true);    
 
     // Record lock event
     EnvironmentLockHistory history = new EnvironmentLockHistory();
@@ -103,21 +111,26 @@ public class EnvironmentService {
    */
   @Transactional
   public EnvironmentDto unlockEnvironment(Long id) {
+    final String currentUserId = authService.getUserId();
+
     Environment environment =
         environmentRepository
             .findById(id)
             .orElseThrow(() -> new EntityNotFoundException("Environment not found with ID: " + id));
 
-    var authentication = SecurityContextHolder.getContext().getAuthentication();
-    var principal = (Jwt) authentication.getPrincipal();
-    var currentUserId = principal.getSubject();
-    if (!environment.isLocked() || !currentUserId.equals(environment.getLockedBy())) {
-      // Handle unauthorized unlock attempt return error
-      return EnvironmentDto.fromEnvironment(environment);
+    if (!environment.isLocked()) {
+      throw new IllegalStateException("Environment is not locked");
+    }
+
+    if (!currentUserId.equals(environment.getLockedBy())) {
+      throw new SecurityException(
+          "You do not have permission to unlock this environment. Environment is locked by: "
+              + environment.getLockedBy());
     }
 
     environment.setLocked(false);
     environment.setLockedBy(null);
+    environment.setLockedAt(null);
 
     var openLock = lockHistoryRepository
       .findTopByEnvironmentAndLockedByAndUnlockedAtIsNullOrderByLockedAtDesc(
