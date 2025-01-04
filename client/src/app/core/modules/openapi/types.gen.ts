@@ -94,6 +94,30 @@ export type WorkflowRunDto = {
   htmlUrl: string;
 };
 
+export type PullRequestBaseInfoDto = {
+  id: number;
+  number: number;
+  title: string;
+  state: 'OPEN' | 'CLOSED';
+  isDraft: boolean;
+  isMerged: boolean;
+  repository?: RepositoryInfoDto;
+  htmlUrl: string;
+  createdAt?: string;
+  updatedAt?: string;
+  author?: UserInfoDto;
+  assignees?: Array<UserInfoDto>;
+  reviewers?: Array<UserInfoDto>;
+};
+
+export type UserInfoDto = {
+  id: number;
+  login: string;
+  avatarUrl: string;
+  name: string;
+  htmlUrl: string;
+};
+
 export type PullRequestInfoDto = {
   id: number;
   number: number;
@@ -115,14 +139,6 @@ export type PullRequestInfoDto = {
   htmlUrl: string;
   createdAt?: string;
   updatedAt?: string;
-};
-
-export type UserInfoDto = {
-  id: number;
-  login: string;
-  avatarUrl: string;
-  name: string;
-  htmlUrl: string;
 };
 
 export type DeploymentDto = {
@@ -445,7 +461,7 @@ export type GetAllPullRequestsResponses = {
   /**
    * OK
    */
-  200: Array<PullRequestInfoDto>;
+  200: Array<PullRequestBaseInfoDto>;
 };
 
 export type GetAllPullRequestsResponse = GetAllPullRequestsResponses[keyof GetAllPullRequestsResponses];

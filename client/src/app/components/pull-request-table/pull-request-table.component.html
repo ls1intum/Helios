@@ -1,80 +1,115 @@
-@if (query.isPending()) {
+@if (query.isPending() || query.isError()) {
   <p-table [value]="[1, 2, 3, 4, 5]">
     <ng-template pTemplate="header">
       <tr>
-        <th>Title</th>
-        <th>Draft</th>
-        <th>Status</th>
-        <th>Author</th>
+        <th>
+          <div class="flex items-center gap-2">
+            <p-button type="button" outlined disabled size="small">
+              <i-tabler name="filter-plus" />
+            </p-button>
+            <input pInputText type="text" pSize="small" placeholder="Search" class="w-full" disabled />
+          </div>
+        </th>
         <th>Assignee</th>
-        <th>Created</th>
+        <th>Reviewers</th>
+        <th></th>
       </tr>
     </ng-template>
     <ng-template pTemplate="body">
       <tr>
-        <td><p-skeleton></p-skeleton></td>
-        <td></td>
-        <td><p-skeleton></p-skeleton></td>
-        <td><p-skeleton></p-skeleton></td>
-        <td><p-skeleton></p-skeleton></td>
-        <td><p-skeleton></p-skeleton></td>
+        <td>
+          <div class="flex items-center gap-2">
+            <p-skeleton shape="circle" styleClass="!size-7" />
+            <p-skeleton class="w-96" />
+          </div>
+          <div class="flex items-center gap-2 ml-1 mt-0.5">
+            <p-skeleton shape="circle" styleClass="!size-5" />
+            <p-skeleton class="!w-52" />
+            <i-tabler name="point" class="!h-3 !w-3" />
+            <p-skeleton styleClass="!w-28" />
+          </div>
+        </td>
+        <td class="w-[0.1%]"><p-skeleton shape="circle" styleClass="!size-7" /></td>
+        <td class="w-[0.1%]"><p-skeleton shape="circle" styleClass="!size-7" /></td>
+        <td class="w-[0.1%]">
+          <p-button text disabled>
+            <i-tabler name="external-link" />
+          </p-button>
+        </td>
       </tr>
     </ng-template>
   </p-table>
 } @else {
-  @if (query.data()?.length === 0) {
-    <p>No pull requests found.</p>
-  } @else {
-    <p-table [rowHover]="true" [value]="query.data() || []" [paginator]="true" [rows]="20">
-      <ng-template pTemplate="header">
-        <tr>
-          <th>Title</th>
-          <th>Draft</th>
-          <th>Status</th>
-          <th>Author</th>
-          <th>Assignee</th>
-          <th>Created</th>
-        </tr>
-      </ng-template>
-      <ng-template pTemplate="body" let-pr>
-        <tr class="cursor-pointer" (click)="openPR(pr)">
-          <td>
-            <div class="flex items-center gap-2">
-              <i-tabler name="git-pull-request"></i-tabler>
-              <span class="font-bold"><span [innerHTML]="pr.title | markdown"></span></span>
-              <p-button [link]="true" (click)="openPRExternal(pr)"><i-tabler name="external-link"></i-tabler></p-button>
-            </div>
-          </td>
-          <td>
-            @if (pr.isDraft) {
-              <p-tag value="Draft" severity="secondary"></p-tag>
+  <p-table #table [rowHover]="true" [value]="filteredPrs()" [paginator]="true" [rows]="20" [globalFilterFields]="['title', 'id']">
+    <ng-template #header>
+      <tr>
+        <th>
+          <app-table-filter [table]="table" [searchTableService]="searchTableService" />
+        </th>
+        <th>Assignee</th>
+        <th>Reviewers</th>
+        <th></th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-pr>
+      <tr class="cursor-pointer" (click)="openPR(pr)">
+        <td>
+          <div class="flex items-center gap-2">
+            <i-tabler [pTooltip]="getPrIconInfo(pr).tooltip" [name]="getPrIconInfo(pr).icon" [class]="getPrIconInfo(pr).color" />
+            <span class="font-bold"><span [innerHTML]="pr.title | markdown"></span></span>
+            <i-tabler name="check" class="!h-4 !w-4 text-green-600" />
+            @for (label of labels; track label.id) {
+              <p-tag [value]="label.name" [rounded]="true" class="border font-medium text-xs py-0.5" [style]="getLabelClasses(label.color)" />
             }
-          </td>
-          <td>
-            <p-tag [value]="getStatus(pr)" [severity]="getStatusSeverity(pr)"></p-tag>
-          </td>
-          <td>
+          </div>
+          <div class="flex gap-2 items-center text-xs">
+            <p-avatar [image]="pr.author?.avatarUrl" shape="circle" class="h-5 w-5" />
+            <span>{{ pr.author?.name }} opened #{{ pr.number }} {{ pr.createdAt | timeAgo }}</span>
+            <i-tabler name="point" class="!h-3 !w-3" />
+            <span>updated {{ pr.updatedAt | timeAgo }}</span>
+          </div>
+        </td>
+
+        <td>
+          @if (pr.assignees?.length) {
             <div class="flex align-items-center gap-2">
-              <p-avatar [image]="pr.author.avatarUrl" shape="circle" size="normal"></p-avatar>
-              <span>{{ pr.author.name }}</span>
+              <p-avatarGroup>
+                @for (assignee of pr.assignees; track assignee) {
+                  <p-avatar [image]="assignee.avatarUrl" [pTooltip]="assignee.name" shape="circle" size="normal"></p-avatar>
+                }
+              </p-avatarGroup>
             </div>
-          </td>
-          <td>
-            @if (pr.assignees?.length) {
-              <div class="flex align-items-center gap-2">
-                <p-avatarGroup>
-                  @for (assignee of pr.assignees; track assignee) {
-                    <p-avatar [image]="assignee.avatarUrl" [pTooltip]="assignee.name" shape="circle" size="normal"></p-avatar>
-                  }
-                </p-avatarGroup>
-              </div>
-            }
-          </td>
-          <td>
-            {{ dateService.formatDate(pr.createdAt, 'd. MMM y') }}
-          </td>
-        </tr>
-      </ng-template>
-    </p-table>
-  }
+          }
+        </td>
+        <td>
+          @if (pr.reviewers?.length) {
+            <div class="flex align-items-center gap-2">
+              <p-avatarGroup>
+                @for (reviewer of pr.reviewers; track reviewer.id) {
+                  <p-avatar [image]="reviewer.avatarUrl" [pTooltip]="reviewer.name" shape="circle" size="normal"></p-avatar>
+                }
+              </p-avatarGroup>
+            </div>
+          }
+        </td>
+        <td>
+          <p-button text (click)="openPRExternal(pr)">
+            <i-tabler name="external-link" />
+          </p-button>
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template #emptymessage>
+      <tr>
+        <td colspan="4">
+          <div class="flex flex-col gap-2 p-20 justify-center items-center">
+            <i-tabler name="git-pull-request" class="!h-20 !w-20 text-red-500" />
+            <span class="font-semibold text-xl">There are no pull requests found matching your filter criteria.</span>
+            <span>Try clearing the filter or reloading the page.</span>
+            <p-button (click)="searchTableService.clearFilter(table)">Clear Filter</p-button>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
 }

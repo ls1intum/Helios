@@ -353,7 +353,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/PullRequestInfoDto"
+                  $ref: "#/components/schemas/PullRequestBaseInfoDto"
   /api/pullrequests/{id}:
     get:
       tags:
@@ -853,6 +853,74 @@ components:
           - UNKNOWN
         htmlUrl:
           type: string
+    PullRequestBaseInfoDto:
+      required:
+      - htmlUrl
+      - id
+      - isDraft
+      - isMerged
+      - number
+      - state
+      - title
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        number:
+          type: integer
+          format: int32
+        title:
+          type: string
+        state:
+          type: string
+          enum:
+          - OPEN
+          - CLOSED
+        isDraft:
+          type: boolean
+        isMerged:
+          type: boolean
+        repository:
+          $ref: "#/components/schemas/RepositoryInfoDto"
+        htmlUrl:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        author:
+          $ref: "#/components/schemas/UserInfoDto"
+        assignees:
+          type: array
+          items:
+            $ref: "#/components/schemas/UserInfoDto"
+        reviewers:
+          type: array
+          items:
+            $ref: "#/components/schemas/UserInfoDto"
+    UserInfoDto:
+      required:
+      - avatarUrl
+      - htmlUrl
+      - id
+      - login
+      - name
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        login:
+          type: string
+        avatarUrl:
+          type: string
+        name:
+          type: string
+        htmlUrl:
+          type: string
     PullRequestInfoDto:
       required:
       - additions
@@ -924,26 +992,6 @@ components:
         updatedAt:
           type: string
           format: date-time
-    UserInfoDto:
-      required:
-      - avatarUrl
-      - htmlUrl
-      - id
-      - login
-      - name
-      type: object
-      properties:
-        id:
-          type: integer
-          format: int64
-        login:
-          type: string
-        avatarUrl:
-          type: string
-        name:
-          type: string
-        htmlUrl:
-          type: string
     DeploymentDto:
       required:
       - environment
