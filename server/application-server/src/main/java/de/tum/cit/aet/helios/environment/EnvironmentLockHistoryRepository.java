@@ -5,13 +5,14 @@ import org.springframework.stereotype.Repository;
 
 
 @Repository
-public interface EnvironmentLockHistoryRepository extends JpaRepository<EnvironmentLockHistory, Long> {
-    /**
-     * Finds the most recent lock history entry for the given environment that is not unlocked
-     * yet, and was locked by the specified user.
-     */
-    EnvironmentLockHistory findTopByEnvironmentAndLockedByAndUnlockedAtIsNullOrderByLockedAtDesc(
-        Environment environment,
-        String lockedBy
-    );
+public interface EnvironmentLockHistoryRepository 
+    extends JpaRepository<EnvironmentLockHistory, Long> {
+  /**
+   * Finds the most recent lock history entry for the given environment that is not unlocked
+   * yet, and was locked by the specified user.
+   */
+  EnvironmentLockHistory findTopByEnvironmentAndLockedByAndUnlockedAtIsNullOrderByLockedAtDesc(
+      Environment environment,
+      String lockedBy
+  );
 }

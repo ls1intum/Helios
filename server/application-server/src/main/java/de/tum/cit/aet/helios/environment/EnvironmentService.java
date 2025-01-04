@@ -73,7 +73,7 @@ public class EnvironmentService {
             .orElseThrow(() -> new EntityNotFoundException("Environment not found with ID: " + id));
     
     if (environment.isLocked()) {
-      if(currentUserId.equals(environment.getLockedBy())) {
+      if (currentUserId.equals(environment.getLockedBy())) {
         return Optional.of(environment);
       }
 
@@ -133,10 +133,10 @@ public class EnvironmentService {
     environment.setLockedAt(null);
 
     var openLock = lockHistoryRepository
-      .findTopByEnvironmentAndLockedByAndUnlockedAtIsNullOrderByLockedAtDesc(
-          environment, 
-          currentUserId
-      );
+        .findTopByEnvironmentAndLockedByAndUnlockedAtIsNullOrderByLockedAtDesc(
+            environment, 
+            currentUserId
+        );
     if (openLock != null) {
       openLock.setUnlockedAt(OffsetDateTime.now());
       lockHistoryRepository.save(openLock);
