@@ -1,7 +1,9 @@
 package de.tum.cit.aet.helios.environment;
 
+import de.tum.cit.aet.helios.auth.AuthService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -14,8 +16,11 @@ public class EnvironmentService {
 
   private final EnvironmentRepository environmentRepository;
 
-  public EnvironmentService(EnvironmentRepository environmentRepository) {
+  private final AuthService authService;
+
+  public EnvironmentService(EnvironmentRepository environmentRepository, AuthService authService) {
     this.environmentRepository = environmentRepository;
+    this.authService = authService;
   }
 
   public Optional<EnvironmentDto> getEnvironmentById(Long id) {
@@ -49,20 +54,28 @@ public class EnvironmentService {
    *
    * @param id the ID of the environment to lock
    * @return an Optional containing the locked environment if successful, or an empty Optional if
-   *     the environment is already locked or if an optimistic locking failure occurs
+   * the environment is already locked or if an optimistic locking failure occurs
    * @throws EntityNotFoundException if no environment is found with the specified ID
    */
   @Transactional
   public Optional<Environment> lockEnvironment(Long id) {
+    final String username = authService.getPreferredUsername();
+
     Environment environment =
         environmentRepository
             .findById(id)
             .orElseThrow(() -> new EntityNotFoundException("Environment not found with ID: " + id));
 
     if (environment.isLocked()) {
+      if (username.equals(environment.getLockedBy())) {
+        return Optional.of(environment);
+      }
+
       return Optional.empty();
     }
 
+    environment.setLockedBy(authService.getPreferredUsername());
+    environment.setLockedAt(OffsetDateTime.now());
     environment.setLocked(true);
 
     try {
@@ -86,12 +99,28 @@ public class EnvironmentService {
    */
   @Transactional
   public EnvironmentDto unlockEnvironment(Long id) {
+    final String username = authService.getPreferredUsername();
+
     Environment environment =
         environmentRepository
             .findById(id)
             .orElseThrow(() -> new EntityNotFoundException("Environment not found with ID: " + id));
 
+    if (!environment.isLocked()) {
+      throw new IllegalStateException("Environment is not locked");
+    }
+
+    if (!username.equals(environment.getLockedBy())) {
+      throw new SecurityException(
+          "You do not have permission to unlock this environment. Environment is locked by: "
+              + environment.getLockedBy());
+    }
+
+
     environment.setLocked(false);
+    environment.setLockedBy(null);
+    environment.setLockedAt(null);
+
     environmentRepository.save(environment);
 
     return EnvironmentDto.fromEnvironment(environment);

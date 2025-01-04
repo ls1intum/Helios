@@ -42,6 +42,7 @@ public class EnvironmentController {
 
   @PutMapping("/{id}/unlock")
   public ResponseEntity<EnvironmentDto> unlockEnvironment(@PathVariable Long id) {
+    // TODO: Check whether the user has the necessary permissions to unlock the environment
     EnvironmentDto environment = environmentService.unlockEnvironment(id);
     return ResponseEntity.ok(environment);
   }
