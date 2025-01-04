@@ -22,6 +22,7 @@ import type {
   GetLatestWorkflowRunsByPullRequestIdAndHeadCommitData,
   GetLatestWorkflowRunsByBranchAndHeadCommitData,
   GetGroupsWithWorkflowsData,
+  GetRepositoryByIdData,
   GetAllPullRequestsData,
   GetPullRequestByIdData,
   GetPullRequestByRepositoryIdAndNumberData,
@@ -54,6 +55,7 @@ import {
   getLatestWorkflowRunsByPullRequestIdAndHeadCommit,
   getLatestWorkflowRunsByBranchAndHeadCommit,
   getGroupsWithWorkflows,
+  getRepositoryById,
   getAllPullRequests,
   getPullRequestById,
   getPullRequestByRepositoryIdAndNumber,
@@ -369,6 +371,23 @@ export const getGroupsWithWorkflowsOptions = (options: Options<GetGroupsWithWork
       return data;
     },
     queryKey: getGroupsWithWorkflowsQueryKey(options),
+  });
+};
+
+export const getRepositoryByIdQueryKey = (options: Options<GetRepositoryByIdData>) => [createQueryKey('getRepositoryById', options)];
+
+export const getRepositoryByIdOptions = (options: Options<GetRepositoryByIdData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getRepositoryById({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: getRepositoryByIdQueryKey(options),
   });
 };
 
