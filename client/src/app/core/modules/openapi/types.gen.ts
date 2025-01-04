@@ -232,7 +232,9 @@ export type UnlockEnvironmentResponses = {
   /**
    * OK
    */
-  200: EnvironmentDto;
+  200: {
+    [key: string]: unknown;
+  };
 };
 
 export type UnlockEnvironmentResponse = UnlockEnvironmentResponses[keyof UnlockEnvironmentResponses];

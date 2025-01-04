@@ -122,7 +122,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/EnvironmentDto"
+                type: object
   /api/settings/{repositoryId}/groups/create:
     post:
       tags:
