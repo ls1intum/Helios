@@ -32,6 +32,7 @@ export class DeploymentSelectionComponent {
 
   handleDeploy = (environment: EnvironmentDto) => {
     this.currentEnvironmentId = environment.id;
-    this.deployEnvironment.mutate({ body: { environmentId: environment.id, branchName: this.sourceRef() } });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    this.deployEnvironment.mutate({ body: { environmentId: environment.id, branchName: this.sourceRef() } } as any);
   };
 }
