@@ -61,7 +61,7 @@ public class GitHubBranchSyncService {
   public List<GHBranch> syncBranchesOfRepository(GHRepository repository) {
     try {
       var branches = repository.getBranches().values().stream().toList();
-      branches.forEach(branch -> processBranch(branch, repository));
+      branches.forEach(branch -> processBranch(branch));
       // Get all branches for the current repository
       var dbBranches = branchRepository.findByRepositoryId(repository.getId());
       // Delete each branch that exists in the database and not in the fetched branches
@@ -84,12 +84,12 @@ public class GitHubBranchSyncService {
    * associations with repositories.
    *
    * @param ghBranch the GitHub branch to process
-   * @param ghRepository the GitHub repository to which the branch belongs
    * @return the updated or newly created Branch entity, or {@code null} if an error occurred
    */
   @Transactional
-  public Branch processBranch(GHBranch ghBranch, GHRepository ghRepository) {
+  public Branch processBranch(GHBranch ghBranch) {
     // Link with existing repository if not already linked
+    GHRepository ghRepository = ghBranch.getOwner();
     var repository = gitRepoRepository.findByNameWithOwner(ghRepository.getFullName());
 
     var result =

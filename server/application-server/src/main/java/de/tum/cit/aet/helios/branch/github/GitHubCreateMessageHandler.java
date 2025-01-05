@@ -51,7 +51,7 @@ public class GitHubCreateMessageHandler extends GitHubMessageHandler<GHEventPayl
         branch = curRepo.getBranch(ref);
 
         repositorySyncService.processRepository(eventPayload.getRepository());
-        branchSyncService.processBranch(branch, repository);
+        branchSyncService.processBranch(branch);
       } catch (IOException e) {
         e.printStackTrace();
       }
