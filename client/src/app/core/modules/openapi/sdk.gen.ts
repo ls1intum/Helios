@@ -28,6 +28,8 @@ import type {
   GetLatestWorkflowRunsByPullRequestIdAndHeadCommitResponse,
   GetLatestWorkflowRunsByBranchAndHeadCommitData,
   GetLatestWorkflowRunsByBranchAndHeadCommitResponse,
+  GetRepoPermissionsData,
+  GetRepoPermissionsResponse,
   GetGroupsWithWorkflowsData,
   GetGroupsWithWorkflowsResponse,
   GetRepositoryByIdData,
@@ -182,6 +184,13 @@ export const getLatestWorkflowRunsByBranchAndHeadCommit = <ThrowOnError extends 
   return (options?.client ?? client).get<GetLatestWorkflowRunsByBranchAndHeadCommitResponse, unknown, ThrowOnError>({
     ...options,
     url: '/api/workflows/branch/{branch}',
+  });
+};
+
+export const getRepoPermissions = <ThrowOnError extends boolean = false>(options: Options<GetRepoPermissionsData, ThrowOnError>) => {
+  return (options?.client ?? client).get<GetRepoPermissionsResponse, unknown, ThrowOnError>({
+    ...options,
+    url: '/api/user-permission/repository/{repoId}',
   });
 };
 

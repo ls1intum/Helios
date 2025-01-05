@@ -306,6 +306,36 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/WorkflowRunDto"
+  /api/user-permission/repository/{repoId}:
+    get:
+      tags:
+      - user-permission-controller
+      operationId: getRepoPermissions
+      parameters:
+      - name: Authorization
+        in: header
+        required: true
+        schema:
+          type: string
+      - name: repoId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: string
+                enum:
+                - ADMIN
+                - WRITE
+                - READ
+                - NONE
+                - UNKNOWN
   /api/settings/{repositoryId}/groups:
     get:
       tags:

@@ -21,6 +21,7 @@ import type {
   GetWorkflowsByRepositoryIdData,
   GetLatestWorkflowRunsByPullRequestIdAndHeadCommitData,
   GetLatestWorkflowRunsByBranchAndHeadCommitData,
+  GetRepoPermissionsData,
   GetGroupsWithWorkflowsData,
   GetRepositoryByIdData,
   GetAllPullRequestsData,
@@ -54,6 +55,7 @@ import {
   getWorkflowsByRepositoryId,
   getLatestWorkflowRunsByPullRequestIdAndHeadCommit,
   getLatestWorkflowRunsByBranchAndHeadCommit,
+  getRepoPermissions,
   getGroupsWithWorkflows,
   getRepositoryById,
   getAllPullRequests,
@@ -354,6 +356,23 @@ export const getLatestWorkflowRunsByBranchAndHeadCommitOptions = (options: Optio
       return data;
     },
     queryKey: getLatestWorkflowRunsByBranchAndHeadCommitQueryKey(options),
+  });
+};
+
+export const getRepoPermissionsQueryKey = (options: Options<GetRepoPermissionsData>) => [createQueryKey('getRepoPermissions', options)];
+
+export const getRepoPermissionsOptions = (options: Options<GetRepoPermissionsData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getRepoPermissions({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: getRepoPermissionsQueryKey(options),
   });
 };
 
