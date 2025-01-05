@@ -461,9 +461,9 @@ export const getPullRequestByRepositoryIdOptions = (options: Options<GetPullRequ
   });
 };
 
-export const getAllEnvironmentsQueryKey = (options?: Options<GetAllEnvironmentsData>) => [createQueryKey('getAllEnvironments', options)];
+export const getAllEnvironmentsQueryKey = (options: Options<GetAllEnvironmentsData>) => [createQueryKey('getAllEnvironments', options)];
 
-export const getAllEnvironmentsOptions = (options?: Options<GetAllEnvironmentsData>) => {
+export const getAllEnvironmentsOptions = (options: Options<GetAllEnvironmentsData>) => {
   return queryOptions({
     queryFn: async ({ queryKey, signal }) => {
       const { data } = await getAllEnvironments({

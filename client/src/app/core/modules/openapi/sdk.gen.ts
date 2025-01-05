@@ -227,7 +227,7 @@ export const getPullRequestByRepositoryId = <ThrowOnError extends boolean = fals
   });
 };
 
-export const getAllEnvironments = <ThrowOnError extends boolean = false>(options?: Options<GetAllEnvironmentsData, ThrowOnError>) => {
+export const getAllEnvironments = <ThrowOnError extends boolean = false>(options: Options<GetAllEnvironmentsData, ThrowOnError>) => {
   return (options?.client ?? client).get<GetAllEnvironmentsResponse, unknown, ThrowOnError>({
     ...options,
     url: '/api/environments',

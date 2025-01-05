@@ -32,6 +32,6 @@ export class DeploymentSelectionComponent {
 
   handleDeploy = (environment: EnvironmentDto) => {
     this.currentEnvironmentId = environment.id;
-    this.deployEnvironment.mutate({ body: { environmentId: environment.id, branchName: this.sourceRef() } });
+    this.deployEnvironment.mutate({ body: { environmentId: environment.id, branchName: this.sourceRef() } } as any);
   };
 }

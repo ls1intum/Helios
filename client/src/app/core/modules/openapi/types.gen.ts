@@ -273,6 +273,9 @@ export type CreateWorkflowGroupResponse = CreateWorkflowGroupResponses[keyof Cre
 
 export type DeployToEnvironmentData = {
   body: DeployRequest;
+  headers: {
+    Authorization: string;
+  };
   path?: never;
   query?: never;
   url: '/api/deployments/deploy';
@@ -519,6 +522,9 @@ export type GetPullRequestByRepositoryIdResponse = GetPullRequestByRepositoryIdR
 
 export type GetAllEnvironmentsData = {
   body?: never;
+  headers: {
+    Authorization: string;
+  };
   path?: never;
   query?: never;
   url: '/api/environments';
