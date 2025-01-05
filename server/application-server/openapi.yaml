@@ -153,6 +153,12 @@ paths:
       tags:
       - deployment-controller
       operationId: deployToEnvironment
+      parameters:
+      - name: Authorization
+        in: header
+        required: true
+        schema:
+          type: string
       requestBody:
         content:
           application/json:
@@ -424,6 +430,12 @@ paths:
       tags:
       - environment-controller
       operationId: getAllEnvironments
+      parameters:
+      - name: Authorization
+        in: header
+        required: true
+        schema:
+          type: string
       responses:
         "200":
           description: OK
