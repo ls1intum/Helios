@@ -164,6 +164,12 @@ export type CommitInfoDto = {
 export type BranchInfoDto = {
   name: string;
   commitSha: string;
+  aheadBy?: number;
+  behindBy?: number;
+  isDefault?: boolean;
+  isProtected?: boolean;
+  updatedAt?: string;
+  updatedBy?: UserInfoDto;
   repository?: RepositoryInfoDto;
 };
 
