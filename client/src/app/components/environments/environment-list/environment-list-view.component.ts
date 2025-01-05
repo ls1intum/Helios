@@ -1,17 +1,17 @@
 import { Component, computed, input, output, signal } from '@angular/core';
 import { AccordionModule } from 'primeng/accordion';
 
-import { TagModule } from 'primeng/tag';
+import { RouterLink } from '@angular/router';
+import { EnvironmentDto } from '@app/core/modules/openapi';
+import { getAllEnvironmentsOptions, getAllEnvironmentsQueryKey, unlockEnvironmentMutation } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
+import { injectMutation, injectQuery, injectQueryClient } from '@tanstack/angular-query-experimental';
 import { IconsModule } from 'icons.module';
 import { ButtonModule } from 'primeng/button';
-import { RouterLink } from '@angular/router';
-import { injectMutation, injectQuery, injectQueryClient } from '@tanstack/angular-query-experimental';
-import { LockTagComponent } from '../lock-tag/lock-tag.component';
-import { DeploymentStateTagComponent } from '../deployment-state-tag/deployment-state-tag.component';
 import { InputTextModule } from 'primeng/inputtext';
+import { TagModule } from 'primeng/tag';
 import { EnvironmentDeploymentInfoComponent } from '../deployment-info/environment-deployment-info.component';
-import { getAllEnvironmentsOptions, getAllEnvironmentsQueryKey, unlockEnvironmentMutation } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
-import { EnvironmentDto } from '@app/core/modules/openapi';
+import { DeploymentStateTagComponent } from '../deployment-state-tag/deployment-state-tag.component';
+import { LockTagComponent } from '../lock-tag/lock-tag.component';
 
 @Component({
   selector: 'app-environment-list-view',
@@ -23,6 +23,8 @@ export class EnvironmentListViewComponent {
 
   editable = input<boolean | undefined>();
   deployable = input<boolean | undefined>();
+  hasUnlockPermissions = input<boolean | undefined>();
+  hasDeployPermissions = input<boolean | undefined>();
   hideLinkToList = input<boolean | undefined>();
 
   deploy = output<EnvironmentDto>();
@@ -30,8 +32,6 @@ export class EnvironmentListViewComponent {
   searchInput = signal<string>('');
 
   environmentQuery = injectQuery(() => getAllEnvironmentsOptions());
-
-  environments = computed(() => this.environmentQuery.data());
 
   unlockEnvironment = injectMutation(() => ({
     ...unlockEnvironmentMutation(),
