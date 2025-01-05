@@ -413,6 +413,27 @@ export type GetLatestWorkflowRunsByBranchAndHeadCommitResponses = {
 
 export type GetLatestWorkflowRunsByBranchAndHeadCommitResponse = GetLatestWorkflowRunsByBranchAndHeadCommitResponses[keyof GetLatestWorkflowRunsByBranchAndHeadCommitResponses];
 
+export type GetRepoPermissionsData = {
+  body?: never;
+  headers: {
+    Authorization: string;
+  };
+  path: {
+    repoId: number;
+  };
+  query?: never;
+  url: '/api/user-permission/repository/{repoId}';
+};
+
+export type GetRepoPermissionsResponses = {
+  /**
+   * OK
+   */
+  200: 'ADMIN' | 'WRITE' | 'READ' | 'NONE' | 'UNKNOWN';
+};
+
+export type GetRepoPermissionsResponse = GetRepoPermissionsResponses[keyof GetRepoPermissionsResponses];
+
 export type GetGroupsWithWorkflowsData = {
   body?: never;
   path: {
@@ -522,9 +543,6 @@ export type GetPullRequestByRepositoryIdResponse = GetPullRequestByRepositoryIdR
 
 export type GetAllEnvironmentsData = {
   body?: never;
-  headers: {
-    Authorization: string;
-  };
   path?: never;
   query?: never;
   url: '/api/environments';

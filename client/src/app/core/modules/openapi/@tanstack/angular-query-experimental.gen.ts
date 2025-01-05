@@ -21,6 +21,7 @@ import type {
   GetWorkflowsByRepositoryIdData,
   GetLatestWorkflowRunsByPullRequestIdAndHeadCommitData,
   GetLatestWorkflowRunsByBranchAndHeadCommitData,
+  GetRepoPermissionsData,
   GetGroupsWithWorkflowsData,
   GetRepositoryByIdData,
   GetAllPullRequestsData,
@@ -54,6 +55,7 @@ import {
   getWorkflowsByRepositoryId,
   getLatestWorkflowRunsByPullRequestIdAndHeadCommit,
   getLatestWorkflowRunsByBranchAndHeadCommit,
+  getRepoPermissions,
   getGroupsWithWorkflows,
   getRepositoryById,
   getAllPullRequests,
@@ -357,6 +359,23 @@ export const getLatestWorkflowRunsByBranchAndHeadCommitOptions = (options: Optio
   });
 };
 
+export const getRepoPermissionsQueryKey = (options: Options<GetRepoPermissionsData>) => [createQueryKey('getRepoPermissions', options)];
+
+export const getRepoPermissionsOptions = (options: Options<GetRepoPermissionsData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getRepoPermissions({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: getRepoPermissionsQueryKey(options),
+  });
+};
+
 export const getGroupsWithWorkflowsQueryKey = (options: Options<GetGroupsWithWorkflowsData>) => [createQueryKey('getGroupsWithWorkflows', options)];
 
 export const getGroupsWithWorkflowsOptions = (options: Options<GetGroupsWithWorkflowsData>) => {
@@ -461,9 +480,9 @@ export const getPullRequestByRepositoryIdOptions = (options: Options<GetPullRequ
   });
 };
 
-export const getAllEnvironmentsQueryKey = (options: Options<GetAllEnvironmentsData>) => [createQueryKey('getAllEnvironments', options)];
+export const getAllEnvironmentsQueryKey = (options?: Options<GetAllEnvironmentsData>) => [createQueryKey('getAllEnvironments', options)];
 
-export const getAllEnvironmentsOptions = (options: Options<GetAllEnvironmentsData>) => {
+export const getAllEnvironmentsOptions = (options?: Options<GetAllEnvironmentsData>) => {
   return queryOptions({
     queryFn: async ({ queryKey, signal }) => {
       const { data } = await getAllEnvironments({
