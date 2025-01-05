@@ -31,7 +31,7 @@
   <app-pipeline [selector]="pipelineSelector()" />
   @if (query.data(); as pr) {
     @if (pr.headRefRepoNameWithOwner === pr.repository?.nameWithOwner) {
-      <app-deployment-selection [sourceRef]="pr.headRefName" />
+      <app-deployment-selection [sourceRef]="pr.headRefName" [repositoryId]="repositoryId()" />
     }
   }
 </div>
