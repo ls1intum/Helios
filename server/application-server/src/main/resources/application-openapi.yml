@@ -30,6 +30,9 @@ github:
         ttl: 0
         size: 0
 
+keycloak:    
+    tokenExchangeUrl: ""
+
 monitoring:
     repositories: ""
     runOnStartup: false
