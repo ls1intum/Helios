@@ -61,14 +61,8 @@ export class EnvironmentListViewComponent {
     if (!environments) {
       return [];
     }
-    // TODO: Incorporate deployed by information to check force unlock permissions for each environment in the list
-    const environmentsWithDeploymentInfo = environments.map(environment => {
-      return {
-        ...environment,
-        deployedByCurrentUser: true,
-      };
-    });
-    return environmentsWithDeploymentInfo.filter(environment => {
+
+    return environments.filter(environment => {
       return environment.name.toLowerCase().includes(search.toLowerCase());
     });
   });
