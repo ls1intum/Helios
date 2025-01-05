@@ -34,8 +34,7 @@ github:
         # in MB
         size: 50
 
-keycloak:
-    realm: ${KEYCLOAK_REALM}        
+keycloak:   
     tokenExchangeUrl: ${GITHUB_TOKEN_EXCHANGE_URL}
 
 monitoring:
