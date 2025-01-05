@@ -124,8 +124,7 @@ public class EnvironmentService {
 
     if (!currentUserId.equals(environment.getLockedBy())) {
       throw new SecurityException(
-          "You do not have permission to unlock this environment. Environment is locked by: "
-              + environment.getLockedBy());
+          "You do not have permission to unlock this environment. Environment is locked by another user");
     }
 
     environment.setLocked(false);
