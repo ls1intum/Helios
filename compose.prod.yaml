@@ -93,6 +93,7 @@ services:
       - REPOSITORY_NAME=${REPOSITORY_NAME}
       - RUN_ON_STARTUP_COOLDOWN=${RUN_ON_STARTUP_COOLDOWN}
       - OAUTH_ISSUER_URL=${OAUTH_ISSUER_URL}
+      - GITHUB_TOKEN_EXCHANGE_URL=${GITHUB_TOKEN_EXCHANGE_URL}
     depends_on:
       - postgres
       - nats-server
