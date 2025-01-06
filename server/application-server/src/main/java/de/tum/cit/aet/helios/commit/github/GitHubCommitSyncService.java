@@ -156,7 +156,14 @@ public class GitHubCommitSyncService {
     // Link author
     try {
       var author = ghCommit.getAuthor();
-      if (author != null) {
+
+      // TODO: Think about a better way to handle anonymous users that committed with a wrong email
+      if (author == null) {
+        result.setAuthor(
+            userRepository
+                .findById(Long.parseLong("-1"))
+                .orElseGet(() -> userRepository.save(userConverter.convertToAnonymous())));
+      } else {
         var resultAuthor =
             userRepository
                 .findById(author.getId())
