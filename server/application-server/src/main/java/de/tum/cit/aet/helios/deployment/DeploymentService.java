@@ -1,6 +1,7 @@
 package de.tum.cit.aet.helios.deployment;
 
 import de.tum.cit.aet.helios.auth.AuthService;
+import de.tum.cit.aet.helios.branch.BranchService;
 import de.tum.cit.aet.helios.environment.Environment;
 import de.tum.cit.aet.helios.environment.EnvironmentService;
 import de.tum.cit.aet.helios.github.GitHubService;
@@ -33,6 +34,7 @@ public class DeploymentService {
   private final AuthService authService;
   private final HeliosDeploymentRepository heliosDeploymentRepository;
   private final PullRequestRepository pullRequestRepository;
+  private final BranchService branchService;
 
   public DeploymentService(
       DeploymentRepository deploymentRepository,
@@ -40,7 +42,7 @@ public class DeploymentService {
       EnvironmentService environmentService,
       WorkflowService workflowService, AuthService authService,
       HeliosDeploymentRepository heliosDeploymentRepository,
-      PullRequestRepository pullRequestRepository) {
+      PullRequestRepository pullRequestRepository, BranchService branchService) {
     this.deploymentRepository = deploymentRepository;
     this.gitHubService = gitHubService;
     this.environmentService = environmentService;
@@ -48,6 +50,7 @@ public class DeploymentService {
     this.authService = authService;
     this.heliosDeploymentRepository = heliosDeploymentRepository;
     this.pullRequestRepository = pullRequestRepository;
+    this.branchService = branchService;
   }
 
   public Optional<DeploymentDto> getDeploymentById(Long id) {
@@ -88,6 +91,12 @@ public class DeploymentService {
     }
 
 
+    // Get the latest sha of the branch
+    final String branchCommitSha = this.branchService.getBranchByName(deployRequest.branchName())
+        .orElseThrow(() -> new DeploymentException("Branch not found"))
+        .commitSha();
+
+    // Lock the environment
     Environment environment =
         this.environmentService
             .lockEnvironment(deployRequest.environmentId())
@@ -119,9 +128,12 @@ public class DeploymentService {
     Map<String, Object> workflowParams = new HashMap<>();
     workflowParams.put("HELIOS_TRIGGERED_BY", user);
     workflowParams.put("HELIOS_BRANCH_NAME", deployRequest.branchName());
+    workflowParams.put("HELIOS_BRANCH_HEAD_SHA", branchCommitSha);
     workflowParams.put("HELIOS_ENVIRONMENT_NAME", environment.getName());
     if (optionalPr.isPresent()) {
+      final PullRequest pr = optionalPr.get();
       workflowParams.put("HELIOS_BUILD", "false");
+      workflowParams.put("HELIOS_PR_NUMBER", pr.getId());
     } else {
       workflowParams.put("HELIOS_BUILD", "true");
       workflowParams.put("HELIOS_BUILD_TAG", "branch-" + heliosDeployment.getId().toString());
@@ -137,8 +149,7 @@ public class DeploymentService {
           deployRequest.branchName(),
           workflowParams);
     } catch (IOException e) {
-      // We want to make sure that the environment is unlocked in case of an error
-      this.environmentService.unlockEnvironment(environment.getId());
+      // Don't need to unlock the environment, since user might want to re-deploy
       heliosDeployment.setStatus(HeliosDeployment.Status.IO_ERROR);
       heliosDeploymentRepository.save(heliosDeployment);
       throw new DeploymentException("Failed to dispatch workflow due to IOException", e);

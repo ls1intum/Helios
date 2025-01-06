@@ -26,6 +26,10 @@ public class BranchService {
     return branchRepository.findById(id).map(BranchInfoDto::fromBranch);
   }
 
+  public Optional<BranchInfoDto> getBranchByName(String name) {
+    return branchRepository.findByName(name).map(BranchInfoDto::fromBranch);
+  }
+
   @Transactional
   public void deleteBranchByNameAndRepositoryId(String name, Long repositoryId) {
     branchRepository.deleteByNameAndRepositoryId(name, repositoryId);
