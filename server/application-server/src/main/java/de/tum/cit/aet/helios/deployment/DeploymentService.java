@@ -133,7 +133,7 @@ public class DeploymentService {
     if (optionalPr.isPresent()) {
       final PullRequest pr = optionalPr.get();
       workflowParams.put("HELIOS_BUILD", "false");
-      workflowParams.put("HELIOS_PR_NUMBER", pr.getId());
+      workflowParams.put("HELIOS_PR_NUMBER", pr.getNumber());
     } else {
       workflowParams.put("HELIOS_BUILD", "true");
       workflowParams.put("HELIOS_BUILD_TAG", "branch-" + heliosDeployment.getId().toString());
