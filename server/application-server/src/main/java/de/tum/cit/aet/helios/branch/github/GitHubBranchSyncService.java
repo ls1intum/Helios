@@ -94,7 +94,7 @@ public class GitHubBranchSyncService {
 
     var result =
         branchRepository
-            .findByNameAndRepositoryId(ghBranch.getName(), repository.getId())
+            .findByNameAndRepositoryId(ghBranch.getName(), repository.getRepositoryId())
             .map(
                 branch -> {
                   try {

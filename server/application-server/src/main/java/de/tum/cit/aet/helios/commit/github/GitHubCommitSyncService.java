@@ -132,7 +132,7 @@ public class GitHubCommitSyncService {
     var repository = gitRepoRepository.findByNameWithOwner(ghRepository.getFullName());
     var result =
         commitRepository
-            .findByShaAndRepositoryId(ghCommit.getSHA1(), repository.getId())
+            .findByShaAndRepositoryId(ghCommit.getSHA1(), repository.getRepositoryId())
             .map(
                 commit -> {
                   try {

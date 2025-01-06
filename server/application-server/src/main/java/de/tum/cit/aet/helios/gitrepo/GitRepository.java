@@ -11,6 +11,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.hibernate.annotations.Filter;
 import org.springframework.lang.NonNull;
 
 @Entity
@@ -19,32 +20,35 @@ import org.springframework.lang.NonNull;
 @Setter
 @NoArgsConstructor
 @ToString(callSuper = true)
+@Filter(name = "gitRepositoryFilter")
 public class GitRepository {
 
   @Id
   @Column(name = "repository_id")
   protected Long repositoryId;
 
-  protected Long id;
-
   protected OffsetDateTime createdAt;
 
   protected OffsetDateTime updatedAt;
 
-  @NonNull private String name;
+  @NonNull
+  private String name;
 
-  @NonNull private String nameWithOwner;
+  @NonNull
+  private String nameWithOwner;
 
   // Whether the repository is private or public.
   private boolean isPrivate;
 
-  @NonNull private String htmlUrl;
+  @NonNull
+  private String htmlUrl;
 
   private String description;
 
   private String homepage;
 
-  @NonNull private OffsetDateTime pushedAt;
+  @NonNull
+  private OffsetDateTime pushedAt;
 
   private boolean isArchived;
 
@@ -59,7 +63,8 @@ public class GitRepository {
 
   private int watchersCount;
 
-  @NonNull private String defaultBranch;
+  @NonNull
+  private String defaultBranch;
 
   private boolean hasIssues;
 

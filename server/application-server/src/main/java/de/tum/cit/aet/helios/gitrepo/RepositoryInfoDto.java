@@ -13,7 +13,7 @@ public record RepositoryInfoDto(
 
   public static RepositoryInfoDto fromRepository(GitRepository repository) {
     return new RepositoryInfoDto(
-        repository.getId(),
+        repository.getRepositoryId(),
         repository.getName(),
         repository.getNameWithOwner(),
         repository.getDescription(),

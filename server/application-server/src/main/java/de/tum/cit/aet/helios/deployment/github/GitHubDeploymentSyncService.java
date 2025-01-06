@@ -151,7 +151,7 @@ public class GitHubDeploymentSyncService {
     // Set the PR associated with the deployment
     Optional<PullRequest> optionalPullRequest =
         pullRequestRepository.findByRepositoryIdAndHeadRefNameOrHeadSha(
-            gitRepository.getId(), deployment.getRef(), deployment.getSha());
+            gitRepository.getRepositoryId(), deployment.getRef(), deployment.getSha());
 
     optionalPullRequest.ifPresent(deployment::setPullRequest);
 

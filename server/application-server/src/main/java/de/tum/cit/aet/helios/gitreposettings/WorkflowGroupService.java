@@ -70,7 +70,7 @@ public class WorkflowGroupService {
                         "WorkflowGroup with id " + workflowGroupId + " not found."));
 
     // Ensure the WorkflowGroup belongs to the given repository
-    if (!workflowGroup.getGitRepoSettings().getRepository().getId().equals(repositoryId)) {
+    if (!workflowGroup.getGitRepoSettings().getRepository().getRepositoryId().equals(repositoryId)) {
       throw new IllegalArgumentException(
           "WorkflowGroup does not belong to the specified repository.");
     }
@@ -226,7 +226,7 @@ public class WorkflowGroupService {
   private GitRepoSettings getOrCreateGitRepoSettings(Long repositoryId) {
     GitRepository gitRepository =
         gitRepoRepository
-            .findById(repositoryId)
+            .findByRepositoryId(repositoryId)
             .orElseThrow(
                 () ->
                     new IllegalArgumentException(

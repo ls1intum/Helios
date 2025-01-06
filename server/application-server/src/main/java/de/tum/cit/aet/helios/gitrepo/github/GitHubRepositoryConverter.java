@@ -20,7 +20,6 @@ public class GitHubRepositoryConverter
   }
 
   public GitRepository update(@NonNull GHRepository source, @NonNull GitRepository repository) {
-    repository.setId(source.getId());
     repository.setRepositoryId(source.getId());
     try {
       repository.setCreatedAt(DateUtil.convertToOffsetDateTime(source.getCreatedAt()));
