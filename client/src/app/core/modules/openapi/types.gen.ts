@@ -694,10 +694,11 @@ export type GetBranchByRepositoryIdAndNameData = {
   body?: never;
   path: {
     repoId: number;
+  };
+  query: {
     name: string;
   };
-  query?: never;
-  url: '/api/branches/repository/{repoId}/name/{name}';
+  url: '/api/branches/repository/{repoId}/branch';
 };
 
 export type GetBranchByRepositoryIdAndNameResponses = {

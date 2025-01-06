@@ -295,7 +295,7 @@ export const getAllBranches = <ThrowOnError extends boolean = false>(options?: O
 export const getBranchByRepositoryIdAndName = <ThrowOnError extends boolean = false>(options: Options<GetBranchByRepositoryIdAndNameData, ThrowOnError>) => {
   return (options?.client ?? client).get<GetBranchByRepositoryIdAndNameResponse, unknown, ThrowOnError>({
     ...options,
-    url: '/api/branches/repository/{repoId}/name/{name}',
+    url: '/api/branches/repository/{repoId}/branch',
   });
 };
 
