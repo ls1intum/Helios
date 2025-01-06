@@ -13,30 +13,79 @@ import { ButtonModule } from 'primeng/button';
 import { BranchViewPreferenceService } from '@app/core/services/branches-table/branch-view-preference';
 import { Router } from '@angular/router';
 import { getAllBranchesOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
-import { BranchInfoDto, RepositoryInfoDto } from '@app/core/modules/openapi';
+import { BranchInfoDto } from '@app/core/modules/openapi';
+import { ProgressBarModule } from 'primeng/progressbar';
+import { DividerModule } from 'primeng/divider';
+import { TooltipModule } from 'primeng/tooltip';
+import { FormsModule } from '@angular/forms';
+import { TimeAgoPipe } from '@app/pipes/time-ago.pipe';
+import { FILTER_OPTIONS_TOKEN, SearchTableService } from '@app/core/services/search-table.service';
+import { TableFilterComponent } from '../table-filter/table-filter.component';
 
 type BranchInfoWithLink = BranchInfoDto & { link: string; lastCommitLink: string };
 
+const FILTER_OPTIONS = [
+  { name: 'All Branches', filter: (branches: BranchInfoWithLink[]) => branches },
+  { name: 'Default Branch', filter: (branches: BranchInfoWithLink[]) => branches.filter(branch => branch.isDefault) },
+  { name: 'Protected Branches', filter: (branches: BranchInfoWithLink[]) => branches.filter(branch => branch.isProtected) },
+  {
+    name: 'Active Branches',
+    filter: (branches: BranchInfoWithLink[]) =>
+      branches.filter(branch => {
+        const date = new Date(branch.updatedAt || '');
+        const staleThreshold = new Date();
+        staleThreshold.setDate(staleThreshold.getDate() - 30);
+
+        return date >= staleThreshold;
+      }),
+  },
+  {
+    name: 'Stale Branches',
+    filter: (branches: BranchInfoWithLink[]) =>
+      branches.filter(branch => {
+        const date = new Date(branch.updatedAt || '');
+        const staleThreshold = new Date();
+        staleThreshold.setDate(staleThreshold.getDate() - 30);
+
+        return date < staleThreshold;
+      }),
+  },
+];
+
 @Component({
   selector: 'app-branches-table',
-  imports: [TableModule, AvatarModule, TagModule, IconsModule, SkeletonModule, InputTextModule, TreeTableModule, ButtonModule, IconFieldModule, InputIconModule],
+  imports: [
+    TableModule,
+    AvatarModule,
+    TagModule,
+    DividerModule,
+    IconsModule,
+    TooltipModule,
+    TimeAgoPipe,
+    SkeletonModule,
+    ProgressBarModule,
+    InputTextModule,
+    TreeTableModule,
+    ButtonModule,
+    IconFieldModule,
+    TableFilterComponent,
+    InputIconModule,
+    InputTextModule,
+    FormsModule,
+  ],
+  providers: [SearchTableService, { provide: FILTER_OPTIONS_TOKEN, useValue: FILTER_OPTIONS }],
   templateUrl: './branches-table.component.html',
 })
 export class BranchTableComponent {
   router = inject(Router);
-  featureBranchesTree = computed(() => this.convertBranchesToTreeNodes(this.getFeatureBranches()));
+  viewPreference = inject(BranchViewPreferenceService);
+  searchTableService = inject(SearchTableService<BranchInfoWithLink>);
 
-  specialBranches = ['master', 'main', 'dev', 'staging', 'development', 'prod', 'production', 'develop'];
-
-  getSpecialBranches() {
-    return this.branches().filter(branch => this.specialBranches.includes(branch.name.toLowerCase()));
-  }
-
-  getFeatureBranches() {
-    return this.branches().filter(branch => !this.specialBranches.includes(branch.name.toLowerCase()));
-  }
+  featureBranchesTree = computed(() => this.convertBranchesToTreeNodes(this.searchTableService.activeFilter().filter(this.branches())));
 
   query = injectQuery(() => getAllBranchesOptions());
+
+  globalFilterFields = ['name', 'commitSha'];
 
   branches = computed<BranchInfoWithLink[]>(
     () =>
@@ -47,12 +96,21 @@ export class BranchTableComponent {
       })) || []
   );
 
-  openLink(url: string): void {
+  maxAheadBehindBy = computed(() => Math.max(...this.branches().map(branch => Math.max(branch.aheadBy || 0, branch.behindBy || 0))));
+
+  openLink(event: Event, url: string): void {
     window.open(url, '_blank');
+    event.stopPropagation();
+  }
+
+  calculateProgress(value: number): number {
+    return (value * 100) / this.maxAheadBehindBy();
   }
 
   openBranch(branch: BranchInfoDto): void {
-    this.router.navigate(['repo', branch.repository?.id, 'ci-cd', 'branch', branch.name]);
+    if (branch.repository?.id) {
+      this.router.navigate(['repo', branch.repository?.id, 'ci-cd', 'branch', branch.name]);
+    }
   }
 
   convertBranchesToTreeNodes(branches: BranchInfoWithLink[]): TreeNode[] {
@@ -76,10 +134,7 @@ export class BranchTableComponent {
 
           // If it's a leaf node, add the branch info
           if (isLeaf) {
-            newNode.data.commitSha = branch.commitSha;
-            newNode.data.repository = branch.repository;
-            newNode.data.lastCommitLink = branch.lastCommitLink;
-            newNode.data.link = branch.link;
+            newNode.data = branch;
           } else {
             newNode.children = [];
           }
@@ -102,20 +157,10 @@ export class BranchTableComponent {
     });
     return rootNodes;
   }
-
-  viewPreference = inject(BranchViewPreferenceService);
-  toggleView() {
-    this.viewPreference.toggleViewMode();
-  }
 }
 
 interface TreeNode {
-  data: {
-    name: string;
-    commitSha?: string;
-    repository?: RepositoryInfoDto;
-    link?: string;
-    lastCommitLink?: string;
+  data: Partial<BranchInfoWithLink> & {
     type?: 'Branch' | 'Folder';
   };
   children?: TreeNode[];
