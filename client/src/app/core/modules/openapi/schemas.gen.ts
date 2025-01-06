@@ -123,6 +123,13 @@ export const EnvironmentDtoSchema = {
     latestDeployment: {
       $ref: '#/components/schemas/EnvironmentDeployment',
     },
+    lockedBy: {
+      type: 'string',
+    },
+    lockedAt: {
+      type: 'string',
+      format: 'date-time',
+    },
   },
 } as const;
 
@@ -415,6 +422,31 @@ export const PullRequestInfoDtoSchema = {
     updatedAt: {
       type: 'string',
       format: 'date-time',
+    },
+  },
+} as const;
+
+export const EnvironmentLockHistoryDtoSchema = {
+  required: ['id'],
+  type: 'object',
+  properties: {
+    id: {
+      type: 'integer',
+      format: 'int64',
+    },
+    lockedBy: {
+      type: 'string',
+    },
+    lockedAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+    unlockedAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+    environment: {
+      $ref: '#/components/schemas/EnvironmentDto',
     },
   },
 } as const;

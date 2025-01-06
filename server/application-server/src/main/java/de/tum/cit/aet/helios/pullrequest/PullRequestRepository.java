@@ -1,5 +1,6 @@
 package de.tum.cit.aet.helios.pullrequest;
 
+import de.tum.cit.aet.helios.issue.Issue;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -10,6 +11,12 @@ public interface PullRequestRepository extends JpaRepository<PullRequest, Long> 
 
   Optional<PullRequest> findByRepositoryRepositoryIdAndHeadRefNameOrHeadSha(Long id, String ref,
                                                                             String sha);
+
+  Optional<PullRequest> findByRepositoryRepositoryIdAndHeadRefName(Long id, String ref);
+
+  Optional<PullRequest> findByRepositoryRepositoryIdAndHeadRefNameAndState(Long repositoryId,
+                                                                           String headRefName,
+                                                                           Issue.State state);
 
   List<PullRequest> findByRepositoryRepositoryId(Long repositoryId);
 
