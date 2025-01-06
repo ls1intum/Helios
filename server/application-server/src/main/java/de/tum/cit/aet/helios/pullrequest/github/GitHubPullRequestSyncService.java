@@ -191,14 +191,17 @@ public class GitHubPullRequestSyncService {
     // Link merged by
     try {
       var mergedByUser = ghPullRequest.getMergedBy();
-      if (mergedByUser != null) {
+      if (mergedByUser == null) {
+        result.setMergedBy(
+            userRepository
+                .findById(Long.parseLong("-1"))
+                .orElseGet(() -> userRepository.save(userConverter.convertToAnonymous())));
+      } else {
         var resultMergedBy =
             userRepository
                 .findById(ghPullRequest.getMergedBy().getId())
                 .orElseGet(() -> userRepository.save(userConverter.convert(mergedByUser)));
         result.setMergedBy(resultMergedBy);
-      } else {
-        result.setMergedBy(null);
       }
     } catch (IOException e) {
       log.error(

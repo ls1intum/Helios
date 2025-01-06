@@ -2,7 +2,9 @@ package de.tum.cit.aet.helios.user.github;
 
 import de.tum.cit.aet.helios.github.BaseGitServiceEntityConverter;
 import de.tum.cit.aet.helios.user.User;
+import de.tum.cit.aet.helios.user.User.Type;
 import java.io.IOException;
+import java.time.OffsetDateTime;
 import lombok.extern.log4j.Log4j2;
 import org.kohsuke.github.GHUser;
 import org.springframework.lang.NonNull;
@@ -15,6 +17,20 @@ public class GitHubUserConverter extends BaseGitServiceEntityConverter<GHUser, U
   @Override
   public User convert(@NonNull GHUser source) {
     return update(source, new User());
+  }
+
+  public User convertToAnonymous() {
+    User user = new User();
+    user.setId(Long.parseLong("-1"));
+    user.setName("Anonymous");
+    user.setCreatedAt(OffsetDateTime.now());
+    user.setUpdatedAt(OffsetDateTime.now());
+    user.setLogin("anonymous");
+    user.setAvatarUrl(
+        "https://github.githubassets.com/images/gravatars/gravatar-user-420.png?size=40");
+    user.setHtmlUrl("https://helios.artemis.cit.tum.de/not-found");
+    user.setType(Type.USER);
+    return user;
   }
 
   @Override
