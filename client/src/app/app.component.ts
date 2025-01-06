@@ -29,11 +29,11 @@ export class AppComponent {
 
     client.interceptors.response.use(async response => {
       if (response.ok == false) {
-        const errorMessage = await response.json();
+        const errorMessage = await response.text();
         this.messageService.add({
           severity: 'error',
           summary: 'Fetch Error',
-          detail: errorMessage.error || 'An unexpected error occurred.',
+          detail: errorMessage || 'An unexpected error occurred.',
         });
       }
       return response;

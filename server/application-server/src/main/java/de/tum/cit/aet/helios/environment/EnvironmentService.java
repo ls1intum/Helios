@@ -1,7 +1,9 @@
 package de.tum.cit.aet.helios.environment;
 
+import de.tum.cit.aet.helios.auth.AuthService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -14,8 +16,17 @@ public class EnvironmentService {
 
   private final EnvironmentRepository environmentRepository;
 
-  public EnvironmentService(EnvironmentRepository environmentRepository) {
+  private final AuthService authService;
+
+  private final EnvironmentLockHistoryRepository lockHistoryRepository;
+
+
+  public EnvironmentService(EnvironmentRepository environmentRepository,
+                            EnvironmentLockHistoryRepository lockHistoryRepository,
+                            AuthService authService) {
     this.environmentRepository = environmentRepository;
+    this.lockHistoryRepository = lockHistoryRepository;
+    this.authService = authService;
   }
 
   public Optional<EnvironmentDto> getEnvironmentById(Long id) {
@@ -54,16 +65,30 @@ public class EnvironmentService {
    */
   @Transactional
   public Optional<Environment> lockEnvironment(Long id) {
+    final String currentUserId = authService.getUserId();
+
     Environment environment =
         environmentRepository
             .findById(id)
             .orElseThrow(() -> new EntityNotFoundException("Environment not found with ID: " + id));
 
     if (environment.isLocked()) {
+      if (currentUserId.equals(environment.getLockedBy())) {
+        return Optional.of(environment);
+      }
+
       return Optional.empty();
     }
-
+    environment.setLockedBy(currentUserId);
+    environment.setLockedAt(OffsetDateTime.now());
     environment.setLocked(true);
+
+    // Record lock event
+    EnvironmentLockHistory history = new EnvironmentLockHistory();
+    history.setEnvironment(environment);
+    history.setLockedBy(currentUserId);
+    history.setLockedAt(OffsetDateTime.now());
+    lockHistoryRepository.saveAndFlush(history);
 
     try {
       environmentRepository.save(environment);
@@ -86,12 +111,37 @@ public class EnvironmentService {
    */
   @Transactional
   public EnvironmentDto unlockEnvironment(Long id) {
+    final String currentUserId = authService.getUserId();
+
     Environment environment =
         environmentRepository
             .findById(id)
             .orElseThrow(() -> new EntityNotFoundException("Environment not found with ID: " + id));
 
+    if (!environment.isLocked()) {
+      throw new IllegalStateException("Environment is not locked");
+    }
+
+    if (!currentUserId.equals(environment.getLockedBy())) {
+      throw new SecurityException(
+          "You do not have permission to unlock this environment. "
+              + "Environment is locked by another user");
+    }
+
     environment.setLocked(false);
+    environment.setLockedBy(null);
+    environment.setLockedAt(null);
+
+    var openLock = lockHistoryRepository
+        .findTopByEnvironmentAndLockedByAndUnlockedAtIsNullOrderByLockedAtDesc(
+            environment,
+            currentUserId
+        );
+    if (openLock != null) {
+      openLock.setUnlockedAt(OffsetDateTime.now());
+      lockHistoryRepository.save(openLock);
+    }
+
     environmentRepository.save(environment);
 
     return EnvironmentDto.fromEnvironment(environment);
@@ -118,5 +168,18 @@ public class EnvironmentService {
               environmentRepository.save(environment);
               return EnvironmentDto.fromEnvironment(environment);
             });
+  }
+
+  public EnvironmentLockHistoryDto getUsersCurrentLock() {
+    final String currentUserId = authService.getUserId();
+    EnvironmentLockHistory lockHistory =
+        lockHistoryRepository
+            .findTopByLockedByAndUnlockedAtIsNullOrderByLockedAtDesc(currentUserId);
+
+    if (lockHistory == null) {
+      return null;
+    }
+
+    return EnvironmentLockHistoryDto.fromEnvironmentLockHistory(lockHistory);
   }
 }

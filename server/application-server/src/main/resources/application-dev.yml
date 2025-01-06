@@ -15,6 +15,10 @@ spring:
                 jwt:
                     issuer-uri: ${OAUTH_ISSUER_URL}
 
+logging:
+    level:
+        de.tum.cit.aet.helios: DEBUG
+
 nats:
     enabled: true
     timeframe: ${MONITORING_TIMEFRAME:7}
