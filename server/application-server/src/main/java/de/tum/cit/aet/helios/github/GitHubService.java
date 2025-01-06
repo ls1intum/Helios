@@ -138,7 +138,8 @@ public class GitHubService {
       Map<String, Object> inputs,
       String token)
       throws IOException {
-    String gitHubToken = exchangeGitHubToken(token);
+    // String gitHubToken = exchangeGitHubToken(token);
+    String gitHubToken = ghAuthToken;
     final String url =
         String.format(
             "https://api.github.com/repos/%s/actions/workflows/%s/dispatches",
