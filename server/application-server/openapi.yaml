@@ -565,7 +565,7 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/BranchInfoDto"
-  /api/branches/repository/{repoId}/name/{name}:
+  /api/branches/repository/{repoId}/branch:
     get:
       tags:
       - branch-controller
@@ -578,7 +578,7 @@ paths:
           type: integer
           format: int64
       - name: name
-        in: path
+        in: query
         required: true
         schema:
           type: string
