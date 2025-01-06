@@ -21,6 +21,7 @@ public class GitHubRepositoryConverter
   @Override
   public GitRepository update(@NonNull GHRepository source, @NonNull GitRepository repository) {
     convertBaseFields(source, repository);
+    repository.setRepository(repository);
     repository.setName(source.getName());
     repository.setNameWithOwner(source.getFullName());
     repository.setPrivate(source.isPrivate());
