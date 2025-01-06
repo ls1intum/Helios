@@ -83,12 +83,15 @@ public class DeploymentService {
 
     // Get the user ID of the user who triggered the deployment
     final String user = this.authService.getUserId();
+    // Get the username of the user who triggered the deployment
+    final String username = this.authService.getPreferredUsername();
 
     // Get the deployment workflow set by the managers
     Workflow deploymentWorkflow = this.workflowService.getDeploymentWorkflow();
     if (deploymentWorkflow == null) {
       throw new DeploymentException("No deployment workflow found");
     }
+    final String deploymentWorkflowFileName = deploymentWorkflow.getFileNameWithExtension();
 
 
     // Get the latest sha of the branch
@@ -102,8 +105,11 @@ public class DeploymentService {
             .lockEnvironment(deployRequest.environmentId())
             .orElseThrow(() -> new DeploymentException("Environment was already locked"));
 
+    // Get the repository name with owners
+    final String repoNameWithOwners = environment.getRepository().getNameWithOwner();
+
     // 10 minutes timeout for redeployment
-    if (!canRedeploy(environment, 10)) {
+    if (!canRedeploy(environment, 20)) {
       throw new DeploymentException("Deployment is still in progress, please wait.");
     }
 
@@ -126,14 +132,19 @@ public class DeploymentService {
 
     // Build parameters for the workflow
     Map<String, Object> workflowParams = new HashMap<>();
-    workflowParams.put("HELIOS_TRIGGERED_BY", user);
+    workflowParams.put("HELIOS_TRIGGERED_BY", username);
     workflowParams.put("HELIOS_BRANCH_NAME", deployRequest.branchName());
     workflowParams.put("HELIOS_BRANCH_HEAD_SHA", branchCommitSha);
     workflowParams.put("HELIOS_ENVIRONMENT_NAME", environment.getName());
+    workflowParams.put("HELIOS_RAW_URL",
+        String.format("https://raw.githubusercontent.com/%s/%s",
+            repoNameWithOwners,
+            branchCommitSha));
     if (optionalPr.isPresent()) {
       final PullRequest pr = optionalPr.get();
       workflowParams.put("HELIOS_BUILD", "false");
-      workflowParams.put("HELIOS_PR_NUMBER", pr.getNumber());
+
+      workflowParams.put("HELIOS_PR_NUMBER", String.valueOf(pr.getNumber()));
     } else {
       workflowParams.put("HELIOS_BUILD", "true");
       workflowParams.put("HELIOS_BUILD_TAG", "branch-" + heliosDeployment.getId().toString());
@@ -144,8 +155,8 @@ public class DeploymentService {
 
     try {
       this.gitHubService.dispatchWorkflow(
-          environment.getRepository().getNameWithOwner(),
-          deploymentWorkflow.getFileNameWithExtension(),
+          repoNameWithOwners,
+          deploymentWorkflowFileName,
           deployRequest.branchName(),
           workflowParams);
     } catch (IOException e) {
@@ -156,7 +167,7 @@ public class DeploymentService {
     }
   }
 
-  public boolean canRedeploy(Environment environment, long timeoutMinutes) {
+  private boolean canRedeploy(Environment environment, long timeoutMinutes) {
     // Fetch the most recent deployment for the environment
     Optional<HeliosDeployment> latestDeployment = heliosDeploymentRepository
         .findTopByEnvironmentOrderByCreatedAtDesc(environment);
@@ -180,7 +191,7 @@ public class DeploymentService {
         || deployment.getStatus() == HeliosDeployment.Status.WAITING) {
       OffsetDateTime now = OffsetDateTime.now();
       if (deployment.getStatusUpdatedAt().plusMinutes(timeoutMinutes).isAfter(now)) {
-        throw new DeploymentException("Deployment is still in progress, please wait.");
+        return false;
       }
 
       deployment.setStatus(HeliosDeployment.Status.UNKNOWN);
