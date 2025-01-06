@@ -20,7 +20,7 @@ export class BranchDetailsComponent {
   branchName = input.required<string>();
 
   query = injectQuery(() => ({
-    ...getBranchByRepositoryIdAndNameOptions({ path: { name: this.branchName(), repoId: this.repositoryId() } }),
+    ...getBranchByRepositoryIdAndNameOptions({ path: { repoId: this.repositoryId() }, query: { name: this.branchName() } }),
     refetchInterval: 30000,
   }));
 
