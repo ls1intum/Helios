@@ -16,7 +16,7 @@
   <!-- Main Content -->
   @if (!isPending() && !isError()) {
     <!-- Grouped Workflows Panels -->
-    <h3 class="text-2xl font-semibold mb-2">Grouped Workflows</h3>
+    <h3 class="text-xl mb-2">Grouped Workflows</h3>
 
     <!-- Drag & Drop Hint -->
     @if (groupedWorkflowsArray().length > 0) {
@@ -75,7 +75,7 @@
     }
 
     <!-- Workflow Table -->
-    <h3 class="text-2xl font-semibold mb-2">Workflows</h3>
+    <h3 class="text-xl mb-2">Workflows</h3>
     <p class="text-sm text-gray-600 mb-4">Note: Only one workflow can be labeled as 'DEPLOYMENT' and one as 'BUILD'.</p>
     <p-table [value]="workflows()" styleClass="w-full mb-6">
       <ng-template pTemplate="header">

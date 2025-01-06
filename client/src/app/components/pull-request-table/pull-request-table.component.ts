@@ -19,20 +19,19 @@ import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 import { FormsModule } from '@angular/forms';
 import { TimeAgoPipe } from '@app/pipes/time-ago.pipe';
 import { FILTER_OPTIONS_TOKEN, SearchTableService } from '@app/core/services/search-table.service';
-import { UserProfile } from '@app/core/services/keycloak/user-profile';
 import { TableFilterComponent } from '../table-filter/table-filter.component';
 
 const FILTER_OPTIONS = [
   { name: 'All pull requests', filter: (prs: PullRequestBaseInfoDto[]) => prs },
   { name: 'Open pull requests', filter: (prs: PullRequestBaseInfoDto[]) => prs.filter(pr => pr.state === 'OPEN') },
-  { name: 'Your pull requests', filter: (prs: PullRequestBaseInfoDto[], userProfile: UserProfile) => prs.filter(pr => pr.author?.name === userProfile?.username) },
+  { name: 'Your pull requests', filter: (prs: PullRequestBaseInfoDto[], username: string) => prs.filter(pr => pr.author?.login === username) },
   {
     name: 'Everything assigned to you',
-    filter: (prs: PullRequestBaseInfoDto[], userProfile: UserProfile) => prs.filter(pr => pr.assignees?.some(assignee => assignee.name === userProfile?.username)),
+    filter: (prs: PullRequestBaseInfoDto[], username: string) => prs.filter(pr => pr.assignees?.some(assignee => assignee.login === username)),
   },
   {
     name: 'Everything that requests a review by you',
-    filter: (prs: PullRequestBaseInfoDto[], userProfile: UserProfile) => prs.filter(pr => pr.reviewers?.some(reviewer => reviewer.name === userProfile?.username)),
+    filter: (prs: PullRequestBaseInfoDto[], username: string) => prs.filter(pr => pr.reviewers?.some(reviewer => reviewer.login === username)),
   },
 ];
 
@@ -91,7 +90,7 @@ export class PullRequestTableComponent {
     }
   }
 
-  filteredPrs = computed(() => this.searchTableService.activeFilter().filter(this.query.data() || [], this.keycloak.profile));
+  filteredPrs = computed(() => this.searchTableService.activeFilter().filter(this.query.data() || [], this.keycloak.decodedToken()?.preferred_username));
 
   openPRExternal(pr: PullRequestInfoDto): void {
     window.open(pr.htmlUrl, '_blank');
@@ -108,6 +107,10 @@ export class PullRequestTableComponent {
       color: '#000000',
       'background-color': color === 'ededed' ? `#${color}` : `#${color}75`,
     };
+  }
+
+  getAvatarBorderClass(login: string) {
+    return this.keycloak.isCurrentUser(login) ? 'border-2 border-primary-400 rounded-full' : '';
   }
 
   openPR(pr: PullRequestInfoDto): void {

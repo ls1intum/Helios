@@ -8,6 +8,7 @@ import { getCommitByRepositoryIdAndNameOptions } from '@app/core/modules/openapi
 import { AvatarModule } from 'primeng/avatar';
 import { TimeAgoPipe } from '@app/pipes/time-ago.pipe';
 import { TooltipModule } from 'primeng/tooltip';
+import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 
 @Component({
   selector: 'app-environment-deployment-info',
@@ -17,6 +18,7 @@ import { TooltipModule } from 'primeng/tooltip';
 })
 export class EnvironmentDeploymentInfoComponent {
   private datePipe = inject(DatePipe);
+  keycloakService = inject(KeycloakService);
 
   repositoryId = input.required<number>();
   deployment = input.required<EnvironmentDeployment>();

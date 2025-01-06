@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, input, numberAttribute, signal, OnDestroy } from '@angular/core';
+import { Component, OnInit, computed, inject, input, numberAttribute, signal, OnDestroy } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { IconsModule } from 'icons.module';
 import { ButtonModule } from 'primeng/button';
@@ -36,6 +36,8 @@ import { ProfileNavSectionComponent } from '@app/components/profile-nav-section/
 })
 export class MainLayoutComponent implements OnInit, OnDestroy {
   private keycloakService = inject(KeycloakService);
+
+  username = computed(() => (this.keycloakService.decodedToken()?.preferred_username || '') as string);
 
   repositoryId = input.required({ transform: numberAttribute });
 
