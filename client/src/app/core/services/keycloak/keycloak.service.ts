@@ -31,7 +31,7 @@ export class KeycloakService {
   });
 
   isCurrentUser(login?: string) {
-    return this.decodedToken()?.preferred_username === login;
+    return this.decodedToken()?.preferred_username.toLowerCase() === login?.toLowerCase();
   }
 
   async init() {
