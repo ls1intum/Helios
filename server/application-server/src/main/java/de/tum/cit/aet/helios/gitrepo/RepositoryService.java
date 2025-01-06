@@ -13,6 +13,7 @@ public class RepositoryService {
   }
 
   public Optional<RepositoryInfoDto> getRepositoryById(Long id) {
-    return repositoryRepository.findByRepositoryId(id).map(RepositoryInfoDto::fromRepository);
+    return repositoryRepository.findByRepositoryId(id)
+        .map(RepositoryInfoDto::fromRepository);
   }
 }

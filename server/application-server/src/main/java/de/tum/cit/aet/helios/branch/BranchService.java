@@ -28,22 +28,22 @@ public class BranchService {
 
   @Transactional
   public void deleteBranchByNameAndRepositoryId(String name, Long repositoryId) {
-    branchRepository.deleteByNameAndRepositoryId(name, repositoryId);
+    branchRepository.deleteByNameAndRepositoryRepositoryId(name, repositoryId);
   }
 
   public List<BranchInfoDto> getBranchesByRepositoryId(Long repositoryId) {
-    return branchRepository.findByRepositoryId(repositoryId).stream()
+    return branchRepository.findByRepositoryRepositoryId(repositoryId).stream()
         .map(BranchInfoDto::fromBranch)
         .collect(Collectors.toList());
   }
 
   public Optional<BranchInfoDto> getBranchInfo(Long repositoryId, String name) {
     return branchRepository
-        .findByRepositoryIdAndName(repositoryId, name)
+        .findByRepositoryRepositoryIdAndName(repositoryId, name)
         .map(BranchInfoDto::fromBranch);
   }
 
   public Optional<Branch> getBranchByRepositoryIdAndName(Long repositoryId, String name) {
-    return branchRepository.findByRepositoryIdAndName(repositoryId, name);
+    return branchRepository.findByRepositoryRepositoryIdAndName(repositoryId, name);
   }
 }

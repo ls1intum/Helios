@@ -14,7 +14,7 @@ public class CommitService {
 
   public Optional<CommitInfoDto> getCommitByShaAndRepositoryId(String sha, Long repositoryId) {
     return commitRepository
-        .findByShaAndRepositoryId(sha, repositoryId)
+        .findByShaAndRepositoryRepositoryId(sha, repositoryId)
         .map(CommitInfoDto::fromCommit);
   }
 }

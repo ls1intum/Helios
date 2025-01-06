@@ -15,6 +15,7 @@ public interface WorkflowGroupMembershipRepository
    */
   @Modifying
   @Query(
-      "DELETE FROM WorkflowGroupMembership m " + "WHERE m.workflow.repository.id = :repositoryId")
+      "DELETE FROM WorkflowGroupMembership m "
+          + "WHERE m.workflow.repository.repositoryId = :repositoryId")
   void deleteAllByRepositoryId(@Param("repositoryId") Long repositoryId);
 }

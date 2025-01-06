@@ -237,7 +237,7 @@ public class WorkflowGroupService {
 
     // Fetch the repository settings for the given repository ID
     return gitRepoSettingsRepository
-        .findByRepositoryId(repositoryId)
+        .findByRepositoryRepositoryId(repositoryId)
         .orElseGet(
             () -> {
               // If not, create a new one

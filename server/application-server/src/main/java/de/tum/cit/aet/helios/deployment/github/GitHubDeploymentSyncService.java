@@ -88,7 +88,7 @@ public class GitHubDeploymentSyncService {
    * Synchronizes deployments for a specific environment.
    *
    * @param ghRepository the GitHub repository
-   * @param environment the environment entity
+   * @param environment  the environment entity
    */
   public void syncDeploymentsOfEnvironment(
       @NotNull GHRepository ghRepository, @NotNull Environment environment) {
@@ -131,8 +131,8 @@ public class GitHubDeploymentSyncService {
    * repository.
    *
    * @param deploymentSource the source (GHDeployment or GitHubDeploymentDto) wrapped as a
-   *     DeploymentSource
-   * @param environment the associated environment entity
+   *                         DeploymentSource
+   * @param environment      the associated environment entity
    */
   void processDeployment(
       @NotNull DeploymentSource deploymentSource,
@@ -150,7 +150,7 @@ public class GitHubDeploymentSyncService {
 
     // Set the PR associated with the deployment
     Optional<PullRequest> optionalPullRequest =
-        pullRequestRepository.findByRepositoryIdAndHeadRefNameOrHeadSha(
+        pullRequestRepository.findByRepositoryRepositoryIdAndHeadRefNameOrHeadSha(
             gitRepository.getRepositoryId(), deployment.getRef(), deployment.getSha());
 
     optionalPullRequest.ifPresent(deployment::setPullRequest);
