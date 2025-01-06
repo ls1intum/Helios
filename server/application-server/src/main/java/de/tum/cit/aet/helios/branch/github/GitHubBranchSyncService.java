@@ -130,12 +130,24 @@ public class GitHubBranchSyncService {
     // Link updatedBy user
     try {
       var updatedBy = ghRepository.getCommit(ghBranch.getSHA1()).getCommitter();
-      var resultUpdatedBy =
-          userRepository
-              .findById(updatedBy.getId())
-              .orElseGet(() -> userRepository.save(userConverter.convert(updatedBy)));
-      result.setUpdatedBy(resultUpdatedBy);
-      result.setUpdatedAt(DateUtil.convertToOffsetDateTime(updatedBy.getUpdatedAt()));
+
+      // TODO: Think about a better way to handle anonymous users that committed with a wrong email
+      if (updatedBy == null) {
+        result.setUpdatedBy(
+            userRepository
+                .findById(Long.parseLong("-1"))
+                .orElseGet(() -> userRepository.save(userConverter.convertToAnonymous())));
+        result.setUpdatedAt(
+            DateUtil.convertToOffsetDateTime(
+                ghRepository.getCommit(ghBranch.getSHA1()).getCommitShortInfo().getCommitDate()));
+      } else {
+        var resultUpdatedBy =
+            userRepository
+                .findById(updatedBy.getId())
+                .orElseGet(() -> userRepository.save(userConverter.convert(updatedBy)));
+        result.setUpdatedBy(resultUpdatedBy);
+        result.setUpdatedAt(DateUtil.convertToOffsetDateTime(updatedBy.getUpdatedAt()));
+      }
     } catch (IOException e) {
       log.error(
           "Failed to link updatedBy user for pull request {}: {}",
