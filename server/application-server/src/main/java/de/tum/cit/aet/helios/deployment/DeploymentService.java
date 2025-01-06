@@ -123,11 +123,12 @@ public class DeploymentService {
     heliosDeployment = heliosDeploymentRepository.save(heliosDeployment);
 
 
-    // Check if a PR exists for the branch
+    // Check if a OPEN PR exists for the branch
     final Optional<PullRequest> optionalPr = pullRequestRepository
-        .findByRepositoryIdAndHeadRefName(
+        .findByRepositoryIdAndHeadRefNameAndState(
             environment.getRepository().getId(),
-            deployRequest.branchName());
+            deployRequest.branchName(),
+            PullRequest.State.OPEN);
 
 
     // Build parameters for the workflow
