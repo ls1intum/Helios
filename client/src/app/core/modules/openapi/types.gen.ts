@@ -146,6 +146,7 @@ export type EnvironmentLockHistoryDto = {
   lockedBy?: string;
   lockedAt?: string;
   unlockedAt?: string;
+  environment?: EnvironmentDto;
 };
 
 export type DeploymentDto = {

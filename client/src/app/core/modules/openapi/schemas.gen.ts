@@ -445,6 +445,9 @@ export const EnvironmentLockHistoryDtoSchema = {
       type: 'string',
       format: 'date-time',
     },
+    environment: {
+      $ref: '#/components/schemas/EnvironmentDto',
+    },
   },
 } as const;
 

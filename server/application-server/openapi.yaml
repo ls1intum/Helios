@@ -1020,6 +1020,8 @@ components:
         unlockedAt:
           type: string
           format: date-time
+        environment:
+          $ref: "#/components/schemas/EnvironmentDto"
     DeploymentDto:
       required:
       - environment
