@@ -1,9 +1,10 @@
 package de.tum.cit.aet.helios.gitrepo;
 
-import de.tum.cit.aet.helios.github.BaseGitServiceEntity;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.OffsetDateTime;
 import lombok.Getter;
@@ -18,7 +19,17 @@ import org.springframework.lang.NonNull;
 @Setter
 @NoArgsConstructor
 @ToString(callSuper = true)
-public class GitRepository extends BaseGitServiceEntity {
+public class GitRepository {
+
+  @Id
+  @Column(name = "repository_id")
+  protected Long repositoryId;
+
+  protected Long id;
+
+  protected OffsetDateTime createdAt;
+
+  protected OffsetDateTime updatedAt;
 
   @NonNull private String name;
 
