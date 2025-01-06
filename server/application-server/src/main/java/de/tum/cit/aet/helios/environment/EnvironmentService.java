@@ -19,7 +19,7 @@ public class EnvironmentService {
   private final AuthService authService;
 
   private final EnvironmentLockHistoryRepository lockHistoryRepository;
-  
+
 
   public EnvironmentService(EnvironmentRepository environmentRepository,
                             EnvironmentLockHistoryRepository lockHistoryRepository,
@@ -71,7 +71,7 @@ public class EnvironmentService {
         environmentRepository
             .findById(id)
             .orElseThrow(() -> new EntityNotFoundException("Environment not found with ID: " + id));
-    
+
     if (environment.isLocked()) {
       if (currentUserId.equals(environment.getLockedBy())) {
         return Optional.of(environment);
@@ -81,7 +81,7 @@ public class EnvironmentService {
     }
     environment.setLockedBy(currentUserId);
     environment.setLockedAt(OffsetDateTime.now());
-    environment.setLocked(true);    
+    environment.setLocked(true);
 
     // Record lock event
     EnvironmentLockHistory history = new EnvironmentLockHistory();
@@ -124,7 +124,8 @@ public class EnvironmentService {
 
     if (!currentUserId.equals(environment.getLockedBy())) {
       throw new SecurityException(
-          "You do not have permission to unlock this environment. Environment is locked by another user");
+          "You do not have permission to unlock this environment. "
+              + "Environment is locked by another user");
     }
 
     environment.setLocked(false);
@@ -133,7 +134,7 @@ public class EnvironmentService {
 
     var openLock = lockHistoryRepository
         .findTopByEnvironmentAndLockedByAndUnlockedAtIsNullOrderByLockedAtDesc(
-            environment, 
+            environment,
             currentUserId
         );
     if (openLock != null) {
@@ -173,7 +174,7 @@ public class EnvironmentService {
     final String currentUserId = authService.getUserId();
     EnvironmentLockHistory lockHistory =
         lockHistoryRepository
-            .findTopByLockedByAndUnlockedAtIsNullOrderByLockedAtDesc(currentUserId);            
+            .findTopByLockedByAndUnlockedAtIsNullOrderByLockedAtDesc(currentUserId);
 
     if (lockHistory == null) {
       return null;
