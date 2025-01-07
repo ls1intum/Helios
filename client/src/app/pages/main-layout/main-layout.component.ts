@@ -47,7 +47,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   lockQuery = injectQuery(() => ({
     ...getEnvironmentsByUserLockingOptions(),
     refetchInterval: 10000,
-    enabled: () => !!this.keycloakService.loggedIn(),
+    enabled: () => !!this.keycloakService.isLoggedIn(),
   }));
 
   items!: { label: string; icon: string; path: string }[];

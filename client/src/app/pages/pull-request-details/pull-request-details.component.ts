@@ -28,7 +28,7 @@ export class PullRequestDetailsComponent {
     refetchInterval: 30000,
   }));
 
-  isLoggedIn = computed(() => this.keycloakService.loggedIn());
+  isLoggedIn = computed(() => this.keycloakService.isLoggedIn());
 
   pipelineSelector = computed<PipelineSelector | null>(() => {
     const pr = this.query.data();

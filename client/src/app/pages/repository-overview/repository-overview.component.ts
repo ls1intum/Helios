@@ -6,7 +6,6 @@ import { PageHeadingComponent } from '@app/components/page-heading/page-heading.
 import { ProfileNavSectionComponent } from '@app/components/profile-nav-section/profile-nav-section.component';
 import { RepositoryInfoDto } from '@app/core/modules/openapi';
 import { getAllRepositoriesOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
-import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 import { RepositoryService } from '@app/core/services/repository.service';
 import { injectQuery } from '@tanstack/angular-query-experimental';
 import { IconsModule } from 'icons.module';
@@ -36,7 +35,6 @@ import { ToastModule } from 'primeng/toast';
 })
 export class ProjectOverviewComponent {
   private repositoryService = inject(RepositoryService);
-  private keycloakService = inject(KeycloakService);
   private router = inject(Router);
 
   query = injectQuery(() => getAllRepositoriesOptions());
@@ -46,10 +44,6 @@ export class ProjectOverviewComponent {
 
   showDialog() {
     this.repositoryConnection().show();
-  }
-
-  loggedIn() {
-    return this.keycloakService.loggedIn();
   }
 
   refreshRepositories() {

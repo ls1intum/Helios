@@ -33,7 +33,7 @@ export class BranchDetailsComponent {
   }));
   commit = computed(() => this.commitQuery.data());
 
-  isLoggedIn = computed(() => this.keycloakService.loggedIn());
+  isLoggedIn = computed(() => this.keycloakService.isLoggedIn());
 
   pipelineSelector = computed<PipelineSelector | null>(() => {
     const branch = this.query.data();

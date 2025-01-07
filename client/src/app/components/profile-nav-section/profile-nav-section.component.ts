@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 import { IconsModule } from 'icons.module';
 import { ButtonModule } from 'primeng/button';
@@ -18,10 +18,10 @@ import { AvatarModule } from 'primeng/avatar';
   templateUrl: './profile-nav-section.component.html',
 })
 export class ProfileNavSectionComponent {
-  constructor(private keycloakService: KeycloakService) {}
+  private keycloakService = inject(KeycloakService);
 
   isLoggedIn() {
-    return this.keycloakService.loggedIn();
+    return this.keycloakService.isLoggedIn();
   }
 
   logout() {

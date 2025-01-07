@@ -54,7 +54,7 @@ export class EnvironmentListViewComponent {
     },
   }));
 
-  isLoggedIn = computed(() => this.keycloakService.loggedIn());
+  isLoggedIn = computed(() => this.keycloakService.isLoggedIn());
 
   onUnlockEnvironment(event: Event, environment: EnvironmentDto) {
     this.unlockEnvironment.mutate({ path: { id: environment.id } });

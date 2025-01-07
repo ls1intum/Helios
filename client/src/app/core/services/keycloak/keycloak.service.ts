@@ -40,7 +40,7 @@ export class KeycloakService {
     this._profile.token = this.keycloak.token || '';
   }
 
-  loggedIn() {
+  isLoggedIn() {
     return this.keycloak.authenticated;
   }
 
@@ -49,6 +49,6 @@ export class KeycloakService {
   }
 
   logout() {
-    return this.keycloak.logout({ redirectUri: environment.clientUrl });
+    return this.keycloak.logout({ redirectUri: window.location.href });
   }
 }
