@@ -2,9 +2,15 @@ package de.tum.cit.aet.helios.github;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import de.tum.cit.aet.helios.auth.AuthService;
 import de.tum.cit.aet.helios.deployment.github.GitHubDeploymentDto;
 import de.tum.cit.aet.helios.environment.github.GitHubEnvironmentApiResponse;
 import de.tum.cit.aet.helios.environment.github.GitHubEnvironmentDto;
+import de.tum.cit.aet.helios.filters.RepositoryContext;
+import de.tum.cit.aet.helios.github.permissions.GitHubPermissionsResponse;
+import de.tum.cit.aet.helios.github.permissions.GitHubRepositoryRoleDto;
+import de.tum.cit.aet.helios.github.permissions.PermissionException;
+import de.tum.cit.aet.helios.github.permissions.RepoPermissionType;
 import jakarta.annotation.PostConstruct;
 import jakarta.transaction.Transactional;
 import java.io.IOException;
@@ -37,6 +43,8 @@ public class GitHubService {
 
   private final OkHttpClient okHttpClient;
 
+  private final AuthService authService;
+
   @Value("${github.authToken}")
   private String ghAuthToken;
 
@@ -49,11 +57,13 @@ public class GitHubService {
       GitHub github,
       GitHubConfig gitHubConfig,
       ObjectMapper objectMapper,
-      OkHttpClient okHttpClient) {
+      OkHttpClient okHttpClient,
+      AuthService authService) {
     this.github = github;
     this.gitHubConfig = gitHubConfig;
     this.objectMapper = objectMapper;
     this.okHttpClient = okHttpClient;
+    this.authService = authService;
   }
 
   @PostConstruct
@@ -205,5 +215,51 @@ public class GitHubService {
       GHRepository repository, String environmentName) {
     return new GitHubDeploymentIterator(
         repository, environmentName, okHttpClient, requestBuilder, objectMapper);
+  }
+
+  public GitHubRepositoryRoleDto getRepositoryRole() throws PermissionException {
+    GHRepository repository = null;
+    try {
+      Long repositoryId = RepositoryContext.getRepositoryId();
+      repository = github.getRepositoryById(repositoryId);
+    } catch (IOException e) {
+      log.error("Error occurred while fetching repository: {}", e.getMessage());
+      throw new PermissionException(e.getMessage());
+    }
+
+    String username = this.authService.getPreferredUsername();
+
+    String owner = repository.getOwnerName();
+    String repoName = repository.getName();
+    String url =
+        String.format(
+            "https://api.github.com/repos/%s/%s/collaborators/%s/permission",
+            owner, repoName, username);
+
+    Request request = requestBuilder.url(url).build();
+
+    try (Response response = okHttpClient.newCall(request).execute()) {
+      if (!response.isSuccessful()) {
+        throw new IOException("GitHub API call failed with response code: " + response.code());
+      }
+
+      if (response.body() == null) {
+        throw new IOException("Response body is null");
+      }
+
+      String responseBody = response.body().string();
+      GitHubPermissionsResponse permissionResponse =
+          objectMapper.readValue(responseBody, GitHubPermissionsResponse.class);
+      return new GitHubRepositoryRoleDto(
+          RepoPermissionType.fromString(permissionResponse.getPermission()),
+          permissionResponse.getRoleName());
+
+    } catch (JsonProcessingException e) {
+      log.error("Error processing JSON response: {}", e.getMessage());
+      throw new PermissionException(e.getMessage());
+    } catch (IOException e) {
+      log.error("Error occurred while fetching environments: {}", e.getMessage());
+      throw new PermissionException(e.getMessage());
+    }
   }
 }
