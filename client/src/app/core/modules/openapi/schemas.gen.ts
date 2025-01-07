@@ -266,6 +266,19 @@ export const WorkflowRunDtoSchema = {
   required: ['displayTitle', 'htmlUrl', 'id', 'name', 'status', 'workflowId'],
 } as const;
 
+export const GitHubRepositoryRoleDtoSchema = {
+  type: 'object',
+  properties: {
+    permission: {
+      type: 'string',
+      enum: ['ADMIN', 'WRITE', 'READ', 'NONE'],
+    },
+    roleName: {
+      type: 'string',
+    },
+  },
+} as const;
+
 export const LabelInfoDtoSchema = {
   type: 'object',
   properties: {
