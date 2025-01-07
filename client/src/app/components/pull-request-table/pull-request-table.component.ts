@@ -97,15 +97,16 @@ export class PullRequestTableComponent {
     window.open(pr.htmlUrl, '_blank');
   }
 
-  // TODO: Find a better way to handle color of labals
+  // TODO: Find a better way to handle color of labels
   getLabelClasses(color: string) {
-    // Color code "ededed" is used for labels with no color
-    // In this case, we want to use black text color
-    // If we don't use the black text color, the text color will be very light and hard to read
+    // Color code 'ededed' is used for labels with no color
+    // In this case, we don't want to transparency effect
+    // If we add transparency, then it's hard to read the text
+    // Also text color of black is also for better readability
     return {
-      'border-color': '#' + color,
-      color: color === "ededed" ? '#000000' : '#' + color,
-      'background-color': '#' + color + '33',
+      'border-color': `#${color}`,
+      color: '#000000',
+      'background-color': color === 'ededed' ? `#${color}` : `#${color}75`,
     };
   }
 
