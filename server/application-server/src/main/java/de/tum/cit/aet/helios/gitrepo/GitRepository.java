@@ -1,11 +1,16 @@
 package de.tum.cit.aet.helios.gitrepo;
 
 import de.tum.cit.aet.helios.github.BaseGitServiceEntity;
+import de.tum.cit.aet.helios.label.Label;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.time.OffsetDateTime;
+import java.util.HashSet;
+import java.util.Set;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -20,20 +25,24 @@ import org.springframework.lang.NonNull;
 @ToString(callSuper = true)
 public class GitRepository extends BaseGitServiceEntity {
 
-  @NonNull private String name;
+  @NonNull
+  private String name;
 
-  @NonNull private String nameWithOwner;
+  @NonNull
+  private String nameWithOwner;
 
   // Whether the repository is private or public.
   private boolean isPrivate;
 
-  @NonNull private String htmlUrl;
+  @NonNull
+  private String htmlUrl;
 
   private String description;
 
   private String homepage;
 
-  @NonNull private OffsetDateTime pushedAt;
+  @NonNull
+  private OffsetDateTime pushedAt;
 
   private boolean isArchived;
 
@@ -48,13 +57,18 @@ public class GitRepository extends BaseGitServiceEntity {
 
   private int watchersCount;
 
-  @NonNull private String defaultBranch;
+  @NonNull
+  private String defaultBranch;
 
   private boolean hasIssues;
 
   private boolean hasProjects;
 
   private boolean hasWiki;
+
+  @OneToMany(mappedBy = "repository", cascade = CascadeType.REMOVE, orphanRemoval = true)
+  @ToString.Exclude
+  private Set<Label> labels = new HashSet<>();
 
   public enum Visibility {
     PUBLIC,
@@ -64,7 +78,7 @@ public class GitRepository extends BaseGitServiceEntity {
   }
 
   // Missing properties:
-  // Issue, Label, Milestone
+  // Issue, Milestone
   // owner
   // organization
 

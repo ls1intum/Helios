@@ -46,14 +46,7 @@ public class Label {
   @ToString.Exclude
   private GitRepository repository;
 
-//  @ManyToMany(mappedBy = "labels")
-//  @ToString.Exclude
-//  private Set<Team> teams = new HashSet<>();
-//
-//  public void removeAllTeams() {
-//    this.teams.forEach(team -> team.getLabels().remove(this));
-//    this.teams.clear();
-//  }
   // Ignored GitHub properties:
+  // - teams
   // - default
 }

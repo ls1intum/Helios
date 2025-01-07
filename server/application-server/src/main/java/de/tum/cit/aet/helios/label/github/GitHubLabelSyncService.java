@@ -52,7 +52,8 @@ public class GitHubLabelSyncService {
     try {
       repository.listLabels().withPageSize(100).forEach(this::processLabel);
     } catch (IOException e) {
-      logger.error("Failed to fetch labels for repository {}: {}", repository.getFullName(), e.getMessage());
+      logger.error("Failed to fetch labels for repository {}: {}", repository.getFullName(),
+          e.getMessage());
     }
   }
 
