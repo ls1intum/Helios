@@ -33,4 +33,8 @@ public class AuthService {
 
     throw new IllegalStateException("Unable to fetch user ID");
   }
+
+  public boolean isLoggedIn() {
+    return SecurityContextHolder.getContext().getAuthentication() != null;
+  }
 } 
