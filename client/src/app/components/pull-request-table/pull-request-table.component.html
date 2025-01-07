@@ -58,7 +58,7 @@
             <i-tabler [pTooltip]="getPrIconInfo(pr).tooltip" [name]="getPrIconInfo(pr).icon" [class]="getPrIconInfo(pr).color" />
             <span class="font-bold"><span [innerHTML]="pr.title | markdown"></span></span>
             <i-tabler name="check" class="!h-4 !w-4 text-green-600" />
-            @for (label of labels; track label.id) {
+            @for (label of pr.labels; track label.id) {
               <p-tag [value]="label.name" [rounded]="true" class="border font-medium text-xs py-0.5" [style]="getLabelClasses(label.color)" />
             }
           </div>

@@ -97,15 +97,14 @@ export class PullRequestTableComponent {
     window.open(pr.htmlUrl, '_blank');
   }
 
-  labels = [
-    { id: 1, description: '', name: 'todo', color: '00ff00' },
-    { id: 3, description: 'Something is not working', name: 'bug', color: 'ff0000' },
-  ];
-
+  // TODO: Find a better way to handle color of labals
   getLabelClasses(color: string) {
+    // Color code "ededed" is used for labels with no color
+    // In this case, we want to use black text color
+    // If we don't use the black text color, the text color will be very light and hard to read
     return {
       'border-color': '#' + color,
-      color: '#' + color,
+      color: color === "ededed" ? '#000000' : '#' + color,
       'background-color': '#' + color + '33',
     };
   }
