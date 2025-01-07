@@ -259,6 +259,31 @@ export const WorkflowRunDtoSchema = {
   },
 } as const;
 
+export const LabelInfoDtoSchema = {
+  required: ['color', 'id', 'name'],
+  type: 'object',
+  properties: {
+    id: {
+      type: 'integer',
+      description: 'The unique identifier of the label',
+      format: 'int64',
+    },
+    name: {
+      type: 'string',
+      description: 'The name of the label',
+      example: 'bug',
+    },
+    color: {
+      type: 'string',
+      description: 'The color of the label as a 6-character hex code (without #)',
+      example: 'ff0000',
+    },
+    repository: {
+      $ref: '#/components/schemas/RepositoryInfoDto',
+    },
+  },
+} as const;
+
 export const PullRequestBaseInfoDtoSchema = {
   required: ['htmlUrl', 'id', 'isDraft', 'isMerged', 'number', 'state', 'title'],
   type: 'object',
@@ -300,6 +325,12 @@ export const PullRequestBaseInfoDtoSchema = {
     },
     author: {
       $ref: '#/components/schemas/UserInfoDto',
+    },
+    labels: {
+      type: 'array',
+      items: {
+        $ref: '#/components/schemas/LabelInfoDto',
+      },
     },
     assignees: {
       type: 'array',
@@ -370,6 +401,12 @@ export const PullRequestInfoDtoSchema = {
     },
     author: {
       $ref: '#/components/schemas/UserInfoDto',
+    },
+    labels: {
+      type: 'array',
+      items: {
+        $ref: '#/components/schemas/LabelInfoDto',
+      },
     },
     assignees: {
       type: 'array',
