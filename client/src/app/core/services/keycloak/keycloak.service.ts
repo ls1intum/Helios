@@ -23,7 +23,7 @@ export class KeycloakService {
 
   async init() {
     const authenticated = await this.keycloak.init({
-      onLoad: 'login-required',
+      onLoad: 'check-sso',
     });
 
     if (authenticated) {
@@ -37,7 +37,6 @@ export class KeycloakService {
   }
 
   logout() {
-    // this.keycloak.accountManagement();
     return this.keycloak.logout({ redirectUri: environment.clientUrl });
   }
 }
