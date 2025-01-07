@@ -29,9 +29,11 @@
 
 <div class="flex flex-col gap-6 max-w-6xl mr-4">
   <app-pipeline [selector]="pipelineSelector()" />
-  @if (query.data(); as pr) {
-    @if (pr.headRefRepoNameWithOwner === pr.repository?.nameWithOwner) {
-      <app-deployment-selection [sourceRef]="pr.headRefName" />
+  @if (isLoggedIn()) {
+    @if (query.data(); as pr) {
+      @if (pr.headRefRepoNameWithOwner === pr.repository?.nameWithOwner) {
+        <app-deployment-selection [sourceRef]="pr.headRefName" />
+      }
     }
   }
 </div>
