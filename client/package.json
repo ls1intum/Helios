@@ -10,7 +10,7 @@
   },
   "private": true,
   "dependencies": {
-    "@hey-api/client-fetch": "^0.5.6",
+    "@hey-api/client-fetch": "^0.6.0",
     "@tanstack/angular-query-experimental": "^5.62.8",
     "@angular/animations": "^19.0.4",
     "@angular/common": "^19.0.4",
@@ -20,13 +20,13 @@
     "@angular/platform-browser": "^19.0.4",
     "@angular/platform-browser-dynamic": "^19.0.4",
     "@angular/router": "^19.0.4",
-    "@primeng/themes": "19.0.1",
+    "@primeng/themes": "19.0.2",
     "angular-tabler-icons": "^3.1.0",
     "eslint-config-prettier": "^9.1.0",
     "keycloak-js": "^26.0.7",
     "marked": "^15.0.3",
     "primeicons": "^7.0.0",
-    "primeng": "19.0.1",
+    "primeng": "19.0.2",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"
   },
@@ -39,7 +39,7 @@
     "@angular-eslint/template-parser": "^19.0.0",
     "@angular/cli": "^19.0.5",
     "@angular/compiler-cli": "^19.0.4",
-    "@hey-api/openapi-ts": "^0.60.0",
+    "@hey-api/openapi-ts": "^0.61.0",
     "@types/jasmine": "~5.1.0",
     "@types/node": "^22.9.0",
     "@typescript-eslint/eslint-plugin": "^8.13.0",
@@ -50,7 +50,7 @@
     "eslint-plugin-jsdoc": "^50.4.3",
     "eslint-plugin-prefer-arrow": "^1.2.3",
     "eslint-plugin-prettier": "^5.2.1",
-    "jasmine-core": "~5.4.0",
+    "jasmine-core": "~5.5.0",
     "karma": "~6.4.0",
     "karma-chrome-launcher": "~3.2.0",
     "karma-coverage": "~2.2.0",
@@ -60,6 +60,6 @@
     "prettier": "^3.3.3",
     "tailwindcss": "^3.4.14",
     "tailwindcss-primeui": "^0.3.4",
-    "typescript": "~5.6.2"
+    "typescript": "~5.7.0"
   }
 }
