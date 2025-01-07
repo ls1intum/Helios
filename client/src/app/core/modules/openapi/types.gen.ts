@@ -37,6 +37,8 @@ export type EnvironmentDto = {
   description?: string;
   serverUrl?: string;
   latestDeployment?: EnvironmentDeployment;
+  lockedBy?: string;
+  lockedAt?: string;
 };
 
 export type RepositoryInfoDto = {
@@ -157,6 +159,14 @@ export type PullRequestInfoDto = {
   updatedAt?: string;
 };
 
+export type EnvironmentLockHistoryDto = {
+  id: number;
+  lockedBy?: string;
+  lockedAt?: string;
+  unlockedAt?: string;
+  environment?: EnvironmentDto;
+};
+
 export type DeploymentDto = {
   id: number;
   repository?: RepositoryInfoDto;
@@ -272,7 +282,9 @@ export type UnlockEnvironmentResponses = {
   /**
    * OK
    */
-  200: EnvironmentDto;
+  200: {
+    [key: string]: unknown;
+  };
 };
 
 export type UnlockEnvironmentResponse = UnlockEnvironmentResponses[keyof UnlockEnvironmentResponses];
@@ -557,6 +569,22 @@ export type GetAllEnvironmentsResponses = {
 
 export type GetAllEnvironmentsResponse = GetAllEnvironmentsResponses[keyof GetAllEnvironmentsResponses];
 
+export type GetEnvironmentsByUserLockingData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/api/environments/user_locking';
+};
+
+export type GetEnvironmentsByUserLockingResponses = {
+  /**
+   * OK
+   */
+  200: EnvironmentLockHistoryDto;
+};
+
+export type GetEnvironmentsByUserLockingResponse = GetEnvironmentsByUserLockingResponses[keyof GetEnvironmentsByUserLockingResponses];
+
 export type GetEnvironmentsByRepositoryIdData = {
   body?: never;
   path: {
@@ -684,10 +712,11 @@ export type GetBranchByRepositoryIdAndNameData = {
   body?: never;
   path: {
     repoId: number;
+  };
+  query: {
     name: string;
   };
-  query?: never;
-  url: '/api/branches/repository/{repoId}/name/{name}';
+  url: '/api/branches/repository/{repoId}/branch';
 };
 
 export type GetBranchByRepositoryIdAndNameResponses = {

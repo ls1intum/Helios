@@ -39,6 +39,7 @@ import {
   IconPlus,
   IconFilter,
   IconFilterPlus,
+  IconLock,
   IconList,
   IconBinaryTree,
   IconShieldHalf,
@@ -85,6 +86,7 @@ const icons = {
   IconPlus,
   IconFilter,
   IconFilterPlus,
+  IconLock,
   IconShieldHalf,
 };
 

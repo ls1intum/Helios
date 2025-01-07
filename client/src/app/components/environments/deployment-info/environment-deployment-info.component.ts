@@ -26,7 +26,16 @@ export class EnvironmentDeploymentInfoComponent {
     ...getCommitByRepositoryIdAndNameOptions({ path: { repoId: this.repositoryId(), sha: this.deployment()?.sha || '' } }),
     enabled: !!this.repositoryId(),
   }));
-  commit = computed(() => this.commitQuery.data());
+  commit = computed(() => {
+    const data = this.commitQuery.data();
+
+    // If the data is an empty object, treat it as null
+    if (data && typeof data === 'object' && !Object.keys(data).length) {
+      return null;
+    }
+
+    return data;
+  });
 
   commitDate = computed(() => {
     const date = this.commit()?.authoredAt;

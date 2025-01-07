@@ -42,6 +42,8 @@ import type {
   GetPullRequestByRepositoryIdResponse,
   GetAllEnvironmentsData,
   GetAllEnvironmentsResponse,
+  GetEnvironmentsByUserLockingData,
+  GetEnvironmentsByUserLockingResponse,
   GetEnvironmentsByRepositoryIdData,
   GetEnvironmentsByRepositoryIdResponse,
   GetAllDeploymentsData,
@@ -234,6 +236,13 @@ export const getAllEnvironments = <ThrowOnError extends boolean = false>(options
   });
 };
 
+export const getEnvironmentsByUserLocking = <ThrowOnError extends boolean = false>(options?: Options<GetEnvironmentsByUserLockingData, ThrowOnError>) => {
+  return (options?.client ?? client).get<GetEnvironmentsByUserLockingResponse, unknown, ThrowOnError>({
+    ...options,
+    url: '/api/environments/user_locking',
+  });
+};
+
 export const getEnvironmentsByRepositoryId = <ThrowOnError extends boolean = false>(options: Options<GetEnvironmentsByRepositoryIdData, ThrowOnError>) => {
   return (options?.client ?? client).get<GetEnvironmentsByRepositoryIdResponse, unknown, ThrowOnError>({
     ...options,
@@ -286,7 +295,7 @@ export const getAllBranches = <ThrowOnError extends boolean = false>(options?: O
 export const getBranchByRepositoryIdAndName = <ThrowOnError extends boolean = false>(options: Options<GetBranchByRepositoryIdAndNameData, ThrowOnError>) => {
   return (options?.client ?? client).get<GetBranchByRepositoryIdAndNameResponse, unknown, ThrowOnError>({
     ...options,
-    url: '/api/branches/repository/{repoId}/name/{name}',
+    url: '/api/branches/repository/{repoId}/branch',
   });
 };
 

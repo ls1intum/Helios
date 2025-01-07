@@ -21,7 +21,9 @@ public record EnvironmentDto(
     List<String> installedApps,
     String description,
     String serverUrl,
-    EnvironmentDeployment latestDeployment) {
+    EnvironmentDeployment latestDeployment,
+    String lockedBy,
+    OffsetDateTime lockedAt) {
 
   public static record EnvironmentDeployment(
       @NonNull Long id,
@@ -62,7 +64,9 @@ public record EnvironmentDto(
         environment.getInstalledApps(),
         environment.getDescription(),
         environment.getServerUrl(),
-        latestDeployment.map(EnvironmentDeployment::fromDeployment).orElse(null));
+        latestDeployment.map(EnvironmentDeployment::fromDeployment).orElse(null),
+        environment.getLockedBy(),
+        environment.getLockedAt());
   }
 
   public static EnvironmentDto fromEnvironment(Environment environment) {
