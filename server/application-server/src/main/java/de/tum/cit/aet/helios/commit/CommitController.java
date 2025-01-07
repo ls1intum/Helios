@@ -14,13 +14,14 @@ public class CommitController {
   public CommitController(CommitService commitService) {
     this.commitService = commitService;
   }
-
+  //TODO: Fix the return type to notFound if the commit is not found
+  
   @GetMapping("/repository/{repoId}/commit/{sha}")
   public ResponseEntity<CommitInfoDto> getCommitByRepositoryIdAndName(
       @PathVariable Long repoId, @PathVariable String sha) {
     return commitService
         .getCommitByShaAndRepositoryId(sha, repoId)
         .map(ResponseEntity::ok)
-        .orElseGet(() -> ResponseEntity.notFound().build());
+        .orElseGet(() -> ResponseEntity.ok(null));
   }
 }
