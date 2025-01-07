@@ -54,15 +54,15 @@
     <ng-template pTemplate="body" let-pr>
       <tr class="cursor-pointer" (click)="openPR(pr)">
         <td>
-          <div class="flex items-center gap-2">
+          <div class="flex flex-wrap items-center gap-2">
             <i-tabler [pTooltip]="getPrIconInfo(pr).tooltip" [name]="getPrIconInfo(pr).icon" [class]="getPrIconInfo(pr).color" />
             <span class="font-bold"><span [innerHTML]="pr.title | markdown"></span></span>
             <i-tabler name="check" class="!h-4 !w-4 text-green-600" />
             @for (label of pr.labels; track label.id) {
-              <p-tag [value]="label.name" [rounded]="true" class="border font-medium text-xs py-0.5" [style]="getLabelClasses(label.color)" />
+              <p-tag [value]="label.name" [rounded]="true" class="border font-medium text-xs py-0.5 whitespace-nowrap" [style]="getLabelClasses(label.color)" />
             }
           </div>
-          <div class="flex gap-2 items-center text-xs">
+          <div class="flex mt-2.5 gap-2 items-center text-xs">
             <p-avatar [image]="pr.author?.avatarUrl" shape="circle" class="h-5 w-5" />
             <span>{{ pr.author?.name }} opened #{{ pr.number }} {{ pr.createdAt | timeAgo }}</span>
             <i-tabler name="point" class="!h-3 !w-3" />
