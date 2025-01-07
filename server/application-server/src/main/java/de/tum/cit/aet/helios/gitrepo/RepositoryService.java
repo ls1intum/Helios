@@ -12,6 +12,10 @@ public class RepositoryService {
     this.repositoryRepository = repositoryRepository;
   }
 
+  public Iterable<RepositoryInfoDto> getRepositories() {
+    return repositoryRepository.findAll().stream().map(RepositoryInfoDto::fromRepository).toList();
+  }
+
   public Optional<RepositoryInfoDto> getRepositoryById(Long id) {
     return repositoryRepository.findById(id).map(RepositoryInfoDto::fromRepository);
   }

@@ -16,6 +16,11 @@ public class RepositoryController {
     this.repositoryService = repositoryService;
   }
 
+  @GetMapping
+  public ResponseEntity<Iterable<RepositoryInfoDto>> getRepositories() {
+    return ResponseEntity.ok(repositoryService.getRepositories());
+  }
+
   @GetMapping("/{id}")
   public ResponseEntity<RepositoryInfoDto> getRepositoryById(@PathVariable Long id) {
     return repositoryService

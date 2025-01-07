@@ -446,6 +446,24 @@ export type GetGroupsWithWorkflowsResponses = {
 
 export type GetGroupsWithWorkflowsResponse = GetGroupsWithWorkflowsResponses[keyof GetGroupsWithWorkflowsResponses];
 
+export type GetRepositoriesData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/api/repository';
+};
+
+export type GetRepositoriesResponses = {
+  /**
+   * OK
+   */
+  200: {
+    [key: string]: unknown;
+  };
+};
+
+export type GetRepositoriesResponse = GetRepositoriesResponses[keyof GetRepositoriesResponses];
+
 export type GetRepositoryByIdData = {
   body?: never;
   path: {
