@@ -1,8 +1,9 @@
 /* eslint-disable prettier/prettier */
-import { Component, computed, inject, input } from '@angular/core';
+import { Component, inject, input } from '@angular/core';
 import { EnvironmentDto } from '@app/core/modules/openapi';
-import { deployToEnvironmentMutation, getAllEnvironmentsQueryKey, getEnvironmentByIdQueryKey, getUserPermissionsOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
-import { injectMutation, injectQuery, injectQueryClient } from '@tanstack/angular-query-experimental';
+import { deployToEnvironmentMutation, getAllEnvironmentsQueryKey, getEnvironmentByIdQueryKey } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
+import { PermissionService } from '@app/core/services/permission.service';
+import { injectMutation, injectQueryClient } from '@tanstack/angular-query-experimental';
 import { MessageService } from 'primeng/api';
 import { EnvironmentListViewComponent } from '../environments/environment-list/environment-list-view.component';
 
@@ -13,17 +14,11 @@ import { EnvironmentListViewComponent } from '../environments/environment-list/e
 })
 export class DeploymentSelectionComponent {
   private messageService = inject(MessageService);
+  permissionService = inject(PermissionService);
 
   queryClient = injectQueryClient();
 
   sourceRef = input.required<string>();
-
-  permissionsQuery = injectQuery(() => ({
-    ...getUserPermissionsOptions(),
-  }));
-
-  hasDeployPermission = computed<boolean>(() => this.permissionsQuery.data()?.permission === 'ADMIN' || this.permissionsQuery.data()?.permission === 'WRITE');
-  hasUnlockPermission = computed<boolean>(() => this.permissionsQuery.data()?.roleName === 'admin' || this.permissionsQuery.data()?.roleName === 'maintain');
 
   private currentEnvironmentId: number | null = null;
 
