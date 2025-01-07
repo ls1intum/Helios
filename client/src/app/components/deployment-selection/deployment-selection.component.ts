@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 import { Component, inject, input } from '@angular/core';
 import { EnvironmentDto } from '@app/core/modules/openapi';
 import { deployToEnvironmentMutation, getAllEnvironmentsQueryKey, getEnvironmentByIdQueryKey } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';

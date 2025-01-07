@@ -13,4 +13,8 @@ export class PermissionService {
   hasDeployPermission = computed(() => this.permissionsQuery.data()?.permission === 'ADMIN' || this.permissionsQuery.data()?.permission === 'WRITE');
   hasUnlockPermission = computed(() => this.permissionsQuery.data()?.roleName === 'admin' || this.permissionsQuery.data()?.roleName === 'maintain');
   isAdminOrMaintainer = computed(() => this.permissionsQuery.data()?.permission === 'ADMIN' || this.permissionsQuery.data()?.roleName === 'maintain');
+
+  refetchPermissions() {
+    this.permissionsQuery.refetch();
+  }
 }
