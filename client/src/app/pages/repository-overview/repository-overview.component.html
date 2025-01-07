@@ -12,16 +12,16 @@
           <div class="flex justify-between items-center w-full" heading>
             <div>Connected Repositories</div>
             <!-- TODO: Remove and replace by update handlers directly on dropdowns -->
-            @if (loggedIn()) {
-              <p-button label="Connect Repository" (click)="showDialog()" size="small" [loading]="loading()"></p-button>
-            }
+            <!-- @if (loggedIn()) {
+              <p-button label="Connect Repository" (click)="showDialog()" size="small"></p-button>
+            } -->
           </div>
-          <span description> In the repository list you can find all of the repositories of your organization connected to Helios and are able to connect new ones. </span>
+          <span description> In the repository list you can find all of the repositories that were added to Helios. </span>
         </app-page-heading>
 
         <div class="card">
           <div class="border rounded-md">
-            @for (item of repositories(); track item.id; let idx = $index, first = $first) {
+            @for (item of query.data(); track item.id) {
               <div class="flex justify-between items-center border-b p-4 gap-2 cursor-pointer hover:bg-slate-50" (click)="navigateToProject(item)">
                 <div class="flex flex-col">
                   <div class="text-xl font-medium mt-2">

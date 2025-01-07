@@ -5,8 +5,10 @@ import { HeliosIconComponent } from '@app/components/helios-icon/helios-icon.com
 import { PageHeadingComponent } from '@app/components/page-heading/page-heading.component';
 import { ProfileNavSectionComponent } from '@app/components/profile-nav-section/profile-nav-section.component';
 import { RepositoryInfoDto } from '@app/core/modules/openapi';
+import { getAllRepositoriesOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 import { RepositoryService } from '@app/core/services/repository.service';
+import { injectQuery } from '@tanstack/angular-query-experimental';
 import { IconsModule } from 'icons.module';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
@@ -37,10 +39,10 @@ export class ProjectOverviewComponent {
   private keycloakService = inject(KeycloakService);
   private router = inject(Router);
 
-  readonly repositoryConnection = viewChild.required(ConnectRepoComponent);
+  query = injectQuery(() => getAllRepositoriesOptions());
+  repositories = computed(() => this.query.data());
 
-  repositories = computed(() => this.repositoryService.repositories());
-  loading = computed(() => this.repositoryService.loading());
+  readonly repositoryConnection = viewChild.required(ConnectRepoComponent);
 
   showDialog() {
     this.repositoryConnection().show();
