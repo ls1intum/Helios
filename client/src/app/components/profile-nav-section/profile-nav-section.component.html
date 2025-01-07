@@ -1,0 +1,13 @@
+<p-divider />
+<div class="flex flex-col items-center">
+  @if (!isLoggedIn()) {
+    <button class="rounded-xl p-2 flex items-center text-green-500 hover:text-green-700" pTooltip="Login" (click)="login()">
+      <i-tabler name="login" class="!size-10 !stroke-1" />
+    </button>
+  } @else {
+    <p-avatar [pTooltip]="fullName()" [label]="initials()" size="large" />
+    <button class="rounded-xl p-2 flex items-center text-red-500 hover:text-red-700" pTooltip="Logout" (click)="logout()">
+      <i-tabler name="logout" class="!size-10 !stroke-1" />
+    </button>
+  }
+</div>

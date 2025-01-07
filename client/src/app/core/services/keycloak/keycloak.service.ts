@@ -32,6 +32,10 @@ export class KeycloakService {
     }
   }
 
+  loggedIn() {
+    return this.keycloak.authenticated;
+  }
+
   login() {
     return this.keycloak.login();
   }

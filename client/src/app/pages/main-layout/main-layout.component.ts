@@ -12,6 +12,7 @@ import { CardModule } from 'primeng/card';
 import { injectQuery } from '@tanstack/angular-query-experimental';
 import { getEnvironmentsByUserLockingOptions, getRepositoryByIdOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { SlicePipe } from '@angular/common';
+import { ProfileNavSectionComponent } from '@app/components/profile-nav-section/profile-nav-section.component';
 
 @Component({
   selector: 'app-main-layout',
@@ -29,6 +30,7 @@ import { SlicePipe } from '@angular/common';
     DividerModule,
     AvatarModule,
     CardModule,
+    ProfileNavSectionComponent,
   ],
   templateUrl: './main-layout.component.html',
 })
@@ -56,6 +58,10 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     this.keycloakService.logout();
   }
 
+  login() {
+    this.keycloakService.login();
+  }
+
   ngOnInit() {
     this.items = [
       {
@@ -73,11 +79,15 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
         icon: 'server-cog',
         path: 'environment/list',
       },
-      {
-        label: 'Project Settings',
-        icon: 'adjustments-alt',
-        path: 'settings',
-      },
+      ...(this.keycloakService.profile
+        ? [
+            {
+              label: 'Project Settings',
+              icon: 'adjustments-alt',
+              path: 'settings',
+            },
+          ]
+        : []),
     ];
 
     this.intervalId = setInterval(() => {
