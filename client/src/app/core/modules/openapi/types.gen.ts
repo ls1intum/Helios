@@ -446,23 +446,21 @@ export type GetGroupsWithWorkflowsResponses = {
 
 export type GetGroupsWithWorkflowsResponse = GetGroupsWithWorkflowsResponses[keyof GetGroupsWithWorkflowsResponses];
 
-export type GetRepositoriesData = {
+export type GetAllRepositoriesData = {
   body?: never;
   path?: never;
   query?: never;
   url: '/api/repository';
 };
 
-export type GetRepositoriesResponses = {
+export type GetAllRepositoriesResponses = {
   /**
    * OK
    */
-  200: {
-    [key: string]: unknown;
-  };
+  200: Array<RepositoryInfoDto>;
 };
 
-export type GetRepositoriesResponse = GetRepositoriesResponses[keyof GetRepositoriesResponses];
+export type GetAllRepositoriesResponse = GetAllRepositoriesResponses[keyof GetAllRepositoriesResponses];
 
 export type GetRepositoryByIdData = {
   body?: never;

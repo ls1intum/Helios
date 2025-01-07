@@ -1,5 +1,6 @@
 package de.tum.cit.aet.helios.gitrepo;
 
+import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,8 +18,8 @@ public class RepositoryController {
   }
 
   @GetMapping
-  public ResponseEntity<Iterable<RepositoryInfoDto>> getRepositories() {
-    return ResponseEntity.ok(repositoryService.getRepositories());
+  public ResponseEntity<List<RepositoryInfoDto>> getAllRepositories() {
+    return ResponseEntity.ok(repositoryService.getAllRepositories());
   }
 
   @GetMapping("/{id}")

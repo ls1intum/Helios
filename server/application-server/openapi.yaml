@@ -325,14 +325,16 @@ paths:
     get:
       tags:
       - repository-controller
-      operationId: getRepositories
+      operationId: getAllRepositories
       responses:
         "200":
           description: OK
           content:
             application/json:
               schema:
-                type: object
+                type: array
+                items:
+                  $ref: "#/components/schemas/RepositoryInfoDto"
   /api/repository/{id}:
     get:
       tags:
