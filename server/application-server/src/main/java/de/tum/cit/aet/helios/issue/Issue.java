@@ -1,6 +1,7 @@
 package de.tum.cit.aet.helios.issue;
 
 import de.tum.cit.aet.helios.github.BaseGitServiceEntity;
+import de.tum.cit.aet.helios.label.Label;
 import de.tum.cit.aet.helios.user.User;
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.DiscriminatorType;
@@ -62,6 +63,15 @@ public class Issue extends BaseGitServiceEntity {
 
   @ManyToMany
   @JoinTable(
+      name = "issue_label",
+      joinColumns = @JoinColumn(name = "issue_id"),
+      inverseJoinColumns = @JoinColumn(name = "label_id")
+  )
+  @ToString.Exclude
+  private Set<Label> labels = new HashSet<>();
+
+  @ManyToMany
+  @JoinTable(
       name = "issue_assignee",
       joinColumns = @JoinColumn(name = "issue_id"),
       inverseJoinColumns = @JoinColumn(name = "user_id"))
@@ -80,7 +90,6 @@ public class Issue extends BaseGitServiceEntity {
   // Missing properties
   // - milestone
   // - issue_comments
-  // - labels
 
   // Ignored GitHub properties:
   // - closed_by seems not to be used by webhooks
