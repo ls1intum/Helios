@@ -280,14 +280,14 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/WorkflowRunDto"
-  /api/workflows/branch/{branch}:
+  /api/workflows/branch:
     get:
       tags:
       - workflow-run-controller
       operationId: getLatestWorkflowRunsByBranchAndHeadCommit
       parameters:
       - name: branch
-        in: path
+        in: query
         required: true
         schema:
           type: string
@@ -321,6 +321,20 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/WorkflowGroupDto"
+  /api/repository:
+    get:
+      tags:
+      - repository-controller
+      operationId: getAllRepositories
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RepositoryInfoDto"
   /api/repository/{id}:
     get:
       tags:
@@ -865,6 +879,28 @@ components:
           - UNKNOWN
         htmlUrl:
           type: string
+    LabelInfoDto:
+      required:
+      - color
+      - id
+      - name
+      type: object
+      properties:
+        id:
+          type: integer
+          description: The unique identifier of the label
+          format: int64
+        name:
+          type: string
+          description: The name of the label
+          example: bug
+        color:
+          type: string
+          description: "The color of the label as a 6-character hex code (without\
+            \ #)"
+          example: ff0000
+        repository:
+          $ref: "#/components/schemas/RepositoryInfoDto"
     PullRequestBaseInfoDto:
       required:
       - htmlUrl
@@ -905,6 +941,10 @@ components:
           format: date-time
         author:
           $ref: "#/components/schemas/UserInfoDto"
+        labels:
+          type: array
+          items:
+            $ref: "#/components/schemas/LabelInfoDto"
         assignees:
           type: array
           items:
@@ -972,6 +1012,10 @@ components:
           format: int32
         author:
           $ref: "#/components/schemas/UserInfoDto"
+        labels:
+          type: array
+          items:
+            $ref: "#/components/schemas/LabelInfoDto"
         assignees:
           type: array
           items:

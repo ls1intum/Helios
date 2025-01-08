@@ -1,12 +1,17 @@
 package de.tum.cit.aet.helios.gitrepo;
 
+import de.tum.cit.aet.helios.label.Label;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.OffsetDateTime;
+import java.util.HashSet;
+import java.util.Set;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -72,6 +77,10 @@ public class GitRepository {
 
   private boolean hasWiki;
 
+  @OneToMany(mappedBy = "repository", cascade = CascadeType.REMOVE, orphanRemoval = true)
+  @ToString.Exclude
+  private Set<Label> labels = new HashSet<>();
+
   public enum Visibility {
     PUBLIC,
     PRIVATE,
@@ -80,7 +89,7 @@ public class GitRepository {
   }
 
   // Missing properties:
-  // Issue, Label, Milestone
+  // Issue, Milestone
   // owner
   // organization
 

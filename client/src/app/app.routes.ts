@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { HeaderGuard } from './core/middlewares/header.service';
+import { RepositoryFilterGuard } from './core/middlewares/repository-filter.guard';
 
 export const routes: Routes = [
   {
@@ -9,6 +9,7 @@ export const routes: Routes = [
   },
   {
     path: 'repo',
+    canActivateChild: [RepositoryFilterGuard],
     children: [
       {
         path: '',
@@ -19,7 +20,6 @@ export const routes: Routes = [
       {
         path: ':repositoryId',
         loadComponent: () => import('./pages/main-layout/main-layout.component').then(m => m.MainLayoutComponent),
-        canActivateChild: [HeaderGuard],
         children: [
           { path: '', loadComponent: () => import('./pages/ci-cd/ci-cd.component').then(m => m.CiCdComponent) },
           {

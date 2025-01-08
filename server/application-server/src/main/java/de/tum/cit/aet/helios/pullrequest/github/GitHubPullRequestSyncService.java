@@ -1,6 +1,9 @@
 package de.tum.cit.aet.helios.pullrequest.github;
 
 import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
+import de.tum.cit.aet.helios.label.Label;
+import de.tum.cit.aet.helios.label.LabelRepository;
+import de.tum.cit.aet.helios.label.github.GitHubLabelConverter;
 import de.tum.cit.aet.helios.pullrequest.PullRequest;
 import de.tum.cit.aet.helios.pullrequest.PullRequestRepository;
 import de.tum.cit.aet.helios.user.User;
@@ -33,25 +36,30 @@ public class GitHubPullRequestSyncService {
   private final UserRepository userRepository;
   private final GitHubPullRequestConverter pullRequestConverter;
   private final GitHubUserConverter userConverter;
+  private final LabelRepository labelRepository;
+  private final GitHubLabelConverter gitHubLabelConverter;
 
   public GitHubPullRequestSyncService(
       PullRequestRepository pullRequestRepository,
       GitRepoRepository gitRepoRepository,
       UserRepository userRepository,
       GitHubPullRequestConverter pullRequestConverter,
-      GitHubUserConverter userConverter) {
+      GitHubUserConverter userConverter, LabelRepository labelRepository,
+      GitHubLabelConverter gitHubLabelConverter) {
     this.pullRequestRepository = pullRequestRepository;
     this.gitRepoRepository = gitRepoRepository;
     this.userRepository = userRepository;
     this.pullRequestConverter = pullRequestConverter;
     this.userConverter = userConverter;
+    this.labelRepository = labelRepository;
+    this.gitHubLabelConverter = gitHubLabelConverter;
   }
 
   /**
    * Synchronizes all pull requests from the specified GitHub repositories.
    *
    * @param repositories the list of GitHub repositories to sync pull requests from
-   * @param since an optional date to filter pull requests by their last update
+   * @param since        an optional date to filter pull requests by their last update
    * @return a list of GitHub pull requests that were successfully fetched and processed
    */
   public List<GHPullRequest> syncPullRequestsOfAllRepositories(
@@ -66,7 +74,7 @@ public class GitHubPullRequestSyncService {
    * Synchronizes all pull requests from a specific GitHub repository.
    *
    * @param repository the GitHub repository to sync pull requests from
-   * @param since an optional date to filter pull requests by their last update
+   * @param since      an optional date to filter pull requests by their last update
    * @return a list of GitHub pull requests that were successfully fetched and processed
    */
   public List<GHPullRequest> syncPullRequestsOfRepository(
@@ -131,9 +139,9 @@ public class GitHubPullRequestSyncService {
                   try {
                     if (pullRequest.getUpdatedAt() == null
                         || pullRequest
-                            .getUpdatedAt()
-                            .isBefore(
-                                DateUtil.convertToOffsetDateTime(ghPullRequest.getUpdatedAt()))) {
+                        .getUpdatedAt()
+                        .isBefore(
+                            DateUtil.convertToOffsetDateTime(ghPullRequest.getUpdatedAt()))) {
                       return pullRequestConverter.update(ghPullRequest, pullRequest);
                     }
                     return pullRequest;
@@ -161,6 +169,22 @@ public class GitHubPullRequestSyncService {
         result.setRepository(repository);
       }
     }
+
+    // Link new labels and remove labels that are not present anymore
+    var ghLabels = ghPullRequest.getLabels();
+    var resultLabels = new HashSet<Label>();
+    ghLabels.forEach(ghLabel -> {
+      var resultLabel = labelRepository
+          .findById(ghLabel.getId())
+          .orElseGet(() -> {
+            var label = gitHubLabelConverter.convert(ghLabel);
+            label.setRepository(result.getRepository());
+            return labelRepository.save(label);
+          });
+      resultLabels.add(resultLabel);
+    });
+    result.getLabels().clear();
+    result.getLabels().addAll(resultLabels);
 
     // Link author
     try {

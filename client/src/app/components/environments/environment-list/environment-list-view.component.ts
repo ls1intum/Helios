@@ -1,4 +1,4 @@
-import { Component, computed, input, output, signal } from '@angular/core';
+import { Component, computed, inject, input, output, signal } from '@angular/core';
 import { AccordionModule } from 'primeng/accordion';
 
 import { TagModule } from 'primeng/tag';
@@ -13,6 +13,7 @@ import { EnvironmentDeploymentInfoComponent } from '../deployment-info/environme
 import { getAllEnvironmentsOptions, getAllEnvironmentsQueryKey, unlockEnvironmentMutation } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { EnvironmentDto } from '@app/core/modules/openapi';
 import { LockTimeComponent } from '../lock-time/lock-time.component';
+import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 
 @Component({
   selector: 'app-environment-list-view',
@@ -32,6 +33,7 @@ import { LockTimeComponent } from '../lock-time/lock-time.component';
 })
 export class EnvironmentListViewComponent {
   private queryClient = injectQueryClient();
+  private keycloakService = inject(KeycloakService);
 
   editable = input<boolean | undefined>();
   deployable = input<boolean | undefined>();
@@ -51,6 +53,8 @@ export class EnvironmentListViewComponent {
       this.queryClient.invalidateQueries({ queryKey: getAllEnvironmentsQueryKey() });
     },
   }));
+
+  isLoggedIn = computed(() => this.keycloakService.isLoggedIn());
 
   onUnlockEnvironment(event: Event, environment: EnvironmentDto) {
     this.unlockEnvironment.mutate({ path: { id: environment.id } });

@@ -3,6 +3,7 @@ package de.tum.cit.aet.helios.pullrequest;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import de.tum.cit.aet.helios.gitrepo.RepositoryInfoDto;
 import de.tum.cit.aet.helios.issue.Issue.State;
+import de.tum.cit.aet.helios.label.LabelInfoDto;
 import de.tum.cit.aet.helios.user.UserInfoDto;
 import java.time.OffsetDateTime;
 import java.util.Comparator;
@@ -19,6 +20,7 @@ public record PullRequestInfoDto(
     @NonNull Boolean isMerged,
     @NonNull Integer commentsCount,
     UserInfoDto author,
+    List<LabelInfoDto> labels,
     List<UserInfoDto> assignees,
     RepositoryInfoDto repository,
     @NonNull Integer additions,
@@ -42,6 +44,10 @@ public record PullRequestInfoDto(
         pullRequest.isMerged(),
         pullRequest.getCommentsCount(),
         UserInfoDto.fromUser(pullRequest.getAuthor()),
+        pullRequest.getLabels().stream()
+            .map(LabelInfoDto::fromLabel)
+            .sorted(Comparator.comparing(LabelInfoDto::name))
+            .toList(),
         pullRequest.getAssignees().stream()
             .map(UserInfoDto::fromUser)
             .sorted(Comparator.comparing(UserInfoDto::login))

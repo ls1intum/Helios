@@ -94,6 +94,22 @@ export type WorkflowRunDto = {
   htmlUrl: string;
 };
 
+export type LabelInfoDto = {
+  /**
+   * The unique identifier of the label
+   */
+  id: number;
+  /**
+   * The name of the label
+   */
+  name: string;
+  /**
+   * The color of the label as a 6-character hex code (without #)
+   */
+  color: string;
+  repository?: RepositoryInfoDto;
+};
+
 export type PullRequestBaseInfoDto = {
   id: number;
   number: number;
@@ -106,6 +122,7 @@ export type PullRequestBaseInfoDto = {
   createdAt?: string;
   updatedAt?: string;
   author?: UserInfoDto;
+  labels?: Array<LabelInfoDto>;
   assignees?: Array<UserInfoDto>;
   reviewers?: Array<UserInfoDto>;
 };
@@ -127,6 +144,7 @@ export type PullRequestInfoDto = {
   isMerged: boolean;
   commentsCount: number;
   author?: UserInfoDto;
+  labels?: Array<LabelInfoDto>;
   assignees?: Array<UserInfoDto>;
   repository?: RepositoryInfoDto;
   additions: number;
@@ -412,11 +430,11 @@ export type GetLatestWorkflowRunsByPullRequestIdAndHeadCommitResponse =
 
 export type GetLatestWorkflowRunsByBranchAndHeadCommitData = {
   body?: never;
-  path: {
+  path?: never;
+  query: {
     branch: string;
   };
-  query?: never;
-  url: '/api/workflows/branch/{branch}';
+  url: '/api/workflows/branch';
 };
 
 export type GetLatestWorkflowRunsByBranchAndHeadCommitResponses = {
@@ -445,6 +463,22 @@ export type GetGroupsWithWorkflowsResponses = {
 };
 
 export type GetGroupsWithWorkflowsResponse = GetGroupsWithWorkflowsResponses[keyof GetGroupsWithWorkflowsResponses];
+
+export type GetAllRepositoriesData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/api/repository';
+};
+
+export type GetAllRepositoriesResponses = {
+  /**
+   * OK
+   */
+  200: Array<RepositoryInfoDto>;
+};
+
+export type GetAllRepositoriesResponse = GetAllRepositoriesResponses[keyof GetAllRepositoriesResponses];
 
 export type GetRepositoryByIdData = {
   body?: never;
