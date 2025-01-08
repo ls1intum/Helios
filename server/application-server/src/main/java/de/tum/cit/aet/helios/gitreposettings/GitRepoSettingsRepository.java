@@ -7,5 +7,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface GitRepoSettingsRepository extends JpaRepository<GitRepoSettings, Long> {
 
-  Optional<GitRepoSettings> findByRepositoryId(Long repositoryId);
+  Optional<GitRepoSettings> findByRepositoryRepositoryId(Long repositoryId);
 }
