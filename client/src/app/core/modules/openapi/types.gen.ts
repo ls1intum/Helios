@@ -430,11 +430,11 @@ export type GetLatestWorkflowRunsByPullRequestIdAndHeadCommitResponse =
 
 export type GetLatestWorkflowRunsByBranchAndHeadCommitData = {
   body?: never;
-  path: {
+  path?: never;
+  query: {
     branch: string;
   };
-  query?: never;
-  url: '/api/workflows/branch/{branch}';
+  url: '/api/workflows/branch';
 };
 
 export type GetLatestWorkflowRunsByBranchAndHeadCommitResponses = {
