@@ -11,7 +11,6 @@ public interface LabelRepository extends JpaRepository<Label, Long> {
 
   Optional<Label> findByName(@NonNull String name);
 
-  Optional<Label> findByRepositoryIdAndName(@Param("repositoryId") Long repositoryId,
-                                            @Param("name") String name);
-
+  Optional<Label> findByRepositoryRepositoryIdAndName(@Param("repositoryId") Long repositoryId,
+                                                      @Param("name") String name);
 }
