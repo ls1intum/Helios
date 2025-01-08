@@ -185,7 +185,7 @@ export const getLatestWorkflowRunsByBranchAndHeadCommit = <ThrowOnError extends 
 ) => {
   return (options?.client ?? client).get<GetLatestWorkflowRunsByBranchAndHeadCommitResponse, unknown, ThrowOnError>({
     ...options,
-    url: '/api/workflows/branch/{branch}',
+    url: '/api/workflows/branch',
   });
 };
 

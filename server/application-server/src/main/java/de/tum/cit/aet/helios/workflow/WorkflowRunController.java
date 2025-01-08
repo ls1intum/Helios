@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -23,11 +24,10 @@ public class WorkflowRunController {
     return ResponseEntity.ok(workflowRuns);
   }
 
-  @GetMapping("/branch/{branch}")
+  @GetMapping("/branch")
   public ResponseEntity<List<WorkflowRunDto>> getLatestWorkflowRunsByBranchAndHeadCommit(
-      @PathVariable String branch) {
+      @RequestParam String branch) {
     var workflowRuns = workflowRunService.getLatestWorkflowRunsByBranchAndHeadCommitSha(branch);
-
     return ResponseEntity.ok(workflowRuns);
   }
 }
