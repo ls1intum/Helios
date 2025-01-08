@@ -3,13 +3,20 @@ import { ActivatedRouteSnapshot, CanActivateChild, GuardResult, MaybeAsync } fro
 import { client } from '../modules/openapi';
 
 @Injectable()
-export class HeaderGuard implements CanActivateChild {
+export class RepositoryFilterGuard implements CanActivateChild {
   constructor() {}
+
   canActivateChild(route: ActivatedRouteSnapshot): MaybeAsync<GuardResult> {
     client.interceptors.request.use(config => {
-      config.headers.set('X-Repository-Id', route.params['repositoryId']);
+      if (!route.params['repositoryId']) {
+        config.headers.delete('X-Repository-Id');
+      } else {
+        config.headers.set('X-Repository-Id', route.params['repositoryId']);
+      }
+
       return config;
     });
+
     return true;
   }
 }

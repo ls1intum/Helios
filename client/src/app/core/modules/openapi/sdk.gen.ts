@@ -30,6 +30,8 @@ import type {
   GetLatestWorkflowRunsByBranchAndHeadCommitResponse,
   GetGroupsWithWorkflowsData,
   GetGroupsWithWorkflowsResponse,
+  GetAllRepositoriesData,
+  GetAllRepositoriesResponse,
   GetRepositoryByIdData,
   GetRepositoryByIdResponse,
   GetAllPullRequestsData,
@@ -191,6 +193,13 @@ export const getGroupsWithWorkflows = <ThrowOnError extends boolean = false>(opt
   return (options?.client ?? client).get<GetGroupsWithWorkflowsResponse, unknown, ThrowOnError>({
     ...options,
     url: '/api/settings/{repositoryId}/groups',
+  });
+};
+
+export const getAllRepositories = <ThrowOnError extends boolean = false>(options?: Options<GetAllRepositoriesData, ThrowOnError>) => {
+  return (options?.client ?? client).get<GetAllRepositoriesResponse, unknown, ThrowOnError>({
+    ...options,
+    url: '/api/repository',
   });
 };
 

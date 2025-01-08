@@ -22,10 +22,12 @@ export class AppComponent {
       baseUrl: environment.serverUrl,
     });
 
-    client.interceptors.request.use(request => {
-      request.headers.set('Authorization', `Bearer ${token}`);
-      return request;
-    });
+    if (token) {
+      client.interceptors.request.use(request => {
+        request.headers.set('Authorization', `Bearer ${token}`);
+        return request;
+      });
+    }
 
     client.interceptors.response.use(async response => {
       if (response.ok == false) {

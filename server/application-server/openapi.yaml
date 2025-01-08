@@ -321,6 +321,20 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/WorkflowGroupDto"
+  /api/repository:
+    get:
+      tags:
+      - repository-controller
+      operationId: getAllRepositories
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RepositoryInfoDto"
   /api/repository/{id}:
     get:
       tags:
