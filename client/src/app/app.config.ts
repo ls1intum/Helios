@@ -13,7 +13,7 @@ import { provideAnimations } from '@angular/platform-browser/animations';
 import { KeycloakService } from './core/services/keycloak/keycloak.service';
 import { BearerInterceptor } from './core/services/keycloak/bearer-interceptor';
 import { DatePipe } from '@angular/common';
-import { HeaderGuard } from './core/middlewares/header.service';
+import { RepositoryFilterGuard } from './core/middlewares/repository-filter.guard';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -60,7 +60,7 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes, withComponentInputBinding(), withRouterConfig({ paramsInheritanceStrategy: 'always' })),
     provideAnimationsAsync(),
     provideTanStackQuery(new QueryClient()),
-    HeaderGuard,
+    RepositoryFilterGuard,
     MessageService,
     ConfirmationService,
     provideHttpClient(withInterceptorsFromDi()),
