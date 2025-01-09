@@ -20,7 +20,7 @@
       </div>
       <span class="flex-grow"></span>
       @if (lockQuery.data()?.lockedAt) {
-        <p class="text-sm text-gray-500 flex items-center gap-1 mb-5">
+        <p class="text-sm text-gray-500 flex items-center gap-1 mb-5 w-20">
           <i-tabler name="lock"></i-tabler>
           {{ timeSinceLocked(lockQuery.data()?.lockedAt) }}
         </p>
