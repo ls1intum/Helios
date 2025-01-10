@@ -12,7 +12,7 @@
     <div class="flex gap-2 items-center text-sm">
       <div class="flex gap-1 items-center">
         @if (commit.author?.avatarUrl) {
-          <p-avatar class="w-6 h-6" shape="circle" [image]="commit.author?.avatarUrl" [styleClass]="keycloakService.isCurrentUser(commit.author?.login) ? '' : ''" />
+          <p-avatar class="w-6 h-6" shape="circle" [image]="commit.author?.avatarUrl" />
         } @else {
           <i-tabler name="user" class="w-6 h-6 text-gray-600" />
         }

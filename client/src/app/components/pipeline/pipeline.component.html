@@ -66,7 +66,11 @@
         </ng-container>
       }
     } @empty {
-      <div>There are no pipeline groups yet. Create one in the repository settings.</div>
+      <div class="flex flex-col justify-center items-center p-4">
+        <i-tabler name="exclamation-circle" class="!size-20 text-primary" />
+        <div class="font-semibold text-lg">There are no pipeline groups yet.</div>
+        <div class="text-sm">Create one in the repository settings.</div>
+      </div>
     }
   </div>
 }
