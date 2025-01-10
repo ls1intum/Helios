@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { computed, Injectable } from '@angular/core';
 import Keycloak from 'keycloak-js';
 import { UserProfile } from './user-profile';
 import { environment } from 'environments/environment';
@@ -19,6 +19,19 @@ export class KeycloakService {
 
   get profile(): UserProfile | undefined {
     return this._profile;
+  }
+
+  decodedToken = computed(() => {
+    const token = this.keycloak.token;
+    if (!token) {
+      return null;
+    }
+    const [, payload] = token.split('.');
+    return JSON.parse(atob(payload));
+  });
+
+  isCurrentUser(login?: string) {
+    return this.decodedToken()?.preferred_username.toLowerCase() === login?.toLowerCase();
   }
 
   async init() {

@@ -30,12 +30,19 @@
                   <i-tabler name="chevron-right"></i-tabler>
                 </div>
               </div>
+            } @empty {
+              <div class="flex flex-col justify-center items-center p-4">
+                <i-tabler name="exclamation-circle" class="!size-20 text-primary" />
+                <div class="font-semibold text-lg">There are currently no repositories connected to Helios.</div>
+                <div class="text-sm">Please contact an administrator to connect your repository.</div>
+              </div>
             }
           </div>
         </div>
         <app-connect-repo></app-connect-repo>
       </div>
     </div>
+
     <p-toast></p-toast>
   </div>
 </main>

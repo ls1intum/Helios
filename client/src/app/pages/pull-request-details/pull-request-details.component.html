@@ -1,9 +1,9 @@
-<div>
+<div class="my-3">
   @if (query.data(); as pr) {
-    <div class="flex flex-col items-start mb-3">
+    <div class="flex flex-col items-start">
       <span class="text-gray-500 text-sm uppercase font-semibold tracking-wider mb-1">Pull Request #{{ pr.number }}</span>
       <div class="flex items-center gap-4">
-        <h2 class="text-3xl" [innerHTML]="pr.title | markdown"></h2>
+        <h2 class="text-2xl" [innerHTML]="pr.title | markdown"></h2>
         <div class="flex items-center gap-2">
           <p-tag [severity]="pr.state === 'OPEN' ? 'success' : 'danger'">
             {{ pr.state }}
@@ -18,7 +18,7 @@
       </div>
     </div>
   } @else {
-    <div class="flex flex-col items-start mb-3 gap-2">
+    <div class="flex flex-col items-start gap-2">
       <p-skeleton width="10rem" />
       <div class="flex items-center gap-4">
         <p-skeleton width="8rem" height="2rem" />
