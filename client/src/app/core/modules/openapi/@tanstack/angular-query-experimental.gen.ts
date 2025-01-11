@@ -42,7 +42,6 @@ import type {
 import {
   updateWorkflowLabel,
   updateWorkflowGroups,
-  client,
   getEnvironmentById,
   updateEnvironment,
   unlockEnvironment,
@@ -73,6 +72,7 @@ import {
   getAllBranches,
   getBranchByRepositoryIdAndName,
   deleteWorkflowGroup,
+  client,
 } from '../sdk.gen';
 
 export const updateWorkflowLabelMutation = (options?: Partial<Options<UpdateWorkflowLabelData>>) => {
