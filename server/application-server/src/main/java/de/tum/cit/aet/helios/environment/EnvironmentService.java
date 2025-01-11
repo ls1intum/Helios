@@ -71,7 +71,7 @@ public class EnvironmentService {
    *
    * @param id the ID of the environment to lock
    * @return an Optional containing the locked environment if successful, or an empty Optional if
-   * the environment is already locked or if an optimistic locking failure occurs
+   *     the environment is already locked or if an optimistic locking failure occurs
    * @throws EntityNotFoundException if no environment is found with the specified ID
    */
   @Transactional
