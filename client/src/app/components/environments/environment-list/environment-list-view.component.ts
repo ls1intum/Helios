@@ -11,10 +11,11 @@ import { DeploymentStateTagComponent } from '../deployment-state-tag/deployment-
 import { InputTextModule } from 'primeng/inputtext';
 import { EnvironmentDeploymentInfoComponent } from '../deployment-info/environment-deployment-info.component';
 import {
-  getAllEnabledEnvironmentsOptions, getAllEnabledEnvironmentsQueryKey,
+  getAllEnabledEnvironmentsOptions,
+  getAllEnabledEnvironmentsQueryKey,
   getAllEnvironmentsOptions,
   getAllEnvironmentsQueryKey,
-  unlockEnvironmentMutation
+  unlockEnvironmentMutation,
 } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { EnvironmentDto } from '@app/core/modules/openapi';
 import { LockTimeComponent } from '../lock-time/lock-time.component';
@@ -48,17 +49,12 @@ export class EnvironmentListViewComponent {
 
   searchInput = signal<string>('');
 
-
   // Dynamically determine the query function & query key
   // If the component is editable and logged in (assuming manager), we want to show all environments; otherwise only enabled environments
   // In PR/Branch View, editable is false, so we only show enabled environments
   // TODO: We need to also check if the user has the correct permissions to view all the environments
-  queryFunction = computed(() =>
-    this.isLoggedIn() && this.editable() ? getAllEnvironmentsOptions() : getAllEnabledEnvironmentsOptions()
-  );
-  queryKey = computed(() =>
-    this.isLoggedIn() && this.editable() ? getAllEnvironmentsQueryKey() : getAllEnabledEnvironmentsQueryKey()
-  );
+  queryFunction = computed(() => (this.isLoggedIn() && this.editable() ? getAllEnvironmentsOptions() : getAllEnabledEnvironmentsOptions()));
+  queryKey = computed(() => (this.isLoggedIn() && this.editable() ? getAllEnvironmentsQueryKey() : getAllEnabledEnvironmentsQueryKey()));
 
   environmentQuery = injectQuery(() => this.queryFunction());
 
