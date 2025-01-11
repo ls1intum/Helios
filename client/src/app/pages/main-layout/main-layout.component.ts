@@ -96,7 +96,6 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   });
 
   ngOnInit() {
-    this.permissionService.refetchPermissions();
     this.intervalId = setInterval(() => {
       this.timeNow.set(new Date());
     }, 1000);
