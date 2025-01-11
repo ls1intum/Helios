@@ -28,6 +28,12 @@ public class EnvironmentController {
     return ResponseEntity.ok(environments);
   }
 
+  @GetMapping("/enabled")
+  public ResponseEntity<List<EnvironmentDto>> getAllEnabledEnvironments() {
+    List<EnvironmentDto> environments = environmentService.getAllEnabledEnvironments();
+    return ResponseEntity.ok(environments);
+  }
+
   @GetMapping("/{id}")
   public ResponseEntity<EnvironmentDto> getEnvironmentById(@PathVariable Long id) {
     Optional<EnvironmentDto> environment = environmentService.getEnvironmentById(id);

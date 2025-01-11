@@ -43,6 +43,16 @@ public class EnvironmentService {
         .collect(Collectors.toList());
   }
 
+  public List<EnvironmentDto> getAllEnabledEnvironments() {
+    return environmentRepository.findByEnabledTrue().stream()
+        .map(
+            environment -> {
+              return EnvironmentDto.fromEnvironment(
+                  environment, environment.getDeployments().reversed().stream().findFirst());
+            })
+        .collect(Collectors.toList());
+  }
+
   public List<EnvironmentDto> getEnvironmentsByRepositoryId(Long repositoryId) {
     return environmentRepository.findByRepositoryRepositoryIdOrderByCreatedAtDesc(repositoryId)
         .stream()
@@ -61,7 +71,7 @@ public class EnvironmentService {
    *
    * @param id the ID of the environment to lock
    * @return an Optional containing the locked environment if successful, or an empty Optional if
-   *     the environment is already locked or if an optimistic locking failure occurs
+   * the environment is already locked or if an optimistic locking failure occurs
    * @throws EntityNotFoundException if no environment is found with the specified ID
    */
   @Transactional
@@ -165,6 +175,7 @@ public class EnvironmentService {
               if (environmentDto.serverUrl() != null) {
                 environment.setServerUrl(environmentDto.serverUrl());
               }
+              environment.setEnabled(environmentDto.enabled());
 
               environmentRepository.save(environment);
               return EnvironmentDto.fromEnvironment(environment);
