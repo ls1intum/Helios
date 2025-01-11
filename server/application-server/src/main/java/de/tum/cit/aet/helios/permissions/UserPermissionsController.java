@@ -4,6 +4,7 @@ import de.tum.cit.aet.helios.github.GitHubService;
 import de.tum.cit.aet.helios.github.permissions.GitHubRepositoryRoleDto;
 import de.tum.cit.aet.helios.github.permissions.PermissionException;
 import de.tum.cit.aet.helios.github.permissions.RepoPermissionType;
+import java.io.IOException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,8 +25,8 @@ public class UserPermissionsController {
     try {
       GitHubRepositoryRoleDto permissions = gitHubService.getRepositoryRole();
       return ResponseEntity.ok(permissions);
-    } catch (PermissionException e) {
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+    } catch (PermissionException | IOException e) {
+      return ResponseEntity.status(HttpStatus.NOT_FOUND)
           .body(new GitHubRepositoryRoleDto(RepoPermissionType.fromString("none"), "none"));
     }
   }

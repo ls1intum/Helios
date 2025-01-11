@@ -217,14 +217,14 @@ public class GitHubService {
         repository, environmentName, okHttpClient, requestBuilder, objectMapper);
   }
 
-  public GitHubRepositoryRoleDto getRepositoryRole() throws PermissionException {
+  public GitHubRepositoryRoleDto getRepositoryRole() throws PermissionException, IOException {
     GHRepository repository = null;
     try {
       Long repositoryId = RepositoryContext.getRepositoryId();
       repository = github.getRepositoryById(repositoryId);
     } catch (IOException e) {
       log.error("Error occurred while fetching repository: {}", e.getMessage());
-      throw new PermissionException(e.getMessage());
+      throw e;
     }
 
     String username = this.authService.getPreferredUsername();
