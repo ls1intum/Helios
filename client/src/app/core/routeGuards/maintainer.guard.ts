@@ -6,7 +6,7 @@ export const maintainerGuard: CanActivateFn = () => {
   const router = inject(Router);
   const permissionService = inject(PermissionService);
 
-  const hasAccess = permissionService.isAdminOrMaintainer();
+  const hasAccess = permissionService.isAtLeastMaintainer();
 
   if (!hasAccess) {
     router.navigate(['/repo']);

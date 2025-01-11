@@ -7,7 +7,7 @@
 
 <app-environment-list-view
   [deployable]="true"
-  [hasUnlockPermissions]="permissionService.hasUnlockPermission()"
-  [hasDeployPermissions]="permissionService.hasDeployPermission()"
+  [hasUnlockPermissions]="permissionService.isAtLeastMaintainer()"
+  [hasDeployPermissions]="permissionService.hasWritePermission()"
   (deploy)="handleDeploy($event)"
 />

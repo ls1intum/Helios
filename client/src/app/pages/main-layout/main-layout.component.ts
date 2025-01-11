@@ -82,7 +82,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
         icon: 'server-cog',
         path: 'environment/list',
       },
-      ...(this.keycloakService.profile && this.permissionService.isAdminOrMaintainer()
+      ...(this.keycloakService.profile && this.permissionService.isAtLeastMaintainer()
         ? [
             {
               label: 'Project Settings',
