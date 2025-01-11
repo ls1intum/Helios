@@ -31,6 +31,7 @@ import type {
   GetAllEnvironmentsData,
   GetEnvironmentsByUserLockingData,
   GetEnvironmentsByRepositoryIdData,
+  GetAllEnabledEnvironmentsData,
   GetAllDeploymentsData,
   GetDeploymentByIdData,
   GetDeploymentsByEnvironmentIdData,
@@ -65,6 +66,7 @@ import {
   getAllEnvironments,
   getEnvironmentsByUserLocking,
   getEnvironmentsByRepositoryId,
+  getAllEnabledEnvironments,
   getAllDeployments,
   getDeploymentById,
   getDeploymentsByEnvironmentId,
@@ -530,6 +532,23 @@ export const getEnvironmentsByRepositoryIdOptions = (options: Options<GetEnviron
       return data;
     },
     queryKey: getEnvironmentsByRepositoryIdQueryKey(options),
+  });
+};
+
+export const getAllEnabledEnvironmentsQueryKey = (options?: Options<GetAllEnabledEnvironmentsData>) => [createQueryKey('getAllEnabledEnvironments', options)];
+
+export const getAllEnabledEnvironmentsOptions = (options?: Options<GetAllEnabledEnvironmentsData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getAllEnabledEnvironments({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: getAllEnabledEnvironmentsQueryKey(options),
   });
 };
 

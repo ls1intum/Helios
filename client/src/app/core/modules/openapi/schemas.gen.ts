@@ -108,6 +108,9 @@ export const EnvironmentDtoSchema = {
       type: 'string',
       format: 'date-time',
     },
+    enabled: {
+      type: 'boolean',
+    },
     installedApps: {
       type: 'array',
       items: {
