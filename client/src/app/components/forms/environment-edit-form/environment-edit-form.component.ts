@@ -13,10 +13,11 @@ import {
   updateEnvironmentMutation,
 } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { MessageService } from 'primeng/api';
+import { Checkbox } from 'primeng/checkbox';
 
 @Component({
   selector: 'app-environment-edit-form',
-  imports: [AutoCompleteModule, ReactiveFormsModule, InputTextModule, InputSwitchModule, ButtonModule],
+  imports: [AutoCompleteModule, ReactiveFormsModule, InputTextModule, InputSwitchModule, ButtonModule, Checkbox],
   templateUrl: './environment-edit-form.component.html',
 })
 export class EnvironmentEditFormComponent implements OnInit {
@@ -46,6 +47,7 @@ export class EnvironmentEditFormComponent implements OnInit {
       serverUrl: '',
       description: '',
       installedApps: [] as string[],
+      enabled: false,
     },
   }));
 
@@ -67,6 +69,7 @@ export class EnvironmentEditFormComponent implements OnInit {
       installedApps: [this.environment()?.installedApps || []],
       description: [this.environment()?.description || ''],
       serverUrl: [this.environment()?.serverUrl || ''],
+      enabled: [this.environment()?.enabled || false],
     });
   }
 
