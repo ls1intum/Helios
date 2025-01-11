@@ -22,6 +22,7 @@ import type {
   GetLatestWorkflowRunsByPullRequestIdAndHeadCommitData,
   GetLatestWorkflowRunsByBranchAndHeadCommitData,
   GetGroupsWithWorkflowsData,
+  GetAllRepositoriesData,
   GetRepositoryByIdData,
   GetAllPullRequestsData,
   GetPullRequestByIdData,
@@ -42,7 +43,6 @@ import type {
 import {
   updateWorkflowLabel,
   updateWorkflowGroups,
-  client,
   getEnvironmentById,
   updateEnvironment,
   unlockEnvironment,
@@ -56,6 +56,7 @@ import {
   getLatestWorkflowRunsByPullRequestIdAndHeadCommit,
   getLatestWorkflowRunsByBranchAndHeadCommit,
   getGroupsWithWorkflows,
+  getAllRepositories,
   getRepositoryById,
   getAllPullRequests,
   getPullRequestById,
@@ -72,6 +73,7 @@ import {
   getAllBranches,
   getBranchByRepositoryIdAndName,
   deleteWorkflowGroup,
+  client,
 } from '../sdk.gen';
 
 export const updateWorkflowLabelMutation = (options?: Partial<Options<UpdateWorkflowLabelData>>) => {
@@ -373,6 +375,23 @@ export const getGroupsWithWorkflowsOptions = (options: Options<GetGroupsWithWork
       return data;
     },
     queryKey: getGroupsWithWorkflowsQueryKey(options),
+  });
+};
+
+export const getAllRepositoriesQueryKey = (options?: Options<GetAllRepositoriesData>) => [createQueryKey('getAllRepositories', options)];
+
+export const getAllRepositoriesOptions = (options?: Options<GetAllRepositoriesData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getAllRepositories({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: getAllRepositoriesQueryKey(options),
   });
 };
 

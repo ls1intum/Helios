@@ -1,5 +1,6 @@
 package de.tum.cit.aet.helios.gitrepo;
 
+import java.util.List;
 import java.util.Optional;
 import org.springframework.stereotype.Service;
 
@@ -12,7 +13,12 @@ public class RepositoryService {
     this.repositoryRepository = repositoryRepository;
   }
 
+  public List<RepositoryInfoDto> getAllRepositories() {
+    return repositoryRepository.findAll().stream().map(RepositoryInfoDto::fromRepository).toList();
+  }
+
   public Optional<RepositoryInfoDto> getRepositoryById(Long id) {
-    return repositoryRepository.findById(id).map(RepositoryInfoDto::fromRepository);
+    return repositoryRepository.findByRepositoryId(id)
+        .map(RepositoryInfoDto::fromRepository);
   }
 }

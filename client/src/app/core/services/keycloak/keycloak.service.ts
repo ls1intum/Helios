@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { computed, Injectable } from '@angular/core';
 import Keycloak from 'keycloak-js';
 import { UserProfile } from './user-profile';
 import { environment } from 'environments/environment';
@@ -21,15 +21,40 @@ export class KeycloakService {
     return this._profile;
   }
 
+  decodedToken = computed(() => {
+    const token = this.keycloak.token;
+    if (!token) {
+      return null;
+    }
+    const [, payload] = token.split('.');
+    return JSON.parse(atob(payload));
+  });
+
+  isCurrentUser(login?: string) {
+    return this.decodedToken()?.preferred_username.toLowerCase() === login?.toLowerCase();
+  }
+
   async init() {
     const authenticated = await this.keycloak.init({
-      onLoad: 'login-required',
+      onLoad: 'check-sso',
     });
 
-    if (authenticated) {
-      this._profile = (await this.keycloak.loadUserProfile()) as UserProfile;
-      this._profile.token = this.keycloak.token || '';
+    if (!authenticated) {
+      return;
     }
+
+    // Regulary check if the token needs to be refreshed and refresh it if necessary
+    setInterval(() => {
+      // Update the token when will last less than 5 minutes
+      this.keycloak.updateToken(300);
+    }, 60000);
+
+    this._profile = (await this.keycloak.loadUserProfile()) as UserProfile;
+    this._profile.token = this.keycloak.token || '';
+  }
+
+  isLoggedIn() {
+    return this.keycloak.authenticated;
   }
 
   login() {
@@ -37,7 +62,6 @@ export class KeycloakService {
   }
 
   logout() {
-    // this.keycloak.accountManagement();
-    return this.keycloak.logout({ redirectUri: environment.clientUrl });
+    return this.keycloak.logout({ redirectUri: window.location.href });
   }
 }

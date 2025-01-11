@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, input, numberAttribute, signal, OnDestroy } from '@angular/core';
+import { Component, OnInit, computed, inject, input, numberAttribute, signal, OnDestroy } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { IconsModule } from 'icons.module';
 import { ButtonModule } from 'primeng/button';
@@ -12,6 +12,7 @@ import { CardModule } from 'primeng/card';
 import { injectQuery } from '@tanstack/angular-query-experimental';
 import { getEnvironmentsByUserLockingOptions, getRepositoryByIdOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { SlicePipe } from '@angular/common';
+import { ProfileNavSectionComponent } from '@app/components/profile-nav-section/profile-nav-section.component';
 
 @Component({
   selector: 'app-main-layout',
@@ -29,11 +30,14 @@ import { SlicePipe } from '@angular/common';
     DividerModule,
     AvatarModule,
     CardModule,
+    ProfileNavSectionComponent,
   ],
   templateUrl: './main-layout.component.html',
 })
 export class MainLayoutComponent implements OnInit, OnDestroy {
   private keycloakService = inject(KeycloakService);
+
+  username = computed(() => (this.keycloakService.decodedToken()?.preferred_username || '') as string);
 
   repositoryId = input.required({ transform: numberAttribute });
 
@@ -45,6 +49,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   lockQuery = injectQuery(() => ({
     ...getEnvironmentsByUserLockingOptions(),
     refetchInterval: 10000,
+    enabled: () => !!this.keycloakService.isLoggedIn(),
   }));
 
   items!: { label: string; icon: string; path: string }[];
@@ -54,6 +59,10 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
 
   logout() {
     this.keycloakService.logout();
+  }
+
+  login() {
+    this.keycloakService.login();
   }
 
   ngOnInit() {
@@ -73,11 +82,15 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
         icon: 'server-cog',
         path: 'environment/list',
       },
-      {
-        label: 'Project Settings',
-        icon: 'adjustments-alt',
-        path: 'settings',
-      },
+      ...(this.keycloakService.profile
+        ? [
+            {
+              label: 'Project Settings',
+              icon: 'adjustments-alt',
+              path: 'settings',
+            },
+          ]
+        : []),
     ];
 
     this.intervalId = setInterval(() => {

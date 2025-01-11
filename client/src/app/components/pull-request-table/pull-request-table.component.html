@@ -63,7 +63,7 @@
             }
           </div>
           <div class="flex mt-2.5 gap-2 items-center text-xs">
-            <p-avatar [image]="pr.author?.avatarUrl" shape="circle" class="h-5 w-5" />
+            <p-avatar [image]="pr.author?.avatarUrl" shape="circle" class="h-5 w-5" [styleClass]="getAvatarBorderClass(pr.author?.login)" />
             <span>{{ pr.author?.name }} opened #{{ pr.number }} {{ pr.createdAt | timeAgo }}</span>
             <i-tabler name="point" class="!h-3 !w-3" />
             <span>updated {{ pr.updatedAt | timeAgo }}</span>
@@ -75,7 +75,13 @@
             <div class="flex align-items-center gap-2">
               <p-avatarGroup>
                 @for (assignee of pr.assignees; track assignee) {
-                  <p-avatar [image]="assignee.avatarUrl" [pTooltip]="assignee.name" shape="circle" size="normal"></p-avatar>
+                  <p-avatar
+                    [image]="assignee.avatarUrl"
+                    [pTooltip]="keycloak.isCurrentUser(assignee.login) ? 'You' : assignee.name"
+                    shape="circle"
+                    size="normal"
+                    [styleClass]="getAvatarBorderClass(assignee.login)"
+                  ></p-avatar>
                 }
               </p-avatarGroup>
             </div>
@@ -86,7 +92,13 @@
             <div class="flex align-items-center gap-2">
               <p-avatarGroup>
                 @for (reviewer of pr.reviewers; track reviewer.id) {
-                  <p-avatar [image]="reviewer.avatarUrl" [pTooltip]="reviewer.name" shape="circle" size="normal"></p-avatar>
+                  <p-avatar
+                    [image]="reviewer.avatarUrl"
+                    [pTooltip]="keycloak.isCurrentUser(reviewer.login) ? 'You' : reviewer.name"
+                    shape="circle"
+                    size="normal"
+                    [styleClass]="getAvatarBorderClass(reviewer.login)"
+                  ></p-avatar>
                 }
               </p-avatarGroup>
             </div>

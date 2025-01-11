@@ -1,11 +1,5 @@
 @if (query.isPending() || query.isError()) {
   <p-table [value]="[1, 2, 3, 4, 5]" styleClass="p-datatable-lg">
-    <ng-template pTemplate="caption">
-      <div class="flex items-center gap-2">
-        <i-tabler name="git-branch" class="!h-8 !w-8 text-primary-800" />
-        <span class="font-semibold text-xl">Branches</span>
-      </div>
-    </ng-template>
     <ng-template pTemplate="header">
       <tr>
         <th>
@@ -33,12 +27,6 @@
 } @else {
   <!-- Branches Tree Table -->
   <p-treetable #table [value]="featureBranchesTree()" [globalFilterFields]="globalFilterFields" [scrollable]="true" styleClass="p-treetable-sm">
-    <ng-template pTemplate="caption">
-      <div class="flex items-center gap-2">
-        <i-tabler name="git-branch" class="!h-8 !w-8 text-primary-800" />
-        <span class="font-semibold text-xl">Branches</span>
-      </div>
-    </ng-template>
     <ng-template pTemplate="header">
       <tr>
         <th>

@@ -9,15 +9,16 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface PullRequestRepository extends JpaRepository<PullRequest, Long> {
 
-  Optional<PullRequest> findByRepositoryIdAndHeadRefNameOrHeadSha(Long id, String ref, String sha);
+  Optional<PullRequest> findByRepositoryRepositoryIdAndHeadRefNameOrHeadSha(Long id, String ref,
+                                                                            String sha);
 
-  Optional<PullRequest> findByRepositoryIdAndHeadRefName(Long id, String ref);
+  Optional<PullRequest> findByRepositoryRepositoryIdAndHeadRefName(Long id, String ref);
 
-  Optional<PullRequest> findByRepositoryIdAndHeadRefNameAndState(Long repositoryId,
-                                                                 String headRefName,
-                                                                 Issue.State state);
+  Optional<PullRequest> findByRepositoryRepositoryIdAndHeadRefNameAndState(Long repositoryId,
+                                                                           String headRefName,
+                                                                           Issue.State state);
 
-  List<PullRequest> findByRepositoryId(Long repositoryId);
+  List<PullRequest> findByRepositoryRepositoryId(Long repositoryId);
 
-  Optional<PullRequest> findByRepositoryIdAndNumber(Long repositoryId, Integer number);
+  Optional<PullRequest> findByRepositoryRepositoryIdAndNumber(Long repositoryId, Integer number);
 }

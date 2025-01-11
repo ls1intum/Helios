@@ -125,8 +125,8 @@ public class DeploymentService {
 
     // Check if a OPEN PR exists for the branch
     final Optional<PullRequest> optionalPr = pullRequestRepository
-        .findByRepositoryIdAndHeadRefNameAndState(
-            environment.getRepository().getId(),
+        .findByRepositoryRepositoryIdAndHeadRefNameAndState(
+            environment.getRepository().getRepositoryId(),
             deployRequest.branchName(),
             PullRequest.State.OPEN);
 
