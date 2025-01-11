@@ -9,7 +9,6 @@ import type {
   UpdateEnvironmentData,
   UpdateEnvironmentResponse,
   UnlockEnvironmentData,
-  UnlockEnvironmentResponse,
   CreateWorkflowGroupData,
   CreateWorkflowGroupResponse,
   DeployToEnvironmentData,
@@ -43,6 +42,7 @@ import type {
 import {
   updateWorkflowLabel,
   updateWorkflowGroups,
+  client,
   getEnvironmentById,
   updateEnvironment,
   unlockEnvironment,
@@ -73,7 +73,6 @@ import {
   getAllBranches,
   getBranchByRepositoryIdAndName,
   deleteWorkflowGroup,
-  client,
 } from '../sdk.gen';
 
 export const updateWorkflowLabelMutation = (options?: Partial<Options<UpdateWorkflowLabelData>>) => {
@@ -163,7 +162,7 @@ export const updateEnvironmentMutation = (options?: Partial<Options<UpdateEnviro
 };
 
 export const unlockEnvironmentMutation = (options?: Partial<Options<UnlockEnvironmentData>>) => {
-  const mutationOptions: MutationOptions<UnlockEnvironmentResponse, DefaultError, Options<UnlockEnvironmentData>> = {
+  const mutationOptions: MutationOptions<unknown, DefaultError, Options<UnlockEnvironmentData>> = {
     mutationFn: async localOptions => {
       const { data } = await unlockEnvironment({
         ...options,
