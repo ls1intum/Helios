@@ -15,7 +15,7 @@ public interface WorkflowGroupRepository extends JpaRepository<WorkflowGroup, Lo
   @Query(
       "SELECT wg "
           + "FROM WorkflowGroup wg "
-          + "WHERE wg.gitRepoSettings.repository.id = :repositoryId "
+          + "WHERE wg.gitRepoSettings.repository.repositoryId = :repositoryId "
           + "ORDER BY wg.orderIndex ASC")
   List<WorkflowGroup> findAllByRepositoryId(@Param("repositoryId") Long repositoryId);
 

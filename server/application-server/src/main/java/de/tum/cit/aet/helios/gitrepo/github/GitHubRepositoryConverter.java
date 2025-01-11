@@ -1,26 +1,36 @@
 package de.tum.cit.aet.helios.gitrepo.github;
 
-import de.tum.cit.aet.helios.github.BaseGitServiceEntityConverter;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import de.tum.cit.aet.helios.util.DateUtil;
+import java.io.IOException;
 import lombok.extern.log4j.Log4j2;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GHRepository.Visibility;
+import org.springframework.core.convert.converter.Converter;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 
 @Component
 @Log4j2
 public class GitHubRepositoryConverter
-    extends BaseGitServiceEntityConverter<GHRepository, GitRepository> {
+    implements Converter<GHRepository, GitRepository> {
   @Override
   public GitRepository convert(@NonNull GHRepository source) {
     return update(source, new GitRepository());
   }
 
-  @Override
   public GitRepository update(@NonNull GHRepository source, @NonNull GitRepository repository) {
-    convertBaseFields(source, repository);
+    repository.setRepositoryId(source.getId());
+    try {
+      repository.setCreatedAt(DateUtil.convertToOffsetDateTime(source.getCreatedAt()));
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+    try {
+      repository.setUpdatedAt(DateUtil.convertToOffsetDateTime(source.getUpdatedAt()));
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
     repository.setName(source.getName());
     repository.setNameWithOwner(source.getFullName());
     repository.setPrivate(source.isPrivate());

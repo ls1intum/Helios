@@ -9,11 +9,11 @@ import org.springframework.stereotype.Repository;
 public interface BranchRepository extends JpaRepository<Branch, Long> {
   Optional<Branch> findByName(String name);
 
-  Optional<Branch> findByNameAndRepositoryId(String name, Long repositoryId);
+  Optional<Branch> findByNameAndRepositoryRepositoryId(String name, Long repositoryId);
 
-  void deleteByNameAndRepositoryId(String name, Long repositoryId);
+  void deleteByNameAndRepositoryRepositoryId(String name, Long repositoryId);
 
-  List<Branch> findByRepositoryId(Long repositoryId);
+  List<Branch> findByRepositoryRepositoryId(Long repositoryId);
 
-  Optional<Branch> findByRepositoryIdAndName(Long repositoryId, String name);
+  Optional<Branch> findByRepositoryRepositoryIdAndName(Long repositoryId, String name);
 }

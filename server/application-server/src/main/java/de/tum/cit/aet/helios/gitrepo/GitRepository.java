@@ -1,11 +1,12 @@
 package de.tum.cit.aet.helios.gitrepo;
 
-import de.tum.cit.aet.helios.github.BaseGitServiceEntity;
 import de.tum.cit.aet.helios.label.Label;
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.time.OffsetDateTime;
@@ -15,6 +16,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.hibernate.annotations.Filter;
 import org.springframework.lang.NonNull;
 
 @Entity
@@ -23,7 +25,16 @@ import org.springframework.lang.NonNull;
 @Setter
 @NoArgsConstructor
 @ToString(callSuper = true)
-public class GitRepository extends BaseGitServiceEntity {
+@Filter(name = "gitRepositoryFilter")
+public class GitRepository {
+
+  @Id
+  @Column(name = "repository_id")
+  protected Long repositoryId;
+
+  protected OffsetDateTime createdAt;
+
+  protected OffsetDateTime updatedAt;
 
   @NonNull
   private String name;

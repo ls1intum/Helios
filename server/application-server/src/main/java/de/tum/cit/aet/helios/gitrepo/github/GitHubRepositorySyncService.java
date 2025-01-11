@@ -99,7 +99,7 @@ public class GitHubRepositorySyncService {
   public GitRepository processRepository(GHRepository ghRepository) {
     var result =
         gitRepoRepository
-            .findById(ghRepository.getId())
+            .findByRepositoryId(ghRepository.getId())
             .map(
                 repository -> {
                   try {

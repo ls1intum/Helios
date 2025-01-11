@@ -44,7 +44,8 @@ public class EnvironmentService {
   }
 
   public List<EnvironmentDto> getEnvironmentsByRepositoryId(Long repositoryId) {
-    return environmentRepository.findByRepositoryIdOrderByCreatedAtDesc(repositoryId).stream()
+    return environmentRepository.findByRepositoryRepositoryIdOrderByCreatedAtDesc(repositoryId)
+        .stream()
         .map(EnvironmentDto::fromEnvironment)
         .collect(Collectors.toList());
   }

@@ -1,4 +1,4 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
 
 import { PipelineComponent, PipelineSelector } from '@app/components/pipeline/pipeline.component';
 import { TagModule } from 'primeng/tag';
@@ -9,6 +9,7 @@ import { DeploymentSelectionComponent } from '@app/components/deployment-selecti
 import { injectQuery } from '@tanstack/angular-query-experimental';
 import { SkeletonModule } from 'primeng/skeleton';
 import { getBranchByRepositoryIdAndNameOptions, getCommitByRepositoryIdAndNameOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
+import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 
 @Component({
   selector: 'app-branch-details',
@@ -16,6 +17,8 @@ import { getBranchByRepositoryIdAndNameOptions, getCommitByRepositoryIdAndNameOp
   templateUrl: './branch-details.component.html',
 })
 export class BranchDetailsComponent {
+  private keycloakService = inject(KeycloakService);
+
   repositoryId = input.required<number>();
   branchName = input.required<string>();
 
@@ -29,6 +32,8 @@ export class BranchDetailsComponent {
     enabled: !!this.repositoryId() && !!this.query.data(),
   }));
   commit = computed(() => this.commitQuery.data());
+
+  isLoggedIn = computed(() => this.keycloakService.isLoggedIn());
 
   pipelineSelector = computed<PipelineSelector | null>(() => {
     const branch = this.query.data();
