@@ -9,7 +9,6 @@ import type {
   UpdateEnvironmentData,
   UpdateEnvironmentResponse,
   UnlockEnvironmentData,
-  UnlockEnvironmentResponse,
   CreateWorkflowGroupData,
   CreateWorkflowGroupResponse,
   DeployToEnvironmentData,
@@ -108,7 +107,7 @@ export const updateEnvironment = <ThrowOnError extends boolean = false>(options:
 };
 
 export const unlockEnvironment = <ThrowOnError extends boolean = false>(options: Options<UnlockEnvironmentData, ThrowOnError>) => {
-  return (options?.client ?? client).put<UnlockEnvironmentResponse, unknown, ThrowOnError>({
+  return (options?.client ?? client).put<unknown, unknown, ThrowOnError>({
     ...options,
     url: '/api/environments/{id}/unlock',
   });

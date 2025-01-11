@@ -107,6 +107,9 @@ export type LabelInfoDto = {
    * The color of the label as a 6-character hex code (without #)
    */
   color: string;
+  /**
+   * The repository associated with this label
+   */
   repository?: RepositoryInfoDto;
 };
 
@@ -282,12 +285,8 @@ export type UnlockEnvironmentResponses = {
   /**
    * OK
    */
-  200: {
-    [key: string]: unknown;
-  };
+  200: unknown;
 };
-
-export type UnlockEnvironmentResponse = UnlockEnvironmentResponses[keyof UnlockEnvironmentResponses];
 
 export type CreateWorkflowGroupData = {
   body: WorkflowGroupDto;
