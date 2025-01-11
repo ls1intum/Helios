@@ -6,6 +6,7 @@ import { RepositoryInfoDto } from '../modules/openapi';
   providedIn: 'root',
 })
 export class RepositoryService {
+  currentRepositoryId = signal<number | null>(null);
   private _repositories = signal<RepositoryInfoDto[]>([]);
   public repositories = this._repositories.asReadonly();
 

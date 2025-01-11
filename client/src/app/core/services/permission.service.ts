@@ -1,13 +1,19 @@
-import { Injectable, computed } from '@angular/core';
+import { Injectable, computed, inject } from '@angular/core';
 import { injectQuery } from '@tanstack/angular-query-experimental';
 import { getUserPermissionsOptions } from '../modules/openapi/@tanstack/angular-query-experimental.gen';
+import { KeycloakService } from './keycloak/keycloak.service';
+import { RepositoryService } from './repository.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class PermissionService {
+  keycloak = inject(KeycloakService);
+  repositoryService = inject(RepositoryService);
+
   permissionsQuery = injectQuery(() => ({
     ...getUserPermissionsOptions(),
+    enabled: () => !!this.repositoryService.currentRepositoryId() && !!this.keycloak.isLoggedIn(),
   }));
 
   hasWritePermission = computed(() => this.permissionsQuery.data()?.permission === 'WRITE' || this.permissionsQuery.data()?.permission === 'ADMIN');
