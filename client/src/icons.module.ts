@@ -43,6 +43,8 @@ import {
   IconList,
   IconBinaryTree,
   IconShieldHalf,
+  IconLogin,
+  IconExclamationCircle,
 } from 'angular-tabler-icons/icons';
 
 // Select some icons (use an object, not an array)
@@ -88,6 +90,8 @@ const icons = {
   IconFilterPlus,
   IconLock,
   IconShieldHalf,
+  IconLogin,
+  IconExclamationCircle,
 };
 
 @NgModule({

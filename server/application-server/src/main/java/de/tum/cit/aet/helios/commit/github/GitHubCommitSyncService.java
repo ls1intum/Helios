@@ -68,7 +68,7 @@ public class GitHubCommitSyncService {
   public List<GHCommit> syncCommitsOfRepository(GHRepository repository) {
     List<GHCommit> commits = new ArrayList<>();
 
-    var dbBranches = branchRepository.findByRepositoryId(repository.getId());
+    var dbBranches = branchRepository.findByRepositoryRepositoryId(repository.getId());
     dbBranches.forEach(
         dbBranch -> {
           try {
@@ -85,7 +85,7 @@ public class GitHubCommitSyncService {
         });
 
     var dbEnvironments =
-        environmentRepository.findByRepositoryIdOrderByCreatedAtDesc(repository.getId());
+        environmentRepository.findByRepositoryRepositoryIdOrderByCreatedAtDesc(repository.getId());
     dbEnvironments.forEach(
         dbEnvironment -> {
           try {
@@ -110,7 +110,7 @@ public class GitHubCommitSyncService {
         });
 
     // Get all commits for the current repository
-    var dbCommits = commitRepository.findByRepositoryId(repository.getId());
+    var dbCommits = commitRepository.findByRepositoryRepositoryId(repository.getId());
     // Delete each commit that exists in the database and not in the fetched commits
     dbCommits.stream()
         .filter(dbCommit -> commits.stream().noneMatch(b -> b.getSHA1().equals(dbCommit.getSha())))
@@ -122,7 +122,7 @@ public class GitHubCommitSyncService {
    * Processes a single GitHub commit by updating or creating it in the local repository. Manages
    * associations with repositories.
    *
-   * @param ghCommit the GitHub commit to process
+   * @param ghCommit     the GitHub commit to process
    * @param ghRepository the GitHub repository to which the commit belongs
    * @return the updated or newly created Commit entity, or {@code null} if an error occurred
    */
@@ -132,7 +132,7 @@ public class GitHubCommitSyncService {
     var repository = gitRepoRepository.findByNameWithOwner(ghRepository.getFullName());
     var result =
         commitRepository
-            .findByShaAndRepositoryId(ghCommit.getSHA1(), repository.getId())
+            .findByShaAndRepositoryRepositoryId(ghCommit.getSHA1(), repository.getRepositoryId())
             .map(
                 commit -> {
                   try {

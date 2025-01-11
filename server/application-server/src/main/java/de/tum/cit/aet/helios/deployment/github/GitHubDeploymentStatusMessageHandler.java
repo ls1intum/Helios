@@ -59,7 +59,8 @@ public class GitHubDeploymentStatusMessageHandler
 
     // Get the repository entity
     GHRepository ghRepository = eventPayload.getRepository();
-    final GitRepository repository = gitRepoRepository.findById(ghRepository.getId()).orElse(null);
+    final GitRepository repository =
+        gitRepoRepository.findByRepositoryId(ghRepository.getId()).orElse(null);
     if (repository == null) {
       log.warn(
           "Repository {} not found in the database. Skipping deployment event.",

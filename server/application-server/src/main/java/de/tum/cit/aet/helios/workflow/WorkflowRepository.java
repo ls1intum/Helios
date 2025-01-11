@@ -10,7 +10,7 @@ import org.springframework.stereotype.Repository;
 public interface WorkflowRepository extends JpaRepository<Workflow, Long> {
   List<Workflow> findByRepository(GitRepository repository);
 
-  List<Workflow> findByRepositoryIdOrderByCreatedAtDesc(Long repositoryId);
+  List<Workflow> findByRepositoryRepositoryIdOrderByCreatedAtDesc(Long repositoryId);
 
   List<Workflow> findByStateOrderByCreatedAtDesc(Workflow.State state);
 

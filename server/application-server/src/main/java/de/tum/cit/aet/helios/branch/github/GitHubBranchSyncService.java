@@ -15,7 +15,9 @@ import org.kohsuke.github.GHBranch;
 import org.kohsuke.github.GHRepository;
 import org.springframework.stereotype.Service;
 
-/** Service for synchronizing branches from GitHub repositories. */
+/**
+ * Service for synchronizing branches from GitHub repositories.
+ */
 @Service
 @Log4j2
 public class GitHubBranchSyncService {
@@ -63,7 +65,7 @@ public class GitHubBranchSyncService {
       var branches = repository.getBranches().values().stream().toList();
       branches.forEach(branch -> processBranch(branch));
       // Get all branches for the current repository
-      var dbBranches = branchRepository.findByRepositoryId(repository.getId());
+      var dbBranches = branchRepository.findByRepositoryRepositoryId(repository.getId());
       // Delete each branch that exists in the database and not in the fetched branches
       dbBranches.stream()
           .filter(
@@ -94,7 +96,7 @@ public class GitHubBranchSyncService {
 
     var result =
         branchRepository
-            .findByNameAndRepositoryId(ghBranch.getName(), repository.getId())
+            .findByNameAndRepositoryRepositoryId(ghBranch.getName(), repository.getRepositoryId())
             .map(
                 branch -> {
                   try {
