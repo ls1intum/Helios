@@ -1,4 +1,4 @@
-<h3 class="text-2xl mb-2">Pipeline</h3>
+<h3 class="text-xl mb-2">Pipeline</h3>
 
 @if (branchQuery.isPending() && pullRequestQuery.isPending()) {
   <div class="flex items-start mt-2 gap-4">
@@ -65,6 +65,12 @@
           }
         </ng-container>
       }
+    } @empty {
+      <div class="flex flex-col justify-center items-center p-4">
+        <i-tabler name="exclamation-circle" class="!size-20 text-primary" />
+        <div class="font-semibold text-lg">There are no pipeline groups yet.</div>
+        <div class="text-sm">Create one in the repository settings.</div>
+      </div>
     }
   </div>
 }
