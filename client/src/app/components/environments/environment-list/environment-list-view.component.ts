@@ -4,6 +4,8 @@ import { AccordionModule } from 'primeng/accordion';
 import { TagModule } from 'primeng/tag';
 import { IconsModule } from 'icons.module';
 import { ButtonModule } from 'primeng/button';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { ConfirmationService } from 'primeng/api';
 import { RouterLink } from '@angular/router';
 import { injectMutation, injectQuery, injectQueryClient } from '@tanstack/angular-query-experimental';
 import { LockTagComponent } from '../lock-tag/lock-tag.component';
@@ -28,12 +30,14 @@ import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
     DeploymentStateTagComponent,
     EnvironmentDeploymentInfoComponent,
     LockTimeComponent,
+    ConfirmDialogModule,
   ],
   templateUrl: './environment-list-view.component.html',
 })
 export class EnvironmentListViewComponent {
   private queryClient = injectQueryClient();
   private keycloakService = inject(KeycloakService);
+  private confirmationService = inject(ConfirmationService);
 
   editable = input<boolean | undefined>();
   deployable = input<boolean | undefined>();
@@ -62,7 +66,13 @@ export class EnvironmentListViewComponent {
   }
 
   deployEnvironment(environment: EnvironmentDto) {
-    this.deploy.emit(environment);
+    this.confirmationService.confirm({
+      header: 'Deployment',
+      message: `Are you sure you want to deploy to ${environment.name}?`,
+      accept: () => {
+        this.deploy.emit(environment);
+      },
+    });
   }
 
   onSearch(event: Event) {
