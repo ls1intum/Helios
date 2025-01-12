@@ -95,6 +95,11 @@ export type WorkflowRunDto = {
   htmlUrl: string;
 };
 
+export type GitHubRepositoryRoleDto = {
+  permission?: 'ADMIN' | 'WRITE' | 'READ' | 'NONE';
+  roleName?: string;
+};
+
 export type LabelInfoDto = {
   /**
    * The unique identifier of the label
@@ -443,6 +448,22 @@ export type GetLatestWorkflowRunsByBranchAndHeadCommitResponses = {
 };
 
 export type GetLatestWorkflowRunsByBranchAndHeadCommitResponse = GetLatestWorkflowRunsByBranchAndHeadCommitResponses[keyof GetLatestWorkflowRunsByBranchAndHeadCommitResponses];
+
+export type GetUserPermissionsData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/api/user-permissions';
+};
+
+export type GetUserPermissionsResponses = {
+  /**
+   * OK
+   */
+  200: GitHubRepositoryRoleDto;
+};
+
+export type GetUserPermissionsResponse = GetUserPermissionsResponses[keyof GetUserPermissionsResponses];
 
 export type GetGroupsWithWorkflowsData = {
   body?: never;

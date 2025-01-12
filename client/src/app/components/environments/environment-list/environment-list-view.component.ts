@@ -1,14 +1,12 @@
 import { Component, computed, inject, input, output, signal } from '@angular/core';
 import { AccordionModule } from 'primeng/accordion';
 
-import { TagModule } from 'primeng/tag';
-import { IconsModule } from 'icons.module';
-import { ButtonModule } from 'primeng/button';
 import { RouterLink } from '@angular/router';
 import { injectMutation, injectQuery, injectQueryClient } from '@tanstack/angular-query-experimental';
-import { LockTagComponent } from '../lock-tag/lock-tag.component';
-import { DeploymentStateTagComponent } from '../deployment-state-tag/deployment-state-tag.component';
+import { IconsModule } from 'icons.module';
+import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
+import { TagModule } from 'primeng/tag';
 import { EnvironmentDeploymentInfoComponent } from '../deployment-info/environment-deployment-info.component';
 import {
   getAllEnabledEnvironmentsOptions,
@@ -18,6 +16,8 @@ import {
   unlockEnvironmentMutation,
 } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { EnvironmentDto } from '@app/core/modules/openapi';
+import { LockTagComponent } from '../lock-tag/lock-tag.component';
+import { DeploymentStateTagComponent } from '../deployment-state-tag/deployment-state-tag.component';
 import { LockTimeComponent } from '../lock-time/lock-time.component';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 
@@ -43,6 +43,8 @@ export class EnvironmentListViewComponent {
 
   editable = input<boolean | undefined>();
   deployable = input<boolean | undefined>();
+  hasUnlockPermissions = input<boolean>();
+  hasDeployPermissions = input<boolean>();
   hideLinkToList = input<boolean | undefined>();
 
   deploy = output<EnvironmentDto>();
@@ -57,8 +59,6 @@ export class EnvironmentListViewComponent {
   queryKey = computed(() => (this.isLoggedIn() && this.editable() ? getAllEnvironmentsQueryKey() : getAllEnabledEnvironmentsQueryKey()));
 
   environmentQuery = injectQuery(() => this.queryFunction());
-
-  environments = computed(() => this.environmentQuery.data());
 
   unlockEnvironment = injectMutation(() => ({
     ...unlockEnvironmentMutation(),

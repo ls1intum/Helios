@@ -28,7 +28,7 @@
 
           <div class="flex-grow"></div>
 
-          @if (isLoggedIn() && !environment.locked && deployable()) {
+          @if (isLoggedIn() && !environment.locked && deployable() && hasDeployPermissions()) {
             <button (click)="deployEnvironment(environment); $event.stopPropagation()" class="p-button p-button-secondary p-2">
               <i-tabler name="cloud-upload" class="mr-1" />Deploy
             </button>

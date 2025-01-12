@@ -26,6 +26,8 @@ import type {
   GetLatestWorkflowRunsByPullRequestIdAndHeadCommitResponse,
   GetLatestWorkflowRunsByBranchAndHeadCommitData,
   GetLatestWorkflowRunsByBranchAndHeadCommitResponse,
+  GetUserPermissionsData,
+  GetUserPermissionsResponse,
   GetGroupsWithWorkflowsData,
   GetGroupsWithWorkflowsResponse,
   GetAllRepositoriesData,
@@ -186,6 +188,13 @@ export const getLatestWorkflowRunsByBranchAndHeadCommit = <ThrowOnError extends 
   return (options?.client ?? client).get<GetLatestWorkflowRunsByBranchAndHeadCommitResponse, unknown, ThrowOnError>({
     ...options,
     url: '/api/workflows/branch',
+  });
+};
+
+export const getUserPermissions = <ThrowOnError extends boolean = false>(options?: Options<GetUserPermissionsData, ThrowOnError>) => {
+  return (options?.client ?? client).get<GetUserPermissionsResponse, unknown, ThrowOnError>({
+    ...options,
+    url: '/api/user-permissions',
   });
 };
 
