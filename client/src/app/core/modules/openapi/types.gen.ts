@@ -265,7 +265,9 @@ export type UpdateEnvironmentResponses = {
   /**
    * OK
    */
-  200: EnvironmentDto;
+  200: {
+    [key: string]: unknown;
+  };
 };
 
 export type UpdateEnvironmentResponse = UpdateEnvironmentResponses[keyof UpdateEnvironmentResponses];

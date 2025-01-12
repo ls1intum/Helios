@@ -165,15 +165,17 @@ public class EnvironmentService {
    * @param environmentDto the EnvironmentDto containing the updated environment information
    * @return an Optional containing the updated environment if successful,
    *     or an empty Optional if no environment is found with the specified ID
+   * @throws EnvironmentException if the environment is locked and cannot be disabled
    */
-  public Optional<EnvironmentDto> updateEnvironment(Long id, EnvironmentDto environmentDto) {
+  public Optional<EnvironmentDto> updateEnvironment(Long id, EnvironmentDto environmentDto)
+      throws EnvironmentException {
     return environmentRepository
         .findById(id)
         .map(
             environment -> {
               if (!environmentDto.enabled() && environment.isLocked()) {
                 throw new EnvironmentException(
-                    "Environment is locked and can not be disabled! "
+                    "Environment is locked and can not be disabled. "
                         + "Please unlock the environment first.");
               } else if (environmentDto.enabled()) {
                 environment.setLocked(false);
