@@ -1,13 +1,19 @@
 package de.tum.cit.aet.helios.github;
 
+import de.tum.cit.aet.helios.util.GitHubAppJwtHelper;
 import java.io.File;
 import java.io.IOException;
+import java.security.PrivateKey;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import lombok.Getter;
 import lombok.extern.log4j.Log4j2;
 import okhttp3.Cache;
 import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
+import org.kohsuke.github.GHApp;
+import org.kohsuke.github.GHAppInstallation;
+import org.kohsuke.github.GHAppInstallationToken;
 import org.kohsuke.github.GitHub;
 import org.kohsuke.github.GitHubBuilder;
 import org.kohsuke.github.extras.okhttp3.OkHttpGitHubConnector;
@@ -25,6 +31,18 @@ public class GitHubConfig {
 
   @Value("${github.authToken}")
   private String ghAuthToken;
+
+  @Value("${github.appId}")
+  private Long appId;
+
+  @Value("${github.clientId}")
+  private String clientId;
+
+  @Value("${github.installationId}")
+  private Long installationId;
+
+  @Value("${github.privateKeyPath}")
+  private String privateKeyPath;
 
   @Value("${github.cache.enabled}")
   private boolean cacheEnabled;
@@ -80,24 +98,40 @@ public class GitHubConfig {
 
   @Bean
   public GitHub createGitHubClientWithCache(OkHttpClient okHttpClient) {
-    if (ghAuthToken == null || ghAuthToken.isEmpty()) {
-      log.error("GitHub auth token is not provided! GitHub client will be disabled.");
-      return GitHub.offline();
-    }
-
     try {
-      // Initialize GitHub client with OAuth token and custom OkHttpClient
-      GitHub github =
-          new GitHubBuilder()
-              .withConnector(new OkHttpGitHubConnector(okHttpClient, cacheTtl))
-              .withOAuthToken(ghAuthToken)
-              .build();
+      GitHub github = null;
+
+      if (appId != null && privateKeyPath != null) {
+        // Initialize GitHub client with GitHub App credentials
+        github = createGitHubClientForGitHubApp();
+      } else if (ghAuthToken == null || ghAuthToken.isEmpty()) {
+        // Initialize GitHub client with PAT
+        github =
+            new GitHubBuilder()
+                .withConnector(new OkHttpGitHubConnector(okHttpClient, cacheTtl))
+                .withOAuthToken(ghAuthToken)
+                .build();
+        if (github.isOffline()) {
+          return github;
+        }
+      } else {
+        log.error(
+            "GitHub auth token or private key is not provided! GitHub client will be disabled.");
+        return GitHub.offline();
+      }
+
+      if (github == null) {
+        log.error("GitHub client is null! GitHub client will be disabled.");
+        return GitHub.offline();
+      }
+
       if (!github.isCredentialValid()) {
         log.error("Invalid GitHub credentials!");
         throw new IllegalStateException("Invalid GitHub credentials");
       }
       log.info("GitHub client initialized successfully");
       return github;
+
     } catch (IOException e) {
       log.error("Failed to initialize GitHub client: {}", e.getMessage());
       throw new RuntimeException("GitHub client initialization failed", e);
@@ -106,5 +140,69 @@ public class GitHubConfig {
           "An unexpected error occurred during GitHub client initialization: {}", e.getMessage());
       throw new RuntimeException("Unexpected error during GitHub client initialization", e);
     }
+  }
+
+  public GitHub createGitHubClientForGitHubApp() {
+    // Load the private key file from disk
+    File pem = new File(privateKeyPath);
+    if (!pem.exists()) {
+      log.error("GitHub App PEM file not found at path: {}", privateKeyPath);
+      return GitHub.offline();
+    }
+
+    try {
+      // Load the private key
+      PrivateKey pk = GitHubAppJwtHelper.loadPrivateKey(pem);
+      // Generate short-lived JWT for the App
+      String jwt = GitHubAppJwtHelper.generateAppJwt(appId, pk);
+
+      // Create a GitHub client using the JWT
+      GitHub githubAppClient =
+          new GitHubBuilder()
+              .withConnector(new OkHttpGitHubConnector(okHttpClient(), cacheTtl))
+              .withJwtToken(jwt)
+              .build();
+
+      // If the installation ID is not provided, try to find it by org name
+      if (installationId == null) {
+        GHApp app = githubAppClient.getApp();
+        List<GHAppInstallation> installs = app.listInstallations().toList();
+        log.info("Found {} installations for this GitHub App", installs.size());
+
+        // Pick the correct one by org name
+        installationId = installs.stream()
+            .filter(inst -> organizationName != null
+                && organizationName.equalsIgnoreCase(inst.getAccount().getLogin()))
+            .map(GHAppInstallation::getId)
+            .findFirst()
+            .orElse(null);
+
+        if (installationId == null) {
+          log.error("Could not find a matching installation for org: {}", organizationName);
+          return GitHub.offline();
+        }
+      }
+
+      // Create an installation token
+      GHAppInstallation installation = githubAppClient.getApp().getInstallationById(installationId);
+      GHAppInstallationToken token = installation.createToken().create();
+      String installationToken = token.getToken();
+
+      // Build the final client using the installation token
+      GitHub installationClient =
+          new GitHubBuilder()
+              .withConnector(new OkHttpGitHubConnector(okHttpClient(), cacheTtl))
+              .withAppInstallationToken(installationToken)
+              .build();
+
+      log.info("GitHub Installation client created successfully (installationId={})",
+          installationId);
+      return installationClient;
+
+    } catch (Exception e) {
+      log.error("Failed to create GitHub App installation client: {}", e.getMessage(), e);
+      return GitHub.offline();
+    }
+
   }
 }

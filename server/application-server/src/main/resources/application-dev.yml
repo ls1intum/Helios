@@ -31,7 +31,12 @@ nats:
 github:
     organizationName: ${ORGANIZATION_NAME}
     # Can be any OAuth token, such as the PAT
+    # TODO: Remove this and use the GitHub App for authentication
     authToken: ${GITHUB_AUTH_TOKEN:}
+    appId: ${GITHUB_APP_ID:}
+    clientId: ${GITHUB_CLIENT_ID:}
+    installationId: ${GITHUB_INSTALLATION_ID:}
+    privateKeyPath: ${GITHUB_PRIVATE_KEY_PATH:}
     cache:
         enabled: true
         ttl: 500

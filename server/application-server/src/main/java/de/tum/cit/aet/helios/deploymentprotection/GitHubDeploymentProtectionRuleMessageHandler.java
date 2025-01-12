@@ -21,18 +21,16 @@ public class GitHubDeploymentProtectionRuleMessageHandler
 
   @Override
   public void handleMessage(Message msg) {
-    log.debug("Received message: {}", msg);
-
     String rawJson = new String(msg.getData(), StandardCharsets.UTF_8);
-    log.debug("Received raw JSON: {}", rawJson);
     try {
       DeploymentProtectionRulePayload payload =
           objectMapper.readValue(rawJson, DeploymentProtectionRulePayload.class);
 
-      log.info("Parsed deployment_protection_rule event: {}", payload);
+      log.info("Parsed deployment_protection_rule event");
 
       if ("requested".equals(payload.getAction())) {
         log.info("Processing a 'requested' action for environment: {}", payload.getEnvironment());
+        log.info("Client ID: {}", payload.getDeployment().getPerformedViaGithubApp().getClientId());
       }
 
     } catch (IOException e) {
