@@ -73,7 +73,7 @@ public class GitHubDeploymentIterator implements Iterator<GitHubDeploymentDto> {
             currentPage,
             perPage);
 
-    Request request = requestBuilder.url(url).build();
+    Request request = requestBuilder.url(url).get().build();
 
     try (Response response = okHttpClient.newCall(request).execute()) {
       if (!response.isSuccessful()) {
