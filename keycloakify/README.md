@@ -1,3 +1,20 @@
+## Changing the theme
+The project is based on the keycloakify-starter project from the official keycloakify documentation.
+We currently only using one login page of the theme.
+`
+keycloakify/src/login/pages/Login.tsx
+`
+Before starting install the dependencies:
+```
+yarn
+```
+To change the theme, edit React file you want to change and then run
+```
+yarn build-keycloak-theme
+```
+Our docker-compose file is configured to use `keycloakify/dist_keycloak` as a volume so the theme will be accessible in keycloak after the build. You may need to restart the docker container to see the changes.
+
+# README from the template file
 <p align="center">
     <i>🚀 <a href="https://keycloakify.dev">Keycloakify</a> v11 starter 🚀</i>
     <br/>
@@ -9,8 +26,7 @@ This starter is based on Vite. There is also [a Webpack based starter](https://g
 # Quick start
 
 ```bash
-git clone https://github.com/keycloakify/keycloakify-starter
-cd keycloakify-starter
+cd keycloakify
 yarn install # Or use an other package manager, just be sure to delete the yarn.lock if you use another package manager.
 ```
 
