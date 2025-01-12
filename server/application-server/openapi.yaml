@@ -1,4 +1,4 @@
-openapi: 3.0.1
+openapi: 3.1.0
 info:
   title: Helios API
   description: API documentation for the Helios application server.
@@ -121,8 +121,7 @@ paths:
           description: OK
           content:
             application/json:
-              schema:
-                type: object
+              schema: {}
   /api/settings/{repositoryId}/groups/create:
     post:
       tags:
@@ -653,10 +652,6 @@ paths:
 components:
   schemas:
     WorkflowGroupDto:
-      required:
-      - id
-      - name
-      - orderIndex
       type: object
       properties:
         id:
@@ -671,10 +666,11 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/WorkflowMembershipDto"
-    WorkflowMembershipDto:
       required:
+      - id
+      - name
       - orderIndex
-      - workflowId
+    WorkflowMembershipDto:
       type: object
       properties:
         workflowId:
@@ -683,14 +679,10 @@ components:
         orderIndex:
           type: integer
           format: int32
-    EnvironmentDeployment:
       required:
-      - id
-      - ref
-      - sha
-      - statusesUrl
-      - task
-      - url
+      - orderIndex
+      - workflowId
+    EnvironmentDeployment:
       type: object
       properties:
         id:
@@ -723,10 +715,14 @@ components:
         updatedAt:
           type: string
           format: date-time
-    EnvironmentDto:
       required:
       - id
-      - name
+      - ref
+      - sha
+      - statusesUrl
+      - task
+      - url
+    EnvironmentDto:
       type: object
       properties:
         repository:
@@ -765,12 +761,10 @@ components:
         lockedAt:
           type: string
           format: date-time
-    RepositoryInfoDto:
       required:
-      - htmlUrl
       - id
       - name
-      - nameWithOwner
+    RepositoryInfoDto:
       type: object
       properties:
         id:
@@ -784,10 +778,12 @@ components:
           type: string
         htmlUrl:
           type: string
-    DeployRequest:
       required:
-      - branchName
-      - environmentId
+      - htmlUrl
+      - id
+      - name
+      - nameWithOwner
+    DeployRequest:
       type: object
       properties:
         environmentId:
@@ -795,13 +791,10 @@ components:
           format: int64
         branchName:
           type: string
-    WorkflowDto:
       required:
-      - id
-      - label
-      - name
-      - path
-      - state
+      - branchName
+      - environmentId
+    WorkflowDto:
       type: object
       properties:
         id:
@@ -842,14 +835,13 @@ components:
         updatedAt:
           type: string
           format: date-time
-    WorkflowRunDto:
       required:
-      - displayTitle
-      - htmlUrl
       - id
+      - label
       - name
-      - status
-      - workflowId
+      - path
+      - state
+    WorkflowRunDto:
       type: object
       properties:
         id:
@@ -895,17 +887,20 @@ components:
           - UNKNOWN
         htmlUrl:
           type: string
-    LabelInfoDto:
       required:
-      - color
+      - displayTitle
+      - htmlUrl
       - id
       - name
+      - status
+      - workflowId
+    LabelInfoDto:
       type: object
       properties:
         id:
           type: integer
-          description: The unique identifier of the label
           format: int64
+          description: The unique identifier of the label
         name:
           type: string
           description: The name of the label
@@ -917,15 +912,12 @@ components:
           example: ff0000
         repository:
           $ref: "#/components/schemas/RepositoryInfoDto"
-    PullRequestBaseInfoDto:
+          description: The repository associated with this label
       required:
-      - htmlUrl
+      - color
       - id
-      - isDraft
-      - isMerged
-      - number
-      - state
-      - title
+      - name
+    PullRequestBaseInfoDto:
       type: object
       properties:
         id:
@@ -969,13 +961,15 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/UserInfoDto"
-    UserInfoDto:
       required:
-      - avatarUrl
       - htmlUrl
       - id
-      - login
-      - name
+      - isDraft
+      - isMerged
+      - number
+      - state
+      - title
+    UserInfoDto:
       type: object
       properties:
         id:
@@ -989,21 +983,13 @@ components:
           type: string
         htmlUrl:
           type: string
-    PullRequestInfoDto:
       required:
-      - additions
-      - commentsCount
-      - deletions
-      - headRefName
-      - headRefRepoNameWithOwner
-      - headSha
+      - avatarUrl
       - htmlUrl
       - id
-      - isDraft
-      - isMerged
-      - number
-      - state
-      - title
+      - login
+      - name
+    PullRequestInfoDto:
       type: object
       properties:
         id:
@@ -1064,9 +1050,21 @@ components:
         updatedAt:
           type: string
           format: date-time
-    EnvironmentLockHistoryDto:
       required:
+      - additions
+      - commentsCount
+      - deletions
+      - headRefName
+      - headRefRepoNameWithOwner
+      - headSha
+      - htmlUrl
       - id
+      - isDraft
+      - isMerged
+      - number
+      - state
+      - title
+    EnvironmentLockHistoryDto:
       type: object
       properties:
         id:
@@ -1082,15 +1080,9 @@ components:
           format: date-time
         environment:
           $ref: "#/components/schemas/EnvironmentDto"
-    DeploymentDto:
       required:
-      - environment
       - id
-      - ref
-      - sha
-      - statusesUrl
-      - task
-      - url
+    DeploymentDto:
       type: object
       properties:
         id:
@@ -1127,9 +1119,15 @@ components:
         updatedAt:
           type: string
           format: date-time
-    CommitInfoDto:
       required:
+      - environment
+      - id
+      - ref
       - sha
+      - statusesUrl
+      - task
+      - url
+    CommitInfoDto:
       type: object
       properties:
         sha:
@@ -1143,10 +1141,9 @@ components:
           format: date-time
         repository:
           $ref: "#/components/schemas/RepositoryInfoDto"
-    BranchInfoDto:
       required:
-      - commitSha
-      - name
+      - sha
+    BranchInfoDto:
       type: object
       properties:
         name:
@@ -1170,3 +1167,6 @@ components:
           $ref: "#/components/schemas/UserInfoDto"
         repository:
           $ref: "#/components/schemas/RepositoryInfoDto"
+      required:
+      - commitSha
+      - name

@@ -9,7 +9,6 @@ import type {
   UpdateEnvironmentData,
   UpdateEnvironmentResponse,
   UnlockEnvironmentData,
-  UnlockEnvironmentResponse,
   CreateWorkflowGroupData,
   CreateWorkflowGroupResponse,
   DeployToEnvironmentData,
@@ -165,7 +164,7 @@ export const updateEnvironmentMutation = (options?: Partial<Options<UpdateEnviro
 };
 
 export const unlockEnvironmentMutation = (options?: Partial<Options<UnlockEnvironmentData>>) => {
-  const mutationOptions: MutationOptions<UnlockEnvironmentResponse, DefaultError, Options<UnlockEnvironmentData>> = {
+  const mutationOptions: MutationOptions<unknown, DefaultError, Options<UnlockEnvironmentData>> = {
     mutationFn: async localOptions => {
       const { data } = await unlockEnvironment({
         ...options,
