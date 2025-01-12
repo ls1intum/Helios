@@ -1,15 +1,15 @@
-import { useEffect } from "react";
-import { clsx } from "keycloakify/tools/clsx";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { HeliosLogo } from "@/resources/logo";
 import { kcSanitize } from "keycloakify/lib/kcSanitize";
-import type { TemplateProps } from "keycloakify/login/TemplateProps";
 import { getKcClsx } from "keycloakify/login/lib/kcClsx";
-import { useSetClassName } from "keycloakify/tools/useSetClassName";
 import { useInitialize } from "keycloakify/login/Template.useInitialize";
+import type { TemplateProps } from "keycloakify/login/TemplateProps";
+import { clsx } from "keycloakify/tools/clsx";
+import { useSetClassName } from "keycloakify/tools/useSetClassName";
+import { CircleAlert, CircleCheck, CircleX, Info } from "lucide-react";
+import { useEffect } from "react";
 import type { I18n } from "./i18n";
 import type { KcContext } from "./KcContext";
-import ThemeSwitcher from "@/components/theme-switcher";
-import { CircleAlert, CircleCheck, CircleX, Hammer, Info } from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function Template(props: TemplateProps<KcContext, I18n>) {
     const {
@@ -56,14 +56,11 @@ export default function Template(props: TemplateProps<KcContext, I18n>) {
 
     return (
         <div className="flex flex-col gap-4 min-h-dvh">
-            <header className="container flex items-center justify-end pt-4 gap-2">
-                <ThemeSwitcher />
-            </header>
             <div className="container flex flex-col items-center justify-center gap-6 flex-1">
                 <div id="kc-header">
                     <div id="kc-header-wrapper" className="flex flex-col items-center gap-4">
-                        <Hammer className="size-12" />
-                        <span className="text-3xl font-medium">Hephaestus</span>
+                        <HeliosLogo />
+                        <span className="text-3xl font-medium">Helios</span>
                     </div>
                 </div>
                 <div className="flex flex-col gap-4 mb-16 md:mb-32 w-96">
@@ -153,26 +150,6 @@ export default function Template(props: TemplateProps<KcContext, I18n>) {
             </div>
             <footer className="py-6 md:px-8 md:py-0 border-t">
                 <div className="container flex flex-col items-center justify-between gap-2 md:gap-4 md:h-24 md:flex-row">
-                    <p className="text-balance text-center text-sm leading-loose text-muted-foreground md:text-left">
-                        <a href="/about" className="font-medium underline underline-offset-4">
-                            About
-                        </a>
-                    </p>
-                    <p className="text-balance text-center text-sm leading-loose text-muted-foreground md:text-left">
-                        <a href="/privacy" className="font-medium underline underline-offset-4">
-                            Privacy
-                        </a>
-                    </p>
-                    <p className="text-balance text-center text-sm leading-loose text-muted-foreground md:text-left">
-                        <a href="/imprint" className="font-medium underline underline-offset-4">
-                            Imprint
-                        </a>
-                    </p>
-                    <p className="text-balance text-center text-sm leading-loose text-muted-foreground md:text-left">
-                        <a data-canny-link href="https://hephaestus.canny.io/feature-requests" className="font-medium underline underline-offset-4">
-                            Feature requests
-                        </a>
-                    </p>
                     <p className="text-balance text-center text-sm leading-loose text-muted-foreground md:text-right flex-1">
                         Built by{" "}
                         <a href="https://github.com/ls1intum" target="_blank" rel="noreferrer" className="font-medium underline underline-offset-4">
@@ -184,7 +161,7 @@ export default function Template(props: TemplateProps<KcContext, I18n>) {
                         </a>
                         . The source code is available on
                         <a
-                            href="https://github.com/ls1intum/hephaestus"
+                            href="https://github.com/ls1intum/helios"
                             target="_blank"
                             rel="noreferrer"
                             className="font-medium underline underline-offset-4"

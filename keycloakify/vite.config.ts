@@ -9,7 +9,7 @@ export default defineConfig({
     plugins: [
         react(),
         keycloakify({
-            themeName: "hephaestus",
+            themeName: "helios",
             accountThemeImplementation: "none",
             postBuild: async buildContext => {
                 await fs.rm(
