@@ -24,6 +24,7 @@ public class GitHubDeploymentProtectionRuleMessageHandler
     log.debug("Received message: {}", msg);
 
     String rawJson = new String(msg.getData(), StandardCharsets.UTF_8);
+    log.debug("Received raw JSON: {}", rawJson);
     try {
       DeploymentProtectionRulePayload payload =
           objectMapper.readValue(rawJson, DeploymentProtectionRulePayload.class);
