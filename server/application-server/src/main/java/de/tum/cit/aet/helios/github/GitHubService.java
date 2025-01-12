@@ -236,7 +236,7 @@ public class GitHubService {
             "https://api.github.com/repos/%s/%s/collaborators/%s/permission",
             owner, repoName, username);
 
-    Request request = requestBuilder.url(url).build();
+    Request request = requestBuilder.url(url).get().build();
 
     try (Response response = okHttpClient.newCall(request).execute()) {
       if (!response.isSuccessful()) {
