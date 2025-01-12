@@ -1,16 +1,10 @@
 package de.tum.cit.aet.helios.deploymentprotection;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.util.List;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import org.kohsuke.github.GHAppInstallation;
-import org.kohsuke.github.GHDeployment;
-import org.kohsuke.github.GHOrganization;
-import org.kohsuke.github.GHPullRequest;
-import org.kohsuke.github.GHRepository;
 
 @Getter
 @Setter
@@ -28,80 +22,103 @@ public class DeploymentProtectionRulePayload {
   @JsonProperty("deployment_callback_url")
   private String deploymentCallbackUrl;
 
-  private GHDeployment deployment;
+  private Deployment deployment;
 
-  @JsonProperty("pull_requests")
-  private List<GHPullRequest> pullRequests;
-
-  private GHRepository repository;
-
-  private GHOrganization organization;
-
-  private GHAppInstallation installation;
-
-  // GHUser throws an exception
-  // Conflicting setter definitions for property "assignees"
-  private Sender sender;
+//  private GHUser sender;
 
   /**
-   * Represents the "sender" object in the payload.
+   * Represents the "deployment" object in the JSON.
    */
   @Getter
   @Setter
   @NoArgsConstructor
   @ToString
-  static class Sender {
-    private String login;
+  static class Deployment {
+    private String url;
     private long id;
 
     @JsonProperty("node_id")
     private String nodeId;
 
-    @JsonProperty("avatar_url")
-    private String avatarUrl;
+    private String task;
 
-    @JsonProperty("gravatar_id")
-    private String gravatarId;
+    @JsonProperty("original_environment")
+    private String originalEnvironment;
+
+    private String environment;
+    private String description;
+
+    @JsonProperty("created_at")
+    private String createdAt;
+
+    @JsonProperty("updated_at")
+    private String updatedAt;
+
+    @JsonProperty("repository_url")
+    private String repositoryUrl;
+
+//    private Creator creator;
+
+    private String sha;
+    // Branch name
+    private String ref;
+
+
+    @JsonProperty("performed_via_github_app")
+    private PerformedViaGithubApp performedViaGithubApp;
+  }
+
+  /**
+   * Represents the "performed_via_github_app" object in the "deployment".
+   */
+  @Getter
+  @Setter
+  @NoArgsConstructor
+  @ToString
+  static class PerformedViaGithubApp {
+    private long id;
+
+    @JsonProperty("client_id")
+    private String clientId;
+
+    // For manual triggering, this is 'github-actions'
+    private String slug;
+
+    @JsonProperty("node_id")
+    private String nodeId;
+
+    private String name;
+  }
+
+  /**
+   * Represents a single pull request object in the "pull_requests" array.
+   */
+  @Getter
+  @Setter
+  @NoArgsConstructor
+  @ToString
+  public static class PullRequest {
 
     private String url;
+    private long id;
 
-    @JsonProperty("html_url")
-    private String htmlUrl;
+    @JsonProperty("node_id")
+    private String nodeId;
 
-    @JsonProperty("followers_url")
-    private String followersUrl;
+    private int number;
+    private String title;
 
-    @JsonProperty("following_url")
-    private String followingUrl;
+    @JsonProperty("created_at")
+    private String createdAt;
 
-    @JsonProperty("gists_url")
-    private String gistsUrl;
+    @JsonProperty("updated_at")
+    private String updatedAt;
 
-    @JsonProperty("starred_url")
-    private String starredUrl;
+    @JsonProperty("closed_at")
+    private String closedAt;
 
-    @JsonProperty("subscriptions_url")
-    private String subscriptionsUrl;
-
-    @JsonProperty("organizations_url")
-    private String organizationsUrl;
-
-    @JsonProperty("repos_url")
-    private String reposUrl;
-
-    @JsonProperty("events_url")
-    private String eventsUrl;
-
-    @JsonProperty("received_events_url")
-    private String receivedEventsUrl;
-
-    private String type;
-
-    @JsonProperty("user_view_type")
-    private String userViewType;
-
-    @JsonProperty("site_admin")
-    private boolean siteAdmin;
+    @JsonProperty("merged_at")
+    private String mergedAt;
   }
 
 }
