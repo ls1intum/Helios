@@ -49,7 +49,7 @@
             }
           }
 
-          @if (isLoggedIn() && deployable()) {
+          @if (isLoggedIn() && deployable() && hasDeployPermissions()) {
             <button
               (click)="deployEnvironment(environment); $event.stopPropagation()"
               class="p-button p-button-secondary p-2"

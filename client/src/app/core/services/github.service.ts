@@ -122,11 +122,4 @@ export class GithubService {
       Accept: 'application/vnd.github.v3+json',
     };
   }
-
-  // private getHeaders(token: string): HttpHeaders {
-  //     return new HttpHeaders({
-  //         'Authorization': `Bearer ${token}`,
-  //         'Accept': 'application/vnd.github.v3+json'
-  //     });
-  // }
 }

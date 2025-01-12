@@ -43,6 +43,8 @@ export class EnvironmentListViewComponent {
 
   editable = input<boolean | undefined>();
   deployable = input<boolean | undefined>();
+  hasUnlockPermissions = input<boolean>();
+  hasDeployPermissions = input<boolean>();
   hideLinkToList = input<boolean | undefined>();
 
   deploy = output<EnvironmentDto>();
@@ -50,8 +52,6 @@ export class EnvironmentListViewComponent {
   searchInput = signal<string>('');
 
   environmentQuery = injectQuery(() => getAllEnvironmentsOptions());
-
-  environments = computed(() => this.environmentQuery.data());
 
   unlockEnvironment = injectMutation(() => ({
     ...unlockEnvironmentMutation(),

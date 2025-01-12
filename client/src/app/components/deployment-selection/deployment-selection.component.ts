@@ -1,9 +1,10 @@
 import { Component, inject, input } from '@angular/core';
-import { EnvironmentListViewComponent } from '../environments/environment-list/environment-list-view.component';
-import { injectMutation, injectQueryClient } from '@tanstack/angular-query-experimental';
-import { deployToEnvironmentMutation, getAllEnvironmentsQueryKey, getEnvironmentByIdQueryKey } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { EnvironmentDto } from '@app/core/modules/openapi';
+import { deployToEnvironmentMutation, getAllEnvironmentsQueryKey, getEnvironmentByIdQueryKey } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
+import { PermissionService } from '@app/core/services/permission.service';
+import { injectMutation, injectQueryClient } from '@tanstack/angular-query-experimental';
 import { MessageService } from 'primeng/api';
+import { EnvironmentListViewComponent } from '../environments/environment-list/environment-list-view.component';
 
 @Component({
   selector: 'app-deployment-selection',
@@ -12,6 +13,7 @@ import { MessageService } from 'primeng/api';
 })
 export class DeploymentSelectionComponent {
   private messageService = inject(MessageService);
+  permissionService = inject(PermissionService);
 
   queryClient = injectQueryClient();
 
