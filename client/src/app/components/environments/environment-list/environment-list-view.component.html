@@ -28,12 +28,6 @@
 
           <div class="flex-grow"></div>
 
-          @if (isLoggedIn() && !environment.locked && deployable()) {
-            <button (click)="deployEnvironment(environment); $event.stopPropagation()" class="p-button p-button-secondary p-2">
-              <i-tabler name="cloud-upload" class="mr-1" />Deploy
-            </button>
-          }
-
           @if (environment.locked) {
             @if (environment.lockedAt) {
               <app-lock-time [lockedAt]="environment.lockedAt"></app-lock-time>
@@ -44,8 +38,26 @@
               >
             }
             @if (isLoggedIn()) {
-              <button (click)="onUnlockEnvironment($event, environment)" class="p-button p-button-danger p-2"><i-tabler name="lock-open" class="mr-1" />Unlock</button>
+              <button
+                (click)="onUnlockEnvironment($event, environment)"
+                [disabled]="!isCurrentUserLocked(environment)"
+                class="p-button p-button-danger p-2"
+                [ngClass]="{ 'opacity-50 cursor-not-allowed': !isCurrentUserLocked(environment) }"
+              >
+                <i-tabler name="lock-open" class="mr-1" />Unlock
+              </button>
             }
+          }
+
+          @if (isLoggedIn() && deployable()) {
+            <button
+              (click)="deployEnvironment(environment); $event.stopPropagation()"
+              class="p-button p-button-secondary p-2"
+              [disabled]="environment.locked && !isCurrentUserLocked(environment)"
+              [ngClass]="{ 'opacity-50 cursor-not-allowed': environment.locked && !isCurrentUserLocked(environment) }"
+            >
+              <i-tabler name="cloud-upload" class="mr-1" />Deploy
+            </button>
           }
 
           @if (isLoggedIn() && editable()) {

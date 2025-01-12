@@ -57,6 +57,10 @@ export class KeycloakService {
     return this.keycloak.authenticated;
   }
 
+  getUserId() {
+    return this.decodedToken()?.sub;
+  }
+
   login() {
     return this.keycloak.login();
   }

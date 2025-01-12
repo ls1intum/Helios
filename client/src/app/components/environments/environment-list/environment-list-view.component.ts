@@ -16,6 +16,7 @@ import { getAllEnvironmentsOptions, getAllEnvironmentsQueryKey, unlockEnvironmen
 import { EnvironmentDto } from '@app/core/modules/openapi';
 import { LockTimeComponent } from '../lock-time/lock-time.component';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-environment-list-view',
@@ -31,6 +32,7 @@ import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
     EnvironmentDeploymentInfoComponent,
     LockTimeComponent,
     ConfirmDialogModule,
+    CommonModule,
   ],
   templateUrl: './environment-list-view.component.html',
 })
@@ -59,6 +61,10 @@ export class EnvironmentListViewComponent {
   }));
 
   isLoggedIn = computed(() => this.keycloakService.isLoggedIn());
+
+  isCurrentUserLocked = (environment: EnvironmentDto) => {
+    return environment.lockedBy === this.keycloakService.getUserId();
+  };
 
   onUnlockEnvironment(event: Event, environment: EnvironmentDto) {
     this.unlockEnvironment.mutate({ path: { id: environment.id } });
