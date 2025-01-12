@@ -1,18 +1,19 @@
-import { Component, OnInit, computed, inject, input, numberAttribute, signal, OnDestroy } from '@angular/core';
+import { SlicePipe } from '@angular/common';
+import { Component, OnDestroy, OnInit, computed, inject, input, numberAttribute, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { ProfileNavSectionComponent } from '@app/components/profile-nav-section/profile-nav-section.component';
+import { getEnvironmentsByUserLockingOptions, getRepositoryByIdOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
+import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
+import { PermissionService } from '@app/core/services/permission.service';
+import { injectQuery } from '@tanstack/angular-query-experimental';
 import { IconsModule } from 'icons.module';
+import { AvatarModule } from 'primeng/avatar';
 import { ButtonModule } from 'primeng/button';
+import { CardModule } from 'primeng/card';
+import { DividerModule } from 'primeng/divider';
+import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
 import { HeliosIconComponent } from '../../components/helios-icon/helios-icon.component';
-import { DividerModule } from 'primeng/divider';
-import { AvatarModule } from 'primeng/avatar';
-import { ToastModule } from 'primeng/toast';
-import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
-import { CardModule } from 'primeng/card';
-import { injectQuery } from '@tanstack/angular-query-experimental';
-import { getEnvironmentsByUserLockingOptions, getRepositoryByIdOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
-import { SlicePipe } from '@angular/common';
-import { ProfileNavSectionComponent } from '@app/components/profile-nav-section/profile-nav-section.component';
 
 @Component({
   selector: 'app-main-layout',
@@ -36,6 +37,7 @@ import { ProfileNavSectionComponent } from '@app/components/profile-nav-section/
 })
 export class MainLayoutComponent implements OnInit, OnDestroy {
   private keycloakService = inject(KeycloakService);
+  private permissionService = inject(PermissionService);
 
   username = computed(() => (this.keycloakService.decodedToken()?.preferred_username || '') as string);
 
@@ -52,8 +54,6 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     enabled: () => !!this.keycloakService.isLoggedIn(),
   }));
 
-  items!: { label: string; icon: string; path: string }[];
-
   timeNow = signal<Date>(new Date());
   private intervalId?: ReturnType<typeof setInterval>;
 
@@ -65,8 +65,8 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     this.keycloakService.login();
   }
 
-  ngOnInit() {
-    this.items = [
+  items = computed(() => {
+    const baseItems = [
       {
         label: 'CI/CD',
         icon: 'arrow-guide',
@@ -82,7 +82,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
         icon: 'server-cog',
         path: 'environment/list',
       },
-      ...(this.keycloakService.profile
+      ...(this.keycloakService.profile && this.permissionService.isAtLeastMaintainer()
         ? [
             {
               label: 'Project Settings',
@@ -92,7 +92,10 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
           ]
         : []),
     ];
+    return baseItems;
+  });
 
+  ngOnInit() {
     this.intervalId = setInterval(() => {
       this.timeNow.set(new Date());
     }, 1000);

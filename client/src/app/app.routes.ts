@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { RepositoryFilterGuard } from './core/middlewares/repository-filter.guard';
+import { maintainerGuard } from './core/routeGuards/maintainer.guard';
 
 export const routes: Routes = [
   {
@@ -74,6 +75,7 @@ export const routes: Routes = [
           {
             path: 'settings',
             loadComponent: () => import('./pages/project-settings/project-settings.component').then(m => m.ProjectSettingsComponent),
+            canActivate: [maintainerGuard],
           },
         ],
       },
