@@ -34,7 +34,7 @@ public class EnvironmentService {
   }
 
   public List<EnvironmentDto> getAllEnvironments() {
-    return environmentRepository.findAll().stream()
+    return environmentRepository.findAllByOrderByNameAsc().stream()
         .map(
             environment -> {
               return EnvironmentDto.fromEnvironment(
