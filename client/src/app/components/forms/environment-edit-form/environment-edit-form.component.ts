@@ -5,7 +5,7 @@ import { InputSwitchModule } from 'primeng/inputswitch';
 import { InputTextModule } from 'primeng/inputtext';
 import { AutoCompleteModule } from 'primeng/autocomplete';
 import { ActivatedRoute, Router } from '@angular/router';
-import { injectMutation, injectQuery, injectQueryClient } from '@tanstack/angular-query-experimental';
+import {injectMutation, injectQuery, QueryClient} from '@tanstack/angular-query-experimental';
 import {
   getAllEnvironmentsQueryKey,
   getEnvironmentByIdOptions,
@@ -22,7 +22,7 @@ import { Checkbox } from 'primeng/checkbox';
 })
 export class EnvironmentEditFormComponent implements OnInit {
   private formBuilder = inject(FormBuilder);
-  private queryClient = injectQueryClient();
+  private queryClient = inject(QueryClient);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
 
