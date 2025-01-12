@@ -48,9 +48,6 @@ public class GitHubService {
   @Value("${github.authToken}")
   private String ghAuthToken;
 
-  // Request builder for GitHub API calls with authorization header
-  private Builder requestBuilder;
-
   private GHOrganization gitHubOrganization;
 
   public GitHubService(
@@ -66,10 +63,9 @@ public class GitHubService {
     this.authService = authService;
   }
 
-  @PostConstruct
-  public void init() {
-    this.requestBuilder =
-        new Request.Builder()
+
+  public Builder getRequestBuilder() {
+    return new Request.Builder()
             .header("Authorization", "token " + ghAuthToken)
             .header("Accept", "application/vnd.github+json");
   }
@@ -155,7 +151,7 @@ public class GitHubService {
     RequestBody requestBody =
         RequestBody.create(jsonPayload, MediaType.get("application/json; charset=utf-8"));
 
-    Request request = requestBuilder.url(url).post(requestBody).build();
+    Request request = getRequestBuilder().url(url).post(requestBody).build();
 
     try (Response response = okHttpClient.newCall(request).execute()) {
       if (!response.isSuccessful()) {
@@ -180,7 +176,7 @@ public class GitHubService {
     final String url =
         String.format("https://api.github.com/repos/%s/%s/environments", owner, repoName);
 
-    Request request = requestBuilder.url(url).build();
+    Request request = getRequestBuilder().url(url).get().build();
 
     try (Response response = okHttpClient.newCall(request).execute()) {
       if (!response.isSuccessful()) {
@@ -214,7 +210,7 @@ public class GitHubService {
   public Iterator<GitHubDeploymentDto> getDeploymentIterator(
       GHRepository repository, String environmentName) {
     return new GitHubDeploymentIterator(
-        repository, environmentName, okHttpClient, requestBuilder, objectMapper);
+        repository, environmentName, okHttpClient, getRequestBuilder(), objectMapper);
   }
 
   public GitHubRepositoryRoleDto getRepositoryRole() throws PermissionException, IOException {
@@ -236,7 +232,7 @@ public class GitHubService {
             "https://api.github.com/repos/%s/%s/collaborators/%s/permission",
             owner, repoName, username);
 
-    Request request = requestBuilder.url(url).get().build();
+    Request request = getRequestBuilder().url(url).get().build();
 
     try (Response response = okHttpClient.newCall(request).execute()) {
       if (!response.isSuccessful()) {
@@ -258,7 +254,7 @@ public class GitHubService {
       log.error("Error processing JSON response: {}", e.getMessage());
       throw new PermissionException(e.getMessage());
     } catch (IOException e) {
-      log.error("Error occurred while fetching environments: {}", e.getMessage());
+      log.error("Error occurred while fetching permissions: {}", e.getMessage());
       throw new PermissionException(e.getMessage());
     }
   }
