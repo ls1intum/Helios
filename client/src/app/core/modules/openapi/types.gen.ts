@@ -268,12 +268,8 @@ export type UpdateEnvironmentResponses = {
   /**
    * OK
    */
-  200: {
-    [key: string]: unknown;
-  };
+  200: unknown;
 };
-
-export type UpdateEnvironmentResponse = UpdateEnvironmentResponses[keyof UpdateEnvironmentResponses];
 
 export type UnlockEnvironmentData = {
   body?: never;

@@ -102,8 +102,7 @@ paths:
           description: OK
           content:
             application/json:
-              schema:
-                type: object
+              schema: {}
   /api/environments/{id}/unlock:
     put:
       tags:

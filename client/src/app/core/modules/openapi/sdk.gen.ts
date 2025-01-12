@@ -7,7 +7,6 @@ import type {
   GetEnvironmentByIdData,
   GetEnvironmentByIdResponse,
   UpdateEnvironmentData,
-  UpdateEnvironmentResponse,
   UnlockEnvironmentData,
   CreateWorkflowGroupData,
   CreateWorkflowGroupResponse,
@@ -98,7 +97,7 @@ export const getEnvironmentById = <ThrowOnError extends boolean = false>(options
 };
 
 export const updateEnvironment = <ThrowOnError extends boolean = false>(options: Options<UpdateEnvironmentData, ThrowOnError>) => {
-  return (options?.client ?? client).put<UpdateEnvironmentResponse, unknown, ThrowOnError>({
+  return (options?.client ?? client).put<unknown, unknown, ThrowOnError>({
     ...options,
     headers: {
       'Content-Type': 'application/json',

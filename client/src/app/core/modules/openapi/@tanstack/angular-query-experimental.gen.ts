@@ -7,7 +7,6 @@ import type {
   UpdateWorkflowGroupsData,
   GetEnvironmentByIdData,
   UpdateEnvironmentData,
-  UpdateEnvironmentResponse,
   UnlockEnvironmentData,
   CreateWorkflowGroupData,
   CreateWorkflowGroupResponse,
@@ -150,7 +149,7 @@ export const getEnvironmentByIdOptions = (options: Options<GetEnvironmentByIdDat
 };
 
 export const updateEnvironmentMutation = (options?: Partial<Options<UpdateEnvironmentData>>) => {
-  const mutationOptions: MutationOptions<UpdateEnvironmentResponse, DefaultError, Options<UpdateEnvironmentData>> = {
+  const mutationOptions: MutationOptions<unknown, DefaultError, Options<UpdateEnvironmentData>> = {
     mutationFn: async localOptions => {
       const { data } = await updateEnvironment({
         ...options,
