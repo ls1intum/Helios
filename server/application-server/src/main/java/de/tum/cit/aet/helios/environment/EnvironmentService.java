@@ -143,14 +143,12 @@ public class EnvironmentService {
     environment.setLockedBy(null);
     environment.setLockedAt(null);
 
-    var openLock = lockHistoryRepository
-        .findTopByEnvironmentAndLockedByAndUnlockedAtIsNullOrderByLockedAtDesc(
-            environment,
-            currentUserId
-        );
-    if (openLock != null) {
-      openLock.setUnlockedAt(OffsetDateTime.now());
-      lockHistoryRepository.save(openLock);
+    Optional<EnvironmentLockHistory> openLock = lockHistoryRepository
+        .findLatestLockForEnvironmentAndUser(environment, currentUserId);
+    if (openLock.isPresent()) {
+      EnvironmentLockHistory openLockHistory = openLock.get();
+      openLockHistory.setUnlockedAt(OffsetDateTime.now());
+      lockHistoryRepository.save(openLockHistory);
     }
 
     environmentRepository.save(environment);
@@ -158,11 +156,32 @@ public class EnvironmentService {
     return EnvironmentDto.fromEnvironment(environment);
   }
 
+  /**
+   * Updates the environment with the specified ID.
+   *
+   * <p>This method updates the environment with the specified ID using the provided EnvironmentDto.
+   *
+   * @param id             the ID of the environment to update
+   * @param environmentDto the EnvironmentDto containing the updated environment information
+   * @return an Optional containing the updated environment if successful,
+   *     or an empty Optional if no environment is found with the specified ID
+   */
   public Optional<EnvironmentDto> updateEnvironment(Long id, EnvironmentDto environmentDto) {
     return environmentRepository
         .findById(id)
         .map(
             environment -> {
+              if (!environmentDto.enabled() && environment.isLocked()) {
+                throw new EnvironmentException(
+                    "Environment is locked and can not be disabled! "
+                        + "Please unlock the environment first.");
+              } else if (environmentDto.enabled()) {
+                environment.setLocked(false);
+                environment.setLockedBy(null);
+                environment.setLockedAt(null);
+              }
+              environment.setEnabled(environmentDto.enabled());
+
               if (environmentDto.updatedAt() != null) {
                 environment.setUpdatedAt(environmentDto.updatedAt());
               }
@@ -175,7 +194,6 @@ public class EnvironmentService {
               if (environmentDto.serverUrl() != null) {
                 environment.setServerUrl(environmentDto.serverUrl());
               }
-              environment.setEnabled(environmentDto.enabled());
 
               environmentRepository.save(environment);
               return EnvironmentDto.fromEnvironment(environment);
@@ -184,14 +202,10 @@ public class EnvironmentService {
 
   public EnvironmentLockHistoryDto getUsersCurrentLock() {
     final String currentUserId = authService.getUserId();
-    EnvironmentLockHistory lockHistory =
-        lockHistoryRepository
-            .findTopByLockedByAndUnlockedAtIsNullOrderByLockedAtDesc(currentUserId);
+    Optional<EnvironmentLockHistory> lockHistory =
+        lockHistoryRepository.findLatestLockForEnabledEnvironment(currentUserId);
 
-    if (lockHistory == null) {
-      return null;
-    }
+    return lockHistory.map(EnvironmentLockHistoryDto::fromEnvironmentLockHistory).orElse(null);
 
-    return EnvironmentLockHistoryDto.fromEnvironmentLockHistory(lockHistory);
   }
 }
