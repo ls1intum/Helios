@@ -15,7 +15,7 @@ export type WorkflowMembershipDto = {
 export type EnvironmentDeployment = {
   id: number;
   url: string;
-  state?: 'PENDING' | 'SUCCESS' | 'ERROR' | 'FAILURE' | 'IN_PROGRESS' | 'QUEUED' | 'INACTIVE' | 'UNKNOWN';
+  state?: 'PENDING' | 'WAITING' | 'SUCCESS' | 'ERROR' | 'FAILURE' | 'IN_PROGRESS' | 'QUEUED' | 'INACTIVE' | 'UNKNOWN';
   statusesUrl: string;
   sha: string;
   ref: string;
@@ -179,7 +179,7 @@ export type DeploymentDto = {
   id: number;
   repository?: RepositoryInfoDto;
   url: string;
-  state?: 'PENDING' | 'SUCCESS' | 'ERROR' | 'FAILURE' | 'IN_PROGRESS' | 'QUEUED' | 'INACTIVE' | 'UNKNOWN';
+  state?: 'PENDING' | 'WAITING' | 'SUCCESS' | 'ERROR' | 'FAILURE' | 'IN_PROGRESS' | 'QUEUED' | 'INACTIVE' | 'UNKNOWN';
   statusesUrl: string;
   sha: string;
   ref: string;

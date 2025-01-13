@@ -51,7 +51,7 @@ export const EnvironmentDeploymentSchema = {
     },
     state: {
       type: 'string',
-      enum: ['PENDING', 'SUCCESS', 'ERROR', 'FAILURE', 'IN_PROGRESS', 'QUEUED', 'INACTIVE', 'UNKNOWN'],
+      enum: ['PENDING', 'WAITING', 'SUCCESS', 'ERROR', 'FAILURE', 'IN_PROGRESS', 'QUEUED', 'INACTIVE', 'UNKNOWN'],
     },
     statusesUrl: {
       type: 'string',
@@ -517,7 +517,7 @@ export const DeploymentDtoSchema = {
     },
     state: {
       type: 'string',
-      enum: ['PENDING', 'SUCCESS', 'ERROR', 'FAILURE', 'IN_PROGRESS', 'QUEUED', 'INACTIVE', 'UNKNOWN'],
+      enum: ['PENDING', 'WAITING', 'SUCCESS', 'ERROR', 'FAILURE', 'IN_PROGRESS', 'QUEUED', 'INACTIVE', 'UNKNOWN'],
     },
     statusesUrl: {
       type: 'string',

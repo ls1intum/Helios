@@ -692,6 +692,7 @@ components:
           type: string
           enum:
           - PENDING
+          - WAITING
           - SUCCESS
           - ERROR
           - FAILURE
@@ -1104,6 +1105,7 @@ components:
           type: string
           enum:
           - PENDING
+          - WAITING
           - SUCCESS
           - ERROR
           - FAILURE
