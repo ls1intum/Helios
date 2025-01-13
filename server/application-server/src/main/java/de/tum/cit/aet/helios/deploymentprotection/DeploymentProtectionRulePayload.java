@@ -1,6 +1,8 @@
 package de.tum.cit.aet.helios.deploymentprotection;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -19,10 +21,17 @@ public class DeploymentProtectionRulePayload {
 
   private String event;
 
+  /**
+   * The URL to accept or reject the deployment.
+   */
   @JsonProperty("deployment_callback_url")
   private String deploymentCallbackUrl;
 
   private Deployment deployment;
+
+  private Repository repository;
+
+  private Sender sender;
 
   @Getter
   @Setter
@@ -56,55 +65,42 @@ public class DeploymentProtectionRulePayload {
 
     // Branch name
     private String ref;
-
-    @JsonProperty("performed_via_github_app")
-    private PerformedViaGithubApp performedViaGithubApp;
   }
 
   @Getter
   @Setter
   @NoArgsConstructor
   @ToString
-  static class PerformedViaGithubApp {
+  static class Repository {
     private long id;
-
-    @JsonProperty("client_id")
-    private String clientId;
-
-    // For manual triggering, this is 'github-actions'
-    private String slug;
 
     @JsonProperty("node_id")
     private String nodeId;
 
     private String name;
+
+    @JsonProperty("full_name")
+    private String fullName;
   }
 
   @Getter
   @Setter
   @NoArgsConstructor
   @ToString
-  public static class PullRequest {
+  static class Sender {
+    private String login;
 
-    private String url;
     private long id;
 
     @JsonProperty("node_id")
     private String nodeId;
 
-    private int number;
-    private String title;
+    @Enumerated(EnumType.STRING)
+    private Type type;
 
-    @JsonProperty("created_at")
-    private String createdAt;
-
-    @JsonProperty("updated_at")
-    private String updatedAt;
-
-    @JsonProperty("closed_at")
-    private String closedAt;
-
-    @JsonProperty("merged_at")
-    private String mergedAt;
+    public enum Type {
+      User,
+      Bot
+    }
   }
 }
