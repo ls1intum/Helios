@@ -21,7 +21,6 @@ import okhttp3.Response;
 import org.kohsuke.github.GHOrganization;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GHWorkflow;
-import org.kohsuke.github.GitHub;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -29,7 +28,7 @@ import org.springframework.stereotype.Service;
 @Log4j2
 @Transactional
 public class GitHubService {
-  private final GitHub github;
+  private final GitHubFacade github;
 
   private final GitHubConfig gitHubConfig;
 
@@ -46,7 +45,7 @@ public class GitHubService {
   private GHOrganization gitHubOrganization;
 
   public GitHubService(
-      GitHub github,
+      GitHubFacade github,
       GitHubConfig gitHubConfig,
       ObjectMapper objectMapper,
       OkHttpClient okHttpClient) {
