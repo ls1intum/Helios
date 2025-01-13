@@ -25,6 +25,7 @@ nats:
 github:
     organizationName: ""
     authToken: ""
+    appName: ""
     appId: ""
     clientId: ""
     installationId: ""

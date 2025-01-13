@@ -17,6 +17,9 @@ public class GitHubConfig {
   @Value("${github.authToken}")
   private String ghAuthToken;
 
+  @Value("${github.appName}")
+  private String appNameWithoutSuffix;
+
   @Value("${github.appId}")
   private Long appId;
 
@@ -41,6 +44,7 @@ public class GitHubConfig {
     return new GitHubClientManager(
         organizationName,
         ghAuthToken,
+        appNameWithoutSuffix,
         appId,
         installationId,
         privateKeyPath,

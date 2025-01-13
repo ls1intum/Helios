@@ -29,6 +29,7 @@ github:
     # Can be any OAuth token, such as the PAT
     # TODO: Remove this and use the GitHub App for authentication
     authToken: ${GITHUB_AUTH_TOKEN:}
+    appName: ${GITHUB_APP_NAME:}
     appId: ${GITHUB_APP_ID:}
     clientId: ${GITHUB_CLIENT_ID:}
     installationId: ${GITHUB_INSTALLATION_ID:}

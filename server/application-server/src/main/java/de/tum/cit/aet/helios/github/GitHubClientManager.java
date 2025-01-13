@@ -2,10 +2,12 @@ package de.tum.cit.aet.helios.github;
 
 import de.tum.cit.aet.helios.util.GitHubAppJwtHelper;
 import java.io.File;
+import java.io.IOException;
 import java.security.PrivateKey;
 import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
+import lombok.Getter;
 import lombok.extern.log4j.Log4j2;
 import okhttp3.OkHttpClient;
 import org.kohsuke.github.GHApp;
@@ -32,7 +34,6 @@ import org.springframework.beans.factory.annotation.Value;
 @Log4j2
 public class GitHubClientManager {
 
-
   /**
    * The personal access token (PAT) for GitHub authentication.
    * Note: All PAT related features should be removed in later iterations.
@@ -42,6 +43,20 @@ public class GitHubClientManager {
    * The organization name to find the installation ID of the GitHub App.
    */
   private final String organizationName;
+
+  /**
+   * The name of the GitHub App.
+   * This is the name of the GitHub App without the bot suffix.
+   * Example: {@code heliosapp-testing}
+   */
+  private final String appNameWithoutSuffix;
+
+  /**
+   * The name of the GitHub App with the bot suffix.
+   * Example: {@code heliosapp-testing[bot]}
+   */
+  private String appName;
+
   /**
    * The GitHub App ID.
    */
@@ -79,18 +94,50 @@ public class GitHubClientManager {
   @Value("${http.cache.ttl}")
   private int cacheTtl;
 
+  /**
+   * The login name of the GitHub App.
+   * This value will be set after creating the GitHub client for the GitHub App.
+   */
+  @Getter
+  private String githubAppNodeId;
+
+  /**
+   * The authentication type used for the GitHub client.
+   */
+  @Getter
+  private final AuthType authType;
+
+  public enum AuthType {
+    PAT,
+    APP
+  }
+
   public GitHubClientManager(String organizationName,
                              String ghAuthToken,
+                             String appNameWithoutSuffix,
                              Long appId,
                              Long installationId,
                              String privateKeyPath,
                              OkHttpClient okHttpClient) {
     this.organizationName = organizationName;
     this.ghAuthToken = ghAuthToken;
+    this.appNameWithoutSuffix = appNameWithoutSuffix;
     this.appId = appId;
     this.installationId = installationId;
     this.privateKeyPath = privateKeyPath;
     this.okHttpClient = okHttpClient;
+
+    if (appId != null && privateKeyPath != null) {
+      this.authType = AuthType.APP;
+    } else if (ghAuthToken == null || ghAuthToken.isEmpty()) {
+      this.authType = AuthType.PAT;
+    } else {
+      log.error(
+          "GitHub auth token or private key is not provided! "
+              + "GitHub client will be disabled.");
+      authType = null;
+    }
+    this.appName = this.appNameWithoutSuffix + "[bot]";
   }
 
   /**
@@ -129,10 +176,26 @@ public class GitHubClientManager {
       if (gitHubClient == null || Instant.now().isAfter(tokenExpirationTime)) {
         log.info("Refreshing GitHub client...");
         gitHubClient = createGitHubClientWithCache();
+        if (authType == AuthType.APP) {
+          fetchGitHubAppNodeId();
+        }
         log.info("GitHub client refreshed successfully");
       }
     } finally {
       lock.unlock();
+    }
+  }
+
+  /**
+   * Fetches the GitHub App node ID using the app name.
+   */
+  private void fetchGitHubAppNodeId() {
+    try {
+      githubAppNodeId = gitHubClient.getUser(appName).getNodeId();
+    } catch (IOException e) {
+      throw new RuntimeException(
+          String.format("Failed to get GitHub Node ID of GitHub App with name: %s, error: %s",
+              appName, e.getMessage()), e);
     }
   }
 
@@ -142,16 +205,20 @@ public class GitHubClientManager {
    * @return the GitHub client
    */
   public GitHub createGitHubClientWithCache() {
+    if (authType == null) {
+      return GitHub.offline();
+    }
+
     try {
       GitHub github = null;
 
-      if (appId != null && privateKeyPath != null) {
+      if (authType == AuthType.APP) {
         // Initialize GitHub client with GitHub App credentials
         github = createGitHubClientForGitHubApp();
 
         // Set token expiration time to 20 minutes from now
         tokenExpirationTime = Instant.now().plusSeconds(60 * 20);
-      } else if (ghAuthToken == null || ghAuthToken.isEmpty()) {
+      } else if (authType == AuthType.PAT) {
         // Set current token to ghAuthToken
         currentToken = ghAuthToken;
         // Initialize GitHub client with PAT
@@ -163,10 +230,6 @@ public class GitHubClientManager {
 
         // Set token expiration time to 1 year from now (PATs don't change)
         tokenExpirationTime = Instant.now().plusSeconds(60 * 60 * 24 * 365);
-      } else {
-        log.error(
-            "GitHub auth token or private key is not provided! GitHub client will be disabled.");
-        return GitHub.offline();
       }
 
       if (github == null || github.isOffline()) {
