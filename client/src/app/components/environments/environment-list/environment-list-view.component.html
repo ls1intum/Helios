@@ -37,25 +37,13 @@
                 ><i-tabler name="external-link" class="mr-1" />Open</a
               >
             }
-            @if (isLoggedIn()) {
-              <button
-                (click)="onUnlockEnvironment($event, environment)"
-                [disabled]="!isCurrentUserLocked(environment)"
-                class="p-button p-button-danger p-2"
-                [ngClass]="{ 'opacity-50 cursor-not-allowed': !isCurrentUserLocked(environment) }"
-              >
-                <i-tabler name="lock-open" class="mr-1" />Unlock
-              </button>
+            @if (isLoggedIn() && isCurrentUserLocked(environment)) {
+              <button (click)="onUnlockEnvironment($event, environment)" class="p-button p-button-danger p-2"><i-tabler name="lock-open" class="mr-1" />Unlock</button>
             }
           }
 
-          @if (isLoggedIn() && deployable() && hasDeployPermissions()) {
-            <button
-              (click)="deployEnvironment(environment); $event.stopPropagation()"
-              class="p-button p-button-secondary p-2"
-              [disabled]="environment.locked && !isCurrentUserLocked(environment)"
-              [ngClass]="{ 'opacity-50 cursor-not-allowed': environment.locked && !isCurrentUserLocked(environment) }"
-            >
+          @if (isLoggedIn() && deployable() && (!environment.locked || isCurrentUserLocked(environment)) && hasDeployPermissions()) {
+            <button (click)="deployEnvironment(environment); $event.stopPropagation()" class="p-button p-button-secondary p-2">
               <i-tabler name="cloud-upload" class="mr-1" />Deploy
             </button>
           }
