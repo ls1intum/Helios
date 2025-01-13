@@ -199,7 +199,8 @@ public class GitHubDeploymentProtectionRuleMessageHandler
             workflowRunId);
       } else {
         log.error(
-            "Failed to send {} request for deployment protection rule. Response code: 422, Response body: {}",
+            "Failed to send {} request for deployment protection rule. "
+                + "Response code: 422, Response body: {}",
             state, responseBody);
       }
     } catch (Exception e) {
