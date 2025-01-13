@@ -34,4 +34,9 @@ public class GitHubFacadeImpl implements GitHubFacade {
     return clientManager.getGitHubClient().getRepository(name);
   }
 
+  @Override
+  public GHRepository getRepositoryById(long id) throws IOException {
+    return clientManager.getGitHubClient().getRepositoryById(id);
+  }
+
 }

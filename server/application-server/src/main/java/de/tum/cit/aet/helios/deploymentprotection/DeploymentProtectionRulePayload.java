@@ -24,11 +24,6 @@ public class DeploymentProtectionRulePayload {
 
   private Deployment deployment;
 
-//  private GHUser sender;
-
-  /**
-   * Represents the "deployment" object in the JSON.
-   */
   @Getter
   @Setter
   @NoArgsConstructor
@@ -57,20 +52,15 @@ public class DeploymentProtectionRulePayload {
     @JsonProperty("repository_url")
     private String repositoryUrl;
 
-//    private Creator creator;
-
     private String sha;
+
     // Branch name
     private String ref;
-
 
     @JsonProperty("performed_via_github_app")
     private PerformedViaGithubApp performedViaGithubApp;
   }
 
-  /**
-   * Represents the "performed_via_github_app" object in the "deployment".
-   */
   @Getter
   @Setter
   @NoArgsConstructor
@@ -90,9 +80,6 @@ public class DeploymentProtectionRulePayload {
     private String name;
   }
 
-  /**
-   * Represents a single pull request object in the "pull_requests" array.
-   */
   @Getter
   @Setter
   @NoArgsConstructor
@@ -120,5 +107,4 @@ public class DeploymentProtectionRulePayload {
     @JsonProperty("merged_at")
     private String mergedAt;
   }
-
 }

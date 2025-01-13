@@ -11,7 +11,6 @@ import de.tum.cit.aet.helios.github.permissions.GitHubPermissionsResponse;
 import de.tum.cit.aet.helios.github.permissions.GitHubRepositoryRoleDto;
 import de.tum.cit.aet.helios.github.permissions.PermissionException;
 import de.tum.cit.aet.helios.github.permissions.RepoPermissionType;
-import jakarta.annotation.PostConstruct;
 import jakarta.transaction.Transactional;
 import java.io.IOException;
 import java.util.Iterator;
@@ -27,7 +26,6 @@ import okhttp3.Response;
 import org.kohsuke.github.GHOrganization;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GHWorkflow;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -44,8 +42,7 @@ public class GitHubService {
 
   private final AuthService authService;
 
-  @Value("${github.authToken}")
-  private String ghAuthToken;
+  private final GitHubClientManager clientManager;
 
   private GHOrganization gitHubOrganization;
 
@@ -54,19 +51,21 @@ public class GitHubService {
       GitHubConfig gitHubConfig,
       ObjectMapper objectMapper,
       OkHttpClient okHttpClient,
-      AuthService authService) {
+      AuthService authService,
+      GitHubClientManager clientManager) {
     this.github = github;
     this.gitHubConfig = gitHubConfig;
     this.objectMapper = objectMapper;
     this.okHttpClient = okHttpClient;
     this.authService = authService;
+    this.clientManager = clientManager;
   }
 
 
   public Builder getRequestBuilder() {
     return new Request.Builder()
-            .header("Authorization", "token " + ghAuthToken)
-            .header("Accept", "application/vnd.github+json");
+        .header("Authorization", "token " + clientManager.getCurrentToken())
+        .header("Accept", "application/vnd.github+json");
   }
 
   /**
@@ -114,7 +113,7 @@ public class GitHubService {
   /**
    * Retrieves a specific workflow for a given repository.
    *
-   * @param repoNameWithOwners the repository name with owners
+   * @param repoNameWithOwners   the repository name with owners
    * @param workflowFileNameOrId the workflow file name or ID
    * @return the GitHub workflow
    * @throws IOException if an I/O error occurs
@@ -127,10 +126,10 @@ public class GitHubService {
   /**
    * Dispatches a workflow for a given repository.
    *
-   * @param repoNameWithOwners the repository name with owners
+   * @param repoNameWithOwners   the repository name with owners
    * @param workflowFileNameOrId the workflow file name or ID
-   * @param ref the reference (branch or tag) to run the workflow on
-   * @param inputs the inputs for the workflow
+   * @param ref                  the reference (branch or tag) to run the workflow on
+   * @param inputs               the inputs for the workflow
    * @throws IOException if an I/O error occurs
    */
   public void dispatchWorkflow(
@@ -202,7 +201,7 @@ public class GitHubService {
   /**
    * Retrieves a GitHub deployment iterator for a given repository and environment.
    *
-   * @param repository the GitHub repository as a GHRepository object
+   * @param repository      the GitHub repository as a GHRepository object
    * @param environmentName the environment name
    * @return a GitHubDeploymentIterator object
    */

@@ -23,4 +23,6 @@ public interface GitHubFacade {
   public GHOrganization getOrganization(String name) throws IOException;
 
   public GHRepository getRepository(String name) throws IOException;
+
+  public GHRepository getRepositoryById(long id) throws IOException;
 }

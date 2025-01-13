@@ -32,15 +32,46 @@ import org.springframework.beans.factory.annotation.Value;
 @Log4j2
 public class GitHubClientManager {
 
-  private final String organizationName;
+
+  /**
+   * The personal access token (PAT) for GitHub authentication.
+   * Note: All PAT related features should be removed in later iterations.
+   */
   private final String ghAuthToken;
+  /**
+   * The organization name to find the installation ID of the GitHub App.
+   */
+  private final String organizationName;
+  /**
+   * The GitHub App ID.
+   */
   private final Long appId;
+  /**
+   * The installation ID of the GitHub App. It can be found in organization settings.
+   * Example URL: {@code https://github.com/organizations/<org-name>/settings/installations/<installation-id>}
+   * If installationId is not provided, it will be found by the organization name.
+   */
   private Long installationId;
+  /**
+   * The path to the private key file (pem) of the GitHub App.
+   * The private key must be generated in GitHub App settings.
+   * Generated key is in PKCS#1 format. It must be converted to PKCS#8 format.
+   */
   private final String privateKeyPath;
 
   private final OkHttpClient okHttpClient;
 
+  /**
+   * The GitHub client instance.
+   */
   private volatile GitHub gitHubClient;
+  /**
+   * The current token used for authentication.
+   */
+  private volatile String currentToken;
+  /**
+   * The expiration time of the current token.
+   */
   private volatile Instant tokenExpirationTime;
 
   private final ReentrantLock lock = new ReentrantLock();
@@ -60,6 +91,18 @@ public class GitHubClientManager {
     this.installationId = installationId;
     this.privateKeyPath = privateKeyPath;
     this.okHttpClient = okHttpClient;
+  }
+
+  /**
+   * Returns the current GitHub token. It is either a PAT or an installation token.
+   *
+   * @return the current token
+   */
+  public String getCurrentToken() {
+    if (currentToken == null || Instant.now().isAfter(tokenExpirationTime)) {
+      refreshClient();
+    }
+    return currentToken;
   }
 
   /**
@@ -86,8 +129,6 @@ public class GitHubClientManager {
       if (gitHubClient == null || Instant.now().isAfter(tokenExpirationTime)) {
         log.info("Refreshing GitHub client...");
         gitHubClient = createGitHubClientWithCache();
-        // Set token expiration time to 20 minutes from now
-        tokenExpirationTime = Instant.now().plusSeconds(60 * 20);
         log.info("GitHub client refreshed successfully");
       }
     } finally {
@@ -107,24 +148,29 @@ public class GitHubClientManager {
       if (appId != null && privateKeyPath != null) {
         // Initialize GitHub client with GitHub App credentials
         github = createGitHubClientForGitHubApp();
+
+        // Set token expiration time to 20 minutes from now
+        tokenExpirationTime = Instant.now().plusSeconds(60 * 20);
       } else if (ghAuthToken == null || ghAuthToken.isEmpty()) {
+        // Set current token to ghAuthToken
+        currentToken = ghAuthToken;
         // Initialize GitHub client with PAT
         github =
             new GitHubBuilder()
                 .withConnector(new OkHttpGitHubConnector(okHttpClient, cacheTtl))
                 .withOAuthToken(ghAuthToken)
                 .build();
-        if (github.isOffline()) {
-          return github;
-        }
+
+        // Set token expiration time to 1 year from now (PATs don't change)
+        tokenExpirationTime = Instant.now().plusSeconds(60 * 60 * 24 * 365);
       } else {
         log.error(
             "GitHub auth token or private key is not provided! GitHub client will be disabled.");
         return GitHub.offline();
       }
 
-      if (github == null) {
-        log.error("GitHub client is null! GitHub client will be disabled.");
+      if (github == null || github.isOffline()) {
+        log.error("GitHub client is null or Offline! GitHub client will be disabled.");
         return GitHub.offline();
       }
 
@@ -195,6 +241,8 @@ public class GitHubClientManager {
       GHAppInstallation installation = githubAppClient.getApp().getInstallationById(installationId);
       GHAppInstallationToken token = installation.createToken().create();
       String installationToken = token.getToken();
+      // Set the current token to the installation token
+      currentToken = installationToken;
 
       // Build the final client using the installation token
       GitHub installationClient =
