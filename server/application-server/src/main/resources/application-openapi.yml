@@ -25,6 +25,12 @@ nats:
 github:
     organizationName: ""
     authToken: ""
+    appId: ""
+    clientId: ""
+    installationId: ""
+    privateKeyPath: ""
+
+http:
     cache:
         enabled: false
         ttl: 0
