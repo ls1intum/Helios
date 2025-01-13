@@ -5,4 +5,9 @@
   </p>
 </div>
 
-<app-environment-list-view [deployable]="true" (deploy)="handleDeploy($event)" />
+<app-environment-list-view
+  [deployable]="true"
+  [hasUnlockPermissions]="permissionService.isAtLeastMaintainer()"
+  [hasDeployPermissions]="permissionService.hasWritePermission()"
+  (deploy)="handleDeploy($event)"
+/>

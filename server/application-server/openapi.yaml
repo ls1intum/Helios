@@ -299,6 +299,18 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/WorkflowRunDto"
+  /api/user-permissions:
+    get:
+      tags:
+      - user-permissions-controller
+      operationId: getUserPermissions
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GitHubRepositoryRoleDto"
   /api/settings/{repositoryId}/groups:
     get:
       tags:
@@ -878,6 +890,18 @@ components:
       - name
       - status
       - workflowId
+    GitHubRepositoryRoleDto:
+      type: object
+      properties:
+        permission:
+          type: string
+          enum:
+          - ADMIN
+          - WRITE
+          - READ
+          - NONE
+        roleName:
+          type: string
     LabelInfoDto:
       type: object
       properties:
