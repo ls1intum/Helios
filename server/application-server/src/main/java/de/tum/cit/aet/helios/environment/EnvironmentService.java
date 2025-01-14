@@ -44,7 +44,7 @@ public class EnvironmentService {
   }
 
   public List<EnvironmentDto> getAllEnabledEnvironments() {
-    return environmentRepository.findByEnabledTrue().stream()
+    return environmentRepository.findByEnabledTrueOrderByNameAsc().stream()
         .map(
             environment -> {
               return EnvironmentDto.fromEnvironment(
