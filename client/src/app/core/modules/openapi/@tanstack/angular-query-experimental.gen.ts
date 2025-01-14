@@ -7,7 +7,6 @@ import type {
   UpdateWorkflowGroupsData,
   GetEnvironmentByIdData,
   UpdateEnvironmentData,
-  UpdateEnvironmentResponse,
   UnlockEnvironmentData,
   CreateWorkflowGroupData,
   CreateWorkflowGroupResponse,
@@ -31,6 +30,7 @@ import type {
   GetAllEnvironmentsData,
   GetEnvironmentsByUserLockingData,
   GetEnvironmentsByRepositoryIdData,
+  GetAllEnabledEnvironmentsData,
   GetAllDeploymentsData,
   GetDeploymentByIdData,
   GetDeploymentsByEnvironmentIdData,
@@ -66,6 +66,7 @@ import {
   getAllEnvironments,
   getEnvironmentsByUserLocking,
   getEnvironmentsByRepositoryId,
+  getAllEnabledEnvironments,
   getAllDeployments,
   getDeploymentById,
   getDeploymentsByEnvironmentId,
@@ -150,7 +151,7 @@ export const getEnvironmentByIdOptions = (options: Options<GetEnvironmentByIdDat
 };
 
 export const updateEnvironmentMutation = (options?: Partial<Options<UpdateEnvironmentData>>) => {
-  const mutationOptions: MutationOptions<UpdateEnvironmentResponse, DefaultError, Options<UpdateEnvironmentData>> = {
+  const mutationOptions: MutationOptions<unknown, DefaultError, Options<UpdateEnvironmentData>> = {
     mutationFn: async localOptions => {
       const { data } = await updateEnvironment({
         ...options,
@@ -548,6 +549,23 @@ export const getEnvironmentsByRepositoryIdOptions = (options: Options<GetEnviron
       return data;
     },
     queryKey: getEnvironmentsByRepositoryIdQueryKey(options),
+  });
+};
+
+export const getAllEnabledEnvironmentsQueryKey = (options?: Options<GetAllEnabledEnvironmentsData>) => [createQueryKey('getAllEnabledEnvironments', options)];
+
+export const getAllEnabledEnvironmentsOptions = (options?: Options<GetAllEnabledEnvironmentsData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getAllEnabledEnvironments({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: getAllEnabledEnvironmentsQueryKey(options),
   });
 };
 

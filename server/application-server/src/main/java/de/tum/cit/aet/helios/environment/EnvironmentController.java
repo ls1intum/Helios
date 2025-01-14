@@ -28,6 +28,12 @@ public class EnvironmentController {
     return ResponseEntity.ok(environments);
   }
 
+  @GetMapping("/enabled")
+  public ResponseEntity<List<EnvironmentDto>> getAllEnabledEnvironments() {
+    List<EnvironmentDto> environments = environmentService.getAllEnabledEnvironments();
+    return ResponseEntity.ok(environments);
+  }
+
   @GetMapping("/{id}")
   public ResponseEntity<EnvironmentDto> getEnvironmentById(@PathVariable Long id) {
     Optional<EnvironmentDto> environment = environmentService.getEnvironmentById(id);
@@ -81,10 +87,14 @@ public class EnvironmentController {
   }
 
   @PutMapping("/{id}")
-  public ResponseEntity<EnvironmentDto> updateEnvironment(
+  public ResponseEntity<?> updateEnvironment(
       @PathVariable Long id, @RequestBody EnvironmentDto environmentDto) {
-    Optional<EnvironmentDto> updatedEnvironment =
-        environmentService.updateEnvironment(id, environmentDto);
-    return updatedEnvironment.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+    try {
+      Optional<EnvironmentDto> updatedEnvironment =
+          environmentService.updateEnvironment(id, environmentDto);
+      return updatedEnvironment.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+    } catch (EnvironmentException e) {
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Update Failed: " + e.getMessage());
+    }
   }
 }
