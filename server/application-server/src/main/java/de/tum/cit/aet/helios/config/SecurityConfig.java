@@ -92,7 +92,7 @@ public class SecurityConfig {
           // Allow production domain
           registry
               .addMapping("/api/**")
-              .allowedOrigins("https://helios.artemis.cit.tum.de")
+              .allowedOrigins("https://helios.aet.cit.tum.de")
               .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
               .allowedHeaders("*")
               .allowCredentials(true);
