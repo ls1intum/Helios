@@ -23,9 +23,11 @@ public interface EnvironmentLockHistoryRepository
         SELECT elh
         FROM EnvironmentLockHistory elh
         WHERE elh.environment = :environment
+          AND elh.environment.enabled = true
           AND elh.lockedBy = :lockedBy
           AND elh.unlockedAt IS NULL
         ORDER BY elh.lockedAt DESC
+        LIMIT 1
       """)
   Optional<EnvironmentLockHistory> findLatestLockForEnvironmentAndUser(
       @Param("environment") Environment environment,
@@ -45,7 +47,8 @@ public interface EnvironmentLockHistoryRepository
         WHERE elh.environment.enabled = true
           AND elh.lockedBy = :lockedBy
           AND elh.unlockedAt IS NULL
-        ORDER BY elh.lockedAt DESC
+        ORDER BY elh.lockedAt ASC
+        LIMIT 1
       """)
   Optional<EnvironmentLockHistory> findLatestLockForEnabledEnvironment(
       @Param("lockedBy") String lockedBy);
