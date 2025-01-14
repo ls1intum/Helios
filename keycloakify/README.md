@@ -8,6 +8,10 @@ Before starting install the dependencies:
 ```
 yarn
 ```
+To run locally
+```
+yarn dev
+```
 To change the theme, edit React file you want to change and then run
 ```
 yarn build-keycloak-theme
