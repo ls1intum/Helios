@@ -1,7 +1,6 @@
-.. _architecture:
-
+============
 Architecture
-==========
+============
 
 .. contents:: Content of this document
     :local:
