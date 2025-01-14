@@ -1,0 +1,84 @@
+name: Deploy to Testserver with Helios
+
+on:
+  workflow_dispatch:
+    inputs:
+      HELIOS_TRIGGERED_BY:
+        description: "Username that triggered deployment"
+        required: true
+        type: string
+      HELIOS_BRANCH_NAME:
+        description: "Which branch to deploy"
+        required: true
+        type: string
+      HELIOS_BRANCH_HEAD_SHA:
+        description: "SHA of the branch to deploy"
+        required: true
+        type: string
+      HELIOS_PR_NUMBER:
+        description: "PR number that triggered deployment"
+        required: false
+        type: string
+      HELIOS_ENVIRONMENT_NAME:
+        description: "Which environment to deploy (e.g. artemis-test7.artemis.cit.tum.de, etc.)."
+        required: true
+        type: string
+      HELIOS_BUILD:
+        description: "Whether to also build or just deploy the existing Docker image"
+        required: true
+        type: boolean
+        default: false
+      HELIOS_BUILD_TAG:
+        description: "Docker tag to use if we are building or pulling an existing image"
+        required: false
+        type: string
+      HELIOS_RAW_URL:
+        description: "URL to the raw content of the repository in the format https://raw.githubusercontent.com/:owner/:repo/:sha"
+        required: true
+        type: string
+
+concurrency: test-servers
+
+env:
+  CI: true
+  RAW_URL: ${{ github.event.inputs.HELIOS_RAW_URL }}
+
+jobs:
+  # Print the inputs for debugging
+  validate-inputs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate Build Tag Input Exists
+        if: ${{ github.event.inputs.HELIOS_BUILD == 'true' && github.event.inputs.HELIOS_BUILD_TAG == '' }}
+        run: |
+          echo "HELIOS_BUILD is true but no HELIOS_BUILD_TAG was provided."
+          exit 1
+      - name: Validate PR Number Input Exists
+        if: ${{ github.event.inputs.HELIOS_BUILD == 'false' && github.event.inputs.HELIOS_PR_NUMBER == '' }}
+        run: |
+          echo "HELIOS_BUILD is false but no HELIOS_PR_NUMBER was provided."
+          exit 1
+
+      - name: Print Inputs
+        run: |
+          echo "RAW_URL: ${{ env.RAW_URL }}"
+          echo "Triggered by: ${{ github.event.inputs.HELIOS_TRIGGERED_BY }}"
+          echo "Branch: ${{ github.event.inputs.HELIOS_BRANCH_NAME }}"
+          echo "SHA: ${{ github.event.inputs.HELIOS_BRANCH_HEAD_SHA }}"
+          echo "PR Number: ${{ github.event.inputs.HELIOS_PR_NUMBER }}"
+          echo "Environment: ${{ github.event.inputs.HELIOS_ENVIRONMENT_NAME }}"
+          echo "Need Build? ${{ github.event.inputs.HELIOS_BUILD }}"
+          echo "Build Tag? ${{ github.event.inputs.HELIOS_BUILD_TAG }}"
+
+  deploy:
+    needs: [ validate-inputs ]
+    runs-on: ubuntu-latest
+    concurrency: test-servers-deploy
+
+    environment:
+      name: ${{ github.event.inputs.HELIOS_ENVIRONMENT_NAME }}
+
+    steps:
+      - name: Echo
+        run: |
+          echo "Deploying to ${{ github.event.inputs.HELIOS_ENVIRONMENT_NAME }}"
