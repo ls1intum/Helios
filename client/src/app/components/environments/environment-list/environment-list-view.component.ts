@@ -7,7 +7,7 @@ import { ButtonModule } from 'primeng/button';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService } from 'primeng/api';
 import { RouterLink } from '@angular/router';
-import { injectMutation, injectQuery, injectQueryClient } from '@tanstack/angular-query-experimental';
+import { injectMutation, injectQuery, QueryClient } from '@tanstack/angular-query-experimental';
 import { InputTextModule } from 'primeng/inputtext';
 import { EnvironmentDeploymentInfoComponent } from '../deployment-info/environment-deployment-info.component';
 import {
@@ -43,7 +43,7 @@ import { CommonModule } from '@angular/common';
   templateUrl: './environment-list-view.component.html',
 })
 export class EnvironmentListViewComponent {
-  private queryClient = injectQueryClient();
+  private queryClient = inject(QueryClient);
   private keycloakService = inject(KeycloakService);
   private confirmationService = inject(ConfirmationService);
 
