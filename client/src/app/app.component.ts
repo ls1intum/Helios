@@ -30,14 +30,25 @@ export class AppComponent {
     }
 
     client.interceptors.response.use(async response => {
-      if (response.ok == false) {
-        const errorMessage = await response.text();
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Fetch Error',
-          detail: errorMessage || 'An unexpected error occurred.',
-        });
+      if (!response.ok) {
+        if (response.status === 401) {
+          // 401-specific message
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Unauthorized',
+            detail: 'You are unauthorized! Please refresh the page.',
+          });
+        } else {
+          // General error handling
+          const errorMessage = await response.text();
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Fetch Error',
+            detail: errorMessage || 'An unexpected error occurred.',
+          });
+        }
       }
+
       return response;
     });
   }
