@@ -1,4 +1,4 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
 import { MarkdownPipe } from '@app/core/modules/markdown/markdown.pipe';
 
 import { PipelineComponent, PipelineSelector } from '@app/components/pipeline/pipeline.component';
@@ -10,6 +10,7 @@ import { DeploymentSelectionComponent } from '@app/components/deployment-selecti
 import { injectQuery } from '@tanstack/angular-query-experimental';
 import { SkeletonModule } from 'primeng/skeleton';
 import { getPullRequestByRepositoryIdAndNumberOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
+import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 
 @Component({
   selector: 'app-branch-details',
@@ -17,13 +18,17 @@ import { getPullRequestByRepositoryIdAndNumberOptions } from '@app/core/modules/
   templateUrl: './pull-request-details.component.html',
 })
 export class PullRequestDetailsComponent {
+  private keycloakService = inject(KeycloakService);
+
   repositoryId = input.required<number>();
   pullRequestNumber = input.required<number>();
 
   query = injectQuery(() => ({
     ...getPullRequestByRepositoryIdAndNumberOptions({ path: { repoId: this.repositoryId(), number: this.pullRequestNumber() } }),
-    refetchInterval: 5000,
+    refetchInterval: 30000,
   }));
+
+  isLoggedIn = computed(() => this.keycloakService.isLoggedIn());
 
   pipelineSelector = computed<PipelineSelector | null>(() => {
     const pr = this.query.data();

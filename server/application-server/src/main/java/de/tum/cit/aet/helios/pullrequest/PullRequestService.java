@@ -4,8 +4,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@Transactional
 public class PullRequestService {
 
   private final PullRequestRepository pullRequestRepository;
@@ -14,9 +16,9 @@ public class PullRequestService {
     this.pullRequestRepository = pullRequestRepository;
   }
 
-  public List<PullRequestInfoDto> getAllPullRequests() {
+  public List<PullRequestBaseInfoDto> getAllPullRequests() {
     return pullRequestRepository.findAll().stream()
-        .map(PullRequestInfoDto::fromPullRequest)
+        .map(PullRequestBaseInfoDto::fromPullRequest)
         .collect(Collectors.toList());
   }
 
@@ -25,7 +27,7 @@ public class PullRequestService {
   }
 
   public List<PullRequestInfoDto> getPullRequestByRepositoryId(Long repositoryId) {
-    return pullRequestRepository.findByRepositoryId(repositoryId).stream()
+    return pullRequestRepository.findByRepositoryRepositoryId(repositoryId).stream()
         .map(PullRequestInfoDto::fromPullRequest)
         .collect(Collectors.toList());
   }
@@ -33,7 +35,7 @@ public class PullRequestService {
   public Optional<PullRequestInfoDto> getPullRequestByRepositoryIdAndNumber(
       Long repoId, Integer number) {
     return pullRequestRepository
-        .findByRepositoryIdAndNumber(repoId, number)
+        .findByRepositoryRepositoryIdAndNumber(repoId, number)
         .map(PullRequestInfoDto::fromPullRequest);
   }
 }

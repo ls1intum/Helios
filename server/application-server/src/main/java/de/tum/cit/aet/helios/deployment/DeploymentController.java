@@ -1,5 +1,6 @@
 package de.tum.cit.aet.helios.deployment;
 
+import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.http.HttpStatus;
@@ -50,12 +51,15 @@ public class DeploymentController {
   }
 
   @PostMapping("/deploy")
-  public ResponseEntity<Void> deployToEnvironment(@RequestBody DeployRequest deployRequest) {
+  public ResponseEntity<String> deployToEnvironment(
+      @Valid @RequestBody DeployRequest deployRequest) {
     try {
       deploymentService.deployToEnvironment(deployRequest);
       return ResponseEntity.ok().build();
     } catch (DeploymentException e) {
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+      return ResponseEntity
+          .status(HttpStatus.INTERNAL_SERVER_ERROR)
+          .body("Deployment failed: " + e.getMessage());
     }
   }
 }

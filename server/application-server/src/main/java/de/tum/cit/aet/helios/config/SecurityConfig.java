@@ -2,11 +2,14 @@ package de.tum.cit.aet.helios.config;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
+import de.tum.cit.aet.helios.filters.RepositoryInterceptor;
 import lombok.extern.log4j.Log4j2;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
+import org.springframework.http.HttpMethod;
 import org.springframework.lang.NonNull;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -14,6 +17,7 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Log4j2
@@ -33,20 +37,22 @@ public class SecurityConfig {
         .csrf(AbstractHttpConfigurer::disable) // Disable CSRF
         .authorizeHttpRequests(
             auth -> {
-              auth.requestMatchers(
-                      "/auth/**",
-                      "/bus/v3/api-docs/**",
-                      "/v2/api-docs",
-                      "/v3/api-docs",
-                      "/v3/api-docs/**",
-                      "/v3/api-docs.yaml",
-                      "/swagger-resources",
-                      "/swagger-resources/**",
-                      "/configuration/ui",
-                      "/configuration/security",
-                      "/swagger-ui/**",
-                      "/webjars/**",
-                      "/swagger-ui.html")
+              auth
+                .requestMatchers(HttpMethod.GET, "/api/**").permitAll()
+                .requestMatchers(
+                        "/auth/**",
+                        "/bus/v3/api-docs/**",
+                        "/v2/api-docs",
+                        "/v3/api-docs",
+                        "/v3/api-docs/**",
+                        "/v3/api-docs.yaml",
+                        "/swagger-resources",
+                        "/swagger-resources/**",
+                        "/configuration/ui",
+                        "/configuration/security",
+                        "/swagger-ui/**",
+                        "/webjars/**",
+                        "/swagger-ui.html")
                   .permitAll()
                   .anyRequest()
                   .authenticated();
@@ -71,9 +77,17 @@ public class SecurityConfig {
 
   @Bean
   public WebMvcConfigurer corsConfigurer() {
+
     return new WebMvcConfigurer() {
+      @Autowired private RepositoryInterceptor requestInterceptor;
+
       @Override
-      public void addCorsMappings(@NotNull @NonNull CorsRegistry registry) {
+      public void addInterceptors(@NonNull InterceptorRegistry registry) {
+        registry.addWebRequestInterceptor(requestInterceptor);
+      }
+
+      @Override
+      public void addCorsMappings(@NotNull CorsRegistry registry) {
         if (environment.matchesProfiles("prod")) {
           // Allow production domain
           registry

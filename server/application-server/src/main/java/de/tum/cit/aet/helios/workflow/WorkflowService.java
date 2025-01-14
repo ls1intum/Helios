@@ -1,11 +1,13 @@
 package de.tum.cit.aet.helios.workflow;
 
+import jakarta.transaction.Transactional;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 
 @Service
+@Transactional
 public class WorkflowService {
 
   private final WorkflowRepository workflowRepository;
@@ -25,7 +27,8 @@ public class WorkflowService {
   }
 
   public List<WorkflowDto> getWorkflowsByRepositoryId(Long repositoryId) {
-    return workflowRepository.findByRepositoryIdOrderByCreatedAtDesc(repositoryId).stream()
+    return workflowRepository.findByRepositoryRepositoryIdOrderByCreatedAtDesc(repositoryId)
+        .stream()
         .map(WorkflowDto::fromWorkflow)
         .collect(Collectors.toList());
   }
@@ -43,5 +46,12 @@ public class WorkflowService {
             .orElseThrow(() -> new IllegalArgumentException("Workflow not found!"));
     workflow.setLabel(label);
     workflowRepository.save(workflow);
+  }
+
+  public Workflow getDeploymentWorkflow() {
+    Workflow workflow =
+        workflowRepository
+            .findFirstByLabelOrderByCreatedAtDesc(Workflow.Label.DEPLOYMENT);
+    return workflow;
   }
 }

@@ -9,10 +9,10 @@ import type {
   UpdateEnvironmentData,
   UpdateEnvironmentResponse,
   UnlockEnvironmentData,
-  UnlockEnvironmentResponse,
   CreateWorkflowGroupData,
   CreateWorkflowGroupResponse,
   DeployToEnvironmentData,
+  DeployToEnvironmentResponse,
   HealthCheckData,
   HealthCheckResponse,
   GetAllWorkflowsData,
@@ -27,8 +27,14 @@ import type {
   GetLatestWorkflowRunsByPullRequestIdAndHeadCommitResponse,
   GetLatestWorkflowRunsByBranchAndHeadCommitData,
   GetLatestWorkflowRunsByBranchAndHeadCommitResponse,
+  GetUserPermissionsData,
+  GetUserPermissionsResponse,
   GetGroupsWithWorkflowsData,
   GetGroupsWithWorkflowsResponse,
+  GetAllRepositoriesData,
+  GetAllRepositoriesResponse,
+  GetRepositoryByIdData,
+  GetRepositoryByIdResponse,
   GetAllPullRequestsData,
   GetAllPullRequestsResponse,
   GetPullRequestByIdData,
@@ -39,6 +45,8 @@ import type {
   GetPullRequestByRepositoryIdResponse,
   GetAllEnvironmentsData,
   GetAllEnvironmentsResponse,
+  GetEnvironmentsByUserLockingData,
+  GetEnvironmentsByUserLockingResponse,
   GetEnvironmentsByRepositoryIdData,
   GetEnvironmentsByRepositoryIdResponse,
   GetAllDeploymentsData,
@@ -49,6 +57,8 @@ import type {
   GetDeploymentsByEnvironmentIdResponse,
   GetLatestDeploymentByEnvironmentIdData,
   GetLatestDeploymentByEnvironmentIdResponse,
+  GetCommitByRepositoryIdAndNameData,
+  GetCommitByRepositoryIdAndNameResponse,
   GetAllBranchesData,
   GetAllBranchesResponse,
   GetBranchByRepositoryIdAndNameData,
@@ -99,7 +109,7 @@ export const updateEnvironment = <ThrowOnError extends boolean = false>(options:
 };
 
 export const unlockEnvironment = <ThrowOnError extends boolean = false>(options: Options<UnlockEnvironmentData, ThrowOnError>) => {
-  return (options?.client ?? client).put<UnlockEnvironmentResponse, unknown, ThrowOnError>({
+  return (options?.client ?? client).put<unknown, unknown, ThrowOnError>({
     ...options,
     url: '/api/environments/{id}/unlock',
   });
@@ -117,7 +127,7 @@ export const createWorkflowGroup = <ThrowOnError extends boolean = false>(option
 };
 
 export const deployToEnvironment = <ThrowOnError extends boolean = false>(options: Options<DeployToEnvironmentData, ThrowOnError>) => {
-  return (options?.client ?? client).post<unknown, unknown, ThrowOnError>({
+  return (options?.client ?? client).post<DeployToEnvironmentResponse, unknown, ThrowOnError>({
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -176,7 +186,14 @@ export const getLatestWorkflowRunsByBranchAndHeadCommit = <ThrowOnError extends 
 ) => {
   return (options?.client ?? client).get<GetLatestWorkflowRunsByBranchAndHeadCommitResponse, unknown, ThrowOnError>({
     ...options,
-    url: '/api/workflows/branch/{branch}',
+    url: '/api/workflows/branch',
+  });
+};
+
+export const getUserPermissions = <ThrowOnError extends boolean = false>(options?: Options<GetUserPermissionsData, ThrowOnError>) => {
+  return (options?.client ?? client).get<GetUserPermissionsResponse, unknown, ThrowOnError>({
+    ...options,
+    url: '/api/user-permissions',
   });
 };
 
@@ -184,6 +201,20 @@ export const getGroupsWithWorkflows = <ThrowOnError extends boolean = false>(opt
   return (options?.client ?? client).get<GetGroupsWithWorkflowsResponse, unknown, ThrowOnError>({
     ...options,
     url: '/api/settings/{repositoryId}/groups',
+  });
+};
+
+export const getAllRepositories = <ThrowOnError extends boolean = false>(options?: Options<GetAllRepositoriesData, ThrowOnError>) => {
+  return (options?.client ?? client).get<GetAllRepositoriesResponse, unknown, ThrowOnError>({
+    ...options,
+    url: '/api/repository',
+  });
+};
+
+export const getRepositoryById = <ThrowOnError extends boolean = false>(options: Options<GetRepositoryByIdData, ThrowOnError>) => {
+  return (options?.client ?? client).get<GetRepositoryByIdResponse, unknown, ThrowOnError>({
+    ...options,
+    url: '/api/repository/{id}',
   });
 };
 
@@ -222,6 +253,13 @@ export const getAllEnvironments = <ThrowOnError extends boolean = false>(options
   });
 };
 
+export const getEnvironmentsByUserLocking = <ThrowOnError extends boolean = false>(options?: Options<GetEnvironmentsByUserLockingData, ThrowOnError>) => {
+  return (options?.client ?? client).get<GetEnvironmentsByUserLockingResponse, unknown, ThrowOnError>({
+    ...options,
+    url: '/api/environments/user_locking',
+  });
+};
+
 export const getEnvironmentsByRepositoryId = <ThrowOnError extends boolean = false>(options: Options<GetEnvironmentsByRepositoryIdData, ThrowOnError>) => {
   return (options?.client ?? client).get<GetEnvironmentsByRepositoryIdResponse, unknown, ThrowOnError>({
     ...options,
@@ -257,6 +295,13 @@ export const getLatestDeploymentByEnvironmentId = <ThrowOnError extends boolean 
   });
 };
 
+export const getCommitByRepositoryIdAndName = <ThrowOnError extends boolean = false>(options: Options<GetCommitByRepositoryIdAndNameData, ThrowOnError>) => {
+  return (options?.client ?? client).get<GetCommitByRepositoryIdAndNameResponse, unknown, ThrowOnError>({
+    ...options,
+    url: '/api/commits/repository/{repoId}/commit/{sha}',
+  });
+};
+
 export const getAllBranches = <ThrowOnError extends boolean = false>(options?: Options<GetAllBranchesData, ThrowOnError>) => {
   return (options?.client ?? client).get<GetAllBranchesResponse, unknown, ThrowOnError>({
     ...options,
@@ -267,7 +312,7 @@ export const getAllBranches = <ThrowOnError extends boolean = false>(options?: O
 export const getBranchByRepositoryIdAndName = <ThrowOnError extends boolean = false>(options: Options<GetBranchByRepositoryIdAndNameData, ThrowOnError>) => {
   return (options?.client ?? client).get<GetBranchByRepositoryIdAndNameResponse, unknown, ThrowOnError>({
     ...options,
-    url: '/api/branches/repository/{repoId}/name/{name}',
+    url: '/api/branches/repository/{repoId}/branch',
   });
 };
 

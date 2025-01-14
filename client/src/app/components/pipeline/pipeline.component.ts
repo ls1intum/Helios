@@ -1,7 +1,6 @@
-import { Component, computed, inject, input } from '@angular/core';
+import { Component, computed, input } from '@angular/core';
 import { injectQuery } from '@tanstack/angular-query-experimental';
 import { TableModule } from 'primeng/table';
-import { PipelineService } from '@app/core/services/pipeline';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { PanelModule } from 'primeng/panel';
 import { IconsModule } from 'icons.module';
@@ -9,6 +8,7 @@ import { TooltipModule } from 'primeng/tooltip';
 import {
   getLatestWorkflowRunsByBranchAndHeadCommitOptions,
   getLatestWorkflowRunsByPullRequestIdAndHeadCommitOptions,
+  getGroupsWithWorkflowsOptions,
 } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { SkeletonModule } from 'primeng/skeleton';
 
@@ -24,12 +24,9 @@ export type PipelineSelector = { repositoryId: number } & (
 @Component({
   selector: 'app-pipeline',
   imports: [TableModule, ProgressSpinnerModule, PanelModule, IconsModule, TooltipModule, SkeletonModule],
-  providers: [PipelineService],
   templateUrl: './pipeline.component.html',
 })
 export class PipelineComponent {
-  pipelineService = inject(PipelineService);
-
   selector = input<PipelineSelector | null>();
 
   branchName = computed(() => {
@@ -42,28 +39,44 @@ export class PipelineComponent {
     if (!selector) return null;
     return 'pullRequestId' in selector ? selector.pullRequestId : null;
   });
-
+  repositoryId = computed(() => {
+    const selector = this.selector();
+    if (!selector) return null;
+    return selector.repositoryId;
+  });
+  //TODO instead of refetching every 15 seconds, we should use websockets to get real-time updates
   branchQuery = injectQuery(() => ({
-    ...getLatestWorkflowRunsByBranchAndHeadCommitOptions({ path: { branch: this.branchName()! } }),
+    ...getLatestWorkflowRunsByBranchAndHeadCommitOptions({ query: { branch: this.branchName()! } }),
     enabled: this.branchName() !== null,
-    refetchInterval: 2000,
+    refetchInterval: 15000,
   }));
   pullRequestQuery = injectQuery(() => ({
     ...getLatestWorkflowRunsByPullRequestIdAndHeadCommitOptions({ path: { pullRequestId: this.pullRequestId() || 0 } }),
     enabled: this.pullRequestId() !== null,
-    refetchInterval: 2000,
+    refetchInterval: 15000,
+  }));
+
+  groupsQuery = injectQuery(() => ({
+    ...getGroupsWithWorkflowsOptions({ path: { repositoryId: this.repositoryId() || 0 } }),
+    refetchInterval: 15000,
   }));
 
   pipeline = computed(() => {
     const workflowRuns = (this.branchName() ? this.branchQuery.data() : this.pullRequestQuery.data()) || [];
-    const groups = this.pipelineService.groupRuns(workflowRuns);
+    const workflowGroups = this.groupsQuery.data() || [];
 
-    if (groups.length === 0) {
-      return null;
-    }
+    const groupedWorkflowsRuns = workflowGroups.map(group => {
+      const workflowIds = group.memberships?.map(membership => membership.workflowId) || [];
+      const matchingRuns = workflowRuns.filter(run => workflowIds.includes(run.workflowId));
+      return {
+        name: group.name,
+        id: group.id,
+        workflows: matchingRuns,
+      };
+    });
 
     return {
-      groups,
+      groups: groupedWorkflowsRuns,
     };
   });
 }

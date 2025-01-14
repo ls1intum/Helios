@@ -9,10 +9,10 @@ import type {
   UpdateEnvironmentData,
   UpdateEnvironmentResponse,
   UnlockEnvironmentData,
-  UnlockEnvironmentResponse,
   CreateWorkflowGroupData,
   CreateWorkflowGroupResponse,
   DeployToEnvironmentData,
+  DeployToEnvironmentResponse,
   HealthCheckData,
   GetAllWorkflowsData,
   GetWorkflowByIdData,
@@ -20,17 +20,22 @@ import type {
   GetWorkflowsByRepositoryIdData,
   GetLatestWorkflowRunsByPullRequestIdAndHeadCommitData,
   GetLatestWorkflowRunsByBranchAndHeadCommitData,
+  GetUserPermissionsData,
   GetGroupsWithWorkflowsData,
+  GetAllRepositoriesData,
+  GetRepositoryByIdData,
   GetAllPullRequestsData,
   GetPullRequestByIdData,
   GetPullRequestByRepositoryIdAndNumberData,
   GetPullRequestByRepositoryIdData,
   GetAllEnvironmentsData,
+  GetEnvironmentsByUserLockingData,
   GetEnvironmentsByRepositoryIdData,
   GetAllDeploymentsData,
   GetDeploymentByIdData,
   GetDeploymentsByEnvironmentIdData,
   GetLatestDeploymentByEnvironmentIdData,
+  GetCommitByRepositoryIdAndNameData,
   GetAllBranchesData,
   GetBranchByRepositoryIdAndNameData,
   DeleteWorkflowGroupData,
@@ -38,7 +43,6 @@ import type {
 import {
   updateWorkflowLabel,
   updateWorkflowGroups,
-  client,
   getEnvironmentById,
   updateEnvironment,
   unlockEnvironment,
@@ -51,20 +55,26 @@ import {
   getWorkflowsByRepositoryId,
   getLatestWorkflowRunsByPullRequestIdAndHeadCommit,
   getLatestWorkflowRunsByBranchAndHeadCommit,
+  getUserPermissions,
   getGroupsWithWorkflows,
+  getAllRepositories,
+  getRepositoryById,
   getAllPullRequests,
   getPullRequestById,
   getPullRequestByRepositoryIdAndNumber,
   getPullRequestByRepositoryId,
   getAllEnvironments,
+  getEnvironmentsByUserLocking,
   getEnvironmentsByRepositoryId,
   getAllDeployments,
   getDeploymentById,
   getDeploymentsByEnvironmentId,
   getLatestDeploymentByEnvironmentId,
+  getCommitByRepositoryIdAndName,
   getAllBranches,
   getBranchByRepositoryIdAndName,
   deleteWorkflowGroup,
+  client,
 } from '../sdk.gen';
 
 export const updateWorkflowLabelMutation = (options?: Partial<Options<UpdateWorkflowLabelData>>) => {
@@ -154,7 +164,7 @@ export const updateEnvironmentMutation = (options?: Partial<Options<UpdateEnviro
 };
 
 export const unlockEnvironmentMutation = (options?: Partial<Options<UnlockEnvironmentData>>) => {
-  const mutationOptions: MutationOptions<UnlockEnvironmentResponse, DefaultError, Options<UnlockEnvironmentData>> = {
+  const mutationOptions: MutationOptions<unknown, DefaultError, Options<UnlockEnvironmentData>> = {
     mutationFn: async localOptions => {
       const { data } = await unlockEnvironment({
         ...options,
@@ -216,7 +226,7 @@ export const deployToEnvironmentOptions = (options: Options<DeployToEnvironmentD
 };
 
 export const deployToEnvironmentMutation = (options?: Partial<Options<DeployToEnvironmentData>>) => {
-  const mutationOptions: MutationOptions<unknown, DefaultError, Options<DeployToEnvironmentData>> = {
+  const mutationOptions: MutationOptions<DeployToEnvironmentResponse, DefaultError, Options<DeployToEnvironmentData>> = {
     mutationFn: async localOptions => {
       const { data } = await deployToEnvironment({
         ...options,
@@ -352,6 +362,23 @@ export const getLatestWorkflowRunsByBranchAndHeadCommitOptions = (options: Optio
   });
 };
 
+export const getUserPermissionsQueryKey = (options?: Options<GetUserPermissionsData>) => [createQueryKey('getUserPermissions', options)];
+
+export const getUserPermissionsOptions = (options?: Options<GetUserPermissionsData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getUserPermissions({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: getUserPermissionsQueryKey(options),
+  });
+};
+
 export const getGroupsWithWorkflowsQueryKey = (options: Options<GetGroupsWithWorkflowsData>) => [createQueryKey('getGroupsWithWorkflows', options)];
 
 export const getGroupsWithWorkflowsOptions = (options: Options<GetGroupsWithWorkflowsData>) => {
@@ -366,6 +393,40 @@ export const getGroupsWithWorkflowsOptions = (options: Options<GetGroupsWithWork
       return data;
     },
     queryKey: getGroupsWithWorkflowsQueryKey(options),
+  });
+};
+
+export const getAllRepositoriesQueryKey = (options?: Options<GetAllRepositoriesData>) => [createQueryKey('getAllRepositories', options)];
+
+export const getAllRepositoriesOptions = (options?: Options<GetAllRepositoriesData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getAllRepositories({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: getAllRepositoriesQueryKey(options),
+  });
+};
+
+export const getRepositoryByIdQueryKey = (options: Options<GetRepositoryByIdData>) => [createQueryKey('getRepositoryById', options)];
+
+export const getRepositoryByIdOptions = (options: Options<GetRepositoryByIdData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getRepositoryById({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: getRepositoryByIdQueryKey(options),
   });
 };
 
@@ -456,6 +517,23 @@ export const getAllEnvironmentsOptions = (options?: Options<GetAllEnvironmentsDa
   });
 };
 
+export const getEnvironmentsByUserLockingQueryKey = (options?: Options<GetEnvironmentsByUserLockingData>) => [createQueryKey('getEnvironmentsByUserLocking', options)];
+
+export const getEnvironmentsByUserLockingOptions = (options?: Options<GetEnvironmentsByUserLockingData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getEnvironmentsByUserLocking({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: getEnvironmentsByUserLockingQueryKey(options),
+  });
+};
+
 export const getEnvironmentsByRepositoryIdQueryKey = (options: Options<GetEnvironmentsByRepositoryIdData>) => [createQueryKey('getEnvironmentsByRepositoryId', options)];
 
 export const getEnvironmentsByRepositoryIdOptions = (options: Options<GetEnvironmentsByRepositoryIdData>) => {
@@ -540,6 +618,23 @@ export const getLatestDeploymentByEnvironmentIdOptions = (options: Options<GetLa
       return data;
     },
     queryKey: getLatestDeploymentByEnvironmentIdQueryKey(options),
+  });
+};
+
+export const getCommitByRepositoryIdAndNameQueryKey = (options: Options<GetCommitByRepositoryIdAndNameData>) => [createQueryKey('getCommitByRepositoryIdAndName', options)];
+
+export const getCommitByRepositoryIdAndNameOptions = (options: Options<GetCommitByRepositoryIdAndNameData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getCommitByRepositoryIdAndName({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: getCommitByRepositoryIdAndNameQueryKey(options),
   });
 };
 

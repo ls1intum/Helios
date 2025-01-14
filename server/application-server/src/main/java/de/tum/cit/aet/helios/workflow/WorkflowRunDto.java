@@ -11,6 +11,7 @@ public record WorkflowRunDto(
     @NonNull String name,
     @NonNull String displayTitle,
     @NonNull Status status,
+    @NonNull Long workflowId,
     Conclusion conclusion,
     @NonNull String htmlUrl) {
   public static WorkflowRunDto fromWorkflowRun(WorkflowRun run) {
@@ -19,6 +20,7 @@ public record WorkflowRunDto(
         run.getName(),
         run.getDisplayTitle(),
         run.getStatus(),
+        run.getWorkflowId(),
         run.getConclusion().orElse(null),
         run.getHtmlUrl());
   }

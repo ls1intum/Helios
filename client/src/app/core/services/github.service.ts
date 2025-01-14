@@ -1,6 +1,6 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { catchError, EMPTY, expand, map, Observable, of, reduce, switchMap } from 'rxjs';
-import { Injectable, signal, inject } from '@angular/core';
+import { Injectable, signal, inject, computed } from '@angular/core';
 import { AuthService } from './auth.service';
 
 export interface GithubOrg {
@@ -31,6 +31,20 @@ export class GithubService {
   setToken(token: string) {
     this.token.set(token);
   }
+
+  decodedToken = computed(() => {
+    const token = this.token();
+    if (!token) {
+      return null;
+    }
+    try {
+      const [, payload] = token.split('.');
+      return JSON.parse(atob(payload));
+    } catch (error) {
+      console.error('Failed to decode token: ', error);
+      return null;
+    }
+  });
 
   private readonly API_BASE = 'https://api.github.com';
   private readonly PER_PAGE = 100;
@@ -108,11 +122,4 @@ export class GithubService {
       Accept: 'application/vnd.github.v3+json',
     };
   }
-
-  // private getHeaders(token: string): HttpHeaders {
-  //     return new HttpHeaders({
-  //         'Authorization': `Bearer ${token}`,
-  //         'Accept': 'application/vnd.github.v3+json'
-  //     });
-  // }
 }

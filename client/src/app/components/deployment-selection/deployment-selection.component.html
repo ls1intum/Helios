@@ -1,8 +1,13 @@
 <div class="mb-4">
-  <h3 class="text-2xl mb-1">Deployment</h3>
-  <p class="text-gray-500">
+  <h3 class="text-xl mb-1">Deployment</h3>
+  <p class="text-gray-500 text-sm">
     You can deploy this branch to any available environment. If all environments are in use, you will have to request someone to unlock an environment for you.
   </p>
 </div>
 
-<app-environment-list-view [deployable]="true" (deploy)="handleDeploy($event)" />
+<app-environment-list-view
+  [deployable]="true"
+  [hasUnlockPermissions]="permissionService.isAtLeastMaintainer()"
+  [hasDeployPermissions]="permissionService.hasWritePermission()"
+  (deploy)="handleDeploy($event)"
+/>

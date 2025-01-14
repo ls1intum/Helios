@@ -1,4 +1,4 @@
-openapi: 3.0.1
+openapi: 3.1.0
 info:
   title: Helios API
   description: API documentation for the Helios application server.
@@ -121,8 +121,7 @@ paths:
           description: OK
           content:
             application/json:
-              schema:
-                $ref: "#/components/schemas/EnvironmentDto"
+              schema: {}
   /api/settings/{repositoryId}/groups/create:
     post:
       tags:
@@ -162,6 +161,10 @@ paths:
       responses:
         "200":
           description: OK
+          content:
+            application/json:
+              schema:
+                type: string
   /status/health:
     get:
       tags:
@@ -276,14 +279,14 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/WorkflowRunDto"
-  /api/workflows/branch/{branch}:
+  /api/workflows/branch:
     get:
       tags:
       - workflow-run-controller
       operationId: getLatestWorkflowRunsByBranchAndHeadCommit
       parameters:
       - name: branch
-        in: path
+        in: query
         required: true
         schema:
           type: string
@@ -296,6 +299,18 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/WorkflowRunDto"
+  /api/user-permissions:
+    get:
+      tags:
+      - user-permissions-controller
+      operationId: getUserPermissions
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GitHubRepositoryRoleDto"
   /api/settings/{repositoryId}/groups:
     get:
       tags:
@@ -317,6 +332,39 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/WorkflowGroupDto"
+  /api/repository:
+    get:
+      tags:
+      - repository-controller
+      operationId: getAllRepositories
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RepositoryInfoDto"
+  /api/repository/{id}:
+    get:
+      tags:
+      - repository-controller
+      operationId: getRepositoryById
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RepositoryInfoDto"
   /api/pullrequests:
     get:
       tags:
@@ -330,7 +378,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/PullRequestInfoDto"
+                  $ref: "#/components/schemas/PullRequestBaseInfoDto"
   /api/pullrequests/{id}:
     get:
       tags:
@@ -410,6 +458,18 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/EnvironmentDto"
+  /api/environments/user_locking:
+    get:
+      tags:
+      - environment-controller
+      operationId: getEnvironmentsByUserLocking
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EnvironmentLockHistoryDto"
   /api/environments/repository/{repositoryId}:
     get:
       tags:
@@ -504,6 +564,30 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DeploymentDto"
+  /api/commits/repository/{repoId}/commit/{sha}:
+    get:
+      tags:
+      - commit-controller
+      operationId: getCommitByRepositoryIdAndName
+      parameters:
+      - name: repoId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: sha
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CommitInfoDto"
   /api/branches:
     get:
       tags:
@@ -518,7 +602,7 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/BranchInfoDto"
-  /api/branches/repository/{repoId}/name/{name}:
+  /api/branches/repository/{repoId}/branch:
     get:
       tags:
       - branch-controller
@@ -531,7 +615,7 @@ paths:
           type: integer
           format: int64
       - name: name
-        in: path
+        in: query
         required: true
         schema:
           type: string
@@ -566,10 +650,6 @@ paths:
 components:
   schemas:
     WorkflowGroupDto:
-      required:
-      - id
-      - name
-      - orderIndex
       type: object
       properties:
         id:
@@ -584,10 +664,11 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/WorkflowMembershipDto"
-    WorkflowMembershipDto:
       required:
+      - id
+      - name
       - orderIndex
-      - workflowId
+    WorkflowMembershipDto:
       type: object
       properties:
         workflowId:
@@ -596,14 +677,10 @@ components:
         orderIndex:
           type: integer
           format: int32
-    EnvironmentDeployment:
       required:
-      - id
-      - ref
-      - sha
-      - statusesUrl
-      - task
-      - url
+      - orderIndex
+      - workflowId
+    EnvironmentDeployment:
       type: object
       properties:
         id:
@@ -636,10 +713,14 @@ components:
         updatedAt:
           type: string
           format: date-time
-    EnvironmentDto:
       required:
       - id
-      - name
+      - ref
+      - sha
+      - statusesUrl
+      - task
+      - url
+    EnvironmentDto:
       type: object
       properties:
         repository:
@@ -671,12 +752,15 @@ components:
           type: string
         latestDeployment:
           $ref: "#/components/schemas/EnvironmentDeployment"
-    RepositoryInfoDto:
+        lockedBy:
+          type: string
+        lockedAt:
+          type: string
+          format: date-time
       required:
-      - htmlUrl
       - id
       - name
-      - nameWithOwner
+    RepositoryInfoDto:
       type: object
       properties:
         id:
@@ -690,10 +774,12 @@ components:
           type: string
         htmlUrl:
           type: string
-    DeployRequest:
       required:
-      - branchName
-      - environmentId
+      - htmlUrl
+      - id
+      - name
+      - nameWithOwner
+    DeployRequest:
       type: object
       properties:
         environmentId:
@@ -701,13 +787,10 @@ components:
           format: int64
         branchName:
           type: string
-    WorkflowDto:
       required:
-      - id
-      - label
-      - name
-      - path
-      - state
+      - branchName
+      - environmentId
+    WorkflowDto:
       type: object
       properties:
         id:
@@ -748,13 +831,13 @@ components:
         updatedAt:
           type: string
           format: date-time
-    WorkflowRunDto:
       required:
-      - displayTitle
-      - htmlUrl
       - id
+      - label
       - name
-      - status
+      - path
+      - state
+    WorkflowRunDto:
       type: object
       properties:
         id:
@@ -782,6 +865,9 @@ components:
           - WAITING
           - PENDING
           - UNKNOWN
+        workflowId:
+          type: integer
+          format: int64
         conclusion:
           type: string
           enum:
@@ -797,14 +883,93 @@ components:
           - UNKNOWN
         htmlUrl:
           type: string
-    PullRequestInfoDto:
       required:
-      - additions
-      - commentsCount
-      - deletions
-      - headRefName
-      - headRefRepoNameWithOwner
-      - headSha
+      - displayTitle
+      - htmlUrl
+      - id
+      - name
+      - status
+      - workflowId
+    GitHubRepositoryRoleDto:
+      type: object
+      properties:
+        permission:
+          type: string
+          enum:
+          - ADMIN
+          - WRITE
+          - READ
+          - NONE
+        roleName:
+          type: string
+    LabelInfoDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: The unique identifier of the label
+        name:
+          type: string
+          description: The name of the label
+          example: bug
+        color:
+          type: string
+          description: "The color of the label as a 6-character hex code (without\
+            \ #)"
+          example: ff0000
+        repository:
+          $ref: "#/components/schemas/RepositoryInfoDto"
+          description: The repository associated with this label
+      required:
+      - color
+      - id
+      - name
+    PullRequestBaseInfoDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        number:
+          type: integer
+          format: int32
+        title:
+          type: string
+        state:
+          type: string
+          enum:
+          - OPEN
+          - CLOSED
+        isDraft:
+          type: boolean
+        isMerged:
+          type: boolean
+        repository:
+          $ref: "#/components/schemas/RepositoryInfoDto"
+        htmlUrl:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        author:
+          $ref: "#/components/schemas/UserInfoDto"
+        labels:
+          type: array
+          items:
+            $ref: "#/components/schemas/LabelInfoDto"
+        assignees:
+          type: array
+          items:
+            $ref: "#/components/schemas/UserInfoDto"
+        reviewers:
+          type: array
+          items:
+            $ref: "#/components/schemas/UserInfoDto"
+      required:
       - htmlUrl
       - id
       - isDraft
@@ -812,6 +977,27 @@ components:
       - number
       - state
       - title
+    UserInfoDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        login:
+          type: string
+        avatarUrl:
+          type: string
+        name:
+          type: string
+        htmlUrl:
+          type: string
+      required:
+      - avatarUrl
+      - htmlUrl
+      - id
+      - login
+      - name
+    PullRequestInfoDto:
       type: object
       properties:
         id:
@@ -836,6 +1022,10 @@ components:
           format: int32
         author:
           $ref: "#/components/schemas/UserInfoDto"
+        labels:
+          type: array
+          items:
+            $ref: "#/components/schemas/LabelInfoDto"
         assignees:
           type: array
           items:
@@ -868,35 +1058,39 @@ components:
         updatedAt:
           type: string
           format: date-time
-    UserInfoDto:
       required:
-      - avatarUrl
+      - additions
+      - commentsCount
+      - deletions
+      - headRefName
+      - headRefRepoNameWithOwner
+      - headSha
       - htmlUrl
       - id
-      - login
-      - name
+      - isDraft
+      - isMerged
+      - number
+      - state
+      - title
+    EnvironmentLockHistoryDto:
       type: object
       properties:
         id:
           type: integer
           format: int64
-        login:
+        lockedBy:
           type: string
-        avatarUrl:
+        lockedAt:
           type: string
-        name:
+          format: date-time
+        unlockedAt:
           type: string
-        htmlUrl:
-          type: string
-    DeploymentDto:
+          format: date-time
+        environment:
+          $ref: "#/components/schemas/EnvironmentDto"
       required:
-      - environment
       - id
-      - ref
-      - sha
-      - statusesUrl
-      - task
-      - url
+    DeploymentDto:
       type: object
       properties:
         id:
@@ -933,15 +1127,54 @@ components:
         updatedAt:
           type: string
           format: date-time
-    BranchInfoDto:
       required:
-      - commitSha
-      - name
+      - environment
+      - id
+      - ref
+      - sha
+      - statusesUrl
+      - task
+      - url
+    CommitInfoDto:
+      type: object
+      properties:
+        sha:
+          type: string
+        author:
+          $ref: "#/components/schemas/UserInfoDto"
+        message:
+          type: string
+        authoredAt:
+          type: string
+          format: date-time
+        repository:
+          $ref: "#/components/schemas/RepositoryInfoDto"
+      required:
+      - sha
+    BranchInfoDto:
       type: object
       properties:
         name:
           type: string
         commitSha:
           type: string
+        aheadBy:
+          type: integer
+          format: int32
+        behindBy:
+          type: integer
+          format: int32
+        isDefault:
+          type: boolean
+        isProtected:
+          type: boolean
+        updatedAt:
+          type: string
+          format: date-time
+        updatedBy:
+          $ref: "#/components/schemas/UserInfoDto"
         repository:
           $ref: "#/components/schemas/RepositoryInfoDto"
+      required:
+      - commitSha
+      - name

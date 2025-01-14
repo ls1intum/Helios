@@ -1,14 +1,12 @@
-<div class="container mx-auto p-4">
-  <!-- Title and 'Add New Group' Button -->
-  <div class="flex justify-between items-center mb-4">
-    <h2 class="text-3xl font-bold">Project Settings</h2>
-    @if (!isPending() && !isError()) {
-      <div class="space-x-2">
-        <button pButton label="Add New Group" class="p-button-sm" (click)="showAddGroupDialog = true"></button>
-        <button pButton label="Update Groups" class="p-button-success p-button-sm" (click)="updateGroups()" [disabled]="isPending()"></button>
-      </div>
-    }
-  </div>
+<div>
+  <app-page-heading [repositoryId]="repositoryId()">
+    <div class="flex justify-between items-center w-full" heading>
+      <div>Repository Settings</div>
+      <!-- TODO: Remove and replace by update handlers directly on dropdowns -->
+      <p-button label="Update Groups" size="small" severity="success" (click)="updateGroups()" [disabled]="isPending()" />
+    </div>
+    <span description> In the repository settings you can setup the repository as you like. You can add new groups, update existing groups, and assign workflows to groups. </span>
+  </app-page-heading>
 
   <!-- Loading Indicator -->
   @if (isPending()) {
@@ -18,7 +16,7 @@
   <!-- Main Content -->
   @if (!isPending() && !isError()) {
     <!-- Grouped Workflows Panels -->
-    <h3 class="text-2xl font-semibold mb-2">Grouped Workflows</h3>
+    <h3 class="text-xl mb-2">Grouped Workflows</h3>
 
     <!-- Drag & Drop Hint -->
     @if (groupedWorkflowsArray().length > 0) {
@@ -51,11 +49,24 @@
             }
           </div>
         }
+        <p-button text class="text-center self-center" pTooltip="Add New Group" (click)="showAddGroupDialog = true">
+          <i-tabler name="plus"></i-tabler>
+        </p-button>
       </div>
     } @else {
       <!-- No Grouping Available -->
       <div class="flex justify-center items-center h-40 mb-8">
-        <p-panel header="No Groups Available" class="min-w-[250px]">
+        <p-panel class="min-w-[250px]">
+          <ng-template #header>
+            <div class="w-full flex justify-between items-center">
+              <div class="font-semibold">No Groups Available</div>
+              <div pTooltip="Create New Group">
+                <p-button text class="text-center self-end" (click)="showAddGroupDialog = true">
+                  <i-tabler name="plus"></i-tabler>
+                </p-button>
+              </div>
+            </div>
+          </ng-template>
           <p class="text-center">No workflows are currently grouped.</p>
           <p class="text-center">Click "Add New Group" to create a new group.</p>
           <p class="text-center">And then assign workflows to the group.</p>
@@ -64,6 +75,8 @@
     }
 
     <!-- Workflow Table -->
+    <h3 class="text-xl mb-2">Workflows</h3>
+    <p class="text-sm text-gray-600 mb-4">Note: Only one workflow can be labeled as 'DEPLOYMENT' and one as 'BUILD'.</p>
     <p-table [value]="workflows()" styleClass="w-full mb-6">
       <ng-template pTemplate="header">
         <tr>
@@ -82,21 +95,21 @@
           <td>{{ workflow.fileNameWithExtension }}</td>
           <td>{{ workflow.name }}</td>
           <td>
-            <p-dropdown
+            <p-select
               [options]="groupDropdownOptions"
               [ngModel]="workflowGroupsMap()[workflow.id] || 'Ungrouped'"
               (onChange)="onChangeGroup(workflow, $event.value)"
               [appendTo]="'body'"
-            ></p-dropdown>
+            />
           </td>
           <td>
-            <p-dropdown
-              [options]="getWorkflowLabelOptions()"
+            <p-select
+              [options]="getWorkflowLabelOptions(workflow.label)"
               [(ngModel)]="workflow.label"
               placeholder="Select Label"
               (onChange)="onChangeLabel(workflow)"
               [appendTo]="'body'"
-            ></p-dropdown>
+            />
           </td>
         </tr>
       </ng-template>
@@ -124,4 +137,6 @@
       </div>
     </div>
   </p-dialog>
+
+  <p-confirmDialog></p-confirmDialog>
 </div>

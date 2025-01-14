@@ -1,15 +1,13 @@
 <div class="flex items-center justify-between mb-3">
   <input pInputText id="commit-hash" (input)="onSearch($event)" [value]="searchInput()" type="text" placeholder="Search for installed systems" class="w-1/3" />
   @if (!hideLinkToList()) {
-    <a [routerLink]="'/environments'" class="p-button p-2 self-end">Manage environments</a>
+    <p-button [routerLink]="'../../../environment'" class="self-end">Manage environments</p-button>
   }
 </div>
 
 <p-accordion [multiple]="true">
   @if (!environmentQuery.isPending() && filteredEnvironments().length === 0) {
-    @if (environmentQuery.isError()) {
-      <p>Failed to load environments. Please try again later.</p>
-    } @else if (searchInput().length === 0) {
+    @if (searchInput().length === 0) {
       <p>No environments found. Create a new environment to get started.</p>
     } @else {
       <p>No environments found for the search term, try something else.</p>
@@ -30,22 +28,27 @@
 
           <div class="flex-grow"></div>
 
-          @if (!environment.locked && deployable()) {
-            <button (click)="deployEnvironment(environment); $event.stopPropagation()" class="p-button p-button-secondary p-2">
-              <i-tabler name="cloud-upload" class="mr-1" />Deploy
-            </button>
-          }
-
           @if (environment.locked) {
+            @if (environment.lockedAt) {
+              <app-lock-time [lockedAt]="environment.lockedAt"></app-lock-time>
+            }
             @if (environment.serverUrl) {
               <a [href]="getFullUrl(environment.serverUrl)" target="_blank" class="p-button p-button-secondary p-2" (click)="$event.stopPropagation()"
                 ><i-tabler name="external-link" class="mr-1" />Open</a
               >
             }
-            <button (click)="onUnlockEnvironment($event, environment)" class="p-button p-button-danger p-2"><i-tabler name="lock-open" class="mr-1" />Unlock</button>
+            @if (isLoggedIn() && isCurrentUserLocked(environment)) {
+              <button (click)="onUnlockEnvironment($event, environment)" class="p-button p-button-danger p-2"><i-tabler name="lock-open" class="mr-1" />Unlock</button>
+            }
           }
 
-          @if (editable()) {
+          @if (isLoggedIn() && deployable() && (!environment.locked || isCurrentUserLocked(environment)) && hasDeployPermissions()) {
+            <button (click)="deployEnvironment(environment); $event.stopPropagation()" class="p-button p-button-secondary p-2">
+              <i-tabler name="cloud-upload" class="mr-1" />Deploy
+            </button>
+          }
+
+          @if (isLoggedIn() && editable()) {
             <a icon [routerLink]="'/repo/' + environment.repository?.id + '/environment/' + environment.id + '/edit'" class="p-button p-button-secondary p-2"
               ><i-tabler name="pencil"
             /></a>
@@ -55,23 +58,22 @@
       </p-accordion-header>
       <p-accordion-content>
         @if (environment.latestDeployment; as deployment) {
-          <app-environment-deployment-info [deployment]="deployment" />
+          <app-environment-deployment-info [deployment]="deployment" [repositoryId]="environment.repository?.id || 0" [installedApps]="environment.installedApps || []" />
         }
 
         <div class="flex gap-4 items-center justify-between">
           <div class="flex gap-1 mt-2 items-center">
-            <a icon [routerLink]="'/repo/' + environment.repository?.id + '/environment/' + environment.id + '/history'" class="p-button p-button-text text-gray-500 p-2"
+            <a
+              icon
+              [routerLink]="'/repo/' + environment.repository?.id + '/environment/' + environment.id + '/history'"
+              class="p-button p-button-text text-gray-500 py-2 flex items-center"
               ><i-tabler class="mr-1" name="history" />View Deployment History</a
             >
-          </div>
-
-          <div class="flex gap-1">
-            @for (installedApp of environment.installedApps; track installedApp) {
-              <p-tag> {{ installedApp }}</p-tag>
-            }
           </div>
         </div>
       </p-accordion-content>
     </p-accordion-panel>
   }
 </p-accordion>
+
+<p-confirmDialog></p-confirmDialog>

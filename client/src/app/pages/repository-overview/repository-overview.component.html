@@ -1,0 +1,48 @@
+<main>
+  <div class="flex h-screen py-3 pl-3 w-screen">
+    <div class="rounded-2xl p-5 mr-3 bg-slate-100 flex flex-col items-center justify-between h-full">
+      <app-helios-icon routerLink="/" size="3rem" class="rounded-xl w-12 cursor-pointer" />
+      <span class="flex-grow"></span>
+      <app-profile-nav-section />
+    </div>
+    <div class="flex-grow">
+      <div class="container mx-auto p-4">
+        <app-page-heading>
+          <div subheading></div>
+          <div class="flex justify-between items-center w-full" heading>
+            <div>Connected Repositories</div>
+          </div>
+          <span description> In the repository list you can find all of the repositories that were added to Helios. </span>
+        </app-page-heading>
+
+        <div class="card">
+          <div class="border rounded-md">
+            @for (item of query.data(); track item.id) {
+              <div class="flex justify-between items-center border-b p-4 gap-2 cursor-pointer hover:bg-slate-50" (click)="navigateToProject(item)">
+                <div class="flex flex-col">
+                  <div class="text-xl font-medium mt-2">
+                    {{ item.name }}
+                    <span class="text-sm"><p-tag value="Public" [rounded]="true" severity="secondary" /></span>
+                  </div>
+                  <div class="text-base text-600">{{ item.description }}</div>
+                </div>
+                <div class="mr-2">
+                  <i-tabler name="chevron-right"></i-tabler>
+                </div>
+              </div>
+            } @empty {
+              <div class="flex flex-col justify-center items-center p-4">
+                <i-tabler name="exclamation-circle" class="!size-20 text-primary" />
+                <div class="font-semibold text-lg">There are currently no repositories connected to Helios.</div>
+                <div class="text-sm">Please contact an administrator to connect your repository.</div>
+              </div>
+            }
+          </div>
+        </div>
+        <app-connect-repo></app-connect-repo>
+      </div>
+    </div>
+
+    <p-toast></p-toast>
+  </div>
+</main>
