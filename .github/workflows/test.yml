@@ -1,5 +1,4 @@
-name: Validate OpenAPI Spec and Generated Client Code
-
+name: Unit and Integration Tests
 on:
   pull_request:
     branches: [main]
