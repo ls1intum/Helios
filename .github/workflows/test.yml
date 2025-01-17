@@ -36,7 +36,7 @@ jobs:
         timeout-minutes: 60
         defaults:
           run:
-            working-directory: server
+            working-directory: server/application-server
         steps:
         - uses: actions/checkout@v3
         - name: Setup Java
@@ -45,7 +45,7 @@ jobs:
             distribution: 'temurin'
             java-version: '21'
         - name: Server Tests
-          run: ./gradlew --console=plain test jacocoTestReport jacocoTestCoverageVerification | tee tests.log
+          run: set -o pipefail && ./gradlew --console=plain test jacocoTestReport jacocoTestCoverageVerification | tee tests.log
         - name: Print failed tests
           if: failure()
           run: grep "Test >.* FAILED\$" tests.log || echo "No failed tests."
