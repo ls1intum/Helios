@@ -8,8 +8,11 @@ jobs:
     server-tests:
         runs-on: ubuntu-latest
         timeout-minutes: 60
+        defaults:
+          run:
+            working-directory: server
         steps:
-        - uses: actions/checkout@v4
+        - uses: actions/checkout@v3
         - name: Setup Java
           uses: actions/setup-java@v4
           with:
@@ -33,13 +36,6 @@ jobs:
             access-token: ${{ secrets.GITHUB_TOKEN }}
             path: build/test-results/test/*.xml
             numFailures: 99
-        - name: Test Report
-          uses: dorny/test-reporter@v1
-          if: success() || failure()    # run this step even if previous step failed
-          with:
-            name: H2 Tests
-            path: build/test-results/test/*.xml
-            reporter: java-junit
         - name: Upload Server Test Coverage Report
           if: success() || failure()
           uses: actions/upload-artifact@v4
