@@ -47,7 +47,7 @@ public class GlobalExceptionHandler {
   // -- 403 FORBIDDEN ------------------------------------
   @ExceptionHandler({SecurityException.class, PermissionException.class})
   public ResponseEntity<ApiError> handleSecurityExceptions(
-    RuntimeException ex, HttpServletRequest request) {
+      RuntimeException ex, HttpServletRequest request) {
 
     ApiError error = new ApiError();
     error.setStatus(HttpStatus.FORBIDDEN.value());
