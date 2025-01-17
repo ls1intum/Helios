@@ -47,7 +47,7 @@ jobs:
         - name: Server Tests
           run: set -o pipefail && ./gradlew --console=plain test jacocoTestReport jacocoTestCoverageVerification | tee tests.log
         - name: Cat jacoco error
-          run: cat build/reports/problems/problems-report.html
+          run: ls build/reports/jacoco/test/ && cat build/reports/jacoco/test/jacocoTestReport.xml
         - name: Print failed tests
           if: failure()
           run: grep "Test >.* FAILED\$" tests.log || echo "No failed tests."
