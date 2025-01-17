@@ -3,7 +3,6 @@ package de.tum.cit.aet.helios.deployment;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Optional;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -53,13 +52,7 @@ public class DeploymentController {
   @PostMapping("/deploy")
   public ResponseEntity<String> deployToEnvironment(
       @Valid @RequestBody DeployRequest deployRequest) {
-    try {
-      deploymentService.deployToEnvironment(deployRequest);
-      return ResponseEntity.ok().build();
-    } catch (DeploymentException e) {
-      return ResponseEntity
-          .status(HttpStatus.INTERNAL_SERVER_ERROR)
-          .body("Deployment failed: " + e.getMessage());
-    }
+    deploymentService.deployToEnvironment(deployRequest);
+    return ResponseEntity.ok().build();
   }
 }
