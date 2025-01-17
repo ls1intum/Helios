@@ -33,6 +33,7 @@ export type EnvironmentDto = {
   htmlUrl?: string;
   createdAt?: string;
   updatedAt?: string;
+  enabled?: boolean;
   installedApps?: Array<string>;
   description?: string;
   serverUrl?: string;
@@ -272,10 +273,8 @@ export type UpdateEnvironmentResponses = {
   /**
    * OK
    */
-  200: EnvironmentDto;
+  200: unknown;
 };
-
-export type UpdateEnvironmentResponse = UpdateEnvironmentResponses[keyof UpdateEnvironmentResponses];
 
 export type UnlockEnvironmentData = {
   body?: never;
@@ -638,6 +637,22 @@ export type GetEnvironmentsByRepositoryIdResponses = {
 };
 
 export type GetEnvironmentsByRepositoryIdResponse = GetEnvironmentsByRepositoryIdResponses[keyof GetEnvironmentsByRepositoryIdResponses];
+
+export type GetAllEnabledEnvironmentsData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/api/environments/enabled';
+};
+
+export type GetAllEnabledEnvironmentsResponses = {
+  /**
+   * OK
+   */
+  200: Array<EnvironmentDto>;
+};
+
+export type GetAllEnabledEnvironmentsResponse = GetAllEnabledEnvironmentsResponses[keyof GetAllEnabledEnvironmentsResponses];
 
 export type GetAllDeploymentsData = {
   body?: never;

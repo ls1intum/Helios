@@ -22,6 +22,10 @@ github-config:
   - changed-files:
       - any-glob-to-any-file: .github/**
 
+keycloakify:
+  - changed-files:
+      - any-glob-to-any-file: keycloakify/**
+
 feature:
   - head-branch: ['^feature', '^feat']
 

@@ -7,7 +7,6 @@ import type {
   GetEnvironmentByIdData,
   GetEnvironmentByIdResponse,
   UpdateEnvironmentData,
-  UpdateEnvironmentResponse,
   UnlockEnvironmentData,
   CreateWorkflowGroupData,
   CreateWorkflowGroupResponse,
@@ -49,6 +48,8 @@ import type {
   GetEnvironmentsByUserLockingResponse,
   GetEnvironmentsByRepositoryIdData,
   GetEnvironmentsByRepositoryIdResponse,
+  GetAllEnabledEnvironmentsData,
+  GetAllEnabledEnvironmentsResponse,
   GetAllDeploymentsData,
   GetAllDeploymentsResponse,
   GetDeploymentByIdData,
@@ -98,7 +99,7 @@ export const getEnvironmentById = <ThrowOnError extends boolean = false>(options
 };
 
 export const updateEnvironment = <ThrowOnError extends boolean = false>(options: Options<UpdateEnvironmentData, ThrowOnError>) => {
-  return (options?.client ?? client).put<UpdateEnvironmentResponse, unknown, ThrowOnError>({
+  return (options?.client ?? client).put<unknown, unknown, ThrowOnError>({
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -264,6 +265,13 @@ export const getEnvironmentsByRepositoryId = <ThrowOnError extends boolean = fal
   return (options?.client ?? client).get<GetEnvironmentsByRepositoryIdResponse, unknown, ThrowOnError>({
     ...options,
     url: '/api/environments/repository/{repositoryId}',
+  });
+};
+
+export const getAllEnabledEnvironments = <ThrowOnError extends boolean = false>(options?: Options<GetAllEnabledEnvironmentsData, ThrowOnError>) => {
+  return (options?.client ?? client).get<GetAllEnabledEnvironmentsResponse, unknown, ThrowOnError>({
+    ...options,
+    url: '/api/environments/enabled',
   });
 };
 
