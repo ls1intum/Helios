@@ -19,9 +19,7 @@ jobs:
             distribution: 'temurin'
             java-version: '21'
         - name: Server Tests
-          run: set -o pipefail && ./gradlew --console=plain test jacocoTestReport jacocoTestCoverageVerification | tee tests.log
-        - name: Cat jacoco error
-          run: ls build/reports/jacoco/test/ && cat build/reports/jacoco/test/jacocoTestReport.xml
+          run: set -o pipefail && ./gradlew --console=plain test jacocoTestReport jacocoTestCoverageVerification | tee tests.log        
         - name: Print failed tests
           if: failure()
           run: grep "Test >.* FAILED\$" tests.log || echo "No failed tests."
