@@ -19,7 +19,8 @@ public class UserPermissionsController {
   }
 
   @GetMapping()
-  public ResponseEntity<GitHubRepositoryRoleDto> getUserPermissions() throws PermissionException, IOException {
+  public ResponseEntity<GitHubRepositoryRoleDto> getUserPermissions() 
+      throws PermissionException, IOException {
     GitHubRepositoryRoleDto permissions = gitHubService.getRepositoryRole();
     return ResponseEntity.ok(permissions);
   }
