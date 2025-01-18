@@ -89,4 +89,9 @@ export class PipelineComponent {
       groups: groupedWorkflowsRuns,
     };
   });
+
+  allGroupsHaveNoWorkflowRuns = computed(() => {
+    const pipelineData = this.pipeline();
+    return pipelineData.groups.length > 0 && pipelineData.groups.every(group => group.workflows.length === 0);
+  });
 }

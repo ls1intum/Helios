@@ -25,6 +25,15 @@
 
 @if (pipeline(); as pipeline) {
   <div class="flex items-start mt-2">
+    <!-- Check if all groups have no workflow runs -->
+    <!-- If so, display a message saying that no workflow runs have been found -->
+    @if (allGroupsHaveNoWorkflowRuns()) {
+      <div class="flex flex-col justify-center items-center p-4">
+        <i-tabler name="info-circle" class="!size-20 text-blue-500" />
+        <div class="font-semibold text-lg">No workflow runs found.</div>
+        <div class="text-sm">Workflow groups exist, but no runs have been executed yet.</div>
+      </div>
+    }
     @for (group of pipeline.groups; track group.name) {
       @if (group.workflows.length > 0) {
         <ng-container>
