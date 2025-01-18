@@ -29,7 +29,7 @@ import org.springframework.stereotype.Component;
 public class GitHubJwtAuthenticationConverter
     implements Converter<Jwt, AbstractAuthenticationToken> {
 
-  final String ROLE_PREFIX = "ROLE_";
+  final String rolePrefix = "ROLE_";
   private final GitHubClient githubClient;
 
   @Autowired private HttpServletRequest request;
@@ -81,7 +81,7 @@ public class GitHubJwtAuthenticationConverter
     // Hardcoded Helios developers
     String[] heliosDevelopers = {"gbanu", "thielpa", "egekocabas", "turkerkoc", "stefannemeth"};
     if (Arrays.asList(heliosDevelopers).contains(username)) {
-      authorities.add(new SimpleGrantedAuthority(ROLE_PREFIX + RepoPermissionType.ADMIN));
+      authorities.add(new SimpleGrantedAuthority(rolePrefix + RepoPermissionType.ADMIN));
       return authorities;
     }
 
@@ -89,21 +89,21 @@ public class GitHubJwtAuthenticationConverter
         githubClient.getRepositoryPermissions(repositoryId, username);
 
     if (githubRepositoryRole.getPermission() == RepoPermissionType.ADMIN) {
-      authorities.add(new SimpleGrantedAuthority(ROLE_PREFIX + RepoPermissionType.ADMIN));
+      authorities.add(new SimpleGrantedAuthority(rolePrefix + RepoPermissionType.ADMIN));
     }
     if (githubRepositoryRole.getPermission() == RepoPermissionType.WRITE
         && githubRepositoryRole.getRoleName().equals("maintain")) {
-      authorities.add(new SimpleGrantedAuthority(ROLE_PREFIX + "MAINTAINER"));
+      authorities.add(new SimpleGrantedAuthority(rolePrefix + "MAINTAINER"));
     }
     if (githubRepositoryRole.getPermission() == RepoPermissionType.WRITE
         && !githubRepositoryRole.getRoleName().equals("maintain")) {
-      authorities.add(new SimpleGrantedAuthority(ROLE_PREFIX + RepoPermissionType.WRITE));
+      authorities.add(new SimpleGrantedAuthority(rolePrefix + RepoPermissionType.WRITE));
     }
     if (githubRepositoryRole.getPermission() == RepoPermissionType.READ) {
-      authorities.add(new SimpleGrantedAuthority(ROLE_PREFIX + RepoPermissionType.READ));
+      authorities.add(new SimpleGrantedAuthority(rolePrefix + RepoPermissionType.READ));
     }
     if (githubRepositoryRole.getPermission() == RepoPermissionType.NONE) {
-      authorities.add(new SimpleGrantedAuthority(ROLE_PREFIX + RepoPermissionType.NONE));
+      authorities.add(new SimpleGrantedAuthority(rolePrefix + RepoPermissionType.NONE));
     }
 
     return authorities;
