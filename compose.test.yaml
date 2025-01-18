@@ -2,9 +2,9 @@ services:
   postgres:
     image: 'postgres:16'
     environment:
-      - POSTGRES_DB=${POSTGRES_DB}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_DB=helios_test-db
+      - POSTGRES_PASSWORD=test
+      - POSTGRES_USER=test
     ports:
       - '5432:5432'
     volumes:
@@ -31,67 +31,11 @@ services:
     networks:
       - helios-network
 
-  webhook-listener:
-    image: "ghcr.io/ls1intum/helios/webhook-listener:${WEBHOOK_LISTENER_IMAGE_TAG}"
-    ports:
-      - '4200:4200'
-    environment:
-      - NATS_AUTH_TOKEN=${NATS_AUTH_TOKEN}
-      - WEBHOOK_SECRET=${WEBHOOK_SECRET}
-      - NATS_URL=nats-server
-    depends_on:
-      - nats-server
-    networks:
-      - helios-network
-
-  nats-server:
-    image: nats:alpine
-    ports:
-      - "4222:4222"
-      - "8222:8222"
-    command:
-      [
-        "/bin/sh",
-        "-c",
-        "echo 'listen: \"0.0.0.0:4222\"
-
-
-          http_port: 8222
-
-
-          jetstream {
-
-          \  store_dir: \"/data\"
-
-          }
-
-
-          authorization {
-
-          \  token: \"${NATS_AUTH_TOKEN}\"
-
-          }' > /etc/nats/nats-server.conf.template && sed 's|{{NATS_AUTH_TOKEN}}|'\"$NATS_AUTH_TOKEN\"'|g' /etc/nats/nats-server.conf.template > /etc/nats/nats-server.conf && exec nats-server --config /etc/nats/nats-server.conf"
-      ]
-    environment:
-      - NATS_AUTH_TOKEN=${NATS_AUTH_TOKEN}
-    volumes:
-      - nats-data:/data
-    healthcheck:
-      test: [ "CMD", "wget", "--spider", "--quiet", "http://localhost:8222/healthz" ]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 3s
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-    networks:
-      - helios-network
-
   client:
-    image: "ghcr.io/ls1intum/helios/client:${CLIENT_IMAGE_TAG}"
+    entrypoint: npx ng serve --configuration=production --host
+    build:
+      context: ./client
+      dockerfile: Dockerfile.dev
     ports:
       # Do not expose the client to 80 or 443
       - "90:80"
@@ -100,25 +44,25 @@ services:
       - helios-network
 
   application-server:
-    image: "ghcr.io/ls1intum/helios/application-server:${APPLICATION_SERVER_IMAGE_TAG}"
+    build:
+      context: ./server/application-server
+      dockerfile: Dockerfile
     ports:
       - '8080:8080'
     environment:
-      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
-      - DATASOURCE_URL=${DATASOURCE_URL}
-      - DATASOURCE_USERNAME=${DATASOURCE_USERNAME}
-      - DATASOURCE_PASSWORD=${DATASOURCE_PASSWORD}
-      - NATS_SERVER=${NATS_SERVER}
-      - NATS_AUTH_TOKEN=${NATS_AUTH_TOKEN}
-      - ORGANIZATION_NAME=${ORGANIZATION_NAME}
+      - SPRING_PROFILES_ACTIVE=test
+      - DATASOURCE_URL=jdbc:postgresql://postgres/helios_test-db
+      - DATASOURCE_USERNAME=test
+      - DATASOURCE_PASSWORD=test
+      - NATS_SERVER=""
+      - NATS_AUTH_TOKEN=""
+      - ORGANIZATION_NAME=ls1intum/Helios
       - GITHUB_AUTH_TOKEN=${GITHUB_AUTH_TOKEN}
-      - REPOSITORY_NAME=${REPOSITORY_NAME}
-      - RUN_ON_STARTUP_COOLDOWN=${RUN_ON_STARTUP_COOLDOWN}
-      - OAUTH_ISSUER_URL=${OAUTH_ISSUER_URL}
+      - REPOSITORY_NAME=Helios
+      - RUN_ON_STARTUP_COOLDOWN=0
+      - OAUTH_ISSUER_URL=http://keycloak:8081/auth/realms/helios
     depends_on:
       - postgres
-      - nats-server
-      - webhook-listener
     networks:
       - helios-network
 
@@ -126,21 +70,20 @@ services:
     image: quay.io/keycloak/keycloak:latest
     container_name: keycloak
     environment:
-      KC_BOOTSTRAP_ADMIN_USERNAME: ${KC_BOOTSTRAP_ADMIN_USERNAME}
-      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KC_BOOTSTRAP_ADMIN_PASSWORD}
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
       KC_DB: postgres
       KC_DB_URL_HOST: postgres
-      KC_DB_USERNAME: ${POSTGRES_USER}
-      KC_DB_PASSWORD: ${POSTGRES_PASSWORD}
-      KC_HOSTNAME: ${KC_HOSTNAME}
-      KC_HTTP_ENABLED: ${KC_HTTP_ENABLED}
+      KC_DB_USERNAME: test
+      KC_DB_PASSWORD: test
+      KC_HOSTNAME: localhost
     ports:
       - '8081:8081'
     depends_on:
       - postgres
     volumes:
-      - ./helios-realm.json:/opt/keycloak/data/import/prod-realm-export.json
-    command: start-dev --import-realm --http-port=8081 --proxy-headers xforwarded --hostname-strict=true
+      - ./helios-example-realm.json:/opt/keycloak/data/import/dev-realm-export.json
+    command: start-dev --import-realm --http-port=8081
     networks:
       - helios-network
 
@@ -148,7 +91,7 @@ services:
     image: mcr.microsoft.com/playwright:v1.16.1-focal
     entrypoint: npx playwright test
     environment:
-      - BASE_URL=http://localhost:4200
+      - BASE_URL=http://client:90
     volumes:
       - .:/app:ro
       # Videos, error screenshots and traces are stored in test-results:
@@ -159,7 +102,6 @@ services:
       - client
       - application-server
       - postgres
-      - nats-server
 
 volumes:
   db-data:
@@ -170,4 +112,3 @@ networks:
   # Create network manually in advance: docker network create helios-network
   helios-network:
     name: helios-network
-    external: true
