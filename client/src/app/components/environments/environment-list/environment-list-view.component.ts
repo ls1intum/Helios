@@ -23,6 +23,7 @@ import { DeploymentStateTagComponent } from '../deployment-state-tag/deployment-
 import { LockTimeComponent } from '../lock-time/lock-time.component';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 import { CommonModule } from '@angular/common';
+import { EnvironmentStateService } from '@app/core/services/environment-state.service';
 
 @Component({
   selector: 'app-environment-list-view',
@@ -46,6 +47,7 @@ export class EnvironmentListViewComponent {
   private queryClient = inject(QueryClient);
   private keycloakService = inject(KeycloakService);
   private confirmationService = inject(ConfirmationService);
+  private environmentStateService = inject(EnvironmentStateService);
 
   editable = input<boolean | undefined>();
   deployable = input<boolean | undefined>();
@@ -70,6 +72,8 @@ export class EnvironmentListViewComponent {
     ...unlockEnvironmentMutation(),
     onSuccess: () => {
       this.queryClient.invalidateQueries({ queryKey: this.queryKey() });
+      // Trigger global update
+      this.environmentStateService.triggerEnvironmentUpdate();
     },
   }));
 
@@ -90,6 +94,8 @@ export class EnvironmentListViewComponent {
       message: `Are you sure you want to deploy to ${environment.name}?`,
       accept: () => {
         this.deploy.emit(environment);
+        // Trigger global update after deployment
+        this.environmentStateService.triggerEnvironmentUpdate();
       },
     });
   }

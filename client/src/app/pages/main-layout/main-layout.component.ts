@@ -14,6 +14,8 @@ import { DividerModule } from 'primeng/divider';
 import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
 import { HeliosIconComponent } from '../../components/helios-icon/helios-icon.component';
+import { EnvironmentStateService } from '@app/core/services/environment-state.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-main-layout',
@@ -38,6 +40,9 @@ import { HeliosIconComponent } from '../../components/helios-icon/helios-icon.co
 export class MainLayoutComponent implements OnInit, OnDestroy {
   private keycloakService = inject(KeycloakService);
   private permissionService = inject(PermissionService);
+  private environmentStateService = inject(EnvironmentStateService);
+
+  private subscription?: Subscription;
 
   username = computed(() => (this.keycloakService.decodedToken()?.preferred_username || '') as string);
 
@@ -96,6 +101,16 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   });
 
   ngOnInit() {
+    // Subscribe to environment update events
+    this.subscription = new Subscription();
+
+    const envUpdateSub = this.environmentStateService.environmentUpdate$.subscribe(() => {
+      // Re-fetch on update event
+      this.lockQuery.refetch();
+    });
+
+    this.subscription.add(envUpdateSub);
+
     this.intervalId = setInterval(() => {
       this.timeNow.set(new Date());
     }, 1000);
