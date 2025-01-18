@@ -1,5 +1,6 @@
 package de.tum.cit.aet.helios.deployment;
 
+import de.tum.cit.aet.helios.config.security.annotations.EnforceWritePermission;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Optional;
@@ -50,6 +51,7 @@ public class DeploymentController {
     return deployment.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
   }
 
+  @EnforceWritePermission
   @PostMapping("/deploy")
   public ResponseEntity<String> deployToEnvironment(
       @Valid @RequestBody DeployRequest deployRequest) {
@@ -57,8 +59,7 @@ public class DeploymentController {
       deploymentService.deployToEnvironment(deployRequest);
       return ResponseEntity.ok().build();
     } catch (DeploymentException e) {
-      return ResponseEntity
-          .status(HttpStatus.INTERNAL_SERVER_ERROR)
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
           .body("Deployment failed: " + e.getMessage());
     }
   }

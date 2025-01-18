@@ -1,5 +1,6 @@
 package de.tum.cit.aet.helios.environment;
 
+import de.tum.cit.aet.helios.config.security.annotations.EnforceAtLeastMaintainer;
 import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
 import java.util.Optional;
@@ -62,30 +63,24 @@ public class EnvironmentController {
 
     } catch (EntityNotFoundException e) {
       // 404 Not Found
-      return ResponseEntity
-          .status(HttpStatus.NOT_FOUND)
-          .body("Unlock Failed: " + e.getMessage());
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Unlock Failed: " + e.getMessage());
 
     } catch (IllegalStateException e) {
       // 400 Bad Request
-      return ResponseEntity
-          .status(HttpStatus.BAD_REQUEST)
-          .body("Unlock Failed: " + e.getMessage());
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Unlock Failed: " + e.getMessage());
 
     } catch (SecurityException e) {
       // 403 Forbidden
-      return ResponseEntity
-          .status(HttpStatus.FORBIDDEN)
-          .body("Unlock Failed: " + e.getMessage());
+      return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Unlock Failed: " + e.getMessage());
 
     } catch (Exception e) {
       // 500 Internal Server Error (fallback for any other exception)
-      return ResponseEntity
-          .status(HttpStatus.INTERNAL_SERVER_ERROR)
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
           .body("Unlock Failed: " + e.getMessage());
     }
   }
 
+  @EnforceAtLeastMaintainer
   @PutMapping("/{id}")
   public ResponseEntity<?> updateEnvironment(
       @PathVariable Long id, @RequestBody EnvironmentDto environmentDto) {
