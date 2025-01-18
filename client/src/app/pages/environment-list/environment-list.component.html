@@ -7,4 +7,4 @@
   </div>
 </app-page-heading>
 
-<app-environment-list-view [editable]="true" [hideLinkToList]="true" />
+<app-environment-list-view [editable]="permissionService.isAdmin()" [hideLinkToList]="true" />

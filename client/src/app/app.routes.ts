@@ -33,7 +33,11 @@ export const routes: Routes = [
             children: [
               { path: '', redirectTo: 'list', pathMatch: 'full' },
               { path: 'list', loadComponent: () => import('./pages/environment-list/environment-list.component').then(m => m.EnvironmentListComponent) },
-              { path: ':id/edit', loadComponent: () => import('./pages/environment-edit/environment-edit.component').then(m => m.EnvironmentEditComponent) },
+              {
+                path: ':id/edit',
+                loadComponent: () => import('./pages/environment-edit/environment-edit.component').then(m => m.EnvironmentEditComponent),
+                canActivate: [maintainerGuard],
+              },
               {
                 path: ':environmentId/history',
                 loadComponent: () => import('./pages/environment-deployment-history/environment-deployment-history.component').then(m => m.EnvironmentDeploymentHistoryComponent),
