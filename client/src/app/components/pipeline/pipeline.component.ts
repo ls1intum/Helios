@@ -72,8 +72,18 @@ export class PipelineComponent {
         name: group.name,
         id: group.id,
         workflows: matchingRuns,
+        isLastWithWorkflows: false,
       };
     });
+
+    let lastWithWorkflowsFound = false;
+    // For loop in reverse to set isLastWithWorkflows in the correct order
+    groupedWorkflowsRuns.reverse().forEach(group => {
+      group.isLastWithWorkflows = !lastWithWorkflowsFound && group.workflows.length > 0;
+      if (group.isLastWithWorkflows) lastWithWorkflowsFound = true;
+    });
+    // Reverse back to the original order
+    groupedWorkflowsRuns.reverse();
 
     return {
       groups: groupedWorkflowsRuns,

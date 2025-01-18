@@ -25,7 +25,7 @@
 
 @if (pipeline(); as pipeline) {
   <div class="flex items-start mt-2">
-    @for (group of pipeline.groups; track group.name; let isLast = $last) {
+    @for (group of pipeline.groups; track group.name) {
       @if (group.workflows.length > 0) {
         <ng-container>
           <p-panel [header]="group.name">
@@ -60,7 +60,7 @@
           </p-panel>
 
           <!-- Connection line -->
-          @if (!isLast) {
+          @if (!group.isLastWithWorkflows) {
             <div class="w-10 h-px bg-gray-300 mt-7"></div>
           }
         </ng-container>
