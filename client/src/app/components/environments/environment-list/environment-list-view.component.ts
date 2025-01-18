@@ -94,8 +94,6 @@ export class EnvironmentListViewComponent {
       message: `Are you sure you want to deploy to ${environment.name}?`,
       accept: () => {
         this.deploy.emit(environment);
-        // Trigger global update after deployment
-        this.environmentStateService.triggerEnvironmentUpdate();
       },
     });
   }

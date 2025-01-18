@@ -5,6 +5,7 @@ import { PermissionService } from '@app/core/services/permission.service';
 import { injectMutation, QueryClient } from '@tanstack/angular-query-experimental';
 import { MessageService } from 'primeng/api';
 import { EnvironmentListViewComponent } from '../environments/environment-list/environment-list-view.component';
+import { EnvironmentStateService } from '@app/core/services/environment-state.service';
 
 @Component({
   selector: 'app-deployment-selection',
@@ -14,6 +15,7 @@ import { EnvironmentListViewComponent } from '../environments/environment-list/e
 export class DeploymentSelectionComponent {
   private messageService = inject(MessageService);
   permissionService = inject(PermissionService);
+  private environmentStateService = inject(EnvironmentStateService);
 
   queryClient = inject(QueryClient);
 
@@ -24,6 +26,9 @@ export class DeploymentSelectionComponent {
   deployEnvironment = injectMutation(() => ({
     ...deployToEnvironmentMutation(),
     onSuccess: () => {
+      // Trigger global update after deployment
+      this.environmentStateService.triggerEnvironmentUpdate();
+
       this.queryClient.invalidateQueries({ queryKey: getAllEnabledEnvironmentsQueryKey() });
       if (this.currentEnvironmentId) {
         this.queryClient.invalidateQueries({ queryKey: getEnvironmentByIdQueryKey({ path: { id: this.currentEnvironmentId } }) });
