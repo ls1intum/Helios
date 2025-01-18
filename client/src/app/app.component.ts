@@ -43,7 +43,7 @@ export class AppComponent {
             errorMessage = errorText;
           }
         }
-        // Distinguish error statuses if needed
+        // Parsing with status code
         if (response.status === 401) {
           this.messageService.add({
             severity: 'error',

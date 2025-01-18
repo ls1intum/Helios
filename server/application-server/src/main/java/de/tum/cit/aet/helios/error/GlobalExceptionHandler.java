@@ -1,10 +1,12 @@
 package de.tum.cit.aet.helios.error;
 
 import de.tum.cit.aet.helios.deployment.DeploymentException;
+import de.tum.cit.aet.helios.environment.EnvironmentException;
 import de.tum.cit.aet.helios.github.permissions.PermissionException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.Instant;
+import java.io.IOException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -45,7 +47,7 @@ public class GlobalExceptionHandler {
   }
 
   // -- 403 FORBIDDEN ------------------------------------
-  @ExceptionHandler({SecurityException.class, PermissionException.class})
+  @ExceptionHandler({SecurityException.class, PermissionException.class, EnvironmentException.class})
   public ResponseEntity<ApiError> handleSecurityExceptions(
       RuntimeException ex, HttpServletRequest request) {
 
@@ -60,7 +62,7 @@ public class GlobalExceptionHandler {
   }
 
   // -- 500 INTERNAL SERVER ERROR (FALLBACK) -------------
-  @ExceptionHandler(Exception.class)
+  @ExceptionHandler({Exception.class, IOException.class})
   public ResponseEntity<ApiError> handleGeneralException(
       Exception ex, HttpServletRequest request) {
 
