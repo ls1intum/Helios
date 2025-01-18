@@ -5,8 +5,8 @@ import de.tum.cit.aet.helios.environment.EnvironmentException;
 import de.tum.cit.aet.helios.github.permissions.PermissionException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
-import java.time.Instant;
 import java.io.IOException;
+import java.time.Instant;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -47,7 +47,8 @@ public class GlobalExceptionHandler {
   }
 
   // -- 403 FORBIDDEN ------------------------------------
-  @ExceptionHandler({SecurityException.class, PermissionException.class, EnvironmentException.class})
+  @ExceptionHandler({SecurityException.class, PermissionException.class, 
+      EnvironmentException.class})
   public ResponseEntity<ApiError> handleSecurityExceptions(
       RuntimeException ex, HttpServletRequest request) {
 
