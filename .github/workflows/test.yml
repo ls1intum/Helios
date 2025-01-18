@@ -50,7 +50,7 @@ jobs:
           if: failure()
           run: grep "Test >.* FAILED\$" tests.log || echo "No failed tests."
         - name: "Codacy: Report coverage"
-          uses: codacy/codacy-coverage-reporter-action@v1.3.0
+          uses: codacy/codacy-coverage-reporter-action@55c3b57cb3bb6833c8c1a6614fee4cebb140de2d
           with:
             project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
             coverage-reports: server/application-server/build/reports/jacoco/test/jacocoTestReport.xml
