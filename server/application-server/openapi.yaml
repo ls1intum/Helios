@@ -457,7 +457,7 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/EnvironmentDto"
-  /api/environments/user_locking:
+  /api/environments/userLocking:
     get:
       tags:
       - environment-controller
@@ -490,6 +490,27 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/EnvironmentDto"
+  /api/environments/environment/{environmentId}/lockHistory:
+    get:
+      tags:
+      - environment-controller
+      operationId: getLockHistoryByEnvironmentId
+      parameters:
+      - name: environmentId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EnvironmentLockHistoryDto"
   /api/environments/enabled:
     get:
       tags:

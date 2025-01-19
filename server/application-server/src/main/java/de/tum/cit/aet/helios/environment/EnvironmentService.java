@@ -208,6 +208,11 @@ public class EnvironmentService {
         lockHistoryRepository.findLatestLockForEnabledEnvironment(currentUserId);
 
     return lockHistory.map(EnvironmentLockHistoryDto::fromEnvironmentLockHistory).orElse(null);
+  }
 
+  public List<EnvironmentLockHistoryDto> getLockHistoryByEnvironmentId(Long environmentId) {
+    return lockHistoryRepository.findLockHistoriesByEnvironment(environmentId).stream()
+        .map(EnvironmentLockHistoryDto::fromEnvironmentLockHistory)
+        .collect(Collectors.toList());
   }
 }

@@ -48,6 +48,8 @@ import type {
   GetEnvironmentsByUserLockingResponse,
   GetEnvironmentsByRepositoryIdData,
   GetEnvironmentsByRepositoryIdResponse,
+  GetLockHistoryByEnvironmentIdData,
+  GetLockHistoryByEnvironmentIdResponse,
   GetAllEnabledEnvironmentsData,
   GetAllEnabledEnvironmentsResponse,
   GetAllDeploymentsData,
@@ -257,7 +259,7 @@ export const getAllEnvironments = <ThrowOnError extends boolean = false>(options
 export const getEnvironmentsByUserLocking = <ThrowOnError extends boolean = false>(options?: Options<GetEnvironmentsByUserLockingData, ThrowOnError>) => {
   return (options?.client ?? client).get<GetEnvironmentsByUserLockingResponse, unknown, ThrowOnError>({
     ...options,
-    url: '/api/environments/user_locking',
+    url: '/api/environments/userLocking',
   });
 };
 
@@ -265,6 +267,13 @@ export const getEnvironmentsByRepositoryId = <ThrowOnError extends boolean = fal
   return (options?.client ?? client).get<GetEnvironmentsByRepositoryIdResponse, unknown, ThrowOnError>({
     ...options,
     url: '/api/environments/repository/{repositoryId}',
+  });
+};
+
+export const getLockHistoryByEnvironmentId = <ThrowOnError extends boolean = false>(options: Options<GetLockHistoryByEnvironmentIdData, ThrowOnError>) => {
+  return (options?.client ?? client).get<GetLockHistoryByEnvironmentIdResponse, unknown, ThrowOnError>({
+    ...options,
+    url: '/api/environments/environment/{environmentId}/lockHistory',
   });
 };
 

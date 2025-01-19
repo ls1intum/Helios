@@ -48,10 +48,18 @@ public class EnvironmentController {
     return ResponseEntity.ok(environments);
   }
 
-  @GetMapping("/user_locking")
+  @GetMapping("/userLocking")
   public ResponseEntity<EnvironmentLockHistoryDto> getEnvironmentsByUserLocking() {
     EnvironmentLockHistoryDto usersLock = environmentService.getUsersCurrentLock();
     return ResponseEntity.ok(usersLock);
+  }
+
+  @GetMapping("/environment/{environmentId}/lockHistory")
+  public ResponseEntity<List<EnvironmentLockHistoryDto>> getLockHistoryByEnvironmentId(@PathVariable Long environmentId) {
+      List<EnvironmentLockHistoryDto> lockHistory =
+        environmentService.getLockHistoryByEnvironmentId(environmentId);
+
+      return ResponseEntity.ok(lockHistory);
   }
 
   @PutMapping("/{id}/unlock")

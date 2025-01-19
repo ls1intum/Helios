@@ -608,7 +608,7 @@ export type GetEnvironmentsByUserLockingData = {
   body?: never;
   path?: never;
   query?: never;
-  url: '/api/environments/user_locking';
+  url: '/api/environments/userLocking';
 };
 
 export type GetEnvironmentsByUserLockingResponses = {
@@ -637,6 +637,24 @@ export type GetEnvironmentsByRepositoryIdResponses = {
 };
 
 export type GetEnvironmentsByRepositoryIdResponse = GetEnvironmentsByRepositoryIdResponses[keyof GetEnvironmentsByRepositoryIdResponses];
+
+export type GetLockHistoryByEnvironmentIdData = {
+  body?: never;
+  path: {
+    environmentId: number;
+  };
+  query?: never;
+  url: '/api/environments/environment/{environmentId}/lockHistory';
+};
+
+export type GetLockHistoryByEnvironmentIdResponses = {
+  /**
+   * OK
+   */
+  200: Array<EnvironmentLockHistoryDto>;
+};
+
+export type GetLockHistoryByEnvironmentIdResponse = GetLockHistoryByEnvironmentIdResponses[keyof GetLockHistoryByEnvironmentIdResponses];
 
 export type GetAllEnabledEnvironmentsData = {
   body?: never;
