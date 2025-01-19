@@ -41,14 +41,21 @@
     <ng-template pTemplate="body" let-rowNode let-branch="rowData">
       <tr [ttRow]="rowNode" class="cursor-pointer" (click)="openBranch(branch)">
         <td>
-          <div class="flex items-center gap-2">
-            <p-treeTableToggler [rowNode]="rowNode" />
-            <p-tag [value]="branch.name" />
-            @if (branch.isProtected) {
-              <i-tabler name="shield-half" pTooltip="Protected Branch" />
-            }
-            <i-tabler name="external-link" (click)="openLink($event, branch.link)"></i-tabler>
-          </div>
+          @if (!rowNode.node.subheader) {
+            <div class="flex items-center gap-2">
+              <p-treeTableToggler [rowNode]="rowNode" />
+
+              <p-tag [value]="branch.name" />
+              @if (branch.isProtected) {
+                <i-tabler name="shield-half" pTooltip="Protected Branch" />
+              }
+              <i-tabler name="external-link" (click)="openLink($event, branch.link)"></i-tabler>
+            </div>
+          } @else if (rowNode.node.children.length > 0) {
+            <div class="flex items-center gap-2">
+              <span class="font-semibold">{{ branch.name }}</span>
+            </div>
+          }
         </td>
         <td class="whitespace-nowrap">
           @if (branch.updatedBy && branch.updatedAt) {

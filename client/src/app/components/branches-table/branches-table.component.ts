@@ -114,7 +114,26 @@ export class BranchTableComponent {
   }
 
   convertBranchesToTreeNodes(branches: BranchInfoWithLink[]): TreeNode[] {
-    const rootNodes: TreeNode[] = [];
+    const rootNodes: TreeNode[] = [
+      {
+        data: {
+          name: 'Protected Branches',
+          type: 'Folder',
+        },
+        children: [],
+        expanded: true,
+        subheader: true,
+      },
+      {
+        data: {
+          name: 'General Branches',
+          type: 'Folder',
+        },
+        children: [],
+        expanded: true,
+        subheader: true,
+      },
+    ];
     const nodeMap = new Map<string, TreeNode>();
 
     branches.forEach(branch => {
@@ -143,7 +162,11 @@ export class BranchTableComponent {
 
           // If it's the first level, add to root nodes
           if (index === 0) {
-            rootNodes.push(newNode);
+            if (branch.isProtected) {
+              rootNodes[0].children!.push(newNode);
+            } else {
+              rootNodes[1].children!.push(newNode);
+            }
           } else {
             // Add as child to parent node
             const parentPath = pathParts.slice(0, index).join('/');
@@ -164,4 +187,6 @@ interface TreeNode {
     type?: 'Branch' | 'Folder';
   };
   children?: TreeNode[];
+  expanded?: boolean;
+  subheader?: boolean;
 }
