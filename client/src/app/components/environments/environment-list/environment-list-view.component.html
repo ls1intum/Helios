@@ -48,7 +48,7 @@
             </button>
           }
 
-          @if (isLoggedIn() && editable()) {
+          @if (isLoggedIn() && editable() && hasEditEnvironmentPermissions()) {
             <!-- Show the disabled tag -->
             @if (!environment.enabled) {
               <p-tag value="Disabled" severity="danger" rounded="true" />

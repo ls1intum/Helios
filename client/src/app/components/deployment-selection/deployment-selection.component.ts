@@ -6,7 +6,6 @@ import {
   getEnvironmentByIdQueryKey,
   getEnvironmentsByUserLockingQueryKey,
 } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
-import { PermissionService } from '@app/core/services/permission.service';
 import { injectMutation, QueryClient } from '@tanstack/angular-query-experimental';
 import { MessageService } from 'primeng/api';
 import { EnvironmentListViewComponent } from '../environments/environment-list/environment-list-view.component';
@@ -18,7 +17,6 @@ import { EnvironmentListViewComponent } from '../environments/environment-list/e
 })
 export class DeploymentSelectionComponent {
   private messageService = inject(MessageService);
-  permissionService = inject(PermissionService);
 
   queryClient = inject(QueryClient);
 

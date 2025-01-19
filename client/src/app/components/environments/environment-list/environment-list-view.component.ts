@@ -52,9 +52,11 @@ export class EnvironmentListViewComponent {
 
   editable = input<boolean | undefined>();
   deployable = input<boolean | undefined>();
-  hasUnlockPermissions = input<boolean>();
-  hasDeployPermissions = input<boolean>();
   hideLinkToList = input<boolean | undefined>();
+
+  hasUnlockPermissions = computed(() => this.permissionService.isAtLeastMaintainer());
+  hasDeployPermissions = computed(() => this.permissionService.hasWritePermission());
+  hasEditEnvironmentPermissions = computed(() => this.permissionService.isAdmin());
 
   deploy = output<EnvironmentDto>();
 
