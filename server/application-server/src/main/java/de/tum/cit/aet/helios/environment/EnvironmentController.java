@@ -1,6 +1,7 @@
 package de.tum.cit.aet.helios.environment;
 
 import de.tum.cit.aet.helios.config.security.annotations.EnforceAtLeastMaintainer;
+import de.tum.cit.aet.helios.config.security.annotations.EnforceAtLeastWritePermission;
 import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
 import java.util.Optional;
@@ -55,6 +56,7 @@ public class EnvironmentController {
     return ResponseEntity.ok(usersLock);
   }
 
+  @EnforceAtLeastWritePermission
   @PutMapping("/{id}/unlock")
   public ResponseEntity<?> unlockEnvironment(@PathVariable Long id) {
     try {

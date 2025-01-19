@@ -1,6 +1,6 @@
 package de.tum.cit.aet.helios.deployment;
 
-import de.tum.cit.aet.helios.config.security.annotations.EnforceWritePermission;
+import de.tum.cit.aet.helios.config.security.annotations.EnforceAtLeastWritePermission;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Optional;
@@ -51,7 +51,7 @@ public class DeploymentController {
     return deployment.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
   }
 
-  @EnforceWritePermission
+  @EnforceAtLeastWritePermission
   @PostMapping("/deploy")
   public ResponseEntity<String> deployToEnvironment(
       @Valid @RequestBody DeployRequest deployRequest) {

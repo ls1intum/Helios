@@ -16,4 +16,4 @@ import org.springframework.security.access.prepost.PreAuthorize;
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 @PreAuthorize("hasRole('WRITE') or hasRole('MAINTAINER') or hasRole('ADMIN')")
-public @interface EnforceWritePermission {}
+public @interface EnforceAtLeastWritePermission {}
