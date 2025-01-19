@@ -49,7 +49,9 @@
               @if (branch.isProtected) {
                 <i-tabler name="shield-half" pTooltip="Protected Branch" />
               }
-              <i-tabler name="external-link" (click)="openLink($event, branch.link)"></i-tabler>
+              @if (!rowNode.node.children) {
+                <i-tabler name="external-link" (click)="openLink($event, branch.link)"></i-tabler>
+              }
             </div>
           </td>
         } @else if (rowNode.node.children.length > 0) {
