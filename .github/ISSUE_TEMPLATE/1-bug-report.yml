@@ -3,8 +3,6 @@ description: File a bug report.
 title: "[Bug]: "
 labels: ["bug", "triage"]
 projects: ["ls1intum/Helios"]
-assignees:
-  - gbanu
 body:
   - type: markdown
     attributes:

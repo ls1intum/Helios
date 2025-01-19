@@ -143,4 +143,8 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
       return `${hh}:${mm}:${ss}`;
     }
   }
+
+  reportIssue() {
+    window.open('https://github.com/ls1intum/Helios/issues/new/choose', '_blank');
+  }
 }
