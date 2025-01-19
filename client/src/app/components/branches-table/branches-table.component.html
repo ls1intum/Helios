@@ -40,8 +40,8 @@
 
     <ng-template pTemplate="body" let-rowNode let-branch="rowData">
       <tr [ttRow]="rowNode" class="cursor-pointer" (click)="openBranch(branch)">
-        <td>
-          @if (!rowNode.node.subheader) {
+        @if (!rowNode.node.subheader) {
+          <td>
             <div class="flex items-center gap-2">
               <p-treeTableToggler [rowNode]="rowNode" />
 
@@ -51,12 +51,14 @@
               }
               <i-tabler name="external-link" (click)="openLink($event, branch.link)"></i-tabler>
             </div>
-          } @else if (rowNode.node.children.length > 0) {
-            <div class="flex items-center gap-2">
+          </td>
+        } @else if (rowNode.node.children.length > 0) {
+          <td>
+            <div class="flex items-end gap-2 h-10">
               <span class="font-semibold">{{ branch.name }}</span>
             </div>
-          }
-        </td>
+          </td>
+        }
         <td class="whitespace-nowrap">
           @if (branch.updatedBy && branch.updatedAt) {
             <div class="flex gap-1 items-center text-sm">

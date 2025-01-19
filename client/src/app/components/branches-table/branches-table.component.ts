@@ -189,7 +189,7 @@ export class BranchTableComponent {
         }
       });
     });
-    return rootNodes;
+    return rootNodes.filter(rootSubheader => rootSubheader.children!.length > 0);
   }
 }
 
