@@ -45,13 +45,6 @@ public class GitHubClientManager {
   private final String organizationName;
 
   /**
-   * The name of the GitHub App.
-   * This is the name of the GitHub App without the bot suffix.
-   * Example: {@code heliosapp-testing}
-   */
-  private final String appNameWithoutSuffix;
-
-  /**
    * The name of the GitHub App with the bot suffix.
    * Example: {@code heliosapp-testing[bot]}
    */
@@ -121,7 +114,7 @@ public class GitHubClientManager {
                              OkHttpClient okHttpClient) {
     this.organizationName = organizationName;
     this.ghAuthToken = ghAuthToken;
-    this.appNameWithoutSuffix = appNameWithoutSuffix;
+    this.appName = appNameWithoutSuffix + "[bot]";
     this.appId = appId;
     this.installationId = installationId;
     this.privateKeyPath = privateKeyPath;
@@ -137,7 +130,6 @@ public class GitHubClientManager {
               + "GitHub client will be disabled.");
       authType = null;
     }
-    this.appName = this.appNameWithoutSuffix + "[bot]";
   }
 
   /**
@@ -213,12 +205,14 @@ public class GitHubClientManager {
       GitHub github = null;
 
       if (authType == AuthType.APP) {
+        log.info("Creating GitHub client for GitHub App...");
         // Initialize GitHub client with GitHub App credentials
         github = createGitHubClientForGitHubApp();
 
         // Set token expiration time to 20 minutes from now
         tokenExpirationTime = Instant.now().plusSeconds(60 * 20);
       } else if (authType == AuthType.PAT) {
+        log.info("Creating GitHub client with PAT...");
         // Set current token to ghAuthToken
         currentToken = ghAuthToken;
         // Initialize GitHub client with PAT
