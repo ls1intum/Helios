@@ -17,7 +17,7 @@ public class PullRequestService {
   }
 
   public List<PullRequestBaseInfoDto> getAllPullRequests() {
-    return pullRequestRepository.findAll().stream()
+    return pullRequestRepository.findAllByOrderByUpdatedAtDesc().stream()
         .map(PullRequestBaseInfoDto::fromPullRequest)
         .collect(Collectors.toList());
   }
@@ -27,7 +27,8 @@ public class PullRequestService {
   }
 
   public List<PullRequestInfoDto> getPullRequestByRepositoryId(Long repositoryId) {
-    return pullRequestRepository.findByRepositoryRepositoryId(repositoryId).stream()
+    return pullRequestRepository.findByRepositoryRepositoryIdOrderByUpdatedAtDesc(repositoryId)
+        .stream()
         .map(PullRequestInfoDto::fromPullRequest)
         .collect(Collectors.toList());
   }
