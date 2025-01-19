@@ -39,6 +39,12 @@ public class GitHubDeploymentProtectionRuleMessageHandler
 
   @Override
   public void handleMessage(Message msg) {
+    if (clientManager.getAuthType().equals(GitHubClientManager.AuthType.PAT)) {
+      log.warn("Received deployment_protection_rule event but no GitHub App is configured.");
+      return;
+    }
+
+
     String rawJson = new String(msg.getData(), StandardCharsets.UTF_8);
     log.info("Received deployment_protection_rule event. Started processing...");
     try {

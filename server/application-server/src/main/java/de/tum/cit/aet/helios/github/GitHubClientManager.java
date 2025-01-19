@@ -48,7 +48,7 @@ public class GitHubClientManager {
    * The name of the GitHub App with the bot suffix.
    * Example: {@code heliosapp-testing[bot]}
    */
-  private String appName;
+  private final String appName;
 
   /**
    * The GitHub App ID.
