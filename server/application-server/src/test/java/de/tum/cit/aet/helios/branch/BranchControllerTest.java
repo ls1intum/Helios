@@ -45,6 +45,7 @@ public class BranchControllerTest {
 
   @Test
   void testRejectUnauthenticatedUser() throws Exception {
+    assertEquals(true, false);
     this.mockMvc
         .perform(get("/api/branches").accept(MediaType.APPLICATION_JSON))
         .andExpect(MockMvcResultMatchers.status().isUnauthorized());

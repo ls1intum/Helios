@@ -58,6 +58,7 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
     testImplementation 'io.zonky.test:embedded-database-spring-test:2.6.0'
+    testImplementation 'com.microsoft.playwright:playwright:1.37.0'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     runtimeAgent1 "org.springframework:spring-instrument:6.2.1"
     runtimeAgent2 "org.aspectj:aspectjweaver:1.9.22.1"
@@ -118,14 +119,6 @@ tasks.register("bootRunDev", BootRun) {
     mainClass.set("de.tum.cit.aet.helios.HeliosApplication")
 }
 
-tasks.named("test") {
-    group = "application"
-    description = "Runs the Spring Boot application with the test profile"
-    // Set the active profile to 'test'
-    systemProperty "spring.profiles.active", "test"
-    finalizedBy "jacocoTestReport"
-}
-
 jacocoTestReport {
     dependsOn test // tests are required to run before generating the report
     reports {
@@ -153,52 +146,22 @@ openApi {
     }
 }
 
-testing {
-    suites { 
-        test { 
-            targets {
-                all {
-                    testTask.configure { 
-                        systemProperty "spring.profiles.active", "test"
-                    }
-                }
-            }
-        }
-
-        e2eTest(JvmTestSuite) {
-            dependencies {
-                implementation project()
-                implementation 'com.microsoft.playwright:playwright:1.37.0'
-            }
-
-            sources { 
-                java { 
-                    srcDirs = ['src/e2e/java'] 
-                }
-            }
-
-            targets { 
-                all {
-                    testTask.configure {
-                        shouldRunAfter(test)
-                    }
-                }
-            }
-        }
+tasks.named("test") {
+    group = "application"
+    description = "Run unit/integration tests of the Spring Boot application with the test profile"
+    useJUnitPlatform {
+        excludeTags "playwright"
     }
+    systemProperty "spring.profiles.active", "test"
+    finalizedBy "jacocoTestReport"
 }
 
-// tasks.register("e2eTest", Test) {
-//     group = "application"
-//     description = "Run e2e tests of the Spring Boot application with the test profile"
-
-//     testClassesDirs = sourceSets.e2e.output.classesDirs
-//     classpath = sourceSets.e2e.runtimeClasspath
-
-//     dependencies {
-//         implementation 'com.microsoft.playwright:playwright:1.37.0'
-//     }
-
-//     systemProperty "spring.profiles.active", "test"
-//     finalizedBy "jacocoTestReport"
-// }
+tasks.register("e2eTest", Test) {
+    group = "application"
+    description = "Run e2e tests of the Spring Boot application with the test profile"
+    useJUnitPlatform {
+        includeTags "playwright"
+    }
+    systemProperty "spring.profiles.active", "test"
+    finalizedBy "jacocoTestReport"
+}
