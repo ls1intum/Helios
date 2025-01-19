@@ -4,7 +4,18 @@
   </div>
   <span description> Here you can see all the Locking, unlocking and deployment history. </span>
 </app-page-heading>
+
 <div class="p-4">
+  <style>
+    /* 
+      This class will be applied to <tr> elements for UNLOCK_EVENT. 
+      We force a bottom border to separate events visually. 
+    */
+    tr.lock-event td {
+      border-bottom: 1px solid black;
+    }
+  </style>
+
   <!-- Loading State -->
   @if (deploymentsQuery.isPending() || lockingHistoryQuery.isPending()) {
     <p-table [value]="[1, 2, 3, 4, 5]" styleClass="p-datatable-lg">
@@ -37,14 +48,14 @@
         </tr>
       </ng-template>
       <ng-template pTemplate="body" let-combinedHistory>
-        <tr>
+        <tr [class.lock-event]="combinedHistory.type === 'LOCK_EVENT'">
           <td>
             <div class="flex align-items-center gap-2">
-              @if (combinedHistory.type == 'DEPLOYMENT') {
+              @if (combinedHistory.type === 'DEPLOYMENT') {
                 <i-tabler name="cloud-upload"></i-tabler>
-              } @else if (combinedHistory.type == 'LOCK_EVENT') {
+              } @else if (combinedHistory.type === 'LOCK_EVENT') {
                 <i-tabler name="lock"></i-tabler>
-              } @else if (combinedHistory.type == 'UNLOCK_EVENT') {
+              } @else if (combinedHistory.type === 'UNLOCK_EVENT') {
                 <i-tabler name="lock-open"></i-tabler>
               }
               <span>{{ combinedHistory.type }}</span>
@@ -52,7 +63,7 @@
           </td>
           <td>
             <div class="flex align-items-center gap-2">
-              @if (combinedHistory.type == 'DEPLOYMENT') {
+              @if (combinedHistory.type === 'DEPLOYMENT') {
                 <ul class="list-none p-0 m-0">
                   <li class="flex align-items-center gap-2 mb-2">
                     <i-tabler name="status-change"></i-tabler>
@@ -67,10 +78,10 @@
                     {{ combinedHistory.sha?.slice(0, 7) }}
                   </li>
                 </ul>
-              } @else if (combinedHistory.type == 'LOCK_EVENT') {
+              } @else if (combinedHistory.type === 'LOCK_EVENT') {
                 <i-tabler name="user"></i-tabler>
                 <span>{{ combinedHistory.lockedBy }}</span>
-              } @else if (combinedHistory.type == 'UNLOCK_EVENT') {
+              } @else if (combinedHistory.type === 'UNLOCK_EVENT') {
                 <i-tabler name="user"></i-tabler>
                 <span>{{ combinedHistory.unlockedBy }}</span>
               }
@@ -78,7 +89,9 @@
           </td>
           <td>
             <div class="flex align-items-center gap-2">
-              <span>{{ dateService.formatDate(combinedHistory.timestamp, 'd MMMM y, h:mm a') }}</span>
+              <span>
+                {{ dateService.formatDate(combinedHistory.timestamp, 'd MMMM y, h:mm a') }}
+              </span>
             </div>
           </td>
         </tr>
