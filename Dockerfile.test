@@ -1,0 +1,7 @@
+FROM node:22
+
+WORKDIR /app
+
+# install only the chromium based browser and dependencies
+RUN npm install @playwright/test@1.49.1
+RUN npx -y playwright install --with-deps chromium

@@ -3,6 +3,7 @@ import org.springframework.boot.gradle.tasks.run.BootRun
 plugins {
     id 'java'
     id 'jacoco'
+    id 'jvm-test-suite'
     id 'org.springframework.boot' version '3.4.1'
     id 'io.spring.dependency-management' version '1.1.7'
     id 'io.freefair.lombok' version '8.11'
@@ -152,6 +153,52 @@ openApi {
     }
 }
 
-tasks.named('test') {
-    useJUnitPlatform()
+testing {
+    suites { 
+        test { 
+            targets {
+                all {
+                    testTask.configure { 
+                        systemProperty "spring.profiles.active", "test"
+                    }
+                }
+            }
+        }
+
+        e2eTest(JvmTestSuite) {
+            dependencies {
+                implementation project()
+                implementation 'com.microsoft.playwright:playwright:1.37.0'
+            }
+
+            sources { 
+                java { 
+                    srcDirs = ['src/e2e/java'] 
+                }
+            }
+
+            targets { 
+                all {
+                    testTask.configure {
+                        shouldRunAfter(test)
+                    }
+                }
+            }
+        }
+    }
 }
+
+// tasks.register("e2eTest", Test) {
+//     group = "application"
+//     description = "Run e2e tests of the Spring Boot application with the test profile"
+
+//     testClassesDirs = sourceSets.e2e.output.classesDirs
+//     classpath = sourceSets.e2e.runtimeClasspath
+
+//     dependencies {
+//         implementation 'com.microsoft.playwright:playwright:1.37.0'
+//     }
+
+//     systemProperty "spring.profiles.active", "test"
+//     finalizedBy "jacocoTestReport"
+// }

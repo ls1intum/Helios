@@ -8,7 +8,7 @@ services:
     ports:
       - '5432:5432'
     volumes:
-      - db-data:/var/lib/postgresql/data
+      - test-db-data:/var/lib/postgresql/data
     command: >
       bash -c "
         set -m
@@ -32,10 +32,14 @@ services:
       - helios-network
 
   client:
-    entrypoint: npx ng serve --configuration=production --host
+    container_name: client
+    command: sh -c "yarn start:e2e"
     build:
       context: ./client
       dockerfile: Dockerfile.dev
+    volumes:
+      - ./client:/usr/src/app/
+      - /usr/src/app/node_modules/
     ports:
       # Do not expose the client to 80 or 443
       - "90:80"
@@ -50,19 +54,14 @@ services:
     ports:
       - '8080:8080'
     environment:
-      - SPRING_PROFILES_ACTIVE=test
-      - DATASOURCE_URL=jdbc:postgresql://postgres/helios_test-db
-      - DATASOURCE_USERNAME=test
-      - DATASOURCE_PASSWORD=test
+      - SPRING_PROFILES_ACTIVE=test,e2e
       - NATS_SERVER=""
       - NATS_AUTH_TOKEN=""
       - ORGANIZATION_NAME=ls1intum/Helios
-      - GITHUB_AUTH_TOKEN=${GITHUB_AUTH_TOKEN}
+      - GITHUB_AUTH_TOKEN=${GITHUB_TOKEN}
       - REPOSITORY_NAME=Helios
       - RUN_ON_STARTUP_COOLDOWN=0
       - OAUTH_ISSUER_URL=http://keycloak:8081/auth/realms/helios
-    depends_on:
-      - postgres
     networks:
       - helios-network
 
@@ -87,25 +86,9 @@ services:
     networks:
       - helios-network
 
-  playwright:
-    image: mcr.microsoft.com/playwright:v1.16.1-focal
-    entrypoint: npx playwright test
-    environment:
-      - BASE_URL=http://client:90
-    volumes:
-      - .:/app:ro
-      # Videos, error screenshots and traces are stored in test-results:
-      - ./test-results:/app/test-results
-      # Snapshot results are stored alongside spec files:
-      - ./test:/app/test
-    depends_on:
-      - client
-      - application-server
-      - postgres
-
 volumes:
-  db-data:
-  nats-data:
+  test-db-data:
+  test-nats-data:
 
 
 networks:

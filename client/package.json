@@ -3,8 +3,10 @@
   "version": "0.0.0",
   "scripts": {
     "dev": "ng serve --watch --host 0.0.0.0 --configuration development",
+    "start:e2e": "ng serve --configuration=production --host",
     "build": "ng build",
     "test": "ng test",
+    "test:e2e": "playwright test",
     "lint": "eslint --max-warnings 0 --fix .",
     "generate:openapi": "openapi-ts"
   },
