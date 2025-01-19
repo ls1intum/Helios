@@ -117,6 +117,15 @@ export class BranchTableComponent {
     const rootNodes: TreeNode[] = [
       {
         data: {
+          name: 'Default',
+          type: 'Folder',
+        },
+        children: [],
+        expanded: true,
+        subheader: true,
+      },
+      {
+        data: {
           name: 'Protected Branches',
           type: 'Folder',
         },
@@ -162,10 +171,12 @@ export class BranchTableComponent {
 
           // If it's the first level, add to root nodes
           if (index === 0) {
-            if (branch.isProtected) {
+            if (branch.isDefault) {
               rootNodes[0].children!.push(newNode);
-            } else {
+            } else if (branch.isProtected) {
               rootNodes[1].children!.push(newNode);
+            } else {
+              rootNodes[2].children!.push(newNode);
             }
           } else {
             // Add as child to parent node
