@@ -6,6 +6,9 @@ import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GHRepositorySearchBuilder;
 import org.kohsuke.github.GHUser;
 
+/**
+ * Facade for GitHub API.
+ */
 public class GitHubFacadeImpl implements GitHubFacade {
 
   private final GitHubClientManager clientManager;

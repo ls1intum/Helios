@@ -6,6 +6,10 @@ import java.util.List;
 import java.util.Map;
 import org.springframework.stereotype.Component;
 
+/**
+ * Registry for custom message handlers.
+ * The registry is used to get the handler for a specific event type.
+ */
 @Component
 public class GitHubCustomMessageHandlerRegistry {
 

@@ -17,6 +17,11 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 import org.springframework.stereotype.Component;
 
+/**
+ * Handles the deployment protection rule event from GitHub when the action is "requested".
+ * The handler checks if the deployment is triggered by the GitHub App and sends an approval
+ * request to the GitHub API.
+ */
 @Component
 @Log4j2
 public class GitHubDeploymentProtectionRuleMessageHandler
@@ -39,6 +44,7 @@ public class GitHubDeploymentProtectionRuleMessageHandler
 
   @Override
   public void handleMessage(Message msg) {
+    // Check if the GitHub App is configured.
     if (clientManager.getAuthType().equals(GitHubClientManager.AuthType.PAT)) {
       log.warn("Received deployment_protection_rule event but no GitHub App is configured.");
       return;
@@ -62,6 +68,11 @@ public class GitHubDeploymentProtectionRuleMessageHandler
           eventPayload.getSender().getLogin(),
           eventPayload.getAction());
 
+      if (!"requested".equals(eventPayload.getAction())) {
+        log.info("Deployment protection rule action is not 'requested'. Ignoring...");
+        return;
+      }
+
       if (isValidDeploymentRequest(eventPayload)) {
         log.info("Deployment protection rule accepted. Processing...");
         sendApprovalRequest(eventPayload, "approved");
@@ -84,8 +95,7 @@ public class GitHubDeploymentProtectionRuleMessageHandler
    * @return True if the deployment request is valid, false otherwise.
    */
   private boolean isValidDeploymentRequest(DeploymentProtectionRulePayload eventPayload) {
-    return "requested".equals(eventPayload.getAction())
-        && eventPayload.getSender().getNodeId()
+    return eventPayload.getSender().getNodeId()
         .equalsIgnoreCase(clientManager.getGithubAppNodeId());
   }
 

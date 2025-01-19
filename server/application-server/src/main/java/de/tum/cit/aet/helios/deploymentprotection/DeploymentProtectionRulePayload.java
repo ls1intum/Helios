@@ -8,6 +8,12 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
+/**
+ * The payload of the deployment_protection_rule event from GitHub.
+ * Payload has minimal fields required for the handler to process the event.
+ * The additional fields can be added as needed.
+ * org.kohsuke.github library did not support this event at the time of implementation.
+ */
 @Getter
 @Setter
 @NoArgsConstructor
