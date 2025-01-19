@@ -1,6 +1,9 @@
 package de.tum.cit.aet.helios.environment;
 
 import de.tum.cit.aet.helios.auth.AuthService;
+import de.tum.cit.aet.helios.deployment.DeploymentException;
+import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
+import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import java.time.OffsetDateTime;
@@ -14,18 +17,19 @@ import org.springframework.stereotype.Service;
 @Transactional
 public class EnvironmentService {
 
-  private final EnvironmentRepository environmentRepository;
-
   private final AuthService authService;
-
+  private final EnvironmentRepository environmentRepository;
   private final EnvironmentLockHistoryRepository lockHistoryRepository;
+  private final HeliosDeploymentRepository heliosDeploymentRepository;
 
 
   public EnvironmentService(EnvironmentRepository environmentRepository,
                             EnvironmentLockHistoryRepository lockHistoryRepository,
+                            HeliosDeploymentRepository heliosDeploymentRepository,
                             AuthService authService) {
     this.environmentRepository = environmentRepository;
     this.lockHistoryRepository = lockHistoryRepository;
+    this.heliosDeploymentRepository = heliosDeploymentRepository;
     this.authService = authService;
   }
 
@@ -139,6 +143,11 @@ public class EnvironmentService {
               + "Environment is locked by another user");
     }
 
+    // 20 minutes timeout for redeployment
+    if (!canUnlock(environment, 20)) {
+      throw new DeploymentException("Deployment is still in progress, please wait.");
+    }
+
     environment.setLocked(false);
     environment.setLockedBy(null);
     environment.setLockedAt(null);
@@ -215,4 +224,32 @@ public class EnvironmentService {
         .map(EnvironmentLockHistoryDto::fromEnvironmentLockHistory)
         .collect(Collectors.toList());
   }
+
+  private boolean canUnlock(Environment environment, long timeoutMinutes) {
+    // Fetch the most recent deployment for the environment
+    Optional<HeliosDeployment> latestDeployment = heliosDeploymentRepository
+        .findTopByEnvironmentOrderByCreatedAtDesc(environment);
+
+    if (latestDeployment.isEmpty()) {
+      // No prior deployments, safe to unlock
+      return true;
+    }
+
+    HeliosDeployment deployment = latestDeployment.get();
+
+    // Check if timeout has elapsed
+    if (deployment.getStatus() == HeliosDeployment.Status.IN_PROGRESS
+        || deployment.getStatus() == HeliosDeployment.Status.WAITING
+        || deployment.getStatus() == HeliosDeployment.Status.QUEUED) {
+      OffsetDateTime now = OffsetDateTime.now();
+      if (deployment.getStatusUpdatedAt().plusMinutes(timeoutMinutes).isAfter(now)) {
+        return false;
+      }
+
+      deployment.setStatus(HeliosDeployment.Status.UNKNOWN);
+      heliosDeploymentRepository.save(deployment);
+    }
+    return true;
+  }
+
 }
