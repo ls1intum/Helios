@@ -24,6 +24,7 @@ import { DeploymentStateTagComponent } from '../deployment-state-tag/deployment-
 import { LockTimeComponent } from '../lock-time/lock-time.component';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 import { CommonModule } from '@angular/common';
+import { PermissionService } from '@app/core/services/permission.service';
 
 @Component({
   selector: 'app-environment-list-view',
@@ -47,6 +48,7 @@ export class EnvironmentListViewComponent {
   private queryClient = inject(QueryClient);
   private keycloakService = inject(KeycloakService);
   private confirmationService = inject(ConfirmationService);
+  permissionService = inject(PermissionService);
 
   editable = input<boolean | undefined>();
   deployable = input<boolean | undefined>();
