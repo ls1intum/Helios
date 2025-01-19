@@ -1,11 +1,15 @@
 import { Component, inject, input } from '@angular/core';
 import { EnvironmentDto } from '@app/core/modules/openapi';
-import { deployToEnvironmentMutation, getAllEnabledEnvironmentsQueryKey, getEnvironmentByIdQueryKey } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
+import {
+  deployToEnvironmentMutation,
+  getAllEnabledEnvironmentsQueryKey,
+  getEnvironmentByIdQueryKey,
+  getEnvironmentsByUserLockingQueryKey,
+} from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { PermissionService } from '@app/core/services/permission.service';
 import { injectMutation, QueryClient } from '@tanstack/angular-query-experimental';
 import { MessageService } from 'primeng/api';
 import { EnvironmentListViewComponent } from '../environments/environment-list/environment-list-view.component';
-import { EnvironmentStateService } from '@app/core/services/environment-state.service';
 
 @Component({
   selector: 'app-deployment-selection',
@@ -15,7 +19,6 @@ import { EnvironmentStateService } from '@app/core/services/environment-state.se
 export class DeploymentSelectionComponent {
   private messageService = inject(MessageService);
   permissionService = inject(PermissionService);
-  private environmentStateService = inject(EnvironmentStateService);
 
   queryClient = inject(QueryClient);
 
@@ -26,8 +29,8 @@ export class DeploymentSelectionComponent {
   deployEnvironment = injectMutation(() => ({
     ...deployToEnvironmentMutation(),
     onSuccess: () => {
-      // Trigger global update after deployment
-      this.environmentStateService.triggerEnvironmentUpdate();
+      // Trigger update on main layout after deployment
+      this.queryClient.invalidateQueries({ queryKey: getEnvironmentsByUserLockingQueryKey() });
 
       this.queryClient.invalidateQueries({ queryKey: getAllEnabledEnvironmentsQueryKey() });
       if (this.currentEnvironmentId) {

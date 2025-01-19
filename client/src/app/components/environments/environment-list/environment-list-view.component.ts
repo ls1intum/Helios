@@ -15,6 +15,7 @@ import {
   getAllEnabledEnvironmentsQueryKey,
   getAllEnvironmentsOptions,
   getAllEnvironmentsQueryKey,
+  getEnvironmentsByUserLockingQueryKey,
   unlockEnvironmentMutation,
 } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { EnvironmentDto } from '@app/core/modules/openapi';
@@ -23,7 +24,6 @@ import { DeploymentStateTagComponent } from '../deployment-state-tag/deployment-
 import { LockTimeComponent } from '../lock-time/lock-time.component';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 import { CommonModule } from '@angular/common';
-import { EnvironmentStateService } from '@app/core/services/environment-state.service';
 
 @Component({
   selector: 'app-environment-list-view',
@@ -47,7 +47,6 @@ export class EnvironmentListViewComponent {
   private queryClient = inject(QueryClient);
   private keycloakService = inject(KeycloakService);
   private confirmationService = inject(ConfirmationService);
-  private environmentStateService = inject(EnvironmentStateService);
 
   editable = input<boolean | undefined>();
   deployable = input<boolean | undefined>();
@@ -72,8 +71,8 @@ export class EnvironmentListViewComponent {
     ...unlockEnvironmentMutation(),
     onSuccess: () => {
       this.queryClient.invalidateQueries({ queryKey: this.queryKey() });
-      // Trigger global update
-      this.environmentStateService.triggerEnvironmentUpdate();
+      // Trigger update on main layout after unlocking
+      this.queryClient.invalidateQueries({ queryKey: getEnvironmentsByUserLockingQueryKey() });
     },
   }));
 
