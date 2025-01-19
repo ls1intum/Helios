@@ -1,7 +1,7 @@
 package de.tum.cit.aet.helios.config;
 
+import de.tum.cit.aet.helios.github.GitHubService;
 import de.tum.cit.aet.helios.github.permissions.GitHubRepositoryRoleDto;
-import de.tum.cit.aet.helios.github.permissions.PermissionException;
 import de.tum.cit.aet.helios.github.permissions.RepoPermissionType;
 import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
@@ -24,11 +24,11 @@ public class GitHubJwtAuthenticationConverter
     implements Converter<Jwt, AbstractAuthenticationToken> {
 
   final String rolePrefix = "ROLE_";
-  private final GitHubClient githubClient;
+  private final GitHubService gitHubService;
   private final HttpServletRequest request;
 
-  public GitHubJwtAuthenticationConverter(GitHubClient githubClient, HttpServletRequest request) {
-    this.githubClient = githubClient;
+  public GitHubJwtAuthenticationConverter(GitHubService gitHubService, HttpServletRequest request) {
+    this.gitHubService = gitHubService;
     this.request = request;
   }
 
@@ -41,7 +41,7 @@ public class GitHubJwtAuthenticationConverter
     if (repositoryId != null) {
       try {
         authorities.addAll(getGithubRepositoryAuthorities(repositoryId, username));
-      } catch (Exception e) {
+      } catch (IOException e) {
         log.error("Failed to fetch GitHub repository permissions", e);
       }
     }
@@ -50,7 +50,7 @@ public class GitHubJwtAuthenticationConverter
   }
 
   private Collection<GrantedAuthority> getGithubRepositoryAuthorities(
-      String repositoryId, String username) throws PermissionException, IOException {
+      String repositoryId, String username) throws IOException {
 
     Collection<GrantedAuthority> authorities = new ArrayList<>();
 
@@ -62,7 +62,7 @@ public class GitHubJwtAuthenticationConverter
     }
 
     GitHubRepositoryRoleDto githubRepositoryRole =
-        githubClient.getRepositoryPermissions(repositoryId, username);
+        gitHubService.getRepositoryRole(repositoryId, username);
 
     if (githubRepositoryRole.getPermission() == RepoPermissionType.ADMIN) {
       authorities.add(new SimpleGrantedAuthority(rolePrefix + RepoPermissionType.ADMIN));
