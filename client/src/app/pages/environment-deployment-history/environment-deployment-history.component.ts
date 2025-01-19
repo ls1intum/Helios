@@ -6,16 +6,19 @@ import { TableModule } from 'primeng/table';
 import { IconsModule } from 'icons.module';
 import { getDeploymentsByEnvironmentIdOptions, getLockHistoryByEnvironmentIdOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { DateService } from '@app/core/services/date.service';
+import { CommonModule } from '@angular/common';
+import { PageHeadingComponent } from '@app/components/page-heading/page-heading.component';
 
 @Component({
   selector: 'app-environment-deployment-history',
-  imports: [IconsModule, PrimeTemplate, SkeletonModule, TableModule],
+  imports: [CommonModule, IconsModule, PrimeTemplate, SkeletonModule, TableModule, PageHeadingComponent],
   templateUrl: './environment-deployment-history.component.html',
 })
 export class EnvironmentDeploymentHistoryComponent {
   dateService = inject(DateService);
 
   environmentId = input.required({ transform: numberAttribute });
+  repositoryId = input.required({ transform: numberAttribute });
 
   deploymentsQuery = injectQuery(() => getDeploymentsByEnvironmentIdOptions({ path: { environmentId: this.environmentId() } }));
   deployments = computed(() => this.deploymentsQuery.data());
@@ -44,8 +47,8 @@ export class EnvironmentDeploymentHistoryComponent {
       // Always create the LOCK_EVENT
       const lockEvent = {
         type: 'LOCK_EVENT',
-        id: l.id,
-        lockedBy: l.lockedBy,
+        id: l.id || 'unknown',
+        lockedBy: l.lockedBy || 'unknown',
         lockedAt: l.lockedAt,
         timestamp: l.lockedAt,
       };
@@ -55,7 +58,7 @@ export class EnvironmentDeploymentHistoryComponent {
         ? {
             type: 'UNLOCK_EVENT',
             id: l.id,
-            lockedBy: l.lockedBy, // or unlockedBy if it differs
+            unlockedBy: l.lockedBy || 'unknown',
             unlockedAt: l.unlockedAt,
             timestamp: l.unlockedAt,
           }

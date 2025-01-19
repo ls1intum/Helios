@@ -76,7 +76,7 @@ public class EnvironmentService {
    */
   @Transactional
   public Optional<Environment> lockEnvironment(Long id) {
-    final String currentUserId = authService.getUserId();
+    final String currentUserName = authService.getPreferredUsername();
 
     Environment environment =
         environmentRepository
@@ -84,20 +84,20 @@ public class EnvironmentService {
             .orElseThrow(() -> new EntityNotFoundException("Environment not found with ID: " + id));
 
     if (environment.isLocked()) {
-      if (currentUserId.equals(environment.getLockedBy())) {
+      if (currentUserName.equals(environment.getLockedBy())) {
         return Optional.of(environment);
       }
 
       return Optional.empty();
     }
-    environment.setLockedBy(currentUserId);
+    environment.setLockedBy(currentUserName);
     environment.setLockedAt(OffsetDateTime.now());
     environment.setLocked(true);
 
     // Record lock event
     EnvironmentLockHistory history = new EnvironmentLockHistory();
     history.setEnvironment(environment);
-    history.setLockedBy(currentUserId);
+    history.setLockedBy(currentUserName);
     history.setLockedAt(OffsetDateTime.now());
     lockHistoryRepository.saveAndFlush(history);
 
@@ -122,7 +122,7 @@ public class EnvironmentService {
    */
   @Transactional
   public EnvironmentDto unlockEnvironment(Long id) {
-    final String currentUserId = authService.getUserId();
+    final String currentUserName = authService.getPreferredUsername();
 
     Environment environment =
         environmentRepository
@@ -133,7 +133,7 @@ public class EnvironmentService {
       throw new IllegalStateException("Environment is not locked");
     }
 
-    if (!currentUserId.equals(environment.getLockedBy())) {
+    if (!currentUserName.equals(environment.getLockedBy())) {
       throw new SecurityException(
           "You do not have permission to unlock this environment. "
               + "Environment is locked by another user");
@@ -144,7 +144,7 @@ public class EnvironmentService {
     environment.setLockedAt(null);
 
     Optional<EnvironmentLockHistory> openLock = lockHistoryRepository
-        .findLatestLockForEnvironmentAndUser(environment, currentUserId);
+        .findLatestLockForEnvironmentAndUser(environment, currentUserName);
     if (openLock.isPresent()) {
       EnvironmentLockHistory openLockHistory = openLock.get();
       openLockHistory.setUnlockedAt(OffsetDateTime.now());
@@ -203,9 +203,9 @@ public class EnvironmentService {
   }
 
   public EnvironmentLockHistoryDto getUsersCurrentLock() {
-    final String currentUserId = authService.getUserId();
+    final String currentUserName = authService.getPreferredUsername();
     Optional<EnvironmentLockHistory> lockHistory =
-        lockHistoryRepository.findLatestLockForEnabledEnvironment(currentUserId);
+        lockHistoryRepository.findLatestLockForEnabledEnvironment(currentUserName);
 
     return lockHistory.map(EnvironmentLockHistoryDto::fromEnvironmentLockHistory).orElse(null);
   }
