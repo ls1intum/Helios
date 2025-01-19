@@ -120,7 +120,7 @@ public class DeploymentService {
     heliosDeployment.setUser(user);
     heliosDeployment.setStatus(HeliosDeployment.Status.WAITING);
     heliosDeployment.setBranchName(deployRequest.branchName());
-    heliosDeployment = heliosDeploymentRepository.save(heliosDeployment);
+    heliosDeployment = heliosDeploymentRepository.saveAndFlush(heliosDeployment);
 
 
     // Check if a OPEN PR exists for the branch
@@ -189,7 +189,8 @@ public class DeploymentService {
 
     // Check if timeout has elapsed
     if (deployment.getStatus() == HeliosDeployment.Status.IN_PROGRESS
-        || deployment.getStatus() == HeliosDeployment.Status.WAITING) {
+        || deployment.getStatus() == HeliosDeployment.Status.WAITING
+        || deployment.getStatus() == HeliosDeployment.Status.QUEUED) {
       OffsetDateTime now = OffsetDateTime.now();
       if (deployment.getStatusUpdatedAt().plusMinutes(timeoutMinutes).isAfter(now)) {
         return false;

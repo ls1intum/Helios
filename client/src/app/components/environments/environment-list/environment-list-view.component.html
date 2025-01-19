@@ -28,12 +28,6 @@
 
           <div class="flex-grow"></div>
 
-          @if (isLoggedIn() && !environment.locked && deployable() && hasDeployPermissions()) {
-            <button (click)="deployEnvironment(environment); $event.stopPropagation()" class="p-button p-button-secondary p-2">
-              <i-tabler name="cloud-upload" class="mr-1" />Deploy
-            </button>
-          }
-
           @if (environment.locked) {
             @if (environment.lockedAt) {
               <app-lock-time [lockedAt]="environment.lockedAt"></app-lock-time>
@@ -43,12 +37,22 @@
                 ><i-tabler name="external-link" class="mr-1" />Open</a
               >
             }
-            @if (isLoggedIn()) {
+            @if (isLoggedIn() && isCurrentUserLocked(environment)) {
               <button (click)="onUnlockEnvironment($event, environment)" class="p-button p-button-danger p-2"><i-tabler name="lock-open" class="mr-1" />Unlock</button>
             }
           }
 
+          @if (isLoggedIn() && deployable() && (!environment.locked || isCurrentUserLocked(environment)) && hasDeployPermissions()) {
+            <button (click)="deployEnvironment(environment); $event.stopPropagation()" class="p-button p-button-secondary p-2">
+              <i-tabler name="cloud-upload" class="mr-1" />Deploy
+            </button>
+          }
+
           @if (isLoggedIn() && editable()) {
+            <!-- Show the disabled tag -->
+            @if (!environment.enabled) {
+              <p-tag value="Disabled" severity="danger" rounded="true" />
+            }
             <a icon [routerLink]="'/repo/' + environment.repository?.id + '/environment/' + environment.id + '/edit'" class="p-button p-button-secondary p-2"
               ><i-tabler name="pencil"
             /></a>
@@ -75,3 +79,5 @@
     </p-accordion-panel>
   }
 </p-accordion>
+
+<p-confirmDialog></p-confirmDialog>

@@ -23,6 +23,12 @@
         <p-autoComplete id="installed-apps" formControlName="installedApps" [multiple]="true" [minLength]="1" fluid [typeahead]="false"> </p-autoComplete>
       </div>
 
+      <!-- Environment Enable/Disable Checkbox -->
+      <div class="flex gap-2">
+        <label for="enabled" class="mr-2">Enabled</label>
+        <p-checkbox id="enabled" formControlName="enabled" [binary]="true"></p-checkbox>
+      </div>
+
       <p-button type="submit">Update</p-button>
     </form>
   </div>
