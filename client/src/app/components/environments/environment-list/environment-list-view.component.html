@@ -37,7 +37,7 @@
                 ><i-tabler name="external-link" class="mr-1" />Open</a
               >
             }
-            @if (isLoggedIn() && isCurrentUserLocked(environment)) {
+            @if ((isLoggedIn() && isCurrentUserLocked(environment)) || hasUnlockPermissions()) {
               <button (click)="onUnlockEnvironment($event, environment)" class="p-button p-button-danger p-2"><i-tabler name="lock-open" class="mr-1" />Unlock</button>
             }
           }
@@ -48,7 +48,7 @@
             </button>
           }
 
-          @if (isLoggedIn() && editable() && hasEditEnvironmentPermissions()) {
+          @if (canViewAllEnvironments()) {
             <!-- Show the disabled tag -->
             @if (!environment.enabled) {
               <p-tag value="Disabled" severity="danger" rounded="true" />

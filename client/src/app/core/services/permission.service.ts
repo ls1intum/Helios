@@ -22,8 +22,4 @@ export class PermissionService {
   hasWritePermission = computed(() => this.permissionsQuery.data()?.permission === 'WRITE' || this.permissionsQuery.data()?.permission === 'ADMIN' || this.isHeliosDeveloper());
   isAtLeastMaintainer = computed(() => this.permissionsQuery.data()?.permission === 'ADMIN' || this.permissionsQuery.data()?.roleName === 'maintain' || this.isHeliosDeveloper());
   isAdmin = computed(() => this.permissionsQuery.data()?.permission === 'ADMIN' || this.isHeliosDeveloper());
-
-  refetchPermissions() {
-    this.permissionsQuery.refetch();
-  }
 }
