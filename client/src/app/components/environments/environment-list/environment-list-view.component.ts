@@ -15,6 +15,7 @@ import {
   getAllEnabledEnvironmentsQueryKey,
   getAllEnvironmentsOptions,
   getAllEnvironmentsQueryKey,
+  getEnvironmentsByUserLockingQueryKey,
   unlockEnvironmentMutation,
 } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { EnvironmentDto } from '@app/core/modules/openapi';
@@ -70,6 +71,8 @@ export class EnvironmentListViewComponent {
     ...unlockEnvironmentMutation(),
     onSuccess: () => {
       this.queryClient.invalidateQueries({ queryKey: this.queryKey() });
+      // Trigger update on main layout after unlocking
+      this.queryClient.invalidateQueries({ queryKey: getEnvironmentsByUserLockingQueryKey() });
     },
   }));
 

@@ -1,6 +1,11 @@
 import { Component, inject, input } from '@angular/core';
 import { EnvironmentDto } from '@app/core/modules/openapi';
-import { deployToEnvironmentMutation, getAllEnabledEnvironmentsQueryKey, getEnvironmentByIdQueryKey } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
+import {
+  deployToEnvironmentMutation,
+  getAllEnabledEnvironmentsQueryKey,
+  getEnvironmentByIdQueryKey,
+  getEnvironmentsByUserLockingQueryKey,
+} from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { PermissionService } from '@app/core/services/permission.service';
 import { injectMutation, QueryClient } from '@tanstack/angular-query-experimental';
 import { MessageService } from 'primeng/api';
@@ -24,6 +29,9 @@ export class DeploymentSelectionComponent {
   deployEnvironment = injectMutation(() => ({
     ...deployToEnvironmentMutation(),
     onSuccess: () => {
+      // Trigger update on main layout after deployment
+      this.queryClient.invalidateQueries({ queryKey: getEnvironmentsByUserLockingQueryKey() });
+
       this.queryClient.invalidateQueries({ queryKey: getAllEnabledEnvironmentsQueryKey() });
       if (this.currentEnvironmentId) {
         this.queryClient.invalidateQueries({ queryKey: getEnvironmentByIdQueryKey({ path: { id: this.currentEnvironmentId } }) });
