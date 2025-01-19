@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { RepositoryFilterGuard } from './core/middlewares/repository-filter.guard';
+import { adminGuard } from './core/routeGuards/admin.guard';
 import { maintainerGuard } from './core/routeGuards/maintainer.guard';
 
 export const routes: Routes = [
@@ -36,7 +37,7 @@ export const routes: Routes = [
               {
                 path: ':id/edit',
                 loadComponent: () => import('./pages/environment-edit/environment-edit.component').then(m => m.EnvironmentEditComponent),
-                canActivate: [maintainerGuard],
+                canActivate: [adminGuard],
               },
               {
                 path: ':environmentId/history',
