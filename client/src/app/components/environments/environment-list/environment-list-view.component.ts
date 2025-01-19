@@ -1,15 +1,9 @@
 import { Component, computed, inject, input, output, signal } from '@angular/core';
 import { AccordionModule } from 'primeng/accordion';
 
-import { TagModule } from 'primeng/tag';
-import { IconsModule } from 'icons.module';
-import { ButtonModule } from 'primeng/button';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { ConfirmationService } from 'primeng/api';
+import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { injectMutation, injectQuery, QueryClient } from '@tanstack/angular-query-experimental';
-import { InputTextModule } from 'primeng/inputtext';
-import { EnvironmentDeploymentInfoComponent } from '../deployment-info/environment-deployment-info.component';
+import { EnvironmentDto } from '@app/core/modules/openapi';
 import {
   getAllEnabledEnvironmentsOptions,
   getAllEnabledEnvironmentsQueryKey,
@@ -18,12 +12,19 @@ import {
   getEnvironmentsByUserLockingQueryKey,
   unlockEnvironmentMutation,
 } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
-import { EnvironmentDto } from '@app/core/modules/openapi';
-import { LockTagComponent } from '../lock-tag/lock-tag.component';
+import { PermissionService } from '@app/core/services/permission.service';
+import { injectMutation, injectQuery, QueryClient } from '@tanstack/angular-query-experimental';
+import { IconsModule } from 'icons.module';
+import { ConfirmationService } from 'primeng/api';
+import { ButtonModule } from 'primeng/button';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { InputTextModule } from 'primeng/inputtext';
+import { TagModule } from 'primeng/tag';
+import { EnvironmentDeploymentInfoComponent } from '../deployment-info/environment-deployment-info.component';
 import { DeploymentStateTagComponent } from '../deployment-state-tag/deployment-state-tag.component';
+import { LockTagComponent } from '../lock-tag/lock-tag.component';
 import { LockTimeComponent } from '../lock-time/lock-time.component';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
-import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-environment-list-view',
@@ -47,23 +48,24 @@ export class EnvironmentListViewComponent {
   private queryClient = inject(QueryClient);
   private keycloakService = inject(KeycloakService);
   private confirmationService = inject(ConfirmationService);
+  permissionService = inject(PermissionService);
 
   editable = input<boolean | undefined>();
   deployable = input<boolean | undefined>();
-  hasUnlockPermissions = input<boolean>();
-  hasDeployPermissions = input<boolean>();
   hideLinkToList = input<boolean | undefined>();
+
+  isLoggedIn = computed(() => this.keycloakService.isLoggedIn());
+  hasUnlockPermissions = computed(() => this.permissionService.isAtLeastMaintainer());
+  hasDeployPermissions = computed(() => this.permissionService.hasWritePermission());
+  hasEditEnvironmentPermissions = computed(() => this.permissionService.isAdmin());
 
   deploy = output<EnvironmentDto>();
 
   searchInput = signal<string>('');
 
-  // Dynamically determine the query function & query key
-  // If the component is editable and logged in (assuming manager), we want to show all environments; otherwise only enabled environments
-  // In PR/Branch View, editable is false, so we only show enabled environments
-  // TODO: We need to also check if the user has the correct permissions to view all the environments
-  queryFunction = computed(() => (this.isLoggedIn() && this.editable() ? getAllEnvironmentsOptions() : getAllEnabledEnvironmentsOptions()));
-  queryKey = computed(() => (this.isLoggedIn() && this.editable() ? getAllEnvironmentsQueryKey() : getAllEnabledEnvironmentsQueryKey()));
+  canViewAllEnvironments = computed(() => this.isLoggedIn() && this.editable() && this.hasEditEnvironmentPermissions());
+  queryFunction = computed(() => (this.canViewAllEnvironments() ? getAllEnvironmentsOptions() : getAllEnabledEnvironmentsOptions()));
+  queryKey = computed(() => (this.canViewAllEnvironments() ? getAllEnvironmentsQueryKey() : getAllEnabledEnvironmentsQueryKey()));
 
   environmentQuery = injectQuery(() => this.queryFunction());
 
@@ -75,8 +77,6 @@ export class EnvironmentListViewComponent {
       this.queryClient.invalidateQueries({ queryKey: getEnvironmentsByUserLockingQueryKey() });
     },
   }));
-
-  isLoggedIn = computed(() => this.keycloakService.isLoggedIn());
 
   isCurrentUserLocked = (environment: EnvironmentDto) => {
     return environment.lockedBy === this.keycloakService.getUserId();
