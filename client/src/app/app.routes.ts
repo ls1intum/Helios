@@ -86,6 +86,10 @@ export const routes: Routes = [
     ],
   },
   {
+    path: 'unauthorized',
+    loadComponent: () => import('./pages/unauthorized-page/unauthorized-page.component').then(m => m.UnauthorizedPageComponent),
+  },
+  {
     path: '**',
     loadComponent: () => import('./pages/page-not-found/page-not-found.component').then(m => m.PageNotFoundComponent),
   },

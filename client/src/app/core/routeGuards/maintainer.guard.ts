@@ -9,7 +9,7 @@ export const maintainerGuard: CanActivateFn = () => {
   const hasAccess = permissionService.isAtLeastMaintainer();
 
   if (!hasAccess) {
-    router.navigate(['/repo']);
+    router.navigate(['/unauthorized']);
   }
 
   return hasAccess;
