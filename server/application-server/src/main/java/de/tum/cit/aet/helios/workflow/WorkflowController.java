@@ -1,5 +1,6 @@
 package de.tum.cit.aet.helios.workflow;
 
+import de.tum.cit.aet.helios.config.security.annotations.EnforceAtLeastMaintainer;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.http.ResponseEntity;
@@ -32,6 +33,7 @@ public class WorkflowController {
     return workflow.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
   }
 
+  @EnforceAtLeastMaintainer
   @PutMapping("/{workflowId}/label")
   public ResponseEntity<Void> updateWorkflowLabel(
       @PathVariable Long workflowId, @RequestBody Workflow.Label label) {
