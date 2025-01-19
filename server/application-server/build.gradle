@@ -147,8 +147,11 @@ openApi {
 }
 
 tasks.named("test") {
+}
+
+tasks.register("unitTest", Test) {
     group = "application"
-    description = "Run unit/integration tests of the Spring Boot application with the test profile"
+    description = "Run unit tests of the Spring Boot application with the test profile"
     useJUnitPlatform {
         excludeTags "playwright"
     }

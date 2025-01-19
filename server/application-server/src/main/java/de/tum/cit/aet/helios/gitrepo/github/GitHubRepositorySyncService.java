@@ -17,7 +17,7 @@ import org.springframework.stereotype.Service;
 @Log4j2
 public class GitHubRepositorySyncService {
 
-  @Value("${monitoring.repositories}")
+  @Value("${monitoring.repositories:[]}")
   private String[] repositoriesToMonitor;
 
   private final GitHub github;

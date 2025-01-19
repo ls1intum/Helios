@@ -48,29 +48,31 @@ services:
     networks:
       - helios-network
 
-  application-server:
-    image: eclipse-temurin:21
-    working_dir: /usr/src/app
-    command: sh -c "./gradlew e2eTest"
-    ports:
-      - '8080:8080'
-    volumes:
-      - ./server/application-server:/usr/src/app/
-    environment:
-      - SPRING_PROFILES_ACTIVE=test
-      - NATS_SERVER=""
-      - NATS_AUTH_TOKEN=""
-      - ORGANIZATION_NAME=ls1intum/Helios
-      - GITHUB_AUTH_TOKEN=${GITHUB_TOKEN}
-      - REPOSITORY_NAME=Helios
-      - RUN_ON_STARTUP_COOLDOWN=0
-      - OAUTH_ISSUER_URL=http://keycloak:8081/auth/realms/helios
-    depends_on:
-      - postgres
-      - client
-      - keycloak
-    networks:
-      - helios-network
+  # application-server:
+  #   image: eclipse-temurin:21
+  #   working_dir: /usr/src/app
+  #   command: sh -c "./gradlew e2eTest"
+  #   ports:
+  #     - '8080:8080'
+  #   volumes:
+  #     - ./server/application-server:/usr/src/app/
+  #     - ./test:/usr/src/app/build/reports
+  #   environment:
+  #     - PWDEBUG=1
+  #     - SPRING_PROFILES_ACTIVE=test
+  #     - NATS_SERVER=""
+  #     - NATS_AUTH_TOKEN=""
+  #     - ORGANIZATION_NAME=ls1intum/Helios
+  #     - GITHUB_AUTH_TOKEN=${GITHUB_TOKEN}
+  #     - REPOSITORY_NAME=Helios
+  #     - RUN_ON_STARTUP_COOLDOWN=0
+  #     - OAUTH_ISSUER_URL=http://keycloak:8081/auth/realms/helios
+  #   depends_on:
+  #     - postgres
+  #     - client
+  #     - keycloak
+  #   networks:
+  #     - helios-network
 
   keycloak:
     image: quay.io/keycloak/keycloak:latest

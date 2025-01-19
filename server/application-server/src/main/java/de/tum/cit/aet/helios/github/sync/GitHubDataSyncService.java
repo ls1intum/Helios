@@ -22,10 +22,11 @@ import org.springframework.stereotype.Service;
 @Log4j2
 public class GitHubDataSyncService {
   private final GitHubLabelSyncService gitHubLabelSyncService;
-  @Value("${monitoring.timeframe}")
+
+  @Value("${monitoring.timeframe:0}")
   private int timeframe;
 
-  @Value("${monitoring.runOnStartupCooldownInMinutes}")
+  @Value("${monitoring.runOnStartupCooldownInMinutes:0}")
   private int runOnStartupCooldownInMinutes;
 
   private final DataSyncStatusRepository dataSyncStatusRepository;
@@ -49,7 +50,8 @@ public class GitHubDataSyncService {
       GitHubBranchSyncService branchSyncService,
       GitHubEnvironmentSyncService environmentSyncService,
       GitHubDeploymentSyncService deploymentSyncService,
-      GitHubCommitSyncService commitSyncService, GitHubLabelSyncService gitHubLabelSyncService) {
+      GitHubCommitSyncService commitSyncService,
+      GitHubLabelSyncService gitHubLabelSyncService) {
     this.dataSyncStatusRepository = dataSyncStatusRepository;
     this.userSyncService = userSyncService;
     this.repositorySyncService = repositorySyncService;
@@ -106,7 +108,6 @@ public class GitHubDataSyncService {
     log.info("[Step 3/10] Syncing Pull Requests (Cutoff: {})", cutoffDate);
     pullRequestSyncService.syncPullRequestsOfAllRepositories(repositories, Optional.of(cutoffDate));
     log.info("[Step 3/10] Completed Pull Request Sync");
-
 
     // Sync environments
     log.info("--------------------------------------------------");
