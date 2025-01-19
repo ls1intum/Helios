@@ -27,7 +27,8 @@ public class PullRequestService {
   }
 
   public List<PullRequestInfoDto> getPullRequestByRepositoryId(Long repositoryId) {
-    return pullRequestRepository.findByRepositoryRepositoryIdOrderByUpdatedAtDesc(repositoryId).stream()
+    return pullRequestRepository.findByRepositoryRepositoryIdOrderByUpdatedAtDesc(repositoryId)
+        .stream()
         .map(PullRequestInfoDto::fromPullRequest)
         .collect(Collectors.toList());
   }
