@@ -16,18 +16,18 @@ export class AppComponent {
   private messageService = inject(MessageService);
 
   constructor() {
-    const token = this.keycloakService.keycloak.token;
-
     client.setConfig({
       baseUrl: environment.serverUrl,
     });
 
-    if (token) {
-      client.interceptors.request.use(request => {
+    client.interceptors.request.use(request => {
+      const token = this.keycloakService.keycloak.token;
+
+      if (token) {
         request.headers.set('Authorization', `Bearer ${token}`);
-        return request;
-      });
-    }
+      }
+      return request;
+    });
 
     client.interceptors.response.use(async response => {
       if (!response.ok) {
