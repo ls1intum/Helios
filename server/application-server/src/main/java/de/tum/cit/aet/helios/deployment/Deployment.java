@@ -106,7 +106,7 @@ public class Deployment extends BaseGitServiceEntity {
    * @return True if the state is WAITING, false otherwise.
    */
   private static boolean isWaitingState(GHDeploymentStatus ghDeploymentStatus) {
-    return extractRawState(ghDeploymentStatus).equals("WAITING");
+    return extractRawState(ghDeploymentStatus).equalsIgnoreCase("WAITING");
   }
 
   /**
@@ -125,9 +125,8 @@ public class Deployment extends BaseGitServiceEntity {
       Matcher matcher = pattern.matcher(toStringValue);
       if (matcher.find()) {
         return matcher.group(1).toUpperCase();
-      } else {
-        return "";
       }
+      return "";
     } catch (Exception e) {
       return "";
     }
