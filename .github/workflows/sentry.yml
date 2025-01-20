@@ -1,0 +1,35 @@
+name: Create Sentry Release and Upload Source Maps
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  sentry:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install Dependencies
+        working-directory: ./client
+        run: yarn install --frozen-lockfile
+
+      - name: Create source maps
+        working-directory: ./client
+        # Build the client in development mode because we only
+        # need the source maps for Sentry without optmizations, etc.
+        run: yarn build --configuration development
+
+      - name: Create Sentry Release and Upload Source Maps
+        uses: getsentry/action-release@v1
+        with:
+          environment: 'production'
+          inject: true
+          sourcemaps: './client/dist/client'
