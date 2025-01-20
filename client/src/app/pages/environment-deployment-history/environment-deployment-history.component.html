@@ -2,7 +2,7 @@
   <div class="flex justify-between items-center w-full" heading>
     <div>Activity History</div>
   </div>
-  <span description> Here you can see all the Locking, unlocking and deployment history. </span>
+  <span description> Here you can see all the locking, unlocking and deployment history. </span>
 </app-page-heading>
 
 <div class="p-4">
@@ -48,7 +48,7 @@
         </tr>
       </ng-template>
       <ng-template pTemplate="body" let-combinedHistory>
-        <tr [class.lock-event]="combinedHistory.type === 'LOCK_EVENT'">
+        <tr [class]="combinedHistory.type === 'LOCK_EVENT' ? 'lock-event' : ''">
           <td>
             <div class="flex align-items-center gap-2">
               @if (combinedHistory.type === 'DEPLOYMENT') {
