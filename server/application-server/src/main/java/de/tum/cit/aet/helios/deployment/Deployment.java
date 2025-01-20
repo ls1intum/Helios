@@ -130,7 +130,8 @@ public class Deployment extends BaseGitServiceEntity {
         return matcher.group(1).toUpperCase();
       }
       log.warn(
-          "Failed to extract raw state from GHDeploymentStatus object: state field not found in toString() output");
+          "Failed to extract raw state from GHDeploymentStatus object: "
+              + "state field not found in toString() output");
     } catch (PatternSyntaxException e) {
       log.error(
           "Failed to extract raw state from GHDeploymentStatus object: Due to pattern syntax error",
