@@ -200,7 +200,6 @@ public class GitHubDeploymentProtectionRuleMessageHandler
     String responseBody = response.body() != null ? response.body().string() : "null";
     try {
       String workflowRunId = extractWorkflowRunId(eventPayload.getDeploymentCallbackUrl());
-      System.out.println("workflowRunId: " + workflowRunId);
       String noPendingRequestsMessage =
           "No pending custom deployment requests in workflow run "
               + "`" + workflowRunId + "` to approve or reject";
