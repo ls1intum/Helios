@@ -36,6 +36,7 @@ import type {
   GetDeploymentByIdData,
   GetDeploymentsByEnvironmentIdData,
   GetLatestDeploymentByEnvironmentIdData,
+  GetActivityHistoryByEnvironmentIdData,
   GetCommitByRepositoryIdAndNameData,
   GetAllBranchesData,
   GetBranchByRepositoryIdAndNameData,
@@ -73,6 +74,7 @@ import {
   getDeploymentById,
   getDeploymentsByEnvironmentId,
   getLatestDeploymentByEnvironmentId,
+  getActivityHistoryByEnvironmentId,
   getCommitByRepositoryIdAndName,
   getAllBranches,
   getBranchByRepositoryIdAndName,
@@ -655,6 +657,25 @@ export const getLatestDeploymentByEnvironmentIdOptions = (options: Options<GetLa
       return data;
     },
     queryKey: getLatestDeploymentByEnvironmentIdQueryKey(options),
+  });
+};
+
+export const getActivityHistoryByEnvironmentIdQueryKey = (options: Options<GetActivityHistoryByEnvironmentIdData>) => [
+  createQueryKey('getActivityHistoryByEnvironmentId', options),
+];
+
+export const getActivityHistoryByEnvironmentIdOptions = (options: Options<GetActivityHistoryByEnvironmentIdData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getActivityHistoryByEnvironmentId({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: getActivityHistoryByEnvironmentIdQueryKey(options),
   });
 };
 

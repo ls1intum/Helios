@@ -190,6 +190,19 @@ export type DeploymentDto = {
   updatedAt?: string;
 };
 
+export type ActivityHistoryDto = {
+  type?: string;
+  id?: number;
+  repository?: RepositoryInfoDto;
+  state?: 'PENDING' | 'SUCCESS' | 'ERROR' | 'FAILURE' | 'IN_PROGRESS' | 'QUEUED' | 'INACTIVE' | 'UNKNOWN';
+  sha?: string;
+  ref?: string;
+  lockedBy?: string;
+  timestamp?: string;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
 export type CommitInfoDto = {
   sha: string;
   author?: UserInfoDto;
@@ -741,6 +754,24 @@ export type GetLatestDeploymentByEnvironmentIdResponses = {
 };
 
 export type GetLatestDeploymentByEnvironmentIdResponse = GetLatestDeploymentByEnvironmentIdResponses[keyof GetLatestDeploymentByEnvironmentIdResponses];
+
+export type GetActivityHistoryByEnvironmentIdData = {
+  body?: never;
+  path: {
+    environmentId: number;
+  };
+  query?: never;
+  url: '/api/deployments/environment/{environmentId}/activity-history';
+};
+
+export type GetActivityHistoryByEnvironmentIdResponses = {
+  /**
+   * OK
+   */
+  200: Array<ActivityHistoryDto>;
+};
+
+export type GetActivityHistoryByEnvironmentIdResponse = GetActivityHistoryByEnvironmentIdResponses[keyof GetActivityHistoryByEnvironmentIdResponses];
 
 export type GetCommitByRepositoryIdAndNameData = {
   body?: never;

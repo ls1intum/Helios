@@ -17,7 +17,7 @@
   </style>
 
   <!-- Loading State -->
-  @if (deploymentsQuery.isPending() || lockingHistoryQuery.isPending()) {
+  @if (activityHistoryQuery.isPending()) {
     <p-table [value]="[1, 2, 3, 4, 5]" styleClass="p-datatable-lg">
       <ng-template pTemplate="header">
         <tr>
@@ -34,12 +34,12 @@
         </tr>
       </ng-template>
     </p-table>
-  } @else if (deploymentsQuery.data()?.length === 0 && lockingHistoryQuery.data()?.length === 0) {
+  } @else if (activityHistoryQuery.data()?.length === 0) {
     <!-- Empty State -->
     <div class="text-gray-500">No deployments and locking found.</div>
   } @else {
     <!-- Data Table -->
-    <p-table [value]="combinedHistory() || []" styleClass="p-datatable-sm">
+    <p-table [value]="activityHistory() || []" styleClass="p-datatable-sm">
       <ng-template pTemplate="header">
         <tr>
           <th>Type</th>
@@ -83,7 +83,7 @@
                 <span>{{ combinedHistory.lockedBy }}</span>
               } @else if (combinedHistory.type === 'UNLOCK_EVENT') {
                 <i-tabler name="user"></i-tabler>
-                <span>{{ combinedHistory.unlockedBy }}</span>
+                <span>{{ combinedHistory.lockedBy }}</span>
               }
             </div>
           </td>

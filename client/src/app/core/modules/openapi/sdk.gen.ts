@@ -60,6 +60,8 @@ import type {
   GetDeploymentsByEnvironmentIdResponse,
   GetLatestDeploymentByEnvironmentIdData,
   GetLatestDeploymentByEnvironmentIdResponse,
+  GetActivityHistoryByEnvironmentIdData,
+  GetActivityHistoryByEnvironmentIdResponse,
   GetCommitByRepositoryIdAndNameData,
   GetCommitByRepositoryIdAndNameResponse,
   GetAllBranchesData,
@@ -309,6 +311,13 @@ export const getLatestDeploymentByEnvironmentId = <ThrowOnError extends boolean 
   return (options?.client ?? client).get<GetLatestDeploymentByEnvironmentIdResponse, unknown, ThrowOnError>({
     ...options,
     url: '/api/deployments/environment/{environmentId}/latest',
+  });
+};
+
+export const getActivityHistoryByEnvironmentId = <ThrowOnError extends boolean = false>(options: Options<GetActivityHistoryByEnvironmentIdData, ThrowOnError>) => {
+  return (options?.client ?? client).get<GetActivityHistoryByEnvironmentIdResponse, unknown, ThrowOnError>({
+    ...options,
+    url: '/api/deployments/environment/{environmentId}/activity-history',
   });
 };
 

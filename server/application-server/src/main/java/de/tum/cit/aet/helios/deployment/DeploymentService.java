@@ -3,6 +3,8 @@ package de.tum.cit.aet.helios.deployment;
 import de.tum.cit.aet.helios.auth.AuthService;
 import de.tum.cit.aet.helios.branch.BranchService;
 import de.tum.cit.aet.helios.environment.Environment;
+import de.tum.cit.aet.helios.environment.EnvironmentLockHistory;
+import de.tum.cit.aet.helios.environment.EnvironmentLockHistoryRepository;
 import de.tum.cit.aet.helios.environment.EnvironmentService;
 import de.tum.cit.aet.helios.github.GitHubService;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
@@ -14,11 +16,13 @@ import de.tum.cit.aet.helios.workflow.WorkflowService;
 import jakarta.transaction.Transactional;
 import java.io.IOException;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 
@@ -35,6 +39,7 @@ public class DeploymentService {
   private final HeliosDeploymentRepository heliosDeploymentRepository;
   private final PullRequestRepository pullRequestRepository;
   private final BranchService branchService;
+  private final EnvironmentLockHistoryRepository lockHistoryRepository;
 
   public DeploymentService(
       DeploymentRepository deploymentRepository,
@@ -42,7 +47,8 @@ public class DeploymentService {
       EnvironmentService environmentService,
       WorkflowService workflowService, AuthService authService,
       HeliosDeploymentRepository heliosDeploymentRepository,
-      PullRequestRepository pullRequestRepository, BranchService branchService) {
+      PullRequestRepository pullRequestRepository, BranchService branchService,
+      EnvironmentLockHistoryRepository lockHistoryRepository) {
     this.deploymentRepository = deploymentRepository;
     this.gitHubService = gitHubService;
     this.environmentService = environmentService;
@@ -51,6 +57,7 @@ public class DeploymentService {
     this.heliosDeploymentRepository = heliosDeploymentRepository;
     this.pullRequestRepository = pullRequestRepository;
     this.branchService = branchService;
+    this.lockHistoryRepository = lockHistoryRepository;
   }
 
   public Optional<DeploymentDto> getDeploymentById(Long id) {
@@ -201,5 +208,56 @@ public class DeploymentService {
     }
     return true;
   }
+
+  public List<ActivityHistoryDto> getActivityHistoryByEnvironmentId(Long environmentId) {
+        // 1) Fetch deployments and map
+        List<Deployment> deployments = deploymentRepository.findByEnvironmentIdOrderByCreatedAtDesc(environmentId);
+
+        List<ActivityHistoryDto> deploymentDtos = deployments.stream()
+            .map(ActivityHistoryDto::fromDeployment)
+            .toList();
+
+        // 2) Fetch lock history and map to one or two items per entry
+        List<EnvironmentLockHistory> lockHistories =
+            lockHistoryRepository.findLockHistoriesByEnvironment(environmentId);
+
+        List<ActivityHistoryDto> lockDtos = lockHistories.stream()
+            .flatMap(lock -> {
+                // LOCK_EVENT
+                ActivityHistoryDto lockEvent = ActivityHistoryDto.fromEnvironmentLockHistory(
+                    "LOCK_EVENT",
+                    lock
+                );
+
+                // If unlockedAt is present, also create UNLOCK_EVENT
+                if (lock.getUnlockedAt() != null) {
+                    ActivityHistoryDto unlockEvent = ActivityHistoryDto.fromEnvironmentLockHistory(
+                        "UNLOCK_EVENT",
+                        lock
+                    );
+                    return Stream.of(lockEvent, unlockEvent);
+                } else {
+                    return Stream.of(lockEvent);
+                }
+            })
+            .toList();
+
+        // 3) Combine everything
+        List<ActivityHistoryDto> combined = new ArrayList<>();
+        combined.addAll(deploymentDtos);
+        combined.addAll(lockDtos);
+
+        // 4) Sort by 'timestamp' descending
+        combined.sort((a, b) -> {
+            OffsetDateTime timeA = a.timestamp();
+            OffsetDateTime timeB = b.timestamp();
+            if (timeA == null && timeB == null) return 0;
+            if (timeA == null) return 1;  // place null timestamps last
+            if (timeB == null) return -1;
+            return timeB.compareTo(timeA); // descending
+        });
+
+        return combined;
+    }
 
 }
