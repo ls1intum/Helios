@@ -37,7 +37,7 @@ on:
         required: true
         type: string
 
-concurrency: test-servers
+concurrency: ${{ github.event.inputs.HELIOS_ENVIRONMENT_NAME }}
 
 env:
   CI: true
