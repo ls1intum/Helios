@@ -3,6 +3,11 @@ spring:
         jpa:
             repositories:
                 bootstrap-mode: deferred
+    jpa:
+        database: POSTGRESQL
+        show-sql: false
+        hibernate:
+            ddl-auto: update
     security:
         oauth2:
             resourceserver:
