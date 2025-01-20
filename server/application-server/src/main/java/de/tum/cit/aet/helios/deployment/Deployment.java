@@ -13,12 +13,15 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import lombok.extern.log4j.Log4j2;
 import org.kohsuke.github.GHDeploymentStatus;
 
+@Log4j2
 @Entity
 @Table(name = "deployment")
 @Getter
@@ -126,9 +129,16 @@ public class Deployment extends BaseGitServiceEntity {
       if (matcher.find()) {
         return matcher.group(1).toUpperCase();
       }
-      return "";
+      log.warn(
+          "Failed to extract raw state from GHDeploymentStatus object: state field not found in toString() output");
+    } catch (PatternSyntaxException e) {
+      log.error(
+          "Failed to extract raw state from GHDeploymentStatus object: Due to pattern syntax error",
+          e);
     } catch (Exception e) {
-      return "";
+      log.error("Error while extracting raw state from GHDeploymentStatus object", e);
     }
+
+    return "";
   }
 }
