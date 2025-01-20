@@ -70,7 +70,7 @@ public class GlobalExceptionHandler {
     ApiError error = new ApiError();
     error.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
     error.setError(HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase());
-    error.setMessage("Error: " + ex.getMessage());
+    error.setMessage("Error: An internal server error occurred");
     error.setPath(request.getRequestURI());
     error.setTimestamp(Instant.now());
 
