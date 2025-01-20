@@ -198,6 +198,7 @@ public class GitHubClientManager {
    */
   public GitHub createGitHubClientWithCache() {
     if (authType == null) {
+      log.warn("Auth type is not set! GitHub client will be disabled.");
       return GitHub.offline();
     }
 
@@ -235,6 +236,7 @@ public class GitHubClientManager {
         log.error("Invalid GitHub credentials!");
         throw new IllegalStateException("Invalid GitHub credentials");
       }
+      log.info("Token expiration time set as: {}", tokenExpirationTime);
       log.info("GitHub client initialized successfully");
       return github;
 
