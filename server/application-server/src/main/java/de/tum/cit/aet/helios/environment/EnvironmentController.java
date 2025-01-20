@@ -55,11 +55,12 @@ public class EnvironmentController {
   }
 
   @GetMapping("/environment/{environmentId}/lockHistory")
-  public ResponseEntity<List<EnvironmentLockHistoryDto>> getLockHistoryByEnvironmentId(@PathVariable Long environmentId) {
-      List<EnvironmentLockHistoryDto> lockHistory =
+  public ResponseEntity<List<EnvironmentLockHistoryDto>> getLockHistoryByEnvironmentId(
+      @PathVariable Long environmentId) {
+    List<EnvironmentLockHistoryDto> lockHistory =
         environmentService.getLockHistoryByEnvironmentId(environmentId);
-
-      return ResponseEntity.ok(lockHistory);
+  
+    return ResponseEntity.ok(lockHistory);
   }
 
   @PutMapping("/{id}/unlock")

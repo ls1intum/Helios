@@ -43,7 +43,9 @@ public record ActivityHistoryDto(
         null,
         null,
         environmentLockHistory.getLockedBy(),
-        "UNLOCK_EVENT".equals(type) ? environmentLockHistory.getUnlockedAt() : environmentLockHistory.getLockedAt(),
+        "UNLOCK_EVENT".equals(type) 
+            ? environmentLockHistory.getUnlockedAt() 
+            : environmentLockHistory.getLockedAt(),
         null,
         null);
   }

@@ -210,54 +210,60 @@ public class DeploymentService {
   }
 
   public List<ActivityHistoryDto> getActivityHistoryByEnvironmentId(Long environmentId) {
-        // 1) Fetch deployments and map
-        List<Deployment> deployments = deploymentRepository.findByEnvironmentIdOrderByCreatedAtDesc(environmentId);
+    // 1) Fetch deployments and map
+    List<Deployment> deployments = deploymentRepository
+        .findByEnvironmentIdOrderByCreatedAtDesc(environmentId);
 
-        List<ActivityHistoryDto> deploymentDtos = deployments.stream()
-            .map(ActivityHistoryDto::fromDeployment)
-            .toList();
+    List<ActivityHistoryDto> deploymentDtos = deployments.stream()
+        .map(ActivityHistoryDto::fromDeployment)
+        .toList();
 
-        // 2) Fetch lock history and map to one or two items per entry
-        List<EnvironmentLockHistory> lockHistories =
-            lockHistoryRepository.findLockHistoriesByEnvironment(environmentId);
+    // 2) Fetch lock history and map to one or two items per entry
+    List<EnvironmentLockHistory> lockHistories =
+        lockHistoryRepository.findLockHistoriesByEnvironment(environmentId);
 
-        List<ActivityHistoryDto> lockDtos = lockHistories.stream()
-            .flatMap(lock -> {
-                // LOCK_EVENT
-                ActivityHistoryDto lockEvent = ActivityHistoryDto.fromEnvironmentLockHistory(
-                    "LOCK_EVENT",
-                    lock
-                );
+    List<ActivityHistoryDto> lockDtos = lockHistories.stream()
+        .flatMap(lock -> {
+          // LOCK_EVENT
+          ActivityHistoryDto lockEvent = ActivityHistoryDto.fromEnvironmentLockHistory(
+              "LOCK_EVENT",
+              lock
+          );
 
-                // If unlockedAt is present, also create UNLOCK_EVENT
-                if (lock.getUnlockedAt() != null) {
-                    ActivityHistoryDto unlockEvent = ActivityHistoryDto.fromEnvironmentLockHistory(
-                        "UNLOCK_EVENT",
-                        lock
-                    );
-                    return Stream.of(lockEvent, unlockEvent);
-                } else {
-                    return Stream.of(lockEvent);
-                }
-            })
-            .toList();
+          // If unlockedAt is present, also create UNLOCK_EVENT
+          if (lock.getUnlockedAt() != null) {
+            ActivityHistoryDto unlockEvent = ActivityHistoryDto.fromEnvironmentLockHistory(
+                "UNLOCK_EVENT",
+                lock
+            );
+            return Stream.of(lockEvent, unlockEvent);
+          } else {
+            return Stream.of(lockEvent);
+          }
+        })
+        .toList();
 
-        // 3) Combine everything
-        List<ActivityHistoryDto> combined = new ArrayList<>();
-        combined.addAll(deploymentDtos);
-        combined.addAll(lockDtos);
+    // 3) Combine everything
+    List<ActivityHistoryDto> combined = new ArrayList<>();
+    combined.addAll(deploymentDtos);
+    combined.addAll(lockDtos);
 
-        // 4) Sort by 'timestamp' descending
-        combined.sort((a, b) -> {
-            OffsetDateTime timeA = a.timestamp();
-            OffsetDateTime timeB = b.timestamp();
-            if (timeA == null && timeB == null) return 0;
-            if (timeA == null) return 1;  // place null timestamps last
-            if (timeB == null) return -1;
-            return timeB.compareTo(timeA); // descending
-        });
+    // 4) Sort by 'timestamp' descending
+    combined.sort((a, b) -> {
+      OffsetDateTime timeA = a.timestamp();
+      OffsetDateTime timeB = b.timestamp();
+      if (timeA == null && timeB == null) {
+        return 0;
+      }
+      if (timeA == null) {
+        return 1;  // place null timestamps last
+      }
+      if (timeB == null) {
+        return -1;
+      }
+      return timeB.compareTo(timeA); // descending
+    });
 
-        return combined;
-    }
-
+    return combined;
+  }
 }

@@ -67,7 +67,8 @@ public class DeploymentController {
   public ResponseEntity<List<ActivityHistoryDto>> getActivityHistoryByEnvironmentId(
       @PathVariable Long environmentId
   ) {
-    List<ActivityHistoryDto> activityHistory = deploymentService.getActivityHistoryByEnvironmentId(environmentId);
+    List<ActivityHistoryDto> activityHistory = 
+        deploymentService.getActivityHistoryByEnvironmentId(environmentId);
     return ResponseEntity.ok(activityHistory);
   }
 }
