@@ -30,13 +30,33 @@ export class AppComponent {
     }
 
     client.interceptors.response.use(async response => {
-      if (response.ok == false) {
-        const errorMessage = await response.text();
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Fetch Error',
-          detail: errorMessage || 'An unexpected error occurred.',
-        });
+      if (!response.ok) {
+        // Attempt to parse the response as JSON
+        let errorMessage = 'An unexpected error occurred.';
+        try {
+          const errorBody = await response.json();
+          errorMessage = errorBody.message || errorMessage;
+        } catch {
+          // If parsing fails, fallback to text
+          const errorText = await response.text();
+          if (errorText) {
+            errorMessage = errorText;
+          }
+        }
+        // Parsing with status code
+        if (response.status === 401) {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Unauthorized',
+            detail: 'You are unauthorized! Please refresh the page.',
+          });
+        } else {
+          this.messageService.add({
+            severity: 'error',
+            summary: `Error ${response.status}`,
+            detail: errorMessage,
+          });
+        }
       }
       return response;
     });
