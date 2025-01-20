@@ -2,7 +2,6 @@ package de.tum.cit.aet.helios.error;
 
 import de.tum.cit.aet.helios.deployment.DeploymentException;
 import de.tum.cit.aet.helios.environment.EnvironmentException;
-import de.tum.cit.aet.helios.github.permissions.PermissionException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
@@ -47,7 +46,7 @@ public class GlobalExceptionHandler {
   }
 
   // -- 403 FORBIDDEN ------------------------------------
-  @ExceptionHandler({SecurityException.class, PermissionException.class, 
+  @ExceptionHandler({SecurityException.class, 
       EnvironmentException.class})
   public ResponseEntity<ApiError> handleSecurityExceptions(
       RuntimeException ex, HttpServletRequest request) {
