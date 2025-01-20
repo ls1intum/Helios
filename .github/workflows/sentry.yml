@@ -17,19 +17,25 @@ jobs:
         with:
           node-version: "22"
 
+      - name: Enable Corepack
+        working-directory: ./client
+        run: corepack enable
+
       - name: Install Dependencies
         working-directory: ./client
         run: yarn install --frozen-lockfile
 
       - name: Create source maps
         working-directory: ./client
-        # Build the client in development mode because we only
-        # need the source maps for Sentry without optmizations, etc.
-        run: yarn build --configuration development
+        run: yarn build --configuration production
 
       - name: Create Sentry Release and Upload Source Maps
-        uses: getsentry/action-release@v1
+        uses: getsentry/action-release@f6dfa3d84a1c740b94aa45255c5e032b744a095d
         with:
           environment: 'production'
           inject: true
           sourcemaps: './client/dist/client'
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ vars.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ vars.SENTRY_ORG }}
