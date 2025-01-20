@@ -107,6 +107,9 @@ export const EnvironmentDtoSchema = {
       type: 'string',
       format: 'date-time',
     },
+    enabled: {
+      type: 'boolean',
+    },
     installedApps: {
       type: 'array',
       items: {
@@ -544,6 +547,47 @@ export const DeploymentDtoSchema = {
     },
   },
   required: ['environment', 'id', 'ref', 'sha', 'statusesUrl', 'task', 'url'],
+} as const;
+
+export const ActivityHistoryDtoSchema = {
+  type: 'object',
+  properties: {
+    type: {
+      type: 'string',
+    },
+    id: {
+      type: 'integer',
+      format: 'int64',
+    },
+    repository: {
+      $ref: '#/components/schemas/RepositoryInfoDto',
+    },
+    state: {
+      type: 'string',
+      enum: ['PENDING', 'SUCCESS', 'ERROR', 'FAILURE', 'IN_PROGRESS', 'QUEUED', 'INACTIVE', 'UNKNOWN'],
+    },
+    sha: {
+      type: 'string',
+    },
+    ref: {
+      type: 'string',
+    },
+    lockedBy: {
+      type: 'string',
+    },
+    timestamp: {
+      type: 'string',
+      format: 'date-time',
+    },
+    createdAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+    updatedAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+  },
 } as const;
 
 export const CommitInfoDtoSchema = {

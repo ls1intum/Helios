@@ -7,9 +7,13 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface EnvironmentRepository extends JpaRepository<Environment, Long> {
+  List<Environment> findAllByOrderByNameAsc();
+
   List<Environment> findByRepository(GitRepository repository);
 
   Environment findByNameAndRepository(String environmentName, GitRepository repository);
 
   List<Environment> findByRepositoryRepositoryIdOrderByCreatedAtDesc(Long repositoryId);
+
+  List<Environment> findByEnabledTrueOrderByNameAsc();
 }

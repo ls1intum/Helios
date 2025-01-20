@@ -16,27 +16,47 @@ export class AppComponent {
   private messageService = inject(MessageService);
 
   constructor() {
-    const token = this.keycloakService.keycloak.token;
-
     client.setConfig({
       baseUrl: environment.serverUrl,
     });
 
-    if (token) {
-      client.interceptors.request.use(request => {
+    client.interceptors.request.use(request => {
+      const token = this.keycloakService.keycloak.token;
+
+      if (token) {
         request.headers.set('Authorization', `Bearer ${token}`);
-        return request;
-      });
-    }
+      }
+      return request;
+    });
 
     client.interceptors.response.use(async response => {
-      if (response.ok == false) {
-        const errorMessage = await response.text();
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Fetch Error',
-          detail: errorMessage || 'An unexpected error occurred.',
-        });
+      if (!response.ok) {
+        // Attempt to parse the response as JSON
+        let errorMessage = 'An unexpected error occurred.';
+        try {
+          const errorBody = await response.json();
+          errorMessage = errorBody.message || errorMessage;
+        } catch {
+          // If parsing fails, fallback to text
+          const errorText = await response.text();
+          if (errorText) {
+            errorMessage = errorText;
+          }
+        }
+        // Parsing with status code
+        if (response.status === 401) {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Unauthorized',
+            detail: 'You are unauthorized! Please refresh the page.',
+          });
+        } else {
+          this.messageService.add({
+            severity: 'error',
+            summary: `Error ${response.status}`,
+            detail: errorMessage,
+          });
+        }
       }
       return response;
     });

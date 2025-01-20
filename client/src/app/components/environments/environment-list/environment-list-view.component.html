@@ -1,7 +1,7 @@
 <div class="flex items-center justify-between mb-3">
   <input pInputText id="commit-hash" (input)="onSearch($event)" [value]="searchInput()" type="text" placeholder="Search for installed systems" class="w-1/3" />
   @if (!hideLinkToList()) {
-    <p-button [routerLink]="'../../../environment'" class="self-end">Manage environments</p-button>
+    <p-button [routerLink]="'../../../environment'" class="self-end">{{ permissionService.isAdmin() ? 'Manage Environments' : 'Go to Environments' }}</p-button>
   }
 </div>
 
@@ -37,7 +37,7 @@
                 ><i-tabler name="external-link" class="mr-1" />Open</a
               >
             }
-            @if (isLoggedIn() && isCurrentUserLocked(environment)) {
+            @if ((isLoggedIn() && isCurrentUserLocked(environment)) || hasUnlockPermissions()) {
               <button (click)="onUnlockEnvironment($event, environment)" class="p-button p-button-danger p-2"><i-tabler name="lock-open" class="mr-1" />Unlock</button>
             }
           }
@@ -48,7 +48,11 @@
             </button>
           }
 
-          @if (isLoggedIn() && editable()) {
+          @if (canViewAllEnvironments()) {
+            <!-- Show the disabled tag -->
+            @if (!environment.enabled) {
+              <p-tag value="Disabled" severity="danger" rounded="true" />
+            }
             <a icon [routerLink]="'/repo/' + environment.repository?.id + '/environment/' + environment.id + '/edit'" class="p-button p-button-secondary p-2"
               ><i-tabler name="pencil"
             /></a>
@@ -67,7 +71,7 @@
               icon
               [routerLink]="'/repo/' + environment.repository?.id + '/environment/' + environment.id + '/history'"
               class="p-button p-button-text text-gray-500 py-2 flex items-center"
-              ><i-tabler class="mr-1" name="history" />View Deployment History</a
+              ><i-tabler class="mr-1" name="history" />View Activity History</a
             >
           </div>
         </div>

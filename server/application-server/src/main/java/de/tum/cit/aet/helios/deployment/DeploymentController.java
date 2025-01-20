@@ -1,9 +1,9 @@
 package de.tum.cit.aet.helios.deployment;
 
+import de.tum.cit.aet.helios.config.security.annotations.EnforceAtLeastWritePermission;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Optional;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -50,16 +50,20 @@ public class DeploymentController {
     return deployment.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
   }
 
+  @EnforceAtLeastWritePermission
   @PostMapping("/deploy")
   public ResponseEntity<String> deployToEnvironment(
       @Valid @RequestBody DeployRequest deployRequest) {
-    try {
-      deploymentService.deployToEnvironment(deployRequest);
-      return ResponseEntity.ok().build();
-    } catch (DeploymentException e) {
-      return ResponseEntity
-          .status(HttpStatus.INTERNAL_SERVER_ERROR)
-          .body("Deployment failed: " + e.getMessage());
-    }
+    deploymentService.deployToEnvironment(deployRequest);
+    return ResponseEntity.ok().build();
+  }
+
+  @GetMapping("/environment/{environmentId}/activity-history")
+  public ResponseEntity<List<ActivityHistoryDto>> getActivityHistoryByEnvironmentId(
+      @PathVariable Long environmentId
+  ) {
+    List<ActivityHistoryDto> activityHistory = 
+        deploymentService.getActivityHistoryByEnvironmentId(environmentId);
+    return ResponseEntity.ok(activityHistory);
   }
 }

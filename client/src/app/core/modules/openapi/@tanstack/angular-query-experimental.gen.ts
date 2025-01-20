@@ -7,7 +7,6 @@ import type {
   UpdateWorkflowGroupsData,
   GetEnvironmentByIdData,
   UpdateEnvironmentData,
-  UpdateEnvironmentResponse,
   UnlockEnvironmentData,
   CreateWorkflowGroupData,
   CreateWorkflowGroupResponse,
@@ -31,10 +30,13 @@ import type {
   GetAllEnvironmentsData,
   GetEnvironmentsByUserLockingData,
   GetEnvironmentsByRepositoryIdData,
+  GetLockHistoryByEnvironmentIdData,
+  GetAllEnabledEnvironmentsData,
   GetAllDeploymentsData,
   GetDeploymentByIdData,
   GetDeploymentsByEnvironmentIdData,
   GetLatestDeploymentByEnvironmentIdData,
+  GetActivityHistoryByEnvironmentIdData,
   GetCommitByRepositoryIdAndNameData,
   GetAllBranchesData,
   GetBranchByRepositoryIdAndNameData,
@@ -66,10 +68,13 @@ import {
   getAllEnvironments,
   getEnvironmentsByUserLocking,
   getEnvironmentsByRepositoryId,
+  getLockHistoryByEnvironmentId,
+  getAllEnabledEnvironments,
   getAllDeployments,
   getDeploymentById,
   getDeploymentsByEnvironmentId,
   getLatestDeploymentByEnvironmentId,
+  getActivityHistoryByEnvironmentId,
   getCommitByRepositoryIdAndName,
   getAllBranches,
   getBranchByRepositoryIdAndName,
@@ -150,7 +155,7 @@ export const getEnvironmentByIdOptions = (options: Options<GetEnvironmentByIdDat
 };
 
 export const updateEnvironmentMutation = (options?: Partial<Options<UpdateEnvironmentData>>) => {
-  const mutationOptions: MutationOptions<UpdateEnvironmentResponse, DefaultError, Options<UpdateEnvironmentData>> = {
+  const mutationOptions: MutationOptions<unknown, DefaultError, Options<UpdateEnvironmentData>> = {
     mutationFn: async localOptions => {
       const { data } = await updateEnvironment({
         ...options,
@@ -551,6 +556,40 @@ export const getEnvironmentsByRepositoryIdOptions = (options: Options<GetEnviron
   });
 };
 
+export const getLockHistoryByEnvironmentIdQueryKey = (options: Options<GetLockHistoryByEnvironmentIdData>) => [createQueryKey('getLockHistoryByEnvironmentId', options)];
+
+export const getLockHistoryByEnvironmentIdOptions = (options: Options<GetLockHistoryByEnvironmentIdData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getLockHistoryByEnvironmentId({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: getLockHistoryByEnvironmentIdQueryKey(options),
+  });
+};
+
+export const getAllEnabledEnvironmentsQueryKey = (options?: Options<GetAllEnabledEnvironmentsData>) => [createQueryKey('getAllEnabledEnvironments', options)];
+
+export const getAllEnabledEnvironmentsOptions = (options?: Options<GetAllEnabledEnvironmentsData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getAllEnabledEnvironments({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: getAllEnabledEnvironmentsQueryKey(options),
+  });
+};
+
 export const getAllDeploymentsQueryKey = (options?: Options<GetAllDeploymentsData>) => [createQueryKey('getAllDeployments', options)];
 
 export const getAllDeploymentsOptions = (options?: Options<GetAllDeploymentsData>) => {
@@ -618,6 +657,25 @@ export const getLatestDeploymentByEnvironmentIdOptions = (options: Options<GetLa
       return data;
     },
     queryKey: getLatestDeploymentByEnvironmentIdQueryKey(options),
+  });
+};
+
+export const getActivityHistoryByEnvironmentIdQueryKey = (options: Options<GetActivityHistoryByEnvironmentIdData>) => [
+  createQueryKey('getActivityHistoryByEnvironmentId', options),
+];
+
+export const getActivityHistoryByEnvironmentIdOptions = (options: Options<GetActivityHistoryByEnvironmentIdData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getActivityHistoryByEnvironmentId({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: getActivityHistoryByEnvironmentIdQueryKey(options),
   });
 };
 

@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { RepositoryFilterGuard } from './core/middlewares/repository-filter.guard';
+import { adminGuard } from './core/routeGuards/admin.guard';
 import { maintainerGuard } from './core/routeGuards/maintainer.guard';
 
 export const routes: Routes = [
@@ -33,7 +34,11 @@ export const routes: Routes = [
             children: [
               { path: '', redirectTo: 'list', pathMatch: 'full' },
               { path: 'list', loadComponent: () => import('./pages/environment-list/environment-list.component').then(m => m.EnvironmentListComponent) },
-              { path: ':id/edit', loadComponent: () => import('./pages/environment-edit/environment-edit.component').then(m => m.EnvironmentEditComponent) },
+              {
+                path: ':id/edit',
+                loadComponent: () => import('./pages/environment-edit/environment-edit.component').then(m => m.EnvironmentEditComponent),
+                canActivate: [adminGuard],
+              },
               {
                 path: ':environmentId/history',
                 loadComponent: () => import('./pages/environment-deployment-history/environment-deployment-history.component').then(m => m.EnvironmentDeploymentHistoryComponent),
@@ -80,6 +85,10 @@ export const routes: Routes = [
         ],
       },
     ],
+  },
+  {
+    path: 'unauthorized',
+    loadComponent: () => import('./pages/unauthorized-page/unauthorized-page.component').then(m => m.UnauthorizedPageComponent),
   },
   {
     path: '**',

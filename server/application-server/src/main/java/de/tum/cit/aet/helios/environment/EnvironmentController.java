@@ -1,9 +1,9 @@
 package de.tum.cit.aet.helios.environment;
 
-import jakarta.persistence.EntityNotFoundException;
+import de.tum.cit.aet.helios.config.security.annotations.EnforceAtLeastMaintainer;
+import de.tum.cit.aet.helios.config.security.annotations.EnforceAtLeastWritePermission;
 import java.util.List;
 import java.util.Optional;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -28,6 +28,12 @@ public class EnvironmentController {
     return ResponseEntity.ok(environments);
   }
 
+  @GetMapping("/enabled")
+  public ResponseEntity<List<EnvironmentDto>> getAllEnabledEnvironments() {
+    List<EnvironmentDto> environments = environmentService.getAllEnabledEnvironments();
+    return ResponseEntity.ok(environments);
+  }
+
   @GetMapping("/{id}")
   public ResponseEntity<EnvironmentDto> getEnvironmentById(@PathVariable Long id) {
     Optional<EnvironmentDto> environment = environmentService.getEnvironmentById(id);
@@ -42,46 +48,31 @@ public class EnvironmentController {
     return ResponseEntity.ok(environments);
   }
 
-  @GetMapping("/user_locking")
+  @GetMapping("/userLocking")
   public ResponseEntity<EnvironmentLockHistoryDto> getEnvironmentsByUserLocking() {
     EnvironmentLockHistoryDto usersLock = environmentService.getUsersCurrentLock();
     return ResponseEntity.ok(usersLock);
   }
 
-  @PutMapping("/{id}/unlock")
-  public ResponseEntity<?> unlockEnvironment(@PathVariable Long id) {
-    try {
-      EnvironmentDto environment = environmentService.unlockEnvironment(id);
-      return ResponseEntity.ok(environment);
-
-    } catch (EntityNotFoundException e) {
-      // 404 Not Found
-      return ResponseEntity
-          .status(HttpStatus.NOT_FOUND)
-          .body("Unlock Failed: " + e.getMessage());
-
-    } catch (IllegalStateException e) {
-      // 400 Bad Request
-      return ResponseEntity
-          .status(HttpStatus.BAD_REQUEST)
-          .body("Unlock Failed: " + e.getMessage());
-
-    } catch (SecurityException e) {
-      // 403 Forbidden
-      return ResponseEntity
-          .status(HttpStatus.FORBIDDEN)
-          .body("Unlock Failed: " + e.getMessage());
-
-    } catch (Exception e) {
-      // 500 Internal Server Error (fallback for any other exception)
-      return ResponseEntity
-          .status(HttpStatus.INTERNAL_SERVER_ERROR)
-          .body("Unlock Failed: " + e.getMessage());
-    }
+  @GetMapping("/environment/{environmentId}/lockHistory")
+  public ResponseEntity<List<EnvironmentLockHistoryDto>> getLockHistoryByEnvironmentId(
+      @PathVariable Long environmentId) {
+    List<EnvironmentLockHistoryDto> lockHistory =
+        environmentService.getLockHistoryByEnvironmentId(environmentId);
+  
+    return ResponseEntity.ok(lockHistory);
   }
 
+  @EnforceAtLeastWritePermission
+  @PutMapping("/{id}/unlock")
+  public ResponseEntity<?> unlockEnvironment(@PathVariable Long id) {
+    EnvironmentDto environment = environmentService.unlockEnvironment(id);
+    return ResponseEntity.ok(environment);
+  }
+
+  @EnforceAtLeastMaintainer
   @PutMapping("/{id}")
-  public ResponseEntity<EnvironmentDto> updateEnvironment(
+  public ResponseEntity<?> updateEnvironment(
       @PathVariable Long id, @RequestBody EnvironmentDto environmentDto) {
     Optional<EnvironmentDto> updatedEnvironment =
         environmentService.updateEnvironment(id, environmentDto);
