@@ -194,7 +194,7 @@ export type ActivityHistoryDto = {
   type?: string;
   id?: number;
   repository?: RepositoryInfoDto;
-  state?: 'PENDING' | 'SUCCESS' | 'ERROR' | 'FAILURE' | 'IN_PROGRESS' | 'QUEUED' | 'INACTIVE' | 'UNKNOWN';
+  state?: 'PENDING' | 'WAITING' | 'SUCCESS' | 'ERROR' | 'FAILURE' | 'IN_PROGRESS' | 'QUEUED' | 'INACTIVE' | 'UNKNOWN';
   sha?: string;
   ref?: string;
   lockedBy?: string;

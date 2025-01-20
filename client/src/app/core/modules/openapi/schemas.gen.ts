@@ -564,7 +564,7 @@ export const ActivityHistoryDtoSchema = {
     },
     state: {
       type: 'string',
-      enum: ['PENDING', 'SUCCESS', 'ERROR', 'FAILURE', 'IN_PROGRESS', 'QUEUED', 'INACTIVE', 'UNKNOWN'],
+      enum: ['PENDING', 'WAITING', 'SUCCESS', 'ERROR', 'FAILURE', 'IN_PROGRESS', 'QUEUED', 'INACTIVE', 'UNKNOWN'],
     },
     sha: {
       type: 'string',
