@@ -15,13 +15,13 @@ import org.springframework.stereotype.Component;
 @Component
 public class HttpClientConfig {
 
-  @Value("${http.cache.enabled}")
+  @Value("${http.cache.enabled:false}")
   private boolean cacheEnabled;
 
-  @Value("${http.cache.ttl}")
+  @Value("${http.cache.ttl:500}")
   private int cacheTtl;
 
-  @Value("${http.cache.size}")
+  @Value("${http.cache.size:50}")
   private int cacheSize;
 
   private final Environment environment;

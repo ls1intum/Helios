@@ -84,7 +84,7 @@ public class GitHubClientManager {
 
   private final ReentrantLock lock = new ReentrantLock();
 
-  @Value("${http.cache.ttl}")
+  @Value("${http.cache.ttl:500}")
   private int cacheTtl;
 
   /**
