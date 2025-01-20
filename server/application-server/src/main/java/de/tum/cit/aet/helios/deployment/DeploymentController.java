@@ -57,4 +57,13 @@ public class DeploymentController {
     deploymentService.deployToEnvironment(deployRequest);
     return ResponseEntity.ok().build();
   }
+
+  @GetMapping("/environment/{environmentId}/activity-history")
+  public ResponseEntity<List<ActivityHistoryDto>> getActivityHistoryByEnvironmentId(
+      @PathVariable Long environmentId
+  ) {
+    List<ActivityHistoryDto> activityHistory = 
+        deploymentService.getActivityHistoryByEnvironmentId(environmentId);
+    return ResponseEntity.ok(activityHistory);
+  }
 }

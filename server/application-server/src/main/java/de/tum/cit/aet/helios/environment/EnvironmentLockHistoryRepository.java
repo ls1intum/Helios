@@ -1,5 +1,6 @@
 package de.tum.cit.aet.helios.environment;
 
+import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -52,4 +53,18 @@ public interface EnvironmentLockHistoryRepository
       """)
   Optional<EnvironmentLockHistory> findLatestLockForEnabledEnvironment(
       @Param("lockedBy") String lockedBy);
+
+  /**
+   * Returns all lock history entries for the given environment ID,
+   * sorted by lockedAt in descending order.
+   */
+  @Query("""
+        SELECT elh
+        FROM EnvironmentLockHistory elh
+        WHERE elh.environment.id = :environmentId
+        ORDER BY elh.lockedAt DESC
+      """)
+  List<EnvironmentLockHistory> findLockHistoriesByEnvironment(
+      @Param("environmentId") Long environmentId
+  );
 }
