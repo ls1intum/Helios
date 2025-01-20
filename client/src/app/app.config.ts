@@ -1,5 +1,5 @@
-import { provideAppInitializer, ApplicationConfig, inject, provideExperimentalZonelessChangeDetection } from '@angular/core';
-import { provideRouter, withComponentInputBinding, withRouterConfig } from '@angular/router';
+import { provideAppInitializer, ApplicationConfig, inject, provideExperimentalZonelessChangeDetection, ErrorHandler } from '@angular/core';
+import { provideRouter, Router, withComponentInputBinding, withRouterConfig } from '@angular/router';
 import { provideQueryClient, provideTanStackQuery, QueryClient } from '@tanstack/angular-query-experimental';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { providePrimeNG } from 'primeng/config';
@@ -7,6 +7,7 @@ import { definePreset } from '@primeng/themes';
 import Aura from '@primeng/themes/aura';
 
 import { routes } from './app.routes';
+import { environment } from '../environments/environment';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { HTTP_INTERCEPTORS, provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import { provideAnimations } from '@angular/platform-browser/animations';
@@ -14,6 +15,7 @@ import { KeycloakService } from './core/services/keycloak/keycloak.service';
 import { BearerInterceptor } from './core/services/keycloak/bearer-interceptor';
 import { DatePipe } from '@angular/common';
 import { RepositoryFilterGuard } from './core/middlewares/repository-filter.guard';
+import * as Sentry from '@sentry/angular';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -71,5 +73,18 @@ export const appConfig: ApplicationConfig = {
       return keycloakService.init();
     }),
     { provide: HTTP_INTERCEPTORS, useClass: BearerInterceptor, multi: true },
+    {
+      provide: ErrorHandler,
+      useValue: environment.production ? Sentry.createErrorHandler() : new ErrorHandler(),
+    },
+    {
+      provide: Sentry.TraceService,
+      deps: [Router],
+    },
+    provideAppInitializer(() => {
+      if (environment.production) {
+        inject(Sentry.TraceService);
+      }
+    }),
   ],
 };
