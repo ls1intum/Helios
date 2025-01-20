@@ -44,3 +44,7 @@ monitoring:
     # Cooldown in minutes before running the monitoring again
     runOnStartupCooldownInMinutes: ${RUN_ON_STARTUP_COOLDOWN:15}
     repository-sync-cron: "0 0 * * * *"
+
+sentry:
+  dsn: https://a07d7c305924ed8246351dc5f11864a0@o4508675143499777.ingest.de.sentry.io/4508675150118992
+  traces-sample-rate: 1.0

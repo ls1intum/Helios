@@ -7,6 +7,7 @@ plugins {
     id 'io.freefair.lombok' version '8.11'
     id 'org.springdoc.openapi-gradle-plugin' version '1.9.0'
     id 'org.openapi.generator' version '6.6.0'
+    id 'io.sentry.jvm.gradle' version '4.14.1'
 }
 
 group = 'de.tum.cit.aet'
@@ -132,6 +133,17 @@ openApi {
         args.set(["--spring.profiles.active=openapi", "-javaagent:${configurations.runtimeAgent1.asPath}", "-javaagent:${configurations.runtimeAgent2.asPath}"])
         jvmArgs.set(["-javaagent:${configurations.runtimeAgent1.asPath}", "-javaagent:${configurations.runtimeAgent2.asPath}"])
     }
+}
+
+sentry {
+  // Generates a JVM (Java, Kotlin, etc.) source bundle and uploads your source code to Sentry.
+  // This enables source context, allowing you to see your source
+  // code as part of your stack traces in Sentry.
+  includeSourceContext = true
+
+  org = "helios-jf"
+  projectName = "helios-server"
+  authToken = System.getenv("SENTRY_AUTH_TOKEN")
 }
 
 tasks.named('test') {
