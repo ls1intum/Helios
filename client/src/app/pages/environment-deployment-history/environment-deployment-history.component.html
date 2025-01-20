@@ -1,12 +1,29 @@
+<app-page-heading [repositoryId]="repositoryId()">
+  <div class="flex justify-between items-center w-full" heading>
+    <div>Activity History</div>
+  </div>
+  <span description> Here you can see all the locking, unlocking and deployment history. </span>
+</app-page-heading>
+
 <div class="p-4">
+  <style>
+    /* 
+      This class will be applied to <tr> elements for UNLOCK_EVENT. 
+      We force a bottom border to separate events visually. 
+    */
+    tr.lock-event td {
+      border-bottom: 1px solid black;
+    }
+  </style>
+
   <!-- Loading State -->
-  @if (deploymentsQuery.isPending()) {
+  @if (activityHistoryQuery.isPending() || activityHistoryQuery.isError()) {
     <p-table [value]="[1, 2, 3, 4, 5]" styleClass="p-datatable-lg">
       <ng-template pTemplate="header">
         <tr>
-          <th>Name</th>
-          <th>Commit SHA</th>
-          <th>State</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Timestamp</th>
         </tr>
       </ng-template>
       <ng-template pTemplate="body">
@@ -17,41 +34,73 @@
         </tr>
       </ng-template>
     </p-table>
-  } @else if (deploymentsQuery.data()?.length === 0) {
-    <!-- Empty State -->
-    <div class="text-gray-500">No deployments found.</div>
   } @else {
     <!-- Data Table -->
-    <p-table [value]="deployments() || []" styleClass="p-datatable-sm">
+    <p-table [value]="activityHistory() || []" styleClass="p-datatable-sm">
       <ng-template pTemplate="header">
         <tr>
-          <th>Name</th>
-          <th>Commit SHA</th>
-          <th>State</th>
-          <th>Deployed On</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Timestamp</th>
         </tr>
       </ng-template>
-      <ng-template pTemplate="body" let-deployment>
+      <ng-template pTemplate="body" let-combinedHistory>
+        <tr [class]="combinedHistory.type === 'LOCK_EVENT' ? 'lock-event' : ''">
+          <td>
+            <div class="flex align-items-center gap-2">
+              @if (combinedHistory.type === 'DEPLOYMENT') {
+                <i-tabler name="cloud-upload"></i-tabler>
+              } @else if (combinedHistory.type === 'LOCK_EVENT') {
+                <i-tabler name="lock"></i-tabler>
+              } @else if (combinedHistory.type === 'UNLOCK_EVENT') {
+                <i-tabler name="lock-open"></i-tabler>
+              }
+              <span>{{ combinedHistory.type }}</span>
+            </div>
+          </td>
+          <td>
+            <div class="flex align-items-center gap-2">
+              @if (combinedHistory.type === 'DEPLOYMENT') {
+                <ul class="list-none p-0 m-0">
+                  <li class="flex align-items-center gap-2 mb-2">
+                    <i-tabler name="status-change"></i-tabler>
+                    {{ combinedHistory.state }}
+                  </li>
+                  <li class="flex align-items-center gap-2 mb-2">
+                    <i-tabler name="git-branch"></i-tabler>
+                    {{ combinedHistory.ref }}
+                  </li>
+                  <li class="flex align-items-center gap-2">
+                    <i-tabler name="git-commit"></i-tabler>
+                    {{ combinedHistory.sha?.slice(0, 7) }}
+                  </li>
+                </ul>
+              } @else if (combinedHistory.type === 'LOCK_EVENT') {
+                <i-tabler name="user"></i-tabler>
+                <span>{{ combinedHistory.lockedBy }}</span>
+              } @else if (combinedHistory.type === 'UNLOCK_EVENT') {
+                <i-tabler name="user"></i-tabler>
+                <span>{{ combinedHistory.lockedBy }}</span>
+              }
+            </div>
+          </td>
+          <td>
+            <div class="flex align-items-center gap-2">
+              <span>
+                {{ dateService.formatDate(combinedHistory.timestamp, 'd MMMM y, h:mm a') }}
+              </span>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
         <tr>
-          <td>
-            <div class="flex align-items-center gap-2">
-              <i-tabler name="git-branch"></i-tabler>
-              <span>{{ deployment.ref }}</span>
+          <td colspan="4">
+            <div class="flex flex-col gap-2 p-20 justify-center items-center">
+              <i-tabler name="cloud-upload" class="!h-20 !w-20 text-red-500" />
+              <span class="font-semibold text-xl">There are no activitiy history found for this environment.</span>
+              <span>Try reloading the page.</span>
             </div>
-          </td>
-          <td>
-            <div class="flex align-items-center gap-2">
-              <i-tabler name="git-commit"></i-tabler>
-              <span>{{ deployment.sha?.slice(0, 7) }}</span>
-            </div>
-          </td>
-          <td>
-            <div class="flex align-items-center gap-2">
-              <span>{{ deployment.state }}</span>
-            </div>
-          </td>
-          <td>
-            <span>{{ dateService.formatDate(deployment.updatedAt, 'd MMMM y, h:mm a') }}</span>
           </td>
         </tr>
       </ng-template>
