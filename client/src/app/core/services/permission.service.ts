@@ -19,10 +19,7 @@ export class PermissionService {
   heliosDevelopers = ['gbanu', 'thielpa', 'egekocabas', 'turkerkoc', 'stefannemeth'];
   isHeliosDeveloper = computed(() => !!this.keycloak.profile?.username && this.heliosDevelopers.includes(this.keycloak.profile.username.toLowerCase()));
 
-  hasWritePermission = computed(() => this.permissionsQuery.data()?.permission === 'WRITE' || this.permissionsQuery.data()?.permission === 'ADMIN');
+  hasWritePermission = computed(() => this.permissionsQuery.data()?.permission === 'WRITE' || this.permissionsQuery.data()?.permission === 'ADMIN' || this.isHeliosDeveloper());
   isAtLeastMaintainer = computed(() => this.permissionsQuery.data()?.permission === 'ADMIN' || this.permissionsQuery.data()?.roleName === 'maintain' || this.isHeliosDeveloper());
-
-  refetchPermissions() {
-    this.permissionsQuery.refetch();
-  }
+  isAdmin = computed(() => this.permissionsQuery.data()?.permission === 'ADMIN' || this.isHeliosDeveloper());
 }

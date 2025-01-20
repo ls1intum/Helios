@@ -9,7 +9,6 @@ import de.tum.cit.aet.helios.environment.github.GitHubEnvironmentDto;
 import de.tum.cit.aet.helios.filters.RepositoryContext;
 import de.tum.cit.aet.helios.github.permissions.GitHubPermissionsResponse;
 import de.tum.cit.aet.helios.github.permissions.GitHubRepositoryRoleDto;
-import de.tum.cit.aet.helios.github.permissions.PermissionException;
 import de.tum.cit.aet.helios.github.permissions.RepoPermissionType;
 import jakarta.transaction.Transactional;
 import java.io.IOException;
@@ -60,7 +59,6 @@ public class GitHubService {
     this.authService = authService;
     this.clientManager = clientManager;
   }
-
 
   public Builder getRequestBuilder() {
     return new Request.Builder()
@@ -211,24 +209,54 @@ public class GitHubService {
         repository, environmentName, okHttpClient, getRequestBuilder(), objectMapper);
   }
 
-  public GitHubRepositoryRoleDto getRepositoryRole() throws PermissionException, IOException {
-    GHRepository repository = null;
+  /**
+   * Retrieves the GitHub repository role for the current user and the repository from the
+   * RepositoryContext.
+   *
+   * @return GitHubRepositoryRoleDto containing the role information.
+   * @throws IOException if there is an error fetching the repository ID or username.
+   */
+  public GitHubRepositoryRoleDto getRepositoryRole() throws IOException {
+    String repositoryId;
     try {
-      Long repositoryId = RepositoryContext.getRepositoryId();
-      repository = github.getRepositoryById(repositoryId);
-    } catch (IOException e) {
+      repositoryId = RepositoryContext.getRepositoryId().toString();
+    } catch (Exception e) {
       log.error("Error occurred while fetching repository: {}", e.getMessage());
-      throw e;
+      throw new IOException("Failed to fetch repository ID", e);
+    }
+    String username;
+    try {
+      username = this.authService.getPreferredUsername();
+    } catch (Exception e) {
+      log.error("Error occurred while fetching username: {}", e.getMessage());
+      throw new IOException("Failed to fetch username", e);
+    }
+    return getRepositoryRole(repositoryId, username);
+  }
+
+  /**
+   * Retrieves the GitHub repository role for a given repository ID and username.
+   *
+   * @param repositoryId the ID of the repository.
+   * @param username the GitHub username.
+   * @return GitHubRepositoryRoleDto containing the role information.
+   * @throws IOException if there is an error making the GitHub API call or processing the response.
+   * @throws IllegalArgumentException if the repository ID or username is null or empty.
+   */
+  public GitHubRepositoryRoleDto getRepositoryRole(String repositoryId, String username)
+      throws IOException, IllegalArgumentException {
+
+    if (repositoryId == null || repositoryId.isEmpty()) {
+      throw new IllegalArgumentException("Repository ID cannot be null or empty");
     }
 
-    String username = this.authService.getPreferredUsername();
-
-    String owner = repository.getOwnerName();
-    String repoName = repository.getName();
+    if (username == null || username.isEmpty()) {
+      throw new IllegalArgumentException("Username cannot be null or empty");
+    }
     String url =
         String.format(
-            "https://api.github.com/repos/%s/%s/collaborators/%s/permission",
-            owner, repoName, username);
+            "https://api.github.com/repositories/%s/collaborators/%s/permission",
+            repositoryId, username);
 
     Request request = getRequestBuilder().url(url).get().build();
 
@@ -250,10 +278,13 @@ public class GitHubService {
 
     } catch (JsonProcessingException e) {
       log.error("Error processing JSON response: {}", e.getMessage());
-      throw new PermissionException(e.getMessage());
+      throw new IOException("Error processing JSON response", e);
     } catch (IOException e) {
       log.error("Error occurred while fetching permissions: {}", e.getMessage());
-      throw new PermissionException(e.getMessage());
+      throw new IOException("Error occurred while fetching permissions", e);
+    } catch (Exception e) {
+      log.error("Unexpected error occurred: {}", e.getMessage());
+      throw new IOException("Unexpected error occurred", e);
     }
   }
 }
