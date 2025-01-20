@@ -1,8 +1,8 @@
 name: Feature Request
 description: Request a new feature.
 title: "[Feature]: "
-labels: ["feature"]
-projects: ["ls1intum/Helios"]
+labels: ["feature-request", "inbox"]
+projects: ["ls1intum/82"]
 body:
   - type: markdown
     attributes:
