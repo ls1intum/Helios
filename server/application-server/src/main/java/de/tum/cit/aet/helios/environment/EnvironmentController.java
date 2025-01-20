@@ -1,5 +1,7 @@
 package de.tum.cit.aet.helios.environment;
 
+import de.tum.cit.aet.helios.config.security.annotations.EnforceAtLeastMaintainer;
+import de.tum.cit.aet.helios.config.security.annotations.EnforceAtLeastWritePermission;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.http.ResponseEntity;
@@ -52,12 +54,14 @@ public class EnvironmentController {
     return ResponseEntity.ok(usersLock);
   }
 
+  @EnforceAtLeastWritePermission
   @PutMapping("/{id}/unlock")
-  public ResponseEntity<?> unlockEnvironment(@PathVariable Long id) {    
+  public ResponseEntity<?> unlockEnvironment(@PathVariable Long id) {
     EnvironmentDto environment = environmentService.unlockEnvironment(id);
     return ResponseEntity.ok(environment);
   }
 
+  @EnforceAtLeastMaintainer
   @PutMapping("/{id}")
   public ResponseEntity<?> updateEnvironment(
       @PathVariable Long id, @RequestBody EnvironmentDto environmentDto) {

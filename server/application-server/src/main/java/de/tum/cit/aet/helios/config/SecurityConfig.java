@@ -11,6 +11,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpMethod;
 import org.springframework.lang.NonNull;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
@@ -23,12 +24,16 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Log4j2
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
   private final Environment environment;
+  private final GitHubJwtAuthenticationConverter gitHubJwtAuthenticationConverter;
 
-  public SecurityConfig(Environment environment) {
+  public SecurityConfig(
+      Environment environment, GitHubJwtAuthenticationConverter gitHubJwtAuthenticationConverter) {
     this.environment = environment;
+    this.gitHubJwtAuthenticationConverter = gitHubJwtAuthenticationConverter;
   }
 
   @Bean
@@ -37,22 +42,22 @@ public class SecurityConfig {
         .csrf(AbstractHttpConfigurer::disable) // Disable CSRF
         .authorizeHttpRequests(
             auth -> {
-              auth
-                .requestMatchers(HttpMethod.GET, "/api/**").permitAll()
-                .requestMatchers(
-                        "/auth/**",
-                        "/bus/v3/api-docs/**",
-                        "/v2/api-docs",
-                        "/v3/api-docs",
-                        "/v3/api-docs/**",
-                        "/v3/api-docs.yaml",
-                        "/swagger-resources",
-                        "/swagger-resources/**",
-                        "/configuration/ui",
-                        "/configuration/security",
-                        "/swagger-ui/**",
-                        "/webjars/**",
-                        "/swagger-ui.html")
+              auth.requestMatchers(HttpMethod.GET, "/api/**")
+                  .permitAll()
+                  .requestMatchers(
+                      "/auth/**",
+                      "/bus/v3/api-docs/**",
+                      "/v2/api-docs",
+                      "/v3/api-docs",
+                      "/v3/api-docs/**",
+                      "/v3/api-docs.yaml",
+                      "/swagger-resources",
+                      "/swagger-resources/**",
+                      "/configuration/ui",
+                      "/configuration/security",
+                      "/swagger-ui/**",
+                      "/webjars/**",
+                      "/swagger-ui.html")
                   .permitAll()
                   .anyRequest()
                   .authenticated();
@@ -60,9 +65,7 @@ public class SecurityConfig {
         .oauth2ResourceServer(
             auth ->
                 auth.jwt(
-                    token ->
-                        token.jwtAuthenticationConverter(
-                            new KeycloakJwtAuthenticationConverter())));
+                    token -> token.jwtAuthenticationConverter(gitHubJwtAuthenticationConverter)));
 
     return http.build();
   }

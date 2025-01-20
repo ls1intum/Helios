@@ -2,7 +2,6 @@ package de.tum.cit.aet.helios.permissions;
 
 import de.tum.cit.aet.helios.github.GitHubService;
 import de.tum.cit.aet.helios.github.permissions.GitHubRepositoryRoleDto;
-import de.tum.cit.aet.helios.github.permissions.PermissionException;
 import java.io.IOException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,7 +19,7 @@ public class UserPermissionsController {
 
   @GetMapping()
   public ResponseEntity<GitHubRepositoryRoleDto> getUserPermissions() 
-      throws PermissionException, IOException {
+      throws IOException {
     GitHubRepositoryRoleDto permissions = gitHubService.getRepositoryRole();
     return ResponseEntity.ok(permissions);
   }

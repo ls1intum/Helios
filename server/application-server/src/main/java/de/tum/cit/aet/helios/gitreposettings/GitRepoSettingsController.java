@@ -1,5 +1,6 @@
 package de.tum.cit.aet.helios.gitreposettings;
 
+import de.tum.cit.aet.helios.config.security.annotations.EnforceAtLeastMaintainer;
 import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.http.ResponseEntity;
@@ -32,6 +33,7 @@ public class GitRepoSettingsController {
     return ResponseEntity.ok(workflowGroupDtoS);
   }
 
+  @EnforceAtLeastMaintainer
   @PostMapping("/groups/create")
   public ResponseEntity<WorkflowGroupDto> createWorkflowGroup(
       @PathVariable Long repositoryId, @Valid @RequestBody WorkflowGroupDto workflowGroupDto) {
@@ -40,6 +42,7 @@ public class GitRepoSettingsController {
     return ResponseEntity.ok(createdWorkflowGroup);
   }
 
+  @EnforceAtLeastMaintainer
   @PutMapping("/groups/update")
   public ResponseEntity<Void> updateWorkflowGroups(
       @PathVariable Long repositoryId, @Valid @RequestBody List<WorkflowGroupDto> workflowGroups) {
@@ -47,6 +50,7 @@ public class GitRepoSettingsController {
     return ResponseEntity.noContent().build();
   }
 
+  @EnforceAtLeastMaintainer
   @DeleteMapping("/groups/{groupId}")
   public ResponseEntity<Void> deleteWorkflowGroup(
       @PathVariable Long repositoryId, @PathVariable Long groupId) {
