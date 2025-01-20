@@ -57,3 +57,9 @@ $ ./gradlew test
 ```bash
 $ ./gradlew generateOpenApiDocs
 ```
+
+### Database migrations
+
+We are using [Flyway](https://flywaydb.org/) for database migrations. When changing the database schema, create a new migration file in `src/main/resources/db/migration` with the following naming convention: `V<version>__<description>.sql`, e.g. `V1_1__create_users.sql`.
+
+The migrations are automatically applied when starting the application.
