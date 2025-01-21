@@ -1,0 +1,8 @@
+<div class="fixed bottom-6 right-6 flex items-center gap-2" (mouseenter)="isExpanded.set(true)" (mouseleave)="isExpanded.set(false)">
+  <button pButton class="p-button-rounded p-button-secondary hover:scale-105 transition-transform duration-200 shadow-lg h-12" (click)="reportIssue()">
+    <i-tabler name="bug" />
+    @if (isExpanded()) {
+      <span>Report an issue</span>
+    }
+  </button>
+</div>

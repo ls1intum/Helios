@@ -4,11 +4,12 @@ import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 import { client } from './core/modules/openapi/sdk.gen';
 import { environment } from '../environments/environment';
 import { MessageService } from 'primeng/api';
+import { ReportProblemButtonComponent } from './components/report-problem-button/report-problem-button.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet],
+  imports: [RouterOutlet, ReportProblemButtonComponent],
   templateUrl: './app.component.html',
 })
 export class AppComponent {
