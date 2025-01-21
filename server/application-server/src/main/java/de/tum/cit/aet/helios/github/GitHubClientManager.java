@@ -122,13 +122,15 @@ public class GitHubClientManager {
 
     if (appId != null && privateKeyPath != null) {
       this.authType = AuthType.APP;
-    } else if (ghAuthToken == null || ghAuthToken.isEmpty()) {
+    } else if (ghAuthToken != null && !ghAuthToken.isEmpty()) {
       this.authType = AuthType.PAT;
     } else {
       log.error(
           "GitHub auth token or private key is not provided! "
               + "GitHub client will be disabled.");
       authType = null;
+      // Set token expiration time to 1 year from now (Since we are in offline mode)
+      tokenExpirationTime = Instant.now().plusSeconds(60 * 60 * 24 * 365);
     }
   }
 
