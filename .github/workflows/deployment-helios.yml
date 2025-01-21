@@ -73,11 +73,8 @@ jobs:
   deploy:
     needs: [ validate-inputs ]
     runs-on: ubuntu-latest
-    concurrency: test-servers-deploy
-
     environment:
       name: ${{ github.event.inputs.HELIOS_ENVIRONMENT_NAME }}
-
     steps:
       - name: Echo
         run: |

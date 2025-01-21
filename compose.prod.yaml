@@ -93,10 +93,17 @@ services:
       - REPOSITORY_NAME=${REPOSITORY_NAME}
       - RUN_ON_STARTUP_COOLDOWN=${RUN_ON_STARTUP_COOLDOWN}
       - OAUTH_ISSUER_URL=${OAUTH_ISSUER_URL}
+      - GITHUB_APP_NAME=${GITHUB_APP_NAME}
+      - GITHUB_APP_ID=${GITHUB_APP_ID}
+      - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}
+      - GITHUB_INSTALLATION_ID=${GITHUB_INSTALLATION_ID}
+      - GITHUB_PRIVATE_KEY_PATH=${GITHUB_PRIVATE_KEY_PATH}
     depends_on:
       - postgres
       - nats-server
       - webhook-listener
+    volumes:
+      - ./heliosapp.converted_key_pkcs8.pem:/app/heliosapp.converted_key_pkcs8.pem
     networks:
       - helios-network
 
