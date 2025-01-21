@@ -1,0 +1,108 @@
+services:
+  postgres:
+    container_name: postgres-e2e
+    image: 'postgres:16'
+    environment:
+      - POSTGRES_DB=helios
+      - POSTGRES_PASSWORD=helios
+      - POSTGRES_USER=helios
+    ports:
+      - '5432:5432'
+    volumes:
+      - test-db-data:/var/lib/postgresql/data
+    command: >
+      bash -c "
+        set -m
+
+        # Start default entrypoint in the background:
+        docker-entrypoint.sh postgres &
+
+        # Wait for Postgres to come up (pg_isready blocks until server is accepting connections)
+        until pg_isready -h localhost -p 5432 --timeout=0; do
+          echo 'Waiting for Postgres to be ready...';
+          sleep 1;
+        done;
+
+        # Create 'keycloak' DB if it doesn’t exist
+        psql -v ON_ERROR_STOP=1 -U helios -tc \"SELECT 1 FROM pg_database WHERE datname = 'keycloak'\" | grep -q 1 || psql -U helios -c \"CREATE DATABASE keycloak;\"
+
+        # Bring Postgres (still running in background) to the foreground
+        fg %1
+      "
+    networks:
+      - helios-network
+
+  client:
+    container_name: client
+    command: sh -c "yarn start:e2e"
+    build:
+      context: ./client
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./client:/usr/src/app/
+      - /usr/src/app/node_modules/
+    ports:
+      # Do not expose the client to 80 or 443
+      - "4200:4200"
+    restart: always
+    networks:
+      - helios-network
+
+  # application-server:
+  #   image: eclipse-temurin:21
+  #   working_dir: /usr/src/app
+  #   command: sh -c "./gradlew e2eTest"
+  #   ports:
+  #     - '8080:8080'
+  #   volumes:
+  #     - ./server/application-server:/usr/src/app/
+  #     - ./test:/usr/src/app/build/reports
+  #   environment:
+  #     - PWDEBUG=1
+  #     - SPRING_PROFILES_ACTIVE=test
+  #     - NATS_SERVER=""
+  #     - NATS_AUTH_TOKEN=""
+  #     - ORGANIZATION_NAME=ls1intum/Helios
+  #     - GITHUB_AUTH_TOKEN=${GITHUB_TOKEN}
+  #     - REPOSITORY_NAME=Helios
+  #     - RUN_ON_STARTUP_COOLDOWN=0
+  #     - OAUTH_ISSUER_URL=http://keycloak:8081/auth/realms/helios
+  #   depends_on:
+  #     - postgres
+  #     - client
+  #     - keycloak
+  #   networks:
+  #     - helios-network
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    container_name: keycloak-e2e
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_DB: postgres
+      KC_DB_URL_HOST: postgres-e2e
+      KC_DB_USERNAME: helios
+      KC_DB_PASSWORD: helios
+      KC_HOSTNAME: localhost
+    ports:
+      - '8081:8081'
+    depends_on:
+      - postgres
+    volumes:
+      - ./helios-example-realm.json:/opt/keycloak/data/import/dev-realm-export.json
+      - ./keycloakify/dist_keycloak:/opt/keycloak/providers/
+    command: start-dev --import-realm --http-port=8081
+    networks:
+      - helios-network
+
+volumes:
+  test-db-data:
+  test-nats-data:
+  keycloak_data:
+
+
+networks:
+  # Create network manually in advance: docker network create helios-network
+  helios-network:
+    name: helios-network

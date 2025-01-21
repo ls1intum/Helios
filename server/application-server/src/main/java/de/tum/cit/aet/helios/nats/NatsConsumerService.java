@@ -31,22 +31,22 @@ import org.springframework.stereotype.Service;
 public class NatsConsumerService {
   private static final int INITIAL_RECONNECT_DELAY_SECONDS = 2;
 
-  @Value("${nats.enabled}")
+  @Value("${nats.enabled:false}")
   private boolean isNatsEnabled;
 
-  @Value("${nats.timeframe}")
+  @Value("${nats.timeframe:0}")
   private int timeframe;
 
-  @Value("${nats.server}")
+  @Value("${nats.server:}")
   private String natsServer;
 
-  @Value("${nats.durableConsumerName}")
+  @Value("${nats.durableConsumerName:}")
   private String durableConsumerName;
 
-  @Value("${monitoring.repositories}")
+  @Value("${monitoring.repositories:[]}")
   private String[] repositoriesToMonitor;
 
-  @Value("${nats.auth.token}")
+  @Value("${nats.auth.token:}")
   private String natsAuthToken;
 
   private final Environment environment;

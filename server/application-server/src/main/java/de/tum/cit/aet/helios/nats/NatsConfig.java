@@ -13,13 +13,13 @@ import org.springframework.core.env.Environment;
 @Log4j2
 public class NatsConfig {
 
-  @Value("${nats.enabled}")
+  @Value("${nats.enabled:false}")
   private boolean isNatsEnabled;
 
-  @Value("${nats.server}")
+  @Value("${nats.server:}")
   private String natsServer;
 
-  @Value("${nats.auth.token}")
+  @Value("${nats.auth.token:}")
   private String natsAuthToken;
 
   private final Environment environment;

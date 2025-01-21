@@ -1,0 +1,29 @@
+spring:
+    data:
+        jpa:
+            repositories:
+                bootstrap-mode: deferred
+    jpa:
+        database: POSTGRESQL
+        show-sql: false
+        hibernate:
+            ddl-auto: update
+    security:
+        oauth2:
+            resourceserver:
+                jwt:
+                    issuer-uri: "url.invalid"
+
+nats:
+    enabled: false
+
+
+github:
+    organizationName: "mock"
+    # Can be any OAuth token, such as the PAT
+    authToken: ${GITHUB_TOKEN:}
+    cache:
+        enabled: true
+        ttl: 500
+        # in MB
+        size: 50

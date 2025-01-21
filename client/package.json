@@ -3,8 +3,10 @@
   "version": "0.0.0",
   "scripts": {
     "dev": "ng serve --watch --host 0.0.0.0 --configuration development",
+    "start:e2e": "ng serve --configuration=production --host",
     "build": "ng build",
     "test": "ng test",
+    "test:e2e": "playwright test",
     "lint": "eslint --max-warnings 0 --fix .",
     "generate:openapi": "openapi-ts"
   },
@@ -40,6 +42,7 @@
     "@angular/cli": "^19.0.5",
     "@angular/compiler-cli": "^19.0.4",
     "@hey-api/openapi-ts": "^0.61.2",
+    "@playwright/test": "^1.49.1",
     "@types/jasmine": "~5.1.0",
     "@types/node": "^22.9.0",
     "@typescript-eslint/eslint-plugin": "^8.13.0",

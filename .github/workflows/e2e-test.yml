@@ -1,0 +1,9 @@
+name: E2E-Tests
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, reopened, edited, synchronize]
+
+jobs:
+    server-tests:
+        runs-on: ubuntu-latest

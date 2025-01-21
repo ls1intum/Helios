@@ -18,13 +18,13 @@ public class NatsNotificationPublisherService {
 
   private Connection natsConnection;
 
-  @Value("${nats.enabled}")
+  @Value("${nats.enabled:false}")
   private boolean isNatsEnabled;
 
-  @Value("${nats.server}")
+  @Value("${nats.server:}")
   private String natsServer;
 
-  @Value("${nats.auth.token}")
+  @Value("${nats.auth.token:}")
   private String natsAuthToken;
 
   @EventListener(ApplicationReadyEvent.class)
