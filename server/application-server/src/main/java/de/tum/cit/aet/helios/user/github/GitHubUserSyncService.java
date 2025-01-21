@@ -1,5 +1,6 @@
 package de.tum.cit.aet.helios.user.github;
 
+import de.tum.cit.aet.helios.github.GitHubFacade;
 import de.tum.cit.aet.helios.user.User;
 import de.tum.cit.aet.helios.user.UserRepository;
 import de.tum.cit.aet.helios.util.DateUtil;
@@ -7,19 +8,18 @@ import jakarta.transaction.Transactional;
 import java.io.IOException;
 import lombok.extern.log4j.Log4j2;
 import org.kohsuke.github.GHUser;
-import org.kohsuke.github.GitHub;
 import org.springframework.stereotype.Service;
 
 @Service
 @Log4j2
 public class GitHubUserSyncService {
 
-  private final GitHub github;
+  private final GitHubFacade github;
   private final UserRepository userRepository;
   private final GitHubUserConverter userConverter;
 
   public GitHubUserSyncService(
-      GitHub github, UserRepository userRepository, GitHubUserConverter userConverter) {
+      GitHubFacade github, UserRepository userRepository, GitHubUserConverter userConverter) {
     this.github = github;
     this.userRepository = userRepository;
     this.userConverter = userConverter;
