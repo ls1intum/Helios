@@ -250,7 +250,7 @@ To enable Helios to trigger and approve deployments, your repository must have a
    on:
      workflow_dispatch:
        inputs:
-         HELIOS_TRIGGERED_BY:
+         triggered_by:
            description: "Username that triggered deployment"
            required: true
            type: string
@@ -258,16 +258,8 @@ To enable Helios to trigger and approve deployments, your repository must have a
            description: "Which branch to deploy"
            required: true
            type: string
-         HELIOS_BRANCH_HEAD_SHA:
-           description: "SHA (Head commit) of the branch to deploy"
-           required: true
-           type: string
          HELIOS_ENVIRONMENT_NAME:
            description: "Which environment to deploy (e.g. artemis-test7.artemis.cit.tum.de)"
-           required: true
-           type: string
-         HELIOS_RAW_URL:
-           description: "URL to the raw content of the repository in the format https://raw.githubusercontent.com/:owner/:repo/:sha"
            required: true
            type: string
          HELIOS_BUILD:
@@ -293,7 +285,7 @@ To enable Helios to trigger and approve deployments, your repository must have a
             - name: Checkout
               uses: actions/checkout@v4
               with:
-                ref: ${{ github.event.inputs.HELIOS_BRANCH_HEAD_SHA }}
+                ref: ${{ github.event.inputs.HELIOS_BRANCH_NAME }}
             - name: (Optional) Build or Prepare
               run:
                   |
@@ -308,7 +300,7 @@ To enable Helios to trigger and approve deployments, your repository must have a
             - name: Checkout
               uses: actions/checkout@v4
               with:
-                ref: ${{ github.event.inputs.HELIOS_BRANCH_HEAD_SHA }}
+                ref: ${{ github.event.inputs.HELIOS_BRANCH_NAME }}
 
          # Add your deployment steps here, referencing inputs from Helios:
          #   ${{ github.event.inputs.HELIOS_BRANCH_NAME }}

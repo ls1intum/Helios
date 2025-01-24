@@ -3,16 +3,12 @@ name: Deploy to Testserver with Helios
 on:
   workflow_dispatch:
     inputs:
-      HELIOS_TRIGGERED_BY:
+      triggered_by:
         description: "Username that triggered deployment"
         required: true
         type: string
       HELIOS_BRANCH_NAME:
         description: "Which branch to deploy"
-        required: true
-        type: string
-      HELIOS_BRANCH_HEAD_SHA:
-        description: "SHA of the branch to deploy"
         required: true
         type: string
       HELIOS_PR_NUMBER:
@@ -32,16 +28,11 @@ on:
         description: "Docker tag to use if we are building or pulling an existing image"
         required: false
         type: string
-      HELIOS_RAW_URL:
-        description: "URL to the raw content of the repository in the format https://raw.githubusercontent.com/:owner/:repo/:sha"
-        required: true
-        type: string
 
 concurrency: ${{ github.event.inputs.HELIOS_ENVIRONMENT_NAME }}
 
 env:
   CI: true
-  RAW_URL: ${{ github.event.inputs.HELIOS_RAW_URL }}
 
 jobs:
   # Print the inputs for debugging
@@ -62,9 +53,8 @@ jobs:
       - name: Print Inputs
         run: |
           echo "RAW_URL: ${{ env.RAW_URL }}"
-          echo "Triggered by: ${{ github.event.inputs.HELIOS_TRIGGERED_BY }}"
+          echo "Triggered by: ${{ github.event.inputs.triggered_by }}"
           echo "Branch: ${{ github.event.inputs.HELIOS_BRANCH_NAME }}"
-          echo "SHA: ${{ github.event.inputs.HELIOS_BRANCH_HEAD_SHA }}"
           echo "PR Number: ${{ github.event.inputs.HELIOS_PR_NUMBER }}"
           echo "Environment: ${{ github.event.inputs.HELIOS_ENVIRONMENT_NAME }}"
           echo "Need Build? ${{ github.event.inputs.HELIOS_BUILD }}"

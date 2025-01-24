@@ -140,23 +140,9 @@ public class DeploymentService {
 
     // Build parameters for the workflow
     Map<String, Object> workflowParams = new HashMap<>();
-    workflowParams.put("HELIOS_TRIGGERED_BY", username);
-    workflowParams.put("HELIOS_BRANCH_NAME", deployRequest.branchName());
-    workflowParams.put("HELIOS_BRANCH_HEAD_SHA", branchCommitSha);
-    workflowParams.put("HELIOS_ENVIRONMENT_NAME", environment.getName());
-    workflowParams.put("HELIOS_RAW_URL",
-        String.format("https://raw.githubusercontent.com/%s/%s",
-            repoNameWithOwners,
-            branchCommitSha));
-    if (optionalPr.isPresent()) {
-      final PullRequest pr = optionalPr.get();
-      workflowParams.put("HELIOS_BUILD", "false");
-
-      workflowParams.put("HELIOS_PR_NUMBER", String.valueOf(pr.getNumber()));
-    } else {
-      workflowParams.put("HELIOS_BUILD", "true");
-      workflowParams.put("HELIOS_BUILD_TAG", "branch-" + heliosDeployment.getId().toString());
-    }
+    workflowParams.put("triggered_by", username);
+    workflowParams.put("branch_name", deployRequest.branchName());
+    workflowParams.put("environment_name", environment.getName());
 
     heliosDeployment.setWorkflowParams(workflowParams);
     heliosDeploymentRepository.save(heliosDeployment);
