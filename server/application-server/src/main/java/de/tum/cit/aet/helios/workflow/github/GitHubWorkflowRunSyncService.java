@@ -189,13 +189,10 @@ public class GitHubWorkflowRunSyncService {
     // Get the deployment workflow set by the managers
     Workflow deploymentWorkflow = workflowService.getDeploymentWorkflow();
     if (deploymentWorkflow == null) {
-      log.debug("No deployment workflow found while processing workflow run {}",
-          workflowRun.getId());
       return;
     }
 
     if (workflowRun.getWorkflowId() != deploymentWorkflow.getId()) {
-      log.debug("Workflow run {} is not a deployment workflow run", workflowRun.getId());
       return;
     }
 
@@ -213,7 +210,7 @@ public class GitHubWorkflowRunSyncService {
 
           // Update the deployment status
           heliosDeployment.setStatus(mappedStatus);
-          log.debug("Updated HeliosDeployment {} to status {}", heliosDeployment.getId(),
+          log.info("Updated HeliosDeployment {} to status {}", heliosDeployment.getId(),
               mappedStatus);
           heliosDeploymentRepository.save(heliosDeployment);
         });
