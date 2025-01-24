@@ -186,7 +186,7 @@ public class EnvironmentService {
                 throw new EnvironmentException(
                     "Environment is locked and can not be disabled. "
                         + "Please unlock the environment first.");
-              } else if (environmentDto.enabled()) {
+              } else if (!environment.isEnabled() && environmentDto.enabled()) {
                 environment.setLocked(false);
                 environment.setLockedBy(null);
                 environment.setLockedAt(null);
