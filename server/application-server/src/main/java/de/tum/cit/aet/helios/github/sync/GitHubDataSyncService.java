@@ -111,8 +111,8 @@ public class GitHubDataSyncService {
     // Sync pull requests
     log.info("--------------------------------------------------");
     var step3Start = Instant.now();
-    log.info("[Step 3/10] Syncing Pull Requests (Cutoff: {})", cutoffDate);
-    pullRequestSyncService.syncPullRequestsOfAllRepositories(repositories, Optional.of(cutoffDate));
+    log.info("[Step 3/10] Syncing Open Pull Requests...");
+    pullRequestSyncService.syncOpenPullRequestsOfAllRepositories(repositories);
     var step3Duration = Duration.between(step3Start, Instant.now()).toMillis();
     log.info("[Step 3/10] Completed Pull Request Sync. (Took: {} ms)", step3Duration);
 
