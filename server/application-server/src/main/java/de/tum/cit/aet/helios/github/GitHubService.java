@@ -242,8 +242,10 @@ public class GitHubService {
    * @param repositoryId the ID of the repository.
    * @param username     the GitHub username.
    * @return GitHubRepositoryRoleDto containing the role information.
-   * @throws IOException              if there is an error making the GitHub API call or processing the response.
-   * @throws IllegalArgumentException if the repository ID or username is null or empty.
+   * @throws IOException if there is an error making the GitHub API call or
+   *                     processing the response.
+   * @throws IllegalArgumentException if the repository ID or username is null
+   *                                  or empty.
    */
   public GitHubRepositoryRoleDto getRepositoryRole(String repositoryId, String username)
       throws IOException, IllegalArgumentException {
