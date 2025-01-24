@@ -104,6 +104,7 @@ public class GitHubDataSyncService {
     // Sync pull requests
     log.info("--------------------------------------------------");
     log.info("[Step 3/10] Syncing Pull Requests (Cutoff: {})", cutoffDate);
+    // TODO: CUT OFF DATE IS SET 7 DAYS BACK, MAYBE GET ALL OPEN PRS INSTEAD?
     pullRequestSyncService.syncPullRequestsOfAllRepositories(repositories, Optional.of(cutoffDate));
     log.info("[Step 3/10] Completed Pull Request Sync");
 
@@ -117,7 +118,7 @@ public class GitHubDataSyncService {
     // Sync deployments
     log.info("--------------------------------------------------");
     log.info("[Step 5/10] Syncing Deployments...");
-    deploymentSyncService.syncDeploymentsOfAllRepositories(repositories);
+    deploymentSyncService.syncDeploymentsOfAllRepositories(repositories, Optional.of(cutoffDate));
     log.info("[Step 5/10] Completed Deployment Sync");
 
     // Sync users
