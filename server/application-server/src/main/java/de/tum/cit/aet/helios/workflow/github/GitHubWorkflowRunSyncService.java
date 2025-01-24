@@ -81,26 +81,26 @@ public class GitHubWorkflowRunSyncService {
     var workflowRuns = new ArrayList<GHWorkflowRun>();
 
     while (iterator.hasNext()) {
-      var ghPullRequests = iterator.nextPage();
-      var keepPullRequests =
-          ghPullRequests.stream()
+      var ghWorkflowRuns = iterator.nextPage();
+      var keepWorkflowRuns =
+          ghWorkflowRuns.stream()
               .filter(
-                  pullRequest -> {
+                  ghWorkflowRun -> {
                     try {
                       return sinceDate.isEmpty()
-                          || pullRequest.getUpdatedAt().after(sinceDate.get());
+                          || ghWorkflowRun.getUpdatedAt().after(sinceDate.get());
                     } catch (IOException e) {
                       log.error(
                           "Failed to filter workflow run {}: {}",
-                          pullRequest.getId(),
+                          ghWorkflowRun.getId(),
                           e.getMessage());
                       return false;
                     }
                   })
               .toList();
 
-      workflowRuns.addAll(keepPullRequests);
-      if (keepPullRequests.size() != ghPullRequests.size()) {
+      workflowRuns.addAll(keepWorkflowRuns);
+      if (keepWorkflowRuns.size() != ghWorkflowRuns.size()) {
         break;
       }
     }
