@@ -117,7 +117,7 @@ public class GitHubDataSyncService {
 
     // Sync deployments
     log.info("--------------------------------------------------");
-    log.info("[Step 5/10] Syncing Deployments...");
+    log.info("[Step 5/10] Syncing Deployments (Cutoff: {})", cutoffDate);
     deploymentSyncService.syncDeploymentsOfAllRepositories(repositories, Optional.of(cutoffDate));
     log.info("[Step 5/10] Completed Deployment Sync");
 
