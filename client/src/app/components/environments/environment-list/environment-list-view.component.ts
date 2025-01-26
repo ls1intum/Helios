@@ -136,7 +136,7 @@ export class EnvironmentListViewComponent {
   }
 
   openUserProfile(login: string) {
-    //Redirect to google.com
+    //Redirect to the user's github profile
     window.open(`
       https://www.github.com/${login}
     `);
