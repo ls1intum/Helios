@@ -21,7 +21,7 @@ import { FormsModule } from '@angular/forms';
 import { TimeAgoPipe } from '@app/pipes/time-ago.pipe';
 import { FILTER_OPTIONS_TOKEN, SearchTableService } from '@app/core/services/search-table.service';
 import { TableFilterComponent } from '../table-filter/table-filter.component';
-import {HighlightPipe} from '@app/pipes/highlight.pipe';
+import { HighlightPipe } from '@app/pipes/highlight.pipe';
 
 type BranchInfoWithLink = BranchInfoDto & { link: string; lastCommitLink: string };
 
@@ -149,9 +149,7 @@ export class BranchTableComponent {
 
     // Function to check if the branch name matches the search value
     const matchesSearch = (branch: BranchInfoWithLink) =>
-      this.searchTableService.searchValue().toLowerCase() &&
-      branch.name.toLowerCase().includes(this.searchTableService.searchValue().toLowerCase());
-
+      this.searchTableService.searchValue().toLowerCase() && branch.name.toLowerCase().includes(this.searchTableService.searchValue().toLowerCase());
 
     branches.forEach(branch => {
       const pathParts = branch.name.split('/');
@@ -207,9 +205,7 @@ export class BranchTableComponent {
                 parentNode.expanded = true;
               }
               // Move up one level by removing the last segment of the path
-              parentPath = parentPath.includes('/')
-                ? parentPath.slice(0, parentPath.lastIndexOf('/'))
-                : '';
+              parentPath = parentPath.includes('/') ? parentPath.slice(0, parentPath.lastIndexOf('/')) : '';
             }
           }
         }

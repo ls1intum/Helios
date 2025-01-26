@@ -46,12 +46,8 @@
               <p-treeTableToggler [rowNode]="rowNode" />
 
               <p-tag>
-                @for (part of (branch.name | highlight: searchTableService.searchValue()); track part.text) {
-                  <span
-                    [class.bg-yellow-200]="part.highlight"
-                    [class.font-semibold]="part.highlight"
-                    [class.rounded]="part.highlight"
-                  >
+                @for (part of branch.name | highlight: searchTableService.searchValue(); track part.text) {
+                  <span [class.bg-yellow-200]="part.highlight" [class.font-semibold]="part.highlight" [class.rounded]="part.highlight">
                     {{ part.text }}
                   </span>
                 }

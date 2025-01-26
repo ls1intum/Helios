@@ -3,10 +3,7 @@ import { Pipe, PipeTransform } from '@angular/core';
   name: 'highlight',
 })
 export class HighlightPipe implements PipeTransform {
-  transform(
-    text: string | null | undefined,
-    term: string | null | undefined
-  ): { text: string; highlight: boolean }[] {
+  transform(text: string | null | undefined, term: string | null | undefined): { text: string; highlight: boolean }[] {
     // Handle edge cases
     if (!text || !term || term.trim() === '') {
       return [{ text: text || '', highlight: false }];
