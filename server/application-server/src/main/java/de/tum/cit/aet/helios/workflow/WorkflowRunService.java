@@ -45,7 +45,7 @@ public class WorkflowRunService {
   public List<WorkflowRunDto> getLatestWorkflowRunsByPullRequestIdAndHeadCommit(
       Long pullRequestId) {
 
-    var pullRequest = pullRequestRepository.findByPullRequestId(pullRequestId).orElse(null);
+    var pullRequest = pullRequestRepository.findById(pullRequestId).orElse(null);
     if (pullRequest == null) {
       log.error("Pull request with id {} not found!", pullRequestId);
       return List.of();
