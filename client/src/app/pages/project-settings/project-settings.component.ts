@@ -1,6 +1,6 @@
 import { FormsModule } from '@angular/forms';
 import { Component, signal, computed, input, numberAttribute, effect, inject } from '@angular/core';
-import {injectMutation, injectQuery, QueryClient} from '@tanstack/angular-query-experimental';
+import { injectMutation, injectQuery, QueryClient } from '@tanstack/angular-query-experimental';
 
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
@@ -63,7 +63,7 @@ export class ProjectSettingsComponent {
   showAddGroupDialog = false;
   newGroupName = '';
   // Store the previous label temporarily for the confirmation dialog
-  previousLabel: "BUILD" | "DEPLOYMENT" | "NONE" = "NONE";
+  previousLabel: 'BUILD' | 'DEPLOYMENT' | 'NONE' = 'NONE';
 
   // Drag & Drop logic for groupedWorkflowsArray
   private dragIndex: number | null = null;
