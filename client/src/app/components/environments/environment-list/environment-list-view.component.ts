@@ -25,6 +25,7 @@ import { DeploymentStateTagComponent } from '../deployment-state-tag/deployment-
 import { LockTagComponent } from '../lock-tag/lock-tag.component';
 import { LockTimeComponent } from '../lock-time/lock-time.component';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
+import { AvatarModule } from 'primeng/avatar';
 
 @Component({
   selector: 'app-environment-list-view',
@@ -39,6 +40,7 @@ import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
     DeploymentStateTagComponent,
     EnvironmentDeploymentInfoComponent,
     LockTimeComponent,
+    AvatarModule,
     ConfirmDialogModule,
     CommonModule,
   ],

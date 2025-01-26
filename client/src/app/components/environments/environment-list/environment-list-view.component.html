@@ -29,6 +29,13 @@
           <div class="flex-grow"></div>
 
           @if (environment.locked) {
+            <div class="flex gap-1 items-center">
+              @if (environment.lockedBy?.avatarUrl) {
+                <p-avatar class="w-6 h-6" shape="circle" [image]="environment.lockedBy?.avatarUrl" />
+              } @else {
+                <i-tabler name="user" class="w-6 h-6 text-gray-600" />
+              }
+            </div>
             @if (environment.lockedAt) {
               <app-lock-time [lockedAt]="environment.lockedAt"></app-lock-time>
             }
