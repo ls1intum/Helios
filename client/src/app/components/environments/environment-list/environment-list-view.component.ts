@@ -26,6 +26,7 @@ import { LockTagComponent } from '../lock-tag/lock-tag.component';
 import { LockTimeComponent } from '../lock-time/lock-time.component';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 import { AvatarModule } from 'primeng/avatar';
+import { TooltipModule } from 'primeng/tooltip';
 
 @Component({
   selector: 'app-environment-list-view',
@@ -37,6 +38,7 @@ import { AvatarModule } from 'primeng/avatar';
     TagModule,
     IconsModule,
     ButtonModule,
+    TooltipModule,
     DeploymentStateTagComponent,
     EnvironmentDeploymentInfoComponent,
     LockTimeComponent,
@@ -51,6 +53,7 @@ export class EnvironmentListViewComponent {
   private keycloakService = inject(KeycloakService);
   private confirmationService = inject(ConfirmationService);
   permissionService = inject(PermissionService);
+  keycloak = inject(KeycloakService);
 
   editable = input<boolean | undefined>();
   deployable = input<boolean | undefined>();
@@ -126,5 +129,16 @@ export class EnvironmentListViewComponent {
       return 'http://' + url;
     }
     return url;
+  }
+
+  getAvatarBorderClass(login: string) {
+    return this.keycloak.isCurrentUser(login) ? 'border-2 border-primary-400 rounded-full' : '';
+  }
+
+  openUserProfile(login: string) {
+    //Redirect to google.com
+    window.open(`
+      https://www.github.com/${login}
+    `);
   }
 }

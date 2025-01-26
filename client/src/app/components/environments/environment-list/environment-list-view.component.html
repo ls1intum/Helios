@@ -30,8 +30,17 @@
 
           @if (environment.locked) {
             <div class="flex gap-1 items-center">
-              @if (environment.lockedBy?.avatarUrl) {
-                <p-avatar class="w-6 h-6" shape="circle" [image]="environment.lockedBy?.avatarUrl" />
+                @if (environment.lockedBy?.avatarUrl) {
+                <p-avatar
+                  class="w-6 h-6"
+                  shape="circle"
+                  size="normal"
+                  [image]="environment.lockedBy?.avatarUrl"
+                  [pTooltip]="keycloak.isCurrentUser(environment.lockedBy?.login) ? 'You' : environment.lockedBy?.name"
+                  [styleClass]="getAvatarBorderClass(environment.lockedBy?.login || '')"
+                  (click)="openUserProfile(environment.lockedBy?.login)"
+                >
+                </p-avatar>
               } @else {
                 <i-tabler name="user" class="w-6 h-6 text-gray-600" />
               }
