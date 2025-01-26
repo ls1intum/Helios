@@ -38,7 +38,7 @@
                   [image]="environment.lockedBy?.avatarUrl"
                   [pTooltip]="keycloak.isCurrentUser(environment.lockedBy?.login) ? 'You' : environment.lockedBy?.name"
                   [styleClass]="getAvatarBorderClass(environment.lockedBy?.login || '')"
-                  (click)="openUserProfile(environment.lockedBy?.login)"
+                  (click)="openUserProfile(environment.lockedBy?.login || '')"
                 >
                 </p-avatar>
               } @else {
