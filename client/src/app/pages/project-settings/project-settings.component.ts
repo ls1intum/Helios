@@ -1,6 +1,6 @@
 import { FormsModule } from '@angular/forms';
 import { Component, signal, computed, input, numberAttribute, effect, inject } from '@angular/core';
-import { injectMutation, injectQuery, injectQueryClient } from '@tanstack/angular-query-experimental';
+import {injectMutation, injectQuery, QueryClient} from '@tanstack/angular-query-experimental';
 
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
@@ -51,7 +51,7 @@ import { SelectModule } from 'primeng/select';
 export class ProjectSettingsComponent {
   private messageService = inject(MessageService);
   private confirmationService = inject(ConfirmationService);
-  queryClient = injectQueryClient();
+  queryClient = inject(QueryClient);
 
   // Signals for repository ID, workflows, and workflow groups
   repositoryId = input.required({ transform: numberAttribute });
@@ -62,6 +62,8 @@ export class ProjectSettingsComponent {
   // For creating a new group
   showAddGroupDialog = false;
   newGroupName = '';
+  // Store the previous label temporarily for the confirmation dialog
+  previousLabel: "BUILD" | "DEPLOYMENT" | "NONE" = "NONE";
 
   // Drag & Drop logic for groupedWorkflowsArray
   private dragIndex: number | null = null;
@@ -216,6 +218,11 @@ export class ProjectSettingsComponent {
     });
   }
 
+  storePreviousLabel(workflow: WorkflowDto) {
+    // Store the current label before change
+    this.previousLabel = workflow.label;
+  }
+
   onChangeLabel(workflow: WorkflowDto) {
     const label = workflow.label;
     if (label === 'DEPLOYMENT' || label === 'BUILD') {
@@ -249,6 +256,10 @@ export class ProjectSettingsComponent {
       `,
       accept: () => {
         this.workflowLabelMutation.mutate({ path: { workflowId: workflow.id }, body: label });
+      },
+      reject: () => {
+        // Restore the previous label if the user cancels
+        workflow.label = this.previousLabel;
       },
     });
   }
