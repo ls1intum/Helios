@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { WorkflowRunStatusComponent } from './workflow-run-status.component';
-import { provideExperimentalZonelessChangeDetection } from '@angular/core';
+import { provideExperimentalZonelessChangeDetection, signal } from '@angular/core';
 import { provideQueryClient, QueryClient } from '@tanstack/angular-query-experimental';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 
@@ -17,7 +17,24 @@ describe('WorkflowRunStatusComponent', () => {
 
     fixture = TestBed.createComponent(WorkflowRunStatusComponent);
     component = fixture.componentInstance;
-    fixture.detectChanges();
+
+    // Set input properties
+    fixture.componentRef.setInput('selector', {
+      type: 'branch',
+      branchName: 'main',
+    });
+
+    // Mock tanstack query data
+    component.branchQuery = {
+      ...component.branchQuery,
+      data: signal(undefined),
+    };
+    component.pullRequestQuery = {
+      ...component.pullRequestQuery,
+      data: signal(undefined),
+    };
+
+    await fixture.whenStable();
   });
 
   it('should create', () => {
