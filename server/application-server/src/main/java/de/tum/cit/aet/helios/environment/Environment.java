@@ -2,6 +2,7 @@ package de.tum.cit.aet.helios.environment;
 
 import de.tum.cit.aet.helios.deployment.Deployment;
 import de.tum.cit.aet.helios.filters.RepositoryFilterEntity;
+import de.tum.cit.aet.helios.user.User;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -9,6 +10,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
@@ -61,8 +63,10 @@ public class Environment extends RepositoryFilterEntity {
   private boolean locked;
 
   // user ID
-  @Column(name = "locked_by")
-  private String lockedBy;
+  @ManyToOne
+  @JoinColumn(name = "author_id")
+  @ToString.Exclude
+  private User lockedBy;
 
   @Column(name = "locked_at")
   private OffsetDateTime lockedAt;
