@@ -78,7 +78,16 @@
               } @else if (combinedHistory.type === 'LOCK_EVENT') {
                 <div class="flex gap-1 items-center">
                   @if (combinedHistory.lockedBy?.avatarUrl) {
-                    <p-avatar class="w-6 h-6" shape="circle" [image]="combinedHistory.lockedBy?.avatarUrl" />
+                    <p-avatar
+                      class="w-6 h-6"
+                      shape="circle"
+                      size="normal"
+                      [image]="combinedHistory.lockedBy?.avatarUrl"
+                      [pTooltip]="keycloakService.isCurrentUser(combinedHistory.lockedBy?.login) ? 'You' : combinedHistory.lockedBy?.name"
+                      [styleClass]="getAvatarBorderClass(combinedHistory.lockedBy?.login || '')"
+                      (click)="openUserProfile(combinedHistory.lockedBy?.login || '')"
+                    >
+                    </p-avatar>
                   } @else {
                     <i-tabler name="user" class="w-6 h-6 text-gray-600" />
                   }
@@ -87,7 +96,16 @@
               } @else if (combinedHistory.type === 'UNLOCK_EVENT') {
                 <div class="flex gap-1 items-center">
                   @if (combinedHistory.lockedBy?.avatarUrl) {
-                    <p-avatar class="w-6 h-6" shape="circle" [image]="combinedHistory.lockedBy?.avatarUrl" />
+                    <p-avatar
+                      class="w-6 h-6"
+                      shape="circle"
+                      size="normal"
+                      [image]="combinedHistory.lockedBy?.avatarUrl"
+                      [pTooltip]="keycloakService.isCurrentUser(combinedHistory.lockedBy?.login) ? 'You' : combinedHistory.lockedBy?.name"
+                      [styleClass]="getAvatarBorderClass(combinedHistory.lockedBy?.login || '')"
+                      (click)="openUserProfile(combinedHistory.lockedBy?.login || '')"
+                    >
+                    </p-avatar>
                   } @else {
                     <i-tabler name="user" class="w-6 h-6 text-gray-600" />
                   }
