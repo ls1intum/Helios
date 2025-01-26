@@ -37,7 +37,7 @@
     @for (group of pipeline.groups; track group.name) {
       @if (group.workflows.length > 0) {
         <ng-container>
-          <p-panel [header]="group.name">
+          <p-panel [header]="group.name" class="max-w-[250px]">
             <div class="flex flex-col gap-4">
               @for (workflowRun of group.workflows; track workflowRun.id) {
                 <div class="flex items-center space-x-2">
