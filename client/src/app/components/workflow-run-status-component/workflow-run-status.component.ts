@@ -123,12 +123,14 @@ export class WorkflowRunStatusComponent {
       };
     }
 
+    const summary = this.countStatuses(runs);
+
     // All completed successfully --> success
     if (runs.length > 0 && runs.every(run => run.status === 'COMPLETED' && run.conclusion === 'SUCCESS')) {
       return {
         icon: 'check',
         color: 'text-green-600',
-        tooltip: 'All Workflows Passed',
+        tooltip: `All Workflows Passed:\n- ${summary.success} successful`,
       };
     }
 
@@ -137,15 +139,49 @@ export class WorkflowRunStatusComponent {
       return {
         icon: 'x',
         color: 'text-red-600',
-        tooltip: 'Some Workflows Failed',
+        tooltip: `Some Workflows Failed:\n- ${summary.failure} failing\n- ${summary.success} successful\n- ${summary.skipped} skipped\n- ${summary.neutral} neutral`,
       };
     }
 
     // Default or no runs --> unknown
     return {
-      icon: 'minus',
+      icon: 'question-mark',
       color: 'text-gray-500',
       tooltip: 'No Workflows or Unknown Status',
     };
   });
+
+  countStatuses = (runs: WorkflowRunDto[]) => {
+    const summary = {
+      success: 0,
+      failure: 0,
+      skipped: 0,
+      neutral: 0,
+    };
+
+    runs.forEach(run => {
+      if (run.status === 'COMPLETED') {
+        switch (run.conclusion) {
+          case 'SUCCESS':
+            summary.success++;
+            break;
+          case 'FAILURE':
+          case 'CANCELLED':
+          case 'TIMED_OUT':
+            summary.failure++;
+            break;
+          case 'SKIPPED':
+            summary.skipped++;
+            break;
+          case 'NEUTRAL':
+            summary.neutral++;
+            break;
+          default:
+            break;
+        }
+      }
+    });
+
+    return summary;
+  };
 }
