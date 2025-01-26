@@ -7,8 +7,10 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 
+@Log4j2
 @Service
 @Transactional
 public class WorkflowRunService {
@@ -43,7 +45,12 @@ public class WorkflowRunService {
   public List<WorkflowRunDto> getLatestWorkflowRunsByPullRequestIdAndHeadCommit(
       Long pullRequestId) {
 
-    var pullRequest = pullRequestRepository.findById(pullRequestId).orElseThrow();
+    var pullRequest = pullRequestRepository.findById(pullRequestId).orElse(null);
+    if (pullRequest == null) {
+      log.error("Pull request with id {} not found!", pullRequestId);
+      return List.of();
+    }
+
     var runs =
         workflowRunRepository.findByPullRequestsIdAndHeadSha(
             pullRequestId, pullRequest.getHeadSha());
@@ -64,7 +71,11 @@ public class WorkflowRunService {
   }
 
   public List<WorkflowRunDto> getLatestWorkflowRunsByBranchAndHeadCommitSha(String branchName) {
-    var branch = branchRepository.findByName(branchName).orElseThrow();
+    var branch = branchRepository.findByName(branchName).orElse(null);
+    if (branch == null) {
+      log.error("Branch with name {} not found!", branchName);
+      return List.of();
+    }
 
     var runs =
         workflowRunRepository.findByHeadBranchAndHeadShaAndPullRequestsIsNull(

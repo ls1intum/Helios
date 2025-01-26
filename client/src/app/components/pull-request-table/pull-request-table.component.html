@@ -57,7 +57,8 @@
           <div class="flex flex-wrap items-center gap-2">
             <i-tabler [pTooltip]="getPrIconInfo(pr).tooltip" [name]="getPrIconInfo(pr).icon" [class]="getPrIconInfo(pr).color" />
             <span class="font-bold"><span [innerHTML]="pr.title | markdown"></span></span>
-            <i-tabler name="check" class="!h-4 !w-4 text-green-600" />
+            <app-workflow-run-status [selector]="{ type: 'pullRequest', pullRequestId: pr.id }"></app-workflow-run-status>
+
             @for (label of pr.labels; track label.id) {
               <p-tag [value]="label.name" [rounded]="true" class="border font-medium text-xs py-0.5 whitespace-nowrap" [style]="getLabelClasses(label.color)" />
             }
