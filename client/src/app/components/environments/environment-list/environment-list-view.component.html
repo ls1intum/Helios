@@ -23,7 +23,7 @@
           <app-lock-tag [isLocked]="!!environment.locked"></app-lock-tag>
 
           @if (environment.latestDeployment; as deployment) {
-            <app-deployment-state-tag [state]="deployment.state || 'IN_PROGRESS'" />
+            <app-deployment-state-tag [state]="deployment.state" />
           }
 
           <div class="flex-grow"></div>

@@ -66,7 +66,10 @@ export class EnvironmentListViewComponent {
   searchInput = signal<string>('');
 
   canViewAllEnvironments = computed(() => this.isLoggedIn() && this.editable() && this.hasEditEnvironmentPermissions());
-  queryFunction = computed(() => (this.canViewAllEnvironments() ? getAllEnvironmentsOptions() : getAllEnabledEnvironmentsOptions()));
+  queryFunction = computed(() => {
+    const options = this.canViewAllEnvironments() ? getAllEnvironmentsOptions() : getAllEnabledEnvironmentsOptions();
+    return { ...options, refetchInterval: 5000 };
+  });
   queryKey = computed(() => (this.canViewAllEnvironments() ? getAllEnvironmentsQueryKey() : getAllEnabledEnvironmentsQueryKey()));
 
   environmentQuery = injectQuery(() => this.queryFunction());
@@ -95,6 +98,7 @@ export class EnvironmentListViewComponent {
       message: `Are you sure you want to deploy to ${environment.name}?`,
       accept: () => {
         this.deploy.emit(environment);
+        this.queryClient.invalidateQueries({ queryKey: this.queryKey() });
       },
     });
   }
