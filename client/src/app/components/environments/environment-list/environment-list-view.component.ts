@@ -70,7 +70,7 @@ export class EnvironmentListViewComponent {
   canViewAllEnvironments = computed(() => this.isLoggedIn() && this.editable() && this.hasEditEnvironmentPermissions());
   queryFunction = computed(() => {
     const options = this.canViewAllEnvironments() ? getAllEnvironmentsOptions() : getAllEnabledEnvironmentsOptions();
-    return { ...options, refetchInterval: 5000 };
+    return { ...options, refetchInterval: 3000 };
   });
   queryKey = computed(() => (this.canViewAllEnvironments() ? getAllEnvironmentsQueryKey() : getAllEnabledEnvironmentsQueryKey()));
 
