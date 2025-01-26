@@ -51,6 +51,7 @@
               }
               @if (!rowNode.node.children) {
                 <i-tabler name="external-link" (click)="openLink($event, branch.link)"></i-tabler>
+                <app-workflow-run-status [selector]="{ type: 'branch', branchName: branch.name }"></app-workflow-run-status>
               }
             </div>
           </td>

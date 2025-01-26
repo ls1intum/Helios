@@ -21,6 +21,7 @@ import { FormsModule } from '@angular/forms';
 import { TimeAgoPipe } from '@app/pipes/time-ago.pipe';
 import { FILTER_OPTIONS_TOKEN, SearchTableService } from '@app/core/services/search-table.service';
 import { TableFilterComponent } from '../table-filter/table-filter.component';
+import {WorkflowRunStatusComponent} from '@app/components/workflow-run-status-component/workflow-run-status.component';
 
 type BranchInfoWithLink = BranchInfoDto & { link: string; lastCommitLink: string };
 
@@ -72,6 +73,7 @@ const FILTER_OPTIONS = [
     InputIconModule,
     InputTextModule,
     FormsModule,
+    WorkflowRunStatusComponent,
   ],
   providers: [SearchTableService, { provide: FILTER_OPTIONS_TOKEN, useValue: FILTER_OPTIONS }],
   templateUrl: './branches-table.component.html',
