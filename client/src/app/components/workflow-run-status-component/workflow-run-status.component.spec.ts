@@ -8,9 +8,8 @@ describe('WorkflowRunStatusComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [WorkflowRunStatusComponent]
-    })
-    .compileComponents();
+      imports: [WorkflowRunStatusComponent],
+    }).compileComponents();
 
     fixture = TestBed.createComponent(WorkflowRunStatusComponent);
     component = fixture.componentInstance;

@@ -1,31 +1,27 @@
-import {Component, computed, input} from '@angular/core';
-import {Skeleton} from 'primeng/skeleton';
-import {TablerIconComponent} from 'angular-tabler-icons';
-import {Tooltip} from 'primeng/tooltip';
-import {injectQuery} from '@tanstack/angular-query-experimental';
+import { Component, computed, input } from '@angular/core';
+import { Skeleton } from 'primeng/skeleton';
+import { TablerIconComponent } from 'angular-tabler-icons';
+import { Tooltip } from 'primeng/tooltip';
+import { injectQuery } from '@tanstack/angular-query-experimental';
 import {
   getLatestWorkflowRunsByBranchAndHeadCommitOptions,
-  getLatestWorkflowRunsByPullRequestIdAndHeadCommitOptions
+  getLatestWorkflowRunsByPullRequestIdAndHeadCommitOptions,
 } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
-import {WorkflowRunDto} from '@app/core/modules/openapi';
+import { WorkflowRunDto } from '@app/core/modules/openapi';
 
-
-export type WorkflowRunSelector = {
-  type: 'pullRequest';
-  pullRequestId: number;
-} | {
-  type: 'branch';
-  branchName: string;
-};
-
+export type WorkflowRunSelector =
+  | {
+      type: 'pullRequest';
+      pullRequestId: number;
+    }
+  | {
+      type: 'branch';
+      branchName: string;
+    };
 
 @Component({
   selector: 'app-workflow-run-status',
-  imports: [
-    Skeleton,
-    TablerIconComponent,
-    Tooltip
-  ],
+  imports: [Skeleton, TablerIconComponent, Tooltip],
   templateUrl: './workflow-run-status.component.html',
 })
 export class WorkflowRunStatusComponent {
@@ -88,7 +84,6 @@ export class WorkflowRunStatusComponent {
     };
   });
 
-
   isLoading = computed(() => {
     if (this.selector().type === 'branch') {
       return this.branchQuery.isPending();
@@ -107,7 +102,6 @@ export class WorkflowRunStatusComponent {
     return false;
   });
 
-
   workflowRuns = computed<WorkflowRunDto[]>(() => {
     if (this.selector().type === 'branch') {
       return this.branchQuery.data() || [];
@@ -116,7 +110,6 @@ export class WorkflowRunStatusComponent {
     }
     return [];
   });
-
 
   workflowStatus = computed(() => {
     const runs = this.workflowRuns();
@@ -131,10 +124,7 @@ export class WorkflowRunStatusComponent {
     }
 
     // All completed successfully --> success
-    if (
-      runs.length > 0 &&
-      runs.every(run => run.status === 'COMPLETED' && run.conclusion === 'SUCCESS')
-    ) {
+    if (runs.length > 0 && runs.every(run => run.status === 'COMPLETED' && run.conclusion === 'SUCCESS')) {
       return {
         icon: 'check',
         color: 'text-green-600',
@@ -143,11 +133,7 @@ export class WorkflowRunStatusComponent {
     }
 
     // Some run has failed or was cancelled --> failure
-    if (
-      runs.some(run =>
-        run.status === 'COMPLETED' && ['FAILURE', 'CANCELLED', 'TIMED_OUT'].includes(run.conclusion ?? '')
-      )
-    ) {
+    if (runs.some(run => run.status === 'COMPLETED' && ['FAILURE', 'CANCELLED', 'TIMED_OUT'].includes(run.conclusion ?? ''))) {
       return {
         icon: 'x',
         color: 'text-red-600',
@@ -162,6 +148,4 @@ export class WorkflowRunStatusComponent {
       tooltip: 'No Workflows or Unknown Status',
     };
   });
-
-
 }
