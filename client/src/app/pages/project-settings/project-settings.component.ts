@@ -227,8 +227,26 @@ export class ProjectSettingsComponent {
     }
     this.confirmationService.confirm({
       header: 'Change Label',
-      message: `Are you sure you want to change the label?<br/><br/>
-      Note: Only one workflow can be labeled as 'DEPLOYMENT' and one as 'BUILD'.`,
+      message: `
+        <div class="max-w-md w-full">
+          <p class="text-base font-medium mb-4">
+            Are you sure you want to change the workflow label to <strong>${label}</strong>?
+          </p>
+          <div class="flex items-start gap-2 p-3 bg-yellow-50 border border-yellow-300 rounded-md">
+            <i class="pi pi-exclamation-triangle text-yellow-500 text-xl"></i>
+            <div>
+              <p class="font-semibold">Note:</p>
+              <p class="text-sm text-gray-600 mb-2">
+                Only one workflow can hold the <strong>${label}</strong> label at a time.
+              </p>
+              <ul class="list-disc list-inside text-sm text-gray-600">
+                <li><strong>DEPLOYMENT</strong>: This label sets the workflow to trigger server deployments.</li>
+                <li><strong>BUILD</strong>: This label sets the workflow to trigger build processes.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      `,
       accept: () => {
         this.workflowLabelMutation.mutate({ path: { workflowId: workflow.id }, body: label });
       },
