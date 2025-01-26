@@ -65,6 +65,10 @@ export class KeycloakService {
     return this.decodedToken()?.preferred_username;
   }
 
+  getUserGithubId() {
+    return this.decodedToken()?.github_id;
+  }
+
   login() {
     return this.keycloak.login();
   }

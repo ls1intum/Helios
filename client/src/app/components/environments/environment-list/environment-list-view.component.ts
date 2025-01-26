@@ -50,10 +50,9 @@ import { TooltipModule } from 'primeng/tooltip';
 })
 export class EnvironmentListViewComponent {
   private queryClient = inject(QueryClient);
-  private keycloakService = inject(KeycloakService);
   private confirmationService = inject(ConfirmationService);
   permissionService = inject(PermissionService);
-  keycloak = inject(KeycloakService);
+  keycloakService = inject(KeycloakService);
 
   editable = input<boolean | undefined>();
   deployable = input<boolean | undefined>();
@@ -87,7 +86,7 @@ export class EnvironmentListViewComponent {
   }));
 
   isCurrentUserLocked = (environment: EnvironmentDto) => {
-    return environment.lockedBy === this.keycloakService.getPreferredUsername();
+    return environment.lockedBy?.id === this.keycloakService.getUserGithubId();
   };
 
   onUnlockEnvironment(event: Event, environment: EnvironmentDto) {
@@ -132,7 +131,7 @@ export class EnvironmentListViewComponent {
   }
 
   getAvatarBorderClass(login: string) {
-    return this.keycloak.isCurrentUser(login) ? 'border-2 border-primary-400 rounded-full' : '';
+    return this.keycloakService.isCurrentUser(login) ? 'border-2 border-primary-400 rounded-full' : '';
   }
 
   openUserProfile(login: string) {
