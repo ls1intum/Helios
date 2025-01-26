@@ -76,11 +76,23 @@
                   </li>
                 </ul>
               } @else if (combinedHistory.type === 'LOCK_EVENT') {
-                <i-tabler name="user"></i-tabler>
-                <span>{{ combinedHistory.lockedBy }}</span>
+                <div class="flex gap-1 items-center">
+                  @if (combinedHistory.lockedBy?.avatarUrl) {
+                    <p-avatar class="w-6 h-6" shape="circle" [image]="combinedHistory.lockedBy?.avatarUrl" />
+                  } @else {
+                    <i-tabler name="user" class="w-6 h-6 text-gray-600" />
+                  }
+                </div>
+                <span>{{ combinedHistory.lockedBy?.name }}</span>
               } @else if (combinedHistory.type === 'UNLOCK_EVENT') {
-                <i-tabler name="user"></i-tabler>
-                <span>{{ combinedHistory.lockedBy }}</span>
+                <div class="flex gap-1 items-center">
+                  @if (combinedHistory.lockedBy?.avatarUrl) {
+                    <p-avatar class="w-6 h-6" shape="circle" [image]="combinedHistory.lockedBy?.avatarUrl" />
+                  } @else {
+                    <i-tabler name="user" class="w-6 h-6 text-gray-600" />
+                  }
+                </div>
+                <span>{{ combinedHistory.lockedBy?.name }}</span>
               }
             </div>
           </td>

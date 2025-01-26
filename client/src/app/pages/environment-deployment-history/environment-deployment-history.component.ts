@@ -8,10 +8,11 @@ import { getActivityHistoryByEnvironmentIdOptions } from '@app/core/modules/open
 import { DateService } from '@app/core/services/date.service';
 import { CommonModule } from '@angular/common';
 import { PageHeadingComponent } from '@app/components/page-heading/page-heading.component';
+import { AvatarModule } from 'primeng/avatar';
 
 @Component({
   selector: 'app-environment-deployment-history',
-  imports: [CommonModule, IconsModule, PrimeTemplate, SkeletonModule, TableModule, PageHeadingComponent],
+  imports: [CommonModule, IconsModule, PrimeTemplate, SkeletonModule, TableModule, PageHeadingComponent, AvatarModule],
   templateUrl: './environment-deployment-history.component.html',
 })
 export class EnvironmentDeploymentHistoryComponent {
