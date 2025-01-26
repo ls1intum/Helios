@@ -1,5 +1,8 @@
 package de.tum.cit.aet.helios.auth;
 
+import de.tum.cit.aet.helios.user.User;
+import de.tum.cit.aet.helios.user.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -8,6 +11,9 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class AuthService {
+
+  @Autowired
+  private UserRepository userRepository;
 
   /**
    * Retrieves the preferred username from the JWT. This is the GitHub username of the user.
@@ -37,4 +43,20 @@ public class AuthService {
   public boolean isLoggedIn() {
     return SecurityContextHolder.getContext().getAuthentication() != null;
   }
-} 
+
+  public String getGithubId() {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    if (authentication instanceof JwtAuthenticationToken jwtAuthenticationToken) {
+      Jwt jwt = (Jwt) jwtAuthenticationToken.getToken();
+      return jwt.getClaim("github_id");
+    }
+
+    throw new IllegalStateException("Unable to fetch GitHub ID");
+  }
+
+  public User getUserFromGithubId() {
+    String githubIdString = getGithubId();
+    Long githubIdLong = Long.valueOf(githubIdString);
+    return userRepository.findById(githubIdLong).orElse(null);
+  }
+}
