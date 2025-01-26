@@ -24,7 +24,7 @@
 }
 
 @if (pipeline(); as pipeline) {
-  <div class="flex items-start mt-2">
+  <div class="flex flex-wrap items-start gap-y-4 mt-2">
     <!-- Check if all groups have no workflow runs -->
     <!-- If so, display a message saying that no workflow runs have been found -->
     @if (allGroupsHaveNoWorkflowRuns()) {
