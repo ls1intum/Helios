@@ -107,6 +107,7 @@
               [options]="getWorkflowLabelOptions(workflow.label)"
               [(ngModel)]="workflow.label"
               placeholder="Select Label"
+              (onClick)="storePreviousLabel(workflow)"
               (onChange)="onChangeLabel(workflow)"
               [appendTo]="'body'"
             />
