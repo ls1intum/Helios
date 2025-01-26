@@ -158,6 +158,7 @@ export class BranchTableComponent {
             data: {
               name: part,
             },
+            expanded: false,
           };
 
           // If it's a leaf node, add the branch info
