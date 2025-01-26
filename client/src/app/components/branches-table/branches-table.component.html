@@ -46,11 +46,13 @@
               <p-treeTableToggler [rowNode]="rowNode" />
 
               <p-tag>
-                @for (part of branch.name | highlight: searchTableService.searchValue(); track part.text) {
-                  <span [class.bg-yellow-200]="part.highlight" [class.font-semibold]="part.highlight" [class.rounded]="part.highlight">
-                    {{ part.text }}
-                  </span>
-                }
+                <div class="flex items-center">
+                  @for (part of branch.name | highlight: searchTableService.searchValue(); track part.text) {
+                    <span [class.bg-yellow-200]="part.highlight" [class.font-semibold]="part.highlight" [class.rounded]="part.highlight">
+                      {{ part.text }}
+                    </span>
+                  }
+                </div>
               </p-tag>
               @if (branch.isProtected) {
                 <i-tabler name="shield-half" pTooltip="Protected Branch" />
