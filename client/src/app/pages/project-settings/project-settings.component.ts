@@ -235,7 +235,7 @@ export class ProjectSettingsComponent {
     this.confirmationService.confirm({
       header: 'Change Label',
       message: `
-        <div class="max-w-md w-full">
+        <div class="max-w-xl w-full">
           <p class="text-base font-medium mb-4">
             Are you sure you want to change the workflow label to <strong>${label}</strong>?
           </p>
@@ -244,11 +244,12 @@ export class ProjectSettingsComponent {
             <div>
               <p class="font-semibold">Note:</p>
               <p class="text-sm text-gray-600 mb-2">
-                Only one workflow can hold the <strong>${label}</strong> label at a time.
+                Only one workflow can be labeled as either <strong>DEPLOYMENT</strong> or <strong>BUILD</strong>.
               </p>
               <ul class="list-disc list-inside text-sm text-gray-600">
                 <li><strong>DEPLOYMENT</strong>: This label sets the workflow to trigger server deployments.</li>
                 <li><strong>BUILD</strong>: This label sets the workflow to trigger build processes.</li>
+                <li><strong>NONE</strong>: No label is set for this workflow.</li>
               </ul>
             </div>
           </div>
