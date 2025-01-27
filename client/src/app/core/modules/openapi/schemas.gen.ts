@@ -65,6 +65,9 @@ export const EnvironmentDeploymentSchema = {
     task: {
       type: 'string',
     },
+    user: {
+      $ref: '#/components/schemas/User',
+    },
     createdAt: {
       type: 'string',
       format: 'date-time',
@@ -774,6 +777,9 @@ export const DeploymentDtoSchema = {
     },
     environment: {
       $ref: '#/components/schemas/EnvironmentDto',
+    },
+    user: {
+      $ref: '#/components/schemas/UserInfoDto',
     },
     createdAt: {
       type: 'string',

@@ -763,6 +763,8 @@ components:
           type: string
         task:
           type: string
+        user:
+          $ref: "#/components/schemas/User"
         createdAt:
           type: string
           format: date-time
@@ -1367,6 +1369,8 @@ components:
           type: string
         environment:
           $ref: "#/components/schemas/EnvironmentDto"
+        user:
+          $ref: "#/components/schemas/UserInfoDto"
         createdAt:
           type: string
           format: date-time

@@ -20,6 +20,7 @@ export type EnvironmentDeployment = {
   sha: string;
   ref: string;
   task: string;
+  user?: User;
   createdAt?: string;
   updatedAt?: string;
 };
@@ -256,6 +257,7 @@ export type DeploymentDto = {
   ref: string;
   task: string;
   environment: EnvironmentDto;
+  user?: UserInfoDto;
   createdAt?: string;
   updatedAt?: string;
 };

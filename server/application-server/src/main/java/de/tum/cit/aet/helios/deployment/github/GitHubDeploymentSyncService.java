@@ -9,6 +9,8 @@ import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import de.tum.cit.aet.helios.pullrequest.PullRequest;
 import de.tum.cit.aet.helios.pullrequest.PullRequestRepository;
+import de.tum.cit.aet.helios.user.User;
+import de.tum.cit.aet.helios.user.UserRepository;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
@@ -28,6 +30,7 @@ public class GitHubDeploymentSyncService {
   private final GitHubService gitHubService;
   private final DeploymentConverter deploymentConverter;
   private final DeploymentSourceFactory deploymentSourceFactory;
+  private final UserRepository userRepository;
 
   public GitHubDeploymentSyncService(
       DeploymentRepository deploymentRepository,
@@ -36,7 +39,8 @@ public class GitHubDeploymentSyncService {
       PullRequestRepository pullRequestRepository,
       GitHubService gitHubService,
       DeploymentConverter deploymentConverter,
-      DeploymentSourceFactory deploymentSourceFactory) {
+      DeploymentSourceFactory deploymentSourceFactory,
+      UserRepository userRepository) {
     this.deploymentRepository = deploymentRepository;
     this.environmentRepository = environmentRepository;
     this.gitRepoRepository = gitRepoRepository;
@@ -44,6 +48,7 @@ public class GitHubDeploymentSyncService {
     this.gitHubService = gitHubService;
     this.deploymentConverter = deploymentConverter;
     this.deploymentSourceFactory = deploymentSourceFactory;
+    this.userRepository = userRepository;
   }
 
   /**
@@ -116,7 +121,8 @@ public class GitHubDeploymentSyncService {
         // Webhook handler sets the state of the deployment
         final DeploymentSource deploymentSource =
             deploymentSourceFactory.create(ghDeployment, Deployment.State.UNKNOWN);
-        processDeployment(deploymentSource, gitRepository, environment);
+        User user = userRepository.findById(ghDeployment.getUserId()).orElse(null);
+        processDeployment(deploymentSource, gitRepository, environment, user);
       }
     } catch (Exception e) {
       log.error(
@@ -137,7 +143,8 @@ public class GitHubDeploymentSyncService {
   void processDeployment(
       @NotNull DeploymentSource deploymentSource,
       @NotNull GitRepository gitRepository,
-      @NotNull Environment environment) {
+      @NotNull Environment environment,
+      @NotNull User user) {
     Deployment deployment =
         deploymentRepository.findById(deploymentSource.getId()).orElseGet(Deployment::new);
 
@@ -154,6 +161,7 @@ public class GitHubDeploymentSyncService {
             gitRepository.getRepositoryId(), deployment.getRef(), deployment.getSha());
 
     optionalPullRequest.ifPresent(deployment::setPullRequest);
+    deployment.setCreator(user);
 
     // Save the deployment
     deploymentRepository.save(deployment);

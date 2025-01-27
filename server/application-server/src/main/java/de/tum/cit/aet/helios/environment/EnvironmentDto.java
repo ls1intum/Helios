@@ -35,6 +35,7 @@ public record EnvironmentDto(
       @NonNull String sha,
       @NonNull String ref,
       @NonNull String task,
+      User user,
       OffsetDateTime createdAt,
       OffsetDateTime updatedAt) {
 
@@ -47,7 +48,8 @@ public record EnvironmentDto(
           deployment.getSha(),
           deployment.getRef(),
           deployment.getTask(),
-          deployment.getCreatedAt(),
+          deployment.getCreator(),
+          deployment.getCreatedAt(),          
           deployment.getUpdatedAt());
     }
   }
