@@ -88,7 +88,9 @@ export class EnvironmentListViewComponent {
   }));
 
   isCurrentUserLocked = (environment: EnvironmentDto) => {
-    return environment.lockedBy?.id === this.keycloakService.getUserGithubId();
+    const currentUserGithubId = Number(this.keycloakService.getUserGithubId());
+    const environmentLockedById = Number(environment.lockedBy?.id);
+    return environmentLockedById === currentUserGithubId;
   };
 
   onUnlockEnvironment(event: Event, environment: EnvironmentDto) {
