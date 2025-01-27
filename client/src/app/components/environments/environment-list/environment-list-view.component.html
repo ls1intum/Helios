@@ -30,6 +30,20 @@
             <p-tag [value]="environment.latestDeployment.ref" severity="secondary" rounded="true">
               <i-tabler name="git-branch" class="!h-4 !w-4 mr-0.5"></i-tabler>
             </p-tag>
+            @if (environment.latestDeployment.user?.avatarUrl) {
+              <p-avatar
+                class="w-6 h-6"
+                shape="circle"
+                size="normal"
+                [image]="environment.latestDeployment.user?.avatarUrl"
+                [pTooltip]="keycloakService.isCurrentUser(environment.latestDeployment.user?.login) ? 'You' : environment.latestDeployment.user?.name"
+                [styleClass]="getAvatarBorderClass(environment.latestDeployment.user?.login || '')"
+                (click)="openUserProfile(environment.latestDeployment.user?.login || '')"
+              >
+              </p-avatar>
+            } @else {
+              <i-tabler name="user" class="w-6 h-6 text-gray-600" />
+            }
           }
 
           <div class="flex-grow"></div>
