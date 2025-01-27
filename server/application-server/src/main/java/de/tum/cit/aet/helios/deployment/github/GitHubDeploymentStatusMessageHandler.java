@@ -7,12 +7,17 @@ import de.tum.cit.aet.helios.environment.github.GitHubEnvironmentSyncService;
 import de.tum.cit.aet.helios.github.GitHubMessageHandler;
 import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
+import de.tum.cit.aet.helios.user.User;
+import de.tum.cit.aet.helios.user.UserRepository;
+import de.tum.cit.aet.helios.user.github.GitHubUserConverter;
+import java.io.IOException;
 import lombok.extern.log4j.Log4j2;
 import org.kohsuke.github.GHDeployment;
 import org.kohsuke.github.GHDeploymentStatus;
 import org.kohsuke.github.GHEvent;
 import org.kohsuke.github.GHEventPayload;
 import org.kohsuke.github.GHRepository;
+import org.kohsuke.github.GHUser;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -25,19 +30,25 @@ public class GitHubDeploymentStatusMessageHandler
   private final EnvironmentRepository environmentRepository;
   private final GitHubEnvironmentSyncService environmentSyncService;
   private final DeploymentSourceFactory deploymentSourceFactory;
+  private final UserRepository userRepository;
+  private final GitHubUserConverter gitHubUserConverter;
 
   private GitHubDeploymentStatusMessageHandler(
       GitHubDeploymentSyncService deploymentSyncService,
       GitRepoRepository gitRepoRepository,
       EnvironmentRepository environmentRepository,
       GitHubEnvironmentSyncService environmentSyncService,
-      DeploymentSourceFactory deploymentSourceFactory) {
+      DeploymentSourceFactory deploymentSourceFactory,
+      UserRepository userRepository,
+      GitHubUserConverter gitHubUserConverter) {
     super(GHEventPayload.DeploymentStatus.class);
     this.deploymentSyncService = deploymentSyncService;
     this.gitRepoRepository = gitRepoRepository;
     this.environmentRepository = environmentRepository;
     this.environmentSyncService = environmentSyncService;
     this.deploymentSourceFactory = deploymentSourceFactory;
+    this.userRepository = userRepository;
+    this.gitHubUserConverter = gitHubUserConverter;
   }
 
   @Override
@@ -50,6 +61,14 @@ public class GitHubDeploymentStatusMessageHandler
 
     GHDeployment ghDeployment = eventPayload.getDeployment();
 
+    GHUser user = null;
+    try {
+      user = ghDeployment.getCreator();
+    } catch (IOException e) {
+      log.error("Error while getting creator of deployment {}", ghDeployment.getId());
+      e.printStackTrace();
+    }    
+    
     // Extract environment name
     String environmentName = ghDeployment.getEnvironment();
     if (environmentName == null || environmentName.isEmpty()) {
@@ -104,9 +123,18 @@ public class GitHubDeploymentStatusMessageHandler
     // Convert GHDeployment to DeploymentSource
     DeploymentSource deploymentSource =
         deploymentSourceFactory.create(ghDeployment, Deployment.mapToState(deploymentStatus));
-
+    
+    User convertedUser = null;
+    if (user != null) {    
+      convertedUser = userRepository.findById(user.getId())
+          .orElse(gitHubUserConverter.convert(user));
+      // Save the user if it is a new user
+      userRepository.save(convertedUser);
+    }
+    
     // Process this single deployment
-    deploymentSyncService.processDeployment(deploymentSource, repository, environment);
+    deploymentSyncService
+        .processDeployment(deploymentSource, repository, environment, convertedUser);
   }
 
   @Override

@@ -4,6 +4,7 @@ import de.tum.cit.aet.helios.auth.AuthService;
 import de.tum.cit.aet.helios.deployment.DeploymentException;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
+import de.tum.cit.aet.helios.user.User;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import java.time.OffsetDateTime;
@@ -80,7 +81,7 @@ public class EnvironmentService {
    */
   @Transactional
   public Optional<Environment> lockEnvironment(Long id) {
-    final String currentUserName = authService.getPreferredUsername();
+    final User currentUser = authService.getUserFromGithubId();
 
     Environment environment =
         environmentRepository
@@ -88,20 +89,20 @@ public class EnvironmentService {
             .orElseThrow(() -> new EntityNotFoundException("Environment not found with ID: " + id));
 
     if (environment.isLocked()) {
-      if (currentUserName.equals(environment.getLockedBy())) {
+      if (currentUser.equals(environment.getLockedBy())) {
         return Optional.of(environment);
       }
 
       return Optional.empty();
     }
-    environment.setLockedBy(currentUserName);
+    environment.setLockedBy(currentUser);
     environment.setLockedAt(OffsetDateTime.now());
     environment.setLocked(true);
 
     // Record lock event
     EnvironmentLockHistory history = new EnvironmentLockHistory();
     history.setEnvironment(environment);
-    history.setLockedBy(currentUserName);
+    history.setLockedBy(currentUser);
     history.setLockedAt(OffsetDateTime.now());
     lockHistoryRepository.saveAndFlush(history);
 
@@ -126,7 +127,7 @@ public class EnvironmentService {
    */
   @Transactional
   public EnvironmentDto unlockEnvironment(Long id) {
-    final String currentUserName = authService.getPreferredUsername();
+    final User currentUser = authService.getUserFromGithubId();
 
     Environment environment =
         environmentRepository
@@ -137,7 +138,7 @@ public class EnvironmentService {
       throw new IllegalStateException("Environment is not locked");
     }
 
-    if (!currentUserName.equals(environment.getLockedBy())) {
+    if (!currentUser.equals(environment.getLockedBy())) {
       throw new SecurityException(
           "You do not have permission to unlock this environment. "
               + "Environment is locked by another user");
@@ -153,7 +154,7 @@ public class EnvironmentService {
     environment.setLockedAt(null);
 
     Optional<EnvironmentLockHistory> openLock = lockHistoryRepository
-        .findLatestLockForEnvironmentAndUser(environment, currentUserName);
+        .findLatestLockForEnvironmentAndUser(environment, currentUser);
     if (openLock.isPresent()) {
       EnvironmentLockHistory openLockHistory = openLock.get();
       openLockHistory.setUnlockedAt(OffsetDateTime.now());
@@ -212,7 +213,7 @@ public class EnvironmentService {
   }
 
   public EnvironmentLockHistoryDto getUsersCurrentLock() {
-    final String currentUserName = authService.getPreferredUsername();
+    final User currentUserName = authService.getUserFromGithubId();
     Optional<EnvironmentLockHistory> lockHistory =
         lockHistoryRepository.findLatestLockForEnabledEnvironment(currentUserName);
 

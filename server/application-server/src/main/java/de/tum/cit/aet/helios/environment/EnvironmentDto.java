@@ -3,6 +3,7 @@ package de.tum.cit.aet.helios.environment;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import de.tum.cit.aet.helios.deployment.Deployment;
 import de.tum.cit.aet.helios.gitrepo.RepositoryInfoDto;
+import de.tum.cit.aet.helios.user.User;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -23,7 +24,7 @@ public record EnvironmentDto(
     String description,
     String serverUrl,
     EnvironmentDeployment latestDeployment,
-    String lockedBy,
+    User lockedBy,
     OffsetDateTime lockedAt) {
 
   public static record EnvironmentDeployment(
@@ -34,6 +35,7 @@ public record EnvironmentDto(
       @NonNull String sha,
       @NonNull String ref,
       @NonNull String task,
+      User user,
       OffsetDateTime createdAt,
       OffsetDateTime updatedAt) {
 
@@ -46,7 +48,8 @@ public record EnvironmentDto(
           deployment.getSha(),
           deployment.getRef(),
           deployment.getTask(),
-          deployment.getCreatedAt(),
+          deployment.getCreator(),
+          deployment.getCreatedAt(),          
           deployment.getUpdatedAt());
     }
   }

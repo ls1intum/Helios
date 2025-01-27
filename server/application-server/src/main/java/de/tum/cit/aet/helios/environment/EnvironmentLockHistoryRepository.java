@@ -1,5 +1,6 @@
 package de.tum.cit.aet.helios.environment;
 
+import de.tum.cit.aet.helios.user.User;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -32,7 +33,7 @@ public interface EnvironmentLockHistoryRepository
       """)
   Optional<EnvironmentLockHistory> findLatestLockForEnvironmentAndUser(
       @Param("environment") Environment environment,
-      @Param("lockedBy") String lockedBy
+      @Param("lockedBy") User lockedBy
   );
 
   /**
@@ -52,7 +53,7 @@ public interface EnvironmentLockHistoryRepository
         LIMIT 1
       """)
   Optional<EnvironmentLockHistory> findLatestLockForEnabledEnvironment(
-      @Param("lockedBy") String lockedBy);
+      @Param("lockedBy") User lockedBy);
 
   /**
    * Returns all lock history entries for the given environment ID,

@@ -7,6 +7,14 @@
     </p-tag>
   }
 
+  @case ('WAITING') {
+    <!-- In Progress State -->
+    <p-tag severity="warn" [rounded]="true">
+      <i-tabler name="progress" class="!h-4 !w-4 mr-0.5 animate-spin"></i-tabler>
+      Waiting deployment
+    </p-tag>
+  }
+
   @case ('PENDING') {
     <!-- Pending State -->
     <p-tag severity="info" [rounded]="true">
@@ -25,8 +33,8 @@
 
   @case ('QUEUED') {
     <!-- Queued State -->
-    <p-tag severity="warn" [rounded]="true">
-      <i-tabler name="progress" class="!h-4 !w-4 mr-0.5"></i-tabler>
+    <p-tag severity="info" [rounded]="true">
+      <i-tabler name="progress" class="!h-4 !w-4 mr-0.5 animate-spin"></i-tabler>
       Deployment queued
     </p-tag>
   }

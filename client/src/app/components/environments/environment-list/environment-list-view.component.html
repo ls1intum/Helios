@@ -23,12 +23,48 @@
           <app-lock-tag [isLocked]="!!environment.locked"></app-lock-tag>
 
           @if (environment.latestDeployment; as deployment) {
-            <app-deployment-state-tag [state]="deployment.state || 'IN_PROGRESS'" />
+            <app-deployment-state-tag [state]="deployment.state" />
+            <p-tag [value]="dateService.formatDate(environment.latestDeployment.updatedAt, 'd/MM/y, HH:mm') || undefined" severity="secondary" rounded="true">
+              <i-tabler name="clock" class="!h-4 !w-4 mr-0.5"></i-tabler>
+            </p-tag>
+            <p-tag [value]="environment.latestDeployment.ref" severity="secondary" rounded="true">
+              <i-tabler name="git-branch" class="!h-4 !w-4 mr-0.5"></i-tabler>
+            </p-tag>
+            @if (environment.latestDeployment.user?.avatarUrl) {
+              <p-avatar
+                class="w-6 h-6"
+                shape="circle"
+                size="normal"
+                [image]="environment.latestDeployment.user?.avatarUrl"
+                [pTooltip]="keycloakService.isCurrentUser(environment.latestDeployment.user?.login) ? 'You' : environment.latestDeployment.user?.name"
+                [styleClass]="getAvatarBorderClass(environment.latestDeployment.user?.login || '')"
+                (click)="openUserProfile(environment.latestDeployment.user?.login || '')"
+              >
+              </p-avatar>
+            } @else {
+              <i-tabler name="user" class="w-6 h-6 text-gray-600" />
+            }
           }
 
           <div class="flex-grow"></div>
 
           @if (environment.locked) {
+            <div class="flex gap-1 items-center">
+              @if (environment.lockedBy?.avatarUrl) {
+                <p-avatar
+                  class="w-6 h-6"
+                  shape="circle"
+                  size="normal"
+                  [image]="environment.lockedBy?.avatarUrl"
+                  [pTooltip]="keycloakService.isCurrentUser(environment.lockedBy?.login) ? 'You' : environment.lockedBy?.name"
+                  [styleClass]="getAvatarBorderClass(environment.lockedBy?.login || '')"
+                  (click)="openUserProfile(environment.lockedBy?.login || '')"
+                >
+                </p-avatar>
+              } @else {
+                <i-tabler name="user" class="w-6 h-6 text-gray-600" />
+              }
+            </div>
             @if (environment.lockedAt) {
               <app-lock-time [lockedAt]="environment.lockedAt"></app-lock-time>
             }

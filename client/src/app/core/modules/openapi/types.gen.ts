@@ -20,6 +20,7 @@ export type EnvironmentDeployment = {
   sha: string;
   ref: string;
   task: string;
+  user?: User;
   createdAt?: string;
   updatedAt?: string;
 };
@@ -38,8 +39,59 @@ export type EnvironmentDto = {
   description?: string;
   serverUrl?: string;
   latestDeployment?: EnvironmentDeployment;
-  lockedBy?: string;
+  lockedBy?: User;
   lockedAt?: string;
+};
+
+export type GitRepository = {
+  repositoryId?: number;
+  createdAt?: string;
+  updatedAt?: string;
+  name: string;
+  nameWithOwner: string;
+  htmlUrl: string;
+  description?: string;
+  homepage?: string;
+  pushedAt: string;
+  visibility: 'PUBLIC' | 'PRIVATE' | 'INTERNAL' | 'UNKNOWN';
+  stargazersCount?: number;
+  watchersCount?: number;
+  defaultBranch: string;
+  hasIssues?: boolean;
+  hasProjects?: boolean;
+  hasWiki?: boolean;
+  labels?: Array<Label>;
+  private?: boolean;
+  archived?: boolean;
+  disabled?: boolean;
+};
+
+export type Issue = {
+  repository?: GitRepository;
+  id?: number;
+  createdAt?: string;
+  updatedAt?: string;
+  number?: number;
+  state: 'OPEN' | 'CLOSED';
+  title: string;
+  body?: string;
+  htmlUrl: string;
+  closedAt?: string;
+  commentsCount?: number;
+  author?: User;
+  labels?: Array<Label>;
+  assignees?: Array<User>;
+  locked?: boolean;
+  pullRequest?: boolean;
+};
+
+export type Label = {
+  id?: number;
+  name?: string;
+  description?: string;
+  color?: string;
+  issues?: Array<Issue>;
+  repository?: GitRepository;
 };
 
 export type RepositoryInfoDto = {
@@ -48,6 +100,25 @@ export type RepositoryInfoDto = {
   nameWithOwner: string;
   description?: string;
   htmlUrl: string;
+};
+
+export type User = {
+  repository?: GitRepository;
+  id?: number;
+  createdAt?: string;
+  updatedAt?: string;
+  login: string;
+  avatarUrl: string;
+  description?: string;
+  name: string;
+  company?: string;
+  blog?: string;
+  location?: string;
+  email?: string;
+  htmlUrl: string;
+  type: 'USER' | 'ORGANIZATION' | 'BOT';
+  followers?: number;
+  following?: number;
 };
 
 export type DeployRequest = {
@@ -170,7 +241,7 @@ export type PullRequestInfoDto = {
 
 export type EnvironmentLockHistoryDto = {
   id: number;
-  lockedBy?: string;
+  lockedBy?: User;
   lockedAt?: string;
   unlockedAt?: string;
   environment?: EnvironmentDto;
@@ -186,6 +257,7 @@ export type DeploymentDto = {
   ref: string;
   task: string;
   environment: EnvironmentDto;
+  user?: UserInfoDto;
   createdAt?: string;
   updatedAt?: string;
 };
@@ -197,7 +269,7 @@ export type ActivityHistoryDto = {
   state?: 'PENDING' | 'WAITING' | 'SUCCESS' | 'ERROR' | 'FAILURE' | 'IN_PROGRESS' | 'QUEUED' | 'INACTIVE' | 'UNKNOWN';
   sha?: string;
   ref?: string;
-  lockedBy?: string;
+  lockedBy?: User;
   timestamp?: string;
   createdAt?: string;
   updatedAt?: string;

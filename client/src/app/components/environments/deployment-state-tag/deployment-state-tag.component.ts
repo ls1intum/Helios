@@ -9,5 +9,5 @@ import { TagModule } from 'primeng/tag';
   templateUrl: './deployment-state-tag.component.html',
 })
 export class DeploymentStateTagComponent {
-  state = input.required<string>();
+  state = input.required<string | undefined>();
 }

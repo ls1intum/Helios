@@ -3,6 +3,7 @@ package de.tum.cit.aet.helios.deployment;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import de.tum.cit.aet.helios.environment.EnvironmentLockHistory;
 import de.tum.cit.aet.helios.gitrepo.RepositoryInfoDto;
+import de.tum.cit.aet.helios.user.User;
 import java.time.OffsetDateTime;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
@@ -13,7 +14,7 @@ public record ActivityHistoryDto(
     Deployment.State state,
     String sha,
     String ref,
-    String lockedBy,
+    User lockedBy,
     OffsetDateTime timestamp,
     OffsetDateTime createdAt,
     OffsetDateTime updatedAt

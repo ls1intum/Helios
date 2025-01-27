@@ -1,5 +1,6 @@
 package de.tum.cit.aet.helios.environment;
 
+import de.tum.cit.aet.helios.user.User;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -9,6 +10,7 @@ import jakarta.persistence.ManyToOne;
 import java.time.OffsetDateTime;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 @Entity
 @Getter
@@ -21,8 +23,11 @@ public class EnvironmentLockHistory {
   @ManyToOne
   @JoinColumn(name = "environment_id")
   private Environment environment;
-
-  private String lockedBy;
+  
+  @ManyToOne
+  @JoinColumn(name = "author_id")
+  @ToString.Exclude
+  private User lockedBy;
   private OffsetDateTime lockedAt;
   private OffsetDateTime unlockedAt;
 }
