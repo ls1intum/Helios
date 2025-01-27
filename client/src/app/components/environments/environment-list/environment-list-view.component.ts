@@ -27,6 +27,7 @@ import { LockTimeComponent } from '../lock-time/lock-time.component';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 import { AvatarModule } from 'primeng/avatar';
 import { TooltipModule } from 'primeng/tooltip';
+import { DateService } from '@app/core/services/date.service';
 
 @Component({
   selector: 'app-environment-list-view',
@@ -53,6 +54,7 @@ export class EnvironmentListViewComponent {
   private confirmationService = inject(ConfirmationService);
   permissionService = inject(PermissionService);
   keycloakService = inject(KeycloakService);
+  dateService = inject(DateService);
 
   editable = input<boolean | undefined>();
   deployable = input<boolean | undefined>();

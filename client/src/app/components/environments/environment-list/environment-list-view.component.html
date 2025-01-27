@@ -24,6 +24,12 @@
 
           @if (environment.latestDeployment; as deployment) {
             <app-deployment-state-tag [state]="deployment.state" />
+            <p-tag [value]="dateService.formatDate(environment.latestDeployment.updatedAt, 'd/MM/y, h:mm') || undefined" severity="secondary" rounded="true">
+              <i-tabler name="clock" class="!h-4 !w-4 mr-0.5"></i-tabler>
+            </p-tag>
+            <p-tag [value]="environment.latestDeployment.ref" severity="secondary" rounded="true">
+              <i-tabler name="git-branch" class="!h-4 !w-4 mr-0.5"></i-tabler>
+            </p-tag>
           }
 
           <div class="flex-grow"></div>
