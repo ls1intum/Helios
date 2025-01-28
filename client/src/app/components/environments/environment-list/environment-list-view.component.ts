@@ -1,7 +1,7 @@
 import { Component, computed, inject, input, output, signal } from '@angular/core';
 import { AccordionModule } from 'primeng/accordion';
 
-import { CommonModule } from '@angular/common';
+import { DatePipe, CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { EnvironmentDto } from '@app/core/modules/openapi';
 import {
@@ -28,6 +28,7 @@ import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 import { AvatarModule } from 'primeng/avatar';
 import { TooltipModule } from 'primeng/tooltip';
 import { DateService } from '@app/core/services/date.service';
+import { TimeAgoPipe } from '@app/pipes/time-ago.pipe';
 
 @Component({
   selector: 'app-environment-list-view',
@@ -46,7 +47,9 @@ import { DateService } from '@app/core/services/date.service';
     AvatarModule,
     ConfirmDialogModule,
     CommonModule,
+    TimeAgoPipe,
   ],
+  providers: [DatePipe],
   templateUrl: './environment-list-view.component.html',
 })
 export class EnvironmentListViewComponent {
@@ -55,6 +58,7 @@ export class EnvironmentListViewComponent {
   permissionService = inject(PermissionService);
   keycloakService = inject(KeycloakService);
   dateService = inject(DateService);
+  private datePipe = inject(DatePipe);
 
   editable = input<boolean | undefined>();
   deployable = input<boolean | undefined>();
@@ -143,5 +147,10 @@ export class EnvironmentListViewComponent {
     window.open(`
       https://www.github.com/${login}
     `);
+  }
+
+  getDeploymentTime(environment: EnvironmentDto) {
+    const date = environment.latestDeployment?.updatedAt;
+    return date ? this.datePipe.transform(date, 'd MMMM y, h:mm a') : null; // Format date
   }
 }

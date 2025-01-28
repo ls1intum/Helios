@@ -18,33 +18,42 @@
     <p-accordion-panel [value]="environment.id">
       <p-accordion-header>
         <div class="flex gap-2 items-center w-full">
-          <span>{{ environment.name }}</span>
+          <div class="flex flex-col gap-1">
+            <div class="flex gap-1 items-center">
+              <span>{{ environment.name }}</span>
 
-          <app-lock-tag [isLocked]="!!environment.locked"></app-lock-tag>
+              <app-lock-tag [isLocked]="!!environment.locked"></app-lock-tag>
 
-          @if (environment.latestDeployment; as deployment) {
-            <app-deployment-state-tag [state]="deployment.state" />
-            <p-tag [value]="dateService.formatDate(environment.latestDeployment.updatedAt, 'd/MM/y, HH:mm') || undefined" severity="secondary" rounded="true">
-              <i-tabler name="clock" class="!h-4 !w-4 mr-0.5"></i-tabler>
-            </p-tag>
-            <p-tag [value]="environment.latestDeployment.ref" severity="secondary" rounded="true">
-              <i-tabler name="git-branch" class="!h-4 !w-4 mr-0.5"></i-tabler>
-            </p-tag>
-            @if (environment.latestDeployment.user?.avatarUrl) {
-              <p-avatar
-                class="w-6 h-6"
-                shape="circle"
-                size="normal"
-                [image]="environment.latestDeployment.user?.avatarUrl"
-                [pTooltip]="keycloakService.isCurrentUser(environment.latestDeployment.user?.login) ? 'You' : environment.latestDeployment.user?.name"
-                [styleClass]="getAvatarBorderClass(environment.latestDeployment.user?.login || '')"
-                (click)="openUserProfile(environment.latestDeployment.user?.login || '')"
-              >
-              </p-avatar>
-            } @else {
-              <i-tabler name="user" class="w-6 h-6 text-gray-600" />
+              @if (environment.latestDeployment; as deployment) {
+                <app-deployment-state-tag [state]="deployment.state" />
+                <p-tag [value]="environment.latestDeployment.ref" severity="secondary" rounded="true">
+                  <i-tabler name="git-branch" class="!size-5 mr-0.5"></i-tabler>
+                </p-tag>
+              }
+            </div>
+            @if (environment.latestDeployment; as deployment) {
+              <div class="flex gap-1 items-center text-sm">
+                @if (environment.latestDeployment.user?.avatarUrl) {
+                  <p-avatar
+                    class="w-6 h-6"
+                    shape="circle"
+                    size="normal"
+                    [image]="environment.latestDeployment.user?.avatarUrl"
+                    [pTooltip]="keycloakService.isCurrentUser(environment.latestDeployment.user?.login) ? 'You' : environment.latestDeployment.user?.name"
+                    [styleClass]="getAvatarBorderClass(environment.latestDeployment.user?.login || '')"
+                    (click)="openUserProfile(environment.latestDeployment.user?.login || '')"
+                  >
+                  </p-avatar>
+                } @else {
+                  <i-tabler name="user" class="w-6 h-6 text-gray-600" />
+                }
+                <span>
+                  {{ environment.latestDeployment.user?.name }} deployed
+                  <span [pTooltip]="getDeploymentTime(environment) || ''">{{ environment.latestDeployment.updatedAt || '' | timeAgo }}</span>
+                </span>
+              </div>
             }
-          }
+          </div>
 
           <div class="flex-grow"></div>
 
