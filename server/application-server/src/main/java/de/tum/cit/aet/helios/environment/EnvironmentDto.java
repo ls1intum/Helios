@@ -3,6 +3,8 @@ package de.tum.cit.aet.helios.environment;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import de.tum.cit.aet.helios.deployment.Deployment;
 import de.tum.cit.aet.helios.gitrepo.RepositoryInfoDto;
+import de.tum.cit.aet.helios.tag.Tag;
+import de.tum.cit.aet.helios.tag.TagRepository;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -34,10 +36,11 @@ public record EnvironmentDto(
       @NonNull String sha,
       @NonNull String ref,
       @NonNull String task,
+      String tagName,
       OffsetDateTime createdAt,
       OffsetDateTime updatedAt) {
 
-    public static EnvironmentDeployment fromDeployment(Deployment deployment) {
+    public static EnvironmentDeployment fromDeployment(Deployment deployment, String tagName) {
       return new EnvironmentDeployment(
           deployment.getId(),
           deployment.getUrl(),
@@ -46,13 +49,14 @@ public record EnvironmentDto(
           deployment.getSha(),
           deployment.getRef(),
           deployment.getTask(),
+          tagName,
           deployment.getCreatedAt(),
           deployment.getUpdatedAt());
     }
   }
 
   public static EnvironmentDto fromEnvironment(
-      Environment environment, Optional<Deployment> latestDeployment) {
+      Environment environment, Optional<Deployment> latestDeployment, TagRepository tagRepository) {
     return new EnvironmentDto(
         RepositoryInfoDto.fromRepository(environment.getRepository()),
         environment.getId(),
@@ -66,12 +70,22 @@ public record EnvironmentDto(
         environment.getInstalledApps(),
         environment.getDescription(),
         environment.getServerUrl(),
-        latestDeployment.map(EnvironmentDeployment::fromDeployment).orElse(null),
+        latestDeployment
+            .map(
+                deployment ->
+                    EnvironmentDeployment.fromDeployment(
+                        deployment,
+                        tagRepository
+                            .findByRepositoryRepositoryIdAndCommitSha(
+                                deployment.getRepository().getRepositoryId(), deployment.getSha())
+                            .map(Tag::getName)
+                            .orElse(null)))
+            .orElse(null),
         environment.getLockedBy(),
         environment.getLockedAt());
   }
 
   public static EnvironmentDto fromEnvironment(Environment environment) {
-    return EnvironmentDto.fromEnvironment(environment, Optional.empty());
+    return EnvironmentDto.fromEnvironment(environment, Optional.empty(), null);
   }
 }

@@ -1,4 +1,4 @@
-import { Component, computed, inject, input } from '@angular/core';
+import { Component, computed, inject, input, signal } from '@angular/core';
 
 import { PipelineComponent, PipelineSelector } from '@app/components/pipeline/pipeline.component';
 import { TagModule } from 'primeng/tag';
@@ -10,10 +10,12 @@ import { injectQuery } from '@tanstack/angular-query-experimental';
 import { SkeletonModule } from 'primeng/skeleton';
 import { getBranchByRepositoryIdAndNameOptions, getCommitByRepositoryIdAndNameOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
+import { TagCreateComponent } from '../../components/dialogs/tag-create/tag-create.component';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-branch-details',
-  imports: [DeploymentSelectionComponent, InputTextModule, TagModule, IconsModule, ButtonModule, PipelineComponent, SkeletonModule],
+  imports: [DeploymentSelectionComponent, InputTextModule, RouterLink, TagModule, TagModule, IconsModule, ButtonModule, PipelineComponent, SkeletonModule, TagCreateComponent],
   templateUrl: './branch-details.component.html',
 })
 export class BranchDetailsComponent {
@@ -21,6 +23,8 @@ export class BranchDetailsComponent {
 
   repositoryId = input.required<number>();
   branchName = input.required<string>();
+
+  isCreateDialogVisible = signal(true);
 
   query = injectQuery(() => ({
     ...getBranchByRepositoryIdAndNameOptions({ path: { repoId: this.repositoryId() }, query: { name: this.branchName() } }),

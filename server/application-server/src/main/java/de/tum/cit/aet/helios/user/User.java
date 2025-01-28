@@ -1,6 +1,7 @@
 package de.tum.cit.aet.helios.user;
 
 import de.tum.cit.aet.helios.github.BaseGitServiceEntity;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -19,7 +20,9 @@ import org.springframework.lang.NonNull;
 @ToString(callSuper = true)
 public class User extends BaseGitServiceEntity {
 
-  @NonNull private String login;
+  @NonNull
+  @Column(unique = true)
+  private String login;
 
   @NonNull private String avatarUrl;
 

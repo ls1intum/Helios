@@ -4,6 +4,7 @@ import de.tum.cit.aet.helios.auth.AuthService;
 import de.tum.cit.aet.helios.deployment.DeploymentException;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
+import de.tum.cit.aet.helios.tag.TagRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import java.time.OffsetDateTime;
@@ -21,16 +22,19 @@ public class EnvironmentService {
   private final EnvironmentRepository environmentRepository;
   private final EnvironmentLockHistoryRepository lockHistoryRepository;
   private final HeliosDeploymentRepository heliosDeploymentRepository;
+  private final TagRepository tagRepository;
 
-
-  public EnvironmentService(EnvironmentRepository environmentRepository,
-                            EnvironmentLockHistoryRepository lockHistoryRepository,
-                            HeliosDeploymentRepository heliosDeploymentRepository,
-                            AuthService authService) {
+  public EnvironmentService(
+      EnvironmentRepository environmentRepository,
+      EnvironmentLockHistoryRepository lockHistoryRepository,
+      HeliosDeploymentRepository heliosDeploymentRepository,
+      TagRepository tagRepository,
+      AuthService authService) {
     this.environmentRepository = environmentRepository;
     this.lockHistoryRepository = lockHistoryRepository;
     this.heliosDeploymentRepository = heliosDeploymentRepository;
     this.authService = authService;
+    this.tagRepository = tagRepository;
   }
 
   public Optional<EnvironmentDto> getEnvironmentById(Long id) {
@@ -42,7 +46,9 @@ public class EnvironmentService {
         .map(
             environment -> {
               return EnvironmentDto.fromEnvironment(
-                  environment, environment.getDeployments().reversed().stream().findFirst());
+                  environment,
+                  environment.getDeployments().reversed().stream().findFirst(),
+                  tagRepository);
             })
         .collect(Collectors.toList());
   }
@@ -52,13 +58,16 @@ public class EnvironmentService {
         .map(
             environment -> {
               return EnvironmentDto.fromEnvironment(
-                  environment, environment.getDeployments().reversed().stream().findFirst());
+                  environment,
+                  environment.getDeployments().reversed().stream().findFirst(),
+                  tagRepository);
             })
         .collect(Collectors.toList());
   }
 
   public List<EnvironmentDto> getEnvironmentsByRepositoryId(Long repositoryId) {
-    return environmentRepository.findByRepositoryRepositoryIdOrderByCreatedAtDesc(repositoryId)
+    return environmentRepository
+        .findByRepositoryRepositoryIdOrderByCreatedAtDesc(repositoryId)
         .stream()
         .map(EnvironmentDto::fromEnvironment)
         .collect(Collectors.toList());
@@ -152,8 +161,8 @@ public class EnvironmentService {
     environment.setLockedBy(null);
     environment.setLockedAt(null);
 
-    Optional<EnvironmentLockHistory> openLock = lockHistoryRepository
-        .findLatestLockForEnvironmentAndUser(environment, currentUserName);
+    Optional<EnvironmentLockHistory> openLock =
+        lockHistoryRepository.findLatestLockForEnvironmentAndUser(environment, currentUserName);
     if (openLock.isPresent()) {
       EnvironmentLockHistory openLockHistory = openLock.get();
       openLockHistory.setUnlockedAt(OffsetDateTime.now());
@@ -170,10 +179,10 @@ public class EnvironmentService {
    *
    * <p>This method updates the environment with the specified ID using the provided EnvironmentDto.
    *
-   * @param id             the ID of the environment to update
+   * @param id the ID of the environment to update
    * @param environmentDto the EnvironmentDto containing the updated environment information
-   * @return an Optional containing the updated environment if successful,
-   *     or an empty Optional if no environment is found with the specified ID
+   * @return an Optional containing the updated environment if successful, or an empty Optional if
+   *     no environment is found with the specified ID
    * @throws EnvironmentException if the environment is locked and cannot be disabled
    */
   public Optional<EnvironmentDto> updateEnvironment(Long id, EnvironmentDto environmentDto)
@@ -227,8 +236,8 @@ public class EnvironmentService {
 
   private boolean canUnlock(Environment environment, long timeoutMinutes) {
     // Fetch the most recent deployment for the environment
-    Optional<HeliosDeployment> latestDeployment = heliosDeploymentRepository
-        .findTopByEnvironmentOrderByCreatedAtDesc(environment);
+    Optional<HeliosDeployment> latestDeployment =
+        heliosDeploymentRepository.findTopByEnvironmentOrderByCreatedAtDesc(environment);
 
     if (latestDeployment.isEmpty()) {
       // No prior deployments, safe to unlock
@@ -251,5 +260,4 @@ public class EnvironmentService {
     }
     return true;
   }
-
 }

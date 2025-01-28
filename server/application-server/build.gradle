@@ -148,6 +148,7 @@ openApi {
         args.set(["--spring.profiles.active=openapi", "-javaagent:${configurations.runtimeAgent1.asPath}", "-javaagent:${configurations.runtimeAgent2.asPath}"])
         jvmArgs.set(["-javaagent:${configurations.runtimeAgent1.asPath}", "-javaagent:${configurations.runtimeAgent2.asPath}"])
     }
+    waitTimeInSeconds.set(60)
 }
 
 tasks.named('test') {
