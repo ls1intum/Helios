@@ -11,12 +11,17 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import org.kohsuke.github.GHDeploymentState;
+import lombok.extern.log4j.Log4j2;
+import org.kohsuke.github.GHDeploymentStatus;
 
+@Log4j2
 @Entity
 @Table(name = "deployment")
 @Getter
@@ -61,6 +66,7 @@ public class Deployment extends BaseGitServiceEntity {
 
   public enum State {
     PENDING,
+    WAITING,
     SUCCESS,
     ERROR,
     FAILURE,
@@ -70,9 +76,21 @@ public class Deployment extends BaseGitServiceEntity {
     UNKNOWN; // Fallback for unmapped states
   }
 
-  // Map GHDeploymentState to Deployment.State
-  public static State mapToState(GHDeploymentState ghState) {
-    return switch (ghState) {
+  /**
+   * Maps a GHDeploymentStatus object to a State enum.
+   *
+   * @param ghDeploymentStatus The GHDeploymentStatus object.
+   * @return The State enum.
+   */
+  public static State mapToState(GHDeploymentStatus ghDeploymentStatus) {
+    // org.kohsuke.github.GHDeploymentStatus didn't implement the state WAITING
+    // So calling ghDeploymentStatus.getState() will throw an exception if the state is WAITING
+    // Exception message: No enum constant org.kohsuke.github.GHDeploymentState.WAITING
+    if (isWaitingState(ghDeploymentStatus)) {
+      return State.WAITING;
+    }
+
+    return switch (ghDeploymentStatus.getState()) {
       case PENDING -> State.PENDING;
       case SUCCESS -> State.SUCCESS;
       case ERROR -> State.ERROR;
@@ -82,5 +100,46 @@ public class Deployment extends BaseGitServiceEntity {
       case INACTIVE -> State.INACTIVE;
       default -> State.UNKNOWN;
     };
+  }
+
+  /**
+   * Checks if the GHDeploymentStatus object is in the WAITING state.
+   *
+   * @param ghDeploymentStatus The GHDeploymentStatus object.
+   * @return True if the state is WAITING, false otherwise.
+   */
+  private static boolean isWaitingState(GHDeploymentStatus ghDeploymentStatus) {
+    return extractRawState(ghDeploymentStatus).equalsIgnoreCase("WAITING");
+  }
+
+  /**
+   * Extracts the raw state from the GHDeploymentStatus object's toString() method.
+   * If any error occurs, it returns an empty string.
+   * The returned state is in uppercase.
+   *
+   * @param ghDeploymentStatus The GHDeploymentStatus object.
+   * @return The raw state as a string in uppercase.
+   */
+  private static String extractRawState(GHDeploymentStatus ghDeploymentStatus) {
+    try {
+      String toStringValue = ghDeploymentStatus.toString();
+      // Use a regex to extract the value of the `state` field
+      Pattern pattern = Pattern.compile("state=([a-zA-Z_]+)(?:,|\\])");
+      Matcher matcher = pattern.matcher(toStringValue);
+      if (matcher.find()) {
+        return matcher.group(1).toUpperCase();
+      }
+      log.warn(
+          "Failed to extract raw state from GHDeploymentStatus object: "
+              + "state field not found in toString() output");
+    } catch (PatternSyntaxException e) {
+      log.error(
+          "Failed to extract raw state from GHDeploymentStatus object: Due to pattern syntax error",
+          e);
+    } catch (Exception e) {
+      log.error("Error while extracting raw state from GHDeploymentStatus object", e);
+    }
+
+    return "";
   }
 }

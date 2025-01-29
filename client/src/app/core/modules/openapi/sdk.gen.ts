@@ -48,6 +48,8 @@ import type {
   GetEnvironmentsByUserLockingResponse,
   GetEnvironmentsByRepositoryIdData,
   GetEnvironmentsByRepositoryIdResponse,
+  GetLockHistoryByEnvironmentIdData,
+  GetLockHistoryByEnvironmentIdResponse,
   GetAllEnabledEnvironmentsData,
   GetAllEnabledEnvironmentsResponse,
   GetAllDeploymentsData,
@@ -58,6 +60,8 @@ import type {
   GetDeploymentsByEnvironmentIdResponse,
   GetLatestDeploymentByEnvironmentIdData,
   GetLatestDeploymentByEnvironmentIdResponse,
+  GetActivityHistoryByEnvironmentIdData,
+  GetActivityHistoryByEnvironmentIdResponse,
   GetCommitByRepositoryIdAndNameData,
   GetCommitByRepositoryIdAndNameResponse,
   GetAllBranchesData,
@@ -257,7 +261,7 @@ export const getAllEnvironments = <ThrowOnError extends boolean = false>(options
 export const getEnvironmentsByUserLocking = <ThrowOnError extends boolean = false>(options?: Options<GetEnvironmentsByUserLockingData, ThrowOnError>) => {
   return (options?.client ?? client).get<GetEnvironmentsByUserLockingResponse, unknown, ThrowOnError>({
     ...options,
-    url: '/api/environments/user_locking',
+    url: '/api/environments/userLocking',
   });
 };
 
@@ -265,6 +269,13 @@ export const getEnvironmentsByRepositoryId = <ThrowOnError extends boolean = fal
   return (options?.client ?? client).get<GetEnvironmentsByRepositoryIdResponse, unknown, ThrowOnError>({
     ...options,
     url: '/api/environments/repository/{repositoryId}',
+  });
+};
+
+export const getLockHistoryByEnvironmentId = <ThrowOnError extends boolean = false>(options: Options<GetLockHistoryByEnvironmentIdData, ThrowOnError>) => {
+  return (options?.client ?? client).get<GetLockHistoryByEnvironmentIdResponse, unknown, ThrowOnError>({
+    ...options,
+    url: '/api/environments/environment/{environmentId}/lockHistory',
   });
 };
 
@@ -300,6 +311,13 @@ export const getLatestDeploymentByEnvironmentId = <ThrowOnError extends boolean 
   return (options?.client ?? client).get<GetLatestDeploymentByEnvironmentIdResponse, unknown, ThrowOnError>({
     ...options,
     url: '/api/deployments/environment/{environmentId}/latest',
+  });
+};
+
+export const getActivityHistoryByEnvironmentId = <ThrowOnError extends boolean = false>(options: Options<GetActivityHistoryByEnvironmentIdData, ThrowOnError>) => {
+  return (options?.client ?? client).get<GetActivityHistoryByEnvironmentIdResponse, unknown, ThrowOnError>({
+    ...options,
+    url: '/api/deployments/environment/{environmentId}/activity-history',
   });
 };
 

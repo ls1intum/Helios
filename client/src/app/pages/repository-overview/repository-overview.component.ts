@@ -32,7 +32,7 @@ import { ToastModule } from 'primeng/toast';
   ],
   templateUrl: './repository-overview.component.html',
 })
-export class ProjectOverviewComponent {
+export class RepositoryOverviewComponent {
   private router = inject(Router);
 
   query = injectQuery(() => getAllRepositoriesOptions());

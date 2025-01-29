@@ -9,7 +9,7 @@ import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import lombok.extern.log4j.Log4j2;
 import org.kohsuke.github.GHDeployment;
-import org.kohsuke.github.GHDeploymentState;
+import org.kohsuke.github.GHDeploymentStatus;
 import org.kohsuke.github.GHEvent;
 import org.kohsuke.github.GHEventPayload;
 import org.kohsuke.github.GHRepository;
@@ -91,12 +91,19 @@ public class GitHubDeploymentStatusMessageHandler
       }
     }
 
-    // Get the deployment state, such as "success", "error", "pending"
-    GHDeploymentState deploymentState = eventPayload.getDeploymentStatus().getState();
+    // Get the deployment status.
+    // Has fields "description", "state", "createdAt", "id", "nodeId", "updatedAt", "url"
+    // State can be "success", "error", "pending", "waiting", etc.
+    // org.kohsuke.github.GHDeploymentStatus didn't implement the state WAITING
+    // So calling eventPayload.getDeploymentStatus().getState() will throw an exception
+    // No enum constant org.kohsuke.github.GHDeploymentState.WAITING
+    // Before calling getState() method, check if the state is WAITING and handle it gracefully
+    // Deployment.mapToState handles mapping gracefully
+    GHDeploymentStatus deploymentStatus = eventPayload.getDeploymentStatus();
 
     // Convert GHDeployment to DeploymentSource
     DeploymentSource deploymentSource =
-        deploymentSourceFactory.create(ghDeployment, Deployment.mapToState(deploymentState));
+        deploymentSourceFactory.create(ghDeployment, Deployment.mapToState(deploymentStatus));
 
     // Process this single deployment
     deploymentSyncService.processDeployment(deploymentSource, repository, environment);

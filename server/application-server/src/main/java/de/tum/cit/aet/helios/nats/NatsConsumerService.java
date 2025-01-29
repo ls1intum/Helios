@@ -1,5 +1,7 @@
 package de.tum.cit.aet.helios.nats;
 
+import de.tum.cit.aet.helios.github.GitHubCustomMessageHandler;
+import de.tum.cit.aet.helios.github.GitHubCustomMessageHandlerRegistry;
 import de.tum.cit.aet.helios.github.GitHubMessageHandler;
 import de.tum.cit.aet.helios.github.GitHubMessageHandlerRegistry;
 import io.nats.client.Connection;
@@ -16,6 +18,7 @@ import java.io.IOException;
 import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
+import java.util.stream.Stream;
 import lombok.extern.log4j.Log4j2;
 import org.kohsuke.github.GHEvent;
 import org.springframework.beans.factory.annotation.Value;
@@ -56,10 +59,14 @@ public class NatsConsumerService {
 
   private final GitHubMessageHandlerRegistry handlerRegistry;
 
+  private final GitHubCustomMessageHandlerRegistry customHandlerRegistry;
+
   public NatsConsumerService(
-      Environment environment, GitHubMessageHandlerRegistry handlerRegistry) {
+      Environment environment, GitHubMessageHandlerRegistry handlerRegistry,
+      GitHubCustomMessageHandlerRegistry customHandlerRegistry) {
     this.environment = environment;
     this.handlerRegistry = handlerRegistry;
+    this.customHandlerRegistry = customHandlerRegistry;
   }
 
   @EventListener(ApplicationReadyEvent.class)
@@ -153,6 +160,16 @@ public class NatsConsumerService {
     try {
       String subject = msg.getSubject();
       String lastPart = subject.substring(subject.lastIndexOf(".") + 1);
+
+      // Check if there's a custom handler for this event type
+      GitHubCustomMessageHandler<?> customHandler = customHandlerRegistry.getHandler(lastPart);
+      if (customHandler != null) {
+        customHandler.handleMessage(msg);
+        msg.ack();
+        return;
+      }
+
+      // Otherwise, use the default handler that uses GHEvent
       GHEvent eventType = GHEvent.valueOf(lastPart.toUpperCase());
       GitHubMessageHandler<?> eventHandler = handlerRegistry.getHandler(eventType);
 
@@ -179,11 +196,12 @@ public class NatsConsumerService {
    * @return The subjects to monitor.
    */
   private String[] getSubjects() {
-    String[] events =
-        handlerRegistry.getSupportedEvents().stream()
-            .map(GHEvent::name)
-            .map(String::toLowerCase)
-            .toArray(String[]::new);
+    String[] events = Stream.concat(
+            customHandlerRegistry.getSupportedEvents().stream(),
+            handlerRegistry.getSupportedEvents().stream().map(GHEvent::name)
+        ).map(String::toLowerCase)
+        .distinct()
+        .toArray(String[]::new);
 
     return Arrays.stream(repositoriesToMonitor)
         .map(this::getSubjectPrefix)

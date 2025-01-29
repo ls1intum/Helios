@@ -79,7 +79,7 @@ export class EnvironmentListViewComponent {
   }));
 
   isCurrentUserLocked = (environment: EnvironmentDto) => {
-    return environment.lockedBy === this.keycloakService.getUserId();
+    return environment.lockedBy === this.keycloakService.getPreferredUsername();
   };
 
   onUnlockEnvironment(event: Event, environment: EnvironmentDto) {
