@@ -1,0 +1,47 @@
+name: Flyway Validation
+
+on: 
+  pull_request:
+    branches: [ main ]
+
+env:
+  FLYWAY_URL: jdbc:postgresql://localhost:5432/helios
+  FLYWAY_USER: helios
+  FLYWAY_PASSWORD: helios
+
+jobs:
+  validate-migrations:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres
+
+        env:
+          POSTGRES_USER: ${{ env.FLYWAY_USER }}
+          POSTGRES_PASSWORD: ${{ env.FLYWAY_PASSWORD }}
+          POSTGRES_DB: helios
+
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+  
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "21"
+
+      - name: Run Gradle to apply Flyway migrations
+        working-directory: ./server/application-server
+        run: ./gradlew flywayMigrate
+
+      - name: Run Gradle to validate Flyway migrations
+        working-directory: ./server/application-server
+        run: ./gradlew flywayValidate
