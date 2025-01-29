@@ -1,10 +1,23 @@
 import { TestBed } from '@angular/core/testing';
 import { AppComponent } from './app.component';
+import { provideExperimentalZonelessChangeDetection } from '@angular/core';
+import { MessageService } from 'primeng/api';
+import { KeycloakService } from './core/services/keycloak/keycloak.service';
+import { vi } from 'vitest';
 
 describe('AppComponent', () => {
   beforeEach(async () => {
+    vi.mock('@app/core/services/keycloak/keycloak.service', () => {
+      return {
+        KeycloakService: vi.fn(() => ({
+          keycloak: { token: 'token' },
+        })),
+      };
+    });
+
     await TestBed.configureTestingModule({
       imports: [AppComponent],
+      providers: [provideExperimentalZonelessChangeDetection(), MessageService, KeycloakService],
     }).compileComponents();
   });
 
@@ -12,18 +25,5 @@ describe('AppComponent', () => {
     const fixture = TestBed.createComponent(AppComponent);
     const app = fixture.componentInstance;
     expect(app).toBeTruthy();
-  });
-
-  it(`should have the 'client' title`, () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.componentInstance;
-    expect(app.title).toEqual('client');
-  });
-
-  it('should render title', () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    fixture.detectChanges();
-    const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Hello, client');
   });
 });

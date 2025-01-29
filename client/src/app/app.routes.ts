@@ -18,7 +18,7 @@ export const routes: Routes = [
         pathMatch: 'full',
         redirectTo: 'list',
       },
-      { path: 'list', loadComponent: () => import('./pages/repository-overview/repository-overview.component').then(m => m.ProjectOverviewComponent) },
+      { path: 'list', loadComponent: () => import('./pages/repository-overview/repository-overview.component').then(m => m.RepositoryOverviewComponent) },
       {
         path: ':repositoryId',
         loadComponent: () => import('./pages/main-layout/main-layout.component').then(m => m.MainLayoutComponent),
