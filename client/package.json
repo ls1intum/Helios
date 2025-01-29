@@ -7,8 +7,7 @@
     "test:unit": "vitest --ui --reporter=html",
     "test:unit:ci": "vitest run --coverage",
     "lint": "eslint --max-warnings 0 --fix .",
-    "generate:openapi": "openapi-ts",
-    "sentry:sourcemaps": "sentry-cli sourcemaps inject --org helios-jf --project helios-client ./dist/client && sentry-cli sourcemaps upload --org helios-jf --project helios-client ./dist/client"
+    "generate:openapi": "openapi-ts"
   },
   "private": true,
   "dependencies": {
