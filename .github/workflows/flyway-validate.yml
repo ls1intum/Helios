@@ -4,14 +4,14 @@ on:
   pull_request:
     branches: [main]
 
+env:
+  FLYWAY_URL: jdbc:postgresql://postgres:5432/helios
+  FLYWAY_USER: helios
+  FLYWAY_PASSWORD: helios
+
 jobs:
   validate-migrations:
     runs-on: ubuntu-latest
-
-    env:
-      FLYWAY_URL: jdbc:postgresql://postgres:5432/helios
-      FLYWAY_USER: helios
-      FLYWAY_PASSWORD: helios
 
     services:
       postgres:
@@ -45,14 +45,14 @@ jobs:
       - name: Check for changes
         id: check_changes
         run: |
-          CHANGED_PATHS=$(git diff --name-only origin/${{ github.base_ref }} origin/${{ github.head_ref }} | grep -E "^server/application-server/src/main/resources/db/migration/")
+          CHANGED_PATHS=$(git diff --name-status origin/${{ github.base_ref }} origin/${{ github.head_ref }} | grep -E "^server/application-server/src/main/resources/db/migration/")
 
           if [[ -z "$CHANGED_PATHS" ]]; then
             echo "CHANGE_DETECTED=false" >> "$GITHUB_OUTPUT"
             echo "No Flyway migration changes detected."
           else
             echo "CHANGE_DETECTED=true" >> "$GITHUB_OUTPUT"
-            echo "Flyway migration changes detected in the following paths:"
+            echo "Flyway migration changes detected:"
             echo "$CHANGED_PATHS"
 
             if echo "$CHANGED_FILES" | grep -q "^M"; then
