@@ -16,14 +16,14 @@ import lombok.Setter;
 @Getter
 @Setter
 public class EnvironmentStatus {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "environment_id")
-    private Environment environment;
-    
-    private Integer statusCode;
-    private Instant checkTimestamp;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
+
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "environment_id")
+  private Environment environment;
+
+  private Integer statusCode;
+  private Instant checkTimestamp;
 }
