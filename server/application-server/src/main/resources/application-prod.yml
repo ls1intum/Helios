@@ -15,7 +15,7 @@ spring:
         database: POSTGRESQL
         show-sql: false
         hibernate:
-            ddl-auto: none
+            ddl-auto: validate
     security:
         oauth2:
             resourceserver:
