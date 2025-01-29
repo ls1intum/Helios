@@ -24,7 +24,7 @@
 }
 
 @if (pipeline(); as pipeline) {
-  <div class="flex items-start mt-2">
+  <div class="flex flex-wrap items-start gap-y-4 mt-2">
     <!-- Check if all groups have no workflow runs -->
     <!-- If so, display a message saying that no workflow runs have been found -->
     @if (allGroupsHaveNoWorkflowRuns()) {
@@ -37,7 +37,7 @@
     @for (group of pipeline.groups; track group.name) {
       @if (group.workflows.length > 0) {
         <ng-container>
-          <p-panel [header]="group.name">
+          <p-panel [header]="group.name" class="max-w-[250px]">
             <div class="flex flex-col gap-4">
               @for (workflowRun of group.workflows; track workflowRun.id) {
                 <div class="flex items-center space-x-2">
@@ -59,8 +59,8 @@
                     <i-tabler name="progress-help" class="text-gray-500" pTooltip="Unknown"></i-tabler>
                   }
                   <!-- Fixed width to ensure consistent alignment -->
-                  <span class="font-medium w-36 flex items-center">
-                    <span class="truncate" [pTooltip]="workflowRun.name">{{ workflowRun.name }}</span>
+                  <span class="font-medium flex items-center justify-between w-full">
+                    <span [pTooltip]="workflowRun.name">{{ workflowRun.name }}</span>
                     <a class="ml-1" [href]="workflowRun.htmlUrl" target="_new"><i-tabler name="external-link" class="w-20 h-20"></i-tabler></a>
                   </span>
                 </div>
