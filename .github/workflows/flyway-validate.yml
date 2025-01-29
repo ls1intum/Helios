@@ -5,7 +5,7 @@ on:
     branches: [ main ]
 
 env:
-  FLYWAY_URL: jdbc:postgresql://localhost:5432/helios
+  FLYWAY_URL: jdbc:postgresql://postgres:5432/helios
   FLYWAY_USER: helios
   FLYWAY_PASSWORD: helios
 
