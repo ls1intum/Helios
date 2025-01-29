@@ -2,11 +2,11 @@ package de.tum.cit.aet.helios.error;
 
 import de.tum.cit.aet.helios.deployment.DeploymentException;
 import de.tum.cit.aet.helios.environment.EnvironmentException;
+import io.sentry.Sentry;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.time.Instant;
-import io.sentry.Sentry;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
