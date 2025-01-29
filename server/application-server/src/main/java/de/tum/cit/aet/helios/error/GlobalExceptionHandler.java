@@ -6,6 +6,7 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.time.Instant;
+import io.sentry.Sentry;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -72,6 +73,8 @@ public class GlobalExceptionHandler {
     error.setMessage("Error: An internal server error occurred");
     error.setPath(request.getRequestURI());
     error.setTimestamp(Instant.now());
+
+    Sentry.captureException(ex);
 
     return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
   }

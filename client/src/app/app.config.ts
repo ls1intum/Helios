@@ -7,15 +7,14 @@ import { definePreset } from '@primeng/themes';
 import Aura from '@primeng/themes/aura';
 
 import { routes } from './app.routes';
-import { environment } from '../environments/environment';
 import { ConfirmationService, MessageService } from 'primeng/api';
-import { HTTP_INTERCEPTORS, provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
+import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { KeycloakService } from './core/services/keycloak/keycloak.service';
-import { BearerInterceptor } from './core/services/keycloak/bearer-interceptor';
 import { DatePipe } from '@angular/common';
 import { RepositoryFilterGuard } from './core/middlewares/repository-filter.guard';
 import * as Sentry from '@sentry/angular';
+import { TraceService } from '@sentry/angular';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -72,19 +71,16 @@ export const appConfig: ApplicationConfig = {
       const keycloakService = inject(KeycloakService);
       return keycloakService.init();
     }),
-    { provide: HTTP_INTERCEPTORS, useClass: BearerInterceptor, multi: true },
     {
       provide: ErrorHandler,
-      useValue: environment.production ? Sentry.createErrorHandler() : new ErrorHandler(),
+      useValue: Sentry.createErrorHandler(),
     },
-    {
-      provide: Sentry.TraceService,
-      deps: [Router],
-    },
+    { provide: TraceService, deps: [Router] },
     provideAppInitializer(() => {
-      if (environment.production) {
-        inject(Sentry.TraceService);
-      }
+      const initializerFn = (() => () => {
+        inject(TraceService);
+      })();
+      return initializerFn();
     }),
   ],
 };
