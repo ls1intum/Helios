@@ -148,29 +148,29 @@ public class GitHubDataSyncService {
     var step7Duration = Duration.between(step7Start, Instant.now()).toMillis();
     log.info("[Step 7/10] Completed Workflow Sync. (Took: {} ms)", step7Duration);
 
-    // Sync workflow runs
-    log.info("--------------------------------------------------");
-    var step8Start = Instant.now();
-    log.info("[Step 8/10] Syncing Workflow Runs (Cutoff: {})", cutoffDate);
-    workflowRunSyncService.syncRunsOfAllRepositories(repositories, Optional.of(cutoffDate));
-    var step8Duration = Duration.between(step8Start, Instant.now()).toMillis();
-    log.info("[Step 8/10] Completed Workflow Run Sync. (Took: {} ms)", step8Duration);
-
     // Sync branches
     log.info("--------------------------------------------------");
-    var step9Start = Instant.now();
-    log.info("[Step 9/10] Syncing Branches...");
+    var step8Start = Instant.now();
+    log.info("[Step 8/10] Syncing Branches...");
     branchSyncService.syncBranchesOfAllRepositories(repositories);
-    var step9Duration = Duration.between(step9Start, Instant.now()).toMillis();
-    log.info("[Step 9/10] Completed Branch Sync. (Took: {} ms)", step9Duration);
+    var step8Duration = Duration.between(step8Start, Instant.now()).toMillis();
+    log.info("[Step 8/10] Completed Branch Sync. (Took: {} ms)", step8Duration);
 
     // Sync commits
     log.info("--------------------------------------------------");
     var step10Start = Instant.now();
-    log.info("[Step 10/10] Syncing Commits...");
+    log.info("[Step 9/10] Syncing Commits...");
     commitSyncService.syncCommitsOfAllRepositories(repositories);
     var step10Duration = Duration.between(step10Start, Instant.now()).toMillis();
-    log.info("[Step 10/10] Completed Commit Sync. (Took: {} ms)", step10Duration);
+    log.info("[Step 9/10] Completed Commit Sync. (Took: {} ms)", step10Duration);
+
+    // Sync workflow runs
+    log.info("--------------------------------------------------");
+    var step9Start = Instant.now();
+    log.info("[Step 10/10] Syncing Workflow Runs (Cutoff: {})", cutoffDate);
+    workflowRunSyncService.syncLatestRunsOfWorkflowsOfAllRepositories(repositories);
+    var step9Duration = Duration.between(step9Start, Instant.now()).toMillis();
+    log.info("[Step 10/10] Completed Workflow Run Sync. (Took: {} ms)", step9Duration);
 
     var endTime = OffsetDateTime.now();
     log.info("--------------------------------------------------");
