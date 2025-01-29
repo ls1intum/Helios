@@ -1,7 +1,6 @@
 package de.tum.cit.aet.helios.deployment;
 
 import de.tum.cit.aet.helios.auth.AuthService;
-import de.tum.cit.aet.helios.branch.BranchService;
 import de.tum.cit.aet.helios.environment.Environment;
 import de.tum.cit.aet.helios.environment.EnvironmentLockHistory;
 import de.tum.cit.aet.helios.environment.EnvironmentLockHistoryRepository;
@@ -9,8 +8,6 @@ import de.tum.cit.aet.helios.environment.EnvironmentService;
 import de.tum.cit.aet.helios.github.GitHubService;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
-import de.tum.cit.aet.helios.pullrequest.PullRequest;
-import de.tum.cit.aet.helios.pullrequest.PullRequestRepository;
 import de.tum.cit.aet.helios.workflow.Workflow;
 import de.tum.cit.aet.helios.workflow.WorkflowService;
 import jakarta.transaction.Transactional;
@@ -37,8 +34,6 @@ public class DeploymentService {
   private final WorkflowService workflowService;
   private final AuthService authService;
   private final HeliosDeploymentRepository heliosDeploymentRepository;
-  private final PullRequestRepository pullRequestRepository;
-  private final BranchService branchService;
   private final EnvironmentLockHistoryRepository lockHistoryRepository;
 
   public DeploymentService(
@@ -47,7 +42,6 @@ public class DeploymentService {
       EnvironmentService environmentService,
       WorkflowService workflowService, AuthService authService,
       HeliosDeploymentRepository heliosDeploymentRepository,
-      PullRequestRepository pullRequestRepository, BranchService branchService,
       EnvironmentLockHistoryRepository lockHistoryRepository) {
     this.deploymentRepository = deploymentRepository;
     this.gitHubService = gitHubService;
@@ -55,8 +49,6 @@ public class DeploymentService {
     this.workflowService = workflowService;
     this.authService = authService;
     this.heliosDeploymentRepository = heliosDeploymentRepository;
-    this.pullRequestRepository = pullRequestRepository;
-    this.branchService = branchService;
     this.lockHistoryRepository = lockHistoryRepository;
   }
 
@@ -100,12 +92,6 @@ public class DeploymentService {
     }
     final String deploymentWorkflowFileName = deploymentWorkflow.getFileNameWithExtension();
 
-
-    // Get the latest sha of the branch
-    final String branchCommitSha = this.branchService.getBranchByName(deployRequest.branchName())
-        .orElseThrow(() -> new DeploymentException("Branch not found"))
-        .commitSha();
-
     // Lock the environment
     Environment environment =
         this.environmentService
@@ -115,7 +101,7 @@ public class DeploymentService {
     // Get the repository name with owners
     final String repoNameWithOwners = environment.getRepository().getNameWithOwner();
 
-    // 10 minutes timeout for redeployment
+    // 20 minutes timeout for re-deployment
     if (!canRedeploy(environment, 20)) {
       throw new DeploymentException("Deployment is still in progress, please wait.");
     }
@@ -128,14 +114,6 @@ public class DeploymentService {
     heliosDeployment.setStatus(HeliosDeployment.Status.WAITING);
     heliosDeployment.setBranchName(deployRequest.branchName());
     heliosDeployment = heliosDeploymentRepository.saveAndFlush(heliosDeployment);
-
-
-    // Check if a OPEN PR exists for the branch
-    final Optional<PullRequest> optionalPr = pullRequestRepository
-        .findByRepositoryRepositoryIdAndHeadRefNameAndState(
-            environment.getRepository().getRepositoryId(),
-            deployRequest.branchName(),
-            PullRequest.State.OPEN);
 
 
     // Build parameters for the workflow
