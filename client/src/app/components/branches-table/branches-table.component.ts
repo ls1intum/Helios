@@ -21,6 +21,7 @@ import { FormsModule } from '@angular/forms';
 import { TimeAgoPipe } from '@app/pipes/time-ago.pipe';
 import { FILTER_OPTIONS_TOKEN, SearchTableService } from '@app/core/services/search-table.service';
 import { TableFilterComponent } from '../table-filter/table-filter.component';
+import { HighlightPipe } from '@app/pipes/highlight.pipe';
 
 type BranchInfoWithLink = BranchInfoDto & { link: string; lastCommitLink: string };
 
@@ -72,6 +73,7 @@ const FILTER_OPTIONS = [
     InputIconModule,
     InputTextModule,
     FormsModule,
+    HighlightPipe,
   ],
   providers: [SearchTableService, { provide: FILTER_OPTIONS_TOKEN, useValue: FILTER_OPTIONS }],
   templateUrl: './branches-table.component.html',
@@ -145,6 +147,10 @@ export class BranchTableComponent {
     ];
     const nodeMap = new Map<string, TreeNode>();
 
+    // Function to check if the branch name matches the search value
+    const matchesSearch = (branch: BranchInfoWithLink) =>
+      this.searchTableService.searchValue().toLowerCase() && branch.name.toLowerCase().includes(this.searchTableService.searchValue().toLowerCase());
+
     branches.forEach(branch => {
       const pathParts = branch.name.split('/');
       let currentPath = '';
@@ -158,6 +164,7 @@ export class BranchTableComponent {
             data: {
               name: part,
             },
+            expanded: false,
           };
 
           // If it's a leaf node, add the branch info
@@ -184,6 +191,21 @@ export class BranchTableComponent {
             const parentNode = nodeMap.get(parentPath);
             if (parentNode && parentNode.children) {
               parentNode.children.push(newNode);
+            }
+          }
+
+          // Expand nodes if they match the search
+          if (matchesSearch(branch)) {
+            // Start from the current node path and expand all the way up to the root
+            let parentPath = currentPath;
+            while (parentPath) {
+              const parentNode = nodeMap.get(parentPath);
+              if (parentNode) {
+                // Expand the parent node
+                parentNode.expanded = true;
+              }
+              // Move up one level by removing the last segment of the path
+              parentPath = parentPath.includes('/') ? parentPath.slice(0, parentPath.lastIndexOf('/')) : '';
             }
           }
         }
