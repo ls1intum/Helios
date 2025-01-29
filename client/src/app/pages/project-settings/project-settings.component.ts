@@ -63,7 +63,7 @@ export class ProjectSettingsComponent {
   showAddGroupDialog = false;
   newGroupName = '';
   // Store the previous label temporarily for the confirmation dialog
-  previousLabel: 'BUILD' | 'DEPLOYMENT' | 'NONE' = 'NONE';
+  private previousLabel: 'BUILD' | 'DEPLOYMENT' | 'NONE' = 'NONE';
 
   // Drag & Drop logic for groupedWorkflowsArray
   private dragIndex: number | null = null;
