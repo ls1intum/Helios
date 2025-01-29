@@ -80,13 +80,12 @@ Application Server Configuration
 `(server .env file)`
 
 You can configure **Helios** to work with **either** a Personal Access Token
-(``GITHUB_AUTH_TOKEN``) **or** a GitHub App. **Full functionality** (including
-Helios's custom deployment protection rules) is only available if you configure
-a GitHub App.
+(``GITHUB_AUTH_TOKEN``) **or** a GitHub App. Full functionality is only available
+if you configure a GitHub App.
 
 **If using a GitHub Personal Access Token**:
 
-- ``GITHUB_AUTH_TOKEN``: Your personal access token (PAT). *(This enables basic GitHub operations but not custom deployment protection rules.)*
+- ``GITHUB_AUTH_TOKEN``: Your personal access token (PAT).
 
 **If using a GitHub App** (recommended for full functionality):
 
@@ -104,7 +103,7 @@ When Helios starts, it will look for all the **GitHub App** variables above:
   ``GITHUB_CLIENT_ID``, etc.) are present, Helios authenticates using the GitHub
   App credentials (full functionality).
 - If they are **not** present, but ``GITHUB_AUTH_TOKEN`` exists, Helios falls back
-  to using the **PAT** (partial functionality, no custom deployment protection rules).
+  to using the **PAT**.
 
 ---
 
@@ -126,9 +125,7 @@ When Helios starts, it will look for all the **GitHub App** variables above:
 
 Creating a GitHub App
 ^^^^^^^^^^^^^^^^^^^^^
-In order to use Helios’s **custom deployment protection rules** and other advanced
-features, you must create a GitHub App (either under an organization or under a
-personal user). Below are typical steps and recommended settings:
+Below are typical steps and recommended settings:
 
 
 
@@ -146,7 +143,7 @@ personal user). Below are typical steps and recommended settings:
     - **Homepage URL**: Can be your local dev URL or your production URL. (Optional)
     - **Enable Device Flow**: (Optional, depending on your needs.)
     - **Enable Webhooks**: Enable
-        - **Webhook URL**: e.g. `https://<your-domain>/github` or `http://<ngrok-url>/github` (if ngrok is running and forwarding to port 4201 for local development).
+        - **Webhook URL**: e.g. `https://<your-domain>/github` or `https://<ngrok-url>/github` (if ngrok is running and forwarding to port 4201 for local development).
         - **Webhook Secret**: Must match your `WEBHOOK_SECRET` in `.env`
 
 3. **Set Permissions**
@@ -163,9 +160,19 @@ personal user). Below are typical steps and recommended settings:
     - **Organization/Account Permissions**:
         - Email addresses: read-only
     - **Subscribe to events**:
-        - Create, Delete, Deployment, Deployment protection rule, Deployment Status,
-            Issues, Label, Pull request, Push, Repository, workflow dispatch,
-            workflow job, workflow run
+        - Create
+        - Delete
+        - Deployment
+        - Deployment protection rule
+        - Deployment Status
+        - Issues
+        - Label
+        - Pull request
+        - Push
+        - Repository
+        - Workflow dispatch
+        - Workflow job
+        - Workflow run
 
 4. **Generate the Private Key**
 
@@ -199,46 +206,12 @@ Insert these values into your `.env` in the `server/application-server` director
 
 .. note::
    For simple local testing, you **can skip** creating a GitHub App and just set
-   a `GITHUB_AUTH_TOKEN`. However, **custom deployment protection rules** will
-   **not** work with a PAT alone.
+   a `GITHUB_AUTH_TOKEN`.
 
-Deployment Protection Rules
----------------------------
-
-After you have created and installed your GitHub App on the target repository, you can configure **deployment protection rules** so that Helios can secure and approve deployments to your environments. This ensures that deployments are triggered and approved by the **Helios [bot]** rather than by a human user.
-
-1. **Open the Repository Settings for Environments**
-
-   - Go to your repository on GitHub.
-   - Click on :guilabel:`Settings` in the navigation bar.
-   - Select :guilabel:`Environments` from the left-hand sidebar.
-
-2. **Select or Create an Environment**
-
-   - Choose an existing environment (such as “staging” or “production”).
-   - Or create a new environment if you do not already have one.
-
-3. **Add a Deployment Protection Rule**
-
-   - Under the **Deployment protection rules** section, look for the **Helios** GitHub App in the list.
-   - Enable the GitHub App as a protection rule by selecting it.
-   - Click :guilabel:`Save protection rule`.
-
-Once saved, the environment will only allow deployments that are triggered (and thus “approved”) by the Helios GitHub App. Manual deployments triggered directly from the GitHub Actions interface will be blocked.
-
-
-+--------------------------------------------------------------+------------------------------------------------+
-| **Example deployment triggered and approved by Helios**      | **Example deployment rejected by Helios**      |
-+--------------------------------------------------------------+------------------------------------------------+
-| .. figure:: ../../images/helios-approved.png                 | .. figure:: ../../images/helios-rejected.png   |
-|    :height: 250px                                            |    :height: 250px                              |
-|    :alt: Example deployment triggered by Helios              |    :alt: Example deployment rejected by Helios |
-|                                                              |                                                |
-+--------------------------------------------------------------+------------------------------------------------+
 
 Example Deployment Workflow
 ---------------------------
-To enable Helios to trigger and approve deployments, your repository must have a corresponding GitHub Actions workflow that Helios can dispatch. Below is an example workflow file (`deploy-with-helios.yml`), which uses the ``workflow_dispatch`` event with specific input parameters.
+To enable Helios to trigger deployments, your repository must have a corresponding GitHub Actions workflow that Helios can dispatch. Below is an example workflow file (`deploy-with-helios.yml`), which uses the ``workflow_dispatch`` event with specific input parameters.
 
 - The workflow uses the ``workflow_dispatch`` event with specific input parameters provided by Helios.
 - The actual **environment** protection settings require that you add the ``environment`` keyword at the **job level** (shown in the deploy job below).
@@ -247,65 +220,51 @@ To enable Helios to trigger and approve deployments, your repository must have a
 
    name: Deploy with Helios
 
-   on:
-     workflow_dispatch:
-       inputs:
-         triggered_by:
-           description: "Username that triggered deployment"
-           required: true
-           type: string
-         HELIOS_BRANCH_NAME:
-           description: "Which branch to deploy"
-           required: true
-           type: string
-         HELIOS_ENVIRONMENT_NAME:
-           description: "Which environment to deploy (e.g. artemis-test7.artemis.cit.tum.de)"
-           required: true
-           type: string
-         HELIOS_BUILD:
-           description: "Whether to also build or just deploy the existing Docker image"
-           required: true
-           type: boolean
-         HELIOS_PR_NUMBER:
-           description: "PR number that triggered deployment"
-           required: false
-           type: string
-         HELIOS_BUILD_TAG:
-           description: "Docker tag to use if we are building or pulling an existing image"
-           required: false
-           type: string
+  on:
+    workflow_dispatch:
+      inputs:
+        # The inputs below must match exactly to work with Helios
+        branch_name:
+          description: "Which branch to deploy"
+          required: true
+          type: string
+        environment_name:
+          description: "Which environment to deploy (e.g. environment defined in GitHub)"
+          required: true
+          type: string
+        triggered_by:
+          description: "Username that triggered deployment (not required, shown if triggered via GitHub UI, logged if triggered via GitHub app)"
+          required: false
+          type: string
 
-   # Ensures only one workflow runs at a time for a given environment name
-   concurrency: ${{ github.event.inputs.HELIOS_ENVIRONMENT_NAME }}
+  # Suggestion: Ensures only one workflow runs at a time for a given environment name
+  concurrency: ${{ github.event.inputs.environment_name }}
 
-   jobs:
-      build:
-         runs-on: ubuntu-latest
-         steps:
-            - name: Checkout
-              uses: actions/checkout@v4
-              with:
-                ref: ${{ github.event.inputs.HELIOS_BRANCH_NAME }}
-            - name: (Optional) Build or Prepare
-              run:
-                  |
-                  echo "Run build steps or check for existing build here..."
+  jobs:
+    build:
+      runs-on: ubuntu-latest
+        steps:
+          - name: Checkout
+            uses: actions/checkout@v4
+            with:
+              ref: ${{ github.event.inputs.branch_name }}
+          - name: (Optional) Build or Prepare
+            run:
+              |
+              echo "Run build steps or check for existing build here..."
 
-      deploy:
-         needs: [ build ]
-         runs-on: ubuntu-latest
-         # The "environment" keyword must be set at the job level to use GitHub Deployment protection
-         environment: ${{ github.event.inputs.HELIOS_ENVIRONMENT_NAME }}
-         steps:
-            - name: Checkout
-              uses: actions/checkout@v4
-              with:
-                ref: ${{ github.event.inputs.HELIOS_BRANCH_NAME }}
+    deploy:
+      needs: [ build ]
+      runs-on: ubuntu-latest
+      # The "environment" keyword must be set at the job level. It should be set in the deploy job (most likely the last job in the workflow).
+      environment: ${{ github.event.inputs.environment_name }}
+      steps:
+        - name: Checkout
+          uses: actions/checkout@v4
+          with:
+            ref: ${{ github.event.inputs.branch_name }}
 
-         # Add your deployment steps here, referencing inputs from Helios:
-         #   ${{ github.event.inputs.HELIOS_BRANCH_NAME }}
-         #   ${{ github.event.inputs.HELIOS_BUILD_TAG }}
-         # etc.
+        # Add your deployment steps here
 
 Explanation
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -315,20 +274,17 @@ Explanation
   2. ``deploy`` - for actually deploying to the GitHub environment.
 
 - **Environment at the Job Level**:
-  In GitHub Actions, you can only specify the ``environment`` keyword at the job level. This ensures that GitHub knows which environment the job is targeting, enabling Helios’s deployment protection rules to function.
+  In GitHub Actions, you can only specify the ``environment`` keyword at the job level. This ensures that GitHub knows which environment the job is targeting.
 
-- **Trigger Source**: Helios will trigger this workflow by sending a ``workflow_dispatch`` event, supplying the relevant metadata (branch, commit SHA, etc.).
-
-- **Helios Inputs**: The inputs named ``HELIOS_*`` provide context for your build or deployment tasks (e.g. branch name, PR number, environment name).
+- **Trigger Source**: Helios will trigger this workflow by sending a ``workflow_dispatch`` event, supplying the relevant metadata (``branch_name``, ``environment_name``, ``triggered_by``).
 
 - **Concurrency**: Setting
   ``concurrency: ${{ github.event.inputs.HELIOS_ENVIRONMENT_NAME }}``
   ensures only one deployment can run at a time for a given environment.
 
-- **Helios as the Actor**: By enabling the Helios GitHub App as a deployment protection rule, the ``workflow_dispatch`` event can still be triggered via the GitHub UI or API by anyone with ``WRITE`` permissions to the repository. However, since the environment is protected by the Helios GitHub App, Helios will be notified to approve or reject the deployment via webhooks. This ensures that the workflow run will either continue or fail based on Helios's decision. Helios will only approve requests that are triggered through Helios itself, providing an additional layer of security and control over deployments.
+- **Helios as the Actor**: The ``workflow_dispatch`` event can be triggered via the GitHub UI or API by anyone with ``WRITE`` permissions to the repository. This means that even if Helios is unresponsive, you can manually trigger deployments using the GitHub UI.
 
-
-By structuring your workflow like this, Helios can act as a **gatekeeper** for environment deployments, providing additional security and ensuring that only Helios-approved deployments proceed. This is especially useful if you want to centralize or automate deployments for multiple branches or environments.
+By structuring your workflow like this, you can ensure that deployments can be triggered directly from the GitHub UI, providing flexibility and control over deployments.
 
 
 Now you can continue running the application by following the steps in the `Starting the Application Guide <start_app.html>`_.
