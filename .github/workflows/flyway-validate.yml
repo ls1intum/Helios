@@ -1,8 +1,8 @@
 name: Flyway Validation
 
-on: 
+on:
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 env:
   FLYWAY_URL: jdbc:postgresql://postgres:5432/helios
@@ -22,12 +22,15 @@ jobs:
           POSTGRES_PASSWORD: ${{ env.FLYWAY_PASSWORD }}
           POSTGRES_DB: helios
 
+        ports:
+          - 5432:5432
+
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-  
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
