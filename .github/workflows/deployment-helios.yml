@@ -1,71 +1,43 @@
-name: Deploy to Testserver with Helios
+name: Deploy to Test-Server with Helios
 
 on:
   workflow_dispatch:
     inputs:
-      triggered_by:
-        description: "Username that triggered deployment"
-        required: true
-        type: string
-      HELIOS_BRANCH_NAME:
+      branch_name:
         description: "Which branch to deploy"
         required: true
         type: string
-      HELIOS_PR_NUMBER:
-        description: "PR number that triggered deployment"
-        required: false
-        type: string
-      HELIOS_ENVIRONMENT_NAME:
-        description: "Which environment to deploy (e.g. artemis-test7.artemis.cit.tum.de, etc.)."
+      environment_name:
+        description: "Which environment to deploy (environment defined in GitHub)"
         required: true
         type: string
-      HELIOS_BUILD:
-        description: "Whether to also build or just deploy the existing Docker image"
-        required: true
-        type: boolean
-        default: false
-      HELIOS_BUILD_TAG:
-        description: "Docker tag to use if we are building or pulling an existing image"
+      triggered_by:
+        description: "Username that triggered deployment (not required, shown if triggered via GitHub UI, logged if triggered via GitHub app)"
         required: false
         type: string
 
-concurrency: ${{ github.event.inputs.HELIOS_ENVIRONMENT_NAME }}
+concurrency: ${{ github.event.inputs.environment_name }}
 
 env:
   CI: true
 
 jobs:
-  # Print the inputs for debugging
-  validate-inputs:
+  log-inputs:
     runs-on: ubuntu-latest
     steps:
-      - name: Validate Build Tag Input Exists
-        if: ${{ github.event.inputs.HELIOS_BUILD == 'true' && github.event.inputs.HELIOS_BUILD_TAG == '' }}
+      - name: Log Inputs
         run: |
-          echo "HELIOS_BUILD is true but no HELIOS_BUILD_TAG was provided."
-          exit 1
-      - name: Validate PR Number Input Exists
-        if: ${{ github.event.inputs.HELIOS_BUILD == 'false' && github.event.inputs.HELIOS_PR_NUMBER == '' }}
-        run: |
-          echo "HELIOS_BUILD is false but no HELIOS_PR_NUMBER was provided."
-          exit 1
+          echo "Branch: ${{ github.event.inputs.branch_name }}"
+          echo "Environment: ${{ github.event.inputs.environment_name }}"
+          echo "Triggered by?: ${{ github.event.inputs.triggered_by }}"
 
-      - name: Print Inputs
-        run: |
-          echo "RAW_URL: ${{ env.RAW_URL }}"
-          echo "Triggered by: ${{ github.event.inputs.triggered_by }}"
-          echo "Branch: ${{ github.event.inputs.HELIOS_BRANCH_NAME }}"
-          echo "PR Number: ${{ github.event.inputs.HELIOS_PR_NUMBER }}"
-          echo "Environment: ${{ github.event.inputs.HELIOS_ENVIRONMENT_NAME }}"
-          echo "Need Build? ${{ github.event.inputs.HELIOS_BUILD }}"
-          echo "Build Tag? ${{ github.event.inputs.HELIOS_BUILD_TAG }}"
 
   deploy:
-    needs: [ validate-inputs ]
+    needs: [ log-inputs ]
     runs-on: ubuntu-latest
     environment:
-      name: ${{ github.event.inputs.HELIOS_ENVIRONMENT_NAME }}
+      name: ${{ github.event.inputs.environment_name }}
     steps:
       - name: Echo
         run: |
-          echo "Deploying to ${{ github.event.inputs.HELIOS_ENVIRONMENT_NAME }}"
+          echo "Deploying to ${{ github.event.inputs.environment_name }}"
