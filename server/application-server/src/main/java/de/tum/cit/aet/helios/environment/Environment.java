@@ -1,7 +1,9 @@
 package de.tum.cit.aet.helios.environment;
 
 import de.tum.cit.aet.helios.deployment.Deployment;
+import de.tum.cit.aet.helios.environment.status.EnvironmentStatus;
 import de.tum.cit.aet.helios.filters.RepositoryFilterEntity;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -14,6 +16,7 @@ import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -83,6 +86,18 @@ public class Environment extends RepositoryFilterEntity {
 
   @OneToMany(mappedBy = "environment", fetch = FetchType.LAZY)
   private List<EnvironmentLockHistory> lockHistory;
+
+  @Column(name = "status_url", nullable = true)
+  private String statusUrl;
+
+  @OneToMany(mappedBy = "environment", cascade = CascadeType.ALL, orphanRemoval = true)
+  @OrderBy("checkTimestamp DESC")
+  private List<EnvironmentStatus> statusHistory;
+
+  public void addStatusEntry(EnvironmentStatus status) {
+    status.setEnvironment(this);
+    statusHistory.add(status);
+  }
 
   // Missing properties
   // nodeId --> GraphQl ID
