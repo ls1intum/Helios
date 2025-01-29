@@ -102,8 +102,7 @@ paths:
           description: OK
           content:
             application/json:
-              schema:
-                $ref: "#/components/schemas/EnvironmentDto"
+              schema: {}
   /api/environments/{id}/unlock:
     put:
       tags:
@@ -299,6 +298,18 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/WorkflowRunDto"
+  /api/user-permissions:
+    get:
+      tags:
+      - user-permissions-controller
+      operationId: getUserPermissions
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GitHubRepositoryRoleDto"
   /api/settings/{repositoryId}/groups:
     get:
       tags:
@@ -446,7 +457,7 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/EnvironmentDto"
-  /api/environments/user_locking:
+  /api/environments/userLocking:
     get:
       tags:
       - environment-controller
@@ -470,6 +481,41 @@ paths:
         schema:
           type: integer
           format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EnvironmentDto"
+  /api/environments/environment/{environmentId}/lockHistory:
+    get:
+      tags:
+      - environment-controller
+      operationId: getLockHistoryByEnvironmentId
+      parameters:
+      - name: environmentId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EnvironmentLockHistoryDto"
+  /api/environments/enabled:
+    get:
+      tags:
+      - environment-controller
+      operationId: getAllEnabledEnvironments
       responses:
         "200":
           description: OK
@@ -552,6 +598,27 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DeploymentDto"
+  /api/deployments/environment/{environmentId}/activity-history:
+    get:
+      tags:
+      - deployment-controller
+      operationId: getActivityHistoryByEnvironmentId
+      parameters:
+      - name: environmentId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActivityHistoryDto"
   /api/commits/repository/{repoId}/commit/{sha}:
     get:
       tags:
@@ -680,6 +747,7 @@ components:
           type: string
           enum:
           - PENDING
+          - WAITING
           - SUCCESS
           - ERROR
           - FAILURE
@@ -730,6 +798,8 @@ components:
         updatedAt:
           type: string
           format: date-time
+        enabled:
+          type: boolean
         installedApps:
           type: array
           items:
@@ -878,6 +948,18 @@ components:
       - name
       - status
       - workflowId
+    GitHubRepositoryRoleDto:
+      type: object
+      properties:
+        permission:
+          type: string
+          enum:
+          - ADMIN
+          - WRITE
+          - READ
+          - NONE
+        roleName:
+          type: string
     LabelInfoDto:
       type: object
       properties:
@@ -1080,6 +1162,7 @@ components:
           type: string
           enum:
           - PENDING
+          - WAITING
           - SUCCESS
           - ERROR
           - FAILURE
@@ -1111,6 +1194,43 @@ components:
       - statusesUrl
       - task
       - url
+    ActivityHistoryDto:
+      type: object
+      properties:
+        type:
+          type: string
+        id:
+          type: integer
+          format: int64
+        repository:
+          $ref: "#/components/schemas/RepositoryInfoDto"
+        state:
+          type: string
+          enum:
+          - PENDING
+          - WAITING
+          - SUCCESS
+          - ERROR
+          - FAILURE
+          - IN_PROGRESS
+          - QUEUED
+          - INACTIVE
+          - UNKNOWN
+        sha:
+          type: string
+        ref:
+          type: string
+        lockedBy:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
     CommitInfoDto:
       type: object
       properties:

@@ -226,6 +226,7 @@ export class ProjectSettingsComponent {
       }
     }
     this.confirmationService.confirm({
+      header: 'Change Label',
       message: `Are you sure you want to change the label?<br/><br/>
       Note: Only one workflow can be labeled as 'DEPLOYMENT' and one as 'BUILD'.`,
       accept: () => {

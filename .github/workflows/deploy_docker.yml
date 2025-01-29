@@ -90,6 +90,12 @@ jobs:
             
             echo "OAUTH_ISSUER_URL=${{ vars.OAUTH_ISSUER_URL }}" >> .env
 
+            echo "GITHUB_APP_NAME=${{ vars.GH_APP_NAME }}" >> .env
+            echo "GITHUB_APP_ID=${{ secrets.GH_APP_ID }}" >> .env
+            echo "GITHUB_CLIENT_ID=${{ secrets.GH_CLIENT_ID }}" >> .env
+            echo "GITHUB_INSTALLATION_ID=${{ vars.GH_INSTALLATION_ID }}" >> .env
+            echo "GITHUB_PRIVATE_KEY_PATH=${{ secrets.GH_PRIVATE_KEY_PATH }}" >> .env
+
             echo "CLIENT_IMAGE_TAG=${{ inputs.client_image_tag }}" >> .env
             echo "APPLICATION_SERVER_IMAGE_TAG=${{ inputs.application_server_image_tag }}" >> .env
             echo "WEBHOOK_LISTENER_IMAGE_TAG=${{ inputs.webhook_listener_image_tag }}" >> .env

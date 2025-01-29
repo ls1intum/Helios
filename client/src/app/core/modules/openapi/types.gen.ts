@@ -15,7 +15,7 @@ export type WorkflowMembershipDto = {
 export type EnvironmentDeployment = {
   id: number;
   url: string;
-  state?: 'PENDING' | 'SUCCESS' | 'ERROR' | 'FAILURE' | 'IN_PROGRESS' | 'QUEUED' | 'INACTIVE' | 'UNKNOWN';
+  state?: 'PENDING' | 'WAITING' | 'SUCCESS' | 'ERROR' | 'FAILURE' | 'IN_PROGRESS' | 'QUEUED' | 'INACTIVE' | 'UNKNOWN';
   statusesUrl: string;
   sha: string;
   ref: string;
@@ -33,6 +33,7 @@ export type EnvironmentDto = {
   htmlUrl?: string;
   createdAt?: string;
   updatedAt?: string;
+  enabled?: boolean;
   installedApps?: Array<string>;
   description?: string;
   serverUrl?: string;
@@ -92,6 +93,11 @@ export type WorkflowRunDto = {
   workflowId: number;
   conclusion?: 'ACTION_REQUIRED' | 'CANCELLED' | 'FAILURE' | 'NEUTRAL' | 'SUCCESS' | 'SKIPPED' | 'STALE' | 'TIMED_OUT' | 'STARTUP_FAILURE' | 'UNKNOWN';
   htmlUrl: string;
+};
+
+export type GitHubRepositoryRoleDto = {
+  permission?: 'ADMIN' | 'WRITE' | 'READ' | 'NONE';
+  roleName?: string;
 };
 
 export type LabelInfoDto = {
@@ -174,12 +180,25 @@ export type DeploymentDto = {
   id: number;
   repository?: RepositoryInfoDto;
   url: string;
-  state?: 'PENDING' | 'SUCCESS' | 'ERROR' | 'FAILURE' | 'IN_PROGRESS' | 'QUEUED' | 'INACTIVE' | 'UNKNOWN';
+  state?: 'PENDING' | 'WAITING' | 'SUCCESS' | 'ERROR' | 'FAILURE' | 'IN_PROGRESS' | 'QUEUED' | 'INACTIVE' | 'UNKNOWN';
   statusesUrl: string;
   sha: string;
   ref: string;
   task: string;
   environment: EnvironmentDto;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type ActivityHistoryDto = {
+  type?: string;
+  id?: number;
+  repository?: RepositoryInfoDto;
+  state?: 'PENDING' | 'WAITING' | 'SUCCESS' | 'ERROR' | 'FAILURE' | 'IN_PROGRESS' | 'QUEUED' | 'INACTIVE' | 'UNKNOWN';
+  sha?: string;
+  ref?: string;
+  lockedBy?: string;
+  timestamp?: string;
   createdAt?: string;
   updatedAt?: string;
 };
@@ -267,10 +286,8 @@ export type UpdateEnvironmentResponses = {
   /**
    * OK
    */
-  200: EnvironmentDto;
+  200: unknown;
 };
-
-export type UpdateEnvironmentResponse = UpdateEnvironmentResponses[keyof UpdateEnvironmentResponses];
 
 export type UnlockEnvironmentData = {
   body?: never;
@@ -445,6 +462,22 @@ export type GetLatestWorkflowRunsByBranchAndHeadCommitResponses = {
 
 export type GetLatestWorkflowRunsByBranchAndHeadCommitResponse = GetLatestWorkflowRunsByBranchAndHeadCommitResponses[keyof GetLatestWorkflowRunsByBranchAndHeadCommitResponses];
 
+export type GetUserPermissionsData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/api/user-permissions';
+};
+
+export type GetUserPermissionsResponses = {
+  /**
+   * OK
+   */
+  200: GitHubRepositoryRoleDto;
+};
+
+export type GetUserPermissionsResponse = GetUserPermissionsResponses[keyof GetUserPermissionsResponses];
+
 export type GetGroupsWithWorkflowsData = {
   body?: never;
   path: {
@@ -588,7 +621,7 @@ export type GetEnvironmentsByUserLockingData = {
   body?: never;
   path?: never;
   query?: never;
-  url: '/api/environments/user_locking';
+  url: '/api/environments/userLocking';
 };
 
 export type GetEnvironmentsByUserLockingResponses = {
@@ -617,6 +650,40 @@ export type GetEnvironmentsByRepositoryIdResponses = {
 };
 
 export type GetEnvironmentsByRepositoryIdResponse = GetEnvironmentsByRepositoryIdResponses[keyof GetEnvironmentsByRepositoryIdResponses];
+
+export type GetLockHistoryByEnvironmentIdData = {
+  body?: never;
+  path: {
+    environmentId: number;
+  };
+  query?: never;
+  url: '/api/environments/environment/{environmentId}/lockHistory';
+};
+
+export type GetLockHistoryByEnvironmentIdResponses = {
+  /**
+   * OK
+   */
+  200: Array<EnvironmentLockHistoryDto>;
+};
+
+export type GetLockHistoryByEnvironmentIdResponse = GetLockHistoryByEnvironmentIdResponses[keyof GetLockHistoryByEnvironmentIdResponses];
+
+export type GetAllEnabledEnvironmentsData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/api/environments/enabled';
+};
+
+export type GetAllEnabledEnvironmentsResponses = {
+  /**
+   * OK
+   */
+  200: Array<EnvironmentDto>;
+};
+
+export type GetAllEnabledEnvironmentsResponse = GetAllEnabledEnvironmentsResponses[keyof GetAllEnabledEnvironmentsResponses];
 
 export type GetAllDeploymentsData = {
   body?: never;
@@ -687,6 +754,24 @@ export type GetLatestDeploymentByEnvironmentIdResponses = {
 };
 
 export type GetLatestDeploymentByEnvironmentIdResponse = GetLatestDeploymentByEnvironmentIdResponses[keyof GetLatestDeploymentByEnvironmentIdResponses];
+
+export type GetActivityHistoryByEnvironmentIdData = {
+  body?: never;
+  path: {
+    environmentId: number;
+  };
+  query?: never;
+  url: '/api/deployments/environment/{environmentId}/activity-history';
+};
+
+export type GetActivityHistoryByEnvironmentIdResponses = {
+  /**
+   * OK
+   */
+  200: Array<ActivityHistoryDto>;
+};
+
+export type GetActivityHistoryByEnvironmentIdResponse = GetActivityHistoryByEnvironmentIdResponses[keyof GetActivityHistoryByEnvironmentIdResponses];
 
 export type GetCommitByRepositoryIdAndNameData = {
   body?: never;

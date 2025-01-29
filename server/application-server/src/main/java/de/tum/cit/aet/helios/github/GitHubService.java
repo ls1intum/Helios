@@ -2,10 +2,14 @@ package de.tum.cit.aet.helios.github;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import de.tum.cit.aet.helios.auth.AuthService;
 import de.tum.cit.aet.helios.deployment.github.GitHubDeploymentDto;
 import de.tum.cit.aet.helios.environment.github.GitHubEnvironmentApiResponse;
 import de.tum.cit.aet.helios.environment.github.GitHubEnvironmentDto;
-import jakarta.annotation.PostConstruct;
+import de.tum.cit.aet.helios.filters.RepositoryContext;
+import de.tum.cit.aet.helios.github.permissions.GitHubPermissionsResponse;
+import de.tum.cit.aet.helios.github.permissions.GitHubRepositoryRoleDto;
+import de.tum.cit.aet.helios.github.permissions.RepoPermissionType;
 import jakarta.transaction.Transactional;
 import java.io.IOException;
 import java.util.Iterator;
@@ -21,15 +25,13 @@ import okhttp3.Response;
 import org.kohsuke.github.GHOrganization;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GHWorkflow;
-import org.kohsuke.github.GitHub;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
 @Log4j2
 @Transactional
 public class GitHubService {
-  private final GitHub github;
+  private final GitHubFacade github;
 
   private final GitHubConfig gitHubConfig;
 
@@ -37,31 +39,31 @@ public class GitHubService {
 
   private final OkHttpClient okHttpClient;
 
-  @Value("${github.authToken}")
-  private String ghAuthToken;
+  private final AuthService authService;
 
-  // Request builder for GitHub API calls with authorization header
-  private Builder requestBuilder;
+  private final GitHubClientManager clientManager;
 
   private GHOrganization gitHubOrganization;
 
   public GitHubService(
-      GitHub github,
+      GitHubFacade github,
       GitHubConfig gitHubConfig,
       ObjectMapper objectMapper,
-      OkHttpClient okHttpClient) {
+      OkHttpClient okHttpClient,
+      AuthService authService,
+      GitHubClientManager clientManager) {
     this.github = github;
     this.gitHubConfig = gitHubConfig;
     this.objectMapper = objectMapper;
     this.okHttpClient = okHttpClient;
+    this.authService = authService;
+    this.clientManager = clientManager;
   }
 
-  @PostConstruct
-  public void init() {
-    this.requestBuilder =
-        new Request.Builder()
-            .header("Authorization", "token " + ghAuthToken)
-            .header("Accept", "application/vnd.github+json");
+  public Builder getRequestBuilder() {
+    return new Request.Builder()
+        .header("Authorization", "token " + clientManager.getCurrentToken())
+        .header("Accept", "application/vnd.github+json");
   }
 
   /**
@@ -109,7 +111,7 @@ public class GitHubService {
   /**
    * Retrieves a specific workflow for a given repository.
    *
-   * @param repoNameWithOwners the repository name with owners
+   * @param repoNameWithOwners   the repository name with owners
    * @param workflowFileNameOrId the workflow file name or ID
    * @return the GitHub workflow
    * @throws IOException if an I/O error occurs
@@ -122,10 +124,10 @@ public class GitHubService {
   /**
    * Dispatches a workflow for a given repository.
    *
-   * @param repoNameWithOwners the repository name with owners
+   * @param repoNameWithOwners   the repository name with owners
    * @param workflowFileNameOrId the workflow file name or ID
-   * @param ref the reference (branch or tag) to run the workflow on
-   * @param inputs the inputs for the workflow
+   * @param ref                  the reference (branch or tag) to run the workflow on
+   * @param inputs               the inputs for the workflow
    * @throws IOException if an I/O error occurs
    */
   public void dispatchWorkflow(
@@ -145,7 +147,7 @@ public class GitHubService {
     RequestBody requestBody =
         RequestBody.create(jsonPayload, MediaType.get("application/json; charset=utf-8"));
 
-    Request request = requestBuilder.url(url).post(requestBody).build();
+    Request request = getRequestBuilder().url(url).post(requestBody).build();
 
     try (Response response = okHttpClient.newCall(request).execute()) {
       if (!response.isSuccessful()) {
@@ -170,7 +172,7 @@ public class GitHubService {
     final String url =
         String.format("https://api.github.com/repos/%s/%s/environments", owner, repoName);
 
-    Request request = requestBuilder.url(url).build();
+    Request request = getRequestBuilder().url(url).get().build();
 
     try (Response response = okHttpClient.newCall(request).execute()) {
       if (!response.isSuccessful()) {
@@ -197,13 +199,92 @@ public class GitHubService {
   /**
    * Retrieves a GitHub deployment iterator for a given repository and environment.
    *
-   * @param repository the GitHub repository as a GHRepository object
+   * @param repository      the GitHub repository as a GHRepository object
    * @param environmentName the environment name
    * @return a GitHubDeploymentIterator object
    */
   public Iterator<GitHubDeploymentDto> getDeploymentIterator(
       GHRepository repository, String environmentName) {
     return new GitHubDeploymentIterator(
-        repository, environmentName, okHttpClient, requestBuilder, objectMapper);
+        repository, environmentName, okHttpClient, getRequestBuilder(), objectMapper);
+  }
+
+  /**
+   * Retrieves the GitHub repository role for the current user and the repository from the
+   * RepositoryContext.
+   *
+   * @return GitHubRepositoryRoleDto containing the role information.
+   * @throws IOException if there is an error fetching the repository ID or username.
+   */
+  public GitHubRepositoryRoleDto getRepositoryRole() throws IOException {
+    String repositoryId;
+    try {
+      repositoryId = RepositoryContext.getRepositoryId().toString();
+    } catch (Exception e) {
+      log.error("Error occurred while fetching repository: {}", e.getMessage());
+      throw new IOException("Failed to fetch repository ID", e);
+    }
+    String username;
+    try {
+      username = this.authService.getPreferredUsername();
+    } catch (Exception e) {
+      log.error("Error occurred while fetching username: {}", e.getMessage());
+      throw new IOException("Failed to fetch username", e);
+    }
+    return getRepositoryRole(repositoryId, username);
+  }
+
+  /**
+   * Retrieves the GitHub repository role for a given repository ID and username.
+   *
+   * @param repositoryId the ID of the repository.
+   * @param username the GitHub username.
+   * @return GitHubRepositoryRoleDto containing the role information.
+   * @throws IOException if there is an error making the GitHub API call or processing the response.
+   * @throws IllegalArgumentException if the repository ID or username is null or empty.
+   */
+  public GitHubRepositoryRoleDto getRepositoryRole(String repositoryId, String username)
+      throws IOException, IllegalArgumentException {
+
+    if (repositoryId == null || repositoryId.isEmpty()) {
+      throw new IllegalArgumentException("Repository ID cannot be null or empty");
+    }
+
+    if (username == null || username.isEmpty()) {
+      throw new IllegalArgumentException("Username cannot be null or empty");
+    }
+    String url =
+        String.format(
+            "https://api.github.com/repositories/%s/collaborators/%s/permission",
+            repositoryId, username);
+
+    Request request = getRequestBuilder().url(url).get().build();
+
+    try (Response response = okHttpClient.newCall(request).execute()) {
+      if (!response.isSuccessful()) {
+        throw new IOException("GitHub API call failed with response code: " + response.code());
+      }
+
+      if (response.body() == null) {
+        throw new IOException("Response body is null");
+      }
+
+      String responseBody = response.body().string();
+      GitHubPermissionsResponse permissionResponse =
+          objectMapper.readValue(responseBody, GitHubPermissionsResponse.class);
+      return new GitHubRepositoryRoleDto(
+          RepoPermissionType.fromString(permissionResponse.getPermission()),
+          permissionResponse.getRoleName());
+
+    } catch (JsonProcessingException e) {
+      log.error("Error processing JSON response: {}", e.getMessage());
+      throw new IOException("Error processing JSON response", e);
+    } catch (IOException e) {
+      log.error("Error occurred while fetching permissions: {}", e.getMessage());
+      throw new IOException("Error occurred while fetching permissions", e);
+    } catch (Exception e) {
+      log.error("Unexpected error occurred: {}", e.getMessage());
+      throw new IOException("Unexpected error occurred", e);
+    }
   }
 }

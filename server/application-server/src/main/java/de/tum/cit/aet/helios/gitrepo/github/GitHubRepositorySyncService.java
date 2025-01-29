@@ -1,5 +1,6 @@
 package de.tum.cit.aet.helios.gitrepo.github;
 
+import de.tum.cit.aet.helios.github.GitHubFacade;
 import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import de.tum.cit.aet.helios.util.DateUtil;
@@ -9,7 +10,6 @@ import java.util.List;
 import java.util.Optional;
 import lombok.extern.log4j.Log4j2;
 import org.kohsuke.github.GHRepository;
-import org.kohsuke.github.GitHub;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -20,12 +20,12 @@ public class GitHubRepositorySyncService {
   @Value("${monitoring.repositories}")
   private String[] repositoriesToMonitor;
 
-  private final GitHub github;
+  private final GitHubFacade github;
   private final GitRepoRepository gitRepoRepository;
   private final GitHubRepositoryConverter repositoryConverter;
 
   public GitHubRepositorySyncService(
-      GitHub github,
+      GitHubFacade github,
       GitRepoRepository gitRepoRepository,
       GitHubRepositoryConverter repositoryConverter) {
     this.github = github;

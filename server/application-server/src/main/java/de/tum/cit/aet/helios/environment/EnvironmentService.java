@@ -1,6 +1,9 @@
 package de.tum.cit.aet.helios.environment;
 
 import de.tum.cit.aet.helios.auth.AuthService;
+import de.tum.cit.aet.helios.deployment.DeploymentException;
+import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
+import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import java.time.OffsetDateTime;
@@ -14,18 +17,19 @@ import org.springframework.stereotype.Service;
 @Transactional
 public class EnvironmentService {
 
-  private final EnvironmentRepository environmentRepository;
-
   private final AuthService authService;
-
+  private final EnvironmentRepository environmentRepository;
   private final EnvironmentLockHistoryRepository lockHistoryRepository;
+  private final HeliosDeploymentRepository heliosDeploymentRepository;
 
 
   public EnvironmentService(EnvironmentRepository environmentRepository,
                             EnvironmentLockHistoryRepository lockHistoryRepository,
+                            HeliosDeploymentRepository heliosDeploymentRepository,
                             AuthService authService) {
     this.environmentRepository = environmentRepository;
     this.lockHistoryRepository = lockHistoryRepository;
+    this.heliosDeploymentRepository = heliosDeploymentRepository;
     this.authService = authService;
   }
 
@@ -34,7 +38,17 @@ public class EnvironmentService {
   }
 
   public List<EnvironmentDto> getAllEnvironments() {
-    return environmentRepository.findAll().stream()
+    return environmentRepository.findAllByOrderByNameAsc().stream()
+        .map(
+            environment -> {
+              return EnvironmentDto.fromEnvironment(
+                  environment, environment.getDeployments().reversed().stream().findFirst());
+            })
+        .collect(Collectors.toList());
+  }
+
+  public List<EnvironmentDto> getAllEnabledEnvironments() {
+    return environmentRepository.findByEnabledTrueOrderByNameAsc().stream()
         .map(
             environment -> {
               return EnvironmentDto.fromEnvironment(
@@ -66,7 +80,7 @@ public class EnvironmentService {
    */
   @Transactional
   public Optional<Environment> lockEnvironment(Long id) {
-    final String currentUserId = authService.getUserId();
+    final String currentUserName = authService.getPreferredUsername();
 
     Environment environment =
         environmentRepository
@@ -74,20 +88,20 @@ public class EnvironmentService {
             .orElseThrow(() -> new EntityNotFoundException("Environment not found with ID: " + id));
 
     if (environment.isLocked()) {
-      if (currentUserId.equals(environment.getLockedBy())) {
+      if (currentUserName.equals(environment.getLockedBy())) {
         return Optional.of(environment);
       }
 
       return Optional.empty();
     }
-    environment.setLockedBy(currentUserId);
+    environment.setLockedBy(currentUserName);
     environment.setLockedAt(OffsetDateTime.now());
     environment.setLocked(true);
 
     // Record lock event
     EnvironmentLockHistory history = new EnvironmentLockHistory();
     history.setEnvironment(environment);
-    history.setLockedBy(currentUserId);
+    history.setLockedBy(currentUserName);
     history.setLockedAt(OffsetDateTime.now());
     lockHistoryRepository.saveAndFlush(history);
 
@@ -112,7 +126,7 @@ public class EnvironmentService {
    */
   @Transactional
   public EnvironmentDto unlockEnvironment(Long id) {
-    final String currentUserId = authService.getUserId();
+    final String currentUserName = authService.getPreferredUsername();
 
     Environment environment =
         environmentRepository
@@ -123,24 +137,27 @@ public class EnvironmentService {
       throw new IllegalStateException("Environment is not locked");
     }
 
-    if (!currentUserId.equals(environment.getLockedBy())) {
+    if (!currentUserName.equals(environment.getLockedBy())) {
       throw new SecurityException(
           "You do not have permission to unlock this environment. "
               + "Environment is locked by another user");
+    }
+
+    // 20 minutes timeout for redeployment
+    if (!canUnlock(environment, 20)) {
+      throw new DeploymentException("Deployment is still in progress, please wait.");
     }
 
     environment.setLocked(false);
     environment.setLockedBy(null);
     environment.setLockedAt(null);
 
-    var openLock = lockHistoryRepository
-        .findTopByEnvironmentAndLockedByAndUnlockedAtIsNullOrderByLockedAtDesc(
-            environment,
-            currentUserId
-        );
-    if (openLock != null) {
-      openLock.setUnlockedAt(OffsetDateTime.now());
-      lockHistoryRepository.save(openLock);
+    Optional<EnvironmentLockHistory> openLock = lockHistoryRepository
+        .findLatestLockForEnvironmentAndUser(environment, currentUserName);
+    if (openLock.isPresent()) {
+      EnvironmentLockHistory openLockHistory = openLock.get();
+      openLockHistory.setUnlockedAt(OffsetDateTime.now());
+      lockHistoryRepository.save(openLockHistory);
     }
 
     environmentRepository.save(environment);
@@ -148,11 +165,34 @@ public class EnvironmentService {
     return EnvironmentDto.fromEnvironment(environment);
   }
 
-  public Optional<EnvironmentDto> updateEnvironment(Long id, EnvironmentDto environmentDto) {
+  /**
+   * Updates the environment with the specified ID.
+   *
+   * <p>This method updates the environment with the specified ID using the provided EnvironmentDto.
+   *
+   * @param id             the ID of the environment to update
+   * @param environmentDto the EnvironmentDto containing the updated environment information
+   * @return an Optional containing the updated environment if successful,
+   *     or an empty Optional if no environment is found with the specified ID
+   * @throws EnvironmentException if the environment is locked and cannot be disabled
+   */
+  public Optional<EnvironmentDto> updateEnvironment(Long id, EnvironmentDto environmentDto)
+      throws EnvironmentException {
     return environmentRepository
         .findById(id)
         .map(
             environment -> {
+              if (!environmentDto.enabled() && environment.isLocked()) {
+                throw new EnvironmentException(
+                    "Environment is locked and can not be disabled. "
+                        + "Please unlock the environment first.");
+              } else if (!environment.isEnabled() && environmentDto.enabled()) {
+                environment.setLocked(false);
+                environment.setLockedBy(null);
+                environment.setLockedAt(null);
+              }
+              environment.setEnabled(environmentDto.enabled());
+
               if (environmentDto.updatedAt() != null) {
                 environment.setUpdatedAt(environmentDto.updatedAt());
               }
@@ -172,15 +212,44 @@ public class EnvironmentService {
   }
 
   public EnvironmentLockHistoryDto getUsersCurrentLock() {
-    final String currentUserId = authService.getUserId();
-    EnvironmentLockHistory lockHistory =
-        lockHistoryRepository
-            .findTopByLockedByAndUnlockedAtIsNullOrderByLockedAtDesc(currentUserId);
+    final String currentUserName = authService.getPreferredUsername();
+    Optional<EnvironmentLockHistory> lockHistory =
+        lockHistoryRepository.findLatestLockForEnabledEnvironment(currentUserName);
 
-    if (lockHistory == null) {
-      return null;
+    return lockHistory.map(EnvironmentLockHistoryDto::fromEnvironmentLockHistory).orElse(null);
+  }
+
+  public List<EnvironmentLockHistoryDto> getLockHistoryByEnvironmentId(Long environmentId) {
+    return lockHistoryRepository.findLockHistoriesByEnvironment(environmentId).stream()
+        .map(EnvironmentLockHistoryDto::fromEnvironmentLockHistory)
+        .collect(Collectors.toList());
+  }
+
+  private boolean canUnlock(Environment environment, long timeoutMinutes) {
+    // Fetch the most recent deployment for the environment
+    Optional<HeliosDeployment> latestDeployment = heliosDeploymentRepository
+        .findTopByEnvironmentOrderByCreatedAtDesc(environment);
+
+    if (latestDeployment.isEmpty()) {
+      // No prior deployments, safe to unlock
+      return true;
     }
 
-    return EnvironmentLockHistoryDto.fromEnvironmentLockHistory(lockHistory);
+    HeliosDeployment deployment = latestDeployment.get();
+
+    // Check if timeout has elapsed
+    if (deployment.getStatus() == HeliosDeployment.Status.IN_PROGRESS
+        || deployment.getStatus() == HeliosDeployment.Status.WAITING
+        || deployment.getStatus() == HeliosDeployment.Status.QUEUED) {
+      OffsetDateTime now = OffsetDateTime.now();
+      if (deployment.getStatusUpdatedAt().plusMinutes(timeoutMinutes).isAfter(now)) {
+        return false;
+      }
+
+      deployment.setStatus(HeliosDeployment.Status.UNKNOWN);
+      heliosDeploymentRepository.save(deployment);
+    }
+    return true;
   }
+
 }

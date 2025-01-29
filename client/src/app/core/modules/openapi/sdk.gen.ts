@@ -7,7 +7,6 @@ import type {
   GetEnvironmentByIdData,
   GetEnvironmentByIdResponse,
   UpdateEnvironmentData,
-  UpdateEnvironmentResponse,
   UnlockEnvironmentData,
   CreateWorkflowGroupData,
   CreateWorkflowGroupResponse,
@@ -27,6 +26,8 @@ import type {
   GetLatestWorkflowRunsByPullRequestIdAndHeadCommitResponse,
   GetLatestWorkflowRunsByBranchAndHeadCommitData,
   GetLatestWorkflowRunsByBranchAndHeadCommitResponse,
+  GetUserPermissionsData,
+  GetUserPermissionsResponse,
   GetGroupsWithWorkflowsData,
   GetGroupsWithWorkflowsResponse,
   GetAllRepositoriesData,
@@ -47,6 +48,10 @@ import type {
   GetEnvironmentsByUserLockingResponse,
   GetEnvironmentsByRepositoryIdData,
   GetEnvironmentsByRepositoryIdResponse,
+  GetLockHistoryByEnvironmentIdData,
+  GetLockHistoryByEnvironmentIdResponse,
+  GetAllEnabledEnvironmentsData,
+  GetAllEnabledEnvironmentsResponse,
   GetAllDeploymentsData,
   GetAllDeploymentsResponse,
   GetDeploymentByIdData,
@@ -55,6 +60,8 @@ import type {
   GetDeploymentsByEnvironmentIdResponse,
   GetLatestDeploymentByEnvironmentIdData,
   GetLatestDeploymentByEnvironmentIdResponse,
+  GetActivityHistoryByEnvironmentIdData,
+  GetActivityHistoryByEnvironmentIdResponse,
   GetCommitByRepositoryIdAndNameData,
   GetCommitByRepositoryIdAndNameResponse,
   GetAllBranchesData,
@@ -96,7 +103,7 @@ export const getEnvironmentById = <ThrowOnError extends boolean = false>(options
 };
 
 export const updateEnvironment = <ThrowOnError extends boolean = false>(options: Options<UpdateEnvironmentData, ThrowOnError>) => {
-  return (options?.client ?? client).put<UpdateEnvironmentResponse, unknown, ThrowOnError>({
+  return (options?.client ?? client).put<unknown, unknown, ThrowOnError>({
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -188,6 +195,13 @@ export const getLatestWorkflowRunsByBranchAndHeadCommit = <ThrowOnError extends 
   });
 };
 
+export const getUserPermissions = <ThrowOnError extends boolean = false>(options?: Options<GetUserPermissionsData, ThrowOnError>) => {
+  return (options?.client ?? client).get<GetUserPermissionsResponse, unknown, ThrowOnError>({
+    ...options,
+    url: '/api/user-permissions',
+  });
+};
+
 export const getGroupsWithWorkflows = <ThrowOnError extends boolean = false>(options: Options<GetGroupsWithWorkflowsData, ThrowOnError>) => {
   return (options?.client ?? client).get<GetGroupsWithWorkflowsResponse, unknown, ThrowOnError>({
     ...options,
@@ -247,7 +261,7 @@ export const getAllEnvironments = <ThrowOnError extends boolean = false>(options
 export const getEnvironmentsByUserLocking = <ThrowOnError extends boolean = false>(options?: Options<GetEnvironmentsByUserLockingData, ThrowOnError>) => {
   return (options?.client ?? client).get<GetEnvironmentsByUserLockingResponse, unknown, ThrowOnError>({
     ...options,
-    url: '/api/environments/user_locking',
+    url: '/api/environments/userLocking',
   });
 };
 
@@ -255,6 +269,20 @@ export const getEnvironmentsByRepositoryId = <ThrowOnError extends boolean = fal
   return (options?.client ?? client).get<GetEnvironmentsByRepositoryIdResponse, unknown, ThrowOnError>({
     ...options,
     url: '/api/environments/repository/{repositoryId}',
+  });
+};
+
+export const getLockHistoryByEnvironmentId = <ThrowOnError extends boolean = false>(options: Options<GetLockHistoryByEnvironmentIdData, ThrowOnError>) => {
+  return (options?.client ?? client).get<GetLockHistoryByEnvironmentIdResponse, unknown, ThrowOnError>({
+    ...options,
+    url: '/api/environments/environment/{environmentId}/lockHistory',
+  });
+};
+
+export const getAllEnabledEnvironments = <ThrowOnError extends boolean = false>(options?: Options<GetAllEnabledEnvironmentsData, ThrowOnError>) => {
+  return (options?.client ?? client).get<GetAllEnabledEnvironmentsResponse, unknown, ThrowOnError>({
+    ...options,
+    url: '/api/environments/enabled',
   });
 };
 
@@ -283,6 +311,13 @@ export const getLatestDeploymentByEnvironmentId = <ThrowOnError extends boolean 
   return (options?.client ?? client).get<GetLatestDeploymentByEnvironmentIdResponse, unknown, ThrowOnError>({
     ...options,
     url: '/api/deployments/environment/{environmentId}/latest',
+  });
+};
+
+export const getActivityHistoryByEnvironmentId = <ThrowOnError extends boolean = false>(options: Options<GetActivityHistoryByEnvironmentIdData, ThrowOnError>) => {
+  return (options?.client ?? client).get<GetActivityHistoryByEnvironmentIdResponse, unknown, ThrowOnError>({
+    ...options,
+    url: '/api/deployments/environment/{environmentId}/activity-history',
   });
 };
 

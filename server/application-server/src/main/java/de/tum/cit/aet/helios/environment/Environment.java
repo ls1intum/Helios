@@ -51,6 +51,13 @@ public class Environment extends RepositoryFilterEntity {
   @OrderBy("createdAt ASC")
   private List<Deployment> deployments;
 
+  /**
+   * Whether the environment is enabled or not.
+   * It is set to false by default. Needs to be set to true
+   * in Helios environment settings page.
+   */
+  private boolean enabled = false;
+
   private boolean locked;
 
   // user ID

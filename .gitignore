@@ -184,3 +184,6 @@ _deps
 CMakeUserPresets.json
 
 .DS_STORE
+
+# Ignore pem files (GitHub App)
+*.pem

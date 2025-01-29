@@ -1,0 +1,26 @@
+name: Feature Request
+description: Request a new feature.
+title: "[Feature]: "
+labels: ["feature-request", "inbox"]
+type: feature
+projects: ["ls1intum/82"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this feature request!
+  - type: input
+    id: contact
+    attributes:
+      label: Contact Details
+      description: How can we get in touch with you if we need more info?
+      placeholder: ex. email@example.com
+    validations:
+      required: false
+  - type: textarea
+    id: feature-request
+    attributes:
+      label: Describe the feature
+      description: What feature are you requesting?
+    validations:
+      required: true

@@ -36,14 +36,23 @@ nats:
 
 
 github:
-    organizationName: ${ORGANIZATION_NAME}
-    # Can be any OAuth token, such as the PAT
+    # Personal Access Token
     authToken: ${GITHUB_AUTH_TOKEN:}
+    # GitHub App configuration
+    organizationName: ${ORGANIZATION_NAME}
+    appName: ${GITHUB_APP_NAME:}
+    appId: ${GITHUB_APP_ID:}
+    clientId: ${GITHUB_CLIENT_ID:}
+    installationId: ${GITHUB_INSTALLATION_ID:}
+    privateKeyPath: ${GITHUB_PRIVATE_KEY_PATH:}
+
+http:
     cache:
         enabled: true
         ttl: 500
         # in MB
         size: 50
+
 
 monitoring:
     # List of repositories to monitor in the format owner/repository

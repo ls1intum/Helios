@@ -28,7 +28,7 @@ public class GitHubUserConverter extends BaseGitServiceEntityConverter<GHUser, U
     user.setLogin("anonymous");
     user.setAvatarUrl(
         "https://github.githubassets.com/images/gravatars/gravatar-user-420.png?size=40");
-    user.setHtmlUrl("https://helios.artemis.cit.tum.de/not-found");
+    user.setHtmlUrl("https://helios.aet.cit.tum.de/not-found");
     user.setType(Type.USER);
     return user;
   }
