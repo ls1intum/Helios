@@ -5,7 +5,7 @@ on:
     branches: [main]
 
 env:
-  FLYWAY_URL: jdbc:postgresql://postgres:5432/helios
+  FLYWAY_URL: jdbc:postgresql://localhost:5432/helios
   FLYWAY_USER: helios
   FLYWAY_PASSWORD: helios
 
@@ -21,10 +21,8 @@ jobs:
           POSTGRES_USER: ${{ env.FLYWAY_USER }}
           POSTGRES_PASSWORD: ${{ env.FLYWAY_PASSWORD }}
           POSTGRES_DB: helios
-
         ports:
           - 5432:5432
-
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -55,7 +53,7 @@ jobs:
             echo "Flyway migration changes detected:"
             echo "$CHANGED_PATHS"
 
-            if echo "$CHANGED_FILES" | grep -q "^M"; then
+            if echo "$CHANGED_FILES" | grep -q "^[^A]"; then
               echo "Error: One or more existing migrations were changed."
               exit 1
             else
