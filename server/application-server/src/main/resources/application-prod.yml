@@ -4,11 +4,18 @@ spring:
         url: ${DATASOURCE_URL}
         username: ${DATASOURCE_USERNAME}
         password: ${DATASOURCE_PASSWORD}
+    flyway:
+        enabled: true
+        url: ${DATASOURCE_URL}
+        user: ${DATASOURCE_USERNAME}
+        password: ${DATASOURCE_PASSWORD}
+        baselineOnMigrate: true
+        baseline-version: 1
     jpa:
         database: POSTGRESQL
         show-sql: false
         hibernate:
-            ddl-auto: update
+            ddl-auto: validate
     security:
         oauth2:
             resourceserver:
@@ -52,3 +59,6 @@ monitoring:
     # Cooldown in minutes before running the monitoring again
     runOnStartupCooldownInMinutes: ${RUN_ON_STARTUP_COOLDOWN:15}
     repository-sync-cron: "0 0 * * * *"
+
+sentry:
+  dsn: ${SENTRY_DSN}

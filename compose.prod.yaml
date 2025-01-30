@@ -98,6 +98,7 @@ services:
       - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}
       - GITHUB_INSTALLATION_ID=${GITHUB_INSTALLATION_ID}
       - GITHUB_PRIVATE_KEY_PATH=${GITHUB_PRIVATE_KEY_PATH}
+      - SENTRY_DSN=${SENTRY_DSN}
     depends_on:
       - postgres
       - nats-server
