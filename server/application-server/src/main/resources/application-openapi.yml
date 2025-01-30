@@ -4,6 +4,8 @@ spring:
         driver-class-name: org.h2.Driver
         username: sa
         password: password
+    flyway:
+        enabled: false
     jpa:
         database-platform: org.hibernate.dialect.H2Dialect
         hibernate:
