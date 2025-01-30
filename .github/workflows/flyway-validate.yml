@@ -43,7 +43,7 @@ jobs:
       - name: Check for changes
         id: check_changes
         run: |
-          CHANGED_PATHS=$(git diff --name-status origin/${{ github.base_ref }} origin/${{ github.head_ref }} | grep -E "server/application-server/src/main/resources/db/migration/")
+          CHANGED_PATHS=$(git diff --name-status origin/${{ github.base_ref }} origin/${{ github.head_ref }} | grep -E "server/application-server/src/main/resources/db/migration/" || true)
 
           if [[ -z "$CHANGED_PATHS" ]]; then
             echo "CHANGE_DETECTED=false" >> "$GITHUB_OUTPUT"
@@ -53,7 +53,7 @@ jobs:
             echo "Flyway migration changes detected:"
             echo "$CHANGED_PATHS"
 
-            if echo "$CHANGED_FILES" | grep -q "^[^A]"; then
+            if echo "$CHANGED_PATHS" | grep -q "^[^A]"; then
               echo "Error: One or more existing migrations were changed."
               exit 1
             else
