@@ -7,6 +7,8 @@ import de.tum.cit.aet.helios.environment.EnvironmentRepository;
 import de.tum.cit.aet.helios.github.GitHubService;
 import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
+import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
+import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
 import de.tum.cit.aet.helios.pullrequest.PullRequest;
 import de.tum.cit.aet.helios.pullrequest.PullRequestRepository;
 import de.tum.cit.aet.helios.user.User;
@@ -31,6 +33,7 @@ public class GitHubDeploymentSyncService {
   private final DeploymentConverter deploymentConverter;
   private final DeploymentSourceFactory deploymentSourceFactory;
   private final UserRepository userRepository;
+  private final HeliosDeploymentRepository heliosDeploymentRepository;
 
   public GitHubDeploymentSyncService(
       DeploymentRepository deploymentRepository,
@@ -40,7 +43,8 @@ public class GitHubDeploymentSyncService {
       GitHubService gitHubService,
       DeploymentConverter deploymentConverter,
       DeploymentSourceFactory deploymentSourceFactory,
-      UserRepository userRepository) {
+      UserRepository userRepository,
+      HeliosDeploymentRepository heliosDeploymentRepository) {
     this.deploymentRepository = deploymentRepository;
     this.environmentRepository = environmentRepository;
     this.gitRepoRepository = gitRepoRepository;
@@ -49,6 +53,7 @@ public class GitHubDeploymentSyncService {
     this.deploymentConverter = deploymentConverter;
     this.deploymentSourceFactory = deploymentSourceFactory;
     this.userRepository = userRepository;
+    this.heliosDeploymentRepository = heliosDeploymentRepository;
   }
 
   /**
@@ -93,7 +98,7 @@ public class GitHubDeploymentSyncService {
    * Synchronizes deployments for a specific environment.
    *
    * @param ghRepository the GitHub repository
-   * @param environment  the environment entity
+   * @param environment the environment entity
    */
   public void syncDeploymentsOfEnvironment(
       @NotNull GHRepository ghRepository, @NotNull Environment environment) {
@@ -137,8 +142,8 @@ public class GitHubDeploymentSyncService {
    * repository.
    *
    * @param deploymentSource the source (GHDeployment or GitHubDeploymentDto) wrapped as a
-   *                         DeploymentSource
-   * @param environment      the associated environment entity
+   *     DeploymentSource
+   * @param environment the associated environment entity
    */
   void processDeployment(
       @NotNull DeploymentSource deploymentSource,
@@ -165,5 +170,29 @@ public class GitHubDeploymentSyncService {
 
     // Save the deployment
     deploymentRepository.save(deployment);
+
+    // Update Helios Deployment
+    updateHeliosDeployment(deployment, environment);
+  }
+
+  private void updateHeliosDeployment(Deployment deployment, Environment environment) {
+    log.info(
+        "Updating Helios Deployment for environment {} and branch {}",
+        environment.getName(),
+        deployment.getRef());
+    // Linking to HeliosDeployment
+    Optional<HeliosDeployment> maybeHeliosDeployment =
+        heliosDeploymentRepository.findTopByEnvironmentAndBranchNameOrderByCreatedAtDesc(
+            environment, deployment.getRef());
+    if (maybeHeliosDeployment.isPresent()) {
+      HeliosDeployment heliosDeployment = maybeHeliosDeployment.get();
+
+      // Only update if it isn't already set
+      if (heliosDeployment.getDeploymentId() == null) {
+        heliosDeployment.setDeploymentId(deployment.getId());
+        heliosDeploymentRepository.save(heliosDeployment);
+        log.info("Helios Deployment updated");
+      }
+    }
   }
 }

@@ -11,6 +11,7 @@ import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
 import de.tum.cit.aet.helios.pullrequest.PullRequest;
 import de.tum.cit.aet.helios.pullrequest.PullRequestRepository;
+import de.tum.cit.aet.helios.user.User;
 import de.tum.cit.aet.helios.workflow.Workflow;
 import de.tum.cit.aet.helios.workflow.WorkflowService;
 import jakarta.transaction.Transactional;
@@ -45,9 +46,11 @@ public class DeploymentService {
       DeploymentRepository deploymentRepository,
       GitHubService gitHubService,
       EnvironmentService environmentService,
-      WorkflowService workflowService, AuthService authService,
+      WorkflowService workflowService,
+      AuthService authService,
       HeliosDeploymentRepository heliosDeploymentRepository,
-      PullRequestRepository pullRequestRepository, BranchService branchService,
+      PullRequestRepository pullRequestRepository,
+      BranchService branchService,
       EnvironmentLockHistoryRepository lockHistoryRepository) {
     this.deploymentRepository = deploymentRepository;
     this.gitHubService = gitHubService;
@@ -100,11 +103,12 @@ public class DeploymentService {
     }
     final String deploymentWorkflowFileName = deploymentWorkflow.getFileNameWithExtension();
 
-
     // Get the latest sha of the branch
-    final String branchCommitSha = this.branchService.getBranchByName(deployRequest.branchName())
-        .orElseThrow(() -> new DeploymentException("Branch not found"))
-        .commitSha();
+    final String branchCommitSha =
+        this.branchService
+            .getBranchByName(deployRequest.branchName())
+            .orElseThrow(() -> new DeploymentException("Branch not found"))
+            .commitSha();
 
     // Lock the environment
     Environment environment =
@@ -120,23 +124,23 @@ public class DeploymentService {
       throw new DeploymentException("Deployment is still in progress, please wait.");
     }
 
-
+    User githubUser = this.authService.getUserFromGithubId();
     // Create a new HeliosDeployment record
     HeliosDeployment heliosDeployment = new HeliosDeployment();
     heliosDeployment.setEnvironment(environment);
     heliosDeployment.setUser(user);
     heliosDeployment.setStatus(HeliosDeployment.Status.WAITING);
     heliosDeployment.setBranchName(deployRequest.branchName());
+    heliosDeployment.setSha(branchCommitSha);
+    heliosDeployment.setCreator(githubUser);
     heliosDeployment = heliosDeploymentRepository.saveAndFlush(heliosDeployment);
 
-
     // Check if a OPEN PR exists for the branch
-    final Optional<PullRequest> optionalPr = pullRequestRepository
-        .findByRepositoryRepositoryIdAndHeadRefNameAndState(
+    final Optional<PullRequest> optionalPr =
+        pullRequestRepository.findByRepositoryRepositoryIdAndHeadRefNameAndState(
             environment.getRepository().getRepositoryId(),
             deployRequest.branchName(),
             PullRequest.State.OPEN);
-
 
     // Build parameters for the workflow
     Map<String, Object> workflowParams = new HashMap<>();
@@ -144,10 +148,10 @@ public class DeploymentService {
     workflowParams.put("HELIOS_BRANCH_NAME", deployRequest.branchName());
     workflowParams.put("HELIOS_BRANCH_HEAD_SHA", branchCommitSha);
     workflowParams.put("HELIOS_ENVIRONMENT_NAME", environment.getName());
-    workflowParams.put("HELIOS_RAW_URL",
-        String.format("https://raw.githubusercontent.com/%s/%s",
-            repoNameWithOwners,
-            branchCommitSha));
+    workflowParams.put(
+        "HELIOS_RAW_URL",
+        String.format(
+            "https://raw.githubusercontent.com/%s/%s", repoNameWithOwners, branchCommitSha));
     if (optionalPr.isPresent()) {
       final PullRequest pr = optionalPr.get();
       workflowParams.put("HELIOS_BUILD", "false");
@@ -177,8 +181,8 @@ public class DeploymentService {
 
   private boolean canRedeploy(Environment environment, long timeoutMinutes) {
     // Fetch the most recent deployment for the environment
-    Optional<HeliosDeployment> latestDeployment = heliosDeploymentRepository
-        .findTopByEnvironmentOrderByCreatedAtDesc(environment);
+    Optional<HeliosDeployment> latestDeployment =
+        heliosDeploymentRepository.findTopByEnvironmentOrderByCreatedAtDesc(environment);
 
     if (latestDeployment.isEmpty()) {
       // No prior deployments, safe to deploy
@@ -211,37 +215,34 @@ public class DeploymentService {
 
   public List<ActivityHistoryDto> getActivityHistoryByEnvironmentId(Long environmentId) {
     // 1) Fetch deployments and map
-    List<Deployment> deployments = deploymentRepository
-        .findByEnvironmentIdOrderByCreatedAtDesc(environmentId);
+    List<Deployment> deployments =
+        deploymentRepository.findByEnvironmentIdOrderByCreatedAtDesc(environmentId);
 
-    List<ActivityHistoryDto> deploymentDtos = deployments.stream()
-        .map(ActivityHistoryDto::fromDeployment)
-        .toList();
+    List<ActivityHistoryDto> deploymentDtos =
+        deployments.stream().map(ActivityHistoryDto::fromDeployment).toList();
 
     // 2) Fetch lock history and map to one or two items per entry
     List<EnvironmentLockHistory> lockHistories =
         lockHistoryRepository.findLockHistoriesByEnvironment(environmentId);
 
-    List<ActivityHistoryDto> lockDtos = lockHistories.stream()
-        .flatMap(lock -> {
-          // LOCK_EVENT
-          ActivityHistoryDto lockEvent = ActivityHistoryDto.fromEnvironmentLockHistory(
-              "LOCK_EVENT",
-              lock
-          );
+    List<ActivityHistoryDto> lockDtos =
+        lockHistories.stream()
+            .flatMap(
+                lock -> {
+                  // LOCK_EVENT
+                  ActivityHistoryDto lockEvent =
+                      ActivityHistoryDto.fromEnvironmentLockHistory("LOCK_EVENT", lock);
 
-          // If unlockedAt is present, also create UNLOCK_EVENT
-          if (lock.getUnlockedAt() != null) {
-            ActivityHistoryDto unlockEvent = ActivityHistoryDto.fromEnvironmentLockHistory(
-                "UNLOCK_EVENT",
-                lock
-            );
-            return Stream.of(lockEvent, unlockEvent);
-          } else {
-            return Stream.of(lockEvent);
-          }
-        })
-        .toList();
+                  // If unlockedAt is present, also create UNLOCK_EVENT
+                  if (lock.getUnlockedAt() != null) {
+                    ActivityHistoryDto unlockEvent =
+                        ActivityHistoryDto.fromEnvironmentLockHistory("UNLOCK_EVENT", lock);
+                    return Stream.of(lockEvent, unlockEvent);
+                  } else {
+                    return Stream.of(lockEvent);
+                  }
+                })
+            .toList();
 
     // 3) Combine everything
     List<ActivityHistoryDto> combined = new ArrayList<>();
@@ -249,20 +250,21 @@ public class DeploymentService {
     combined.addAll(lockDtos);
 
     // 4) Sort by 'timestamp' descending
-    combined.sort((a, b) -> {
-      OffsetDateTime timeA = a.timestamp();
-      OffsetDateTime timeB = b.timestamp();
-      if (timeA == null && timeB == null) {
-        return 0;
-      }
-      if (timeA == null) {
-        return 1;  // place null timestamps last
-      }
-      if (timeB == null) {
-        return -1;
-      }
-      return timeB.compareTo(timeA); // descending
-    });
+    combined.sort(
+        (a, b) -> {
+          OffsetDateTime timeA = a.timestamp();
+          OffsetDateTime timeB = b.timestamp();
+          if (timeA == null && timeB == null) {
+            return 0;
+          }
+          if (timeA == null) {
+            return 1; // place null timestamps last
+          }
+          if (timeB == null) {
+            return -1;
+          }
+          return timeB.compareTo(timeA); // descending
+        });
 
     return combined;
   }
