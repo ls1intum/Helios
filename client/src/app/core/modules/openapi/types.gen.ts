@@ -38,8 +38,15 @@ export type EnvironmentDto = {
   description?: string;
   serverUrl?: string;
   latestDeployment?: EnvironmentDeployment;
+  latestStatus?: EnvironmentStatusDto;
   lockedBy?: string;
   lockedAt?: string;
+};
+
+export type EnvironmentStatusDto = {
+  id: number;
+  statusCode: number;
+  checkedAt: string;
 };
 
 export type RepositoryInfoDto = {

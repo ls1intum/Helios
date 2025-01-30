@@ -1,0 +1,16 @@
+<div class="flex flex-col">
+  <span class="text-xs uppercase tracking-tighter font-bold text-gray-500 mb-2">Latest status check</span>
+
+  <div class="flex items-center justify-between">
+    <span class="text-sm font-medium text-gray-700">Last Checked:</span>
+    <span class="text-sm text-gray-500">
+      {{ status().checkedAt || 'Never' | timeAgo }}
+    </span>
+  </div>
+  <div class="flex items-center justify-between mt-1">
+    <span class="text-sm font-medium text-gray-700">Status Code:</span>
+    <span class="text-sm text-gray-500">
+      {{ status().statusCode || 'N/A' }}
+    </span>
+  </div>
+</div>

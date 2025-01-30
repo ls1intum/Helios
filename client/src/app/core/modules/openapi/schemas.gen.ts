@@ -125,6 +125,9 @@ export const EnvironmentDtoSchema = {
     latestDeployment: {
       $ref: '#/components/schemas/EnvironmentDeployment',
     },
+    latestStatus: {
+      $ref: '#/components/schemas/EnvironmentStatusDto',
+    },
     lockedBy: {
       type: 'string',
     },
@@ -134,6 +137,25 @@ export const EnvironmentDtoSchema = {
     },
   },
   required: ['id', 'name'],
+} as const;
+
+export const EnvironmentStatusDtoSchema = {
+  type: 'object',
+  properties: {
+    id: {
+      type: 'integer',
+      format: 'int64',
+    },
+    statusCode: {
+      type: 'integer',
+      format: 'int32',
+    },
+    checkedAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+  },
+  required: ['checkedAt', 'id', 'statusCode'],
 } as const;
 
 export const RepositoryInfoDtoSchema = {
