@@ -36,6 +36,10 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Print GitHub event name
+        run: |
+          echo "GitHub event name: ${{ github.event_name }}"
+
       - name: Fetch all branches
         if: github.event_name == 'pull_request'
         run: |
