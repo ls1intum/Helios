@@ -45,12 +45,21 @@
             <div class="flex items-center gap-2">
               <p-treeTableToggler [rowNode]="rowNode" />
 
-              <p-tag [value]="branch.name" />
+              <p-tag>
+                <div class="flex items-center">
+                  @for (part of branch.name | highlight: searchTableService.searchValue(); track part.text) {
+                    <span [class.bg-yellow-200]="part.highlight" [class.font-semibold]="part.highlight" [class.rounded]="part.highlight">
+                      {{ part.text }}
+                    </span>
+                  }
+                </div>
+              </p-tag>
               @if (branch.isProtected) {
                 <i-tabler name="shield-half" pTooltip="Protected Branch" />
               }
               @if (!rowNode.node.children) {
                 <i-tabler name="external-link" (click)="openLink($event, branch.link)"></i-tabler>
+                <app-workflow-run-status [selector]="{ type: 'branch', branchName: branch.name }"></app-workflow-run-status>
               }
             </div>
           </td>
