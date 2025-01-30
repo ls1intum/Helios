@@ -42,7 +42,8 @@ public class EnvironmentService {
         .map(
             environment -> {
               return EnvironmentDto.fromEnvironment(
-                  environment, environment.getDeployments().reversed().stream().findFirst());
+                  environment, environment.getDeployments().reversed().stream().findFirst(),
+                  environment.getLatestStatus());
             })
         .collect(Collectors.toList());
   }
@@ -52,7 +53,9 @@ public class EnvironmentService {
         .map(
             environment -> {
               return EnvironmentDto.fromEnvironment(
-                  environment, environment.getDeployments().reversed().stream().findFirst());
+                  environment,
+                  environment.getDeployments().reversed().stream().findFirst(),
+                  environment.getLatestStatus());
             })
         .collect(Collectors.toList());
   }

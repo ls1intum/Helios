@@ -2,7 +2,9 @@ package de.tum.cit.aet.helios.environment;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import de.tum.cit.aet.helios.deployment.Deployment;
+import de.tum.cit.aet.helios.environment.status.EnvironmentStatus;
 import de.tum.cit.aet.helios.gitrepo.RepositoryInfoDto;
+import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -23,8 +25,21 @@ public record EnvironmentDto(
     String description,
     String serverUrl,
     EnvironmentDeployment latestDeployment,
+    EnvironmentStatusDto latestStatus,
     String lockedBy,
     OffsetDateTime lockedAt) {
+
+  public static record EnvironmentStatusDto(
+      @NonNull Long id,
+      @NonNull int statusCode,
+      @NonNull Instant checkedAt) {
+    public static EnvironmentStatusDto fromEnvironment(EnvironmentStatus environment) {
+      return new EnvironmentStatusDto(
+          environment.getId(),
+          environment.getStatusCode(),
+          environment.getCheckTimestamp());
+    }
+  }
 
   public static record EnvironmentDeployment(
       @NonNull Long id,
@@ -52,7 +67,7 @@ public record EnvironmentDto(
   }
 
   public static EnvironmentDto fromEnvironment(
-      Environment environment, Optional<Deployment> latestDeployment) {
+      Environment environment, Optional<Deployment> latestDeployment, Optional<EnvironmentStatus> latestStatus) {
     return new EnvironmentDto(
         RepositoryInfoDto.fromRepository(environment.getRepository()),
         environment.getId(),
@@ -67,11 +82,12 @@ public record EnvironmentDto(
         environment.getDescription(),
         environment.getServerUrl(),
         latestDeployment.map(EnvironmentDeployment::fromDeployment).orElse(null),
+        latestStatus.map(EnvironmentStatusDto::fromEnvironment).orElse(null),
         environment.getLockedBy(),
         environment.getLockedAt());
   }
 
   public static EnvironmentDto fromEnvironment(Environment environment) {
-    return EnvironmentDto.fromEnvironment(environment, Optional.empty());
+    return EnvironmentDto.fromEnvironment(environment, Optional.empty(), Optional.empty());
   }
 }

@@ -2,6 +2,7 @@ package de.tum.cit.aet.helios.environment.status;
 
 import de.tum.cit.aet.helios.environment.Environment;
 import de.tum.cit.aet.helios.environment.EnvironmentRepository;
+import jakarta.transaction.Transactional;
 import java.time.Instant;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +18,7 @@ import org.springframework.web.client.RestTemplate;
 @RequiredArgsConstructor
 @EnableAsync
 @Log4j2
+@Transactional
 public class EnvironmentStatusChecker {
   private final EnvironmentRepository environmentRepository;
   private final EnvironmentStatusRepository statusRepository;

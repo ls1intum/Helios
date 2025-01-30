@@ -18,6 +18,7 @@ import jakarta.persistence.Version;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -93,6 +94,10 @@ public class Environment extends RepositoryFilterEntity {
   @OneToMany(mappedBy = "environment", cascade = CascadeType.ALL, orphanRemoval = true)
   @OrderBy("checkTimestamp DESC")
   private List<EnvironmentStatus> statusHistory;
+
+  public Optional<EnvironmentStatus> getLatestStatus() {
+    return statusHistory.stream().findFirst();
+  }
 
   public void addStatusEntry(EnvironmentStatus status) {
     status.setEnvironment(this);
