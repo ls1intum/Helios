@@ -14,4 +14,6 @@ public interface HeliosDeploymentRepository extends JpaRepository<HeliosDeployme
   Optional<HeliosDeployment> findTopByBranchNameAndCreatedAtLessThanEqualOrderByCreatedAtDesc(
       String branchName, OffsetDateTime eventTime);
 
+  Optional<HeliosDeployment> findTopByEnvironmentAndBranchNameOrderByCreatedAtDesc(
+      Environment environment, String branchName);
 }

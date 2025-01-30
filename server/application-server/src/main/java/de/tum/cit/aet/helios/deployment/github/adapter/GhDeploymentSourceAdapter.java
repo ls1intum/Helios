@@ -62,6 +62,15 @@ public class GhDeploymentSourceAdapter implements DeploymentSource {
   }
 
   @Override
+  public Long getUserId() {
+    try {
+      return ghDeployment.getCreator().getId();
+    } catch (IOException e) {
+      return null;
+    }
+  }
+
+  @Override
   public String getRepositoryUrl() {
     return ghDeployment.getRepositoryUrl().toString();
   }

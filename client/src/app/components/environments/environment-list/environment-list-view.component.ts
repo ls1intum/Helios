@@ -1,7 +1,7 @@
 import { Component, computed, inject, input, output, signal } from '@angular/core';
 import { AccordionModule } from 'primeng/accordion';
 
-import { CommonModule } from '@angular/common';
+import { DatePipe, CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { EnvironmentDto } from '@app/core/modules/openapi';
 import {
@@ -25,6 +25,10 @@ import { DeploymentStateTagComponent } from '../deployment-state-tag/deployment-
 import { LockTagComponent } from '../lock-tag/lock-tag.component';
 import { LockTimeComponent } from '../lock-time/lock-time.component';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
+import { AvatarModule } from 'primeng/avatar';
+import { TooltipModule } from 'primeng/tooltip';
+import { DateService } from '@app/core/services/date.service';
+import { TimeAgoPipe } from '@app/pipes/time-ago.pipe';
 
 @Component({
   selector: 'app-environment-list-view',
@@ -36,19 +40,25 @@ import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
     TagModule,
     IconsModule,
     ButtonModule,
+    TooltipModule,
     DeploymentStateTagComponent,
     EnvironmentDeploymentInfoComponent,
     LockTimeComponent,
+    AvatarModule,
     ConfirmDialogModule,
     CommonModule,
+    TimeAgoPipe,
   ],
+  providers: [DatePipe],
   templateUrl: './environment-list-view.component.html',
 })
 export class EnvironmentListViewComponent {
   private queryClient = inject(QueryClient);
-  private keycloakService = inject(KeycloakService);
   private confirmationService = inject(ConfirmationService);
   permissionService = inject(PermissionService);
+  keycloakService = inject(KeycloakService);
+  dateService = inject(DateService);
+  private datePipe = inject(DatePipe);
 
   editable = input<boolean | undefined>();
   deployable = input<boolean | undefined>();
@@ -64,7 +74,10 @@ export class EnvironmentListViewComponent {
   searchInput = signal<string>('');
 
   canViewAllEnvironments = computed(() => this.isLoggedIn() && this.editable() && this.hasEditEnvironmentPermissions());
-  queryFunction = computed(() => (this.canViewAllEnvironments() ? getAllEnvironmentsOptions() : getAllEnabledEnvironmentsOptions()));
+  queryFunction = computed(() => {
+    const options = this.canViewAllEnvironments() ? getAllEnvironmentsOptions() : getAllEnabledEnvironmentsOptions();
+    return { ...options, refetchInterval: 3000 };
+  });
   queryKey = computed(() => (this.canViewAllEnvironments() ? getAllEnvironmentsQueryKey() : getAllEnabledEnvironmentsQueryKey()));
 
   environmentQuery = injectQuery(() => this.queryFunction());
@@ -79,7 +92,9 @@ export class EnvironmentListViewComponent {
   }));
 
   isCurrentUserLocked = (environment: EnvironmentDto) => {
-    return environment.lockedBy === this.keycloakService.getPreferredUsername();
+    const currentUserGithubId = Number(this.keycloakService.getUserGithubId());
+    const environmentLockedById = Number(environment.lockedBy?.id);
+    return environmentLockedById === currentUserGithubId;
   };
 
   onUnlockEnvironment(event: Event, environment: EnvironmentDto) {
@@ -93,6 +108,7 @@ export class EnvironmentListViewComponent {
       message: `Are you sure you want to deploy to ${environment.name}?`,
       accept: () => {
         this.deploy.emit(environment);
+        this.queryClient.invalidateQueries({ queryKey: this.queryKey() });
       },
     });
   }
@@ -120,5 +136,21 @@ export class EnvironmentListViewComponent {
       return 'http://' + url;
     }
     return url;
+  }
+
+  getAvatarBorderClass(login: string) {
+    return this.keycloakService.isCurrentUser(login) ? 'border-2 border-primary-400 rounded-full' : '';
+  }
+
+  openUserProfile(login: string) {
+    //Redirect to the user's github profile
+    window.open(`
+      https://www.github.com/${login}
+    `);
+  }
+
+  getDeploymentTime(environment: EnvironmentDto) {
+    const date = environment.latestDeployment?.updatedAt;
+    return date ? this.datePipe.transform(date, 'd MMMM y, h:mm a') : null; // Format date
   }
 }

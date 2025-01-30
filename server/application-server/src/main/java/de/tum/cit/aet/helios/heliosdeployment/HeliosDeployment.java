@@ -1,6 +1,7 @@
 package de.tum.cit.aet.helios.heliosdeployment;
 
 import de.tum.cit.aet.helios.environment.Environment;
+import de.tum.cit.aet.helios.user.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -67,6 +68,15 @@ public class HeliosDeployment {
   @Column(name = "updated_at", nullable = false)
   private OffsetDateTime updatedAt;
 
+  @Column(name = "deployment_id", nullable = true)
+  private Long deploymentId;
+
+  private String sha;
+
+  @ManyToOne
+  @JoinColumn(name = "user_id")
+  private User creator;
+
   @PrePersist
   protected void onCreate() {
     if (createdAt == null) {
@@ -80,37 +90,24 @@ public class HeliosDeployment {
     updatedAt = OffsetDateTime.now();
   }
 
-
   // Enum to represent deployment status
   public enum Status {
-    /**
-     * Deployment called and waiting GitHub webhook listener.
-     */
+    /** Deployment called and waiting GitHub webhook listener. */
     WAITING,
-    /**
-     * The queued.
-     */
+    /** The queued. */
     QUEUED,
-    /**
-     * Deployment is in progress.
-     */
+    /** Deployment is in progress. */
     IN_PROGRESS,
-    /**
-     * Deployment successful finished.
-     */
+    /** Deployment successful finished. */
     DEPLOYMENT_SUCCESS,
-    /**
-     * Deployment failed (Whether the deployment or optional build failed).
-     */
+    /** Deployment failed (Whether the deployment or optional build failed). */
     FAILED,
     /**
-     * Deployment failed due to an I/O error.
-     * This only shows that there were a problem dispatching the workflow.
+     * Deployment failed due to an I/O error. This only shows that there were a problem dispatching
+     * the workflow.
      */
     IO_ERROR,
-    /**
-     * Deployment status is unknown.
-     */
+    /** Deployment status is unknown. */
     UNKNOWN;
   }
 
@@ -139,4 +136,3 @@ public class HeliosDeployment {
     }
   }
 }
-

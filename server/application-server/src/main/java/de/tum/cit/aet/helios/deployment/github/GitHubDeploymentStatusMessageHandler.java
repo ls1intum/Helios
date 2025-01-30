@@ -7,12 +7,16 @@ import de.tum.cit.aet.helios.environment.github.GitHubEnvironmentSyncService;
 import de.tum.cit.aet.helios.github.GitHubMessageHandler;
 import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
+import de.tum.cit.aet.helios.user.User;
+import de.tum.cit.aet.helios.user.github.GitHubUserSyncService;
+import java.io.IOException;
 import lombok.extern.log4j.Log4j2;
 import org.kohsuke.github.GHDeployment;
 import org.kohsuke.github.GHDeploymentStatus;
 import org.kohsuke.github.GHEvent;
 import org.kohsuke.github.GHEventPayload;
 import org.kohsuke.github.GHRepository;
+import org.kohsuke.github.GHUser;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -25,19 +29,22 @@ public class GitHubDeploymentStatusMessageHandler
   private final EnvironmentRepository environmentRepository;
   private final GitHubEnvironmentSyncService environmentSyncService;
   private final DeploymentSourceFactory deploymentSourceFactory;
+  private final GitHubUserSyncService userSyncService;
 
   private GitHubDeploymentStatusMessageHandler(
       GitHubDeploymentSyncService deploymentSyncService,
       GitRepoRepository gitRepoRepository,
       EnvironmentRepository environmentRepository,
       GitHubEnvironmentSyncService environmentSyncService,
-      DeploymentSourceFactory deploymentSourceFactory) {
+      DeploymentSourceFactory deploymentSourceFactory,
+      GitHubUserSyncService userSyncService) {
     super(GHEventPayload.DeploymentStatus.class);
     this.deploymentSyncService = deploymentSyncService;
     this.gitRepoRepository = gitRepoRepository;
     this.environmentRepository = environmentRepository;
     this.environmentSyncService = environmentSyncService;
     this.deploymentSourceFactory = deploymentSourceFactory;
+    this.userSyncService = userSyncService;
   }
 
   @Override
@@ -49,6 +56,18 @@ public class GitHubDeploymentStatusMessageHandler
         eventPayload.getAction());
 
     GHDeployment ghDeployment = eventPayload.getDeployment();
+
+    GHUser user = null;
+    User convertedUser = null;
+    try {
+      user = ghDeployment.getCreator();
+      if (user != null) {
+        convertedUser = userSyncService.processUser(user);
+      }
+    } catch (IOException e) {
+      log.error("Error while getting creator of deployment {}", ghDeployment.getId());
+      e.printStackTrace();
+    }
 
     // Extract environment name
     String environmentName = ghDeployment.getEnvironment();
@@ -106,7 +125,8 @@ public class GitHubDeploymentStatusMessageHandler
         deploymentSourceFactory.create(ghDeployment, Deployment.mapToState(deploymentStatus));
 
     // Process this single deployment
-    deploymentSyncService.processDeployment(deploymentSource, repository, environment);
+    deploymentSyncService.processDeployment(
+        deploymentSource, repository, environment, convertedUser);
   }
 
   @Override

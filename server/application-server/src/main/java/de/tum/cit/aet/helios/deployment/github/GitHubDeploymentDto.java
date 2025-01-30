@@ -27,6 +27,8 @@ public class GitHubDeploymentDto {
 
   private String environment;
 
+  private Long userId;
+
   private String description;
 
   @JsonProperty("created_at")

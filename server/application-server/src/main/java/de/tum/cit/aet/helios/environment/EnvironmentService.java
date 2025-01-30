@@ -1,9 +1,12 @@
 package de.tum.cit.aet.helios.environment;
 
 import de.tum.cit.aet.helios.auth.AuthService;
+import de.tum.cit.aet.helios.deployment.Deployment;
 import de.tum.cit.aet.helios.deployment.DeploymentException;
+import de.tum.cit.aet.helios.deployment.LatestDeploymentUnion;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
+import de.tum.cit.aet.helios.user.User;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import java.time.OffsetDateTime;
@@ -22,11 +25,11 @@ public class EnvironmentService {
   private final EnvironmentLockHistoryRepository lockHistoryRepository;
   private final HeliosDeploymentRepository heliosDeploymentRepository;
 
-
-  public EnvironmentService(EnvironmentRepository environmentRepository,
-                            EnvironmentLockHistoryRepository lockHistoryRepository,
-                            HeliosDeploymentRepository heliosDeploymentRepository,
-                            AuthService authService) {
+  public EnvironmentService(
+      EnvironmentRepository environmentRepository,
+      EnvironmentLockHistoryRepository lockHistoryRepository,
+      HeliosDeploymentRepository heliosDeploymentRepository,
+      AuthService authService) {
     this.environmentRepository = environmentRepository;
     this.lockHistoryRepository = lockHistoryRepository;
     this.heliosDeploymentRepository = heliosDeploymentRepository;
@@ -40,9 +43,9 @@ public class EnvironmentService {
   public List<EnvironmentDto> getAllEnvironments() {
     return environmentRepository.findAllByOrderByNameAsc().stream()
         .map(
-            environment -> {
-              return EnvironmentDto.fromEnvironment(
-                  environment, environment.getDeployments().reversed().stream().findFirst());
+            env -> {
+              LatestDeploymentUnion latest = findLatestDeployment(env);
+              return EnvironmentDto.fromEnvironment(env, latest);
             })
         .collect(Collectors.toList());
   }
@@ -50,18 +53,73 @@ public class EnvironmentService {
   public List<EnvironmentDto> getAllEnabledEnvironments() {
     return environmentRepository.findByEnabledTrueOrderByNameAsc().stream()
         .map(
-            environment -> {
-              return EnvironmentDto.fromEnvironment(
-                  environment, environment.getDeployments().reversed().stream().findFirst());
+            env -> {
+              LatestDeploymentUnion latest = findLatestDeployment(env);
+              return EnvironmentDto.fromEnvironment(env, latest);
             })
         .collect(Collectors.toList());
   }
 
   public List<EnvironmentDto> getEnvironmentsByRepositoryId(Long repositoryId) {
-    return environmentRepository.findByRepositoryRepositoryIdOrderByCreatedAtDesc(repositoryId)
+    return environmentRepository
+        .findByRepositoryRepositoryIdOrderByCreatedAtDesc(repositoryId)
         .stream()
         .map(EnvironmentDto::fromEnvironment)
         .collect(Collectors.toList());
+  }
+
+  private Optional<Deployment> findDeploymentById(Environment environment, Long deploymentId) {
+    if (deploymentId == null) {
+      return Optional.empty();
+    }
+    return environment.getDeployments().stream()
+        .filter(d -> d.getId().equals(deploymentId))
+        .findFirst();
+  }
+
+  /**
+   * Finds the "latest" deployment for the given environment, taking into account: 1) The most
+   * recent HeliosDeployment (if present). 2) If that HeliosDeployment has a non-null deploymentId,
+   * we look up the real Deployment in environment.getDeployments(). 3) Otherwise if
+   * HeliosDeployment has null deploymentId, we use the HeliosDeployment as the placeholder. 4) If
+   * no HeliosDeployment exists at all, we fall back to the actual latest real Deployment in
+   * environment.getDeployments().
+   *
+   * <p>Returns a small wrapper object with either a real Deployment or a HeliosDeployment. This
+   * helps unify your "latest" logic into one place.
+   */
+  private LatestDeploymentUnion findLatestDeployment(Environment env) {
+    // (A) Check if we have a HeliosDeployment
+    var maybeHelios = heliosDeploymentRepository.findTopByEnvironmentOrderByCreatedAtDesc(env);
+    if (maybeHelios.isPresent()) {
+      HeliosDeployment helios = maybeHelios.get();
+
+      // If HeliosDeployment references a real Deployment
+      if (helios.getDeploymentId() != null) {
+        Optional<Deployment> realDep = findDeploymentById(env, helios.getDeploymentId());
+        if (realDep.isPresent()) {
+          return LatestDeploymentUnion.realDeployment(realDep.get());
+        } else {
+          // The HeliosDeployment references a missing or
+          // no-longer-existent Deployment. Fall back to the Helios object.
+          return LatestDeploymentUnion.heliosDeployment(helios);
+        }
+      } else {
+        // HeliosDeployment has no real deploymentId -> still in "waiting" or "in-progress" phase
+        return LatestDeploymentUnion.heliosDeployment(helios);
+      }
+    }
+
+    // (B) No HeliosDeployment: use the environment's real Deployments
+    var deployments = env.getDeployments();
+    if (deployments != null && !deployments.isEmpty()) {
+      // The last item in the list is presumably the latest.
+      // (You have @OrderBy("createdAt ASC"), so the last is "newest".)
+      Deployment lastDep = deployments.get(deployments.size() - 1);
+      return LatestDeploymentUnion.realDeployment(lastDep);
+    }
+    // (C) No real deployments exist -> empty
+    return LatestDeploymentUnion.none();
   }
 
   /**
@@ -80,7 +138,7 @@ public class EnvironmentService {
    */
   @Transactional
   public Optional<Environment> lockEnvironment(Long id) {
-    final String currentUserName = authService.getPreferredUsername();
+    final User currentUser = authService.getUserFromGithubId();
 
     Environment environment =
         environmentRepository
@@ -88,20 +146,20 @@ public class EnvironmentService {
             .orElseThrow(() -> new EntityNotFoundException("Environment not found with ID: " + id));
 
     if (environment.isLocked()) {
-      if (currentUserName.equals(environment.getLockedBy())) {
+      if (currentUser.equals(environment.getLockedBy())) {
         return Optional.of(environment);
       }
 
       return Optional.empty();
     }
-    environment.setLockedBy(currentUserName);
+    environment.setLockedBy(currentUser);
     environment.setLockedAt(OffsetDateTime.now());
     environment.setLocked(true);
 
     // Record lock event
     EnvironmentLockHistory history = new EnvironmentLockHistory();
     history.setEnvironment(environment);
-    history.setLockedBy(currentUserName);
+    history.setLockedBy(currentUser);
     history.setLockedAt(OffsetDateTime.now());
     lockHistoryRepository.saveAndFlush(history);
 
@@ -126,7 +184,7 @@ public class EnvironmentService {
    */
   @Transactional
   public EnvironmentDto unlockEnvironment(Long id) {
-    final String currentUserName = authService.getPreferredUsername();
+    final User currentUser = authService.getUserFromGithubId();
 
     Environment environment =
         environmentRepository
@@ -137,7 +195,7 @@ public class EnvironmentService {
       throw new IllegalStateException("Environment is not locked");
     }
 
-    if (!currentUserName.equals(environment.getLockedBy())) {
+    if (!currentUser.equals(environment.getLockedBy())) {
       throw new SecurityException(
           "You do not have permission to unlock this environment. "
               + "Environment is locked by another user");
@@ -152,8 +210,8 @@ public class EnvironmentService {
     environment.setLockedBy(null);
     environment.setLockedAt(null);
 
-    Optional<EnvironmentLockHistory> openLock = lockHistoryRepository
-        .findLatestLockForEnvironmentAndUser(environment, currentUserName);
+    Optional<EnvironmentLockHistory> openLock =
+        lockHistoryRepository.findLatestLockForEnvironmentAndUser(environment, currentUser);
     if (openLock.isPresent()) {
       EnvironmentLockHistory openLockHistory = openLock.get();
       openLockHistory.setUnlockedAt(OffsetDateTime.now());
@@ -170,10 +228,10 @@ public class EnvironmentService {
    *
    * <p>This method updates the environment with the specified ID using the provided EnvironmentDto.
    *
-   * @param id             the ID of the environment to update
+   * @param id the ID of the environment to update
    * @param environmentDto the EnvironmentDto containing the updated environment information
-   * @return an Optional containing the updated environment if successful,
-   *     or an empty Optional if no environment is found with the specified ID
+   * @return an Optional containing the updated environment if successful, or an empty Optional if
+   *     no environment is found with the specified ID
    * @throws EnvironmentException if the environment is locked and cannot be disabled
    */
   public Optional<EnvironmentDto> updateEnvironment(Long id, EnvironmentDto environmentDto)
@@ -212,7 +270,7 @@ public class EnvironmentService {
   }
 
   public EnvironmentLockHistoryDto getUsersCurrentLock() {
-    final String currentUserName = authService.getPreferredUsername();
+    final User currentUserName = authService.getUserFromGithubId();
     Optional<EnvironmentLockHistory> lockHistory =
         lockHistoryRepository.findLatestLockForEnabledEnvironment(currentUserName);
 
@@ -227,8 +285,8 @@ public class EnvironmentService {
 
   private boolean canUnlock(Environment environment, long timeoutMinutes) {
     // Fetch the most recent deployment for the environment
-    Optional<HeliosDeployment> latestDeployment = heliosDeploymentRepository
-        .findTopByEnvironmentOrderByCreatedAtDesc(environment);
+    Optional<HeliosDeployment> latestDeployment =
+        heliosDeploymentRepository.findTopByEnvironmentOrderByCreatedAtDesc(environment);
 
     if (latestDeployment.isEmpty()) {
       // No prior deployments, safe to unlock
@@ -251,5 +309,4 @@ public class EnvironmentService {
     }
     return true;
   }
-
 }
