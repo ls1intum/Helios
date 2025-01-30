@@ -52,3 +52,6 @@ monitoring:
     # Cooldown in minutes before running the monitoring again
     runOnStartupCooldownInMinutes: ${RUN_ON_STARTUP_COOLDOWN:15}
     repository-sync-cron: "0 0 * * * *"
+
+sentry:
+  dsn: ${SENTRY_DSN}
