@@ -10,7 +10,7 @@ spring:
         user: ${DATASOURCE_USERNAME}
         password: ${DATASOURCE_PASSWORD}
         baselineOnMigrate: true
-        baseline-version: 1.0.0
+        baseline-version: 1
     jpa:
         database: POSTGRESQL
         show-sql: false
