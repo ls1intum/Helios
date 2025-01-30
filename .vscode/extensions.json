@@ -9,5 +9,6 @@
         "josevseb.google-java-format-for-vs-code",
         "codacy-app.codacy",
         "cweijan.dbclient-jdbc",
+        "cweijan.vscode-postgresql-client2",
     ]
 }
