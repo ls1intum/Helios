@@ -82,7 +82,7 @@ export class PullRequestTableComponent {
 
   getPrIconInfo(pr: PullRequestInfoDto): { icon: string; color: string; tooltip: string } {
     if (pr.isMerged) {
-      return { icon: 'git-merge', color: 'text', tooltip: 'Merged' };
+      return { icon: 'git-merge', color: 'text-purple-500', tooltip: 'Merged' };
     } else if (pr.state === 'CLOSED') {
       return { icon: 'git-pull-request-closed', color: 'text-red-500', tooltip: 'Closed' };
     } else if (pr.isDraft) {
