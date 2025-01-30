@@ -20,6 +20,7 @@ import { FormsModule } from '@angular/forms';
 import { TimeAgoPipe } from '@app/pipes/time-ago.pipe';
 import { FILTER_OPTIONS_TOKEN, SearchTableService } from '@app/core/services/search-table.service';
 import { TableFilterComponent } from '../table-filter/table-filter.component';
+import { WorkflowRunStatusComponent } from '@app/components/workflow-run-status-component/workflow-run-status.component';
 
 const FILTER_OPTIONS = [
   { name: 'All pull requests', filter: (prs: PullRequestBaseInfoDto[]) => prs },
@@ -52,6 +53,7 @@ const FILTER_OPTIONS = [
     ButtonModule,
     TableFilterComponent,
     DividerModule,
+    WorkflowRunStatusComponent,
   ],
   providers: [SearchTableService, { provide: FILTER_OPTIONS_TOKEN, useValue: FILTER_OPTIONS }],
   templateUrl: './pull-request-table.component.html',
