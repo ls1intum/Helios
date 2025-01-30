@@ -19,6 +19,13 @@ export type WorkflowRunSelector =
       branchName: string;
     };
 
+type WorkflowRunSummary = {
+  success: number;
+  failure: number;
+  skipped: number;
+  neutral: number;
+};
+
 @Component({
   selector: 'app-workflow-run-status',
   imports: [Skeleton, TablerIconComponent, Tooltip],
@@ -136,10 +143,16 @@ export class WorkflowRunStatusComponent {
 
     // Some run has failed or was cancelled --> failure
     if (runs.some(run => run.status === 'COMPLETED' && ['FAILURE', 'CANCELLED', 'TIMED_OUT'].includes(run.conclusion ?? ''))) {
+      // Build lines dynamically, skipping zero counts:
+      const lines: string[] = [];
+      if (summary.failure > 0) lines.push(`- ${summary.failure} failing`);
+      if (summary.success > 0) lines.push(`- ${summary.success} successful`);
+      if (summary.skipped > 0) lines.push(`- ${summary.skipped} skipped`);
+      if (summary.neutral > 0) lines.push(`- ${summary.neutral} neutral`);
       return {
         icon: 'x',
         color: 'text-red-600',
-        tooltip: `Some Workflows Failed:\n- ${summary.failure} failing\n- ${summary.success} successful\n- ${summary.skipped} skipped\n- ${summary.neutral} neutral`,
+        tooltip: `Some Workflows Failed:\n${lines.join('\n')}`,
       };
     }
 
@@ -151,8 +164,8 @@ export class WorkflowRunStatusComponent {
     };
   });
 
-  countStatuses = (runs: WorkflowRunDto[]) => {
-    const summary = {
+  countStatuses = (runs: WorkflowRunDto[]): WorkflowRunSummary => {
+    const summary: WorkflowRunSummary = {
       success: 0,
       failure: 0,
       skipped: 0,
