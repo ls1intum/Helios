@@ -36,10 +36,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Print GitHub event name
-        run: |
-          echo "GitHub event name: ${{ github.event_name }}"
-
       - name: Fetch all branches
         if: github.event_name == 'pull_request'
         run: |
@@ -69,18 +65,18 @@ jobs:
           fi
 
       - name: Set up Java
-        if: ${{ steps.check_changes.outputs.CHANGE_DETECTED == 'true' || github.event_name == 'workflow_call' }}
+        if: steps.check_changes.outputs.CHANGE_DETECTED == 'true' || github.event_name == 'push'
         uses: actions/setup-java@v4
         with:
           distribution: "temurin"
           java-version: "21"
 
       - name: Run Gradle to apply Flyway migrations
-        if: steps.check_changes.outputs.CHANGE_DETECTED == 'true' || github.event_name == 'workflow_call'
+        if: steps.check_changes.outputs.CHANGE_DETECTED == 'true' || github.event_name == 'push'
         working-directory: ./server/application-server
         run: ./gradlew flywayMigrate
 
       - name: Run Gradle to validate Flyway migrations
-        if: steps.check_changes.outputs.CHANGE_DETECTED == 'true' || github.event_name == 'workflow_call'
+        if: steps.check_changes.outputs.CHANGE_DETECTED == 'true' || github.event_name == 'push'
         working-directory: ./server/application-server
         run: ./gradlew flywayValidate
