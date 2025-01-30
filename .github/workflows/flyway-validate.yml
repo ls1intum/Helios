@@ -65,7 +65,7 @@ jobs:
           fi
 
       - name: Set up Java
-        if: steps.check_changes.outputs.CHANGE_DETECTED == 'true' || github.event_name == 'workflow_call'
+        if: ${{ steps.check_changes.outputs.CHANGE_DETECTED == 'true' || github.event_name == 'workflow_call' }}
         uses: actions/setup-java@v4
         with:
           distribution: "temurin"
