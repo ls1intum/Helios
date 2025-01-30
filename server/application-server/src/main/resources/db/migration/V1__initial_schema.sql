@@ -476,5 +476,3 @@ ALTER TABLE ONLY public.helios_deployment
 
 ALTER TABLE ONLY public.issue_label
     ADD CONSTRAINT fkxbk5rr30kkb6k4ech7x4vh9h FOREIGN KEY (label_id) REFERENCES public.label(id);
-
-test
