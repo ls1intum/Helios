@@ -63,8 +63,8 @@ public class GitHubDeploymentSourceAdapter implements DeploymentSource {
   }
 
   @Override
-  public Long getUserId() {
-    return gitHubDeploymentDto.getUserId();
+  public String getUserLogin() {
+    return gitHubDeploymentDto.getCreator().login();
   }
 
   @Override

@@ -1,6 +1,7 @@
 package de.tum.cit.aet.helios.deployment.github;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import de.tum.cit.aet.helios.user.UserInfoDto;
 import java.time.OffsetDateTime;
 import lombok.Getter;
 import lombok.Setter;
@@ -27,7 +28,7 @@ public class GitHubDeploymentDto {
 
   private String environment;
 
-  private Long userId;
+  private UserInfoDto creator;
 
   private String description;
 

@@ -52,6 +52,16 @@ public class GhDeploymentSourceAdapter implements DeploymentSource {
   }
 
   @Override
+  public String getUserLogin() {
+    try {
+      return ghDeployment.getCreator().getLogin();
+    } catch (IOException e) {
+      e.printStackTrace();
+      return null;
+    }
+  }
+
+  @Override
   public String getTask() {
     return ghDeployment.getTask();
   }
@@ -59,15 +69,6 @@ public class GhDeploymentSourceAdapter implements DeploymentSource {
   @Override
   public String getEnvironment() {
     return ghDeployment.getEnvironment();
-  }
-
-  @Override
-  public Long getUserId() {
-    try {
-      return ghDeployment.getCreator().getId();
-    } catch (IOException e) {
-      return null;
-    }
   }
 
   @Override

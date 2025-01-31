@@ -12,7 +12,7 @@ import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
 import de.tum.cit.aet.helios.pullrequest.PullRequest;
 import de.tum.cit.aet.helios.pullrequest.PullRequestRepository;
 import de.tum.cit.aet.helios.user.User;
-import de.tum.cit.aet.helios.user.UserRepository;
+import de.tum.cit.aet.helios.user.github.GitHubUserSyncService;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
@@ -32,8 +32,8 @@ public class GitHubDeploymentSyncService {
   private final GitHubService gitHubService;
   private final DeploymentConverter deploymentConverter;
   private final DeploymentSourceFactory deploymentSourceFactory;
-  private final UserRepository userRepository;
   private final HeliosDeploymentRepository heliosDeploymentRepository;
+  private final GitHubUserSyncService gitHubUserSyncService;
 
   public GitHubDeploymentSyncService(
       DeploymentRepository deploymentRepository,
@@ -43,8 +43,8 @@ public class GitHubDeploymentSyncService {
       GitHubService gitHubService,
       DeploymentConverter deploymentConverter,
       DeploymentSourceFactory deploymentSourceFactory,
-      UserRepository userRepository,
-      HeliosDeploymentRepository heliosDeploymentRepository) {
+      HeliosDeploymentRepository heliosDeploymentRepository,
+      GitHubUserSyncService gitHubUserSyncService) {
     this.deploymentRepository = deploymentRepository;
     this.environmentRepository = environmentRepository;
     this.gitRepoRepository = gitRepoRepository;
@@ -52,8 +52,8 @@ public class GitHubDeploymentSyncService {
     this.gitHubService = gitHubService;
     this.deploymentConverter = deploymentConverter;
     this.deploymentSourceFactory = deploymentSourceFactory;
-    this.userRepository = userRepository;
     this.heliosDeploymentRepository = heliosDeploymentRepository;
+    this.gitHubUserSyncService = gitHubUserSyncService;
   }
 
   /**
@@ -126,7 +126,13 @@ public class GitHubDeploymentSyncService {
         // Webhook handler sets the state of the deployment
         final DeploymentSource deploymentSource =
             deploymentSourceFactory.create(ghDeployment, Deployment.State.UNKNOWN);
-        User user = userRepository.findById(ghDeployment.getUserId()).orElse(null);
+
+        User user = null;
+        if (deploymentSource.getUserLogin() != null) {
+          // Process the creator of the deployment
+          user = gitHubUserSyncService.syncUser(deploymentSource.getUserLogin());
+        }
+
         processDeployment(deploymentSource, gitRepository, environment, user);
       }
     } catch (Exception e) {
@@ -149,7 +155,7 @@ public class GitHubDeploymentSyncService {
       @NotNull DeploymentSource deploymentSource,
       @NotNull GitRepository gitRepository,
       @NotNull Environment environment,
-      @NotNull User user) {
+      User user) {
     Deployment deployment =
         deploymentRepository.findById(deploymentSource.getId()).orElseGet(Deployment::new);
 
@@ -166,7 +172,11 @@ public class GitHubDeploymentSyncService {
             gitRepository.getRepositoryId(), deployment.getRef(), deployment.getSha());
 
     optionalPullRequest.ifPresent(deployment::setPullRequest);
-    deployment.setCreator(user);
+
+    // Set the creator of the deployment
+    if (user != null) {
+      deployment.setCreator(user);
+    }
 
     // Save the deployment
     deploymentRepository.save(deployment);

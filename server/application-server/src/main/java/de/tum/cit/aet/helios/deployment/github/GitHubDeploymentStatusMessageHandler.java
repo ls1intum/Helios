@@ -2,6 +2,8 @@ package de.tum.cit.aet.helios.deployment.github;
 
 import de.tum.cit.aet.helios.deployment.Deployment;
 import de.tum.cit.aet.helios.environment.Environment;
+import de.tum.cit.aet.helios.environment.EnvironmentLockHistory;
+import de.tum.cit.aet.helios.environment.EnvironmentLockHistoryRepository;
 import de.tum.cit.aet.helios.environment.EnvironmentRepository;
 import de.tum.cit.aet.helios.environment.github.GitHubEnvironmentSyncService;
 import de.tum.cit.aet.helios.github.GitHubMessageHandler;
@@ -10,6 +12,7 @@ import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import de.tum.cit.aet.helios.user.User;
 import de.tum.cit.aet.helios.user.github.GitHubUserSyncService;
 import java.io.IOException;
+import java.util.Optional;
 import lombok.extern.log4j.Log4j2;
 import org.kohsuke.github.GHDeployment;
 import org.kohsuke.github.GHDeploymentStatus;
@@ -30,6 +33,7 @@ public class GitHubDeploymentStatusMessageHandler
   private final GitHubEnvironmentSyncService environmentSyncService;
   private final DeploymentSourceFactory deploymentSourceFactory;
   private final GitHubUserSyncService userSyncService;
+  private final EnvironmentLockHistoryRepository environmentLockHistoryRepository;
 
   private GitHubDeploymentStatusMessageHandler(
       GitHubDeploymentSyncService deploymentSyncService,
@@ -37,7 +41,8 @@ public class GitHubDeploymentStatusMessageHandler
       EnvironmentRepository environmentRepository,
       GitHubEnvironmentSyncService environmentSyncService,
       DeploymentSourceFactory deploymentSourceFactory,
-      GitHubUserSyncService userSyncService) {
+      GitHubUserSyncService userSyncService,
+      EnvironmentLockHistoryRepository environmentLockHistoryRepository) {
     super(GHEventPayload.DeploymentStatus.class);
     this.deploymentSyncService = deploymentSyncService;
     this.gitRepoRepository = gitRepoRepository;
@@ -45,6 +50,7 @@ public class GitHubDeploymentStatusMessageHandler
     this.environmentSyncService = environmentSyncService;
     this.deploymentSourceFactory = deploymentSourceFactory;
     this.userSyncService = userSyncService;
+    this.environmentLockHistoryRepository = environmentLockHistoryRepository;
   }
 
   @Override
@@ -66,7 +72,7 @@ public class GitHubDeploymentStatusMessageHandler
       }
     } catch (IOException e) {
       log.error("Error while getting creator of deployment {}", ghDeployment.getId());
-      e.printStackTrace();
+      return;
     }
 
     // Extract environment name
@@ -123,6 +129,16 @@ public class GitHubDeploymentStatusMessageHandler
     // Convert GHDeployment to DeploymentSource
     DeploymentSource deploymentSource =
         deploymentSourceFactory.create(ghDeployment, Deployment.mapToState(deploymentStatus));
+
+    // If deployed by helios set current user as the locking user
+    if (convertedUser != null && convertedUser.getLogin().contains("helios")) {
+      Optional<EnvironmentLockHistory> lockHistory =
+          environmentLockHistoryRepository.findCurrentLockForEnabledEnvironment(
+              environment.getId());
+      if (lockHistory.isPresent() && lockHistory.get().getLockedBy() != null) {
+        convertedUser = lockHistory.get().getLockedBy();
+      }
+    }
 
     // Process this single deployment
     deploymentSyncService.processDeployment(

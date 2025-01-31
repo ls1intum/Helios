@@ -29,7 +29,7 @@ public interface DeploymentSource {
 
   String getEnvironment();
 
-  Long getUserId();
+  String getUserLogin();
 
   String getRepositoryUrl();
 
