@@ -5,6 +5,8 @@ on:
     branches: [main]
 
 jobs:
+  validate-flyway:
+    uses: ./.github/workflows/flyway-validate.yml
   build-prod-container:
     uses: ./.github/workflows/build_docker.yml
     secrets: inherit

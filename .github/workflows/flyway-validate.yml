@@ -3,6 +3,7 @@ name: Flyway Validation
 on:
   pull_request:
     branches: [main]
+  workflow_call: {}
 
 env:
   FLYWAY_URL: jdbc:postgresql://localhost:5432/helios
@@ -36,12 +37,14 @@ jobs:
           fetch-depth: 0
 
       - name: Fetch all branches
+        if: github.event_name == 'pull_request'
         run: |
           git fetch origin ${{ github.base_ref }}:refs/remotes/origin/${{ github.base_ref }}
           git fetch origin ${{ github.head_ref }}:refs/remotes/origin/${{ github.head_ref }}
 
       - name: Check for changes
         id: check_changes
+        if: github.event_name == 'pull_request'
         run: |
           CHANGED_PATHS=$(git diff --name-status origin/${{ github.base_ref }} origin/${{ github.head_ref }} | grep -E "server/application-server/src/main/resources/db/migration/" || true)
 
@@ -62,18 +65,18 @@ jobs:
           fi
 
       - name: Set up Java
-        if: steps.check_changes.outputs.CHANGE_DETECTED == 'true'
+        if: steps.check_changes.outputs.CHANGE_DETECTED == 'true' || github.event_name == 'push'
         uses: actions/setup-java@v4
         with:
           distribution: "temurin"
           java-version: "21"
 
       - name: Run Gradle to apply Flyway migrations
-        if: steps.check_changes.outputs.CHANGE_DETECTED == 'true'
+        if: steps.check_changes.outputs.CHANGE_DETECTED == 'true' || github.event_name == 'push'
         working-directory: ./server/application-server
         run: ./gradlew flywayMigrate
 
       - name: Run Gradle to validate Flyway migrations
-        if: steps.check_changes.outputs.CHANGE_DETECTED == 'true'
+        if: steps.check_changes.outputs.CHANGE_DETECTED == 'true' || github.event_name == 'push'
         working-directory: ./server/application-server
         run: ./gradlew flywayValidate
