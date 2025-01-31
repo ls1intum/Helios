@@ -95,16 +95,7 @@ public class EnvironmentService {
       HeliosDeployment helios = maybeHelios.get();
 
       // If HeliosDeployment references a real Deployment
-      if (helios.getDeploymentId() != null) {
-        Optional<Deployment> realDep = findDeploymentById(env, helios.getDeploymentId());
-        if (realDep.isPresent()) {
-          return LatestDeploymentUnion.realDeployment(realDep.get());
-        } else {
-          // The HeliosDeployment references a missing or
-          // no-longer-existent Deployment. Fall back to the Helios object.
-          return LatestDeploymentUnion.heliosDeployment(helios);
-        }
-      } else {
+      if (helios.getDeploymentId() == null) {
         // HeliosDeployment has no real deploymentId -> still in "waiting" or "in-progress" phase
         return LatestDeploymentUnion.heliosDeployment(helios);
       }
