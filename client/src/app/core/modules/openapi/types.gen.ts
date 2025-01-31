@@ -14,12 +14,12 @@ export type WorkflowMembershipDto = {
 
 export type EnvironmentDeployment = {
   id: number;
-  url: string;
+  url?: string;
   state?: 'PENDING' | 'WAITING' | 'SUCCESS' | 'ERROR' | 'FAILURE' | 'IN_PROGRESS' | 'QUEUED' | 'INACTIVE' | 'UNKNOWN';
-  statusesUrl: string;
-  sha: string;
-  ref: string;
-  task: string;
+  statusesUrl?: string;
+  sha?: string;
+  ref?: string;
+  task?: string;
   user?: User;
   createdAt?: string;
   updatedAt?: string;

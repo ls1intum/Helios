@@ -77,7 +77,7 @@ export const EnvironmentDeploymentSchema = {
       format: 'date-time',
     },
   },
-  required: ['id', 'ref', 'sha', 'statusesUrl', 'task', 'url'],
+  required: ['id'],
 } as const;
 
 export const EnvironmentDtoSchema = {

@@ -773,11 +773,6 @@ components:
           format: date-time
       required:
       - id
-      - ref
-      - sha
-      - statusesUrl
-      - task
-      - url
     EnvironmentDto:
       type: object
       properties:
