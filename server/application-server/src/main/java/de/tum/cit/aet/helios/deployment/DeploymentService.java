@@ -5,6 +5,7 @@ import de.tum.cit.aet.helios.branch.BranchService;
 import de.tum.cit.aet.helios.environment.Environment;
 import de.tum.cit.aet.helios.environment.EnvironmentLockHistory;
 import de.tum.cit.aet.helios.environment.EnvironmentLockHistoryRepository;
+import de.tum.cit.aet.helios.environment.EnvironmentRepository;
 import de.tum.cit.aet.helios.environment.EnvironmentService;
 import de.tum.cit.aet.helios.github.GitHubService;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
@@ -41,6 +42,7 @@ public class DeploymentService {
   private final PullRequestRepository pullRequestRepository;
   private final BranchService branchService;
   private final EnvironmentLockHistoryRepository lockHistoryRepository;
+  private final EnvironmentRepository environmentRepository;
 
   public DeploymentService(
       DeploymentRepository deploymentRepository,
@@ -51,7 +53,8 @@ public class DeploymentService {
       HeliosDeploymentRepository heliosDeploymentRepository,
       PullRequestRepository pullRequestRepository,
       BranchService branchService,
-      EnvironmentLockHistoryRepository lockHistoryRepository) {
+      EnvironmentLockHistoryRepository lockHistoryRepository,
+      EnvironmentRepository environmentRepository) {
     this.deploymentRepository = deploymentRepository;
     this.gitHubService = gitHubService;
     this.environmentService = environmentService;
@@ -61,6 +64,7 @@ public class DeploymentService {
     this.pullRequestRepository = pullRequestRepository;
     this.branchService = branchService;
     this.lockHistoryRepository = lockHistoryRepository;
+    this.environmentRepository = environmentRepository;
   }
 
   public Optional<DeploymentDto> getDeploymentById(Long id) {
@@ -214,26 +218,21 @@ public class DeploymentService {
   }
 
   public List<ActivityHistoryDto> getActivityHistoryByEnvironmentId(Long environmentId) {
-    // 1) Fetch deployments and map
+    // 1) Real deployments
     List<Deployment> deployments =
         deploymentRepository.findByEnvironmentIdOrderByCreatedAtDesc(environmentId);
-
     List<ActivityHistoryDto> deploymentDtos =
         deployments.stream().map(ActivityHistoryDto::fromDeployment).toList();
 
-    // 2) Fetch lock history and map to one or two items per entry
+    // 3) Lock history (lock/unlock)
     List<EnvironmentLockHistory> lockHistories =
         lockHistoryRepository.findLockHistoriesByEnvironment(environmentId);
-
     List<ActivityHistoryDto> lockDtos =
         lockHistories.stream()
             .flatMap(
                 lock -> {
-                  // LOCK_EVENT
                   ActivityHistoryDto lockEvent =
                       ActivityHistoryDto.fromEnvironmentLockHistory("LOCK_EVENT", lock);
-
-                  // If unlockedAt is present, also create UNLOCK_EVENT
                   if (lock.getUnlockedAt() != null) {
                     ActivityHistoryDto unlockEvent =
                         ActivityHistoryDto.fromEnvironmentLockHistory("UNLOCK_EVENT", lock);
@@ -244,26 +243,35 @@ public class DeploymentService {
                 })
             .toList();
 
-    // 3) Combine everything
+    // 4) Combine the lists
     List<ActivityHistoryDto> combined = new ArrayList<>();
     combined.addAll(deploymentDtos);
+    // combined.addAll(heliosDtos);
     combined.addAll(lockDtos);
 
-    // 4) Sort by 'timestamp' descending
+    // 4a) Add heliosDeployment if it's the latest
+    var environment = environmentRepository.findById(environmentId).orElse(null);
+    if (environment != null) {
+      LatestDeploymentUnion latestUnion = environmentService.findLatestDeployment(environment);
+      if (!latestUnion.isNone() && latestUnion.isHeliosDeployment()) {
+        if (deploymentDtos.isEmpty()
+            || latestUnion.getUpdatedAt().isAfter(deploymentDtos.get(0).updatedAt())) {
+          ActivityHistoryDto latestItem =
+              ActivityHistoryDto.fromLatestDeploymentUnion("DEPLOYMENT", latestUnion);
+          combined.add(latestItem);
+        }
+      }
+    }
+
+    // 5) Sort by timestamp descending
     combined.sort(
         (a, b) -> {
           OffsetDateTime timeA = a.timestamp();
           OffsetDateTime timeB = b.timestamp();
-          if (timeA == null && timeB == null) {
-            return 0;
-          }
-          if (timeA == null) {
-            return 1; // place null timestamps last
-          }
-          if (timeB == null) {
-            return -1;
-          }
-          return timeB.compareTo(timeA); // descending
+          if (timeA == null && timeB == null) return 0;
+          if (timeA == null) return 1;
+          if (timeB == null) return -1;
+          return timeB.compareTo(timeA);
         });
 
     return combined;

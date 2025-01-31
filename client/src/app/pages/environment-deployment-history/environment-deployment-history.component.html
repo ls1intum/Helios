@@ -74,43 +74,60 @@
                     <i-tabler name="git-commit"></i-tabler>
                     {{ combinedHistory.sha?.slice(0, 7) }}
                   </li>
+                  <li class="flex align-items-center gap-2 mt-2">
+                    @if (combinedHistory.user?.avatarUrl) {
+                      <p-avatar
+                        class="w-6 h-6"
+                        shape="circle"
+                        size="normal"
+                        [image]="combinedHistory.user?.avatarUrl"
+                        [pTooltip]="keycloakService.isCurrentUser(combinedHistory.user?.login) ? 'You' : combinedHistory.user?.name"
+                        [styleClass]="getAvatarBorderClass(combinedHistory.user?.login || '')"
+                        (click)="openUserProfile(combinedHistory.user?.login || '')"
+                      >
+                      </p-avatar>
+                    } @else {
+                      <i-tabler name="user" class="w-6 h-6 text-gray-600" />
+                    }
+                    <span>{{ combinedHistory.user?.name }}</span>
+                  </li>
                 </ul>
               } @else if (combinedHistory.type === 'LOCK_EVENT') {
                 <div class="flex gap-1 items-center">
-                  @if (combinedHistory.lockedBy?.avatarUrl) {
+                  @if (combinedHistory.user?.avatarUrl) {
                     <p-avatar
                       class="w-6 h-6"
                       shape="circle"
                       size="normal"
-                      [image]="combinedHistory.lockedBy?.avatarUrl"
-                      [pTooltip]="keycloakService.isCurrentUser(combinedHistory.lockedBy?.login) ? 'You' : combinedHistory.lockedBy?.name"
-                      [styleClass]="getAvatarBorderClass(combinedHistory.lockedBy?.login || '')"
-                      (click)="openUserProfile(combinedHistory.lockedBy?.login || '')"
+                      [image]="combinedHistory.user?.avatarUrl"
+                      [pTooltip]="keycloakService.isCurrentUser(combinedHistory.user?.login) ? 'You' : combinedHistory.user?.name"
+                      [styleClass]="getAvatarBorderClass(combinedHistory.user?.login || '')"
+                      (click)="openUserProfile(combinedHistory.user?.login || '')"
                     >
                     </p-avatar>
                   } @else {
                     <i-tabler name="user" class="w-6 h-6 text-gray-600" />
                   }
                 </div>
-                <span>{{ combinedHistory.lockedBy?.name }}</span>
+                <span>{{ combinedHistory.user?.name }}</span>
               } @else if (combinedHistory.type === 'UNLOCK_EVENT') {
                 <div class="flex gap-1 items-center">
-                  @if (combinedHistory.lockedBy?.avatarUrl) {
+                  @if (combinedHistory.user?.avatarUrl) {
                     <p-avatar
                       class="w-6 h-6"
                       shape="circle"
                       size="normal"
-                      [image]="combinedHistory.lockedBy?.avatarUrl"
-                      [pTooltip]="keycloakService.isCurrentUser(combinedHistory.lockedBy?.login) ? 'You' : combinedHistory.lockedBy?.name"
-                      [styleClass]="getAvatarBorderClass(combinedHistory.lockedBy?.login || '')"
-                      (click)="openUserProfile(combinedHistory.lockedBy?.login || '')"
+                      [image]="combinedHistory.user?.avatarUrl"
+                      [pTooltip]="keycloakService.isCurrentUser(combinedHistory.user?.login) ? 'You' : combinedHistory.user?.name"
+                      [styleClass]="getAvatarBorderClass(combinedHistory.user?.login || '')"
+                      (click)="openUserProfile(combinedHistory.user?.login || '')"
                     >
                     </p-avatar>
                   } @else {
                     <i-tabler name="user" class="w-6 h-6 text-gray-600" />
                   }
                 </div>
-                <span>{{ combinedHistory.lockedBy?.name }}</span>
+                <span>{{ combinedHistory.user?.name }}</span>
               }
             </div>
           </td>

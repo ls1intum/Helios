@@ -88,7 +88,7 @@ public class EnvironmentService {
    * <p>Returns a small wrapper object with either a real Deployment or a HeliosDeployment. This
    * helps unify your "latest" logic into one place.
    */
-  private LatestDeploymentUnion findLatestDeployment(Environment env) {
+  public LatestDeploymentUnion findLatestDeployment(Environment env) {
     // (A) Check if we have a HeliosDeployment
     var maybeHelios = heliosDeploymentRepository.findTopByEnvironmentOrderByCreatedAtDesc(env);
     if (maybeHelios.isPresent()) {
