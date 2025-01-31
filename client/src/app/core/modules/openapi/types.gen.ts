@@ -40,6 +40,7 @@ export type EnvironmentDto = {
   latestDeployment?: EnvironmentDeployment;
   lockedBy?: string;
   lockedAt?: string;
+  environmentType?: 'TEST' | 'STAGING' | 'PRODUCTION';
 };
 
 export type RepositoryInfoDto = {
@@ -65,7 +66,7 @@ export type WorkflowDto = {
   url?: string;
   htmlUrl?: string;
   badgeUrl?: string;
-  label: 'BUILD' | 'DEPLOYMENT' | 'NONE';
+  deploymentEnvironment: 'NONE' | 'TEST_SERVER' | 'STAGING_SERVER' | 'PRODUCTION_SERVER';
   createdAt?: string;
   updatedAt?: string;
 };
@@ -223,16 +224,16 @@ export type BranchInfoDto = {
   repository?: RepositoryInfoDto;
 };
 
-export type UpdateWorkflowLabelData = {
-  body: 'BUILD' | 'DEPLOYMENT' | 'NONE';
+export type UpdateDeploymentEnvironmentData = {
+  body: 'NONE' | 'TEST_SERVER' | 'STAGING_SERVER' | 'PRODUCTION_SERVER';
   path: {
     workflowId: number;
   };
   query?: never;
-  url: '/api/workflows/{workflowId}/label';
+  url: '/api/workflows/{workflowId}/deploymentEnvironment';
 };
 
-export type UpdateWorkflowLabelResponses = {
+export type UpdateDeploymentEnvironmentResponses = {
   /**
    * OK
    */

@@ -22,11 +22,11 @@ public class EnvironmentService {
   private final EnvironmentLockHistoryRepository lockHistoryRepository;
   private final HeliosDeploymentRepository heliosDeploymentRepository;
 
-
-  public EnvironmentService(EnvironmentRepository environmentRepository,
-                            EnvironmentLockHistoryRepository lockHistoryRepository,
-                            HeliosDeploymentRepository heliosDeploymentRepository,
-                            AuthService authService) {
+  public EnvironmentService(
+      EnvironmentRepository environmentRepository,
+      EnvironmentLockHistoryRepository lockHistoryRepository,
+      HeliosDeploymentRepository heliosDeploymentRepository,
+      AuthService authService) {
     this.environmentRepository = environmentRepository;
     this.lockHistoryRepository = lockHistoryRepository;
     this.heliosDeploymentRepository = heliosDeploymentRepository;
@@ -35,6 +35,10 @@ public class EnvironmentService {
 
   public Optional<EnvironmentDto> getEnvironmentById(Long id) {
     return environmentRepository.findById(id).map(EnvironmentDto::fromEnvironment);
+  }
+
+  public Optional<Environment.Type> getEnvironmentTypeById(Long id) {
+    return environmentRepository.findById(id).map(Environment::getEnvironmentType);
   }
 
   public List<EnvironmentDto> getAllEnvironments() {
@@ -58,7 +62,8 @@ public class EnvironmentService {
   }
 
   public List<EnvironmentDto> getEnvironmentsByRepositoryId(Long repositoryId) {
-    return environmentRepository.findByRepositoryRepositoryIdOrderByCreatedAtDesc(repositoryId)
+    return environmentRepository
+        .findByRepositoryRepositoryIdOrderByCreatedAtDesc(repositoryId)
         .stream()
         .map(EnvironmentDto::fromEnvironment)
         .collect(Collectors.toList());
@@ -156,8 +161,8 @@ public class EnvironmentService {
     environment.setLockedBy(null);
     environment.setLockedAt(null);
 
-    Optional<EnvironmentLockHistory> openLock = lockHistoryRepository
-        .findLatestLockForEnvironmentAndUser(environment, currentUserName);
+    Optional<EnvironmentLockHistory> openLock =
+        lockHistoryRepository.findLatestLockForEnvironmentAndUser(environment, currentUserName);
     if (openLock.isPresent()) {
       EnvironmentLockHistory openLockHistory = openLock.get();
       openLockHistory.setUnlockedAt(OffsetDateTime.now());
@@ -174,10 +179,10 @@ public class EnvironmentService {
    *
    * <p>This method updates the environment with the specified ID using the provided EnvironmentDto.
    *
-   * @param id             the ID of the environment to update
+   * @param id the ID of the environment to update
    * @param environmentDto the EnvironmentDto containing the updated environment information
-   * @return an Optional containing the updated environment if successful,
-   *     or an empty Optional if no environment is found with the specified ID
+   * @return an Optional containing the updated environment if successful, or an empty Optional if
+   *     no environment is found with the specified ID
    * @throws EnvironmentException if the environment is locked and cannot be disabled
    */
   public Optional<EnvironmentDto> updateEnvironment(Long id, EnvironmentDto environmentDto)
@@ -231,8 +236,8 @@ public class EnvironmentService {
 
   private boolean canUnlock(Environment environment, long timeoutMinutes) {
     // Fetch the most recent deployment for the environment
-    Optional<HeliosDeployment> latestDeployment = heliosDeploymentRepository
-        .findTopByEnvironmentOrderByCreatedAtDesc(environment);
+    Optional<HeliosDeployment> latestDeployment =
+        heliosDeploymentRepository.findTopByEnvironmentOrderByCreatedAtDesc(environment);
 
     if (latestDeployment.isEmpty()) {
       // No prior deployments, safe to unlock
@@ -255,5 +260,4 @@ public class EnvironmentService {
     }
     return true;
   }
-
 }
