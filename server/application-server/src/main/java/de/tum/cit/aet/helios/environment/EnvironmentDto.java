@@ -1,16 +1,16 @@
 package de.tum.cit.aet.helios.environment;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import de.tum.cit.aet.helios.deployment.Deployment;
 import de.tum.cit.aet.helios.environment.status.EnvironmentStatus;
+import de.tum.cit.aet.helios.environment.status.StatusCheckType;
 import de.tum.cit.aet.helios.gitrepo.RepositoryInfoDto;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.springframework.lang.NonNull;
 
-@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public record EnvironmentDto(
     RepositoryInfoDto repository,
     @NonNull Long id,
@@ -24,6 +24,8 @@ public record EnvironmentDto(
     List<String> installedApps,
     String description,
     String serverUrl,
+    StatusCheckType statusCheckType,
+    String statusUrl,
     EnvironmentDeployment latestDeployment,
     EnvironmentStatusDto latestStatus,
     String lockedBy,
@@ -31,13 +33,19 @@ public record EnvironmentDto(
 
   public static record EnvironmentStatusDto(
       @NonNull Long id,
-      @NonNull int statusCode,
-      @NonNull Instant checkedAt) {
+      @NonNull Boolean success,
+      Integer statusCode,
+      @NonNull Instant checkedAt,
+      StatusCheckType checkType,
+      Map<String, Object> metadata) {
     public static EnvironmentStatusDto fromEnvironment(EnvironmentStatus environment) {
       return new EnvironmentStatusDto(
           environment.getId(),
+          environment.isSuccess(),
           environment.getStatusCode(),
-          environment.getCheckTimestamp());
+          environment.getCheckTimestamp(),
+          environment.getCheckType(),
+          environment.getMetadata());
     }
   }
 
@@ -81,6 +89,8 @@ public record EnvironmentDto(
         environment.getInstalledApps(),
         environment.getDescription(),
         environment.getServerUrl(),
+        environment.getStatusCheckType(),
+        environment.getStatusUrl(),
         latestDeployment.map(EnvironmentDeployment::fromDeployment).orElse(null),
         latestStatus.map(EnvironmentStatusDto::fromEnvironment).orElse(null),
         environment.getLockedBy(),

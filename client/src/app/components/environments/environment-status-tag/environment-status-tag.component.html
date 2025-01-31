@@ -1,17 +1,10 @@
 @if (status(); as status) {
   <!-- Info State -->
   <!-- Success State -->
-  @if (status.statusCode >= 200 && status.statusCode < 300) {
+  @if (status.success) {
     <p-tag severity="success" [rounded]="true">
       <i-tabler name="check" class="!h-4 !w-4 mr-0.5"></i-tabler>
       Status check successful
-    </p-tag>
-  }
-  <!-- Redirect State -->
-  @else if (status.statusCode >= 300 && status.statusCode < 400) {
-    <p-tag severity="warn" [rounded]="true">
-      <i-tabler name="arrow-right" class="!h-4 !w-4 mr-0.5"></i-tabler>
-      Status check redirected
     </p-tag>
   } @else {
     <!-- Error State -->

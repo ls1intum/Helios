@@ -122,6 +122,13 @@ export const EnvironmentDtoSchema = {
     serverUrl: {
       type: 'string',
     },
+    statusCheckType: {
+      type: 'string',
+      enum: ['HTTP_STATUS', 'ARTEMIS_INFO'],
+    },
+    statusUrl: {
+      type: 'string',
+    },
     latestDeployment: {
       $ref: '#/components/schemas/EnvironmentDeployment',
     },
@@ -146,6 +153,9 @@ export const EnvironmentStatusDtoSchema = {
       type: 'integer',
       format: 'int64',
     },
+    success: {
+      type: 'boolean',
+    },
     statusCode: {
       type: 'integer',
       format: 'int32',
@@ -154,8 +164,16 @@ export const EnvironmentStatusDtoSchema = {
       type: 'string',
       format: 'date-time',
     },
+    checkType: {
+      type: 'string',
+      enum: ['HTTP_STATUS', 'ARTEMIS_INFO'],
+    },
+    metadata: {
+      type: 'object',
+      additionalProperties: {},
+    },
   },
-  required: ['checkedAt', 'id', 'statusCode'],
+  required: ['checkedAt', 'id', 'success'],
 } as const;
 
 export const RepositoryInfoDtoSchema = {

@@ -13,4 +13,22 @@
       {{ status().statusCode || 'N/A' }}
     </span>
   </div>
+
+  @if (status().checkType === 'ARTEMIS_INFO') {
+    <span class="text-xs uppercase tracking-tighter text-gray-500 mt-3">Artemis Build</span>
+    @for (
+      item of [
+        { label: 'Name', value: artemisBuildInfo().name },
+        { label: 'Group', value: artemisBuildInfo().group },
+        { label: 'Version', value: artemisBuildInfo().version },
+        { label: 'Build Time', value: artemisBuildInfo().buildTime },
+      ];
+      track item.label
+    ) {
+      <div class="flex items-center justify-between mt-1">
+        <span class="text-sm font-medium text-gray-700">{{ item.label }}:</span>
+        <span class="text-sm text-gray-500">{{ item.value || '-/-' }}</span>
+      </div>
+    }
+  }
 </div>

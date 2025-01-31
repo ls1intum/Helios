@@ -22,11 +22,10 @@ public class EnvironmentService {
   private final EnvironmentLockHistoryRepository lockHistoryRepository;
   private final HeliosDeploymentRepository heliosDeploymentRepository;
 
-
   public EnvironmentService(EnvironmentRepository environmentRepository,
-                            EnvironmentLockHistoryRepository lockHistoryRepository,
-                            HeliosDeploymentRepository heliosDeploymentRepository,
-                            AuthService authService) {
+      EnvironmentLockHistoryRepository lockHistoryRepository,
+      HeliosDeploymentRepository heliosDeploymentRepository,
+      AuthService authService) {
     this.environmentRepository = environmentRepository;
     this.lockHistoryRepository = lockHistoryRepository;
     this.heliosDeploymentRepository = heliosDeploymentRepository;
@@ -70,25 +69,31 @@ public class EnvironmentService {
   /**
    * Locks the environment with the specified ID.
    *
-   * <p>This method attempts to lock the environment by setting its locked status to true. If the
-   * environment is already locked, it returns an empty Optional. If the environment is successfully
+   * <p>
+   * This method attempts to lock the environment by setting its locked status to
+   * true. If the
+   * environment is already locked, it returns an empty Optional. If the
+   * environment is successfully
    * locked, it returns an Optional containing the locked environment.
    *
-   * <p>This method is transactional and handles optimistic locking failures.
+   * <p>
+   * This method is transactional and handles optimistic locking failures.
    *
    * @param id the ID of the environment to lock
-   * @return an Optional containing the locked environment if successful, or an empty Optional if
-   *     the environment is already locked or if an optimistic locking failure occurs
-   * @throws EntityNotFoundException if no environment is found with the specified ID
+   * @return an Optional containing the locked environment if successful, or an
+   *         empty Optional if
+   *         the environment is already locked or if an optimistic locking failure
+   *         occurs
+   * @throws EntityNotFoundException if no environment is found with the specified
+   *                                 ID
    */
   @Transactional
   public Optional<Environment> lockEnvironment(Long id) {
     final String currentUserName = authService.getPreferredUsername();
 
-    Environment environment =
-        environmentRepository
-            .findById(id)
-            .orElseThrow(() -> new EntityNotFoundException("Environment not found with ID: " + id));
+    Environment environment = environmentRepository
+        .findById(id)
+        .orElseThrow(() -> new EntityNotFoundException("Environment not found with ID: " + id));
 
     if (environment.isLocked()) {
       if (currentUserName.equals(environment.getLockedBy())) {
@@ -121,20 +126,22 @@ public class EnvironmentService {
   /**
    * Unlocks the environment with the specified ID.
    *
-   * <p>This method sets the locked status of the environment to false and saves the updated
+   * <p>
+   * This method sets the locked status of the environment to false and saves the
+   * updated
    * environment.
    *
    * @param id the ID of the environment to unlock
-   * @throws EntityNotFoundException if no environment is found with the specified ID
+   * @throws EntityNotFoundException if no environment is found with the specified
+   *                                 ID
    */
   @Transactional
   public EnvironmentDto unlockEnvironment(Long id) {
     final String currentUserName = authService.getPreferredUsername();
 
-    Environment environment =
-        environmentRepository
-            .findById(id)
-            .orElseThrow(() -> new EntityNotFoundException("Environment not found with ID: " + id));
+    Environment environment = environmentRepository
+        .findById(id)
+        .orElseThrow(() -> new EntityNotFoundException("Environment not found with ID: " + id));
 
     if (!environment.isLocked()) {
       throw new IllegalStateException("Environment is not locked");
@@ -171,13 +178,17 @@ public class EnvironmentService {
   /**
    * Updates the environment with the specified ID.
    *
-   * <p>This method updates the environment with the specified ID using the provided EnvironmentDto.
+   * <p>
+   * This method updates the environment with the specified ID using the provided
+   * EnvironmentDto.
    *
    * @param id             the ID of the environment to update
-   * @param environmentDto the EnvironmentDto containing the updated environment information
+   * @param environmentDto the EnvironmentDto containing the updated environment
+   *                       information
    * @return an Optional containing the updated environment if successful,
-   *     or an empty Optional if no environment is found with the specified ID
-   * @throws EnvironmentException if the environment is locked and cannot be disabled
+   *         or an empty Optional if no environment is found with the specified ID
+   * @throws EnvironmentException if the environment is locked and cannot be
+   *                              disabled
    */
   public Optional<EnvironmentDto> updateEnvironment(Long id, EnvironmentDto environmentDto)
       throws EnvironmentException {
@@ -208,6 +219,13 @@ public class EnvironmentService {
               if (environmentDto.serverUrl() != null) {
                 environment.setServerUrl(environmentDto.serverUrl());
               }
+              if (environmentDto.statusCheckType() != null) {
+                environment.setStatusCheckType(environmentDto.statusCheckType());
+                environment.setStatusUrl(environmentDto.statusUrl());
+              } else {
+                environment.setStatusCheckType(null);
+                environment.setStatusUrl(null);
+              }
 
               environmentRepository.save(environment);
               return EnvironmentDto.fromEnvironment(environment);
@@ -216,8 +234,8 @@ public class EnvironmentService {
 
   public EnvironmentLockHistoryDto getUsersCurrentLock() {
     final String currentUserName = authService.getPreferredUsername();
-    Optional<EnvironmentLockHistory> lockHistory =
-        lockHistoryRepository.findLatestLockForEnabledEnvironment(currentUserName);
+    Optional<EnvironmentLockHistory> lockHistory = lockHistoryRepository
+        .findLatestLockForEnabledEnvironment(currentUserName);
 
     return lockHistory.map(EnvironmentLockHistoryDto::fromEnvironmentLockHistory).orElse(null);
   }
