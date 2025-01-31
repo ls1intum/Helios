@@ -10,5 +10,5 @@ public interface EnvironmentStatusRepository extends JpaRepository<EnvironmentSt
       + "WHERE es.environment.id = :environmentId AND es.id NOT IN ("
       + "SELECT es2.id FROM EnvironmentStatus es2 WHERE es2.environment.id = :environmentId "
       + "ORDER BY es2.checkTimestamp DESC LIMIT :keepCount)")
-  void deleteAllButOldestByEnvironmentId(Long environmentId, int keepCount);
+  void deleteAllButLatestByEnvironmentId(Long environmentId, int keepCount);
 }

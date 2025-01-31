@@ -75,7 +75,7 @@ public class StatusCheckService {
 
     // To prevent the status table from growing indefinitely, delete all but the
     // oldest keepCount entries for the environment
-    statusRepository.deleteAllButOldestByEnvironmentId(environment.getId(), this.keepCount);
+    statusRepository.deleteAllButLatestByEnvironmentId(environment.getId(), this.keepCount);
 
     log.debug("Persisted status entry for environment {}", environment.getId());
   }
