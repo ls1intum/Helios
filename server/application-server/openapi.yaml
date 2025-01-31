@@ -925,9 +925,9 @@ components:
           items:
             $ref: "#/components/schemas/User"
           uniqueItems: true
-        locked:
-          type: boolean
         pullRequest:
+          type: boolean
+        locked:
           type: boolean
       required:
       - htmlUrl
@@ -1406,8 +1406,8 @@ components:
           type: string
         ref:
           type: string
-        lockedBy:
-          $ref: "#/components/schemas/User"
+        user:
+          $ref: "#/components/schemas/UserInfoDto"
         timestamp:
           type: string
           format: date-time

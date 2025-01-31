@@ -277,10 +277,10 @@ export const IssueSchema = {
       },
       uniqueItems: true,
     },
-    locked: {
+    pullRequest: {
       type: 'boolean',
     },
-    pullRequest: {
+    locked: {
       type: 'boolean',
     },
   },
@@ -816,8 +816,8 @@ export const ActivityHistoryDtoSchema = {
     ref: {
       type: 'string',
     },
-    lockedBy: {
-      $ref: '#/components/schemas/User',
+    user: {
+      $ref: '#/components/schemas/UserInfoDto',
     },
     timestamp: {
       type: 'string',

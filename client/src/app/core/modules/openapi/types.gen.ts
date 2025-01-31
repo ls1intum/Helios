@@ -81,8 +81,8 @@ export type Issue = {
   author?: User;
   labels?: Array<Label>;
   assignees?: Array<User>;
-  locked?: boolean;
   pullRequest?: boolean;
+  locked?: boolean;
 };
 
 export type Label = {
@@ -269,7 +269,7 @@ export type ActivityHistoryDto = {
   state?: 'PENDING' | 'WAITING' | 'SUCCESS' | 'ERROR' | 'FAILURE' | 'IN_PROGRESS' | 'QUEUED' | 'INACTIVE' | 'UNKNOWN';
   sha?: string;
   ref?: string;
-  lockedBy?: User;
+  user?: UserInfoDto;
   timestamp?: string;
   createdAt?: string;
   updatedAt?: string;
