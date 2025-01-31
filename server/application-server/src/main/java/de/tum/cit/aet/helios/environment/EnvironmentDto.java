@@ -33,7 +33,8 @@ public record EnvironmentDto(
     EnvironmentDeployment latestDeployment,
     EnvironmentStatusDto latestStatus,
     UserInfoDto lockedBy,
-    OffsetDateTime lockedAt) {
+    OffsetDateTime lockedAt,
+    Environment.Type environmentType) {
 
   public static record EnvironmentStatusDto(
       @NonNull Long id,
@@ -120,7 +121,8 @@ public record EnvironmentDto(
         envDeployment,
         latestStatus.map(EnvironmentStatusDto::fromEnvironmentStatus).orElse(null),
         UserInfoDto.fromUser(environment.getLockedBy()),
-        environment.getLockedAt());
+        environment.getLockedAt(),
+        environment.getEnvironmentType());
   }
 
   /** Overload if you just want to create an EnvironmentDto with no "latestDeployment" info. */

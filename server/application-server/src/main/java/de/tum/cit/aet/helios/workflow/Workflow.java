@@ -1,6 +1,7 @@
 package de.tum.cit.aet.helios.workflow;
 
 import de.tum.cit.aet.helios.github.BaseGitServiceEntity;
+import de.tum.cit.aet.helios.workflow.Workflow.DeploymentEnvironment;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -40,7 +41,7 @@ public class Workflow extends BaseGitServiceEntity {
   // Custom field for Repository Settings
   @NonNull
   @Enumerated(EnumType.STRING)
-  private Label label = Label.NONE;
+  private DeploymentEnvironment deploymentEnvironment = DeploymentEnvironment.NONE;
 
   public enum State {
     ACTIVE,
@@ -51,9 +52,10 @@ public class Workflow extends BaseGitServiceEntity {
     UNKNOWN,
   }
 
-  public enum Label {
-    BUILD,
-    DEPLOYMENT,
-    NONE
+  public enum DeploymentEnvironment {
+    NONE,
+    TEST_SERVER,
+    STAGING_SERVER,
+    PRODUCTION_SERVER
   }
 }
