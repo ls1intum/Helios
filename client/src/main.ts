@@ -8,7 +8,6 @@ Sentry.init({
   enabled: environment.sentry.enabled,
   // The DSN (Data Source Name) tells the SDK where to send the events to.
   dsn: environment.sentry.dsn,
-  debug: true,
   // The browser tracing integration captures performance data
   // like throughput and latency
   integrations: [Sentry.browserTracingIntegration()],
