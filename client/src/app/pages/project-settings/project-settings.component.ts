@@ -1,6 +1,6 @@
 import { FormsModule } from '@angular/forms';
 import { Component, signal, computed, input, numberAttribute, effect, inject } from '@angular/core';
-import { injectMutation, injectQuery, injectQueryClient } from '@tanstack/angular-query-experimental';
+import { injectMutation, injectQuery, QueryClient } from '@tanstack/angular-query-experimental';
 
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
@@ -51,7 +51,7 @@ import { SelectModule } from 'primeng/select';
 export class ProjectSettingsComponent {
   private messageService = inject(MessageService);
   private confirmationService = inject(ConfirmationService);
-  queryClient = injectQueryClient();
+  queryClient = inject(QueryClient);
 
   // Signals for repository ID, workflows, and workflow groups
   repositoryId = input.required({ transform: numberAttribute });
@@ -62,6 +62,8 @@ export class ProjectSettingsComponent {
   // For creating a new group
   showAddGroupDialog = false;
   newGroupName = '';
+  // Store the previous label temporarily for the confirmation dialog
+  private previousLabel: 'BUILD' | 'DEPLOYMENT' | 'NONE' = 'NONE';
 
   // Drag & Drop logic for groupedWorkflowsArray
   private dragIndex: number | null = null;
@@ -216,6 +218,11 @@ export class ProjectSettingsComponent {
     });
   }
 
+  storePreviousLabel(workflow: WorkflowDto) {
+    // Store the current label before change
+    this.previousLabel = workflow.label;
+  }
+
   onChangeLabel(workflow: WorkflowDto) {
     const label = workflow.label;
     if (label === 'DEPLOYMENT' || label === 'BUILD') {
@@ -227,10 +234,33 @@ export class ProjectSettingsComponent {
     }
     this.confirmationService.confirm({
       header: 'Change Label',
-      message: `Are you sure you want to change the label?<br/><br/>
-      Note: Only one workflow can be labeled as 'DEPLOYMENT' and one as 'BUILD'.`,
+      message: `
+        <div class="max-w-xl w-full">
+          <p class="text-base font-medium mb-4">
+            Are you sure you want to change the workflow label to <strong>${label}</strong>?
+          </p>
+          <div class="flex items-start gap-2 p-3 bg-yellow-50 border border-yellow-300 rounded-md">
+            <i class="pi pi-exclamation-triangle text-yellow-500 text-xl"></i>
+            <div>
+              <p class="font-semibold">Note:</p>
+              <p class="text-sm text-gray-600 mb-2">
+                Only one workflow can be labeled as either <strong>DEPLOYMENT</strong> or <strong>BUILD</strong>.
+              </p>
+              <ul class="list-disc list-inside text-sm text-gray-600">
+                <li><strong>DEPLOYMENT</strong>: This label sets the workflow to trigger server deployments.</li>
+                <li><strong>BUILD</strong>: This label sets the workflow to trigger build processes.</li>
+                <li><strong>NONE</strong>: No label is set for this workflow.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      `,
       accept: () => {
         this.workflowLabelMutation.mutate({ path: { workflowId: workflow.id }, body: label });
+      },
+      reject: () => {
+        // Restore the previous label if the user cancels
+        workflow.label = this.previousLabel;
       },
     });
   }
