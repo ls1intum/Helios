@@ -75,7 +75,8 @@ public record EnvironmentDto(
   }
 
   public static EnvironmentDto fromEnvironment(
-      Environment environment, Optional<Deployment> latestDeployment, Optional<EnvironmentStatus> latestStatus) {
+      Environment environment, Optional<Deployment> latestDeployment,
+      Optional<EnvironmentStatus> latestStatus) {
     return new EnvironmentDto(
         RepositoryInfoDto.fromRepository(environment.getRepository()),
         environment.getId(),

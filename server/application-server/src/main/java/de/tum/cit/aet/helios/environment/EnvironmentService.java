@@ -69,23 +69,18 @@ public class EnvironmentService {
   /**
    * Locks the environment with the specified ID.
    *
-   * <p>
-   * This method attempts to lock the environment by setting its locked status to
+   * <p>This method attempts to lock the environment by setting its locked status to
    * true. If the
    * environment is already locked, it returns an empty Optional. If the
    * environment is successfully
    * locked, it returns an Optional containing the locked environment.
    *
-   * <p>
-   * This method is transactional and handles optimistic locking failures.
+   * <p>This method is transactional and handles optimistic locking failures.
    *
    * @param id the ID of the environment to lock
-   * @return an Optional containing the locked environment if successful, or an
-   *         empty Optional if
-   *         the environment is already locked or if an optimistic locking failure
-   *         occurs
-   * @throws EntityNotFoundException if no environment is found with the specified
-   *                                 ID
+   * @return an Optional containing the locked environment if successful, or an empty Optional if
+   *     the environment is already locked or if an optimistic locking failure occurs
+   * @throws EntityNotFoundException if no environment is found with the specified ID
    */
   @Transactional
   public Optional<Environment> lockEnvironment(Long id) {
@@ -126,14 +121,11 @@ public class EnvironmentService {
   /**
    * Unlocks the environment with the specified ID.
    *
-   * <p>
-   * This method sets the locked status of the environment to false and saves the
-   * updated
+   * <p>This method sets the locked status of the environment to false and saves the updated
    * environment.
    *
    * @param id the ID of the environment to unlock
-   * @throws EntityNotFoundException if no environment is found with the specified
-   *                                 ID
+   * @throws EntityNotFoundException if no environment is found with the specified ID
    */
   @Transactional
   public EnvironmentDto unlockEnvironment(Long id) {
@@ -178,8 +170,7 @@ public class EnvironmentService {
   /**
    * Updates the environment with the specified ID.
    *
-   * <p>
-   * This method updates the environment with the specified ID using the provided
+   * <p>This method updates the environment with the specified ID using the provided
    * EnvironmentDto.
    *
    * @param id             the ID of the environment to update
