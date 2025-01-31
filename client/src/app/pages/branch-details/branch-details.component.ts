@@ -24,7 +24,7 @@ export class BranchDetailsComponent {
   repositoryId = input.required<number>();
   branchName = input.required<string>();
 
-  isCreateDialogVisible = signal(true);
+  isCreateDialogVisible = signal(false);
 
   query = injectQuery(() => ({
     ...getBranchByRepositoryIdAndNameOptions({ path: { repoId: this.repositoryId() }, query: { name: this.branchName() } }),

@@ -21,7 +21,9 @@
     </div>
   }
   <div>
-    <p-button label="Create Release" (onClick)="isCreateDialogVisible.set(true)" />
+    @if (isLoggedIn()) {
+      <p-button label="Create Release" (onClick)="isCreateDialogVisible.set(true)" />
+    }
   </div>
 </div>
 
@@ -33,5 +35,5 @@
 </div>
 
 @if (commit() !== undefined) {
-  <app-tag-create [(isVisible)]="isCreateDialogVisible" [branchName]="branchName()" [headCommit]="commit()!" />
+  <app-tag-create [(isVisible)]="isCreateDialogVisible" [branchName]="branchName()" [headCommit]="commit()!" [repositoryId]="repositoryId()" />
 }

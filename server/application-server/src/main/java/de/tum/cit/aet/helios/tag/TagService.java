@@ -126,6 +126,11 @@ public class TagService {
 
   public TagInfoDto createTag(TagCreateDto tag) {
     final Long repositoryId = RepositoryContext.getRepositoryId();
+
+    if (tagRepository.existsByRepositoryRepositoryIdAndName(repositoryId, tag.name()) == true) {
+      throw new TagException("Tag already exists");
+    }
+
     Tag newTag = new Tag();
     newTag.setName(tag.name());
     newTag.setCommit(

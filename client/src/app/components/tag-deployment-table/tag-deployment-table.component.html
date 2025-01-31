@@ -2,14 +2,7 @@
   <p-table [value]="[1, 2, 3, 4, 5]">
     <ng-template pTemplate="header">
       <tr>
-        <th>
-          <div class="flex items-center gap-2">
-            <p-button type="button" outlined disabled size="small">
-              <i-tabler name="filter-plus" />
-            </p-button>
-            <input pInputText type="text" pSize="small" placeholder="Search" class="w-full" disabled />
-          </div>
-        </th>
+        <th>Name</th>
         <th>Status</th>
         <th>Deploy</th>
       </tr>
@@ -46,14 +39,43 @@
               <p-tag value="success" class="text-xs" severity="success" />
             }
             @case ('REPLACED') {
-              <p-tag value="replaced" class="text-xs" severity="contrast" />
-              now at {{ environment.latestDeployment.tagName }}
+              <div class="flex items-center gap-1">
+                <p-tag value="replaced" class="text-xs" severity="contrast" />
+                now at
+                @if (environment.latestDeployment.tagName) {
+                  <p-tag class="text-xs">
+                    <i-tabler name="git-branch" class="!size-4" />
+                    {{ environment.latestDeployment.tagName }}
+                  </p-tag>
+                } @else {
+                  <p-tag class="text-xs">
+                    <i-tabler name="git-branch" class="!size-4" />
+                    {{ environment.latestDeployment.ref }}
+                  </p-tag>
+                }
+              </div>
             }
             @case ('FAILURE') {
               <p-tag value="failed" class="text-xs" severity="danger" />
             }
             @case ('NEVER_DEPLOYED') {
-              now at {{ environment.latestDeployment.tagName }}
+              <div class="flex items-center gap-1">
+                @if (environment.latestDeployment.tagName) {
+                  now at
+                  <p-tag class="text-xs">
+                    <i-tabler name="git-branch" class="!size-4" />
+                    {{ environment.latestDeployment.tagName }}
+                  </p-tag>
+                } @else if (environment.latestDeployment.ref) {
+                  now at
+                  <p-tag class="text-xs">
+                    <i-tabler name="git-branch" class="!size-4" />
+                    {{ environment.latestDeployment.ref }}
+                  </p-tag>
+                } @else {
+                  no tag deployed yet
+                }
+              </div>
             }
             @default {
               <p-tag value="unknown" class="text-xs" />

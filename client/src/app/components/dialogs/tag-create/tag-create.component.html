@@ -30,6 +30,8 @@
             </p-button>
             will be included in this tag
           </div>
+        } @else if (commitListData.commitsLength == -1) {
+          <span class="font-semibold">There is no previous tag yet, this will be the first tag created on this branch.</span>
         } @else {
           <span class="font-semibold">There is no new commit since the last tag, please create one first before creating another tag!</span>
         }

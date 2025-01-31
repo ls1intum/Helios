@@ -4,6 +4,7 @@ import de.tum.cit.aet.helios.branch.Branch;
 import de.tum.cit.aet.helios.commit.Commit;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import de.tum.cit.aet.helios.user.User;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
@@ -74,7 +75,7 @@ public class Tag {
   @ToString.Exclude
   private User createdBy;
 
-  @ManyToMany
+  @ManyToMany(cascade = CascadeType.ALL)
   @JoinTable(
       name = "tag_marked_working_by",
       joinColumns = {
@@ -85,7 +86,7 @@ public class Tag {
   @ToString.Exclude
   private Set<User> markedWorkingBy = new HashSet<>();
 
-  @ManyToMany
+  @ManyToMany(cascade = CascadeType.ALL)
   @JoinTable(
       name = "tag_marked_broken_by",
       joinColumns = {

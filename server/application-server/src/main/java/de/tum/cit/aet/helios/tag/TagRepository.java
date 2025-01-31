@@ -12,4 +12,6 @@ public interface TagRepository extends JpaRepository<Tag, TagId> {
   Optional<Tag> findByRepositoryRepositoryIdAndName(Long repositoryId, String name);
 
   Optional<Tag> findByRepositoryRepositoryIdAndCommitSha(Long repositoryId, String commitSha);
+
+  boolean existsByRepositoryRepositoryIdAndName(Long repositoryId, String name);
 }

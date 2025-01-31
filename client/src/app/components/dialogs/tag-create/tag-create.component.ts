@@ -1,10 +1,10 @@
-import { JsonPipe, SlicePipe } from '@angular/common';
+import { SlicePipe } from '@angular/common';
 import { Component, inject, input, model, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommitInfoDto } from '@app/core/modules/openapi';
-import { createTagMutation, getCommitsSinceLastTagOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
+import { createTagMutation, getBranchByRepositoryIdAndNameQueryKey, getCommitsSinceLastTagOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
-import { injectMutation, injectQuery } from '@tanstack/angular-query-experimental';
+import { injectMutation, injectQuery, QueryClient } from '@tanstack/angular-query-experimental';
 import { IconsModule } from 'icons.module';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
@@ -21,10 +21,12 @@ import { TooltipModule } from 'primeng/tooltip';
 export class TagCreateComponent {
   private messageService = inject(MessageService);
   private keycloakService = inject(KeycloakService);
+  private queryClient = inject(QueryClient);
 
   isVisible = model.required<boolean>();
   branchName = input.required<string>();
   headCommit = input.required<CommitInfoDto>();
+  repositoryId = input.required<number>();
 
   isCommitListVisible = signal(false);
   tagName = signal('');
@@ -34,6 +36,9 @@ export class TagCreateComponent {
     ...createTagMutation(),
     onSuccess: () => {
       this.messageService.add({ severity: 'success', summary: 'Tag created', detail: 'Tag has been created successfully' });
+      this.queryClient.invalidateQueries({
+        queryKey: getBranchByRepositoryIdAndNameQueryKey({ path: { repoId: this.repositoryId() }, query: { name: this.branchName() } }),
+      });
       this.onClose();
     },
   }));
