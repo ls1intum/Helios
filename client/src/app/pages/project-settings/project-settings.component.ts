@@ -1,17 +1,19 @@
+import { Component, computed, effect, inject, input, numberAttribute, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Component, signal, computed, input, numberAttribute, effect, inject } from '@angular/core';
 import { injectMutation, injectQuery, injectQueryClient } from '@tanstack/angular-query-experimental';
 
-import { TableModule } from 'primeng/table';
-import { ButtonModule } from 'primeng/button';
-import { PanelModule } from 'primeng/panel';
-import { DialogModule } from 'primeng/dialog';
-import { InputTextModule } from 'primeng/inputtext';
 import { IconsModule } from 'icons.module';
-import { DragDropModule } from 'primeng/dragdrop';
 import { ConfirmationService } from 'primeng/api';
+import { ButtonModule } from 'primeng/button';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { DialogModule } from 'primeng/dialog';
+import { DragDropModule } from 'primeng/dragdrop';
+import { InputTextModule } from 'primeng/inputtext';
+import { PanelModule } from 'primeng/panel';
+import { TableModule } from 'primeng/table';
 
+import { PageHeadingComponent } from '@app/components/page-heading/page-heading.component';
+import { WorkflowDto, WorkflowGroupDto, WorkflowMembershipDto } from '@app/core/modules/openapi';
 import {
   createWorkflowGroupMutation,
   deleteWorkflowGroupMutation,
@@ -19,15 +21,13 @@ import {
   getGroupsWithWorkflowsQueryKey,
   getWorkflowsByRepositoryIdOptions,
   getWorkflowsByRepositoryIdQueryKey,
+  updateDeploymentEnvironmentMutation,
   updateWorkflowGroupsMutation,
-  updateWorkflowLabelMutation,
 } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
-import { WorkflowDto, WorkflowGroupDto, WorkflowMembershipDto } from '@app/core/modules/openapi';
 import { WorkflowDtoSchema } from '@app/core/modules/openapi/schemas.gen';
 import { MessageService } from 'primeng/api';
-import { PageHeadingComponent } from '@app/components/page-heading/page-heading.component';
-import { TooltipModule } from 'primeng/tooltip';
 import { SelectModule } from 'primeng/select';
+import { TooltipModule } from 'primeng/tooltip';
 
 @Component({
   selector: 'app-project-settings',
@@ -176,8 +176,8 @@ export class ProjectSettingsComponent {
     enabled: () => !!this.repositoryId(),
   }));
 
-  workflowLabelMutation = injectMutation(() => ({
-    ...updateWorkflowLabelMutation(),
+  workflowDeploymentEnvironmentMutation = injectMutation(() => ({
+    ...updateDeploymentEnvironmentMutation(),
     onSuccess: () => {
       this.queryClient.invalidateQueries({ queryKey: getWorkflowsByRepositoryIdQueryKey({ path: { repositoryId: this.repositoryId() } }) });
       this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Workflow Label updated successfully' });
@@ -208,18 +208,19 @@ export class ProjectSettingsComponent {
   }));
 
   getWorkflowLabelOptions(currentLabel: string) {
-    const assignedLabels = this.workflows().map(wf => wf.label);
-    return Object.values(WorkflowDtoSchema.properties.label.enum).filter(label => {
-      const isDeployment = label === 'DEPLOYMENT' && assignedLabels.includes('DEPLOYMENT');
-      const isBuild = label === 'BUILD' && assignedLabels.includes('BUILD');
-      return label === currentLabel || (!isDeployment && !isBuild);
+    const assignedLabels = this.workflows().map(wf => wf.deploymentEnvironment);
+    return Object.values(WorkflowDtoSchema.properties.deploymentEnvironment.enum).filter(label => {
+      const isTest = label === 'TEST_SERVER' && assignedLabels.includes('TEST_SERVER');
+      const isStaging = label === 'STAGING_SERVER' && assignedLabels.includes('STAGING_SERVER');
+      const isProduction = label === 'PRODUCTION_SERVER' && assignedLabels.includes('PRODUCTION_SERVER');
+      return label === currentLabel || (!isTest && !isStaging && !isProduction);
     });
   }
 
   onChangeLabel(workflow: WorkflowDto) {
-    const label = workflow.label;
-    if (label === 'DEPLOYMENT' || label === 'BUILD') {
-      const existingLabel = this.workflows().find(wf => wf.label === label && wf.id !== workflow.id);
+    const label = workflow.deploymentEnvironment;
+    if (deploymentLabels.includes(label)) {
+      const existingLabel = this.workflows().find(wf => wf.deploymentEnvironment === label && wf.id !== workflow.id);
       if (existingLabel) {
         console.warn(`Only one workflow can be labeled as ${label}.`);
         return;
@@ -230,7 +231,7 @@ export class ProjectSettingsComponent {
       message: `Are you sure you want to change the label?<br/><br/>
       Note: Only one workflow can be labeled as 'DEPLOYMENT' and one as 'BUILD'.`,
       accept: () => {
-        this.workflowLabelMutation.mutate({ path: { workflowId: workflow.id }, body: label });
+        this.workflowDeploymentEnvironmentMutation.mutate({ path: { workflowId: workflow.id }, body: label });
       },
     });
   }
@@ -351,3 +352,5 @@ export class ProjectSettingsComponent {
     this.dragIndex = null;
   }
 }
+
+const deploymentLabels = ['TEST_SERVER', 'STAGING_SERVER', 'PRODUCTION_SERVER'];
