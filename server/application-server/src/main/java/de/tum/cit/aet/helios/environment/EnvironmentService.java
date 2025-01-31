@@ -42,7 +42,7 @@ public class EnvironmentService {
         .map(
             environment -> {
               return EnvironmentDto.fromEnvironment(
-                  environment, environment.getDeployments().reversed().stream().findFirst());
+                  environment, environment.getLatestDeployment());
             })
         .collect(Collectors.toList());
   }
@@ -52,7 +52,7 @@ public class EnvironmentService {
         .map(
             environment -> {
               return EnvironmentDto.fromEnvironment(
-                  environment, environment.getDeployments().reversed().stream().findFirst());
+                  environment, environment.getLatestDeployment());
             })
         .collect(Collectors.toList());
   }
