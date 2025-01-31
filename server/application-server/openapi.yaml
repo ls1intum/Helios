@@ -13,11 +13,11 @@ servers:
 - url: /
   description: Default Server URL
 paths:
-  /api/workflows/{workflowId}/label:
+  /api/workflows/{workflowId}/deploymentEnvironment:
     put:
       tags:
       - workflow-controller
-      operationId: updateWorkflowLabel
+      operationId: updateDeploymentEnvironment
       parameters:
       - name: workflowId
         in: path
@@ -31,9 +31,10 @@ paths:
             schema:
               type: string
               enum:
-              - BUILD
-              - DEPLOYMENT
               - NONE
+              - TEST_SERVER
+              - STAGING_SERVER
+              - PRODUCTION_SERVER
         required: true
       responses:
         "200":
@@ -909,6 +910,12 @@ components:
         lockedAt:
           type: string
           format: date-time
+        environmentType:
+          type: string
+          enum:
+          - TEST
+          - STAGING
+          - PRODUCTION
       required:
       - id
       - name
@@ -1040,12 +1047,13 @@ components:
           type: string
         badgeUrl:
           type: string
-        label:
+        deploymentEnvironment:
           type: string
           enum:
-          - BUILD
-          - DEPLOYMENT
           - NONE
+          - TEST_SERVER
+          - STAGING_SERVER
+          - PRODUCTION_SERVER
         createdAt:
           type: string
           format: date-time
@@ -1053,8 +1061,8 @@ components:
           type: string
           format: date-time
       required:
+      - deploymentEnvironment
       - id
-      - label
       - name
       - path
       - state

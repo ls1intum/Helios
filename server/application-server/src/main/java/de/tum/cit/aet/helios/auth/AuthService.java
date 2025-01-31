@@ -1,5 +1,6 @@
 package de.tum.cit.aet.helios.auth;
 
+import de.tum.cit.aet.helios.environment.Environment;
 import de.tum.cit.aet.helios.github.GitHubFacade;
 import de.tum.cit.aet.helios.user.User;
 import de.tum.cit.aet.helios.user.UserRepository;
@@ -87,5 +88,20 @@ public class AuthService {
       throw new IllegalStateException("Unable to fetch GitHub user");
     }
     return githubUserSyncService.processUser(ghUser);
+  }
+
+  public boolean hasRole(String role) {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    return authentication != null
+        && authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals(role));
+  }
+
+  public boolean canDeployToEnvironment(Environment.Type environmentType) {
+    if (environmentType == Environment.Type.PRODUCTION) {
+      return hasRole("ROLE_ADMIN");
+    } else if (environmentType == Environment.Type.STAGING) {
+      return hasRole("ROLE_MAINTAINER") || hasRole("ROLE_ADMIN");
+    }
+    return false;
   }
 }

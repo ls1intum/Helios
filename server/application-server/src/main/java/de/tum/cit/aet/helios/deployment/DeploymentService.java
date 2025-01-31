@@ -90,6 +90,15 @@ public class DeploymentService {
     if (deployRequest.environmentId() == null || deployRequest.branchName() == null) {
       throw new DeploymentException("Environment ID and branch name must not be null");
     }
+    // Get the environment first to check its type
+    Environment.Type requestedEnvironmentType =
+        this.environmentService
+            .getEnvironmentTypeById(deployRequest.environmentId())
+            .orElseThrow(() -> new DeploymentException("Environment not found"));
+
+    if (!authService.canDeployToEnvironment(requestedEnvironmentType)) {
+      throw new SecurityException("Insufficient permissions to deploy to this environment");
+    }
 
     // Get the user ID of the user who triggered the deployment
     final String user = this.authService.getUserId();
@@ -97,8 +106,14 @@ public class DeploymentService {
     final String username = this.authService.getPreferredUsername();
 
     // Get the deployment workflow set by the managers
+    Workflow.DeploymentEnvironment deploymentEnvironment =
+        workflowService.getDeploymentEnvironment(requestedEnvironmentType);
+    if (deploymentEnvironment == null) {
+      throw new DeploymentException("No workflow for this deployment environment found");
+    }
     Workflow deploymentWorkflow =
-        this.workflowService.getDeploymentWorkflow(RepositoryContext.getRepositoryId());
+        this.workflowService.getDeploymentWorkflowByEnvironment(
+            deploymentEnvironment, RepositoryContext.getRepositoryId());
     if (deploymentWorkflow == null) {
       throw new DeploymentException("No deployment workflow found");
     }
