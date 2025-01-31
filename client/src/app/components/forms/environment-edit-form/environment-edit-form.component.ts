@@ -49,12 +49,6 @@ export class EnvironmentEditFormComponent implements OnInit {
     { label: 'Artemis Info', value: 'ARTEMIS_INFO' },
   ];
 
-  selectedCity: string = '';
-
-  onStatusCheckTypeChange = (event: unknown) => {
-    console.log(event);
-  };
-
   environmentId = input<number>(0); // This is the environment id
   environmentForm!: FormGroup;
 
