@@ -6,10 +6,12 @@ import de.tum.cit.aet.helios.deployment.github.GitHubDeploymentDto;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.time.OffsetDateTime;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.Queue;
 import lombok.extern.log4j.Log4j2;
 import okhttp3.OkHttpClient;
@@ -25,6 +27,7 @@ public class GitHubDeploymentIterator implements Iterator<GitHubDeploymentDto> {
   private final OkHttpClient okHttpClient;
   private final Request.Builder requestBuilder;
   private final ObjectMapper objectMapper;
+  private final Optional<OffsetDateTime> since;
 
   private int currentPage = 1;
   private final int perPage = 100;
@@ -36,12 +39,14 @@ public class GitHubDeploymentIterator implements Iterator<GitHubDeploymentDto> {
       String environmentName,
       OkHttpClient okHttpClient,
       Request.Builder requestBuilder,
-      ObjectMapper objectMapper) {
+      ObjectMapper objectMapper,
+      Optional<OffsetDateTime> since) {
     this.repository = repository;
     this.environmentName = environmentName;
     this.okHttpClient = okHttpClient;
     this.requestBuilder = requestBuilder;
     this.objectMapper = objectMapper;
+    this.since = since;
   }
 
   @Override
@@ -90,7 +95,14 @@ public class GitHubDeploymentIterator implements Iterator<GitHubDeploymentDto> {
 
       String responseBody = response.body().string();
       List<GitHubDeploymentDto> deployments =
-          objectMapper.readValue(responseBody, new TypeReference<>() {});
+          objectMapper.readValue(responseBody, new TypeReference<>() {
+          });
+
+      // Filter deployments based on the `since` parameter if provided
+      if (since.isPresent()) {
+        OffsetDateTime sinceTime = since.get();
+        deployments.removeIf(deployment -> deployment.getCreatedAt().isBefore(sinceTime));
+      }
 
       if (deployments.size() < perPage) {
         hasMore = false;

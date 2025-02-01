@@ -81,26 +81,26 @@ public class GitHubWorkflowRunSyncService {
     var workflowRuns = new ArrayList<GHWorkflowRun>();
 
     while (iterator.hasNext()) {
-      var ghPullRequests = iterator.nextPage();
-      var keepPullRequests =
-          ghPullRequests.stream()
+      var ghWorkflowRuns = iterator.nextPage();
+      var keepWorkflowRuns =
+          ghWorkflowRuns.stream()
               .filter(
-                  pullRequest -> {
+                  ghWorkflowRun -> {
                     try {
                       return sinceDate.isEmpty()
-                          || pullRequest.getUpdatedAt().after(sinceDate.get());
+                          || ghWorkflowRun.getUpdatedAt().after(sinceDate.get());
                     } catch (IOException e) {
                       log.error(
                           "Failed to filter workflow run {}: {}",
-                          pullRequest.getId(),
+                          ghWorkflowRun.getId(),
                           e.getMessage());
                       return false;
                     }
                   })
               .toList();
 
-      workflowRuns.addAll(keepPullRequests);
-      if (keepPullRequests.size() != ghPullRequests.size()) {
+      workflowRuns.addAll(keepWorkflowRuns);
+      if (keepWorkflowRuns.size() != ghWorkflowRuns.size()) {
         break;
       }
     }
@@ -189,13 +189,10 @@ public class GitHubWorkflowRunSyncService {
     // Get the deployment workflow set by the managers
     Workflow deploymentWorkflow = workflowService.getDeploymentWorkflow();
     if (deploymentWorkflow == null) {
-      log.debug("No deployment workflow found while processing workflow run {}",
-          workflowRun.getId());
       return;
     }
 
     if (workflowRun.getWorkflowId() != deploymentWorkflow.getId()) {
-      log.debug("Workflow run {} is not a deployment workflow run", workflowRun.getId());
       return;
     }
 
@@ -213,7 +210,7 @@ public class GitHubWorkflowRunSyncService {
 
           // Update the deployment status
           heliosDeployment.setStatus(mappedStatus);
-          log.debug("Updated HeliosDeployment {} to status {}", heliosDeployment.getId(),
+          log.info("Updated HeliosDeployment {} to status {}", heliosDeployment.getId(),
               mappedStatus);
           heliosDeploymentRepository.save(heliosDeployment);
         });

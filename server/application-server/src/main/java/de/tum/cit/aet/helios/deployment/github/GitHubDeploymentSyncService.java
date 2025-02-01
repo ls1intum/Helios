@@ -9,6 +9,7 @@ import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import de.tum.cit.aet.helios.pullrequest.PullRequest;
 import de.tum.cit.aet.helios.pullrequest.PullRequestRepository;
+import java.time.OffsetDateTime;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
@@ -51,8 +52,10 @@ public class GitHubDeploymentSyncService {
    *
    * @param repositories the list of GitHub repositories to sync deployments from
    */
-  public void syncDeploymentsOfAllRepositories(@NotNull List<GHRepository> repositories) {
-    repositories.forEach(this::syncDeploymentsOfRepository);
+  public void syncDeploymentsOfAllRepositories(
+      @NotNull List<GHRepository> repositories,
+      Optional<OffsetDateTime> since) {
+    repositories.forEach(ghRepository -> syncDeploymentsOfRepository(ghRepository, since));
   }
 
   /**
@@ -60,7 +63,9 @@ public class GitHubDeploymentSyncService {
    *
    * @param ghRepository the GitHub repository to sync deployments from
    */
-  public void syncDeploymentsOfRepository(@NotNull GHRepository ghRepository) {
+  public void syncDeploymentsOfRepository(
+      @NotNull GHRepository ghRepository,
+      Optional<OffsetDateTime> since) {
     try {
       // Fetch the GitRepository entity
       String fullName = ghRepository.getFullName();
@@ -74,7 +79,7 @@ public class GitHubDeploymentSyncService {
       List<Environment> environments = environmentRepository.findByRepository(repository);
 
       for (Environment environment : environments) {
-        syncDeploymentsOfEnvironment(ghRepository, environment);
+        syncDeploymentsOfEnvironment(ghRepository, environment, since);
       }
     } catch (Exception e) {
       log.error(
@@ -91,7 +96,9 @@ public class GitHubDeploymentSyncService {
    * @param environment  the environment entity
    */
   public void syncDeploymentsOfEnvironment(
-      @NotNull GHRepository ghRepository, @NotNull Environment environment) {
+      @NotNull GHRepository ghRepository,
+      @NotNull Environment environment,
+      Optional<OffsetDateTime> since) {
     try {
       GitRepository gitRepository =
           gitRepoRepository.findByNameWithOwner(ghRepository.getFullName());
@@ -106,7 +113,7 @@ public class GitHubDeploymentSyncService {
 
       // Use the iterator from GitHubService to fetch deployments one by one
       Iterator<GitHubDeploymentDto> iterator =
-          gitHubService.getDeploymentIterator(ghRepository, environment.getName());
+          gitHubService.getDeploymentIterator(ghRepository, environment.getName(), since);
 
       while (iterator.hasNext()) {
         final GitHubDeploymentDto ghDeployment = iterator.next();
