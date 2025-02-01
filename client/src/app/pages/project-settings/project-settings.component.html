@@ -104,8 +104,8 @@
           </td>
           <td>
             <p-select
-              [options]="getWorkflowLabelOptions(workflow.label)"
-              [(ngModel)]="workflow.label"
+              [options]="getWorkflowLabelOptions(workflow.deploymentEnvironment)"
+              [(ngModel)]="workflow.deploymentEnvironment"
               placeholder="Select Label"
               (onClick)="storePreviousLabel(workflow)"
               (onChange)="onChangeLabel(workflow)"

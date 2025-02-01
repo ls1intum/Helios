@@ -111,10 +111,10 @@ public class Environment extends RepositoryFilterEntity {
     return this.deployments.reversed().stream().findFirst();
   }
 
-  @Column(name = "environment_type")
+  @Column(name = "type")
   @NonNull
   @Enumerated(EnumType.STRING)
-  private Type environmentType = Type.TEST;
+  private Type type = Type.TEST;
 
   public enum Type {
     TEST,
