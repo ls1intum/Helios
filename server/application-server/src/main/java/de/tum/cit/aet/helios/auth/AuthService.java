@@ -46,11 +46,19 @@ public class AuthService {
   }
 
   public boolean canDeployToEnvironment(Environment.Type environmentType) {
-    if (environmentType == Environment.Type.PRODUCTION) {
-      return hasRole("ROLE_ADMIN");
-    } else if (environmentType == Environment.Type.STAGING) {
-      return hasRole("ROLE_MAINTAINER") || hasRole("ROLE_ADMIN");
-    }
+    if (null != environmentType)
+      switch (environmentType) {
+        case PRODUCTION -> {
+          return hasRole("ROLE_ADMIN");
+        }
+        case STAGING -> {
+          return hasRole("ROLE_MAINTAINER") || hasRole("ROLE_ADMIN");
+        }
+        case TEST -> {
+          return hasRole("ROLE_WRITE") || hasRole("ROLE_MAINTAINER") || hasRole("ROLE_ADMIN");
+        }
+        default -> {}
+      }
     return false;
   }
 }

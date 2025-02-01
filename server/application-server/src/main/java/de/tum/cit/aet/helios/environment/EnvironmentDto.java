@@ -70,7 +70,7 @@ public record EnvironmentDto(
         latestDeployment.map(EnvironmentDeployment::fromDeployment).orElse(null),
         environment.getLockedBy(),
         environment.getLockedAt(),
-        environment.getEnvironmentType());
+        environment.getType());
   }
 
   public static EnvironmentDto fromEnvironment(Environment environment) {

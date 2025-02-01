@@ -153,3 +153,10 @@ openApi {
 tasks.named('test') {
     useJUnitPlatform()
 }
+
+flyway {
+    url = 'jdbc:postgresql://localhost:5432/helios'
+    user = 'helios'
+    password = 'helios'
+    cleanDisabled = false
+}

@@ -84,10 +84,10 @@ public class Environment extends RepositoryFilterEntity {
   @OneToMany(mappedBy = "environment", fetch = FetchType.LAZY)
   private List<EnvironmentLockHistory> lockHistory;
 
-  @Column(name = "environment_type")
+  @Column(name = "type")
   @NonNull
   @Enumerated(EnumType.STRING)
-  private Type environmentType = Type.TEST;
+  private Type type = Type.TEST;
 
   public enum Type {
     TEST,

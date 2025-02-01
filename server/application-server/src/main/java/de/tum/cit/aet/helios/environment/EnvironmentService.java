@@ -38,7 +38,7 @@ public class EnvironmentService {
   }
 
   public Optional<Environment.Type> getEnvironmentTypeById(Long id) {
-    return environmentRepository.findById(id).map(Environment::getEnvironmentType);
+    return environmentRepository.findById(id).map(Environment::getType);
   }
 
   public List<EnvironmentDto> getAllEnvironments() {
