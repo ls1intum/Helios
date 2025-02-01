@@ -15,6 +15,7 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Optional;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -83,6 +84,10 @@ public class Environment extends RepositoryFilterEntity {
 
   @OneToMany(mappedBy = "environment", fetch = FetchType.LAZY)
   private List<EnvironmentLockHistory> lockHistory;
+
+  public Optional<Deployment> getLatestDeployment() {
+    return this.deployments.reversed().stream().findFirst();
+  }
 
   // Missing properties
   // nodeId --> GraphQl ID

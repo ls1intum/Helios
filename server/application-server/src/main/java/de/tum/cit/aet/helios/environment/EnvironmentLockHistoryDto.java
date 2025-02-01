@@ -13,7 +13,6 @@ public record EnvironmentLockHistoryDto(
     @Nullable OffsetDateTime unlockedAt,
     EnvironmentDto environment) {
 
-
   public static EnvironmentLockHistoryDto fromEnvironmentLockHistory(
       EnvironmentLockHistory environmentLockHistory) {
     Environment environment = environmentLockHistory.getEnvironment();
@@ -22,6 +21,8 @@ public record EnvironmentLockHistoryDto(
         environmentLockHistory.getLockedBy(),
         environmentLockHistory.getLockedAt(),
         environmentLockHistory.getUnlockedAt(),
-        EnvironmentDto.fromEnvironment(environment));
+        EnvironmentDto.fromEnvironment(
+            environment,
+            environment.getLatestDeployment()));
   }
 }
