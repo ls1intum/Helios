@@ -2,31 +2,21 @@ name: Build and Deploy to Prod
 
 on:
   push:
-    branches:
-      - main
-      - fix/flyway-validate-workflow-2
+    branches: [main]
 
 jobs:
   validate-flyway:
     uses: ./.github/workflows/flyway-validate.yml
   build-prod-container:
     needs: validate-flyway
-    # uses: ./.github/workflows/build_docker.yml
-    # secrets: inherit
-    runs-on: ubuntu-latest
-    steps:
-      - name: print hello 1
-        run: echo "Hello 1"
+    uses: ./.github/workflows/build_docker.yml
+    secrets: inherit
   deploy-prod-container:
     needs: build-prod-container
-    runs-on: ubuntu-latest
-    steps:
-      - name: print hello 2
-        run: echo "Hello 2"
-    # uses: ./.github/workflows/deploy_docker.yml
-    # secrets: inherit
-    # with:
-    #   environment: production
-    #   client_image_tag: "latest"
-    #   application_server_image_tag: "latest"
-    #   webhook_listener_image_tag: "latest"
+    uses: ./.github/workflows/deploy_docker.yml
+    secrets: inherit
+    with:
+      environment: production
+      client_image_tag: "latest"
+      application_server_image_tag: "latest"
+      webhook_listener_image_tag: "latest"
