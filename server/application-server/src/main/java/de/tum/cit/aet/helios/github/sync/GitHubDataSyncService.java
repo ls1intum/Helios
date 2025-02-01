@@ -158,19 +158,19 @@ public class GitHubDataSyncService {
 
     // Sync commits
     log.info("--------------------------------------------------");
-    var step10Start = Instant.now();
+    var step9Start = Instant.now();
     log.info("[Step 9/10] Syncing Commits...");
     commitSyncService.syncCommitsOfAllRepositories(repositories);
-    var step10Duration = Duration.between(step10Start, Instant.now()).toMillis();
-    log.info("[Step 9/10] Completed Commit Sync. (Took: {} ms)", step10Duration);
+    var step9Duration = Duration.between(step9Start, Instant.now()).toMillis();
+    log.info("[Step 9/10] Completed Commit Sync. (Took: {} ms)", step9Duration);
 
     // Sync workflow runs
     log.info("--------------------------------------------------");
-    var step9Start = Instant.now();
+    var step10Start = Instant.now();
     log.info("[Step 10/10] Syncing Workflow Runs (Cutoff: {})", cutoffDate);
     workflowRunSyncService.syncLatestRunsOfWorkflowsOfAllRepositories(repositories);
-    var step9Duration = Duration.between(step9Start, Instant.now()).toMillis();
-    log.info("[Step 10/10] Completed Workflow Run Sync. (Took: {} ms)", step9Duration);
+    var step10Duration = Duration.between(step10Start, Instant.now()).toMillis();
+    log.info("[Step 10/10] Completed Workflow Run Sync. (Took: {} ms)", step10Duration);
 
     var endTime = OffsetDateTime.now();
     log.info("--------------------------------------------------");
