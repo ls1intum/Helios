@@ -24,6 +24,8 @@ spring:
 logging:
     level:
         de.tum.cit.aet.helios: DEBUG
+        org.springframework.web: DEBUG
+        org.springframework.web.servlet.DispatcherServlet: DEBUG
 
 nats:
     enabled: true

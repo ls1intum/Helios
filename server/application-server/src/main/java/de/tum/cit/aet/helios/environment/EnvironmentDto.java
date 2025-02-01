@@ -122,7 +122,7 @@ public record EnvironmentDto(
         latestStatus.map(EnvironmentStatusDto::fromEnvironmentStatus).orElse(null),
         UserInfoDto.fromUser(environment.getLockedBy()),
         environment.getLockedAt(),
-        environment.getEnvironmentType());
+        environment.getType());
   }
 
   /** Overload if you just want to create an EnvironmentDto with no "latestDeployment" info. */
