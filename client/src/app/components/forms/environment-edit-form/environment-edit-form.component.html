@@ -23,6 +23,23 @@
         <p-autoComplete id="installed-apps" formControlName="installedApps" [multiple]="true" [minLength]="1" fluid [typeahead]="false"> </p-autoComplete>
       </div>
 
+      <div class="flex flex-col gap-1">
+        <label for="status-check-type">Status Check</label>
+        <span class="text-sm text-gray-500"> When enabled, the status check will run periodically to check the health of the environment. </span>
+        <p-select id="status-check-type" class="mt-2" [options]="statusCheckTypes" formControlName="statusCheckType"></p-select>
+      </div>
+
+      @if (environmentForm.get('statusCheckType')?.value !== null) {
+        <div class="flex flex-col gap-2">
+          <label for="status-check-url">Status URL</label>
+          <span class="text-sm text-gray-500">
+            This can be the URL of the Artemis management info endpoint (if set as the status check type) or any other URL that returns a 200 status code when the environment is
+            healthy.
+          </span>
+          <input pInputText id="status-check-url" type="text" formControlName="statusUrl" />
+        </div>
+      }
+
       <!-- Environment Enable/Disable Checkbox -->
       <div class="flex gap-2">
         <label for="enabled" class="mr-2">Enabled</label>

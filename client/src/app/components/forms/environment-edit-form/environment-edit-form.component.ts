@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, input, OnInit } from '@angular/core';
+import { Component, computed, inject, input, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { InputSwitchModule } from 'primeng/inputswitch';
@@ -14,10 +14,12 @@ import {
 } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { MessageService } from 'primeng/api';
 import { Checkbox } from 'primeng/checkbox';
+import { SelectModule } from 'primeng/select';
+import { toObservable } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-environment-edit-form',
-  imports: [AutoCompleteModule, ReactiveFormsModule, InputTextModule, InputSwitchModule, ButtonModule, Checkbox],
+  imports: [AutoCompleteModule, ReactiveFormsModule, InputTextModule, InputSwitchModule, ButtonModule, Checkbox, SelectModule],
   templateUrl: './environment-edit-form.component.html',
 })
 export class EnvironmentEditFormComponent implements OnInit {
@@ -27,14 +29,25 @@ export class EnvironmentEditFormComponent implements OnInit {
   private route = inject(ActivatedRoute);
 
   constructor(private messageService: MessageService) {
-    // This effect is needed, because the form is initialized before the data is fetched.
+    // This subscription is needed, because the form is initialized before the data is fetched.
     // As soon as the data is fetched, the form is updated with the fetched data.
-    effect(() => {
-      if (this.environment()) {
-        this.environmentForm.patchValue(this.environment() || {});
+    //
+    // We used to call effect() here, but selecting an option within NgPrime Select
+    // for some reason triggers the effect to run and reset the form to the initial state.
+    toObservable(this.environment).subscribe(environment => {
+      if (!environment) {
+        return;
       }
+
+      this.environmentForm.patchValue(environment);
     });
   }
+
+  statusCheckTypes = [
+    { label: 'Disabled', value: null },
+    { label: 'HTTP Status', value: 'HTTP_STATUS' },
+    { label: 'Artemis Info', value: 'ARTEMIS_INFO' },
+  ];
 
   environmentId = input<number>(0); // This is the environment id
   environmentForm!: FormGroup;
@@ -64,12 +77,16 @@ export class EnvironmentEditFormComponent implements OnInit {
   environment = computed(() => this.environmentQuery.data());
 
   ngOnInit(): void {
+    const environment = this.environment();
+
     this.environmentForm = this.formBuilder.group({
-      name: [this.environment()?.name || '', Validators.required],
-      installedApps: [this.environment()?.installedApps || []],
-      description: [this.environment()?.description || ''],
-      serverUrl: [this.environment()?.serverUrl || ''],
-      enabled: [this.environment()?.enabled || false],
+      name: [environment?.name || '', Validators.required],
+      installedApps: [environment?.installedApps || []],
+      description: [environment?.description || ''],
+      serverUrl: [environment?.serverUrl || ''],
+      enabled: [environment?.enabled || false],
+      statusCheckType: [environment?.statusCheckType || null],
+      statusUrl: [environment?.statusUrl || ''],
     });
   }
 
@@ -79,7 +96,10 @@ export class EnvironmentEditFormComponent implements OnInit {
 
   submitForm = () => {
     if (this.environmentForm && this.environmentForm.valid) {
-      this.mutateEnvironment.mutate({ path: { id: this.environmentId() }, body: this.environmentForm.value });
+      this.mutateEnvironment.mutate({
+        path: { id: this.environmentId() },
+        body: this.environmentForm.value,
+      });
     }
   };
 }

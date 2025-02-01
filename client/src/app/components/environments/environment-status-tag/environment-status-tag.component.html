@@ -1,0 +1,16 @@
+@if (status(); as status) {
+  <!-- Info State -->
+  <!-- Success State -->
+  @if (status.success) {
+    <p-tag severity="success" [rounded]="true">
+      <i-tabler name="check" class="!h-4 !w-4 mr-0.5"></i-tabler>
+      Status check successful
+    </p-tag>
+  } @else {
+    <!-- Error State -->
+    <p-tag severity="danger" [rounded]="true">
+      <i-tabler name="exclamation-circle" class="!h-4 !w-4 mr-0.5"></i-tabler>
+      Status check failed
+    </p-tag>
+  }
+}
