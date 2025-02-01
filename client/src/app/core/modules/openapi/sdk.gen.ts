@@ -3,6 +3,12 @@
 import { createClient, createConfig, type Options } from '@hey-api/client-fetch';
 import type {
   UpdateWorkflowLabelData,
+  GetAllTagsData,
+  GetAllTagsResponse,
+  CreateTagData,
+  CreateTagResponse,
+  MarkWorkingData,
+  MarkBrokenData,
   UpdateWorkflowGroupsData,
   GetEnvironmentByIdData,
   GetEnvironmentByIdResponse,
@@ -28,6 +34,10 @@ import type {
   GetLatestWorkflowRunsByBranchAndHeadCommitResponse,
   GetUserPermissionsData,
   GetUserPermissionsResponse,
+  GetTagByNameData,
+  GetTagByNameResponse,
+  GetCommitsSinceLastTagData,
+  GetCommitsSinceLastTagResponse,
   GetGroupsWithWorkflowsData,
   GetGroupsWithWorkflowsResponse,
   GetAllRepositoriesData,
@@ -81,6 +91,46 @@ export const updateWorkflowLabel = <ThrowOnError extends boolean = false>(option
       ...options?.headers,
     },
     url: '/api/workflows/{workflowId}/label',
+  });
+};
+
+export const getAllTags = <ThrowOnError extends boolean = false>(options?: Options<GetAllTagsData, ThrowOnError>) => {
+  return (options?.client ?? client).get<GetAllTagsResponse, unknown, ThrowOnError>({
+    ...options,
+    url: '/api/tags',
+  });
+};
+
+export const createTag = <ThrowOnError extends boolean = false>(options: Options<CreateTagData, ThrowOnError>) => {
+  return (options?.client ?? client).put<CreateTagResponse, unknown, ThrowOnError>({
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+    url: '/api/tags',
+  });
+};
+
+export const markWorking = <ThrowOnError extends boolean = false>(options: Options<MarkWorkingData, ThrowOnError>) => {
+  return (options?.client ?? client).put<unknown, unknown, ThrowOnError>({
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+    url: '/api/tags/{name}/markworking',
+  });
+};
+
+export const markBroken = <ThrowOnError extends boolean = false>(options: Options<MarkBrokenData, ThrowOnError>) => {
+  return (options?.client ?? client).put<unknown, unknown, ThrowOnError>({
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+    url: '/api/tags/{name}/markbroken',
   });
 };
 
@@ -199,6 +249,20 @@ export const getUserPermissions = <ThrowOnError extends boolean = false>(options
   return (options?.client ?? client).get<GetUserPermissionsResponse, unknown, ThrowOnError>({
     ...options,
     url: '/api/user-permissions',
+  });
+};
+
+export const getTagByName = <ThrowOnError extends boolean = false>(options: Options<GetTagByNameData, ThrowOnError>) => {
+  return (options?.client ?? client).get<GetTagByNameResponse, unknown, ThrowOnError>({
+    ...options,
+    url: '/api/tags/{name}',
+  });
+};
+
+export const getCommitsSinceLastTag = <ThrowOnError extends boolean = false>(options: Options<GetCommitsSinceLastTagData, ThrowOnError>) => {
+  return (options?.client ?? client).get<GetCommitsSinceLastTagResponse, unknown, ThrowOnError>({
+    ...options,
+    url: '/api/tags/newcommits/{name}',
   });
 };
 

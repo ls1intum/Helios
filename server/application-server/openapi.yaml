@@ -38,6 +38,77 @@ paths:
       responses:
         "200":
           description: OK
+  /api/tags:
+    get:
+      tags:
+      - tag-controller
+      operationId: getAllTags
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TagInfoDto"
+    put:
+      tags:
+      - tag-controller
+      operationId: createTag
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TagCreateDto"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TagInfoDto"
+  /api/tags/{name}/markworking:
+    put:
+      tags:
+      - tag-controller
+      operationId: markWorking
+      parameters:
+      - name: name
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: string
+        required: true
+      responses:
+        "200":
+          description: OK
+  /api/tags/{name}/markbroken:
+    put:
+      tags:
+      - tag-controller
+      operationId: markBroken
+      parameters:
+      - name: name
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: string
+        required: true
+      responses:
+        "200":
+          description: OK
   /api/settings/{repositoryId}/groups/update:
     put:
       tags:
@@ -310,6 +381,42 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/GitHubRepositoryRoleDto"
+  /api/tags/{name}:
+    get:
+      tags:
+      - tag-controller
+      operationId: getTagByName
+      parameters:
+      - name: name
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TagDetailsDto"
+  /api/tags/newcommits/{name}:
+    get:
+      tags:
+      - tag-controller
+      operationId: getCommitsSinceLastTag
+      parameters:
+      - name: name
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CommitsSinceTagDto"
   /api/settings/{repositoryId}/groups:
     get:
       tags:
@@ -680,7 +787,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/BranchInfoDto"
+                $ref: "#/components/schemas/BranchDetailsDto"
   /api/settings/{repositoryId}/groups/{groupId}:
     delete:
       tags:
@@ -704,6 +811,30 @@ paths:
           description: OK
 components:
   schemas:
+    TagCreateDto:
+      type: object
+      properties:
+        name:
+          type: string
+        commitSha:
+          type: string
+        branchName:
+          type: string
+        createdByLogin:
+          type: string
+      required:
+      - commitSha
+      - createdByLogin
+      - name
+    TagInfoDto:
+      type: object
+      properties:
+        name:
+          type: string
+        commitSha:
+          type: string
+        branchName:
+          type: string
     WorkflowGroupDto:
       type: object
       properties:
@@ -762,6 +893,8 @@ components:
         ref:
           type: string
         task:
+          type: string
+        tagName:
           type: string
         createdAt:
           type: string
@@ -960,6 +1093,162 @@ components:
           - NONE
         roleName:
           type: string
+    BranchInfoDto:
+      type: object
+      properties:
+        name:
+          type: string
+        commitSha:
+          type: string
+        aheadBy:
+          type: integer
+          format: int32
+        behindBy:
+          type: integer
+          format: int32
+        isDefault:
+          type: boolean
+        isProtected:
+          type: boolean
+        updatedAt:
+          type: string
+          format: date-time
+        updatedBy:
+          $ref: "#/components/schemas/UserInfoDto"
+        repository:
+          $ref: "#/components/schemas/RepositoryInfoDto"
+      required:
+      - commitSha
+      - name
+    CommitInfoDto:
+      type: object
+      properties:
+        sha:
+          type: string
+        author:
+          $ref: "#/components/schemas/UserInfoDto"
+        message:
+          type: string
+        authoredAt:
+          type: string
+          format: date-time
+        repository:
+          $ref: "#/components/schemas/RepositoryInfoDto"
+      required:
+      - sha
+    DeploymentDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        repository:
+          $ref: "#/components/schemas/RepositoryInfoDto"
+        url:
+          type: string
+        state:
+          type: string
+          enum:
+          - PENDING
+          - WAITING
+          - SUCCESS
+          - ERROR
+          - FAILURE
+          - IN_PROGRESS
+          - QUEUED
+          - INACTIVE
+          - UNKNOWN
+        statusesUrl:
+          type: string
+        sha:
+          type: string
+        ref:
+          type: string
+        task:
+          type: string
+        environment:
+          $ref: "#/components/schemas/EnvironmentDto"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+      - environment
+      - id
+      - ref
+      - sha
+      - statusesUrl
+      - task
+      - url
+    TagDetailsDto:
+      type: object
+      properties:
+        name:
+          type: string
+        commit:
+          $ref: "#/components/schemas/CommitInfoDto"
+        branch:
+          $ref: "#/components/schemas/BranchInfoDto"
+        deployments:
+          type: array
+          items:
+            $ref: "#/components/schemas/DeploymentDto"
+        markedWorkingBy:
+          type: array
+          items:
+            $ref: "#/components/schemas/UserInfoDto"
+        markedBrokenBy:
+          type: array
+          items:
+            $ref: "#/components/schemas/UserInfoDto"
+        createdBy:
+          $ref: "#/components/schemas/UserInfoDto"
+        createdAt:
+          type: string
+          format: date-time
+      required:
+      - commit
+      - createdAt
+      - createdBy
+      - deployments
+      - markedBrokenBy
+      - markedWorkingBy
+      - name
+    UserInfoDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        login:
+          type: string
+        avatarUrl:
+          type: string
+        name:
+          type: string
+        htmlUrl:
+          type: string
+      required:
+      - avatarUrl
+      - htmlUrl
+      - id
+      - login
+      - name
+    CommitsSinceTagDto:
+      type: object
+      properties:
+        commitsLength:
+          type: integer
+          format: int32
+        commits:
+          type: array
+          items:
+            $ref: "#/components/schemas/CommitInfoDto"
+      required:
+      - commits
+      - commitsLength
     LabelInfoDto:
       type: object
       properties:
@@ -1035,26 +1324,6 @@ components:
       - number
       - state
       - title
-    UserInfoDto:
-      type: object
-      properties:
-        id:
-          type: integer
-          format: int64
-        login:
-          type: string
-        avatarUrl:
-          type: string
-        name:
-          type: string
-        htmlUrl:
-          type: string
-      required:
-      - avatarUrl
-      - htmlUrl
-      - id
-      - login
-      - name
     PullRequestInfoDto:
       type: object
       properties:
@@ -1148,52 +1417,6 @@ components:
           $ref: "#/components/schemas/EnvironmentDto"
       required:
       - id
-    DeploymentDto:
-      type: object
-      properties:
-        id:
-          type: integer
-          format: int64
-        repository:
-          $ref: "#/components/schemas/RepositoryInfoDto"
-        url:
-          type: string
-        state:
-          type: string
-          enum:
-          - PENDING
-          - WAITING
-          - SUCCESS
-          - ERROR
-          - FAILURE
-          - IN_PROGRESS
-          - QUEUED
-          - INACTIVE
-          - UNKNOWN
-        statusesUrl:
-          type: string
-        sha:
-          type: string
-        ref:
-          type: string
-        task:
-          type: string
-        environment:
-          $ref: "#/components/schemas/EnvironmentDto"
-        createdAt:
-          type: string
-          format: date-time
-        updatedAt:
-          type: string
-          format: date-time
-      required:
-      - environment
-      - id
-      - ref
-      - sha
-      - statusesUrl
-      - task
-      - url
     ActivityHistoryDto:
       type: object
       properties:
@@ -1231,23 +1454,7 @@ components:
         updatedAt:
           type: string
           format: date-time
-    CommitInfoDto:
-      type: object
-      properties:
-        sha:
-          type: string
-        author:
-          $ref: "#/components/schemas/UserInfoDto"
-        message:
-          type: string
-        authoredAt:
-          type: string
-          format: date-time
-        repository:
-          $ref: "#/components/schemas/RepositoryInfoDto"
-      required:
-      - sha
-    BranchInfoDto:
+    BranchDetailsDto:
       type: object
       properties:
         name:
@@ -1264,6 +1471,8 @@ components:
           type: boolean
         isProtected:
           type: boolean
+        tagName:
+          type: string
         updatedAt:
           type: string
           format: date-time

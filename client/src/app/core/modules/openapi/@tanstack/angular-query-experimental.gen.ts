@@ -4,6 +4,11 @@ import type { Options } from '@hey-api/client-fetch';
 import { type MutationOptions, type DefaultError, queryOptions } from '@tanstack/angular-query-experimental';
 import type {
   UpdateWorkflowLabelData,
+  GetAllTagsData,
+  CreateTagData,
+  CreateTagResponse,
+  MarkWorkingData,
+  MarkBrokenData,
   UpdateWorkflowGroupsData,
   GetEnvironmentByIdData,
   UpdateEnvironmentData,
@@ -20,6 +25,8 @@ import type {
   GetLatestWorkflowRunsByPullRequestIdAndHeadCommitData,
   GetLatestWorkflowRunsByBranchAndHeadCommitData,
   GetUserPermissionsData,
+  GetTagByNameData,
+  GetCommitsSinceLastTagData,
   GetGroupsWithWorkflowsData,
   GetAllRepositoriesData,
   GetRepositoryByIdData,
@@ -44,6 +51,10 @@ import type {
 } from '../types.gen';
 import {
   updateWorkflowLabel,
+  getAllTags,
+  createTag,
+  markWorking,
+  markBroken,
   updateWorkflowGroups,
   getEnvironmentById,
   updateEnvironment,
@@ -58,6 +69,8 @@ import {
   getLatestWorkflowRunsByPullRequestIdAndHeadCommit,
   getLatestWorkflowRunsByBranchAndHeadCommit,
   getUserPermissions,
+  getTagByName,
+  getCommitsSinceLastTag,
   getGroupsWithWorkflows,
   getAllRepositories,
   getRepositoryById,
@@ -96,20 +109,6 @@ export const updateWorkflowLabelMutation = (options?: Partial<Options<UpdateWork
   return mutationOptions;
 };
 
-export const updateWorkflowGroupsMutation = (options?: Partial<Options<UpdateWorkflowGroupsData>>) => {
-  const mutationOptions: MutationOptions<unknown, DefaultError, Options<UpdateWorkflowGroupsData>> = {
-    mutationFn: async localOptions => {
-      const { data } = await updateWorkflowGroups({
-        ...options,
-        ...localOptions,
-        throwOnError: true,
-      });
-      return data;
-    },
-  };
-  return mutationOptions;
-};
-
 type QueryKey<TOptions extends Options> = [
   Pick<TOptions, 'baseUrl' | 'body' | 'headers' | 'path' | 'query'> & {
     _id: string;
@@ -135,6 +134,79 @@ const createQueryKey = <TOptions extends Options>(id: string, options?: TOptions
     params.query = options.query;
   }
   return params;
+};
+
+export const getAllTagsQueryKey = (options?: Options<GetAllTagsData>) => [createQueryKey('getAllTags', options)];
+
+export const getAllTagsOptions = (options?: Options<GetAllTagsData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getAllTags({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: getAllTagsQueryKey(options),
+  });
+};
+
+export const createTagMutation = (options?: Partial<Options<CreateTagData>>) => {
+  const mutationOptions: MutationOptions<CreateTagResponse, DefaultError, Options<CreateTagData>> = {
+    mutationFn: async localOptions => {
+      const { data } = await createTag({
+        ...options,
+        ...localOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const markWorkingMutation = (options?: Partial<Options<MarkWorkingData>>) => {
+  const mutationOptions: MutationOptions<unknown, DefaultError, Options<MarkWorkingData>> = {
+    mutationFn: async localOptions => {
+      const { data } = await markWorking({
+        ...options,
+        ...localOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const markBrokenMutation = (options?: Partial<Options<MarkBrokenData>>) => {
+  const mutationOptions: MutationOptions<unknown, DefaultError, Options<MarkBrokenData>> = {
+    mutationFn: async localOptions => {
+      const { data } = await markBroken({
+        ...options,
+        ...localOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const updateWorkflowGroupsMutation = (options?: Partial<Options<UpdateWorkflowGroupsData>>) => {
+  const mutationOptions: MutationOptions<unknown, DefaultError, Options<UpdateWorkflowGroupsData>> = {
+    mutationFn: async localOptions => {
+      const { data } = await updateWorkflowGroups({
+        ...options,
+        ...localOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
 };
 
 export const getEnvironmentByIdQueryKey = (options: Options<GetEnvironmentByIdData>) => [createQueryKey('getEnvironmentById', options)];
@@ -381,6 +453,40 @@ export const getUserPermissionsOptions = (options?: Options<GetUserPermissionsDa
       return data;
     },
     queryKey: getUserPermissionsQueryKey(options),
+  });
+};
+
+export const getTagByNameQueryKey = (options: Options<GetTagByNameData>) => [createQueryKey('getTagByName', options)];
+
+export const getTagByNameOptions = (options: Options<GetTagByNameData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getTagByName({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: getTagByNameQueryKey(options),
+  });
+};
+
+export const getCommitsSinceLastTagQueryKey = (options: Options<GetCommitsSinceLastTagData>) => [createQueryKey('getCommitsSinceLastTag', options)];
+
+export const getCommitsSinceLastTagOptions = (options: Options<GetCommitsSinceLastTagData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getCommitsSinceLastTag({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: getCommitsSinceLastTagQueryKey(options),
   });
 };
 
