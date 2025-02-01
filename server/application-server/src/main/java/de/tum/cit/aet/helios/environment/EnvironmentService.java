@@ -87,6 +87,10 @@ public class EnvironmentService {
             .findById(id)
             .orElseThrow(() -> new EntityNotFoundException("Environment not found with ID: " + id));
 
+    if (!environment.isEnabled()) {
+      throw new IllegalStateException("Environment is disabled");
+    }
+
     if (environment.isLocked()) {
       if (currentUserName.equals(environment.getLockedBy())) {
         return Optional.of(environment);
