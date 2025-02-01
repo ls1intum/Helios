@@ -1,7 +1,10 @@
 package de.tum.cit.aet.helios.workflow;
 
+import de.tum.cit.aet.helios.environment.Environment;
 import jakarta.transaction.Transactional;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
@@ -27,7 +30,8 @@ public class WorkflowService {
   }
 
   public List<WorkflowDto> getWorkflowsByRepositoryId(Long repositoryId) {
-    return workflowRepository.findByRepositoryRepositoryIdOrderByCreatedAtDesc(repositoryId)
+    return workflowRepository
+        .findByRepositoryRepositoryIdOrderByCreatedAtDesc(repositoryId)
         .stream()
         .map(WorkflowDto::fromWorkflow)
         .collect(Collectors.toList());
@@ -39,19 +43,44 @@ public class WorkflowService {
         .collect(Collectors.toList());
   }
 
-  public void updateWorkflowLabel(Long workflowId, Workflow.Label label) {
+  public void updateWorkflowDeploymentEnvironment(
+      Long workflowId, Workflow.DeploymentEnvironment env) {
     Workflow workflow =
         workflowRepository
             .findById(workflowId)
             .orElseThrow(() -> new IllegalArgumentException("Workflow not found!"));
-    workflow.setLabel(label);
+    workflow.setDeploymentEnvironment(env);
     workflowRepository.save(workflow);
   }
 
-  public Workflow getDeploymentWorkflow() {
+  public Workflow getDeploymentWorkflowByEnvironment(Workflow.DeploymentEnvironment environment) {
     Workflow workflow =
-        workflowRepository
-            .findFirstByLabelOrderByCreatedAtDesc(Workflow.Label.DEPLOYMENT);
+        workflowRepository.findFirstByDeploymentEnvironmentOrderByCreatedAtDesc(environment);
     return workflow;
+  }
+
+  public List<Workflow> getDeploymentWorkflows() {
+    return Arrays.stream(Workflow.DeploymentEnvironment.values())
+        .filter(env -> env != Workflow.DeploymentEnvironment.NONE)
+        .map(workflowRepository::findFirstByDeploymentEnvironmentOrderByCreatedAtDesc)
+        .filter(Objects::nonNull)
+        .collect(Collectors.toList());
+  }
+
+  public Workflow.DeploymentEnvironment getDeploymentEnvironment(Environment.Type type) {
+    switch (type) {
+      case PRODUCTION -> {
+        return Workflow.DeploymentEnvironment.PRODUCTION_SERVER;
+      }
+      case STAGING -> {
+        return Workflow.DeploymentEnvironment.STAGING_SERVER;
+      }
+      case TEST -> {
+        return Workflow.DeploymentEnvironment.TEST_SERVER;
+      }
+      default -> {
+        return Workflow.DeploymentEnvironment.NONE;
+      }
+    }
   }
 }

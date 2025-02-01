@@ -24,7 +24,8 @@ public record EnvironmentDto(
     String serverUrl,
     EnvironmentDeployment latestDeployment,
     String lockedBy,
-    OffsetDateTime lockedAt) {
+    OffsetDateTime lockedAt,
+    Environment.Type environmentType) {
 
   public static record EnvironmentDeployment(
       @NonNull Long id,
@@ -68,7 +69,8 @@ public record EnvironmentDto(
         environment.getServerUrl(),
         latestDeployment.map(EnvironmentDeployment::fromDeployment).orElse(null),
         environment.getLockedBy(),
-        environment.getLockedAt());
+        environment.getLockedAt(),
+        environment.getEnvironmentType());
   }
 
   public static EnvironmentDto fromEnvironment(Environment environment) {

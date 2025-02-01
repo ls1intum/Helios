@@ -6,6 +6,8 @@ import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
@@ -17,6 +19,7 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
 import lombok.Setter;
 import lombok.ToString;
 
@@ -27,8 +30,7 @@ import lombok.ToString;
 @NoArgsConstructor
 @ToString
 public class Environment extends RepositoryFilterEntity {
-  @Id
-  private Long id;
+  @Id private Long id;
 
   @Column(nullable = false)
   private String name;
@@ -44,17 +46,15 @@ public class Environment extends RepositoryFilterEntity {
   @Column(name = "updated_at")
   private OffsetDateTime updatedAt;
 
-  @Version
-  private Integer version;
+  @Version private Integer version;
 
   @OneToMany(fetch = FetchType.EAGER, mappedBy = "environment")
   @OrderBy("createdAt ASC")
   private List<Deployment> deployments;
 
   /**
-   * Whether the environment is enabled or not.
-   * It is set to false by default. Needs to be set to true
-   * in Helios environment settings page.
+   * Whether the environment is enabled or not. It is set to false by default. Needs to be set to
+   * true in Helios environment settings page.
    */
   private boolean enabled = false;
 
@@ -83,6 +83,17 @@ public class Environment extends RepositoryFilterEntity {
 
   @OneToMany(mappedBy = "environment", fetch = FetchType.LAZY)
   private List<EnvironmentLockHistory> lockHistory;
+
+  @Column(name = "environment_type")
+  @NonNull
+  @Enumerated(EnumType.STRING)
+  private Type environmentType = Type.TEST;
+
+  public enum Type {
+    TEST,
+    STAGING,
+    PRODUCTION
+  }
 
   // Missing properties
   // nodeId --> GraphQl ID

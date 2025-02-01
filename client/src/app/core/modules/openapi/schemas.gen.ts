@@ -132,6 +132,10 @@ export const EnvironmentDtoSchema = {
       type: 'string',
       format: 'date-time',
     },
+    environmentType: {
+      type: 'string',
+      enum: ['TEST', 'STAGING', 'PRODUCTION'],
+    },
   },
   required: ['id', 'name'],
 } as const;
@@ -205,9 +209,9 @@ export const WorkflowDtoSchema = {
     badgeUrl: {
       type: 'string',
     },
-    label: {
+    deploymentEnvironment: {
       type: 'string',
-      enum: ['BUILD', 'DEPLOYMENT', 'NONE'],
+      enum: ['NONE', 'TEST_SERVER', 'STAGING_SERVER', 'PRODUCTION_SERVER'],
     },
     createdAt: {
       type: 'string',
@@ -218,7 +222,7 @@ export const WorkflowDtoSchema = {
       format: 'date-time',
     },
   },
-  required: ['id', 'label', 'name', 'path', 'state'],
+  required: ['deploymentEnvironment', 'id', 'name', 'path', 'state'],
 } as const;
 
 export const WorkflowRunDtoSchema = {
