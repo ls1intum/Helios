@@ -277,10 +277,10 @@ export const IssueSchema = {
       },
       uniqueItems: true,
     },
-    pullRequest: {
+    locked: {
       type: 'boolean',
     },
-    locked: {
+    pullRequest: {
       type: 'boolean',
     },
   },

@@ -3,11 +3,11 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 100px; /* Set your desired width */
-    height: 30px; /* Set your desired height */
-    overflow: hidden; /* Ensure overflow content doesn't affect layout */
-    text-align: center; /* Center text within the tag */
-    white-space: nowrap; /* Prevent text wrapping */
+    width: 100px;
+    height: 30px;
+    overflow: hidden;
+    text-align: center;
+    white-space: nowrap;
   }
 </style>
 <p-tag [value]="dateService.timeSinceLocked(this.lockedAt!, this.timeNow())" [rounded]="false" class="fixed-size-tag" />

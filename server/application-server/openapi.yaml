@@ -925,9 +925,9 @@ components:
           items:
             $ref: "#/components/schemas/User"
           uniqueItems: true
-        pullRequest:
-          type: boolean
         locked:
+          type: boolean
+        pullRequest:
           type: boolean
       required:
       - htmlUrl

@@ -70,10 +70,6 @@ public class LatestDeploymentUnion {
     }
   }
 
-  /*
-   * If you prefer to unify HeliosDeployment.Status to your Deployment.State, you can do a small
-   * converter:
-   */
   private static Deployment.State mapHeliosStatusToDeploymentState(
       HeliosDeployment.Status heliosStatus) {
     return switch (heliosStatus) {

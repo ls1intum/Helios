@@ -81,8 +81,8 @@ export type Issue = {
   author?: User;
   labels?: Array<Label>;
   assignees?: Array<User>;
-  pullRequest?: boolean;
   locked?: boolean;
+  pullRequest?: boolean;
 };
 
 export type Label = {
