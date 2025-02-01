@@ -50,7 +50,10 @@ import {
   IconExclamationMark,
   IconTimeDurationOff,
   IconBug,
+  IconAlertCircle,
+  IconCircle,
   IconClock,
+  IconX,
 } from 'angular-tabler-icons/icons';
 
 // Select some icons (use an object, not an array)
@@ -103,7 +106,10 @@ const icons = {
   IconExclamationMark,
   IconTimeDurationOff,
   IconBug,
+  IconAlertCircle,
+  IconCircle,
   IconClock,
+  IconX,
 };
 
 @NgModule({
