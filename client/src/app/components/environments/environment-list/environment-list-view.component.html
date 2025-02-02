@@ -33,24 +33,14 @@
             </div>
             @if (environment.latestDeployment; as deployment) {
               <div class="flex gap-1 items-center text-sm">
-                @if (environment.latestDeployment.user?.avatarUrl) {
-                  <p-avatar
-                    class="w-6 h-6"
-                    shape="circle"
-                    size="normal"
-                    [image]="environment.latestDeployment.user?.avatarUrl"
-                    [pTooltip]="keycloakService.isCurrentUser(environment.latestDeployment.user?.login) ? 'You' : environment.latestDeployment.user?.name"
-                    [styleClass]="getAvatarBorderClass(environment.latestDeployment.user?.login || '')"
-                    (click)="openUserProfile(environment.latestDeployment.user?.login || '')"
-                  >
-                  </p-avatar>
-                } @else {
-                  <i-tabler name="user" class="w-6 h-6 text-gray-600" />
-                }
-                <span>
+                <app-user-avatar [user]="environment?.latestDeployment?.user" />
+                @if (environment.latestDeployment.user?.name) {
                   {{ environment.latestDeployment.user?.name }} deployed
+                }
+                @if (environment.latestDeployment.updatedAt) {
                   <span [pTooltip]="getDeploymentTime(environment) || ''">{{ environment.latestDeployment.updatedAt || '' | timeAgo }}</span>
-                </span>
+                }
+                <span> </span>
               </div>
             }
           </div>
@@ -59,20 +49,7 @@
 
           @if (environment.locked) {
             <div class="flex gap-1 items-center">
-              @if (environment.lockedBy?.avatarUrl) {
-                <p-avatar
-                  class="w-6 h-6"
-                  shape="circle"
-                  size="normal"
-                  [image]="environment.lockedBy?.avatarUrl"
-                  [pTooltip]="keycloakService.isCurrentUser(environment.lockedBy?.login) ? 'You' : environment.lockedBy?.name"
-                  [styleClass]="getAvatarBorderClass(environment.lockedBy?.login || '')"
-                  (click)="openUserProfile(environment.lockedBy?.login || '')"
-                >
-                </p-avatar>
-              } @else {
-                <i-tabler name="user" class="w-6 h-6 text-gray-600" />
-              }
+              <app-user-avatar [user]="environment.lockedBy" />
             </div>
             @if (environment.lockedAt) {
               <app-lock-time [lockedAt]="environment.lockedAt"></app-lock-time>

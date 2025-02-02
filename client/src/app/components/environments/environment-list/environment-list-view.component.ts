@@ -29,6 +29,7 @@ import { AvatarModule } from 'primeng/avatar';
 import { TooltipModule } from 'primeng/tooltip';
 import { DateService } from '@app/core/services/date.service';
 import { TimeAgoPipe } from '@app/pipes/time-ago.pipe';
+import { UserAvatarComponent } from '@app/components/user-avatar/user-avatar.component';
 
 @Component({
   selector: 'app-environment-list-view',
@@ -48,6 +49,7 @@ import { TimeAgoPipe } from '@app/pipes/time-ago.pipe';
     ConfirmDialogModule,
     CommonModule,
     TimeAgoPipe,
+    UserAvatarComponent,
   ],
   providers: [DatePipe],
   templateUrl: './environment-list-view.component.html',
