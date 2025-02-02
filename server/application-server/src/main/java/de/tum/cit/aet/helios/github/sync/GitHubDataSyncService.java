@@ -124,6 +124,8 @@ public class GitHubDataSyncService {
     var step1Duration = Duration.between(step1Start, Instant.now()).toMillis();
     log.info("[Step 1/10] Completed Syncing {} repositories. "
         + "(Took: {} ms)", repositories.size(), step1Duration);
+    logRateLimit("After Step 1");
+
 
     // Sync all labels
     log.info("--------------------------------------------------");
@@ -194,7 +196,7 @@ public class GitHubDataSyncService {
     log.info("--------------------------------------------------");
     var step10Start = Instant.now();
     log.info("[Step 10/10] Syncing Workflow Runs (Cutoff: {})", cutoffDate);
-    workflowRunSyncService.syncLatestRunsOfWorkflowsOfAllRepositories(repositories);
+    workflowRunSyncService.syncRunsOfAllRepositories(repositories, Optional.of(cutoffDate));
     var step10Duration = Duration.between(step10Start, Instant.now()).toMillis();
     log.info("[Step 10/10] Completed Workflow Run Sync. (Took: {} ms)", step10Duration);
 

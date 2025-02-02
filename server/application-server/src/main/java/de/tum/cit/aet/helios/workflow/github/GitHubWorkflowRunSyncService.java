@@ -2,10 +2,6 @@ package de.tum.cit.aet.helios.workflow.github;
 
 import static de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment.mapWorkflowRunStatus;
 
-import de.tum.cit.aet.helios.branch.Branch;
-import de.tum.cit.aet.helios.branch.BranchRepository;
-import de.tum.cit.aet.helios.commit.CommitRepository;
-import de.tum.cit.aet.helios.github.GitHubService;
 import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
@@ -18,13 +14,15 @@ import de.tum.cit.aet.helios.workflow.WorkflowRunRepository;
 import de.tum.cit.aet.helios.workflow.WorkflowService;
 import jakarta.transaction.Transactional;
 import java.io.IOException;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import lombok.extern.log4j.Log4j2;
 import org.kohsuke.github.GHRepository;
-import org.kohsuke.github.GHWorkflow;
 import org.kohsuke.github.GHWorkflowRun;
 import org.springframework.stereotype.Service;
 
@@ -37,26 +35,19 @@ public class GitHubWorkflowRunSyncService {
   private final PullRequestRepository pullRequestRepository;
   private final WorkflowService workflowService;
   private final HeliosDeploymentRepository heliosDeploymentRepository;
-  private final BranchRepository branchRepository;
-  private final CommitRepository commitRepository;
-  private final GitHubService gitHubService;
 
   public GitHubWorkflowRunSyncService(
       WorkflowRunRepository workflowRunRepository,
       GitHubWorkflowRunConverter workflowRunConverter,
       GitRepoRepository gitRepoRepository,
       PullRequestRepository pullRequestRepository, WorkflowService workflowService,
-      HeliosDeploymentRepository heliosDeploymentRepository, BranchRepository branchRepository,
-      CommitRepository commitRepository, GitHubService gitHubService) {
+      HeliosDeploymentRepository heliosDeploymentRepository) {
     this.workflowRunRepository = workflowRunRepository;
     this.workflowRunConverter = workflowRunConverter;
     this.gitRepoRepository = gitRepoRepository;
     this.pullRequestRepository = pullRequestRepository;
     this.workflowService = workflowService;
     this.heliosDeploymentRepository = heliosDeploymentRepository;
-    this.branchRepository = branchRepository;
-    this.commitRepository = commitRepository;
-    this.gitHubService = gitHubService;
   }
 
   /**
@@ -65,17 +56,10 @@ public class GitHubWorkflowRunSyncService {
    * @param repositories the list of GitHub repositories to sync workflow runs from
    * @return a list of GitHub workflow runs that were successfully fetched and processed
    */
-  public List<GHWorkflowRun> syncLatestRunsOfWorkflowsOfAllRepositories(
-      List<GHRepository> repositories) {
+  public List<GHWorkflowRun> syncRunsOfAllRepositories(
+      List<GHRepository> repositories, Optional<OffsetDateTime> since) {
     return repositories.stream()
-        .map(repository -> {
-          try {
-            return syncRunsOfRepository(repository);
-          } catch (IOException e) {
-            log.error("Failed to sync runs of repository {}: {}", repository.getName(), e.getMessage());
-            return new ArrayList<GHWorkflowRun>();
-          }
-        })
+        .map(repository -> syncRunsOfRepository(repository, since))
         .flatMap(List::stream)
         .toList();
   }
@@ -87,57 +71,41 @@ public class GitHubWorkflowRunSyncService {
    * @return a list of GitHub workflow runs requests that were successfully fetched and processed
    */
   public List<GHWorkflowRun> syncRunsOfRepository(
-      GHRepository repository) throws IOException {
-
-    // Get all workflows, such as deploy.yml, test.yml, etc.
-    List<GHWorkflow> workflows = repository.listWorkflows().toList();
-    System.out.println("workflows: " + workflows.size());
-
-    // Get all branches of the repository
-    // Branches should be synced before running WorkflowRun sync
-    List<Branch> branchList = branchRepository.findByRepositoryRepositoryId(repository.getId());
-    System.out.println("branchList: " + branchList.size());
+      GHRepository repository, Optional<OffsetDateTime> since) {
 
 
-    // For each workflow, get the latest workflow runs for each branch
-    for (GHWorkflow workflow : workflows) {
-      for (Branch branch : branchList) {
-        var ghRun = gitHubService.getLatestRunForBranch(repository, workflow.getId(), branch.getName());
-        System.out.println("ghRun: " + ghRun);
+    var sinceDate = since.map(date -> Date.from(date.toInstant()));
+
+    var iterator = repository.queryWorkflowRuns().list().withPageSize(100).iterator();
+
+    var workflowRuns = new ArrayList<GHWorkflowRun>();
+
+    while (iterator.hasNext()) {
+      var ghWorkflowRuns = iterator.nextPage();
+      var keepWorkflowRuns =
+          ghWorkflowRuns.stream()
+              .filter(
+                  ghWorkflowRun -> {
+                    try {
+                      return sinceDate.isEmpty()
+                          || ghWorkflowRun.getUpdatedAt().after(sinceDate.get());
+                    } catch (IOException e) {
+                      log.error(
+                          "Failed to filter workflow run {}: {}",
+                          ghWorkflowRun.getId(),
+                          e.getMessage());
+                      return false;
+                    }
+                  })
+              .toList();
+
+      workflowRuns.addAll(keepWorkflowRuns);
+      if (keepWorkflowRuns.size() != ghWorkflowRuns.size()) {
+        break;
       }
     }
 
-
-//    var iterator = repository.queryWorkflowRuns().list().withPageSize(100).iterator();
-
-    var workflowRuns = new ArrayList<GHWorkflowRun>();
-//
-//    while (iterator.hasNext()) {
-//      var ghWorkflowRuns = iterator.nextPage();
-//      var keepWorkflowRuns =
-//          ghWorkflowRuns.stream()
-//              .filter(
-//                  ghWorkflowRun -> {
-//                    try {
-//                      return sinceDate.isEmpty()
-//                          || ghWorkflowRun.getUpdatedAt().after(sinceDate.get());
-//                    } catch (IOException e) {
-//                      log.error(
-//                          "Failed to filter workflow run {}: {}",
-//                          ghWorkflowRun.getId(),
-//                          e.getMessage());
-//                      return false;
-//                    }
-//                  })
-//              .toList();
-//
-//      workflowRuns.addAll(keepWorkflowRuns);
-//      if (keepWorkflowRuns.size() != ghWorkflowRuns.size()) {
-//        break;
-//      }
-//    }
-//
-//    workflowRuns.forEach(this::processRun);
+    workflowRuns.forEach(this::processRun);
 
     return workflowRuns;
   }
