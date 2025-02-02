@@ -88,7 +88,7 @@ public class EnvironmentService {
    * @return A wrapper object containing the latest Deployment or HeliosDeployment, or an empty
    *     result if no deployments exist.
    */
-  private LatestDeploymentUnion findLatestDeployment(Environment env) {
+  public LatestDeploymentUnion findLatestDeployment(Environment env) {
     // Retrieve the latest HeliosDeployment
     Optional<HeliosDeployment> latestHeliosOpt =
         heliosDeploymentRepository.findTopByEnvironmentOrderByCreatedAtDesc(env);
@@ -143,6 +143,10 @@ public class EnvironmentService {
         environmentRepository
             .findById(id)
             .orElseThrow(() -> new EntityNotFoundException("Environment not found with ID: " + id));
+
+    if (!environment.isEnabled()) {
+      throw new IllegalStateException("Environment is disabled");
+    }
 
     if (environment.isLocked()) {
       if (currentUser.equals(environment.getLockedBy())) {
@@ -273,13 +277,15 @@ public class EnvironmentService {
     Optional<EnvironmentLockHistory> lockHistory =
         lockHistoryRepository.findLatestLockForEnabledEnvironment(currentUser);
 
-    return lockHistory.map(EnvironmentLockHistoryDto::fromEnvironmentLockHistory).orElse(null);
+    return lockHistory
+        .map(lock -> EnvironmentLockHistoryDto.fromEnvironmentLockHistory(lock, this))
+        .orElse(null);
   }
 
   public List<EnvironmentLockHistoryDto> getLockHistoryByEnvironmentId(Long environmentId) {
     return lockHistoryRepository.findLockHistoriesByEnvironment(environmentId).stream()
-        .map(EnvironmentLockHistoryDto::fromEnvironmentLockHistory)
-        .collect(Collectors.toList());
+    .map(lock -> EnvironmentLockHistoryDto.fromEnvironmentLockHistory(lock, this))
+    .collect(Collectors.toList());
   }
 
   private boolean canUnlock(Environment environment, long timeoutMinutes) {

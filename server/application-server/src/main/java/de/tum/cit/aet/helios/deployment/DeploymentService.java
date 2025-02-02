@@ -11,8 +11,6 @@ import de.tum.cit.aet.helios.filters.RepositoryContext;
 import de.tum.cit.aet.helios.github.GitHubService;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
-import de.tum.cit.aet.helios.pullrequest.PullRequest;
-import de.tum.cit.aet.helios.pullrequest.PullRequestRepository;
 import de.tum.cit.aet.helios.user.User;
 import de.tum.cit.aet.helios.workflow.Workflow;
 import de.tum.cit.aet.helios.workflow.WorkflowService;
@@ -40,10 +38,9 @@ public class DeploymentService {
   private final WorkflowService workflowService;
   private final AuthService authService;
   private final HeliosDeploymentRepository heliosDeploymentRepository;
-  private final PullRequestRepository pullRequestRepository;
-  private final BranchService branchService;
   private final EnvironmentLockHistoryRepository lockHistoryRepository;
   private final EnvironmentRepository environmentRepository;
+  private final BranchService branchService;
 
   public DeploymentService(
       DeploymentRepository deploymentRepository,
@@ -52,7 +49,6 @@ public class DeploymentService {
       WorkflowService workflowService,
       AuthService authService,
       HeliosDeploymentRepository heliosDeploymentRepository,
-      PullRequestRepository pullRequestRepository,
       BranchService branchService,
       EnvironmentLockHistoryRepository lockHistoryRepository,
       EnvironmentRepository environmentRepository) {
@@ -62,10 +58,9 @@ public class DeploymentService {
     this.workflowService = workflowService;
     this.authService = authService;
     this.heliosDeploymentRepository = heliosDeploymentRepository;
-    this.pullRequestRepository = pullRequestRepository;
-    this.branchService = branchService;
     this.lockHistoryRepository = lockHistoryRepository;
     this.environmentRepository = environmentRepository;
+    this.branchService = branchService;
   }
 
   public Optional<DeploymentDto> getDeploymentById(Long id) {
@@ -125,7 +120,7 @@ public class DeploymentService {
     // Get the repository name with owners
     final String repoNameWithOwners = environment.getRepository().getNameWithOwner();
 
-    // 10 minutes timeout for redeployment
+    // 20 minutes timeout for re-deployment
     if (!canRedeploy(environment, 20)) {
       throw new DeploymentException("Deployment is still in progress, please wait.");
     }
@@ -141,32 +136,11 @@ public class DeploymentService {
     heliosDeployment.setCreator(githubUser);
     heliosDeployment = heliosDeploymentRepository.saveAndFlush(heliosDeployment);
 
-    // Check if a OPEN PR exists for the branch
-    final Optional<PullRequest> optionalPr =
-        pullRequestRepository.findByRepositoryRepositoryIdAndHeadRefNameAndState(
-            environment.getRepository().getRepositoryId(),
-            deployRequest.branchName(),
-            PullRequest.State.OPEN);
-
     // Build parameters for the workflow
     Map<String, Object> workflowParams = new HashMap<>();
-    workflowParams.put("HELIOS_TRIGGERED_BY", username);
-    workflowParams.put("HELIOS_BRANCH_NAME", deployRequest.branchName());
-    workflowParams.put("HELIOS_BRANCH_HEAD_SHA", branchCommitSha);
-    workflowParams.put("HELIOS_ENVIRONMENT_NAME", environment.getName());
-    workflowParams.put(
-        "HELIOS_RAW_URL",
-        String.format(
-            "https://raw.githubusercontent.com/%s/%s", repoNameWithOwners, branchCommitSha));
-    if (optionalPr.isPresent()) {
-      final PullRequest pr = optionalPr.get();
-      workflowParams.put("HELIOS_BUILD", "false");
-
-      workflowParams.put("HELIOS_PR_NUMBER", String.valueOf(pr.getNumber()));
-    } else {
-      workflowParams.put("HELIOS_BUILD", "true");
-      workflowParams.put("HELIOS_BUILD_TAG", "branch-" + heliosDeployment.getId().toString());
-    }
+    workflowParams.put("triggered_by", username);
+    workflowParams.put("branch_name", deployRequest.branchName());
+    workflowParams.put("environment_name", environment.getName());
 
     heliosDeployment.setWorkflowParams(workflowParams);
     heliosDeploymentRepository.save(heliosDeployment);

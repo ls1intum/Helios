@@ -19,12 +19,7 @@
         }
       </div>
       <span class="flex-grow"></span>
-      @if (lockQuery.data()?.lockedAt) {
-        <p class="text-sm text-gray-500 flex items-center gap-1 mb-5">
-          <i-tabler name="lock"></i-tabler>
-          <span class="w-20">{{ timeSinceLocked() }}</span>
-        </p>
-      }
+      <app-user-lock-info />
       <app-profile-nav-section />
     </div>
 

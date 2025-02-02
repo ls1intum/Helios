@@ -15,13 +15,14 @@ public record EnvironmentLockHistoryDto(
     EnvironmentDto environment) {
 
   public static EnvironmentLockHistoryDto fromEnvironmentLockHistory(
-      EnvironmentLockHistory environmentLockHistory) {
+      EnvironmentLockHistory environmentLockHistory, EnvironmentService environmentService) {
     Environment environment = environmentLockHistory.getEnvironment();
     return new EnvironmentLockHistoryDto(
         environmentLockHistory.getId(),
         UserInfoDto.fromUser(environmentLockHistory.getLockedBy()),
         environmentLockHistory.getLockedAt(),
         environmentLockHistory.getUnlockedAt(),
-        EnvironmentDto.fromEnvironment(environment));
+        EnvironmentDto.fromEnvironment(
+            environment, environmentService.findLatestDeployment(environment)));
   }
 }

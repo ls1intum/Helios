@@ -1,8 +1,8 @@
 import { SlicePipe } from '@angular/common';
-import { Component, OnDestroy, OnInit, computed, inject, input, numberAttribute, signal } from '@angular/core';
+import { Component, computed, inject, input, numberAttribute } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { ProfileNavSectionComponent } from '@app/components/profile-nav-section/profile-nav-section.component';
-import { getEnvironmentsByUserLockingOptions, getRepositoryByIdOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
+import { getRepositoryByIdOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 import { PermissionService } from '@app/core/services/permission.service';
 import { injectQuery } from '@tanstack/angular-query-experimental';
@@ -14,7 +14,7 @@ import { DividerModule } from 'primeng/divider';
 import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
 import { HeliosIconComponent } from '../../components/helios-icon/helios-icon.component';
-import { DateService } from '@app/core/services/date.service';
+import { UserLockInfoComponent } from '@app/components/user-lock-info/user-lock-info.component';
 
 @Component({
   selector: 'app-main-layout',
@@ -33,15 +33,13 @@ import { DateService } from '@app/core/services/date.service';
     AvatarModule,
     CardModule,
     ProfileNavSectionComponent,
+    UserLockInfoComponent,
   ],
   templateUrl: './main-layout.component.html',
 })
-export class MainLayoutComponent implements OnInit, OnDestroy {
+export class MainLayoutComponent {
   private keycloakService = inject(KeycloakService);
   private permissionService = inject(PermissionService);
-  private dateService = inject(DateService);
-
-  timeSinceLocked = computed(() => this.dateService.timeSinceLocked(this.lockQuery.data()?.lockedAt, this.timeNow()));
 
   username = computed(() => (this.keycloakService.decodedToken()?.preferred_username || '') as string);
 
@@ -51,15 +49,6 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     ...getRepositoryByIdOptions({ path: { id: this.repositoryId() } }),
     enabled: () => !!this.repositoryId(),
   }));
-
-  lockQuery = injectQuery(() => ({
-    ...getEnvironmentsByUserLockingOptions(),
-    refetchInterval: 10000,
-    enabled: () => !!this.keycloakService.isLoggedIn(),
-  }));
-
-  timeNow = signal<Date>(new Date());
-  private intervalId?: ReturnType<typeof setInterval>;
 
   logout() {
     this.keycloakService.logout();
@@ -98,17 +87,4 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     ];
     return baseItems;
   });
-
-  ngOnInit() {
-    this.intervalId = setInterval(() => {
-      this.timeNow.set(new Date());
-    }, 1000);
-  }
-
-  ngOnDestroy() {
-    // Clear the interval
-    if (this.intervalId) {
-      clearInterval(this.intervalId);
-    }
-  }
 }

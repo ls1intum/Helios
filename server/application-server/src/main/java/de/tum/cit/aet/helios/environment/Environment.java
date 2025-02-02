@@ -29,8 +29,7 @@ import lombok.ToString;
 @NoArgsConstructor
 @ToString
 public class Environment extends RepositoryFilterEntity {
-  @Id
-  private Long id;
+  @Id private Long id;
 
   @Column(nullable = false)
   private String name;
@@ -46,17 +45,15 @@ public class Environment extends RepositoryFilterEntity {
   @Column(name = "updated_at")
   private OffsetDateTime updatedAt;
 
-  @Version
-  private Integer version;
+  @Version private Integer version;
 
   @OneToMany(fetch = FetchType.EAGER, mappedBy = "environment")
   @OrderBy("createdAt ASC")
   private List<Deployment> deployments;
 
   /**
-   * Whether the environment is enabled or not.
-   * It is set to false by default. Needs to be set to true
-   * in Helios environment settings page.
+   * Whether the environment is enabled or not. It is set to false by default. Needs to be set to
+   * true in Helios environment settings page.
    */
   private boolean enabled = false;
 

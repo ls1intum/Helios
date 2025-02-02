@@ -13,6 +13,7 @@ import de.tum.cit.aet.helios.pullrequest.PullRequest;
 import de.tum.cit.aet.helios.pullrequest.PullRequestRepository;
 import de.tum.cit.aet.helios.user.User;
 import de.tum.cit.aet.helios.user.github.GitHubUserSyncService;
+import jakarta.transaction.Transactional;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
@@ -151,6 +152,7 @@ public class GitHubDeploymentSyncService {
    *     DeploymentSource
    * @param environment the associated environment entity
    */
+  @Transactional
   void processDeployment(
       @NotNull DeploymentSource deploymentSource,
       @NotNull GitRepository gitRepository,
