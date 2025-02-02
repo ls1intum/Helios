@@ -3,6 +3,7 @@ exclude_paths:
   - "**.spec.ts"
   - "**/test/**"
   - "**/test-setup.ts"
-engines:
-  tsqllint:
-    enabled: false
+  # Codacy is using TSQL (Microsoft) instead of PSQL (Postgres) for SQL analysis
+  # and we can only disable that from the UI. However, we don't have access to
+  # the UI, so we have to exclude all SQL files from the analysis.
+  - "*.sql"
