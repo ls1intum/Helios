@@ -46,7 +46,7 @@ public class AuthService {
   }
 
   public boolean canDeployToEnvironment(Environment.Type environmentType) {
-    if (null != environmentType)
+    if (null != environmentType) {
       switch (environmentType) {
         case PRODUCTION -> {
           return hasRole("ROLE_ADMIN");
@@ -59,6 +59,7 @@ public class AuthService {
         }
         default -> {}
       }
+    }
     return false;
   }
 }
