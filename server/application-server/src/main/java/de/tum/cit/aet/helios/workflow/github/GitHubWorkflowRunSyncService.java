@@ -54,6 +54,7 @@ public class GitHubWorkflowRunSyncService {
    * Synchronizes all workflow runs from the specified GitHub repositories.
    *
    * @param repositories the list of GitHub repositories to sync workflow runs from
+   * @param since        an optional date to filter pull requests by their last update
    * @return a list of GitHub workflow runs that were successfully fetched and processed
    */
   public List<GHWorkflowRun> syncRunsOfAllRepositories(
@@ -68,15 +69,14 @@ public class GitHubWorkflowRunSyncService {
    * Synchronizes all workflow runs from a specific GitHub repository.
    *
    * @param repository the GitHub repository to sync workflow runs from
+   * @param since      an optional date to filter workflow runs by their last update
    * @return a list of GitHub workflow runs requests that were successfully fetched and processed
    */
   public List<GHWorkflowRun> syncRunsOfRepository(
       GHRepository repository, Optional<OffsetDateTime> since) {
-
+    var iterator = repository.queryWorkflowRuns().list().withPageSize(100).iterator();
 
     var sinceDate = since.map(date -> Date.from(date.toInstant()));
-
-    var iterator = repository.queryWorkflowRuns().list().withPageSize(100).iterator();
 
     var workflowRuns = new ArrayList<GHWorkflowRun>();
 
