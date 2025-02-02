@@ -24,9 +24,11 @@ import okhttp3.Request;
 import okhttp3.Request.Builder;
 import okhttp3.RequestBody;
 import okhttp3.Response;
+import org.kohsuke.github.GHArtifact;
 import org.kohsuke.github.GHOrganization;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GHWorkflow;
+import org.kohsuke.github.PagedIterable;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -97,6 +99,17 @@ public class GitHubService {
    */
   public GHRepository getRepository(String repoNameWithOwners) throws IOException {
     return github.getRepository(repoNameWithOwners);
+  }
+
+  /**
+   * Retrieves the artifacts for a given repository.
+   * 
+   * @param repoNameWithOwners
+   * @return the list of repositories as a PagedIterable object (not thread-safe)
+   * @throws IOException
+   */
+  public PagedIterable<GHArtifact> getWorkflowRunArtifacts(long repoId, long workflowRunId) throws IOException {
+    return github.getRepositoryById(repoId).getWorkflowRun(workflowRunId).listArtifacts();
   }
 
   /**
