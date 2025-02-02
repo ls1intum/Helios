@@ -105,6 +105,10 @@ public class Environment extends RepositoryFilterEntity {
     return statusHistory.stream().findFirst();
   }
 
+  public Optional<Deployment> getLatestDeployment() {
+    return this.deployments.reversed().stream().findFirst();
+  }
+
   // Missing properties
   // nodeId --> GraphQl ID
   // ProtectionRule
