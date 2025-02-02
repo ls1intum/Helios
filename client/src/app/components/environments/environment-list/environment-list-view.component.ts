@@ -27,7 +27,6 @@ import { LockTimeComponent } from '../lock-time/lock-time.component';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 import { AvatarModule } from 'primeng/avatar';
 import { TooltipModule } from 'primeng/tooltip';
-import { DateService } from '@app/core/services/date.service';
 import { TimeAgoPipe } from '@app/pipes/time-ago.pipe';
 import { UserAvatarComponent } from '@app/components/user-avatar/user-avatar.component';
 
@@ -57,16 +56,16 @@ import { UserAvatarComponent } from '@app/components/user-avatar/user-avatar.com
 export class EnvironmentListViewComponent {
   private queryClient = inject(QueryClient);
   private confirmationService = inject(ConfirmationService);
-  permissionService = inject(PermissionService);
-  keycloakService = inject(KeycloakService);
-  dateService = inject(DateService);
+  private keycloakService = inject(KeycloakService);
   private datePipe = inject(DatePipe);
+  private permissionService = inject(PermissionService);
 
   editable = input<boolean | undefined>();
   deployable = input<boolean | undefined>();
   hideLinkToList = input<boolean | undefined>();
 
   isLoggedIn = computed(() => this.keycloakService.isLoggedIn());
+  isAdmin = computed(() => this.permissionService.isAdmin());
   hasUnlockPermissions = computed(() => this.permissionService.isAtLeastMaintainer());
   hasDeployPermissions = computed(() => this.permissionService.hasWritePermission());
   hasEditEnvironmentPermissions = computed(() => this.permissionService.isAdmin());
@@ -110,7 +109,6 @@ export class EnvironmentListViewComponent {
       message: `Are you sure you want to deploy to ${environment.name}?`,
       accept: () => {
         this.deploy.emit(environment);
-        this.queryClient.invalidateQueries({ queryKey: this.queryKey() });
       },
     });
   }
@@ -138,17 +136,6 @@ export class EnvironmentListViewComponent {
       return 'http://' + url;
     }
     return url;
-  }
-
-  getAvatarBorderClass(login: string) {
-    return this.keycloakService.isCurrentUser(login) ? 'border-2 border-primary-400 rounded-full' : '';
-  }
-
-  openUserProfile(login: string) {
-    //Redirect to the user's github profile
-    window.open(`
-      https://www.github.com/${login}
-    `);
   }
 
   getDeploymentTime(environment: EnvironmentDto) {
