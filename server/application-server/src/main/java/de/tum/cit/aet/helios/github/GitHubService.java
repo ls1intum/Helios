@@ -10,7 +10,6 @@ import de.tum.cit.aet.helios.filters.RepositoryContext;
 import de.tum.cit.aet.helios.github.permissions.GitHubPermissionsResponse;
 import de.tum.cit.aet.helios.github.permissions.GitHubRepositoryRoleDto;
 import de.tum.cit.aet.helios.github.permissions.RepoPermissionType;
-import de.tum.cit.aet.helios.workflow.GitHubWorkflowRunsPage;
 import jakarta.transaction.Transactional;
 import java.io.IOException;
 import java.time.OffsetDateTime;
@@ -28,7 +27,6 @@ import okhttp3.Response;
 import org.kohsuke.github.GHOrganization;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GHWorkflow;
-import org.kohsuke.github.GHWorkflowRun;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -293,53 +291,4 @@ public class GitHubService {
       throw new IOException("Unexpected error occurred", e);
     }
   }
-
-  public Optional<GHWorkflowRun> getLatestRunForBranch(
-      GHRepository ghRepository,
-      long workflowId,
-      String branchName
-  ) throws IOException {
-    String url = String.format(
-        "https://api.github.com/repos/%s/actions/workflows/%d/runs?branch=%s&per_page=1&sort=created&order=desc",
-        ghRepository.getFullName(),
-        workflowId,
-        branchName
-    );
-
-    Request request = getRequestBuilder().url(url).get().build();
-
-    try (Response response = okHttpClient.newCall(request).execute()) {
-      if (!response.isSuccessful()) {
-        // 404 --> no runs found or workflow doesn’t exist
-        if (response.code() == 404) {
-          log.info("No workflow runs found (404).");
-          return Optional.empty();
-        }
-        throw new IOException("GitHub API call failed with response code: " + response.code());
-      }
-
-      if (response.body() == null) {
-        throw new IOException("Response body is null");
-      }
-
-      String responseBody = response.body().string();
-      GitHubWorkflowRunsPage runsPage =
-          objectMapper.readValue(responseBody, GitHubWorkflowRunsPage.class);
-
-      List<GitHubWorkflowRunsPage.GitHubWorkflowRunItem> runs = runsPage.getWorkflowRuns();
-      if (runs.isEmpty()) {
-        // No runs for that workflow+branch
-        System.out.println("No runs for that workflow+branch");
-        return Optional.empty();
-      }
-
-
-      // 3) Extract the ID of the newest run (the first in the array)
-      long newestRunId = runs.getFirst().getId();
-
-      GHWorkflowRun ghRun = ghRepository.getWorkflowRun(newestRunId);
-      return Optional.of(ghRun);
-    }
-  }
-
 }
