@@ -48,6 +48,9 @@ public class HttpClientConfig {
 
     OkHttpClient.Builder builder = new OkHttpClient.Builder();
 
+    // Add the rate limit interceptor
+    builder.addInterceptor(new HttpClientRateLimitInterceptor());
+
     if (cacheEnabled) {
       File cacheDir = new File("./build/github-cache");
       Cache cache = new Cache(cacheDir, cacheSize * 1024L * 1024L);
