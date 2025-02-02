@@ -5,9 +5,12 @@ import de.tum.cit.aet.helios.commit.github.GitHubCommitSyncService;
 import de.tum.cit.aet.helios.deployment.github.GitHubDeploymentSyncService;
 import de.tum.cit.aet.helios.environment.github.GitHubEnvironmentSyncService;
 import de.tum.cit.aet.helios.gitrepo.github.GitHubRepositorySyncService;
+import de.tum.cit.aet.helios.http.RateLimitInfo;
+import de.tum.cit.aet.helios.http.RateLimitInfoHolder;
 import de.tum.cit.aet.helios.label.github.GitHubLabelSyncService;
 import de.tum.cit.aet.helios.pullrequest.github.GitHubPullRequestSyncService;
 import de.tum.cit.aet.helios.user.github.GitHubUserSyncService;
+import de.tum.cit.aet.helios.util.RateLimitUtil;
 import de.tum.cit.aet.helios.workflow.github.GitHubWorkflowRunSyncService;
 import de.tum.cit.aet.helios.workflow.github.GitHubWorkflowSyncService;
 import jakarta.transaction.Transactional;
@@ -39,6 +42,8 @@ public class GitHubDataSyncService {
   private final GitHubEnvironmentSyncService environmentSyncService;
   private final GitHubDeploymentSyncService deploymentSyncService;
   private final GitHubCommitSyncService commitSyncService;
+  private final RateLimitInfoHolder rateLimitInfoHolder;
+
 
   public GitHubDataSyncService(
       DataSyncStatusRepository dataSyncStatusRepository,
@@ -50,7 +55,9 @@ public class GitHubDataSyncService {
       GitHubBranchSyncService branchSyncService,
       GitHubEnvironmentSyncService environmentSyncService,
       GitHubDeploymentSyncService deploymentSyncService,
-      GitHubCommitSyncService commitSyncService, GitHubLabelSyncService gitHubLabelSyncService) {
+      GitHubCommitSyncService commitSyncService,
+      GitHubLabelSyncService gitHubLabelSyncService,
+      RateLimitInfoHolder rateLimitInfoHolder) {
     this.dataSyncStatusRepository = dataSyncStatusRepository;
     this.userSyncService = userSyncService;
     this.repositorySyncService = repositorySyncService;
@@ -62,6 +69,18 @@ public class GitHubDataSyncService {
     this.deploymentSyncService = deploymentSyncService;
     this.commitSyncService = commitSyncService;
     this.gitHubLabelSyncService = gitHubLabelSyncService;
+    this.rateLimitInfoHolder = rateLimitInfoHolder;
+  }
+
+  private void logRateLimit(String label) {
+    RateLimitInfo info = rateLimitInfoHolder.getLatestRateLimitInfo();
+    String message = RateLimitUtil.formatRateLimitMessage(label, info);
+    log.info(message);
+  }
+
+  private void logRateLimitSummary(RateLimitInfo before, RateLimitInfo after) {
+    String summary = RateLimitUtil.formatRateLimitSummary(before, after);
+    log.info(summary);
   }
 
   @Transactional
@@ -86,6 +105,12 @@ public class GitHubDataSyncService {
     log.info("        Starting Data Sync Job");
     log.info("--------------------------------------------------");
 
+
+    // Capture rate limit info before sync
+    RateLimitInfo beforeSyncRateLimit = rateLimitInfoHolder.getLatestRateLimitInfo();
+    // Log rate limit before sync
+    logRateLimit("Before Sync");
+
     // Start new sync
     // CHECKSTYLE.OFF: VariableDeclarationUsageDistance
     var startTime = OffsetDateTime.now();
@@ -94,6 +119,7 @@ public class GitHubDataSyncService {
     log.info("--------------------------------------------------");
     var step1Start = Instant.now();
     log.info("[Step 1/10] Syncing Monitored Repositories...");
+    logRateLimit("Before Step 1");
     var repositories = repositorySyncService.syncAllMonitoredRepositories();
     var step1Duration = Duration.between(step1Start, Instant.now()).toMillis();
     log.info("[Step 1/10] Completed Syncing {} repositories. "
@@ -173,6 +199,9 @@ public class GitHubDataSyncService {
     log.info("[Step 10/10] Completed Workflow Run Sync. (Took: {} ms)", step10Duration);
 
     var endTime = OffsetDateTime.now();
+    // Capture rate limit info after sync
+    RateLimitInfo afterSyncRateLimit = rateLimitInfoHolder.getLatestRateLimitInfo();
+
     log.info("--------------------------------------------------");
     log.info("        Data Sync Job Completed Successfully");
     log.info("--------------------------------------------------");
@@ -187,6 +216,8 @@ public class GitHubDataSyncService {
     log.info("Step 9 took: {} ms", step9Duration);
     log.info("Step 10 took: {} ms", step10Duration);
     log.info("Total Duration: {} seconds", Duration.between(startTime, endTime).getSeconds());
+    // Log a summary of rate limit changes.
+    logRateLimitSummary(beforeSyncRateLimit, afterSyncRateLimit);
     log.info("--------------------------------------------------");
 
     // Store successful sync status
