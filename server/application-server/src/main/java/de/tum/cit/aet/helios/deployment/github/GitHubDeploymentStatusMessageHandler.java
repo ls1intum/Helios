@@ -118,17 +118,7 @@ public class GitHubDeploymentStatusMessageHandler
         return;
       }
     }
-
-    // Get the deployment status.
-    // Has fields "description", "state", "createdAt", "id", "nodeId", "updatedAt", "url"
-    // State can be "success", "error", "pending", "waiting", etc.
-    // org.kohsuke.github.GHDeploymentStatus didn't implement the state WAITING
-    // So calling eventPayload.getDeploymentStatus().getState() will throw an exception
-    // No enum constant org.kohsuke.github.GHDeploymentState.WAITING
-    // Before calling getState() method, check if the state is WAITING and handle it gracefully
-    // Deployment.mapToState handles mapping gracefully
-    GHDeploymentStatus deploymentStatus = eventPayload.getDeploymentStatus();
-
+    
     // If deployed by helios set current user as the locking user
     String githubAppName = null;
     try {
@@ -149,9 +139,18 @@ public class GitHubDeploymentStatusMessageHandler
       }
     }
 
+    // Get the deployment status.
+    // Has fields "description", "state", "createdAt", "id", "nodeId", "updatedAt", "url"
+    // State can be "success", "error", "pending", "waiting", etc.
+    // org.kohsuke.github.GHDeploymentStatus didn't implement the state WAITING
+    // So calling eventPayload.getDeploymentStatus().getState() will throw an exception
+    // No enum constant org.kohsuke.github.GHDeploymentState.WAITING
+    // Before calling getState() method, check if the state is WAITING and handle it gracefully
+    // Deployment.mapToState handles mapping gracefully
+    GHDeploymentStatus deploymentStatus = eventPayload.getDeploymentStatus();
     // Convert GHDeployment to DeploymentSource
     DeploymentSource deploymentSource =
-    deploymentSourceFactory.create(ghDeployment, Deployment.mapToState(deploymentStatus));
+        deploymentSourceFactory.create(ghDeployment, Deployment.mapToState(deploymentStatus));
 
     // Process this single deployment
     deploymentSyncService.processDeployment(

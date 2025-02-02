@@ -230,8 +230,8 @@ public class DeploymentService {
    *       them to DTOs, and sorts by creation time descending
    *   <li><b>Lock History</b> - Retrieves environment lock events and generates paired LOCK/UNLOCK
    *       events when applicable, converting them to DTOs
-   *   <li><b>Helios Deployment</b> - Conditionally adds the latest Helios deployment if it's newer
-   *       than existing deployment records
+   *   <li><b>Helios Deployment</b> - Conditionally adds the Helios deployments if it's not matched
+   *       with deployment records
    * </ol>
    *
    * <p>The final combined list is sorted by timestamp descending, with null timestamps placed last.
@@ -278,16 +278,15 @@ public class DeploymentService {
     // combined.addAll(heliosDtos);
     combined.addAll(lockDtos);
 
-    // 4a) Add heliosDeployment if it's the latest
+    // 4a) Add heliosDeployment for latest deployment (deployment webhook not yet received) and all
+    // the failed deployments
     var environment = environmentRepository.findById(environmentId).orElse(null);
     if (environment != null) {
-      LatestDeploymentUnion latestUnion = environmentService.findLatestDeployment(environment);
-      if (!latestUnion.isNone() && latestUnion.isHeliosDeployment()) {
-        if (deploymentDtos.isEmpty()
-            || latestUnion.getUpdatedAt().isAfter(deploymentDtos.get(0).updatedAt())) {
-          ActivityHistoryDto latestItem = ActivityHistoryDto.fromLatestDeploymentUnion(latestUnion);
-          combined.add(latestItem);
-        }
+      List<HeliosDeployment> heliosDeployments =
+          heliosDeploymentRepository.findByEnvironmentAndDeploymentIdIsNull(environment);
+      for (HeliosDeployment heliosDeployment : heliosDeployments) {
+        ActivityHistoryDto heliosDto = ActivityHistoryDto.fromHeliosDeployment(heliosDeployment);
+        combined.add(heliosDto);
       }
     }
 

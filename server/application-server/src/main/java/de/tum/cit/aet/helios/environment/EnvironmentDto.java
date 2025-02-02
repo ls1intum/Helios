@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import de.tum.cit.aet.helios.deployment.Deployment;
 import de.tum.cit.aet.helios.deployment.LatestDeploymentUnion;
 import de.tum.cit.aet.helios.gitrepo.RepositoryInfoDto;
-import de.tum.cit.aet.helios.user.User;
+import de.tum.cit.aet.helios.user.UserInfoDto;
 import java.time.OffsetDateTime;
 import java.util.List;
 import org.springframework.lang.NonNull;
@@ -24,7 +24,7 @@ public record EnvironmentDto(
     String description,
     String serverUrl,
     EnvironmentDeployment latestDeployment,
-    User lockedBy,
+    UserInfoDto lockedBy,
     OffsetDateTime lockedAt) {
   /** This is the DTO for the "latestDeployment" portion inside EnvironmentDto. */
   public static record EnvironmentDeployment(
@@ -35,7 +35,7 @@ public record EnvironmentDto(
       String sha,
       String ref,
       String task,
-      User user,
+      UserInfoDto user,
       OffsetDateTime createdAt,
       OffsetDateTime updatedAt) {
     /** Builds an EnvironmentDeployment from a LatestDeploymentUnion. */
@@ -48,7 +48,7 @@ public record EnvironmentDto(
           union.getSha(),
           union.getRef(),
           union.getTask(),
-          union.getCreator(),
+          UserInfoDto.fromUser(union.getCreator()),
           union.getCreatedAt(),
           union.getUpdatedAt());
     }
@@ -80,7 +80,7 @@ public record EnvironmentDto(
         environment.getDescription(),
         environment.getServerUrl(),
         envDeployment,
-        environment.getLockedBy(),
+        UserInfoDto.fromUser(environment.getLockedBy()),
         environment.getLockedAt());
   }
 

@@ -2,6 +2,7 @@ package de.tum.cit.aet.helios.heliosdeployment;
 
 import de.tum.cit.aet.helios.environment.Environment;
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -16,4 +17,6 @@ public interface HeliosDeploymentRepository extends JpaRepository<HeliosDeployme
 
   Optional<HeliosDeployment> findTopByEnvironmentAndBranchNameOrderByCreatedAtDesc(
       Environment environment, String branchName);
+
+  List<HeliosDeployment> findByEnvironmentAndDeploymentIdIsNull(Environment environment);
 }

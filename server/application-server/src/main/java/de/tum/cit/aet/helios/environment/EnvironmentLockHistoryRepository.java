@@ -78,7 +78,8 @@ public interface EnvironmentLockHistoryRepository
       """
       SELECT elh
       FROM EnvironmentLockHistory elh
-      WHERE elh.environment.id = :environmentId
+      WHERE elh.environment.enabled = true
+        AND elh.environment.id = :environmentId
         AND elh.unlockedAt IS NULL
       ORDER BY elh.lockedAt DESC
       LIMIT 1

@@ -66,7 +66,7 @@ export const EnvironmentDeploymentSchema = {
       type: 'string',
     },
     user: {
-      $ref: '#/components/schemas/User',
+      $ref: '#/components/schemas/UserInfoDto',
     },
     createdAt: {
       type: 'string',
@@ -129,7 +129,7 @@ export const EnvironmentDtoSchema = {
       $ref: '#/components/schemas/EnvironmentDeployment',
     },
     lockedBy: {
-      $ref: '#/components/schemas/User',
+      $ref: '#/components/schemas/UserInfoDto',
     },
     lockedAt: {
       type: 'string',
@@ -137,183 +137,6 @@ export const EnvironmentDtoSchema = {
     },
   },
   required: ['id', 'name'],
-} as const;
-
-export const GitRepositorySchema = {
-  type: 'object',
-  properties: {
-    repositoryId: {
-      type: 'integer',
-      format: 'int64',
-    },
-    createdAt: {
-      type: 'string',
-      format: 'date-time',
-    },
-    updatedAt: {
-      type: 'string',
-      format: 'date-time',
-    },
-    name: {
-      type: 'string',
-    },
-    nameWithOwner: {
-      type: 'string',
-    },
-    htmlUrl: {
-      type: 'string',
-    },
-    description: {
-      type: 'string',
-    },
-    homepage: {
-      type: 'string',
-    },
-    pushedAt: {
-      type: 'string',
-      format: 'date-time',
-    },
-    visibility: {
-      type: 'string',
-      enum: ['PUBLIC', 'PRIVATE', 'INTERNAL', 'UNKNOWN'],
-    },
-    stargazersCount: {
-      type: 'integer',
-      format: 'int32',
-    },
-    watchersCount: {
-      type: 'integer',
-      format: 'int32',
-    },
-    defaultBranch: {
-      type: 'string',
-    },
-    hasIssues: {
-      type: 'boolean',
-    },
-    hasProjects: {
-      type: 'boolean',
-    },
-    hasWiki: {
-      type: 'boolean',
-    },
-    labels: {
-      type: 'array',
-      items: {
-        $ref: '#/components/schemas/Label',
-      },
-      uniqueItems: true,
-    },
-    private: {
-      type: 'boolean',
-    },
-    archived: {
-      type: 'boolean',
-    },
-    disabled: {
-      type: 'boolean',
-    },
-  },
-  required: ['defaultBranch', 'htmlUrl', 'name', 'nameWithOwner', 'pushedAt', 'visibility'],
-} as const;
-
-export const IssueSchema = {
-  type: 'object',
-  properties: {
-    repository: {
-      $ref: '#/components/schemas/GitRepository',
-    },
-    id: {
-      type: 'integer',
-      format: 'int64',
-    },
-    createdAt: {
-      type: 'string',
-      format: 'date-time',
-    },
-    updatedAt: {
-      type: 'string',
-      format: 'date-time',
-    },
-    number: {
-      type: 'integer',
-      format: 'int32',
-    },
-    state: {
-      type: 'string',
-      enum: ['OPEN', 'CLOSED'],
-    },
-    title: {
-      type: 'string',
-    },
-    body: {
-      type: 'string',
-    },
-    htmlUrl: {
-      type: 'string',
-    },
-    closedAt: {
-      type: 'string',
-      format: 'date-time',
-    },
-    commentsCount: {
-      type: 'integer',
-      format: 'int32',
-    },
-    author: {
-      $ref: '#/components/schemas/User',
-    },
-    labels: {
-      type: 'array',
-      items: {
-        $ref: '#/components/schemas/Label',
-      },
-      uniqueItems: true,
-    },
-    assignees: {
-      type: 'array',
-      items: {
-        $ref: '#/components/schemas/User',
-      },
-      uniqueItems: true,
-    },
-    locked: {
-      type: 'boolean',
-    },
-    pullRequest: {
-      type: 'boolean',
-    },
-  },
-  required: ['htmlUrl', 'state', 'title'],
-} as const;
-
-export const LabelSchema = {
-  type: 'object',
-  properties: {
-    id: {
-      type: 'integer',
-      format: 'int64',
-    },
-    name: {
-      type: 'string',
-    },
-    description: {
-      type: 'string',
-    },
-    color: {
-      type: 'string',
-    },
-    issues: {
-      type: 'array',
-      items: {
-        $ref: '#/components/schemas/Issue',
-      },
-      uniqueItems: true,
-    },
-    repository: {
-      $ref: '#/components/schemas/GitRepository',
-    },
-  },
 } as const;
 
 export const RepositoryInfoDtoSchema = {
@@ -339,23 +162,12 @@ export const RepositoryInfoDtoSchema = {
   required: ['htmlUrl', 'id', 'name', 'nameWithOwner'],
 } as const;
 
-export const UserSchema = {
+export const UserInfoDtoSchema = {
   type: 'object',
   properties: {
-    repository: {
-      $ref: '#/components/schemas/GitRepository',
-    },
     id: {
       type: 'integer',
       format: 'int64',
-    },
-    createdAt: {
-      type: 'string',
-      format: 'date-time',
-    },
-    updatedAt: {
-      type: 'string',
-      format: 'date-time',
     },
     login: {
       type: 'string',
@@ -363,41 +175,14 @@ export const UserSchema = {
     avatarUrl: {
       type: 'string',
     },
-    description: {
-      type: 'string',
-    },
     name: {
-      type: 'string',
-    },
-    company: {
-      type: 'string',
-    },
-    blog: {
-      type: 'string',
-    },
-    location: {
-      type: 'string',
-    },
-    email: {
       type: 'string',
     },
     htmlUrl: {
       type: 'string',
     },
-    type: {
-      type: 'string',
-      enum: ['USER', 'ORGANIZATION', 'BOT'],
-    },
-    followers: {
-      type: 'integer',
-      format: 'int32',
-    },
-    following: {
-      type: 'integer',
-      format: 'int32',
-    },
   },
-  required: ['avatarUrl', 'htmlUrl', 'login', 'name', 'type'],
+  required: ['avatarUrl', 'htmlUrl', 'id', 'login', 'name'],
 } as const;
 
 export const DeployRequestSchema = {
@@ -612,29 +397,6 @@ export const PullRequestBaseInfoDtoSchema = {
   required: ['htmlUrl', 'id', 'isDraft', 'isMerged', 'number', 'state', 'title'],
 } as const;
 
-export const UserInfoDtoSchema = {
-  type: 'object',
-  properties: {
-    id: {
-      type: 'integer',
-      format: 'int64',
-    },
-    login: {
-      type: 'string',
-    },
-    avatarUrl: {
-      type: 'string',
-    },
-    name: {
-      type: 'string',
-    },
-    htmlUrl: {
-      type: 'string',
-    },
-  },
-  required: ['avatarUrl', 'htmlUrl', 'id', 'login', 'name'],
-} as const;
-
 export const PullRequestInfoDtoSchema = {
   type: 'object',
   properties: {
@@ -729,7 +491,7 @@ export const EnvironmentLockHistoryDtoSchema = {
       format: 'int64',
     },
     lockedBy: {
-      $ref: '#/components/schemas/User',
+      $ref: '#/components/schemas/UserInfoDto',
     },
     lockedAt: {
       type: 'string',

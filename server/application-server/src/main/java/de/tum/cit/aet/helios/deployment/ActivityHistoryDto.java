@@ -3,6 +3,7 @@ package de.tum.cit.aet.helios.deployment;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import de.tum.cit.aet.helios.environment.EnvironmentLockHistory;
 import de.tum.cit.aet.helios.gitrepo.RepositoryInfoDto;
+import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
 import de.tum.cit.aet.helios.user.UserInfoDto;
 import java.time.OffsetDateTime;
 
@@ -19,19 +20,18 @@ public record ActivityHistoryDto(
     OffsetDateTime createdAt,
     OffsetDateTime updatedAt) {
 
-  public static ActivityHistoryDto fromLatestDeploymentUnion(LatestDeploymentUnion union) {
-    // You could unify HeliosDeployment.Status -> Deployment.State, etc.
+  public static ActivityHistoryDto fromHeliosDeployment(HeliosDeployment heliosDeployment) {
     return new ActivityHistoryDto(
-        "DEPLOYMENT", // e.g. "LATEST_DEPLOYMENT"
-        union.getId(), // union returns the ID (Helios or real)
-        union.getRepository(), // mapped repository
-        union.getState(), // mapped state
-        union.getSha(), // real or helios
-        union.getRef(), // branchName or real ref
-        UserInfoDto.fromUser(union.getCreator()),
-        union.getCreatedAt(), // we’ll consider “timestamp” = createdAt
-        union.getCreatedAt(),
-        union.getUpdatedAt());
+        "DEPLOYMENT",
+        heliosDeployment.getId(),
+        RepositoryInfoDto.fromRepository(heliosDeployment.getEnvironment().getRepository()),
+        HeliosDeployment.mapHeliosStatusToDeploymentState(heliosDeployment.getStatus()),
+        heliosDeployment.getSha(),
+        heliosDeployment.getBranchName(),
+        UserInfoDto.fromUser(heliosDeployment.getCreator()),
+        heliosDeployment.getCreatedAt(),
+        heliosDeployment.getCreatedAt(),
+        heliosDeployment.getUpdatedAt());
   }
 
   public static ActivityHistoryDto fromDeployment(Deployment deployment) {

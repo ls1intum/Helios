@@ -68,15 +68,6 @@ public class EnvironmentService {
         .collect(Collectors.toList());
   }
 
-  private Optional<Deployment> findDeploymentById(Environment environment, Long deploymentId) {
-    if (deploymentId == null) {
-      return Optional.empty();
-    }
-    return environment.getDeployments().stream()
-        .filter(d -> d.getId().equals(deploymentId))
-        .findFirst();
-  }
-
   /**
    * Finds the "latest" deployment for the given environment, taking into account: 1) The most
    * recent HeliosDeployment (if present). 2) If that HeliosDeployment has a non-null deploymentId,
@@ -88,7 +79,7 @@ public class EnvironmentService {
    * <p>Returns a small wrapper object with either a real Deployment or a HeliosDeployment. This
    * helps unify your "latest" logic into one place.
    */
-  public LatestDeploymentUnion findLatestDeployment(Environment env) {
+  private LatestDeploymentUnion findLatestDeployment(Environment env) {
     // (A) Check if we have a HeliosDeployment
     var maybeHelios = heliosDeploymentRepository.findTopByEnvironmentOrderByCreatedAtDesc(env);
     if (maybeHelios.isPresent()) {
@@ -261,9 +252,9 @@ public class EnvironmentService {
   }
 
   public EnvironmentLockHistoryDto getUsersCurrentLock() {
-    final User currentUserName = authService.getUserFromGithubId();
+    final User currentUser = authService.getUserFromGithubId();
     Optional<EnvironmentLockHistory> lockHistory =
-        lockHistoryRepository.findLatestLockForEnabledEnvironment(currentUserName);
+        lockHistoryRepository.findLatestLockForEnabledEnvironment(currentUser);
 
     return lockHistory.map(EnvironmentLockHistoryDto::fromEnvironmentLockHistory).orElse(null);
   }

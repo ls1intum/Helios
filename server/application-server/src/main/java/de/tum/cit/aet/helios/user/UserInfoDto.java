@@ -12,6 +12,9 @@ public record UserInfoDto(
     @NonNull String htmlUrl) {
 
   public static UserInfoDto fromUser(User user) {
+    if (user == null) {
+      return null;
+    }
     return new UserInfoDto(
         user.getId(), user.getLogin(), user.getAvatarUrl(), user.getName(), user.getHtmlUrl());
   }
