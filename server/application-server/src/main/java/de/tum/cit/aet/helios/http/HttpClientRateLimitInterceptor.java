@@ -46,11 +46,28 @@ public class HttpClientRateLimitInterceptor implements Interceptor {
           && remainingHeader != null
           && usedHeader != null
           && resetHeader != null) {
+
         // Update the rate limit info in the holder
-        RateLimitInfo info = new RateLimitInfo();
-        info.setLimit(Integer.parseInt(limitHeader));
-        info.setRemaining(Integer.parseInt(remainingHeader));
-        info.setUsed(Integer.parseInt(usedHeader));
+        final RateLimitInfo info = new RateLimitInfo();
+
+        try {
+          info.setLimit(Integer.parseInt(limitHeader));
+        } catch (NumberFormatException e) {
+          log.warn("Unable to parse '{}' header value: {}", HEADER_RATE_LIMIT, limitHeader, e);
+        }
+
+        try {
+          info.setRemaining(Integer.parseInt(remainingHeader));
+        } catch (NumberFormatException e) {
+          log.warn("Unable to parse '{}' header value: {}", HEADER_RATE_REMAINING, remainingHeader,
+              e);
+        }
+
+        try {
+          info.setUsed(Integer.parseInt(usedHeader));
+        } catch (NumberFormatException e) {
+          log.warn("Unable to parse '{}' header value: {}", HEADER_RATE_USED, usedHeader, e);
+        }
 
         try {
           // Convert the reset time (in seconds since epoch) to an Instant.
