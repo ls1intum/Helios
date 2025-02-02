@@ -34,7 +34,7 @@ public record EnvironmentDto(
     EnvironmentStatusDto latestStatus,
     UserInfoDto lockedBy,
     OffsetDateTime lockedAt,
-    Environment.Type environmentType) {
+    Environment.Type type) {
 
   public static record EnvironmentStatusDto(
       @NonNull Long id,

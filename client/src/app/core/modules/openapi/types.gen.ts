@@ -45,7 +45,7 @@ export type EnvironmentDto = {
   latestStatus?: EnvironmentStatusDto;
   lockedBy?: UserInfoDto;
   lockedAt?: string;
-  environmentType?: 'TEST' | 'STAGING' | 'PRODUCTION';
+  type?: 'TEST' | 'STAGING' | 'PRODUCTION';
 };
 
 export type EnvironmentStatusDto = {
