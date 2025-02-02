@@ -32,8 +32,8 @@ public class StatusCheckScheduler {
     log.info("Found {} environments with status check type configured.", environments.size());
 
     List<CompletableFuture<Void>> futures = environments.stream()
-      .map(env -> statusCheckService.performStatusCheck(env))
-      .toList();
+        .map(env -> statusCheckService.performStatusCheck(env))
+        .toList();
 
     // Wait for all status checks to complete
     futures.forEach(CompletableFuture::join);
