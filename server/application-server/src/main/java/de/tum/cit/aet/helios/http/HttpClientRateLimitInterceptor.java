@@ -1,5 +1,6 @@
-package de.tum.cit.aet.helios.github;
+package de.tum.cit.aet.helios.http;
 
+import de.tum.cit.aet.helios.util.RateLimitUtil;
 import java.io.IOException;
 import java.time.Instant;
 import lombok.extern.log4j.Log4j2;
@@ -20,6 +21,13 @@ public class HttpClientRateLimitInterceptor implements Interceptor {
   private static final String HEADER_RATE_USED = "x-ratelimit-used";
   private static final String HEADER_RATE_RESET = "x-ratelimit-reset";
 
+  private final RateLimitInfoHolder rateLimitInfoHolder;
+
+
+  public HttpClientRateLimitInterceptor(RateLimitInfoHolder rateLimitInfoHolder) {
+    this.rateLimitInfoHolder = rateLimitInfoHolder;
+  }
+
   @NotNull
   @Override
   public Response intercept(Chain chain) throws IOException {
@@ -34,26 +42,28 @@ public class HttpClientRateLimitInterceptor implements Interceptor {
       final String usedHeader = response.header(HEADER_RATE_USED);
       final String resetHeader = response.header(HEADER_RATE_RESET);
 
-      if (limitHeader != null && remainingHeader != null) {
-        StringBuilder logMessage = new StringBuilder()
-            .append("GitHub API Rate Limit: ")
-            .append(limitHeader)
-            .append(" | Remaining: ")
-            .append(remainingHeader)
-            .append(" | Used: ")
-            .append(usedHeader);
+      if (limitHeader != null
+          && remainingHeader != null
+          && usedHeader != null
+          && resetHeader != null) {
+        // Update the rate limit info in the holder
+        RateLimitInfo info = new RateLimitInfo();
+        info.setLimit(Integer.parseInt(limitHeader));
+        info.setRemaining(Integer.parseInt(remainingHeader));
+        info.setUsed(Integer.parseInt(usedHeader));
 
-        if (resetHeader != null) {
-          try {
-            // Convert the reset time (in seconds since epoch) to an Instant object.
-            long resetEpochSeconds = Long.parseLong(resetHeader);
-            Instant resetInstant = Instant.ofEpochSecond(resetEpochSeconds);
-            logMessage.append(" | Resets at: ").append(resetInstant);
-          } catch (NumberFormatException e) {
-            log.warn("Unable to parse '{}' header value: {}", HEADER_RATE_RESET, resetHeader, e);
-          }
+        try {
+          // Convert the reset time (in seconds since epoch) to an Instant.
+          long resetEpochSeconds = Long.parseLong(resetHeader);
+          Instant resetInstant = Instant.ofEpochSecond(resetEpochSeconds);
+          info.setReset(resetInstant);
+        } catch (NumberFormatException e) {
+          log.warn("Unable to parse '{}' header value: {}", HEADER_RATE_RESET, resetHeader, e);
         }
-        log.info(logMessage.toString());
+
+        rateLimitInfoHolder.setLatestRateLimitInfo(info);
+        String rateLimitMessage = RateLimitUtil.formatRateLimitMessage("GitHub API", info);
+        log.info(rateLimitMessage);
       } else {
         log.debug("GitHub rate limit headers not found for request: {}", request.url());
       }
