@@ -38,9 +38,10 @@ github:
 http:
     cache:
         enabled: true
-        ttl: 500
+        # in seconds (7200 = 2 hours)
+        ttl: 7200
         # in MB
-        size: 50
+        size: 500
 
 monitoring:
     # List of repositories to monitor in the format owner/repository
