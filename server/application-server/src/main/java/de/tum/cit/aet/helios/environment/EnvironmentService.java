@@ -42,7 +42,7 @@ public class EnvironmentService {
         .map(
             environment -> {
               return EnvironmentDto.fromEnvironment(
-                  environment, environment.getDeployments().reversed().stream().findFirst());
+                  environment, environment.getLatestDeployment());
             })
         .collect(Collectors.toList());
   }
@@ -52,7 +52,7 @@ public class EnvironmentService {
         .map(
             environment -> {
               return EnvironmentDto.fromEnvironment(
-                  environment, environment.getDeployments().reversed().stream().findFirst());
+                  environment, environment.getLatestDeployment());
             })
         .collect(Collectors.toList());
   }
@@ -86,6 +86,10 @@ public class EnvironmentService {
         environmentRepository
             .findById(id)
             .orElseThrow(() -> new EntityNotFoundException("Environment not found with ID: " + id));
+
+    if (!environment.isEnabled()) {
+      throw new IllegalStateException("Environment is disabled");
+    }
 
     if (environment.isLocked()) {
       if (currentUserName.equals(environment.getLockedBy())) {
