@@ -9,8 +9,7 @@ spring:
         url: ${DATASOURCE_URL}
         user: ${DATASOURCE_USERNAME}
         password: ${DATASOURCE_PASSWORD}
-        baselineOnMigrate: true
-        baseline-version: 1
+        baselineOnMigrate: false
     jpa:
         database: POSTGRESQL
         show-sql: false
