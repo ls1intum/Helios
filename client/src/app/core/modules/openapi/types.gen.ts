@@ -37,9 +37,21 @@ export type EnvironmentDto = {
   installedApps?: Array<string>;
   description?: string;
   serverUrl?: string;
+  statusCheckType?: 'HTTP_STATUS' | 'ARTEMIS_INFO';
+  statusUrl?: string;
   latestDeployment?: EnvironmentDeployment;
+  latestStatus?: EnvironmentStatusDto;
   lockedBy?: string;
   lockedAt?: string;
+};
+
+export type EnvironmentStatusDto = {
+  id: number;
+  success: boolean;
+  httpStatusCode: number;
+  checkedAt: string;
+  checkType: 'HTTP_STATUS' | 'ARTEMIS_INFO';
+  metadata?: {};
 };
 
 export type RepositoryInfoDto = {

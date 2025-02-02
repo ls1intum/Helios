@@ -808,8 +808,17 @@ components:
           type: string
         serverUrl:
           type: string
+        statusCheckType:
+          type: string
+          enum:
+          - HTTP_STATUS
+          - ARTEMIS_INFO
+        statusUrl:
+          type: string
         latestDeployment:
           $ref: "#/components/schemas/EnvironmentDeployment"
+        latestStatus:
+          $ref: "#/components/schemas/EnvironmentStatusDto"
         lockedBy:
           type: string
         lockedAt:
@@ -818,6 +827,34 @@ components:
       required:
       - id
       - name
+    EnvironmentStatusDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        success:
+          type: boolean
+        httpStatusCode:
+          type: integer
+          format: int32
+        checkedAt:
+          type: string
+          format: date-time
+        checkType:
+          type: string
+          enum:
+          - HTTP_STATUS
+          - ARTEMIS_INFO
+        metadata:
+          type: object
+          additionalProperties: {}
+      required:
+      - checkType
+      - checkedAt
+      - httpStatusCode
+      - id
+      - success
     RepositoryInfoDto:
       type: object
       properties:

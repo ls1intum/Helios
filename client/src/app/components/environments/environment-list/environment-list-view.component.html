@@ -26,6 +26,10 @@
             <app-deployment-state-tag [state]="deployment.state || 'IN_PROGRESS'" />
           }
 
+          @if (environment.latestStatus; as status) {
+            <app-environment-status-tag [status]="status" />
+          }
+
           <div class="flex-grow"></div>
 
           @if (environment.locked) {
@@ -61,9 +65,20 @@
         </div>
       </p-accordion-header>
       <p-accordion-content>
-        @if (environment.latestDeployment; as deployment) {
-          <app-environment-deployment-info [deployment]="deployment" [repositoryId]="environment.repository?.id || 0" [installedApps]="environment.installedApps || []" />
-        }
+        <div class="flex justify-between max-w-6xl">
+          @if (environment.latestDeployment; as deployment) {
+            <app-environment-deployment-info
+              class="flex-grow max-w-2xl"
+              [deployment]="deployment"
+              [repositoryId]="environment.repository?.id || 0"
+              [installedApps]="environment.installedApps || []"
+            />
+          }
+
+          @if (environment.latestStatus; as status) {
+            <app-environment-status-info class="flex-grow max-w-xs mt-2 ml-14" [status]="status" />
+          }
+        </div>
 
         <div class="flex gap-4 items-center justify-between">
           <div class="flex gap-1 mt-2 items-center">

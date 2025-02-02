@@ -1,14 +1,16 @@
 package de.tum.cit.aet.helios.environment;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import de.tum.cit.aet.helios.deployment.Deployment;
+import de.tum.cit.aet.helios.environment.status.EnvironmentStatus;
+import de.tum.cit.aet.helios.environment.status.StatusCheckType;
 import de.tum.cit.aet.helios.gitrepo.RepositoryInfoDto;
+import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.springframework.lang.NonNull;
 
-@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public record EnvironmentDto(
     RepositoryInfoDto repository,
     @NonNull Long id,
@@ -22,9 +24,30 @@ public record EnvironmentDto(
     List<String> installedApps,
     String description,
     String serverUrl,
+    StatusCheckType statusCheckType,
+    String statusUrl,
     EnvironmentDeployment latestDeployment,
+    EnvironmentStatusDto latestStatus,
     String lockedBy,
     OffsetDateTime lockedAt) {
+
+  public static record EnvironmentStatusDto(
+      @NonNull Long id,
+      @NonNull Boolean success,
+      @NonNull Integer httpStatusCode,
+      @NonNull Instant checkedAt,
+      @NonNull StatusCheckType checkType,
+      Map<String, Object> metadata) {
+    public static EnvironmentStatusDto fromEnvironmentStatus(EnvironmentStatus environment) {
+      return new EnvironmentStatusDto(
+          environment.getId(),
+          environment.isSuccess(),
+          environment.getHttpStatusCode(),
+          environment.getCheckTimestamp(),
+          environment.getCheckType(),
+          environment.getMetadata());
+    }
+  }
 
   public static record EnvironmentDeployment(
       @NonNull Long id,
@@ -52,7 +75,8 @@ public record EnvironmentDto(
   }
 
   public static EnvironmentDto fromEnvironment(
-      Environment environment, Optional<Deployment> latestDeployment) {
+      Environment environment, Optional<Deployment> latestDeployment,
+      Optional<EnvironmentStatus> latestStatus) {
     return new EnvironmentDto(
         RepositoryInfoDto.fromRepository(environment.getRepository()),
         environment.getId(),
@@ -66,12 +90,15 @@ public record EnvironmentDto(
         environment.getInstalledApps(),
         environment.getDescription(),
         environment.getServerUrl(),
+        environment.getStatusCheckType(),
+        environment.getStatusUrl(),
         latestDeployment.map(EnvironmentDeployment::fromDeployment).orElse(null),
+        latestStatus.map(EnvironmentStatusDto::fromEnvironmentStatus).orElse(null),
         environment.getLockedBy(),
         environment.getLockedAt());
   }
 
   public static EnvironmentDto fromEnvironment(Environment environment) {
-    return EnvironmentDto.fromEnvironment(environment, Optional.empty());
+    return EnvironmentDto.fromEnvironment(environment, Optional.empty(), Optional.empty());
   }
 }

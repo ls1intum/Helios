@@ -1,11 +1,16 @@
 package de.tum.cit.aet.helios.environment;
 
 import de.tum.cit.aet.helios.deployment.Deployment;
+import de.tum.cit.aet.helios.environment.status.EnvironmentStatus;
+import de.tum.cit.aet.helios.environment.status.StatusCheckType;
 import de.tum.cit.aet.helios.filters.RepositoryFilterEntity;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
@@ -84,6 +89,21 @@ public class Environment extends RepositoryFilterEntity {
 
   @OneToMany(mappedBy = "environment", fetch = FetchType.LAZY)
   private List<EnvironmentLockHistory> lockHistory;
+
+  @Column(name = "status_url", nullable = true)
+  private String statusUrl;
+
+  @Enumerated(EnumType.STRING)
+  @Column(name = "status_check_type", length = 20)
+  private StatusCheckType statusCheckType;
+
+  @OneToMany(mappedBy = "environment", cascade = CascadeType.ALL, orphanRemoval = true)
+  @OrderBy("checkTimestamp DESC")
+  private List<EnvironmentStatus> statusHistory;
+
+  public Optional<EnvironmentStatus> getLatestStatus() {
+    return statusHistory.stream().findFirst();
+  }
 
   public Optional<Deployment> getLatestDeployment() {
     return this.deployments.reversed().stream().findFirst();

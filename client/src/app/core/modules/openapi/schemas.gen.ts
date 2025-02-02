@@ -122,8 +122,18 @@ export const EnvironmentDtoSchema = {
     serverUrl: {
       type: 'string',
     },
+    statusCheckType: {
+      type: 'string',
+      enum: ['HTTP_STATUS', 'ARTEMIS_INFO'],
+    },
+    statusUrl: {
+      type: 'string',
+    },
     latestDeployment: {
       $ref: '#/components/schemas/EnvironmentDeployment',
+    },
+    latestStatus: {
+      $ref: '#/components/schemas/EnvironmentStatusDto',
     },
     lockedBy: {
       type: 'string',
@@ -134,6 +144,36 @@ export const EnvironmentDtoSchema = {
     },
   },
   required: ['id', 'name'],
+} as const;
+
+export const EnvironmentStatusDtoSchema = {
+  type: 'object',
+  properties: {
+    id: {
+      type: 'integer',
+      format: 'int64',
+    },
+    success: {
+      type: 'boolean',
+    },
+    httpStatusCode: {
+      type: 'integer',
+      format: 'int32',
+    },
+    checkedAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+    checkType: {
+      type: 'string',
+      enum: ['HTTP_STATUS', 'ARTEMIS_INFO'],
+    },
+    metadata: {
+      type: 'object',
+      additionalProperties: {},
+    },
+  },
+  required: ['checkType', 'checkedAt', 'httpStatusCode', 'id', 'success'],
 } as const;
 
 export const RepositoryInfoDtoSchema = {

@@ -25,6 +25,8 @@ import { DeploymentStateTagComponent } from '../deployment-state-tag/deployment-
 import { LockTagComponent } from '../lock-tag/lock-tag.component';
 import { LockTimeComponent } from '../lock-time/lock-time.component';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
+import { EnvironmentStatusInfoComponent } from '../environment-status-info/environment-status-info.component';
+import { EnvironmentStatusTagComponent } from '../environment-status-tag/environment-status-tag.component';
 
 @Component({
   selector: 'app-environment-list-view',
@@ -37,7 +39,9 @@ import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
     IconsModule,
     ButtonModule,
     DeploymentStateTagComponent,
+    EnvironmentStatusTagComponent,
     EnvironmentDeploymentInfoComponent,
+    EnvironmentStatusInfoComponent,
     LockTimeComponent,
     ConfirmDialogModule,
     CommonModule,

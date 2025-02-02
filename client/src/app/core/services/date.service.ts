@@ -7,7 +7,7 @@ import { inject, Injectable } from '@angular/core';
 export class DateService {
   private datePipe = inject(DatePipe);
 
-  formatDate = (date?: string, formatString: string = 'd. MMMM y'): string | null => {
+  formatDate = (date?: Date | string | number, formatString: string = 'd. MMMM y'): string | null => {
     return date ? this.datePipe.transform(date, formatString) : null;
   };
 }
