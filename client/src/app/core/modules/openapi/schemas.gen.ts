@@ -132,7 +132,7 @@ export const EnvironmentDtoSchema = {
       type: 'string',
       format: 'date-time',
     },
-    environmentType: {
+    type: {
       type: 'string',
       enum: ['TEST', 'STAGING', 'PRODUCTION'],
     },

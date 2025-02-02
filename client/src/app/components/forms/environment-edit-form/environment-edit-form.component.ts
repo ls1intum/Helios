@@ -14,10 +14,11 @@ import {
 } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { MessageService } from 'primeng/api';
 import { Checkbox } from 'primeng/checkbox';
+import { DropdownModule } from 'primeng/dropdown';
 
 @Component({
   selector: 'app-environment-edit-form',
-  imports: [AutoCompleteModule, ReactiveFormsModule, InputTextModule, InputSwitchModule, ButtonModule, Checkbox],
+  imports: [AutoCompleteModule, ReactiveFormsModule, InputTextModule, InputSwitchModule, ButtonModule, Checkbox, DropdownModule],
   templateUrl: './environment-edit-form.component.html',
 })
 export class EnvironmentEditFormComponent implements OnInit {
@@ -39,11 +40,18 @@ export class EnvironmentEditFormComponent implements OnInit {
   environmentId = input<number>(0); // This is the environment id
   environmentForm!: FormGroup;
 
+  environmentTypes = [
+    { label: 'Test', value: 'TEST' },
+    { label: 'Staging', value: 'STAGING' },
+    { label: 'Production', value: 'PRODUCTION' },
+  ];
+
   environmentQuery = injectQuery(() => ({
     ...getEnvironmentByIdOptions({ path: { id: this.environmentId() } }),
     placeholderData: {
       id: 0,
       name: '',
+      type: 'TEST' as const,
       serverUrl: '',
       description: '',
       installedApps: [] as string[],
@@ -66,6 +74,7 @@ export class EnvironmentEditFormComponent implements OnInit {
   ngOnInit(): void {
     this.environmentForm = this.formBuilder.group({
       name: [this.environment()?.name || '', Validators.required],
+      type: [this.environment()?.type || 'TEST'],
       installedApps: [this.environment()?.installedApps || []],
       description: [this.environment()?.description || ''],
       serverUrl: [this.environment()?.serverUrl || ''],

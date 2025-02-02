@@ -40,7 +40,7 @@ export type EnvironmentDto = {
   latestDeployment?: EnvironmentDeployment;
   lockedBy?: string;
   lockedAt?: string;
-  environmentType?: 'TEST' | 'STAGING' | 'PRODUCTION';
+  type?: 'TEST' | 'STAGING' | 'PRODUCTION';
 };
 
 export type RepositoryInfoDto = {

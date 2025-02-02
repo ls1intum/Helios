@@ -214,6 +214,9 @@ public class EnvironmentService {
               if (environmentDto.serverUrl() != null) {
                 environment.setServerUrl(environmentDto.serverUrl());
               }
+              if (environmentDto.type() != null) {
+                environment.setType(environmentDto.type());
+              }
 
               environmentRepository.save(environment);
               return EnvironmentDto.fromEnvironment(environment);

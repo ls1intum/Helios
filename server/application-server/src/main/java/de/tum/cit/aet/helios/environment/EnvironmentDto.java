@@ -25,7 +25,7 @@ public record EnvironmentDto(
     EnvironmentDeployment latestDeployment,
     String lockedBy,
     OffsetDateTime lockedAt,
-    Environment.Type environmentType) {
+    Environment.Type type) {
 
   public static record EnvironmentDeployment(
       @NonNull Long id,
