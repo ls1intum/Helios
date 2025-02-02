@@ -3,6 +3,7 @@ package de.tum.cit.aet.helios.environment;
 import de.tum.cit.aet.helios.auth.AuthService;
 import de.tum.cit.aet.helios.deployment.Deployment;
 import de.tum.cit.aet.helios.deployment.DeploymentException;
+import de.tum.cit.aet.helios.deployment.DeploymentRepository;
 import de.tum.cit.aet.helios.deployment.LatestDeploymentUnion;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
@@ -24,16 +25,19 @@ public class EnvironmentService {
   private final EnvironmentRepository environmentRepository;
   private final EnvironmentLockHistoryRepository lockHistoryRepository;
   private final HeliosDeploymentRepository heliosDeploymentRepository;
+  private final DeploymentRepository deploymentRepository;
 
   public EnvironmentService(
       EnvironmentRepository environmentRepository,
       EnvironmentLockHistoryRepository lockHistoryRepository,
       HeliosDeploymentRepository heliosDeploymentRepository,
-      AuthService authService) {
+      AuthService authService,
+      DeploymentRepository deploymentRepository) {
     this.environmentRepository = environmentRepository;
     this.lockHistoryRepository = lockHistoryRepository;
     this.heliosDeploymentRepository = heliosDeploymentRepository;
     this.authService = authService;
+    this.deploymentRepository = deploymentRepository;
   }
 
   public Optional<EnvironmentDto> getEnvironmentById(Long id) {
@@ -88,25 +92,21 @@ public class EnvironmentService {
     // Retrieve the latest HeliosDeployment
     Optional<HeliosDeployment> latestHeliosOpt =
         heliosDeploymentRepository.findTopByEnvironmentOrderByCreatedAtDesc(env);
-
-    // Retrieve the latest real Deployment from the environment
-    List<Deployment> deployments = env.getDeployments();
-    Deployment latestDeployment = null;
-    if (deployments != null && !deployments.isEmpty()) {
-      latestDeployment = deployments.get(deployments.size() - 1); // Last deployment is the latest
-    }
+    Optional<Deployment> latestDeploymentOpt =
+        deploymentRepository.findFirstByEnvironmentIdOrderByCreatedAtDesc(env.getId());
 
     // If no deployments exist at all, return empty
-    if (latestHeliosOpt.isEmpty() && latestDeployment == null) {
+    if (latestHeliosOpt.isEmpty() && latestDeploymentOpt.isEmpty()) {
       return LatestDeploymentUnion.none();
     }
 
     // Compare the latest HeliosDeployment and the latest real Deployment
-    if (latestHeliosOpt.isPresent() && latestDeployment != null) {
+    if (latestHeliosOpt.isPresent() && latestDeploymentOpt.isPresent()) {
       HeliosDeployment latestHelios = latestHeliosOpt.get();
+      Deployment latestDeployment = latestDeploymentOpt.get();
 
       // Compare updatedAt timestamps to determine the latest
-      if (latestDeployment.getUpdatedAt().isAfter(latestHelios.getUpdatedAt())) {
+      if (latestDeployment.getCreatedAt().isAfter(latestHelios.getCreatedAt())) {
         return LatestDeploymentUnion.realDeployment(latestDeployment);
       } else {
         return LatestDeploymentUnion.heliosDeployment(latestHelios);
@@ -117,7 +117,7 @@ public class EnvironmentService {
     if (latestHeliosOpt.isPresent()) {
       return LatestDeploymentUnion.heliosDeployment(latestHeliosOpt.get());
     } else {
-      return LatestDeploymentUnion.realDeployment(latestDeployment);
+      return LatestDeploymentUnion.realDeployment(latestDeploymentOpt.get());
     }
   }
 
