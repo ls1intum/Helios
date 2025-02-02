@@ -176,7 +176,7 @@ public class GitHubDeploymentSyncService {
     optionalPullRequest.ifPresent(deployment::setPullRequest);
 
     // Set the creator of the deployment
-    if (user != null) {
+    if (user != null && deployment.getCreator() == null) {
       deployment.setCreator(user);
     }
 
