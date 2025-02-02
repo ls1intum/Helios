@@ -6,7 +6,6 @@ import { TagModule } from 'primeng/tag';
 @Component({
   selector: 'app-environment-status-tag',
   imports: [TagModule, IconsModule],
-  providers: [],
   templateUrl: './environment-status-tag.component.html',
 })
 export class EnvironmentStatusTagComponent {

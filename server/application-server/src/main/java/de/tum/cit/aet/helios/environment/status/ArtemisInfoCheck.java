@@ -40,11 +40,10 @@ public class ArtemisInfoCheck implements StatusCheckStrategy {
       return new StatusCheckResult(
           response.getStatusCode().is2xxSuccessful(),
           response.getStatusCode().value(),
-          StatusCheckType.ARTEMIS_INFO,
           metadata);
 
     } catch (Exception e) {
-      return new StatusCheckResult(false, 503, StatusCheckType.ARTEMIS_INFO, Map.of());
+      return new StatusCheckResult(false, 503, Map.of());
     }
   }
 

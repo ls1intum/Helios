@@ -36,6 +36,15 @@ public class EnvironmentStatusConfig {
         StatusCheckType.ARTEMIS_INFO, artemisInfoCheck);
   }
 
+  /**
+   * Creates a TaskExecutor bean named "statusCheckTaskExecutor".
+   * This executor is used to manage and execute status check tasks concurrently.
+   * The core and maximum pool sizes are configured based on the available processors
+   * to optimize performance but can be overridden in the application configuration.
+   *
+   * @param config the configuration for the StatusCheckTaskExecutor
+   * @return a configured ThreadPoolTaskExecutor instance
+   */
   @Bean("statusCheckTaskExecutor")
   public TaskExecutor taskExecutor(
       StatusCheckTaskExecutorConfig config) {

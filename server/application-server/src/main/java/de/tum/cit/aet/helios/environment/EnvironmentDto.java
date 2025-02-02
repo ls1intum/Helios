@@ -34,15 +34,15 @@ public record EnvironmentDto(
   public static record EnvironmentStatusDto(
       @NonNull Long id,
       @NonNull Boolean success,
-      Integer statusCode,
+      @NonNull Integer httpStatusCode,
       @NonNull Instant checkedAt,
-      StatusCheckType checkType,
+      @NonNull StatusCheckType checkType,
       Map<String, Object> metadata) {
-    public static EnvironmentStatusDto fromEnvironment(EnvironmentStatus environment) {
+    public static EnvironmentStatusDto fromEnvironmentStatus(EnvironmentStatus environment) {
       return new EnvironmentStatusDto(
           environment.getId(),
           environment.isSuccess(),
-          environment.getStatusCode(),
+          environment.getHttpStatusCode(),
           environment.getCheckTimestamp(),
           environment.getCheckType(),
           environment.getMetadata());
@@ -93,7 +93,7 @@ public record EnvironmentDto(
         environment.getStatusCheckType(),
         environment.getStatusUrl(),
         latestDeployment.map(EnvironmentDeployment::fromDeployment).orElse(null),
-        latestStatus.map(EnvironmentStatusDto::fromEnvironment).orElse(null),
+        latestStatus.map(EnvironmentStatusDto::fromEnvironmentStatus).orElse(null),
         environment.getLockedBy(),
         environment.getLockedAt());
   }

@@ -4,7 +4,6 @@ import java.util.Map;
 
 public record StatusCheckResult(
     boolean success,
-    int statusCode,
-    StatusCheckType checkType,
+    int httpStatusCode,
     Map<String, Object> metadata) {
 }

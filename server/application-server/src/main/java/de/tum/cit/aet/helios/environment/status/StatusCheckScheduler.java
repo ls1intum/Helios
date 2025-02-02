@@ -3,6 +3,7 @@ package de.tum.cit.aet.helios.environment.status;
 import de.tum.cit.aet.helios.environment.Environment;
 import de.tum.cit.aet.helios.environment.EnvironmentRepository;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -29,7 +30,14 @@ public class StatusCheckScheduler {
     List<Environment> environments = environmentRepository.findByStatusCheckTypeIsNotNull();
 
     log.info("Found {} environments with status check type configured.", environments.size());
-    environments.forEach(statusCheckService::performStatusCheck);
+
+    List<CompletableFuture<Void>> futures = environments.stream()
+      .map(env -> statusCheckService.performStatusCheck(env))
+      .toList();
+
+    // Wait for all status checks to complete
+    futures.forEach(CompletableFuture::join);
+
     log.info("Scheduled status checks completed.");
   }
 }

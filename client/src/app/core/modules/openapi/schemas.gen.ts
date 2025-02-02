@@ -156,7 +156,7 @@ export const EnvironmentStatusDtoSchema = {
     success: {
       type: 'boolean',
     },
-    statusCode: {
+    httpStatusCode: {
       type: 'integer',
       format: 'int32',
     },
@@ -173,7 +173,7 @@ export const EnvironmentStatusDtoSchema = {
       additionalProperties: {},
     },
   },
-  required: ['checkedAt', 'id', 'success'],
+  required: ['checkType', 'checkedAt', 'httpStatusCode', 'id', 'success'],
 } as const;
 
 export const RepositoryInfoDtoSchema = {

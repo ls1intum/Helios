@@ -27,18 +27,18 @@ public class EnvironmentStatus {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  @ManyToOne(fetch = FetchType.LAZY)
+  @ManyToOne(fetch = FetchType.LAZY, optional = false)
   @JoinColumn(name = "environment_id")
   private Environment environment;
 
   @Column(nullable = false)
   private boolean success;
 
-  @Column(name = "status_code")
-  private Integer statusCode;
+  @Column(name = "http_status_code", nullable = false)
+  private Integer httpStatusCode;
 
   @Enumerated(EnumType.STRING)
-  @Column(name = "check_type", length = 20)
+  @Column(name = "check_type", length = 20, nullable = false)
   private StatusCheckType checkType;
 
   @Column(name = "check_timestamp", nullable = false)

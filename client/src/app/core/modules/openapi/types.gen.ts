@@ -48,9 +48,9 @@ export type EnvironmentDto = {
 export type EnvironmentStatusDto = {
   id: number;
   success: boolean;
-  statusCode?: number;
+  httpStatusCode: number;
   checkedAt: string;
-  checkType?: 'HTTP_STATUS' | 'ARTEMIS_INFO';
+  checkType: 'HTTP_STATUS' | 'ARTEMIS_INFO';
   metadata?: {};
 };
 

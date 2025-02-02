@@ -4,6 +4,7 @@ import de.tum.cit.aet.helios.environment.Environment;
 import jakarta.transaction.Transactional;
 import java.time.Instant;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,7 +24,7 @@ public class StatusCheckService {
    * before deleting the oldest entries.
    */
   @Value("${status-check.keep-count:10}")
-  private int keepCount = 10;
+  private int keepCount;
 
   /**
    * Performs a status check on the given environment asynchronously as the status
@@ -36,14 +37,19 @@ public class StatusCheckService {
    * @param environment the environment on which to perform the status check
    */
   @Async("statusCheckTaskExecutor")
-  public void performStatusCheck(Environment environment) {
+  public CompletableFuture<Void> performStatusCheck(Environment environment) {
+    // We need to return a CompletableFuture to allow the caller to wait for the
+    // completion of the status check, even though we don't need to return any value.
+    final CompletableFuture<Void> returnFuture = CompletableFuture.completedFuture(null);
+
     final StatusCheckType checkType = environment.getStatusCheckType();
+
     log.debug("Starting status check for environment {} (ID: {}) with type {}",
         environment.getName(), environment.getId(), checkType);
 
     if (checkType == null) {
       log.warn("Skipping environment {} - no check type configured", environment.getId());
-      return;
+      return returnFuture;
     }
 
     final StatusCheckStrategy strategy = checkStrategies.get(checkType);
@@ -51,14 +57,16 @@ public class StatusCheckService {
     if (strategy == null) {
       log.error("No strategy found for check type {} in environment {}",
           checkType, environment.getId());
-      return;
+      return returnFuture;
     }
 
     final StatusCheckResult result = strategy.check(environment);
     log.debug("Check completed for environment {} - success: {}, code: {}",
-        environment.getId(), result.success(), result.statusCode());
+        environment.getId(), result.success(), result.httpStatusCode());
 
     saveStatusResult(environment, result);
+
+    return returnFuture;
   }
 
   private void saveStatusResult(Environment environment, StatusCheckResult result) {
@@ -67,7 +75,7 @@ public class StatusCheckService {
     status.setEnvironment(environment);
     status.setCheckType(environment.getStatusCheckType());
     status.setSuccess(result.success());
-    status.setStatusCode(result.statusCode());
+    status.setHttpStatusCode(result.httpStatusCode());
     status.setCheckTimestamp(Instant.now());
     status.setMetadata(result.metadata());
 

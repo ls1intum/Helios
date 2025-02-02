@@ -22,10 +22,9 @@ public class HttpStatusCheck implements StatusCheckStrategy {
       return new StatusCheckResult(
           response.getStatusCode().is2xxSuccessful(),
           response.getStatusCode().value(),
-          StatusCheckType.HTTP_STATUS,
           Map.of());
     } catch (Exception e) {
-      return new StatusCheckResult(false, 503, StatusCheckType.HTTP_STATUS, Map.of());
+      return new StatusCheckResult(false, 503, Map.of());
     }
   }
 

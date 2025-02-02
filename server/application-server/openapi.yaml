@@ -835,7 +835,7 @@ components:
           format: int64
         success:
           type: boolean
-        statusCode:
+        httpStatusCode:
           type: integer
           format: int32
         checkedAt:
@@ -850,7 +850,9 @@ components:
           type: object
           additionalProperties: {}
       required:
+      - checkType
       - checkedAt
+      - httpStatusCode
       - id
       - success
     RepositoryInfoDto:
