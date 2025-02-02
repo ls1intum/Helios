@@ -16,7 +16,8 @@ import org.springframework.stereotype.Component;
  * <ul>
  *   <li>Monitoring the current rate limit status from anywhere in the application by accessing the
  *   `latestRateLimitInfo` field.</li>
- *   <li>Logging or displaying the current rate limit status for debugging or informational purposes.</li>
+ *   <li>Logging or displaying the current rate limit status for debugging
+ *   or informational purposes.</li>
  *   <li>Implementing custom logic based on the rate limit status, such as delaying requests or
  *   notifying users when the rate limit is close to being reached.</li>
  * </ul>
