@@ -64,21 +64,12 @@ public class LatestDeploymentUnion {
     if (isRealDeployment()) {
       return realDeployment.getState();
     } else if (isHeliosDeployment()) {
-      return mapHeliosStatusToDeploymentState(heliosDeployment.getStatus());
+      Deployment.State state =
+          HeliosDeployment.mapHeliosStatusToDeploymentState(heliosDeployment.getStatus());
+      return state;
     } else {
       return null;
     }
-  }
-
-  private static Deployment.State mapHeliosStatusToDeploymentState(
-      HeliosDeployment.Status heliosStatus) {
-    return switch (heliosStatus) {
-      case WAITING, QUEUED -> Deployment.State.PENDING;
-      case IN_PROGRESS -> Deployment.State.IN_PROGRESS;
-      case DEPLOYMENT_SUCCESS -> Deployment.State.SUCCESS;
-      case FAILED -> Deployment.State.FAILURE;
-      case IO_ERROR, UNKNOWN -> Deployment.State.UNKNOWN;
-    };
   }
 
   public String getStatusesUrl() {

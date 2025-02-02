@@ -1,5 +1,6 @@
 package de.tum.cit.aet.helios.heliosdeployment;
 
+import de.tum.cit.aet.helios.deployment.Deployment;
 import de.tum.cit.aet.helios.environment.Environment;
 import de.tum.cit.aet.helios.user.User;
 import jakarta.persistence.Column;
@@ -134,5 +135,28 @@ public class HeliosDeployment {
     } else {
       return Status.UNKNOWN;
     }
+  }
+
+  public static Deployment.State mapHeliosStatusToDeploymentState(
+      HeliosDeployment.Status heliosStatus) {
+    return switch (heliosStatus) {
+      case WAITING -> Deployment.State.WAITING;
+      case QUEUED -> Deployment.State.PENDING;
+      case IN_PROGRESS -> Deployment.State.IN_PROGRESS;
+      case DEPLOYMENT_SUCCESS -> Deployment.State.SUCCESS;
+      case FAILED -> Deployment.State.FAILURE;
+      case IO_ERROR, UNKNOWN -> Deployment.State.UNKNOWN;
+    };
+  }
+
+  public static HeliosDeployment.Status mapDeploymentStateToHeliosStatus(Deployment.State state) {
+    return switch (state) {
+      case WAITING, PENDING -> Status.WAITING;
+      case IN_PROGRESS -> Status.IN_PROGRESS;
+      case SUCCESS -> Status.DEPLOYMENT_SUCCESS;
+      case FAILURE, ERROR -> Status.FAILED;
+      case UNKNOWN, INACTIVE -> Status.UNKNOWN;
+      case QUEUED -> Status.QUEUED;
+    };
   }
 }

@@ -200,6 +200,8 @@ public class GitHubDeploymentSyncService {
       // Only update if it isn't already set
       if (heliosDeployment.getDeploymentId() == null) {
         heliosDeployment.setDeploymentId(deployment.getId());
+        heliosDeployment.setStatus(
+            HeliosDeployment.mapDeploymentStateToHeliosStatus(deployment.getState()));
         heliosDeploymentRepository.save(heliosDeployment);
         log.info("Helios Deployment updated");
       }
