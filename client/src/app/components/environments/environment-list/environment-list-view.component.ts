@@ -142,6 +142,16 @@ export class EnvironmentListViewComponent {
     return url;
   }
 
+  openExternalLink(event: MouseEvent, environment: EnvironmentDto): void {
+    // Prevent the click event from propagating
+    event.stopPropagation();
+
+    // Only proceed if the server URL is available
+    if (environment.serverUrl) {
+      window.open(this.getFullUrl(environment.serverUrl), '_blank');
+    }
+  }
+
   getDeploymentTime(environment: EnvironmentDto) {
     const date = environment.latestDeployment?.updatedAt;
     return date ? this.datePipe.transform(date, 'd MMMM y, h:mm a') : null; // Format date
