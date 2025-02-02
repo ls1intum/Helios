@@ -42,7 +42,7 @@ public class EnvironmentService {
         .map(
             environment -> {
               return EnvironmentDto.fromEnvironment(
-                  environment, environment.getDeployments().reversed().stream().findFirst());
+                  environment, environment.getLatestDeployment());
             })
         .collect(Collectors.toList());
   }
@@ -52,7 +52,7 @@ public class EnvironmentService {
         .map(
             environment -> {
               return EnvironmentDto.fromEnvironment(
-                  environment, environment.getDeployments().reversed().stream().findFirst());
+                  environment, environment.getLatestDeployment());
             })
         .collect(Collectors.toList());
   }
@@ -86,6 +86,10 @@ public class EnvironmentService {
         environmentRepository
             .findById(id)
             .orElseThrow(() -> new EntityNotFoundException("Environment not found with ID: " + id));
+
+    if (!environment.isEnabled()) {
+      throw new IllegalStateException("Environment is disabled");
+    }
 
     if (environment.isLocked()) {
       if (currentUserName.equals(environment.getLockedBy())) {
@@ -186,7 +190,7 @@ public class EnvironmentService {
                 throw new EnvironmentException(
                     "Environment is locked and can not be disabled. "
                         + "Please unlock the environment first.");
-              } else if (environmentDto.enabled()) {
+              } else if (!environment.isEnabled() && environmentDto.enabled()) {
                 environment.setLocked(false);
                 environment.setLockedBy(null);
                 environment.setLockedAt(null);

@@ -2,6 +2,7 @@ package de.tum.cit.aet.helios.error;
 
 import de.tum.cit.aet.helios.deployment.DeploymentException;
 import de.tum.cit.aet.helios.environment.EnvironmentException;
+import io.sentry.Sentry;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
@@ -72,6 +73,8 @@ public class GlobalExceptionHandler {
     error.setMessage("Error: An internal server error occurred");
     error.setPath(request.getRequestURI());
     error.setTimestamp(Instant.now());
+
+    Sentry.captureException(ex);
 
     return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
   }
