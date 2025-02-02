@@ -78,6 +78,7 @@ public class AuthService {
     // If user does not exist, fetch user from GitHub and save it to the database
     GHUser ghUser;
     try {
+      // TODO: Add get user by ID method in GitHubFacade
       ghUser = githubFacade.getUser(getPreferredUsername());
     } catch (IOException e) {
       throw new IllegalStateException("Unable to fetch GitHub user");

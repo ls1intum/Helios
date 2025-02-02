@@ -6,6 +6,7 @@ import de.tum.cit.aet.helios.environment.EnvironmentLockHistory;
 import de.tum.cit.aet.helios.environment.EnvironmentLockHistoryRepository;
 import de.tum.cit.aet.helios.environment.EnvironmentRepository;
 import de.tum.cit.aet.helios.environment.github.GitHubEnvironmentSyncService;
+import de.tum.cit.aet.helios.github.GitHubFacadeImpl;
 import de.tum.cit.aet.helios.github.GitHubMessageHandler;
 import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
@@ -34,6 +35,7 @@ public class GitHubDeploymentStatusMessageHandler
   private final DeploymentSourceFactory deploymentSourceFactory;
   private final GitHubUserSyncService userSyncService;
   private final EnvironmentLockHistoryRepository environmentLockHistoryRepository;
+  private final GitHubFacadeImpl gitHubFacadeImpl;
 
   private GitHubDeploymentStatusMessageHandler(
       GitHubDeploymentSyncService deploymentSyncService,
@@ -42,7 +44,8 @@ public class GitHubDeploymentStatusMessageHandler
       GitHubEnvironmentSyncService environmentSyncService,
       DeploymentSourceFactory deploymentSourceFactory,
       GitHubUserSyncService userSyncService,
-      EnvironmentLockHistoryRepository environmentLockHistoryRepository) {
+      EnvironmentLockHistoryRepository environmentLockHistoryRepository,
+      GitHubFacadeImpl gitHubFacadeImpl) {
     super(GHEventPayload.DeploymentStatus.class);
     this.deploymentSyncService = deploymentSyncService;
     this.gitRepoRepository = gitRepoRepository;
@@ -51,6 +54,7 @@ public class GitHubDeploymentStatusMessageHandler
     this.deploymentSourceFactory = deploymentSourceFactory;
     this.userSyncService = userSyncService;
     this.environmentLockHistoryRepository = environmentLockHistoryRepository;
+    this.gitHubFacadeImpl = gitHubFacadeImpl;
   }
 
   @Override
@@ -63,10 +67,9 @@ public class GitHubDeploymentStatusMessageHandler
 
     GHDeployment ghDeployment = eventPayload.getDeployment();
 
-    GHUser user = null;
     User convertedUser = null;
     try {
-      user = ghDeployment.getCreator();
+      GHUser user = ghDeployment.getCreator();
       if (user != null) {
         convertedUser = userSyncService.processUser(user);
       }
@@ -126,12 +129,18 @@ public class GitHubDeploymentStatusMessageHandler
     // Deployment.mapToState handles mapping gracefully
     GHDeploymentStatus deploymentStatus = eventPayload.getDeploymentStatus();
 
-    // Convert GHDeployment to DeploymentSource
-    DeploymentSource deploymentSource =
-        deploymentSourceFactory.create(ghDeployment, Deployment.mapToState(deploymentStatus));
-
     // If deployed by helios set current user as the locking user
-    if (convertedUser != null && convertedUser.getLogin().contains("helios")) {
+    String githubAppName = null;
+    try {
+      githubAppName = gitHubFacadeImpl.getGithubAppName();
+    } catch (IOException e) {
+      log.error("Github App Name could not be found.", e);
+    }
+
+    // If we have user name coming from the deployment event, and it is the helios app name, then
+    // change it to locking user
+    if (convertedUser != null
+        && (githubAppName == null || (convertedUser.getLogin().equals(githubAppName)))) {
       Optional<EnvironmentLockHistory> lockHistory =
           environmentLockHistoryRepository.findCurrentLockForEnabledEnvironment(
               environment.getId());
@@ -139,6 +148,10 @@ public class GitHubDeploymentStatusMessageHandler
         convertedUser = lockHistory.get().getLockedBy();
       }
     }
+
+    // Convert GHDeployment to DeploymentSource
+    DeploymentSource deploymentSource =
+    deploymentSourceFactory.create(ghDeployment, Deployment.mapToState(deploymentStatus));
 
     // Process this single deployment
     deploymentSyncService.processDeployment(

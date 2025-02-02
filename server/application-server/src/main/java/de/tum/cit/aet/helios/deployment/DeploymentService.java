@@ -219,12 +219,39 @@ public class DeploymentService {
     return true;
   }
 
+  /**
+   * Retrieves and combines activity history for a specific environment, including deployments,
+   * lock/unlock events, and potential Helios deployments, sorted chronologically descending.
+   *
+   * <p>The method aggregates data from three sources:
+   *
+   * <ol>
+   *   <li><b>Real Deployments</b> - Fetches deployments from the deployment repository, converts
+   *       them to DTOs, and sorts by creation time descending
+   *   <li><b>Lock History</b> - Retrieves environment lock events and generates paired LOCK/UNLOCK
+   *       events when applicable, converting them to DTOs
+   *   <li><b>Helios Deployment</b> - Conditionally adds the latest Helios deployment if it's newer
+   *       than existing deployment records
+   * </ol>
+   *
+   * <p>The final combined list is sorted by timestamp descending, with null timestamps placed last.
+   *
+   * @param environmentId The ID of the environment to fetch history for
+   * @return Combined list of {@link ActivityHistoryDto} objects representing all activity, sorted
+   *     by timestamp descending. Returns empty list if no activities found.
+   * @implNote Special handling for Helios deployments:
+   *     <ul>
+   *       <li>Helios deployments are only added if they represent the latest deployment activity
+   *       <li>Will not duplicate if already present in deployment records
+   *       <li>Requires separate environment lookup to verify deployment recency
+   *     </ul>
+   */
   public List<ActivityHistoryDto> getActivityHistoryByEnvironmentId(Long environmentId) {
     // 1) Real deployments
-    List<Deployment> deployments =
-        deploymentRepository.findByEnvironmentIdOrderByCreatedAtDesc(environmentId);
     List<ActivityHistoryDto> deploymentDtos =
-        deployments.stream().map(ActivityHistoryDto::fromDeployment).toList();
+        deploymentRepository.findByEnvironmentIdOrderByCreatedAtDesc(environmentId).stream()
+            .map(ActivityHistoryDto::fromDeployment)
+            .toList();
 
     // 3) Lock history (lock/unlock)
     List<EnvironmentLockHistory> lockHistories =
@@ -258,8 +285,7 @@ public class DeploymentService {
       if (!latestUnion.isNone() && latestUnion.isHeliosDeployment()) {
         if (deploymentDtos.isEmpty()
             || latestUnion.getUpdatedAt().isAfter(deploymentDtos.get(0).updatedAt())) {
-          ActivityHistoryDto latestItem =
-              ActivityHistoryDto.fromLatestDeploymentUnion("DEPLOYMENT", latestUnion);
+          ActivityHistoryDto latestItem = ActivityHistoryDto.fromLatestDeploymentUnion(latestUnion);
           combined.add(latestItem);
         }
       }

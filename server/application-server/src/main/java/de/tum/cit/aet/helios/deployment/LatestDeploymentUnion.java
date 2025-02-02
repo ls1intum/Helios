@@ -1,5 +1,6 @@
 package de.tum.cit.aet.helios.deployment;
 
+import de.tum.cit.aet.helios.gitrepo.RepositoryInfoDto;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
 import de.tum.cit.aet.helios.user.User;
 import java.time.OffsetDateTime;
@@ -47,6 +48,16 @@ public class LatestDeploymentUnion {
       return realDeployment.getId();
     } else if (isHeliosDeployment()) {
       return heliosDeployment.getId();
+    } else {
+      return null;
+    }
+  }
+
+  public RepositoryInfoDto getRepository() {
+    if (isRealDeployment()) {
+      return RepositoryInfoDto.fromRepository(realDeployment.getRepository());
+    } else if (isHeliosDeployment()) {
+      return RepositoryInfoDto.fromRepository(heliosDeployment.getEnvironment().getRepository());
     } else {
       return null;
     }

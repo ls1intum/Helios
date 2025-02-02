@@ -19,18 +19,12 @@ public record ActivityHistoryDto(
     OffsetDateTime createdAt,
     OffsetDateTime updatedAt) {
 
-  public static ActivityHistoryDto fromLatestDeploymentUnion(
-      String type, LatestDeploymentUnion union) {
+  public static ActivityHistoryDto fromLatestDeploymentUnion(LatestDeploymentUnion union) {
     // You could unify HeliosDeployment.Status -> Deployment.State, etc.
     return new ActivityHistoryDto(
         "DEPLOYMENT", // e.g. "LATEST_DEPLOYMENT"
         union.getId(), // union returns the ID (Helios or real)
-        union.isNone()
-            ? null
-            : RepositoryInfoDto.fromRepository(
-                union.isRealDeployment()
-                    ? union.getRealDeployment().getRepository()
-                    : union.getHeliosDeployment().getEnvironment().getRepository()),
+        union.getRepository(), // mapped repository
         union.getState(), // mapped state
         union.getSha(), // real or helios
         union.getRef(), // branchName or real ref
