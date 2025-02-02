@@ -29,6 +29,8 @@ import { AvatarModule } from 'primeng/avatar';
 import { TooltipModule } from 'primeng/tooltip';
 import { TimeAgoPipe } from '@app/pipes/time-ago.pipe';
 import { UserAvatarComponent } from '@app/components/user-avatar/user-avatar.component';
+import { EnvironmentStatusInfoComponent } from '../environment-status-info/environment-status-info.component';
+import { EnvironmentStatusTagComponent } from '../environment-status-tag/environment-status-tag.component';
 
 @Component({
   selector: 'app-environment-list-view',
@@ -42,7 +44,9 @@ import { UserAvatarComponent } from '@app/components/user-avatar/user-avatar.com
     ButtonModule,
     TooltipModule,
     DeploymentStateTagComponent,
+    EnvironmentStatusTagComponent,
     EnvironmentDeploymentInfoComponent,
+    EnvironmentStatusInfoComponent,
     LockTimeComponent,
     AvatarModule,
     ConfirmDialogModule,

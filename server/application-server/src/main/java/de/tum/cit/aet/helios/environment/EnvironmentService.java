@@ -49,7 +49,7 @@ public class EnvironmentService {
         .map(
             env -> {
               LatestDeploymentUnion latest = findLatestDeployment(env);
-              return EnvironmentDto.fromEnvironment(env, latest);
+              return EnvironmentDto.fromEnvironment(env, latest, env.getLatestStatus());
             })
         .collect(Collectors.toList());
   }
@@ -59,7 +59,7 @@ public class EnvironmentService {
         .map(
             env -> {
               LatestDeploymentUnion latest = findLatestDeployment(env);
-              return EnvironmentDto.fromEnvironment(env, latest);
+              return EnvironmentDto.fromEnvironment(env, latest, env.getLatestStatus());
             })
         .collect(Collectors.toList());
   }
@@ -124,8 +124,10 @@ public class EnvironmentService {
   /**
    * Locks the environment with the specified ID.
    *
-   * <p>This method attempts to lock the environment by setting its locked status to true. If the
-   * environment is already locked, it returns an empty Optional. If the environment is successfully
+   * <p>This method attempts to lock the environment by setting its locked status to
+   * true. If the
+   * environment is already locked, it returns an empty Optional. If the
+   * environment is successfully
    * locked, it returns an Optional containing the locked environment.
    *
    * <p>This method is transactional and handles optimistic locking failures.
@@ -139,10 +141,9 @@ public class EnvironmentService {
   public Optional<Environment> lockEnvironment(Long id) {
     final User currentUser = authService.getUserFromGithubId();
 
-    Environment environment =
-        environmentRepository
-            .findById(id)
-            .orElseThrow(() -> new EntityNotFoundException("Environment not found with ID: " + id));
+    Environment environment = environmentRepository
+        .findById(id)
+        .orElseThrow(() -> new EntityNotFoundException("Environment not found with ID: " + id));
 
     if (!environment.isEnabled()) {
       throw new IllegalStateException("Environment is disabled");
@@ -189,10 +190,9 @@ public class EnvironmentService {
   public EnvironmentDto unlockEnvironment(Long id) {
     final User currentUser = authService.getUserFromGithubId();
 
-    Environment environment =
-        environmentRepository
-            .findById(id)
-            .orElseThrow(() -> new EntityNotFoundException("Environment not found with ID: " + id));
+    Environment environment = environmentRepository
+        .findById(id)
+        .orElseThrow(() -> new EntityNotFoundException("Environment not found with ID: " + id));
 
     if (!environment.isLocked()) {
       throw new IllegalStateException("Environment is not locked");
@@ -229,7 +229,8 @@ public class EnvironmentService {
   /**
    * Updates the environment with the specified ID.
    *
-   * <p>This method updates the environment with the specified ID using the provided EnvironmentDto.
+   * <p>This method updates the environment with the specified ID using the provided
+   * EnvironmentDto.
    *
    * @param id the ID of the environment to update
    * @param environmentDto the EnvironmentDto containing the updated environment information
@@ -265,6 +266,13 @@ public class EnvironmentService {
               }
               if (environmentDto.serverUrl() != null) {
                 environment.setServerUrl(environmentDto.serverUrl());
+              }
+              if (environmentDto.statusCheckType() != null) {
+                environment.setStatusCheckType(environmentDto.statusCheckType());
+                environment.setStatusUrl(environmentDto.statusUrl());
+              } else {
+                environment.setStatusCheckType(null);
+                environment.setStatusUrl(null);
               }
 
               environmentRepository.save(environment);

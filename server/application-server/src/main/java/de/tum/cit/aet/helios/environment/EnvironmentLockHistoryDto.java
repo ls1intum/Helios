@@ -23,6 +23,8 @@ public record EnvironmentLockHistoryDto(
         environmentLockHistory.getLockedAt(),
         environmentLockHistory.getUnlockedAt(),
         EnvironmentDto.fromEnvironment(
-            environment, environmentService.findLatestDeployment(environment)));
+            environment,
+            environmentService.findLatestDeployment(environment),
+            environment.getLatestStatus()));
   }
 }
