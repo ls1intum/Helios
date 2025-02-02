@@ -41,7 +41,7 @@ public class GitHubFacadeImpl implements GitHubFacade {
   }
 
   @Override
-  public String getGithubAppName() throws IOException {
+  public String getGithubAppName() {
     return clientManager.getAppName();
   }
 }

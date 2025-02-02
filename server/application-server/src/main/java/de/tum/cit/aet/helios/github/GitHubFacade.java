@@ -25,5 +25,5 @@ public interface GitHubFacade {
 
   public GHRepository getRepositoryById(long id) throws IOException;
 
-  public String getGithubAppName() throws IOException;
+  public String getGithubAppName();
 }

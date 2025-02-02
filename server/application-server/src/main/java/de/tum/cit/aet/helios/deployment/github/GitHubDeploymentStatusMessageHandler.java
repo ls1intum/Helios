@@ -6,7 +6,7 @@ import de.tum.cit.aet.helios.environment.EnvironmentLockHistory;
 import de.tum.cit.aet.helios.environment.EnvironmentLockHistoryRepository;
 import de.tum.cit.aet.helios.environment.EnvironmentRepository;
 import de.tum.cit.aet.helios.environment.github.GitHubEnvironmentSyncService;
-import de.tum.cit.aet.helios.github.GitHubFacadeImpl;
+import de.tum.cit.aet.helios.github.GitHubFacade;
 import de.tum.cit.aet.helios.github.GitHubMessageHandler;
 import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
@@ -35,7 +35,7 @@ public class GitHubDeploymentStatusMessageHandler
   private final DeploymentSourceFactory deploymentSourceFactory;
   private final GitHubUserSyncService userSyncService;
   private final EnvironmentLockHistoryRepository environmentLockHistoryRepository;
-  private final GitHubFacadeImpl gitHubFacadeImpl;
+  private final GitHubFacade github;
 
   private GitHubDeploymentStatusMessageHandler(
       GitHubDeploymentSyncService deploymentSyncService,
@@ -45,7 +45,7 @@ public class GitHubDeploymentStatusMessageHandler
       DeploymentSourceFactory deploymentSourceFactory,
       GitHubUserSyncService userSyncService,
       EnvironmentLockHistoryRepository environmentLockHistoryRepository,
-      GitHubFacadeImpl gitHubFacadeImpl) {
+      GitHubFacade github) {
     super(GHEventPayload.DeploymentStatus.class);
     this.deploymentSyncService = deploymentSyncService;
     this.gitRepoRepository = gitRepoRepository;
@@ -54,7 +54,7 @@ public class GitHubDeploymentStatusMessageHandler
     this.deploymentSourceFactory = deploymentSourceFactory;
     this.userSyncService = userSyncService;
     this.environmentLockHistoryRepository = environmentLockHistoryRepository;
-    this.gitHubFacadeImpl = gitHubFacadeImpl;
+    this.github = github;
   }
 
   @Override
@@ -118,19 +118,10 @@ public class GitHubDeploymentStatusMessageHandler
         return;
       }
     }
-    
-    // If deployed by helios set current user as the locking user
-    String githubAppName = null;
-    try {
-      githubAppName = gitHubFacadeImpl.getGithubAppName();
-    } catch (IOException e) {
-      log.error("Github App Name could not be found.", e);
-    }
 
     // If we have user name coming from the deployment event, and it is the helios app name, then
     // change it to locking user
-    if (convertedUser != null
-        && (githubAppName == null || (convertedUser.getLogin().equals(githubAppName)))) {
+    if (convertedUser != null && (convertedUser.getLogin().equals(github.getGithubAppName()))) {
       Optional<EnvironmentLockHistory> lockHistory =
           environmentLockHistoryRepository.findCurrentLockForEnabledEnvironment(
               environment.getId());

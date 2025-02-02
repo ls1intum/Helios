@@ -2,6 +2,7 @@ package de.tum.cit.aet.helios.workflow.github;
 
 import static de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment.mapWorkflowRunStatus;
 
+import de.tum.cit.aet.helios.github.GitHubFacade;
 import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
@@ -35,6 +36,7 @@ public class GitHubWorkflowRunSyncService {
   private final PullRequestRepository pullRequestRepository;
   private final WorkflowService workflowService;
   private final HeliosDeploymentRepository heliosDeploymentRepository;
+  private final GitHubFacade github;
 
   public GitHubWorkflowRunSyncService(
       WorkflowRunRepository workflowRunRepository,
@@ -42,13 +44,15 @@ public class GitHubWorkflowRunSyncService {
       GitRepoRepository gitRepoRepository,
       PullRequestRepository pullRequestRepository,
       WorkflowService workflowService,
-      HeliosDeploymentRepository heliosDeploymentRepository) {
+      HeliosDeploymentRepository heliosDeploymentRepository,
+      GitHubFacade github) {
     this.workflowRunRepository = workflowRunRepository;
     this.workflowRunConverter = workflowRunConverter;
     this.gitRepoRepository = gitRepoRepository;
     this.pullRequestRepository = pullRequestRepository;
     this.workflowService = workflowService;
     this.heliosDeploymentRepository = heliosDeploymentRepository;
+    this.github = github;
   }
 
   /**
@@ -200,6 +204,12 @@ public class GitHubWorkflowRunSyncService {
       log.debug("Workflow run {} is not a deployment workflow run", workflowRun.getId());
       return;
     }
+
+    // TODO: We need to check whether workflow run is triggered via Helios-App or via the Github UI
+    // Library that we are using didin't implement this feature. We need to get the user who
+    // triggered the workflow run
+    // Then we can check whether it's triggered via Helios-App or a Github User via Github UI.
+    // We only need to update heliosDeployment if it's triggered via Helios-App
 
     heliosDeploymentRepository
         .findTopByBranchNameAndCreatedAtLessThanEqualOrderByCreatedAtDesc(

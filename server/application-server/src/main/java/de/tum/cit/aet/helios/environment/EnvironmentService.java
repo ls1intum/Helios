@@ -69,39 +69,56 @@ public class EnvironmentService {
   }
 
   /**
-   * Finds the "latest" deployment for the given environment, taking into account: 1) The most
-   * recent HeliosDeployment (if present). 2) If that HeliosDeployment has a non-null deploymentId,
-   * we look up the real Deployment in environment.getDeployments(). 3) Otherwise if
-   * HeliosDeployment has null deploymentId, we use the HeliosDeployment as the placeholder. 4) If
-   * no HeliosDeployment exists at all, we fall back to the actual latest real Deployment in
-   * environment.getDeployments().
+   * Finds the "latest" deployment for the given environment by considering: 1) The most recent
+   * HeliosDeployment (if present), ordered by `createdAt`. 2) If the HeliosDeployment has a
+   * non-null `deploymentId`, the corresponding real Deployment is retrieved from the environment's
+   * deployments. 3) If the HeliosDeployment has a null `deploymentId`, it is treated as a
+   * placeholder. 4) If no HeliosDeployment exists, the latest real Deployment from the environment
+   * is used.
    *
-   * <p>Returns a small wrapper object with either a real Deployment or a HeliosDeployment. This
-   * helps unify your "latest" logic into one place.
+   * <p>The method compares the `updatedAt` timestamps of the latest HeliosDeployment and the latest
+   * real Deployment to determine which one is the most recent. It returns a wrapper object
+   * containing either the latest HeliosDeployment or the latest real Deployment.
+   *
+   * @param env The environment to search for deployments.
+   * @return A wrapper object containing the latest Deployment or HeliosDeployment, or an empty
+   *     result if no deployments exist.
    */
   private LatestDeploymentUnion findLatestDeployment(Environment env) {
-    // (A) Check if we have a HeliosDeployment
-    var maybeHelios = heliosDeploymentRepository.findTopByEnvironmentOrderByCreatedAtDesc(env);
-    if (maybeHelios.isPresent()) {
-      HeliosDeployment helios = maybeHelios.get();
+    // Retrieve the latest HeliosDeployment
+    Optional<HeliosDeployment> latestHeliosOpt =
+        heliosDeploymentRepository.findTopByEnvironmentOrderByCreatedAtDesc(env);
 
-      // If HeliosDeployment references a real Deployment
-      if (helios.getDeploymentId() == null) {
-        // HeliosDeployment has no real deploymentId -> still in "waiting" or "in-progress" phase
-        return LatestDeploymentUnion.heliosDeployment(helios);
+    // Retrieve the latest real Deployment from the environment
+    List<Deployment> deployments = env.getDeployments();
+    Deployment latestDeployment = null;
+    if (deployments != null && !deployments.isEmpty()) {
+      latestDeployment = deployments.get(deployments.size() - 1); // Last deployment is the latest
+    }
+
+    // If no deployments exist at all, return empty
+    if (latestHeliosOpt.isEmpty() && latestDeployment == null) {
+      return LatestDeploymentUnion.none();
+    }
+
+    // Compare the latest HeliosDeployment and the latest real Deployment
+    if (latestHeliosOpt.isPresent() && latestDeployment != null) {
+      HeliosDeployment latestHelios = latestHeliosOpt.get();
+
+      // Compare updatedAt timestamps to determine the latest
+      if (latestDeployment.getUpdatedAt().isAfter(latestHelios.getUpdatedAt())) {
+        return LatestDeploymentUnion.realDeployment(latestDeployment);
+      } else {
+        return LatestDeploymentUnion.heliosDeployment(latestHelios);
       }
     }
 
-    // (B) No HeliosDeployment: use the environment's real Deployments
-    var deployments = env.getDeployments();
-    if (deployments != null && !deployments.isEmpty()) {
-      // The last item in the list is presumably the latest.
-      // (You have @OrderBy("createdAt ASC"), so the last is "newest".)
-      Deployment lastDep = deployments.get(deployments.size() - 1);
-      return LatestDeploymentUnion.realDeployment(lastDep);
+    // If only one of them exists, return the available one
+    if (latestHeliosOpt.isPresent()) {
+      return LatestDeploymentUnion.heliosDeployment(latestHeliosOpt.get());
+    } else {
+      return LatestDeploymentUnion.realDeployment(latestDeployment);
     }
-    // (C) No real deployments exist -> empty
-    return LatestDeploymentUnion.none();
   }
 
   /**
