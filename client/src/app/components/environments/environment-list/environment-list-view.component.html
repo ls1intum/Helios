@@ -51,6 +51,10 @@
             }
           </div>
 
+          @if (environment.latestStatus; as status) {
+            <app-environment-status-tag [status]="status" />
+          }
+
           <div class="flex-grow"></div>
 
           @if (environment.locked) {

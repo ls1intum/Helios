@@ -66,6 +66,15 @@ export type EnvironmentStatusDto = {
   metadata?: {};
 };
 
+export type EnvironmentStatusDto = {
+  id: number;
+  success: boolean;
+  httpStatusCode: number;
+  checkedAt: string;
+  checkType: 'HTTP_STATUS' | 'ARTEMIS_INFO';
+  metadata?: {};
+};
+
 export type RepositoryInfoDto = {
   id: number;
   name: string;
@@ -119,21 +128,21 @@ export type WorkflowRunDto = {
   name: string;
   displayTitle: string;
   status:
-    | 'QUEUED'
-    | 'IN_PROGRESS'
-    | 'COMPLETED'
-    | 'ACTION_REQUIRED'
-    | 'CANCELLED'
-    | 'FAILURE'
-    | 'NEUTRAL'
-    | 'SKIPPED'
-    | 'STALE'
-    | 'SUCCESS'
-    | 'TIMED_OUT'
-    | 'REQUESTED'
-    | 'WAITING'
-    | 'PENDING'
-    | 'UNKNOWN';
+  | 'QUEUED'
+  | 'IN_PROGRESS'
+  | 'COMPLETED'
+  | 'ACTION_REQUIRED'
+  | 'CANCELLED'
+  | 'FAILURE'
+  | 'NEUTRAL'
+  | 'SKIPPED'
+  | 'STALE'
+  | 'SUCCESS'
+  | 'TIMED_OUT'
+  | 'REQUESTED'
+  | 'WAITING'
+  | 'PENDING'
+  | 'UNKNOWN';
   workflowId: number;
   conclusion?: 'ACTION_REQUIRED' | 'CANCELLED' | 'FAILURE' | 'NEUTRAL' | 'SUCCESS' | 'SKIPPED' | 'STALE' | 'TIMED_OUT' | 'STARTUP_FAILURE' | 'UNKNOWN';
   htmlUrl: string;
