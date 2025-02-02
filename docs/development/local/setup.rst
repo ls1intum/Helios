@@ -207,9 +207,6 @@ Example Deployment Workflow
 ---------------------------
 To enable Helios to trigger deployments, your repository must have a corresponding GitHub Actions workflow that Helios can dispatch. Below is an example workflow file (`deploy-with-helios.yml`), which uses the ``workflow_dispatch`` event with specific input parameters.
 
-- The workflow uses the ``workflow_dispatch`` event with specific input parameters provided by Helios.
-- The actual **environment** protection settings require that you add the ``environment`` keyword at the **job level** (shown in the deploy job below).
-
 .. code-block:: yaml
 
    name: Deploy with Helios
@@ -273,10 +270,10 @@ Explanation
 - **Trigger Source**: Helios will trigger this workflow by sending a ``workflow_dispatch`` event, supplying the relevant metadata (``branch_name``, ``environment_name``, ``triggered_by``).
 
 - **Concurrency**: Setting
-  ``concurrency: ${{ github.event.inputs.HELIOS_ENVIRONMENT_NAME }}``
+  ``concurrency: ${{ github.event.inputs.environment_name }}``
   ensures only one deployment can run at a time for a given environment.
 
-- **Helios as the Actor**: The ``workflow_dispatch`` event can be triggered via the GitHub UI or API by anyone with ``WRITE`` permissions to the repository. This means that even if Helios is unresponsive, you can manually trigger deployments using the GitHub UI.
+- **Helios as the Actor**: The ``workflow_dispatch`` event in **GitHub** can be triggered via the GitHub UI or API by anyone who has ``WRITE`` permissions to the repository in GitHub. This means that even if Helios is unresponsive, you can manually trigger deployments using the GitHub UI.
 
 By structuring your workflow like this, you can ensure that deployments can be triggered directly from the GitHub UI, providing flexibility and control over deployments.
 
