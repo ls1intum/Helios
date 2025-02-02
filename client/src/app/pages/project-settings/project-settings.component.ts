@@ -63,7 +63,7 @@ export class ProjectSettingsComponent {
   showAddGroupDialog = false;
   newGroupName = '';
   // Store the previous label temporarily for the confirmation dialog
-  private previousLabel: 'BUILD' | 'DEPLOYMENT' | 'NONE' = 'NONE';
+  private previousLabel: 'NONE' | 'TEST_SERVER' | 'STAGING_SERVER' | 'PRODUCTION_SERVER' = 'NONE';
 
   // Drag & Drop logic for groupedWorkflowsArray
   private dragIndex: number | null = null;
@@ -221,7 +221,7 @@ export class ProjectSettingsComponent {
 
   storePreviousLabel(workflow: WorkflowDto) {
     // Store the current label before change
-    this.previousLabel = workflow.label;
+    this.previousLabel = workflow.deploymentEnvironment;
   }
 
   onChangeLabel(workflow: WorkflowDto) {
@@ -245,11 +245,12 @@ export class ProjectSettingsComponent {
             <div>
               <p class="font-semibold">Note:</p>
               <p class="text-sm text-gray-600 mb-2">
-                Only one workflow can be labeled as either <strong>DEPLOYMENT</strong> or <strong>BUILD</strong>.
+                Only one workflow can be labeled as either <strong>TEST_SERVER</strong>, <strong>STAGING_SERVER</strong> or <strong>PRODUCTION_SERVER</strong>.
               </p>
               <ul class="list-disc list-inside text-sm text-gray-600">
-                <li><strong>DEPLOYMENT</strong>: This label sets the workflow to trigger server deployments.</li>
-                <li><strong>BUILD</strong>: This label sets the workflow to trigger build processes.</li>
+                <li><strong>TEST_SERVER</strong>: This label sets the workflow to trigger test server deployments.</li>
+                <li><strong>STAGING_SERVER</strong>: This label sets the workflow to staging test server deployments.</li>
+                <li><strong>PRODUCTION_SERVER</strong>: This label sets the workflow to production test server deployments.</li>
                 <li><strong>NONE</strong>: No label is set for this workflow.</li>
               </ul>
             </div>
@@ -261,7 +262,7 @@ export class ProjectSettingsComponent {
       },
       reject: () => {
         // Restore the previous label if the user cancels
-        workflow.label = this.previousLabel;
+        workflow.deploymentEnvironment = this.previousLabel;
       },
     });
   }

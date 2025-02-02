@@ -270,6 +270,9 @@ public class EnvironmentService {
                 environment.setStatusCheckType(null);
                 environment.setStatusUrl(null);
               }
+              if (environmentDto.type() != null) {
+                environment.setType(environmentDto.type());
+              }
 
               environmentRepository.save(environment);
               return EnvironmentDto.fromEnvironment(environment);

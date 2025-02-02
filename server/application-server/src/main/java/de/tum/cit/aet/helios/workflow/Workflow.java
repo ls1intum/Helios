@@ -1,7 +1,6 @@
 package de.tum.cit.aet.helios.workflow;
 
 import de.tum.cit.aet.helios.github.BaseGitServiceEntity;
-import de.tum.cit.aet.helios.workflow.Workflow.DeploymentEnvironment;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;

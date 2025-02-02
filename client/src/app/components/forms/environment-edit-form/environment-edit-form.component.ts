@@ -52,11 +52,18 @@ export class EnvironmentEditFormComponent implements OnInit {
   environmentId = input<number>(0); // This is the environment id
   environmentForm!: FormGroup;
 
+  environmentTypes = [
+    { label: 'Test', value: 'TEST' },
+    { label: 'Staging', value: 'STAGING' },
+    { label: 'Production', value: 'PRODUCTION' },
+  ];
+
   environmentQuery = injectQuery(() => ({
     ...getEnvironmentByIdOptions({ path: { id: this.environmentId() } }),
     placeholderData: {
       id: 0,
       name: '',
+      type: 'TEST' as const,
       serverUrl: '',
       description: '',
       installedApps: [] as string[],
@@ -81,6 +88,7 @@ export class EnvironmentEditFormComponent implements OnInit {
 
     this.environmentForm = this.formBuilder.group({
       name: [environment?.name || '', Validators.required],
+      type: [this.environment()?.type || 'TEST'],
       installedApps: [environment?.installedApps || []],
       description: [environment?.description || ''],
       serverUrl: [environment?.serverUrl || ''],
