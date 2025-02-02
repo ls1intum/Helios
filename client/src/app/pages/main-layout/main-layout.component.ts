@@ -39,7 +39,9 @@ import { DateService } from '@app/core/services/date.service';
 export class MainLayoutComponent implements OnInit, OnDestroy {
   private keycloakService = inject(KeycloakService);
   private permissionService = inject(PermissionService);
-  dateService = inject(DateService);
+  private dateService = inject(DateService);
+
+  timeSinceLocked = computed(() => this.dateService.timeSinceLocked(this.lockQuery.data()?.lockedAt, this.timeNow()));
 
   username = computed(() => (this.keycloakService.decodedToken()?.preferred_username || '') as string);
 

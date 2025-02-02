@@ -9,32 +9,19 @@ import { DateService } from '@app/core/services/date.service';
 import { CommonModule } from '@angular/common';
 import { PageHeadingComponent } from '@app/components/page-heading/page-heading.component';
 import { AvatarModule } from 'primeng/avatar';
-import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 import { TooltipModule } from 'primeng/tooltip';
-
+import { UserAvatarComponent } from '@app/components/user-avatar/user-avatar.component';
 @Component({
   selector: 'app-environment-deployment-history',
-  imports: [CommonModule, IconsModule, PrimeTemplate, SkeletonModule, TableModule, PageHeadingComponent, AvatarModule, TooltipModule],
+  imports: [CommonModule, IconsModule, PrimeTemplate, SkeletonModule, TableModule, PageHeadingComponent, AvatarModule, TooltipModule, UserAvatarComponent],
   templateUrl: './environment-deployment-history.component.html',
 })
 export class EnvironmentDeploymentHistoryComponent {
   dateService = inject(DateService);
-  keycloakService = inject(KeycloakService);
 
   environmentId = input.required({ transform: numberAttribute });
   repositoryId = input.required({ transform: numberAttribute });
 
   activityHistoryQuery = injectQuery(() => getActivityHistoryByEnvironmentIdOptions({ path: { environmentId: this.environmentId() } }));
   activityHistory = computed(() => this.activityHistoryQuery.data());
-
-  getAvatarBorderClass(login: string) {
-    return this.keycloakService.isCurrentUser(login) ? 'border-2 border-primary-400 rounded-full' : '';
-  }
-
-  openUserProfile(login: string) {
-    //Redirect to the user's github profile
-    window.open(`
-      https://www.github.com/${login}
-    `);
-  }
 }

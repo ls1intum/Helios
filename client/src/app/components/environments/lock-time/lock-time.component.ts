@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, OnDestroy, signal, inject } from '@angular/core';
+import { Component, input, OnInit, OnDestroy, signal, inject, computed } from '@angular/core';
 import { TagModule } from 'primeng/tag';
 import { DateService } from '@app/core/services/date.service';
 
@@ -8,9 +8,10 @@ import { DateService } from '@app/core/services/date.service';
   templateUrl: './lock-time.component.html',
 })
 export class LockTimeComponent implements OnInit, OnDestroy {
-  @Input() lockedAt?: string;
-  dateService = inject(DateService);
+  lockedAt = input.required<string>();
+  private dateService = inject(DateService);
 
+  timeSinceLocked = computed(() => this.dateService.timeSinceLocked(this.lockedAt(), this.timeNow()));
   // track the current time in a signal that we update every second
   timeNow = signal<Date>(new Date());
 
