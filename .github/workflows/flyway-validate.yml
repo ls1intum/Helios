@@ -6,9 +6,9 @@ on:
   workflow_call: {}
 
 env:
-  FLYWAY_URL: jdbc:postgresql://localhost:5432/helios
-  FLYWAY_USER: helios
-  FLYWAY_PASSWORD: helios
+  DATASOURCE_URL: jdbc:postgresql://localhost:5432/helios
+  DATASOURCE_USERNAME: helios
+  DATASOURCE_PASSWORD: helios
 
 jobs:
   validate-migrations:
@@ -19,8 +19,8 @@ jobs:
         image: postgres
 
         env:
-          POSTGRES_USER: ${{ env.FLYWAY_USER }}
-          POSTGRES_PASSWORD: ${{ env.FLYWAY_PASSWORD }}
+          POSTGRES_USER: ${{ env.DATASOURCE_USERNAME }}
+          POSTGRES_PASSWORD: ${{ env.DATASOURCE_PASSWORD }}
           POSTGRES_DB: helios
         ports:
           - 5432:5432
