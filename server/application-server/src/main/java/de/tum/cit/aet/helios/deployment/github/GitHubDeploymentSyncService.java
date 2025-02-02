@@ -52,6 +52,7 @@ public class GitHubDeploymentSyncService {
    * Synchronizes deployments for all repositories.
    *
    * @param repositories the list of GitHub repositories to sync deployments from
+   * @param since        an optional timestamp to fetch deployments since
    */
   public void syncDeploymentsOfAllRepositories(
       @NotNull List<GHRepository> repositories,
@@ -63,6 +64,7 @@ public class GitHubDeploymentSyncService {
    * Synchronizes deployments for a specific repository.
    *
    * @param ghRepository the GitHub repository to sync deployments from
+   * @param since        an optional timestamp to fetch deployments since
    */
   public void syncDeploymentsOfRepository(
       @NotNull GHRepository ghRepository,
@@ -95,6 +97,7 @@ public class GitHubDeploymentSyncService {
    *
    * @param ghRepository the GitHub repository
    * @param environment  the environment entity
+   * @param since        an optional timestamp to fetch deployments since
    */
   public void syncDeploymentsOfEnvironment(
       @NotNull GHRepository ghRepository,
@@ -140,6 +143,7 @@ public class GitHubDeploymentSyncService {
    *
    * @param deploymentSource the source (GHDeployment or GitHubDeploymentDto) wrapped as a
    *                         DeploymentSource
+   * @param gitRepository    the associated GitRepository entity
    * @param environment      the associated environment entity
    */
   @Transactional

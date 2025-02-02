@@ -10,6 +10,10 @@ import okhttp3.Request;
 import okhttp3.Response;
 import org.jetbrains.annotations.NotNull;
 
+/**
+ * An OkHttp interceptor that extracts rate limit information from GitHub API responses and updates
+ * the rate limit info holder.
+ */
 @Log4j2
 public class HttpClientRateLimitInterceptor implements Interceptor {
 

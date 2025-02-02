@@ -35,7 +35,8 @@ public class HttpClientConfig {
   }
 
   /**
-   * Builds an OkHttpClient.Builder with cache, logging interceptor and timeouts.
+   * Builds an OkHttpClient.Builder with cache, logging interceptor,
+   * rate limit interceptor, and timeouts.
    *
    * @return the OkHttpClient.Builder
    */

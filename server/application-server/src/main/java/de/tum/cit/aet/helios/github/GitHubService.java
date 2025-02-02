@@ -203,6 +203,7 @@ public class GitHubService {
    *
    * @param repository      the GitHub repository as a GHRepository object
    * @param environmentName the environment name
+   * @param since           an optional timestamp to fetch deployments since
    * @return a GitHubDeploymentIterator object
    */
   public Iterator<GitHubDeploymentDto> getDeploymentIterator(

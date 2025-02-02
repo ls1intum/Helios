@@ -4,6 +4,9 @@ import de.tum.cit.aet.helios.http.RateLimitInfo;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 
+/**
+ * Utility class for formatting rate limit information.
+ */
 public class RateLimitUtil {
 
   private static final String DATE_PATTERN = "dd/MM/yyyy HH:mm:ss";
@@ -12,7 +15,7 @@ public class RateLimitUtil {
    * Builds a formatted rate limit message.
    *
    * @param label a label to prefix the message
-   * @param info  the RateLimitInfo (maybe null)
+   * @param info  the RateLimitInfo to format
    * @return a formatted string describing the rate limit
    */
   public static String formatRateLimitMessage(String label, RateLimitInfo info) {
@@ -22,7 +25,7 @@ public class RateLimitUtil {
     // Convert the reset Instant to OffsetDateTime for UTC and CET
     OffsetDateTime resetUtc = DateUtil.convertToOffsetDateTime(info.getReset());
     OffsetDateTime resetCet = DateUtil.convertToOffsetDateTime(info.getReset(), ZoneId.of("CET"));
-    // Format both dates using the shared DateUtil
+
     String formattedUtc = DateUtil.format(resetUtc, DATE_PATTERN);
     String formattedCet = DateUtil.format(resetCet, DATE_PATTERN);
     return String.format(

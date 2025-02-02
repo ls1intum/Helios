@@ -13,17 +13,34 @@ public class DateUtil {
     return date != null ? date.toInstant().atOffset(ZoneOffset.UTC) : null;
   }
 
-  // New: Convert an Instant to OffsetDateTime using UTC by default
+  /**
+   * Convert an Instant to OffsetDateTime using UTC by default.
+   *
+   * @param instant the Instant to convert
+   * @return the converted OffsetDateTime
+   */
   public static OffsetDateTime convertToOffsetDateTime(Instant instant) {
     return instant != null ? instant.atOffset(ZoneOffset.UTC) : null;
   }
 
-  // New: Convert an Instant to OffsetDateTime using a specified ZoneId
+  /**
+   * Convert an Instant to OffsetDateTime using the specified ZoneId.
+   *
+   * @param instant the Instant to convert
+   * @param zone    the ZoneId to use
+   * @return the converted OffsetDateTime
+   */
   public static OffsetDateTime convertToOffsetDateTime(Instant instant, ZoneId zone) {
     return instant != null ? instant.atZone(zone).toOffsetDateTime() : null;
   }
 
-  // Format an OffsetDateTime using the given pattern
+  /**
+   * Format an OffsetDateTime using the given pattern.
+   *
+   * @param offsetDateTime the OffsetDateTime to format
+   * @param pattern        the pattern to use
+   * @return the formatted date string
+   */
   public static String format(OffsetDateTime offsetDateTime, String pattern) {
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern(pattern);
     return formatter.format(offsetDateTime);

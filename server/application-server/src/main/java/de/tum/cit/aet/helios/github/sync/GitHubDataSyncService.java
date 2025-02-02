@@ -107,6 +107,9 @@ public class GitHubDataSyncService {
 
 
     // Capture rate limit info before sync
+    // We need to suppress the checkstyle warning here
+    // since after the sync, we need to compare the rate limit info
+    @SuppressWarnings("checkstyle:VariableDeclarationUsageDistance")
     RateLimitInfo beforeSyncRateLimit = rateLimitInfoHolder.getLatestRateLimitInfo();
     // Log rate limit before sync
     logRateLimit("Before Sync");
@@ -119,12 +122,10 @@ public class GitHubDataSyncService {
     log.info("--------------------------------------------------");
     var step1Start = Instant.now();
     log.info("[Step 1/10] Syncing Monitored Repositories...");
-    logRateLimit("Before Step 1");
     var repositories = repositorySyncService.syncAllMonitoredRepositories();
     var step1Duration = Duration.between(step1Start, Instant.now()).toMillis();
     log.info("[Step 1/10] Completed Syncing {} repositories. "
         + "(Took: {} ms)", repositories.size(), step1Duration);
-    logRateLimit("After Step 1");
 
 
     // Sync all labels
@@ -202,6 +203,7 @@ public class GitHubDataSyncService {
 
     var endTime = OffsetDateTime.now();
     // Capture rate limit info after sync
+    @SuppressWarnings("checkstyle:VariableDeclarationUsageDistance")
     RateLimitInfo afterSyncRateLimit = rateLimitInfoHolder.getLatestRateLimitInfo();
 
     log.info("--------------------------------------------------");
@@ -220,6 +222,7 @@ public class GitHubDataSyncService {
     log.info("Total Duration: {} seconds", Duration.between(startTime, endTime).getSeconds());
     // Log a summary of rate limit changes.
     logRateLimitSummary(beforeSyncRateLimit, afterSyncRateLimit);
+    log.info("--------------------------------------------------");
     log.info("--------------------------------------------------");
 
     // Store successful sync status
