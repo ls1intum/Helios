@@ -40,7 +40,8 @@ public class GitHubWorkflowRunSyncService {
       WorkflowRunRepository workflowRunRepository,
       GitHubWorkflowRunConverter workflowRunConverter,
       GitRepoRepository gitRepoRepository,
-      PullRequestRepository pullRequestRepository, WorkflowService workflowService,
+      PullRequestRepository pullRequestRepository,
+      WorkflowService workflowService,
       HeliosDeploymentRepository heliosDeploymentRepository) {
     this.workflowRunRepository = workflowRunRepository;
     this.workflowRunConverter = workflowRunConverter;
@@ -54,7 +55,7 @@ public class GitHubWorkflowRunSyncService {
    * Synchronizes all worfklwo runs from the specified GitHub repositories.
    *
    * @param repositories the list of GitHub repositories to sync workflow runs from
-   * @param since        an optional date to filter pull requests by their last update
+   * @param since an optional date to filter pull requests by their last update
    * @return a list of GitHub workflow runs that were successfully fetched and processed
    */
   public List<GHWorkflowRun> syncRunsOfAllRepositories(
@@ -69,7 +70,7 @@ public class GitHubWorkflowRunSyncService {
    * Synchronizes all workflow runs from a specific GitHub repository.
    *
    * @param repository the GitHub repository to sync workflow runs from
-   * @param since      an optional date to filter workflow runs by their last update
+   * @param since an optional date to filter workflow runs by their last update
    * @return a list of GitHub workflow runs requests that were successfully fetched and processed
    */
   public List<GHWorkflowRun> syncRunsOfRepository(
@@ -120,9 +121,9 @@ public class GitHubWorkflowRunSyncService {
                   try {
                     if (workflowRun.getUpdatedAt() == null
                         || workflowRun
-                        .getUpdatedAt()
-                        .isBefore(
-                            DateUtil.convertToOffsetDateTime(ghWorkflowRun.getUpdatedAt()))) {
+                            .getUpdatedAt()
+                            .isBefore(
+                                DateUtil.convertToOffsetDateTime(ghWorkflowRun.getUpdatedAt()))) {
                       return workflowRunConverter.update(ghWorkflowRun, workflowRun);
                     }
                     return workflowRun;
@@ -187,10 +188,11 @@ public class GitHubWorkflowRunSyncService {
 
   private void processRunForHeliosDeployment(GHWorkflowRun workflowRun) throws IOException {
     // Get the deployment workflow set by the managers
-    Workflow deploymentWorkflow = workflowService.getDeploymentWorkflow();
+    Workflow deploymentWorkflow =
+        workflowService.getDeploymentWorkflow(workflowRun.getRepository().getId());
     if (deploymentWorkflow == null) {
-      log.debug("No deployment workflow found while processing workflow run {}",
-          workflowRun.getId());
+      log.debug(
+          "No deployment workflow found while processing workflow run {}", workflowRun.getId());
       return;
     }
 
@@ -203,20 +205,19 @@ public class GitHubWorkflowRunSyncService {
         .findTopByBranchNameAndCreatedAtLessThanEqualOrderByCreatedAtDesc(
             workflowRun.getHeadBranch(),
             DateUtil.convertToOffsetDateTime(workflowRun.getRunStartedAt()))
-        .ifPresent(heliosDeployment -> {
+        .ifPresent(
+            heliosDeployment -> {
+              HeliosDeployment.Status mappedStatus =
+                  mapWorkflowRunStatus(workflowRun.getStatus(), workflowRun.getConclusion());
+              log.debug("Mapped status {} to {}", workflowRun.getStatus(), mappedStatus);
 
-          HeliosDeployment.Status mappedStatus = mapWorkflowRunStatus(
-              workflowRun.getStatus(),
-              workflowRun.getConclusion()
-          );
-          log.debug("Mapped status {} to {}", workflowRun.getStatus(), mappedStatus);
-
-          // Update the deployment status
-          heliosDeployment.setStatus(mappedStatus);
-          log.debug("Updated HeliosDeployment {} to status {}", heliosDeployment.getId(),
-              mappedStatus);
-          heliosDeploymentRepository.save(heliosDeployment);
-        });
-
+              // Update the deployment status
+              heliosDeployment.setStatus(mappedStatus);
+              log.debug(
+                  "Updated HeliosDeployment {} to status {}",
+                  heliosDeployment.getId(),
+                  mappedStatus);
+              heliosDeploymentRepository.save(heliosDeployment);
+            });
   }
 }

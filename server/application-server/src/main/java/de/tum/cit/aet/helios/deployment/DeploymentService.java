@@ -7,6 +7,7 @@ import de.tum.cit.aet.helios.environment.EnvironmentLockHistory;
 import de.tum.cit.aet.helios.environment.EnvironmentLockHistoryRepository;
 import de.tum.cit.aet.helios.environment.EnvironmentRepository;
 import de.tum.cit.aet.helios.environment.EnvironmentService;
+import de.tum.cit.aet.helios.filters.RepositoryContext;
 import de.tum.cit.aet.helios.github.GitHubService;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
@@ -101,7 +102,8 @@ public class DeploymentService {
     final String username = this.authService.getPreferredUsername();
 
     // Get the deployment workflow set by the managers
-    Workflow deploymentWorkflow = this.workflowService.getDeploymentWorkflow();
+    Workflow deploymentWorkflow =
+        this.workflowService.getDeploymentWorkflow(RepositoryContext.getRepositoryId());
     if (deploymentWorkflow == null) {
       throw new DeploymentException("No deployment workflow found");
     }
