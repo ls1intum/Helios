@@ -69,8 +69,8 @@ public class GitHubBranchSyncService {
       // TODO: We might need the old branches in some cases, so we should not delete them for now
       // Delete each branch that exists in the database and not in the fetched branches
       // dbBranches.stream()
-      //     .filter(
-      //         dbBranch -> branches.stream().noneMatch(b -> b.getName().equals(dbBranch.getName())))
+      //   .filter(
+      //      dbBranch -> branches.stream().noneMatch(b -> b.getName().equals(dbBranch.getName())))
       //     .forEach(dbBranch -> branchRepository.delete(dbBranch));
       return branches;
     } catch (IOException e) {

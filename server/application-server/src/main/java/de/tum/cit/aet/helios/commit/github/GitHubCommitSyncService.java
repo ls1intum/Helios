@@ -114,7 +114,7 @@ public class GitHubCommitSyncService {
     // Delete each commit that exists in the database and not in the fetched commits
     // TODO: We might need the old commits in some cases, so we should not delete them for now
     // dbCommits.stream()
-    //     .filter(dbCommit -> commits.stream().noneMatch(b -> b.getSHA1().equals(dbCommit.getSha())))
+    //  .filter(dbCommit -> commits.stream().noneMatch(b -> b.getSHA1().equals(dbCommit.getSha())))
     //     .forEach(dbCommit -> commitRepository.delete(dbCommit));
     return commits;
   }
