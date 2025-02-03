@@ -13,6 +13,7 @@ import de.tum.cit.aet.helios.github.GitHubService;
 import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import de.tum.cit.aet.helios.tag.TagDetailsDto.TagEvaluationDto;
+import de.tum.cit.aet.helios.user.User;
 import de.tum.cit.aet.helios.user.UserInfoDto;
 import de.tum.cit.aet.helios.user.UserRepository;
 import de.tum.cit.aet.helios.user.github.GitHubUserSyncService;
@@ -145,31 +146,29 @@ public class TagService {
     final String login = authService.getPreferredUsername();
     final Long repositoryId = RepositoryContext.getRepositoryId();
 
-    tagRepository
+    final Tag tag = tagRepository
         .findByRepositoryRepositoryIdAndName(repositoryId, name)
-        .map(
-            tag -> {
-              TagEvaluation evaluation =
-                  tag.getEvaluations().stream()
-                      .filter(eval -> eval.getEvaluatedBy().getLogin().equals(login))
-                      .findFirst()
-                      .orElseGet(
-                          () -> {
-                            TagEvaluation newEvaluation = new TagEvaluation();
-                            newEvaluation.setTag(tag);
-                            // TODO: Replace this by filtering with Userid
-                            newEvaluation.setEvaluatedBy(
-                                userRepository
-                                    .findByLoginIgnoreCase(login)
-                                    .orElseGet(() -> userSyncService.syncUser(login)));
-                            return newEvaluation;
-                          });
-              evaluation.setWorking(isWorking);
-              tagEvaluationRepository.save(evaluation);
-              tag.getEvaluations().removeIf(eval -> eval.equals(evaluation));
-              tag.getEvaluations().add(evaluation);
-              return TagInfoDto.fromTag(tagRepository.save(tag));
-            })
         .orElseThrow(() -> new TagException("Tag not found"));
+
+    final User user =  userRepository
+               .findByLoginIgnoreCase(login)
+               .orElseGet(() -> userSyncService.syncUser(login));
+    
+    if (user == null) {
+      throw new TagException("User not found");
+    }
+
+    final TagEvaluation evaluation = tagEvaluationRepository.findByTagAndEvaluatedById(
+      tag,
+      user.getId()
+    ).orElseGet(() -> {
+      TagEvaluation newEvaluation = new TagEvaluation();
+      newEvaluation.setTag(tag);
+      newEvaluation.setEvaluatedBy(user);
+      return newEvaluation;
+    });
+
+    evaluation.setWorking(isWorking);
+    tagEvaluationRepository.save(evaluation);
   }
 }
