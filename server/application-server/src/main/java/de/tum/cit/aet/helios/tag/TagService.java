@@ -159,8 +159,8 @@ public class TagService {
     }
 
     final TagEvaluation evaluation = tagEvaluationRepository.findByTagAndEvaluatedById(
-      tag,
-      user.getId()
+        tag,
+        user.getId()
     ).orElseGet(() -> {
       TagEvaluation newEvaluation = new TagEvaluation();
       newEvaluation.setTag(tag);
