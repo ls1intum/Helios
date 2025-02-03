@@ -20,13 +20,13 @@ public class GitHubConfig {
   @Value("${github.appName}")
   private String appNameWithoutSuffix;
 
-  @Value("${github.appId}")
+  @Value("${github.appId:#{null}}")
   private Long appId;
 
   @Value("${github.clientId}")
   private String clientId;
 
-  @Value("${github.installationId}")
+  @Value("${github.installationId:#{null}}")
   private Long installationId;
 
   @Value("${github.privateKeyPath}")
@@ -38,7 +38,6 @@ public class GitHubConfig {
     this.okHttpClient = okHttpClient;
   }
 
-
   @Bean
   public GitHubClientManager gitHubClientManager() {
     return new GitHubClientManager(
@@ -48,13 +47,11 @@ public class GitHubConfig {
         appId,
         installationId,
         privateKeyPath,
-        okHttpClient
-    );
+        okHttpClient);
   }
 
   /**
-   * Creates a GitHubFacade instance.
-   * This facade is used instead of directly using the GitHub bean
+   * Creates a GitHubFacade instance. This facade is used instead of directly using the GitHub bean
    * to handle the automatic refreshing of the JWT token used for GitHub API calls.
    *
    * @param manager The GitHub client manager.
@@ -64,5 +61,4 @@ public class GitHubConfig {
   public GitHubFacade githubClient(GitHubClientManager manager) {
     return new GitHubFacadeImpl(manager);
   }
-
 }

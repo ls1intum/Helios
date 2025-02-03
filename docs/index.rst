@@ -25,6 +25,7 @@ The Artemis open-source project relies on GitHub Actions for its CI/CD workflows
   development/local/openapi
   development/local/webhook
   development/local/migrations
+  development/local/testing
 
 .. toctree::
   :caption: Setup production
