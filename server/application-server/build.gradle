@@ -172,3 +172,29 @@ openApi {
 tasks.named('test') {
     useJUnitPlatform()
 }
+
+// Load environment variables from the .env file
+// into the project properties so that they can be used
+def envFile = file('.env')
+if (envFile.exists()) {
+    envFile.readLines().each { line ->
+        def (key, value) = line.tokenize('=')
+        if (key && value) {
+            // Replace the double quotes around the value with an empty string
+            project.ext.set(key, value.trim().replaceAll('^"(.*)"$', '$1'))
+        }
+    }
+}
+
+flyway {
+    url = project.hasProperty('DATASOURCE_URL')
+        ? project.DATASOURCE_URL
+        : System.getenv('DATASOURCE_URL')
+    user = project.hasProperty('DATASOURCE_USERNAME')
+        ? project.DATASOURCE_USERNAME
+        : System.getenv('DATASOURCE_USERNAME')
+    password = project.hasProperty('DATASOURCE_PASSWORD')
+        ? project.DATASOURCE_PASSWORD
+        : System.getenv('DATASOURCE_PASSWORD')
+    cleanDisabled = false
+}
