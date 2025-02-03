@@ -12,9 +12,10 @@ import { TooltipModule } from 'primeng/tooltip';
   templateUrl: './user-avatar.component.html',
 })
 export class UserAvatarComponent {
-  keycloakService = inject(KeycloakService);
+  private keycloakService = inject(KeycloakService);
 
   user = input.required<UserInfoDto | undefined>();
+  toolTipText = input<string | undefined>();
 
   getAvatarBorderClass(login: string) {
     return this.keycloakService.isCurrentUser(login) ? 'border-2 border-primary-400 rounded-full' : '';
@@ -25,5 +26,11 @@ export class UserAvatarComponent {
     window.open(`
       https://www.github.com/${login}
     `);
+  }
+
+  getTooltipText(): string {
+    const tooltipText = this.toolTipText() ?? '';
+    const userText = this.keycloakService.isCurrentUser(this.user()?.login) ? 'You' : (this.user()?.name ?? '');
+    return `${tooltipText} ${userText}`.trim();
   }
 }
