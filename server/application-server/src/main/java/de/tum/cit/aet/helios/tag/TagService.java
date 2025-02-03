@@ -143,16 +143,13 @@ public class TagService {
   }
 
   public void evaluateTag(String name, boolean isWorking) {
-    final String login = authService.getPreferredUsername();
     final Long repositoryId = RepositoryContext.getRepositoryId();
 
     final Tag tag = tagRepository
         .findByRepositoryRepositoryIdAndName(repositoryId, name)
         .orElseThrow(() -> new TagException("Tag not found"));
 
-    final User user =  userRepository
-               .findByLoginIgnoreCase(login)
-               .orElseGet(() -> userSyncService.syncUser(login));
+    final User user =  authService.getUserFromGithubId();
     
     if (user == null) {
       throw new TagException("User not found");
