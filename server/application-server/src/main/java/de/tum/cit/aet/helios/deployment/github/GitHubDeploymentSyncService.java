@@ -106,7 +106,7 @@ public class GitHubDeploymentSyncService {
    * Synchronizes deployments for a specific environment.
    *
    * @param ghRepository the GitHub repository
-   * @param environment the environment entity
+   * @param environment  the environment entity
    * @param since        an optional timestamp to fetch deployments since
    */
   public void syncDeploymentsOfEnvironment(
@@ -131,10 +131,22 @@ public class GitHubDeploymentSyncService {
 
       while (iterator.hasNext()) {
         final GitHubDeploymentDto ghDeployment = iterator.next();
-        // Set state as UNKNOWN as the state is not provided by the GitHub API
-        // We can make a separate API call to fetch the deployment state
-        // But that would be an overkill for now
-        // Webhook handler sets the state of the deployment
+
+        // The data sync fetches deployments without their state,
+        // as the GitHub REST API does not provide the state directly.
+        // This is not ideal, but it's a limitation of the API.
+        // To avoid making an additional API call to fetch the state,
+        // we set it to UNKNOWN initially.
+        // The state is later updated by the webhook handler during runtime.
+        // However, if the data sync runs again, it could overwrite the state back to UNKNOWN.
+        // To prevent this, we check if the deployment already exists in the database.
+        // If it does, we skip processing to avoid overwriting the state with UNKNOWN.
+        // If it doesn't, we proceed with processing the deployment.
+        if (deploymentRepository.existsById(ghDeployment.getId())) {
+          continue;
+        }
+
+        // Set state as UNKNOWN
         final DeploymentSource deploymentSource =
             deploymentSourceFactory.create(ghDeployment, Deployment.State.UNKNOWN);
 
@@ -159,9 +171,9 @@ public class GitHubDeploymentSyncService {
    * repository.
    *
    * @param deploymentSource the source (GHDeployment or GitHubDeploymentDto) wrapped as a
-   *     DeploymentSource
+   *                         DeploymentSource
    * @param gitRepository    the associated GitRepository entity
-   * @param environment the associated environment entity
+   * @param environment      the associated environment entity
    */
   @Transactional
   void processDeployment(
