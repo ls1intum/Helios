@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -27,9 +28,9 @@ public class TagController {
     return ResponseEntity.ok(tagService.getTagByName(name));
   }
 
-  @GetMapping("/newcommits/{name}")
-  public ResponseEntity<CommitsSinceTagDto> getCommitsSinceLastTag(@PathVariable String name) {
-    return ResponseEntity.ok(tagService.getCommitsFromBranchSinceLastTag(name));
+  @GetMapping("/newcommits")
+  public ResponseEntity<CommitsSinceTagDto> getCommitsSinceLastTag(@RequestParam String branch) {
+    return ResponseEntity.ok(tagService.getCommitsFromBranchSinceLastTag(branch));
   }
 
   @PostMapping

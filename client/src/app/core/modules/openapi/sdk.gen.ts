@@ -246,7 +246,7 @@ export const getTagByName = <ThrowOnError extends boolean = false>(options: Opti
 export const getCommitsSinceLastTag = <ThrowOnError extends boolean = false>(options: Options<GetCommitsSinceLastTagData, ThrowOnError>) => {
   return (options?.client ?? client).get<GetCommitsSinceLastTagResponse, unknown, ThrowOnError>({
     ...options,
-    url: '/api/tags/newcommits/{name}',
+    url: '/api/tags/newcommits',
   });
 };
 

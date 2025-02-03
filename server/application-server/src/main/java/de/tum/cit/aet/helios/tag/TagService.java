@@ -76,19 +76,21 @@ public class TagService {
   public CommitsSinceTagDto getCommitsFromBranchSinceLastTag(String branchName) {
     final Long repositoryId = RepositoryContext.getRepositoryId();
     try {
-      final GHRepository repository =
-          gitHubService.getRepository(
-              gitRepoRepository
-                  .findById(repositoryId)
-                  .map(GitRepository::getNameWithOwner)
-                  .orElseThrow(() -> new TagException("Repository not found")));
+      final GitRepository repository =
+          gitRepoRepository
+          .findById(repositoryId)
+          .orElseThrow(() -> new TagException("Repository not found"));
+
+      final GHRepository githubRepository =
+          gitHubService.getRepository(repository.getNameWithOwner());
+
       final Branch branch =
           branchRepository
               .findByRepositoryRepositoryIdAndName(repositoryId, branchName)
               .orElseThrow(() -> new TagException("Branch not found"));
 
       final Tag lastTag =
-          tagRepository.findAll().stream()
+          tagRepository.findByRepository(repository).stream()
               .sorted(Tag::compareToByDate)
               .findFirst()
               .orElseGet(() -> null);
@@ -98,7 +100,7 @@ public class TagService {
       }
 
       final GHCompare compare =
-          repository.getCompare(lastTag.getCommit().getSha(), branch.getCommitSha());
+        githubRepository.getCompare(lastTag.getCommit().getSha(), branch.getCommitSha());
 
       return new CommitsSinceTagDto(compare.getTotalCommits(), new ArrayList<>());
       // Add this snippet later when showing commit info

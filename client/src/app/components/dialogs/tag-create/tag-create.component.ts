@@ -32,7 +32,7 @@ export class TagCreateComponent {
   tagName = signal('');
 
   newCommitListQuery = injectQuery(() => ({
-    ...getCommitsSinceLastTagOptions({ path: { name: this.branchName() } }),
+    ...getCommitsSinceLastTagOptions({ query: { branch: this.branchName() } }),
     enabled: !!this.isVisible() && !!this.branchName(),
   }));
   newCommitListMutation = injectMutation(() => ({

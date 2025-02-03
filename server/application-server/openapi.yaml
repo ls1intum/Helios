@@ -378,14 +378,14 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/TagDetailsDto"
-  /api/tags/newcommits/{name}:
+  /api/tags/newcommits:
     get:
       tags:
       - tag-controller
       operationId: getCommitsSinceLastTag
       parameters:
-      - name: name
-        in: path
+      - name: branch
+        in: query
         required: true
         schema:
           type: string

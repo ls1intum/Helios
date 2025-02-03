@@ -607,11 +607,11 @@ export type GetTagByNameResponse = GetTagByNameResponses[keyof GetTagByNameRespo
 
 export type GetCommitsSinceLastTagData = {
   body?: never;
-  path: {
-    name: string;
+  path?: never;
+  query: {
+    branch: string;
   };
-  query?: never;
-  url: '/api/tags/newcommits/{name}';
+  url: '/api/tags/newcommits';
 };
 
 export type GetCommitsSinceLastTagResponses = {
