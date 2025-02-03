@@ -763,6 +763,8 @@ components:
           type: string
         task:
           type: string
+        user:
+          $ref: "#/components/schemas/UserInfoDto"
         createdAt:
           type: string
           format: date-time
@@ -771,11 +773,6 @@ components:
           format: date-time
       required:
       - id
-      - ref
-      - sha
-      - statusesUrl
-      - task
-      - url
     EnvironmentDto:
       type: object
       properties:
@@ -820,7 +817,7 @@ components:
         latestStatus:
           $ref: "#/components/schemas/EnvironmentStatusDto"
         lockedBy:
-          type: string
+          $ref: "#/components/schemas/UserInfoDto"
         lockedAt:
           type: string
           format: date-time
@@ -874,6 +871,26 @@ components:
       - id
       - name
       - nameWithOwner
+    UserInfoDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        login:
+          type: string
+        avatarUrl:
+          type: string
+        name:
+          type: string
+        htmlUrl:
+          type: string
+      required:
+      - avatarUrl
+      - htmlUrl
+      - id
+      - login
+      - name
     DeployRequest:
       type: object
       properties:
@@ -1072,26 +1089,6 @@ components:
       - number
       - state
       - title
-    UserInfoDto:
-      type: object
-      properties:
-        id:
-          type: integer
-          format: int64
-        login:
-          type: string
-        avatarUrl:
-          type: string
-        name:
-          type: string
-        htmlUrl:
-          type: string
-      required:
-      - avatarUrl
-      - htmlUrl
-      - id
-      - login
-      - name
     PullRequestInfoDto:
       type: object
       properties:
@@ -1174,7 +1171,7 @@ components:
           type: integer
           format: int64
         lockedBy:
-          type: string
+          $ref: "#/components/schemas/UserInfoDto"
         lockedAt:
           type: string
           format: date-time
@@ -1217,6 +1214,8 @@ components:
           type: string
         environment:
           $ref: "#/components/schemas/EnvironmentDto"
+        user:
+          $ref: "#/components/schemas/UserInfoDto"
         createdAt:
           type: string
           format: date-time
@@ -1257,8 +1256,8 @@ components:
           type: string
         ref:
           type: string
-        lockedBy:
-          type: string
+        user:
+          $ref: "#/components/schemas/UserInfoDto"
         timestamp:
           type: string
           format: date-time

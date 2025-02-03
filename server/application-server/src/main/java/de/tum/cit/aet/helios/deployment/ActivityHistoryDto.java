@@ -3,6 +3,8 @@ package de.tum.cit.aet.helios.deployment;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import de.tum.cit.aet.helios.environment.EnvironmentLockHistory;
 import de.tum.cit.aet.helios.gitrepo.RepositoryInfoDto;
+import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
+import de.tum.cit.aet.helios.user.UserInfoDto;
 import java.time.OffsetDateTime;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
@@ -13,12 +15,25 @@ public record ActivityHistoryDto(
     Deployment.State state,
     String sha,
     String ref,
-    String lockedBy,
+    UserInfoDto user,
     OffsetDateTime timestamp,
     OffsetDateTime createdAt,
-    OffsetDateTime updatedAt
-) {
-  
+    OffsetDateTime updatedAt) {
+
+  public static ActivityHistoryDto fromHeliosDeployment(HeliosDeployment heliosDeployment) {
+    return new ActivityHistoryDto(
+        "DEPLOYMENT",
+        heliosDeployment.getId(),
+        RepositoryInfoDto.fromRepository(heliosDeployment.getEnvironment().getRepository()),
+        HeliosDeployment.mapHeliosStatusToDeploymentState(heliosDeployment.getStatus()),
+        heliosDeployment.getSha(),
+        heliosDeployment.getBranchName(),
+        UserInfoDto.fromUser(heliosDeployment.getCreator()),
+        heliosDeployment.getCreatedAt(),
+        heliosDeployment.getCreatedAt(),
+        heliosDeployment.getUpdatedAt());
+  }
+
   public static ActivityHistoryDto fromDeployment(Deployment deployment) {
     return new ActivityHistoryDto(
         "DEPLOYMENT",
@@ -27,7 +42,7 @@ public record ActivityHistoryDto(
         deployment.getState(),
         deployment.getSha(),
         deployment.getRef(),
-        null,
+        UserInfoDto.fromUser(deployment.getCreator()),
         deployment.getCreatedAt(),
         deployment.getCreatedAt(),
         deployment.getUpdatedAt());
@@ -42,9 +57,9 @@ public record ActivityHistoryDto(
         null,
         null,
         null,
-        environmentLockHistory.getLockedBy(),
-        "UNLOCK_EVENT".equals(type) 
-            ? environmentLockHistory.getUnlockedAt() 
+        UserInfoDto.fromUser(environmentLockHistory.getLockedBy()),
+        "UNLOCK_EVENT".equals(type)
+            ? environmentLockHistory.getUnlockedAt()
             : environmentLockHistory.getLockedAt(),
         null,
         null);

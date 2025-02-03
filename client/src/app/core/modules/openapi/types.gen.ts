@@ -14,12 +14,13 @@ export type WorkflowMembershipDto = {
 
 export type EnvironmentDeployment = {
   id: number;
-  url: string;
+  url?: string;
   state?: 'PENDING' | 'WAITING' | 'SUCCESS' | 'ERROR' | 'FAILURE' | 'IN_PROGRESS' | 'QUEUED' | 'INACTIVE' | 'UNKNOWN';
-  statusesUrl: string;
-  sha: string;
-  ref: string;
-  task: string;
+  statusesUrl?: string;
+  sha?: string;
+  ref?: string;
+  task?: string;
+  user?: UserInfoDto;
   createdAt?: string;
   updatedAt?: string;
 };
@@ -41,7 +42,7 @@ export type EnvironmentDto = {
   statusUrl?: string;
   latestDeployment?: EnvironmentDeployment;
   latestStatus?: EnvironmentStatusDto;
-  lockedBy?: string;
+  lockedBy?: UserInfoDto;
   lockedAt?: string;
 };
 
@@ -59,6 +60,14 @@ export type RepositoryInfoDto = {
   name: string;
   nameWithOwner: string;
   description?: string;
+  htmlUrl: string;
+};
+
+export type UserInfoDto = {
+  id: number;
+  login: string;
+  avatarUrl: string;
+  name: string;
   htmlUrl: string;
 };
 
@@ -148,14 +157,6 @@ export type PullRequestBaseInfoDto = {
   reviewers?: Array<UserInfoDto>;
 };
 
-export type UserInfoDto = {
-  id: number;
-  login: string;
-  avatarUrl: string;
-  name: string;
-  htmlUrl: string;
-};
-
 export type PullRequestInfoDto = {
   id: number;
   number: number;
@@ -182,7 +183,7 @@ export type PullRequestInfoDto = {
 
 export type EnvironmentLockHistoryDto = {
   id: number;
-  lockedBy?: string;
+  lockedBy?: UserInfoDto;
   lockedAt?: string;
   unlockedAt?: string;
   environment?: EnvironmentDto;
@@ -198,6 +199,7 @@ export type DeploymentDto = {
   ref: string;
   task: string;
   environment: EnvironmentDto;
+  user?: UserInfoDto;
   createdAt?: string;
   updatedAt?: string;
 };
@@ -209,7 +211,7 @@ export type ActivityHistoryDto = {
   state?: 'PENDING' | 'WAITING' | 'SUCCESS' | 'ERROR' | 'FAILURE' | 'IN_PROGRESS' | 'QUEUED' | 'INACTIVE' | 'UNKNOWN';
   sha?: string;
   ref?: string;
-  lockedBy?: string;
+  user?: UserInfoDto;
   timestamp?: string;
   createdAt?: string;
   updatedAt?: string;

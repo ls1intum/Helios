@@ -21,65 +21,53 @@ import org.springframework.beans.factory.annotation.Value;
 /**
  * Manages the GitHub client for the application.
  *
- * <p>This class is responsible for creating and refreshing the GitHub client
- * used to interact with the GitHub API. It handles authentication using
- * either a GitHub App or a personal access token (PAT), and ensures that
- * the client is always up-to-date with a valid token.
- * </p>
+ * <p>This class is responsible for creating and refreshing the GitHub client used to interact with
+ * the GitHub API. It handles authentication using either a GitHub App or a personal access token
+ * (PAT), and ensures that the client is always up-to-date with a valid token.
  *
- * <p>The GitHub client is cached and refreshed every 20 minutes to ensure
- * that the token does not expire during usage.
- * </p>
+ * <p>The GitHub client is cached and refreshed every 20 minutes to ensure that the token does not
+ * expire during usage.
  */
 @Log4j2
 public class GitHubClientManager {
 
   /**
-   * The personal access token (PAT) for GitHub authentication.
-   * Note: All PAT related features should be removed in later iterations.
+   * The personal access token (PAT) for GitHub authentication. Note: All PAT related features
+   * should be removed in later iterations.
    */
   private final String ghAuthToken;
-  /**
-   * The organization name to find the installation ID of the GitHub App.
-   */
+
+  /** The organization name to find the installation ID of the GitHub App. */
   private final String organizationName;
 
-  /**
-   * The name of the GitHub App with the bot suffix.
-   * Example: {@code heliosapp-testing[bot]}
-   */
-  private final String appName;
+  /** The name of the GitHub App with the bot suffix. Example: {@code heliosapp-testing[bot]} */
+  @Getter private final String appName;
+
+  /** The GitHub App ID. */
+  private final Long appId;
 
   /**
-   * The GitHub App ID.
-   */
-  private final Long appId;
-  /**
-   * The installation ID of the GitHub App. It can be found in organization settings.
-   * Example URL: {@code https://github.com/organizations/<org-name>/settings/installations/<installation-id>}
-   * If installationId is not provided, it will be found by the organization name.
+   * The installation ID of the GitHub App. It can be found in organization settings. Example URL:
+   * {@code https://github.com/organizations/<org-name>/settings/installations/<installation-id>} If
+   * installationId is not provided, it will be found by the organization name.
    */
   private Long installationId;
+
   /**
-   * The path to the private key file (pem) of the GitHub App.
-   * The private key must be generated in GitHub App settings.
-   * Generated key is in PKCS#1 format. It must be converted to PKCS#8 format.
+   * The path to the private key file (pem) of the GitHub App. The private key must be generated in
+   * GitHub App settings. Generated key is in PKCS#1 format. It must be converted to PKCS#8 format.
    */
   private final String privateKeyPath;
 
   private final OkHttpClient okHttpClient;
 
-  /**
-   * The GitHub client instance.
-   */
+  /** The GitHub client instance. */
   private volatile GitHub gitHubClient;
-  /**
-   * The current token used for authentication.
-   */
+
+  /** The current token used for authentication. */
   private volatile String currentToken;
-  /**
-   * The expiration time of the current token.
-   */
+
+  /** The expiration time of the current token. */
   private volatile Instant tokenExpirationTime;
 
   private final ReentrantLock lock = new ReentrantLock();
@@ -88,30 +76,27 @@ public class GitHubClientManager {
   private int cacheTtl;
 
   /**
-   * The login name of the GitHub App.
-   * This value will be set after creating the GitHub client for the GitHub App.
+   * The login name of the GitHub App. This value will be set after creating the GitHub client for
+   * the GitHub App.
    */
-  @Getter
-  private String githubAppNodeId;
+  @Getter private String githubAppNodeId;
 
-  /**
-   * The authentication type used for the GitHub client.
-   */
-  @Getter
-  private final AuthType authType;
+  /** The authentication type used for the GitHub client. */
+  @Getter private final AuthType authType;
 
   public enum AuthType {
     PAT,
     APP
   }
 
-  public GitHubClientManager(String organizationName,
-                             String ghAuthToken,
-                             String appNameWithoutSuffix,
-                             Long appId,
-                             Long installationId,
-                             String privateKeyPath,
-                             OkHttpClient okHttpClient) {
+  public GitHubClientManager(
+      String organizationName,
+      String ghAuthToken,
+      String appNameWithoutSuffix,
+      Long appId,
+      Long installationId,
+      String privateKeyPath,
+      OkHttpClient okHttpClient) {
     this.organizationName = organizationName;
     this.ghAuthToken = ghAuthToken;
     this.appName = appNameWithoutSuffix + "[bot]";
@@ -126,8 +111,7 @@ public class GitHubClientManager {
       this.authType = AuthType.PAT;
     } else {
       log.error(
-          "GitHub auth token or private key is not provided! "
-              + "GitHub client will be disabled.");
+          "GitHub auth token or private key is not provided! " + "GitHub client will be disabled.");
       authType = null;
       // Set token expiration time to 1 year from now (Since we are in offline mode)
       tokenExpirationTime = Instant.now().plusSeconds(60 * 60 * 24 * 365);
@@ -147,10 +131,9 @@ public class GitHubClientManager {
   }
 
   /**
-   * Returns a GitHub client instance.
-   * If the client is null or the token has expired,
-   * a new client will be created. Generated client is valid for 1 hour.
-   * Every 20 minutes, the client will be refreshed.
+   * Returns a GitHub client instance. If the client is null or the token has expired, a new client
+   * will be created. Generated client is valid for 1 hour. Every 20 minutes, the client will be
+   * refreshed.
    *
    * @return the GitHub client
    */
@@ -161,9 +144,7 @@ public class GitHubClientManager {
     return gitHubClient;
   }
 
-  /**
-   * Refreshes the GitHub client in every 20 minutes.
-   */
+  /** Refreshes the GitHub client in every 20 minutes. */
   private void refreshClient() {
     lock.lock();
     try {
@@ -180,16 +161,16 @@ public class GitHubClientManager {
     }
   }
 
-  /**
-   * Fetches the GitHub App node ID using the app name.
-   */
+  /** Fetches the GitHub App node ID using the app name. */
   private void fetchGitHubAppNodeId() {
     try {
       githubAppNodeId = gitHubClient.getUser(appName).getNodeId();
     } catch (IOException e) {
       throw new RuntimeException(
-          String.format("Failed to get GitHub Node ID of GitHub App with name: %s, error: %s",
-              appName, e.getMessage()), e);
+          String.format(
+              "Failed to get GitHub Node ID of GitHub App with name: %s, error: %s",
+              appName, e.getMessage()),
+          e);
     }
   }
 
@@ -250,8 +231,9 @@ public class GitHubClientManager {
   }
 
   /**
-   * Creates a GitHub client for a GitHub App installation.
-   * Follows the GitHub documentation <a href="https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/about-authentication-with-a-github-app">About authentication with a GitHub App</a>
+   * Creates a GitHub client for a GitHub App installation. Follows the GitHub documentation <a
+   * href="https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/about-authentication-with-a-github-app">About
+   * authentication with a GitHub App</a>
    *
    * @return the GitHub client
    */
@@ -283,12 +265,15 @@ public class GitHubClientManager {
         log.info("Found {} installations for this GitHub App", installs.size());
 
         // Pick the correct one by org name
-        installationId = installs.stream()
-            .filter(inst -> organizationName != null
-                && organizationName.equalsIgnoreCase(inst.getAccount().getLogin()))
-            .map(GHAppInstallation::getId)
-            .findFirst()
-            .orElse(null);
+        installationId =
+            installs.stream()
+                .filter(
+                    inst ->
+                        organizationName != null
+                            && organizationName.equalsIgnoreCase(inst.getAccount().getLogin()))
+                .map(GHAppInstallation::getId)
+                .findFirst()
+                .orElse(null);
 
         if (installationId == null) {
           log.error("Could not find a matching installation for org: {}", organizationName);
@@ -312,14 +297,13 @@ public class GitHubClientManager {
               .withAppInstallationToken(installationToken)
               .build();
 
-      log.info("GitHub Installation client created successfully (installationId={})",
-          installationId);
+      log.info(
+          "GitHub Installation client created successfully (installationId={})", installationId);
       return installationClient;
 
     } catch (Exception e) {
       log.error("Failed to create GitHub App installation client: {}", e.getMessage(), e);
       return GitHub.offline();
     }
-
   }
 }

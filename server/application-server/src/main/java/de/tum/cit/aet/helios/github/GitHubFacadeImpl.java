@@ -6,9 +6,7 @@ import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GHRepositorySearchBuilder;
 import org.kohsuke.github.GHUser;
 
-/**
- * Facade for GitHub API.
- */
+/** Facade for GitHub API. */
 public class GitHubFacadeImpl implements GitHubFacade {
 
   private final GitHubClientManager clientManager;
@@ -42,4 +40,8 @@ public class GitHubFacadeImpl implements GitHubFacade {
     return clientManager.getGitHubClient().getRepositoryById(id);
   }
 
+  @Override
+  public String getGithubAppName() {
+    return clientManager.getAppName();
+  }
 }

@@ -1,7 +1,7 @@
 <div class="flex items-center justify-between mb-3">
   <input pInputText id="commit-hash" (input)="onSearch($event)" [value]="searchInput()" type="text" placeholder="Search for installed systems" class="w-1/3" />
   @if (!hideLinkToList()) {
-    <p-button [routerLink]="'../../../environment'" class="self-end">{{ permissionService.isAdmin() ? 'Manage Environments' : 'Go to Environments' }}</p-button>
+    <p-button [routerLink]="'../../../environment'" class="self-end">{{ isAdmin() ? 'Manage Environments' : 'Go to Environments' }}</p-button>
   }
 </div>
 
@@ -18,28 +18,47 @@
     <p-accordion-panel [value]="environment.id">
       <p-accordion-header>
         <div class="flex gap-2 items-center w-full">
-          <span>{{ environment.name }}</span>
+          <div class="flex flex-col gap-1">
+            <div class="flex gap-1 items-center mr-3">
+              <span [pTooltip]="'Open Environment'" class="cursor-pointer hover:bg-gray-200 px-2 py-1 rounded" (click)="openExternalLink($event, environment)">
+                {{ environment.name }}
+              </span>
 
-          <app-lock-tag [isLocked]="!!environment.locked"></app-lock-tag>
+              <app-lock-tag [isLocked]="!!environment.locked"></app-lock-tag>
 
-          @if (environment.latestDeployment; as deployment) {
-            <app-deployment-state-tag [state]="deployment.state || 'IN_PROGRESS'" />
-          }
-
-          @if (environment.latestStatus; as status) {
-            <app-environment-status-tag [status]="status" />
-          }
+              @if (environment.latestStatus; as status) {
+                <app-environment-status-tag [status]="status" />
+              }
+            </div>
+            @if (environment.latestDeployment; as deployment) {
+              <div class="flex gap-1 items-center text-sm mt-2">
+                <app-user-avatar [user]="environment?.latestDeployment?.user" />
+                @if (environment.latestDeployment.user?.name) {
+                  {{ environment.latestDeployment.user?.name }} deployed
+                }
+                @if (environment.latestDeployment.updatedAt) {
+                  <span [pTooltip]="getDeploymentTime(environment) || ''">{{ environment.latestDeployment.updatedAt || '' | timeAgo }}</span>
+                }
+                <app-deployment-state-tag [state]="deployment.state" />
+                <p-tag severity="secondary" rounded="true" class="max-w-[350px] flex items-center" [pTooltip]="tooltipTemplate" tooltipPosition="top">
+                  <i-tabler name="git-branch" class="!size-5 mr-0.5 flex-shrink-0"></i-tabler>
+                  <span class="ml-1 truncate flex-1">{{ deployment.ref }}</span>
+                  <ng-template #tooltipTemplate>
+                    <div class="flex items-center">{{ deployment.ref }}</div>
+                  </ng-template>
+                </p-tag>
+              </div>
+            }
+          </div>
 
           <div class="flex-grow"></div>
 
           @if (environment.locked) {
+            <div class="flex gap-1 items-center">
+              <app-user-avatar [user]="environment.lockedBy" />
+            </div>
             @if (environment.lockedAt) {
               <app-lock-time [lockedAt]="environment.lockedAt"></app-lock-time>
-            }
-            @if (environment.serverUrl) {
-              <a [href]="getFullUrl(environment.serverUrl)" target="_blank" class="p-button p-button-secondary p-2" (click)="$event.stopPropagation()"
-                ><i-tabler name="external-link" class="mr-1" />Open</a
-              >
             }
             @if ((isLoggedIn() && isCurrentUserLocked(environment)) || hasUnlockPermissions()) {
               <button (click)="onUnlockEnvironment($event, environment)" class="p-button p-button-danger p-2"><i-tabler name="lock-open" class="mr-1" />Unlock</button>
@@ -65,22 +84,22 @@
         </div>
       </p-accordion-header>
       <p-accordion-content>
-        <div class="flex justify-between max-w-6xl">
-          @if (environment.latestDeployment; as deployment) {
-            <app-environment-deployment-info
-              class="flex-grow max-w-2xl"
-              [deployment]="deployment"
-              [repositoryId]="environment.repository?.id || 0"
-              [installedApps]="environment.installedApps || []"
-            />
-          }
-
-          @if (environment.latestStatus; as status) {
-            <app-environment-status-info class="flex-grow max-w-xs mt-2 ml-14" [status]="status" />
-          }
+        <div class="flex w-full">
+          <div class="flex flex-col gap-1">
+            @if (environment.latestDeployment; as deployment) {
+              <app-environment-deployment-info class="max-w-2xl" [deployment]="deployment" [repositoryId]="environment.repository?.id || 0" />
+            }
+          </div>
+          <div class="flex-grow"></div>
+          <div class="flex flex-col gap-1">
+            @if (environment.latestStatus; as status) {
+              <app-environment-status-info class="max-w-xs mt-2 ml-14" [status]="status" />
+            }
+          </div>
+          <span class="w-2"></span>
         </div>
 
-        <div class="flex gap-4 items-center justify-between">
+        <div class="flex gap-4 mt-3 items-center justify-between">
           <div class="flex gap-1 mt-2 items-center">
             <a
               icon
@@ -88,6 +107,12 @@
               class="p-button p-button-text text-gray-500 py-2 flex items-center"
               ><i-tabler class="mr-1" name="history" />View Activity History</a
             >
+          </div>
+          <div class="flex flex-grow"></div>
+          <div class="flex gap-2">
+            @for (installedApp of environment.installedApps; track installedApp) {
+              <p-tag class="bg-gray-300 gap-0">{{ installedApp }}</p-tag>
+            }
           </div>
         </div>
       </p-accordion-content>

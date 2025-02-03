@@ -15,25 +15,29 @@ import org.springframework.stereotype.Service;
 public class StatusCheckScheduler {
   private final EnvironmentRepository environmentRepository;
   private final StatusCheckService statusCheckService;
+  private final org.springframework.core.env.Environment springEnvironment;
 
   /*
    * Runs status checks for all environments with a status check type configured
    * at a fixed interval.
-   * 
+   *
    * The interval is configurable via the status-check.interval property.
    * Defaults to 120 seconds.
    */
   @Scheduled(fixedRateString = "${status-check.interval:120s}")
   public void runScheduledChecks() {
+    if (springEnvironment.matchesProfiles("openapi")) {
+      log.info("OpenAPI profile detected. Skipping Status Check Scheduler.");
+      return;
+    }
     log.info("Starting scheduled status checks.");
 
     List<Environment> environments = environmentRepository.findByStatusCheckTypeIsNotNull();
 
     log.info("Found {} environments with status check type configured.", environments.size());
 
-    List<CompletableFuture<Void>> futures = environments.stream()
-        .map(env -> statusCheckService.performStatusCheck(env))
-        .toList();
+    List<CompletableFuture<Void>> futures =
+        environments.stream().map(env -> statusCheckService.performStatusCheck(env)).toList();
 
     // Wait for all status checks to complete
     futures.forEach(CompletableFuture::join);
