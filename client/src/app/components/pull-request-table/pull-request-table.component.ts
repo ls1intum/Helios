@@ -25,14 +25,14 @@ import { WorkflowRunStatusComponent } from '@app/components/workflow-run-status-
 const FILTER_OPTIONS = [
   { name: 'All pull requests', filter: (prs: PullRequestBaseInfoDto[]) => prs },
   { name: 'Open pull requests', filter: (prs: PullRequestBaseInfoDto[]) => prs.filter(pr => pr.state === 'OPEN') },
-  { name: 'Your pull requests', filter: (prs: PullRequestBaseInfoDto[], username: string) => prs.filter(pr => pr.author?.login === username) },
+  { name: 'Your pull requests', filter: (prs: PullRequestBaseInfoDto[], username: string) => prs.filter(pr => pr.author?.login.toLowerCase() === username.toLowerCase()) },
   {
     name: 'Everything assigned to you',
-    filter: (prs: PullRequestBaseInfoDto[], username: string) => prs.filter(pr => pr.assignees?.some(assignee => assignee.login === username)),
+    filter: (prs: PullRequestBaseInfoDto[], username: string) => prs.filter(pr => pr.assignees?.some(assignee => assignee.login.toLowerCase() === username.toLowerCase())),
   },
   {
     name: 'Everything that requests a review by you',
-    filter: (prs: PullRequestBaseInfoDto[], username: string) => prs.filter(pr => pr.reviewers?.some(reviewer => reviewer.login === username)),
+    filter: (prs: PullRequestBaseInfoDto[], username: string) => prs.filter(pr => pr.reviewers?.some(reviewer => reviewer.login.toLowerCase() === username.toLowerCase())),
   },
 ];
 

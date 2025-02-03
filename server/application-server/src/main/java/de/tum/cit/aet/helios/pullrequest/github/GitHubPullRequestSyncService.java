@@ -1,7 +1,6 @@
 package de.tum.cit.aet.helios.pullrequest.github;
 
 import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
-import de.tum.cit.aet.helios.issue.Issue;
 import de.tum.cit.aet.helios.label.Label;
 import de.tum.cit.aet.helios.label.LabelRepository;
 import de.tum.cit.aet.helios.label.github.GitHubLabelConverter;
@@ -86,23 +85,10 @@ public class GitHubPullRequestSyncService {
             .iterator();
 
     var pullRequests = new ArrayList<GHPullRequest>();
-    iterator.forEachRemaining(pullRequests::add);
-
-    // Close pull requests that are not present in the fetched list
-    List<Long> syncedPrIds = pullRequests.stream()
-        .map(GHPullRequest::getId)
-        .toList();
-
-    pullRequestRepository
-        .findAllByState(Issue.State.OPEN)
-        .stream()
-        .filter(pr -> !syncedPrIds.contains(pr.getId()))
-        .forEach(pr -> {
-          pr.setState(Issue.State.CLOSED);
-          pullRequestRepository.save(pr);
-        });
-
-    pullRequests.forEach(this::processPullRequest);
+    iterator.forEachRemaining(pullRequest -> {
+      pullRequests.add(pullRequest);
+      processPullRequest(pullRequest);
+    });
     return pullRequests;
   }
 

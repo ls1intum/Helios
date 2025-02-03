@@ -1,0 +1,10 @@
+spring:
+    data:
+        jpa:
+            repositories:
+                bootstrap-mode: deferred
+    security:
+        oauth2:
+            resourceserver:
+                jwt:
+                    issuer-uri: "url.invalid"
