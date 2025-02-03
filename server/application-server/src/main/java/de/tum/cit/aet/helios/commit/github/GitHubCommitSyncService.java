@@ -110,11 +110,12 @@ public class GitHubCommitSyncService {
         });
 
     // Get all commits for the current repository
-    var dbCommits = commitRepository.findByRepositoryRepositoryId(repository.getId());
+    // var dbCommits = commitRepository.findByRepositoryRepositoryId(repository.getId());
     // Delete each commit that exists in the database and not in the fetched commits
-    dbCommits.stream()
-        .filter(dbCommit -> commits.stream().noneMatch(b -> b.getSHA1().equals(dbCommit.getSha())))
-        .forEach(dbCommit -> commitRepository.delete(dbCommit));
+    // TODO: We might need the old commits in some cases, so we should not delete them for now
+    // dbCommits.stream()
+    //     .filter(dbCommit -> commits.stream().noneMatch(b -> b.getSHA1().equals(dbCommit.getSha())))
+    //     .forEach(dbCommit -> commitRepository.delete(dbCommit));
     return commits;
   }
 
