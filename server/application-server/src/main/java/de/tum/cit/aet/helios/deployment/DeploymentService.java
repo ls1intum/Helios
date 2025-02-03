@@ -1,13 +1,17 @@
 package de.tum.cit.aet.helios.deployment;
 
 import de.tum.cit.aet.helios.auth.AuthService;
+import de.tum.cit.aet.helios.branch.BranchService;
 import de.tum.cit.aet.helios.environment.Environment;
 import de.tum.cit.aet.helios.environment.EnvironmentLockHistory;
 import de.tum.cit.aet.helios.environment.EnvironmentLockHistoryRepository;
+import de.tum.cit.aet.helios.environment.EnvironmentRepository;
 import de.tum.cit.aet.helios.environment.EnvironmentService;
+import de.tum.cit.aet.helios.filters.RepositoryContext;
 import de.tum.cit.aet.helios.github.GitHubService;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
+import de.tum.cit.aet.helios.user.User;
 import de.tum.cit.aet.helios.workflow.Workflow;
 import de.tum.cit.aet.helios.workflow.WorkflowService;
 import jakarta.transaction.Transactional;
@@ -35,14 +39,19 @@ public class DeploymentService {
   private final AuthService authService;
   private final HeliosDeploymentRepository heliosDeploymentRepository;
   private final EnvironmentLockHistoryRepository lockHistoryRepository;
+  private final EnvironmentRepository environmentRepository;
+  private final BranchService branchService;
 
   public DeploymentService(
       DeploymentRepository deploymentRepository,
       GitHubService gitHubService,
       EnvironmentService environmentService,
-      WorkflowService workflowService, AuthService authService,
+      WorkflowService workflowService,
+      AuthService authService,
       HeliosDeploymentRepository heliosDeploymentRepository,
-      EnvironmentLockHistoryRepository lockHistoryRepository) {
+      BranchService branchService,
+      EnvironmentLockHistoryRepository lockHistoryRepository,
+      EnvironmentRepository environmentRepository) {
     this.deploymentRepository = deploymentRepository;
     this.gitHubService = gitHubService;
     this.environmentService = environmentService;
@@ -50,6 +59,8 @@ public class DeploymentService {
     this.authService = authService;
     this.heliosDeploymentRepository = heliosDeploymentRepository;
     this.lockHistoryRepository = lockHistoryRepository;
+    this.environmentRepository = environmentRepository;
+    this.branchService = branchService;
   }
 
   public Optional<DeploymentDto> getDeploymentById(Long id) {
@@ -86,11 +97,19 @@ public class DeploymentService {
     final String username = this.authService.getPreferredUsername();
 
     // Get the deployment workflow set by the managers
-    Workflow deploymentWorkflow = this.workflowService.getDeploymentWorkflow();
+    Workflow deploymentWorkflow =
+        this.workflowService.getDeploymentWorkflow(RepositoryContext.getRepositoryId());
     if (deploymentWorkflow == null) {
       throw new DeploymentException("No deployment workflow found");
     }
     final String deploymentWorkflowFileName = deploymentWorkflow.getFileNameWithExtension();
+
+    // Get the latest sha of the branch
+    final String branchCommitSha =
+        this.branchService
+            .getBranchByName(deployRequest.branchName())
+            .orElseThrow(() -> new DeploymentException("Branch not found"))
+            .commitSha();
 
     // Lock the environment
     Environment environment =
@@ -106,15 +125,16 @@ public class DeploymentService {
       throw new DeploymentException("Deployment is still in progress, please wait.");
     }
 
-
+    User githubUser = this.authService.getUserFromGithubId();
     // Create a new HeliosDeployment record
     HeliosDeployment heliosDeployment = new HeliosDeployment();
     heliosDeployment.setEnvironment(environment);
     heliosDeployment.setUser(user);
     heliosDeployment.setStatus(HeliosDeployment.Status.WAITING);
     heliosDeployment.setBranchName(deployRequest.branchName());
+    heliosDeployment.setSha(branchCommitSha);
+    heliosDeployment.setCreator(githubUser);
     heliosDeployment = heliosDeploymentRepository.saveAndFlush(heliosDeployment);
-
 
     // Build parameters for the workflow
     Map<String, Object> workflowParams = new HashMap<>();
@@ -141,8 +161,8 @@ public class DeploymentService {
 
   private boolean canRedeploy(Environment environment, long timeoutMinutes) {
     // Fetch the most recent deployment for the environment
-    Optional<HeliosDeployment> latestDeployment = heliosDeploymentRepository
-        .findTopByEnvironmentOrderByCreatedAtDesc(environment);
+    Optional<HeliosDeployment> latestDeployment =
+        heliosDeploymentRepository.findTopByEnvironmentOrderByCreatedAtDesc(environment);
 
     if (latestDeployment.isEmpty()) {
       // No prior deployments, safe to deploy
@@ -173,60 +193,93 @@ public class DeploymentService {
     return true;
   }
 
+  /**
+   * Retrieves and combines activity history for a specific environment, including deployments,
+   * lock/unlock events, and potential Helios deployments, sorted chronologically descending.
+   *
+   * <p>The method aggregates data from three sources:
+   *
+   * <ol>
+   *   <li><b>Real Deployments</b> - Fetches deployments from the deployment repository, converts
+   *       them to DTOs, and sorts by creation time descending
+   *   <li><b>Lock History</b> - Retrieves environment lock events and generates paired LOCK/UNLOCK
+   *       events when applicable, converting them to DTOs
+   *   <li><b>Helios Deployment</b> - Conditionally adds the Helios deployments if it's not matched
+   *       with deployment records
+   * </ol>
+   *
+   * <p>The final combined list is sorted by timestamp descending, with null timestamps placed last.
+   *
+   * @param environmentId The ID of the environment to fetch history for
+   * @return Combined list of {@link ActivityHistoryDto} objects representing all activity, sorted
+   *     by timestamp descending. Returns empty list if no activities found.
+   * @implNote Special handling for Helios deployments:
+   *     <ul>
+   *       <li>Helios deployments are only added if they represent the latest deployment activity
+   *       <li>Will not duplicate if already present in deployment records
+   *       <li>Requires separate environment lookup to verify deployment recency
+   *     </ul>
+   */
   public List<ActivityHistoryDto> getActivityHistoryByEnvironmentId(Long environmentId) {
-    // 1) Fetch deployments and map
-    List<Deployment> deployments = deploymentRepository
-        .findByEnvironmentIdOrderByCreatedAtDesc(environmentId);
+    // 1) Real deployments
+    List<ActivityHistoryDto> deploymentDtos =
+        deploymentRepository.findByEnvironmentIdOrderByCreatedAtDesc(environmentId).stream()
+            .map(ActivityHistoryDto::fromDeployment)
+            .toList();
 
-    List<ActivityHistoryDto> deploymentDtos = deployments.stream()
-        .map(ActivityHistoryDto::fromDeployment)
-        .toList();
-
-    // 2) Fetch lock history and map to one or two items per entry
+    // 3) Lock history (lock/unlock)
     List<EnvironmentLockHistory> lockHistories =
         lockHistoryRepository.findLockHistoriesByEnvironment(environmentId);
+    List<ActivityHistoryDto> lockDtos =
+        lockHistories.stream()
+            .flatMap(
+                lock -> {
+                  ActivityHistoryDto lockEvent =
+                      ActivityHistoryDto.fromEnvironmentLockHistory("LOCK_EVENT", lock);
+                  if (lock.getUnlockedAt() != null) {
+                    ActivityHistoryDto unlockEvent =
+                        ActivityHistoryDto.fromEnvironmentLockHistory("UNLOCK_EVENT", lock);
+                    return Stream.of(lockEvent, unlockEvent);
+                  } else {
+                    return Stream.of(lockEvent);
+                  }
+                })
+            .toList();
 
-    List<ActivityHistoryDto> lockDtos = lockHistories.stream()
-        .flatMap(lock -> {
-          // LOCK_EVENT
-          ActivityHistoryDto lockEvent = ActivityHistoryDto.fromEnvironmentLockHistory(
-              "LOCK_EVENT",
-              lock
-          );
-
-          // If unlockedAt is present, also create UNLOCK_EVENT
-          if (lock.getUnlockedAt() != null) {
-            ActivityHistoryDto unlockEvent = ActivityHistoryDto.fromEnvironmentLockHistory(
-                "UNLOCK_EVENT",
-                lock
-            );
-            return Stream.of(lockEvent, unlockEvent);
-          } else {
-            return Stream.of(lockEvent);
-          }
-        })
-        .toList();
-
-    // 3) Combine everything
+    // 4) Combine the lists
     List<ActivityHistoryDto> combined = new ArrayList<>();
     combined.addAll(deploymentDtos);
+    // combined.addAll(heliosDtos);
     combined.addAll(lockDtos);
 
-    // 4) Sort by 'timestamp' descending
-    combined.sort((a, b) -> {
-      OffsetDateTime timeA = a.timestamp();
-      OffsetDateTime timeB = b.timestamp();
-      if (timeA == null && timeB == null) {
-        return 0;
+    // 4a) Add heliosDeployment for latest deployment (deployment webhook not yet received) and all
+    // the failed deployments
+    var environment = environmentRepository.findById(environmentId).orElse(null);
+    if (environment != null) {
+      List<HeliosDeployment> heliosDeployments =
+          heliosDeploymentRepository.findByEnvironmentAndDeploymentIdIsNull(environment);
+      for (HeliosDeployment heliosDeployment : heliosDeployments) {
+        ActivityHistoryDto heliosDto = ActivityHistoryDto.fromHeliosDeployment(heliosDeployment);
+        combined.add(heliosDto);
       }
-      if (timeA == null) {
-        return 1;  // place null timestamps last
-      }
-      if (timeB == null) {
-        return -1;
-      }
-      return timeB.compareTo(timeA); // descending
-    });
+    }
+
+    // 5) Sort by timestamp descending
+    combined.sort(
+        (a, b) -> {
+          OffsetDateTime timeA = a.timestamp();
+          OffsetDateTime timeB = b.timestamp();
+          if (timeA == null && timeB == null) {
+            return 0;
+          }
+          if (timeA == null) {
+            return 1;
+          }
+          if (timeB == null) {
+            return -1;
+          }
+          return timeB.compareTo(timeA);
+        });
 
     return combined;
   }

@@ -54,6 +54,8 @@ public class GitHubEnvironmentSyncService {
       for (GitHubEnvironmentDto gitHubEnvironmentDto : gitHubEnvironmentDtoS) {
         processEnvironment(gitHubEnvironmentDto, ghRepository);
       }
+
+      // TODO: handle deletion of environments that are not present in the GitHub repository anymore
     } catch (IOException e) {
       log.error(
           "Failed to sync environments for repository {}: {}",

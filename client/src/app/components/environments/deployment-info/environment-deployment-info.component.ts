@@ -20,7 +20,6 @@ export class EnvironmentDeploymentInfoComponent {
 
   repositoryId = input.required<number>();
   deployment = input.required<EnvironmentDeployment>();
-  installedApps = input.required<string[]>();
 
   commitQuery = injectQuery(() => ({
     ...getCommitByRepositoryIdAndNameOptions({ path: { repoId: this.repositoryId(), sha: this.deployment()?.sha || '' } }),

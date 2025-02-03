@@ -1,7 +1,7 @@
 import { Component, computed, inject, input, output, signal } from '@angular/core';
 import { AccordionModule } from 'primeng/accordion';
 
-import { CommonModule } from '@angular/common';
+import { DatePipe, CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { EnvironmentDto } from '@app/core/modules/openapi';
 import {
@@ -25,6 +25,12 @@ import { DeploymentStateTagComponent } from '../deployment-state-tag/deployment-
 import { LockTagComponent } from '../lock-tag/lock-tag.component';
 import { LockTimeComponent } from '../lock-time/lock-time.component';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
+import { AvatarModule } from 'primeng/avatar';
+import { TooltipModule } from 'primeng/tooltip';
+import { TimeAgoPipe } from '@app/pipes/time-ago.pipe';
+import { UserAvatarComponent } from '@app/components/user-avatar/user-avatar.component';
+import { EnvironmentStatusInfoComponent } from '../environment-status-info/environment-status-info.component';
+import { EnvironmentStatusTagComponent } from '../environment-status-tag/environment-status-tag.component';
 
 @Component({
   selector: 'app-environment-list-view',
@@ -36,25 +42,34 @@ import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
     TagModule,
     IconsModule,
     ButtonModule,
+    TooltipModule,
     DeploymentStateTagComponent,
+    EnvironmentStatusTagComponent,
     EnvironmentDeploymentInfoComponent,
+    EnvironmentStatusInfoComponent,
     LockTimeComponent,
+    AvatarModule,
     ConfirmDialogModule,
     CommonModule,
+    TimeAgoPipe,
+    UserAvatarComponent,
   ],
+  providers: [DatePipe],
   templateUrl: './environment-list-view.component.html',
 })
 export class EnvironmentListViewComponent {
   private queryClient = inject(QueryClient);
-  private keycloakService = inject(KeycloakService);
   private confirmationService = inject(ConfirmationService);
-  permissionService = inject(PermissionService);
+  private keycloakService = inject(KeycloakService);
+  private datePipe = inject(DatePipe);
+  private permissionService = inject(PermissionService);
 
   editable = input<boolean | undefined>();
   deployable = input<boolean | undefined>();
   hideLinkToList = input<boolean | undefined>();
 
   isLoggedIn = computed(() => this.keycloakService.isLoggedIn());
+  isAdmin = computed(() => this.permissionService.isAdmin());
   hasUnlockPermissions = computed(() => this.permissionService.isAtLeastMaintainer());
   hasDeployPermissions = computed(() => this.permissionService.hasWritePermission());
   hasEditEnvironmentPermissions = computed(() => this.permissionService.isAdmin());
@@ -64,7 +79,10 @@ export class EnvironmentListViewComponent {
   searchInput = signal<string>('');
 
   canViewAllEnvironments = computed(() => this.isLoggedIn() && this.editable() && this.hasEditEnvironmentPermissions());
-  queryFunction = computed(() => (this.canViewAllEnvironments() ? getAllEnvironmentsOptions() : getAllEnabledEnvironmentsOptions()));
+  queryFunction = computed(() => {
+    const options = this.canViewAllEnvironments() ? getAllEnvironmentsOptions() : getAllEnabledEnvironmentsOptions();
+    return { ...options, refetchInterval: 3000 };
+  });
   queryKey = computed(() => (this.canViewAllEnvironments() ? getAllEnvironmentsQueryKey() : getAllEnabledEnvironmentsQueryKey()));
 
   environmentQuery = injectQuery(() => this.queryFunction());
@@ -79,7 +97,9 @@ export class EnvironmentListViewComponent {
   }));
 
   isCurrentUserLocked = (environment: EnvironmentDto) => {
-    return environment.lockedBy === this.keycloakService.getPreferredUsername();
+    const currentUserGithubId = Number(this.keycloakService.getUserGithubId());
+    const environmentLockedById = Number(environment.lockedBy?.id);
+    return environmentLockedById === currentUserGithubId;
   };
 
   onUnlockEnvironment(event: Event, environment: EnvironmentDto) {
@@ -120,5 +140,20 @@ export class EnvironmentListViewComponent {
       return 'http://' + url;
     }
     return url;
+  }
+
+  openExternalLink(event: MouseEvent, environment: EnvironmentDto): void {
+    // Prevent the click event from propagating
+    event.stopPropagation();
+
+    // Only proceed if the server URL is available
+    if (environment.serverUrl) {
+      window.open(this.getFullUrl(environment.serverUrl), '_blank');
+    }
+  }
+
+  getDeploymentTime(environment: EnvironmentDto) {
+    const date = environment.latestDeployment?.updatedAt;
+    return date ? this.datePipe.transform(date, 'd MMMM y, h:mm a') : null; // Format date
   }
 }

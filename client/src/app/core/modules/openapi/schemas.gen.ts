@@ -65,6 +65,9 @@ export const EnvironmentDeploymentSchema = {
     task: {
       type: 'string',
     },
+    user: {
+      $ref: '#/components/schemas/UserInfoDto',
+    },
     createdAt: {
       type: 'string',
       format: 'date-time',
@@ -74,7 +77,7 @@ export const EnvironmentDeploymentSchema = {
       format: 'date-time',
     },
   },
-  required: ['id', 'ref', 'sha', 'statusesUrl', 'task', 'url'],
+  required: ['id'],
 } as const;
 
 export const EnvironmentDtoSchema = {
@@ -122,11 +125,21 @@ export const EnvironmentDtoSchema = {
     serverUrl: {
       type: 'string',
     },
+    statusCheckType: {
+      type: 'string',
+      enum: ['HTTP_STATUS', 'ARTEMIS_INFO'],
+    },
+    statusUrl: {
+      type: 'string',
+    },
     latestDeployment: {
       $ref: '#/components/schemas/EnvironmentDeployment',
     },
+    latestStatus: {
+      $ref: '#/components/schemas/EnvironmentStatusDto',
+    },
     lockedBy: {
-      type: 'string',
+      $ref: '#/components/schemas/UserInfoDto',
     },
     lockedAt: {
       type: 'string',
@@ -134,6 +147,36 @@ export const EnvironmentDtoSchema = {
     },
   },
   required: ['id', 'name'],
+} as const;
+
+export const EnvironmentStatusDtoSchema = {
+  type: 'object',
+  properties: {
+    id: {
+      type: 'integer',
+      format: 'int64',
+    },
+    success: {
+      type: 'boolean',
+    },
+    httpStatusCode: {
+      type: 'integer',
+      format: 'int32',
+    },
+    checkedAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+    checkType: {
+      type: 'string',
+      enum: ['HTTP_STATUS', 'ARTEMIS_INFO'],
+    },
+    metadata: {
+      type: 'object',
+      additionalProperties: {},
+    },
+  },
+  required: ['checkType', 'checkedAt', 'httpStatusCode', 'id', 'success'],
 } as const;
 
 export const RepositoryInfoDtoSchema = {
@@ -157,6 +200,29 @@ export const RepositoryInfoDtoSchema = {
     },
   },
   required: ['htmlUrl', 'id', 'name', 'nameWithOwner'],
+} as const;
+
+export const UserInfoDtoSchema = {
+  type: 'object',
+  properties: {
+    id: {
+      type: 'integer',
+      format: 'int64',
+    },
+    login: {
+      type: 'string',
+    },
+    avatarUrl: {
+      type: 'string',
+    },
+    name: {
+      type: 'string',
+    },
+    htmlUrl: {
+      type: 'string',
+    },
+  },
+  required: ['avatarUrl', 'htmlUrl', 'id', 'login', 'name'],
 } as const;
 
 export const DeployRequestSchema = {
@@ -371,29 +437,6 @@ export const PullRequestBaseInfoDtoSchema = {
   required: ['htmlUrl', 'id', 'isDraft', 'isMerged', 'number', 'state', 'title'],
 } as const;
 
-export const UserInfoDtoSchema = {
-  type: 'object',
-  properties: {
-    id: {
-      type: 'integer',
-      format: 'int64',
-    },
-    login: {
-      type: 'string',
-    },
-    avatarUrl: {
-      type: 'string',
-    },
-    name: {
-      type: 'string',
-    },
-    htmlUrl: {
-      type: 'string',
-    },
-  },
-  required: ['avatarUrl', 'htmlUrl', 'id', 'login', 'name'],
-} as const;
-
 export const PullRequestInfoDtoSchema = {
   type: 'object',
   properties: {
@@ -488,7 +531,7 @@ export const EnvironmentLockHistoryDtoSchema = {
       format: 'int64',
     },
     lockedBy: {
-      type: 'string',
+      $ref: '#/components/schemas/UserInfoDto',
     },
     lockedAt: {
       type: 'string',
@@ -537,6 +580,9 @@ export const DeploymentDtoSchema = {
     environment: {
       $ref: '#/components/schemas/EnvironmentDto',
     },
+    user: {
+      $ref: '#/components/schemas/UserInfoDto',
+    },
     createdAt: {
       type: 'string',
       format: 'date-time',
@@ -572,8 +618,8 @@ export const ActivityHistoryDtoSchema = {
     ref: {
       type: 'string',
     },
-    lockedBy: {
-      type: 'string',
+    user: {
+      $ref: '#/components/schemas/UserInfoDto',
     },
     timestamp: {
       type: 'string',

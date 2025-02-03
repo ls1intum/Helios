@@ -1,4 +1,4 @@
-package de.tum.cit.aet.helios.github;
+package de.tum.cit.aet.helios.http;
 
 import java.io.File;
 import java.util.concurrent.TimeUnit;
@@ -26,12 +26,17 @@ public class HttpClientConfig {
 
   private final Environment environment;
 
-  public HttpClientConfig(Environment environment) {
+  private final RateLimitInfoHolder rateLimitInfoHolder;
+
+
+  public HttpClientConfig(Environment environment, RateLimitInfoHolder rateLimitInfoHolder) {
     this.environment = environment;
+    this.rateLimitInfoHolder = rateLimitInfoHolder;
   }
 
   /**
-   * Builds an OkHttpClient.Builder with cache, logging interceptor and timeouts.
+   * Builds an OkHttpClient.Builder with cache, logging interceptor,
+   * rate limit interceptor, and timeouts.
    *
    * @return the OkHttpClient.Builder
    */
@@ -47,6 +52,9 @@ public class HttpClientConfig {
     }
 
     OkHttpClient.Builder builder = new OkHttpClient.Builder();
+
+    // Add the rate limit interceptor
+    builder.addInterceptor(new HttpClientRateLimitInterceptor(rateLimitInfoHolder));
 
     if (cacheEnabled) {
       File cacheDir = new File("./build/github-cache");

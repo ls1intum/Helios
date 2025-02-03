@@ -1,5 +1,6 @@
-import { Component, Input, OnInit, OnDestroy, signal } from '@angular/core';
+import { Component, input, OnInit, OnDestroy, signal, inject, computed } from '@angular/core';
 import { TagModule } from 'primeng/tag';
+import { DateService } from '@app/core/services/date.service';
 
 @Component({
   selector: 'app-lock-time',
@@ -7,8 +8,10 @@ import { TagModule } from 'primeng/tag';
   templateUrl: './lock-time.component.html',
 })
 export class LockTimeComponent implements OnInit, OnDestroy {
-  @Input() lockedAt?: string;
+  lockedAt = input.required<string>();
+  private dateService = inject(DateService);
 
+  timeSinceLocked = computed(() => this.dateService.timeSinceLocked(this.lockedAt(), this.timeNow()));
   // track the current time in a signal that we update every second
   timeNow = signal<Date>(new Date());
 
@@ -27,43 +30,5 @@ export class LockTimeComponent implements OnInit, OnDestroy {
     if (this.intervalId) {
       clearInterval(this.intervalId);
     }
-  }
-
-  timeSinceLocked(): string {
-    if (!this.lockedAt) {
-      return '';
-    }
-
-    const lockedDate = new Date(this.lockedAt);
-    const now = this.timeNow();
-    const diffMs = now.getTime() - lockedDate.getTime();
-
-    // If the locked time is in the future, return empty
-    if (diffMs < 0) {
-      return '';
-    }
-
-    const totalSeconds = Math.floor(diffMs / 1000);
-    const days = Math.floor(totalSeconds / 86400);
-    const hours = Math.floor((totalSeconds % 86400) / 3600);
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
-    const seconds = totalSeconds % 60;
-
-    // Build a list of non-zero time parts
-    const parts: string[] = [];
-    if (days > 0) {
-      parts.push(`${days} day${days > 1 ? 's' : ''}`);
-    }
-    if (hours > 0) {
-      parts.push(`${hours} hour${hours > 1 ? 's' : ''}`);
-    }
-    if (minutes > 0) {
-      parts.push(`${minutes} minute${minutes > 1 ? 's' : ''}`);
-    }
-    // Always show seconds
-    parts.push(`${seconds} second${seconds !== 1 ? 's' : ''}`);
-
-    // Join them with a comma and a space: e.g., "2 hours, 8 minutes, 23 seconds ago"
-    return parts.join(', ') + ' ago';
   }
 }
