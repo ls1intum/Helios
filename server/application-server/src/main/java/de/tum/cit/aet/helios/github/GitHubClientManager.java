@@ -1,6 +1,7 @@
 package de.tum.cit.aet.helios.github;
 
 import de.tum.cit.aet.helios.util.GitHubAppJwtHelper;
+import jakarta.annotation.PostConstruct;
 import java.io.File;
 import java.io.IOException;
 import java.security.PrivateKey;
@@ -116,6 +117,12 @@ public class GitHubClientManager {
       // Set token expiration time to 1 year from now (Since we are in offline mode)
       tokenExpirationTime = Instant.now().plusSeconds(60 * 60 * 24 * 365);
     }
+  }
+
+  @PostConstruct
+  public void init() {
+    log.info("Initializing GitHubClientManager. Refreshing client at startup...");
+    refreshClient();
   }
 
   /**

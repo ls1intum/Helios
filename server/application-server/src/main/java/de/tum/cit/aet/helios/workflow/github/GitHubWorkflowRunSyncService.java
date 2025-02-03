@@ -15,9 +15,9 @@ import de.tum.cit.aet.helios.workflow.WorkflowRunRepository;
 import de.tum.cit.aet.helios.workflow.WorkflowService;
 import jakarta.transaction.Transactional;
 import java.io.IOException;
-import java.sql.Date;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -56,7 +56,7 @@ public class GitHubWorkflowRunSyncService {
   }
 
   /**
-   * Synchronizes all worfklwo runs from the specified GitHub repositories.
+   * Synchronizes all workflow runs from the specified GitHub repositories.
    *
    * @param repositories the list of GitHub repositories to sync workflow runs from
    * @param since an optional date to filter pull requests by their last update
@@ -86,26 +86,26 @@ public class GitHubWorkflowRunSyncService {
     var workflowRuns = new ArrayList<GHWorkflowRun>();
 
     while (iterator.hasNext()) {
-      var ghPullRequests = iterator.nextPage();
-      var keepPullRequests =
-          ghPullRequests.stream()
+      var ghWorkflowRuns = iterator.nextPage();
+      var keepWorkflowRuns =
+          ghWorkflowRuns.stream()
               .filter(
-                  pullRequest -> {
+                  ghWorkflowRun -> {
                     try {
                       return sinceDate.isEmpty()
-                          || pullRequest.getUpdatedAt().after(sinceDate.get());
+                          || ghWorkflowRun.getUpdatedAt().after(sinceDate.get());
                     } catch (IOException e) {
                       log.error(
                           "Failed to filter workflow run {}: {}",
-                          pullRequest.getId(),
+                          ghWorkflowRun.getId(),
                           e.getMessage());
                       return false;
                     }
                   })
               .toList();
 
-      workflowRuns.addAll(keepPullRequests);
-      if (keepPullRequests.size() != ghPullRequests.size()) {
+      workflowRuns.addAll(keepWorkflowRuns);
+      if (keepWorkflowRuns.size() != ghWorkflowRuns.size()) {
         break;
       }
     }
@@ -195,13 +195,10 @@ public class GitHubWorkflowRunSyncService {
     Workflow deploymentWorkflow =
         workflowService.getDeploymentWorkflow(workflowRun.getRepository().getId());
     if (deploymentWorkflow == null) {
-      log.debug(
-          "No deployment workflow found while processing workflow run {}", workflowRun.getId());
       return;
     }
 
     if (workflowRun.getWorkflowId() != deploymentWorkflow.getId()) {
-      log.debug("Workflow run {} is not a deployment workflow run", workflowRun.getId());
       return;
     }
 
@@ -223,7 +220,7 @@ public class GitHubWorkflowRunSyncService {
 
               // Update the deployment status
               heliosDeployment.setStatus(mappedStatus);
-              log.debug(
+              log.info(
                   "Updated HeliosDeployment {} to status {}",
                   heliosDeployment.getId(),
                   mappedStatus);
