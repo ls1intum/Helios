@@ -78,8 +78,8 @@ public class TagService {
     try {
       final GitRepository repository =
           gitRepoRepository
-          .findById(repositoryId)
-          .orElseThrow(() -> new TagException("Repository not found"));
+              .findById(repositoryId)
+              .orElseThrow(() -> new TagException("Repository not found"));
 
       final GHRepository githubRepository =
           gitHubService.getRepository(repository.getNameWithOwner());
@@ -119,7 +119,7 @@ public class TagService {
     final String login = authService.getPreferredUsername();
 
     if (tagRepository.existsByRepositoryRepositoryIdAndName(repositoryId, tag.name()) == true) {
-      throw new TagException("Tag already exists");
+      throw new TagException("Tag with this name already exists");
     }
 
     Tag newTag = new Tag();
@@ -147,25 +147,27 @@ public class TagService {
   public void evaluateTag(String name, boolean isWorking) {
     final Long repositoryId = RepositoryContext.getRepositoryId();
 
-    final Tag tag = tagRepository
-        .findByRepositoryRepositoryIdAndName(repositoryId, name)
-        .orElseThrow(() -> new TagException("Tag not found"));
+    final Tag tag =
+        tagRepository
+            .findByRepositoryRepositoryIdAndName(repositoryId, name)
+            .orElseThrow(() -> new TagException("Tag not found"));
 
-    final User user =  authService.getUserFromGithubId();
-    
+    final User user = authService.getUserFromGithubId();
+
     if (user == null) {
       throw new TagException("User not found");
     }
 
-    final TagEvaluation evaluation = tagEvaluationRepository.findByTagAndEvaluatedById(
-        tag,
-        user.getId()
-    ).orElseGet(() -> {
-      TagEvaluation newEvaluation = new TagEvaluation();
-      newEvaluation.setTag(tag);
-      newEvaluation.setEvaluatedBy(user);
-      return newEvaluation;
-    });
+    final TagEvaluation evaluation =
+        tagEvaluationRepository
+            .findByTagAndEvaluatedById(tag, user.getId())
+            .orElseGet(
+                () -> {
+                  TagEvaluation newEvaluation = new TagEvaluation();
+                  newEvaluation.setTag(tag);
+                  newEvaluation.setEvaluatedBy(user);
+                  return newEvaluation;
+                });
 
     evaluation.setWorking(isWorking);
     tagEvaluationRepository.save(evaluation);

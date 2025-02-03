@@ -14,17 +14,17 @@
         <h2 class="text-2xl">{{ commit()?.message }}</h2>
       </div>
     </div>
+    <div>
+      @if (isAtLeastMaintainer() && !branch.tagName) {
+        <p-button label="Create Release" (onClick)="isCreateDialogVisible.set(true)" />
+      }
+    </div>
   } @else {
     <div class="flex flex-col items-start gap-2">
       <p-skeleton width="8rem" height="1rem" />
       <p-skeleton width="10rem" height="2rem" />
     </div>
   }
-  <div>
-    @if (isAtLeastMaintainer()) {
-      <p-button label="Create Release" (onClick)="isCreateDialogVisible.set(true)" />
-    }
-  </div>
 </div>
 
 <div class="flex flex-col gap-6 max-w-6xl mr-4">

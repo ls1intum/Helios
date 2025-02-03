@@ -13,6 +13,7 @@ import { SlicePipe } from '@angular/common';
 import { TagModule } from 'primeng/tag';
 import { MessageService } from 'primeng/api';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
+import { PermissionService } from '@app/core/services/permission.service';
 
 @Component({
   selector: 'app-tag-details',
@@ -22,6 +23,7 @@ import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 export class TagDetailsComponent {
   private messageService = inject(MessageService);
   private keycloakService = inject(KeycloakService);
+  permissionService = inject(PermissionService);
   private queryClient = inject(QueryClient);
 
   name = input.required<string>();

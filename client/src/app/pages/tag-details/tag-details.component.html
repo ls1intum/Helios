@@ -29,14 +29,16 @@
     </div>
 
     <div class="flex flex-col items-center">
-      <p-buttongroup class="mb-5">
-        <p-button label="Working" severity="success" [disabled]="hasUserEvaluatedTo(true)" (onClick)="evaluateTag(true)">
-          <i-tabler name="check" class="!size-5 text-white" />
-        </p-button>
-        <p-button label="Broken" severity="danger" [disabled]="hasUserEvaluatedTo(false)" (onClick)="evaluateTag(false)">
-          <i-tabler name="x" class="!size-5 text-white" />
-        </p-button>
-      </p-buttongroup>
+      @if (permissionService.isAtLeastMaintainer()) {
+        <p-buttongroup class="mb-5">
+          <p-button label="Working" severity="success" [disabled]="hasUserEvaluatedTo(true)" (onClick)="evaluateTag(true)">
+            <i-tabler name="check" class="!size-5 text-white" />
+          </p-button>
+          <p-button label="Broken" severity="danger" [disabled]="hasUserEvaluatedTo(false)" (onClick)="evaluateTag(false)">
+            <i-tabler name="x" class="!size-5 text-white" />
+          </p-button>
+        </p-buttongroup>
+      }
       @if (tag.evaluations.length > 0) {
         <div class="text-gray-500 text-sm uppercase font-semibold tracking-wider mb-1">Reviews</div>
         <div>
