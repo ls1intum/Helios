@@ -77,9 +77,7 @@ public class GlobalExceptionHandler {
 
     Sentry.captureException(ex);
     log.error(
-        "An internal server error occurred: {}\n{}",
-        ex.getMessage(),
-        ex.getStackTrace().toString());
+        "An internal server error occurred", ex);
 
     return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
   }
