@@ -100,7 +100,7 @@ public class TagService {
       }
 
       final GHCompare compare =
-        githubRepository.getCompare(lastTag.getCommit().getSha(), branch.getCommitSha());
+          githubRepository.getCompare(lastTag.getCommit().getSha(), branch.getCommitSha());
 
       return new CommitsSinceTagDto(compare.getTotalCommits(), new ArrayList<>());
       // Add this snippet later when showing commit info
