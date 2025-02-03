@@ -33,16 +33,17 @@ public class Tag {
 
   @Id private String name;
 
-  @OneToOne(optional = false)
+  @OneToOne(optional = false, cascade = CascadeType.ALL)
   private Commit commit;
 
-  @OneToOne private Branch branch;
+  @ManyToOne(fetch = FetchType.LAZY)
+  private Branch branch;
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "created_by_id")
   private User createdBy;
 
-  @OneToMany(cascade = CascadeType.REMOVE)
+  @OneToMany(cascade = CascadeType.ALL)
   private Set<TagEvaluation> evaluations = new HashSet<>();
 
   private OffsetDateTime createdAt;

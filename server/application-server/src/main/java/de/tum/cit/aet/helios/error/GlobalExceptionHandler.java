@@ -8,11 +8,13 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.time.Instant;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+@Log4j2
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -74,6 +76,10 @@ public class GlobalExceptionHandler {
     error.setTimestamp(Instant.now());
 
     Sentry.captureException(ex);
+    log.error(
+        "An internal server error occurred: {}\n{}",
+        ex.getMessage(),
+        ex.getStackTrace().toString());
 
     return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
   }

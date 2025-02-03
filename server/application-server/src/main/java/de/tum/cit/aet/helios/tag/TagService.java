@@ -134,15 +134,17 @@ public class TagService {
             .findById(repositoryId)
             .orElseThrow(() -> new TagException("Repository not found")));
     newTag.setCreatedBy(
-        userRepository.findByLogin(login).orElseGet(() -> userSyncService.syncUser(login)));
+        userRepository
+            .findByLoginIgnoreCase(login)
+            .orElseGet(() -> userSyncService.syncUser(login)));
     newTag.setCreatedAt(OffsetDateTime.now());
     return TagInfoDto.fromTag(tagRepository.save(newTag));
   }
 
   public void evaluateTag(String name, boolean isWorking) {
     final String login = authService.getPreferredUsername();
-    System.out.println(123123 + login);
     final Long repositoryId = RepositoryContext.getRepositoryId();
+
     tagRepository
         .findByRepositoryRepositoryIdAndName(repositoryId, name)
         .map(
@@ -154,9 +156,11 @@ public class TagService {
                       .orElseGet(
                           () -> {
                             TagEvaluation newEvaluation = new TagEvaluation();
+                            newEvaluation.setTag(tag);
+                            // TODO: Replace this by filtering with Userid
                             newEvaluation.setEvaluatedBy(
                                 userRepository
-                                    .findByLogin(login)
+                                    .findByLoginIgnoreCase(login)
                                     .orElseGet(() -> userSyncService.syncUser(login)));
                             return newEvaluation;
                           });
