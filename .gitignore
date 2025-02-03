@@ -187,3 +187,6 @@ CMakeUserPresets.json
 
 # Ignore pem files (GitHub App)
 *.pem
+
+# Ignore test files
+test/*

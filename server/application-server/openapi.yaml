@@ -121,6 +121,56 @@ paths:
           content:
             application/json:
               schema: {}
+  /api/tags:
+    get:
+      tags:
+      - tag-controller
+      operationId: getAllTags
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TagInfoDto"
+    post:
+      tags:
+      - tag-controller
+      operationId: createTag
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TagCreateDto"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TagInfoDto"
+  /api/tags/{name}/evaluate/{isWorking}:
+    post:
+      tags:
+      - tag-controller
+      operationId: evaluate
+      parameters:
+      - name: name
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: isWorking
+        in: path
+        required: true
+        schema:
+          type: boolean
+      responses:
+        "200":
+          description: OK
   /api/settings/{repositoryId}/groups/create:
     post:
       tags:
@@ -310,6 +360,42 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/GitHubRepositoryRoleDto"
+  /api/tags/{name}:
+    get:
+      tags:
+      - tag-controller
+      operationId: getTagByName
+      parameters:
+      - name: name
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TagDetailsDto"
+  /api/tags/newcommits:
+    get:
+      tags:
+      - tag-controller
+      operationId: getCommitsSinceLastTag
+      parameters:
+      - name: branch
+        in: query
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CommitsSinceTagDto"
   /api/settings/{repositoryId}/groups:
     get:
       tags:
@@ -680,7 +766,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/BranchInfoDto"
+                $ref: "#/components/schemas/BranchDetailsDto"
   /api/settings/{repositoryId}/groups/{groupId}:
     delete:
       tags:
@@ -762,6 +848,8 @@ components:
         ref:
           type: string
         task:
+          type: string
+        tagName:
           type: string
         user:
           $ref: "#/components/schemas/UserInfoDto"
@@ -891,6 +979,27 @@ components:
       - id
       - login
       - name
+    TagCreateDto:
+      type: object
+      properties:
+        name:
+          type: string
+        commitSha:
+          type: string
+        branchName:
+          type: string
+      required:
+      - commitSha
+      - name
+    TagInfoDto:
+      type: object
+      properties:
+        name:
+          type: string
+        commitSha:
+          type: string
+        branchName:
+          type: string
     DeployRequest:
       type: object
       properties:
@@ -1014,6 +1123,149 @@ components:
           - NONE
         roleName:
           type: string
+    BranchInfoDto:
+      type: object
+      properties:
+        name:
+          type: string
+        commitSha:
+          type: string
+        aheadBy:
+          type: integer
+          format: int32
+        behindBy:
+          type: integer
+          format: int32
+        isDefault:
+          type: boolean
+        isProtected:
+          type: boolean
+        updatedAt:
+          type: string
+          format: date-time
+        updatedBy:
+          $ref: "#/components/schemas/UserInfoDto"
+        repository:
+          $ref: "#/components/schemas/RepositoryInfoDto"
+      required:
+      - commitSha
+      - name
+    CommitInfoDto:
+      type: object
+      properties:
+        sha:
+          type: string
+        author:
+          $ref: "#/components/schemas/UserInfoDto"
+        message:
+          type: string
+        authoredAt:
+          type: string
+          format: date-time
+        repository:
+          $ref: "#/components/schemas/RepositoryInfoDto"
+      required:
+      - sha
+    DeploymentDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        repository:
+          $ref: "#/components/schemas/RepositoryInfoDto"
+        url:
+          type: string
+        state:
+          type: string
+          enum:
+          - PENDING
+          - WAITING
+          - SUCCESS
+          - ERROR
+          - FAILURE
+          - IN_PROGRESS
+          - QUEUED
+          - INACTIVE
+          - UNKNOWN
+        statusesUrl:
+          type: string
+        sha:
+          type: string
+        ref:
+          type: string
+        task:
+          type: string
+        environment:
+          $ref: "#/components/schemas/EnvironmentDto"
+        user:
+          $ref: "#/components/schemas/UserInfoDto"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+      - environment
+      - id
+      - ref
+      - sha
+      - statusesUrl
+      - task
+      - url
+    TagDetailsDto:
+      type: object
+      properties:
+        name:
+          type: string
+        commit:
+          $ref: "#/components/schemas/CommitInfoDto"
+        branch:
+          $ref: "#/components/schemas/BranchInfoDto"
+        deployments:
+          type: array
+          items:
+            $ref: "#/components/schemas/DeploymentDto"
+        evaluations:
+          type: array
+          items:
+            $ref: "#/components/schemas/TagEvaluationDto"
+        createdBy:
+          $ref: "#/components/schemas/UserInfoDto"
+        createdAt:
+          type: string
+          format: date-time
+      required:
+      - commit
+      - createdAt
+      - createdBy
+      - deployments
+      - evaluations
+      - name
+    TagEvaluationDto:
+      type: object
+      properties:
+        user:
+          $ref: "#/components/schemas/UserInfoDto"
+        isWorking:
+          type: boolean
+      required:
+      - isWorking
+      - user
+    CommitsSinceTagDto:
+      type: object
+      properties:
+        commitsLength:
+          type: integer
+          format: int32
+        commits:
+          type: array
+          items:
+            $ref: "#/components/schemas/CommitInfoDto"
+      required:
+      - commits
+      - commitsLength
     LabelInfoDto:
       type: object
       properties:
@@ -1182,54 +1434,6 @@ components:
           $ref: "#/components/schemas/EnvironmentDto"
       required:
       - id
-    DeploymentDto:
-      type: object
-      properties:
-        id:
-          type: integer
-          format: int64
-        repository:
-          $ref: "#/components/schemas/RepositoryInfoDto"
-        url:
-          type: string
-        state:
-          type: string
-          enum:
-          - PENDING
-          - WAITING
-          - SUCCESS
-          - ERROR
-          - FAILURE
-          - IN_PROGRESS
-          - QUEUED
-          - INACTIVE
-          - UNKNOWN
-        statusesUrl:
-          type: string
-        sha:
-          type: string
-        ref:
-          type: string
-        task:
-          type: string
-        environment:
-          $ref: "#/components/schemas/EnvironmentDto"
-        user:
-          $ref: "#/components/schemas/UserInfoDto"
-        createdAt:
-          type: string
-          format: date-time
-        updatedAt:
-          type: string
-          format: date-time
-      required:
-      - environment
-      - id
-      - ref
-      - sha
-      - statusesUrl
-      - task
-      - url
     ActivityHistoryDto:
       type: object
       properties:
@@ -1267,23 +1471,7 @@ components:
         updatedAt:
           type: string
           format: date-time
-    CommitInfoDto:
-      type: object
-      properties:
-        sha:
-          type: string
-        author:
-          $ref: "#/components/schemas/UserInfoDto"
-        message:
-          type: string
-        authoredAt:
-          type: string
-          format: date-time
-        repository:
-          $ref: "#/components/schemas/RepositoryInfoDto"
-      required:
-      - sha
-    BranchInfoDto:
+    BranchDetailsDto:
       type: object
       properties:
         name:
@@ -1300,6 +1488,8 @@ components:
           type: boolean
         isProtected:
           type: boolean
+        tagName:
+          type: string
         updatedAt:
           type: string
           format: date-time

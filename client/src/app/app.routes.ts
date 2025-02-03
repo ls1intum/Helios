@@ -48,6 +48,18 @@ export const routes: Routes = [
           {
             path: 'release',
             loadComponent: () => import('./pages/release/release.component').then(m => m.ReleaseComponent),
+            children: [
+              {
+                path: '',
+                redirectTo: 'list',
+                pathMatch: 'full',
+              },
+              { path: 'list', loadComponent: () => import('./pages/tag-list/tag-list.component').then(m => m.TagListComponent) },
+              {
+                path: ':name',
+                loadComponent: () => import('./pages/tag-details/tag-details.component').then(m => m.TagDetailsComponent),
+              },
+            ],
           },
           {
             path: 'ci-cd',

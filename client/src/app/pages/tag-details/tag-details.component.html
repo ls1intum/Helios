@@ -1,0 +1,71 @@
+@if (tagQuery.data()!; as tag) {
+  <div class="my-3 flex items-start justify-between">
+    <div class="flex flex-col items-start">
+      <span class="text-gray-500 text-sm uppercase font-semibold tracking-wider mb-1">
+        Tag
+        @if (tag.branch) {
+          created from branch {{ tag.branch.name }}
+        }
+      </span>
+      <div class="flex-col items-center gap-4">
+        <h2 class="text-2xl">
+          {{ tag.name }}
+          <p-tag class="text-xs">
+            <i-tabler name="git-commit" class="!size-4" />
+            {{ tag.commit.sha | slice: 0 : 7 }}
+          </p-tag>
+        </h2>
+        <div class="flex gap-1 items-center text-sm">
+          <div>created by</div>
+          @if (tag.createdBy.avatarUrl) {
+            <p-avatar class="size-4" shape="circle" [image]="tag.createdBy.avatarUrl" />
+          } @else {
+            <i-tabler name="user" class="size-4 text-gray-600" />
+          }
+          {{ tag.createdBy.login }}
+          <span [pTooltip]="tag.createdAt">{{ tag.createdAt | timeAgo }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex flex-col items-center">
+      @if (permissionService.isAtLeastMaintainer()) {
+        <p-buttongroup class="mb-5">
+          <p-button label="Working" severity="success" [disabled]="hasUserEvaluatedTo(true)" (onClick)="evaluateTag(true)">
+            <i-tabler name="check" class="!size-5 text-white" />
+          </p-button>
+          <p-button label="Broken" severity="danger" [disabled]="hasUserEvaluatedTo(false)" (onClick)="evaluateTag(false)">
+            <i-tabler name="x" class="!size-5 text-white" />
+          </p-button>
+        </p-buttongroup>
+      }
+      @if (tag.evaluations.length > 0) {
+        <div class="text-gray-500 text-sm uppercase font-semibold tracking-wider mb-1">Reviews</div>
+        <div>
+          @for (evaluation of tag.evaluations; track evaluation.user.id) {
+            <div class="relative inline-block pt-2 pr-1">
+              <p-avatar [image]="evaluation.user.avatarUrl" class="size-7" shape="circle" />
+              <div class="absolute top-0 right-0">
+                @if (evaluation.isWorking) {
+                  <i-tabler name="check" class="!size-3 text-white bg-green-500 rounded-full" />
+                } @else {
+                  <i-tabler name="x" class="!size-3 text-white bg-red-500 rounded-full" />
+                }
+              </div>
+            </div>
+          }
+        </div>
+      } @else {
+        <div class="text-gray-500 text-sm uppercase font-semibold tracking-wider mb-1">No reviews yet</div>
+      }
+    </div>
+  </div>
+
+  <h3 class="text-xl mb-2">Tag Status on Environments</h3>
+  <app-tag-deployment-table [tag]="tag" />
+} @else {
+  <div class="flex flex-col items-start gap-2">
+    <p-skeleton width="8rem" height="1rem" />
+    <p-skeleton width="10rem" height="2rem" />
+  </div>
+}

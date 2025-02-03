@@ -61,7 +61,7 @@ export class KeycloakService {
     return this.decodedToken()?.sub;
   }
 
-  getPreferredUsername() {
+  getPreferredUsername(): string | undefined {
     return this.decodedToken()?.preferred_username;
   }
 

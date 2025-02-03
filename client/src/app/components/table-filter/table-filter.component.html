@@ -1,11 +1,13 @@
 <div class="flex items-center gap-2 w-full">
-  <p-button type="button" outlined (onClick)="toggle($event)" size="small">
-    @if (searchTableService().hasActiveFilter()) {
-      <i-tabler name="filter" />
-    } @else {
-      <i-tabler name="filter-plus" />
-    }
-  </p-button>
+  @if (searchTableService().filterOptions.length > 0) {
+    <p-button type="button" outlined (onClick)="toggle($event)" size="small">
+      @if (searchTableService().hasActiveFilter()) {
+        <i-tabler name="filter" />
+      } @else {
+        <i-tabler name="filter-plus" />
+      }
+    </p-button>
+  }
   <input
     pInputText
     [(ngModel)]="searchTableService().searchValue"

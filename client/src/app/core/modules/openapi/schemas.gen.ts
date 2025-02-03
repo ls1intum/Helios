@@ -65,6 +65,9 @@ export const EnvironmentDeploymentSchema = {
     task: {
       type: 'string',
     },
+    tagName: {
+      type: 'string',
+    },
     user: {
       $ref: '#/components/schemas/UserInfoDto',
     },
@@ -225,6 +228,37 @@ export const UserInfoDtoSchema = {
   required: ['avatarUrl', 'htmlUrl', 'id', 'login', 'name'],
 } as const;
 
+export const TagCreateDtoSchema = {
+  type: 'object',
+  properties: {
+    name: {
+      type: 'string',
+    },
+    commitSha: {
+      type: 'string',
+    },
+    branchName: {
+      type: 'string',
+    },
+  },
+  required: ['commitSha', 'name'],
+} as const;
+
+export const TagInfoDtoSchema = {
+  type: 'object',
+  properties: {
+    name: {
+      type: 'string',
+    },
+    commitSha: {
+      type: 'string',
+    },
+    branchName: {
+      type: 'string',
+    },
+  },
+} as const;
+
 export const DeployRequestSchema = {
   type: 'object',
   properties: {
@@ -346,6 +380,178 @@ export const GitHubRepositoryRoleDtoSchema = {
       type: 'string',
     },
   },
+} as const;
+
+export const BranchInfoDtoSchema = {
+  type: 'object',
+  properties: {
+    name: {
+      type: 'string',
+    },
+    commitSha: {
+      type: 'string',
+    },
+    aheadBy: {
+      type: 'integer',
+      format: 'int32',
+    },
+    behindBy: {
+      type: 'integer',
+      format: 'int32',
+    },
+    isDefault: {
+      type: 'boolean',
+    },
+    isProtected: {
+      type: 'boolean',
+    },
+    updatedAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+    updatedBy: {
+      $ref: '#/components/schemas/UserInfoDto',
+    },
+    repository: {
+      $ref: '#/components/schemas/RepositoryInfoDto',
+    },
+  },
+  required: ['commitSha', 'name'],
+} as const;
+
+export const CommitInfoDtoSchema = {
+  type: 'object',
+  properties: {
+    sha: {
+      type: 'string',
+    },
+    author: {
+      $ref: '#/components/schemas/UserInfoDto',
+    },
+    message: {
+      type: 'string',
+    },
+    authoredAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+    repository: {
+      $ref: '#/components/schemas/RepositoryInfoDto',
+    },
+  },
+  required: ['sha'],
+} as const;
+
+export const DeploymentDtoSchema = {
+  type: 'object',
+  properties: {
+    id: {
+      type: 'integer',
+      format: 'int64',
+    },
+    repository: {
+      $ref: '#/components/schemas/RepositoryInfoDto',
+    },
+    url: {
+      type: 'string',
+    },
+    state: {
+      type: 'string',
+      enum: ['PENDING', 'WAITING', 'SUCCESS', 'ERROR', 'FAILURE', 'IN_PROGRESS', 'QUEUED', 'INACTIVE', 'UNKNOWN'],
+    },
+    statusesUrl: {
+      type: 'string',
+    },
+    sha: {
+      type: 'string',
+    },
+    ref: {
+      type: 'string',
+    },
+    task: {
+      type: 'string',
+    },
+    environment: {
+      $ref: '#/components/schemas/EnvironmentDto',
+    },
+    user: {
+      $ref: '#/components/schemas/UserInfoDto',
+    },
+    createdAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+    updatedAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+  },
+  required: ['environment', 'id', 'ref', 'sha', 'statusesUrl', 'task', 'url'],
+} as const;
+
+export const TagDetailsDtoSchema = {
+  type: 'object',
+  properties: {
+    name: {
+      type: 'string',
+    },
+    commit: {
+      $ref: '#/components/schemas/CommitInfoDto',
+    },
+    branch: {
+      $ref: '#/components/schemas/BranchInfoDto',
+    },
+    deployments: {
+      type: 'array',
+      items: {
+        $ref: '#/components/schemas/DeploymentDto',
+      },
+    },
+    evaluations: {
+      type: 'array',
+      items: {
+        $ref: '#/components/schemas/TagEvaluationDto',
+      },
+    },
+    createdBy: {
+      $ref: '#/components/schemas/UserInfoDto',
+    },
+    createdAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+  },
+  required: ['commit', 'createdAt', 'createdBy', 'deployments', 'evaluations', 'name'],
+} as const;
+
+export const TagEvaluationDtoSchema = {
+  type: 'object',
+  properties: {
+    user: {
+      $ref: '#/components/schemas/UserInfoDto',
+    },
+    isWorking: {
+      type: 'boolean',
+    },
+  },
+  required: ['isWorking', 'user'],
+} as const;
+
+export const CommitsSinceTagDtoSchema = {
+  type: 'object',
+  properties: {
+    commitsLength: {
+      type: 'integer',
+      format: 'int32',
+    },
+    commits: {
+      type: 'array',
+      items: {
+        $ref: '#/components/schemas/CommitInfoDto',
+      },
+    },
+  },
+  required: ['commits', 'commitsLength'],
 } as const;
 
 export const LabelInfoDtoSchema = {
@@ -548,53 +754,6 @@ export const EnvironmentLockHistoryDtoSchema = {
   required: ['id'],
 } as const;
 
-export const DeploymentDtoSchema = {
-  type: 'object',
-  properties: {
-    id: {
-      type: 'integer',
-      format: 'int64',
-    },
-    repository: {
-      $ref: '#/components/schemas/RepositoryInfoDto',
-    },
-    url: {
-      type: 'string',
-    },
-    state: {
-      type: 'string',
-      enum: ['PENDING', 'WAITING', 'SUCCESS', 'ERROR', 'FAILURE', 'IN_PROGRESS', 'QUEUED', 'INACTIVE', 'UNKNOWN'],
-    },
-    statusesUrl: {
-      type: 'string',
-    },
-    sha: {
-      type: 'string',
-    },
-    ref: {
-      type: 'string',
-    },
-    task: {
-      type: 'string',
-    },
-    environment: {
-      $ref: '#/components/schemas/EnvironmentDto',
-    },
-    user: {
-      $ref: '#/components/schemas/UserInfoDto',
-    },
-    createdAt: {
-      type: 'string',
-      format: 'date-time',
-    },
-    updatedAt: {
-      type: 'string',
-      format: 'date-time',
-    },
-  },
-  required: ['environment', 'id', 'ref', 'sha', 'statusesUrl', 'task', 'url'],
-} as const;
-
 export const ActivityHistoryDtoSchema = {
   type: 'object',
   properties: {
@@ -636,30 +795,7 @@ export const ActivityHistoryDtoSchema = {
   },
 } as const;
 
-export const CommitInfoDtoSchema = {
-  type: 'object',
-  properties: {
-    sha: {
-      type: 'string',
-    },
-    author: {
-      $ref: '#/components/schemas/UserInfoDto',
-    },
-    message: {
-      type: 'string',
-    },
-    authoredAt: {
-      type: 'string',
-      format: 'date-time',
-    },
-    repository: {
-      $ref: '#/components/schemas/RepositoryInfoDto',
-    },
-  },
-  required: ['sha'],
-} as const;
-
-export const BranchInfoDtoSchema = {
+export const BranchDetailsDtoSchema = {
   type: 'object',
   properties: {
     name: {
@@ -681,6 +817,9 @@ export const BranchInfoDtoSchema = {
     },
     isProtected: {
       type: 'boolean',
+    },
+    tagName: {
+      type: 'string',
     },
     updatedAt: {
       type: 'string',

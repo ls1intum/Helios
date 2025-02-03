@@ -45,6 +45,19 @@ public class BranchControllerTest {
               new RepositoryInfoDto(1L, "repo", "repo", null, "url")),
           new BranchInfoDto("branch2", "sha2", 0, 0, false, false, null, null, null));
 
+  private final BranchDetailsDto branch =
+      new BranchDetailsDto(
+          "branch1",
+          "sha1",
+          0,
+          0,
+          false,
+          false,
+          "tag",
+          null,
+          null,
+          new RepositoryInfoDto(1L, "repo", "repo", null, "url"));
+
   @Test
   void testRejectUnauthenticatedUser() throws Exception {
     this.mockMvc
@@ -71,7 +84,8 @@ public class BranchControllerTest {
     Long id = this.branches.get(0).repository().id();
     String branchName = this.branches.get(0).name();
 
-    when(branchService.getBranchInfo(id, branchName)).thenReturn(Optional.of(branches.get(0)));
+    when(branchService.getBranchByRepositoryIdAndName(id, branchName))
+        .thenReturn(Optional.of(branch));
     ResultActions request =
         this.mockMvc
             .perform(
@@ -83,8 +97,8 @@ public class BranchControllerTest {
 
     assertEquals(
         objectMapper.readValue(
-            request.andReturn().getResponse().getContentAsString(), BranchInfoDto.class),
-        this.branches.get(0));
+            request.andReturn().getResponse().getContentAsString(), BranchDetailsDto.class),
+        branch);
   }
 
   @Test

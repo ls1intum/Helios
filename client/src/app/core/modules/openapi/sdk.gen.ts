@@ -8,6 +8,11 @@ import type {
   GetEnvironmentByIdResponse,
   UpdateEnvironmentData,
   UnlockEnvironmentData,
+  GetAllTagsData,
+  GetAllTagsResponse,
+  CreateTagData,
+  CreateTagResponse,
+  EvaluateData,
   CreateWorkflowGroupData,
   CreateWorkflowGroupResponse,
   DeployToEnvironmentData,
@@ -28,6 +33,10 @@ import type {
   GetLatestWorkflowRunsByBranchAndHeadCommitResponse,
   GetUserPermissionsData,
   GetUserPermissionsResponse,
+  GetTagByNameData,
+  GetTagByNameResponse,
+  GetCommitsSinceLastTagData,
+  GetCommitsSinceLastTagResponse,
   GetGroupsWithWorkflowsData,
   GetGroupsWithWorkflowsResponse,
   GetAllRepositoriesData,
@@ -120,6 +129,31 @@ export const unlockEnvironment = <ThrowOnError extends boolean = false>(options:
   });
 };
 
+export const getAllTags = <ThrowOnError extends boolean = false>(options?: Options<GetAllTagsData, ThrowOnError>) => {
+  return (options?.client ?? client).get<GetAllTagsResponse, unknown, ThrowOnError>({
+    ...options,
+    url: '/api/tags',
+  });
+};
+
+export const createTag = <ThrowOnError extends boolean = false>(options: Options<CreateTagData, ThrowOnError>) => {
+  return (options?.client ?? client).post<CreateTagResponse, unknown, ThrowOnError>({
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+    url: '/api/tags',
+  });
+};
+
+export const evaluate = <ThrowOnError extends boolean = false>(options: Options<EvaluateData, ThrowOnError>) => {
+  return (options?.client ?? client).post<unknown, unknown, ThrowOnError>({
+    ...options,
+    url: '/api/tags/{name}/evaluate/{isWorking}',
+  });
+};
+
 export const createWorkflowGroup = <ThrowOnError extends boolean = false>(options: Options<CreateWorkflowGroupData, ThrowOnError>) => {
   return (options?.client ?? client).post<CreateWorkflowGroupResponse, unknown, ThrowOnError>({
     ...options,
@@ -199,6 +233,20 @@ export const getUserPermissions = <ThrowOnError extends boolean = false>(options
   return (options?.client ?? client).get<GetUserPermissionsResponse, unknown, ThrowOnError>({
     ...options,
     url: '/api/user-permissions',
+  });
+};
+
+export const getTagByName = <ThrowOnError extends boolean = false>(options: Options<GetTagByNameData, ThrowOnError>) => {
+  return (options?.client ?? client).get<GetTagByNameResponse, unknown, ThrowOnError>({
+    ...options,
+    url: '/api/tags/{name}',
+  });
+};
+
+export const getCommitsSinceLastTag = <ThrowOnError extends boolean = false>(options: Options<GetCommitsSinceLastTagData, ThrowOnError>) => {
+  return (options?.client ?? client).get<GetCommitsSinceLastTagResponse, unknown, ThrowOnError>({
+    ...options,
+    url: '/api/tags/newcommits',
   });
 };
 

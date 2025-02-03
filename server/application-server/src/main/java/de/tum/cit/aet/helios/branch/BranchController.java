@@ -25,10 +25,10 @@ public class BranchController {
   }
 
   @GetMapping("/repository/{repoId}/branch")
-  public ResponseEntity<BranchInfoDto> getBranchByRepositoryIdAndName(
+  public ResponseEntity<BranchDetailsDto> getBranchByRepositoryIdAndName(
       @PathVariable(name = "repoId") Long repoId, @RequestParam(name = "name") String name) {
     return branchService
-        .getBranchInfo(repoId, name)
+        .getBranchByRepositoryIdAndName(repoId, name)
         .map(ResponseEntity::ok)
         .orElseGet(() -> ResponseEntity.notFound().build());
   }

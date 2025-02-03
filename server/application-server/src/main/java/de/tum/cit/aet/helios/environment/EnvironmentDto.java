@@ -5,6 +5,8 @@ import de.tum.cit.aet.helios.deployment.LatestDeploymentUnion;
 import de.tum.cit.aet.helios.environment.status.EnvironmentStatus;
 import de.tum.cit.aet.helios.environment.status.StatusCheckType;
 import de.tum.cit.aet.helios.gitrepo.RepositoryInfoDto;
+import de.tum.cit.aet.helios.tag.Tag;
+import de.tum.cit.aet.helios.tag.TagRepository;
 import de.tum.cit.aet.helios.user.UserInfoDto;
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -60,11 +62,13 @@ public record EnvironmentDto(
       String sha,
       String ref,
       String task,
+      String tagName,
       UserInfoDto user,
       OffsetDateTime createdAt,
       OffsetDateTime updatedAt) {
     /** Builds an EnvironmentDeployment from a LatestDeploymentUnion. */
-    public static EnvironmentDeployment fromUnion(LatestDeploymentUnion union) {
+    public static EnvironmentDeployment fromUnion(
+        LatestDeploymentUnion union, TagRepository tagRepository) {
       return new EnvironmentDeployment(
           union.getId(),
           union.getUrl(),
@@ -73,6 +77,10 @@ public record EnvironmentDto(
           union.getSha(),
           union.getRef(),
           union.getTask(),
+          tagRepository
+              .findByRepositoryRepositoryIdAndCommitSha(union.getRepository().id(), union.getSha())
+              .map(Tag::getName)
+              .orElse(null),
           UserInfoDto.fromUser(union.getCreator()),
           union.getCreatedAt(),
           union.getUpdatedAt());
@@ -86,11 +94,12 @@ public record EnvironmentDto(
   public static EnvironmentDto fromEnvironment(
       Environment environment,
       LatestDeploymentUnion latestUnion,
-      Optional<EnvironmentStatus> latestStatus) {
+      Optional<EnvironmentStatus> latestStatus,
+      TagRepository tagRepository) {
     // If union is null or none(), we won't have a 'latestDeployment'
     EnvironmentDeployment envDeployment = null;
     if (latestUnion != null && !latestUnion.isNone()) {
-      envDeployment = EnvironmentDeployment.fromUnion(latestUnion);
+      envDeployment = EnvironmentDeployment.fromUnion(latestUnion, tagRepository);
     }
 
     return new EnvironmentDto(
@@ -117,6 +126,6 @@ public record EnvironmentDto(
   /** Overload if you just want to create an EnvironmentDto with no "latestDeployment" info. */
   public static EnvironmentDto fromEnvironment(Environment environment) {
     return EnvironmentDto.fromEnvironment(
-        environment, LatestDeploymentUnion.none(), Optional.empty());
+        environment, LatestDeploymentUnion.none(), Optional.empty(), null);
   }
 }

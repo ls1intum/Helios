@@ -8,6 +8,10 @@ import type {
   GetEnvironmentByIdData,
   UpdateEnvironmentData,
   UnlockEnvironmentData,
+  GetAllTagsData,
+  CreateTagData,
+  CreateTagResponse,
+  EvaluateData,
   CreateWorkflowGroupData,
   CreateWorkflowGroupResponse,
   DeployToEnvironmentData,
@@ -20,6 +24,8 @@ import type {
   GetLatestWorkflowRunsByPullRequestIdAndHeadCommitData,
   GetLatestWorkflowRunsByBranchAndHeadCommitData,
   GetUserPermissionsData,
+  GetTagByNameData,
+  GetCommitsSinceLastTagData,
   GetGroupsWithWorkflowsData,
   GetAllRepositoriesData,
   GetRepositoryByIdData,
@@ -48,6 +54,9 @@ import {
   getEnvironmentById,
   updateEnvironment,
   unlockEnvironment,
+  getAllTags,
+  createTag,
+  evaluate,
   createWorkflowGroup,
   deployToEnvironment,
   healthCheck,
@@ -58,6 +67,8 @@ import {
   getLatestWorkflowRunsByPullRequestIdAndHeadCommit,
   getLatestWorkflowRunsByBranchAndHeadCommit,
   getUserPermissions,
+  getTagByName,
+  getCommitsSinceLastTag,
   getGroupsWithWorkflows,
   getAllRepositories,
   getRepositoryById,
@@ -172,6 +183,85 @@ export const unlockEnvironmentMutation = (options?: Partial<Options<UnlockEnviro
   const mutationOptions: MutationOptions<unknown, DefaultError, Options<UnlockEnvironmentData>> = {
     mutationFn: async localOptions => {
       const { data } = await unlockEnvironment({
+        ...options,
+        ...localOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const getAllTagsQueryKey = (options?: Options<GetAllTagsData>) => [createQueryKey('getAllTags', options)];
+
+export const getAllTagsOptions = (options?: Options<GetAllTagsData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getAllTags({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: getAllTagsQueryKey(options),
+  });
+};
+
+export const createTagQueryKey = (options: Options<CreateTagData>) => [createQueryKey('createTag', options)];
+
+export const createTagOptions = (options: Options<CreateTagData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await createTag({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: createTagQueryKey(options),
+  });
+};
+
+export const createTagMutation = (options?: Partial<Options<CreateTagData>>) => {
+  const mutationOptions: MutationOptions<CreateTagResponse, DefaultError, Options<CreateTagData>> = {
+    mutationFn: async localOptions => {
+      const { data } = await createTag({
+        ...options,
+        ...localOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const evaluateQueryKey = (options: Options<EvaluateData>) => [createQueryKey('evaluate', options)];
+
+export const evaluateOptions = (options: Options<EvaluateData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await evaluate({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: evaluateQueryKey(options),
+  });
+};
+
+export const evaluateMutation = (options?: Partial<Options<EvaluateData>>) => {
+  const mutationOptions: MutationOptions<unknown, DefaultError, Options<EvaluateData>> = {
+    mutationFn: async localOptions => {
+      const { data } = await evaluate({
         ...options,
         ...localOptions,
         throwOnError: true,
@@ -381,6 +471,40 @@ export const getUserPermissionsOptions = (options?: Options<GetUserPermissionsDa
       return data;
     },
     queryKey: getUserPermissionsQueryKey(options),
+  });
+};
+
+export const getTagByNameQueryKey = (options: Options<GetTagByNameData>) => [createQueryKey('getTagByName', options)];
+
+export const getTagByNameOptions = (options: Options<GetTagByNameData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getTagByName({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: getTagByNameQueryKey(options),
+  });
+};
+
+export const getCommitsSinceLastTagQueryKey = (options: Options<GetCommitsSinceLastTagData>) => [createQueryKey('getCommitsSinceLastTag', options)];
+
+export const getCommitsSinceLastTagOptions = (options: Options<GetCommitsSinceLastTagData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getCommitsSinceLastTag({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: getCommitsSinceLastTagQueryKey(options),
   });
 };
 

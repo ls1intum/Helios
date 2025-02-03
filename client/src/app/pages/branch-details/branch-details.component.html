@@ -1,10 +1,23 @@
-<div class="my-3">
+<div class="my-3 flex items-start justify-between">
   @if (query.data(); as branch) {
     <div class="flex flex-col items-start">
-      <span class="text-gray-500 text-sm uppercase font-semibold tracking-wider mb-1">Branch {{ branch.name }}</span>
+      <span class="text-gray-500 text-sm uppercase font-semibold tracking-wider mb-1 flex gap-2 items-center"
+        >Branch {{ branch.name }}
+        @if (branch.tagName) {
+          <p-tag class="text-xs cursor-pointer" [routerLink]="['/repo', repositoryId(), 'release', branch.tagName]">
+            <i-tabler name="tag" class="!size-4" />
+            {{ branch.tagName }}
+          </p-tag>
+        }
+      </span>
       <div class="flex items-center gap-4">
         <h2 class="text-2xl">{{ commit()?.message }}</h2>
       </div>
+    </div>
+    <div>
+      @if (isAtLeastMaintainer() && !branch.tagName) {
+        <p-button label="Create Release" (onClick)="isCreateDialogVisible.set(true)" />
+      }
     </div>
   } @else {
     <div class="flex flex-col items-start gap-2">
@@ -20,3 +33,7 @@
     <app-deployment-selection [sourceRef]="branch.name" />
   }
 </div>
+
+@if (commit() !== undefined) {
+  <app-tag-create [(isVisible)]="isCreateDialogVisible" [branchName]="branchName()" [headCommit]="commit()!" [repositoryId]="repositoryId()" />
+}

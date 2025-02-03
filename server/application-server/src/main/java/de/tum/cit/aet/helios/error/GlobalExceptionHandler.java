@@ -2,16 +2,19 @@ package de.tum.cit.aet.helios.error;
 
 import de.tum.cit.aet.helios.deployment.DeploymentException;
 import de.tum.cit.aet.helios.environment.EnvironmentException;
+import de.tum.cit.aet.helios.tag.TagException;
 import io.sentry.Sentry;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.time.Instant;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+@Log4j2
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -47,8 +50,7 @@ public class GlobalExceptionHandler {
   }
 
   // -- 403 FORBIDDEN ------------------------------------
-  @ExceptionHandler({SecurityException.class, 
-      EnvironmentException.class})
+  @ExceptionHandler({SecurityException.class, EnvironmentException.class})
   public ResponseEntity<ApiError> handleSecurityExceptions(
       RuntimeException ex, HttpServletRequest request) {
 
@@ -64,8 +66,7 @@ public class GlobalExceptionHandler {
 
   // -- 500 INTERNAL SERVER ERROR (FALLBACK) -------------
   @ExceptionHandler({Exception.class, IOException.class})
-  public ResponseEntity<ApiError> handleGeneralException(
-      Exception ex, HttpServletRequest request) {
+  public ResponseEntity<ApiError> handleGeneralException(Exception ex, HttpServletRequest request) {
 
     ApiError error = new ApiError();
     error.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
@@ -75,6 +76,8 @@ public class GlobalExceptionHandler {
     error.setTimestamp(Instant.now());
 
     Sentry.captureException(ex);
+    log.error(
+        "An internal server error occurred", ex);
 
     return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
   }
@@ -87,6 +90,19 @@ public class GlobalExceptionHandler {
     error.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
     error.setError("Deployment Error");
     error.setMessage("Deployment failed: " + ex.getMessage());
+    error.setPath(request.getRequestURI());
+    error.setTimestamp(Instant.now());
+
+    return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
+  }
+
+  @ExceptionHandler(TagException.class)
+  public ResponseEntity<ApiError> handleTagException(TagException ex, HttpServletRequest request) {
+
+    ApiError error = new ApiError();
+    error.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+    error.setError("Tag Error");
+    error.setMessage("Tag operation failed: " + ex.getMessage());
     error.setPath(request.getRequestURI());
     error.setTimestamp(Instant.now());
 

@@ -7,6 +7,7 @@ import de.tum.cit.aet.helios.deployment.DeploymentRepository;
 import de.tum.cit.aet.helios.deployment.LatestDeploymentUnion;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
+import de.tum.cit.aet.helios.tag.TagRepository;
 import de.tum.cit.aet.helios.user.User;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
@@ -14,31 +15,21 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 
 @Service
 @Transactional
+@RequiredArgsConstructor
 public class EnvironmentService {
 
   private final AuthService authService;
   private final EnvironmentRepository environmentRepository;
   private final EnvironmentLockHistoryRepository lockHistoryRepository;
   private final HeliosDeploymentRepository heliosDeploymentRepository;
+  private final TagRepository tagRepository;
   private final DeploymentRepository deploymentRepository;
-
-  public EnvironmentService(
-      EnvironmentRepository environmentRepository,
-      EnvironmentLockHistoryRepository lockHistoryRepository,
-      HeliosDeploymentRepository heliosDeploymentRepository,
-      AuthService authService,
-      DeploymentRepository deploymentRepository) {
-    this.environmentRepository = environmentRepository;
-    this.lockHistoryRepository = lockHistoryRepository;
-    this.heliosDeploymentRepository = heliosDeploymentRepository;
-    this.authService = authService;
-    this.deploymentRepository = deploymentRepository;
-  }
 
   public Optional<EnvironmentDto> getEnvironmentById(Long id) {
     return environmentRepository.findById(id).map(EnvironmentDto::fromEnvironment);
@@ -47,9 +38,10 @@ public class EnvironmentService {
   public List<EnvironmentDto> getAllEnvironments() {
     return environmentRepository.findAllByOrderByNameAsc().stream()
         .map(
-            env -> {
-              LatestDeploymentUnion latest = findLatestDeployment(env);
-              return EnvironmentDto.fromEnvironment(env, latest, env.getLatestStatus());
+            environment -> {
+              LatestDeploymentUnion latest = findLatestDeployment(environment);
+              return EnvironmentDto.fromEnvironment(
+                  environment, latest, environment.getLatestStatus(), tagRepository);
             })
         .collect(Collectors.toList());
   }
@@ -57,9 +49,10 @@ public class EnvironmentService {
   public List<EnvironmentDto> getAllEnabledEnvironments() {
     return environmentRepository.findByEnabledTrueOrderByNameAsc().stream()
         .map(
-            env -> {
-              LatestDeploymentUnion latest = findLatestDeployment(env);
-              return EnvironmentDto.fromEnvironment(env, latest, env.getLatestStatus());
+            environment -> {
+              LatestDeploymentUnion latest = findLatestDeployment(environment);
+              return EnvironmentDto.fromEnvironment(
+                  environment, latest, environment.getLatestStatus(), tagRepository);
             })
         .collect(Collectors.toList());
   }
@@ -124,10 +117,8 @@ public class EnvironmentService {
   /**
    * Locks the environment with the specified ID.
    *
-   * <p>This method attempts to lock the environment by setting its locked status to
-   * true. If the
-   * environment is already locked, it returns an empty Optional. If the
-   * environment is successfully
+   * <p>This method attempts to lock the environment by setting its locked status to true. If the
+   * environment is already locked, it returns an empty Optional. If the environment is successfully
    * locked, it returns an Optional containing the locked environment.
    *
    * <p>This method is transactional and handles optimistic locking failures.
@@ -141,9 +132,10 @@ public class EnvironmentService {
   public Optional<Environment> lockEnvironment(Long id) {
     final User currentUser = authService.getUserFromGithubId();
 
-    Environment environment = environmentRepository
-        .findById(id)
-        .orElseThrow(() -> new EntityNotFoundException("Environment not found with ID: " + id));
+    Environment environment =
+        environmentRepository
+            .findById(id)
+            .orElseThrow(() -> new EntityNotFoundException("Environment not found with ID: " + id));
 
     if (!environment.isEnabled()) {
       throw new IllegalStateException("Environment is disabled");
@@ -190,9 +182,10 @@ public class EnvironmentService {
   public EnvironmentDto unlockEnvironment(Long id) {
     final User currentUser = authService.getUserFromGithubId();
 
-    Environment environment = environmentRepository
-        .findById(id)
-        .orElseThrow(() -> new EntityNotFoundException("Environment not found with ID: " + id));
+    Environment environment =
+        environmentRepository
+            .findById(id)
+            .orElseThrow(() -> new EntityNotFoundException("Environment not found with ID: " + id));
 
     if (!environment.isLocked()) {
       throw new IllegalStateException("Environment is not locked");
@@ -229,8 +222,7 @@ public class EnvironmentService {
   /**
    * Updates the environment with the specified ID.
    *
-   * <p>This method updates the environment with the specified ID using the provided
-   * EnvironmentDto.
+   * <p>This method updates the environment with the specified ID using the provided EnvironmentDto.
    *
    * @param id the ID of the environment to update
    * @param environmentDto the EnvironmentDto containing the updated environment information
@@ -286,14 +278,16 @@ public class EnvironmentService {
         lockHistoryRepository.findLatestLockForEnabledEnvironment(currentUser);
 
     return lockHistory
-        .map(lock -> EnvironmentLockHistoryDto.fromEnvironmentLockHistory(lock, this))
+        .map(
+            lock -> EnvironmentLockHistoryDto.fromEnvironmentLockHistory(lock, this, tagRepository))
         .orElse(null);
   }
 
   public List<EnvironmentLockHistoryDto> getLockHistoryByEnvironmentId(Long environmentId) {
     return lockHistoryRepository.findLockHistoriesByEnvironment(environmentId).stream()
-    .map(lock -> EnvironmentLockHistoryDto.fromEnvironmentLockHistory(lock, this))
-    .collect(Collectors.toList());
+        .map(
+            lock -> EnvironmentLockHistoryDto.fromEnvironmentLockHistory(lock, this, tagRepository))
+        .collect(Collectors.toList());
   }
 
   private boolean canUnlock(Environment environment, long timeoutMinutes) {

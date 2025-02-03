@@ -20,6 +20,7 @@ export type EnvironmentDeployment = {
   sha?: string;
   ref?: string;
   task?: string;
+  tagName?: string;
   user?: UserInfoDto;
   createdAt?: string;
   updatedAt?: string;
@@ -71,6 +72,18 @@ export type UserInfoDto = {
   htmlUrl: string;
 };
 
+export type TagCreateDto = {
+  name: string;
+  commitSha: string;
+  branchName?: string;
+};
+
+export type TagInfoDto = {
+  name?: string;
+  commitSha?: string;
+  branchName?: string;
+};
+
 export type DeployRequest = {
   environmentId: number;
   branchName: string;
@@ -119,6 +132,61 @@ export type WorkflowRunDto = {
 export type GitHubRepositoryRoleDto = {
   permission?: 'ADMIN' | 'WRITE' | 'READ' | 'NONE';
   roleName?: string;
+};
+
+export type BranchInfoDto = {
+  name: string;
+  commitSha: string;
+  aheadBy?: number;
+  behindBy?: number;
+  isDefault?: boolean;
+  isProtected?: boolean;
+  updatedAt?: string;
+  updatedBy?: UserInfoDto;
+  repository?: RepositoryInfoDto;
+};
+
+export type CommitInfoDto = {
+  sha: string;
+  author?: UserInfoDto;
+  message?: string;
+  authoredAt?: string;
+  repository?: RepositoryInfoDto;
+};
+
+export type DeploymentDto = {
+  id: number;
+  repository?: RepositoryInfoDto;
+  url: string;
+  state?: 'PENDING' | 'WAITING' | 'SUCCESS' | 'ERROR' | 'FAILURE' | 'IN_PROGRESS' | 'QUEUED' | 'INACTIVE' | 'UNKNOWN';
+  statusesUrl: string;
+  sha: string;
+  ref: string;
+  task: string;
+  environment: EnvironmentDto;
+  user?: UserInfoDto;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type TagDetailsDto = {
+  name: string;
+  commit: CommitInfoDto;
+  branch?: BranchInfoDto;
+  deployments: Array<DeploymentDto>;
+  evaluations: Array<TagEvaluationDto>;
+  createdBy: UserInfoDto;
+  createdAt: string;
+};
+
+export type TagEvaluationDto = {
+  user: UserInfoDto;
+  isWorking: boolean;
+};
+
+export type CommitsSinceTagDto = {
+  commitsLength: number;
+  commits: Array<CommitInfoDto>;
 };
 
 export type LabelInfoDto = {
@@ -189,21 +257,6 @@ export type EnvironmentLockHistoryDto = {
   environment?: EnvironmentDto;
 };
 
-export type DeploymentDto = {
-  id: number;
-  repository?: RepositoryInfoDto;
-  url: string;
-  state?: 'PENDING' | 'WAITING' | 'SUCCESS' | 'ERROR' | 'FAILURE' | 'IN_PROGRESS' | 'QUEUED' | 'INACTIVE' | 'UNKNOWN';
-  statusesUrl: string;
-  sha: string;
-  ref: string;
-  task: string;
-  environment: EnvironmentDto;
-  user?: UserInfoDto;
-  createdAt?: string;
-  updatedAt?: string;
-};
-
 export type ActivityHistoryDto = {
   type?: string;
   id?: number;
@@ -217,21 +270,14 @@ export type ActivityHistoryDto = {
   updatedAt?: string;
 };
 
-export type CommitInfoDto = {
-  sha: string;
-  author?: UserInfoDto;
-  message?: string;
-  authoredAt?: string;
-  repository?: RepositoryInfoDto;
-};
-
-export type BranchInfoDto = {
+export type BranchDetailsDto = {
   name: string;
   commitSha: string;
   aheadBy?: number;
   behindBy?: number;
   isDefault?: boolean;
   isProtected?: boolean;
+  tagName?: string;
   updatedAt?: string;
   updatedBy?: UserInfoDto;
   repository?: RepositoryInfoDto;
@@ -313,6 +359,55 @@ export type UnlockEnvironmentData = {
 };
 
 export type UnlockEnvironmentResponses = {
+  /**
+   * OK
+   */
+  200: unknown;
+};
+
+export type GetAllTagsData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/api/tags';
+};
+
+export type GetAllTagsResponses = {
+  /**
+   * OK
+   */
+  200: Array<TagInfoDto>;
+};
+
+export type GetAllTagsResponse = GetAllTagsResponses[keyof GetAllTagsResponses];
+
+export type CreateTagData = {
+  body: TagCreateDto;
+  path?: never;
+  query?: never;
+  url: '/api/tags';
+};
+
+export type CreateTagResponses = {
+  /**
+   * OK
+   */
+  200: TagInfoDto;
+};
+
+export type CreateTagResponse = CreateTagResponses[keyof CreateTagResponses];
+
+export type EvaluateData = {
+  body?: never;
+  path: {
+    name: string;
+    isWorking: boolean;
+  };
+  query?: never;
+  url: '/api/tags/{name}/evaluate/{isWorking}';
+};
+
+export type EvaluateResponses = {
   /**
    * OK
    */
@@ -491,6 +586,42 @@ export type GetUserPermissionsResponses = {
 };
 
 export type GetUserPermissionsResponse = GetUserPermissionsResponses[keyof GetUserPermissionsResponses];
+
+export type GetTagByNameData = {
+  body?: never;
+  path: {
+    name: string;
+  };
+  query?: never;
+  url: '/api/tags/{name}';
+};
+
+export type GetTagByNameResponses = {
+  /**
+   * OK
+   */
+  200: TagDetailsDto;
+};
+
+export type GetTagByNameResponse = GetTagByNameResponses[keyof GetTagByNameResponses];
+
+export type GetCommitsSinceLastTagData = {
+  body?: never;
+  path?: never;
+  query: {
+    branch: string;
+  };
+  url: '/api/tags/newcommits';
+};
+
+export type GetCommitsSinceLastTagResponses = {
+  /**
+   * OK
+   */
+  200: CommitsSinceTagDto;
+};
+
+export type GetCommitsSinceLastTagResponse = GetCommitsSinceLastTagResponses[keyof GetCommitsSinceLastTagResponses];
 
 export type GetGroupsWithWorkflowsData = {
   body?: never;
@@ -837,7 +968,7 @@ export type GetBranchByRepositoryIdAndNameResponses = {
   /**
    * OK
    */
-  200: BranchInfoDto;
+  200: BranchDetailsDto;
 };
 
 export type GetBranchByRepositoryIdAndNameResponse = GetBranchByRepositoryIdAndNameResponses[keyof GetBranchByRepositoryIdAndNameResponses];
