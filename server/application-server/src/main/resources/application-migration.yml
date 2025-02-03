@@ -1,0 +1,22 @@
+spring:
+    datasource:
+        driver-class-name: org.postgresql.Driver
+        url: ${DATASOURCE_URL}
+        username: ${DATASOURCE_USERNAME}
+        password: ${DATASOURCE_PASSWORD}
+    jpa:
+        properties:
+            hibernate:
+                format_sql: false
+                hbm2ddl.delimiter: ;
+            javax:
+                persistence:
+                    schema-generation:
+                        create-source: metadata
+                        database:
+                            action: validate
+                        scripts:
+                            action: update
+                            create-target: src/main/resources/db/migration/Vx__New_Migration.sql
+                            drop-target: src/main/resources/db/migration/Vx__New_Migration.sql
+

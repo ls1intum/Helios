@@ -83,7 +83,7 @@ public class BranchControllerTest {
 
     assertEquals(
         objectMapper.readValue(
-            request.andReturn().getResponse().getContentAsString(), BranchInfoDto.class),
+            request.andReturn().getResponse().getContentAsString(), BranchDetailsDto.class),
         this.branches.get(0));
   }
 
