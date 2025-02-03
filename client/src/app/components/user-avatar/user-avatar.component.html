@@ -1,0 +1,14 @@
+@if (user()) {
+  <p-avatar
+    class="w-6 h-6"
+    shape="circle"
+    size="normal"
+    [image]="user()?.avatarUrl"
+    [pTooltip]="keycloakService.isCurrentUser(user()?.login) ? 'You' : user()?.name"
+    [styleClass]="getAvatarBorderClass(user()?.login || '')"
+    (click)="openUserProfile(user()?.login || '')"
+  >
+  </p-avatar>
+} @else {
+  <i-tabler name="user" class="w-6 h-6 text-gray-600" />
+}

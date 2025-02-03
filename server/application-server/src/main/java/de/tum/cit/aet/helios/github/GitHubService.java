@@ -12,9 +12,11 @@ import de.tum.cit.aet.helios.github.permissions.GitHubRepositoryRoleDto;
 import de.tum.cit.aet.helios.github.permissions.RepoPermissionType;
 import jakarta.transaction.Transactional;
 import java.io.IOException;
+import java.time.OffsetDateTime;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import lombok.extern.log4j.Log4j2;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
@@ -201,12 +203,13 @@ public class GitHubService {
    *
    * @param repository      the GitHub repository as a GHRepository object
    * @param environmentName the environment name
+   * @param since           an optional timestamp to fetch deployments since
    * @return a GitHubDeploymentIterator object
    */
   public Iterator<GitHubDeploymentDto> getDeploymentIterator(
-      GHRepository repository, String environmentName) {
+      GHRepository repository, String environmentName, Optional<OffsetDateTime> since) {
     return new GitHubDeploymentIterator(
-        repository, environmentName, okHttpClient, getRequestBuilder(), objectMapper);
+        repository, environmentName, okHttpClient, getRequestBuilder(), objectMapper, since);
   }
 
   /**
@@ -238,10 +241,12 @@ public class GitHubService {
    * Retrieves the GitHub repository role for a given repository ID and username.
    *
    * @param repositoryId the ID of the repository.
-   * @param username the GitHub username.
+   * @param username     the GitHub username.
    * @return GitHubRepositoryRoleDto containing the role information.
-   * @throws IOException if there is an error making the GitHub API call or processing the response.
-   * @throws IllegalArgumentException if the repository ID or username is null or empty.
+   * @throws IOException if there is an error making the GitHub API call or
+   *                     processing the response.
+   * @throws IllegalArgumentException if the repository ID or username is null
+   *                                  or empty.
    */
   public GitHubRepositoryRoleDto getRepositoryRole(String repositoryId, String username)
       throws IOException, IllegalArgumentException {

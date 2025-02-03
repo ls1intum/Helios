@@ -1,16 +1,20 @@
 package de.tum.cit.aet.helios.environment;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import de.tum.cit.aet.helios.deployment.Deployment;
+import de.tum.cit.aet.helios.deployment.LatestDeploymentUnion;
+import de.tum.cit.aet.helios.environment.status.EnvironmentStatus;
+import de.tum.cit.aet.helios.environment.status.StatusCheckType;
 import de.tum.cit.aet.helios.gitrepo.RepositoryInfoDto;
 import de.tum.cit.aet.helios.tag.Tag;
 import de.tum.cit.aet.helios.tag.TagRepository;
+import de.tum.cit.aet.helios.user.UserInfoDto;
+import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.springframework.lang.NonNull;
 
-@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public record EnvironmentDto(
     RepositoryInfoDto repository,
     @NonNull Long id,
@@ -24,39 +28,80 @@ public record EnvironmentDto(
     List<String> installedApps,
     String description,
     String serverUrl,
+    StatusCheckType statusCheckType,
+    String statusUrl,
     EnvironmentDeployment latestDeployment,
-    String lockedBy,
+    EnvironmentStatusDto latestStatus,
+    UserInfoDto lockedBy,
     OffsetDateTime lockedAt) {
 
-  public static record EnvironmentDeployment(
+  public static record EnvironmentStatusDto(
       @NonNull Long id,
-      @NonNull String url,
-      Deployment.State state,
-      @NonNull String statusesUrl,
-      @NonNull String sha,
-      @NonNull String ref,
-      @NonNull String task,
-      String tagName,
-      OffsetDateTime createdAt,
-      OffsetDateTime updatedAt) {
-
-    public static EnvironmentDeployment fromDeployment(Deployment deployment, String tagName) {
-      return new EnvironmentDeployment(
-          deployment.getId(),
-          deployment.getUrl(),
-          deployment.getState(),
-          deployment.getStatusesUrl(),
-          deployment.getSha(),
-          deployment.getRef(),
-          deployment.getTask(),
-          tagName,
-          deployment.getCreatedAt(),
-          deployment.getUpdatedAt());
+      @NonNull Boolean success,
+      @NonNull Integer httpStatusCode,
+      @NonNull Instant checkedAt,
+      @NonNull StatusCheckType checkType,
+      Map<String, Object> metadata) {
+    public static EnvironmentStatusDto fromEnvironmentStatus(EnvironmentStatus environment) {
+      return new EnvironmentStatusDto(
+          environment.getId(),
+          environment.isSuccess(),
+          environment.getHttpStatusCode(),
+          environment.getCheckTimestamp(),
+          environment.getCheckType(),
+          environment.getMetadata());
     }
   }
 
+  /** This is the DTO for the "latestDeployment" portion inside EnvironmentDto. */
+  public static record EnvironmentDeployment(
+      @NonNull Long id,
+      String url,
+      Deployment.State state,
+      String statusesUrl,
+      String sha,
+      String ref,
+      String task,
+      String tagName,
+      UserInfoDto user,
+      OffsetDateTime createdAt,
+      OffsetDateTime updatedAt) {
+    /** Builds an EnvironmentDeployment from a LatestDeploymentUnion. */
+    public static EnvironmentDeployment fromUnion(
+        LatestDeploymentUnion union, TagRepository tagRepository) {
+      return new EnvironmentDeployment(
+          union.getId(),
+          union.getUrl(),
+          union.getState(),
+          union.getStatusesUrl(),
+          union.getSha(),
+          union.getRef(),
+          union.getTask(),
+          tagRepository
+              .findByRepositoryRepositoryIdAndCommitSha(union.getRepository().id(), union.getSha())
+              .map(Tag::getName)
+              .orElse(null),
+          UserInfoDto.fromUser(union.getCreator()),
+          union.getCreatedAt(),
+          union.getUpdatedAt());
+    }
+  }
+
+  /**
+   * Main factory method that takes an Environment plus a LatestDeploymentUnion (which might be
+   * real, helios, or none).
+   */
   public static EnvironmentDto fromEnvironment(
-      Environment environment, Optional<Deployment> latestDeployment, TagRepository tagRepository) {
+      Environment environment,
+      LatestDeploymentUnion latestUnion,
+      Optional<EnvironmentStatus> latestStatus,
+      TagRepository tagRepository) {
+    // If union is null or none(), we won't have a 'latestDeployment'
+    EnvironmentDeployment envDeployment = null;
+    if (latestUnion != null && !latestUnion.isNone()) {
+      envDeployment = EnvironmentDeployment.fromUnion(latestUnion, tagRepository);
+    }
+
     return new EnvironmentDto(
         RepositoryInfoDto.fromRepository(environment.getRepository()),
         environment.getId(),
@@ -70,22 +115,17 @@ public record EnvironmentDto(
         environment.getInstalledApps(),
         environment.getDescription(),
         environment.getServerUrl(),
-        latestDeployment
-            .map(
-                deployment ->
-                    EnvironmentDeployment.fromDeployment(
-                        deployment,
-                        tagRepository
-                            .findByRepositoryRepositoryIdAndCommitSha(
-                                deployment.getRepository().getRepositoryId(), deployment.getSha())
-                            .map(Tag::getName)
-                            .orElse(null)))
-            .orElse(null),
-        environment.getLockedBy(),
+        environment.getStatusCheckType(),
+        environment.getStatusUrl(),
+        envDeployment,
+        latestStatus.map(EnvironmentStatusDto::fromEnvironmentStatus).orElse(null),
+        UserInfoDto.fromUser(environment.getLockedBy()),
         environment.getLockedAt());
   }
 
+  /** Overload if you just want to create an EnvironmentDto with no "latestDeployment" info. */
   public static EnvironmentDto fromEnvironment(Environment environment) {
-    return EnvironmentDto.fromEnvironment(environment, Optional.empty(), null);
+    return EnvironmentDto.fromEnvironment(
+        environment, LatestDeploymentUnion.none(), Optional.empty(), null);
   }
 }

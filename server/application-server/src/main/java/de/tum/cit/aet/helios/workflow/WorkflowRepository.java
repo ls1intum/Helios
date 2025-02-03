@@ -14,5 +14,6 @@ public interface WorkflowRepository extends JpaRepository<Workflow, Long> {
 
   List<Workflow> findByStateOrderByCreatedAtDesc(Workflow.State state);
 
-  Workflow findFirstByLabelOrderByCreatedAtDesc(Label deployment);
+  Workflow findFirstByLabelAndRepositoryRepositoryIdOrderByCreatedAtDesc(
+      Label deployment, Long repositoryId);
 }

@@ -62,8 +62,10 @@ public class GitHubUserSyncService {
                 user -> {
                   try {
                     if (user.getUpdatedAt() == null
-                        || user.getUpdatedAt()
-                            .isBefore(DateUtil.convertToOffsetDateTime(ghUser.getUpdatedAt()))) {
+                        || (ghUser.getUpdatedAt() != null
+                            && user.getUpdatedAt()
+                                .isBefore(
+                                    DateUtil.convertToOffsetDateTime(ghUser.getUpdatedAt())))) {
                       return userConverter.update(ghUser, user);
                     }
                     return user;

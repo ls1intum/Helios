@@ -18,6 +18,8 @@ public interface PullRequestRepository extends JpaRepository<PullRequest, Long> 
                                                                            String headRefName,
                                                                            Issue.State state);
 
+  List<PullRequest> findAllByState(Issue.State state);
+
   List<PullRequest> findAllByOrderByUpdatedAtDesc();
 
   List<PullRequest> findByRepositoryRepositoryIdOrderByUpdatedAtDesc(Long repositoryId);

@@ -52,6 +52,16 @@ public class GhDeploymentSourceAdapter implements DeploymentSource {
   }
 
   @Override
+  public String getUserLogin() {
+    try {
+      return ghDeployment.getCreator().getLogin();
+    } catch (IOException e) {
+      e.printStackTrace();
+      return null;
+    }
+  }
+
+  @Override
   public String getTask() {
     return ghDeployment.getTask();
   }

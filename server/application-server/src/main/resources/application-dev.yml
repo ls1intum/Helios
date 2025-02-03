@@ -39,7 +39,7 @@ github:
     # Personal Access Token
     authToken: ${GITHUB_AUTH_TOKEN:}
     # GitHub App configuration
-    organizationName: ${ORGANIZATION_NAME}
+    organizationName: ${ORGANIZATION_NAME:}
     appName: ${GITHUB_APP_NAME:}
     appId: ${GITHUB_APP_ID:}
     clientId: ${GITHUB_CLIENT_ID:}
@@ -49,7 +49,8 @@ github:
 http:
     cache:
         enabled: true
-        ttl: 500
+        # in seconds (7200 = 2 hours)
+        ttl: 7200
         # in MB
         size: 50
 

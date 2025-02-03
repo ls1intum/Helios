@@ -1,6 +1,7 @@
 package de.tum.cit.aet.helios.pullrequest.github;
 
 import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
+import de.tum.cit.aet.helios.issue.Issue;
 import de.tum.cit.aet.helios.label.Label;
 import de.tum.cit.aet.helios.label.LabelRepository;
 import de.tum.cit.aet.helios.label.github.GitHubLabelConverter;
@@ -12,12 +13,9 @@ import de.tum.cit.aet.helios.user.github.GitHubUserConverter;
 import de.tum.cit.aet.helios.util.DateUtil;
 import jakarta.transaction.Transactional;
 import java.io.IOException;
-import java.time.OffsetDateTime;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import lombok.extern.log4j.Log4j2;
 import org.kohsuke.github.GHDirection;
 import org.kohsuke.github.GHIssueState;
@@ -59,13 +57,12 @@ public class GitHubPullRequestSyncService {
    * Synchronizes all pull requests from the specified GitHub repositories.
    *
    * @param repositories the list of GitHub repositories to sync pull requests from
-   * @param since        an optional date to filter pull requests by their last update
    * @return a list of GitHub pull requests that were successfully fetched and processed
    */
-  public List<GHPullRequest> syncPullRequestsOfAllRepositories(
-      List<GHRepository> repositories, Optional<OffsetDateTime> since) {
+  public List<GHPullRequest> syncOpenPullRequestsOfAllRepositories(
+      List<GHRepository> repositories) {
     return repositories.stream()
-        .map(repository -> syncPullRequestsOfRepository(repository, since))
+        .map(this::syncPullRequestsOfRepository)
         .flatMap(List::stream)
         .toList();
   }
@@ -74,48 +71,36 @@ public class GitHubPullRequestSyncService {
    * Synchronizes all pull requests from a specific GitHub repository.
    *
    * @param repository the GitHub repository to sync pull requests from
-   * @param since      an optional date to filter pull requests by their last update
    * @return a list of GitHub pull requests that were successfully fetched and processed
    */
   public List<GHPullRequest> syncPullRequestsOfRepository(
-      GHRepository repository, Optional<OffsetDateTime> since) {
+      GHRepository repository) {
     var iterator =
         repository
             .queryPullRequests()
-            .state(GHIssueState.ALL)
+            .state(GHIssueState.OPEN)
             .sort(Sort.UPDATED)
             .direction(GHDirection.DESC)
             .list()
             .withPageSize(100)
             .iterator();
 
-    var sinceDate = since.map(date -> Date.from(date.toInstant()));
-
     var pullRequests = new ArrayList<GHPullRequest>();
-    while (iterator.hasNext()) {
-      var ghPullRequests = iterator.nextPage();
-      var keepPullRequests =
-          ghPullRequests.stream()
-              .filter(
-                  pullRequest -> {
-                    try {
-                      return sinceDate.isEmpty()
-                          || pullRequest.getUpdatedAt().after(sinceDate.get());
-                    } catch (IOException e) {
-                      log.error(
-                          "Failed to filter pull request {}: {}",
-                          pullRequest.getId(),
-                          e.getMessage());
-                      return false;
-                    }
-                  })
-              .toList();
+    iterator.forEachRemaining(pullRequests::add);
 
-      pullRequests.addAll(keepPullRequests);
-      if (keepPullRequests.size() != ghPullRequests.size()) {
-        break;
-      }
-    }
+    // Close pull requests that are not present in the fetched list
+    List<Long> syncedPrIds = pullRequests.stream()
+        .map(GHPullRequest::getId)
+        .toList();
+
+    pullRequestRepository
+        .findAllByState(Issue.State.OPEN)
+        .stream()
+        .filter(pr -> !syncedPrIds.contains(pr.getId()))
+        .forEach(pr -> {
+          pr.setState(Issue.State.CLOSED);
+          pullRequestRepository.save(pr);
+        });
 
     pullRequests.forEach(this::processPullRequest);
     return pullRequests;

@@ -9,4 +9,4 @@ springdoc:
 
 logging:
     level:
-        org.kohsuke.github.GitHubClient: DEBUG
+        org.kohsuke.github.GitHubClient: INFO

@@ -29,6 +29,8 @@ public interface DeploymentSource {
 
   String getEnvironment();
 
+  String getUserLogin();
+
   String getRepositoryUrl();
 
   OffsetDateTime getCreatedAt() throws IOException;
