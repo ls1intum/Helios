@@ -16,4 +16,6 @@ public interface EnvironmentRepository extends JpaRepository<Environment, Long> 
   List<Environment> findByRepositoryRepositoryIdOrderByCreatedAtDesc(Long repositoryId);
 
   List<Environment> findByEnabledTrueOrderByNameAsc();
+
+  List<Environment> findByStatusCheckTypeIsNotNull();
 }

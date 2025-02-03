@@ -1,1 +1,13 @@
-<p-tag [value]="timeSinceLocked()" [rounded]="false" />
+<style>
+  .fixed-size-tag {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100px;
+    height: 30px;
+    overflow: hidden;
+    text-align: center;
+    white-space: nowrap;
+  }
+</style>
+<p-tag [value]="timeSinceLocked()" [rounded]="false" class="fixed-size-tag" />

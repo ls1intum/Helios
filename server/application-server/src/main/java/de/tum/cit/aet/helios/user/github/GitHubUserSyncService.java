@@ -36,11 +36,12 @@ public class GitHubUserSyncService {
    *
    * @param login The GitHub username (login) of the user to fetch.
    */
-  public void syncUser(String login) {
+  public User syncUser(String login) {
     try {
-      processUser(github.getUser(login));
+      return processUser(github.getUser(login));
     } catch (IOException e) {
       log.error("Failed to fetch user {}: {}", login, e.getMessage());
+      return null;
     }
   }
 
@@ -61,8 +62,10 @@ public class GitHubUserSyncService {
                 user -> {
                   try {
                     if (user.getUpdatedAt() == null
-                        || user.getUpdatedAt()
-                            .isBefore(DateUtil.convertToOffsetDateTime(ghUser.getUpdatedAt()))) {
+                        || (ghUser.getUpdatedAt() != null
+                            && user.getUpdatedAt()
+                                .isBefore(
+                                    DateUtil.convertToOffsetDateTime(ghUser.getUpdatedAt())))) {
                       return userConverter.update(ghUser, user);
                     }
                     return user;

@@ -27,7 +27,8 @@ public class WorkflowService {
   }
 
   public List<WorkflowDto> getWorkflowsByRepositoryId(Long repositoryId) {
-    return workflowRepository.findByRepositoryRepositoryIdOrderByCreatedAtDesc(repositoryId)
+    return workflowRepository
+        .findByRepositoryRepositoryIdOrderByCreatedAtDesc(repositoryId)
         .stream()
         .map(WorkflowDto::fromWorkflow)
         .collect(Collectors.toList());
@@ -48,10 +49,10 @@ public class WorkflowService {
     workflowRepository.save(workflow);
   }
 
-  public Workflow getDeploymentWorkflow() {
+  public Workflow getDeploymentWorkflow(Long repositoryId) {
     Workflow workflow =
-        workflowRepository
-            .findFirstByLabelOrderByCreatedAtDesc(Workflow.Label.DEPLOYMENT);
+        workflowRepository.findFirstByLabelAndRepositoryRepositoryIdOrderByCreatedAtDesc(
+            Workflow.Label.DEPLOYMENT, repositoryId);
     return workflow;
   }
 }

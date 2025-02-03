@@ -63,6 +63,11 @@ public class GitHubDeploymentSourceAdapter implements DeploymentSource {
   }
 
   @Override
+  public String getUserLogin() {
+    return gitHubDeploymentDto.getCreator().login();
+  }
+
+  @Override
   public String getRepositoryUrl() {
     return gitHubDeploymentDto.getRepositoryUrl();
   }

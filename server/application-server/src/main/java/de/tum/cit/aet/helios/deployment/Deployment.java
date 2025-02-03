@@ -3,6 +3,7 @@ package de.tum.cit.aet.helios.deployment;
 import de.tum.cit.aet.helios.environment.Environment;
 import de.tum.cit.aet.helios.github.BaseGitServiceEntity;
 import de.tum.cit.aet.helios.pullrequest.PullRequest;
+import de.tum.cit.aet.helios.user.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -58,6 +59,10 @@ public class Deployment extends BaseGitServiceEntity {
   private String task;
 
   private String environmentName;
+
+  @ManyToOne
+  @JoinColumn(name = "user_id")
+  private User creator;
 
   @Column(name = "repository_url")
   private String repositoryUrl;

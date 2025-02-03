@@ -74,13 +74,21 @@
                     <i-tabler name="git-commit"></i-tabler>
                     {{ combinedHistory.sha?.slice(0, 7) }}
                   </li>
+                  <li class="flex align-items-center gap-2 mt-2">
+                    <app-user-avatar [user]="combinedHistory.user" />
+                    <span>{{ combinedHistory.user?.name }}</span>
+                  </li>
                 </ul>
               } @else if (combinedHistory.type === 'LOCK_EVENT') {
-                <i-tabler name="user"></i-tabler>
-                <span>{{ combinedHistory.lockedBy }}</span>
+                <div class="flex gap-1 items-center">
+                  <app-user-avatar [user]="combinedHistory.user" />
+                </div>
+                <span>{{ combinedHistory.user?.name }}</span>
               } @else if (combinedHistory.type === 'UNLOCK_EVENT') {
-                <i-tabler name="user"></i-tabler>
-                <span>{{ combinedHistory.lockedBy }}</span>
+                <div class="flex gap-1 items-center">
+                  <app-user-avatar [user]="combinedHistory.user" />
+                </div>
+                <span>{{ combinedHistory.user?.name }}</span>
               }
             </div>
           </td>

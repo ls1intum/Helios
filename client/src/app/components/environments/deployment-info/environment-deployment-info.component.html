@@ -1,13 +1,9 @@
 <div class="flex-col items-start mb-2">
-  <span class="text-xs uppercase tracking-tighter font-bold text-gray-500">Latest deployment</span>
+  <span class="text-xs uppercase tracking-tighter font-bold text-gray-500">Latest Commit</span>
   @if (commit(); as commit) {
     <div class="flex gap-4 items-center mb-4 mt-2">
       <span class="font-semibold text-lg">{{ commit.message }}</span>
       <div class="flex-grow"></div>
-      <div class="flex gap-1 items-center">
-        <span>{{ deployment().ref }}</span>
-        <i-tabler name="git-branch" class="w-6 h-6 text-gray-500" />
-      </div>
     </div>
     <div class="flex gap-2 items-center text-sm">
       <div class="flex gap-1 items-center">
@@ -26,13 +22,6 @@
         <span [pTooltip]="deployment().sha">{{ deployment().sha | slice: 0 : 8 }}</span>
       </div>
       <div class="flex flex-grow"></div>
-      <div>
-        <div class="flex gap-2">
-          @for (installedApp of installedApps(); track installedApp) {
-            <p-tag class="bg-gray-300 gap-0">{{ installedApp }}</p-tag>
-          }
-        </div>
-      </div>
     </div>
   } @else {
     <div class="font-semibold text-lg">Commit Information Could Not Be Loaded</div>
