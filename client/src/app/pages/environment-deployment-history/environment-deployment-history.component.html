@@ -18,7 +18,7 @@
 
   <!-- Loading State -->
   @if (activityHistoryQuery.isPending() || activityHistoryQuery.isError()) {
-    <p-table [value]="[1, 2, 3, 4, 5]" styleClass="p-datatable-lg">
+    <p-table [value]="[1, 2, 3, 4, 5]" [paginator]="true" [rows]="20" styleClass="p-datatable-lg">
       <ng-template pTemplate="header">
         <tr>
           <th>Type</th>
@@ -35,8 +35,8 @@
       </ng-template>
     </p-table>
   } @else {
-    <!-- Data Table -->
-    <p-table [value]="activityHistory() || []" styleClass="p-datatable-sm">
+    <!-- Data Table with Pagination -->
+    <p-table [value]="activityHistory() || []" [paginator]="true" [rows]="20" styleClass="p-datatable-sm">
       <ng-template pTemplate="header">
         <tr>
           <th>Type</th>
@@ -103,7 +103,7 @@
       </ng-template>
       <ng-template pTemplate="emptymessage">
         <tr>
-          <td colspan="4">
+          <td colspan="3">
             <div class="flex flex-col gap-2 p-20 justify-center items-center">
               <i-tabler name="cloud-upload" class="!h-20 !w-20 text-red-500" />
               <span class="font-semibold text-xl">There are no activitiy history found for this environment.</span>
