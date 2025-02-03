@@ -38,77 +38,6 @@ paths:
       responses:
         "200":
           description: OK
-  /api/tags:
-    get:
-      tags:
-      - tag-controller
-      operationId: getAllTags
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/TagInfoDto"
-    put:
-      tags:
-      - tag-controller
-      operationId: createTag
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/TagCreateDto"
-        required: true
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/TagInfoDto"
-  /api/tags/{name}/markworking:
-    put:
-      tags:
-      - tag-controller
-      operationId: markWorking
-      parameters:
-      - name: name
-        in: path
-        required: true
-        schema:
-          type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: string
-        required: true
-      responses:
-        "200":
-          description: OK
-  /api/tags/{name}/markbroken:
-    put:
-      tags:
-      - tag-controller
-      operationId: markBroken
-      parameters:
-      - name: name
-        in: path
-        required: true
-        schema:
-          type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: string
-        required: true
-      responses:
-        "200":
-          description: OK
   /api/settings/{repositoryId}/groups/update:
     put:
       tags:
@@ -192,6 +121,56 @@ paths:
           content:
             application/json:
               schema: {}
+  /api/tags:
+    get:
+      tags:
+      - tag-controller
+      operationId: getAllTags
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TagInfoDto"
+    post:
+      tags:
+      - tag-controller
+      operationId: createTag
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TagCreateDto"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TagInfoDto"
+  /api/tags/{name}/evaluate/{isWorking}:
+    post:
+      tags:
+      - tag-controller
+      operationId: evaluate
+      parameters:
+      - name: name
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: isWorking
+        in: path
+        required: true
+        schema:
+          type: boolean
+      responses:
+        "200":
+          description: OK
   /api/settings/{repositoryId}/groups/create:
     post:
       tags:
@@ -811,30 +790,6 @@ paths:
           description: OK
 components:
   schemas:
-    TagCreateDto:
-      type: object
-      properties:
-        name:
-          type: string
-        commitSha:
-          type: string
-        branchName:
-          type: string
-        createdByLogin:
-          type: string
-      required:
-      - commitSha
-      - createdByLogin
-      - name
-    TagInfoDto:
-      type: object
-      properties:
-        name:
-          type: string
-        commitSha:
-          type: string
-        branchName:
-          type: string
     WorkflowGroupDto:
       type: object
       properties:
@@ -970,6 +925,27 @@ components:
       - id
       - name
       - nameWithOwner
+    TagCreateDto:
+      type: object
+      properties:
+        name:
+          type: string
+        commitSha:
+          type: string
+        branchName:
+          type: string
+      required:
+      - commitSha
+      - name
+    TagInfoDto:
+      type: object
+      properties:
+        name:
+          type: string
+        commitSha:
+          type: string
+        branchName:
+          type: string
     DeployRequest:
       type: object
       properties:
@@ -1195,14 +1171,10 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/DeploymentDto"
-        markedWorkingBy:
+        evaluations:
           type: array
           items:
-            $ref: "#/components/schemas/UserInfoDto"
-        markedBrokenBy:
-          type: array
-          items:
-            $ref: "#/components/schemas/UserInfoDto"
+            $ref: "#/components/schemas/TagEvaluationDto"
         createdBy:
           $ref: "#/components/schemas/UserInfoDto"
         createdAt:
@@ -1213,9 +1185,18 @@ components:
       - createdAt
       - createdBy
       - deployments
-      - markedBrokenBy
-      - markedWorkingBy
+      - evaluations
       - name
+    TagEvaluationDto:
+      type: object
+      properties:
+        user:
+          $ref: "#/components/schemas/UserInfoDto"
+        isWorking:
+          type: boolean
+      required:
+      - isWorking
+      - user
     UserInfoDto:
       type: object
       properties:

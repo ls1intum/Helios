@@ -31,7 +31,10 @@ export class TagCreateComponent {
   isCommitListVisible = signal(false);
   tagName = signal('');
 
-  newCommitListQuery = injectQuery(() => getCommitsSinceLastTagOptions({ path: { name: this.branchName() } }));
+  newCommitListQuery = injectQuery(() => ({
+    ...getCommitsSinceLastTagOptions({ path: { name: this.branchName() } }),
+    enabled: !!this.isVisible() && !!this.branchName(),
+  }));
   newCommitListMutation = injectMutation(() => ({
     ...createTagMutation(),
     onSuccess: () => {
@@ -49,7 +52,7 @@ export class TagCreateComponent {
 
   createTag = () => {
     this.newCommitListMutation.mutate({
-      body: { name: this.tagName(), commitSha: this.headCommit().sha, branchName: this.branchName(), createdByLogin: this.keycloakService.getPreferredUsername() },
+      body: { name: this.tagName(), commitSha: this.headCommit().sha, branchName: this.branchName() },
     });
   };
 }

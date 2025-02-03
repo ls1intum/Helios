@@ -3,17 +3,16 @@
 import { createClient, createConfig, type Options } from '@hey-api/client-fetch';
 import type {
   UpdateWorkflowLabelData,
-  GetAllTagsData,
-  GetAllTagsResponse,
-  CreateTagData,
-  CreateTagResponse,
-  MarkWorkingData,
-  MarkBrokenData,
   UpdateWorkflowGroupsData,
   GetEnvironmentByIdData,
   GetEnvironmentByIdResponse,
   UpdateEnvironmentData,
   UnlockEnvironmentData,
+  GetAllTagsData,
+  GetAllTagsResponse,
+  CreateTagData,
+  CreateTagResponse,
+  EvaluateData,
   CreateWorkflowGroupData,
   CreateWorkflowGroupResponse,
   DeployToEnvironmentData,
@@ -94,46 +93,6 @@ export const updateWorkflowLabel = <ThrowOnError extends boolean = false>(option
   });
 };
 
-export const getAllTags = <ThrowOnError extends boolean = false>(options?: Options<GetAllTagsData, ThrowOnError>) => {
-  return (options?.client ?? client).get<GetAllTagsResponse, unknown, ThrowOnError>({
-    ...options,
-    url: '/api/tags',
-  });
-};
-
-export const createTag = <ThrowOnError extends boolean = false>(options: Options<CreateTagData, ThrowOnError>) => {
-  return (options?.client ?? client).put<CreateTagResponse, unknown, ThrowOnError>({
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
-    url: '/api/tags',
-  });
-};
-
-export const markWorking = <ThrowOnError extends boolean = false>(options: Options<MarkWorkingData, ThrowOnError>) => {
-  return (options?.client ?? client).put<unknown, unknown, ThrowOnError>({
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
-    url: '/api/tags/{name}/markworking',
-  });
-};
-
-export const markBroken = <ThrowOnError extends boolean = false>(options: Options<MarkBrokenData, ThrowOnError>) => {
-  return (options?.client ?? client).put<unknown, unknown, ThrowOnError>({
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
-    url: '/api/tags/{name}/markbroken',
-  });
-};
-
 export const updateWorkflowGroups = <ThrowOnError extends boolean = false>(options: Options<UpdateWorkflowGroupsData, ThrowOnError>) => {
   return (options?.client ?? client).put<unknown, unknown, ThrowOnError>({
     ...options,
@@ -167,6 +126,31 @@ export const unlockEnvironment = <ThrowOnError extends boolean = false>(options:
   return (options?.client ?? client).put<unknown, unknown, ThrowOnError>({
     ...options,
     url: '/api/environments/{id}/unlock',
+  });
+};
+
+export const getAllTags = <ThrowOnError extends boolean = false>(options?: Options<GetAllTagsData, ThrowOnError>) => {
+  return (options?.client ?? client).get<GetAllTagsResponse, unknown, ThrowOnError>({
+    ...options,
+    url: '/api/tags',
+  });
+};
+
+export const createTag = <ThrowOnError extends boolean = false>(options: Options<CreateTagData, ThrowOnError>) => {
+  return (options?.client ?? client).post<CreateTagResponse, unknown, ThrowOnError>({
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+    url: '/api/tags',
+  });
+};
+
+export const evaluate = <ThrowOnError extends boolean = false>(options: Options<EvaluateData, ThrowOnError>) => {
+  return (options?.client ?? client).post<unknown, unknown, ThrowOnError>({
+    ...options,
+    url: '/api/tags/{name}/evaluate/{isWorking}',
   });
 };
 

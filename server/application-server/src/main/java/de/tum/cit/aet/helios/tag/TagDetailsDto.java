@@ -13,7 +13,14 @@ public record TagDetailsDto(
     @NonNull CommitInfoDto commit,
     BranchInfoDto branch,
     @NonNull List<DeploymentDto> deployments,
-    @NonNull List<UserInfoDto> markedWorkingBy,
-    @NonNull List<UserInfoDto> markedBrokenBy,
+    @NonNull List<TagEvaluationDto> evaluations,
     @NonNull UserInfoDto createdBy,
-    @NonNull OffsetDateTime createdAt) {}
+    @NonNull OffsetDateTime createdAt) {
+
+  public record TagEvaluationDto(@NonNull UserInfoDto user, @NonNull boolean isWorking) {
+    public static TagEvaluationDto fromEvaluation(@NonNull TagEvaluation evaluation) {
+      return new TagEvaluationDto(
+          UserInfoDto.fromUser(evaluation.getEvaluatedBy()), evaluation.isWorking());
+    }
+  }
+}

@@ -21,7 +21,7 @@
     </div>
   }
   <div>
-    @if (isLoggedIn()) {
+    @if (isAtLeastMaintainer()) {
       <p-button label="Create Release" (onClick)="isCreateDialogVisible.set(true)" />
     }
   </div>

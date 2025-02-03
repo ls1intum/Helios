@@ -1,5 +1,6 @@
 package de.tum.cit.aet.helios.tag;
 
+import de.tum.cit.aet.helios.auth.AuthService;
 import de.tum.cit.aet.helios.branch.Branch;
 import de.tum.cit.aet.helios.branch.BranchInfoDto;
 import de.tum.cit.aet.helios.branch.BranchRepository;
@@ -11,6 +12,7 @@ import de.tum.cit.aet.helios.filters.RepositoryContext;
 import de.tum.cit.aet.helios.github.GitHubService;
 import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
+import de.tum.cit.aet.helios.tag.TagDetailsDto.TagEvaluationDto;
 import de.tum.cit.aet.helios.user.UserInfoDto;
 import de.tum.cit.aet.helios.user.UserRepository;
 import de.tum.cit.aet.helios.user.github.GitHubUserSyncService;
@@ -19,7 +21,7 @@ import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.kohsuke.github.GHCompare;
 import org.kohsuke.github.GHRepository;
@@ -28,6 +30,7 @@ import org.springframework.stereotype.Service;
 @Service
 @Transactional
 @Log4j2
+@RequiredArgsConstructor
 public class TagService {
   private final TagRepository tagRepository;
   private final CommitRepository commitRepository;
@@ -37,25 +40,8 @@ public class TagService {
   private final BranchRepository branchRepository;
   private final UserRepository userRepository;
   private final GitHubUserSyncService userSyncService;
-
-  public TagService(
-      TagRepository tagRepository,
-      CommitRepository commitRepository,
-      DeploymentRepository deploymentRepository,
-      GitHubService gitHubService,
-      GitRepoRepository gitRepoRepository,
-      BranchRepository branchRepository,
-      UserRepository userRepository,
-      GitHubUserSyncService userSyncService) {
-    this.tagRepository = tagRepository;
-    this.commitRepository = commitRepository;
-    this.deploymentRepository = deploymentRepository;
-    this.gitHubService = gitHubService;
-    this.gitRepoRepository = gitRepoRepository;
-    this.branchRepository = branchRepository;
-    this.userRepository = userRepository;
-    this.userSyncService = userSyncService;
-  }
+  private final TagEvaluationRepository tagEvaluationRepository;
+  private final AuthService authService;
 
   public List<TagInfoDto> getAllTags() {
     return tagRepository.findAllByOrderByNameAsc().stream().map(TagInfoDto::fromTag).toList();
@@ -69,7 +55,9 @@ public class TagService {
         .map(
             tag -> {
               final List<DeploymentDto> deployments =
-                  deploymentRepository.findBySha(tag.getCommit().getSha()).stream()
+                  deploymentRepository
+                      .findByRepositoryRepositoryIdAndSha(repositoryId, tag.getCommit().getSha())
+                      .stream()
                       .map(DeploymentDto::fromDeployment)
                       .toList();
               return new TagDetailsDto(
@@ -77,8 +65,7 @@ public class TagService {
                   CommitInfoDto.fromCommit(tag.getCommit()),
                   BranchInfoDto.fromBranch(tag.getBranch()),
                   deployments,
-                  tag.getMarkedWorkingBy().stream().map(UserInfoDto::fromUser).toList(),
-                  tag.getMarkedBrokenBy().stream().map(UserInfoDto::fromUser).toList(),
+                  tag.getEvaluations().stream().map(TagEvaluationDto::fromEvaluation).toList(),
                   UserInfoDto.fromUser(tag.getCreatedBy()),
                   tag.getCreatedAt());
             })
@@ -126,6 +113,7 @@ public class TagService {
 
   public TagInfoDto createTag(TagCreateDto tag) {
     final Long repositoryId = RepositoryContext.getRepositoryId();
+    final String login = authService.getPreferredUsername();
 
     if (tagRepository.existsByRepositoryRepositoryIdAndName(repositoryId, tag.name()) == true) {
       throw new TagException("Tag already exists");
@@ -146,53 +134,38 @@ public class TagService {
             .findById(repositoryId)
             .orElseThrow(() -> new TagException("Repository not found")));
     newTag.setCreatedBy(
-        userRepository
-            .findByLogin(tag.createdByLogin())
-            .orElseGet(() -> userSyncService.syncUser(tag.createdByLogin())));
+        userRepository.findByLogin(login).orElseGet(() -> userSyncService.syncUser(login)));
     newTag.setCreatedAt(OffsetDateTime.now());
     return TagInfoDto.fromTag(tagRepository.save(newTag));
   }
 
-  public Optional<TagInfoDto> editTag(String name, TagInfoDto tagInfoDto) {
-    final Long repositoryId = RepositoryContext.getRepositoryId();
-    return tagRepository
-        .findByRepositoryRepositoryIdAndName(repositoryId, name)
-        .map(
-            tag -> {
-              tagRepository.save(tag);
-              return TagInfoDto.fromTag(tag);
-            });
-  }
-
-  public void markTagWorking(String name, String login) {
+  public void evaluateTag(String name, boolean isWorking) {
+    final String login = authService.getPreferredUsername();
+    System.out.println(123123 + login);
     final Long repositoryId = RepositoryContext.getRepositoryId();
     tagRepository
         .findByRepositoryRepositoryIdAndName(repositoryId, name)
         .map(
             tag -> {
-              tag.getMarkedBrokenBy().removeIf(user -> user.getLogin().equals(login));
-              tag.getMarkedWorkingBy()
-                  .add(
-                      userRepository
-                          .findByLogin(login)
-                          .orElseGet(() -> userSyncService.syncUser(login)));
+              TagEvaluation evaluation =
+                  tag.getEvaluations().stream()
+                      .filter(eval -> eval.getEvaluatedBy().getLogin().equals(login))
+                      .findFirst()
+                      .orElseGet(
+                          () -> {
+                            TagEvaluation newEvaluation = new TagEvaluation();
+                            newEvaluation.setEvaluatedBy(
+                                userRepository
+                                    .findByLogin(login)
+                                    .orElseGet(() -> userSyncService.syncUser(login)));
+                            return newEvaluation;
+                          });
+              evaluation.setWorking(isWorking);
+              tagEvaluationRepository.save(evaluation);
+              tag.getEvaluations().removeIf(eval -> eval.equals(evaluation));
+              tag.getEvaluations().add(evaluation);
               return TagInfoDto.fromTag(tagRepository.save(tag));
-            });
-  }
-
-  public void markTagBroken(String name, String login) {
-    final Long repositoryId = RepositoryContext.getRepositoryId();
-    tagRepository
-        .findByRepositoryRepositoryIdAndName(repositoryId, name)
-        .map(
-            tag -> {
-              tag.getMarkedWorkingBy().removeIf(user -> user.getLogin().equals(login));
-              tag.getMarkedBrokenBy()
-                  .add(
-                      userRepository
-                          .findByLogin(login)
-                          .orElseGet(() -> userSyncService.syncUser(login)));
-              return TagInfoDto.fromTag(tagRepository.save(tag));
-            });
+            })
+        .orElseThrow(() -> new TagException("Tag not found"));
   }
 }

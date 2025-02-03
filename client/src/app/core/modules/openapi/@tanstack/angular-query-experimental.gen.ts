@@ -4,15 +4,14 @@ import type { Options } from '@hey-api/client-fetch';
 import { type MutationOptions, type DefaultError, queryOptions } from '@tanstack/angular-query-experimental';
 import type {
   UpdateWorkflowLabelData,
-  GetAllTagsData,
-  CreateTagData,
-  CreateTagResponse,
-  MarkWorkingData,
-  MarkBrokenData,
   UpdateWorkflowGroupsData,
   GetEnvironmentByIdData,
   UpdateEnvironmentData,
   UnlockEnvironmentData,
+  GetAllTagsData,
+  CreateTagData,
+  CreateTagResponse,
+  EvaluateData,
   CreateWorkflowGroupData,
   CreateWorkflowGroupResponse,
   DeployToEnvironmentData,
@@ -51,14 +50,13 @@ import type {
 } from '../types.gen';
 import {
   updateWorkflowLabel,
-  getAllTags,
-  createTag,
-  markWorking,
-  markBroken,
   updateWorkflowGroups,
   getEnvironmentById,
   updateEnvironment,
   unlockEnvironment,
+  getAllTags,
+  createTag,
+  evaluate,
   createWorkflowGroup,
   deployToEnvironment,
   healthCheck,
@@ -109,6 +107,20 @@ export const updateWorkflowLabelMutation = (options?: Partial<Options<UpdateWork
   return mutationOptions;
 };
 
+export const updateWorkflowGroupsMutation = (options?: Partial<Options<UpdateWorkflowGroupsData>>) => {
+  const mutationOptions: MutationOptions<unknown, DefaultError, Options<UpdateWorkflowGroupsData>> = {
+    mutationFn: async localOptions => {
+      const { data } = await updateWorkflowGroups({
+        ...options,
+        ...localOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
 type QueryKey<TOptions extends Options> = [
   Pick<TOptions, 'baseUrl' | 'body' | 'headers' | 'path' | 'query'> & {
     _id: string;
@@ -134,79 +146,6 @@ const createQueryKey = <TOptions extends Options>(id: string, options?: TOptions
     params.query = options.query;
   }
   return params;
-};
-
-export const getAllTagsQueryKey = (options?: Options<GetAllTagsData>) => [createQueryKey('getAllTags', options)];
-
-export const getAllTagsOptions = (options?: Options<GetAllTagsData>) => {
-  return queryOptions({
-    queryFn: async ({ queryKey, signal }) => {
-      const { data } = await getAllTags({
-        ...options,
-        ...queryKey[0],
-        signal,
-        throwOnError: true,
-      });
-      return data;
-    },
-    queryKey: getAllTagsQueryKey(options),
-  });
-};
-
-export const createTagMutation = (options?: Partial<Options<CreateTagData>>) => {
-  const mutationOptions: MutationOptions<CreateTagResponse, DefaultError, Options<CreateTagData>> = {
-    mutationFn: async localOptions => {
-      const { data } = await createTag({
-        ...options,
-        ...localOptions,
-        throwOnError: true,
-      });
-      return data;
-    },
-  };
-  return mutationOptions;
-};
-
-export const markWorkingMutation = (options?: Partial<Options<MarkWorkingData>>) => {
-  const mutationOptions: MutationOptions<unknown, DefaultError, Options<MarkWorkingData>> = {
-    mutationFn: async localOptions => {
-      const { data } = await markWorking({
-        ...options,
-        ...localOptions,
-        throwOnError: true,
-      });
-      return data;
-    },
-  };
-  return mutationOptions;
-};
-
-export const markBrokenMutation = (options?: Partial<Options<MarkBrokenData>>) => {
-  const mutationOptions: MutationOptions<unknown, DefaultError, Options<MarkBrokenData>> = {
-    mutationFn: async localOptions => {
-      const { data } = await markBroken({
-        ...options,
-        ...localOptions,
-        throwOnError: true,
-      });
-      return data;
-    },
-  };
-  return mutationOptions;
-};
-
-export const updateWorkflowGroupsMutation = (options?: Partial<Options<UpdateWorkflowGroupsData>>) => {
-  const mutationOptions: MutationOptions<unknown, DefaultError, Options<UpdateWorkflowGroupsData>> = {
-    mutationFn: async localOptions => {
-      const { data } = await updateWorkflowGroups({
-        ...options,
-        ...localOptions,
-        throwOnError: true,
-      });
-      return data;
-    },
-  };
-  return mutationOptions;
 };
 
 export const getEnvironmentByIdQueryKey = (options: Options<GetEnvironmentByIdData>) => [createQueryKey('getEnvironmentById', options)];
@@ -244,6 +183,85 @@ export const unlockEnvironmentMutation = (options?: Partial<Options<UnlockEnviro
   const mutationOptions: MutationOptions<unknown, DefaultError, Options<UnlockEnvironmentData>> = {
     mutationFn: async localOptions => {
       const { data } = await unlockEnvironment({
+        ...options,
+        ...localOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const getAllTagsQueryKey = (options?: Options<GetAllTagsData>) => [createQueryKey('getAllTags', options)];
+
+export const getAllTagsOptions = (options?: Options<GetAllTagsData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getAllTags({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: getAllTagsQueryKey(options),
+  });
+};
+
+export const createTagQueryKey = (options: Options<CreateTagData>) => [createQueryKey('createTag', options)];
+
+export const createTagOptions = (options: Options<CreateTagData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await createTag({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: createTagQueryKey(options),
+  });
+};
+
+export const createTagMutation = (options?: Partial<Options<CreateTagData>>) => {
+  const mutationOptions: MutationOptions<CreateTagResponse, DefaultError, Options<CreateTagData>> = {
+    mutationFn: async localOptions => {
+      const { data } = await createTag({
+        ...options,
+        ...localOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const evaluateQueryKey = (options: Options<EvaluateData>) => [createQueryKey('evaluate', options)];
+
+export const evaluateOptions = (options: Options<EvaluateData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await evaluate({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: evaluateQueryKey(options),
+  });
+};
+
+export const evaluateMutation = (options?: Partial<Options<EvaluateData>>) => {
+  const mutationOptions: MutationOptions<unknown, DefaultError, Options<EvaluateData>> = {
+    mutationFn: async localOptions => {
+      const { data } = await evaluate({
         ...options,
         ...localOptions,
         throwOnError: true,

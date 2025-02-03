@@ -30,29 +30,25 @@
 
     <div class="flex flex-col items-center">
       <p-buttongroup class="mb-5">
-        <p-button label="Working" severity="success" (onClick)="markWorking()">
+        <p-button label="Working" severity="success" (onClick)="evaluateTag(true)">
           <i-tabler name="check" class="!size-5 text-white" />
         </p-button>
-        <p-button label="Broken" severity="danger" (onClick)="markBroken()">
+        <p-button label="Broken" severity="danger" (onClick)="evaluateTag(false)">
           <i-tabler name="x" class="!size-5 text-white" />
         </p-button>
       </p-buttongroup>
-      @if (tag.markedBrokenBy.length > 0 || tag.markedWorkingBy.length > 0) {
+      @if (tag.evaluations.length > 0) {
         <div class="text-gray-500 text-sm uppercase font-semibold tracking-wider mb-1">Reviews</div>
         <div>
-          @for (user of tag.markedWorkingBy; track user.id) {
+          @for (evaluation of tag.evaluations; track evaluation.user.id) {
             <div class="relative inline-block pt-2 pr-1">
-              <p-avatar [image]="user.avatarUrl" class="size-7" shape="circle" />
+              <p-avatar [image]="evaluation.user.avatarUrl" class="size-7" shape="circle" />
               <div class="absolute top-0 right-0">
-                <i-tabler name="check" class="!size-3 text-white bg-green-500 rounded-full" />
-              </div>
-            </div>
-          }
-          @for (user of tag.markedBrokenBy; track user.id) {
-            <div class="relative inline-block pt-2 pr-1">
-              <p-avatar [image]="user.avatarUrl" class="size-7" shape="circle" />
-              <div class="absolute top-0 right-0">
-                <i-tabler name="x" class="!size-3 text-white bg-red-500 rounded-full" />
+                @if (evaluation.isWorking) {
+                  <i-tabler name="check" class="!size-3 text-white bg-green-500 rounded-full" />
+                } @else {
+                  <i-tabler name="x" class="!size-3 text-white bg-red-500 rounded-full" />
+                }
               </div>
             </div>
           }
@@ -63,7 +59,7 @@
     </div>
   </div>
 
-  <h3 class="text-xl mb-2">Deployments</h3>
+  <h3 class="text-xl mb-2">Tag Status on Environments</h3>
   <app-tag-deployment-table [tag]="tag" />
 } @else {
   <div class="flex flex-col items-start gap-2">

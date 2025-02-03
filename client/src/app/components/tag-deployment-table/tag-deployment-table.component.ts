@@ -25,19 +25,29 @@ export class TagDeploymentTableComponent {
   deploymentStatus = (environment: EnvironmentDto) => {
     let deployments = this.tag().deployments.filter(deployment => deployment.environment.id === environment.id);
 
+    // If there are no deployments related to this tag anymore, this tag was not deployed yet
     if (deployments.length === 0) {
       return 'NEVER_DEPLOYED';
     }
 
+    // If the latest deployment is not part of the deployments list, but there were deployments to this environment, the tag was replaced
     if (deployments.every(deployment => environment.latestDeployment?.id !== deployment.id)) {
       return 'REPLACED';
     }
 
-    if (deployments.every(deployment => deployment.state === 'SUCCESS')) {
+    // For the following cases, we are only interested in the deployment that matches the latest deployment of the environment
+    const deployment = deployments.find(deployment => environment.latestDeployment?.id === deployment.id);
+
+    // If there is no deployment that matches the latest deployment, the tag was replaced
+    if (deployment === undefined) {
+      return 'REPLACED';
+    }
+
+    if (deployment.state === 'SUCCESS') {
       return 'SUCCESS';
     }
 
-    if (deployments.some(deployment => deployment.state === 'FAILURE')) {
+    if (deployment.state === 'FAILURE') {
       return 'FAILURE';
     }
     return 'UNKNOWN';

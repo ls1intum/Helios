@@ -1,5 +1,5 @@
 import { Component, inject, input } from '@angular/core';
-import { getTagByNameOptions, getTagByNameQueryKey, markBrokenMutation, markWorkingMutation } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
+import { evaluateMutation, getTagByNameOptions, getTagByNameQueryKey } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { injectMutation, injectQuery, QueryClient } from '@tanstack/angular-query-experimental';
 import { ButtonModule } from 'primeng/button';
 import { ButtonGroupModule } from 'primeng/buttongroup';
@@ -27,26 +27,15 @@ export class TagDetailsComponent {
   name = input.required<string>();
   tagQuery = injectQuery(() => getTagByNameOptions({ path: { name: this.name() } }));
 
-  markWorkingMutation = injectMutation(() => ({
-    ...markWorkingMutation(),
+  evaluateTagMutation = injectMutation(() => ({
+    ...evaluateMutation(),
     onSuccess: () => {
-      this.messageService.add({ severity: 'success', summary: 'Mark as working', detail: 'Tag has been marked as working successfully' });
-      this.queryClient.invalidateQueries({ queryKey: getTagByNameQueryKey({ path: { name: this.name() } }) });
-    },
-  }));
-  markBrokenMutation = injectMutation(() => ({
-    ...markBrokenMutation(),
-    onSuccess: () => {
-      this.messageService.add({ severity: 'success', summary: 'Mark as broken', detail: 'Tag has been marked as broken successfully' });
+      this.messageService.add({ severity: 'success', summary: 'Tag Evaluation', detail: 'Your evaluation has been saved successfully' });
       this.queryClient.invalidateQueries({ queryKey: getTagByNameQueryKey({ path: { name: this.name() } }) });
     },
   }));
 
-  markWorking = () => {
-    this.markWorkingMutation.mutate({ body: this.keycloakService.getPreferredUsername(), path: { name: this.name() } });
-  };
-
-  markBroken = () => {
-    this.markBrokenMutation.mutate({ body: this.keycloakService.getPreferredUsername(), path: { name: this.name() } });
+  evaluateTag = (isWorking: boolean) => {
+    this.evaluateTagMutation.mutate({ path: { name: this.name(), isWorking } });
   };
 }
