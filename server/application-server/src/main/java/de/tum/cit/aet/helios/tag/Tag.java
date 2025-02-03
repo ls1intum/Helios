@@ -43,7 +43,8 @@ public class Tag {
   @JoinColumn(name = "created_by_id")
   private User createdBy;
 
-  @OneToMany(cascade = CascadeType.ALL)
+  @OneToMany(mappedBy = "tag", cascade = CascadeType.ALL)
+  @ToString.Exclude
   private Set<TagEvaluation> evaluations = new HashSet<>();
 
   private OffsetDateTime createdAt;

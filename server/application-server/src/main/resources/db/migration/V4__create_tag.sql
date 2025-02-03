@@ -22,9 +22,7 @@ create table
         primary key (evaluated_by_id, tag_name, tag_repository_id)
     );
 
-create table tag_evaluations (tag_name varchar(255) not null, tag_repository_id bigint not null, evaluations_evaluated_by_id bigint not null, evaluations_tag_name varchar(255) not null, evaluations_tag_repository_id bigint not null, primary key (tag_name, tag_repository_id, evaluations_evaluated_by_id, evaluations_tag_name, evaluations_tag_repository_id));
 
-alter table only tag add constraint pkey_branch_name_repository_id unique (branch_name, branch_repository_id);
 alter table only tag add constraint pkey_commit_repository_id_commit_sha unique (commit_repository_id, commit_sha);
 alter table only tag add constraint FKdj9bgiudh8pae58vb7k1hy4pq foreign key (repository_id) references repository;
 alter table only tag add constraint FK3o93c1y4ayqlobwid7ipkc2l4 foreign key (commit_repository_id, commit_sha) references commit;
@@ -33,6 +31,3 @@ alter table only tag add constraint FKlvm85yfqra0n9dmqrfaeqh2hj foreign key (cre
 alter table only public.user add constraint unique_user_login unique (login);
 alter table if exists tag_evaluation add constraint FKerigvj8hd9wn6jg8ahgjhxnbf foreign key (evaluated_by_id) references public.user;
 alter table if exists tag_evaluation add constraint FKrwgk63y2dr7how94g6a1q3sq2 foreign key (tag_name, tag_repository_id) references tag;
-alter table if exists tag_evaluations add constraint pkey_evaluations_evaluated_by_id_evaluations_tag_name_evaluations_tag_repository_id unique (evaluations_evaluated_by_id, evaluations_tag_name, evaluations_tag_repository_id);
-alter table if exists tag_evaluations add constraint FKek1aokok0g66cugrfkyxrap01 foreign key (evaluations_evaluated_by_id, evaluations_tag_name, evaluations_tag_repository_id) references tag_evaluation;
-alter table if exists tag_evaluations add constraint FKnv2toh0qu24n5a6t4u5mgo0yw foreign key (tag_name, tag_repository_id) references tag;
