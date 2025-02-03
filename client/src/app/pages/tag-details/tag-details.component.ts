@@ -38,4 +38,11 @@ export class TagDetailsComponent {
   evaluateTag = (isWorking: boolean) => {
     this.evaluateTagMutation.mutate({ path: { name: this.name(), isWorking } });
   };
+
+  hasUserEvaluatedTo(isWorking: boolean) {
+    const evaluations = this.tagQuery.data()?.evaluations;
+    if (!evaluations) return false;
+    const userEvaluation = evaluations.find(evaluation => evaluation.user.login.toLowerCase() === this.keycloakService.getPreferredUsername()?.toLowerCase());
+    return userEvaluation?.isWorking === isWorking;
+  }
 }
