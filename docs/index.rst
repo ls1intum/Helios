@@ -16,6 +16,13 @@ Introduction
 The Artemis open-source project relies on GitHub Actions for its CI/CD workflows but faces challenges such as complex workflows, lack of user-friendly deployment management, and limited test analytics. This project aims to enhance the CI/CD capabilities of Artemis by developing a centralized web application that integrates with GitHub Actions. The proposed solution will provide a streamlined platform for managing deployments, environment tracking, and test analytics, accessible through an intuitive interface.
 
 .. toctree::
+  :caption: User Guide
+  :includehidden:
+  :maxdepth: 3
+
+  user_guide/deployments/testserver
+
+.. toctree::
   :caption: Contributor Guide
   :includehidden:
   :maxdepth: 3
