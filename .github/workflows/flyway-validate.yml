@@ -2,7 +2,7 @@ name: Flyway Validation
 
 on:
   pull_request:
-    branches: [main]
+    branches: [staging]
   workflow_call: {}
 
 env:

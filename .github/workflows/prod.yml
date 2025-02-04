@@ -3,6 +3,21 @@ name: Build and Deploy to Prod
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - '.codacy.yaml'
+      - '.env.example'
+      - '.gitignore'
+      - 'compose.prod.yaml'
+      - 'compose.yaml'
+      - 'helios-example-realm.json'
+      - 'LICENSE'
+      - 'nginx.conf'
+      - 'openapitools.json'
+      - 'README.md'
+      - '.github/**'
+      - '.vscode/**'
+      - 'docs/**'
+      - 'keycloakify/**'
 
 jobs:
   validate-flyway:

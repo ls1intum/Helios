@@ -7,7 +7,7 @@ on:
       - '.github/workflows/docs.yml'
   push:
     branches:
-      - main
+      - staging
     paths:
       - 'docs/**'
       - '.github/workflows/docs.yml'
@@ -35,7 +35,7 @@ jobs:
         with:
           path: docs/_build/dirhtml/
   deploy:
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/staging'
     environment:
       name: github-pages
       url: "https://ls1intum.github.io/Helios/"
