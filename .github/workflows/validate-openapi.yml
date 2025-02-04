@@ -2,7 +2,7 @@ name: Validate OpenAPI Spec and Generated Client Code
 
 on:
   pull_request:
-    branches: [main]
+    branches: [staging]
     types: [opened, reopened, edited, synchronize]
 
 jobs:

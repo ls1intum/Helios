@@ -7,7 +7,7 @@
     "dependencies"
   ],
   "draftPR": true,
-  "baseBranches": ["main"],
+  "baseBranches": ["staging"],
   "rebaseWhen": "conflicted",
   "prHourlyLimit": 10,
   "packageRules": [
