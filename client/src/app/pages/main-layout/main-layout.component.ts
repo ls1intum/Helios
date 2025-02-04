@@ -58,6 +58,8 @@ export class MainLayoutComponent {
     this.keycloakService.login();
   }
 
+  isLoggedIn = computed(() => this.keycloakService.isLoggedIn());
+
   items = computed(() => {
     const baseItems = [
       {
