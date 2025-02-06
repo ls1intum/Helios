@@ -7,6 +7,7 @@ import de.tum.cit.aet.helios.deployment.DeploymentRepository;
 import de.tum.cit.aet.helios.deployment.LatestDeploymentUnion;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
+import de.tum.cit.aet.helios.permissions.UserService;
 import de.tum.cit.aet.helios.tag.TagRepository;
 import de.tum.cit.aet.helios.user.User;
 import jakarta.persistence.EntityNotFoundException;
@@ -30,6 +31,7 @@ public class EnvironmentService {
   private final HeliosDeploymentRepository heliosDeploymentRepository;
   private final TagRepository tagRepository;
   private final DeploymentRepository deploymentRepository;
+  private final UserService userService;
 
   public Optional<EnvironmentDto> getEnvironmentById(Long id) {
     return environmentRepository.findById(id).map(EnvironmentDto::fromEnvironment);
@@ -191,7 +193,8 @@ public class EnvironmentService {
       throw new IllegalStateException("Environment is not locked");
     }
 
-    if (!currentUser.equals(environment.getLockedBy())) {
+    System.out.println("Current user: " + userService.isAtLeastMaintainer());
+    if (!currentUser.equals(environment.getLockedBy()) && !userService.isAtLeastMaintainer()) {
       throw new SecurityException(
           "You do not have permission to unlock this environment. "
               + "Environment is locked by another user");
