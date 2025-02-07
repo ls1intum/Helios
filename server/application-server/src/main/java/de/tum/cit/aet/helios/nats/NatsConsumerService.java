@@ -8,7 +8,7 @@ import io.nats.client.Connection;
 import io.nats.client.ConsumerContext;
 import io.nats.client.JetStreamApiException;
 import io.nats.client.Message;
-import io.nats.client.MessageHandler;
+import io.nats.client.MessageConsumer;
 import io.nats.client.Nats;
 import io.nats.client.Options;
 import io.nats.client.StreamContext;
@@ -18,6 +18,9 @@ import java.io.IOException;
 import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 import lombok.extern.log4j.Log4j2;
 import org.kohsuke.github.GHEvent;
@@ -57,12 +60,22 @@ public class NatsConsumerService {
   private Connection natsConnection;
   private ConsumerContext consumerContext;
 
+  /**
+   * Active NATS message consumer.
+   */
+  private MessageConsumer messageConsumer;
+
+
   private final GitHubMessageHandlerRegistry handlerRegistry;
 
   private final GitHubCustomMessageHandlerRegistry customHandlerRegistry;
 
+  private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+
+
   public NatsConsumerService(
-      Environment environment, GitHubMessageHandlerRegistry handlerRegistry,
+      Environment environment,
+      GitHubMessageHandlerRegistry handlerRegistry,
       GitHubCustomMessageHandlerRegistry customHandlerRegistry) {
     this.environment = environment;
     this.handlerRegistry = handlerRegistry;
@@ -89,7 +102,7 @@ public class NatsConsumerService {
         natsConnection = Nats.connect(options);
         setupOrUpdateConsumer(natsConnection);
         return;
-      } catch (IOException | InterruptedException e) {
+      } catch (IOException | InterruptedException | RuntimeException e) {
         log.error("NATS connection error: {}", e.getMessage(), e);
       }
     }
@@ -116,43 +129,43 @@ public class NatsConsumerService {
         .build();
   }
 
-  private void setupOrUpdateConsumer(Connection connection) throws IOException, InterruptedException {
+  private synchronized void setupOrUpdateConsumer(Connection connection)
+      throws IOException, InterruptedException, RuntimeException {
     try {
+      // Close old consumer if it exists
+      if (messageConsumer != null) {
+        messageConsumer.close();
+        log.info("Closed previous MessageConsumer.");
+        messageConsumer = null;
+      }
+
       StreamContext streamContext = connection.getStreamContext("github");
+      String[] subjects = getSubjects();
+      log.info("Setting up consumer for subjects: {}", Arrays.toString(subjects));
 
-      // Check if consumer already exists
+      // Build consumer configuration for the new or existing durable consumer
+      ConsumerConfiguration.Builder consumerConfigBuilder =
+          ConsumerConfiguration.builder()
+              .filterSubjects(subjects)
+              .deliverPolicy(DeliverPolicy.ByStartTime)
+              .startTime(ZonedDateTime.now().minusDays(timeframe));
+
       if (durableConsumerName != null && !durableConsumerName.isEmpty()) {
-        try {
-          consumerContext = streamContext.getConsumerContext(durableConsumerName);
-        } catch (JetStreamApiException e) {
-          consumerContext = null;
-        }
+        consumerConfigBuilder.durable(durableConsumerName);
       }
 
-      if (consumerContext == null) {
-        log.info("Setting up consumer for subjects: {}", Arrays.toString(getSubjects()));
-        ConsumerConfiguration.Builder consumerConfigBuilder =
-            ConsumerConfiguration.builder()
-                .filterSubjects(getSubjects())
-                .deliverPolicy(DeliverPolicy.ByStartTime)
-                .startTime(ZonedDateTime.now().minusDays(timeframe));
+      ConsumerConfiguration consumerConfig = consumerConfigBuilder.build();
+      consumerContext = streamContext.createOrUpdateConsumer(consumerConfig);
+      log.info("Consumer created or updated.");
 
-        if (durableConsumerName != null && !durableConsumerName.isEmpty()) {
-          consumerConfigBuilder.durable(durableConsumerName);
-        }
-
-        ConsumerConfiguration consumerConfig = consumerConfigBuilder.build();
-        consumerContext = streamContext.createOrUpdateConsumer(consumerConfig);
-      } else {
-        log.info("Consumer already exists. Skipping consumer setup.");
-      }
-
-      MessageHandler handler = this::handleMessage;
-      consumerContext.consume(handler);
+      messageConsumer = consumerContext.consume(this::handleMessage);
       log.info("Successfully started consuming messages.");
     } catch (JetStreamApiException e) {
       log.error("JetStream API exception: {}", e.getMessage(), e);
       throw new IOException("Failed to set up consumer.", e);
+    } catch (Exception e) {
+      log.error("Error setting up consumer: {}", e.getMessage(), e);
+      throw new RuntimeException("Failed to set up consumer.", e);
     }
   }
 
@@ -187,6 +200,21 @@ public class NatsConsumerService {
       log.error("Error processing message: {}", e.getMessage(), e);
     } finally {
       msg.ack();
+    }
+  }
+
+  /**
+   * Re-fetch subjects and re-create/update the consumer.
+   */
+  public synchronized void updateSubjects() {
+    if (natsConnection != null) {
+      try {
+        setupOrUpdateConsumer(natsConnection);
+      } catch (Exception e) {
+        log.error("Failed to update consumer at runtime: {}", e.getMessage(), e);
+        // Schedule a retry after 5 seconds delay
+        scheduler.schedule(this::updateSubjects, 5, TimeUnit.SECONDS);
+      }
     }
   }
 
