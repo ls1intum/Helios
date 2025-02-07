@@ -28,7 +28,7 @@ logging:
 nats:
     enabled: true
     timeframe: ${MONITORING_TIMEFRAME:7}
-    durableConsumerName: ""
+    durableConsumerName: ${NATS_DURABLE_CONSUMER_NAME:}
     server: ${NATS_SERVER}
     auth:
         token: ${NATS_AUTH_TOKEN}

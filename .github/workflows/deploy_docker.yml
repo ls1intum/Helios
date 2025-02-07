@@ -77,6 +77,7 @@ jobs:
             echo "DATASOURCE_PASSWORD=${{ secrets.DATASOURCE_PASSWORD }}" >> .env
             echo "NATS_SERVER=${{ secrets.NATS_SERVER }}" >> .env
             echo "NATS_AUTH_TOKEN=${{ secrets.NATS_AUTH_TOKEN }}" >> .env
+            echo "NATS_DURABLE_CONSUMER_NAME=${{ vars.NATS_DURABLE_CONSUMER_NAME }}" >> .env
             echo "WEBHOOK_SECRET=${{ secrets.WEBHOOK_SECRET }}" >> .env
             echo "REPOSITORY_NAME=${{ vars.REPOSITORY_NAME }}" >> .env
             echo "ORGANIZATION_NAME=${{ vars.ORGANIZATION_NAME }}" >> .env
