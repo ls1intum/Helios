@@ -166,6 +166,8 @@ public class NatsConsumerService {
         ConsumerConfiguration existingConfig = existingConsumer.getConsumerConfiguration();
         log.info("Consumer '{}' already exists. Updating subjects.", durableConsumerName);
         consumerConfigBuilder = ConsumerConfiguration.builder(existingConfig)
+            .inactiveThreshold(Duration.ofMinutes(10))
+            .ackWait(Duration.ofMinutes(1))
             .filterSubjects(subjects);
       } else {
         log.info("Creating new configuration for consumer.");
@@ -173,6 +175,8 @@ public class NatsConsumerService {
         consumerConfigBuilder = ConsumerConfiguration.builder()
             .deliverPolicy(DeliverPolicy.ByStartTime)
             .startTime(ZonedDateTime.now().minusDays(timeframe))
+            .inactiveThreshold(Duration.ofMinutes(10))
+            .ackWait(Duration.ofMinutes(1))
             .filterSubjects(subjects);
 
         if (durableConsumerName != null && !durableConsumerName.isEmpty()) {
@@ -182,7 +186,8 @@ public class NatsConsumerService {
 
       ConsumerConfiguration consumerConfig = consumerConfigBuilder.build();
       consumerContext = streamContext.createOrUpdateConsumer(consumerConfig);
-      log.info("Consumer created or updated with name '{}'.", consumerContext.getConsumerName());
+      log.info("Consumer created or updated with name '{}' and configuration: {}",
+          consumerContext.getConsumerInfo().getName(), consumerConfig);
 
       messageConsumer = consumerContext.consume(this::handleMessage);
       log.info("Successfully started consuming messages.");
