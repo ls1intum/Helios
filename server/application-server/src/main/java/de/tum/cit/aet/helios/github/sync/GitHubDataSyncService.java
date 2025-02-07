@@ -5,27 +5,27 @@ import de.tum.cit.aet.helios.commit.github.GitHubCommitSyncService;
 import de.tum.cit.aet.helios.deployment.github.GitHubDeploymentSyncService;
 import de.tum.cit.aet.helios.environment.github.GitHubEnvironmentSyncService;
 import de.tum.cit.aet.helios.gitrepo.github.GitHubRepositorySyncService;
-import de.tum.cit.aet.helios.http.RateLimitInfo;
-import de.tum.cit.aet.helios.http.RateLimitInfoHolder;
 import de.tum.cit.aet.helios.label.github.GitHubLabelSyncService;
 import de.tum.cit.aet.helios.pullrequest.github.GitHubPullRequestSyncService;
 import de.tum.cit.aet.helios.user.github.GitHubUserSyncService;
-import de.tum.cit.aet.helios.util.RateLimitUtil;
 import de.tum.cit.aet.helios.workflow.github.GitHubWorkflowRunSyncService;
 import de.tum.cit.aet.helios.workflow.github.GitHubWorkflowSyncService;
-import jakarta.transaction.Transactional;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.Optional;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.kohsuke.github.GHRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Log4j2
+@RequiredArgsConstructor
 public class GitHubDataSyncService {
-  private final GitHubLabelSyncService gitHubLabelSyncService;
   @Value("${monitoring.timeframe}")
   private int timeframe;
 
@@ -42,53 +42,16 @@ public class GitHubDataSyncService {
   private final GitHubEnvironmentSyncService environmentSyncService;
   private final GitHubDeploymentSyncService deploymentSyncService;
   private final GitHubCommitSyncService commitSyncService;
-  private final RateLimitInfoHolder rateLimitInfoHolder;
+  private final GitHubLabelSyncService gitHubLabelSyncService;
 
 
-  public GitHubDataSyncService(
-      DataSyncStatusRepository dataSyncStatusRepository,
-      GitHubUserSyncService userSyncService,
-      GitHubRepositorySyncService repositorySyncService,
-      GitHubPullRequestSyncService pullRequestSyncService,
-      GitHubWorkflowRunSyncService workflowRunSyncService,
-      GitHubWorkflowSyncService workflowSyncService,
-      GitHubBranchSyncService branchSyncService,
-      GitHubEnvironmentSyncService environmentSyncService,
-      GitHubDeploymentSyncService deploymentSyncService,
-      GitHubCommitSyncService commitSyncService,
-      GitHubLabelSyncService gitHubLabelSyncService,
-      RateLimitInfoHolder rateLimitInfoHolder) {
-    this.dataSyncStatusRepository = dataSyncStatusRepository;
-    this.userSyncService = userSyncService;
-    this.repositorySyncService = repositorySyncService;
-    this.pullRequestSyncService = pullRequestSyncService;
-    this.workflowRunSyncService = workflowRunSyncService;
-    this.workflowSyncService = workflowSyncService;
-    this.branchSyncService = branchSyncService;
-    this.environmentSyncService = environmentSyncService;
-    this.deploymentSyncService = deploymentSyncService;
-    this.commitSyncService = commitSyncService;
-    this.gitHubLabelSyncService = gitHubLabelSyncService;
-    this.rateLimitInfoHolder = rateLimitInfoHolder;
-  }
-
-  private void logRateLimit(String label) {
-    RateLimitInfo info = rateLimitInfoHolder.getLatestRateLimitInfo();
-    String message = RateLimitUtil.formatRateLimitMessage(label, info);
-    log.info(message);
-  }
-
-  private void logRateLimitSummary(RateLimitInfo before, RateLimitInfo after) {
-    String summary = RateLimitUtil.formatRateLimitSummary(before, after);
-    log.info(summary);
-  }
-
-  @Transactional
-  public void syncData() {
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
+  public void syncRepositoryData(String repositoryNameWithOwner) {
     var cutoffDate = OffsetDateTime.now().minusDays(timeframe);
 
     // Get last sync time
-    var lastSync = dataSyncStatusRepository.findTopByOrderByStartTimeDesc();
+    var lastSync = dataSyncStatusRepository.findTopByRepositoryNameWithOwner(
+        repositoryNameWithOwner);
     if (lastSync.isPresent()) {
       var lastSyncTime = lastSync.get().getStartTime();
       cutoffDate = lastSyncTime.isAfter(cutoffDate) ? lastSyncTime : cutoffDate;
@@ -97,138 +60,176 @@ public class GitHubDataSyncService {
     var cooldownTime = OffsetDateTime.now().minusMinutes(runOnStartupCooldownInMinutes);
     if (lastSync.isPresent() && lastSync.get().getStartTime().isAfter(cooldownTime)) {
       log.info(
-          "Skipping sync, last sync was less than {} minutes ago", runOnStartupCooldownInMinutes);
+          "Skipping sync for repository {}, last sync was less than {} minutes ago",
+          repositoryNameWithOwner, runOnStartupCooldownInMinutes);
       return;
     }
 
     log.info("--------------------------------------------------");
-    log.info("        Starting Data Sync Job");
+    log.info("    Starting Data Sync Job for Repository: {}", repositoryNameWithOwner);
     log.info("--------------------------------------------------");
 
-
-    // Capture rate limit info before sync
-    // We need to suppress the checkstyle warning here
-    // since after the sync, we need to compare the rate limit info
-    @SuppressWarnings("checkstyle:VariableDeclarationUsageDistance")
-    RateLimitInfo beforeSyncRateLimit = rateLimitInfoHolder.getLatestRateLimitInfo();
-    // Log rate limit before sync
-    logRateLimit("Before Sync");
-
-    // Start new sync
-    // CHECKSTYLE.OFF: VariableDeclarationUsageDistance
-    var startTime = OffsetDateTime.now();
-    // CHECKSTYLE.ON: VariableDeclarationUsageDistance
-
-    log.info("--------------------------------------------------");
-    var step1Start = Instant.now();
-    log.info("[Step 1/10] Syncing Monitored Repositories...");
-    var repositories = repositorySyncService.syncAllMonitoredRepositories();
-    var step1Duration = Duration.between(step1Start, Instant.now()).toMillis();
-    log.info("[Step 1/10] Completed Syncing {} repositories. "
-        + "(Took: {} ms)", repositories.size(), step1Duration);
-
-
-    // Sync all labels
-    log.info("--------------------------------------------------");
-    var step2Start = Instant.now();
-    log.info("[Step 2/10] Syncing Labels...");
-    gitHubLabelSyncService.syncLabelsOfAllRepositories(repositories);
-    var step2Duration = Duration.between(step2Start, Instant.now()).toMillis();
-    log.info("[Step 2/10] Completed Label Sync. (Took: {} ms)", step2Duration);
-
-
-    // Sync pull requests
-    log.info("--------------------------------------------------");
-    var step3Start = Instant.now();
-    log.info("[Step 3/10] Syncing Open Pull Requests...");
-    pullRequestSyncService.syncOpenPullRequestsOfAllRepositories(repositories);
-    var step3Duration = Duration.between(step3Start, Instant.now()).toMillis();
-    log.info("[Step 3/10] Completed Pull Request Sync. (Took: {} ms)", step3Duration);
-
-    // Sync environments
-    log.info("--------------------------------------------------");
-    var step4Start = Instant.now();
-    log.info("[Step 4/10] Syncing Environments...");
-    environmentSyncService.syncEnvironmentsOfAllRepositories(repositories);
-    var step4Duration = Duration.between(step4Start, Instant.now()).toMillis();
-    log.info("[Step 4/10] Completed Environment Sync. (Took: {} ms)", step4Duration);
-
-    // Sync deployments
-    log.info("--------------------------------------------------");
-    var step5Start = Instant.now();
-    log.info("[Step 5/10] Syncing Deployments (Cutoff: {})", cutoffDate);
-    deploymentSyncService.syncDeploymentsOfAllRepositories(repositories, Optional.of(cutoffDate));
-    var step5Duration = Duration.between(step5Start, Instant.now()).toMillis();
-    log.info("[Step 5/10] Completed Deployment Sync. (Took: {} ms)", step5Duration);
-
-    // Sync users
-    log.info("--------------------------------------------------");
-    var step6Start = Instant.now();
-    log.info("[Step 6/10] Syncing Users...");
-    userSyncService.syncAllExistingUsers();
-    var step6Duration = Duration.between(step6Start, Instant.now()).toMillis();
-    log.info("[Step 6/10] Completed User Sync. (Took: {} ms)", step6Duration);
-
-    // Sync workflows
-    log.info("--------------------------------------------------");
-    var step7Start = Instant.now();
-    log.info("[Step 7/10] Syncing Workflows...");
-    workflowSyncService.syncWorkflowsOfAllRepositories(repositories);
-    var step7Duration = Duration.between(step7Start, Instant.now()).toMillis();
-    log.info("[Step 7/10] Completed Workflow Sync. (Took: {} ms)", step7Duration);
-
-    // Sync branches
-    log.info("--------------------------------------------------");
-    var step8Start = Instant.now();
-    log.info("[Step 8/10] Syncing Branches...");
-    branchSyncService.syncBranchesOfAllRepositories(repositories);
-    var step8Duration = Duration.between(step8Start, Instant.now()).toMillis();
-    log.info("[Step 8/10] Completed Branch Sync. (Took: {} ms)", step8Duration);
-
-    // Sync commits
-    log.info("--------------------------------------------------");
-    var step9Start = Instant.now();
-    log.info("[Step 9/10] Syncing Commits...");
-    commitSyncService.syncCommitsOfAllRepositories(repositories);
-    var step9Duration = Duration.between(step9Start, Instant.now()).toMillis();
-    log.info("[Step 9/10] Completed Commit Sync. (Took: {} ms)", step9Duration);
-
-    // Sync workflow runs
-    log.info("--------------------------------------------------");
-    var step10Start = Instant.now();
-    log.info("[Step 10/10] Syncing Workflow Runs (Cutoff: {})", cutoffDate);
-    workflowRunSyncService.syncRunsOfAllRepositories(repositories, Optional.of(cutoffDate));
-    var step10Duration = Duration.between(step10Start, Instant.now()).toMillis();
-    log.info("[Step 10/10] Completed Workflow Run Sync. (Took: {} ms)", step10Duration);
-
-    var endTime = OffsetDateTime.now();
-    // Capture rate limit info after sync
-    @SuppressWarnings("checkstyle:VariableDeclarationUsageDistance")
-    RateLimitInfo afterSyncRateLimit = rateLimitInfoHolder.getLatestRateLimitInfo();
-
-    log.info("--------------------------------------------------");
-    log.info("        Data Sync Job Completed Successfully");
-    log.info("--------------------------------------------------");
-    log.info("Step 1 took: {} ms", step1Duration);
-    log.info("Step 2 took: {} ms", step2Duration);
-    log.info("Step 3 took: {} ms", step3Duration);
-    log.info("Step 4 took: {} ms", step4Duration);
-    log.info("Step 5 took: {} ms", step5Duration);
-    log.info("Step 6 took: {} ms", step6Duration);
-    log.info("Step 7 took: {} ms", step7Duration);
-    log.info("Step 8 took: {} ms", step8Duration);
-    log.info("Step 9 took: {} ms", step9Duration);
-    log.info("Step 10 took: {} ms", step10Duration);
-    log.info("Total Duration: {} seconds", Duration.between(startTime, endTime).getSeconds());
-    // Log a summary of rate limit changes.
-    logRateLimitSummary(beforeSyncRateLimit, afterSyncRateLimit);
-    log.info("--------------------------------------------------");
-    log.info("--------------------------------------------------");
-
-    // Store successful sync status
-    var syncStatus = new DataSyncStatus();
-    syncStatus.setStartTime(startTime);
-    syncStatus.setEndTime(endTime);
+    // Create a new sync status record with IN_PROGRESS status.
+    DataSyncStatus syncStatus = new DataSyncStatus();
+    syncStatus.setRepositoryNameWithOwner(repositoryNameWithOwner);
+    syncStatus.setStartTime(OffsetDateTime.now());
+    syncStatus.setStatus(DataSyncStatus.Status.IN_PROGRESS);
     dataSyncStatusRepository.save(syncStatus);
+
+    try {
+
+      // Start new sync
+      // CHECKSTYLE.OFF: VariableDeclarationUsageDistance
+      var startTime = OffsetDateTime.now();
+      // CHECKSTYLE.ON: VariableDeclarationUsageDistance
+
+      log.info("--------------------------------------------------");
+      var step1Start = Instant.now();
+      log.info("Repository: {} --> [Step 1/10] Syncing Repository", repositoryNameWithOwner);
+      Optional<GHRepository> optionalRepository =
+          repositorySyncService.syncRepository(repositoryNameWithOwner);
+      var step1Duration = Duration.between(step1Start, Instant.now()).toMillis();
+      log.info("Repository: {} --> [Step 1/10] Completed Syncing "
+          + "(Took: {} ms)", repositoryNameWithOwner, step1Duration);
+
+      if (optionalRepository.isEmpty()) {
+        log.error(
+            "Repository: {} --> [Step 1/10] Syncing Repository Failed. "
+                + "Skipping the rest of the sync steps.",
+            repositoryNameWithOwner);
+        syncStatus.setEndTime(OffsetDateTime.now());
+        syncStatus.setStatus(DataSyncStatus.Status.FAILED);
+        dataSyncStatusRepository.save(syncStatus);
+        return;
+      }
+
+      GHRepository ghRepository = optionalRepository.get();
+
+      // Sync all labels
+      log.info("--------------------------------------------------");
+      var step2Start = Instant.now();
+      log.info("Repository: {} --> [Step 2/10] Syncing Labels...", repositoryNameWithOwner);
+      gitHubLabelSyncService.syncLabelsOfRepository(ghRepository);
+      var step2Duration = Duration.between(step2Start, Instant.now()).toMillis();
+      log.info("Repository: {} --> [Step 2/10] Completed Label Sync. (Took: {} ms)",
+          repositoryNameWithOwner, step2Duration);
+
+
+      // Sync pull requests
+      log.info("--------------------------------------------------");
+      var step3Start = Instant.now();
+      log.info("Repository: {} --> [Step 3/10] Syncing Open Pull Requests...",
+          repositoryNameWithOwner);
+      pullRequestSyncService.syncPullRequestsOfRepository(ghRepository);
+      var step3Duration = Duration.between(step3Start, Instant.now()).toMillis();
+      log.info("Repository: {} --> [Step 3/10] Completed Pull Request Sync. (Took: {} ms)",
+          repositoryNameWithOwner,
+          step3Duration);
+
+      // Sync environments
+      log.info("--------------------------------------------------");
+      var step4Start = Instant.now();
+      log.info("Repository: {} --> [Step 4/10] Syncing Environments...", repositoryNameWithOwner);
+      environmentSyncService.syncEnvironmentsOfRepository(ghRepository);
+      var step4Duration = Duration.between(step4Start, Instant.now()).toMillis();
+      log.info("Repository: {} --> [Step 4/10] Completed Environment Sync. (Took: {} ms)",
+          repositoryNameWithOwner,
+          step4Duration);
+
+      // Sync deployments
+      log.info("--------------------------------------------------");
+      var step5Start = Instant.now();
+      log.info("Repository: {} --> [Step 5/10] Syncing Deployments (Cutoff: {})",
+          repositoryNameWithOwner, cutoffDate);
+      deploymentSyncService.syncDeploymentsOfRepository(ghRepository, Optional.of(cutoffDate));
+      var step5Duration = Duration.between(step5Start, Instant.now()).toMillis();
+      log.info("Repository: {} --> [Step 5/10] Completed Deployment Sync. (Took: {} ms)",
+          repositoryNameWithOwner,
+          step5Duration);
+
+      // Sync users
+      log.info("--------------------------------------------------");
+      var step6Start = Instant.now();
+      log.info("Repository: {} --> [Step 6/10] Syncing Users...", repositoryNameWithOwner);
+      userSyncService.syncAllExistingUsers();
+      var step6Duration = Duration.between(step6Start, Instant.now()).toMillis();
+      log.info("Repository: {} --> [Step 6/10] Completed User Sync. (Took: {} ms)",
+          repositoryNameWithOwner, step6Duration);
+
+      // Sync workflows
+      log.info("--------------------------------------------------");
+      var step7Start = Instant.now();
+      log.info("Repository: {} --> [Step 7/10] Syncing Workflows...", repositoryNameWithOwner);
+      workflowSyncService.syncWorkflowsOfRepository(ghRepository);
+      var step7Duration = Duration.between(step7Start, Instant.now()).toMillis();
+      log.info("Repository: {} --> [Step 7/10] Completed Workflow Sync. (Took: {} ms)",
+          repositoryNameWithOwner,
+          step7Duration);
+
+      // Sync branches
+      log.info("--------------------------------------------------");
+      var step8Start = Instant.now();
+      log.info("Repository: {} --> [Step 8/10] Syncing Branches...", repositoryNameWithOwner);
+      branchSyncService.syncBranchesOfRepository(ghRepository);
+      var step8Duration = Duration.between(step8Start, Instant.now()).toMillis();
+      log.info("Repository: {} --> [Step 8/10] Completed Branch Sync. (Took: {} ms)",
+          repositoryNameWithOwner,
+          step8Duration);
+
+      // Sync commits
+      log.info("--------------------------------------------------");
+      var step9Start = Instant.now();
+      log.info("Repository: {} --> [Step 9/10] Syncing Commits...", repositoryNameWithOwner);
+      commitSyncService.syncCommitsOfRepository(ghRepository);
+      var step9Duration = Duration.between(step9Start, Instant.now()).toMillis();
+      log.info("Repository: {} --> [Step 9/10] Completed Commit Sync. (Took: {} ms)",
+          repositoryNameWithOwner,
+          step9Duration);
+
+      // Sync workflow runs
+      log.info("--------------------------------------------------");
+      var step10Start = Instant.now();
+      log.info("Repository: {} --> [Step 10/10] Syncing Workflow Runs (Cutoff: {})",
+          repositoryNameWithOwner, cutoffDate);
+      workflowRunSyncService.syncRunsOfRepository(ghRepository, Optional.of(cutoffDate));
+      var step10Duration = Duration.between(step10Start, Instant.now()).toMillis();
+      log.info("Repository: {} --> [Step 10/10] Completed Workflow Run Sync. (Took: {} ms)",
+          repositoryNameWithOwner,
+          step10Duration);
+
+      var endTime = OffsetDateTime.now();
+
+      log.info("--------------------------------------------------");
+      log.info("    Data Sync Job Completed Successfully for Repository: {}",
+          repositoryNameWithOwner);
+      log.info("--------------------------------------------------");
+      log.info("Repository: {} --> Step 1 took: {} ms", repositoryNameWithOwner, step1Duration);
+      log.info("Repository: {} --> Step 2 took: {} ms", repositoryNameWithOwner, step2Duration);
+      log.info("Repository: {} --> Step 3 took: {} ms", repositoryNameWithOwner, step3Duration);
+      log.info("Repository: {} --> Step 4 took: {} ms", repositoryNameWithOwner, step4Duration);
+      log.info("Repository: {} --> Step 5 took: {} ms", repositoryNameWithOwner, step5Duration);
+      log.info("Repository: {} --> Step 6 took: {} ms", repositoryNameWithOwner, step6Duration);
+      log.info("Repository: {} --> Step 7 took: {} ms", repositoryNameWithOwner, step7Duration);
+      log.info("Repository: {} --> Step 8 took: {} ms", repositoryNameWithOwner, step8Duration);
+      log.info("Repository: {} --> Step 9 took: {} ms", repositoryNameWithOwner, step9Duration);
+      log.info("Repository: {} --> Step 10 took: {} ms", repositoryNameWithOwner, step10Duration);
+      log.info("Repository: {} --> Total Duration: {} seconds", repositoryNameWithOwner,
+          Duration.between(startTime, endTime).getSeconds());
+      log.info("--------------------------------------------------");
+      log.info("--------------------------------------------------");
+
+      // Store successful sync status
+      syncStatus.setEndTime(endTime);
+      syncStatus.setStatus(DataSyncStatus.Status.SUCCESS);
+      dataSyncStatusRepository.save(syncStatus);
+    } catch (Exception e) {
+      log.error("Repository: {} --> Error syncing repository: {}",
+          repositoryNameWithOwner,
+          e.getMessage(), e);
+      // Update the sync record with FAILED status.
+      syncStatus.setEndTime(OffsetDateTime.now());
+      syncStatus.setStatus(DataSyncStatus.Status.FAILED);
+      dataSyncStatusRepository.save(syncStatus);
+    }
   }
 }
