@@ -13,6 +13,7 @@ import io.nats.client.Nats;
 import io.nats.client.Options;
 import io.nats.client.StreamContext;
 import io.nats.client.api.ConsumerConfiguration;
+import io.nats.client.api.ConsumerInfo;
 import io.nats.client.api.DeliverPolicy;
 import java.io.IOException;
 import java.time.Duration;
@@ -139,24 +140,50 @@ public class NatsConsumerService {
         messageConsumer = null;
       }
 
+      // Get the stream context for the "github" stream
       StreamContext streamContext = connection.getStreamContext("github");
+      // Get the subjects to monitor
       String[] subjects = getSubjects();
-      log.info("Setting up consumer for subjects: {}", Arrays.toString(subjects));
+      log.info("Setting up consumer for stream 'github' with subjects: {}",
+          Arrays.toString(subjects));
 
-      // Build consumer configuration for the new or existing durable consumer
+
       ConsumerConfiguration.Builder consumerConfigBuilder =
-          ConsumerConfiguration.builder()
-              .filterSubjects(subjects)
-              .deliverPolicy(DeliverPolicy.ByStartTime)
-              .startTime(ZonedDateTime.now().minusDays(timeframe));
+          ConsumerConfiguration.builder().filterSubjects(subjects);
 
+      // Check if a consumer with the given durable name already exists
+      ConsumerInfo existingConsumer = null;
       if (durableConsumerName != null && !durableConsumerName.isEmpty()) {
-        consumerConfigBuilder.durable(durableConsumerName);
+        try {
+          existingConsumer = streamContext.getConsumerInfo(durableConsumerName);
+          log.info("Consumer '{}' found.", durableConsumerName);
+        } catch (Exception e) {
+          log.info("Consumer '{}' not found; a new one will be created.", durableConsumerName);
+        }
+      }
+
+      if (existingConsumer != null) {
+        // Use existing configuration as base
+        ConsumerConfiguration existingConfig = existingConsumer.getConsumerConfiguration();
+        log.info("Consumer '{}' already exists. Updating subjects.", durableConsumerName);
+        consumerConfigBuilder = ConsumerConfiguration.builder(existingConfig)
+            .filterSubjects(subjects);
+      } else {
+        log.info("Creating new configuration for consumer.");
+        // Create new configuration with deliver policy and start time
+        consumerConfigBuilder = ConsumerConfiguration.builder()
+            .deliverPolicy(DeliverPolicy.ByStartTime)
+            .startTime(ZonedDateTime.now().minusDays(timeframe))
+            .filterSubjects(subjects);
+
+        if (durableConsumerName != null && !durableConsumerName.isEmpty()) {
+          consumerConfigBuilder = consumerConfigBuilder.durable(durableConsumerName);
+        }
       }
 
       ConsumerConfiguration consumerConfig = consumerConfigBuilder.build();
       consumerContext = streamContext.createOrUpdateConsumer(consumerConfig);
-      log.info("Consumer created or updated.");
+      log.info("Consumer created or updated with name '{}'.", consumerContext.getConsumerName());
 
       messageConsumer = consumerContext.consume(this::handleMessage);
       log.info("Successfully started consuming messages.");
