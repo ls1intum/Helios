@@ -87,7 +87,7 @@ public class NatsConsumerService {
     while (true) {
       try {
         natsConnection = Nats.connect(options);
-        setupConsumer(natsConnection);
+        setupOrUpdateConsumer(natsConnection);
         return;
       } catch (IOException | InterruptedException e) {
         log.error("NATS connection error: {}", e.getMessage(), e);
@@ -116,7 +116,7 @@ public class NatsConsumerService {
         .build();
   }
 
-  private void setupConsumer(Connection connection) throws IOException, InterruptedException {
+  private void setupOrUpdateConsumer(Connection connection) throws IOException, InterruptedException {
     try {
       StreamContext streamContext = connection.getStreamContext("github");
 
