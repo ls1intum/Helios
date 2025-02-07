@@ -5,9 +5,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.tum.cit.aet.helios.github.GitHubClientManager;
 import de.tum.cit.aet.helios.github.GitHubCustomMessageHandler;
-import io.nats.client.Message;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import lombok.extern.log4j.Log4j2;
 import okhttp3.MediaType;
@@ -25,7 +23,7 @@ import org.springframework.stereotype.Component;
 @Component
 @Log4j2
 public class GitHubDeploymentProtectionRuleMessageHandler
-    implements GitHubCustomMessageHandler<DeploymentProtectionRulePayload> {
+    extends GitHubCustomMessageHandler<DeploymentProtectionRulePayload> {
 
   private final GitHubClientManager clientManager;
 
@@ -37,55 +35,44 @@ public class GitHubDeploymentProtectionRuleMessageHandler
       GitHubClientManager clientManager,
       OkHttpClient okHttpClient,
       ObjectMapper objectMapper) {
+    super(DeploymentProtectionRulePayload.class, objectMapper);
     this.clientManager = clientManager;
     this.okHttpClient = okHttpClient;
     this.objectMapper = objectMapper;
   }
 
   @Override
-  public void handleMessage(Message msg) {
+  public void handleEvent(DeploymentProtectionRulePayload eventPayload) {
     // Check if the GitHub App is configured.
     if (clientManager.getAuthType().equals(GitHubClientManager.AuthType.PAT)) {
       log.warn("Received deployment_protection_rule event but no GitHub App is configured.");
       return;
     }
 
+    log.info(
+        "Received deployment protection rule event for "
+            + "repository: {}, "
+            + "environment: {}, "
+            + "sender: {}, "
+            + "action: {}",
+        eventPayload.getRepository().getFullName(),
+        eventPayload.getEnvironment(),
+        eventPayload.getSender().getLogin(),
+        eventPayload.getAction());
 
-    String rawJson = new String(msg.getData(), StandardCharsets.UTF_8);
-    log.info("Received deployment_protection_rule event. Started processing...");
-    try {
-      DeploymentProtectionRulePayload eventPayload =
-          objectMapper.readValue(rawJson, DeploymentProtectionRulePayload.class);
-
-      log.info(
-          "Received deployment protection rule event for "
-              + "repository: {}, "
-              + "environment: {}, "
-              + "sender: {}, "
-              + "action: {}",
-          eventPayload.getRepository().getFullName(),
-          eventPayload.getEnvironment(),
-          eventPayload.getSender().getLogin(),
-          eventPayload.getAction());
-
-      if (!"requested".equals(eventPayload.getAction())) {
-        log.info("Deployment protection rule action is not 'requested'. Ignoring...");
-        return;
-      }
-
-      if (isValidDeploymentRequest(eventPayload)) {
-        log.info("Deployment protection rule accepted. Processing...");
-        sendApprovalRequest(eventPayload, "approved");
-      } else {
-        log.info("Deployment protection rule rejected. Ignoring...");
-        sendApprovalRequest(eventPayload, "rejected");
-      }
-
-    } catch (IOException e) {
-      log.error("Failed to parse deployment_protection_rule payload", e);
-    } catch (Exception e) {
-      log.error("Failed to process deployment_protection_rule payload", e);
+    if (!"requested".equals(eventPayload.getAction())) {
+      log.info("Deployment protection rule action is not 'requested'. Ignoring...");
+      return;
     }
+
+    if (isValidDeploymentRequest(eventPayload)) {
+      log.info("Deployment protection rule accepted. Processing...");
+      sendApprovalRequest(eventPayload, "approved");
+    } else {
+      log.info("Deployment protection rule rejected. Ignoring...");
+      sendApprovalRequest(eventPayload, "rejected");
+    }
+
   }
 
   /**
