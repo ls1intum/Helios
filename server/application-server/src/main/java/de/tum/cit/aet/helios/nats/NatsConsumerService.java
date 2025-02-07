@@ -161,10 +161,13 @@ public class NatsConsumerService {
       String subject = msg.getSubject();
       String lastPart = subject.substring(subject.lastIndexOf(".") + 1);
 
+
+      log.info("Received message with subject: {}", subject);
+
       // Check if there's a custom handler for this event type
       GitHubCustomMessageHandler<?> customHandler = customHandlerRegistry.getHandler(lastPart);
       if (customHandler != null) {
-        customHandler.handleMessage(msg);
+        customHandler.onMessage(msg);
         msg.ack();
         return;
       }
@@ -196,16 +199,41 @@ public class NatsConsumerService {
    * @return The subjects to monitor.
    */
   private String[] getSubjects() {
-    String[] events = Stream.concat(
-            customHandlerRegistry.getSupportedEvents().stream(),
-            handlerRegistry.getSupportedEvents().stream().map(GHEvent::name)
-        ).map(String::toLowerCase)
-        .distinct()
-        .toArray(String[]::new);
+    return Stream.concat(
+            // Custom events
+            customHandlerRegistry.getSupportedEvents().stream()
+                .flatMap(customEvent -> {
+                  GitHubCustomMessageHandler<?> customHandler =
+                      customHandlerRegistry.getHandler(customEvent);
+                  if (customHandler == null) {
+                    return Stream.empty();
+                  }
 
-    return Arrays.stream(repositoriesToMonitor)
-        .map(this::getSubjectPrefix)
-        .flatMap(prefix -> Arrays.stream(events).map(event -> prefix + "." + event))
+                  String eventName = customEvent.toLowerCase();
+
+                  return customHandler.isGlobalEvent()
+                      ? Stream.of("github.*.*." + eventName)
+                      : Arrays.stream(repositoriesToMonitor)
+                      .map(repo -> getSubjectPrefix(repo) + "." + eventName);
+                }),
+
+            // Normal GitHub events
+            handlerRegistry.getSupportedEvents().stream()
+                .flatMap(event -> {
+                  GitHubMessageHandler<?> handler = handlerRegistry.getHandler(event);
+                  if (handler == null) {
+                    return Stream.empty();
+                  }
+
+                  String eventName = event.name().toLowerCase();
+
+                  return handler.isGlobalEvent()
+                      ? Stream.of("github.*.*." + eventName)
+                      : Arrays.stream(repositoriesToMonitor)
+                      .map(repo -> getSubjectPrefix(repo) + "." + eventName);
+                })
+        )
+        .distinct()
         .toArray(String[]::new);
   }
 
