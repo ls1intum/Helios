@@ -53,7 +53,7 @@ http:
 monitoring:
     # List of repositories to monitor in the format owner/repository
     # Example: ls1intum/Helios or ls1intum/Helios,ls1intum/Artemis
-    repositories: ${REPOSITORY_NAME}
+    repositories: ${REPOSITORY_NAME:}
     runOnStartup: true
     # Fetching timeframe in days
     timeframe: 7
