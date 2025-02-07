@@ -47,15 +47,11 @@ public class GitHubDataSyncScheduler {
   }
 
   public void syncData() {
-    // Create a stream from the environment variables (assumed to be a String array)
     Stream<String> envRepoNames = Arrays.stream(repositoriesToMonitor);
 
-    // Create a stream from the database repository names
     Stream<String> dbRepoNames = gitRepositoryRepository.findAll().stream()
         .map(GitRepository::getNameWithOwner);
 
-    // Concatenate the two streams (environment variables first), apply distinct to remove duplicates,
-    // and collect to a list (if you need the count) or process directly with forEach.
     List<String> uniqueRepoNames = Stream.concat(envRepoNames, dbRepoNames)
         .distinct()
         .toList();
