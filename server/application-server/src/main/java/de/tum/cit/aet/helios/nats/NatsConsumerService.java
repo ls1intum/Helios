@@ -50,6 +50,12 @@ public class NatsConsumerService {
   @Value("${nats.durableConsumerName}")
   private String durableConsumerName;
 
+  @Value("${nats.consumerInactiveThresholdMinutes}")
+  private int consumerInactiveThresholdMinutes;
+
+  @Value("${nats.consumerAckWaitSeconds}")
+  private int consumerAckWaitSeconds;
+
   @Value("${monitoring.repositories}")
   private String[] repositoriesToMonitor;
 
@@ -175,8 +181,8 @@ public class NatsConsumerService {
         consumerConfigBuilder = ConsumerConfiguration.builder()
             .deliverPolicy(DeliverPolicy.ByStartTime)
             .startTime(ZonedDateTime.now().minusDays(timeframe))
-            .inactiveThreshold(Duration.ofMinutes(10))
-            .ackWait(Duration.ofMinutes(1))
+            .inactiveThreshold(Duration.ofMinutes(consumerInactiveThresholdMinutes))
+            .ackWait(Duration.ofSeconds(consumerAckWaitSeconds))
             .filterSubjects(subjects);
 
         if (durableConsumerName != null && !durableConsumerName.isEmpty()) {

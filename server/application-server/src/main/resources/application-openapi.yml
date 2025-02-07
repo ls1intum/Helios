@@ -21,6 +21,8 @@ nats:
     timeframe: 0
     server: ""
     durableConsumerName: ""
+    consumerInactiveThresholdMinutes: 0
+    consumerAckWaitSeconds: 0
     auth:
         token: ""
 
