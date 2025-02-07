@@ -148,8 +148,7 @@ public class NatsConsumerService {
           Arrays.toString(subjects));
 
 
-      ConsumerConfiguration.Builder consumerConfigBuilder =
-          ConsumerConfiguration.builder().filterSubjects(subjects);
+      ConsumerConfiguration.Builder consumerConfigBuilder = null;
 
       // Check if a consumer with the given durable name already exists
       ConsumerInfo existingConsumer = null;
