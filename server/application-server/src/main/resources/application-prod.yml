@@ -25,7 +25,12 @@ spring:
 nats:
     enabled: true
     timeframe: ${MONITORING_TIMEFRAME:7}
-    durableConsumerName: ""
+    # Durable consumer name: If provided, the consumer will be durable and resume from its last acknowledged sequence on redeploy.
+    durableConsumerName: ${NATS_DURABLE_CONSUMER_NAME:}
+    # Inactive threshold (in minutes): Specifies how long (in minutes) an inactive consumer is retained before being removed.
+    consumerInactiveThresholdMinutes: ${NATS_CONSUMER_INACTIVE_THRESHOLD_MINUTES:30}
+    # Acknowledgment wait (in seconds): Specifies how long NATS waits for a message acknowledgment before resending the message.
+    consumerAckWaitSeconds: ${NATS_CONSUMER_ACK_WAIT_SECONDS:60}
     server: ${NATS_SERVER}
     auth:
         token: ${NATS_AUTH_TOKEN}
