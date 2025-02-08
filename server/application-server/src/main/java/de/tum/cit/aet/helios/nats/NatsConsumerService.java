@@ -15,18 +15,18 @@ import io.nats.client.StreamContext;
 import io.nats.client.api.ConsumerConfiguration;
 import io.nats.client.api.ConsumerInfo;
 import io.nats.client.api.DeliverPolicy;
+import io.sentry.Sentry;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 import lombok.extern.log4j.Log4j2;
 import org.kohsuke.github.GHEvent;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.env.Environment;
@@ -62,7 +62,6 @@ public class NatsConsumerService {
   @Value("${nats.auth.token}")
   private String natsAuthToken;
 
-  private final Environment environment;
 
   private Connection natsConnection;
   private ConsumerContext consumerContext;
@@ -72,21 +71,24 @@ public class NatsConsumerService {
    */
   private MessageConsumer messageConsumer;
 
+  private final Environment environment;
 
   private final GitHubMessageHandlerRegistry handlerRegistry;
 
   private final GitHubCustomMessageHandlerRegistry customHandlerRegistry;
 
-  private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+  private final NatsErrorListener natsErrorListener;
 
-
+  @Autowired
   public NatsConsumerService(
       Environment environment,
       GitHubMessageHandlerRegistry handlerRegistry,
-      GitHubCustomMessageHandlerRegistry customHandlerRegistry) {
+      GitHubCustomMessageHandlerRegistry customHandlerRegistry,
+      @Lazy NatsErrorListener natsErrorListener) {
     this.environment = environment;
     this.handlerRegistry = handlerRegistry;
     this.customHandlerRegistry = customHandlerRegistry;
+    this.natsErrorListener = natsErrorListener;
   }
 
   @EventListener(ApplicationReadyEvent.class)
@@ -131,6 +133,7 @@ public class NatsConsumerService {
         .connectionListener(
             (conn, type) ->
                 log.info("Connection event - Server: {}, {}", conn.getServerInfo().getPort(), type))
+        .errorListener(natsErrorListener)
         .maxReconnects(-1)
         .reconnectWait(Duration.ofSeconds(INITIAL_RECONNECT_DELAY_SECONDS))
         .build();
@@ -172,8 +175,8 @@ public class NatsConsumerService {
         ConsumerConfiguration existingConfig = existingConsumer.getConsumerConfiguration();
         log.info("Consumer '{}' already exists. Updating subjects.", durableConsumerName);
         consumerConfigBuilder = ConsumerConfiguration.builder(existingConfig)
-            .inactiveThreshold(Duration.ofMinutes(10))
-            .ackWait(Duration.ofMinutes(1))
+            .inactiveThreshold(Duration.ofMinutes(consumerInactiveThresholdMinutes))
+            .ackWait(Duration.ofSeconds(consumerAckWaitSeconds))
             .filterSubjects(subjects);
       } else {
         log.info("Creating new configuration for consumer.");
@@ -241,16 +244,39 @@ public class NatsConsumerService {
   }
 
   /**
+   * Reinitialize the NATS consumer.
+   */
+  public void reinitializeConsumer() {
+    log.info("NATS Consumer reinitialization process started.");
+    if (natsConnection != null) {
+      try {
+        log.info("Attempting to reinitialize the NATS consumer...");
+        setupOrUpdateConsumer(natsConnection);
+        log.info("NATS consumer reinitialized successfully.");
+      } catch (Exception e) {
+        log.error("Failed to reinitialize the NATS consumer: {}", e.getMessage(), e);
+        // Log error to Sentry
+        Sentry.captureException(e);
+      }
+    } else {
+      log.warn("NATS connection is null. Can not reinitialize consumer.");
+    }
+  }
+
+  /**
    * Re-fetch subjects and re-create/update the consumer.
+   * Tries 3 times and sends error to Sentry on each failure.
    */
   public synchronized void updateSubjects() {
     if (natsConnection != null) {
-      try {
-        setupOrUpdateConsumer(natsConnection);
-      } catch (Exception e) {
-        log.error("Failed to update consumer at runtime: {}", e.getMessage(), e);
-        // Schedule a retry after 5 seconds delay
-        scheduler.schedule(this::updateSubjects, 5, TimeUnit.SECONDS);
+      for (int i = 0; i < 5; i++) {
+        try {
+          setupOrUpdateConsumer(natsConnection);
+          return;
+        } catch (Exception e) {
+          log.error("Failed to update consumer at runtime: {}", e.getMessage(), e);
+          Sentry.captureException(e);
+        }
       }
     }
   }
