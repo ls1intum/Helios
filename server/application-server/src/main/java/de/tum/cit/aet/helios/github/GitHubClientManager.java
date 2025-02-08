@@ -14,7 +14,6 @@ import okhttp3.OkHttpClient;
 import org.kohsuke.github.GHApp;
 import org.kohsuke.github.GHAppInstallation;
 import org.kohsuke.github.GHAppInstallationToken;
-import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GitHub;
 import org.kohsuke.github.GitHubBuilder;
 import org.kohsuke.github.extras.okhttp3.OkHttpGitHubConnector;
@@ -203,14 +202,6 @@ public class GitHubClientManager {
 
         // Set token expiration time to 20 minutes from now
         tokenExpirationTime = Instant.now().plusSeconds(60 * 20);
-
-        // Retrieve the repositories accessible to this installation
-        List<String> installedRepositories =
-            github.getInstallation().listRepositories().toList().stream()
-                .map(GHRepository::getFullName)
-                .toList();
-
-        log.info("Installed repositories for this GitHub App: {}", installedRepositories);
       } else if (authType == AuthType.PAT) {
         log.info("Creating GitHub client with PAT...");
         // Set current token to ghAuthToken

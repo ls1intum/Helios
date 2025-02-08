@@ -1,6 +1,7 @@
 package de.tum.cit.aet.helios.github.sync;
 
 
+import de.tum.cit.aet.helios.github.GitHubFacade;
 import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import java.util.Arrays;
@@ -24,6 +25,7 @@ public class GitHubDataSyncScheduler {
 
   private final GitRepoRepository gitRepositoryRepository;
   private final GitHubDataSyncService dataSyncService;
+  private final GitHubFacade gitHubFacade;
 
   @Value("${monitoring.runOnStartup:true}")
   private boolean runOnStartup;
@@ -35,7 +37,7 @@ public class GitHubDataSyncScheduler {
   public void run() {
     if (runOnStartup) {
       log.info("Starting initial GitHub data sync...");
-      syncData();
+      syncInstalledRepositories();
       log.info("Initial GitHub data sync completed.");
     }
   }
@@ -43,14 +45,31 @@ public class GitHubDataSyncScheduler {
   @Scheduled(cron = "${monitoring.repository-sync-cron}")
   public void syncDataCron() {
     log.info("Starting scheduled GitHub data sync...");
-    syncData();
+    syncInstalledRepositories();
     log.info("Scheduled GitHub data sync completed.");
   }
 
-  public void syncData() {
-    Stream<String> envRepoNames = Arrays.stream(repositoriesToMonitor);
-    log.info("Repositories from environment: {}", Arrays.toString(repositoriesToMonitor));
+  private void syncInstalledRepositories() {
+    try {
+      Stream<String> envRepoNames = Arrays.stream(repositoriesToMonitor);
+      log.info("Repositories from environment: {}", Arrays.toString(repositoriesToMonitor));
 
+      List<String> installedRepositories = gitHubFacade.getInstalledRepositoriesForGitHubApp();
+      log.info("Installed repositories: {}", installedRepositories);
+
+      List<String> allRepositories = Stream.concat(envRepoNames, installedRepositories.stream())
+          .distinct()
+          .toList();
+
+      log.info("Final list of repositories to sync: {}", allRepositories);
+
+      dataSyncService.syncRepositories(allRepositories);
+    } catch (Exception ex) {
+      log.error("Failed to sync installed repositories: {} {}", ex.getMessage(), ex);
+    }
+  }
+
+  public void syncData() {
     List<String> dbRepoList = gitRepositoryRepository.findAll().stream()
         .map(GitRepository::getNameWithOwner)
         .collect(Collectors.toList());

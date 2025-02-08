@@ -13,6 +13,7 @@ import de.tum.cit.aet.helios.workflow.github.GitHubWorkflowSyncService;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -44,6 +45,20 @@ public class GitHubDataSyncService {
   private final GitHubCommitSyncService commitSyncService;
   private final GitHubLabelSyncService gitHubLabelSyncService;
 
+
+  @Transactional
+  public void syncRepositories(List<String> nameWithOwners) {
+    for (String repositoryNameWithOwner : nameWithOwners) {
+      log.info("Started syncing repository: {}", repositoryNameWithOwner);
+      Optional<GHRepository> optionalRepository =
+          repositorySyncService.syncRepository(repositoryNameWithOwner);
+      if (optionalRepository.isEmpty()) {
+        log.error("Failed to sync repository: {}", repositoryNameWithOwner);
+        continue;
+      }
+      log.info("Successfully synced repository: {}", repositoryNameWithOwner);
+    }
+  }
 
   @Transactional(propagation = Propagation.REQUIRES_NEW)
   public void syncRepositoryData(String repositoryNameWithOwner) {

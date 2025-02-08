@@ -1,6 +1,7 @@
 package de.tum.cit.aet.helios.github;
 
 import java.io.IOException;
+import java.util.List;
 import org.kohsuke.github.GHOrganization;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GHRepositorySearchBuilder;
@@ -26,4 +27,6 @@ public interface GitHubFacade {
   public GHRepository getRepositoryById(long id) throws IOException;
 
   public String getGithubAppName();
+
+  public List<String> getInstalledRepositoriesForGitHubApp() throws IOException;
 }

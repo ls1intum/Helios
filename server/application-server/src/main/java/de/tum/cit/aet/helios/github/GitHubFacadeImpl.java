@@ -1,12 +1,15 @@
 package de.tum.cit.aet.helios.github;
 
 import java.io.IOException;
+import java.util.List;
 import org.kohsuke.github.GHOrganization;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GHRepositorySearchBuilder;
 import org.kohsuke.github.GHUser;
 
-/** Facade for GitHub API. */
+/**
+ * Facade for GitHub API.
+ */
 public class GitHubFacadeImpl implements GitHubFacade {
 
   private final GitHubClientManager clientManager;
@@ -43,5 +46,19 @@ public class GitHubFacadeImpl implements GitHubFacade {
   @Override
   public String getGithubAppName() {
     return clientManager.getAppName();
+  }
+
+  @Override
+  public List<String> getInstalledRepositoriesForGitHubApp() throws IOException {
+    if (GitHubClientManager.AuthType.APP.equals(clientManager.getAuthType())) {
+      return clientManager.getGitHubClient()
+          .getInstallation()
+          .listRepositories()
+          .toList()
+          .stream()
+          .map(GHRepository::getFullName)
+          .toList();
+    }
+    return List.of();
   }
 }
