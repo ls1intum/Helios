@@ -173,6 +173,15 @@ ALTER TABLE public.issue_assignee
             REFERENCES public.issue(id)
             ON DELETE CASCADE;
 
+
+-- Ensure issue_assignee rows are deleted when their associated issue is deleted
+ALTER TABLE public.issue_assignee DROP CONSTRAINT fkocgmsva4p5e8ic9k5dbjqa15u;
+ALTER TABLE public.issue_assignee
+    ADD CONSTRAINT fkocgmsva4p5e8ic9k5dbjqa15u
+        FOREIGN KEY (issue_id)
+            REFERENCES public.issue(id)
+            ON DELETE CASCADE;
+
 -------------------------------------------------------------------------------
 -- issue_label -> issue
 -------------------------------------------------------------------------------
