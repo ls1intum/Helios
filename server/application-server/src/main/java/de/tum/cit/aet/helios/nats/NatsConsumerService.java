@@ -246,7 +246,7 @@ public class NatsConsumerService {
   /**
    * Reinitialize the NATS consumer.
    */
-  public void reinitializeConsumer() {
+  public synchronized void reinitializeConsumer() {
     log.info("NATS Consumer reinitialization process started.");
     if (natsConnection != null) {
       try {
@@ -260,24 +260,6 @@ public class NatsConsumerService {
       }
     } else {
       log.warn("NATS connection is null. Can not reinitialize consumer.");
-    }
-  }
-
-  /**
-   * Re-fetch subjects and re-create/update the consumer.
-   * Tries 3 times and sends error to Sentry on each failure.
-   */
-  public synchronized void updateSubjects() {
-    if (natsConnection != null) {
-      for (int i = 0; i < 5; i++) {
-        try {
-          setupOrUpdateConsumer(natsConnection);
-          return;
-        } catch (Exception e) {
-          log.error("Failed to update consumer at runtime: {}", e.getMessage(), e);
-          Sentry.captureException(e);
-        }
-      }
     }
   }
 
