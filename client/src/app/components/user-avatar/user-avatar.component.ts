@@ -6,6 +6,8 @@ import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 import { AvatarModule } from 'primeng/avatar';
 import { TooltipModule } from 'primeng/tooltip';
 
+export type TooltipPosition = 'top' | 'bottom' | 'left' | 'right';
+
 @Component({
   selector: 'app-user-avatar',
   imports: [CommonModule, TooltipModule, AvatarModule, IconsModule],
@@ -16,6 +18,7 @@ export class UserAvatarComponent {
 
   user = input.required<UserInfoDto | undefined>();
   toolTipText = input<string | undefined>();
+  tooltipPosition = input<TooltipPosition>('right');
 
   getAvatarBorderClass(login: string) {
     return this.keycloakService.isCurrentUser(login) ? 'border-2 border-primary-400 rounded-full' : '';

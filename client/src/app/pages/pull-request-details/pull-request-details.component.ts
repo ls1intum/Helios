@@ -11,10 +11,23 @@ import { injectQuery } from '@tanstack/angular-query-experimental';
 import { SkeletonModule } from 'primeng/skeleton';
 import { getPullRequestByRepositoryIdAndNumberOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
+import { UserAvatarComponent } from '@app/components/user-avatar/user-avatar.component';
+import { PullRequestStatusIconComponent } from '@app/components/pull-request-status-icon/pull-request-status-icon.component';
 
 @Component({
   selector: 'app-branch-details',
-  imports: [InputTextModule, TagModule, IconsModule, ButtonModule, PipelineComponent, MarkdownPipe, DeploymentSelectionComponent, SkeletonModule],
+  imports: [
+    InputTextModule,
+    TagModule,
+    IconsModule,
+    ButtonModule,
+    PipelineComponent,
+    MarkdownPipe,
+    DeploymentSelectionComponent,
+    SkeletonModule,
+    UserAvatarComponent,
+    PullRequestStatusIconComponent,
+  ],
   templateUrl: './pull-request-details.component.html',
 })
 export class PullRequestDetailsComponent {
