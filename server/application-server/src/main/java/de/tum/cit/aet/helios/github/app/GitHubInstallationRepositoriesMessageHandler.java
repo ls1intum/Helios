@@ -35,8 +35,8 @@ public class GitHubInstallationRepositoriesMessageHandler
   @Override
   protected void handleEvent(GitHubInstallationPayload eventPayload) {
     // Check if the GitHub App is configured.
-    if (clientManager.getAuthType().equals(GitHubClientManager.AuthType.PAT)) {
-      log.warn("Received installation_repositories event but no GitHub App is configured.");
+    if (!GitHubClientManager.AuthType.APP.equals(clientManager.getAuthType())) {
+      log.warn("Received installation_repositories event, but no GitHub App is configured.");
       return;
     }
 
@@ -58,17 +58,20 @@ public class GitHubInstallationRepositoriesMessageHandler
         eventPayload.getAction()
     );
 
-    // Sync repositories added
+    // Sync repositories added to the GitHub App
     repositoriesAdded.forEach(
         repository -> {
           log.info("[Installation Event Handler] Sync will start for repository: {}",
               repository.getFullName());
-          dataSyncService.syncRepositoryData(repository.getFullName());
+          dataSyncService.syncRepository(repository.getFullName());
           log.info("[Installation Event Handler] Sync completed for repository: {}",
               repository.getFullName());
         });
 
-    // Sync repositories removed
+    // Remove repositories that were uninstalled from the GitHub App
+    // This will delete all related data from the database
+    // The foreign key relationships are configured with DELETE CASCADE
+    // Therefore, removing the repository row will remove all associated data
     repositoriesRemoved.forEach(
         repository -> {
           log.info("[Installation Event Handler] Deletion will start for repository: {}",

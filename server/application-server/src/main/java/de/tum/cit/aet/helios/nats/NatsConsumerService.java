@@ -2,6 +2,7 @@ package de.tum.cit.aet.helios.nats;
 
 import de.tum.cit.aet.helios.github.GitHubCustomMessageHandler;
 import de.tum.cit.aet.helios.github.GitHubCustomMessageHandlerRegistry;
+import de.tum.cit.aet.helios.github.GitHubFacade;
 import de.tum.cit.aet.helios.github.GitHubMessageHandler;
 import de.tum.cit.aet.helios.github.GitHubMessageHandlerRegistry;
 import io.nats.client.Connection;
@@ -20,6 +21,8 @@ import java.io.IOException;
 import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.stream.Stream;
 import lombok.extern.log4j.Log4j2;
 import org.kohsuke.github.GHEvent;
@@ -77,6 +80,8 @@ public class NatsConsumerService {
 
   private final GitHubCustomMessageHandlerRegistry customHandlerRegistry;
 
+  private final GitHubFacade gitHub;
+
   private final NatsErrorListener natsErrorListener;
 
   @Autowired
@@ -84,10 +89,12 @@ public class NatsConsumerService {
       Environment environment,
       GitHubMessageHandlerRegistry handlerRegistry,
       GitHubCustomMessageHandlerRegistry customHandlerRegistry,
+      GitHubFacade gitHub,
       @Lazy NatsErrorListener natsErrorListener) {
     this.environment = environment;
     this.handlerRegistry = handlerRegistry;
     this.customHandlerRegistry = customHandlerRegistry;
+    this.gitHub = gitHub;
     this.natsErrorListener = natsErrorListener;
   }
 
@@ -267,47 +274,116 @@ public class NatsConsumerService {
   }
 
   /**
-   * Subjects to monitor.
+   * Retrieves all subjects to monitor by combining custom event subjects and normal GitHub event subjects.
    *
-   * @return The subjects to monitor.
+   * @return an array of unique subjects.
    */
   private String[] getSubjects() {
-    return Stream.concat(
-            // Custom events
-            customHandlerRegistry.getSupportedEvents().stream()
-                .flatMap(customEvent -> {
-                  GitHubCustomMessageHandler<?> customHandler =
-                      customHandlerRegistry.getHandler(customEvent);
-                  if (customHandler == null) {
-                    return Stream.empty();
-                  }
+    // Retrieve the list of repositories; if an error occurs, an empty list is returned.
+    List<String> repositories = getInstalledRepositories();
+    if (repositories.isEmpty()) {
+      return new String[0];
+    }
 
-                  String eventName = customEvent.toLowerCase();
+    // Build streams for custom events and normal events.
+    Stream<String> customSubjects = getCustomEventSubjects(repositories);
+    Stream<String> normalSubjects = getNormalEventSubjects(repositories);
 
-                  return customHandler.isGlobalEvent()
-                      ? Stream.of("github.*.*." + eventName)
-                      : Arrays.stream(repositoriesToMonitor)
-                      .map(repo -> getSubjectPrefix(repo) + "." + eventName);
-                }),
-
-            // Normal GitHub events
-            handlerRegistry.getSupportedEvents().stream()
-                .flatMap(event -> {
-                  GitHubMessageHandler<?> handler = handlerRegistry.getHandler(event);
-                  if (handler == null) {
-                    return Stream.empty();
-                  }
-
-                  String eventName = event.name().toLowerCase();
-
-                  return handler.isGlobalEvent()
-                      ? Stream.of("github.*.*." + eventName)
-                      : Arrays.stream(repositoriesToMonitor)
-                      .map(repo -> getSubjectPrefix(repo) + "." + eventName);
-                })
-        )
+    // Combine, remove duplicates, and convert to array.
+    return Stream.concat(customSubjects, normalSubjects)
         .distinct()
         .toArray(String[]::new);
+  }
+
+  /**
+   * Retrieves the list of installed repositories for the GitHub App.
+   *
+   * @return a list of repository names, or an empty list if an error occurs.
+   */
+  private List<String> getInstalledRepositories() {
+    try {
+      return gitHub.getInstalledRepositoriesForGitHubApp();
+    } catch (IOException e) {
+      log.error("Failed to get installed repositories for GitHub App: {}", e.getMessage(), e);
+      Sentry.captureException(e);
+      return Collections.emptyList();
+    }
+  }
+
+  /**
+   * Builds a stream of subjects for custom events.
+   *
+   * @param repositories the list of repositories to include when the event is not global.
+   * @return a stream of custom event subjects.
+   */
+  private Stream<String> getCustomEventSubjects(List<String> repositories) {
+    return customHandlerRegistry.getSupportedEvents().stream()
+        .flatMap(customEvent -> {
+          GitHubCustomMessageHandler<?> customHandler =
+              customHandlerRegistry.getHandler(customEvent);
+          if (customHandler == null) {
+            return Stream.empty();
+          }
+          String eventName = customEvent.toLowerCase();
+
+          // If the event is global, use a wildcard; otherwise, build a subject for each repository.
+          return customHandler.isGlobalEvent()
+              ? Stream.of(buildGlobalSubject(eventName))
+              : repositories.stream().map(repo -> buildRepositorySubject(repo, eventName));
+        });
+  }
+
+  /**
+   * Builds a stream of subjects for normal GitHub events.
+   *
+   * @param repositories the list of repositories to include when the event is not global.
+   * @return a stream of normal event subjects.
+   */
+  private Stream<String> getNormalEventSubjects(List<String> repositories) {
+    return handlerRegistry.getSupportedEvents().stream()
+        .flatMap(event -> {
+          GitHubMessageHandler<?> handler = handlerRegistry.getHandler(event);
+          if (handler == null) {
+            return Stream.empty();
+          }
+          String eventName = event.name().toLowerCase();
+
+          // If the event is global, use a wildcard; otherwise, build a subject for each repository.
+          return handler.isGlobalEvent()
+              ? Stream.of(buildGlobalSubject(eventName))
+              : repositories.stream().map(repo -> buildRepositorySubject(repo, eventName));
+        });
+  }
+
+  /**
+   * Constructs a subject for global events.
+   *
+   * <p>This method returns a subject string formatted as:
+   * <code>github.*.*.&lt;eventName&gt;</code>.</p>
+   *
+   * @param eventName the name of the event.
+   * @return a subject string for global events, e.g.
+   * <code>github.*.*.push</code> when <code>eventName</code> is "push".
+   */
+  private String buildGlobalSubject(String eventName) {
+    return "github.*.*." + eventName;
+  }
+
+  /**
+   * Constructs a subject string specific to a repository and event.
+   *
+   * <p>This method formats the subject as:
+   * <code>&lt;subjectPrefix&gt;.&lt;eventName&gt;</code>, where the subject prefix is generated based on the
+   * repository identifier provided.</p>
+   *
+   * @param repo      the repository identifier in the format <code>"owner/repository"</code>.
+   * @param eventName the name of the event.
+   * @return the fully constructed subject string. For example, if
+   * <code>eventName</code> is <code>"push"</code>, then the returned subject will be
+   * <code>github.myOrg.myRepo.push</code>.
+   */
+  private String buildRepositorySubject(String repo, String eventName) {
+    return getSubjectPrefix(repo) + "." + eventName;
   }
 
   /**

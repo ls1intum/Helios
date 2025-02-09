@@ -4,10 +4,7 @@ package de.tum.cit.aet.helios.github.sync;
 import de.tum.cit.aet.helios.github.GitHubFacade;
 import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Value;
@@ -30,9 +27,6 @@ public class GitHubDataSyncScheduler {
   @Value("${monitoring.runOnStartup:true}")
   private boolean runOnStartup;
 
-  @Value("${monitoring.repositories:}")
-  private String[] repositoriesToMonitor;
-
   @EventListener(ApplicationReadyEvent.class)
   public void run() {
     if (runOnStartup) {
@@ -51,46 +45,25 @@ public class GitHubDataSyncScheduler {
 
   private void syncInstalledRepositories() {
     try {
-      Stream<String> envRepoNames = Arrays.stream(repositoriesToMonitor);
-      log.info("Repositories from environment: {}", Arrays.toString(repositoriesToMonitor));
+      // Sync repositories that are installed the GitHub App
+      List<String> syncRepositories = gitHubFacade.getInstalledRepositoriesForGitHubApp();
+      log.info("Repositories will be synced: {}", syncRepositories);
 
-      List<String> installedRepositories = gitHubFacade.getInstalledRepositoriesForGitHubApp();
-      log.info("Installed repositories: {}", installedRepositories);
-
-      List<String> allRepositories = Stream.concat(envRepoNames, installedRepositories.stream())
-          .distinct()
+      // Find the repositories that are not installed anymore
+      List<String> repositoriesThatNeedsToBeDeleted = gitRepositoryRepository.findAll().stream()
+          .map(GitRepository::getNameWithOwner)
+          .filter(repo -> !syncRepositories.contains(repo))
           .toList();
 
-      log.info("Final list of repositories to sync: {}", allRepositories);
+      log.info("Repositories that needs to be deleted from db: {}",
+          repositoriesThatNeedsToBeDeleted);
 
-      dataSyncService.syncRepositories(allRepositories);
+      // Sync the repositories that are installed
+      syncRepositories.forEach(dataSyncService::syncRepository);
+      // Delete the repositories that are not installed anymore
+      repositoriesThatNeedsToBeDeleted.forEach(gitRepositoryRepository::deleteByNameWithOwner);
     } catch (Exception ex) {
       log.error("Failed to sync installed repositories: {} {}", ex.getMessage(), ex);
     }
-  }
-
-  public void syncData() {
-    List<String> dbRepoList = gitRepositoryRepository.findAll().stream()
-        .map(GitRepository::getNameWithOwner)
-        .collect(Collectors.toList());
-    log.info("Repositories from database: {}", dbRepoList);
-
-    List<String> uniqueRepoNames =
-        Stream.concat(Arrays.stream(repositoriesToMonitor), dbRepoList.stream())
-            .distinct()
-            .toList();
-
-    log.info("Found {} unique repositories to sync: {}", uniqueRepoNames.size(), uniqueRepoNames);
-
-    uniqueRepoNames.forEach(repoName -> {
-      try {
-        log.info("Scheduled sync for repository: {}", repoName);
-        dataSyncService.syncRepositoryData(repoName);
-        log.info("Scheduled sync completed for repository: {}", repoName);
-      } catch (Exception ex) {
-        log.error("Scheduled sync failed for repository: {}: {} {}",
-            repoName, ex.getMessage(), ex);
-      }
-    });
   }
 }
