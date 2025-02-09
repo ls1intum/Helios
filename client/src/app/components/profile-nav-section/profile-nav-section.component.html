@@ -1,7 +1,7 @@
 <p-divider />
 <div class="flex flex-col gap-3 items-center">
   @if (isLoggedIn()) {
-    <p-avatar [pTooltip]="fullName()" [label]="initials()" size="large" />
+    <p-avatar shape="circle" size="normal" [image]="getProfilePictureUrl()" [pTooltip]="fullName()" tooltipPosition="top" (click)="openProfile()"> </p-avatar>
 
     <button pTooltip="Logout" (click)="logout()" class="rounded-xl p-2 flex items-center text-red-500 hover:text-red-700">
       <i-tabler name="logout" class="!size-10 !stroke-1" />

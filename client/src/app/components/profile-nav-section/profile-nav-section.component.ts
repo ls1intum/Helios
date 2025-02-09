@@ -48,7 +48,19 @@ export class ProfileNavSectionComponent {
     return `${profile?.firstName} ${profile?.lastName}`;
   }
 
+  getProfilePictureUrl() {
+    return this.keycloakService.getUserGithubProfilePictureUrl();
+  }
+
+  getProfileUrl() {
+    return this.keycloakService.getUserGithubProfileUrl();
+  }
+
   login() {
     this.keycloakService.login();
+  }
+
+  openProfile() {
+    window.open(this.getProfileUrl());
   }
 }

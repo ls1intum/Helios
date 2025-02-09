@@ -69,6 +69,24 @@ export class KeycloakService {
     return this.decodedToken()?.github_id;
   }
 
+  getUserGithubProfilePictureUrl() {
+    const userId = this.getUserGithubId();
+    if (userId) {
+      return `https://avatars.githubusercontent.com/u/${userId}`;
+    }
+
+    return '';
+  }
+
+  getUserGithubProfileUrl() {
+    const username = this.getPreferredUsername();
+    if (username) {
+      return `https://github.com/${username}`;
+    }
+
+    return '';
+  }
+
   login() {
     return this.keycloak.login();
   }
