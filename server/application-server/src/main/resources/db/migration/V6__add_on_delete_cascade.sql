@@ -182,6 +182,7 @@ ALTER TABLE public.issue_assignee
             REFERENCES public.issue(id)
             ON DELETE CASCADE;
 
+
 -------------------------------------------------------------------------------
 -- issue_label -> issue
 -------------------------------------------------------------------------------
