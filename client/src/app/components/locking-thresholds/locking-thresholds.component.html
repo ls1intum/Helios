@@ -1,0 +1,48 @@
+<div>
+  <h3 class="text-xl mb-2">Locking Thresholds</h3>
+  <div class="flex flex-col gap-8 p-2 w-2/4 mx-auto">
+    <div class="flex flex-col">
+      <label class="font-semibold" for="lockExpThres">Locking Expiration Threshold</label>
+      <p class="text-sm text-gray-600 mb-4">Lock of any environment will be released after this threshold.</p>
+      <div class="flex flex-row items-center w-full gap-2">
+        <p-toggleswitch [(ngModel)]="isLockExpirationEnabled" (onChange)="onThresholdToggle('expiration')" />
+        <p-inputnumber
+          [disabled]="!isLockExpirationEnabled"
+          id="lockExpThres"
+          [(ngModel)]="lockingExpirationThreshold"
+          [showButtons]="true"
+          buttonLayout="horizontal"
+          inputId="horizontal"
+          spinnerMode="horizontal"
+          [step]="1"
+          [min]="-1"
+          class="w-full"
+          suffix=" seconds"
+        />
+      </div>
+    </div>
+    <div class="flex flex-col">
+      <label class="font-semibold" for="lockExpThres">Locking Reservation Threshold</label>
+      <p class="text-sm text-gray-600 mb-4">Lock of any environment can be unlocked by any user after this threshold.</p>
+      <div class="flex flex-row items-center w-full gap-2">
+        <p-toggleswitch [(ngModel)]="isLockReservationEnabled" (onChange)="onThresholdToggle('reservation')" />
+        <p-inputnumber
+          [disabled]="!isLockReservationEnabled"
+          id="lockResThres"
+          [(ngModel)]="lockingReservationThreshold"
+          [showButtons]="true"
+          buttonLayout="horizontal"
+          inputId="horizontal"
+          spinnerMode="horizontal"
+          [step]="1"
+          [min]="-1"
+          class="w-full"
+          suffix=" seconds"
+        />
+      </div>
+    </div>
+    <div class="flex justify-end">
+      <p-button label="Update Thresholds" severity="success" class="mt-2" (click)="updateLockingThresholds()" />
+    </div>
+  </div>
+</div>

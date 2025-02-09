@@ -15,6 +15,13 @@
 
   <!-- Main Content -->
   @if (!isPending() && !isError()) {
+    <!-- Locking Thresholds -->
+    <app-locking-thresholds></app-locking-thresholds>
+
+    <div class="flex justify-center">
+      <p-divider class="w-full mt-4" />
+    </div>
+
     <!-- Grouped Workflows Panels -->
     <h3 class="text-xl mb-2">Grouped Workflows</h3>
 
