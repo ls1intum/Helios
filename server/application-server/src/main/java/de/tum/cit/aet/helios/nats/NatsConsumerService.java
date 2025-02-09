@@ -274,7 +274,8 @@ public class NatsConsumerService {
   }
 
   /**
-   * Retrieves all subjects to monitor by combining custom event subjects and normal GitHub event subjects.
+   * Retrieves all subjects to monitor by combining
+   * custom event subjects and normal GitHub event subjects.
    *
    * @return an array of unique subjects.
    */
@@ -363,7 +364,7 @@ public class NatsConsumerService {
    *
    * @param eventName the name of the event.
    * @return a subject string for global events, e.g.
-   * <code>github.*.*.push</code> when <code>eventName</code> is "push".
+   *      <code>github.*.*.push</code> when <code>eventName</code> is "push".
    */
   private String buildGlobalSubject(String eventName) {
     return "github.*.*." + eventName;
@@ -373,14 +374,15 @@ public class NatsConsumerService {
    * Constructs a subject string specific to a repository and event.
    *
    * <p>This method formats the subject as:
-   * <code>&lt;subjectPrefix&gt;.&lt;eventName&gt;</code>, where the subject prefix is generated based on the
+   * <code>&lt;subjectPrefix&gt;.&lt;eventName&gt;</code>,
+   * where the subject prefix is generated based on the
    * repository identifier provided.</p>
    *
    * @param repo      the repository identifier in the format <code>"owner/repository"</code>.
    * @param eventName the name of the event.
    * @return the fully constructed subject string. For example, if
-   * <code>eventName</code> is <code>"push"</code>, then the returned subject will be
-   * <code>github.myOrg.myRepo.push</code>.
+   *      <code>eventName</code> is <code>"push"</code>, then the returned subject will be
+   *      <code>github.myOrg.myRepo.push</code>.
    */
   private String buildRepositorySubject(String repo, String eventName) {
     return getSubjectPrefix(repo) + "." + eventName;
