@@ -55,4 +55,5 @@ export class PullRequestDetailsComponent {
       pullRequestId: pr.id,
     };
   });
+  protected readonly encodeURIComponent = encodeURIComponent;
 }

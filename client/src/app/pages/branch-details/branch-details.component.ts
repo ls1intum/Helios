@@ -12,11 +12,23 @@ import { getBranchByRepositoryIdAndNameOptions, getCommitByRepositoryIdAndNameOp
 import { TagCreateComponent } from '../../components/dialogs/tag-create/tag-create.component';
 import { RouterLink } from '@angular/router';
 import { PermissionService } from '@app/core/services/permission.service';
-import {MarkdownPipe} from '@app/core/modules/markdown/markdown.pipe';
+import { MarkdownPipe } from '@app/core/modules/markdown/markdown.pipe';
 
 @Component({
   selector: 'app-branch-details',
-  imports: [DeploymentSelectionComponent, InputTextModule, RouterLink, TagModule, TagModule, IconsModule, ButtonModule, PipelineComponent, SkeletonModule, TagCreateComponent, MarkdownPipe],
+  imports: [
+    DeploymentSelectionComponent,
+    InputTextModule,
+    RouterLink,
+    TagModule,
+    TagModule,
+    IconsModule,
+    ButtonModule,
+    PipelineComponent,
+    SkeletonModule,
+    TagCreateComponent,
+    MarkdownPipe,
+  ],
   templateUrl: './branch-details.component.html',
 })
 export class BranchDetailsComponent {

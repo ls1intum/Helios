@@ -21,9 +21,7 @@ import { TimeAgoPipe } from '@app/pipes/time-ago.pipe';
 import { FILTER_OPTIONS_TOKEN, SearchTableService } from '@app/core/services/search-table.service';
 import { TableFilterComponent } from '../table-filter/table-filter.component';
 import { WorkflowRunStatusComponent } from '@app/components/workflow-run-status-component/workflow-run-status.component';
-import {
-  PullRequestStatusIconComponent
-} from '@app/components/pull-request-status-icon/pull-request-status-icon.component';
+import { PullRequestStatusIconComponent } from '@app/components/pull-request-status-icon/pull-request-status-icon.component';
 
 const FILTER_OPTIONS = [
   { name: 'All pull requests', filter: (prs: PullRequestBaseInfoDto[]) => prs },

@@ -7,7 +7,7 @@
         <!-- PR Title -->
         <h2 class="text-2xl" [innerHTML]="pr.title | markdown"></h2>
 
-        <!-- PR Number with Clickable Link -->
+        <!-- PR Number -->
         <h2 class="text-2xl">
           <a [href]="pr.htmlUrl" target="_blank" rel="noopener noreferrer" class="text-gray-600 hover:underline"> #{{ pr.number }} </a>
         </h2>
@@ -19,15 +19,18 @@
           <!-- Author Avatar -->
           <app-user-avatar [user]="pr.author" toolTipText="Author" tooltipPosition="top" />
 
-          <!-- Author Name and PR Intent -->
-          <p class="text-gray-700 mt-1 text-sm">
-            <span class="font-semibold">{{ pr.author.name || pr.author.login }}</span>
-            wants to merge from
-            <p-tag class="font-normal">{{ pr.headRefName }}</p-tag>
-          </p>
+          <!-- Author Name and Merge Info -->
+          <span class="text-gray-700 text-sm font-semibold"> {{ pr.author.name || pr.author.login }} wants to merge from </span>
+
+          <!-- Branch Name with Icon -->
+          <p-tag class="font-normal flex items-center gap-1 px-2 py-1">
+            <i-tabler name="git-branch" class="w-4 h-4"></i-tabler>
+            <a [href]="'/repo/' + repositoryId() + '/ci-cd/branch/' + encodeURIComponent(pr.headRefName)" target="_blank" rel="noopener noreferrer" class="hover:underline">
+              {{ pr.headRefName }}
+            </a>
+          </p-tag>
         </div>
       }
-
     </div>
   } @else {
     <div class="flex flex-col items-start gap-2">
