@@ -45,6 +45,8 @@ export type EnvironmentDto = {
   latestStatus?: EnvironmentStatusDto;
   lockedBy?: UserInfoDto;
   lockedAt?: string;
+  lockExpirationThreshold?: number;
+  lockReservationThreshold?: number;
 };
 
 export type EnvironmentStatusDto = {
