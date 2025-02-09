@@ -2,7 +2,6 @@ package de.tum.cit.aet.helios.environment;
 
 import de.tum.cit.aet.helios.gitreposettings.GitRepoSettings;
 import de.tum.cit.aet.helios.gitreposettings.GitRepoSettingsService;
-import de.tum.cit.aet.helios.user.github.GitHubUserConverter;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -18,7 +17,6 @@ public class EnvironmentScheduler {
   private final EnvironmentRepository environmentRepository;
   private final GitRepoSettingsService gitRepoSettingsService;
   private final EnvironmentLockHistoryRepository lockHistoryRepository;
-  private final GitHubUserConverter userConverter;
 
   // Every 5 seconds
   @Scheduled(fixedRate = 5000)
