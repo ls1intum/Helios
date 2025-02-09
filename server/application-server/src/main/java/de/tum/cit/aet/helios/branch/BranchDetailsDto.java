@@ -14,12 +14,12 @@ public record BranchDetailsDto(
     int behindBy,
     boolean isDefault,
     boolean isProtected,
-    String tagName,
+    String releaseCandidateName,
     OffsetDateTime updatedAt,
     UserInfoDto updatedBy,
     RepositoryInfoDto repository) {
 
-  public static BranchDetailsDto fromBranch(Branch branch, String tagName) {
+  public static BranchDetailsDto fromBranch(Branch branch, String releaseCandidateName) {
     return new BranchDetailsDto(
         branch.getName(),
         branch.getCommitSha(),
@@ -27,7 +27,7 @@ public record BranchDetailsDto(
         branch.getBehindBy(),
         branch.isDefault(),
         branch.isProtection(),
-        tagName,
+        releaseCandidateName,
         branch.getUpdatedAt(),
         UserInfoDto.fromUser(branch.getUpdatedBy()),
         RepositoryInfoDto.fromRepository(branch.getRepository()));

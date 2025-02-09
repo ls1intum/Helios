@@ -54,10 +54,10 @@ export const routes: Routes = [
                 redirectTo: 'list',
                 pathMatch: 'full',
               },
-              { path: 'list', loadComponent: () => import('./pages/tag-list/tag-list.component').then(m => m.TagListComponent) },
+              { path: 'list', loadComponent: () => import('./pages/release-candidate-list/release-candidate-list.component').then(m => m.ReleaseCanidateListComponent) },
               {
                 path: ':name',
-                loadComponent: () => import('./pages/tag-details/tag-details.component').then(m => m.TagDetailsComponent),
+                loadComponent: () => import('./pages/release-candidate-details/release-candidate-details.component').then(m => m.ReleaseCandidateDetailsComponent),
               },
             ],
           },

@@ -1,5 +1,5 @@
 import { Component, computed, inject } from '@angular/core';
-import { getAllTagsOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
+import { getAllReleaseCandidatesOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { FILTER_OPTIONS_TOKEN, SearchTableService } from '@app/core/services/search-table.service';
 import { injectQuery } from '@tanstack/angular-query-experimental';
 import { IconsModule } from 'icons.module';
@@ -8,22 +8,22 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { TableModule } from 'primeng/table';
 import { TableFilterComponent } from '../table-filter/table-filter.component';
 import { TagModule } from 'primeng/tag';
-import { TagInfoDto } from '@app/core/modules/openapi';
+import { ReleaseCandidateInfoDto } from '@app/core/modules/openapi';
 import { Router, RouterLink } from '@angular/router';
 import { SlicePipe } from '@angular/common';
 
-const FILTER_OPTIONS: { name: string; filter: (prs: TagInfoDto[]) => TagInfoDto[] }[] = [];
+const FILTER_OPTIONS: { name: string; filter: (prs: ReleaseCandidateInfoDto[]) => ReleaseCandidateInfoDto[] }[] = [];
 
 @Component({
-  selector: 'app-tag-table',
+  selector: 'app-release-candidate-table',
   imports: [TableModule, ButtonModule, IconsModule, SkeletonModule, TableFilterComponent, TagModule, RouterLink, SlicePipe],
   providers: [SearchTableService, { provide: FILTER_OPTIONS_TOKEN, useValue: FILTER_OPTIONS }],
-  templateUrl: './tag-table.component.html',
+  templateUrl: './release-candidate-table.component.html',
 })
-export class TagTableComponent {
-  tagsQuery = injectQuery(() => getAllTagsOptions());
+export class ReleaseCandidateTableComponent {
+  releaseCandidatesQuery = injectQuery(() => getAllReleaseCandidatesOptions());
   router = inject(Router);
   searchTableService = inject(SearchTableService);
 
-  filteredTags = computed(() => this.tagsQuery.data() || []);
+  filteredReleaseCandidates = computed(() => this.releaseCandidatesQuery.data() || []);
 }

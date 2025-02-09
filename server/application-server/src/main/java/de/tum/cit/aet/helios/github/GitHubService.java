@@ -113,7 +113,7 @@ public class GitHubService {
   /**
    * Retrieves a specific workflow for a given repository.
    *
-   * @param repoNameWithOwners   the repository name with owners
+   * @param repoNameWithOwners the repository name with owners
    * @param workflowFileNameOrId the workflow file name or ID
    * @return the GitHub workflow
    * @throws IOException if an I/O error occurs
@@ -126,10 +126,10 @@ public class GitHubService {
   /**
    * Dispatches a workflow for a given repository.
    *
-   * @param repoNameWithOwners   the repository name with owners
+   * @param repoNameWithOwners the repository name with owners
    * @param workflowFileNameOrId the workflow file name or ID
-   * @param ref                  the reference (branch or tag) to run the workflow on
-   * @param inputs               the inputs for the workflow
+   * @param ref the reference (branch or releaseCandidate) to run the workflow on
+   * @param inputs the inputs for the workflow
    * @throws IOException if an I/O error occurs
    */
   public void dispatchWorkflow(
@@ -201,9 +201,9 @@ public class GitHubService {
   /**
    * Retrieves a GitHub deployment iterator for a given repository and environment.
    *
-   * @param repository      the GitHub repository as a GHRepository object
+   * @param repository the GitHub repository as a GHRepository object
    * @param environmentName the environment name
-   * @param since           an optional timestamp to fetch deployments since
+   * @param since an optional timestamp to fetch deployments since
    * @return a GitHubDeploymentIterator object
    */
   public Iterator<GitHubDeploymentDto> getDeploymentIterator(
@@ -241,12 +241,10 @@ public class GitHubService {
    * Retrieves the GitHub repository role for a given repository ID and username.
    *
    * @param repositoryId the ID of the repository.
-   * @param username     the GitHub username.
+   * @param username the GitHub username.
    * @return GitHubRepositoryRoleDto containing the role information.
-   * @throws IOException if there is an error making the GitHub API call or
-   *                     processing the response.
-   * @throws IllegalArgumentException if the repository ID or username is null
-   *                                  or empty.
+   * @throws IOException if there is an error making the GitHub API call or processing the response.
+   * @throws IllegalArgumentException if the repository ID or username is null or empty.
    */
   public GitHubRepositoryRoleDto getRepositoryRole(String repositoryId, String username)
       throws IOException, IllegalArgumentException {

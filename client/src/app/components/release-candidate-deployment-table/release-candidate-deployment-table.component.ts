@@ -1,5 +1,5 @@
 import { Component, input } from '@angular/core';
-import { EnvironmentDto, TagDetailsDto } from '@app/core/modules/openapi';
+import { EnvironmentDto, ReleaseCandidateDetailsDto } from '@app/core/modules/openapi';
 import { getAllEnabledEnvironmentsOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { injectQuery } from '@tanstack/angular-query-experimental';
 import { IconsModule } from 'icons.module';
@@ -13,24 +13,24 @@ import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
 
 @Component({
-  selector: 'app-tag-deployment-table',
+  selector: 'app-release-candidate-deployment-table',
   imports: [TableModule, ButtonModule, IconsModule, SkeletonModule, TagModule, AvatarModule, OverlayBadgeModule, BadgeModule, TooltipModule],
-  templateUrl: './tag-deployment-table.component.html',
+  templateUrl: './release-candidate-deployment-table.component.html',
 })
-export class TagDeploymentTableComponent {
-  tag = input.required<TagDetailsDto>();
+export class ReleaseCandidateDeploymentTableComponent {
+  releaseCandidate = input.required<ReleaseCandidateDetailsDto>();
 
   environmentQuery = injectQuery(() => getAllEnabledEnvironmentsOptions());
 
   deploymentStatus = (environment: EnvironmentDto) => {
-    let deployments = this.tag().deployments.filter(deployment => deployment.environment.id === environment.id);
+    let deployments = this.releaseCandidate().deployments.filter(deployment => deployment.environment.id === environment.id);
 
-    // If there are no deployments related to this tag anymore, this tag was not deployed yet
+    // If there are no deployments related to this release candidate anymore, this release candidate was not deployed yet
     if (deployments.length === 0) {
       return 'NEVER_DEPLOYED';
     }
 
-    // If the latest deployment is not part of the deployments list, but there were deployments to this environment, the tag was replaced
+    // If the latest deployment is not part of the deployments list, but there were deployments to this environment, the release candidate was replaced
     if (deployments.every(deployment => environment.latestDeployment?.id !== deployment.id)) {
       return 'REPLACED';
     }
@@ -38,7 +38,7 @@ export class TagDeploymentTableComponent {
     // For the following cases, we are only interested in the deployment that matches the latest deployment of the environment
     const deployment = deployments.find(deployment => environment.latestDeployment?.id === deployment.id);
 
-    // If there is no deployment that matches the latest deployment, the tag was replaced
+    // If there is no deployment that matches the latest deployment, the release candidate was replaced
     if (deployment === undefined) {
       return 'REPLACED';
     }
