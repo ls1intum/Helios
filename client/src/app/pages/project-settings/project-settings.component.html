@@ -16,7 +16,7 @@
   <!-- Main Content -->
   @if (!isPending() && !isError()) {
     <!-- Locking Thresholds -->
-    <app-locking-thresholds></app-locking-thresholds>
+    <app-locking-thresholds [repositoryId]="repositoryId()"></app-locking-thresholds>
 
     <div class="flex justify-center">
       <p-divider class="w-full mt-4" />

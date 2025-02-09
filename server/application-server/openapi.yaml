@@ -396,6 +396,25 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/CommitsSinceTagDto"
+  /api/settings/{repositoryId}/settings:
+    get:
+      tags:
+      - git-repo-settings-controller
+      operationId: getGitRepoSettings
+      parameters:
+      - name: repositoryId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GitRepoSettingsDto"
   /api/settings/{repositoryId}/groups:
     get:
       tags:
@@ -1272,6 +1291,18 @@ components:
       required:
       - commits
       - commitsLength
+    GitRepoSettingsDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        lockExpirationThreshold:
+          type: integer
+          format: int64
+        lockReservationThreshold:
+          type: integer
+          format: int64
     LabelInfoDto:
       type: object
       properties:

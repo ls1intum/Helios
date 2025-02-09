@@ -562,6 +562,24 @@ export const CommitsSinceTagDtoSchema = {
   required: ['commits', 'commitsLength'],
 } as const;
 
+export const GitRepoSettingsDtoSchema = {
+  type: 'object',
+  properties: {
+    id: {
+      type: 'integer',
+      format: 'int64',
+    },
+    lockExpirationThreshold: {
+      type: 'integer',
+      format: 'int64',
+    },
+    lockReservationThreshold: {
+      type: 'integer',
+      format: 'int64',
+    },
+  },
+} as const;
+
 export const LabelInfoDtoSchema = {
   type: 'object',
   properties: {

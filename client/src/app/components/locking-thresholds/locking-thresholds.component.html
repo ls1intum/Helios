@@ -5,11 +5,11 @@
       <label class="font-semibold" for="lockExpThres">Locking Expiration Threshold</label>
       <p class="text-sm text-gray-600 mb-4">Lock of any environment will be released after this threshold.</p>
       <div class="flex flex-row items-center w-full gap-2">
-        <p-toggleswitch [(ngModel)]="isLockExpirationEnabled" (onChange)="onThresholdToggle('expiration')" />
+        <p-toggleswitch [ngModel]="isLockExpirationEnabled()" (onChange)="onThresholdToggle('expiration')" />
         <p-inputnumber
-          [disabled]="!isLockExpirationEnabled"
+          [disabled]="!isLockExpirationEnabled()"
           id="lockExpThres"
-          [(ngModel)]="lockingExpirationThreshold"
+          [ngModel]="lockingExpirationThreshold()"
           [showButtons]="true"
           buttonLayout="horizontal"
           inputId="horizontal"
@@ -25,11 +25,11 @@
       <label class="font-semibold" for="lockExpThres">Locking Reservation Threshold</label>
       <p class="text-sm text-gray-600 mb-4">Lock of any environment can be unlocked by any user after this threshold.</p>
       <div class="flex flex-row items-center w-full gap-2">
-        <p-toggleswitch [(ngModel)]="isLockReservationEnabled" (onChange)="onThresholdToggle('reservation')" />
+        <p-toggleswitch [ngModel]="isLockReservationEnabled()" (onChange)="onThresholdToggle('reservation')" />
         <p-inputnumber
-          [disabled]="!isLockReservationEnabled"
+          [disabled]="!isLockReservationEnabled()"
           id="lockResThres"
-          [(ngModel)]="lockingReservationThreshold"
+          [ngModel]="lockingReservationThreshold()"
           [showButtons]="true"
           buttonLayout="horizontal"
           inputId="horizontal"

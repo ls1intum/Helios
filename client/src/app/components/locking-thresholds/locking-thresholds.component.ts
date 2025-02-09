@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { Component, computed, effect, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 
@@ -6,6 +6,8 @@ import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { DividerModule } from 'primeng/divider';
 import { IftaLabelModule } from 'primeng/iftalabel';
+import { injectQuery } from '@tanstack/angular-query-experimental';
+import { getEnvironmentByIdOptions, getGitRepoSettingsOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 
 @Component({
   selector: 'app-locking-thresholds',
@@ -15,31 +17,66 @@ import { IftaLabelModule } from 'primeng/iftalabel';
 })
 export class LockingThresholdsComponent {
   // Add these to your component class
-  isLockExpirationEnabled = false;
-  isLockReservationEnabled = false;
+  isLockExpirationEnabled = signal(false);
+  isLockReservationEnabled = signal(false);
+  lockingExpirationThreshold = signal<number | undefined>(undefined);
+  lockingReservationThreshold = signal<number | undefined>(undefined);
 
-  // Initialize with -1 (disabled state)
-  lockingExpirationThreshold: number | undefined;
-  lockingReservationThreshold: number | undefined;
+  environmentId = input<number | undefined>();
+  repositoryId = input.required<number>();
 
-  environmentId = input<string | undefined>();
+  isPending = computed(() => this.fetchGitRepoThresholdsQuery.isPending() || this.fetchEnvironmentThresholdsQuery.isPending());
+  isError = computed(() => this.fetchGitRepoThresholdsQuery.isError() || this.fetchEnvironmentThresholdsQuery.isError());
 
-  // Add these methods
+  fetchGitRepoThresholdsQuery = injectQuery(() => ({
+    ...getGitRepoSettingsOptions({ path: { repositoryId: this.repositoryId() } }),
+    enabled: () => !!this.repositoryId(),
+    refetchOnWindowFocus: false,
+  }));
+
+  fetchEnvironmentThresholdsQuery = injectQuery(() => ({
+    ...getEnvironmentByIdOptions({ path: { id: this.environmentId()! } }),
+    enabled: () => this.environmentId() !== undefined,
+    refetchOnWindowFocus: false,
+  }));
+
+  constructor() {
+    effect(
+      () => {
+        const gitRepoThresholds = this.fetchGitRepoThresholdsQuery.data();
+        const environmentThresholds = this.fetchEnvironmentThresholdsQuery.data();
+
+        // Use untracked to prevent immediate effect triggers
+        const expThreshold = environmentThresholds?.lockExpirationThreshold ?? gitRepoThresholds?.lockExpirationThreshold ?? undefined;
+        const resThreshold = environmentThresholds?.lockReservationThreshold ?? gitRepoThresholds?.lockReservationThreshold ?? undefined;
+
+        // Update signals in batch
+        this.lockingExpirationThreshold.set(expThreshold);
+        this.lockingReservationThreshold.set(resThreshold);
+
+        // Set toggle states based on thresholds
+        this.isLockExpirationEnabled.set(expThreshold !== undefined && expThreshold >= 0);
+        this.isLockReservationEnabled.set(resThreshold !== undefined && resThreshold >= 0);
+      },
+      { allowSignalWrites: true }
+    );
+  }
+
+  // Updated toggle handler
   onThresholdToggle(type: 'expiration' | 'reservation') {
+    const gitRepoThresholds = this.fetchGitRepoThresholdsQuery.data();
+    const environmentThresholds = this.fetchEnvironmentThresholdsQuery.data();
+
     if (type === 'expiration') {
-      if (!this.isLockExpirationEnabled) {
-        this.lockingExpirationThreshold = undefined;
-      } else {
-        // Set default value when enabling
-        this.lockingExpirationThreshold = this.lockingExpirationThreshold === undefined ? 3600 : this.lockingExpirationThreshold;
-      }
+      const expThreshold = environmentThresholds?.lockExpirationThreshold ?? gitRepoThresholds?.lockExpirationThreshold ?? undefined;
+      const enabled = !this.isLockExpirationEnabled();
+      this.isLockExpirationEnabled.set(enabled);
+      this.lockingExpirationThreshold.set(enabled ? (expThreshold ?? undefined) : undefined);
     } else {
-      if (!this.isLockReservationEnabled) {
-        this.lockingReservationThreshold = undefined;
-      } else {
-        // Set default value when enabling
-        this.lockingReservationThreshold = this.lockingReservationThreshold === undefined ? 900 : this.lockingReservationThreshold;
-      }
+      const resThreshold = environmentThresholds?.lockReservationThreshold ?? gitRepoThresholds?.lockReservationThreshold ?? undefined;
+      const enabled = !this.isLockReservationEnabled();
+      this.isLockReservationEnabled.set(enabled);
+      this.lockingReservationThreshold.set(enabled ? (resThreshold ?? undefined) : undefined);
     }
   }
 

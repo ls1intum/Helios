@@ -191,6 +191,12 @@ export type CommitsSinceTagDto = {
   commits: Array<CommitInfoDto>;
 };
 
+export type GitRepoSettingsDto = {
+  id?: number;
+  lockExpirationThreshold?: number;
+  lockReservationThreshold?: number;
+};
+
 export type LabelInfoDto = {
   /**
    * The unique identifier of the label
@@ -624,6 +630,24 @@ export type GetCommitsSinceLastTagResponses = {
 };
 
 export type GetCommitsSinceLastTagResponse = GetCommitsSinceLastTagResponses[keyof GetCommitsSinceLastTagResponses];
+
+export type GetGitRepoSettingsData = {
+  body?: never;
+  path: {
+    repositoryId: number;
+  };
+  query?: never;
+  url: '/api/settings/{repositoryId}/settings';
+};
+
+export type GetGitRepoSettingsResponses = {
+  /**
+   * OK
+   */
+  200: GitRepoSettingsDto;
+};
+
+export type GetGitRepoSettingsResponse = GetGitRepoSettingsResponses[keyof GetGitRepoSettingsResponses];
 
 export type GetGroupsWithWorkflowsData = {
   body?: never;

@@ -20,9 +20,20 @@ import org.springframework.web.bind.annotation.RestController;
 public class GitRepoSettingsController {
 
   private final WorkflowGroupService workflowGroupService;
+  private final GitRepoSettingsService gitRepoSettingsService;
 
-  public GitRepoSettingsController(WorkflowGroupService workflowGroupService) {
+  public GitRepoSettingsController(
+      WorkflowGroupService workflowGroupService, GitRepoSettingsService gitRepoSettingsService) {
     this.workflowGroupService = workflowGroupService;
+    this.gitRepoSettingsService = gitRepoSettingsService;
+  }
+
+  @GetMapping("/settings")
+  public ResponseEntity<GitRepoSettingsDto> getGitRepoSettings(@PathVariable Long repositoryId) {
+    GitRepoSettingsDto gitRepoSettingsDto =
+        GitRepoSettingsDto.fromGitRepoSettings(
+            gitRepoSettingsService.getGitRepoSettingsByRepositoryId(repositoryId).orElseThrow());
+    return ResponseEntity.ok(gitRepoSettingsDto);
   }
 
   @GetMapping("/groups")
