@@ -1,26 +1,33 @@
-<div class="my-5">
+<div class="mt-4 mb-5">
   @if (query.data(); as pr) {
     <div class="flex flex-col items-start">
-      <div class="flex items-center gap-4">
-        <!-- Author Avatar -->
-        @if (pr.author) {
-          <div class="flex items-center gap-2 mt-2">
-            <app-user-avatar [user]="pr.author" toolTipText="Author" tooltipPosition="top" />
-          </div>
-        }
+      <div class="flex items-center gap-4 mt-2">
+        <app-pull-request-status-icon [pullRequest]="pr" tooltipPosition="top" />
 
-        <div class="flex items-center gap-2 mt-2">
-          <app-pull-request-status-icon [pullRequest]="pr" tooltipPosition="top" />
+        <!-- PR Title -->
+        <h2 class="text-2xl" [innerHTML]="pr.title | markdown"></h2>
 
-          <!-- PR Title -->
-          <h2 class="text-2xl" [innerHTML]="pr.title | markdown"></h2>
-
-          <!-- PR Number with Clickable Link -->
-          <h2 class="text-2xl">
-            <a [href]="pr.htmlUrl" target="_blank" rel="noopener noreferrer" class="text-gray-600 hover:underline"> #{{ pr.number }} </a>
-          </h2>
-        </div>
+        <!-- PR Number with Clickable Link -->
+        <h2 class="text-2xl">
+          <a [href]="pr.htmlUrl" target="_blank" rel="noopener noreferrer" class="text-gray-600 hover:underline"> #{{ pr.number }} </a>
+        </h2>
       </div>
+
+      <!-- Merge Statement -->
+      @if (pr.author) {
+        <div class="flex items-center gap-2 mt-2">
+          <!-- Author Avatar -->
+          <app-user-avatar [user]="pr.author" toolTipText="Author" tooltipPosition="top" />
+
+          <!-- Author Name and PR Intent -->
+          <p class="text-gray-700 mt-1 text-sm">
+            <span class="font-semibold">{{ pr.author.name || pr.author.login }}</span>
+            wants to merge from
+            <p-tag class="font-normal">{{ pr.headRefName }}</p-tag>
+          </p>
+        </div>
+      }
+
     </div>
   } @else {
     <div class="flex flex-col items-start gap-2">
