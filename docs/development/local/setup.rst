@@ -114,6 +114,9 @@ When Helios starts, it will look for all the **GitHub App** variables above:
 - ``DATASOURCE_PASSWORD``: Database password
 - ``NATS_SERVER``: NATS server URL
 - ``NATS_AUTH_TOKEN``: Authorization token for NATS server. This token is used to authenticate different services with the NATS server.
+- ``NATS_DURABLE_CONSUMER_NAME``: Name of the durable consumer for NATS server. With durable consumers, NATS remembers where it left off when the last event was acknowledged.
+- ``NATS_CONSUMER_INACTIVE_THRESHOLD_MINUTES``: (Optional, default: 30) Specifies the time (in minutes) after which an inactive consumer is removed.
+- ``NATS_CONSUMER_ACK_WAIT_SECONDS``: (Optional, default: 60) Specifies the time (in seconds) that NATS waits for a message acknowledgment before resending the message.
 - ``REPOSITORY_NAME``: Name of the repository that should be synced (e.g. `ls1intum/Helios`)
 - ``RUN_ON_STARTUP_COOLDOWN``: When server starts, it first checks the latest run of sync, if it is less than this value in minutes, it will not run the sync again
 - ``OAUTH_ISSUER_URL``: URL to Keycloak realm
