@@ -102,6 +102,17 @@ public class Environment extends RepositoryFilterEntity {
   @OrderBy("checkTimestamp DESC")
   private List<EnvironmentStatus> statusHistory;
 
+  // Once the threshold is reached, the lock automatically expires and the environment becomes
+  // available again.
+  // This field has presedence over the one in GitRepoSettings.
+  @Column(name = "lock_expiration_threshold")
+  private Long lockExpirationThreshold;
+
+  // After this period, any user can unlock the environment.
+  // This field has presedence over the one in GitRepoSettings.
+  @Column(name = "lock_reservation_threshold")
+  private Long lockReservationThreshold;
+
   public Optional<EnvironmentStatus> getLatestStatus() {
     return statusHistory.stream().findFirst();
   }

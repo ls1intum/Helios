@@ -5,6 +5,8 @@ import de.tum.cit.aet.helios.deployment.Deployment;
 import de.tum.cit.aet.helios.deployment.DeploymentException;
 import de.tum.cit.aet.helios.deployment.DeploymentRepository;
 import de.tum.cit.aet.helios.deployment.LatestDeploymentUnion;
+import de.tum.cit.aet.helios.gitreposettings.GitRepoSettings;
+import de.tum.cit.aet.helios.gitreposettings.GitRepoSettingsService;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
 import de.tum.cit.aet.helios.permissions.UserService;
@@ -32,6 +34,7 @@ public class EnvironmentService {
   private final TagRepository tagRepository;
   private final DeploymentRepository deploymentRepository;
   private final UserService userService;
+  private final GitRepoSettingsService gitRepoSettingsService;
 
   public Optional<EnvironmentDto> getEnvironmentById(Long id) {
     return environmentRepository.findById(id).map(EnvironmentDto::fromEnvironment);
@@ -193,11 +196,25 @@ public class EnvironmentService {
       throw new IllegalStateException("Environment is not locked");
     }
 
-    System.out.println("Current user: " + userService.isAtLeastMaintainer());
+    Long lockReservationThreshold =
+        environment.getLockReservationThreshold() != null
+            ? environment.getLockReservationThreshold()
+            : gitRepoSettingsService
+                .getGitRepoSettingsByRepositoryId(environment.getRepository().getRepositoryId())
+                .map(GitRepoSettings::getLockReservationThreshold)
+                .orElse(0L);
+
+    OffsetDateTime now = OffsetDateTime.now();
+    OffsetDateTime lockedAt = environment.getLockedAt();
+
+    // Check if the current user can unlock the environment
     if (!currentUser.equals(environment.getLockedBy()) && !userService.isAtLeastMaintainer()) {
-      throw new SecurityException(
-          "You do not have permission to unlock this environment. "
-              + "Environment is locked by another user");
+      // Allow unlocking if the lock is older than the reservation threshold
+      if (lockedAt.plusSeconds(lockReservationThreshold).isAfter(now)) {
+        throw new SecurityException(
+            "You do not have permission to unlock this environment. Environment is locked by"
+                + " another user and the reservation period has not elapsed.");
+      }
     }
 
     // 20 minutes timeout for redeployment

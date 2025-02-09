@@ -1,16 +1,20 @@
 package de.tum.cit.aet.helios.gitreposettings;
 
-import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
 import jakarta.transaction.Transactional;
+import java.util.Optional;
 import org.springframework.stereotype.Service;
 
 @Service
 @Transactional
 public class GitRepoSettingsService {
 
-  private final GitRepoRepository gitRepoRepository;
+  private final GitRepoSettingsRepository gitRepoRepository;
 
-  public GitRepoSettingsService(GitRepoRepository gitRepoRepository) {
+  public GitRepoSettingsService(GitRepoSettingsRepository gitRepoRepository) {
     this.gitRepoRepository = gitRepoRepository;
+  }
+
+  public Optional<GitRepoSettings> getGitRepoSettingsByRepositoryId(Long repositoryId) {
+    return gitRepoRepository.findByRepositoryRepositoryId(repositoryId);
   }
 }

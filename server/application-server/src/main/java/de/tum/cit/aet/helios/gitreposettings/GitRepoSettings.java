@@ -30,4 +30,11 @@ public class GitRepoSettings extends RepositoryFilterEntity {
   // Automatically orders groups by orderIndex defined in WorkflowGroup
   @OrderBy("orderIndex ASC")
   private List<WorkflowGroup> groups;
+
+  // Once the threshold is reached, the lock automatically expires and the environment becomes
+  // available again.
+  private Long lockExpirationThreshold = 60L; // Default value: 1 minute
+
+  // After this period, any user can unlock the environment.
+  private Long lockReservationThreshold = 30L; // Default value: 30 seconds
 }
