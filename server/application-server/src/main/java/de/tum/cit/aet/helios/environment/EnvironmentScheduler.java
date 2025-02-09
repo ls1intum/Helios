@@ -31,7 +31,12 @@ public class EnvironmentScheduler {
                 : gitRepoSettingsService
                     .getGitRepoSettingsByRepositoryId(environment.getRepository().getRepositoryId())
                     .map(GitRepoSettings::getLockExpirationThreshold)
-                    .orElse(0L);
+                    .orElse(-1L);
+
+        // Skip if lock expiration threshold is not set
+        if (lockExpirationThreshold == -1) {
+          continue;
+        }
 
         OffsetDateTime lockedAt = environment.getLockedAt();
         if (lockedAt == null) {

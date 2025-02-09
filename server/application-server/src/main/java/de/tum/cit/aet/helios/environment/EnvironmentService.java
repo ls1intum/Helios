@@ -202,15 +202,17 @@ public class EnvironmentService {
             : gitRepoSettingsService
                 .getGitRepoSettingsByRepositoryId(environment.getRepository().getRepositoryId())
                 .map(GitRepoSettings::getLockReservationThreshold)
-                .orElse(0L);
+                .orElse(-1L);
 
     OffsetDateTime now = OffsetDateTime.now();
     OffsetDateTime lockedAt = environment.getLockedAt();
 
     // Check if the current user can unlock the environment
     if (!currentUser.equals(environment.getLockedBy()) && !userService.isAtLeastMaintainer()) {
-      // Allow unlocking if the lock is older than the reservation threshold
-      if (lockedAt.plusSeconds(lockReservationThreshold).isAfter(now)) {
+      // Allow unlocking if lockReservationThreshold is set and the lock is older than the
+      // reservation threshold
+      if (lockReservationThreshold == -1
+          || lockedAt.plusSeconds(lockReservationThreshold).isAfter(now)) {
         throw new SecurityException(
             "You do not have permission to unlock this environment. Environment is locked by"
                 + " another user and the reservation period has not elapsed.");
