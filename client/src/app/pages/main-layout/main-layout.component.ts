@@ -1,4 +1,4 @@
-import { SlicePipe } from '@angular/common';
+import {NgClass, SlicePipe} from '@angular/common';
 import { Component, computed, inject, input, numberAttribute } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { ProfileNavSectionComponent } from '@app/components/profile-nav-section/profile-nav-section.component';
@@ -34,6 +34,7 @@ import { UserLockInfoComponent } from '@app/components/user-lock-info/user-lock-
     CardModule,
     ProfileNavSectionComponent,
     UserLockInfoComponent,
+    NgClass,
   ],
   templateUrl: './main-layout.component.html',
 })

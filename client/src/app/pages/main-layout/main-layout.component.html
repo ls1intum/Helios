@@ -1,12 +1,12 @@
-@if (!isLoggedIn()) {
-  <div class="top-1 bg-gray-700 text-white rounded-b-2xl z-50 text-center flex items-center justify-center gap-1">
-    You are currently using Helios in readonly mode.
-    <button (click)="login()" class="p-0 text-white hover:text-gray-300 underline">Login here.</button>
-  </div>
-}
-
 <main class="h-screen overflow-hidden">
-  <div class="flex h-full p-3">
+  @if (!isLoggedIn()) {
+    <!-- Top Bar -->
+    <div class="top-1 bg-gray-700 text-white rounded-b-2xl z-50 text-center flex items-center justify-center gap-1">
+      You are currently using Helios in readonly mode.
+      <button (click)="login()" class="p-0 text-white hover:text-gray-300 underline">Login here.</button>
+    </div>
+  }
+  <div class="flex p-3" [ngClass]="isLoggedIn() ? 'h-full' : 'h-[calc(100vh-24px)]'">
     <!-- Fixed Navigation Bar -->
     <div class="rounded-2xl p-5 mr-3 bg-gray-100 flex flex-col items-center justify-between h-full sticky top-3">
       <app-helios-icon routerLink="/" size="3rem" class="rounded-xl w-12 cursor-pointer" />
