@@ -1,12 +1,9 @@
 <!-- Sidebar Wrapper (Two-column Layout) -->
-<div class="flex h-full rounded-2xl mr-6 bg-gray-100 transition-all"
-     [ngClass]="{ 'w-16': !isExpanded(), 'w-48': isExpanded() }">
-
+<div class="flex h-full rounded-2xl mr-4 bg-gray-100 transition-all" [ngClass]="{ 'w-16': !isExpanded(), 'w-48': isExpanded() }">
   <!-- Left Section: Main Navigation -->
   <div class="flex flex-col p-3 items-center justify-between w-full">
-
     <!-- Helios Icon (Now Shows 'Home' When Expanded) -->
-    <a routerLink="/"  class="flex items-center gap-2 hover:bg-gray-200 w-full">
+    <a routerLink="/" class="flex items-center gap-2 hover:bg-gray-200 w-full">
       <app-helios-icon size="2rem" class="rounded-xl w-8 cursor-pointer" />
       @if (isExpanded()) {
         <span class="text-gray-700 text-sm font-medium">Home</span>
@@ -19,9 +16,7 @@
       <!-- Repository Info (Avatar + Full Name) -->
       <div class="flex items-center gap-2 w-full p-2 rounded-xl hover:bg-gray-200 transition-all">
         <!-- Repository Initials Avatar -->
-        <p-avatar label="{{ repositoryQuery.data()?.name | slice: 0 : 1 }}"
-                  pTooltip="{{ repositoryQuery.data()?.nameWithOwner }}"
-                  size="normal" />
+        <p-avatar label="{{ repositoryQuery.data()?.name | slice: 0 : 1 }}" pTooltip="{{ repositoryQuery.data()?.nameWithOwner }}" size="normal" />
 
         <!-- Show Full Repository Name When Expanded -->
         @if (isExpanded()) {
@@ -63,12 +58,8 @@
 
   <!-- Right Section: Small Toggle Button -->
   <div class="flex items-center justify-center w-5 transition-all">
-    <button
-      class="h-8 w-8 flex items-center justify-center bg-gray-50 hover:bg-gray-200 rounded-md shadow-md transition-all"
-      (click)="toggleSidebar()"
-    >
+    <button class="h-8 w-8 flex items-center justify-center bg-gray-50 hover:bg-gray-200 rounded-md shadow-md transition-all" (click)="toggleSidebar()">
       <i-tabler [name]="isExpanded() ? 'chevron-left' : 'chevron-right'" class="!size-4"></i-tabler>
     </button>
   </div>
-
 </div>

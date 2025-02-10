@@ -1,10 +1,10 @@
-import {Component, computed, inject, input, signal} from '@angular/core';
+import { Component, computed, inject, input, signal } from '@angular/core';
 import { Avatar } from 'primeng/avatar';
 import { Divider } from 'primeng/divider';
 import { HeliosIconComponent } from '@app/components/helios-icon/helios-icon.component';
 import { ProfileNavSectionComponent } from '@app/components/profile-nav-section/profile-nav-section.component';
 import { RouterLink, RouterLinkActive } from '@angular/router';
-import {NgClass, NgIf, SlicePipe} from '@angular/common';
+import { NgClass, SlicePipe } from '@angular/common';
 import { TablerIconComponent } from 'angular-tabler-icons';
 import { Tooltip } from 'primeng/tooltip';
 import { UserLockInfoComponent } from '@app/components/user-lock-info/user-lock-info.component';
@@ -12,11 +12,22 @@ import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 import { PermissionService } from '@app/core/services/permission.service';
 import { injectQuery } from '@tanstack/angular-query-experimental';
 import { getRepositoryByIdOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
-import {Button} from 'primeng/button';
 
 @Component({
   selector: 'app-navigation-bar',
-  imports: [Avatar, Divider, HeliosIconComponent, ProfileNavSectionComponent, RouterLink, SlicePipe, TablerIconComponent, Tooltip, UserLockInfoComponent, RouterLinkActive, NgClass],
+  imports: [
+    Avatar,
+    Divider,
+    HeliosIconComponent,
+    ProfileNavSectionComponent,
+    RouterLink,
+    SlicePipe,
+    TablerIconComponent,
+    Tooltip,
+    UserLockInfoComponent,
+    RouterLinkActive,
+    NgClass,
+  ],
   templateUrl: './navigation-bar.component.html',
 })
 export class NavigationBarComponent {
