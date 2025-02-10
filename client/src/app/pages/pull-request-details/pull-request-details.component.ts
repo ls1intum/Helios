@@ -1,6 +1,5 @@
 import { Component, computed, inject, input } from '@angular/core';
 import { MarkdownPipe } from '@app/core/modules/markdown/markdown.pipe';
-
 import { PipelineComponent, PipelineSelector } from '@app/components/pipeline/pipeline.component';
 import { TagModule } from 'primeng/tag';
 import { IconsModule } from 'icons.module';
@@ -55,5 +54,4 @@ export class PullRequestDetailsComponent {
       pullRequestId: pr.id,
     };
   });
-  protected readonly encodeURIComponent = encodeURIComponent;
 }

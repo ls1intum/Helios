@@ -25,7 +25,7 @@
           <!-- Branch Name with Icon -->
           <p-tag class="font-normal flex items-center gap-1 px-2 py-1">
             <i-tabler name="git-branch" class="w-4 h-4"></i-tabler>
-            <a [href]="'/repo/' + repositoryId() + '/ci-cd/branch/' + encodeURIComponent(pr.headRefName)" target="_blank" rel="noopener noreferrer" class="hover:underline">
+            <a [href]="pr.repository?.htmlUrl + '/tree/' + pr.headRefName" target="_blank" rel="noopener noreferrer" class="hover:underline">
               {{ pr.headRefName }}
             </a>
           </p-tag>
