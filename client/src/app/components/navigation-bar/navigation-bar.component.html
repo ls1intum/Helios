@@ -1,5 +1,5 @@
 <!-- Sidebar Wrapper (Two-column Layout) -->
-<div class="flex h-full rounded-2xl mr-3 bg-gray-100 transition-all"
+<div class="flex h-full rounded-2xl mr-6 bg-gray-100 transition-all"
      [ngClass]="{ 'w-16': !isExpanded(), 'w-48': isExpanded() }">
 
   <!-- Left Section: Main Navigation -->
@@ -7,7 +7,7 @@
 
     <!-- Helios Icon (Now Shows 'Home' When Expanded) -->
     <a routerLink="/"  class="flex items-center gap-2 hover:bg-gray-200 w-full">
-      <app-helios-icon routerLink="/" size="2rem" class="rounded-xl w-8 cursor-pointer" />
+      <app-helios-icon size="2rem" class="rounded-xl w-8 cursor-pointer" />
       @if (isExpanded()) {
         <span class="text-gray-700 text-sm font-medium">Home</span>
       }
@@ -62,7 +62,7 @@
   </div>
 
   <!-- Right Section: Small Toggle Button -->
-  <div class="flex items-center justify-center w-6 transition-all">
+  <div class="flex items-center justify-center w-5 transition-all">
     <button
       class="h-8 w-8 flex items-center justify-center bg-gray-50 hover:bg-gray-200 rounded-md shadow-md transition-all"
       (click)="toggleSidebar()"

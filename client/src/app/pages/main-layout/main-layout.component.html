@@ -8,12 +8,12 @@
   }
   <div class="flex flex-grow p-3" [ngClass]="isLoggedIn() ? 'h-[calc(100vh-24px)]' : 'h-[calc(100vh-48px)]'">
     <!-- Fixed Navigation Bar -->
-    <div class="h-full sticky top-3">
+    <div class="h-full sticky top-3 flex">
       <app-navigation-bar [repositoryId]="repositoryId()"></app-navigation-bar>
     </div>
 
     <!-- Scrollable Content Area -->
-    <div class="flex-grow overflow-hidden h-full border border-gray-200 rounded-2xl">
+    <div class="flex-grow overflow-hidden h-full border border-gray-200 rounded-2xl pr-7">
       <div class="h-full overflow-auto p-6 mx-auto">
         <router-outlet />
       </div>
