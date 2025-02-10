@@ -51,24 +51,24 @@ export class NavigationBarComponent {
       {
         label: 'CI/CD',
         icon: 'arrow-guide',
-        path: [this.repositoryId(), 'ci-cd'],
+        path: [ 'repo', this.repositoryId(), 'ci-cd'],
       },
       {
         label: 'Release Management',
         icon: 'rocket',
-        path: [this.repositoryId(), 'release'],
+        path: ['repo', this.repositoryId(), 'release'],
       },
       {
         label: 'Environments',
         icon: 'server-cog',
-        path: [this.repositoryId(), 'environment'],
+        path: ['repo', this.repositoryId(), 'environment'],
       },
       ...(this.keycloakService.profile && this.permissionService.isAtLeastMaintainer()
         ? [
           {
             label: 'Project Settings',
             icon: 'adjustments-alt',
-            path: [this.repositoryId(), 'settings'],
+            path: ['repo', this.repositoryId(), 'settings'],
           },
         ]
         : []),

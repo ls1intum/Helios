@@ -6,11 +6,6 @@ import { maintainerGuard } from './core/routeGuards/maintainer.guard';
 export const routes: Routes = [
   {
     path: '',
-    pathMatch: 'full',
-    redirectTo: 'repo',
-  },
-  {
-    path: 'repo',
     loadComponent: () => import('./pages/main-layout/main-layout.component').then(m => m.MainLayoutComponent),
     canActivateChild: [RepositoryFilterGuard],
     children: [
@@ -20,7 +15,11 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/repository-overview/repository-overview.component').then(m => m.RepositoryOverviewComponent)
       },
       {
-        path: ':repositoryId',
+        path: 'about',
+        loadComponent: () => import('./pages/about/about.component').then(m => m.AboutComponent),
+      },
+      {
+        path: 'repo/:repositoryId',
         children: [
           { path: '', loadComponent: () => import('./pages/ci-cd/ci-cd.component').then(m => m.CiCdComponent) },
           {
