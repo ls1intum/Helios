@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import {Component, inject, input} from '@angular/core';
+import { Component, inject, input } from '@angular/core';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 import { IconsModule } from 'icons.module';
 import { ButtonModule } from 'primeng/button';

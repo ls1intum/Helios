@@ -3,11 +3,8 @@
   <!-- Left Section: Main Navigation -->
   <div class="flex flex-col p-3 items-center justify-between w-full">
     <!-- Helios Icon -->
-    <a routerLink="/"
-       [pTooltip]="!isExpanded() ? 'Home' : undefined"
-       class="flex items-center gap-2 hover:bg-gray-200 w-full">
-      <app-helios-icon
-        size="2rem" class="rounded-xl w-8 cursor-pointer" />
+    <a routerLink="/" [pTooltip]="!isExpanded() ? 'Home' : undefined" class="flex items-center gap-2 hover:bg-gray-200 w-full">
+      <app-helios-icon size="2rem" class="rounded-xl w-8 cursor-pointer" />
       @if (isExpanded()) {
         <span class="text-gray-700 text-sm font-semibold">Home</span>
       }
@@ -94,7 +91,7 @@
     <p-divider />
 
     <!-- Login/Logout Button -->
-    <app-profile-nav-section [isExpanded]="isExpanded()"/>
+    <app-profile-nav-section [isExpanded]="isExpanded()" />
   </div>
 
   <!-- Right Section: Small Toggle Button -->
