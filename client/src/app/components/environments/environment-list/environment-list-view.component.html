@@ -77,6 +77,7 @@
               <p-tag value="Disabled" severity="danger" rounded="true" />
             }
             <a icon [routerLink]="'/repo/' + environment.repository?.id + '/environment/' + environment.id + '/edit'" class="p-button p-button-secondary p-2"
+               (click)="$event.stopPropagation()"
               ><i-tabler name="pencil"
             /></a>
           }
