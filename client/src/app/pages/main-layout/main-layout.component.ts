@@ -1,11 +1,6 @@
 import { NgClass } from '@angular/common';
-import {Component, computed, inject, OnInit, signal} from '@angular/core';
-import {
-  ActivatedRoute,
-  NavigationEnd,
-  Router,
-  RouterOutlet
-} from '@angular/router';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { ActivatedRoute, NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 import { IconsModule } from 'icons.module';
 import { AvatarModule } from 'primeng/avatar';
@@ -15,25 +10,13 @@ import { DividerModule } from 'primeng/divider';
 import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
 import { FooterComponent } from '@app/components/footer/footer.component';
-import {NavigationBarComponent} from '@app/components/navigation-bar/navigation-bar.component';
-import {filter} from 'rxjs';
+import { NavigationBarComponent } from '@app/components/navigation-bar/navigation-bar.component';
+import { filter } from 'rxjs';
 
 @Component({
   selector: 'app-main-layout',
   standalone: true,
-  imports: [
-    RouterOutlet,
-    ToastModule,
-    IconsModule,
-    ButtonModule,
-    TooltipModule,
-    DividerModule,
-    AvatarModule,
-    CardModule,
-    NgClass,
-    FooterComponent,
-    NavigationBarComponent,
-  ],
+  imports: [RouterOutlet, ToastModule, IconsModule, ButtonModule, TooltipModule, DividerModule, AvatarModule, CardModule, NgClass, FooterComponent, NavigationBarComponent],
   templateUrl: './main-layout.component.html',
 })
 export class MainLayoutComponent implements OnInit {
@@ -48,11 +31,9 @@ export class MainLayoutComponent implements OnInit {
     this.updateRepositoryId();
 
     // Listen for route changes (After initial load)
-    this.router.events
-      .pipe(filter(event => event instanceof NavigationEnd))
-      .subscribe(() => {
-        this.updateRepositoryId();
-      });
+    this.router.events.pipe(filter(event => event instanceof NavigationEnd)).subscribe(() => {
+      this.updateRepositoryId();
+    });
   }
 
   private updateRepositoryId(): void {
@@ -66,12 +47,10 @@ export class MainLayoutComponent implements OnInit {
       const idFromSnapshot = child.snapshot.paramMap.get('repositoryId');
       if (idFromSnapshot) {
         this.repositoryId.set(Number(idFromSnapshot));
-      }
-      else {
+      } else {
         this.repositoryId.set(undefined);
       }
-    }
-    else {
+    } else {
       this.repositoryId.set(undefined);
     }
   }

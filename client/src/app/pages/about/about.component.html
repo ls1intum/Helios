@@ -1,8 +1,8 @@
 <app-page-heading>
   <div heading>About Helios</div>
   <div description>
-    Helios is an interactive platform designed to improve the efficiency and usability of CI/CD workflows in GitHub Actions.
-    The platform enables better visualization, environment tracking, and test analytics for deployment management.
+    Helios is an interactive platform designed to improve the efficiency and usability of CI/CD workflows in GitHub Actions. The platform enables better visualization, environment
+    tracking, and test analytics for deployment management.
   </div>
 </app-page-heading>
 
@@ -30,7 +30,7 @@
     <h2 class="text-lg font-semibold mb-2">Project Advisors</h2>
     <div class="flex justify-center">
       <div class="p-2 border rounded-md text-center">
-        <img [ngSrc]="'assets/about/krusche.jpg'" alt="Stephan Krusche" width="112" height="112" class="w-28 h-28 mx-auto rounded-full">
+        <img [ngSrc]="'assets/about/krusche.jpg'" alt="Stephan Krusche" width="112" height="112" class="w-28 h-28 mx-auto rounded-full" />
         <p class="font-semibold">Stephan Krusche</p>
         <p class="text-sm text-gray-600">Project Advisor</p>
         <a href="https://ase.cit.tum.de/people/krusche/" class="text-blue-500 ml-2" target="_blank">Website</a>
@@ -44,7 +44,7 @@
     <div class="flex flex-wrap justify-center gap-4">
       @for (contributor of contributors; track contributor.name) {
         <div class="p-2 border rounded-md text-center w-48">
-          <img [ngSrc]="'assets/about/' + contributor.photo" alt="{{ contributor.name }}" width="112" height="112" class="w-28 h-28 mx-auto rounded-full">
+          <img [ngSrc]="'assets/about/' + contributor.photo" alt="{{ contributor.name }}" width="112" height="112" class="w-28 h-28 mx-auto rounded-full" />
           <p class="font-semibold">{{ contributor.name }}</p>
           <p class="text-sm text-gray-600">{{ contributor.description }}</p>
           @if (contributor.github) {

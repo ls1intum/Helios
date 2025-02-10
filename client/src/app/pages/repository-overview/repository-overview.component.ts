@@ -14,16 +14,7 @@ import { ToastModule } from 'primeng/toast';
 
 @Component({
   selector: 'app-repository-overview',
-  imports: [
-    DataViewModule,
-    ButtonModule,
-    TagModule,
-    CardModule,
-    ChipModule,
-    IconsModule,
-    PageHeadingComponent,
-    ToastModule,
-  ],
+  imports: [DataViewModule, ButtonModule, TagModule, CardModule, ChipModule, IconsModule, PageHeadingComponent, ToastModule],
   templateUrl: './repository-overview.component.html',
 })
 export class RepositoryOverviewComponent {
