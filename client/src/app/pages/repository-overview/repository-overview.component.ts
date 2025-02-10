@@ -1,6 +1,5 @@
-import { Component, computed, inject, viewChild } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { ConnectRepoComponent } from '@app/components/connect-repo/connect-repo.component';
 import { PageHeadingComponent } from '@app/components/page-heading/page-heading.component';
 import { RepositoryInfoDto } from '@app/core/modules/openapi';
 import { getAllRepositoriesOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
@@ -22,7 +21,6 @@ import { ToastModule } from 'primeng/toast';
     CardModule,
     ChipModule,
     IconsModule,
-    ConnectRepoComponent,
     PageHeadingComponent,
     ToastModule,
   ],
