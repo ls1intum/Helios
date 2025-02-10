@@ -1,9 +1,11 @@
 <div class="flex flex-col items-start">
-  <ng-content select="[subheading]">
+  @if (repositoryId()) {
+    <ng-content select="[subheading]">
     <span class="text-gray-500 text-sm uppercase font-semibold tracking-wider mb-1">
       {{ repositoryQuery.data()?.nameWithOwner }}
     </span>
-  </ng-content>
+    </ng-content>
+  }
   <div class="flex items-center gap-4 mb-1 w-full">
     <h2 class="text-3xl w-full">
       <ng-content select="[heading]" />
