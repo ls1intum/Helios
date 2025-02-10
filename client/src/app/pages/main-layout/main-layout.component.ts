@@ -1,11 +1,12 @@
-import { NgClass, SlicePipe } from '@angular/common';
-import { Component, computed, inject, input, numberAttribute } from '@angular/core';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { ProfileNavSectionComponent } from '@app/components/profile-nav-section/profile-nav-section.component';
-import { getRepositoryByIdOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
+import { NgClass } from '@angular/common';
+import {Component, computed, inject, OnInit, signal} from '@angular/core';
+import {
+  ActivatedRoute,
+  NavigationEnd,
+  Router,
+  RouterOutlet
+} from '@angular/router';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
-import { PermissionService } from '@app/core/services/permission.service';
-import { injectQuery } from '@tanstack/angular-query-experimental';
 import { IconsModule } from 'icons.module';
 import { AvatarModule } from 'primeng/avatar';
 import { ButtonModule } from 'primeng/button';
@@ -13,10 +14,9 @@ import { CardModule } from 'primeng/card';
 import { DividerModule } from 'primeng/divider';
 import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
-import { HeliosIconComponent } from '@app/components/helios-icon/helios-icon.component';
-import { UserLockInfoComponent } from '@app/components/user-lock-info/user-lock-info.component';
 import { FooterComponent } from '@app/components/footer/footer.component';
 import {NavigationBarComponent} from '@app/components/navigation-bar/navigation-bar.component';
+import {filter} from 'rxjs';
 
 @Component({
   selector: 'app-main-layout',
@@ -36,10 +36,45 @@ import {NavigationBarComponent} from '@app/components/navigation-bar/navigation-
   ],
   templateUrl: './main-layout.component.html',
 })
-export class MainLayoutComponent {
+export class MainLayoutComponent implements OnInit {
   private keycloakService = inject(KeycloakService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
 
-  repositoryId = input.required({ transform: numberAttribute });
+  repositoryId = signal<number | undefined>(undefined);
+
+  ngOnInit(): void {
+    // Initialize on first load (Refresh)
+    this.updateRepositoryId();
+
+    // Listen for route changes (After initial load)
+    this.router.events
+      .pipe(filter(event => event instanceof NavigationEnd))
+      .subscribe(() => {
+        this.updateRepositoryId();
+      });
+  }
+
+  private updateRepositoryId(): void {
+    let child = this.route.firstChild;
+
+    while (child?.firstChild) {
+      child = child.firstChild;
+    }
+
+    if (child) {
+      const idFromSnapshot = child.snapshot.paramMap.get('repositoryId');
+      if (idFromSnapshot) {
+        this.repositoryId.set(Number(idFromSnapshot));
+      }
+      else {
+        this.repositoryId.set(undefined);
+      }
+    }
+    else {
+      this.repositoryId.set(undefined);
+    }
+  }
 
   login() {
     this.keycloakService.login();
