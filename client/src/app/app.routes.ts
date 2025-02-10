@@ -19,6 +19,14 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/about/about.component').then(m => m.AboutComponent),
       },
       {
+        path: 'privacy',
+        loadComponent: () => import('./pages/privacy/privacy.component').then(m => m.PrivacyComponent),
+      },
+      {
+        path: 'imprint',
+        loadComponent: () => import('./pages/imprint/imprint.component').then(m => m.ImprintComponent),
+      },
+      {
         path: 'repo/:repositoryId',
         children: [
           { path: '', loadComponent: () => import('./pages/ci-cd/ci-cd.component').then(m => m.CiCdComponent) },
