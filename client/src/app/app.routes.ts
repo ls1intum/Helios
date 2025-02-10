@@ -11,17 +11,16 @@ export const routes: Routes = [
   },
   {
     path: 'repo',
+    loadComponent: () => import('./pages/main-layout/main-layout.component').then(m => m.MainLayoutComponent),
     canActivateChild: [RepositoryFilterGuard],
     children: [
       {
         path: '',
         pathMatch: 'full',
-        redirectTo: 'list',
+        loadComponent: () => import('./pages/repository-overview/repository-overview.component').then(m => m.RepositoryOverviewComponent)
       },
-      { path: 'list', loadComponent: () => import('./pages/repository-overview/repository-overview.component').then(m => m.RepositoryOverviewComponent) },
       {
         path: ':repositoryId',
-        loadComponent: () => import('./pages/main-layout/main-layout.component').then(m => m.MainLayoutComponent),
         children: [
           { path: '', loadComponent: () => import('./pages/ci-cd/ci-cd.component').then(m => m.CiCdComponent) },
           {
