@@ -84,8 +84,9 @@ export class PullRequestTableComponent {
 
   filteredPrs = computed(() => this.searchTableService.activeFilter().filter(this.query.data() || [], this.keycloak.decodedToken()?.preferred_username));
 
-  openPRExternal(pr: PullRequestInfoDto): void {
+  openPRExternal(event: Event, pr: PullRequestInfoDto): void {
     window.open(pr.htmlUrl, '_blank');
+    event.stopPropagation();
   }
 
   // TODO: Find a better way to handle color of labels
