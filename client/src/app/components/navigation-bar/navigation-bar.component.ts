@@ -1,4 +1,4 @@
-import {Component, computed, inject, input, numberAttribute} from '@angular/core';
+import {Component, computed, inject, input} from '@angular/core';
 import {Avatar} from 'primeng/avatar';
 import {Divider} from 'primeng/divider';
 import {HeliosIconComponent} from '@app/components/helios-icon/helios-icon.component';
@@ -33,18 +33,12 @@ export class NavigationBarComponent {
   private keycloakService = inject(KeycloakService);
   private permissionService = inject(PermissionService);
 
-  username = computed(() => (this.keycloakService.decodedToken()?.preferred_username || '') as string);
-
-  repositoryId = input.required({ transform: numberAttribute });
+  repositoryId = input.required<number | undefined>();
 
   repositoryQuery = injectQuery(() => ({
-    ...getRepositoryByIdOptions({ path: { id: this.repositoryId() } }),
-    enabled: () => !!this.repositoryId(),
+    ...getRepositoryByIdOptions({ path: { id: this.repositoryId() ?? 0 } }),
+    enabled: () => this.repositoryId() !== undefined,
   }));
-
-  logout() {
-    this.keycloakService.logout();
-  }
 
   login() {
     this.keycloakService.login();
@@ -53,32 +47,31 @@ export class NavigationBarComponent {
   isLoggedIn = computed(() => this.keycloakService.isLoggedIn());
 
   items = computed(() => {
-    const baseItems = [
+    return [
       {
         label: 'CI/CD',
         icon: 'arrow-guide',
-        path: 'ci-cd',
+        path: [this.repositoryId(), 'ci-cd'],
       },
       {
         label: 'Release Management',
         icon: 'rocket',
-        path: 'release',
+        path: [this.repositoryId(), 'release'],
       },
       {
         label: 'Environments',
         icon: 'server-cog',
-        path: 'environment',
+        path: [this.repositoryId(), 'environment'],
       },
       ...(this.keycloakService.profile && this.permissionService.isAtLeastMaintainer()
         ? [
           {
             label: 'Project Settings',
             icon: 'adjustments-alt',
-            path: 'settings',
+            path: [this.repositoryId(), 'settings'],
           },
         ]
         : []),
     ];
-    return baseItems;
   });
 }
