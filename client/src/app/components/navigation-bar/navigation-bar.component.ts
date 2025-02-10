@@ -35,7 +35,7 @@ export class NavigationBarComponent {
   private permissionService = inject(PermissionService);
 
   // Toggle sidebar state
-  isExpanded = signal(false);
+  isExpanded = signal(this.loadSidebarState());
 
   repositoryId = input.required<number | undefined>();
 
@@ -80,6 +80,16 @@ export class NavigationBarComponent {
   }
 
   toggleSidebar() {
-    this.isExpanded.set(!this.isExpanded());
+    const newState = !this.isExpanded();
+    this.isExpanded.set(newState);
+    this.saveSidebarState(newState);
+  }
+
+  private saveSidebarState(state: boolean) {
+    localStorage.setItem('sidebarExpanded', JSON.stringify(state));
+  }
+
+  private loadSidebarState(): boolean {
+    return JSON.parse(localStorage.getItem('sidebarExpanded') || 'false');
   }
 }
