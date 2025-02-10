@@ -1,5 +1,5 @@
 <!-- Sidebar Wrapper (Two-column Layout) -->
-<div class="flex h-full rounded-2xl mr-4 bg-gray-100 transition-all" [ngClass]="{ 'w-16': !isExpanded(), 'w-48': isExpanded() }">
+<div class="flex h-full rounded-2xl mr-4 bg-gray-100 transition-all duration-300 ease-in-out relative" [ngClass]="{ 'w-16': !isExpanded(), 'w-48': isExpanded() }">
   <!-- Left Section: Main Navigation -->
   <div class="flex flex-col p-3 items-center justify-between w-full">
     <!-- Helios Icon -->
@@ -95,8 +95,8 @@
   </div>
 
   <!-- Right Section: Small Toggle Button -->
-  <div class="flex items-center justify-center w-5 transition-all">
-    <button class="h-8 w-8 flex items-center justify-center bg-gray-50 hover:bg-gray-200 rounded-md shadow-md transition-all" (click)="toggleSidebar()">
+  <div class="absolute -right-3 top-1/2 -translate-y-1/2 z-10">
+    <button class="h-6 w-6 flex items-center justify-center bg-gray-50 hover:bg-gray-200 rounded-md hover:scale-105 transition-all" (click)="toggleSidebar()">
       <i-tabler [name]="isExpanded() ? 'chevron-left' : 'chevron-right'" class="!size-4"></i-tabler>
     </button>
   </div>
