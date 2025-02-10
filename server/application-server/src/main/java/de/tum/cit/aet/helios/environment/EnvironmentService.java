@@ -288,6 +288,8 @@ public class EnvironmentService {
                 environment.setStatusCheckType(null);
                 environment.setStatusUrl(null);
               }
+              environment.setLockExpirationThreshold(environmentDto.lockExpirationThreshold());
+              environment.setLockReservationThreshold(environmentDto.lockReservationThreshold());
 
               environmentRepository.save(environment);
               return EnvironmentDto.fromEnvironment(environment);

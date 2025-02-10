@@ -87,6 +87,8 @@ export class EnvironmentEditFormComponent implements OnInit {
       enabled: [environment?.enabled || false],
       statusCheckType: [environment?.statusCheckType || null],
       statusUrl: [environment?.statusUrl || ''],
+      lockExpirationThreshold: [environment?.lockExpirationThreshold],
+      lockReservationThreshold: [environment?.lockReservationThreshold],
     });
   }
 

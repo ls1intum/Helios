@@ -40,6 +40,46 @@
         </div>
       }
 
+      <div class="flex flex-col gap-2">
+        <label for="lock-expiration-threshold">Lock Expiration Threshold</label>
+        <span class="text-sm text-gray-500">
+          Lock of this environment will be released after this threshold. Leave this empty if you want to use the global lock expiration threshold. Set it to -1 if you want to
+          disable the lock expiration for this environment.
+        </span>
+        <div class="flex items-center gap-2">
+          <input
+            pInputText
+            id="lock-expiration-threshold"
+            type="number"
+            formControlName="lockExpirationThreshold"
+            [disabled]="!environmentForm.get('enableLockExpiration')?.value"
+            class="w-full"
+            formControlName="lockExpirationThreshold"
+          />
+          <span class="text-sm text-gray-500">minutes</span>
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <label for="lock-reservation-threshold">Lock Reservation Threshold</label>
+        <span class="text-sm text-gray-500">
+          Lock of this environment can be unlocked by any user after this threshold. Leave this empty if you want to use the global lock reservation threshold. Set it to -1 if you
+          want to disable the lock reservation for this environment.
+        </span>
+        <div class="flex items-center gap-2">
+          <input
+            pInputText
+            id="lock-reservation-threshold"
+            type="number"
+            formControlName="lockReservationThreshold"
+            [disabled]="!environmentForm.get('enableLockReservation')?.value"
+            class="w-full"
+            formControlName="lockReservationThreshold"
+          />
+          <span class="text-sm text-gray-500">minutes</span>
+        </div>
+      </div>
+
       <!-- Environment Enable/Disable Checkbox -->
       <div class="flex gap-2">
         <label for="enabled" class="mr-2">Enabled</label>
