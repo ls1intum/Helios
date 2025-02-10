@@ -1,7 +1,7 @@
 @if (latestLock(); as lock) {
-  <a routerLink="environment/list" class="text-sm text-gray-500 flex flex-col items-center gap-1 mb-5" [pTooltip]="tooltipContent">
-    <i-tabler name="lock"></i-tabler>
-    <span class="w-20 text-center">{{ timeSinceLocked() }}</span>
+  <a routerLink="environment/list" class="text-xs text-gray-500 flex flex-col items-center gap-1 mb-5" [pTooltip]="tooltipContent">
+    <i-tabler name="lock" class="w-5 h-5"></i-tabler>
+    <span class="w-12 text-center">{{ timeSinceLocked() }}</span>
   </a>
   <ng-template #tooltipContent>
     <div class="flex flex-col">
