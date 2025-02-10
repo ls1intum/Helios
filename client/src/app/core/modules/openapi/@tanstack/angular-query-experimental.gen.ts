@@ -4,6 +4,8 @@ import type { Options } from '@hey-api/client-fetch';
 import { type MutationOptions, type DefaultError, queryOptions } from '@tanstack/angular-query-experimental';
 import type {
   UpdateWorkflowLabelData,
+  GetGitRepoSettingsData,
+  UpdateGitRepoSettingsData,
   UpdateWorkflowGroupsData,
   GetEnvironmentByIdData,
   UpdateEnvironmentData,
@@ -26,7 +28,6 @@ import type {
   GetUserPermissionsData,
   GetTagByNameData,
   GetCommitsSinceLastTagData,
-  GetGitRepoSettingsData,
   GetGroupsWithWorkflowsData,
   GetAllRepositoriesData,
   GetRepositoryByIdData,
@@ -51,6 +52,8 @@ import type {
 } from '../types.gen';
 import {
   updateWorkflowLabel,
+  getGitRepoSettings,
+  updateGitRepoSettings,
   updateWorkflowGroups,
   getEnvironmentById,
   updateEnvironment,
@@ -70,7 +73,6 @@ import {
   getUserPermissions,
   getTagByName,
   getCommitsSinceLastTag,
-  getGitRepoSettings,
   getGroupsWithWorkflows,
   getAllRepositories,
   getRepositoryById,
@@ -109,20 +111,6 @@ export const updateWorkflowLabelMutation = (options?: Partial<Options<UpdateWork
   return mutationOptions;
 };
 
-export const updateWorkflowGroupsMutation = (options?: Partial<Options<UpdateWorkflowGroupsData>>) => {
-  const mutationOptions: MutationOptions<unknown, DefaultError, Options<UpdateWorkflowGroupsData>> = {
-    mutationFn: async localOptions => {
-      const { data } = await updateWorkflowGroups({
-        ...options,
-        ...localOptions,
-        throwOnError: true,
-      });
-      return data;
-    },
-  };
-  return mutationOptions;
-};
-
 type QueryKey<TOptions extends Options> = [
   Pick<TOptions, 'baseUrl' | 'body' | 'headers' | 'path' | 'query'> & {
     _id: string;
@@ -148,6 +136,51 @@ const createQueryKey = <TOptions extends Options>(id: string, options?: TOptions
     params.query = options.query;
   }
   return params;
+};
+
+export const getGitRepoSettingsQueryKey = (options: Options<GetGitRepoSettingsData>) => [createQueryKey('getGitRepoSettings', options)];
+
+export const getGitRepoSettingsOptions = (options: Options<GetGitRepoSettingsData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getGitRepoSettings({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: getGitRepoSettingsQueryKey(options),
+  });
+};
+
+export const updateGitRepoSettingsMutation = (options?: Partial<Options<UpdateGitRepoSettingsData>>) => {
+  const mutationOptions: MutationOptions<unknown, DefaultError, Options<UpdateGitRepoSettingsData>> = {
+    mutationFn: async localOptions => {
+      const { data } = await updateGitRepoSettings({
+        ...options,
+        ...localOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const updateWorkflowGroupsMutation = (options?: Partial<Options<UpdateWorkflowGroupsData>>) => {
+  const mutationOptions: MutationOptions<unknown, DefaultError, Options<UpdateWorkflowGroupsData>> = {
+    mutationFn: async localOptions => {
+      const { data } = await updateWorkflowGroups({
+        ...options,
+        ...localOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
 };
 
 export const getEnvironmentByIdQueryKey = (options: Options<GetEnvironmentByIdData>) => [createQueryKey('getEnvironmentById', options)];
@@ -507,23 +540,6 @@ export const getCommitsSinceLastTagOptions = (options: Options<GetCommitsSinceLa
       return data;
     },
     queryKey: getCommitsSinceLastTagQueryKey(options),
-  });
-};
-
-export const getGitRepoSettingsQueryKey = (options: Options<GetGitRepoSettingsData>) => [createQueryKey('getGitRepoSettings', options)];
-
-export const getGitRepoSettingsOptions = (options: Options<GetGitRepoSettingsData>) => {
-  return queryOptions({
-    queryFn: async ({ queryKey, signal }) => {
-      const { data } = await getGitRepoSettings({
-        ...options,
-        ...queryKey[0],
-        signal,
-        throwOnError: true,
-      });
-      return data;
-    },
-    queryKey: getGitRepoSettingsQueryKey(options),
   });
 };
 

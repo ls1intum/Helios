@@ -1,6 +1,6 @@
 package de.tum.cit.aet.helios.environment;
 
-import de.tum.cit.aet.helios.gitreposettings.GitRepoSettings;
+import de.tum.cit.aet.helios.gitreposettings.GitRepoSettingsDto;
 import de.tum.cit.aet.helios.gitreposettings.GitRepoSettingsService;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -30,7 +30,7 @@ public class EnvironmentScheduler {
                 ? environment.getLockExpirationThreshold()
                 : gitRepoSettingsService
                     .getGitRepoSettingsByRepositoryId(environment.getRepository().getRepositoryId())
-                    .map(GitRepoSettings::getLockExpirationThreshold)
+                    .map(GitRepoSettingsDto::lockExpirationThreshold)
                     .orElse(-1L);
 
         // Skip if lock expiration threshold is not set

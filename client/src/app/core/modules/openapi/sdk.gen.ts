@@ -3,6 +3,9 @@
 import { createClient, createConfig, type Options } from '@hey-api/client-fetch';
 import type {
   UpdateWorkflowLabelData,
+  GetGitRepoSettingsData,
+  GetGitRepoSettingsResponse,
+  UpdateGitRepoSettingsData,
   UpdateWorkflowGroupsData,
   GetEnvironmentByIdData,
   GetEnvironmentByIdResponse,
@@ -37,8 +40,6 @@ import type {
   GetTagByNameResponse,
   GetCommitsSinceLastTagData,
   GetCommitsSinceLastTagResponse,
-  GetGitRepoSettingsData,
-  GetGitRepoSettingsResponse,
   GetGroupsWithWorkflowsData,
   GetGroupsWithWorkflowsResponse,
   GetAllRepositoriesData,
@@ -92,6 +93,24 @@ export const updateWorkflowLabel = <ThrowOnError extends boolean = false>(option
       ...options?.headers,
     },
     url: '/api/workflows/{workflowId}/label',
+  });
+};
+
+export const getGitRepoSettings = <ThrowOnError extends boolean = false>(options: Options<GetGitRepoSettingsData, ThrowOnError>) => {
+  return (options?.client ?? client).get<GetGitRepoSettingsResponse, unknown, ThrowOnError>({
+    ...options,
+    url: '/api/settings/{repositoryId}/settings',
+  });
+};
+
+export const updateGitRepoSettings = <ThrowOnError extends boolean = false>(options: Options<UpdateGitRepoSettingsData, ThrowOnError>) => {
+  return (options?.client ?? client).put<unknown, unknown, ThrowOnError>({
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+    url: '/api/settings/{repositoryId}/settings',
   });
 };
 
@@ -249,13 +268,6 @@ export const getCommitsSinceLastTag = <ThrowOnError extends boolean = false>(opt
   return (options?.client ?? client).get<GetCommitsSinceLastTagResponse, unknown, ThrowOnError>({
     ...options,
     url: '/api/tags/newcommits',
-  });
-};
-
-export const getGitRepoSettings = <ThrowOnError extends boolean = false>(options: Options<GetGitRepoSettingsData, ThrowOnError>) => {
-  return (options?.client ?? client).get<GetGitRepoSettingsResponse, unknown, ThrowOnError>({
-    ...options,
-    url: '/api/settings/{repositoryId}/settings',
   });
 };
 

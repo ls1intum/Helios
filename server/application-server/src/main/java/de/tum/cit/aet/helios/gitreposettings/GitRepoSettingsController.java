@@ -3,6 +3,7 @@ package de.tum.cit.aet.helios.gitreposettings;
 import de.tum.cit.aet.helios.config.security.annotations.EnforceAtLeastMaintainer;
 import jakarta.validation.Valid;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -29,10 +30,10 @@ public class GitRepoSettingsController {
   }
 
   @GetMapping("/settings")
+  @EnforceAtLeastMaintainer
   public ResponseEntity<GitRepoSettingsDto> getGitRepoSettings(@PathVariable Long repositoryId) {
     GitRepoSettingsDto gitRepoSettingsDto =
-        GitRepoSettingsDto.fromGitRepoSettings(
-            gitRepoSettingsService.getGitRepoSettingsByRepositoryId(repositoryId).orElseThrow());
+        gitRepoSettingsService.getGitRepoSettingsByRepositoryId(repositoryId).orElseThrow();
     return ResponseEntity.ok(gitRepoSettingsDto);
   }
 
@@ -59,6 +60,15 @@ public class GitRepoSettingsController {
       @PathVariable Long repositoryId, @Valid @RequestBody List<WorkflowGroupDto> workflowGroups) {
     workflowGroupService.updateWorkflowGroups(repositoryId, workflowGroups);
     return ResponseEntity.noContent().build();
+  }
+
+  @EnforceAtLeastMaintainer
+  @PutMapping("/settings")
+  public ResponseEntity<?> updateGitRepoSettings(
+      @PathVariable Long repositoryId, @Valid @RequestBody GitRepoSettingsDto gitRepoSettingsDto) {
+    Optional<GitRepoSettingsDto> updateGitRepoSettings =
+        gitRepoSettingsService.updateGitRepoSettings(repositoryId, gitRepoSettingsDto);
+    return updateGitRepoSettings.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
   }
 
   @EnforceAtLeastMaintainer

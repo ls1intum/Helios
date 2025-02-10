@@ -18,6 +18,7 @@
           [min]="-1"
           class="w-full"
           suffix=" seconds"
+          (ngModelChange)="onExpirationThresholdChange($event)"
         />
       </div>
     </div>
@@ -38,6 +39,7 @@
           [min]="-1"
           class="w-full"
           suffix=" seconds"
+          (ngModelChange)="onReservationThresholdChange($event)"
         />
       </div>
     </div>

@@ -6,8 +6,8 @@ import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { DividerModule } from 'primeng/divider';
 import { IftaLabelModule } from 'primeng/iftalabel';
-import { injectQuery } from '@tanstack/angular-query-experimental';
-import { getEnvironmentByIdOptions, getGitRepoSettingsOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
+import { injectMutation, injectQuery } from '@tanstack/angular-query-experimental';
+import { getEnvironmentByIdOptions, getGitRepoSettingsOptions, updateGitRepoSettingsMutation } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 
 @Component({
   selector: 'app-locking-thresholds',
@@ -38,6 +38,13 @@ export class LockingThresholdsComponent {
     ...getEnvironmentByIdOptions({ path: { id: this.environmentId()! } }),
     enabled: () => this.environmentId() !== undefined,
     refetchOnWindowFocus: false,
+  }));
+
+  mutateGitRepoSettings = injectMutation(() => ({
+    ...updateGitRepoSettingsMutation(),
+    onSuccess: () => {
+      console.log('Git repo settings updated');
+    },
   }));
 
   constructor() {
@@ -79,13 +86,34 @@ export class LockingThresholdsComponent {
       this.lockingReservationThreshold.set(enabled ? (resThreshold ?? undefined) : undefined);
     }
   }
+  // Add these methods to your component class
+  onExpirationThresholdChange(value: number | null) {
+    console.log('Expiration threshold changed:', value);
+    this.lockingExpirationThreshold.set(value !== null ? value : undefined);
+  }
 
+  onReservationThresholdChange(value: number | null) {
+    console.log('Reservation threshold changed:', value);
+    this.lockingReservationThreshold.set(value !== null ? value : undefined);
+  }
   // Update your existing updateLockingThresholds method
   updateLockingThresholds() {
     // Here you would typically send the values to your backend
     console.log('Saving thresholds:', {
-      expiration: this.lockingExpirationThreshold,
-      reservation: this.lockingReservationThreshold,
+      expiration: this.lockingExpirationThreshold(),
+      reservation: this.lockingReservationThreshold(),
+    });
+
+    console.log('Saving to API');
+    console.log('Expiration:', this.isLockExpirationEnabled(), this.lockingExpirationThreshold());
+    this.mutateGitRepoSettings.mutate({
+      path: {
+        repositoryId: this.repositoryId(),
+      },
+      body: {
+        lockExpirationThreshold: this.isLockExpirationEnabled() ? this.lockingExpirationThreshold() : undefined,
+        lockReservationThreshold: this.isLockReservationEnabled() ? this.lockingReservationThreshold() : undefined,
+      },
     });
 
     // Add your API call here

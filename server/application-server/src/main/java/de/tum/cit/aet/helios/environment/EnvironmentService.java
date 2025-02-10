@@ -5,7 +5,7 @@ import de.tum.cit.aet.helios.deployment.Deployment;
 import de.tum.cit.aet.helios.deployment.DeploymentException;
 import de.tum.cit.aet.helios.deployment.DeploymentRepository;
 import de.tum.cit.aet.helios.deployment.LatestDeploymentUnion;
-import de.tum.cit.aet.helios.gitreposettings.GitRepoSettings;
+import de.tum.cit.aet.helios.gitreposettings.GitRepoSettingsDto;
 import de.tum.cit.aet.helios.gitreposettings.GitRepoSettingsService;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
@@ -201,7 +201,7 @@ public class EnvironmentService {
             ? environment.getLockReservationThreshold()
             : gitRepoSettingsService
                 .getGitRepoSettingsByRepositoryId(environment.getRepository().getRepositoryId())
-                .map(GitRepoSettings::getLockReservationThreshold)
+                .map(GitRepoSettingsDto::lockReservationThreshold)
                 .orElse(-1L);
 
     OffsetDateTime now = OffsetDateTime.now();
