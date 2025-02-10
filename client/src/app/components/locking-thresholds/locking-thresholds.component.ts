@@ -7,7 +7,12 @@ import { InputNumberModule } from 'primeng/inputnumber';
 import { DividerModule } from 'primeng/divider';
 import { IftaLabelModule } from 'primeng/iftalabel';
 import { injectMutation, injectQuery } from '@tanstack/angular-query-experimental';
-import { getEnvironmentByIdOptions, getGitRepoSettingsOptions, updateGitRepoSettingsMutation } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
+import {
+  getEnvironmentByIdOptions,
+  getGitRepoSettingsOptions,
+  updateGitRepoSettingsMutation,
+  updateEnvironmentMutation,
+} from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 
 @Component({
   selector: 'app-locking-thresholds',
@@ -47,6 +52,14 @@ export class LockingThresholdsComponent {
     },
   }));
 
+  mutateEnvironment = injectMutation(() => ({
+    ...updateEnvironmentMutation(),
+    onSuccess: () => {
+      // this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Environment updated successfully' });
+      console.log('Environment updated successfully');
+    },
+  }));
+
   constructor() {
     effect(
       () => {
@@ -58,8 +71,8 @@ export class LockingThresholdsComponent {
         const resThreshold = environmentThresholds?.lockReservationThreshold ?? gitRepoThresholds?.lockReservationThreshold ?? undefined;
 
         // Update signals in batch
-        this.lockingExpirationThreshold.set(expThreshold);
-        this.lockingReservationThreshold.set(resThreshold);
+        this.lockingExpirationThreshold.set(expThreshold !== undefined && expThreshold > 0 ? expThreshold : undefined);
+        this.lockingReservationThreshold.set(resThreshold !== undefined && resThreshold > 0 ? resThreshold : undefined);
 
         // Set toggle states based on thresholds
         this.isLockExpirationEnabled.set(expThreshold !== undefined && expThreshold >= 0);
@@ -71,19 +84,19 @@ export class LockingThresholdsComponent {
 
   // Updated toggle handler
   onThresholdToggle(type: 'expiration' | 'reservation') {
-    const gitRepoThresholds = this.fetchGitRepoThresholdsQuery.data();
-    const environmentThresholds = this.fetchEnvironmentThresholdsQuery.data();
+    // const gitRepoThresholds = this.fetchGitRepoThresholdsQuery.data();
+    // const environmentThresholds = this.fetchEnvironmentThresholdsQuery.data();
 
     if (type === 'expiration') {
-      const expThreshold = environmentThresholds?.lockExpirationThreshold ?? gitRepoThresholds?.lockExpirationThreshold ?? undefined;
+      // const expThreshold = environmentThresholds?.lockExpirationThreshold ?? gitRepoThresholds?.lockExpirationThreshold ?? undefined;
       const enabled = !this.isLockExpirationEnabled();
       this.isLockExpirationEnabled.set(enabled);
-      this.lockingExpirationThreshold.set(enabled ? (expThreshold ?? undefined) : undefined);
+      this.lockingExpirationThreshold.set(enabled ? 60 : undefined);
     } else {
-      const resThreshold = environmentThresholds?.lockReservationThreshold ?? gitRepoThresholds?.lockReservationThreshold ?? undefined;
+      // const resThreshold = environmentThresholds?.lockReservationThreshold ?? gitRepoThresholds?.lockReservationThreshold ?? undefined;
       const enabled = !this.isLockReservationEnabled();
       this.isLockReservationEnabled.set(enabled);
-      this.lockingReservationThreshold.set(enabled ? (resThreshold ?? undefined) : undefined);
+      this.lockingReservationThreshold.set(enabled ? 30 : undefined);
     }
   }
   // Add these methods to your component class
@@ -104,17 +117,33 @@ export class LockingThresholdsComponent {
       reservation: this.lockingReservationThreshold(),
     });
 
+    const lockExpriation = this.isLockExpirationEnabled() ? this.lockingExpirationThreshold() : -1;
+    const lockReservation = this.isLockReservationEnabled() ? this.lockingReservationThreshold() : -1;
+
     console.log('Saving to API');
-    console.log('Expiration:', this.isLockExpirationEnabled(), this.lockingExpirationThreshold());
-    this.mutateGitRepoSettings.mutate({
-      path: {
-        repositoryId: this.repositoryId(),
-      },
-      body: {
-        lockExpirationThreshold: this.isLockExpirationEnabled() ? this.lockingExpirationThreshold() : undefined,
-        lockReservationThreshold: this.isLockReservationEnabled() ? this.lockingReservationThreshold() : undefined,
-      },
-    });
+    if (this.environmentId() !== undefined) {
+      console.log('Environment ID:', this.environmentId());
+      this.mutateEnvironment.mutate({
+        path: { id: this.environmentId()! },
+        body: {
+          lockExpirationThreshold: lockExpriation,
+          lockReservationThreshold: lockReservation,
+          id: this.environmentId()!,
+          name: '', //TODO get name from environment
+        },
+      });
+    } else {
+      console.log('Repository ID:', this.repositoryId());
+      this.mutateGitRepoSettings.mutate({
+        path: {
+          repositoryId: this.repositoryId(),
+        },
+        body: {
+          lockExpirationThreshold: lockExpriation,
+          lockReservationThreshold: lockReservation,
+        },
+      });
+    }
 
     // Add your API call here
   }

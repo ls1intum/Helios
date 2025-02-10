@@ -15,9 +15,9 @@
           inputId="horizontal"
           spinnerMode="horizontal"
           [step]="1"
-          [min]="-1"
+          [min]="1"
           class="w-full"
-          suffix=" seconds"
+          suffix=" minutes"
           (ngModelChange)="onExpirationThresholdChange($event)"
         />
       </div>
@@ -36,9 +36,9 @@
           inputId="horizontal"
           spinnerMode="horizontal"
           [step]="1"
-          [min]="-1"
+          [min]="1"
           class="w-full"
-          suffix=" seconds"
+          suffix=" minutes"
           (ngModelChange)="onReservationThresholdChange($event)"
         />
       </div>

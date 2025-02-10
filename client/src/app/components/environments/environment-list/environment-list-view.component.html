@@ -60,7 +60,7 @@
             @if (environment.lockedAt) {
               <app-lock-time [lockedAt]="environment.lockedAt"></app-lock-time>
             }
-            @if (isLoggedIn() && (isCurrentUserLocked(environment) || hasUnlockPermissions())) {
+            @if (isLoggedIn()) {
               <button (click)="onUnlockEnvironment($event, environment)" class="p-button p-button-danger p-2"><i-tabler name="lock-open" class="mr-1" />Unlock</button>
             }
           }

@@ -212,7 +212,7 @@ public class EnvironmentService {
       // Allow unlocking if lockReservationThreshold is set and the lock is older than the
       // reservation threshold
       if (lockReservationThreshold == -1
-          || lockedAt.plusSeconds(lockReservationThreshold).isAfter(now)) {
+          || lockedAt.plusMinutes(lockReservationThreshold).isAfter(now)) {
         throw new SecurityException(
             "You do not have permission to unlock this environment. Environment is locked by"
                 + " another user and the reservation period has not elapsed.");

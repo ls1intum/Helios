@@ -24,8 +24,8 @@ public class EnvironmentScheduler {
     List<Environment> lockedEnvironments = environmentRepository.findByLockedTrue();
     for (Environment environment : lockedEnvironments) {
       try {
-        // Determine the applicable thresholds
-        Long lockExpirationThreshold =
+        // Determine the applicable thresholds in minutes
+        Long lockExpirationThresholdMinutes =
             environment.getLockExpirationThreshold() != null
                 ? environment.getLockExpirationThreshold()
                 : gitRepoSettingsService
@@ -33,18 +33,22 @@ public class EnvironmentScheduler {
                     .map(GitRepoSettingsDto::lockExpirationThreshold)
                     .orElse(-1L);
 
-        // Skip if lock expiration threshold is not set
-        if (lockExpirationThreshold == -1) {
+        // Skip if lock expiration threshold is set to -1
+        if (lockExpirationThresholdMinutes == -1) {
           continue;
         }
+
+        // Convert minutes to seconds for comparison
+        long lockExpirationThresholdSeconds = lockExpirationThresholdMinutes * 60;
 
         OffsetDateTime lockedAt = environment.getLockedAt();
         if (lockedAt == null) {
           continue;
         }
 
-        long lockedDuration = (OffsetDateTime.now().toEpochSecond() - lockedAt.toEpochSecond());
-        if (lockedDuration >= lockExpirationThreshold) {
+        long lockedDurationSeconds =
+            OffsetDateTime.now().toEpochSecond() - lockedAt.toEpochSecond();
+        if (lockedDurationSeconds >= lockExpirationThresholdSeconds) {
           environment.setLocked(false);
           environment.setLockedBy(null);
           environment.setLockedAt(null);
@@ -58,9 +62,13 @@ public class EnvironmentScheduler {
           }
 
           environmentRepository.save(environment);
+          log.info(
+              "Auto-unlocked environment {} after {} minutes",
+              environment.getId(),
+              lockExpirationThresholdMinutes);
         }
       } catch (Exception e) {
-        // Log error
+        log.error("Error unlocking environment {}: {}", environment.getId(), e.getMessage());
       }
     }
   }

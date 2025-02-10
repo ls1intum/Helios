@@ -33,8 +33,8 @@ public class GitRepoSettings extends RepositoryFilterEntity {
 
   // Once the threshold is reached, the lock automatically expires and the environment becomes
   // available again.
-  private Long lockExpirationThreshold = 60L; // Default value: 1 minute
+  private Long lockExpirationThreshold = 60L; // Default value: 1 hour
 
   // After this period, any user can unlock the environment.
-  private Long lockReservationThreshold = 30L; // Default value: 30 seconds
+  private Long lockReservationThreshold = 30L; // Default value: 30 minutes
 }
