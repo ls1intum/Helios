@@ -1,4 +1,4 @@
-<div class="flex flex-col gap-3 items-center">
+<div class="flex flex-col gap-3 items-center" [ngClass]="{ 'flex-col': !isExpanded(), 'flex-row': isExpanded() }">
   @if (isLoggedIn()) {
     <p-avatar shape="circle" size="normal" [image]="getProfilePictureUrl()" [pTooltip]="fullName()" tooltipPosition="top" (click)="openProfile()"> </p-avatar>
 
@@ -6,8 +6,13 @@
       <i-tabler name="logout" class="!size-7 !stroke-1"></i-tabler>
     </button>
   } @else {
-    <button pTooltip="Login" (click)="login()" class="rounded-xl p-2 flex items-center text-green-500 hover:text-green-700">
+    <button pTooltip="Login" (click)="login()"
+            class="rounded-xl p-2 flex items-center justify-center gap-2 w-full text-green-500 hover:text-green-700">
       <i-tabler name="login" class="!size-7 !stroke-1"></i-tabler>
+      @if (isExpanded()) {
+        <span class="text-xs text-gray-500">Login</span>
+      }
     </button>
+
   }
 </div>
