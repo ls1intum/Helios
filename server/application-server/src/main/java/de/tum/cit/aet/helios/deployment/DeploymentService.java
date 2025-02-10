@@ -11,7 +11,6 @@ import de.tum.cit.aet.helios.filters.RepositoryContext;
 import de.tum.cit.aet.helios.github.GitHubService;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
-import de.tum.cit.aet.helios.user.User;
 import de.tum.cit.aet.helios.workflow.Workflow;
 import de.tum.cit.aet.helios.workflow.WorkflowService;
 import jakarta.transaction.Transactional;
@@ -86,92 +85,142 @@ public class DeploymentService {
   }
 
   public void deployToEnvironment(DeployRequest deployRequest) {
-    // TODO: Check DeployRequest validity before calling this method
+    validateDeployRequest(deployRequest);
+
+    Environment.Type environmentType =
+        validateEnvironmentAndPermissions(deployRequest.environmentId());
+    String commitSha = determineCommitSha(deployRequest, environmentType);
+
+    Environment environment = lockEnvironment(deployRequest.environmentId());
+    Workflow deploymentWorkflow = getDeploymentWorkflow(environmentType);
+
+    HeliosDeployment heliosDeployment =
+        createHeliosDeployment(environment, deployRequest, commitSha);
+    Map<String, Object> workflowParams =
+        createWorkflowParams(environmentType, deployRequest, environment);
+
+    dispatchWorkflow(
+        environment, deploymentWorkflow, deployRequest, workflowParams, heliosDeployment);
+  }
+
+  private void validateDeployRequest(DeployRequest deployRequest) {
+    System.out.println(deployRequest);
     if (deployRequest.environmentId() == null || deployRequest.branchName() == null) {
       throw new DeploymentException("Environment ID and branch name must not be null");
     }
-    // Get the environment first to check its type
-    Environment.Type requestedEnvironmentType =
+  }
+
+  private Environment.Type validateEnvironmentAndPermissions(Long environmentId) {
+    Environment.Type environmentType =
         this.environmentService
-            .getEnvironmentTypeById(deployRequest.environmentId())
+            .getEnvironmentTypeById(environmentId)
             .orElseThrow(() -> new DeploymentException("Environment not found"));
 
-    if (!authService.canDeployToEnvironment(requestedEnvironmentType)) {
+    if (!authService.canDeployToEnvironment(environmentType)) {
       throw new SecurityException("Insufficient permissions to deploy to this environment");
     }
 
-    // Get the user ID of the user who triggered the deployment
-    final String user = this.authService.getUserId();
-    // Get the username of the user who triggered the deployment
-    final String username = this.authService.getPreferredUsername();
+    return environmentType;
+  }
 
-    // Get the deployment workflow set by the managers
+  private String determineCommitSha(DeployRequest deployRequest, Environment.Type environmentType) {
+    String commitSha = deployRequest.commitSha();
+
+    if (environmentType == Environment.Type.PRODUCTION
+        || environmentType == Environment.Type.STAGING) {
+      if (commitSha == null) {
+        throw new DeploymentException(
+            "Commit SHA should be provided for production/staging deployments");
+      }
+      return commitSha;
+    }
+
+    return commitSha != null
+        ? commitSha
+        : this.branchService
+            .getBranchByName(deployRequest.branchName())
+            .orElseThrow(() -> new DeploymentException("Branch not found"))
+            .commitSha();
+  }
+
+  private Environment lockEnvironment(Long environmentId) {
+    Environment environment =
+        this.environmentService
+            .lockEnvironment(environmentId)
+            .orElseThrow(() -> new DeploymentException("Environment was already locked"));
+
+    if (!canRedeploy(environment, 20)) {
+      throw new DeploymentException("Deployment is still in progress, please wait.");
+    }
+
+    return environment;
+  }
+
+  private HeliosDeployment createHeliosDeployment(
+      Environment environment, DeployRequest deployRequest, String commitSha) {
+    HeliosDeployment heliosDeployment = new HeliosDeployment();
+    heliosDeployment.setEnvironment(environment);
+    heliosDeployment.setUser(authService.getUserId());
+    heliosDeployment.setStatus(HeliosDeployment.Status.WAITING);
+    heliosDeployment.setBranchName(deployRequest.branchName());
+    heliosDeployment.setSha(commitSha);
+    heliosDeployment.setCreator(authService.getUserFromGithubId());
+    return heliosDeploymentRepository.saveAndFlush(heliosDeployment);
+  }
+
+  private Map<String, Object> createWorkflowParams(
+      Environment.Type environmentType, DeployRequest deployRequest, Environment environment) {
+    Map<String, Object> workflowParams = new HashMap<>();
+
+    if (environmentType == Environment.Type.PRODUCTION
+        || environmentType == Environment.Type.STAGING) {
+      workflowParams.put("commit_sha", deployRequest.commitSha());
+      workflowParams.put("branch_name", deployRequest.branchName());
+    } else if (environmentType == Environment.Type.TEST) {
+      workflowParams.put("triggered_by", authService.getPreferredUsername());
+      workflowParams.put("branch_name", deployRequest.branchName());
+      workflowParams.put("environment_name", environment.getName());
+    }
+
+    return workflowParams;
+  }
+
+  private void dispatchWorkflow(
+      Environment environment,
+      Workflow deploymentWorkflow,
+      DeployRequest deployRequest,
+      Map<String, Object> workflowParams,
+      HeliosDeployment heliosDeployment) {
+    heliosDeployment.setWorkflowParams(workflowParams);
+    heliosDeploymentRepository.save(heliosDeployment);
+
+    try {
+      this.gitHubService.dispatchWorkflow(
+          environment.getRepository().getNameWithOwner(),
+          deploymentWorkflow.getFileNameWithExtension(),
+          deployRequest.branchName(),
+          workflowParams);
+    } catch (IOException e) {
+      heliosDeployment.setStatus(HeliosDeployment.Status.IO_ERROR);
+      heliosDeploymentRepository.save(heliosDeployment);
+      throw new DeploymentException("Failed to dispatch workflow due to IOException", e);
+    }
+  }
+
+  private Workflow getDeploymentWorkflow(Environment.Type environmentType) {
     Workflow.DeploymentEnvironment deploymentEnvironment =
-        workflowService.getDeploymentEnvironment(requestedEnvironmentType);
+        workflowService.getDeploymentEnvironment(environmentType);
     if (deploymentEnvironment == null) {
       throw new DeploymentException("No workflow for this deployment environment found");
     }
+
     Workflow deploymentWorkflow =
         this.workflowService.getDeploymentWorkflowByEnvironment(
             deploymentEnvironment, RepositoryContext.getRepositoryId());
     if (deploymentWorkflow == null) {
       throw new DeploymentException("No deployment workflow found");
     }
-    final String deploymentWorkflowFileName = deploymentWorkflow.getFileNameWithExtension();
-
-    // Get the latest sha of the branch
-    final String branchCommitSha =
-        this.branchService
-            .getBranchByName(deployRequest.branchName())
-            .orElseThrow(() -> new DeploymentException("Branch not found"))
-            .commitSha();
-
-    // Lock the environment
-    Environment environment =
-        this.environmentService
-            .lockEnvironment(deployRequest.environmentId())
-            .orElseThrow(() -> new DeploymentException("Environment was already locked"));
-
-    // Get the repository name with owners
-    final String repoNameWithOwners = environment.getRepository().getNameWithOwner();
-
-    // 20 minutes timeout for re-deployment
-    if (!canRedeploy(environment, 20)) {
-      throw new DeploymentException("Deployment is still in progress, please wait.");
-    }
-
-    User githubUser = this.authService.getUserFromGithubId();
-    // Create a new HeliosDeployment record
-    HeliosDeployment heliosDeployment = new HeliosDeployment();
-    heliosDeployment.setEnvironment(environment);
-    heliosDeployment.setUser(user);
-    heliosDeployment.setStatus(HeliosDeployment.Status.WAITING);
-    heliosDeployment.setBranchName(deployRequest.branchName());
-    heliosDeployment.setSha(branchCommitSha);
-    heliosDeployment.setCreator(githubUser);
-    heliosDeployment = heliosDeploymentRepository.saveAndFlush(heliosDeployment);
-
-    // Build parameters for the workflow
-    Map<String, Object> workflowParams = new HashMap<>();
-    workflowParams.put("triggered_by", username);
-    workflowParams.put("branch_name", deployRequest.branchName());
-    workflowParams.put("environment_name", environment.getName());
-
-    heliosDeployment.setWorkflowParams(workflowParams);
-    heliosDeploymentRepository.save(heliosDeployment);
-
-    try {
-      this.gitHubService.dispatchWorkflow(
-          repoNameWithOwners,
-          deploymentWorkflowFileName,
-          deployRequest.branchName(),
-          workflowParams);
-    } catch (IOException e) {
-      // Don't need to unlock the environment, since user might want to re-deploy
-      heliosDeployment.setStatus(HeliosDeployment.Status.IO_ERROR);
-      heliosDeploymentRepository.save(heliosDeployment);
-      throw new DeploymentException("Failed to dispatch workflow due to IOException", e);
-    }
+    return deploymentWorkflow;
   }
 
   private boolean canRedeploy(Environment environment, long timeoutMinutes) {
