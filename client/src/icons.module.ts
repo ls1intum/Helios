@@ -55,6 +55,7 @@ import {
   IconClock,
   IconTag,
   IconX,
+  IconFileText,
 } from 'angular-tabler-icons/icons';
 
 // Select some icons (use an object, not an array)
@@ -112,6 +113,7 @@ const icons = {
   IconClock,
   IconTag,
   IconX,
+  IconFileText,
 };
 
 @NgModule({
