@@ -1,4 +1,4 @@
-import {NgClass, SlicePipe} from '@angular/common';
+import { NgClass, SlicePipe } from '@angular/common';
 import { Component, computed, inject, input, numberAttribute } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { ProfileNavSectionComponent } from '@app/components/profile-nav-section/profile-nav-section.component';
@@ -13,8 +13,9 @@ import { CardModule } from 'primeng/card';
 import { DividerModule } from 'primeng/divider';
 import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
-import { HeliosIconComponent } from '../../components/helios-icon/helios-icon.component';
+import { HeliosIconComponent } from '@app/components/helios-icon/helios-icon.component';
 import { UserLockInfoComponent } from '@app/components/user-lock-info/user-lock-info.component';
+import { FooterComponent } from '@app/components/footer/footer.component';
 
 @Component({
   selector: 'app-main-layout',
@@ -35,6 +36,7 @@ import { UserLockInfoComponent } from '@app/components/user-lock-info/user-lock-
     ProfileNavSectionComponent,
     UserLockInfoComponent,
     NgClass,
+    FooterComponent,
   ],
   templateUrl: './main-layout.component.html',
 })
