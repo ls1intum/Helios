@@ -21,10 +21,7 @@
             "inlineStyleLanguage": "css",
             "assets": [
               "src/favicon.png",
-              {
-                "glob": "**/*",
-                "input": "public"
-              }
+              "src/assets"
             ],
             "styles": [
               "src/styles.css"
