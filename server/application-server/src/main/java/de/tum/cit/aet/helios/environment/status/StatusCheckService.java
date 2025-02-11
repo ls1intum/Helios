@@ -1,9 +1,10 @@
 package de.tum.cit.aet.helios.environment.status;
 
 import de.tum.cit.aet.helios.environment.Environment;
-import jakarta.transaction.Transactional;
+import de.tum.cit.aet.helios.environment.EnvironmentRepository;
 import java.time.Instant;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
@@ -11,14 +12,16 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.support.TransactionTemplate;
 
 @Service
 @RequiredArgsConstructor
 @Log4j2
-@Transactional
 public class StatusCheckService {
   private final Map<StatusCheckType, StatusCheckStrategy> checkStrategies;
+  private final EnvironmentRepository environmentRepository;
   private final EnvironmentStatusRepository statusRepository;
+  private final TransactionTemplate transactionTemplate;
   private final EnvironmentStatusConfig config;
 
   /**
@@ -69,33 +72,44 @@ public class StatusCheckService {
       // Add a timeout to the check so no matter what check we use
       // we make sure that we don't wait for too long
     }).orTimeout(this.config.getCheckInterval().getSeconds(), TimeUnit.SECONDS).exceptionally(ex -> {
-      handleTimeout(environment);
+      handleThrowable(environment, ex);
       return null;
     });
   }
 
-  private void handleTimeout(Environment env) {
-    StatusCheckResult result = new StatusCheckResult(false, 0, Map.of("timeout", true));
-    log.error("Status check timed out for environment {}", env.getId());
-    saveStatusResult(env, result);
+  private void handleThrowable(Environment env, Throwable ex) {
+    log.error("Failed to perform status check for environment {}", env.getId(), ex);
+
+    // Status code of 0 indicates that the check failed because of us
+    saveStatusResult(env, new StatusCheckResult(false, 0, Map.of()));
   }
 
   private void saveStatusResult(Environment environment, StatusCheckResult result) {
-    EnvironmentStatus status = new EnvironmentStatus();
+    // We need to use a TransactionTemplate here because this runs asynchronously
+    transactionTemplate.executeWithoutResult(transactionStatus -> {
+      Optional<EnvironmentStatus> latestStatus = environment.getLatestStatus();
+      EnvironmentStatus status = new EnvironmentStatus();
 
-    status.setEnvironment(environment);
-    status.setCheckType(environment.getStatusCheckType());
-    status.setSuccess(result.success());
-    status.setHttpStatusCode(result.httpStatusCode());
-    status.setCheckTimestamp(Instant.now());
-    status.setMetadata(result.metadata());
+      status.setEnvironment(environment);
+      status.setCheckType(environment.getStatusCheckType());
+      status.setSuccess(result.success());
+      status.setHttpStatusCode(result.httpStatusCode());
+      status.setCheckTimestamp(Instant.now());
+      status.setMetadata(result.metadata());
 
-    statusRepository.save(status);
+      statusRepository.save(status);
 
-    // To prevent the status table from growing indefinitely, delete all but the
-    // oldest keepCount entries for the environment
-    statusRepository.deleteAllButLatestByEnvironmentId(environment.getId(), this.keepCount);
+      // To prevent the status table from growing indefinitely, delete all but the
+      // oldest keepCount entries for the environment
+      statusRepository.deleteAllButLatestByEnvironmentId(environment.getId(), this.keepCount);
 
-    log.debug("Persisted status entry for environment {}", environment.getId());
+      // Did the status change? If so, update the statusChangedAt field
+      if (!latestStatus.isPresent() || latestStatus.get().getHttpStatusCode() != result.httpStatusCode()) {
+        environment.setStatusChangedAt(Instant.now());
+        environmentRepository.save(environment);
+      }
+
+      log.debug("Persisted status entry for environment {}", environment.getId());
+    });
   }
 }

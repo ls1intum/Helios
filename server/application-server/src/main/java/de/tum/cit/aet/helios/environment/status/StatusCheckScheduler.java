@@ -67,7 +67,7 @@ public class StatusCheckScheduler {
           Optional<EnvironmentStatus> latestStatus = env.getLatestStatus();
 
           if (latestStatus.isEmpty()) {
-            return false;
+            return true;
           }
 
           return Duration.between(latestStatus.get().getCheckTimestamp(), now).toSeconds() >= this.config
@@ -104,7 +104,7 @@ public class StatusCheckScheduler {
 
     final long intervalSeconds = this.config.getCheckInterval().getSeconds();
 
-    if (intervalSeconds > duration) {
+    if (duration > intervalSeconds) {
       log.warn("Scheduled status checks took longer than the configured interval of {} seconds.",
           intervalSeconds);
     } else {
