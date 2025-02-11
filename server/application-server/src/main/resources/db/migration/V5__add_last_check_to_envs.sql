@@ -1,0 +1,4 @@
+ALTER TABLE public.environment
+ADD COLUMN status_changed_at TIMESTAMP(6)
+WITH
+  TIME ZONE DEFAULT NULL;

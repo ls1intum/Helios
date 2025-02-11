@@ -98,6 +98,9 @@ public class Environment extends RepositoryFilterEntity {
   @Column(name = "status_check_type", length = 20)
   private StatusCheckType statusCheckType;
 
+  @Column(name = "status_changed_at", nullable = true)
+  private OffsetDateTime statusChangedAt;
+
   @OneToMany(mappedBy = "environment", cascade = CascadeType.ALL, orphanRemoval = true)
   @OrderBy("checkTimestamp DESC")
   private List<EnvironmentStatus> statusHistory;
