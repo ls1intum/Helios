@@ -8,13 +8,13 @@ import type {
   GetEnvironmentByIdResponse,
   UpdateEnvironmentData,
   UnlockEnvironmentData,
-  GetAllTagsData,
-  GetAllTagsResponse,
-  CreateTagData,
-  CreateTagResponse,
-  EvaluateData,
   CreateWorkflowGroupData,
   CreateWorkflowGroupResponse,
+  GetAllReleaseCandidatesData,
+  GetAllReleaseCandidatesResponse,
+  CreateReleaseCandidateData,
+  CreateReleaseCandidateResponse,
+  EvaluateData,
   DeployToEnvironmentData,
   DeployToEnvironmentResponse,
   HealthCheckData,
@@ -33,16 +33,16 @@ import type {
   GetLatestWorkflowRunsByBranchAndHeadCommitResponse,
   GetUserPermissionsData,
   GetUserPermissionsResponse,
-  GetTagByNameData,
-  GetTagByNameResponse,
-  GetCommitsSinceLastTagData,
-  GetCommitsSinceLastTagResponse,
   GetGroupsWithWorkflowsData,
   GetGroupsWithWorkflowsResponse,
   GetAllRepositoriesData,
   GetAllRepositoriesResponse,
   GetRepositoryByIdData,
   GetRepositoryByIdResponse,
+  GetReleaseCandidateByNameData,
+  GetReleaseCandidateByNameResponse,
+  GetCommitsSinceLastReleaseCandidateData,
+  GetCommitsSinceLastReleaseCandidateResponse,
   GetAllPullRequestsData,
   GetAllPullRequestsResponse,
   GetPullRequestByIdData,
@@ -129,31 +129,6 @@ export const unlockEnvironment = <ThrowOnError extends boolean = false>(options:
   });
 };
 
-export const getAllTags = <ThrowOnError extends boolean = false>(options?: Options<GetAllTagsData, ThrowOnError>) => {
-  return (options?.client ?? client).get<GetAllTagsResponse, unknown, ThrowOnError>({
-    ...options,
-    url: '/api/tags',
-  });
-};
-
-export const createTag = <ThrowOnError extends boolean = false>(options: Options<CreateTagData, ThrowOnError>) => {
-  return (options?.client ?? client).post<CreateTagResponse, unknown, ThrowOnError>({
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
-    url: '/api/tags',
-  });
-};
-
-export const evaluate = <ThrowOnError extends boolean = false>(options: Options<EvaluateData, ThrowOnError>) => {
-  return (options?.client ?? client).post<unknown, unknown, ThrowOnError>({
-    ...options,
-    url: '/api/tags/{name}/evaluate/{isWorking}',
-  });
-};
-
 export const createWorkflowGroup = <ThrowOnError extends boolean = false>(options: Options<CreateWorkflowGroupData, ThrowOnError>) => {
   return (options?.client ?? client).post<CreateWorkflowGroupResponse, unknown, ThrowOnError>({
     ...options,
@@ -162,6 +137,31 @@ export const createWorkflowGroup = <ThrowOnError extends boolean = false>(option
       ...options?.headers,
     },
     url: '/api/settings/{repositoryId}/groups/create',
+  });
+};
+
+export const getAllReleaseCandidates = <ThrowOnError extends boolean = false>(options?: Options<GetAllReleaseCandidatesData, ThrowOnError>) => {
+  return (options?.client ?? client).get<GetAllReleaseCandidatesResponse, unknown, ThrowOnError>({
+    ...options,
+    url: '/api/release-candidate',
+  });
+};
+
+export const createReleaseCandidate = <ThrowOnError extends boolean = false>(options: Options<CreateReleaseCandidateData, ThrowOnError>) => {
+  return (options?.client ?? client).post<CreateReleaseCandidateResponse, unknown, ThrowOnError>({
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+    url: '/api/release-candidate',
+  });
+};
+
+export const evaluate = <ThrowOnError extends boolean = false>(options: Options<EvaluateData, ThrowOnError>) => {
+  return (options?.client ?? client).post<unknown, unknown, ThrowOnError>({
+    ...options,
+    url: '/api/release-candidate/{name}/evaluate/{isWorking}',
   });
 };
 
@@ -236,20 +236,6 @@ export const getUserPermissions = <ThrowOnError extends boolean = false>(options
   });
 };
 
-export const getTagByName = <ThrowOnError extends boolean = false>(options: Options<GetTagByNameData, ThrowOnError>) => {
-  return (options?.client ?? client).get<GetTagByNameResponse, unknown, ThrowOnError>({
-    ...options,
-    url: '/api/tags/{name}',
-  });
-};
-
-export const getCommitsSinceLastTag = <ThrowOnError extends boolean = false>(options: Options<GetCommitsSinceLastTagData, ThrowOnError>) => {
-  return (options?.client ?? client).get<GetCommitsSinceLastTagResponse, unknown, ThrowOnError>({
-    ...options,
-    url: '/api/tags/newcommits',
-  });
-};
-
 export const getGroupsWithWorkflows = <ThrowOnError extends boolean = false>(options: Options<GetGroupsWithWorkflowsData, ThrowOnError>) => {
   return (options?.client ?? client).get<GetGroupsWithWorkflowsResponse, unknown, ThrowOnError>({
     ...options,
@@ -268,6 +254,20 @@ export const getRepositoryById = <ThrowOnError extends boolean = false>(options:
   return (options?.client ?? client).get<GetRepositoryByIdResponse, unknown, ThrowOnError>({
     ...options,
     url: '/api/repository/{id}',
+  });
+};
+
+export const getReleaseCandidateByName = <ThrowOnError extends boolean = false>(options: Options<GetReleaseCandidateByNameData, ThrowOnError>) => {
+  return (options?.client ?? client).get<GetReleaseCandidateByNameResponse, unknown, ThrowOnError>({
+    ...options,
+    url: '/api/release-candidate/{name}',
+  });
+};
+
+export const getCommitsSinceLastReleaseCandidate = <ThrowOnError extends boolean = false>(options: Options<GetCommitsSinceLastReleaseCandidateData, ThrowOnError>) => {
+  return (options?.client ?? client).get<GetCommitsSinceLastReleaseCandidateResponse, unknown, ThrowOnError>({
+    ...options,
+    url: '/api/release-candidate/newcommits',
   });
 };
 

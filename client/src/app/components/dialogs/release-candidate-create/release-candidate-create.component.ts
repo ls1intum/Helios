@@ -2,7 +2,11 @@ import { SlicePipe } from '@angular/common';
 import { Component, inject, input, model, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommitInfoDto } from '@app/core/modules/openapi';
-import { createTagMutation, getBranchByRepositoryIdAndNameQueryKey, getCommitsSinceLastTagOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
+import {
+  createReleaseCandidateMutation,
+  getBranchByRepositoryIdAndNameQueryKey,
+  getCommitsSinceLastReleaseCandidateOptions,
+} from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 import { injectMutation, injectQuery, QueryClient } from '@tanstack/angular-query-experimental';
 import { IconsModule } from 'icons.module';
@@ -14,11 +18,11 @@ import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
 
 @Component({
-  selector: 'app-tag-create',
+  selector: 'app-release-candidate-create',
   imports: [ButtonModule, DialogModule, IconsModule, FormsModule, InputTextModule, TagModule, SlicePipe, TooltipModule],
-  templateUrl: './tag-create.component.html',
+  templateUrl: './release-candidate-create.component.html',
 })
-export class TagCreateComponent {
+export class ReleaseCandidateCreateComponent {
   private messageService = inject(MessageService);
   private keycloakService = inject(KeycloakService);
   private queryClient = inject(QueryClient);
@@ -29,16 +33,16 @@ export class TagCreateComponent {
   repositoryId = input.required<number>();
 
   isCommitListVisible = signal(false);
-  tagName = signal('');
+  releaseCandidateName = signal('');
 
   newCommitListQuery = injectQuery(() => ({
-    ...getCommitsSinceLastTagOptions({ query: { branch: this.branchName() } }),
+    ...getCommitsSinceLastReleaseCandidateOptions({ query: { branch: this.branchName() } }),
     enabled: !!this.isVisible() && !!this.branchName(),
   }));
   newCommitListMutation = injectMutation(() => ({
-    ...createTagMutation(),
+    ...createReleaseCandidateMutation(),
     onSuccess: () => {
-      this.messageService.add({ severity: 'success', summary: 'Tag created', detail: 'Tag has been created successfully' });
+      this.messageService.add({ severity: 'success', summary: 'Release Candidate Created', detail: 'Release candidate has been created successfully' });
       this.queryClient.invalidateQueries({
         queryKey: getBranchByRepositoryIdAndNameQueryKey({ path: { repoId: this.repositoryId() }, query: { name: this.branchName() } }),
       });
@@ -50,9 +54,9 @@ export class TagCreateComponent {
     this.isVisible.update(() => false);
   };
 
-  createTag = () => {
+  createReleaseCandidate = () => {
     this.newCommitListMutation.mutate({
-      body: { name: this.tagName(), commitSha: this.headCommit().sha, branchName: this.branchName() },
+      body: { name: this.releaseCandidateName(), commitSha: this.headCommit().sha, branchName: this.branchName() },
     });
   };
 }
