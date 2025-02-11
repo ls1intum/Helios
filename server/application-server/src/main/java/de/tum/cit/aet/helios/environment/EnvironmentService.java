@@ -11,6 +11,7 @@ import de.tum.cit.aet.helios.releasecandidate.ReleaseCandidateRepository;
 import de.tum.cit.aet.helios.user.User;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
+import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -167,6 +168,20 @@ public class EnvironmentService {
     }
 
     return Optional.of(environment);
+  }
+
+  /**
+   * Marks the provided environment as having its status changed by setting the
+   * current timestamp. It updates the environment's status change timestamp to the
+   * current instant and persists the changes in the repository.
+   * This will cause the status check for the environment to run more frequently
+   * for some time.
+   *
+   * @param environment the Environment instance whose status has been altered
+   */
+  public void markStatusAsChanged(Environment environment) {
+    environment.setStatusChangedAt(Instant.now());
+    environmentRepository.save(environment);
   }
 
   /**

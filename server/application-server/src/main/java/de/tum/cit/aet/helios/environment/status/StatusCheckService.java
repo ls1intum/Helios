@@ -1,7 +1,7 @@
 package de.tum.cit.aet.helios.environment.status;
 
 import de.tum.cit.aet.helios.environment.Environment;
-import de.tum.cit.aet.helios.environment.EnvironmentRepository;
+import de.tum.cit.aet.helios.environment.EnvironmentService;
 import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
@@ -19,7 +19,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 @Log4j2
 public class StatusCheckService {
   private final Map<StatusCheckType, StatusCheckStrategy> checkStrategies;
-  private final EnvironmentRepository environmentRepository;
+  private final EnvironmentService environmentService;
   private final EnvironmentStatusRepository statusRepository;
   private final TransactionTemplate transactionTemplate;
   private final EnvironmentStatusConfig config;
@@ -110,8 +110,7 @@ public class StatusCheckService {
           !latestStatus.isPresent()
           || latestStatus.get().getHttpStatusCode() != result.httpStatusCode()
       ) {
-        environment.setStatusChangedAt(Instant.now());
-        environmentRepository.save(environment);
+        environmentService.markStatusAsChanged(environment);
       }
 
       log.debug("Persisted status entry for environment {}", environment.getId());
