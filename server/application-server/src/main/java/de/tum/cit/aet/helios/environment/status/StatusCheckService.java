@@ -70,7 +70,9 @@ public class StatusCheckService {
 
       // Add a timeout to the check so no matter what check we use
       // we make sure that we don't wait for too long
-    }).orTimeout(this.config.getCheckInterval().getSeconds(), TimeUnit.SECONDS).exceptionally(ex -> {
+    })
+    .orTimeout(this.config.getCheckInterval().getSeconds(), TimeUnit.SECONDS)
+    .exceptionally(ex -> {
       handleThrowable(environment, ex);
       return null;
     });
@@ -86,7 +88,6 @@ public class StatusCheckService {
   private void saveStatusResult(Environment environment, StatusCheckResult result) {
     // We need to use a TransactionTemplate here because this runs asynchronously
     transactionTemplate.executeWithoutResult(transactionStatus -> {
-      Optional<EnvironmentStatus> latestStatus = environment.getLatestStatus();
       EnvironmentStatus status = new EnvironmentStatus();
 
       status.setEnvironment(environment);
@@ -102,8 +103,13 @@ public class StatusCheckService {
       // oldest keepCount entries for the environment
       statusRepository.deleteAllButLatestByEnvironmentId(environment.getId(), this.keepCount);
 
+      Optional<EnvironmentStatus> latestStatus = environment.getLatestStatus();
+
       // Did the status change? If so, update the statusChangedAt field
-      if (!latestStatus.isPresent() || latestStatus.get().getHttpStatusCode() != result.httpStatusCode()) {
+      if (
+        !latestStatus.isPresent() ||
+        latestStatus.get().getHttpStatusCode() != result.httpStatusCode()
+      ) {
         environment.setStatusChangedAt(Instant.now());
         environmentRepository.save(environment);
       }
