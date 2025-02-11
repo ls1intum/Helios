@@ -42,7 +42,8 @@ public class StatusCheckScheduler {
 
     // 1. Let's get all environments with a status check type configured
     // and pre-load the latest status for each environment (if it exists)
-    List<Environment> environments = environmentRepository.findByStatusCheckTypeIsNotNullWithLatestStatus();
+    List<Environment> environments = environmentRepository
+        .findByStatusCheckTypeIsNotNullWithLatestStatus();
 
     // 2. Now let's determine if the environments are stable, meaning that we would
     // check them less frequently.
@@ -52,10 +53,12 @@ public class StatusCheckScheduler {
             return true;
           }
 
+          long secsSinceLastChange = Duration.between(env.getStatusChangedAt(), now).toSeconds();
+          long recentThresholdSeconds = this.config.getCheckRecentThreshold().getSeconds();
+
           // Stable means that the environment has been in the same state for a while
           // (threshold)
-          return Duration.between(env.getStatusChangedAt(), now).toSeconds() >= this.config.getCheckRecentThreshold()
-              .toSeconds();
+          return secsSinceLastChange >= recentThresholdSeconds;
         })
         .toList();
 
@@ -70,9 +73,11 @@ public class StatusCheckScheduler {
             return true;
           }
 
-          return Duration.between(latestStatus.get().getCheckTimestamp(), now).toSeconds() >= this.config
-              .getCheckStableInterval()
+          long secsSinceLastCheck = Duration.between(latestStatus.get().getCheckTimestamp(), now)
               .toSeconds();
+          long stableIntervalSeconds = this.config.getCheckStableInterval().getSeconds();
+
+          return secsSinceLastCheck >= stableIntervalSeconds;
         })
         .toList();
 
@@ -86,11 +91,14 @@ public class StatusCheckScheduler {
         .flatMap(List::stream)
         .toList();
 
-    log.debug("Found {} environments with status check type configured. {} stable (checking {} now), {} recent",
+    log.debug(
+        "Found {} environments with status check type configured. "
+        + "{} stable (checking {} now), {} recent",
         environments.size(),
         stableEnvironments.size(),
         stableEnvironmentsToCheck.size(),
-        recentEnvironments.size());
+        recentEnvironments.size()
+    );
 
     List<CompletableFuture<Void>> futures = environmentsToCheck.stream()
         .map(env -> statusCheckService.performStatusCheck(env))

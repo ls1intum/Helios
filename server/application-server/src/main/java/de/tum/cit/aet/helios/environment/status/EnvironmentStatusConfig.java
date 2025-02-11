@@ -54,7 +54,9 @@ public class EnvironmentStatusConfig {
   // so that will be our general check interval
   public Duration getCheckInterval() {
     if (checkRecentInterval.compareTo(checkStableInterval) > 0) {
-      throw new IllegalArgumentException("Recent interval must be lower or equal to stable interval");
+      throw new IllegalArgumentException(
+        "Recent interval must be lower or equal to stable interval"
+      );
     }
     return checkRecentInterval;
   }

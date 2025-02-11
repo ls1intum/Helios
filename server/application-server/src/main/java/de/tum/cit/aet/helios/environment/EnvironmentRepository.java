@@ -18,10 +18,10 @@ public interface EnvironmentRepository extends JpaRepository<Environment, Long> 
 
   List<Environment> findByEnabledTrueOrderByNameAsc();
 
-  @Query("SELECT DISTINCT e FROM Environment e " +
-      "LEFT JOIN FETCH e.statusHistory es " + //
-      "WHERE (es is NULL OR es.checkTimestamp = " +
-      "(SELECT MAX(es2.checkTimestamp) FROM EnvironmentStatus es2 WHERE es2.environment = e))" +
-      "AND e.statusCheckType IS NOT NULL")
+  @Query("SELECT DISTINCT e FROM Environment e "
+      + "LEFT JOIN FETCH e.statusHistory es "
+      + "WHERE (es is NULL OR es.checkTimestamp = "
+      + "(SELECT MAX(es2.checkTimestamp) FROM EnvironmentStatus es2 WHERE es2.environment = e))"
+      + "AND e.statusCheckType IS NOT NULL")
   List<Environment> findByStatusCheckTypeIsNotNullWithLatestStatus();
 }

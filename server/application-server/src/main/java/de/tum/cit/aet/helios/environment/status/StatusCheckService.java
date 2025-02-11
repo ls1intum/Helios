@@ -35,8 +35,7 @@ public class StatusCheckService {
    * Performs a status check on the given environment asynchronously as the status
    * check may take a while to complete.
    * 
-   * <p>
-   * The type of status check to be performed is determined by the environment's
+   * <p>The type of status check to be performed is determined by the environment's
    * configuration.
    * Saves the result of the status check after completion.
    *
