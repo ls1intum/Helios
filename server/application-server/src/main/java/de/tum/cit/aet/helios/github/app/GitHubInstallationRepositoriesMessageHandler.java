@@ -64,7 +64,7 @@ public class GitHubInstallationRepositoriesMessageHandler
           log.info("[Installation Event Handler] Sync will start for repository: {}",
               repository.getFullName());
           dataSyncService.syncRepository(repository.getFullName());
-          log.info("[Installation Event Handler] Sync completed for repository: {}",
+          log.info("[Installation Event Handler] Sync triggered asynchronously for repository: {}",
               repository.getFullName());
         });
 
