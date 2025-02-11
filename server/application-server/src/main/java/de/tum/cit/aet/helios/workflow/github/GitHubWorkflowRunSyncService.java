@@ -193,7 +193,7 @@ public class GitHubWorkflowRunSyncService {
   private void processRunForHeliosDeployment(GHWorkflowRun workflowRun) throws IOException {
     // Get the deployment workflow set by the managers
     List<Workflow> deploymentWorkflows =
-        workflowService.getDeploymentWorkflows(workflowRun.getRepository().getId());
+        workflowService.getDeploymentWorkflowsForAllEnv(workflowRun.getRepository().getId());
     if (deploymentWorkflows.isEmpty()) {
       log.debug(
           "No deployment workflow found while processing workflow run {}", workflowRun.getId());
