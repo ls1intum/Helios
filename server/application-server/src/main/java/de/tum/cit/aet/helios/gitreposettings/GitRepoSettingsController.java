@@ -33,7 +33,7 @@ public class GitRepoSettingsController {
   @EnforceAtLeastMaintainer
   public ResponseEntity<GitRepoSettingsDto> getGitRepoSettings(@PathVariable Long repositoryId) {
     GitRepoSettingsDto gitRepoSettingsDto =
-        gitRepoSettingsService.getGitRepoSettingsByRepositoryId(repositoryId).orElseThrow();
+        gitRepoSettingsService.getOrCreateGitRepoSettingsByRepositoryId(repositoryId).orElseThrow();
     return ResponseEntity.ok(gitRepoSettingsDto);
   }
 

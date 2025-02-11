@@ -45,6 +45,10 @@ public class EnvironmentService {
         .map(
             environment -> {
               LatestDeploymentUnion latest = findLatestDeployment(environment);
+              // Set lock expiration timestamps if settings is changed after the environment is
+              // locked
+              environment.setLockWillExpireAt(getLockWillExpireAt(environment));
+              environment.setLockReservationExpiresAt(getLockReservationExpiresAt(environment));
               return EnvironmentDto.fromEnvironment(
                   environment, latest, environment.getLatestStatus(), tagRepository);
             })
@@ -56,6 +60,10 @@ public class EnvironmentService {
         .map(
             environment -> {
               LatestDeploymentUnion latest = findLatestDeployment(environment);
+              // Set lock expiration timestamps if settings is changed after the environment is
+              // locked
+              environment.setLockWillExpireAt(getLockWillExpireAt(environment));
+              environment.setLockReservationExpiresAt(getLockReservationExpiresAt(environment));
               return EnvironmentDto.fromEnvironment(
                   environment, latest, environment.getLatestStatus(), tagRepository);
             })
@@ -156,6 +164,8 @@ public class EnvironmentService {
     environment.setLockedBy(currentUser);
     environment.setLockedAt(OffsetDateTime.now());
     environment.setLocked(true);
+    environment.setLockWillExpireAt(getLockWillExpireAt(environment));
+    environment.setLockReservationExpiresAt(getLockReservationExpiresAt(environment));
 
     // Record lock event
     EnvironmentLockHistory history = new EnvironmentLockHistory();
@@ -172,6 +182,44 @@ public class EnvironmentService {
     }
 
     return Optional.of(environment);
+  }
+
+  @Transactional
+  private OffsetDateTime getLockWillExpireAt(Environment environment) {
+    Long lockExpirationThreshold =
+        environment.getLockExpirationThreshold() != null
+            ? environment.getLockExpirationThreshold()
+            : gitRepoSettingsService
+                .getOrCreateGitRepoSettingsByRepositoryId(
+                    environment.getRepository().getRepositoryId())
+                .map(GitRepoSettingsDto::lockExpirationThreshold)
+                .orElse(-1L);
+    if (environment.isLocked() && environment.getLockedAt() != null) {
+      return lockExpirationThreshold != -1
+          ? environment.getLockedAt().plusMinutes(lockExpirationThreshold)
+          : null;
+    } else {
+      return null;
+    }
+  }
+
+  @Transactional
+  private OffsetDateTime getLockReservationExpiresAt(Environment environment) {
+    Long lockReservationThreshold =
+        environment.getLockReservationThreshold() != null
+            ? environment.getLockReservationThreshold()
+            : gitRepoSettingsService
+                .getOrCreateGitRepoSettingsByRepositoryId(
+                    environment.getRepository().getRepositoryId())
+                .map(GitRepoSettingsDto::lockReservationThreshold)
+                .orElse(-1L);
+    if (environment.isLocked() && environment.getLockedAt() != null) {
+      return lockReservationThreshold != -1
+          ? environment.getLockedAt().plusMinutes(lockReservationThreshold)
+          : null;
+    } else {
+      return null;
+    }
   }
 
   /**
@@ -200,7 +248,8 @@ public class EnvironmentService {
         environment.getLockReservationThreshold() != null
             ? environment.getLockReservationThreshold()
             : gitRepoSettingsService
-                .getGitRepoSettingsByRepositoryId(environment.getRepository().getRepositoryId())
+                .getOrCreateGitRepoSettingsByRepositoryId(
+                    environment.getRepository().getRepositoryId())
                 .map(GitRepoSettingsDto::lockReservationThreshold)
                 .orElse(-1L);
 
@@ -227,6 +276,8 @@ public class EnvironmentService {
     environment.setLocked(false);
     environment.setLockedBy(null);
     environment.setLockedAt(null);
+    environment.setLockWillExpireAt(null);
+    environment.setLockReservationExpiresAt(null);
 
     Optional<EnvironmentLockHistory> openLock =
         lockHistoryRepository.findLatestLockForEnvironmentAndUser(environment, currentUser);

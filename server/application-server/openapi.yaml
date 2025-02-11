@@ -969,6 +969,12 @@ components:
         lockReservationThreshold:
           type: integer
           format: int64
+        lockWillExpireAt:
+          type: string
+          format: date-time
+        lockReservationWillExpireAt:
+          type: string
+          format: date-time
       required:
       - id
       - name

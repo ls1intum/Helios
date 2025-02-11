@@ -29,7 +29,8 @@ public class EnvironmentScheduler {
             environment.getLockExpirationThreshold() != null
                 ? environment.getLockExpirationThreshold()
                 : gitRepoSettingsService
-                    .getGitRepoSettingsByRepositoryId(environment.getRepository().getRepositoryId())
+                    .getOrCreateGitRepoSettingsByRepositoryId(
+                        environment.getRepository().getRepositoryId())
                     .map(GitRepoSettingsDto::lockExpirationThreshold)
                     .orElse(-1L);
 

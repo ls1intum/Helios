@@ -53,6 +53,8 @@ export type EnvironmentDto = {
   lockedAt?: string;
   lockExpirationThreshold?: number;
   lockReservationThreshold?: number;
+  lockWillExpireAt?: string;
+  lockReservationWillExpireAt?: string;
 };
 
 export type EnvironmentStatusDto = {

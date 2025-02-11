@@ -174,6 +174,14 @@ export const EnvironmentDtoSchema = {
       type: 'integer',
       format: 'int64',
     },
+    lockWillExpireAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+    lockReservationWillExpireAt: {
+      type: 'string',
+      format: 'date-time',
+    },
   },
   required: ['id', 'name'],
 } as const;
