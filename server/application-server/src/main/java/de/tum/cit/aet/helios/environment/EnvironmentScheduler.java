@@ -18,8 +18,8 @@ public class EnvironmentScheduler {
   private final GitRepoSettingsService gitRepoSettingsService;
   private final EnvironmentLockHistoryRepository lockHistoryRepository;
 
-  // Every 5 seconds
-  @Scheduled(fixedRate = 5000)
+  // Every minute
+  @Scheduled(fixedRate = 60000)
   public void unlockExpiredEnvironments() {
     List<Environment> lockedEnvironments = environmentRepository.findByLockedTrue();
     for (Environment environment : lockedEnvironments) {
