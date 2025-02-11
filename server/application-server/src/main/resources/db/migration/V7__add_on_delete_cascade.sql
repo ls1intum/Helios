@@ -265,20 +265,20 @@ ALTER TABLE public.workflow_group
             ON DELETE CASCADE;
 
 -------------------------------------------------------------------------------
--- tag -> repository
+-- release_candidate -> repository
 -------------------------------------------------------------------------------
-ALTER TABLE public.tag DROP CONSTRAINT FKdj9bgiudh8pae58vb7k1hy4pq;
-ALTER TABLE public.tag
+ALTER TABLE public.release_candidate DROP CONSTRAINT FKdj9bgiudh8pae58vb7k1hy4pq;
+ALTER TABLE public.release_candidate
     ADD CONSTRAINT FKdj9bgiudh8pae58vb7k1hy4pq
         FOREIGN KEY (repository_id)
             REFERENCES public.repository(repository_id)
             ON DELETE CASCADE;
 
 -------------------------------------------------------------------------------
--- tag -> commit
+-- release_candidate -> commit
 -------------------------------------------------------------------------------
-ALTER TABLE public.tag DROP CONSTRAINT FK3o93c1y4ayqlobwid7ipkc2l4;
-ALTER TABLE public.tag
+ALTER TABLE public.release_candidate DROP CONSTRAINT FK3o93c1y4ayqlobwid7ipkc2l4;
+ALTER TABLE public.release_candidate
     ADD CONSTRAINT FK3o93c1y4ayqlobwid7ipkc2l4
         FOREIGN KEY (commit_repository_id, commit_sha)
             REFERENCES public.commit(repository_id, sha)
@@ -286,25 +286,25 @@ ALTER TABLE public.tag
 
 
 -------------------------------------------------------------------------------
--- tag_evaluation -> user
+-- release_candidate_evaluation -> user
 -------------------------------------------------------------------------------
--- Removing a user also removes tag_evaluation rows associated with them
-ALTER TABLE public.tag_evaluation DROP CONSTRAINT FKerigvj8hd9wn6jg8ahgjhxnbf;
-ALTER TABLE public.tag_evaluation
+-- Removing a user also removes release_candidate_evaluation rows associated with them
+ALTER TABLE public.release_candidate_evaluation DROP CONSTRAINT FKerigvj8hd9wn6jg8ahgjhxnbf;
+ALTER TABLE public.release_candidate_evaluation
     ADD CONSTRAINT FKerigvj8hd9wn6jg8ahgjhxnbf
         FOREIGN KEY (evaluated_by_id)
             REFERENCES public."user"(id)
             ON DELETE CASCADE;
 
 -------------------------------------------------------------------------------
--- tag_evaluation -> tag
+-- release_candidate_evaluation -> release_candidate
 -------------------------------------------------------------------------------
--- Removing a tag row automatically removes any tag_evaluation rows that reference that tag.
-ALTER TABLE public.tag_evaluation DROP CONSTRAINT FKrwgk63y2dr7how94g6a1q3sq2;
-ALTER TABLE public.tag_evaluation
+-- Removing a release_candidate row automatically removes any release_candidate_evaluation rows that reference that release_candidate.
+ALTER TABLE public.release_candidate_evaluation DROP CONSTRAINT FKrwgk63y2dr7how94g6a1q3sq2;
+ALTER TABLE public.release_candidate_evaluation
     ADD CONSTRAINT FKrwgk63y2dr7how94g6a1q3sq2
-        FOREIGN KEY (tag_name, tag_repository_id)
-            REFERENCES public.tag(name, repository_id)
+        FOREIGN KEY (release_candidate_name, release_candidate_repository_id)
+            REFERENCES public.release_candidate(name, repository_id)
             ON DELETE CASCADE;
 
 COMMIT;
