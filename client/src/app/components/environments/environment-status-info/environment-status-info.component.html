@@ -1,13 +1,13 @@
 <div class="flex flex-col">
   <span class="text-xs uppercase tracking-tighter font-bold text-gray-500 mb-2">Latest status check</span>
 
-  <div class="flex items-center justify-between">
+  <div class="flex items-center justify-between gap-1">
     <span class="text-sm font-medium text-gray-700">Last Checked:</span>
     <span class="text-sm text-gray-500">
       {{ timeSinceChecked() }}
     </span>
   </div>
-  <div class="flex items-center justify-between mt-1">
+  <div class="flex items-center justify-between mt-1 gap-1">
     <span class="text-sm font-medium text-gray-700">Status Code:</span>
     <span class="text-sm text-gray-500">
       {{ status().httpStatusCode || 'N/A' }}
@@ -17,7 +17,7 @@
   @if (status().checkType === 'ARTEMIS_INFO') {
     <span class="text-xs uppercase tracking-tighter text-gray-500 mt-3">Artemis Build</span>
     @for (item of artemisBuildInfo(); track item.label) {
-      <div class="flex items-center justify-between mt-1">
+      <div class="flex items-center justify-between mt-1 gap-1">
         <span class="text-sm font-medium text-gray-700">{{ item.label }}:</span>
         <span class="text-sm text-gray-500">{{ item.value || '-/-' }}</span>
       </div>
