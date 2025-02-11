@@ -30,17 +30,22 @@ public class GitHubDataSyncScheduler {
   @EventListener(ApplicationReadyEvent.class)
   public void run() {
     if (runOnStartup) {
-      log.info("Starting initial GitHub data sync...");
-      syncInstalledRepositories();
-      log.info("Initial GitHub data sync completed.");
+      log.info("Initial GitHub data sync started...");
+      syncGitHubData();
+      log.info("Initial GitHub data sync triggered asynchronously.");
     }
   }
 
   @Scheduled(cron = "${monitoring.repository-sync-cron}")
   public void syncDataCron() {
-    log.info("Starting scheduled GitHub data sync...");
+    log.info("Scheduled GitHub data sync started...");
+    syncGitHubData();
+    log.info("Scheduled GitHub data sync triggered asynchronously.");
+  }
+
+  private void syncGitHubData() {
     syncInstalledRepositories();
-    log.info("Scheduled GitHub data sync completed.");
+    syncUsers();
   }
 
   private void syncInstalledRepositories() {
@@ -65,5 +70,9 @@ public class GitHubDataSyncScheduler {
     } catch (Exception ex) {
       log.error("Failed to sync installed repositories: {} {}", ex.getMessage(), ex);
     }
+  }
+
+  private void syncUsers() {
+    dataSyncService.syncUsers();
   }
 }
