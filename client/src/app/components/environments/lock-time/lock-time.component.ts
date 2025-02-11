@@ -8,10 +8,10 @@ import { DateService } from '@app/core/services/date.service';
   templateUrl: './lock-time.component.html',
 })
 export class LockTimeComponent implements OnInit, OnDestroy {
-  lockedAt = input.required<string>();
+  timeLockWillExpire = input.required<string | undefined>();
   private dateService = inject(DateService);
 
-  timeSinceLocked = computed(() => this.dateService.timeSinceLocked(this.lockedAt(), this.timeNow()));
+  timeUntilLockExpires = computed(() => this.dateService.timeUntilExpire(this.timeNow(), this.timeLockWillExpire()));
   // track the current time in a signal that we update every second
   timeNow = signal<Date>(new Date());
 

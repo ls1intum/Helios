@@ -35,6 +35,7 @@ public class EnvironmentService {
   private final DeploymentRepository deploymentRepository;
   private final UserService userService;
   private final GitRepoSettingsService gitRepoSettingsService;
+  private final EnvironmentScheduler environmentScheduler;
 
   public Optional<EnvironmentDto> getEnvironmentById(Long id) {
     return environmentRepository.findById(id).map(EnvironmentDto::fromEnvironment);
@@ -44,11 +45,12 @@ public class EnvironmentService {
     return environmentRepository.findAllByOrderByNameAsc().stream()
         .map(
             environment -> {
-              LatestDeploymentUnion latest = findLatestDeployment(environment);
               // Set lock expiration timestamps if settings is changed after the environment is
               // locked
               environment.setLockWillExpireAt(getLockWillExpireAt(environment));
               environment.setLockReservationExpiresAt(getLockReservationExpiresAt(environment));
+              environmentScheduler.unlockExpiredEnvironments();
+              LatestDeploymentUnion latest = findLatestDeployment(environment);
               return EnvironmentDto.fromEnvironment(
                   environment, latest, environment.getLatestStatus(), tagRepository);
             })
@@ -59,11 +61,12 @@ public class EnvironmentService {
     return environmentRepository.findByEnabledTrueOrderByNameAsc().stream()
         .map(
             environment -> {
-              LatestDeploymentUnion latest = findLatestDeployment(environment);
               // Set lock expiration timestamps if settings is changed after the environment is
               // locked
               environment.setLockWillExpireAt(getLockWillExpireAt(environment));
               environment.setLockReservationExpiresAt(getLockReservationExpiresAt(environment));
+              environmentScheduler.unlockExpiredEnvironments();
+              LatestDeploymentUnion latest = findLatestDeployment(environment);
               return EnvironmentDto.fromEnvironment(
                   environment, latest, environment.getLatestStatus(), tagRepository);
             })

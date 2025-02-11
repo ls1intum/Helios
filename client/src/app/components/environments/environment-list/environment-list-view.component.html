@@ -58,7 +58,7 @@
               <app-user-avatar [user]="environment.lockedBy" [toolTipText]="'Locked By'" />
             </div>
             @if (environment.lockedAt) {
-              <app-lock-time [lockedAt]="environment.lockedAt"></app-lock-time>
+              <app-lock-time [timeLockWillExpire]="environment.lockWillExpireAt"></app-lock-time>
             }
             @if (isLoggedIn()) {
               <button (click)="onUnlockEnvironment($event, environment)" class="p-button p-button-danger p-2"><i-tabler name="lock-open" class="mr-1" />Unlock</button>
