@@ -24,7 +24,7 @@ public class GitHubCommitConverter implements Converter<GHCommit, Commit> {
         throw new IllegalArgumentException("Commit hash cannot be null");
       }
       if (source.getCommitShortInfo().getMessage().length() > 255) {
-        commit.setMessage(commit.getMessage().substring(0, 255));
+        commit.setMessage(source.getCommitShortInfo().getMessage().substring(0, 255));
       } else {
         commit.setMessage(source.getCommitShortInfo().getMessage());
       }
