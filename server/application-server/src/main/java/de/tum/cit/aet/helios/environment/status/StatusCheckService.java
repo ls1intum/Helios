@@ -107,8 +107,8 @@ public class StatusCheckService {
 
       // Did the status change? If so, update the statusChangedAt field
       if (
-        !latestStatus.isPresent() ||
-        latestStatus.get().getHttpStatusCode() != result.httpStatusCode()
+          !latestStatus.isPresent() ||
+          latestStatus.get().getHttpStatusCode() != result.httpStatusCode()
       ) {
         environment.setStatusChangedAt(Instant.now());
         environmentRepository.save(environment);
