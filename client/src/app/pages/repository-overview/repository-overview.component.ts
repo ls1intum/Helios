@@ -13,28 +13,11 @@ import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
 import { Skeleton } from 'primeng/skeleton';
 import { TableModule } from 'primeng/table';
-import { InputText } from 'primeng/inputtext';
-import { TableFilterComponent } from '@app/components/table-filter/table-filter.component';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
-import { Avatar } from 'primeng/avatar';
 
 @Component({
   selector: 'app-repository-overview',
-  imports: [
-    DataViewModule,
-    ButtonModule,
-    TagModule,
-    CardModule,
-    ChipModule,
-    IconsModule,
-    PageHeadingComponent,
-    ToastModule,
-    Skeleton,
-    TableModule,
-    InputText,
-    TableFilterComponent,
-    Avatar,
-  ],
+  imports: [DataViewModule, ButtonModule, TagModule, CardModule, ChipModule, IconsModule, PageHeadingComponent, ToastModule, Skeleton, TableModule],
   templateUrl: './repository-overview.component.html',
 })
 export class RepositoryOverviewComponent {
