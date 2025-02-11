@@ -88,6 +88,7 @@ export type TagInfoDto = {
 export type DeployRequest = {
   environmentId: number;
   branchName: string;
+  commitSha?: string;
 };
 
 export type WorkflowDto = {

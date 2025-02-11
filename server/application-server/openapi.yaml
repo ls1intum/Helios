@@ -1015,6 +1015,8 @@ components:
           format: int64
         branchName:
           type: string
+        commitSha:
+          type: string
       required:
       - branchName
       - environmentId

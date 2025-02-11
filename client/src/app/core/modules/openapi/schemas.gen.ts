@@ -273,6 +273,9 @@ export const DeployRequestSchema = {
     branchName: {
       type: 'string',
     },
+    commitSha: {
+      type: 'string',
+    },
   },
   required: ['branchName', 'environmentId'],
 } as const;

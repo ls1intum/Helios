@@ -13,6 +13,6 @@ public interface WorkflowRepository extends JpaRepository<Workflow, Long> {
 
   List<Workflow> findByStateOrderByCreatedAtDesc(Workflow.State state);
 
-  Workflow findFirstByDeploymentEnvironmentAndRepositoryRepositoryIdOrderByCreatedAtDesc(
-      Workflow.DeploymentEnvironment environment, Long repositoryId);
+  Workflow findFirstByRepositoryRepositoryIdAndDeploymentEnvironmentOrderByCreatedAtDesc(
+      Long repositoryId, Workflow.DeploymentEnvironment deploymentEnvironment);
 }

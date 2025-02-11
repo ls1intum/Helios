@@ -57,20 +57,20 @@ public class WorkflowService {
       Workflow.DeploymentEnvironment environment, Long repositoryId) {
     Workflow workflow =
         workflowRepository
-            .findFirstByDeploymentEnvironmentAndRepositoryRepositoryIdOrderByCreatedAtDesc(
-                environment, repositoryId);
+            .findFirstByRepositoryRepositoryIdAndDeploymentEnvironmentOrderByCreatedAtDesc(
+                repositoryId, environment);
     return workflow;
   }
 
-  public List<Workflow> getDeploymentWorkflows(Long repositoryId) {
+  public List<Workflow> getDeploymentWorkflowsForAllEnv(Long repositoryId) {
 
     return Arrays.stream(Workflow.DeploymentEnvironment.values())
         .filter(env -> env != Workflow.DeploymentEnvironment.NONE)
         .map(
             env ->
                 workflowRepository
-                    .findFirstByDeploymentEnvironmentAndRepositoryRepositoryIdOrderByCreatedAtDesc(
-                        env, repositoryId))
+                    .findFirstByRepositoryRepositoryIdAndDeploymentEnvironmentOrderByCreatedAtDesc(
+                        repositoryId, env))
         .filter(Objects::nonNull)
         .collect(Collectors.toList());
   }
