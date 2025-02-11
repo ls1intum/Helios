@@ -1,4 +1,4 @@
-package de.tum.cit.aet.helios.tag;
+package de.tum.cit.aet.helios.releasecandidate;
 
 import de.tum.cit.aet.helios.user.User;
 import jakarta.persistence.Column;
@@ -15,12 +15,12 @@ import lombok.ToString;
 @Entity
 @Getter
 @Setter
-@IdClass(TagEvaluationId.class)
+@IdClass(ReleaseCandidateEvaluationId.class)
 @ToString(callSuper = true)
-public class TagEvaluation {
+public class ReleaseCandidateEvaluation {
   @Id
   @ManyToOne(fetch = FetchType.LAZY)
-  private Tag tag;
+  private ReleaseCandidate releaseCandidate;
 
   @Column(name = "is_working")
   private boolean isWorking;

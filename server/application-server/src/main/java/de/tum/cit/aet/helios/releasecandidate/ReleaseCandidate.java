@@ -1,4 +1,4 @@
-package de.tum.cit.aet.helios.tag;
+package de.tum.cit.aet.helios.releasecandidate;
 
 import de.tum.cit.aet.helios.branch.Branch;
 import de.tum.cit.aet.helios.commit.Commit;
@@ -23,9 +23,9 @@ import lombok.ToString;
 @Entity
 @Getter
 @Setter
-@IdClass(TagId.class)
+@IdClass(ReleaseCandidateId.class)
 @ToString(callSuper = true)
-public class Tag {
+public class ReleaseCandidate {
   @Id
   @ManyToOne
   @JoinColumn(name = "repository_id", nullable = false)
@@ -43,13 +43,13 @@ public class Tag {
   @JoinColumn(name = "created_by_id")
   private User createdBy;
 
-  @OneToMany(mappedBy = "tag", cascade = CascadeType.ALL)
+  @OneToMany(mappedBy = "releaseCandidate", cascade = CascadeType.ALL)
   @ToString.Exclude
-  private Set<TagEvaluation> evaluations = new HashSet<>();
+  private Set<ReleaseCandidateEvaluation> evaluations = new HashSet<>();
 
   private OffsetDateTime createdAt;
 
-  public int compareToByDate(Tag other) {
+  public int compareToByDate(ReleaseCandidate other) {
     return this.createdAt.compareTo(other.createdAt);
   }
 }

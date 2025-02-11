@@ -53,7 +53,7 @@ public class BranchControllerTest {
           0,
           false,
           false,
-          "tag",
+          "releaseCandidate",
           null,
           null,
           new RepositoryInfoDto(1L, "repo", "repo", null, "url"));

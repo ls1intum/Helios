@@ -1,12 +1,12 @@
 <p-dialog [(visible)]="isVisible" [modal]="true" [style]="{ width: '25rem' }">
   <ng-template #header>
-    <div class="font-bold text-xl">New Tag</div>
+    <div class="font-bold text-xl">New Release Candidate</div>
   </ng-template>
   @if (newCommitListQuery.data(); as commitListData) {
     <div class="flex flex-col gap-4">
       <div class="flex gap-1 items-center mb-2">
         <i-tabler name="tag" class="!size-5 text-primary-500" />
-        <input pInputText [(ngModel)]="tagName" placeholder="Tag Name" pSize="small" />
+        <input pInputText [(ngModel)]="releaseCandidateName" placeholder="Release Candidate Name" pSize="small" />
       </div>
       <div class="flex gap-2">
         <p-tag class="text-xs">
@@ -28,18 +28,18 @@
             <p-button link pTooltip="Commit info can be seen soon!" (onClick)="isCommitListVisible.set(!isCommitListVisible())">
               {{ commitListData.commitsLength }} new commit(s)
             </p-button>
-            will be included in this tag
+            will be included in this release candidate
           </div>
         } @else if (commitListData.commitsLength == -1) {
-          <span class="font-semibold">There is no previous tag yet, this will be the first tag created on this branch.</span>
+          <span class="font-semibold">There is no previous release candidate yet, this will be the first release candidate created on this branch.</span>
         } @else {
-          <span class="font-semibold">There is no new commit since the last tag, please create one first before creating another tag!</span>
+          <span class="font-semibold">There is no new commit since the last release candidate, please create one first before creating another release candidate!</span>
         }
       </div>
     </div>
   }
   <ng-template #footer>
     <p-button label="Cancel" [text]="true" (click)="onClose()" />
-    <p-button label="Save" severity="primary" [disabled]="newCommitListQuery.data()?.commitsLength === 0 || tagName() === ''" (click)="createTag()" />
+    <p-button label="Save" severity="primary" [disabled]="newCommitListQuery.data()?.commitsLength === 0 || releaseCandidateName() === ''" (click)="createReleaseCandidate()" />
   </ng-template>
 </p-dialog>

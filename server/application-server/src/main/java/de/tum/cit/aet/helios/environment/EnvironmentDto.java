@@ -5,8 +5,8 @@ import de.tum.cit.aet.helios.deployment.LatestDeploymentUnion;
 import de.tum.cit.aet.helios.environment.status.EnvironmentStatus;
 import de.tum.cit.aet.helios.environment.status.StatusCheckType;
 import de.tum.cit.aet.helios.gitrepo.RepositoryInfoDto;
-import de.tum.cit.aet.helios.tag.Tag;
-import de.tum.cit.aet.helios.tag.TagRepository;
+import de.tum.cit.aet.helios.releasecandidate.ReleaseCandidate;
+import de.tum.cit.aet.helios.releasecandidate.ReleaseCandidateRepository;
 import de.tum.cit.aet.helios.user.UserInfoDto;
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -62,13 +62,13 @@ public record EnvironmentDto(
       String sha,
       String ref,
       String task,
-      String tagName,
+      String releaseCandidateName,
       UserInfoDto user,
       OffsetDateTime createdAt,
       OffsetDateTime updatedAt) {
     /** Builds an EnvironmentDeployment from a LatestDeploymentUnion. */
     public static EnvironmentDeployment fromUnion(
-        LatestDeploymentUnion union, TagRepository tagRepository) {
+        LatestDeploymentUnion union, ReleaseCandidateRepository releaseCandidateRepository) {
       return new EnvironmentDeployment(
           union.getId(),
           union.getUrl(),
@@ -77,9 +77,9 @@ public record EnvironmentDto(
           union.getSha(),
           union.getRef(),
           union.getTask(),
-          tagRepository
+          releaseCandidateRepository
               .findByRepositoryRepositoryIdAndCommitSha(union.getRepository().id(), union.getSha())
-              .map(Tag::getName)
+              .map(ReleaseCandidate::getName)
               .orElse(null),
           UserInfoDto.fromUser(union.getCreator()),
           union.getCreatedAt(),
@@ -95,11 +95,11 @@ public record EnvironmentDto(
       Environment environment,
       LatestDeploymentUnion latestUnion,
       Optional<EnvironmentStatus> latestStatus,
-      TagRepository tagRepository) {
+      ReleaseCandidateRepository releaseCandidateRepository) {
     // If union is null or none(), we won't have a 'latestDeployment'
     EnvironmentDeployment envDeployment = null;
     if (latestUnion != null && !latestUnion.isNone()) {
-      envDeployment = EnvironmentDeployment.fromUnion(latestUnion, tagRepository);
+      envDeployment = EnvironmentDeployment.fromUnion(latestUnion, releaseCandidateRepository);
     }
 
     return new EnvironmentDto(

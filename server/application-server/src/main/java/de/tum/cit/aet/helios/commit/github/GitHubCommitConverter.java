@@ -23,7 +23,11 @@ public class GitHubCommitConverter implements Converter<GHCommit, Commit> {
       } else {
         throw new IllegalArgumentException("Commit hash cannot be null");
       }
-      commit.setMessage(source.getCommitShortInfo().getMessage());
+      if (source.getCommitShortInfo().getMessage().length() > 255) {
+        commit.setMessage(source.getCommitShortInfo().getMessage().substring(0, 255));
+      } else {
+        commit.setMessage(source.getCommitShortInfo().getMessage());
+      }
       commit.setAuthoredAt(DateUtil.convertToOffsetDateTime(source.getAuthoredDate()));
 
     } catch (Exception e) {

@@ -2,7 +2,7 @@ package de.tum.cit.aet.helios.error;
 
 import de.tum.cit.aet.helios.deployment.DeploymentException;
 import de.tum.cit.aet.helios.environment.EnvironmentException;
-import de.tum.cit.aet.helios.tag.TagException;
+import de.tum.cit.aet.helios.releasecandidate.ReleaseCandidateException;
 import io.sentry.Sentry;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -76,8 +76,7 @@ public class GlobalExceptionHandler {
     error.setTimestamp(Instant.now());
 
     Sentry.captureException(ex);
-    log.error(
-        "An internal server error occurred", ex);
+    log.error("An internal server error occurred", ex);
 
     return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
   }
@@ -96,13 +95,14 @@ public class GlobalExceptionHandler {
     return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
   }
 
-  @ExceptionHandler(TagException.class)
-  public ResponseEntity<ApiError> handleTagException(TagException ex, HttpServletRequest request) {
+  @ExceptionHandler(ReleaseCandidateException.class)
+  public ResponseEntity<ApiError> handleReleaseCandidateException(
+      ReleaseCandidateException ex, HttpServletRequest request) {
 
     ApiError error = new ApiError();
     error.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
-    error.setError("Tag Error");
-    error.setMessage("Tag operation failed: " + ex.getMessage());
+    error.setError("Release Candidate Error");
+    error.setMessage("Release Candidate operation failed: " + ex.getMessage());
     error.setPath(request.getRequestURI());
     error.setTimestamp(Instant.now());
 

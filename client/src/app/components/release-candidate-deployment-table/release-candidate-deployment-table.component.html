@@ -42,10 +42,10 @@
               <div class="flex items-center gap-1">
                 <p-tag value="replaced" class="text-xs" severity="contrast" />
                 now at
-                @if (environment.latestDeployment.tagName) {
+                @if (environment.latestDeployment.releaseCandidateName) {
                   <p-tag class="text-xs">
                     <i-tabler name="git-branch" class="!size-4" />
-                    {{ environment.latestDeployment.tagName }}
+                    {{ environment.latestDeployment.releaseCandidateName }}
                   </p-tag>
                 } @else {
                   <p-tag class="text-xs">
@@ -60,11 +60,11 @@
             }
             @case ('NEVER_DEPLOYED') {
               <div class="flex items-center gap-1">
-                @if (environment.latestDeployment.tagName) {
+                @if (environment.latestDeployment.releaseCandidateName) {
                   now at
                   <p-tag class="text-xs">
                     <i-tabler name="git-branch" class="!size-4" />
-                    {{ environment.latestDeployment.tagName }}
+                    {{ environment.latestDeployment.releaseCandidateName }}
                   </p-tag>
                 } @else if (environment.latestDeployment.ref) {
                   now at
@@ -73,13 +73,13 @@
                     {{ environment.latestDeployment.ref }}
                   </p-tag>
                 } @else {
-                  no tag deployed yet
+                  no release candidate deployed yet
                 }
               </div>
             }
             @default {
               <p-tag value="unknown" class="text-xs" />
-              now at {{ environment.latestDeployment.tagName }}
+              now at {{ environment.latestDeployment.releaseCandidateName }}
             }
           }
         </td>
