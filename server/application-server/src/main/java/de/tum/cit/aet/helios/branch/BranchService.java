@@ -1,7 +1,7 @@
 package de.tum.cit.aet.helios.branch;
 
-import de.tum.cit.aet.helios.tag.Tag;
-import de.tum.cit.aet.helios.tag.TagRepository;
+import de.tum.cit.aet.helios.releasecandidate.ReleaseCandidate;
+import de.tum.cit.aet.helios.releasecandidate.ReleaseCandidateRepository;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -13,11 +13,12 @@ import org.springframework.transaction.annotation.Transactional;
 public class BranchService {
 
   private final BranchRepository branchRepository;
-  private final TagRepository tagRepository;
+  private final ReleaseCandidateRepository releaseCandidateRepository;
 
-  public BranchService(BranchRepository branchRepository, TagRepository tagRepository) {
+  public BranchService(
+      BranchRepository branchRepository, ReleaseCandidateRepository releaseCandidateRepository) {
     this.branchRepository = branchRepository;
-    this.tagRepository = tagRepository;
+    this.releaseCandidateRepository = releaseCandidateRepository;
   }
 
   public List<BranchInfoDto> getAllBranches() {
@@ -54,10 +55,10 @@ public class BranchService {
             branch ->
                 BranchDetailsDto.fromBranch(
                     branch,
-                    tagRepository
+                    releaseCandidateRepository
                         .findByRepositoryRepositoryIdAndCommitSha(
                             repositoryId, branch.getCommitSha())
-                        .map(Tag::getName)
+                        .map(ReleaseCandidate::getName)
                         .orElseGet(() -> null)));
   }
 }

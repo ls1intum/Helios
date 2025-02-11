@@ -1,29 +1,29 @@
-@if (tagQuery.data()!; as tag) {
+@if (releaseCandidateQuery.data()!; as releaseCandidate) {
   <div class="my-3 flex items-start justify-between">
     <div class="flex flex-col items-start">
       <span class="text-gray-500 text-sm uppercase font-semibold tracking-wider mb-1">
-        Tag
-        @if (tag.branch) {
-          created from branch {{ tag.branch.name }}
+        Release Candidate
+        @if (releaseCandidate.branch) {
+          created from branch {{ releaseCandidate.branch.name }}
         }
       </span>
       <div class="flex-col items-center gap-4">
         <h2 class="text-2xl">
-          {{ tag.name }}
+          {{ releaseCandidate.name }}
           <p-tag class="text-xs">
             <i-tabler name="git-commit" class="!size-4" />
-            {{ tag.commit.sha | slice: 0 : 7 }}
+            {{ releaseCandidate.commit.sha | slice: 0 : 7 }}
           </p-tag>
         </h2>
         <div class="flex gap-1 items-center text-sm">
           <div>created by</div>
-          @if (tag.createdBy.avatarUrl) {
-            <p-avatar class="size-4" shape="circle" [image]="tag.createdBy.avatarUrl" />
+          @if (releaseCandidate.createdBy.avatarUrl) {
+            <p-avatar class="size-4" shape="circle" [image]="releaseCandidate.createdBy.avatarUrl" />
           } @else {
             <i-tabler name="user" class="size-4 text-gray-600" />
           }
-          {{ tag.createdBy.login }}
-          <span [pTooltip]="tag.createdAt">{{ tag.createdAt | timeAgo }}</span>
+          {{ releaseCandidate.createdBy.login }}
+          <span [pTooltip]="releaseCandidate.createdAt">{{ releaseCandidate.createdAt | timeAgo }}</span>
         </div>
       </div>
     </div>
@@ -31,18 +31,18 @@
     <div class="flex flex-col items-center">
       @if (permissionService.isAtLeastMaintainer()) {
         <p-buttongroup class="mb-5">
-          <p-button label="Working" severity="success" [disabled]="hasUserEvaluatedTo(true)" (onClick)="evaluateTag(true)">
+          <p-button label="Working" severity="success" [disabled]="hasUserEvaluatedTo(true)" (onClick)="evaluateReleaseCandidate(true)">
             <i-tabler name="check" class="!size-5 text-white" />
           </p-button>
-          <p-button label="Broken" severity="danger" [disabled]="hasUserEvaluatedTo(false)" (onClick)="evaluateTag(false)">
+          <p-button label="Broken" severity="danger" [disabled]="hasUserEvaluatedTo(false)" (onClick)="evaluateReleaseCandidate(false)">
             <i-tabler name="x" class="!size-5 text-white" />
           </p-button>
         </p-buttongroup>
       }
-      @if (tag.evaluations.length > 0) {
+      @if (releaseCandidate.evaluations.length > 0) {
         <div class="text-gray-500 text-sm uppercase font-semibold tracking-wider mb-1">Reviews</div>
         <div>
-          @for (evaluation of tag.evaluations; track evaluation.user.id) {
+          @for (evaluation of releaseCandidate.evaluations; track evaluation.user.id) {
             <div class="relative inline-block pt-2 pr-1">
               <p-avatar [image]="evaluation.user.avatarUrl" class="size-7" shape="circle" />
               <div class="absolute top-0 right-0">
@@ -61,8 +61,8 @@
     </div>
   </div>
 
-  <h3 class="text-xl mb-2">Tag Status on Environments</h3>
-  <app-tag-deployment-table [tag]="tag" />
+  <h3 class="text-xl mb-2">Release Candidate Status on Environments</h3>
+  <app-release-candidate-deployment-table [releaseCandidate]="releaseCandidate" />
 } @else {
   <div class="flex flex-col items-start gap-2">
     <p-skeleton width="8rem" height="1rem" />
