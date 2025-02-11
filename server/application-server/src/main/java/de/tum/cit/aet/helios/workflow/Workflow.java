@@ -40,7 +40,7 @@ public class Workflow extends BaseGitServiceEntity {
   // Custom field for Repository Settings
   @NonNull
   @Enumerated(EnumType.STRING)
-  private Label label = Label.NONE;
+  private DeploymentEnvironment deploymentEnvironment = DeploymentEnvironment.NONE;
 
   public enum State {
     ACTIVE,
@@ -51,9 +51,10 @@ public class Workflow extends BaseGitServiceEntity {
     UNKNOWN,
   }
 
-  public enum Label {
-    BUILD,
-    DEPLOYMENT,
-    NONE
+  public enum DeploymentEnvironment {
+    NONE,
+    TEST_SERVER,
+    STAGING_SERVER,
+    PRODUCTION_SERVER
   }
 }

@@ -35,6 +35,10 @@ public class EnvironmentService {
     return environmentRepository.findById(id).map(EnvironmentDto::fromEnvironment);
   }
 
+  public Optional<Environment.Type> getEnvironmentTypeById(Long id) {
+    return environmentRepository.findById(id).map(Environment::getType);
+  }
+
   public List<EnvironmentDto> getAllEnvironments() {
     return environmentRepository.findAllByOrderByNameAsc().stream()
         .map(
@@ -265,6 +269,9 @@ public class EnvironmentService {
               } else {
                 environment.setStatusCheckType(null);
                 environment.setStatusUrl(null);
+              }
+              if (environmentDto.type() != null) {
+                environment.setType(environmentDto.type());
               }
 
               environmentRepository.save(environment);

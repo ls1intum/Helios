@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Optional;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
 import lombok.Setter;
 import lombok.ToString;
 
@@ -108,6 +109,17 @@ public class Environment extends RepositoryFilterEntity {
 
   public Optional<Deployment> getLatestDeployment() {
     return this.deployments.reversed().stream().findFirst();
+  }
+
+  @Column(name = "type")
+  @NonNull
+  @Enumerated(EnumType.STRING)
+  private Type type = Type.TEST;
+
+  public enum Type {
+    TEST,
+    STAGING,
+    PRODUCTION
   }
 
   // Missing properties
