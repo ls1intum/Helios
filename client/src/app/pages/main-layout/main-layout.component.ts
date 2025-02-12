@@ -25,6 +25,11 @@ export class MainLayoutComponent implements OnInit {
   private router = inject(Router);
 
   repositoryId = signal<number | undefined>(undefined);
+  isLoggedIn = computed(() => this.keycloakService.isLoggedIn());
+  dynamicHeight = computed(() =>
+    this.isLoggedIn() ? 'h-[calc(100vh-24px)]' : 'h-[calc(100vh-48px)]'
+  );
+
 
   ngOnInit(): void {
     // Initialize on first load (Refresh)
@@ -94,5 +99,4 @@ export class MainLayoutComponent implements OnInit {
     this.keycloakService.login();
   }
 
-  isLoggedIn = computed(() => this.keycloakService.isLoggedIn());
 }

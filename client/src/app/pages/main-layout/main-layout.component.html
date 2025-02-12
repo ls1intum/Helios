@@ -6,7 +6,7 @@
       <button (click)="login()" class="p-0 text-white hover:text-gray-300 underline">Login here.</button>
     </div>
   }
-  <div class="flex flex-grow p-3" [ngClass]="isLoggedIn() ? 'h-[calc(100vh-24px)]' : 'h-[calc(100vh-48px)]'">
+  <div class="flex flex-grow p-3" [ngClass]="dynamicHeight()">
     <!-- Fixed Navigation Bar -->
     <div class="h-full sticky top-3 flex">
       <app-navigation-bar [repositoryId]="repositoryId()"></app-navigation-bar>
