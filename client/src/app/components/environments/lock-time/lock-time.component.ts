@@ -11,7 +11,13 @@ export class LockTimeComponent implements OnInit, OnDestroy {
   timeLockWillExpire = input.required<string | undefined>();
   private dateService = inject(DateService);
 
-  timeUntilLockExpires = computed(() => this.dateService.timeUntilExpire(this.timeNow(), this.timeLockWillExpire()));
+  timeUntilLockExpires = computed(() => {
+    const timeLockWillExpireValue = this.timeLockWillExpire();
+    if (!timeLockWillExpireValue || timeLockWillExpireValue === undefined || timeLockWillExpireValue === null || timeLockWillExpireValue === '') {
+      return 'Unlimited';
+    }
+    return this.dateService.timeUntilExpire(this.timeNow(), this.timeLockWillExpire());
+  });
   // track the current time in a signal that we update every second
   timeNow = signal<Date>(new Date());
 

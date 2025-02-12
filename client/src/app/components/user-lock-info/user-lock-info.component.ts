@@ -16,7 +16,11 @@ export class UserLockInfoComponent implements OnInit, OnDestroy {
   private dateService = inject(DateService);
   timeNow = signal<Date>(new Date());
   private intervalId?: ReturnType<typeof setInterval>;
-  timeUntilLockExpires = computed(() => this.dateService.timeUntilExpire(this.timeNow(), this.latestLockExpiration()?.environment?.lockWillExpireAt));
+  timeUntilLockExpires = computed(() =>
+    this.latestLockExpiration()?.environment?.lockWillExpireAt !== null
+      ? this.dateService.timeUntilExpire(this.timeNow(), this.latestLockExpiration()?.environment?.lockWillExpireAt)
+      : `Unlimited`
+  );
   // Returns the latest lock information for the current user
   lockQuery = injectQuery(() => ({
     ...getEnvironmentsByUserLockingOptions(),
@@ -42,6 +46,7 @@ export class UserLockInfoComponent implements OnInit, OnDestroy {
 
     // For some reason, when there is no lock
     // an empty object instead of null is returned
-    return lock?.lockedAt && lock?.environment?.lockWillExpireAt ? lock : null;
+    const val = lock?.lockedAt ? lock : null;
+    return val;
   });
 }

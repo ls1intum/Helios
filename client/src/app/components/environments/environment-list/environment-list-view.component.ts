@@ -73,11 +73,31 @@ export class EnvironmentListViewComponent {
   hasUnlockPermissions = computed(() => this.permissionService.isAtLeastMaintainer());
   hasDeployPermissions = computed(() => this.permissionService.hasWritePermission());
   hasEditEnvironmentPermissions = computed(() => this.permissionService.isAdmin());
-
   deploy = output<EnvironmentDto>();
 
   searchInput = signal<string>('');
+  // 🕒 Compute timeUntilReservationExpires in minutes
+  timeUntilReservationExpires = computed(() => {
+    const environments = this.environmentQuery.data();
 
+    if (!environments) return new Map<number, number>(); // Return empty map if no data
+
+    const now = new Date().getTime();
+    const timeLeftMap = new Map<number, number>();
+
+    environments.forEach(env => {
+      if (env.lockedAt && env.lockReservationWillExpireAt) {
+        const willExpireAt = new Date(env.lockReservationWillExpireAt).getTime();
+
+        const timeLeftMs = willExpireAt - now; // Remaining time in milliseconds
+        const timeLeftMinutes = Math.floor(timeLeftMs / 60000); // Convert to minutes
+
+        timeLeftMap.set(env.id, timeLeftMinutes > 0 ? timeLeftMinutes : 0); // No negative values
+      }
+    });
+
+    return timeLeftMap;
+  });
   canViewAllEnvironments = computed(() => this.isLoggedIn() && this.editable() && this.hasEditEnvironmentPermissions());
   queryFunction = computed(() => {
     const options = this.canViewAllEnvironments() ? getAllEnvironmentsOptions() : getAllEnabledEnvironmentsOptions();
@@ -155,5 +175,29 @@ export class EnvironmentListViewComponent {
   getDeploymentTime(environment: EnvironmentDto) {
     const date = environment.latestDeployment?.updatedAt;
     return date ? this.datePipe.transform(date, 'd MMMM y, h:mm a') : null; // Format date
+  }
+
+  canUnlock(environment: EnvironmentDto) {
+    if (this.hasUnlockPermissions() || this.isCurrentUserLocked(environment)) {
+      return true;
+    } else if (!this.isCurrentUserLocked(environment) && (this.timeUntilReservationExpires()?.get(environment.id) ?? -1) === 0) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  unlockToolTip(environment: EnvironmentDto) {
+    if (this.isCurrentUserLocked(environment)) {
+      return 'Unlock Environment';
+    }
+    const timeLeft = this.timeUntilReservationExpires().get(environment.id);
+    if (timeLeft === undefined || timeLeft === null) {
+      return 'You can not unlock this environment';
+    } else if (timeLeft === 0) {
+      return 'Reservation Expired. You can unlock this environment.';
+    } else {
+      return `You can unlock this environment in ${timeLeft} minutes`;
+    }
   }
 }

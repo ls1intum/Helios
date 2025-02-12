@@ -61,7 +61,19 @@
               <app-lock-time [timeLockWillExpire]="environment.lockWillExpireAt"></app-lock-time>
             }
             @if (isLoggedIn()) {
-              <button (click)="onUnlockEnvironment($event, environment)" class="p-button p-button-danger p-2"><i-tabler name="lock-open" class="mr-1" />Unlock</button>
+              <span pTooltip="{{ unlockToolTip(environment) }}" tooltipPosition="top" [ngStyle]="{ display: 'inline-block' }">
+                <button
+                  (click)="onUnlockEnvironment($event, environment)"
+                  class="p-button p-button-danger p-2"
+                  [disabled]="!canUnlock(environment)"
+                  [ngStyle]="{
+                    opacity: canUnlock(environment) ? '1' : '0.5',
+                    cursor: canUnlock(environment) ? 'pointer' : 'not-allowed',
+                  }"
+                >
+                  <i-tabler name="lock-open" class="mr-1" />Unlock
+                </button>
+              </span>
             }
           }
 
