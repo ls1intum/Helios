@@ -283,10 +283,11 @@ public class EnvironmentService {
     environment.setLockReservationExpiresAt(null);
 
     Optional<EnvironmentLockHistory> openLock =
-        lockHistoryRepository.findLatestLockForEnvironmentAndUser(environment, currentUser);
+        lockHistoryRepository.findCurrentLockForEnabledEnvironment(environment.getId());
     if (openLock.isPresent()) {
       EnvironmentLockHistory openLockHistory = openLock.get();
       openLockHistory.setUnlockedAt(OffsetDateTime.now());
+      openLockHistory.setUnlockedBy(currentUser);
       lockHistoryRepository.save(openLockHistory);
     }
 

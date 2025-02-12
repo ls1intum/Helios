@@ -19,3 +19,24 @@ ALTER TABLE repository_settings
 
 ALTER TABLE repository_settings
     ADD COLUMN lock_reservation_threshold BIGINT DEFAULT 30; -- Default: 30 (30 minutes)
+
+-- Modify environment_lock_history table
+ALTER TABLE environment_lock_history 
+    RENAME COLUMN author_id TO locking_author_id;
+
+ALTER TABLE environment_lock_history
+    ADD COLUMN unlocking_author_id BIGINT;
+
+-- Update existing records: set unlocking_author_id = locking_author_id where unlocked_at exists
+UPDATE environment_lock_history
+SET unlocking_author_id = locking_author_id
+WHERE unlocked_at IS NOT NULL;
+
+-- Add foreign key constraints
+ALTER TABLE environment_lock_history
+    ADD CONSTRAINT fk_environment_lock_history_locking_author
+    FOREIGN KEY (locking_author_id) REFERENCES "user"(id);
+
+ALTER TABLE environment_lock_history
+    ADD CONSTRAINT fk_environment_lock_history_unlocking_author
+    FOREIGN KEY (unlocking_author_id) REFERENCES "user"(id);

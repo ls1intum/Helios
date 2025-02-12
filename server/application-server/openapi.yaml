@@ -1490,6 +1490,8 @@ components:
           format: int64
         lockedBy:
           $ref: "#/components/schemas/UserInfoDto"
+        unlockedBy:
+          $ref: "#/components/schemas/UserInfoDto"
         lockedAt:
           type: string
           format: date-time
@@ -1527,6 +1529,8 @@ components:
         ref:
           type: string
         user:
+          $ref: "#/components/schemas/UserInfoDto"
+        user2:
           $ref: "#/components/schemas/UserInfoDto"
         timestamp:
           type: string

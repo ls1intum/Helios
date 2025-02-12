@@ -2,6 +2,8 @@ package de.tum.cit.aet.helios.environment;
 
 import de.tum.cit.aet.helios.gitreposettings.GitRepoSettingsDto;
 import de.tum.cit.aet.helios.gitreposettings.GitRepoSettingsService;
+import de.tum.cit.aet.helios.user.UserRepository;
+import de.tum.cit.aet.helios.user.github.GitHubUserConverter;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -17,6 +19,8 @@ public class EnvironmentScheduler {
   private final EnvironmentRepository environmentRepository;
   private final GitRepoSettingsService gitRepoSettingsService;
   private final EnvironmentLockHistoryRepository lockHistoryRepository;
+  private final GitHubUserConverter userConverter;
+  private final UserRepository userRepository;
 
   // Every minute
   @Scheduled(fixedRate = 60000)
@@ -59,6 +63,11 @@ public class EnvironmentScheduler {
           if (openLock.isPresent()) {
             EnvironmentLockHistory openLockHistory = openLock.get();
             openLockHistory.setUnlockedAt(OffsetDateTime.now());
+            openLockHistory.setUnlockedBy(
+                userRepository
+                    .findById(Long.parseLong("-2"))
+                    .orElseGet(
+                        () -> userRepository.save(userConverter.convertToExpirationPicker())));
             lockHistoryRepository.save(openLockHistory);
           }
 

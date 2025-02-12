@@ -773,6 +773,9 @@ export const EnvironmentLockHistoryDtoSchema = {
     lockedBy: {
       $ref: '#/components/schemas/UserInfoDto',
     },
+    unlockedBy: {
+      $ref: '#/components/schemas/UserInfoDto',
+    },
     lockedAt: {
       type: 'string',
       format: 'date-time',
@@ -812,6 +815,9 @@ export const ActivityHistoryDtoSchema = {
       type: 'string',
     },
     user: {
+      $ref: '#/components/schemas/UserInfoDto',
+    },
+    user2: {
       $ref: '#/components/schemas/UserInfoDto',
     },
     timestamp: {

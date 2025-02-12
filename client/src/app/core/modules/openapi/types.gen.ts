@@ -262,6 +262,7 @@ export type PullRequestInfoDto = {
 export type EnvironmentLockHistoryDto = {
   id: number;
   lockedBy?: UserInfoDto;
+  unlockedBy?: UserInfoDto;
   lockedAt?: string;
   unlockedAt?: string;
   environment?: EnvironmentDto;
@@ -275,6 +276,7 @@ export type ActivityHistoryDto = {
   sha?: string;
   ref?: string;
   user?: UserInfoDto;
+  user2?: UserInfoDto;
   timestamp?: string;
   createdAt?: string;
   updatedAt?: string;

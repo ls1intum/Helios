@@ -33,6 +33,19 @@ public class GitHubUserConverter extends BaseGitServiceEntityConverter<GHUser, U
     return user;
   }
 
+  public User convertToExpirationPicker() {
+    User user = new User();
+    user.setId(Long.parseLong("-2"));
+    user.setName("Auto Release Lock");
+    user.setCreatedAt(OffsetDateTime.now());
+    user.setUpdatedAt(OffsetDateTime.now());
+    user.setLogin("ls1intum/Helios");
+    user.setAvatarUrl("https://helios.aet.cit.tum.de/favicon.png");
+    user.setHtmlUrl("https://helios.aet.cit.tum.de/not-found");
+    user.setType(Type.USER);
+    return user;
+  }
+
   @Override
   public User update(@NonNull GHUser source, @NonNull User user) {
     convertBaseFields(source, user);
