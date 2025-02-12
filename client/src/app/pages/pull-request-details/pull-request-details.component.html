@@ -1,7 +1,7 @@
-<div class="mt-4 mb-5">
+<div class="mt-4 mb-5 flex items-start justify-between">
   @if (query.data(); as pr) {
     <div class="flex flex-col items-start">
-      <div class="flex items-center gap-4 mt-2">
+      <span class="mb-1 flex gap-2 items-center">
         <app-pull-request-status-icon [pullRequest]="pr" tooltipPosition="top" />
 
         <!-- PR Title -->
@@ -11,11 +11,11 @@
         <h2 class="text-2xl">
           <a [href]="pr.htmlUrl" target="_blank" rel="noopener noreferrer" class="text-gray-600 hover:underline"> #{{ pr.number }} </a>
         </h2>
-      </div>
+      </span>
 
       <!-- Merge Statement -->
       @if (pr.author) {
-        <div class="flex items-center gap-2 mt-2">
+        <div class="flex items-center gap-2">
           <!-- Author Avatar -->
           <app-user-avatar [user]="pr.author" toolTipText="Author" tooltipPosition="top" />
 
@@ -23,8 +23,8 @@
           <span class="text-gray-700 text-sm font-semibold"> {{ pr.author.name || pr.author.login }} opened a pull request from </span>
 
           <!-- Branch Name with Icon -->
-          <p-tag class="font-normal flex items-center gap-1 px-2 py-1">
-            <i-tabler name="git-branch" class="w-4 h-4"></i-tabler>
+          <p-tag rounded class="font-normal flex items-center px-2 py-1" >
+            <i-tabler name="git-branch" class="w-3 h-3"></i-tabler>
             <a [href]="pr.repository?.htmlUrl + '/tree/' + pr.headRefName" target="_blank" rel="noopener noreferrer" class="hover:underline">
               {{ pr.headRefName }}
             </a>
