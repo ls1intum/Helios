@@ -30,7 +30,6 @@
   <div class="mt-6 p-4 border rounded-lg shadow-md text-center">
     <h2 class="text-lg font-semibold mb-2">Project Advisors</h2>
     <div class="flex justify-center">
-
       @for (advisor of projectAdvisors; track advisor.name) {
         <div class="p-2 border rounded-md text-center">
           <img [ngSrc]="getGithubProfilePictureUrl(advisor.githubId)" alt="{{ advisor.name }}" width="112" height="112" class="w-28 h-28 mx-auto rounded-full" />

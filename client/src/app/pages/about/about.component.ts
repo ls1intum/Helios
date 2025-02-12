@@ -15,7 +15,7 @@ export class AboutComponent {
       website: 'https://ase.cit.tum.de/people/krusche/',
       githubHandle: 'krusche',
       githubId: 744067,
-    }
+    },
   ];
 
   contributors = [

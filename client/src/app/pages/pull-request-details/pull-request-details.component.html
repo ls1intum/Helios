@@ -23,7 +23,7 @@
           <span class="text-gray-700 text-sm font-semibold"> {{ pr.author.name || pr.author.login }} opened a pull request from </span>
 
           <!-- Branch Name with Icon -->
-          <p-tag rounded class="font-normal flex items-center px-2 py-1" >
+          <p-tag rounded class="font-normal flex items-center px-2 py-1">
             <i-tabler name="git-branch" class="w-3 h-3"></i-tabler>
             <a [href]="pr.repository?.htmlUrl + '/tree/' + pr.headRefName" target="_blank" rel="noopener noreferrer" class="hover:underline">
               {{ pr.headRefName }}

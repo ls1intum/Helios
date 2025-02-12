@@ -4,8 +4,7 @@ import { IconsModule } from 'icons.module';
 import { UserInfoDto } from '@app/core/modules/openapi';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 import { AvatarModule } from 'primeng/avatar';
-import {Tooltip} from 'primeng/tooltip';
-
+import { Tooltip } from 'primeng/tooltip';
 
 @Component({
   selector: 'app-user-avatar',

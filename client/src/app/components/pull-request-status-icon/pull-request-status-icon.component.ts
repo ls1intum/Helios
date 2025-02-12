@@ -3,7 +3,6 @@ import { TablerIconComponent } from 'angular-tabler-icons';
 import { Tooltip } from 'primeng/tooltip';
 import { PullRequestInfoDto } from '@app/core/modules/openapi';
 
-
 @Component({
   selector: 'app-pull-request-status-icon',
   imports: [TablerIconComponent, Tooltip],
