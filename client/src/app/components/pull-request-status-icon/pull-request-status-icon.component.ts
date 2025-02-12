@@ -3,7 +3,6 @@ import { TablerIconComponent } from 'angular-tabler-icons';
 import { Tooltip } from 'primeng/tooltip';
 import { PullRequestInfoDto } from '@app/core/modules/openapi';
 
-export type TooltipPosition = 'top' | 'bottom' | 'left' | 'right';
 
 @Component({
   selector: 'app-pull-request-status-icon',
@@ -12,7 +11,7 @@ export type TooltipPosition = 'top' | 'bottom' | 'left' | 'right';
 })
 export class PullRequestStatusIconComponent {
   pullRequest = input<PullRequestInfoDto | null>();
-  tooltipPosition = input<TooltipPosition>('right');
+  tooltipPosition = input<Tooltip['tooltipPosition']>('right');
 
   iconName = computed(() => {
     if (!this.pullRequest()) return 'question-mark';
