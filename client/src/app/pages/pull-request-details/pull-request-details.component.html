@@ -1,21 +1,36 @@
-<div class="my-3">
+<div class="mt-4 mb-5 flex items-start justify-between">
   @if (query.data(); as pr) {
     <div class="flex flex-col items-start">
-      <span class="text-gray-500 text-sm uppercase font-semibold tracking-wider mb-1">Pull Request #{{ pr.number }}</span>
-      <div class="flex items-center gap-4">
+      <span class="mb-1 flex gap-2 items-center">
+        <app-pull-request-status-icon [pullRequest]="pr" tooltipPosition="top" />
+
+        <!-- PR Title -->
         <h2 class="text-2xl" [innerHTML]="pr.title | markdown"></h2>
+
+        <!-- PR Number -->
+        <h2 class="text-2xl">
+          <a [href]="pr.htmlUrl" target="_blank" rel="noopener noreferrer" class="text-gray-600 hover:underline"> #{{ pr.number }} </a>
+        </h2>
+      </span>
+
+      <!-- Merge Statement -->
+      @if (pr.author) {
         <div class="flex items-center gap-2">
-          <p-tag [severity]="pr.state === 'OPEN' ? 'success' : 'danger'">
-            {{ pr.state }}
+          <!-- Author Avatar -->
+          <app-user-avatar [user]="pr.author" toolTipText="Author" tooltipPosition="top" />
+
+          <!-- Author Name and Merge Info -->
+          <span class="text-gray-700 text-sm font-semibold"> {{ pr.author.name || pr.author.login }} opened a pull request from </span>
+
+          <!-- Branch Name with Icon -->
+          <p-tag rounded class="font-normal flex items-center px-2 py-1">
+            <i-tabler name="git-branch" class="w-3 h-3"></i-tabler>
+            <a [href]="pr.repository?.htmlUrl + '/tree/' + pr.headRefName" target="_blank" rel="noopener noreferrer" class="hover:underline">
+              {{ pr.headRefName }}
+            </a>
           </p-tag>
-          @if (pr.isDraft) {
-            <p-tag severity="warn">DRAFT</p-tag>
-          }
-          @if (pr.isMerged) {
-            <p-tag severity="info">MERGED</p-tag>
-          }
         </div>
-      </div>
+      }
     </div>
   } @else {
     <div class="flex flex-col items-start gap-2">

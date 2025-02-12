@@ -9,9 +9,10 @@ import { DeploymentSelectionComponent } from '@app/components/deployment-selecti
 import { injectQuery } from '@tanstack/angular-query-experimental';
 import { SkeletonModule } from 'primeng/skeleton';
 import { getBranchByRepositoryIdAndNameOptions, getCommitByRepositoryIdAndNameOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
-import { ReleaseCandidateCreateComponent } from '../../components/dialogs/release-candidate-create/release-candidate-create.component';
+import { ReleaseCandidateCreateComponent } from '@app/components/dialogs/release-candidate-create/release-candidate-create.component';
 import { RouterLink } from '@angular/router';
 import { PermissionService } from '@app/core/services/permission.service';
+import { MarkdownPipe } from '@app/core/modules/markdown/markdown.pipe';
 
 @Component({
   selector: 'app-branch-details',
@@ -26,6 +27,7 @@ import { PermissionService } from '@app/core/services/permission.service';
     PipelineComponent,
     SkeletonModule,
     ReleaseCandidateCreateComponent,
+    MarkdownPipe,
   ],
   templateUrl: './branch-details.component.html',
 })

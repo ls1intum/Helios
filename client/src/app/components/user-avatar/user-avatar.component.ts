@@ -4,11 +4,11 @@ import { IconsModule } from 'icons.module';
 import { UserInfoDto } from '@app/core/modules/openapi';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 import { AvatarModule } from 'primeng/avatar';
-import { TooltipModule } from 'primeng/tooltip';
+import { Tooltip } from 'primeng/tooltip';
 
 @Component({
   selector: 'app-user-avatar',
-  imports: [CommonModule, TooltipModule, AvatarModule, IconsModule],
+  imports: [CommonModule, AvatarModule, IconsModule, Tooltip],
   templateUrl: './user-avatar.component.html',
 })
 export class UserAvatarComponent {
@@ -16,6 +16,7 @@ export class UserAvatarComponent {
 
   user = input.required<UserInfoDto | undefined>();
   toolTipText = input<string | undefined>();
+  tooltipPosition = input<Tooltip['tooltipPosition']>('right');
 
   getAvatarBorderClass(login: string) {
     return this.keycloakService.isCurrentUser(login) ? 'border-2 border-primary-400 rounded-full' : '';

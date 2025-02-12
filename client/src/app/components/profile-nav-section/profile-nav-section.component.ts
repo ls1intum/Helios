@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { Component, inject, input } from '@angular/core';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 import { IconsModule } from 'icons.module';
 import { ButtonModule } from 'primeng/button';
@@ -19,6 +19,8 @@ import { AvatarModule } from 'primeng/avatar';
 })
 export class ProfileNavSectionComponent {
   private keycloakService = inject(KeycloakService);
+
+  isExpanded = input.required<boolean>();
 
   isLoggedIn() {
     return this.keycloakService.isLoggedIn();
@@ -48,7 +50,19 @@ export class ProfileNavSectionComponent {
     return `${profile?.firstName} ${profile?.lastName}`;
   }
 
+  getProfilePictureUrl() {
+    return this.keycloakService.getUserGithubProfilePictureUrl();
+  }
+
+  getProfileUrl() {
+    return this.keycloakService.getUserGithubProfileUrl();
+  }
+
   login() {
     this.keycloakService.login();
+  }
+
+  openProfile() {
+    window.open(this.getProfileUrl());
   }
 }

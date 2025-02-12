@@ -1,0 +1,81 @@
+<app-page-heading>
+  <div heading>About Helios</div>
+  <div description>
+    <br />
+    Helios is an interactive platform designed to improve the efficiency and usability of CI/CD workflows in GitHub Actions. The platform enables better visualization, environment
+    tracking, deployment management and test analytics.
+  </div>
+</app-page-heading>
+
+<div class="container mx-auto p-6">
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div class="p-4 border rounded-lg shadow-md">
+      <h2 class="text-lg font-semibold mb-2">Main Features</h2>
+      <ul class="list-disc pl-5">
+        <li>Visualization of GitHub Actions pipelines</li>
+        <li>Environment locking/unlocking</li>
+        <li>Deployment management</li>
+        <li>Test analytics (coming soon)</li>
+      </ul>
+    </div>
+
+    <div class="p-4 border rounded-lg shadow-md">
+      <h2 class="text-lg font-semibold mb-2">Get in Touch</h2>
+      <p><a href="https://github.com/ls1intum/Helios/issues/new?template=1-bug-report.yml" class="text-blue-500" target="_blank">Report a Bug</a></p>
+      <p><a href="https://github.com/ls1intum/Helios/issues/new?template=2-feature-request.yml" class="text-blue-500" target="_blank">Request a Feature</a></p>
+      <p><a href="https://github.com/ls1intum/Helios/releases" class="text-blue-500" target="_blank">Release Notes</a></p>
+    </div>
+  </div>
+
+  <div class="mt-6 p-4 border rounded-lg shadow-md text-center">
+    <h2 class="text-lg font-semibold mb-2">Project Advisors</h2>
+    <div class="flex justify-center">
+      @for (advisor of projectAdvisors; track advisor.name) {
+        <div class="p-2 border rounded-md text-center">
+          <img [ngSrc]="getGithubProfilePictureUrl(advisor.githubId)" alt="{{ advisor.name }}" width="112" height="112" class="w-28 h-28 mx-auto rounded-full" />
+          <p class="font-semibold">{{ advisor.name }}</p>
+          <p class="text-sm text-gray-600">{{ advisor.description }}</p>
+          @if (advisor.website) {
+            <a [href]="advisor.website" class="text-blue-500 ml-2" target="_blank">Website</a>
+          }
+          @if (advisor.githubHandle) {
+            <a [href]="getGithubProfileUrl(advisor.githubHandle)" class="text-blue-500 ml-2" target="_blank">GitHub</a>
+          }
+        </div>
+      }
+    </div>
+  </div>
+
+  <div class="mt-6 p-4 border rounded-lg shadow-md text-center">
+    <h2 class="text-lg font-semibold mb-2">Contributors</h2>
+    <div class="flex flex-wrap justify-center gap-4">
+      @for (contributor of contributors; track contributor.name) {
+        <div class="p-2 border rounded-md text-center w-48">
+          <img [ngSrc]="getGithubProfilePictureUrl(contributor.githubId)" alt="{{ contributor.name }}" width="112" height="112" class="w-28 h-28 mx-auto rounded-full" />
+          <p class="font-semibold">{{ contributor.name }}</p>
+          <p class="text-sm text-gray-600">{{ contributor.description }}</p>
+          @if (contributor.website) {
+            <a [href]="contributor.website" class="text-blue-500 ml-2" target="_blank">Website</a>
+          }
+          @if (contributor.githubHandle) {
+            <a [href]="getGithubProfileUrl(contributor.githubHandle)" class="text-blue-500 ml-2" target="_blank">GitHub</a>
+          }
+        </div>
+      }
+    </div>
+  </div>
+
+  <div class="mt-6 p-4 border rounded-lg shadow-md text-center">
+    <h2 class="text-lg font-semibold mb-2">Operator</h2>
+    <div class="flex justify-center">
+      <div class="p-2 border rounded-md text-center">
+        <p class="font-semibold">Name</p>
+        <p class="text-gray-600">Technical University of Munich</p>
+        <p class="font-semibold mt-2">Administrator</p>
+        <p class="text-gray-600">Stephan Krusche</p>
+        <p class="font-semibold mt-2">Contact Email</p>
+        <a href="mailto:artemis@xcit.tum.de" class="text-blue-500">artemis&#64;xcit.tum.de</a>
+      </div>
+    </div>
+  </div>
+</div>
