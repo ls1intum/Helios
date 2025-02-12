@@ -13,7 +13,6 @@ import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
 import { Skeleton } from 'primeng/skeleton';
 import { TableModule } from 'primeng/table';
-import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 
 @Component({
   selector: 'app-repository-overview',
@@ -22,7 +21,6 @@ import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 })
 export class RepositoryOverviewComponent {
   private router = inject(Router);
-  keycloak = inject(KeycloakService);
 
   query = injectQuery(() => getAllRepositoriesOptions());
 
