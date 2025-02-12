@@ -8,11 +8,29 @@ import { NgOptimizedImage } from '@angular/common';
   templateUrl: './about.component.html',
 })
 export class AboutComponent {
-  contributors = [
-    { name: 'Galiiabanu Bakirova', description: "Master's Thesis", photo: 'bakirova.jpeg', github: 'gbanu' },
-    { name: 'Ege Kocabaş', description: "Master's Thesis", photo: 'kocabas.jpeg', github: 'egekocabas' },
-    { name: 'Turker Koç', description: "Master's Thesis", photo: 'koc.jpeg', github: 'TurkerKoc' },
-    { name: 'Paul Thiel', description: 'Bachelor Thesis', photo: 'thiel.jpeg', github: 'thielpa' },
-    { name: 'Stefan Németh', description: 'Bachelor Thesis', photo: 'nemeth.jpeg', github: 'StefanNemeth' },
+  projectAdvisors = [
+    {
+      name: 'Stephan Krusche',
+      description: 'Project Advisor',
+      website: 'https://ase.cit.tum.de/people/krusche/',
+      githubHandle: 'krusche',
+      githubId: 1119707,
+    }
   ];
+
+  contributors = [
+    { name: 'Galiiabanu Bakirova', description: "Master's Thesis", website: null, githubHandle: 'gbanu', githubId: 56745022 },
+    { name: 'Ege Kocabaş', description: "Master's Thesis", website: null, githubHandle: 'egekocabas', githubId: 48245934 },
+    { name: 'Turker Koç', description: "Master's Thesis", website: null, githubHandle: 'TurkerKoc', githubId: 39654393 },
+    { name: 'Paul Thiel', description: 'Bachelor Thesis', website: null, githubHandle: 'thielpa', githubId: 10695477 },
+    { name: 'Stefan Németh', description: 'Bachelor Thesis', website: null, githubHandle: 'StefanNemeth', githubId: 5003405 },
+  ];
+
+  getGithubProfilePictureUrl(userId: number): string {
+    return `https://avatars.githubusercontent.com/u/${userId}`;
+  }
+
+  getGithubProfileUrl(handle: string): string {
+    return `https://github.com/${handle}`;
+  }
 }

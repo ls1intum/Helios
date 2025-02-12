@@ -30,13 +30,20 @@
   <div class="mt-6 p-4 border rounded-lg shadow-md text-center">
     <h2 class="text-lg font-semibold mb-2">Project Advisors</h2>
     <div class="flex justify-center">
-      <div class="p-2 border rounded-md text-center">
-        <img [ngSrc]="'assets/about/krusche.jpg'" alt="Stephan Krusche" width="112" height="112" class="w-28 h-28 mx-auto rounded-full" />
-        <p class="font-semibold">Stephan Krusche</p>
-        <p class="text-sm text-gray-600">Project Advisor</p>
-        <a href="https://ase.cit.tum.de/people/krusche/" class="text-blue-500 ml-2" target="_blank">Website</a>
-        <a href="https://github.com/krusche" class="text-blue-500 ml-2" target="_blank">GitHub</a>
-      </div>
+
+      @for (advisor of projectAdvisors; track advisor.name) {
+        <div class="p-2 border rounded-md text-center">
+          <img [ngSrc]="getGithubProfilePictureUrl(advisor.githubId)" alt="{{ advisor.name }}" width="112" height="112" class="w-28 h-28 mx-auto rounded-full" />
+          <p class="font-semibold">{{ advisor.name }}</p>
+          <p class="text-sm text-gray-600">{{ advisor.description }}</p>
+          @if (advisor.website) {
+            <a [href]="advisor.website" class="text-blue-500 ml-2" target="_blank">Website</a>
+          }
+          @if (advisor.githubHandle) {
+            <a [href]="getGithubProfileUrl(advisor.githubHandle)" class="text-blue-500 ml-2" target="_blank">GitHub</a>
+          }
+        </div>
+      }
     </div>
   </div>
 
@@ -45,11 +52,14 @@
     <div class="flex flex-wrap justify-center gap-4">
       @for (contributor of contributors; track contributor.name) {
         <div class="p-2 border rounded-md text-center w-48">
-          <img [ngSrc]="'assets/about/' + contributor.photo" alt="{{ contributor.name }}" width="112" height="112" class="w-28 h-28 mx-auto rounded-full" />
+          <img [ngSrc]="getGithubProfilePictureUrl(contributor.githubId)" alt="{{ contributor.name }}" width="112" height="112" class="w-28 h-28 mx-auto rounded-full" />
           <p class="font-semibold">{{ contributor.name }}</p>
           <p class="text-sm text-gray-600">{{ contributor.description }}</p>
-          @if (contributor.github) {
-            <a [href]="'https://github.com/' + contributor.github" class="text-blue-500 ml-2" target="_blank">GitHub</a>
+          @if (contributor.website) {
+            <a [href]="contributor.website" class="text-blue-500 ml-2" target="_blank">Website</a>
+          }
+          @if (contributor.githubHandle) {
+            <a [href]="getGithubProfileUrl(contributor.githubHandle)" class="text-blue-500 ml-2" target="_blank">GitHub</a>
           }
         </div>
       }
