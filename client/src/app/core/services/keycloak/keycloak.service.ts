@@ -69,7 +69,7 @@ export class KeycloakService {
     return this.decodedToken()?.github_id;
   }
 
-  getUserGithubProfilePictureUrl() {
+  getUserGithubProfilePictureUrl(): string {
     const userId = this.getUserGithubId();
     if (userId) {
       return `https://avatars.githubusercontent.com/u/${userId}`;
