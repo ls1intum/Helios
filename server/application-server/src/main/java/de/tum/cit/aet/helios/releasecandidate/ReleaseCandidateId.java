@@ -1,18 +1,18 @@
-package de.tum.cit.aet.helios.tag;
+package de.tum.cit.aet.helios.releasecandidate;
 
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import java.io.Serializable;
 import java.util.Objects;
 
-public class TagId implements Serializable {
+public class ReleaseCandidateId implements Serializable {
 
   private String name;
   private GitRepository repository;
 
   // Default constructor
-  public TagId() {}
+  public ReleaseCandidateId() {}
 
-  public TagId(String name, GitRepository repository) {
+  public ReleaseCandidateId(String name, GitRepository repository) {
     this.name = name;
     this.repository = repository;
   }
@@ -26,8 +26,9 @@ public class TagId implements Serializable {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    TagId tagId = (TagId) o;
-    return Objects.equals(name, tagId.name) && Objects.equals(repository, tagId.repository);
+    ReleaseCandidateId releaseCandidateId = (ReleaseCandidateId) o;
+    return Objects.equals(name, releaseCandidateId.name)
+        && Objects.equals(repository, releaseCandidateId.repository);
   }
 
   @Override

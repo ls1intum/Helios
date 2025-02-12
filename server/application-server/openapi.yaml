@@ -163,56 +163,6 @@ paths:
           content:
             application/json:
               schema: {}
-  /api/tags:
-    get:
-      tags:
-      - tag-controller
-      operationId: getAllTags
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/TagInfoDto"
-    post:
-      tags:
-      - tag-controller
-      operationId: createTag
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/TagCreateDto"
-        required: true
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/TagInfoDto"
-  /api/tags/{name}/evaluate/{isWorking}:
-    post:
-      tags:
-      - tag-controller
-      operationId: evaluate
-      parameters:
-      - name: name
-        in: path
-        required: true
-        schema:
-          type: string
-      - name: isWorking
-        in: path
-        required: true
-        schema:
-          type: boolean
-      responses:
-        "200":
-          description: OK
   /api/settings/{repositoryId}/groups/create:
     post:
       tags:
@@ -238,6 +188,56 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/WorkflowGroupDto"
+  /api/release-candidate:
+    get:
+      tags:
+      - release-candidate-controller
+      operationId: getAllReleaseCandidates
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ReleaseCandidateInfoDto"
+    post:
+      tags:
+      - release-candidate-controller
+      operationId: createReleaseCandidate
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReleaseCandidateCreateDto"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReleaseCandidateInfoDto"
+  /api/release-candidate/{name}/evaluate/{isWorking}:
+    post:
+      tags:
+      - release-candidate-controller
+      operationId: evaluate
+      parameters:
+      - name: name
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: isWorking
+        in: path
+        required: true
+        schema:
+          type: boolean
+      responses:
+        "200":
+          description: OK
   /api/deployments/deploy:
     post:
       tags:
@@ -402,42 +402,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/GitHubRepositoryRoleDto"
-  /api/tags/{name}:
-    get:
-      tags:
-      - tag-controller
-      operationId: getTagByName
-      parameters:
-      - name: name
-        in: path
-        required: true
-        schema:
-          type: string
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/TagDetailsDto"
-  /api/tags/newcommits:
-    get:
-      tags:
-      - tag-controller
-      operationId: getCommitsSinceLastTag
-      parameters:
-      - name: branch
-        in: query
-        required: true
-        schema:
-          type: string
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/CommitsSinceTagDto"
   /api/settings/{repositoryId}/groups:
     get:
       tags:
@@ -492,6 +456,42 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/RepositoryInfoDto"
+  /api/release-candidate/{name}:
+    get:
+      tags:
+      - release-candidate-controller
+      operationId: getReleaseCandidateByName
+      parameters:
+      - name: name
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReleaseCandidateDetailsDto"
+  /api/release-candidate/newcommits:
+    get:
+      tags:
+      - release-candidate-controller
+      operationId: getCommitsSinceLastReleaseCandidate
+      parameters:
+      - name: branch
+        in: query
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CommitsSinceReleaseCandidateDto"
   /api/pullrequests:
     get:
       tags:
@@ -903,7 +903,7 @@ components:
           type: string
         task:
           type: string
-        tagName:
+        releaseCandidateName:
           type: string
         user:
           $ref: "#/components/schemas/UserInfoDto"
@@ -1045,7 +1045,7 @@ components:
       - id
       - login
       - name
-    TagCreateDto:
+    ReleaseCandidateCreateDto:
       type: object
       properties:
         name:
@@ -1057,7 +1057,7 @@ components:
       required:
       - commitSha
       - name
-    TagInfoDto:
+    ReleaseCandidateInfoDto:
       type: object
       properties:
         name:
@@ -1280,7 +1280,7 @@ components:
       - statusesUrl
       - task
       - url
-    TagDetailsDto:
+    ReleaseCandidateDetailsDto:
       type: object
       properties:
         name:
@@ -1296,7 +1296,7 @@ components:
         evaluations:
           type: array
           items:
-            $ref: "#/components/schemas/TagEvaluationDto"
+            $ref: "#/components/schemas/ReleaseCandidateEvaluationDto"
         createdBy:
           $ref: "#/components/schemas/UserInfoDto"
         createdAt:
@@ -1309,7 +1309,7 @@ components:
       - deployments
       - evaluations
       - name
-    TagEvaluationDto:
+    ReleaseCandidateEvaluationDto:
       type: object
       properties:
         user:
@@ -1319,7 +1319,7 @@ components:
       required:
       - isWorking
       - user
-    CommitsSinceTagDto:
+    CommitsSinceReleaseCandidateDto:
       type: object
       properties:
         commitsLength:
@@ -1554,7 +1554,7 @@ components:
           type: boolean
         isProtected:
           type: boolean
-        tagName:
+        releaseCandidateName:
           type: string
         updatedAt:
           type: string

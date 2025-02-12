@@ -26,7 +26,7 @@ export type EnvironmentDeployment = {
   sha?: string;
   ref?: string;
   task?: string;
-  tagName?: string;
+  releaseCandidateName?: string;
   user?: UserInfoDto;
   createdAt?: string;
   updatedAt?: string;
@@ -82,13 +82,13 @@ export type UserInfoDto = {
   htmlUrl: string;
 };
 
-export type TagCreateDto = {
+export type ReleaseCandidateCreateDto = {
   name: string;
   commitSha: string;
   branchName?: string;
 };
 
-export type TagInfoDto = {
+export type ReleaseCandidateInfoDto = {
   name?: string;
   commitSha?: string;
   branchName?: string;
@@ -179,22 +179,22 @@ export type DeploymentDto = {
   updatedAt?: string;
 };
 
-export type TagDetailsDto = {
+export type ReleaseCandidateDetailsDto = {
   name: string;
   commit: CommitInfoDto;
   branch?: BranchInfoDto;
   deployments: Array<DeploymentDto>;
-  evaluations: Array<TagEvaluationDto>;
+  evaluations: Array<ReleaseCandidateEvaluationDto>;
   createdBy: UserInfoDto;
   createdAt: string;
 };
 
-export type TagEvaluationDto = {
+export type ReleaseCandidateEvaluationDto = {
   user: UserInfoDto;
   isWorking: boolean;
 };
 
-export type CommitsSinceTagDto = {
+export type CommitsSinceReleaseCandidateDto = {
   commitsLength: number;
   commits: Array<CommitInfoDto>;
 };
@@ -287,7 +287,7 @@ export type BranchDetailsDto = {
   behindBy?: number;
   isDefault?: boolean;
   isProtected?: boolean;
-  tagName?: string;
+  releaseCandidateName?: string;
   updatedAt?: string;
   updatedBy?: UserInfoDto;
   repository?: RepositoryInfoDto;
@@ -409,55 +409,6 @@ export type UnlockEnvironmentResponses = {
   200: unknown;
 };
 
-export type GetAllTagsData = {
-  body?: never;
-  path?: never;
-  query?: never;
-  url: '/api/tags';
-};
-
-export type GetAllTagsResponses = {
-  /**
-   * OK
-   */
-  200: Array<TagInfoDto>;
-};
-
-export type GetAllTagsResponse = GetAllTagsResponses[keyof GetAllTagsResponses];
-
-export type CreateTagData = {
-  body: TagCreateDto;
-  path?: never;
-  query?: never;
-  url: '/api/tags';
-};
-
-export type CreateTagResponses = {
-  /**
-   * OK
-   */
-  200: TagInfoDto;
-};
-
-export type CreateTagResponse = CreateTagResponses[keyof CreateTagResponses];
-
-export type EvaluateData = {
-  body?: never;
-  path: {
-    name: string;
-    isWorking: boolean;
-  };
-  query?: never;
-  url: '/api/tags/{name}/evaluate/{isWorking}';
-};
-
-export type EvaluateResponses = {
-  /**
-   * OK
-   */
-  200: unknown;
-};
-
 export type CreateWorkflowGroupData = {
   body: WorkflowGroupDto;
   path: {
@@ -475,6 +426,55 @@ export type CreateWorkflowGroupResponses = {
 };
 
 export type CreateWorkflowGroupResponse = CreateWorkflowGroupResponses[keyof CreateWorkflowGroupResponses];
+
+export type GetAllReleaseCandidatesData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/api/release-candidate';
+};
+
+export type GetAllReleaseCandidatesResponses = {
+  /**
+   * OK
+   */
+  200: Array<ReleaseCandidateInfoDto>;
+};
+
+export type GetAllReleaseCandidatesResponse = GetAllReleaseCandidatesResponses[keyof GetAllReleaseCandidatesResponses];
+
+export type CreateReleaseCandidateData = {
+  body: ReleaseCandidateCreateDto;
+  path?: never;
+  query?: never;
+  url: '/api/release-candidate';
+};
+
+export type CreateReleaseCandidateResponses = {
+  /**
+   * OK
+   */
+  200: ReleaseCandidateInfoDto;
+};
+
+export type CreateReleaseCandidateResponse = CreateReleaseCandidateResponses[keyof CreateReleaseCandidateResponses];
+
+export type EvaluateData = {
+  body?: never;
+  path: {
+    name: string;
+    isWorking: boolean;
+  };
+  query?: never;
+  url: '/api/release-candidate/{name}/evaluate/{isWorking}';
+};
+
+export type EvaluateResponses = {
+  /**
+   * OK
+   */
+  200: unknown;
+};
 
 export type DeployToEnvironmentData = {
   body: DeployRequest;
@@ -631,42 +631,6 @@ export type GetUserPermissionsResponses = {
 
 export type GetUserPermissionsResponse = GetUserPermissionsResponses[keyof GetUserPermissionsResponses];
 
-export type GetTagByNameData = {
-  body?: never;
-  path: {
-    name: string;
-  };
-  query?: never;
-  url: '/api/tags/{name}';
-};
-
-export type GetTagByNameResponses = {
-  /**
-   * OK
-   */
-  200: TagDetailsDto;
-};
-
-export type GetTagByNameResponse = GetTagByNameResponses[keyof GetTagByNameResponses];
-
-export type GetCommitsSinceLastTagData = {
-  body?: never;
-  path?: never;
-  query: {
-    branch: string;
-  };
-  url: '/api/tags/newcommits';
-};
-
-export type GetCommitsSinceLastTagResponses = {
-  /**
-   * OK
-   */
-  200: CommitsSinceTagDto;
-};
-
-export type GetCommitsSinceLastTagResponse = GetCommitsSinceLastTagResponses[keyof GetCommitsSinceLastTagResponses];
-
 export type GetGroupsWithWorkflowsData = {
   body?: never;
   path: {
@@ -718,6 +682,42 @@ export type GetRepositoryByIdResponses = {
 };
 
 export type GetRepositoryByIdResponse = GetRepositoryByIdResponses[keyof GetRepositoryByIdResponses];
+
+export type GetReleaseCandidateByNameData = {
+  body?: never;
+  path: {
+    name: string;
+  };
+  query?: never;
+  url: '/api/release-candidate/{name}';
+};
+
+export type GetReleaseCandidateByNameResponses = {
+  /**
+   * OK
+   */
+  200: ReleaseCandidateDetailsDto;
+};
+
+export type GetReleaseCandidateByNameResponse = GetReleaseCandidateByNameResponses[keyof GetReleaseCandidateByNameResponses];
+
+export type GetCommitsSinceLastReleaseCandidateData = {
+  body?: never;
+  path?: never;
+  query: {
+    branch: string;
+  };
+  url: '/api/release-candidate/newcommits';
+};
+
+export type GetCommitsSinceLastReleaseCandidateResponses = {
+  /**
+   * OK
+   */
+  200: CommitsSinceReleaseCandidateDto;
+};
+
+export type GetCommitsSinceLastReleaseCandidateResponse = GetCommitsSinceLastReleaseCandidateResponses[keyof GetCommitsSinceLastReleaseCandidateResponses];
 
 export type GetAllPullRequestsData = {
   body?: never;

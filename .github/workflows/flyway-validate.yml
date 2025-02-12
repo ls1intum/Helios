@@ -4,6 +4,8 @@ on:
   pull_request:
     branches: [staging]
   workflow_call: {}
+  push:
+    branches: [staging]
 
 env:
   DATASOURCE_URL: jdbc:postgresql://localhost:5432/helios

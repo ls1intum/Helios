@@ -83,7 +83,7 @@ export const EnvironmentDeploymentSchema = {
     task: {
       type: 'string',
     },
-    tagName: {
+    releaseCandidateName: {
       type: 'string',
     },
     user: {
@@ -262,7 +262,7 @@ export const UserInfoDtoSchema = {
   required: ['avatarUrl', 'htmlUrl', 'id', 'login', 'name'],
 } as const;
 
-export const TagCreateDtoSchema = {
+export const ReleaseCandidateCreateDtoSchema = {
   type: 'object',
   properties: {
     name: {
@@ -278,7 +278,7 @@ export const TagCreateDtoSchema = {
   required: ['commitSha', 'name'],
 } as const;
 
-export const TagInfoDtoSchema = {
+export const ReleaseCandidateInfoDtoSchema = {
   type: 'object',
   properties: {
     name: {
@@ -523,7 +523,7 @@ export const DeploymentDtoSchema = {
   required: ['environment', 'id', 'ref', 'sha', 'statusesUrl', 'task', 'url'],
 } as const;
 
-export const TagDetailsDtoSchema = {
+export const ReleaseCandidateDetailsDtoSchema = {
   type: 'object',
   properties: {
     name: {
@@ -544,7 +544,7 @@ export const TagDetailsDtoSchema = {
     evaluations: {
       type: 'array',
       items: {
-        $ref: '#/components/schemas/TagEvaluationDto',
+        $ref: '#/components/schemas/ReleaseCandidateEvaluationDto',
       },
     },
     createdBy: {
@@ -558,7 +558,7 @@ export const TagDetailsDtoSchema = {
   required: ['commit', 'createdAt', 'createdBy', 'deployments', 'evaluations', 'name'],
 } as const;
 
-export const TagEvaluationDtoSchema = {
+export const ReleaseCandidateEvaluationDtoSchema = {
   type: 'object',
   properties: {
     user: {
@@ -571,7 +571,7 @@ export const TagEvaluationDtoSchema = {
   required: ['isWorking', 'user'],
 } as const;
 
-export const CommitsSinceTagDtoSchema = {
+export const CommitsSinceReleaseCandidateDtoSchema = {
   type: 'object',
   properties: {
     commitsLength: {
@@ -852,7 +852,7 @@ export const BranchDetailsDtoSchema = {
     isProtected: {
       type: 'boolean',
     },
-    tagName: {
+    releaseCandidateName: {
       type: 'string',
     },
     updatedAt: {

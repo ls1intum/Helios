@@ -1,7 +1,7 @@
 package de.tum.cit.aet.helios.environment;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import de.tum.cit.aet.helios.tag.TagRepository;
+import de.tum.cit.aet.helios.releasecandidate.ReleaseCandidateRepository;
 import de.tum.cit.aet.helios.user.UserInfoDto;
 import io.micrometer.common.lang.Nullable;
 import java.time.OffsetDateTime;
@@ -18,7 +18,7 @@ public record EnvironmentLockHistoryDto(
   public static EnvironmentLockHistoryDto fromEnvironmentLockHistory(
       EnvironmentLockHistory environmentLockHistory,
       EnvironmentService environmentService,
-      TagRepository tagRepository) {
+      ReleaseCandidateRepository releaseCandidateRepository) {
     Environment environment = environmentLockHistory.getEnvironment();
     return new EnvironmentLockHistoryDto(
         environmentLockHistory.getId(),
@@ -29,6 +29,6 @@ public record EnvironmentLockHistoryDto(
             environment,
             environmentService.findLatestDeployment(environment),
             environment.getLatestStatus(),
-            tagRepository));
+            releaseCandidateRepository));
   }
 }

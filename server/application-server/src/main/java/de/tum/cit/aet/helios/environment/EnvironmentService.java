@@ -10,7 +10,7 @@ import de.tum.cit.aet.helios.gitreposettings.GitRepoSettingsService;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
 import de.tum.cit.aet.helios.permissions.UserService;
-import de.tum.cit.aet.helios.tag.TagRepository;
+import de.tum.cit.aet.helios.releasecandidate.ReleaseCandidateRepository;
 import de.tum.cit.aet.helios.user.User;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
@@ -31,7 +31,7 @@ public class EnvironmentService {
   private final EnvironmentRepository environmentRepository;
   private final EnvironmentLockHistoryRepository lockHistoryRepository;
   private final HeliosDeploymentRepository heliosDeploymentRepository;
-  private final TagRepository tagRepository;
+  private final ReleaseCandidateRepository releaseCandidateRepository;
   private final DeploymentRepository deploymentRepository;
   private final UserService userService;
   private final GitRepoSettingsService gitRepoSettingsService;
@@ -52,7 +52,7 @@ public class EnvironmentService {
               environmentScheduler.unlockExpiredEnvironments();
               LatestDeploymentUnion latest = findLatestDeployment(environment);
               return EnvironmentDto.fromEnvironment(
-                  environment, latest, environment.getLatestStatus(), tagRepository);
+                  environment, latest, environment.getLatestStatus(), releaseCandidateRepository);
             })
         .collect(Collectors.toList());
   }
@@ -68,7 +68,7 @@ public class EnvironmentService {
               environmentScheduler.unlockExpiredEnvironments();
               LatestDeploymentUnion latest = findLatestDeployment(environment);
               return EnvironmentDto.fromEnvironment(
-                  environment, latest, environment.getLatestStatus(), tagRepository);
+                  environment, latest, environment.getLatestStatus(), releaseCandidateRepository);
             })
         .collect(Collectors.toList());
   }
@@ -357,14 +357,18 @@ public class EnvironmentService {
 
     return lockHistory
         .map(
-            lock -> EnvironmentLockHistoryDto.fromEnvironmentLockHistory(lock, this, tagRepository))
+            lock ->
+                EnvironmentLockHistoryDto.fromEnvironmentLockHistory(
+                    lock, this, releaseCandidateRepository))
         .orElse(null);
   }
 
   public List<EnvironmentLockHistoryDto> getLockHistoryByEnvironmentId(Long environmentId) {
     return lockHistoryRepository.findLockHistoriesByEnvironment(environmentId).stream()
         .map(
-            lock -> EnvironmentLockHistoryDto.fromEnvironmentLockHistory(lock, this, tagRepository))
+            lock ->
+                EnvironmentLockHistoryDto.fromEnvironmentLockHistory(
+                    lock, this, releaseCandidateRepository))
         .collect(Collectors.toList());
   }
 

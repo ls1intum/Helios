@@ -10,12 +10,12 @@ import type {
   GetEnvironmentByIdData,
   UpdateEnvironmentData,
   UnlockEnvironmentData,
-  GetAllTagsData,
-  CreateTagData,
-  CreateTagResponse,
-  EvaluateData,
   CreateWorkflowGroupData,
   CreateWorkflowGroupResponse,
+  GetAllReleaseCandidatesData,
+  CreateReleaseCandidateData,
+  CreateReleaseCandidateResponse,
+  EvaluateData,
   DeployToEnvironmentData,
   DeployToEnvironmentResponse,
   HealthCheckData,
@@ -26,11 +26,11 @@ import type {
   GetLatestWorkflowRunsByPullRequestIdAndHeadCommitData,
   GetLatestWorkflowRunsByBranchAndHeadCommitData,
   GetUserPermissionsData,
-  GetTagByNameData,
-  GetCommitsSinceLastTagData,
   GetGroupsWithWorkflowsData,
   GetAllRepositoriesData,
   GetRepositoryByIdData,
+  GetReleaseCandidateByNameData,
+  GetCommitsSinceLastReleaseCandidateData,
   GetAllPullRequestsData,
   GetPullRequestByIdData,
   GetPullRequestByRepositoryIdAndNumberData,
@@ -58,10 +58,10 @@ import {
   getEnvironmentById,
   updateEnvironment,
   unlockEnvironment,
-  getAllTags,
-  createTag,
-  evaluate,
   createWorkflowGroup,
+  getAllReleaseCandidates,
+  createReleaseCandidate,
+  evaluate,
   deployToEnvironment,
   healthCheck,
   getAllWorkflows,
@@ -71,11 +71,11 @@ import {
   getLatestWorkflowRunsByPullRequestIdAndHeadCommit,
   getLatestWorkflowRunsByBranchAndHeadCommit,
   getUserPermissions,
-  getTagByName,
-  getCommitsSinceLastTag,
   getGroupsWithWorkflows,
   getAllRepositories,
   getRepositoryById,
+  getReleaseCandidateByName,
+  getCommitsSinceLastReleaseCandidate,
   getAllPullRequests,
   getPullRequestById,
   getPullRequestByRepositoryIdAndNumber,
@@ -228,12 +228,12 @@ export const unlockEnvironmentMutation = (options?: Partial<Options<UnlockEnviro
   return mutationOptions;
 };
 
-export const getAllTagsQueryKey = (options?: Options<GetAllTagsData>) => [createQueryKey('getAllTags', options)];
+export const createWorkflowGroupQueryKey = (options: Options<CreateWorkflowGroupData>) => [createQueryKey('createWorkflowGroup', options)];
 
-export const getAllTagsOptions = (options?: Options<GetAllTagsData>) => {
+export const createWorkflowGroupOptions = (options: Options<CreateWorkflowGroupData>) => {
   return queryOptions({
     queryFn: async ({ queryKey, signal }) => {
-      const { data } = await getAllTags({
+      const { data } = await createWorkflowGroup({
         ...options,
         ...queryKey[0],
         signal,
@@ -241,31 +241,62 @@ export const getAllTagsOptions = (options?: Options<GetAllTagsData>) => {
       });
       return data;
     },
-    queryKey: getAllTagsQueryKey(options),
+    queryKey: createWorkflowGroupQueryKey(options),
   });
 };
 
-export const createTagQueryKey = (options: Options<CreateTagData>) => [createQueryKey('createTag', options)];
-
-export const createTagOptions = (options: Options<CreateTagData>) => {
-  return queryOptions({
-    queryFn: async ({ queryKey, signal }) => {
-      const { data } = await createTag({
-        ...options,
-        ...queryKey[0],
-        signal,
-        throwOnError: true,
-      });
-      return data;
-    },
-    queryKey: createTagQueryKey(options),
-  });
-};
-
-export const createTagMutation = (options?: Partial<Options<CreateTagData>>) => {
-  const mutationOptions: MutationOptions<CreateTagResponse, DefaultError, Options<CreateTagData>> = {
+export const createWorkflowGroupMutation = (options?: Partial<Options<CreateWorkflowGroupData>>) => {
+  const mutationOptions: MutationOptions<CreateWorkflowGroupResponse, DefaultError, Options<CreateWorkflowGroupData>> = {
     mutationFn: async localOptions => {
-      const { data } = await createTag({
+      const { data } = await createWorkflowGroup({
+        ...options,
+        ...localOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const getAllReleaseCandidatesQueryKey = (options?: Options<GetAllReleaseCandidatesData>) => [createQueryKey('getAllReleaseCandidates', options)];
+
+export const getAllReleaseCandidatesOptions = (options?: Options<GetAllReleaseCandidatesData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getAllReleaseCandidates({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: getAllReleaseCandidatesQueryKey(options),
+  });
+};
+
+export const createReleaseCandidateQueryKey = (options: Options<CreateReleaseCandidateData>) => [createQueryKey('createReleaseCandidate', options)];
+
+export const createReleaseCandidateOptions = (options: Options<CreateReleaseCandidateData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await createReleaseCandidate({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: createReleaseCandidateQueryKey(options),
+  });
+};
+
+export const createReleaseCandidateMutation = (options?: Partial<Options<CreateReleaseCandidateData>>) => {
+  const mutationOptions: MutationOptions<CreateReleaseCandidateResponse, DefaultError, Options<CreateReleaseCandidateData>> = {
+    mutationFn: async localOptions => {
+      const { data } = await createReleaseCandidate({
         ...options,
         ...localOptions,
         throwOnError: true,
@@ -297,37 +328,6 @@ export const evaluateMutation = (options?: Partial<Options<EvaluateData>>) => {
   const mutationOptions: MutationOptions<unknown, DefaultError, Options<EvaluateData>> = {
     mutationFn: async localOptions => {
       const { data } = await evaluate({
-        ...options,
-        ...localOptions,
-        throwOnError: true,
-      });
-      return data;
-    },
-  };
-  return mutationOptions;
-};
-
-export const createWorkflowGroupQueryKey = (options: Options<CreateWorkflowGroupData>) => [createQueryKey('createWorkflowGroup', options)];
-
-export const createWorkflowGroupOptions = (options: Options<CreateWorkflowGroupData>) => {
-  return queryOptions({
-    queryFn: async ({ queryKey, signal }) => {
-      const { data } = await createWorkflowGroup({
-        ...options,
-        ...queryKey[0],
-        signal,
-        throwOnError: true,
-      });
-      return data;
-    },
-    queryKey: createWorkflowGroupQueryKey(options),
-  });
-};
-
-export const createWorkflowGroupMutation = (options?: Partial<Options<CreateWorkflowGroupData>>) => {
-  const mutationOptions: MutationOptions<CreateWorkflowGroupResponse, DefaultError, Options<CreateWorkflowGroupData>> = {
-    mutationFn: async localOptions => {
-      const { data } = await createWorkflowGroup({
         ...options,
         ...localOptions,
         throwOnError: true,
@@ -509,40 +509,6 @@ export const getUserPermissionsOptions = (options?: Options<GetUserPermissionsDa
   });
 };
 
-export const getTagByNameQueryKey = (options: Options<GetTagByNameData>) => [createQueryKey('getTagByName', options)];
-
-export const getTagByNameOptions = (options: Options<GetTagByNameData>) => {
-  return queryOptions({
-    queryFn: async ({ queryKey, signal }) => {
-      const { data } = await getTagByName({
-        ...options,
-        ...queryKey[0],
-        signal,
-        throwOnError: true,
-      });
-      return data;
-    },
-    queryKey: getTagByNameQueryKey(options),
-  });
-};
-
-export const getCommitsSinceLastTagQueryKey = (options: Options<GetCommitsSinceLastTagData>) => [createQueryKey('getCommitsSinceLastTag', options)];
-
-export const getCommitsSinceLastTagOptions = (options: Options<GetCommitsSinceLastTagData>) => {
-  return queryOptions({
-    queryFn: async ({ queryKey, signal }) => {
-      const { data } = await getCommitsSinceLastTag({
-        ...options,
-        ...queryKey[0],
-        signal,
-        throwOnError: true,
-      });
-      return data;
-    },
-    queryKey: getCommitsSinceLastTagQueryKey(options),
-  });
-};
-
 export const getGroupsWithWorkflowsQueryKey = (options: Options<GetGroupsWithWorkflowsData>) => [createQueryKey('getGroupsWithWorkflows', options)];
 
 export const getGroupsWithWorkflowsOptions = (options: Options<GetGroupsWithWorkflowsData>) => {
@@ -591,6 +557,42 @@ export const getRepositoryByIdOptions = (options: Options<GetRepositoryByIdData>
       return data;
     },
     queryKey: getRepositoryByIdQueryKey(options),
+  });
+};
+
+export const getReleaseCandidateByNameQueryKey = (options: Options<GetReleaseCandidateByNameData>) => [createQueryKey('getReleaseCandidateByName', options)];
+
+export const getReleaseCandidateByNameOptions = (options: Options<GetReleaseCandidateByNameData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getReleaseCandidateByName({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: getReleaseCandidateByNameQueryKey(options),
+  });
+};
+
+export const getCommitsSinceLastReleaseCandidateQueryKey = (options: Options<GetCommitsSinceLastReleaseCandidateData>) => [
+  createQueryKey('getCommitsSinceLastReleaseCandidate', options),
+];
+
+export const getCommitsSinceLastReleaseCandidateOptions = (options: Options<GetCommitsSinceLastReleaseCandidateData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getCommitsSinceLastReleaseCandidate({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: getCommitsSinceLastReleaseCandidateQueryKey(options),
   });
 };
 
