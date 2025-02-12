@@ -14,7 +14,7 @@ export class AboutComponent {
       description: 'Project Advisor',
       website: 'https://ase.cit.tum.de/people/krusche/',
       githubHandle: 'krusche',
-      githubId: 1119707,
+      githubId: 744067,
     }
   ];
 
