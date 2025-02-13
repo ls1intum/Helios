@@ -63,8 +63,6 @@ public class EnvironmentService {
     return environmentRepository.findAllByOrderByNameAsc().stream()
         .map(
             environment -> {
-              // Set lock expiration timestamps if settings is changed after the environment is
-              // locked
               environmentScheduler.unlockExpiredEnvironments();
               LatestDeploymentUnion latest = findLatestDeployment(environment);
               return EnvironmentDto.fromEnvironment(
