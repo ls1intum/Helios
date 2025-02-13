@@ -65,7 +65,7 @@
             }
           }
 
-          @if (isLoggedIn() && deployable() && (!environment.locked || isCurrentUserLocked(environment)) && hasDeployPermissions()) {
+          @if (userCanDeploy(environment)) {
             <button (click)="deployEnvironment(environment); $event.stopPropagation()" class="p-button p-button-secondary p-2">
               <i-tabler name="cloud-upload" class="mr-1" />Deploy
             </button>

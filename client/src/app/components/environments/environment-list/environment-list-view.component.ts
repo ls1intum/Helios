@@ -67,6 +67,7 @@ export class EnvironmentListViewComponent {
   editable = input<boolean | undefined>();
   deployable = input<boolean | undefined>();
   hideLinkToList = input<boolean | undefined>();
+  showTestEnvironmentsOnly = input<boolean | undefined>();
 
   isLoggedIn = computed(() => this.keycloakService.isLoggedIn());
   isAdmin = computed(() => this.permissionService.isAdmin());
@@ -74,6 +75,9 @@ export class EnvironmentListViewComponent {
   hasDeployPermissions = computed(() => this.permissionService.hasWritePermission());
   hasEditEnvironmentPermissions = computed(() => this.permissionService.isAdmin());
 
+  userCanDeploy(environment: EnvironmentDto): boolean {
+    return !!(this.isLoggedIn() && this.deployable() && (!environment.locked || this.isCurrentUserLocked(environment)) && this.hasDeployPermissions());
+  }
   deploy = output<EnvironmentDto>();
 
   searchInput = signal<string>('');
@@ -123,7 +127,11 @@ export class EnvironmentListViewComponent {
   }
 
   filteredEnvironments = computed(() => {
-    const environments = this.environmentQuery.data();
+    let environments = this.environmentQuery.data();
+    if (this.showTestEnvironmentsOnly()) {
+      environments = environments?.filter(environment => environment.type === 'TEST');
+    }
+
     const search = this.searchInput();
 
     if (!environments) {
