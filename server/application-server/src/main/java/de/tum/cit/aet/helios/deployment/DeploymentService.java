@@ -175,12 +175,11 @@ public class DeploymentService {
     if (environmentType == Environment.Type.PRODUCTION
         || environmentType == Environment.Type.STAGING) {
       workflowParams.put("commit_sha", deployRequest.commitSha());
-      workflowParams.put("branch_name", deployRequest.branchName());
     } else if (environmentType == Environment.Type.TEST) {
       workflowParams.put("triggered_by", authService.getPreferredUsername());
-      workflowParams.put("branch_name", deployRequest.branchName());
-      workflowParams.put("environment_name", environment.getName());
     }
+    workflowParams.put("branch_name", deployRequest.branchName());
+    workflowParams.put("environment_name", environment.getName());
 
     return workflowParams;
   }
