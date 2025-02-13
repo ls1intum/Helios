@@ -257,6 +257,7 @@ public class EnvironmentService {
       throw new IllegalStateException("Environment is not locked");
     }
 
+    // TODO User environment lockReservationExpiresAt instead of calcualting it as below
     Long lockReservationThreshold =
         environment.getLockReservationThreshold() != null
             ? environment.getLockReservationThreshold()
