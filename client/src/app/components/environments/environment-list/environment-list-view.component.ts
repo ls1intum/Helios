@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, output, signal } from '@angular/core';
+import { Component, computed, inject, input, output, signal, OnDestroy } from '@angular/core';
 import { AccordionModule } from 'primeng/accordion';
 
 import { DatePipe, CommonModule } from '@angular/common';
@@ -57,12 +57,14 @@ import { EnvironmentStatusTagComponent } from '../environment-status-tag/environ
   providers: [DatePipe],
   templateUrl: './environment-list-view.component.html',
 })
-export class EnvironmentListViewComponent {
+export class EnvironmentListViewComponent implements OnDestroy {
   private queryClient = inject(QueryClient);
   private confirmationService = inject(ConfirmationService);
   private keycloakService = inject(KeycloakService);
   private datePipe = inject(DatePipe);
   private permissionService = inject(PermissionService);
+  private currentTime = signal(Date.now());
+  private intervalId: number | undefined;
 
   editable = input<boolean | undefined>();
   deployable = input<boolean | undefined>();
@@ -73,11 +75,28 @@ export class EnvironmentListViewComponent {
   hasUnlockPermissions = computed(() => this.permissionService.isAtLeastMaintainer());
   hasDeployPermissions = computed(() => this.permissionService.hasWritePermission());
   hasEditEnvironmentPermissions = computed(() => this.permissionService.isAdmin());
-
   deploy = output<EnvironmentDto>();
 
   searchInput = signal<string>('');
+  timeUntilReservationExpires = computed(() => {
+    const environments = this.environmentQuery.data();
+    const now = this.currentTime();
 
+    if (!environments) return new Map<number, number>();
+
+    const timeLeftMap = new Map<number, number>();
+
+    environments.forEach(env => {
+      if (env.lockedAt && env.lockReservationWillExpireAt) {
+        const willExpireAt = new Date(env.lockReservationWillExpireAt).getTime();
+        const timeLeftMs = willExpireAt - now;
+
+        timeLeftMap.set(env.id, Math.max(timeLeftMs, 0)); // Ensure non-negative
+      }
+    });
+
+    return timeLeftMap;
+  });
   canViewAllEnvironments = computed(() => this.isLoggedIn() && this.editable() && this.hasEditEnvironmentPermissions());
   queryFunction = computed(() => {
     const options = this.canViewAllEnvironments() ? getAllEnvironmentsOptions() : getAllEnabledEnvironmentsOptions();
@@ -95,6 +114,18 @@ export class EnvironmentListViewComponent {
       this.queryClient.invalidateQueries({ queryKey: getEnvironmentsByUserLockingQueryKey() });
     },
   }));
+
+  constructor() {
+    this.intervalId = window.setInterval(() => {
+      this.currentTime.set(Date.now());
+    }, 1000);
+  }
+
+  ngOnDestroy(): void {
+    if (this.intervalId !== undefined) {
+      clearInterval(this.intervalId);
+    }
+  }
 
   isCurrentUserLocked = (environment: EnvironmentDto) => {
     const currentUserGithubId = Number(this.keycloakService.getUserGithubId());
@@ -155,5 +186,43 @@ export class EnvironmentListViewComponent {
   getDeploymentTime(environment: EnvironmentDto) {
     const date = environment.latestDeployment?.updatedAt;
     return date ? this.datePipe.transform(date, 'd MMMM y, h:mm a') : null; // Format date
+  }
+
+  canUnlock(environment: EnvironmentDto) {
+    if (this.hasUnlockPermissions() || this.isCurrentUserLocked(environment)) {
+      return true;
+    } else if (!this.isCurrentUserLocked(environment) && (this.timeUntilReservationExpires()?.get(environment.id) ?? -1) === 0) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  unlockToolTip(environment: EnvironmentDto) {
+    const timeLeft = this.timeUntilReservationExpires().get(environment.id);
+    const timeLeftMinutes = timeLeft !== undefined && timeLeft !== null ? Math.ceil(timeLeft / 60000) : 0;
+    if (this.isCurrentUserLocked(environment) || this.hasUnlockPermissions()) {
+      if (timeLeft !== undefined && timeLeft !== null) {
+        if (timeLeft > 0) {
+          // if the user is locked and the time has not expired, show the time left
+          return timeLeftMinutes > 1 ? `Other users can unlock this environment in ${timeLeftMinutes} minutes` : 'Other users can unlock this environment in 1 minute';
+        } else if (timeLeft === 0) {
+          // If the user is locked and the time has expired, show only unlock environment
+          return 'Reservation has expired. Any user can unlock this environment.';
+        }
+      }
+      // If the user is locked and the time has expired, show only unlock environment
+      return 'Unlock Environment';
+    }
+    if (timeLeft === undefined || timeLeft === null) {
+      // If the user is not locked and the time is not set, then user can not unlock
+      return 'You can not unlock this environment';
+    } else if (timeLeft === 0) {
+      // If the user is not locked and the time has expired, show reservation expired
+      return 'Reservation Expired. You can unlock this environment.';
+    } else {
+      // If the user is not locked and the time has not expired, show the time left
+      return timeLeftMinutes > 1 ? `You can unlock this environment in ${timeLeftMinutes} minutes` : 'You can unlock this environment in 1 minute';
+    }
   }
 }

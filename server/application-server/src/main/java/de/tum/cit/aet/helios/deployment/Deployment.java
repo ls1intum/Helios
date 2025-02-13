@@ -95,6 +95,7 @@ public class Deployment extends BaseGitServiceEntity {
       return State.WAITING;
     }
 
+    // TODO: Handle deployment canceled case
     return switch (ghDeploymentStatus.getState()) {
       case PENDING -> State.PENDING;
       case SUCCESS -> State.SUCCESS;
@@ -118,9 +119,8 @@ public class Deployment extends BaseGitServiceEntity {
   }
 
   /**
-   * Extracts the raw state from the GHDeploymentStatus object's toString() method.
-   * If any error occurs, it returns an empty string.
-   * The returned state is in uppercase.
+   * Extracts the raw state from the GHDeploymentStatus object's toString() method. If any error
+   * occurs, it returns an empty string. The returned state is in uppercase.
    *
    * @param ghDeploymentStatus The GHDeploymentStatus object.
    * @return The raw state as a string in uppercase.
