@@ -18,13 +18,13 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 
 @Service
 @Transactional
-@RequiredArgsConstructor
 public class EnvironmentService {
 
   private final AuthService authService;
@@ -34,8 +34,30 @@ public class EnvironmentService {
   private final ReleaseCandidateRepository releaseCandidateRepository;
   private final DeploymentRepository deploymentRepository;
   private final UserService userService;
-  private final GitRepoSettingsService gitRepoSettingsService;
+  @Lazy private final GitRepoSettingsService gitRepoSettingsService;
   private final EnvironmentScheduler environmentScheduler;
+
+  @Autowired
+  public EnvironmentService(
+      AuthService authService,
+      EnvironmentRepository environmentRepository,
+      EnvironmentLockHistoryRepository lockHistoryRepository,
+      HeliosDeploymentRepository heliosDeploymentRepository,
+      ReleaseCandidateRepository releaseCandidateRepository,
+      DeploymentRepository deploymentRepository,
+      UserService userService,
+      @Lazy GitRepoSettingsService gitRepoSettingsService,
+      EnvironmentScheduler environmentScheduler) {
+    this.authService = authService;
+    this.environmentRepository = environmentRepository;
+    this.lockHistoryRepository = lockHistoryRepository;
+    this.heliosDeploymentRepository = heliosDeploymentRepository;
+    this.releaseCandidateRepository = releaseCandidateRepository;
+    this.deploymentRepository = deploymentRepository;
+    this.userService = userService;
+    this.gitRepoSettingsService = gitRepoSettingsService;
+    this.environmentScheduler = environmentScheduler;
+  }
 
   public Optional<EnvironmentDto> getEnvironmentById(Long id) {
     return environmentRepository.findById(id).map(EnvironmentDto::fromEnvironment);
@@ -47,8 +69,6 @@ public class EnvironmentService {
             environment -> {
               // Set lock expiration timestamps if settings is changed after the environment is
               // locked
-              environment.setLockWillExpireAt(getLockWillExpireAt(environment));
-              environment.setLockReservationExpiresAt(getLockReservationExpiresAt(environment));
               environmentScheduler.unlockExpiredEnvironments();
               LatestDeploymentUnion latest = findLatestDeployment(environment);
               return EnvironmentDto.fromEnvironment(
@@ -61,10 +81,6 @@ public class EnvironmentService {
     return environmentRepository.findByEnabledTrueOrderByNameAsc().stream()
         .map(
             environment -> {
-              // Set lock expiration timestamps if settings is changed after the environment is
-              // locked
-              environment.setLockWillExpireAt(getLockWillExpireAt(environment));
-              environment.setLockReservationExpiresAt(getLockReservationExpiresAt(environment));
               environmentScheduler.unlockExpiredEnvironments();
               LatestDeploymentUnion latest = findLatestDeployment(environment);
               return EnvironmentDto.fromEnvironment(
@@ -345,10 +361,25 @@ public class EnvironmentService {
               }
               environment.setLockExpirationThreshold(environmentDto.lockExpirationThreshold());
               environment.setLockReservationThreshold(environmentDto.lockReservationThreshold());
+              if (environment.isLocked() && environment.getLockedAt() != null) {
+                environment.setLockWillExpireAt(getLockWillExpireAt(environment));
+                environment.setLockReservationExpiresAt(getLockReservationExpiresAt(environment));
+              }
 
               environmentRepository.save(environment);
               return EnvironmentDto.fromEnvironment(environment);
             });
+  }
+
+  // Called by GitRepoSettingsService when lock expiration threshold is updated
+  public void updateLockExpirationAndReservation(Long repositoryId) {
+    List<Environment> lockedEnvironments =
+        environmentRepository.findByRepositoryRepositoryIdAndLockedTrue(repositoryId);
+    for (Environment environment : lockedEnvironments) {
+      environment.setLockWillExpireAt(getLockWillExpireAt(environment));
+      environment.setLockReservationExpiresAt(getLockReservationExpiresAt(environment));
+      environmentRepository.save(environment);
+    }
   }
 
   public EnvironmentLockHistoryDto getUsersCurrentLock() {
