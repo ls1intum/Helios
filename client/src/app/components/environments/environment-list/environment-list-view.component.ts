@@ -202,9 +202,14 @@ export class EnvironmentListViewComponent implements OnDestroy {
     const timeLeft = this.timeUntilReservationExpires().get(environment.id);
     const timeLeftMinutes = timeLeft !== undefined && timeLeft !== null ? Math.ceil(timeLeft / 60000) : 0;
     if (this.isCurrentUserLocked(environment) || this.hasUnlockPermissions()) {
-      if (timeLeft !== undefined && timeLeft !== null && timeLeft > 0) {
-        // if the user is locked and the time has not expired, show the time left
-        return timeLeftMinutes > 1 ? `Other users can unlock this environment in ${timeLeftMinutes} minutes` : 'Other users can unlock this environment in 1 minute';
+      if (timeLeft !== undefined && timeLeft !== null) {
+        if (timeLeft > 0) {
+          // if the user is locked and the time has not expired, show the time left
+          return timeLeftMinutes > 1 ? `Other users can unlock this environment in ${timeLeftMinutes} minutes` : 'Other users can unlock this environment in 1 minute';
+        } else if (timeLeft === 0) {
+          // If the user is locked and the time has expired, show only unlock environment
+          return 'Reservation has expired. Any user can unlock this environment.';
+        }
       }
       // If the user is locked and the time has expired, show only unlock environment
       return 'Unlock Environment';
