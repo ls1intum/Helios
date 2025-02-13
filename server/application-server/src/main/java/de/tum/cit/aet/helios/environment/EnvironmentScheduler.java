@@ -25,6 +25,7 @@ public class EnvironmentScheduler {
   // Every minute
   @Scheduled(fixedRate = 60000)
   public void unlockExpiredEnvironments() {
+    Integer numberOfAutoUnlockedEnvironments = 0;
     List<Environment> lockedEnvironments = environmentRepository.findByLockedTrue();
     for (Environment environment : lockedEnvironments) {
       try {
@@ -69,17 +70,21 @@ public class EnvironmentScheduler {
                     .orElseGet(
                         () -> userRepository.save(userConverter.convertToExpirationPicker())));
             lockHistoryRepository.save(openLockHistory);
+            numberOfAutoUnlockedEnvironments++;
+            log.info(
+                "Auto-unlocked environment {} after {} minutes",
+                environment.getId(),
+                lockExpirationThresholdMinutes);
           }
 
           environmentRepository.save(environment);
-          log.info(
-              "Auto-unlocked environment {} after {} minutes",
-              environment.getId(),
-              lockExpirationThresholdMinutes);
         }
       } catch (Exception e) {
         log.error("Error unlocking environment {}: {}", environment.getId(), e.getMessage());
       }
+    }
+    if (numberOfAutoUnlockedEnvironments > 0) {
+      log.info("Auto-unlocked {} environments", numberOfAutoUnlockedEnvironments);
     }
   }
 }
