@@ -9,7 +9,6 @@ import de.tum.cit.aet.helios.gitreposettings.GitRepoSettingsDto;
 import de.tum.cit.aet.helios.gitreposettings.GitRepoSettingsService;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
-import de.tum.cit.aet.helios.permissions.UserService;
 import de.tum.cit.aet.helios.releasecandidate.ReleaseCandidateRepository;
 import de.tum.cit.aet.helios.user.User;
 import jakarta.persistence.EntityNotFoundException;
@@ -33,7 +32,6 @@ public class EnvironmentService {
   private final HeliosDeploymentRepository heliosDeploymentRepository;
   private final ReleaseCandidateRepository releaseCandidateRepository;
   private final DeploymentRepository deploymentRepository;
-  private final UserService userService;
   @Lazy private final GitRepoSettingsService gitRepoSettingsService;
   private final EnvironmentScheduler environmentScheduler;
 
@@ -45,7 +43,6 @@ public class EnvironmentService {
       HeliosDeploymentRepository heliosDeploymentRepository,
       ReleaseCandidateRepository releaseCandidateRepository,
       DeploymentRepository deploymentRepository,
-      UserService userService,
       @Lazy GitRepoSettingsService gitRepoSettingsService,
       EnvironmentScheduler environmentScheduler) {
     this.authService = authService;
@@ -54,7 +51,6 @@ public class EnvironmentService {
     this.heliosDeploymentRepository = heliosDeploymentRepository;
     this.releaseCandidateRepository = releaseCandidateRepository;
     this.deploymentRepository = deploymentRepository;
-    this.userService = userService;
     this.gitRepoSettingsService = gitRepoSettingsService;
     this.environmentScheduler = environmentScheduler;
   }
@@ -276,7 +272,7 @@ public class EnvironmentService {
     OffsetDateTime lockedAt = environment.getLockedAt();
 
     // Check if the current user can unlock the environment
-    if (!currentUser.equals(environment.getLockedBy()) && !userService.isAtLeastMaintainer()) {
+    if (!currentUser.equals(environment.getLockedBy()) && !authService.isAtLeastMaintainer()) {
       // Allow unlocking if lockReservationThreshold is set and the lock is older than the
       // reservation threshold
       if (lockReservationThreshold == -1
