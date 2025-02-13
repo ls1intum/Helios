@@ -4,7 +4,7 @@ import { QueryClient } from '@tanstack/angular-query-experimental';
 import {
   getAllEnabledEnvironmentsQueryKey,
   getAllEnvironmentsQueryKey,
-  getEnvironmentsByUserLockingOptions,
+  getEnvironmentsByUserLockingQueryKey,
 } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 @Injectable({
   providedIn: 'root',
@@ -41,7 +41,7 @@ export class DateService {
     if (diffMs <= 0) {
       this.queryClient.invalidateQueries({ queryKey: getAllEnabledEnvironmentsQueryKey() });
       this.queryClient.invalidateQueries({ queryKey: getAllEnvironmentsQueryKey() });
-      this.queryClient.invalidateQueries({ queryKey: getEnvironmentsByUserLockingOptions() });
+      this.queryClient.invalidateQueries({ queryKey: getEnvironmentsByUserLockingQueryKey() });
       return '00:00:00'; // Already expired
     }
 

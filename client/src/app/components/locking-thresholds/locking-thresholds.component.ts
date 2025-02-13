@@ -6,8 +6,8 @@ import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { DividerModule } from 'primeng/divider';
 import { IftaLabelModule } from 'primeng/iftalabel';
-import { injectMutation, injectQuery } from '@tanstack/angular-query-experimental';
-import { getGitRepoSettingsOptions, updateGitRepoSettingsMutation } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
+import { injectMutation, injectQuery, QueryClient } from '@tanstack/angular-query-experimental';
+import { getGitRepoSettingsOptions, updateGitRepoSettingsMutation, getEnvironmentsByUserLockingQueryKey, getAllEnvironmentsQueryKey, getAllEnabledEnvironmentsQueryKey } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { MessageService } from 'primeng/api';
 @Component({
   selector: 'app-locking-thresholds',
@@ -17,6 +17,7 @@ import { MessageService } from 'primeng/api';
 })
 export class LockingThresholdsComponent {
   private messageService = inject(MessageService);
+  private queryClient = inject(QueryClient);
   isLockExpirationEnabled = signal(false);
   isLockReservationEnabled = signal(false);
   lockingExpirationThreshold = signal<number | undefined>(undefined);
@@ -36,7 +37,10 @@ export class LockingThresholdsComponent {
   mutateGitRepoSettings = injectMutation(() => ({
     ...updateGitRepoSettingsMutation(),
     onSuccess: () => {
-      this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Thesholds successfully saved.' });
+      this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Thesholds successfully saved.' });      
+      this.queryClient.invalidateQueries({ queryKey: getAllEnvironmentsQueryKey() });
+      this.queryClient.invalidateQueries({ queryKey: getAllEnabledEnvironmentsQueryKey() });
+      this.queryClient.invalidateQueries({ queryKey: getEnvironmentsByUserLockingQueryKey() });
     },
   }));
 
