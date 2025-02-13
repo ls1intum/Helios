@@ -39,6 +39,7 @@ export class DateService {
     const diffMs = expireDate.getTime() - now.getTime();
 
     if (diffMs <= 0) {
+      // TODO move this to the component using service
       this.queryClient.invalidateQueries({ queryKey: getAllEnabledEnvironmentsQueryKey() });
       this.queryClient.invalidateQueries({ queryKey: getAllEnvironmentsQueryKey() });
       this.queryClient.invalidateQueries({ queryKey: getEnvironmentsByUserLockingQueryKey() });
