@@ -40,3 +40,12 @@ ALTER TABLE environment_lock_history
 ALTER TABLE environment_lock_history
     ADD CONSTRAINT fk_environment_lock_history_unlocking_author
     FOREIGN KEY (unlocking_author_id) REFERENCES "user"(id);
+
+-- Update existing records: set lock_expiration_threshold and lock_reservation_threshold to default values
+UPDATE environment
+SET
+    lock_will_expire_at = locked_at + INTERVAL '60 minutes',
+    lock_reservation_expires_at = locked_at + INTERVAL '30 minutes'
+WHERE
+    locked = true
+    AND locked_at IS NOT NULL;
