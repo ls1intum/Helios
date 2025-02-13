@@ -996,6 +996,7 @@ components:
         branchName:
           type: string
       required:
+      - branchName
       - commitSha
       - name
     ReleaseCandidateInfoDto:
@@ -1247,6 +1248,7 @@ components:
           type: string
           format: date-time
       required:
+      - branch
       - commit
       - createdAt
       - createdBy

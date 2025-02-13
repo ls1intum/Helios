@@ -245,7 +245,7 @@ export const ReleaseCandidateCreateDtoSchema = {
       type: 'string',
     },
   },
-  required: ['commitSha', 'name'],
+  required: ['branchName', 'commitSha', 'name'],
 } as const;
 
 export const ReleaseCandidateInfoDtoSchema = {
@@ -528,7 +528,7 @@ export const ReleaseCandidateDetailsDtoSchema = {
       format: 'date-time',
     },
   },
-  required: ['commit', 'createdAt', 'createdBy', 'deployments', 'evaluations', 'name'],
+  required: ['branch', 'commit', 'createdAt', 'createdBy', 'deployments', 'evaluations', 'name'],
 } as const;
 
 export const ReleaseCandidateEvaluationDtoSchema = {

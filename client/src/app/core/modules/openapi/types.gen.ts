@@ -76,7 +76,7 @@ export type UserInfoDto = {
 export type ReleaseCandidateCreateDto = {
   name: string;
   commitSha: string;
-  branchName?: string;
+  branchName: string;
 };
 
 export type ReleaseCandidateInfoDto = {
@@ -174,7 +174,7 @@ export type DeploymentDto = {
 export type ReleaseCandidateDetailsDto = {
   name: string;
   commit: CommitInfoDto;
-  branch?: BranchInfoDto;
+  branch: BranchInfoDto;
   deployments: Array<DeploymentDto>;
   evaluations: Array<ReleaseCandidateEvaluationDto>;
   createdBy: UserInfoDto;

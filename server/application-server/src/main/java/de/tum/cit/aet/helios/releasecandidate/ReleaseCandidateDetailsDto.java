@@ -11,7 +11,7 @@ import org.springframework.lang.NonNull;
 public record ReleaseCandidateDetailsDto(
     @NonNull String name,
     @NonNull CommitInfoDto commit,
-    BranchInfoDto branch,
+    @NonNull BranchInfoDto branch,
     @NonNull List<DeploymentDto> deployments,
     @NonNull List<ReleaseCandidateEvaluationDto> evaluations,
     @NonNull UserInfoDto createdBy,

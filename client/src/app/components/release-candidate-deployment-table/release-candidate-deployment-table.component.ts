@@ -1,12 +1,18 @@
-import { Component, input } from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
 import { EnvironmentDto, ReleaseCandidateDetailsDto } from '@app/core/modules/openapi';
-import { getAllEnabledEnvironmentsOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
-import { injectQuery } from '@tanstack/angular-query-experimental';
+import {
+  deployToEnvironmentMutation,
+  getAllEnabledEnvironmentsOptions,
+  getAllEnabledEnvironmentsQueryKey,
+  getEnvironmentByIdQueryKey,
+  getEnvironmentsByUserLockingQueryKey,
+} from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
+import { injectMutation, injectQuery, QueryClient } from '@tanstack/angular-query-experimental';
 import { IconsModule } from 'icons.module';
 import { AvatarModule } from 'primeng/avatar';
+import { BadgeModule } from 'primeng/badge';
 import { ButtonModule } from 'primeng/button';
 import { OverlayBadgeModule } from 'primeng/overlaybadge';
-import { BadgeModule } from 'primeng/badge';
 import { SkeletonModule } from 'primeng/skeleton';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
@@ -19,8 +25,29 @@ import { TooltipModule } from 'primeng/tooltip';
 })
 export class ReleaseCandidateDeploymentTableComponent {
   releaseCandidate = input.required<ReleaseCandidateDetailsDto>();
+  queryClient = inject(QueryClient);
 
   environmentQuery = injectQuery(() => getAllEnabledEnvironmentsOptions());
+
+  deployableEnvironments = computed(() => this.environmentQuery.data()?.filter(environment => environment.type === 'STAGING' || environment.type === 'PRODUCTION'));
+
+  deployToEnvironment = injectMutation(() => ({
+    ...deployToEnvironmentMutation(),
+    onSuccess: (_, variables) => {
+      // Trigger update on main layout after deployment
+      this.queryClient.invalidateQueries({ queryKey: getEnvironmentsByUserLockingQueryKey() });
+      this.queryClient.invalidateQueries({ queryKey: getAllEnabledEnvironmentsQueryKey() });
+      this.queryClient.invalidateQueries({
+        queryKey: getEnvironmentByIdQueryKey({
+          path: { id: variables.body.environmentId },
+        }),
+      });
+    },
+  }));
+
+  deployReleaseCandidate = (environment: EnvironmentDto) => {
+    this.deployToEnvironment.mutate({ body: { environmentId: environment.id, branchName: this.releaseCandidate().branch.name, commitSha: this.releaseCandidate().commit.sha } });
+  };
 
   deploymentStatus = (environment: EnvironmentDto) => {
     let deployments = this.releaseCandidate().deployments.filter(deployment => deployment.environment.id === environment.id);
