@@ -201,15 +201,12 @@ export class EnvironmentListViewComponent implements OnDestroy {
   unlockToolTip(environment: EnvironmentDto) {
     const timeLeft = this.timeUntilReservationExpires().get(environment.id);
     const timeLeftMinutes = timeLeft !== undefined && timeLeft !== null ? Math.ceil(timeLeft / 60000) : 0;
-    if (this.isCurrentUserLocked(environment)) {
+    if (this.isCurrentUserLocked(environment) || this.hasUnlockPermissions()) {
       if (timeLeft !== undefined && timeLeft !== null && timeLeft > 0) {
         // if the user is locked and the time has not expired, show the time left
         return timeLeftMinutes > 1 ? `Other users can unlock this environment in ${timeLeftMinutes} minutes` : 'Other users can unlock this environment in 1 minute';
       }
       // If the user is locked and the time has expired, show only unlock environment
-      return 'Unlock Environment';
-    } else if (this.hasUnlockPermissions()) {
-      // If the user is an admin, user can always unlock
       return 'Unlock Environment';
     }
     if (timeLeft === undefined || timeLeft === null) {
