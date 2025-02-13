@@ -58,6 +58,8 @@ public class EnvironmentScheduler {
           environment.setLocked(false);
           environment.setLockedBy(null);
           environment.setLockedAt(null);
+          environment.setLockWillExpireAt(null);
+          environment.setLockReservationExpiresAt(null);
 
           Optional<EnvironmentLockHistory> openLock =
               lockHistoryRepository.findCurrentLockForEnabledEnvironment(environment.getId());
