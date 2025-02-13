@@ -21,7 +21,7 @@ export class LockTimeComponent implements OnInit, OnDestroy {
   });
 
   autoReleaseToolTip = computed(() => {
-    if(this.timeUntilLockExpires() === 'Unlimited') {
+    if (this.timeUntilLockExpires() === 'Unlimited') {
       return 'This environment is locked indefinitely';
     } else {
       return `This environment will be automatically unlocked in`;
