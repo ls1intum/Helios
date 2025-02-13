@@ -199,16 +199,27 @@ export class EnvironmentListViewComponent implements OnDestroy {
   }
 
   unlockToolTip(environment: EnvironmentDto) {
+    const timeLeft = this.timeUntilReservationExpires().get(environment.id);
+    const timeLeftMinutes = timeLeft !== undefined && timeLeft !== null ? Math.ceil(timeLeft / 60000) : 0;
     if (this.isCurrentUserLocked(environment)) {
+      if (timeLeft !== undefined && timeLeft !== null && timeLeft > 0) {
+        // if the user is locked and the time has not expired, show the time left
+        return timeLeftMinutes > 1 ? `Your reservation will expire in ${timeLeftMinutes} minutes` : 'Your reservation will expire in 1 minute';
+      }
+      // If the user is locked and the time has expired, show only unlock environment
+      return 'Unlock Environment';
+    } else if (this.hasUnlockPermissions()) {
+      // If the user is an admin, user can always unlock
       return 'Unlock Environment';
     }
-    const timeLeft = this.timeUntilReservationExpires().get(environment.id);
     if (timeLeft === undefined || timeLeft === null) {
+      // If the user is not locked and the time is not set, then user can not unlock
       return 'You can not unlock this environment';
     } else if (timeLeft === 0) {
+      // If the user is not locked and the time has expired, show reservation expired
       return 'Reservation Expired. You can unlock this environment.';
     } else {
-      const timeLeftMinutes = Math.ceil(timeLeft / 60000);
+      // If the user is not locked and the time has not expired, show the time left
       return timeLeftMinutes > 1 ? `You can unlock this environment in ${timeLeftMinutes} minutes` : 'You can unlock this environment in 1 minute';
     }
   }
