@@ -204,7 +204,7 @@ export class EnvironmentListViewComponent implements OnDestroy {
     if (this.isCurrentUserLocked(environment)) {
       if (timeLeft !== undefined && timeLeft !== null && timeLeft > 0) {
         // if the user is locked and the time has not expired, show the time left
-        return timeLeftMinutes > 1 ? `Your reservation will expire in ${timeLeftMinutes} minutes` : 'Your reservation will expire in 1 minute';
+        return timeLeftMinutes > 1 ? `Other users can unlock this environment in ${timeLeftMinutes} minutes` : 'Other users can unlock this environment in 1 minute';
       }
       // If the user is locked and the time has expired, show only unlock environment
       return 'Unlock Environment';

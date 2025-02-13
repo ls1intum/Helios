@@ -10,4 +10,4 @@
     white-space: nowrap;
   }
 </style>
-<p-tag [value]="timeUntilLockExpires()" [rounded]="false" class="fixed-size-tag" />
+<p-tag [value]="timeUntilLockExpires()" [rounded]="false" class="fixed-size-tag" [pTooltip]="autoReleaseToolTip()" tooltipPosition="top" />
