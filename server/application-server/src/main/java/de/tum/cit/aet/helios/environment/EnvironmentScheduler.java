@@ -29,6 +29,7 @@ public class EnvironmentScheduler {
     List<Environment> lockedEnvironments = environmentRepository.findByLockedTrue();
     for (Environment environment : lockedEnvironments) {
       try {
+        // TODO use directly the lockWillExpireAt field instead of calculating it as below
         // Determine the applicable thresholds in minutes
         Long lockExpirationThresholdMinutes =
             environment.getLockExpirationThreshold() != null
