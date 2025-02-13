@@ -60,7 +60,7 @@
             @if (environment.lockedAt) {
               <app-lock-time [timeLockWillExpire]="environment.lockWillExpireAt"></app-lock-time>
             }
-            @if (isLoggedIn() && (environment.lockReservationWillExpireAt !== null || isCurrentUserLocked(environment))) {
+            @if (isLoggedIn() && (environment.lockReservationWillExpireAt !== null || isCurrentUserLocked(environment) || hasUnlockPermissions())) {
               <span pTooltip="{{ unlockToolTip(environment) }}" tooltipPosition="top" [ngStyle]="{ display: 'inline-block' }">
                 <button
                   (click)="onUnlockEnvironment($event, environment)"
