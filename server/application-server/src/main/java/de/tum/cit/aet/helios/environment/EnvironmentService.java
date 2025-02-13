@@ -333,6 +333,8 @@ public class EnvironmentService {
                 environment.setLocked(false);
                 environment.setLockedBy(null);
                 environment.setLockedAt(null);
+                environment.setLockWillExpireAt(null);
+                environment.setLockReservationExpiresAt(null);
               }
               environment.setEnabled(environmentDto.enabled());
 
