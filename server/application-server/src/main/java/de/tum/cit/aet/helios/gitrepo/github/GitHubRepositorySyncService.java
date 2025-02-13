@@ -97,6 +97,7 @@ public class GitHubRepositorySyncService {
    */
   @Transactional
   public GitRepository processRepository(GHRepository ghRepository) {
+    // TODO if gitRepoSettings is not found, create it
     var result =
         gitRepoRepository
             .findByRepositoryId(ghRepository.getId())
