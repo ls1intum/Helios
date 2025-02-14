@@ -49,7 +49,9 @@ public class ArtemisInfoCheck implements StatusCheckStrategy {
     }
   }
 
-  public record ArtemisInfo(@JsonProperty("build") BuildInfo build, @JsonProperty("git") GitInfo git) {
+  public record ArtemisInfo(
+      @JsonProperty("build") BuildInfo build,
+      @JsonProperty("git") GitInfo git) {
     public record BuildInfo(
         String artifact,
         String name,
