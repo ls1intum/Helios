@@ -104,7 +104,7 @@ public class GitHubService {
   /**
    * Retrieves the artifacts for a given repository.
    * 
-   * @param repoNameWithOwners
+   * @param repoNameWithOwners the repository name with owners
    * @return the list of repositories as a PagedIterable object (not thread-safe)
    * @throws IOException
    */
