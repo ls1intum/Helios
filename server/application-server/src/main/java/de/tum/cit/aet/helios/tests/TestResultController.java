@@ -14,14 +14,14 @@ import org.springframework.web.bind.annotation.RequestParam;
 @RequiredArgsConstructor
 @RequestMapping("/test-results")
 public class TestResultController {
-    @GetMapping("/pr/{pullRequestId}")
-    public ResponseEntity<List<TestResult>> getTestResultsByPullRequestIdAndHeadCommit(
-            @PathVariable Long pullRequestId) {
-        throw new NotImplementedError("Not implemented yet");
-    }
+  @GetMapping("/pr/{pullRequestId}")
+  public ResponseEntity<List<TestResult>> getTestResultsByPullRequestIdAndHeadCommit(
+      @PathVariable Long pullRequestId) {
+    throw new NotImplementedError("Not implemented yet");
+  }
 
-    @GetMapping("/branch")
-    public ResponseEntity<List<TestResult>> getTestResultsByBranchAndHeadCommit(@RequestParam String branch) {
-        throw new NotImplementedError("Not implemented yet");
-    }
+  @GetMapping("/branch")
+  public ResponseEntity<List<TestResult>> getTestResultsByBranchAndHeadCommit(@RequestParam String branch) {
+    throw new NotImplementedError("Not implemented yet");
+  }
 }

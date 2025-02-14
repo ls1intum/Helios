@@ -19,30 +19,30 @@ import lombok.ToString;
 @NoArgsConstructor
 @ToString
 public class TestResult {
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private Long id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.AUTO)
+  private Long id;
 
-    @ManyToOne(optional = false)
-    private WorkflowRun workflowRun;
+  @ManyToOne(optional = false)
+  private WorkflowRun workflowRun;
 
-    @Min(0)
-    @Column(nullable = false)
-    private int total;
+  @Min(0)
+  @Column(nullable = false)
+  private int total;
 
-    @Min(0)
-    @Column(nullable = false)
-    private int passed;
+  @Min(0)
+  @Column(nullable = false)
+  private int passed;
 
-    @Min(0)
-    @Column(nullable = false)
-    private int failures;
+  @Min(0)
+  @Column(nullable = false)
+  private int failures;
 
-    @Min(0)
-    @Column(nullable = false)
-    private int errors;
+  @Min(0)
+  @Column(nullable = false)
+  private int errors;
 
-    @Min(0)
-    @Column(nullable = false)
-    private int skipped;
+  @Min(0)
+  @Column(nullable = false)
+  private int skipped;
 }
