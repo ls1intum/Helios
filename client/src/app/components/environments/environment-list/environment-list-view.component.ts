@@ -31,7 +31,7 @@ import { TimeAgoPipe } from '@app/pipes/time-ago.pipe';
 import { UserAvatarComponent } from '@app/components/user-avatar/user-avatar.component';
 import { EnvironmentStatusInfoComponent } from '../environment-status-info/environment-status-info.component';
 import { EnvironmentStatusTagComponent } from '../environment-status-tag/environment-status-tag.component';
-
+import { DeploymentStepperComponent } from '../deployment-stepper/deployment-stepper.component';
 @Component({
   selector: 'app-environment-list-view',
   imports: [
@@ -44,6 +44,7 @@ import { EnvironmentStatusTagComponent } from '../environment-status-tag/environ
     ButtonModule,
     TooltipModule,
     DeploymentStateTagComponent,
+    DeploymentStepperComponent,
     EnvironmentStatusTagComponent,
     EnvironmentDeploymentInfoComponent,
     EnvironmentStatusInfoComponent,

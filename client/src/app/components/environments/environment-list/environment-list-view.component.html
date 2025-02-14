@@ -109,6 +109,9 @@
             }
           </div>
           <span class="w-2"></span>
+          @if (environment.latestDeployment; as deployment) {
+            <app-deployment-stepper [deployment]="environment.latestDeployment" class="w-full mt-4" />
+          }
         </div>
 
         <div class="flex gap-4 mt-3 items-center justify-between">

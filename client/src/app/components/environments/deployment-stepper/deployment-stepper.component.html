@@ -1,0 +1,62 @@
+<div class="relative pt-4">
+  <div class="flex justify-between">
+    @for (step of steps; track step; let i = $index) {
+      <div class="flex flex-col items-center w-1/4">
+        <div class="relative">
+          <!-- Step Circle -->
+          <div
+            [ngClass]="{
+              'bg-green-500': getStepStatus(i) === 'completed',
+              'bg-blue-500 animate-pulse': getStepStatus(i) === 'active',
+              'bg-red-500': getStepStatus(i) === 'error',
+              'bg-gray-200': getStepStatus(i) === 'upcoming',
+            }"
+            class="w-8 h-8 rounded-full flex items-center justify-center transition-colors duration-300 mt-3"
+            [style.z-index]="1"
+          >
+            @switch (getStepStatus(i)) {
+              @case ('completed') {
+                <i-tabler name="check" class="text-white w-5 h-5"></i-tabler>
+              }
+              @case ('active') {
+                <i-tabler name="progress" class="text-white w-5 h-5 animate-spin"></i-tabler>
+              }
+              @case ('error') {
+                <i-tabler name="x" class="text-white w-5 h-5"></i-tabler>
+              }
+              @case ('upcoming') {
+                <div class="w-5 h-5"></div>
+              }
+            }
+          </div>
+
+          <!-- Step Label -->
+          <div class="absolute top-8 left-1/2 -translate-x-1/2 mt-4 text-center">
+            <span class="text-sm font-medium text-gray-700">{{ step }}</span>
+            <div class="text-xs text-gray-500 mt-1">
+              {{ stepDescriptions[step] }}
+            </div>
+            <!-- Always show time estimate container -->
+            <div class="text-xs text-gray-500 mt-1 h-6">
+              @if (getTimeEstimate(i)) {
+                {{ getTimeEstimate(i) }} remaining
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Progress Line -->
+  <div class="absolute top-4 left-0 right-0 h-1 bg-gray-200" [style.z-index]="0">
+    <div [style.width.%]="progressPercentage" class="h-full bg-green-500 transition-all duration-500" [style.margin-left]="'5%'" [style.margin-right]="'5%'"></div>
+  </div>
+
+  @if (isErrorState) {
+    <div class="mt-8 text-center text-red-500">
+      <i-tabler name="alert-circle" class="w-5 h-5 mr-2"></i-tabler>
+      Deployment failed - {{ deployment?.state }}
+    </div>
+  }
+</div>
