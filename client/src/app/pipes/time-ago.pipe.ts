@@ -1,11 +1,17 @@
 import { Pipe, PipeTransform } from '@angular/core';
+
+interface TimeAgoPipeOptions {
+  showSeconds?: boolean;
+  referenceDate?: Date;
+}
+
 @Pipe({
   name: 'timeAgo',
 })
 export class TimeAgoPipe implements PipeTransform {
-  transform(value: string): string {
+  transform(value: string, options?: TimeAgoPipeOptions): string {
     const date = new Date(value);
-    const now = new Date();
+    const now = options?.referenceDate || new Date();
     const diff = Math.abs(now.getTime() - date.getTime());
     let seconds = Math.round(diff / 1000);
     let minutes = Math.round(seconds / 60);
@@ -16,6 +22,9 @@ export class TimeAgoPipe implements PipeTransform {
     if (Number.isNaN(seconds)) {
       return '';
     } else if (seconds < 60) {
+      if (options?.showSeconds) {
+        return seconds + ` second${seconds === 1 ? '' : 's'} ago`;
+      }
       return 'a few seconds ago';
     } else if (seconds < 120) {
       return 'a minute ago';

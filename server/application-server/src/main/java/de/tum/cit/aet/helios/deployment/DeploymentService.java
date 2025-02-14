@@ -151,6 +151,8 @@ public class DeploymentService {
           deploymentWorkflowFileName,
           deployRequest.branchName(),
           workflowParams);
+
+      this.environmentService.markStatusAsChanged(environment);
     } catch (IOException e) {
       // Don't need to unlock the environment, since user might want to re-deploy
       heliosDeployment.setStatus(HeliosDeployment.Status.IO_ERROR);
