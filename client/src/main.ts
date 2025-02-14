@@ -10,7 +10,7 @@ Sentry.init({
   dsn: environment.sentry.dsn,
   // The browser tracing integration captures performance data
   // like throughput and latency
-  integrations: [Sentry.browserTracingIntegration()],
+  integrations: [Sentry.browserTracingIntegration(), Sentry.replayIntegration()],
   // Our sample rate for tracing is 20% in production
   tracesSampleRate: environment.production ? 0.2 : 1.0,
 });
