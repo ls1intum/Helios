@@ -5,66 +5,66 @@ on:
     types: [opened, reopened, edited, synchronize]
 
 jobs:
-    client-tests:
-        runs-on: ubuntu-latest
-        timeout-minutes: 30
-        defaults:
-          run:
-            working-directory: 'client'
-        steps:
-        - uses: actions/checkout@v4
-        - name: Setup Node.js
-          uses: actions/setup-node@v4
-        - name: Install Dependencies
-          run: yarn install --frozen-lockfile
-        - name: Run Client Unit Tests
-          run: yarn test:unit:ci
-        - name: "Codacy: Report coverage"
-          uses: codacy/codacy-coverage-reporter-action@55c3b57cb3bb6833c8c1a6614fee4cebb140de2d
-          with:
-            project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
-            coverage-reports: client/coverage/lcov.info
-          if: (github.event.pull_request.head.repo.full_name == github.event.pull_request.base.repo.full_name) && (success() || failure())
-        - name: Upload Client Test Coverage Report
-          if: success() || failure()
-          uses: actions/upload-artifact@v4
-          with:
-              name: Coverage Report Client Tests
-              path: client/coverage/lcov-report
-    server-tests:
-        runs-on: ubuntu-latest
-        timeout-minutes: 60
-        defaults:
-          run:
-            working-directory: server/application-server
-        steps:
-        - uses: actions/checkout@v3
-        - name: Setup Java
-          uses: actions/setup-java@v4
-          with:
-            distribution: 'temurin'
-            java-version: '21'
-        - name: Server Tests
-          run: set -o pipefail && ./gradlew --console=plain test jacocoTestReport jacocoTestCoverageVerification | tee tests.log        
-        - name: Print failed tests
-          if: failure()
-          run: grep "Test >.* FAILED\$" tests.log || echo "No failed tests."
-        - name: "Codacy: Report coverage"
-          uses: codacy/codacy-coverage-reporter-action@55c3b57cb3bb6833c8c1a6614fee4cebb140de2d
-          with:
-            project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
-            coverage-reports: server/application-server/build/reports/jacoco/test/jacocoTestReport.xml
-          if: (github.event.pull_request.head.repo.full_name == github.event.pull_request.base.repo.full_name) && (success() || failure())
-        - name: Annotate Server Test Results
-          uses: ashley-taylor/junit-report-annotations-action@f9c1a5cbe28479439f82b80a5402a6d3aa1990ac
-          if: always()
-          with:
-            access-token: ${{ secrets.GITHUB_TOKEN }}
-            path: server/application-server/build/test-results/test/*.xml
-            numFailures: 99
-        - name: Upload Server Test Coverage Report
-          if: success() || failure()
-          uses: actions/upload-artifact@v4
-          with:
-            name: Coverage Report Server Tests
-            path: server/application-server/build/reports/jacoco/test/html/
+  client-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: "client"
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+      - name: Install Dependencies
+        run: yarn install --frozen-lockfile
+      - name: Run Client Unit Tests
+        run: yarn test:unit:ci
+      - name: "Codacy: Report coverage"
+        uses: codacy/codacy-coverage-reporter-action@55c3b57cb3bb6833c8c1a6614fee4cebb140de2d
+        with:
+          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+          coverage-reports: client/coverage/lcov.info
+        if: (github.event.pull_request.head.repo.full_name == github.event.pull_request.base.repo.full_name) && (success() || failure())
+      - name: Upload Client Test Coverage Report
+        if: success() || failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Coverage Report Client Tests
+          path: client/coverage/lcov-report
+  server-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "21"
+      - name: Server Tests
+        run: set -o pipefail && ./gradlew --console=plain test jacocoTestReport jacocoTestCoverageVerification | tee tests.log
+      - name: Print failed tests
+        if: failure()
+        run: grep "Test >.* FAILED\$" tests.log || echo "No failed tests."
+      - name: "Codacy: Report coverage"
+        uses: codacy/codacy-coverage-reporter-action@55c3b57cb3bb6833c8c1a6614fee4cebb140de2d
+        with:
+          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+          coverage-reports: server/application-server/build/reports/jacoco/test/jacocoTestReport.xml
+        if: (github.event.pull_request.head.repo.full_name == github.event.pull_request.base.repo.full_name) && (success() || failure())
+      - name: Annotate Server Test Results
+        uses: ashley-taylor/junit-report-annotations-action@f9c1a5cbe28479439f82b80a5402a6d3aa1990ac
+        if: always()
+        with:
+          access-token: ${{ secrets.GITHUB_TOKEN }}
+          path: server/application-server/build/test-results/test/*.xml
+          numFailures: 99
+      - name: Upload Server Test Coverage Report
+        if: success() || failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Coverage Report Server Tests
+          path: server/application-server/build/reports/jacoco/test/html/
