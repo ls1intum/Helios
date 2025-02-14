@@ -183,4 +183,18 @@ public class ReleaseCandidateService {
     evaluation.setWorking(isWorking);
     releaseCandidateEvaluationRepository.save(evaluation);
   }
+
+  public ReleaseCandidateInfoDto deleteReleaseCandidateByName(String name) {
+    final Long repositoryId = RepositoryContext.getRepositoryId();
+
+    ReleaseCandidateInfoDto rc = releaseCandidateRepository
+        .findByRepositoryRepositoryIdAndName(repositoryId, name)
+        .map(ReleaseCandidateInfoDto::fromReleaseCandidate)
+        .orElseThrow(() -> new ReleaseCandidateException("ReleaseCandidate could not be found."));
+
+    releaseCandidateRepository
+        .deleteByRepositoryRepositoryIdAndName(repositoryId, name);
+    
+    return rc;
+  }
 }

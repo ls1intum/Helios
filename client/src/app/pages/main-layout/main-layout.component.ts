@@ -15,6 +15,7 @@ import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
 import { HeliosIconComponent } from '../../components/helios-icon/helios-icon.component';
 import { UserLockInfoComponent } from '@app/components/user-lock-info/user-lock-info.component';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
 
 @Component({
   selector: 'app-main-layout',
@@ -31,6 +32,7 @@ import { UserLockInfoComponent } from '@app/components/user-lock-info/user-lock-
     HeliosIconComponent,
     DividerModule,
     AvatarModule,
+    ConfirmDialogModule,
     CardModule,
     ProfileNavSectionComponent,
     UserLockInfoComponent,

@@ -10,7 +10,6 @@ import { InputTextModule } from 'primeng/inputtext';
 import { IconsModule } from 'icons.module';
 import { DragDropModule } from 'primeng/dragdrop';
 import { ConfirmationService } from 'primeng/api';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { DividerModule } from 'primeng/divider';
 
 import {
@@ -33,7 +32,6 @@ import { LockingThresholdsComponent } from '@app/components/locking-thresholds/l
 
 @Component({
   selector: 'app-project-settings',
-  standalone: true,
   imports: [
     FormsModule,
     TableModule,
@@ -47,7 +45,6 @@ import { LockingThresholdsComponent } from '@app/components/locking-thresholds/l
     InputTextModule,
     IconsModule,
     DragDropModule,
-    ConfirmDialogModule,
     DividerModule,
   ],
   templateUrl: './project-settings.component.html',

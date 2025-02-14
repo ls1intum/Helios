@@ -14,6 +14,11 @@
             <i-tabler name="git-commit" class="!size-4" />
             {{ releaseCandidate.commit.sha | slice: 0 : 7 }}
           </p-tag>
+          @if (permissionService.isAtLeastMaintainer()) {
+            <p-button text (onClick)="deleteReleaseCandidate(releaseCandidate)">
+              <i-tabler name="trash" class="!size-5 text-red-500 hover:text-red-700" />
+            </p-button>
+          }
         </h2>
         <div class="flex gap-1 items-center text-sm">
           <div>created by</div>

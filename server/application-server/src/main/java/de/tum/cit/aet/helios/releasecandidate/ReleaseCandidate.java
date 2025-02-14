@@ -35,7 +35,7 @@ public class ReleaseCandidate {
 
   @Id private String name;
 
-  @OneToOne(optional = false, cascade = CascadeType.ALL)
+  @OneToOne(optional = false)
   private Commit commit;
 
   @ManyToOne(fetch = FetchType.LAZY)

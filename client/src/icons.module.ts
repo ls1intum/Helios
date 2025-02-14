@@ -54,6 +54,7 @@ import {
   IconCircle,
   IconClock,
   IconTag,
+  IconTrash,
   IconX,
 } from 'angular-tabler-icons/icons';
 
@@ -111,6 +112,7 @@ const icons = {
   IconCircle,
   IconClock,
   IconTag,
+  IconTrash,
   IconX,
 };
 

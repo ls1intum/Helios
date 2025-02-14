@@ -4,6 +4,7 @@ import de.tum.cit.aet.helios.config.security.annotations.EnforceAtLeastMaintaine
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -47,5 +48,11 @@ public class ReleaseCandidateController {
   public ResponseEntity<Void> evaluate(@PathVariable String name, @PathVariable boolean isWorking) {
     releaseCandidateService.evaluateReleaseCandidate(name, isWorking);
     return ResponseEntity.ok().build();
+  }
+
+  @DeleteMapping("/{name}")
+  public ResponseEntity<ReleaseCandidateInfoDto> deleteReleaseCandidateByName(
+      @PathVariable String name) {
+    return ResponseEntity.ok(releaseCandidateService.deleteReleaseCandidateByName(name));
   }
 }
