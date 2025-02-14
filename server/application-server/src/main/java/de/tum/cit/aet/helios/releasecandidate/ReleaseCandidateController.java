@@ -50,6 +50,7 @@ public class ReleaseCandidateController {
     return ResponseEntity.ok().build();
   }
 
+  @EnforceAtLeastMaintainer
   @DeleteMapping("/{name}")
   public ResponseEntity<ReleaseCandidateInfoDto> deleteReleaseCandidateByName(
       @PathVariable String name) {
