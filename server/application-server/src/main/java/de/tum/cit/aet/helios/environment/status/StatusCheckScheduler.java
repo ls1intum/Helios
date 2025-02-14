@@ -25,8 +25,8 @@ public class StatusCheckScheduler {
    * Runs status checks for all environments with a status check type configured
    * at a fixed interval.
    *
-   * The interval is configurable via the status-check.interval property.
-   * Defaults to 120 seconds.
+   * The interval is configurable via the status-check.recent-interval property.
+   * Defaults to 10 seconds.
    */
   @Scheduled(fixedRateString = "${status-check.recent-interval:10s}")
   public void runScheduledChecks() {
