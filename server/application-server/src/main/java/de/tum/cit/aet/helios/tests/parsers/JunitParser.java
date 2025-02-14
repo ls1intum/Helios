@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @Log4j2
-public class JUnitParser implements TestResultParser {
+public class JunitParser implements TestResultParser {
   public TestParserResult parse(InputStream inputStream) {
     try {
       JAXBContext context = JAXBContext.newInstance(TestSuite.class);
@@ -19,11 +19,7 @@ public class JUnitParser implements TestResultParser {
       TestSuite suite = (TestSuite) unmarshaller.unmarshal(inputStream);
 
       return new TestParserResult(
-          suite.tests,
-          suite.failures,
-          suite.errors,
-          suite.skipped,
-          suite.time);
+          suite.tests, suite.failures, suite.errors, suite.skipped, suite.time);
     } catch (JAXBException e) {
       throw new TestResultParseException("Failed to parse JUnit XML", e);
     }
@@ -35,15 +31,10 @@ public class JUnitParser implements TestResultParser {
 
   @XmlRootElement(name = "testsuite")
   public static class TestSuite {
-    @XmlAttribute
-    public int tests;
-    @XmlAttribute
-    public int failures;
-    @XmlAttribute
-    public int errors;
-    @XmlAttribute
-    public int skipped;
-    @XmlAttribute
-    public double time;
+    @XmlAttribute public int tests;
+    @XmlAttribute public int failures;
+    @XmlAttribute public int errors;
+    @XmlAttribute public int skipped;
+    @XmlAttribute public double time;
   }
 }

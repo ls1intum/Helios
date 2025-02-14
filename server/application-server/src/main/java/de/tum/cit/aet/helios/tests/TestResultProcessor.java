@@ -1,7 +1,7 @@
 package de.tum.cit.aet.helios.tests;
 
 import de.tum.cit.aet.helios.github.GitHubService;
-import de.tum.cit.aet.helios.tests.parsers.JUnitParser;
+import de.tum.cit.aet.helios.tests.parsers.JunitParser;
 import de.tum.cit.aet.helios.tests.parsers.TestParserResult;
 import de.tum.cit.aet.helios.workflow.WorkflowRun;
 import de.tum.cit.aet.helios.workflow.WorkflowRunRepository;
@@ -24,22 +24,25 @@ public class TestResultProcessor {
   private final GitHubService gitHubService;
   private final WorkflowRunRepository workflowRunRepository;
   private final TestResultRepository testResultRepository;
-  private final JUnitParser junitParser;
+  private final JunitParser junitParser;
 
   @Value("${tests.artifactName:Test Results}")
   private String testArtifactName;
 
   public void processRun(long workflowRunId) {
-    final WorkflowRun workflowRun = this.workflowRunRepository.findById(workflowRunId)
-        .orElseThrow(() -> new TestResultException("Workflow run not found"));
+    final WorkflowRun workflowRun =
+        this.workflowRunRepository
+            .findById(workflowRunId)
+            .orElseThrow(() -> new TestResultException("Workflow run not found"));
 
     log.debug("Processing test results for workflow run {}", workflowRunId);
 
     GHArtifact testResultsArtifact = null;
 
     try {
-      PagedIterable<GHArtifact> artifacts = this.gitHubService.getWorkflowRunArtifacts(
-          workflowRun.getRepository().getRepositoryId(), workflowRunId);
+      PagedIterable<GHArtifact> artifacts =
+          this.gitHubService.getWorkflowRunArtifacts(
+              workflowRun.getRepository().getRepositoryId(), workflowRunId);
 
       // Traverse page iterable to find the first artifact with the configured name
       for (GHArtifact artifact : artifacts) {
@@ -68,39 +71,41 @@ public class TestResultProcessor {
 
     log.debug("Parsed {} test results. Persisting...", results.size());
 
-    results.forEach(result -> {
-      final TestResult testResult = new TestResult();
-      testResult.setWorkflowRun(workflowRun);
-      testResult.setTotal(result.total());
-      testResult.setPassed(result.passed());
-      testResult.setFailures(result.failures());
-      testResult.setErrors(result.errors());
-      testResult.setSkipped(result.skipped());
-      testResultRepository.save(testResult);
-    });
+    results.forEach(
+        result -> {
+          final TestResult testResult = new TestResult();
+          testResult.setWorkflowRun(workflowRun);
+          testResult.setTotal(result.total());
+          testResult.setPassed(result.passed());
+          testResult.setFailures(result.failures());
+          testResult.setErrors(result.errors());
+          testResult.setSkipped(result.skipped());
+          testResultRepository.save(testResult);
+        });
 
     log.debug("Persisted test results");
   }
 
   private List<TestParserResult> processTestResultArtifact(GHArtifact artifact) throws IOException {
     // Download the ZIP artifact, find all parsable XML files and parse them
-    return artifact.download(stream -> {
-      List<TestParserResult> results = new ArrayList<>();
+    return artifact.download(
+        stream -> {
+          List<TestParserResult> results = new ArrayList<>();
 
-      try (ZipInputStream zipInput = new ZipInputStream(stream)) {
-        ZipEntry entry;
+          try (ZipInputStream zipInput = new ZipInputStream(stream)) {
+            ZipEntry entry;
 
-        while ((entry = zipInput.getNextEntry()) != null) {
-          if (!entry.isDirectory()) {
-            if (this.junitParser.supports(entry.getName())) {
-              results.add(this.junitParser.parse(zipInput));
+            while ((entry = zipInput.getNextEntry()) != null) {
+              if (!entry.isDirectory()) {
+                if (this.junitParser.supports(entry.getName())) {
+                  results.add(this.junitParser.parse(zipInput));
+                }
+              }
+              zipInput.closeEntry();
             }
           }
-          zipInput.closeEntry();
-        }
-      }
 
-      return results;
-    });
+          return results;
+        });
   }
 }
