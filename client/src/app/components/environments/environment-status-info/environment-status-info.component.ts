@@ -37,6 +37,7 @@ export class EnvironmentStatusInfoComponent implements OnInit, OnDestroy {
           group?: string;
           version?: string;
           buildTime?: number;
+          commitId?: string;
         }
       | undefined;
 
@@ -56,6 +57,10 @@ export class EnvironmentStatusInfoComponent implements OnInit, OnDestroy {
       {
         label: 'Build Time',
         value: metadata?.buildTime ? this.dateService.formatDate(metadata.buildTime * 1000, 'yyyy-MM-dd HH:mm:ss') || '-/-' : undefined,
+      },
+      {
+        label: 'Commit Hash',
+        value: metadata?.commitId ? metadata.commitId.slice(0, 7) : undefined,
       },
     ];
   });
