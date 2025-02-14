@@ -11,6 +11,7 @@ import { IconsModule } from 'icons.module';
 import { DragDropModule } from 'primeng/dragdrop';
 import { ConfirmationService } from 'primeng/api';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { DividerModule } from 'primeng/divider';
 
 import {
   createWorkflowGroupMutation,
@@ -28,6 +29,7 @@ import { MessageService } from 'primeng/api';
 import { PageHeadingComponent } from '@app/components/page-heading/page-heading.component';
 import { TooltipModule } from 'primeng/tooltip';
 import { SelectModule } from 'primeng/select';
+import { LockingThresholdsComponent } from '@app/components/locking-thresholds/locking-thresholds.component';
 
 @Component({
   selector: 'app-project-settings',
@@ -37,6 +39,7 @@ import { SelectModule } from 'primeng/select';
     TableModule,
     ButtonModule,
     PageHeadingComponent,
+    LockingThresholdsComponent,
     PanelModule,
     DialogModule,
     TooltipModule,
@@ -45,6 +48,7 @@ import { SelectModule } from 'primeng/select';
     IconsModule,
     DragDropModule,
     ConfirmDialogModule,
+    DividerModule,
   ],
   templateUrl: './project-settings.component.html',
 })

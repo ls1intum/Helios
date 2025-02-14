@@ -33,7 +33,11 @@ public record EnvironmentDto(
     EnvironmentDeployment latestDeployment,
     EnvironmentStatusDto latestStatus,
     UserInfoDto lockedBy,
-    OffsetDateTime lockedAt) {
+    OffsetDateTime lockedAt,
+    Long lockExpirationThreshold,
+    Long lockReservationThreshold,
+    OffsetDateTime lockWillExpireAt,
+    OffsetDateTime lockReservationWillExpireAt) {
 
   public static record EnvironmentStatusDto(
       @NonNull Long id,
@@ -120,7 +124,11 @@ public record EnvironmentDto(
         envDeployment,
         latestStatus.map(EnvironmentStatusDto::fromEnvironmentStatus).orElse(null),
         UserInfoDto.fromUser(environment.getLockedBy()),
-        environment.getLockedAt());
+        environment.getLockedAt(),
+        environment.getLockExpirationThreshold(),
+        environment.getLockReservationThreshold(),
+        environment.getLockWillExpireAt(),
+        environment.getLockReservationExpiresAt());
   }
 
   /** Overload if you just want to create an EnvironmentDto with no "latestDeployment" info. */

@@ -86,9 +86,9 @@
                 <span>{{ combinedHistory.user?.name }}</span>
               } @else if (combinedHistory.type === 'UNLOCK_EVENT') {
                 <div class="flex gap-1 items-center">
-                  <app-user-avatar [user]="combinedHistory.user" />
+                  <app-user-avatar [user]="combinedHistory.user2" />
                 </div>
-                <span>{{ combinedHistory.user?.name }}</span>
+                <span>{{ combinedHistory.user2?.name }}</span>
               }
             </div>
           </td>

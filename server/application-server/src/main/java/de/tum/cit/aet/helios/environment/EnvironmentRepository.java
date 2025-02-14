@@ -24,4 +24,8 @@ public interface EnvironmentRepository extends JpaRepository<Environment, Long> 
       + "(SELECT MAX(es2.checkTimestamp) FROM EnvironmentStatus es2 WHERE es2.environment = e))"
       + "AND e.statusCheckType IS NOT NULL")
   List<Environment> findByStatusCheckTypeIsNotNullWithLatestStatus();
+
+  List<Environment> findByLockedTrue();
+
+  List<Environment> findByRepositoryRepositoryIdAndLockedTrue(Long repositoryId);
 }

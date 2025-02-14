@@ -38,6 +38,48 @@ paths:
       responses:
         "200":
           description: OK
+  /api/settings/{repositoryId}/settings:
+    get:
+      tags:
+      - git-repo-settings-controller
+      operationId: getGitRepoSettings
+      parameters:
+      - name: repositoryId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GitRepoSettingsDto"
+    put:
+      tags:
+      - git-repo-settings-controller
+      operationId: updateGitRepoSettings
+      parameters:
+      - name: repositoryId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GitRepoSettingsDto"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {}
   /api/settings/{repositoryId}/groups/update:
     put:
       tags:
@@ -790,6 +832,18 @@ paths:
           description: OK
 components:
   schemas:
+    GitRepoSettingsDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        lockExpirationThreshold:
+          type: integer
+          format: int64
+        lockReservationThreshold:
+          type: integer
+          format: int64
     WorkflowGroupDto:
       type: object
       properties:
@@ -907,6 +961,18 @@ components:
         lockedBy:
           $ref: "#/components/schemas/UserInfoDto"
         lockedAt:
+          type: string
+          format: date-time
+        lockExpirationThreshold:
+          type: integer
+          format: int64
+        lockReservationThreshold:
+          type: integer
+          format: int64
+        lockWillExpireAt:
+          type: string
+          format: date-time
+        lockReservationWillExpireAt:
           type: string
           format: date-time
       required:
@@ -1424,6 +1490,8 @@ components:
           format: int64
         lockedBy:
           $ref: "#/components/schemas/UserInfoDto"
+        unlockedBy:
+          $ref: "#/components/schemas/UserInfoDto"
         lockedAt:
           type: string
           format: date-time
@@ -1461,6 +1529,8 @@ components:
         ref:
           type: string
         user:
+          $ref: "#/components/schemas/UserInfoDto"
+        user2:
           $ref: "#/components/schemas/UserInfoDto"
         timestamp:
           type: string

@@ -3,6 +3,7 @@ package de.tum.cit.aet.helios.gitreposettings;
 import de.tum.cit.aet.helios.config.security.annotations.EnforceAtLeastMaintainer;
 import jakarta.validation.Valid;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -20,9 +21,20 @@ import org.springframework.web.bind.annotation.RestController;
 public class GitRepoSettingsController {
 
   private final WorkflowGroupService workflowGroupService;
+  private final GitRepoSettingsService gitRepoSettingsService;
 
-  public GitRepoSettingsController(WorkflowGroupService workflowGroupService) {
+  public GitRepoSettingsController(
+      WorkflowGroupService workflowGroupService, GitRepoSettingsService gitRepoSettingsService) {
     this.workflowGroupService = workflowGroupService;
+    this.gitRepoSettingsService = gitRepoSettingsService;
+  }
+
+  @GetMapping("/settings")
+  @EnforceAtLeastMaintainer
+  public ResponseEntity<GitRepoSettingsDto> getGitRepoSettings(@PathVariable Long repositoryId) {
+    GitRepoSettingsDto gitRepoSettingsDto =
+        gitRepoSettingsService.getOrCreateGitRepoSettingsByRepositoryId(repositoryId).orElseThrow();
+    return ResponseEntity.ok(gitRepoSettingsDto);
   }
 
   @GetMapping("/groups")
@@ -48,6 +60,15 @@ public class GitRepoSettingsController {
       @PathVariable Long repositoryId, @Valid @RequestBody List<WorkflowGroupDto> workflowGroups) {
     workflowGroupService.updateWorkflowGroups(repositoryId, workflowGroups);
     return ResponseEntity.noContent().build();
+  }
+
+  @EnforceAtLeastMaintainer
+  @PutMapping("/settings")
+  public ResponseEntity<?> updateGitRepoSettings(
+      @PathVariable Long repositoryId, @Valid @RequestBody GitRepoSettingsDto gitRepoSettingsDto) {
+    Optional<GitRepoSettingsDto> updateGitRepoSettings =
+        gitRepoSettingsService.updateGitRepoSettings(repositoryId, gitRepoSettingsDto);
+    return updateGitRepoSettings.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
   }
 
   @EnforceAtLeastMaintainer
