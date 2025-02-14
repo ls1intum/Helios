@@ -34,6 +34,7 @@ paths:
               - BUILD
               - DEPLOYMENT
               - NONE
+              - TEST
         required: true
       responses:
         "200":
@@ -1344,9 +1345,9 @@ components:
           uniqueItems: true
         merged:
           type: boolean
-        pullRequest:
-          type: boolean
         draft:
+          type: boolean
+        pullRequest:
           type: boolean
         locked:
           type: boolean
@@ -1553,6 +1554,7 @@ components:
           - BUILD
           - DEPLOYMENT
           - NONE
+          - TEST
         createdAt:
           type: string
           format: date-time

@@ -55,4 +55,11 @@ public class WorkflowService {
             Workflow.Label.DEPLOYMENT, repositoryId);
     return workflow;
   }
+
+  public Workflow getTestWorkflow(Long repositoryId) {
+    Workflow workflow =
+        workflowRepository.findFirstByLabelAndRepositoryRepositoryIdOrderByCreatedAtDesc(
+            Workflow.Label.TEST, repositoryId);
+    return workflow;
+  }
 }

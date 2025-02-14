@@ -10,8 +10,4 @@ create table test_result (
       references workflow_run ( id )
 );
 
--- We only want one test result per workflow run
-create unique index idx_test_result_workflow_run_id on
-   test_result (
-      workflow_run_id
-   );
+alter table workflow drop constraint workflow_label_check;

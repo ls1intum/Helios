@@ -3,7 +3,10 @@ package de.tum.cit.aet.helios.tests;
 import de.tum.cit.aet.helios.github.GitHubService;
 import de.tum.cit.aet.helios.tests.parsers.JunitParser;
 import de.tum.cit.aet.helios.tests.parsers.TestParserResult;
+import de.tum.cit.aet.helios.workflow.Workflow;
 import de.tum.cit.aet.helios.workflow.WorkflowRun;
+import de.tum.cit.aet.helios.workflow.WorkflowService;
+import java.io.FilterInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,33 +27,41 @@ public class TestResultProcessor {
   private final GitHubService gitHubService;
   private final TestResultRepository testResultRepository;
   private final JunitParser junitParser;
+  private final WorkflowService workflowService;
 
   @Value("${tests.artifactName:Test Results}")
   private String testArtifactName;
-
-  @Value("${tests.runName:Test}")
-  private String testRunName;
 
   public boolean shouldProcess(WorkflowRun workflowRun) {
     log.debug(
         "Checking if test results should be processed for workflow run {}", workflowRun.getName());
 
-    if (!workflowRun.getName().equals(this.testRunName)) {
+    if (workflowRun.getStatus() != WorkflowRun.Status.COMPLETED) {
       return false;
     }
 
-    if (workflowRun.getStatus() != WorkflowRun.Status.COMPLETED) {
+    final Workflow testWorkflow =
+        this.workflowService.getTestWorkflow(workflowRun.getRepository().getRepositoryId());
+
+    if (testWorkflow == null || workflowRun.getWorkflowId() != testWorkflow.getId()) {
       return false;
     }
 
     return this.testResultRepository.findByWorkflowRun(workflowRun).isEmpty();
   }
 
-  @Async
+  @Async("testResultProcessorExecutor")
   public void processRun(WorkflowRun workflowRun) {
     log.debug("Processing test results for workflow run {}", workflowRun.getName());
 
     GHArtifact testResultsArtifact = null;
+
+    // thread sleep 2 seconds
+    try {
+      Thread.sleep(2000);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
 
     try {
       PagedIterable<GHArtifact> artifacts =
@@ -103,6 +114,10 @@ public class TestResultProcessor {
     // Download the ZIP artifact, find all parsable XML files and parse them
     return artifact.download(
         stream -> {
+          if (stream.available() == 0) {
+            throw new TestResultException("Empty artifact stream");
+          }
+
           List<TestParserResult> results = new ArrayList<>();
 
           try (ZipInputStream zipInput = new ZipInputStream(stream)) {
@@ -111,7 +126,15 @@ public class TestResultProcessor {
             while ((entry = zipInput.getNextEntry()) != null) {
               if (!entry.isDirectory()) {
                 if (this.junitParser.supports(entry.getName())) {
-                  results.add(this.junitParser.parse(zipInput));
+                  var nonClosingStream =
+                      new FilterInputStream(zipInput) {
+                        @Override
+                        public void close() throws IOException {
+                          // Do nothing, so the underlying stream stays open.
+                        }
+                      };
+
+                  results.add(this.junitParser.parse(nonClosingStream));
                 }
               }
               zipInput.closeEntry();

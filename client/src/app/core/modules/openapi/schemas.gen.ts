@@ -605,10 +605,10 @@ export const PullRequestSchema = {
     merged: {
       type: 'boolean',
     },
-    pullRequest: {
+    draft: {
       type: 'boolean',
     },
-    draft: {
+    pullRequest: {
       type: 'boolean',
     },
     locked: {
@@ -855,7 +855,7 @@ export const WorkflowDtoSchema = {
     },
     label: {
       type: 'string',
-      enum: ['BUILD', 'DEPLOYMENT', 'NONE'],
+      enum: ['BUILD', 'DEPLOYMENT', 'NONE', 'TEST'],
     },
     createdAt: {
       type: 'string',
