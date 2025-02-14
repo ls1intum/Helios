@@ -13,8 +13,8 @@ You can generate the standardized OpenAPI file with following command:
 
 .. code-block:: shell
 
-    cd server/application-server
-    ./gradlew generateOpenapi
+    cd server
+    ./gradlew :application-server:generateOpenApiDocs
 
 Client
 ------

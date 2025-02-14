@@ -18,6 +18,8 @@ import type {
   EvaluateData,
   DeployToEnvironmentData,
   DeployToEnvironmentResponse,
+  GetTestResultsByPullRequestIdAndHeadCommitData,
+  GetTestResultsByBranchAndHeadCommitData,
   HealthCheckData,
   GetAllWorkflowsData,
   GetWorkflowByIdData,
@@ -63,6 +65,8 @@ import {
   createReleaseCandidate,
   evaluate,
   deployToEnvironment,
+  getTestResultsByPullRequestIdAndHeadCommit,
+  getTestResultsByBranchAndHeadCommit,
   healthCheck,
   getAllWorkflows,
   getWorkflowById,
@@ -367,6 +371,44 @@ export const deployToEnvironmentMutation = (options?: Partial<Options<DeployToEn
     },
   };
   return mutationOptions;
+};
+
+export const getTestResultsByPullRequestIdAndHeadCommitQueryKey = (options: Options<GetTestResultsByPullRequestIdAndHeadCommitData>) => [
+  createQueryKey('getTestResultsByPullRequestIdAndHeadCommit', options),
+];
+
+export const getTestResultsByPullRequestIdAndHeadCommitOptions = (options: Options<GetTestResultsByPullRequestIdAndHeadCommitData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getTestResultsByPullRequestIdAndHeadCommit({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: getTestResultsByPullRequestIdAndHeadCommitQueryKey(options),
+  });
+};
+
+export const getTestResultsByBranchAndHeadCommitQueryKey = (options: Options<GetTestResultsByBranchAndHeadCommitData>) => [
+  createQueryKey('getTestResultsByBranchAndHeadCommit', options),
+];
+
+export const getTestResultsByBranchAndHeadCommitOptions = (options: Options<GetTestResultsByBranchAndHeadCommitData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getTestResultsByBranchAndHeadCommit({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: getTestResultsByBranchAndHeadCommitQueryKey(options),
+  });
 };
 
 export const healthCheckQueryKey = (options?: Options<HealthCheckData>) => [createQueryKey('healthCheck', options)];

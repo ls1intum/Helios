@@ -42,67 +42,72 @@ public class StatusCheckScheduler {
 
     // 1. Let's get all environments with a status check type configured
     // and pre-load the latest status for each environment (if it exists)
-    List<Environment> environments = environmentRepository
-        .findByStatusCheckTypeIsNotNullWithLatestStatus();
+    List<Environment> environments =
+        environmentRepository.findByStatusCheckTypeIsNotNullWithLatestStatus();
 
     // 2. Now let's determine if the environments are stable, meaning that we would
     // check them less frequently.
-    var stableEnvironments = environments.stream()
-        .filter(env -> {
-          if (env.getStatusChangedAt() == null) {
-            return true;
-          }
+    var stableEnvironments =
+        environments.stream()
+            .filter(
+                env -> {
+                  if (env.getStatusChangedAt() == null) {
+                    return true;
+                  }
 
-          long secsSinceLastChange = Duration.between(env.getStatusChangedAt(), now).toSeconds();
-          long recentThresholdSeconds = this.config.getCheckRecentThreshold().getSeconds();
+                  long secsSinceLastChange =
+                      Duration.between(env.getStatusChangedAt(), now).toSeconds();
+                  long recentThresholdSeconds = this.config.getCheckRecentThreshold().getSeconds();
 
-          // Stable means that the environment has been in the same state for a while
-          // (threshold)
-          return secsSinceLastChange >= recentThresholdSeconds;
-        })
-        .toList();
+                  // Stable means that the environment has been in the same state for a while
+                  // (threshold)
+                  return secsSinceLastChange >= recentThresholdSeconds;
+                })
+            .toList();
 
     // 3. Filter the stable environments, so we only include the ones that we should
     // check now
     // (the last status check is older than the stable interval)
-    var stableEnvironmentsToCheck = stableEnvironments.stream()
-        .filter(env -> {
-          Optional<EnvironmentStatus> latestStatus = env.getLatestStatus();
+    var stableEnvironmentsToCheck =
+        stableEnvironments.stream()
+            .filter(
+                env -> {
+                  Optional<EnvironmentStatus> latestStatus = env.getLatestStatus();
 
-          if (latestStatus.isEmpty()) {
-            return true;
-          }
+                  if (latestStatus.isEmpty()) {
+                    return true;
+                  }
 
-          long secsSinceLastCheck = Duration.between(latestStatus.get().getCheckTimestamp(), now)
-              .toSeconds();
-          long stableIntervalSeconds = this.config.getCheckStableInterval().getSeconds();
+                  long secsSinceLastCheck =
+                      Duration.between(latestStatus.get().getCheckTimestamp(), now).toSeconds();
+                  long stableIntervalSeconds = this.config.getCheckStableInterval().getSeconds();
 
-          return secsSinceLastCheck >= stableIntervalSeconds;
-        })
-        .toList();
+                  return secsSinceLastCheck >= stableIntervalSeconds;
+                })
+            .toList();
 
     // 4. Set all non-stable environments as recent environments
-    var recentEnvironments = environments.stream()
-        .filter(env -> !stableEnvironments.contains(env))
-        .toList();
+    var recentEnvironments =
+        environments.stream().filter(env -> !stableEnvironments.contains(env)).toList();
 
     // 5. Combine the stable environments to check and the recent environments
-    var environmentsToCheck = List.of(stableEnvironmentsToCheck, recentEnvironments).stream()
-        .flatMap(List::stream)
-        .toList();
+    var environmentsToCheck =
+        List.of(stableEnvironmentsToCheck, recentEnvironments).stream()
+            .flatMap(List::stream)
+            .toList();
 
     log.debug(
         "Found {} environments with status check type configured. "
-        + "{} stable (checking {} now), {} recent",
+            + "{} stable (checking {} now), {} recent",
         environments.size(),
         stableEnvironments.size(),
         stableEnvironmentsToCheck.size(),
-        recentEnvironments.size()
-    );
+        recentEnvironments.size());
 
-    List<CompletableFuture<Void>> futures = environmentsToCheck.stream()
-        .map(env -> statusCheckService.performStatusCheck(env))
-        .toList();
+    List<CompletableFuture<Void>> futures =
+        environmentsToCheck.stream()
+            .map(env -> statusCheckService.performStatusCheck(env))
+            .toList();
 
     // Wait for all status checks to complete
     futures.forEach(CompletableFuture::join);
@@ -113,7 +118,8 @@ public class StatusCheckScheduler {
     final long intervalSeconds = this.config.getCheckInterval().getSeconds();
 
     if (duration > intervalSeconds) {
-      log.warn("Scheduled status checks took longer than the configured interval of {} seconds.",
+      log.warn(
+          "Scheduled status checks took longer than the configured interval of {} seconds.",
           intervalSeconds);
     } else {
       log.debug("Scheduled status checks completed in {} seconds.", duration);

@@ -19,7 +19,7 @@ plugins {
 
 // Detect if the generateOpenApiDocs task is being executed
 gradle.taskGraph.whenReady { taskGraph ->
-    if (taskGraph.hasTask(':generateOpenApiDocs') || taskGraph.hasTask(':bootRunOpenApi')) {
+    if (taskGraph.hasTask(':application-server:generateOpenApiDocs') || taskGraph.hasTask(':application-server:bootRunOpenApi')) {
         println "OpenAPI task detected. Adding H2 dependency."
         // Add the H2 dependency dynamically
         dependencies {
