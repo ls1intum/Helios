@@ -20,7 +20,7 @@ import lombok.ToString;
 @ToString
 public class TestResult {
   @Id
-  @GeneratedValue(strategy = GenerationType.AUTO)
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
   @ManyToOne(optional = false)

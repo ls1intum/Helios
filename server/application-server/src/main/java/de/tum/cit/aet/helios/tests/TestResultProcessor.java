@@ -4,7 +4,6 @@ import de.tum.cit.aet.helios.github.GitHubService;
 import de.tum.cit.aet.helios.tests.parsers.JunitParser;
 import de.tum.cit.aet.helios.tests.parsers.TestParserResult;
 import de.tum.cit.aet.helios.workflow.WorkflowRun;
-import de.tum.cit.aet.helios.workflow.WorkflowRunRepository;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,6 +14,7 @@ import lombok.extern.log4j.Log4j2;
 import org.kohsuke.github.GHArtifact;
 import org.kohsuke.github.PagedIterable;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -22,27 +22,40 @@ import org.springframework.stereotype.Service;
 @Log4j2
 public class TestResultProcessor {
   private final GitHubService gitHubService;
-  private final WorkflowRunRepository workflowRunRepository;
   private final TestResultRepository testResultRepository;
   private final JunitParser junitParser;
 
   @Value("${tests.artifactName:Test Results}")
   private String testArtifactName;
 
-  public void processRun(long workflowRunId) {
-    final WorkflowRun workflowRun =
-        this.workflowRunRepository
-            .findById(workflowRunId)
-            .orElseThrow(() -> new TestResultException("Workflow run not found"));
+  @Value("${tests.runName:Test}")
+  private String testRunName;
 
-    log.debug("Processing test results for workflow run {}", workflowRunId);
+  public boolean shouldProcess(WorkflowRun workflowRun) {
+    log.debug(
+        "Checking if test results should be processed for workflow run {}", workflowRun.getName());
+
+    if (!workflowRun.getName().equals(this.testRunName)) {
+      return false;
+    }
+
+    if (workflowRun.getStatus() != WorkflowRun.Status.COMPLETED) {
+      return false;
+    }
+
+    return this.testResultRepository.findByWorkflowRun(workflowRun).isEmpty();
+  }
+
+  @Async
+  public void processRun(WorkflowRun workflowRun) {
+    log.debug("Processing test results for workflow run {}", workflowRun.getName());
 
     GHArtifact testResultsArtifact = null;
 
     try {
       PagedIterable<GHArtifact> artifacts =
           this.gitHubService.getWorkflowRunArtifacts(
-              workflowRun.getRepository().getRepositoryId(), workflowRunId);
+              workflowRun.getRepository().getRepositoryId(), workflowRun.getId());
 
       // Traverse page iterable to find the first artifact with the configured name
       for (GHArtifact artifact : artifacts) {

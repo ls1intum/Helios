@@ -2,6 +2,7 @@ package de.tum.cit.aet.helios.workflow.github;
 
 import de.tum.cit.aet.helios.github.GitHubMessageHandler;
 import de.tum.cit.aet.helios.gitrepo.github.GitHubRepositorySyncService;
+import de.tum.cit.aet.helios.tests.TestResultProcessor;
 import lombok.extern.log4j.Log4j2;
 import org.kohsuke.github.GHEvent;
 import org.kohsuke.github.GHEventPayload;
@@ -13,26 +14,29 @@ public class GitHubWorkflowRunMessageHandler
     extends GitHubMessageHandler<GHEventPayload.WorkflowRun> {
   private final GitHubRepositorySyncService repositorySyncService;
   private final GitHubWorkflowRunSyncService workflowSyncService;
+  private final TestResultProcessor testResultProcessor;
 
   private GitHubWorkflowRunMessageHandler(
       GitHubWorkflowRunSyncService workflowSyncService,
-      GitHubRepositorySyncService repositorySyncService) {
+      GitHubRepositorySyncService repositorySyncService,
+      TestResultProcessor testResultProcessor) {
     super(GHEventPayload.WorkflowRun.class);
 
     this.workflowSyncService = workflowSyncService;
     this.repositorySyncService = repositorySyncService;
+    this.testResultProcessor = testResultProcessor;
   }
 
   @Override
   protected void handleEvent(GHEventPayload.WorkflowRun eventPayload) {
     var action = eventPayload.getAction();
     var repository = eventPayload.getRepository();
-    var run = eventPayload.getWorkflowRun();
+    var githubRun = eventPayload.getWorkflowRun();
 
     log.info(
         "Received worfklow run event for repository: {}, workflow run: {}, action: {}",
         repository.getFullName(),
-        run.getUrl(),
+        githubRun.getUrl(),
         action);
 
     try {
@@ -48,7 +52,12 @@ public class GitHubWorkflowRunMessageHandler
     }
 
     repositorySyncService.processRepository(eventPayload.getRepository());
-    workflowSyncService.processRun(run);
+
+    var run = workflowSyncService.processRun(githubRun);
+
+    if (testResultProcessor.shouldProcess(run)) {
+      testResultProcessor.processRun(run);
+    }
   }
 
   @Override
