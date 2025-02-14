@@ -1,0 +1,3 @@
+rootProject.name = 'helios'
+
+include 'application-server'

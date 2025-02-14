@@ -10,27 +10,11 @@ buildscript {
 }
 
 plugins {
-    id 'java'
-    id 'jacoco'
-    id 'org.springframework.boot' version '3.4.1'
-    id 'io.spring.dependency-management' version '1.1.7'
-    id 'io.freefair.lombok' version '8.11'
+    id 'org.springframework.boot'
+    id 'io.freefair.lombok'
     id 'org.springdoc.openapi-gradle-plugin' version '1.9.0'
     id 'org.openapi.generator' version '6.6.0'
     id 'org.flywaydb.flyway' version '11.2.0'
-}
-
-group = 'de.tum.cit.aet'
-version = '0.0.1-SNAPSHOT'
-
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
-    }
-}
-
-repositories {
-    mavenCentral()
 }
 
 // Detect if the generateOpenApiDocs task is being executed

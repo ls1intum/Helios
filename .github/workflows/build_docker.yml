@@ -13,7 +13,6 @@ on:
         description: "The tag of the webhook listener image that was built"
         value: ${{ jobs.build.outputs.webhook_listener_image_tag }}
 
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -27,7 +26,7 @@ jobs:
             path: client
           - dockerfile: ./server/application-server/Dockerfile
             image: ghcr.io/ls1intum/helios/application-server
-            context: ./server/application-server
+            context: ./server
             path: server
           - dockerfile: ./server/webhook-listener/Dockerfile
             image: ghcr.io/ls1intum/helios/webhook-listener
