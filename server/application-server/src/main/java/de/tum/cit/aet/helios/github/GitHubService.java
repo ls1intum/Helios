@@ -107,7 +107,7 @@ public class GitHubService {
    * @param repoId the repository ID
    * @param workflowRunId the workflow run ID
    * @return the list of repositories as a PagedIterable object (not thread-safe)
-   * @throws IOException
+   * @throws IOException if an I/O error occurs
    */
   public PagedIterable<GHArtifact> getWorkflowRunArtifacts(long repoId, long workflowRunId)
       throws IOException {
