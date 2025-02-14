@@ -54,8 +54,8 @@ jobs:
 
       - name: Run Gradle to generate OpenAPI docs
         if: steps.check_changes.outputs.CHANGE_DETECTED == 'true'
-        working-directory: ./server/application-server
-        run: ./gradlew generateOpenApiDocs
+        working-directory: ./server
+        run: ./gradlew :application-server:generateOpenApiDocs
 
       - name: Check for OpenAPI spec differences
         if: steps.check_changes.outputs.CHANGE_DETECTED == 'true'
