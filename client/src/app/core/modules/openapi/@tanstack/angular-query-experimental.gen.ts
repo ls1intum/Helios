@@ -29,6 +29,8 @@ import type {
   GetGroupsWithWorkflowsData,
   GetAllRepositoriesData,
   GetRepositoryByIdData,
+  DeleteReleaseCandidateByNameData,
+  DeleteReleaseCandidateByNameResponse,
   GetReleaseCandidateByNameData,
   GetCommitsSinceLastReleaseCandidateData,
   GetAllPullRequestsData,
@@ -74,6 +76,7 @@ import {
   getGroupsWithWorkflows,
   getAllRepositories,
   getRepositoryById,
+  deleteReleaseCandidateByName,
   getReleaseCandidateByName,
   getCommitsSinceLastReleaseCandidate,
   getAllPullRequests,
@@ -558,6 +561,20 @@ export const getRepositoryByIdOptions = (options: Options<GetRepositoryByIdData>
     },
     queryKey: getRepositoryByIdQueryKey(options),
   });
+};
+
+export const deleteReleaseCandidateByNameMutation = (options?: Partial<Options<DeleteReleaseCandidateByNameData>>) => {
+  const mutationOptions: MutationOptions<DeleteReleaseCandidateByNameResponse, DefaultError, Options<DeleteReleaseCandidateByNameData>> = {
+    mutationFn: async localOptions => {
+      const { data } = await deleteReleaseCandidateByName({
+        ...options,
+        ...localOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
 };
 
 export const getReleaseCandidateByNameQueryKey = (options: Options<GetReleaseCandidateByNameData>) => [createQueryKey('getReleaseCandidateByName', options)];
