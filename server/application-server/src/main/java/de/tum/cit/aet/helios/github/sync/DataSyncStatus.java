@@ -1,6 +1,8 @@
 package de.tum.cit.aet.helios.github.sync;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -25,6 +27,16 @@ public class DataSyncStatus {
   @NonNull private OffsetDateTime startTime;
 
   @NonNull private OffsetDateTime endTime;
+
+  /**
+   * Stores the repository name directly instead of a relationship.
+   * In the first sync, the repository is not present in the database.
+   * Also, CASCADE delete is not required for this entity.
+   */
+  private String repositoryNameWithOwner;
+
+  @Enumerated(EnumType.STRING)
+  private Status status;
 
   public enum Status {
     SUCCESS,

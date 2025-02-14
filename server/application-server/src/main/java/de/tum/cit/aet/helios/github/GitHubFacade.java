@@ -1,6 +1,7 @@
 package de.tum.cit.aet.helios.github;
 
 import java.io.IOException;
+import java.util.List;
 import org.kohsuke.github.GHOrganization;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GHRepositorySearchBuilder;
@@ -26,4 +27,23 @@ public interface GitHubFacade {
   public GHRepository getRepositoryById(long id) throws IOException;
 
   public String getGithubAppName();
+
+  /**
+   * Retrieves the list of repositories associated with the GitHub App.
+   *
+   * <p>The method determines the repositories based on the available credentials:
+   * </p>
+   * <ul>
+   *   <li>If no credentials are found, an empty list is returned.</li>
+   *   <li>If a Personal Access Token (PAT) is available, the method returns the repositories
+   *       specified in the corresponding environment variable.</li>
+   *   <li>If GitHub App credentials are found, the method returns a combined list containing
+   *       both the repositories from the environment variable and the actual installed repositories
+   *       of the GitHub App.</li>
+   * </ul>
+   *
+   * @return a list of repository full names in the format {@code owner/repository}.
+   * @throws IOException if an error occurs while retrieving the repository list.
+   */
+  public List<String> getInstalledRepositoriesForGitHubApp() throws IOException;
 }

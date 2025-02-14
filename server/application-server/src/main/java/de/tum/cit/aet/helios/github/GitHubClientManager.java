@@ -275,9 +275,11 @@ public class GitHubClientManager {
         installationId =
             installs.stream()
                 .filter(
-                    inst ->
-                        organizationName != null
-                            && organizationName.equalsIgnoreCase(inst.getAccount().getLogin()))
+                    inst -> {
+                        log.info("Installation details: {}", inst);
+                        return organizationName != null
+                            && organizationName.equalsIgnoreCase(inst.getAccount().getLogin());
+                    })
                 .map(GHAppInstallation::getId)
                 .findFirst()
                 .orElse(null);

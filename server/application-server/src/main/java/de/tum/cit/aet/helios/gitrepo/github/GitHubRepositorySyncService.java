@@ -10,15 +10,11 @@ import java.util.List;
 import java.util.Optional;
 import lombok.extern.log4j.Log4j2;
 import org.kohsuke.github.GHRepository;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
 @Log4j2
 public class GitHubRepositorySyncService {
-
-  @Value("${monitoring.repositories}")
-  private String[] repositoriesToMonitor;
 
   private final GitHubFacade github;
   private final GitRepoRepository gitRepoRepository;
@@ -31,15 +27,6 @@ public class GitHubRepositorySyncService {
     this.github = github;
     this.gitRepoRepository = gitRepoRepository;
     this.repositoryConverter = repositoryConverter;
-  }
-
-  /**
-   * Syncs all monitored GitHub repositories.
-   *
-   * @return A list of successfully fetched GitHub repositories.
-   */
-  public List<GHRepository> syncAllMonitoredRepositories() {
-    return syncAllRepositories(List.of(repositoriesToMonitor));
   }
 
   /**
