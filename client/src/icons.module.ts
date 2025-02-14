@@ -55,6 +55,7 @@ import {
   IconCircle,
   IconClock,
   IconTag,
+  IconTrash,
   IconX,
   IconChevronsRight,
   IconCircleChevronsRight,
@@ -117,6 +118,7 @@ const icons = {
   IconCircle,
   IconClock,
   IconTag,
+  IconTrash,
   IconX,
 };
 
