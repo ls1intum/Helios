@@ -144,10 +144,19 @@ public class DeploymentService {
   }
 
   private Environment lockEnvironment(Long environmentId) {
+    // First, get the environment
     Environment environment =
-        this.environmentService
-            .lockEnvironment(environmentId)
-            .orElseThrow(() -> new DeploymentException("Environment was already locked"));
+        environmentRepository
+            .findById(environmentId)
+            .orElseThrow(() -> new DeploymentException("Environment not found"));
+
+    // Only attempt to lock if it's a test environment
+    if (environment.getType() == Environment.Type.TEST) {
+      environment =
+          this.environmentService
+              .lockEnvironment(environmentId)
+              .orElseThrow(() -> new DeploymentException("Environment was already locked"));
+    }
 
     if (!canRedeploy(environment, 20)) {
       throw new DeploymentException("Deployment is still in progress, please wait.");

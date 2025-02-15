@@ -145,13 +145,19 @@ public class EnvironmentService {
       throw new IllegalStateException("Environment is disabled");
     }
 
+    // Only proceed with locking if it's a TEST environment
+    if (environment.getType() != Environment.Type.TEST) {
+      // Return the environment without locking for non-TEST environments
+      return Optional.of(environment);
+    }
+
     if (environment.isLocked()) {
       if (currentUser.equals(environment.getLockedBy())) {
         return Optional.of(environment);
       }
-
       return Optional.empty();
     }
+
     environment.setLockedBy(currentUser);
     environment.setLockedAt(OffsetDateTime.now());
     environment.setLocked(true);

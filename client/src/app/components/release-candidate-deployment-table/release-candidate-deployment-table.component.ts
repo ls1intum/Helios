@@ -18,6 +18,7 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
+import { MessageService } from 'primeng/api';
 
 @Component({
   selector: 'app-release-candidate-deployment-table',
@@ -28,6 +29,9 @@ export class ReleaseCandidateDeploymentTableComponent {
   releaseCandidate = input.required<ReleaseCandidateDetailsDto>();
   queryClient = inject(QueryClient);
   selectedEnvironmentId = signal<number | undefined>(undefined);
+  isLoadingWorkflow = signal<boolean>(false);
+  startQueryingWorkflow = signal<boolean>(false);
+  messageService = inject(MessageService);
 
   environmentQuery = injectQuery(() => getAllEnabledEnvironmentsOptions());
 
@@ -49,32 +53,48 @@ export class ReleaseCandidateDeploymentTableComponent {
 
   workflowRunUrlQuery = injectQuery(() => ({
     ...getWorkflowRunUrlOptions({
-      query: { branch: this.releaseCandidate().branch.name, commitSha: this.releaseCandidate().commit.sha },
-      path: { environmentId: this.selectedEnvironmentId() || 0 },
+      query: {
+        branch: this.releaseCandidate().branch.name,
+        commitSha: this.releaseCandidate().commit.sha,
+      },
+      path: {
+        environmentId: this.selectedEnvironmentId() || 0,
+      },
     }),
-    enabled: this.selectedEnvironmentId() !== undefined,
+    enabled: this.selectedEnvironmentId() !== undefined && this.deployToEnvironment.isSuccess() && this.startQueryingWorkflow(),
     refetchInterval: data => (data ? false : 3000),
-    retry: 5, // Retry up to 5 times
-    retryDelay: 3000,
   }));
 
   deployReleaseCandidate = (environment: EnvironmentDto) => {
+    this.selectedEnvironmentId.set(environment.id);
+    this.isLoadingWorkflow.set(true);
+    this.startQueryingWorkflow.set(false);
+
     this.deployToEnvironment.mutate(
-      { body: { environmentId: environment.id, branchName: this.releaseCandidate().branch.name, commitSha: this.releaseCandidate().commit.sha } },
+      {
+        body: {
+          environmentId: environment.id,
+          branchName: this.releaseCandidate().branch.name,
+          commitSha: this.releaseCandidate().commit.sha,
+        },
+      },
       {
         onSuccess: () => {
-          // Wait 3 seconds before enabling the workflow URL query
+          this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Deployment started successfully' });
+          // Wait 10 seconds before starting to query the workflow URL
+
           setTimeout(() => {
-            this.selectedEnvironmentId.set(environment.id);
-          }, 5000);
+            this.startQueryingWorkflow.set(true);
+          }, 10000);
+        },
+        onError: () => {
+          this.isLoadingWorkflow.set(false);
+          this.selectedEnvironmentId.set(undefined);
+          this.startQueryingWorkflow.set(false);
         },
       }
     );
   };
-
-  isLoadingWorkflowUrl = computed(() => {
-    return this.workflowRunUrlQuery.isLoading() || (this.deployToEnvironment.isSuccess() && !this.workflowRunUrlQuery.data());
-  });
 
   deploymentStatus = (environment: EnvironmentDto) => {
     let deployments = this.releaseCandidate().deployments.filter(deployment => deployment.environment.id === environment.id);
