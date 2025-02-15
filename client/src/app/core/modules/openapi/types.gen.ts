@@ -109,7 +109,7 @@ export type WorkflowDto = {
   url?: string;
   htmlUrl?: string;
   badgeUrl?: string;
-  label: 'BUILD' | 'DEPLOYMENT' | 'NONE';
+  label: 'BUILD' | 'DEPLOYMENT' | 'NONE' | 'TEST';
   createdAt?: string;
   updatedAt?: string;
 };
@@ -296,7 +296,7 @@ export type BranchDetailsDto = {
 };
 
 export type UpdateWorkflowLabelData = {
-  body: 'BUILD' | 'DEPLOYMENT' | 'NONE';
+  body: 'BUILD' | 'DEPLOYMENT' | 'NONE' | 'TEST';
   path: {
     workflowId: number;
   };

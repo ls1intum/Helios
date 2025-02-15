@@ -67,7 +67,7 @@ export class ProjectSettingsComponent {
   showAddGroupDialog = false;
   newGroupName = '';
   // Store the previous label temporarily for the confirmation dialog
-  private previousLabel: 'BUILD' | 'DEPLOYMENT' | 'NONE' = 'NONE';
+  private previousLabel: 'BUILD' | 'DEPLOYMENT' | 'NONE' | 'TEST' = 'NONE';
 
   // Drag & Drop logic for groupedWorkflowsArray
   private dragIndex: number | null = null;
@@ -253,6 +253,7 @@ export class ProjectSettingsComponent {
               <ul class="list-disc list-inside text-sm text-gray-600">
                 <li><strong>DEPLOYMENT</strong>: This label sets the workflow to trigger server deployments.</li>
                 <li><strong>BUILD</strong>: This label sets the workflow to trigger build processes.</li>
+                <li><strong>TEST</strong>: This label sets the workflow to be searched for test artifacts.</li>
                 <li><strong>NONE</strong>: No label is set for this workflow.</li>
               </ul>
             </div>

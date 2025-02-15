@@ -21,10 +21,16 @@ public class EnvironmentScheduler {
   private final EnvironmentLockHistoryRepository lockHistoryRepository;
   private final GitHubUserConverter userConverter;
   private final UserRepository userRepository;
+  private final org.springframework.core.env.Environment springEnvironment;
 
   // Every minute
   @Scheduled(fixedRate = 60000)
   public void unlockExpiredEnvironments() {
+    if (springEnvironment.matchesProfiles("openapi")) {
+      log.info("OpenAPI profile detected. Skipping Status Check Scheduler.");
+      return;
+    }
+
     Integer numberOfAutoUnlockedEnvironments = 0;
     List<Environment> lockedEnvironments = environmentRepository.findByLockedTrue();
     for (Environment environment : lockedEnvironments) {

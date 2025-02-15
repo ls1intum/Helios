@@ -341,7 +341,7 @@ export const WorkflowDtoSchema = {
     },
     label: {
       type: 'string',
-      enum: ['BUILD', 'DEPLOYMENT', 'NONE'],
+      enum: ['BUILD', 'DEPLOYMENT', 'NONE', 'TEST'],
     },
     createdAt: {
       type: 'string',

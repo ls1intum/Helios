@@ -2,12 +2,16 @@ package de.tum.cit.aet.helios.workflow;
 
 import de.tum.cit.aet.helios.github.BaseGitServiceEntity;
 import de.tum.cit.aet.helios.pullrequest.PullRequest;
+import de.tum.cit.aet.helios.tests.TestSuite;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import lombok.Getter;
@@ -63,6 +67,9 @@ public class WorkflowRun extends BaseGitServiceEntity {
 
   @Enumerated(EnumType.STRING)
   private Conclusion conclusion;
+
+  @OneToMany(mappedBy = "workflowRun", cascade = CascadeType.ALL)
+  private List<TestSuite> testSuites;
 
   public Optional<Conclusion> getConclusion() {
     return Optional.ofNullable(conclusion);
