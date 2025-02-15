@@ -142,4 +142,21 @@ export class ReleaseCandidateDeploymentTableComponent {
   openWorkflowUrl(url: string) {
     window.open(url, '_blank');
   }
+
+  openEnvironment(event: MouseEvent, environment: EnvironmentDto): void {
+    // Prevent the click event from propagating
+    event.stopPropagation();
+
+    // Only proceed if the server URL is available
+    if (environment.serverUrl) {
+      window.open(this.getFullUrl(environment.serverUrl), '_blank');
+    }
+  }
+
+  private getFullUrl(url: string): string {
+    if (url && !url.startsWith('http') && !url.startsWith('https')) {
+      return 'http://' + url;
+    }
+    return url;
+  }
 }

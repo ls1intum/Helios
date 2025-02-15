@@ -32,7 +32,12 @@
     <ng-template pTemplate="body" let-environment>
       <tr>
         <td>
-          {{ environment.name }}
+          <span class="flex items-center gap-2">
+            {{ environment.name }}
+            <span [pTooltip]="'Open Environment'" class="cursor-pointer hover:bg-gray-200 px-2 py-1 rounded flex items-center" (click)="openEnvironment($event, environment)">
+              <i-tabler name="external-link" />
+            </span>
+          </span>
         </td>
         <td>
           @switch (deploymentStatus(environment)) {
