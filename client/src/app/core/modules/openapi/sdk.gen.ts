@@ -20,10 +20,6 @@ import type {
   EvaluateData,
   DeployToEnvironmentData,
   DeployToEnvironmentResponse,
-  GetTestResultsByPullRequestIdAndHeadCommitData,
-  GetTestResultsByPullRequestIdAndHeadCommitResponse,
-  GetTestResultsByBranchAndHeadCommitData,
-  GetTestResultsByBranchAndHeadCommitResponse,
   HealthCheckData,
   HealthCheckResponse,
   GetAllWorkflowsData,
@@ -198,22 +194,6 @@ export const deployToEnvironment = <ThrowOnError extends boolean = false>(option
       ...options?.headers,
     },
     url: '/api/deployments/deploy',
-  });
-};
-
-export const getTestResultsByPullRequestIdAndHeadCommit = <ThrowOnError extends boolean = false>(
-  options: Options<GetTestResultsByPullRequestIdAndHeadCommitData, ThrowOnError>
-) => {
-  return (options?.client ?? client).get<GetTestResultsByPullRequestIdAndHeadCommitResponse, unknown, ThrowOnError>({
-    ...options,
-    url: '/test-results/pr/{pullRequestId}',
-  });
-};
-
-export const getTestResultsByBranchAndHeadCommit = <ThrowOnError extends boolean = false>(options: Options<GetTestResultsByBranchAndHeadCommitData, ThrowOnError>) => {
-  return (options?.client ?? client).get<GetTestResultsByBranchAndHeadCommitResponse, unknown, ThrowOnError>({
-    ...options,
-    url: '/test-results/branch',
   });
 };
 

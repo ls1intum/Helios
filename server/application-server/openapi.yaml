@@ -10,31 +10,31 @@ info:
     url: https://github.com/ls1intum/Helios/blob/main/LICENSE
   version: 0.0.1
 servers:
-- url: /
-  description: Default Server URL
+  - url: /
+    description: Default Server URL
 paths:
   /api/workflows/{workflowId}/label:
     put:
       tags:
-      - workflow-controller
+        - workflow-controller
       operationId: updateWorkflowLabel
       parameters:
-      - name: workflowId
-        in: path
-        required: true
-        schema:
-          type: integer
-          format: int64
+        - name: workflowId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
       requestBody:
         content:
           application/json:
             schema:
               type: string
               enum:
-              - BUILD
-              - DEPLOYMENT
-              - NONE
-              - TEST
+                - BUILD
+                - DEPLOYMENT
+                - NONE
+                - TEST
         required: true
       responses:
         "200":
@@ -42,15 +42,15 @@ paths:
   /api/settings/{repositoryId}/settings:
     get:
       tags:
-      - git-repo-settings-controller
+        - git-repo-settings-controller
       operationId: getGitRepoSettings
       parameters:
-      - name: repositoryId
-        in: path
-        required: true
-        schema:
-          type: integer
-          format: int64
+        - name: repositoryId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
       responses:
         "200":
           description: OK
@@ -60,15 +60,15 @@ paths:
                 $ref: "#/components/schemas/GitRepoSettingsDto"
     put:
       tags:
-      - git-repo-settings-controller
+        - git-repo-settings-controller
       operationId: updateGitRepoSettings
       parameters:
-      - name: repositoryId
-        in: path
-        required: true
-        schema:
-          type: integer
-          format: int64
+        - name: repositoryId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
       requestBody:
         content:
           application/json:
@@ -84,15 +84,15 @@ paths:
   /api/settings/{repositoryId}/groups/update:
     put:
       tags:
-      - git-repo-settings-controller
+        - git-repo-settings-controller
       operationId: updateWorkflowGroups
       parameters:
-      - name: repositoryId
-        in: path
-        required: true
-        schema:
-          type: integer
-          format: int64
+        - name: repositoryId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
       requestBody:
         content:
           application/json:
@@ -107,15 +107,15 @@ paths:
   /api/environments/{id}:
     get:
       tags:
-      - environment-controller
+        - environment-controller
       operationId: getEnvironmentById
       parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: integer
-          format: int64
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
       responses:
         "200":
           description: OK
@@ -125,15 +125,15 @@ paths:
                 $ref: "#/components/schemas/EnvironmentDto"
     put:
       tags:
-      - environment-controller
+        - environment-controller
       operationId: updateEnvironment
       parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: integer
-          format: int64
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
       requestBody:
         content:
           application/json:
@@ -149,15 +149,15 @@ paths:
   /api/environments/{id}/unlock:
     put:
       tags:
-      - environment-controller
+        - environment-controller
       operationId: unlockEnvironment
       parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: integer
-          format: int64
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
       responses:
         "200":
           description: OK
@@ -167,15 +167,15 @@ paths:
   /api/settings/{repositoryId}/groups/create:
     post:
       tags:
-      - git-repo-settings-controller
+        - git-repo-settings-controller
       operationId: createWorkflowGroup
       parameters:
-      - name: repositoryId
-        in: path
-        required: true
-        schema:
-          type: integer
-          format: int64
+        - name: repositoryId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
       requestBody:
         content:
           application/json:
@@ -192,7 +192,7 @@ paths:
   /api/release-candidate:
     get:
       tags:
-      - release-candidate-controller
+        - release-candidate-controller
       operationId: getAllReleaseCandidates
       responses:
         "200":
@@ -205,7 +205,7 @@ paths:
                   $ref: "#/components/schemas/ReleaseCandidateInfoDto"
     post:
       tags:
-      - release-candidate-controller
+        - release-candidate-controller
       operationId: createReleaseCandidate
       requestBody:
         content:
@@ -223,26 +223,26 @@ paths:
   /api/release-candidate/{name}/evaluate/{isWorking}:
     post:
       tags:
-      - release-candidate-controller
+        - release-candidate-controller
       operationId: evaluate
       parameters:
-      - name: name
-        in: path
-        required: true
-        schema:
-          type: string
-      - name: isWorking
-        in: path
-        required: true
-        schema:
-          type: boolean
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: isWorking
+          in: path
+          required: true
+          schema:
+            type: boolean
       responses:
         "200":
           description: OK
   /api/deployments/deploy:
     post:
       tags:
-      - deployment-controller
+        - deployment-controller
       operationId: deployToEnvironment
       requestBody:
         content:
@@ -257,51 +257,10 @@ paths:
             application/json:
               schema:
                 type: string
-  /test-results/pr/{pullRequestId}:
-    get:
-      tags:
-      - test-result-controller
-      operationId: getTestResultsByPullRequestIdAndHeadCommit
-      parameters:
-      - name: pullRequestId
-        in: path
-        required: true
-        schema:
-          type: integer
-          format: int64
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/TestResult"
-  /test-results/branch:
-    get:
-      tags:
-      - test-result-controller
-      operationId: getTestResultsByBranchAndHeadCommit
-      parameters:
-      - name: branch
-        in: query
-        required: true
-        schema:
-          type: string
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/TestResult"
   /status/health:
     get:
       tags:
-      - status-controller
+        - status-controller
       operationId: healthCheck
       responses:
         "200":
@@ -313,7 +272,7 @@ paths:
   /api/workflows:
     get:
       tags:
-      - workflow-controller
+        - workflow-controller
       operationId: getAllWorkflows
       responses:
         "200":
@@ -327,15 +286,15 @@ paths:
   /api/workflows/{id}:
     get:
       tags:
-      - workflow-controller
+        - workflow-controller
       operationId: getWorkflowById
       parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: integer
-          format: int64
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
       responses:
         "200":
           description: OK
@@ -346,21 +305,21 @@ paths:
   /api/workflows/state/{state}:
     get:
       tags:
-      - workflow-controller
+        - workflow-controller
       operationId: getWorkflowsByState
       parameters:
-      - name: state
-        in: path
-        required: true
-        schema:
-          type: string
-          enum:
-          - ACTIVE
-          - DELETED
-          - DISABLED_FORK
-          - DISABLED_INACTIVITY
-          - DISABLED_MANUALLY
-          - UNKNOWN
+        - name: state
+          in: path
+          required: true
+          schema:
+            type: string
+            enum:
+              - ACTIVE
+              - DELETED
+              - DISABLED_FORK
+              - DISABLED_INACTIVITY
+              - DISABLED_MANUALLY
+              - UNKNOWN
       responses:
         "200":
           description: OK
@@ -373,15 +332,15 @@ paths:
   /api/workflows/repository/{repositoryId}:
     get:
       tags:
-      - workflow-controller
+        - workflow-controller
       operationId: getWorkflowsByRepositoryId
       parameters:
-      - name: repositoryId
-        in: path
-        required: true
-        schema:
-          type: integer
-          format: int64
+        - name: repositoryId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
       responses:
         "200":
           description: OK
@@ -394,15 +353,15 @@ paths:
   /api/workflows/pr/{pullRequestId}:
     get:
       tags:
-      - workflow-run-controller
+        - workflow-run-controller
       operationId: getLatestWorkflowRunsByPullRequestIdAndHeadCommit
       parameters:
-      - name: pullRequestId
-        in: path
-        required: true
-        schema:
-          type: integer
-          format: int64
+        - name: pullRequestId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
       responses:
         "200":
           description: OK
@@ -415,14 +374,14 @@ paths:
   /api/workflows/branch:
     get:
       tags:
-      - workflow-run-controller
+        - workflow-run-controller
       operationId: getLatestWorkflowRunsByBranchAndHeadCommit
       parameters:
-      - name: branch
-        in: query
-        required: true
-        schema:
-          type: string
+        - name: branch
+          in: query
+          required: true
+          schema:
+            type: string
       responses:
         "200":
           description: OK
@@ -435,7 +394,7 @@ paths:
   /api/user-permissions:
     get:
       tags:
-      - user-permissions-controller
+        - user-permissions-controller
       operationId: getUserPermissions
       responses:
         "200":
@@ -447,15 +406,15 @@ paths:
   /api/settings/{repositoryId}/groups:
     get:
       tags:
-      - git-repo-settings-controller
+        - git-repo-settings-controller
       operationId: getGroupsWithWorkflows
       parameters:
-      - name: repositoryId
-        in: path
-        required: true
-        schema:
-          type: integer
-          format: int64
+        - name: repositoryId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
       responses:
         "200":
           description: OK
@@ -468,7 +427,7 @@ paths:
   /api/repository:
     get:
       tags:
-      - repository-controller
+        - repository-controller
       operationId: getAllRepositories
       responses:
         "200":
@@ -482,15 +441,15 @@ paths:
   /api/repository/{id}:
     get:
       tags:
-      - repository-controller
+        - repository-controller
       operationId: getRepositoryById
       parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: integer
-          format: int64
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
       responses:
         "200":
           description: OK
@@ -501,14 +460,14 @@ paths:
   /api/release-candidate/{name}:
     get:
       tags:
-      - release-candidate-controller
+        - release-candidate-controller
       operationId: getReleaseCandidateByName
       parameters:
-      - name: name
-        in: path
-        required: true
-        schema:
-          type: string
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
       responses:
         "200":
           description: OK
@@ -519,14 +478,14 @@ paths:
   /api/release-candidate/newcommits:
     get:
       tags:
-      - release-candidate-controller
+        - release-candidate-controller
       operationId: getCommitsSinceLastReleaseCandidate
       parameters:
-      - name: branch
-        in: query
-        required: true
-        schema:
-          type: string
+        - name: branch
+          in: query
+          required: true
+          schema:
+            type: string
       responses:
         "200":
           description: OK
@@ -537,7 +496,7 @@ paths:
   /api/pullrequests:
     get:
       tags:
-      - pull-request-controller
+        - pull-request-controller
       operationId: getAllPullRequests
       responses:
         "200":
@@ -551,15 +510,15 @@ paths:
   /api/pullrequests/{id}:
     get:
       tags:
-      - pull-request-controller
+        - pull-request-controller
       operationId: getPullRequestById
       parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: integer
-          format: int64
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
       responses:
         "200":
           description: OK
@@ -570,21 +529,21 @@ paths:
   /api/pullrequests/repository/{repoId}/pr/{number}:
     get:
       tags:
-      - pull-request-controller
+        - pull-request-controller
       operationId: getPullRequestByRepositoryIdAndNumber
       parameters:
-      - name: repoId
-        in: path
-        required: true
-        schema:
-          type: integer
-          format: int64
-      - name: number
-        in: path
-        required: true
-        schema:
-          type: integer
-          format: int32
+        - name: repoId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: number
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
       responses:
         "200":
           description: OK
@@ -595,15 +554,15 @@ paths:
   /api/pullrequests/repository/{id}:
     get:
       tags:
-      - pull-request-controller
+        - pull-request-controller
       operationId: getPullRequestByRepositoryId
       parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: integer
-          format: int64
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
       responses:
         "200":
           description: OK
@@ -616,7 +575,7 @@ paths:
   /api/environments:
     get:
       tags:
-      - environment-controller
+        - environment-controller
       operationId: getAllEnvironments
       responses:
         "200":
@@ -630,7 +589,7 @@ paths:
   /api/environments/userLocking:
     get:
       tags:
-      - environment-controller
+        - environment-controller
       operationId: getEnvironmentsByUserLocking
       responses:
         "200":
@@ -642,15 +601,15 @@ paths:
   /api/environments/repository/{repositoryId}:
     get:
       tags:
-      - environment-controller
+        - environment-controller
       operationId: getEnvironmentsByRepositoryId
       parameters:
-      - name: repositoryId
-        in: path
-        required: true
-        schema:
-          type: integer
-          format: int64
+        - name: repositoryId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
       responses:
         "200":
           description: OK
@@ -663,15 +622,15 @@ paths:
   /api/environments/environment/{environmentId}/lockHistory:
     get:
       tags:
-      - environment-controller
+        - environment-controller
       operationId: getLockHistoryByEnvironmentId
       parameters:
-      - name: environmentId
-        in: path
-        required: true
-        schema:
-          type: integer
-          format: int64
+        - name: environmentId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
       responses:
         "200":
           description: OK
@@ -684,7 +643,7 @@ paths:
   /api/environments/enabled:
     get:
       tags:
-      - environment-controller
+        - environment-controller
       operationId: getAllEnabledEnvironments
       responses:
         "200":
@@ -698,7 +657,7 @@ paths:
   /api/deployments:
     get:
       tags:
-      - deployment-controller
+        - deployment-controller
       operationId: getAllDeployments
       responses:
         "200":
@@ -712,15 +671,15 @@ paths:
   /api/deployments/{id}:
     get:
       tags:
-      - deployment-controller
+        - deployment-controller
       operationId: getDeploymentById
       parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: integer
-          format: int64
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
       responses:
         "200":
           description: OK
@@ -731,15 +690,15 @@ paths:
   /api/deployments/environment/{environmentId}:
     get:
       tags:
-      - deployment-controller
+        - deployment-controller
       operationId: getDeploymentsByEnvironmentId
       parameters:
-      - name: environmentId
-        in: path
-        required: true
-        schema:
-          type: integer
-          format: int64
+        - name: environmentId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
       responses:
         "200":
           description: OK
@@ -752,15 +711,15 @@ paths:
   /api/deployments/environment/{environmentId}/latest:
     get:
       tags:
-      - deployment-controller
+        - deployment-controller
       operationId: getLatestDeploymentByEnvironmentId
       parameters:
-      - name: environmentId
-        in: path
-        required: true
-        schema:
-          type: integer
-          format: int64
+        - name: environmentId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
       responses:
         "200":
           description: OK
@@ -771,15 +730,15 @@ paths:
   /api/deployments/environment/{environmentId}/activity-history:
     get:
       tags:
-      - deployment-controller
+        - deployment-controller
       operationId: getActivityHistoryByEnvironmentId
       parameters:
-      - name: environmentId
-        in: path
-        required: true
-        schema:
-          type: integer
-          format: int64
+        - name: environmentId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
       responses:
         "200":
           description: OK
@@ -792,20 +751,20 @@ paths:
   /api/commits/repository/{repoId}/commit/{sha}:
     get:
       tags:
-      - commit-controller
+        - commit-controller
       operationId: getCommitByRepositoryIdAndName
       parameters:
-      - name: repoId
-        in: path
-        required: true
-        schema:
-          type: integer
-          format: int64
-      - name: sha
-        in: path
-        required: true
-        schema:
-          type: string
+        - name: repoId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: sha
+          in: path
+          required: true
+          schema:
+            type: string
       responses:
         "200":
           description: OK
@@ -816,7 +775,7 @@ paths:
   /api/branches:
     get:
       tags:
-      - branch-controller
+        - branch-controller
       operationId: getAllBranches
       responses:
         "200":
@@ -830,20 +789,20 @@ paths:
   /api/branches/repository/{repoId}/branch:
     get:
       tags:
-      - branch-controller
+        - branch-controller
       operationId: getBranchByRepositoryIdAndName
       parameters:
-      - name: repoId
-        in: path
-        required: true
-        schema:
-          type: integer
-          format: int64
-      - name: name
-        in: query
-        required: true
-        schema:
-          type: string
+        - name: repoId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: name
+          in: query
+          required: true
+          schema:
+            type: string
       responses:
         "200":
           description: OK
@@ -854,21 +813,21 @@ paths:
   /api/settings/{repositoryId}/groups/{groupId}:
     delete:
       tags:
-      - git-repo-settings-controller
+        - git-repo-settings-controller
       operationId: deleteWorkflowGroup
       parameters:
-      - name: repositoryId
-        in: path
-        required: true
-        schema:
-          type: integer
-          format: int64
-      - name: groupId
-        in: path
-        required: true
-        schema:
-          type: integer
-          format: int64
+        - name: repositoryId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
       responses:
         "200":
           description: OK
@@ -902,9 +861,9 @@ components:
           items:
             $ref: "#/components/schemas/WorkflowMembershipDto"
       required:
-      - id
-      - name
-      - orderIndex
+        - id
+        - name
+        - orderIndex
     WorkflowMembershipDto:
       type: object
       properties:
@@ -915,8 +874,8 @@ components:
           type: integer
           format: int32
       required:
-      - orderIndex
-      - workflowId
+        - orderIndex
+        - workflowId
     EnvironmentDeployment:
       type: object
       properties:
@@ -928,15 +887,15 @@ components:
         state:
           type: string
           enum:
-          - PENDING
-          - WAITING
-          - SUCCESS
-          - ERROR
-          - FAILURE
-          - IN_PROGRESS
-          - QUEUED
-          - INACTIVE
-          - UNKNOWN
+            - PENDING
+            - WAITING
+            - SUCCESS
+            - ERROR
+            - FAILURE
+            - IN_PROGRESS
+            - QUEUED
+            - INACTIVE
+            - UNKNOWN
         statusesUrl:
           type: string
         sha:
@@ -956,7 +915,7 @@ components:
           type: string
           format: date-time
       required:
-      - id
+        - id
     EnvironmentDto:
       type: object
       properties:
@@ -992,8 +951,8 @@ components:
         statusCheckType:
           type: string
           enum:
-          - HTTP_STATUS
-          - ARTEMIS_INFO
+            - HTTP_STATUS
+            - ARTEMIS_INFO
         statusUrl:
           type: string
         latestDeployment:
@@ -1018,8 +977,8 @@ components:
           type: string
           format: date-time
       required:
-      - id
-      - name
+        - id
+        - name
     EnvironmentStatusDto:
       type: object
       properties:
@@ -1037,17 +996,17 @@ components:
         checkType:
           type: string
           enum:
-          - HTTP_STATUS
-          - ARTEMIS_INFO
+            - HTTP_STATUS
+            - ARTEMIS_INFO
         metadata:
           type: object
           additionalProperties: {}
       required:
-      - checkType
-      - checkedAt
-      - httpStatusCode
-      - id
-      - success
+        - checkType
+        - checkedAt
+        - httpStatusCode
+        - id
+        - success
     RepositoryInfoDto:
       type: object
       properties:
@@ -1063,10 +1022,10 @@ components:
         htmlUrl:
           type: string
       required:
-      - htmlUrl
-      - id
-      - name
-      - nameWithOwner
+        - htmlUrl
+        - id
+        - name
+        - nameWithOwner
     UserInfoDto:
       type: object
       properties:
@@ -1082,11 +1041,11 @@ components:
         htmlUrl:
           type: string
       required:
-      - avatarUrl
-      - htmlUrl
-      - id
-      - login
-      - name
+        - avatarUrl
+        - htmlUrl
+        - id
+        - login
+        - name
     ReleaseCandidateCreateDto:
       type: object
       properties:
@@ -1097,8 +1056,8 @@ components:
         branchName:
           type: string
       required:
-      - commitSha
-      - name
+        - commitSha
+        - name
     ReleaseCandidateInfoDto:
       type: object
       properties:
@@ -1117,8 +1076,8 @@ components:
         branchName:
           type: string
       required:
-      - branchName
-      - environmentId
+        - branchName
+        - environmentId
     GitRepository:
       type: object
       properties:
@@ -1147,10 +1106,10 @@ components:
         visibility:
           type: string
           enum:
-          - PUBLIC
-          - PRIVATE
-          - INTERNAL
-          - UNKNOWN
+            - PUBLIC
+            - PRIVATE
+            - INTERNAL
+            - UNKNOWN
         stargazersCount:
           type: integer
           format: int32
@@ -1177,12 +1136,12 @@ components:
         disabled:
           type: boolean
       required:
-      - defaultBranch
-      - htmlUrl
-      - name
-      - nameWithOwner
-      - pushedAt
-      - visibility
+        - defaultBranch
+        - htmlUrl
+        - name
+        - nameWithOwner
+        - pushedAt
+        - visibility
     Issue:
       type: object
       properties:
@@ -1203,8 +1162,8 @@ components:
         state:
           type: string
           enum:
-          - OPEN
-          - CLOSED
+            - OPEN
+            - CLOSED
         title:
           type: string
         body:
@@ -1234,9 +1193,9 @@ components:
         pullRequest:
           type: boolean
       required:
-      - htmlUrl
-      - state
-      - title
+        - htmlUrl
+        - state
+        - title
     Label:
       type: object
       properties:
@@ -1276,8 +1235,8 @@ components:
         state:
           type: string
           enum:
-          - OPEN
-          - CLOSED
+            - OPEN
+            - CLOSED
         title:
           type: string
         body:
@@ -1352,9 +1311,9 @@ components:
         locked:
           type: boolean
       required:
-      - htmlUrl
-      - state
-      - title
+        - htmlUrl
+        - state
+        - title
     TestResult:
       type: object
       properties:
@@ -1418,9 +1377,9 @@ components:
         type:
           type: string
           enum:
-          - USER
-          - ORGANIZATION
-          - BOT
+            - USER
+            - ORGANIZATION
+            - BOT
         followers:
           type: integer
           format: int32
@@ -1428,11 +1387,11 @@ components:
           type: integer
           format: int32
       required:
-      - avatarUrl
-      - htmlUrl
-      - login
-      - name
-      - type
+        - avatarUrl
+        - htmlUrl
+        - login
+        - name
+        - type
     WorkflowRun:
       type: object
       properties:
@@ -1491,34 +1450,34 @@ components:
         status:
           type: string
           enum:
-          - QUEUED
-          - IN_PROGRESS
-          - COMPLETED
-          - ACTION_REQUIRED
-          - CANCELLED
-          - FAILURE
-          - NEUTRAL
-          - SKIPPED
-          - STALE
-          - SUCCESS
-          - TIMED_OUT
-          - REQUESTED
-          - WAITING
-          - PENDING
-          - UNKNOWN
+            - QUEUED
+            - IN_PROGRESS
+            - COMPLETED
+            - ACTION_REQUIRED
+            - CANCELLED
+            - FAILURE
+            - NEUTRAL
+            - SKIPPED
+            - STALE
+            - SUCCESS
+            - TIMED_OUT
+            - REQUESTED
+            - WAITING
+            - PENDING
+            - UNKNOWN
         conclusion:
           type: string
           enum:
-          - ACTION_REQUIRED
-          - CANCELLED
-          - FAILURE
-          - NEUTRAL
-          - SUCCESS
-          - SKIPPED
-          - STALE
-          - TIMED_OUT
-          - STARTUP_FAILURE
-          - UNKNOWN
+            - ACTION_REQUIRED
+            - CANCELLED
+            - FAILURE
+            - NEUTRAL
+            - SUCCESS
+            - SKIPPED
+            - STALE
+            - TIMED_OUT
+            - STARTUP_FAILURE
+            - UNKNOWN
     WorkflowDto:
       type: object
       properties:
@@ -1536,12 +1495,12 @@ components:
         state:
           type: string
           enum:
-          - ACTIVE
-          - DELETED
-          - DISABLED_FORK
-          - DISABLED_INACTIVITY
-          - DISABLED_MANUALLY
-          - UNKNOWN
+            - ACTIVE
+            - DELETED
+            - DISABLED_FORK
+            - DISABLED_INACTIVITY
+            - DISABLED_MANUALLY
+            - UNKNOWN
         url:
           type: string
         htmlUrl:
@@ -1551,10 +1510,10 @@ components:
         label:
           type: string
           enum:
-          - BUILD
-          - DEPLOYMENT
-          - NONE
-          - TEST
+            - BUILD
+            - DEPLOYMENT
+            - NONE
+            - TEST
         createdAt:
           type: string
           format: date-time
@@ -1562,11 +1521,11 @@ components:
           type: string
           format: date-time
       required:
-      - id
-      - label
-      - name
-      - path
-      - state
+        - id
+        - label
+        - name
+        - path
+        - state
     WorkflowRunDto:
       type: object
       properties:
@@ -1580,56 +1539,56 @@ components:
         status:
           type: string
           enum:
-          - QUEUED
-          - IN_PROGRESS
-          - COMPLETED
-          - ACTION_REQUIRED
-          - CANCELLED
-          - FAILURE
-          - NEUTRAL
-          - SKIPPED
-          - STALE
-          - SUCCESS
-          - TIMED_OUT
-          - REQUESTED
-          - WAITING
-          - PENDING
-          - UNKNOWN
+            - QUEUED
+            - IN_PROGRESS
+            - COMPLETED
+            - ACTION_REQUIRED
+            - CANCELLED
+            - FAILURE
+            - NEUTRAL
+            - SKIPPED
+            - STALE
+            - SUCCESS
+            - TIMED_OUT
+            - REQUESTED
+            - WAITING
+            - PENDING
+            - UNKNOWN
         workflowId:
           type: integer
           format: int64
         conclusion:
           type: string
           enum:
-          - ACTION_REQUIRED
-          - CANCELLED
-          - FAILURE
-          - NEUTRAL
-          - SUCCESS
-          - SKIPPED
-          - STALE
-          - TIMED_OUT
-          - STARTUP_FAILURE
-          - UNKNOWN
+            - ACTION_REQUIRED
+            - CANCELLED
+            - FAILURE
+            - NEUTRAL
+            - SUCCESS
+            - SKIPPED
+            - STALE
+            - TIMED_OUT
+            - STARTUP_FAILURE
+            - UNKNOWN
         htmlUrl:
           type: string
       required:
-      - displayTitle
-      - htmlUrl
-      - id
-      - name
-      - status
-      - workflowId
+        - displayTitle
+        - htmlUrl
+        - id
+        - name
+        - status
+        - workflowId
     GitHubRepositoryRoleDto:
       type: object
       properties:
         permission:
           type: string
           enum:
-          - ADMIN
-          - WRITE
-          - READ
-          - NONE
+            - ADMIN
+            - WRITE
+            - READ
+            - NONE
         roleName:
           type: string
     BranchInfoDto:
@@ -1657,8 +1616,8 @@ components:
         repository:
           $ref: "#/components/schemas/RepositoryInfoDto"
       required:
-      - commitSha
-      - name
+        - commitSha
+        - name
     CommitInfoDto:
       type: object
       properties:
@@ -1674,7 +1633,7 @@ components:
         repository:
           $ref: "#/components/schemas/RepositoryInfoDto"
       required:
-      - sha
+        - sha
     DeploymentDto:
       type: object
       properties:
@@ -1688,15 +1647,15 @@ components:
         state:
           type: string
           enum:
-          - PENDING
-          - WAITING
-          - SUCCESS
-          - ERROR
-          - FAILURE
-          - IN_PROGRESS
-          - QUEUED
-          - INACTIVE
-          - UNKNOWN
+            - PENDING
+            - WAITING
+            - SUCCESS
+            - ERROR
+            - FAILURE
+            - IN_PROGRESS
+            - QUEUED
+            - INACTIVE
+            - UNKNOWN
         statusesUrl:
           type: string
         sha:
@@ -1716,13 +1675,13 @@ components:
           type: string
           format: date-time
       required:
-      - environment
-      - id
-      - ref
-      - sha
-      - statusesUrl
-      - task
-      - url
+        - environment
+        - id
+        - ref
+        - sha
+        - statusesUrl
+        - task
+        - url
     ReleaseCandidateDetailsDto:
       type: object
       properties:
@@ -1746,12 +1705,12 @@ components:
           type: string
           format: date-time
       required:
-      - commit
-      - createdAt
-      - createdBy
-      - deployments
-      - evaluations
-      - name
+        - commit
+        - createdAt
+        - createdBy
+        - deployments
+        - evaluations
+        - name
     ReleaseCandidateEvaluationDto:
       type: object
       properties:
@@ -1760,8 +1719,8 @@ components:
         isWorking:
           type: boolean
       required:
-      - isWorking
-      - user
+        - isWorking
+        - user
     CommitsSinceReleaseCandidateDto:
       type: object
       properties:
@@ -1773,8 +1732,8 @@ components:
           items:
             $ref: "#/components/schemas/CommitInfoDto"
       required:
-      - commits
-      - commitsLength
+        - commits
+        - commitsLength
     LabelInfoDto:
       type: object
       properties:
@@ -1788,16 +1747,17 @@ components:
           example: bug
         color:
           type: string
-          description: "The color of the label as a 6-character hex code (without\
+          description:
+            "The color of the label as a 6-character hex code (without\
             \ #)"
           example: ff0000
         repository:
           $ref: "#/components/schemas/RepositoryInfoDto"
           description: The repository associated with this label
       required:
-      - color
-      - id
-      - name
+        - color
+        - id
+        - name
     PullRequestBaseInfoDto:
       type: object
       properties:
@@ -1812,8 +1772,8 @@ components:
         state:
           type: string
           enum:
-          - OPEN
-          - CLOSED
+            - OPEN
+            - CLOSED
         isDraft:
           type: boolean
         isMerged:
@@ -1843,13 +1803,13 @@ components:
           items:
             $ref: "#/components/schemas/UserInfoDto"
       required:
-      - htmlUrl
-      - id
-      - isDraft
-      - isMerged
-      - number
-      - state
-      - title
+        - htmlUrl
+        - id
+        - isDraft
+        - isMerged
+        - number
+        - state
+        - title
     PullRequestInfoDto:
       type: object
       properties:
@@ -1864,8 +1824,8 @@ components:
         state:
           type: string
           enum:
-          - OPEN
-          - CLOSED
+            - OPEN
+            - CLOSED
         isDraft:
           type: boolean
         isMerged:
@@ -1912,19 +1872,19 @@ components:
           type: string
           format: date-time
       required:
-      - additions
-      - commentsCount
-      - deletions
-      - headRefName
-      - headRefRepoNameWithOwner
-      - headSha
-      - htmlUrl
-      - id
-      - isDraft
-      - isMerged
-      - number
-      - state
-      - title
+        - additions
+        - commentsCount
+        - deletions
+        - headRefName
+        - headRefRepoNameWithOwner
+        - headSha
+        - htmlUrl
+        - id
+        - isDraft
+        - isMerged
+        - number
+        - state
+        - title
     EnvironmentLockHistoryDto:
       type: object
       properties:
@@ -1944,7 +1904,7 @@ components:
         environment:
           $ref: "#/components/schemas/EnvironmentDto"
       required:
-      - id
+        - id
     ActivityHistoryDto:
       type: object
       properties:
@@ -1958,15 +1918,15 @@ components:
         state:
           type: string
           enum:
-          - PENDING
-          - WAITING
-          - SUCCESS
-          - ERROR
-          - FAILURE
-          - IN_PROGRESS
-          - QUEUED
-          - INACTIVE
-          - UNKNOWN
+            - PENDING
+            - WAITING
+            - SUCCESS
+            - ERROR
+            - FAILURE
+            - IN_PROGRESS
+            - QUEUED
+            - INACTIVE
+            - UNKNOWN
         sha:
           type: string
         ref:
@@ -2011,5 +1971,5 @@ components:
         repository:
           $ref: "#/components/schemas/RepositoryInfoDto"
       required:
-      - commitSha
-      - name
+        - commitSha
+        - name

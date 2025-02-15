@@ -66,6 +66,15 @@ export type EnvironmentStatusDto = {
   metadata?: {};
 };
 
+export type EnvironmentStatusDto = {
+  id: number;
+  success: boolean;
+  httpStatusCode: number;
+  checkedAt: string;
+  checkType: 'HTTP_STATUS' | 'ARTEMIS_INFO';
+  metadata?: {};
+};
+
 export type RepositoryInfoDto = {
   id: number;
   name: string;
@@ -238,21 +247,21 @@ export type WorkflowRun = {
   headBranch?: string;
   headSha?: string;
   status?:
-    | 'QUEUED'
-    | 'IN_PROGRESS'
-    | 'COMPLETED'
-    | 'ACTION_REQUIRED'
-    | 'CANCELLED'
-    | 'FAILURE'
-    | 'NEUTRAL'
-    | 'SKIPPED'
-    | 'STALE'
-    | 'SUCCESS'
-    | 'TIMED_OUT'
-    | 'REQUESTED'
-    | 'WAITING'
-    | 'PENDING'
-    | 'UNKNOWN';
+  | 'QUEUED'
+  | 'IN_PROGRESS'
+  | 'COMPLETED'
+  | 'ACTION_REQUIRED'
+  | 'CANCELLED'
+  | 'FAILURE'
+  | 'NEUTRAL'
+  | 'SKIPPED'
+  | 'STALE'
+  | 'SUCCESS'
+  | 'TIMED_OUT'
+  | 'REQUESTED'
+  | 'WAITING'
+  | 'PENDING'
+  | 'UNKNOWN';
   conclusion?: 'ACTION_REQUIRED' | 'CANCELLED' | 'FAILURE' | 'NEUTRAL' | 'SUCCESS' | 'SKIPPED' | 'STALE' | 'TIMED_OUT' | 'STARTUP_FAILURE' | 'UNKNOWN';
 };
 
@@ -276,21 +285,21 @@ export type WorkflowRunDto = {
   name: string;
   displayTitle: string;
   status:
-    | 'QUEUED'
-    | 'IN_PROGRESS'
-    | 'COMPLETED'
-    | 'ACTION_REQUIRED'
-    | 'CANCELLED'
-    | 'FAILURE'
-    | 'NEUTRAL'
-    | 'SKIPPED'
-    | 'STALE'
-    | 'SUCCESS'
-    | 'TIMED_OUT'
-    | 'REQUESTED'
-    | 'WAITING'
-    | 'PENDING'
-    | 'UNKNOWN';
+  | 'QUEUED'
+  | 'IN_PROGRESS'
+  | 'COMPLETED'
+  | 'ACTION_REQUIRED'
+  | 'CANCELLED'
+  | 'FAILURE'
+  | 'NEUTRAL'
+  | 'SKIPPED'
+  | 'STALE'
+  | 'SUCCESS'
+  | 'TIMED_OUT'
+  | 'REQUESTED'
+  | 'WAITING'
+  | 'PENDING'
+  | 'UNKNOWN';
   workflowId: number;
   conclusion?: 'ACTION_REQUIRED' | 'CANCELLED' | 'FAILURE' | 'NEUTRAL' | 'SUCCESS' | 'SKIPPED' | 'STALE' | 'TIMED_OUT' | 'STARTUP_FAILURE' | 'UNKNOWN';
   htmlUrl: string;
@@ -650,42 +659,6 @@ export type DeployToEnvironmentResponses = {
 };
 
 export type DeployToEnvironmentResponse = DeployToEnvironmentResponses[keyof DeployToEnvironmentResponses];
-
-export type GetTestResultsByPullRequestIdAndHeadCommitData = {
-  body?: never;
-  path: {
-    pullRequestId: number;
-  };
-  query?: never;
-  url: '/test-results/pr/{pullRequestId}';
-};
-
-export type GetTestResultsByPullRequestIdAndHeadCommitResponses = {
-  /**
-   * OK
-   */
-  200: Array<TestResult>;
-};
-
-export type GetTestResultsByPullRequestIdAndHeadCommitResponse = GetTestResultsByPullRequestIdAndHeadCommitResponses[keyof GetTestResultsByPullRequestIdAndHeadCommitResponses];
-
-export type GetTestResultsByBranchAndHeadCommitData = {
-  body?: never;
-  path?: never;
-  query: {
-    branch: string;
-  };
-  url: '/test-results/branch';
-};
-
-export type GetTestResultsByBranchAndHeadCommitResponses = {
-  /**
-   * OK
-   */
-  200: Array<TestResult>;
-};
-
-export type GetTestResultsByBranchAndHeadCommitResponse = GetTestResultsByBranchAndHeadCommitResponses[keyof GetTestResultsByBranchAndHeadCommitResponses];
 
 export type HealthCheckData = {
   body?: never;
