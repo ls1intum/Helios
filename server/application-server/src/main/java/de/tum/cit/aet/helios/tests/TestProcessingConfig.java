@@ -8,7 +8,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 @Configuration
 @EnableAsync
-public class TestsConfig {
+public class TestProcessingConfig {
   /**
    * Creates a TaskExecutor bean named "testResultProcessorExecutor". This executor is used to
    * process test results asynchronously.
