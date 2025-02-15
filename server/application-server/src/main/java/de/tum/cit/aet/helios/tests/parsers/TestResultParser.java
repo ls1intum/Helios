@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public interface TestResultParser {
-  TestSuite parse(InputStream content);
+  TestSuite parse(InputStream content) throws TestResultParseException;
 
   boolean supports(String artifactName);
 

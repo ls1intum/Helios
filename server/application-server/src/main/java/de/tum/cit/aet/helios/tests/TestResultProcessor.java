@@ -2,6 +2,7 @@ package de.tum.cit.aet.helios.tests;
 
 import de.tum.cit.aet.helios.github.GitHubService;
 import de.tum.cit.aet.helios.tests.parsers.JunitParser;
+import de.tum.cit.aet.helios.tests.parsers.TestResultParseException;
 import de.tum.cit.aet.helios.tests.parsers.TestResultParser;
 import de.tum.cit.aet.helios.workflow.WorkflowRun;
 import de.tum.cit.aet.helios.workflow.WorkflowService;
@@ -156,9 +157,14 @@ public class TestResultProcessor {
                         }
                       };
 
-                  results.add(this.junitParser.parse(nonClosingStream));
+                  try {
+                    results.add(this.junitParser.parse(nonClosingStream));
+                  } catch (TestResultParseException e) {
+                    log.error("Failed to parse JUnit XML file {}", entry.getName(), e);
+                  }
                 }
               }
+
               zipInput.closeEntry();
             }
           }

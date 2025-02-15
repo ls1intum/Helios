@@ -17,7 +17,7 @@ import org.springframework.stereotype.Component;
 @Component
 @Log4j2
 public class JunitParser implements TestResultParser {
-  public TestResultParser.TestSuite parse(InputStream inputStream) {
+  public TestResultParser.TestSuite parse(InputStream inputStream) throws TestResultParseException {
     try {
       JAXBContext context = JAXBContext.newInstance(TestSuite.class);
       Unmarshaller unmarshaller = context.createUnmarshaller();
