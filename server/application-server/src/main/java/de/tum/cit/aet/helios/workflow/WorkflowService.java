@@ -1,9 +1,13 @@
 package de.tum.cit.aet.helios.workflow;
 
 import de.tum.cit.aet.helios.environment.Environment;
+import de.tum.cit.aet.helios.environment.EnvironmentService;
+import de.tum.cit.aet.helios.filters.RepositoryContext;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import java.util.Arrays;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -14,9 +18,12 @@ import org.springframework.stereotype.Service;
 public class WorkflowService {
 
   private final WorkflowRepository workflowRepository;
+  private final EnvironmentService environmentService;
 
-  public WorkflowService(WorkflowRepository workflowRepository) {
+  public WorkflowService(
+      WorkflowRepository workflowRepository, EnvironmentService environmentService) {
     this.workflowRepository = workflowRepository;
+    this.environmentService = environmentService;
   }
 
   public Optional<WorkflowDto> getWorkflowById(Long id) {
@@ -90,5 +97,26 @@ public class WorkflowService {
         return Workflow.DeploymentEnvironment.NONE;
       }
     }
+  }
+
+  public Workflow getDeploymentWorkflowForEnv(Long environmentId) {
+    Environment.Type environmentType =
+        this.environmentService
+            .getEnvironmentTypeById(environmentId)
+            .orElseThrow(() -> new EntityNotFoundException("Environment not found"));
+
+    Workflow.DeploymentEnvironment deploymentEnvironment =
+        this.getDeploymentEnvironment(environmentType);
+    if (deploymentEnvironment == null) {
+      throw new IllegalStateException("No workflow for this deployment environment found");
+    }
+
+    Workflow deploymentWorkflow =
+        this.getDeploymentWorkflowByEnvironment(
+            deploymentEnvironment, RepositoryContext.getRepositoryId());
+    if (deploymentWorkflow == null) {
+      throw new NoSuchElementException("No deployment workflow found");
+    }
+    return deploymentWorkflow;
   }
 }

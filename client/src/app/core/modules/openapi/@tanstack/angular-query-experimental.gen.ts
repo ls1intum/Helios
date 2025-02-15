@@ -20,6 +20,7 @@ import type {
   GetAllWorkflowsData,
   GetWorkflowByIdData,
   GetWorkflowsByStateData,
+  GetWorkflowRunUrlData,
   GetWorkflowsByRepositoryIdData,
   GetLatestWorkflowRunsByPullRequestIdAndHeadCommitData,
   GetLatestWorkflowRunsByBranchAndHeadCommitData,
@@ -63,6 +64,7 @@ import {
   getAllWorkflows,
   getWorkflowById,
   getWorkflowsByState,
+  getWorkflowRunUrl,
   getWorkflowsByRepositoryId,
   getLatestWorkflowRunsByPullRequestIdAndHeadCommit,
   getLatestWorkflowRunsByBranchAndHeadCommit,
@@ -399,6 +401,23 @@ export const getWorkflowsByStateOptions = (options: Options<GetWorkflowsByStateD
       return data;
     },
     queryKey: getWorkflowsByStateQueryKey(options),
+  });
+};
+
+export const getWorkflowRunUrlQueryKey = (options: Options<GetWorkflowRunUrlData>) => [createQueryKey('getWorkflowRunUrl', options)];
+
+export const getWorkflowRunUrlOptions = (options: Options<GetWorkflowRunUrlData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getWorkflowRunUrl({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: getWorkflowRunUrlQueryKey(options),
   });
 };
 

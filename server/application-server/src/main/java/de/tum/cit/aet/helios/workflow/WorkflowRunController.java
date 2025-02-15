@@ -1,6 +1,7 @@
 package de.tum.cit.aet.helios.workflow;
 
 import java.util.List;
+import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,5 +30,15 @@ public class WorkflowRunController {
       @RequestParam String branch) {
     var workflowRuns = workflowRunService.getLatestWorkflowRunsByBranchAndHeadCommitSha(branch);
     return ResponseEntity.ok(workflowRuns);
+  }
+
+  @GetMapping("/runs/{environmentId}")
+  public ResponseEntity<Optional<String>> getWorkflowRunUrl(
+      @PathVariable Long environmentId,
+      @RequestParam String branch,
+      @RequestParam String commitSha) {
+    String getWorkflowRunUrl =
+        workflowRunService.getWorkflowRunUrl(branch, commitSha, environmentId);
+    return ResponseEntity.ok(Optional.ofNullable(getWorkflowRunUrl));
   }
 }

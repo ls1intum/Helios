@@ -7,7 +7,6 @@ import de.tum.cit.aet.helios.environment.EnvironmentLockHistory;
 import de.tum.cit.aet.helios.environment.EnvironmentLockHistoryRepository;
 import de.tum.cit.aet.helios.environment.EnvironmentRepository;
 import de.tum.cit.aet.helios.environment.EnvironmentService;
-import de.tum.cit.aet.helios.filters.RepositoryContext;
 import de.tum.cit.aet.helios.github.GitHubService;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
@@ -92,7 +91,8 @@ public class DeploymentService {
     String commitSha = determineCommitSha(deployRequest, environmentType);
 
     Environment environment = lockEnvironment(deployRequest.environmentId());
-    Workflow deploymentWorkflow = getDeploymentWorkflow(environmentType);
+    Workflow deploymentWorkflow =
+        workflowService.getDeploymentWorkflowForEnv(deployRequest.environmentId());
 
     HeliosDeployment heliosDeployment =
         createHeliosDeployment(environment, deployRequest, commitSha);
@@ -204,22 +204,6 @@ public class DeploymentService {
       heliosDeploymentRepository.save(heliosDeployment);
       throw new DeploymentException("Failed to dispatch workflow due to IOException", e);
     }
-  }
-
-  private Workflow getDeploymentWorkflow(Environment.Type environmentType) {
-    Workflow.DeploymentEnvironment deploymentEnvironment =
-        workflowService.getDeploymentEnvironment(environmentType);
-    if (deploymentEnvironment == null) {
-      throw new DeploymentException("No workflow for this deployment environment found");
-    }
-
-    Workflow deploymentWorkflow =
-        this.workflowService.getDeploymentWorkflowByEnvironment(
-            deploymentEnvironment, RepositoryContext.getRepositoryId());
-    if (deploymentWorkflow == null) {
-      throw new DeploymentException("No deployment workflow found");
-    }
-    return deploymentWorkflow;
   }
 
   private boolean canRedeploy(Environment environment, long timeoutMinutes) {

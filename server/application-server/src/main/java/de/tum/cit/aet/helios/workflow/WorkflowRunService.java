@@ -16,14 +16,17 @@ import org.springframework.stereotype.Service;
 public class WorkflowRunService {
 
   private final WorkflowRunRepository workflowRunRepository;
+  private final WorkflowService workflowService;
   private final PullRequestRepository pullRequestRepository;
   private final BranchRepository branchRepository;
 
   public WorkflowRunService(
       WorkflowRunRepository workflowRunRepository,
+      WorkflowService workflowService,
       PullRequestRepository pullRequestRepository,
       BranchRepository branchRepository) {
     this.workflowRunRepository = workflowRunRepository;
+    this.workflowService = workflowService;
     this.pullRequestRepository = pullRequestRepository;
     this.branchRepository = branchRepository;
   }
@@ -83,5 +86,13 @@ public class WorkflowRunService {
     var latestRuns = getLatestWorkflowRuns(runs);
 
     return latestRuns.map(WorkflowRunDto::fromWorkflowRun).toList();
+  }
+
+  public String getWorkflowRunUrl(String branch, String commitSha, Long environmentId) {
+    Workflow workflow = this.workflowService.getDeploymentWorkflowForEnv(environmentId);
+    return workflowRunRepository
+        .findFirstByHeadBranchAndHeadShaAndWorkflowIdOrderByCreatedAtDesc(
+            branch, commitSha, workflow.getId())
+        .getHtmlUrl();
   }
 }

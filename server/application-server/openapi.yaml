@@ -287,6 +287,35 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/WorkflowDto"
+  /api/workflows/runs/{environmentId}:
+    get:
+      tags:
+      - workflow-run-controller
+      operationId: getWorkflowRunUrl
+      parameters:
+      - name: environmentId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: branch
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: commitSha
+        in: query
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: string
   /api/workflows/repository/{repositoryId}:
     get:
       tags:

@@ -9,4 +9,7 @@ public interface WorkflowRunRepository extends JpaRepository<WorkflowRun, Long> 
   List<WorkflowRun> findByPullRequestsIdAndHeadSha(Long pullRequestsId, String headSha);
 
   List<WorkflowRun> findByHeadBranchAndHeadShaAndPullRequestsIsNull(String branch, String headSha);
+
+  WorkflowRun findFirstByHeadBranchAndHeadShaAndWorkflowIdOrderByCreatedAtDesc(
+      String branch, String headSha, Long workflowId);
 }

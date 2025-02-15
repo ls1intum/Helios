@@ -25,6 +25,8 @@ import type {
   GetWorkflowByIdResponse,
   GetWorkflowsByStateData,
   GetWorkflowsByStateResponse,
+  GetWorkflowRunUrlData,
+  GetWorkflowRunUrlResponse,
   GetWorkflowsByRepositoryIdData,
   GetWorkflowsByRepositoryIdResponse,
   GetLatestWorkflowRunsByPullRequestIdAndHeadCommitData,
@@ -201,6 +203,13 @@ export const getWorkflowsByState = <ThrowOnError extends boolean = false>(option
   return (options?.client ?? client).get<GetWorkflowsByStateResponse, unknown, ThrowOnError>({
     ...options,
     url: '/api/workflows/state/{state}',
+  });
+};
+
+export const getWorkflowRunUrl = <ThrowOnError extends boolean = false>(options: Options<GetWorkflowRunUrlData, ThrowOnError>) => {
+  return (options?.client ?? client).get<GetWorkflowRunUrlResponse, unknown, ThrowOnError>({
+    ...options,
+    url: '/api/workflows/runs/{environmentId}',
   });
 };
 

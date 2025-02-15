@@ -26,6 +26,7 @@
         <th>Name</th>
         <th>Status</th>
         <th>Deploy</th>
+        <th>Actions</th>
       </tr>
     </ng-template>
     <ng-template pTemplate="body" let-environment>
@@ -84,7 +85,24 @@
           }
         </td>
         <td>
-          <p-button (onClick)="deployReleaseCandidate(environment)">Deploy</p-button>
+          <p-button (onClick)="deployReleaseCandidate(environment)" [loading]="deployToEnvironment.isPending() && selectedEnvironmentId() === environment.id"> Deploy </p-button>
+        </td>
+        <td>
+          @if (deployToEnvironment.isSuccess() && selectedEnvironmentId() === environment.id && workflowRunUrlQuery.data()) {
+            <p-button styleClass="p-button-success" (onClick)="openWorkflowUrl(workflowRunUrlQuery.data()!)">
+              <ng-template pTemplate="content">
+                <div class="flex items-center gap-2">
+                  <span>Approve Deployment</span>
+                  <i-tabler name="external-link" class="!size-4" />
+                </div>
+              </ng-template>
+            </p-button>
+          } @else if (deployToEnvironment.isSuccess() && selectedEnvironmentId() === environment.id && isLoadingWorkflowUrl()) {
+            <div class="flex items-center gap-2">
+              <i class="pi pi-spinner pi-spin"></i>
+              <span>Loading workflow...</span>
+            </div>
+          }
         </td>
       </tr>
     </ng-template>

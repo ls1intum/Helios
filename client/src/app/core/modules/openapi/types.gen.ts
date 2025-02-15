@@ -518,6 +518,27 @@ export type GetWorkflowsByStateResponses = {
 
 export type GetWorkflowsByStateResponse = GetWorkflowsByStateResponses[keyof GetWorkflowsByStateResponses];
 
+export type GetWorkflowRunUrlData = {
+  body?: never;
+  path: {
+    environmentId: number;
+  };
+  query: {
+    branch: string;
+    commitSha: string;
+  };
+  url: '/api/workflows/runs/{environmentId}';
+};
+
+export type GetWorkflowRunUrlResponses = {
+  /**
+   * OK
+   */
+  200: string;
+};
+
+export type GetWorkflowRunUrlResponse = GetWorkflowRunUrlResponses[keyof GetWorkflowRunUrlResponses];
+
 export type GetWorkflowsByRepositoryIdData = {
   body?: never;
   path: {

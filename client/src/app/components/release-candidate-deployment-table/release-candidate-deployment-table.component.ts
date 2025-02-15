@@ -1,4 +1,4 @@
-import { Component, computed, inject, input } from '@angular/core';
+import { Component, computed, inject, input, signal } from '@angular/core';
 import { EnvironmentDto, ReleaseCandidateDetailsDto } from '@app/core/modules/openapi';
 import {
   deployToEnvironmentMutation,
@@ -6,6 +6,7 @@ import {
   getAllEnabledEnvironmentsQueryKey,
   getEnvironmentByIdQueryKey,
   getEnvironmentsByUserLockingQueryKey,
+  getWorkflowRunUrlOptions,
 } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { injectMutation, injectQuery, QueryClient } from '@tanstack/angular-query-experimental';
 import { IconsModule } from 'icons.module';
@@ -26,6 +27,7 @@ import { TooltipModule } from 'primeng/tooltip';
 export class ReleaseCandidateDeploymentTableComponent {
   releaseCandidate = input.required<ReleaseCandidateDetailsDto>();
   queryClient = inject(QueryClient);
+  selectedEnvironmentId = signal<number | undefined>(undefined);
 
   environmentQuery = injectQuery(() => getAllEnabledEnvironmentsOptions());
 
@@ -45,9 +47,34 @@ export class ReleaseCandidateDeploymentTableComponent {
     },
   }));
 
+  workflowRunUrlQuery = injectQuery(() => ({
+    ...getWorkflowRunUrlOptions({
+      query: { branch: this.releaseCandidate().branch.name, commitSha: this.releaseCandidate().commit.sha },
+      path: { environmentId: this.selectedEnvironmentId() || 0 },
+    }),
+    enabled: this.selectedEnvironmentId() !== undefined,
+    refetchInterval: data => (data ? false : 3000),
+    retry: 5, // Retry up to 5 times
+    retryDelay: 3000,
+  }));
+
   deployReleaseCandidate = (environment: EnvironmentDto) => {
-    this.deployToEnvironment.mutate({ body: { environmentId: environment.id, branchName: this.releaseCandidate().branch.name, commitSha: this.releaseCandidate().commit.sha } });
+    this.deployToEnvironment.mutate(
+      { body: { environmentId: environment.id, branchName: this.releaseCandidate().branch.name, commitSha: this.releaseCandidate().commit.sha } },
+      {
+        onSuccess: () => {
+          // Wait 3 seconds before enabling the workflow URL query
+          setTimeout(() => {
+            this.selectedEnvironmentId.set(environment.id);
+          }, 5000);
+        },
+      }
+    );
   };
+
+  isLoadingWorkflowUrl = computed(() => {
+    return this.workflowRunUrlQuery.isLoading() || (this.deployToEnvironment.isSuccess() && !this.workflowRunUrlQuery.data());
+  });
 
   deploymentStatus = (environment: EnvironmentDto) => {
     let deployments = this.releaseCandidate().deployments.filter(deployment => deployment.environment.id === environment.id);
@@ -79,4 +106,8 @@ export class ReleaseCandidateDeploymentTableComponent {
     }
     return 'UNKNOWN';
   };
+
+  openWorkflowUrl(url: string) {
+    window.open(url, '_blank');
+  }
 }
