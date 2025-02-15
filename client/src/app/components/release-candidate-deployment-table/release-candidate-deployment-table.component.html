@@ -43,16 +43,18 @@
               <div class="flex items-center gap-1">
                 <p-tag value="replaced" class="text-xs" severity="contrast" />
                 now at
-                @if (environment.latestDeployment.releaseCandidateName) {
-                  <p-tag class="text-xs">
-                    <i-tabler name="git-branch" class="!size-4" />
-                    {{ environment.latestDeployment.releaseCandidateName }}
-                  </p-tag>
-                } @else {
-                  <p-tag class="text-xs">
-                    <i-tabler name="git-branch" class="!size-4" />
-                    {{ environment.latestDeployment.ref }}
-                  </p-tag>
+                @if (environment.latestDeployment) {
+                  @if (environment.latestDeployment.releaseCandidateName) {
+                    <p-tag class="text-xs">
+                      <i-tabler name="git-branch" class="!size-4" />
+                      {{ environment.latestDeployment.releaseCandidateName }}
+                    </p-tag>
+                  } @else {
+                    <p-tag class="text-xs">
+                      <i-tabler name="git-branch" class="!size-4" />
+                      {{ environment.latestDeployment.ref }}
+                    </p-tag>
+                  }
                 }
               </div>
             }
@@ -61,18 +63,19 @@
             }
             @case ('NEVER_DEPLOYED') {
               <div class="flex items-center gap-1">
-                @if (environment.latestDeployment.releaseCandidateName) {
+                @if (environment.latestDeployment) {
                   now at
-                  <p-tag class="text-xs">
-                    <i-tabler name="git-branch" class="!size-4" />
-                    {{ environment.latestDeployment.releaseCandidateName }}
-                  </p-tag>
-                } @else if (environment.latestDeployment.ref) {
-                  now at
-                  <p-tag class="text-xs">
-                    <i-tabler name="git-branch" class="!size-4" />
-                    {{ environment.latestDeployment.ref }}
-                  </p-tag>
+                  @if (environment.latestDeployment.releaseCandidateName) {
+                    <p-tag class="text-xs">
+                      <i-tabler name="git-branch" class="!size-4" />
+                      {{ environment.latestDeployment.releaseCandidateName }}
+                    </p-tag>
+                  } @else {
+                    <p-tag class="text-xs">
+                      <i-tabler name="git-branch" class="!size-4" />
+                      {{ environment.latestDeployment.ref }}
+                    </p-tag>
+                  }
                 } @else {
                   no release candidate deployed yet
                 }

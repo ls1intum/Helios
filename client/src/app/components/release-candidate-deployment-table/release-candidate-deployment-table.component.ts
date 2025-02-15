@@ -7,6 +7,7 @@ import {
   getEnvironmentByIdQueryKey,
   getEnvironmentsByUserLockingQueryKey,
   getWorkflowRunUrlOptions,
+  getWorkflowRunUrlQueryKey,
 } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { injectMutation, injectQuery, QueryClient } from '@tanstack/angular-query-experimental';
 import { IconsModule } from 'icons.module';
@@ -33,7 +34,7 @@ export class ReleaseCandidateDeploymentTableComponent {
   startQueryingWorkflow = signal<boolean>(false);
   messageService = inject(MessageService);
 
-  environmentQuery = injectQuery(() => getAllEnabledEnvironmentsOptions());
+  environmentQuery = injectQuery(() => ({ ...getAllEnabledEnvironmentsOptions(), refetchInterval: 3000 }));
 
   deployableEnvironments = computed(() => this.environmentQuery.data()?.filter(environment => environment.type === 'STAGING' || environment.type === 'PRODUCTION'));
 
@@ -58,7 +59,7 @@ export class ReleaseCandidateDeploymentTableComponent {
         commitSha: this.releaseCandidate().commit.sha,
       },
       path: {
-        environmentId: this.selectedEnvironmentId() || 0,
+        environmentId: this.selectedEnvironmentId() ?? 0,
       },
     }),
     enabled: this.selectedEnvironmentId() !== undefined && this.deployToEnvironment.isSuccess() && this.startQueryingWorkflow(),
@@ -81,11 +82,22 @@ export class ReleaseCandidateDeploymentTableComponent {
       {
         onSuccess: () => {
           this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Deployment started successfully' });
-          // Wait 10 seconds before starting to query the workflow URL
+          this.queryClient.invalidateQueries({
+            queryKey: getWorkflowRunUrlQueryKey({
+              query: {
+                branch: this.releaseCandidate().branch.name,
+                commitSha: this.releaseCandidate().commit.sha,
+              },
+              path: {
+                environmentId: environment.id,
+              },
+            }),
+          });
 
+          // Wait 10 seconds before starting to query the workflow URL
           setTimeout(() => {
             this.startQueryingWorkflow.set(true);
-          }, 10000);
+          }, 10 * 1000);
         },
         onError: () => {
           this.isLoadingWorkflow.set(false);
@@ -98,7 +110,7 @@ export class ReleaseCandidateDeploymentTableComponent {
 
   deploymentStatus = (environment: EnvironmentDto) => {
     let deployments = this.releaseCandidate().deployments.filter(deployment => deployment.environment.id === environment.id);
-
+    console.log('DEPLOYMENTS', deployments.length > 0 ? JSON.stringify(deployments.length) : 'NO DEPLOYMENTS');
     // If there are no deployments related to this release candidate anymore, this release candidate was not deployed yet
     if (deployments.length === 0) {
       return 'NEVER_DEPLOYED';
@@ -121,7 +133,7 @@ export class ReleaseCandidateDeploymentTableComponent {
       return 'SUCCESS';
     }
 
-    if (deployment.state === 'FAILURE') {
+    if (deployment.state === 'ERROR') {
       return 'FAILURE';
     }
     return 'UNKNOWN';
