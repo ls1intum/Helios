@@ -21,65 +21,69 @@
       </div>
     </p-panel>
   </div>
-}
-
-@if (pipeline(); as pipeline) {
-  <div class="flex flex-wrap items-start gap-y-4 mt-2">
-    <!-- Check if all groups have no workflow runs -->
-    <!-- If so, display a message saying that no workflow runs have been found -->
-    @if (allGroupsHaveNoWorkflowRuns()) {
-      <div class="flex flex-col justify-center items-center p-4">
-        <i-tabler name="info-circle" class="!size-20 text-primary" />
-        <div class="font-semibold text-lg">No workflow runs found.</div>
-        <div class="text-sm">Workflow groups exist, but no runs have been executed yet.</div>
-      </div>
-    }
-    @for (group of pipeline.groups; track group.name) {
-      @if (group.workflows.length > 0) {
-        <ng-container>
-          <p-panel [header]="group.name" class="max-w-[250px]">
-            <div class="flex flex-col gap-4">
-              @for (workflowRun of group.workflows; track workflowRun.id) {
-                <div class="flex items-center space-x-2">
-                  @if (workflowRun.status === 'COMPLETED') {
-                    @switch (workflowRun.conclusion) {
-                      @case ('SUCCESS') {
-                        <i-tabler name="circle-check" class="text-green-500" pTooltip="Success"></i-tabler>
-                      }
-                      @case ('FAILURE') {
-                        <i-tabler name="circle-x" class="text-red-500" pTooltip="Failure"></i-tabler>
-                      }
-                      @default {
+} @else {
+  @if (pipeline(); as pipeline) {
+    <div class="flex flex-wrap items-start gap-y-4 mt-2">
+      <!-- Check if all groups have no workflow runs -->
+      <!-- If so, display a message saying that no workflow runs have been found -->
+      @if (allGroupsHaveNoWorkflowRuns()) {
+        <div class="flex flex-col justify-center items-center p-4">
+          <i-tabler name="info-circle" class="!size-20 text-primary" />
+          <div class="font-semibold text-lg">No workflow runs found.</div>
+          <div class="text-sm">Workflow groups exist, but no runs have been executed yet.</div>
+        </div>
+      }
+      @for (group of pipeline.groups; track group.name) {
+        @if (group.workflows.length > 0) {
+          <ng-container>
+            <p-panel [header]="group.name" class="max-w-[250px]">
+              <div class="flex flex-col gap-4">
+                @for (workflowRun of group.workflows; track workflowRun.id) {
+                  <div class="flex items-center space-x-2">
+                    <div class="flex items-center">
+                      @if (workflowRun.status === 'COMPLETED') {
+                        @switch (workflowRun.conclusion) {
+                          @case ('SUCCESS') {
+                            <i-tabler name="circle-check" class="text-green-500" pTooltip="Success"></i-tabler>
+                          }
+                          @case ('FAILURE') {
+                            <i-tabler name="circle-x" class="text-red-500" pTooltip="Failure"></i-tabler>
+                          }
+                          @default {
+                            <i-tabler name="progress-help" class="text-gray-500" pTooltip="Unknown"></i-tabler>
+                          }
+                        }
+                      } @else if (['IN_PROGRESS', 'QUEUED', 'PENDING', 'WAITING', 'REQUESTED'].includes(workflowRun.status)) {
+                        <i-tabler name="progress" class="text-yellow-500 animate-spin" pTooltip="In progress"></i-tabler>
+                      } @else {
                         <i-tabler name="progress-help" class="text-gray-500" pTooltip="Unknown"></i-tabler>
                       }
-                    }
-                  } @else if (['IN_PROGRESS', 'QUEUED', 'PENDING', 'WAITING', 'REQUESTED'].includes(workflowRun.status)) {
-                    <i-tabler name="progress" class="text-yellow-500 animate-spin" pTooltip="In progress"></i-tabler>
-                  } @else {
-                    <i-tabler name="progress-help" class="text-gray-500" pTooltip="Unknown"></i-tabler>
-                  }
-                  <!-- Fixed width to ensure consistent alignment -->
-                  <span class="font-medium flex items-center justify-between w-full">
-                    <span [pTooltip]="workflowRun.name">{{ workflowRun.name }}</span>
-                    <a class="ml-1" [href]="workflowRun.htmlUrl" target="_new"><i-tabler name="external-link" class="w-20 h-20"></i-tabler></a>
-                  </span>
-                </div>
-              }
-            </div>
-          </p-panel>
+                    </div>
+                    <!-- Fixed width to ensure consistent alignment -->
+                    <span class="font-medium flex items-center justify-between w-full">
+                      <span [pTooltip]="workflowRun.name">{{ workflowRun.name }}</span>
+                      <a class="ml-1" [href]="workflowRun.htmlUrl" target="_new"><i-tabler name="external-link" class="w-20 h-20"></i-tabler></a>
+                    </span>
+                  </div>
+                }
+              </div>
+            </p-panel>
 
-          <!-- Connection line -->
-          @if (!group.isLastWithWorkflows) {
-            <div class="w-10 h-px bg-gray-300 mt-7"></div>
-          }
-        </ng-container>
+            <!-- Connection line -->
+            @if (!group.isLastWithWorkflows) {
+              <div class="w-10 h-px bg-gray-300 mt-7"></div>
+            }
+          </ng-container>
+        }
+      } @empty {
+        <div class="flex flex-col justify-center items-center p-4">
+          <i-tabler name="exclamation-circle" class="!size-20 text-primary" />
+          <div class="font-semibold text-lg">There are no pipeline groups yet.</div>
+          <div class="text-sm">Create one in the repository settings.</div>
+        </div>
       }
-    } @empty {
-      <div class="flex flex-col justify-center items-center p-4">
-        <i-tabler name="exclamation-circle" class="!size-20 text-primary" />
-        <div class="font-semibold text-lg">There are no pipeline groups yet.</div>
-        <div class="text-sm">Create one in the repository settings.</div>
-      </div>
-    }
-  </div>
+    </div>
+
+    <app-pipeline-test-results [pipeline]="pipeline" />
+  }
 }
