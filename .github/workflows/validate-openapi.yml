@@ -79,8 +79,8 @@ jobs:
             The OpenAPI specs in `openapi.yaml` differ from the generated version.
             Please update the OpenAPI specs by running:
             ```bash
-            cd ./server
-            ./gradlew :application-server:generateOpenApiDocs
+            cd ./server/application-server
+            ./gradlew generateOpenApiDocs
             ```
             Commit and push the updated file.
 
