@@ -4,7 +4,10 @@ import de.tum.cit.aet.helios.github.BaseGitServiceEntity;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import java.util.List;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
@@ -30,6 +33,9 @@ public class Workflow extends BaseGitServiceEntity {
   @NonNull
   @Enumerated(EnumType.STRING)
   private State state;
+
+  @OneToMany(mappedBy = "workflow", fetch = FetchType.LAZY)
+  private List<WorkflowRun> workflowRuns;
 
   private String url;
 

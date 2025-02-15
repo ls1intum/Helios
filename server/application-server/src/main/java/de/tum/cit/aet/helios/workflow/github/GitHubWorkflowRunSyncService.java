@@ -2,7 +2,6 @@ package de.tum.cit.aet.helios.workflow.github;
 
 import static de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment.mapWorkflowRunStatus;
 
-import de.tum.cit.aet.helios.github.GitHubFacade;
 import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
@@ -10,6 +9,7 @@ import de.tum.cit.aet.helios.pullrequest.PullRequest;
 import de.tum.cit.aet.helios.pullrequest.PullRequestRepository;
 import de.tum.cit.aet.helios.util.DateUtil;
 import de.tum.cit.aet.helios.workflow.Workflow;
+import de.tum.cit.aet.helios.workflow.WorkflowRepository;
 import de.tum.cit.aet.helios.workflow.WorkflowRun;
 import de.tum.cit.aet.helios.workflow.WorkflowRunRepository;
 import de.tum.cit.aet.helios.workflow.WorkflowService;
@@ -22,6 +22,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GHWorkflowRun;
@@ -29,31 +30,15 @@ import org.springframework.stereotype.Service;
 
 @Log4j2
 @Service
+@RequiredArgsConstructor
 public class GitHubWorkflowRunSyncService {
   private final WorkflowRunRepository workflowRunRepository;
   private final GitHubWorkflowRunConverter workflowRunConverter;
   private final GitRepoRepository gitRepoRepository;
   private final PullRequestRepository pullRequestRepository;
+  private final WorkflowRepository workflowRepository;
   private final WorkflowService workflowService;
   private final HeliosDeploymentRepository heliosDeploymentRepository;
-  private final GitHubFacade github;
-
-  public GitHubWorkflowRunSyncService(
-      WorkflowRunRepository workflowRunRepository,
-      GitHubWorkflowRunConverter workflowRunConverter,
-      GitRepoRepository gitRepoRepository,
-      PullRequestRepository pullRequestRepository,
-      WorkflowService workflowService,
-      HeliosDeploymentRepository heliosDeploymentRepository,
-      GitHubFacade github) {
-    this.workflowRunRepository = workflowRunRepository;
-    this.workflowRunConverter = workflowRunConverter;
-    this.gitRepoRepository = gitRepoRepository;
-    this.pullRequestRepository = pullRequestRepository;
-    this.workflowService = workflowService;
-    this.heliosDeploymentRepository = heliosDeploymentRepository;
-    this.github = github;
-  }
 
   /**
    * Synchronizes all workflow runs from the specified GitHub repositories.
@@ -153,6 +138,16 @@ public class GitHubWorkflowRunSyncService {
       if (repository != null) {
         result.setRepository(repository);
       }
+    }
+
+    if (result.getWorkflow() == null) {
+      var workflow = workflowRepository.findById(ghWorkflowRun.getWorkflowId());
+
+      if (workflow.isEmpty()) {
+        return null;
+      }
+
+      result.setWorkflow(workflow.get());
     }
 
     try {

@@ -4,8 +4,9 @@ import de.tum.cit.aet.helios.github.GitHubService;
 import de.tum.cit.aet.helios.tests.parsers.JunitParser;
 import de.tum.cit.aet.helios.tests.parsers.TestResultParseException;
 import de.tum.cit.aet.helios.tests.parsers.TestResultParser;
+import de.tum.cit.aet.helios.workflow.Workflow;
 import de.tum.cit.aet.helios.workflow.WorkflowRun;
-import de.tum.cit.aet.helios.workflow.WorkflowService;
+import de.tum.cit.aet.helios.workflow.WorkflowRunRepository;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -25,9 +26,8 @@ import org.springframework.stereotype.Service;
 @Log4j2
 public class TestResultProcessor {
   private final GitHubService gitHubService;
-  private final TestSuiteRepository testSuiteRepository;
+  private final WorkflowRunRepository workflowRunRepository;
   private final JunitParser junitParser;
-  private final WorkflowService workflowService;
 
   @Value("${tests.artifactName:JUnit Test Results}")
   private String testArtifactName;
@@ -36,25 +36,34 @@ public class TestResultProcessor {
     log.debug(
         "Checking if test results should be processed for workflow run {}", workflowRun.getName());
 
-    if (workflowRun.getStatus() != WorkflowRun.Status.COMPLETED) {
+    if (workflowRun.getStatus() != WorkflowRun.Status.COMPLETED
+        || workflowRun.getWorkflow().getLabel() != Workflow.Label.TEST) {
       return false;
     }
 
-    var testWorkflows =
-        this.workflowService.getTestWorkflows(workflowRun.getRepository().getRepositoryId());
-
-    if (testWorkflows.stream().noneMatch(w -> w.getId().equals(workflowRun.getWorkflowId()))) {
-      return false;
-    }
-
-    // We don't want to process test results twice
-    return this.testSuiteRepository.findByWorkflowRunId(workflowRun.getId()).isEmpty();
+    return workflowRun.getTestProcessingStatus() == null;
   }
 
   @Async("testResultProcessorExecutor")
   public void processRun(WorkflowRun workflowRun) {
     log.debug("Processing test results for workflow run {}", workflowRun.getName());
 
+    workflowRun.setTestProcessingStatus(WorkflowRun.TestProcessingStatus.PROCESSING);
+    this.workflowRunRepository.save(workflowRun);
+
+    try {
+      workflowRun.setTestSuites(this.processRunSync(workflowRun));
+      workflowRun.setTestProcessingStatus(WorkflowRun.TestProcessingStatus.PROCESSED);
+      log.debug("Successfully persisted test results for workflow run {}", workflowRun.getName());
+    } catch (Exception e) {
+      log.error("Failed to process test results for workflow run {}", workflowRun.getName(), e);
+      workflowRun.setTestProcessingStatus(WorkflowRun.TestProcessingStatus.FAILED);
+    } finally {
+      this.workflowRunRepository.save(workflowRun);
+    }
+  }
+
+  private List<TestSuite> processRunSync(WorkflowRun workflowRun) {
     GHArtifact testResultsArtifact = null;
 
     try {
@@ -127,9 +136,7 @@ public class TestResultProcessor {
       testSuites.add(testSuite);
     }
 
-    this.testSuiteRepository.saveAll(testSuites);
-
-    log.debug("Persisted test results");
+    return testSuites;
   }
 
   private List<TestResultParser.TestSuite> processTestResultArtifact(GHArtifact artifact)

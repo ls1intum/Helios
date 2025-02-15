@@ -11,6 +11,8 @@ import {
   getGroupsWithWorkflowsOptions,
 } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { SkeletonModule } from 'primeng/skeleton';
+import { WorkflowRunDto } from '@app/core/modules/openapi';
+import { PipelineTestResultsComponent } from './test-results/pipeline-test-results.component';
 
 export type PipelineSelector = { repositoryId: number } & (
   | {
@@ -21,9 +23,18 @@ export type PipelineSelector = { repositoryId: number } & (
     }
 );
 
+export interface Pipeline {
+  groups: {
+    name: string;
+    id: number;
+    workflows: WorkflowRunDto[];
+    isLastWithWorkflows: boolean;
+  }[];
+}
+
 @Component({
   selector: 'app-pipeline',
-  imports: [TableModule, ProgressSpinnerModule, PanelModule, IconsModule, TooltipModule, SkeletonModule],
+  imports: [TableModule, ProgressSpinnerModule, PanelModule, IconsModule, TooltipModule, SkeletonModule, PipelineTestResultsComponent],
   templateUrl: './pipeline.component.html',
 })
 export class PipelineComponent {
@@ -46,12 +57,12 @@ export class PipelineComponent {
   });
   //TODO instead of refetching every 15 seconds, we should use websockets to get real-time updates
   branchQuery = injectQuery(() => ({
-    ...getLatestWorkflowRunsByBranchAndHeadCommitOptions({ query: { branch: this.branchName()! } }),
+    ...getLatestWorkflowRunsByBranchAndHeadCommitOptions({ query: { branch: this.branchName()!, includeTestSuites: true } }),
     enabled: this.branchName() !== null,
     refetchInterval: 15000,
   }));
   pullRequestQuery = injectQuery(() => ({
-    ...getLatestWorkflowRunsByPullRequestIdAndHeadCommitOptions({ path: { pullRequestId: this.pullRequestId() || 0 } }),
+    ...getLatestWorkflowRunsByPullRequestIdAndHeadCommitOptions({ path: { pullRequestId: this.pullRequestId() || 0 }, query: { includeTestSuites: true } }),
     enabled: this.pullRequestId() !== null,
     refetchInterval: 15000,
   }));
@@ -61,7 +72,7 @@ export class PipelineComponent {
     refetchInterval: 15000,
   }));
 
-  pipeline = computed(() => {
+  pipeline = computed<Pipeline>(() => {
     const workflowRuns = (this.branchName() ? this.branchQuery.data() : this.pullRequestQuery.data()) || [];
     const workflowGroups = this.groupsQuery.data() || [];
 

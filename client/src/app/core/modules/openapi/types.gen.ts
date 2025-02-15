@@ -114,6 +114,29 @@ export type WorkflowDto = {
   updatedAt?: string;
 };
 
+export type TestCaseDto = {
+  id: number;
+  name: string;
+  className: string;
+  status: 'PASSED' | 'FAILED' | 'ERROR' | 'SKIPPED';
+  time: number;
+  message?: string;
+  stackTrace?: string;
+  errorType?: string;
+};
+
+export type TestSuiteDto = {
+  id: number;
+  name: string;
+  timestamp: string;
+  tests: number;
+  failures: number;
+  errors: number;
+  skipped: number;
+  time: number;
+  testCases: Array<TestCaseDto>;
+};
+
 export type WorkflowRunDto = {
   id: number;
   name: string;
@@ -137,6 +160,9 @@ export type WorkflowRunDto = {
   workflowId: number;
   conclusion?: 'ACTION_REQUIRED' | 'CANCELLED' | 'FAILURE' | 'NEUTRAL' | 'SUCCESS' | 'SKIPPED' | 'STALE' | 'TIMED_OUT' | 'STARTUP_FAILURE' | 'UNKNOWN';
   htmlUrl: string;
+  label: 'BUILD' | 'DEPLOYMENT' | 'NONE' | 'TEST';
+  testProcessingStatus?: 'PROCESSING' | 'PROCESSED' | 'FAILED';
+  testSuites: Array<TestSuiteDto>;
 };
 
 export type GitHubRepositoryRoleDto = {
@@ -585,7 +611,9 @@ export type GetLatestWorkflowRunsByPullRequestIdAndHeadCommitData = {
   path: {
     pullRequestId: number;
   };
-  query?: never;
+  query?: {
+    includeTestSuites?: boolean;
+  };
   url: '/api/workflows/pr/{pullRequestId}';
 };
 
@@ -604,6 +632,7 @@ export type GetLatestWorkflowRunsByBranchAndHeadCommitData = {
   path?: never;
   query: {
     branch: string;
+    includeTestSuites?: boolean;
   };
   url: '/api/workflows/branch';
 };
