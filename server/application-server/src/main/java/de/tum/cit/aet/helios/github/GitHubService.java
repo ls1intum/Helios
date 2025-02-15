@@ -103,14 +103,12 @@ public class GitHubService {
 
   /**
    * Retrieves the artifacts for a given repository.
-   *
-   * @param repoId the repository ID
-   * @param workflowRunId the workflow run ID
+   * 
+   * @param repoNameWithOwners the repository name with owners
    * @return the list of repositories as a PagedIterable object (not thread-safe)
    * @throws IOException if an I/O error occurs
    */
-  public PagedIterable<GHArtifact> getWorkflowRunArtifacts(long repoId, long workflowRunId)
-      throws IOException {
+  public PagedIterable<GHArtifact> getWorkflowRunArtifacts(long repoId, long workflowRunId) throws IOException {
     return github.getRepositoryById(repoId).getWorkflowRun(workflowRunId).listArtifacts();
   }
 
