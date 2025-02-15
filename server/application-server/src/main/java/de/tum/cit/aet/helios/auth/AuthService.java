@@ -103,7 +103,7 @@ public class AuthService {
           return hasRole("ROLE_ADMIN");
         }
         case STAGING -> {
-          return hasRole("ROLE_MAINTAINER") || hasRole("ROLE_ADMIN");
+          return hasRole("ROLE_ADMIN");
         }
         case TEST -> {
           return hasRole("ROLE_WRITE") || hasRole("ROLE_MAINTAINER") || hasRole("ROLE_ADMIN");

@@ -94,10 +94,12 @@
           }
         </td>
         <td>
-          <p-button (onClick)="deployReleaseCandidate(environment)" [loading]="deployToEnvironment.isPending() && selectedEnvironmentId() === environment.id"> Deploy </p-button>
+          @if (userCanDeploy()) {
+            <p-button (onClick)="deployReleaseCandidate(environment)" [loading]="deployToEnvironment.isPending() && selectedEnvironmentId() === environment.id"> Deploy </p-button>
+          }
         </td>
         <td>
-          @if (selectedEnvironmentId() === environment.id && deployToEnvironment.isSuccess()) {
+          @if (userCanDeploy() && selectedEnvironmentId() === environment.id && deployToEnvironment.isSuccess()) {
             <p-button
               styleClass="p-button-success"
               [loading]="!startQueryingWorkflow() || !workflowRunUrlQuery.data()"

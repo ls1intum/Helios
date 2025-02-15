@@ -20,6 +20,8 @@ import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
 import { MessageService } from 'primeng/api';
+import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
+import { PermissionService } from '@app/core/services/permission.service';
 
 @Component({
   selector: 'app-release-candidate-deployment-table',
@@ -33,6 +35,11 @@ export class ReleaseCandidateDeploymentTableComponent {
   isLoadingWorkflow = signal<boolean>(false);
   startQueryingWorkflow = signal<boolean>(false);
   messageService = inject(MessageService);
+  keycloakService = inject(KeycloakService);
+  permissions = inject(PermissionService);
+  isLoggedIn = computed(() => this.keycloakService.isLoggedIn());
+
+  userCanDeploy = computed(() => !!(this.isLoggedIn() && this.permissions.isAdmin()));
 
   environmentQuery = injectQuery(() => ({ ...getAllEnabledEnvironmentsOptions(), refetchInterval: 3000 }));
 

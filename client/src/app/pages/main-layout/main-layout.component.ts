@@ -67,11 +67,7 @@ export class MainLayoutComponent {
         icon: 'arrow-guide',
         path: 'ci-cd',
       },
-      {
-        label: 'Release Management',
-        icon: 'rocket',
-        path: 'release',
-      },
+
       {
         label: 'Environments',
         icon: 'server-cog',
@@ -79,6 +75,11 @@ export class MainLayoutComponent {
       },
       ...(this.keycloakService.profile && this.permissionService.isAtLeastMaintainer()
         ? [
+            {
+              label: 'Release Management',
+              icon: 'rocket',
+              path: 'release',
+            },
             {
               label: 'Project Settings',
               icon: 'adjustments-alt',
