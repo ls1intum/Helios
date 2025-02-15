@@ -2,8 +2,7 @@ package de.tum.cit.aet.helios.tests;
 
 import de.tum.cit.aet.helios.github.GitHubService;
 import de.tum.cit.aet.helios.tests.parsers.JunitParser;
-import de.tum.cit.aet.helios.tests.parsers.TestParserResult;
-import de.tum.cit.aet.helios.workflow.Workflow;
+import de.tum.cit.aet.helios.tests.parsers.TestResultParser;
 import de.tum.cit.aet.helios.workflow.WorkflowRun;
 import de.tum.cit.aet.helios.workflow.WorkflowService;
 import java.io.FilterInputStream;
@@ -25,11 +24,11 @@ import org.springframework.stereotype.Service;
 @Log4j2
 public class TestResultProcessor {
   private final GitHubService gitHubService;
-  private final TestResultRepository testResultRepository;
+  private final TestSuiteRepository testSuiteRepository;
   private final JunitParser junitParser;
   private final WorkflowService workflowService;
 
-  @Value("${tests.artifactName:Test Results}")
+  @Value("${tests.artifactName:JUnit Test Results}")
   private String testArtifactName;
 
   public boolean shouldProcess(WorkflowRun workflowRun) {
@@ -40,14 +39,15 @@ public class TestResultProcessor {
       return false;
     }
 
-    final Workflow testWorkflow =
-        this.workflowService.getTestWorkflow(workflowRun.getRepository().getRepositoryId());
+    var testWorkflows =
+        this.workflowService.getTestWorkflows(workflowRun.getRepository().getRepositoryId());
 
-    if (testWorkflow == null || workflowRun.getWorkflowId() != testWorkflow.getId()) {
+    if (testWorkflows.stream().noneMatch(w -> w.getId().equals(workflowRun.getWorkflowId()))) {
       return false;
     }
 
-    return this.testResultRepository.findByWorkflowRun(workflowRun).isEmpty();
+    // We don't want to process test results twice
+    return this.testSuiteRepository.findByWorkflowRunId(workflowRun.getId()).isEmpty();
   }
 
   @Async("testResultProcessorExecutor")
@@ -55,13 +55,6 @@ public class TestResultProcessor {
     log.debug("Processing test results for workflow run {}", workflowRun.getName());
 
     GHArtifact testResultsArtifact = null;
-
-    // thread sleep 2 seconds
-    try {
-      Thread.sleep(2000);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    }
 
     try {
       PagedIterable<GHArtifact> artifacts =
@@ -85,7 +78,7 @@ public class TestResultProcessor {
 
     log.debug("Found test results artifact {}", testResultsArtifact.getName());
 
-    List<TestParserResult> results;
+    List<TestResultParser.TestSuite> results;
 
     try {
       results = this.processTestResultArtifact(testResultsArtifact);
@@ -93,24 +86,53 @@ public class TestResultProcessor {
       throw new TestResultException("Failed to process test results artifact", e);
     }
 
-    log.debug("Parsed {} test results. Persisting...", results.size());
+    log.debug("Parsed {} test suits. Persisting...", results.size());
 
-    results.forEach(
-        result -> {
-          final TestResult testResult = new TestResult();
-          testResult.setWorkflowRun(workflowRun);
-          testResult.setTotal(result.total());
-          testResult.setPassed(result.passed());
-          testResult.setFailures(result.failures());
-          testResult.setErrors(result.errors());
-          testResult.setSkipped(result.skipped());
-          testResultRepository.save(testResult);
-        });
+    List<TestSuite> testSuites = new ArrayList<>();
+
+    for (TestResultParser.TestSuite result : results) {
+      TestSuite testSuite = new TestSuite();
+      testSuite.setWorkflowRun(workflowRun);
+      testSuite.setName(result.name());
+      testSuite.setTests(result.tests());
+      testSuite.setFailures(result.failures());
+      testSuite.setErrors(result.errors());
+      testSuite.setSkipped(result.skipped());
+      testSuite.setTime(result.time());
+      testSuite.setTimestamp(result.timestamp());
+      testSuite.setTestCases(
+          result.testCases().stream()
+              .map(
+                  tc -> {
+                    TestCase testCase = new TestCase();
+                    testCase.setTestSuite(testSuite);
+                    testCase.setName(tc.name());
+                    testCase.setClassName(tc.className());
+                    testCase.setTime(tc.time());
+                    testCase.setStatus(
+                        tc.failed()
+                            ? TestCase.TestStatus.FAILED
+                            : tc.error()
+                                ? TestCase.TestStatus.ERROR
+                                : tc.skipped()
+                                    ? TestCase.TestStatus.SKIPPED
+                                    : TestCase.TestStatus.PASSED);
+                    testCase.setMessage(tc.message());
+                    testCase.setStackTrace(tc.stackTrace());
+                    testCase.setErrorType(tc.errorType());
+                    return testCase;
+                  })
+              .toList());
+      testSuites.add(testSuite);
+    }
+
+    this.testSuiteRepository.saveAll(testSuites);
 
     log.debug("Persisted test results");
   }
 
-  private List<TestParserResult> processTestResultArtifact(GHArtifact artifact) throws IOException {
+  private List<TestResultParser.TestSuite> processTestResultArtifact(GHArtifact artifact)
+      throws IOException {
     // Download the ZIP artifact, find all parsable XML files and parse them
     return artifact.download(
         stream -> {
@@ -118,7 +140,7 @@ public class TestResultProcessor {
             throw new TestResultException("Empty artifact stream");
           }
 
-          List<TestParserResult> results = new ArrayList<>();
+          List<TestResultParser.TestSuite> results = new ArrayList<>();
 
           try (ZipInputStream zipInput = new ZipInputStream(stream)) {
             ZipEntry entry;

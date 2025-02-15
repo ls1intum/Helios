@@ -56,10 +56,8 @@ public class WorkflowService {
     return workflow;
   }
 
-  public Workflow getTestWorkflow(Long repositoryId) {
-    Workflow workflow =
-        workflowRepository.findFirstByLabelAndRepositoryRepositoryIdOrderByCreatedAtDesc(
-            Workflow.Label.TEST, repositoryId);
-    return workflow;
+  public List<Workflow> getTestWorkflows(Long repositoryId) {
+    return workflowRepository.findByLabelAndRepositoryRepositoryId(
+        Workflow.Label.TEST, repositoryId);
   }
 }
