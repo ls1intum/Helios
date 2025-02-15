@@ -1,70 +1,15 @@
-@switch (state()) {
-  @case ('SUCCESS') {
-    <!-- Success State -->
-    <p-tag severity="success" [rounded]="true" [pTooltip]="'Latest Deployment Successful'">
-      <i-tabler name="check" class="!size-5"></i-tabler>
-    </p-tag>
-  }
+<div class="flex items-center gap-1">
+  <p-tag [severity]="getSeverity()" [rounded]="rounded()" [pTooltip]="!verbose() ? getTooltip() : undefined" [value]="verbose() ? getValue() : undefined">
+    <div class="flex items-center gap-2">
+      <i-tabler [name]="getIcon()" [class]="getIconClass()"></i-tabler>
+    </div>
+  </p-tag>
 
-  @case ('WAITING') {
-    <!-- In Progress State -->
-    <p-tag severity="warn" [rounded]="true" [pTooltip]="'Waiting deployment'">
-      <i-tabler name="progress" class="!size-5 animate-spin"></i-tabler>
+  @if (showLatestDeployment() && latestDeployment()) {
+    <span>now at</span>
+    <p-tag class="text-xs">
+      <i-tabler name="git-branch" class="!size-4" />
+      {{ latestDeployment()?.releaseCandidateName ?? latestDeployment()?.ref }}
     </p-tag>
   }
-
-  @case ('PENDING') {
-    <!-- Pending State -->
-    <p-tag severity="warn" [rounded]="true" [pTooltip]="'Deployment pending'">
-      <i-tabler name="progress" class="!size-5 animate-spin"></i-tabler>
-    </p-tag>
-  }
-
-  @case ('IN_PROGRESS') {
-    <!-- In Progress State -->
-    <p-tag severity="info" [rounded]="true" [pTooltip]="'Deployment in progress'">
-      <i-tabler name="progress" class="!size-5 animate-spin"></i-tabler>
-    </p-tag>
-  }
-
-  @case ('QUEUED') {
-    <!-- Queued State -->
-    <p-tag severity="info" [rounded]="true" [pTooltip]="'Deployment queued'">
-      <i-tabler name="progress" class="!size-5 animate-spin"></i-tabler>
-    </p-tag>
-  }
-
-  @case ('ERROR') {
-    <!-- Error State -->
-    <p-tag severity="danger" [rounded]="true" [pTooltip]="'Latest deployment failed'">
-      <i-tabler name="exclamation-circle" class="!size-5"></i-tabler>
-    </p-tag>
-  }
-
-  @case ('FAILURE') {
-    <!-- Failure State -->
-    <p-tag severity="danger" [rounded]="true" [pTooltip]="'Latest deployment failed'">
-      <i-tabler name="exclamation-mark" class="!size-5"></i-tabler>
-    </p-tag>
-  }
-
-  @case ('INACTIVE') {
-    <!-- Inactive State -->
-    <p-tag severity="secondary" [rounded]="true" [pTooltip]="'Deployment inactive'">
-      <i-tabler name="time-duration-off" class="!size-5"></i-tabler>
-    </p-tag>
-  }
-
-  @case ('UNKNOWN') {
-    <!-- Unknown State -->
-    <p-tag severity="secondary" [rounded]="true" [pTooltip]="'Deployment state unknown'">
-      <i-tabler name="question-mark" class="!size-5"></i-tabler>
-    </p-tag>
-  }
-
-  @default {
-    <p-tag severity="secondary" [rounded]="true" [pTooltip]="'Unrecognized State'">
-      <i-tabler name="question-mark" class="!size-5"></i-tabler>
-    </p-tag>
-  }
-}
+</div>

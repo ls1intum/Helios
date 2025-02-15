@@ -22,10 +22,11 @@ import { TooltipModule } from 'primeng/tooltip';
 import { MessageService } from 'primeng/api';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 import { PermissionService } from '@app/core/services/permission.service';
+import { DeploymentStateTagComponent } from '../environments/deployment-state-tag/deployment-state-tag.component';
 
 @Component({
   selector: 'app-release-candidate-deployment-table',
-  imports: [TableModule, ButtonModule, IconsModule, SkeletonModule, TagModule, AvatarModule, OverlayBadgeModule, BadgeModule, TooltipModule],
+  imports: [TableModule, ButtonModule, IconsModule, SkeletonModule, TagModule, AvatarModule, OverlayBadgeModule, BadgeModule, TooltipModule, DeploymentStateTagComponent],
   templateUrl: './release-candidate-deployment-table.component.html',
 })
 export class ReleaseCandidateDeploymentTableComponent {
@@ -136,12 +137,8 @@ export class ReleaseCandidateDeploymentTableComponent {
       return 'REPLACED';
     }
 
-    if (deployment.state === 'SUCCESS') {
-      return 'SUCCESS';
-    }
-
-    if (deployment.state === 'ERROR') {
-      return 'FAILURE';
+    if (deployment.state !== undefined) {
+      return deployment.state;
     }
     return 'UNKNOWN';
   };
