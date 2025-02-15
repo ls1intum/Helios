@@ -66,15 +66,6 @@ export type EnvironmentStatusDto = {
   metadata?: {};
 };
 
-export type EnvironmentStatusDto = {
-  id: number;
-  success: boolean;
-  httpStatusCode: number;
-  checkedAt: string;
-  checkType: 'HTTP_STATUS' | 'ARTEMIS_INFO';
-  metadata?: {};
-};
-
 export type RepositoryInfoDto = {
   id: number;
   name: string;
@@ -108,163 +99,6 @@ export type DeployRequest = {
   branchName: string;
 };
 
-export type GitRepository = {
-  repositoryId?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  name: string;
-  nameWithOwner: string;
-  htmlUrl: string;
-  description?: string;
-  homepage?: string;
-  pushedAt: string;
-  visibility: 'PUBLIC' | 'PRIVATE' | 'INTERNAL' | 'UNKNOWN';
-  stargazersCount?: number;
-  watchersCount?: number;
-  defaultBranch: string;
-  hasIssues?: boolean;
-  hasProjects?: boolean;
-  hasWiki?: boolean;
-  labels?: Array<Label>;
-  private?: boolean;
-  archived?: boolean;
-  disabled?: boolean;
-};
-
-export type Issue = {
-  repository?: GitRepository;
-  id?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  number?: number;
-  state: 'OPEN' | 'CLOSED';
-  title: string;
-  body?: string;
-  htmlUrl: string;
-  closedAt?: string;
-  commentsCount?: number;
-  author?: User;
-  labels?: Array<Label>;
-  assignees?: Array<User>;
-  locked?: boolean;
-  pullRequest?: boolean;
-};
-
-export type Label = {
-  id?: number;
-  name?: string;
-  description?: string;
-  color?: string;
-  issues?: Array<Issue>;
-  repository?: GitRepository;
-};
-
-export type PullRequest = {
-  repository?: GitRepository;
-  id?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  number?: number;
-  state: 'OPEN' | 'CLOSED';
-  title: string;
-  body?: string;
-  htmlUrl: string;
-  closedAt?: string;
-  commentsCount?: number;
-  author?: User;
-  labels?: Array<Label>;
-  assignees?: Array<User>;
-  mergedAt?: string;
-  mergeCommitSha?: string;
-  headRefName?: string;
-  headRefRepoNameWithOwner?: string;
-  headSha?: string;
-  isMergeable?: boolean;
-  mergeableState?: string;
-  maintainerCanModify?: boolean;
-  commits?: number;
-  additions?: number;
-  deletions?: number;
-  changedFiles?: number;
-  mergedBy?: User;
-  requestedReviewers?: Array<User>;
-  workflowRuns?: Array<WorkflowRun>;
-  merged?: boolean;
-  draft?: boolean;
-  pullRequest?: boolean;
-  locked?: boolean;
-};
-
-export type TestResult = {
-  id?: number;
-  workflowRun?: WorkflowRun;
-  total?: number;
-  passed?: number;
-  failures?: number;
-  errors?: number;
-  skipped?: number;
-};
-
-export type User = {
-  repository?: GitRepository;
-  id?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  login: string;
-  avatarUrl: string;
-  description?: string;
-  name: string;
-  company?: string;
-  blog?: string;
-  location?: string;
-  email?: string;
-  htmlUrl: string;
-  type: 'USER' | 'ORGANIZATION' | 'BOT';
-  followers?: number;
-  following?: number;
-};
-
-export type WorkflowRun = {
-  repository?: GitRepository;
-  id?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  pullRequests?: Array<PullRequest>;
-  name?: string;
-  displayTitle?: string;
-  runNumber?: number;
-  workflowId?: number;
-  runAttempt?: number;
-  runStartedAt?: string;
-  htmlUrl?: string;
-  jobsUrl?: string;
-  logsUrl?: string;
-  checkSuiteUrl?: string;
-  artifactsUrl?: string;
-  cancelUrl?: string;
-  rerunUrl?: string;
-  workflowUrl?: string;
-  headBranch?: string;
-  headSha?: string;
-  status?:
-  | 'QUEUED'
-  | 'IN_PROGRESS'
-  | 'COMPLETED'
-  | 'ACTION_REQUIRED'
-  | 'CANCELLED'
-  | 'FAILURE'
-  | 'NEUTRAL'
-  | 'SKIPPED'
-  | 'STALE'
-  | 'SUCCESS'
-  | 'TIMED_OUT'
-  | 'REQUESTED'
-  | 'WAITING'
-  | 'PENDING'
-  | 'UNKNOWN';
-  conclusion?: 'ACTION_REQUIRED' | 'CANCELLED' | 'FAILURE' | 'NEUTRAL' | 'SUCCESS' | 'SKIPPED' | 'STALE' | 'TIMED_OUT' | 'STARTUP_FAILURE' | 'UNKNOWN';
-};
-
 export type WorkflowDto = {
   id: number;
   repository?: RepositoryInfoDto;
@@ -285,21 +119,21 @@ export type WorkflowRunDto = {
   name: string;
   displayTitle: string;
   status:
-  | 'QUEUED'
-  | 'IN_PROGRESS'
-  | 'COMPLETED'
-  | 'ACTION_REQUIRED'
-  | 'CANCELLED'
-  | 'FAILURE'
-  | 'NEUTRAL'
-  | 'SKIPPED'
-  | 'STALE'
-  | 'SUCCESS'
-  | 'TIMED_OUT'
-  | 'REQUESTED'
-  | 'WAITING'
-  | 'PENDING'
-  | 'UNKNOWN';
+    | 'QUEUED'
+    | 'IN_PROGRESS'
+    | 'COMPLETED'
+    | 'ACTION_REQUIRED'
+    | 'CANCELLED'
+    | 'FAILURE'
+    | 'NEUTRAL'
+    | 'SKIPPED'
+    | 'STALE'
+    | 'SUCCESS'
+    | 'TIMED_OUT'
+    | 'REQUESTED'
+    | 'WAITING'
+    | 'PENDING'
+    | 'UNKNOWN';
   workflowId: number;
   conclusion?: 'ACTION_REQUIRED' | 'CANCELLED' | 'FAILURE' | 'NEUTRAL' | 'SUCCESS' | 'SKIPPED' | 'STALE' | 'TIMED_OUT' | 'STARTUP_FAILURE' | 'UNKNOWN';
   htmlUrl: string;
