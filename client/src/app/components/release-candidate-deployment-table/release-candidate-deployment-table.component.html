@@ -2,9 +2,10 @@
   <p-table [value]="[1, 2, 3, 4, 5]">
     <ng-template pTemplate="header">
       <tr>
-        <th>Name</th>
-        <th>Status</th>
-        <th>Deploy</th>
+        <th class="w-[40%]">Name</th>
+        <th class="w-[30%]">Status</th>
+        <th class="w-[15%]">Deploy</th>
+        <th class="w-[15%]">Actions</th>
       </tr>
     </ng-template>
     <ng-template pTemplate="body">
@@ -23,10 +24,10 @@
   <p-table #table [rowHover]="true" [value]="deployableEnvironments() || []" [paginator]="true" [rows]="20">
     <ng-template #header>
       <tr>
-        <th>Name</th>
-        <th>Status</th>
-        <th>Deploy</th>
-        <th>Actions</th>
+        <th class="w-[40%]">Name</th>
+        <th class="w-[30%]">Status</th>
+        <th class="w-[15%]">Deploy</th>
+        <th class="w-[15%]">Actions</th>
       </tr>
     </ng-template>
     <ng-template pTemplate="body" let-environment>
