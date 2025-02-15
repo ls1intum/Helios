@@ -1,4 +1,3 @@
-// deployment-state-tag.component.ts
 import { Component, computed, input } from '@angular/core';
 import { TagModule } from 'primeng/tag';
 import { IconsModule } from 'icons.module';

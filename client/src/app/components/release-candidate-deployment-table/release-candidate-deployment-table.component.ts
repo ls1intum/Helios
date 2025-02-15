@@ -118,7 +118,6 @@ export class ReleaseCandidateDeploymentTableComponent {
 
   deploymentStatus = (environment: EnvironmentDto) => {
     let deployments = this.releaseCandidate().deployments.filter(deployment => deployment.environment.id === environment.id);
-    console.log('DEPLOYMENTS', deployments.length > 0 ? JSON.stringify(deployments.length) : 'NO DEPLOYMENTS');
     // If there are no deployments related to this release candidate anymore, this release candidate was not deployed yet
     if (deployments.length === 0) {
       return 'NEVER_DEPLOYED';
