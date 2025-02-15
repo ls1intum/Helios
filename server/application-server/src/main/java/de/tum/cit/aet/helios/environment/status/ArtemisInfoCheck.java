@@ -29,12 +29,14 @@ public class ArtemisInfoCheck implements StatusCheckStrategy {
 
       if (artemisInfo != null) {
         ArtemisInfo.BuildInfo build = artemisInfo.build();
+        ArtemisInfo.GitInfo git = artemisInfo.git();
 
         metadata.put("artifact", build.artifact());
         metadata.put("name", build.name());
         metadata.put("version", build.version());
         metadata.put("group", build.group());
         metadata.put("buildTime", build.time());
+        metadata.put("commitId", git.commit().id().full());
       }
 
       return new StatusCheckResult(
@@ -47,13 +49,30 @@ public class ArtemisInfoCheck implements StatusCheckStrategy {
     }
   }
 
-  public record ArtemisInfo(@JsonProperty("build") BuildInfo build) {
+  public record ArtemisInfo(
+      @JsonProperty("build") BuildInfo build,
+      @JsonProperty("git") GitInfo git) {
     public record BuildInfo(
         String artifact,
         String name,
         @JsonProperty("time") Instant time,
         String version,
         String group) {
+    }
+
+    public record GitInfo(
+        String branch,
+        @JsonProperty("commit") CommitInfo commit
+    ) {
+      public record CommitInfo(
+          @JsonProperty("time") Instant time,
+          @JsonProperty("id") CommitIdInfo id
+      ) {
+        public record CommitIdInfo(
+            String full
+        ) {
+        }
+      }
     }
   }
 

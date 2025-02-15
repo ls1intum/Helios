@@ -11,6 +11,8 @@ import {
   getEnvironmentByIdOptions,
   getEnvironmentByIdQueryKey,
   updateEnvironmentMutation,
+  getEnvironmentsByUserLockingQueryKey,
+  getAllEnabledEnvironmentsQueryKey,
 } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { MessageService } from 'primeng/api';
 import { Checkbox } from 'primeng/checkbox';
@@ -76,6 +78,8 @@ export class EnvironmentEditFormComponent implements OnInit {
     onSuccess: () => {
       this.queryClient.invalidateQueries({ queryKey: getEnvironmentByIdQueryKey({ path: { id: this.environmentId() } }) });
       this.queryClient.invalidateQueries({ queryKey: getAllEnvironmentsQueryKey() });
+      this.queryClient.invalidateQueries({ queryKey: getAllEnabledEnvironmentsQueryKey() });
+      this.queryClient.invalidateQueries({ queryKey: getEnvironmentsByUserLockingQueryKey() });
       this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Environment updated successfully' });
       this.redirectToEnvironmentList();
     },
@@ -95,6 +99,8 @@ export class EnvironmentEditFormComponent implements OnInit {
       enabled: [environment?.enabled || false],
       statusCheckType: [environment?.statusCheckType || null],
       statusUrl: [environment?.statusUrl || ''],
+      lockExpirationThreshold: [environment?.lockExpirationThreshold],
+      lockReservationThreshold: [environment?.lockReservationThreshold],
     });
   }
 

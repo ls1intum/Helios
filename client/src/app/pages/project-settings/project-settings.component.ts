@@ -7,11 +7,13 @@ import { ConfirmationService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { DialogModule } from 'primeng/dialog';
+import { DividerModule } from 'primeng/divider';
 import { DragDropModule } from 'primeng/dragdrop';
 import { InputTextModule } from 'primeng/inputtext';
 import { PanelModule } from 'primeng/panel';
 import { TableModule } from 'primeng/table';
 
+import { LockingThresholdsComponent } from '@app/components/locking-thresholds/locking-thresholds.component';
 import { PageHeadingComponent } from '@app/components/page-heading/page-heading.component';
 import { WorkflowDto, WorkflowGroupDto, WorkflowMembershipDto } from '@app/core/modules/openapi';
 import {
@@ -37,6 +39,7 @@ import { TooltipModule } from 'primeng/tooltip';
     TableModule,
     ButtonModule,
     PageHeadingComponent,
+    LockingThresholdsComponent,
     PanelModule,
     DialogModule,
     TooltipModule,
@@ -45,6 +48,7 @@ import { TooltipModule } from 'primeng/tooltip';
     IconsModule,
     DragDropModule,
     ConfirmDialogModule,
+    DividerModule,
   ],
   templateUrl: './project-settings.component.html',
 })

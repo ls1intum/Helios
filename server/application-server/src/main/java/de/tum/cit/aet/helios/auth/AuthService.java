@@ -113,4 +113,12 @@ public class AuthService {
     }
     return false;
   }
+
+  public boolean isAtLeastMaintainer() {
+    return SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream()
+        .anyMatch(
+            a ->
+                a.getAuthority().equals("ROLE_MAINTAINER")
+                    || a.getAuthority().equals("ROLE_ADMIN"));
+  }
 }

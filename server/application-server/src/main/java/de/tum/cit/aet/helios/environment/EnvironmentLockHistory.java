@@ -23,11 +23,17 @@ public class EnvironmentLockHistory {
   @ManyToOne
   @JoinColumn(name = "environment_id")
   private Environment environment;
-  
+
   @ManyToOne
-  @JoinColumn(name = "author_id")
+  @JoinColumn(name = "locking_author_id")
   @ToString.Exclude
   private User lockedBy;
+
+  @ManyToOne
+  @JoinColumn(name = "unlocking_author_id")
+  @ToString.Exclude
+  private User unlockedBy;
+
   private OffsetDateTime lockedAt;
   private OffsetDateTime unlockedAt;
 }

@@ -208,6 +208,8 @@ public class DeploymentService {
           deploymentWorkflow.getFileNameWithExtension(),
           deployRequest.branchName(),
           workflowParams);
+
+      this.environmentService.markStatusAsChanged(environment);
     } catch (IOException e) {
       heliosDeployment.setStatus(HeliosDeployment.Status.IO_ERROR);
       heliosDeploymentRepository.save(heliosDeployment);
