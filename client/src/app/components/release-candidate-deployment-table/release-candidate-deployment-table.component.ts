@@ -5,12 +5,14 @@ import {
   getAllEnabledEnvironmentsOptions,
   getAllEnabledEnvironmentsQueryKey,
   getEnvironmentByIdQueryKey,
-  getEnvironmentsByUserLockingQueryKey,
   getWorkflowRunUrlOptions,
   getWorkflowRunUrlQueryKey,
 } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
+import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
+import { PermissionService } from '@app/core/services/permission.service';
 import { injectMutation, injectQuery, QueryClient } from '@tanstack/angular-query-experimental';
 import { IconsModule } from 'icons.module';
+import { MessageService } from 'primeng/api';
 import { AvatarModule } from 'primeng/avatar';
 import { BadgeModule } from 'primeng/badge';
 import { ButtonModule } from 'primeng/button';
@@ -19,9 +21,6 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
-import { MessageService } from 'primeng/api';
-import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
-import { PermissionService } from '@app/core/services/permission.service';
 import { DeploymentStateTagComponent } from '../environments/deployment-state-tag/deployment-state-tag.component';
 
 @Component({
@@ -49,8 +48,6 @@ export class ReleaseCandidateDeploymentTableComponent {
   deployToEnvironment = injectMutation(() => ({
     ...deployToEnvironmentMutation(),
     onSuccess: (_, variables) => {
-      // Trigger update on main layout after deployment
-      this.queryClient.invalidateQueries({ queryKey: getEnvironmentsByUserLockingQueryKey() });
       this.queryClient.invalidateQueries({ queryKey: getAllEnabledEnvironmentsQueryKey() });
       this.queryClient.invalidateQueries({
         queryKey: getEnvironmentByIdQueryKey({
