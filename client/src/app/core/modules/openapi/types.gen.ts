@@ -111,7 +111,7 @@ export type WorkflowDto = {
   url?: string;
   htmlUrl?: string;
   badgeUrl?: string;
-  deploymentEnvironment: 'NONE' | 'TEST_SERVER' | 'STAGING_SERVER' | 'PRODUCTION_SERVER';
+  label: 'NONE' | 'TEST_SERVER' | 'STAGING_SERVER' | 'PRODUCTION_SERVER';
   createdAt?: string;
   updatedAt?: string;
 };
@@ -297,16 +297,16 @@ export type BranchDetailsDto = {
   repository?: RepositoryInfoDto;
 };
 
-export type UpdateDeploymentEnvironmentData = {
+export type UpdateWorkflowLabelData = {
   body: 'NONE' | 'TEST_SERVER' | 'STAGING_SERVER' | 'PRODUCTION_SERVER';
   path: {
     workflowId: number;
   };
   query?: never;
-  url: '/api/workflows/{workflowId}/deploymentEnvironment';
+  url: '/api/workflows/{workflowId}/label';
 };
 
-export type UpdateDeploymentEnvironmentResponses = {
+export type UpdateWorkflowLabelResponses = {
   /**
    * OK
    */

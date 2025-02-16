@@ -50,51 +50,51 @@ public class WorkflowService {
         .collect(Collectors.toList());
   }
 
-  public void updateWorkflowDeploymentEnvironment(
-      Long workflowId, Workflow.DeploymentEnvironment env) {
+  public void updateWorkflowLabel(Long workflowId, Workflow.Label label) {
     Workflow workflow =
         workflowRepository
             .findById(workflowId)
             .orElseThrow(() -> new IllegalArgumentException("Workflow not found!"));
-    workflow.setDeploymentEnvironment(env);
+    workflow.setLabel(label);
     workflowRepository.save(workflow);
   }
 
-  public Workflow getDeploymentWorkflowByEnvironment(
-      Workflow.DeploymentEnvironment environment, Long repositoryId) {
+  public Workflow getDeploymentWorkflowByLabel(Workflow.Label label, Long repositoryId) {
     Workflow workflow =
-        workflowRepository
-            .findFirstByRepositoryRepositoryIdAndDeploymentEnvironmentOrderByCreatedAtDesc(
-                repositoryId, environment);
+        workflowRepository.findFirstByLabelAndRepositoryRepositoryIdOrderByCreatedAtDesc(
+            label, repositoryId);
     return workflow;
   }
 
   public List<Workflow> getDeploymentWorkflowsForAllEnv(Long repositoryId) {
 
-    return Arrays.stream(Workflow.DeploymentEnvironment.values())
-        .filter(env -> env != Workflow.DeploymentEnvironment.NONE)
+    return Arrays.stream(Workflow.Label.values())
+        .filter(
+            label ->
+                label == Workflow.Label.TEST_SERVER
+                    || label == Workflow.Label.STAGING_SERVER
+                    || label == Workflow.Label.PRODUCTION_SERVER)
         .map(
-            env ->
-                workflowRepository
-                    .findFirstByRepositoryRepositoryIdAndDeploymentEnvironmentOrderByCreatedAtDesc(
-                        repositoryId, env))
+            label ->
+                workflowRepository.findFirstByLabelAndRepositoryRepositoryIdOrderByCreatedAtDesc(
+                    label, repositoryId))
         .filter(Objects::nonNull)
         .collect(Collectors.toList());
   }
 
-  public Workflow.DeploymentEnvironment getDeploymentEnvironment(Environment.Type type) {
+  public Workflow.Label getLabel(Environment.Type type) {
     switch (type) {
       case PRODUCTION -> {
-        return Workflow.DeploymentEnvironment.PRODUCTION_SERVER;
+        return Workflow.Label.PRODUCTION_SERVER;
       }
       case STAGING -> {
-        return Workflow.DeploymentEnvironment.STAGING_SERVER;
+        return Workflow.Label.STAGING_SERVER;
       }
       case TEST -> {
-        return Workflow.DeploymentEnvironment.TEST_SERVER;
+        return Workflow.Label.TEST_SERVER;
       }
       default -> {
-        return Workflow.DeploymentEnvironment.NONE;
+        return null;
       }
     }
   }
@@ -105,15 +105,13 @@ public class WorkflowService {
             .getEnvironmentTypeById(environmentId)
             .orElseThrow(() -> new EntityNotFoundException("Environment not found"));
 
-    Workflow.DeploymentEnvironment deploymentEnvironment =
-        this.getDeploymentEnvironment(environmentType);
-    if (deploymentEnvironment == null) {
+    Workflow.Label label = this.getLabel(environmentType);
+    if (label == null) {
       throw new IllegalStateException("No workflow for this deployment environment found");
     }
 
     Workflow deploymentWorkflow =
-        this.getDeploymentWorkflowByEnvironment(
-            deploymentEnvironment, RepositoryContext.getRepositoryId());
+        this.getDeploymentWorkflowByLabel(label, RepositoryContext.getRepositoryId());
     if (deploymentWorkflow == null) {
       throw new NoSuchElementException("No deployment workflow found");
     }

@@ -2,7 +2,7 @@
 
 import { createClient, createConfig, type Options } from '@hey-api/client-fetch';
 import type {
-  UpdateDeploymentEnvironmentData,
+  UpdateWorkflowLabelData,
   GetGitRepoSettingsData,
   GetGitRepoSettingsResponse,
   UpdateGitRepoSettingsData,
@@ -87,14 +87,14 @@ import type {
 
 export const client = createClient(createConfig());
 
-export const updateDeploymentEnvironment = <ThrowOnError extends boolean = false>(options: Options<UpdateDeploymentEnvironmentData, ThrowOnError>) => {
+export const updateWorkflowLabel = <ThrowOnError extends boolean = false>(options: Options<UpdateWorkflowLabelData, ThrowOnError>) => {
   return (options?.client ?? client).put<unknown, unknown, ThrowOnError>({
     ...options,
     headers: {
       'Content-Type': 'application/json',
       ...options?.headers,
     },
-    url: '/api/workflows/{workflowId}/deploymentEnvironment',
+    url: '/api/workflows/{workflowId}/label',
   });
 };
 

@@ -34,10 +34,10 @@ public class WorkflowController {
   }
 
   @EnforceAtLeastMaintainer
-  @PutMapping("/{workflowId}/deploymentEnvironment")
-  public ResponseEntity<Void> updateDeploymentEnvironment(
-      @PathVariable Long workflowId, @RequestBody Workflow.DeploymentEnvironment environment) {
-    workflowService.updateWorkflowDeploymentEnvironment(workflowId, environment);
+  @PutMapping("/{workflowId}/label")
+  public ResponseEntity<Void> updateWorkflowLabel(
+      @PathVariable Long workflowId, @RequestBody Workflow.Label label) {
+    workflowService.updateWorkflowLabel(workflowId, label);
     return ResponseEntity.noContent().build();
   }
 

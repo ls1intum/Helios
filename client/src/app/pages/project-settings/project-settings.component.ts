@@ -23,7 +23,7 @@ import {
   getGroupsWithWorkflowsQueryKey,
   getWorkflowsByRepositoryIdOptions,
   getWorkflowsByRepositoryIdQueryKey,
-  updateDeploymentEnvironmentMutation,
+  updateWorkflowLabelMutation,
   updateWorkflowGroupsMutation,
 } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { WorkflowDtoSchema } from '@app/core/modules/openapi/schemas.gen';
@@ -182,8 +182,8 @@ export class ProjectSettingsComponent {
     enabled: () => !!this.repositoryId(),
   }));
 
-  workflowDeploymentEnvironmentMutation = injectMutation(() => ({
-    ...updateDeploymentEnvironmentMutation(),
+  workflowLabelMutation = injectMutation(() => ({
+    ...updateWorkflowLabelMutation(),
     onSuccess: () => {
       this.queryClient.invalidateQueries({ queryKey: getWorkflowsByRepositoryIdQueryKey({ path: { repositoryId: this.repositoryId() } }) });
       this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Workflow Label updated successfully' });
@@ -214,8 +214,8 @@ export class ProjectSettingsComponent {
   }));
 
   getWorkflowLabelOptions(currentLabel: string) {
-    const assignedLabels = this.workflows().map(wf => wf.deploymentEnvironment);
-    return Object.values(WorkflowDtoSchema.properties.deploymentEnvironment.enum).filter(label => {
+    const assignedLabels = this.workflows().map(wf => wf.label);
+    return Object.values(WorkflowDtoSchema.properties.label.enum).filter(label => {
       const isTest = label === 'TEST_SERVER' && assignedLabels.includes('TEST_SERVER');
       const isStaging = label === 'STAGING_SERVER' && assignedLabels.includes('STAGING_SERVER');
       const isProduction = label === 'PRODUCTION_SERVER' && assignedLabels.includes('PRODUCTION_SERVER');
@@ -225,13 +225,13 @@ export class ProjectSettingsComponent {
 
   storePreviousLabel(workflow: WorkflowDto) {
     // Store the current label before change
-    this.previousLabel = workflow.deploymentEnvironment;
+    this.previousLabel = workflow.label;
   }
 
   onChangeLabel(workflow: WorkflowDto) {
-    const label = workflow.deploymentEnvironment;
+    const label = workflow.label;
     if (deploymentLabels.includes(label)) {
-      const existingLabel = this.workflows().find(wf => wf.deploymentEnvironment === label && wf.id !== workflow.id);
+      const existingLabel = this.workflows().find(wf => wf.label === label && wf.id !== workflow.id);
       if (existingLabel) {
         console.warn(`Only one workflow can be labeled as ${label}.`);
         return;
@@ -262,11 +262,11 @@ export class ProjectSettingsComponent {
         </div>
       `,
       accept: () => {
-        this.workflowDeploymentEnvironmentMutation.mutate({ path: { workflowId: workflow.id }, body: label });
+        this.workflowLabelMutation.mutate({ path: { workflowId: workflow.id }, body: label });
       },
       reject: () => {
         // Restore the previous label if the user cancels
-        workflow.deploymentEnvironment = this.previousLabel;
+        workflow.label = this.previousLabel;
       },
     });
   }

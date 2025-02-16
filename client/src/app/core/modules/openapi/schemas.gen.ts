@@ -346,7 +346,7 @@ export const WorkflowDtoSchema = {
     badgeUrl: {
       type: 'string',
     },
-    deploymentEnvironment: {
+    label: {
       type: 'string',
       enum: ['NONE', 'TEST_SERVER', 'STAGING_SERVER', 'PRODUCTION_SERVER'],
     },
@@ -359,7 +359,7 @@ export const WorkflowDtoSchema = {
       format: 'date-time',
     },
   },
-  required: ['deploymentEnvironment', 'id', 'name', 'path', 'state'],
+  required: ['id', 'label', 'name', 'path', 'state'],
 } as const;
 
 export const WorkflowRunDtoSchema = {

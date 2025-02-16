@@ -16,7 +16,7 @@ public record WorkflowDto(
     String url,
     String htmlUrl,
     String badgeUrl,
-    @NonNull Workflow.DeploymentEnvironment deploymentEnvironment,
+    @NonNull Workflow.Label label,
     OffsetDateTime createdAt,
     OffsetDateTime updatedAt) {
 
@@ -31,7 +31,7 @@ public record WorkflowDto(
         workflow.getUrl(),
         workflow.getHtmlUrl(),
         workflow.getBadgeUrl(),
-        workflow.getDeploymentEnvironment(),
+        workflow.getLabel(),
         workflow.getCreatedAt(),
         workflow.getUpdatedAt());
   }

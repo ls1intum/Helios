@@ -3,7 +3,7 @@
 import type { Options } from '@hey-api/client-fetch';
 import { type MutationOptions, type DefaultError, queryOptions } from '@tanstack/angular-query-experimental';
 import type {
-  UpdateDeploymentEnvironmentData,
+  UpdateWorkflowLabelData,
   GetGitRepoSettingsData,
   UpdateGitRepoSettingsData,
   UpdateWorkflowGroupsData,
@@ -52,7 +52,7 @@ import type {
   DeleteWorkflowGroupData,
 } from '../types.gen';
 import {
-  updateDeploymentEnvironment,
+  updateWorkflowLabel,
   getGitRepoSettings,
   updateGitRepoSettings,
   updateWorkflowGroups,
@@ -99,10 +99,10 @@ import {
   client,
 } from '../sdk.gen';
 
-export const updateDeploymentEnvironmentMutation = (options?: Partial<Options<UpdateDeploymentEnvironmentData>>) => {
-  const mutationOptions: MutationOptions<unknown, DefaultError, Options<UpdateDeploymentEnvironmentData>> = {
+export const updateWorkflowLabelMutation = (options?: Partial<Options<UpdateWorkflowLabelData>>) => {
+  const mutationOptions: MutationOptions<unknown, DefaultError, Options<UpdateWorkflowLabelData>> = {
     mutationFn: async localOptions => {
-      const { data } = await updateDeploymentEnvironment({
+      const { data } = await updateWorkflowLabel({
         ...options,
         ...localOptions,
         throwOnError: true,

@@ -92,7 +92,7 @@
           <th>File Name</th>
           <th>Workflow Name</th>
           <th>Assign Group</th>
-          <th>Deployment Environment</th>
+          <th>Label</th>
         </tr>
       </ng-template>
       <ng-template pTemplate="body" let-workflow>
@@ -111,8 +111,8 @@
           </td>
           <td>
             <p-select
-              [options]="getWorkflowLabelOptions(workflow.deploymentEnvironment)"
-              [(ngModel)]="workflow.deploymentEnvironment"
+              [options]="getWorkflowLabelOptions(workflow.label)"
+              [(ngModel)]="workflow.label"
               placeholder="Select Label"
               (onClick)="storePreviousLabel(workflow)"
               (onChange)="onChangeLabel(workflow)"

@@ -13,11 +13,11 @@ servers:
 - url: /
   description: Default Server URL
 paths:
-  /api/workflows/{workflowId}/deploymentEnvironment:
+  /api/workflows/{workflowId}/label:
     put:
       tags:
       - workflow-controller
-      operationId: updateDeploymentEnvironment
+      operationId: updateWorkflowLabel
       parameters:
       - name: workflowId
         in: path
@@ -1145,7 +1145,7 @@ components:
           type: string
         badgeUrl:
           type: string
-        deploymentEnvironment:
+        label:
           type: string
           enum:
           - NONE
@@ -1159,8 +1159,8 @@ components:
           type: string
           format: date-time
       required:
-      - deploymentEnvironment
       - id
+      - label
       - name
       - path
       - state
