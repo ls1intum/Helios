@@ -55,7 +55,7 @@ public class GitHubUserSyncService {
    *
    * @param ghUser The GitHub user data to process.
    * @return The updated or newly created User entity, or {@code null} if an error occurred during
-   * update.
+   *      update.
    */
   @Transactional(propagation = Propagation.REQUIRES_NEW)
   public User processUser(GHUser ghUser) {
