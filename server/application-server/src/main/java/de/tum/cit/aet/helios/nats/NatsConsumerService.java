@@ -228,7 +228,11 @@ public class NatsConsumerService {
       GitHubCustomMessageHandler<?> customHandler = customHandlerRegistry.getHandler(lastPart);
       if (customHandler != null) {
         if (customHandler.isGlobalEvent()) {
-          // Early ack if it is a global event
+          // Acknowledge the message early if it is a global event.
+          // Currently, the only global event is `installation_repositories`.
+          // The handler for this event initiates data synchronization for added repositories
+          // and deletes removed repositories. Early acknowledgment prevents message redelivery
+          // or the durable consumer from being dropped by NATS.
           msg.ack();
           customHandler.onMessage(msg);
         } else {
@@ -250,7 +254,11 @@ public class NatsConsumerService {
       }
 
       if (eventHandler.isGlobalEvent()) {
-        // Early ack if it is a global event
+        // Acknowledge the message early if it is a global event.
+        // Currently, the only global event is `installation_repositories`.
+        // The handler for this event initiates data synchronization for added repositories
+        // and deletes removed repositories. Early acknowledgment prevents message redelivery
+        // or the durable consumer from being dropped by NATS.
         msg.ack();
         eventHandler.onMessage(msg);
       } else {
