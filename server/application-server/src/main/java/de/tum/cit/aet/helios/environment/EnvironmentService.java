@@ -126,7 +126,7 @@ public class EnvironmentService {
 
       // Compare updatedAt timestamps to determine the latest
       if (latestDeployment.getCreatedAt().isAfter(latestHelios.getCreatedAt())) {
-        return LatestDeploymentUnion.realDeployment(latestDeployment);
+        return LatestDeploymentUnion.realDeployment(latestDeployment, latestHelios.getCreatedAt());
       } else {
         return LatestDeploymentUnion.heliosDeployment(latestHelios);
       }

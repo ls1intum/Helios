@@ -15,6 +15,12 @@ public class LatestDeploymentUnion {
     this.heliosDeployment = heliosDeployment;
   }
 
+  public static LatestDeploymentUnion realDeployment(
+      Deployment dep, OffsetDateTime heliosDeploymentCreatedAt) {
+    dep.setCreatedAt(heliosDeploymentCreatedAt);
+    return new LatestDeploymentUnion(dep, null);
+  }
+
   public static LatestDeploymentUnion realDeployment(Deployment dep) {
     return new LatestDeploymentUnion(dep, null);
   }
