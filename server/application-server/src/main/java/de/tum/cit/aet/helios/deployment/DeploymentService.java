@@ -104,7 +104,6 @@ public class DeploymentService {
   }
 
   private void validateDeployRequest(DeployRequest deployRequest) {
-    System.out.println(deployRequest);
     if (deployRequest.environmentId() == null || deployRequest.branchName() == null) {
       throw new DeploymentException("Environment ID and branch name must not be null");
     }
