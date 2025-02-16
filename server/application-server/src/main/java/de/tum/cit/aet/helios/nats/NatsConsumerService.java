@@ -382,14 +382,14 @@ public class NatsConsumerService {
    * Constructs a subject for global events.
    *
    * <p>This method returns a subject string formatted as:
-   * <code>github.*.*.&lt;eventName&gt;</code>.</p>
+   * <code>github.?.?.&lt;eventName&gt;</code>.</p>
    *
    * @param eventName the name of the event.
    * @return a subject string for global events, e.g.
-   *      <code>github.*.*.push</code> when <code>eventName</code> is "push".
+   *      <code>github.?.?.push</code> when <code>eventName</code> is "push".
    */
   private String buildGlobalSubject(String eventName) {
-    return "github.*.*." + eventName;
+    return "github.?.?." + eventName;
   }
 
   /**
