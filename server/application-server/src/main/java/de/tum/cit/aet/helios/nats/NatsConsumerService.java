@@ -88,7 +88,7 @@ public class NatsConsumerService {
   public NatsConsumerService(
       Environment environment,
       GitHubMessageHandlerRegistry handlerRegistry,
-      GitHubCustomMessageHandlerRegistry customHandlerRegistry,
+      @Lazy GitHubCustomMessageHandlerRegistry customHandlerRegistry,
       GitHubFacade gitHub,
       @Lazy NatsErrorListener natsErrorListener) {
     this.environment = environment;
@@ -227,8 +227,15 @@ public class NatsConsumerService {
       // Check if there's a custom handler for this event type
       GitHubCustomMessageHandler<?> customHandler = customHandlerRegistry.getHandler(lastPart);
       if (customHandler != null) {
-        customHandler.onMessage(msg);
-        msg.ack();
+        if (customHandler.isGlobalEvent()) {
+          // Early ack if it is a global event
+          msg.ack();
+          customHandler.onMessage(msg);
+        } else {
+          // Late ack otherwise
+          customHandler.onMessage(msg);
+          msg.ack();
+        }
         return;
       }
 
@@ -242,8 +249,15 @@ public class NatsConsumerService {
         return;
       }
 
-      eventHandler.onMessage(msg);
-      msg.ack();
+      if (eventHandler.isGlobalEvent()) {
+        // Early ack if it is a global event
+        msg.ack();
+        eventHandler.onMessage(msg);
+      } else {
+        // Late ack otherwise
+        eventHandler.onMessage(msg);
+        msg.ack();
+      }
     } catch (IllegalArgumentException e) {
       log.error("Invalid event type in subject '{}': {}", msg.getSubject(), e.getMessage());
     } catch (Exception e) {
