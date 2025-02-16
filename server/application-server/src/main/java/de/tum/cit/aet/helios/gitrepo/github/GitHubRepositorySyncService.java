@@ -52,6 +52,5 @@ public class GitHubRepositorySyncService {
     }
 
     gitRepoRepository.save(result);
-    gitRepoRepository.flush();
   }
 }
