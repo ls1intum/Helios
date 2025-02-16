@@ -4,6 +4,7 @@ package de.tum.cit.aet.helios.github.sync;
 import de.tum.cit.aet.helios.github.GitHubFacade;
 import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
+import de.tum.cit.aet.helios.gitrepo.RepositoryService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -23,6 +24,8 @@ public class GitHubDataSyncScheduler {
   private final GitRepoRepository gitRepositoryRepository;
   private final GitHubDataSyncService dataSyncService;
   private final GitHubFacade gitHubFacade;
+  private final RepositoryService repositoryService;
+  private final DataSyncStatusService dataSyncStatusService;
 
   @Value("${monitoring.runOnStartup:true}")
   private boolean runOnStartup;
@@ -66,7 +69,10 @@ public class GitHubDataSyncScheduler {
       // Sync the repositories that are installed
       syncRepositories.forEach(dataSyncService::syncRepositoryData);
       // Delete the repositories that are not installed anymore
-      repositoriesThatNeedsToBeDeleted.forEach(gitRepositoryRepository::deleteByNameWithOwner);
+      repositoriesThatNeedsToBeDeleted.forEach(repoNameWithOwner -> {
+        repositoryService.deleteRepository(repoNameWithOwner);
+        dataSyncStatusService.deleteByRepositoryNameWithOwner(repoNameWithOwner);
+      });
     } catch (Exception ex) {
       log.error("Failed to sync installed repositories: {} {}", ex.getMessage(), ex);
     }
