@@ -193,6 +193,18 @@ ALTER TABLE public.issue_label
             REFERENCES public.issue(id)
             ON DELETE CASCADE;
 
+
+-------------------------------------------------------------------------------
+-- issue_label -> label
+-------------------------------------------------------------------------------
+-- Deleting a label also removes any issue_label rows referencing that label.
+ALTER TABLE public.issue_label DROP CONSTRAINT fkxbk5rr30kkb6k4ech7x4vh9h;
+ALTER TABLE public.issue_label
+    ADD CONSTRAINT fkxbk5rr30kkb6k4ech7x4vh9h
+        FOREIGN KEY (label_id)
+            REFERENCES public.label(id)
+            ON DELETE CASCADE;
+
 -------------------------------------------------------------------------------
 -- pull_request_requested_reviewers -> issue
 -------------------------------------------------------------------------------
