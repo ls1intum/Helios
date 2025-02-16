@@ -3,6 +3,7 @@ package de.tum.cit.aet.helios.user.github;
 import de.tum.cit.aet.helios.user.User;
 import de.tum.cit.aet.helios.user.UserRepository;
 import de.tum.cit.aet.helios.util.DateUtil;
+import java.io.IOException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.hibernate.exception.ConstraintViolationException;
@@ -59,103 +60,31 @@ public class GitHubUserSyncService {
    */
   @Transactional(propagation = Propagation.REQUIRES_NEW)
   public User processUser(GHUser ghUser) {
-    Long ghUserId = ghUser.getId();
-    try {
-      // 1. Check if user already exists
-      var existingUserOpt = userRepository.findById(ghUserId);
-      if (existingUserOpt.isPresent()) {
-        // 2. Possibly update existing user if GH data is newer
-        return updateExistingUser(existingUserOpt.get(), ghUser);
-      } else {
-        // 3. Create a new user
-        return createNewUser(ghUser);
-      }
-    } catch (Exception e) {
-      log.error("Failed to process GitHub user {}: {}", ghUserId, e.getMessage());
+    var result =
+        userRepository
+            .findById(ghUser.getId())
+            .map(
+                user -> {
+                  try {
+                    if (user.getUpdatedAt() == null
+                        || (ghUser.getUpdatedAt() != null
+                        && user.getUpdatedAt()
+                        .isBefore(
+                            DateUtil.convertToOffsetDateTime(ghUser.getUpdatedAt())))) {
+                      return userConverter.update(ghUser, user);
+                    }
+                    return user;
+                  } catch (IOException e) {
+                    log.error("Failed to update repository {}: {}", ghUser.getId(), e.getMessage());
+                    return null;
+                  }
+                })
+            .orElseGet(() -> userConverter.convert(ghUser));
+
+    if (result == null) {
       return null;
     }
+
+    return userRepository.save(result);
   }
-
-  /**
-   * Attempt to update an existing user if needed.
-   * Catches concurrency exceptions, does fallback read if needed.
-   */
-  private User updateExistingUser(User existingUser, GHUser ghUser) {
-    Long ghUserId = ghUser.getId();
-    try {
-      // Only update if GH data is newer
-      if (existingUser.getUpdatedAt() == null
-          || (ghUser.getUpdatedAt() != null
-          && existingUser.getUpdatedAt().isBefore(
-          DateUtil.convertToOffsetDateTime(ghUser.getUpdatedAt())))) {
-        existingUser = userConverter.update(ghUser, existingUser);
-      }
-      return userRepository.saveAndFlush(existingUser);
-
-    } catch (DataIntegrityViolationException | ConstraintViolationException ex) {
-      // concurrency error can happen if we re-insert for some reason
-      log.warn("Concurrent update detected for user {}, fallback to read from DB", ghUserId);
-      return fallbackExistingUserIfConcurrency(ghUser, ghUserId);
-
-    } catch (Exception e) {
-      log.error("Failed to update user {}: {}", ghUserId, e.getMessage());
-      // fallback - return the user as-is, ignoring partial changes
-      return existingUser;
-    }
-  }
-
-  /**
-   * Attempt to create a new user from GH data.
-   * Catches concurrency exceptions, does fallback read if needed.
-   */
-  private User createNewUser(GHUser ghUser) {
-    Long ghUserId = ghUser.getId();
-    try {
-      User newUser = userConverter.convert(ghUser);
-      if (newUser == null) {
-        return null; // converter failed, or GH data is invalid
-      }
-      return userRepository.saveAndFlush(newUser);
-
-    } catch (DataIntegrityViolationException | ConstraintViolationException ex) {
-      // Another thread inserted same user ID concurrently
-      log.warn("Concurrent insert detected for user {}, will attempt fallback read.", ghUserId);
-      return fallbackExistingUserIfConcurrency(ghUser, ghUserId);
-
-    } catch (Exception e) {
-      log.error("Failed to create new user {}: {}", ghUserId, e.getMessage());
-      return null;
-    }
-  }
-
-  private User fallbackExistingUserIfConcurrency(
-      GHUser ghUser,
-      Long ghUserId
-  ) {
-    // Another thread may have inserted the user in parallel.
-    var nowExistingOpt = userRepository.findById(ghUserId);
-    if (nowExistingOpt.isPresent()) {
-      User nowExisting = nowExistingOpt.get();
-      // Update if remote GH data is newer
-      try {
-        if (ghUser.getUpdatedAt() != null
-            && (nowExisting.getUpdatedAt() == null
-            || nowExisting.getUpdatedAt().isBefore(
-            DateUtil.convertToOffsetDateTime(ghUser.getUpdatedAt())))) {
-          nowExisting = userConverter.update(ghUser, nowExisting);
-          return userRepository.saveAndFlush(nowExisting);
-        }
-      } catch (Exception e) {
-        log.error("Failed updating existing user after concurrency insert: {}", e.getMessage());
-      }
-      return nowExisting; // Return whatever we have in DB
-    } else {
-      // Not found even after concurrency error
-      log.warn("User {} not found even after concurrency fallback read", ghUserId);
-      return null;
-    }
-  }
-
-
-
 }
