@@ -1,11 +1,11 @@
-<div class="relative pt-4">
+<div class="relative items-center pt-4 ml-10 mr-10 pb-4">
   <!-- Dynamic Progress Bar always showing its percentage -->
   <p-progressbar [value]="dynamicProgress" [showValue]="true"></p-progressbar>
 
   <!-- Stepper Circles and Labels -->
   <div class="flex justify-between mb-4 mt-2">
     @for (step of steps; track step; let i = $index) {
-      <div class="flex flex-col items-center w-1/4">
+      <div class="flex flex-col items-center">
         <div class="relative">
           <!-- Step Circle -->
           <div
@@ -13,7 +13,7 @@
               'bg-green-500': getStepStatus(i) === 'completed',
               'bg-blue-500 animate-pulse': getStepStatus(i) === 'active',
               'bg-red-500': getStepStatus(i) === 'error',
-              'bg-gray-200': getStepStatus(i) === 'upcoming',
+              'bg-gray-200': getStepStatus(i) === 'upcoming' || getStepStatus(i) === 'unknown' || getStepStatus(i) === 'inactive',
             }"
             class="w-8 h-8 rounded-full flex items-center justify-center transition-colors duration-300"
             style="z-index: 1"
@@ -28,6 +28,12 @@
               @case ('error') {
                 <i-tabler name="x" class="text-white w-5 h-5"></i-tabler>
               }
+              @case ('unknown') {
+                <i-tabler name="question-mark" class="w-5 h-5"></i-tabler>
+              }
+              @case ('inactive') {
+                <i-tabler name="exclamation-mark" class="w-5 h-5"></i-tabler>
+              }
               @case ('upcoming') {
                 <div class="w-5 h-5"></div>
               }
@@ -40,6 +46,11 @@
               <span class="text-sm font-medium text-red-500">{{ 'ERROR' }}</span>
               <div class="text-xs text-gray-500">
                 {{ stepDescriptions['ERROR'] }}
+              </div>
+            } @else if (isUnknownState()) {
+              <span class="text-sm font-medium text-gray-700">{{ 'UNKNOWN' }}</span>
+              <div class="text-xs text-gray-500">
+                {{ stepDescriptions['UNKNOWN'] }}
               </div>
             } @else {
               <span class="text-sm font-medium text-gray-700">{{ step }}</span>

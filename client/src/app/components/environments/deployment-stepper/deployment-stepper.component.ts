@@ -15,18 +15,22 @@ export class DeploymentStepperComponent implements OnInit, OnDestroy {
   // Define the four steps. (Note: estimatedTimes are defined only for the first three.)
   steps: ('WAITING' | 'PENDING' | 'IN_PROGRESS' | 'SUCCESS')[] = ['WAITING', 'PENDING', 'IN_PROGRESS', 'SUCCESS'];
   stepDescriptions: {
-    [key in 'WAITING' | 'PENDING' | 'IN_PROGRESS' | 'SUCCESS' | 'ERROR' | 'FAILURE']: string;
+    [key in 'QUEUED' | 'WAITING' | 'PENDING' | 'IN_PROGRESS' | 'SUCCESS' | 'ERROR' | 'FAILURE' | 'UNKNOWN' | 'INACTIVE']: string;
   } = {
+    QUEUED: 'Deployment Queued',
     WAITING: 'Waiting for approval',
     PENDING: 'Pending deployment',
     IN_PROGRESS: 'Deployment in progress',
     SUCCESS: 'Deployment successful',
     ERROR: 'Deployment error',
     FAILURE: 'Deployment failed',
+    UNKNOWN: 'State unknown',
+    INACTIVE: 'Inactive deployment',
   };
 
   // Estimated times in minutes for each non-terminal step.
   estimatedTimes = {
+    QUEUED: 5,
     WAITING: 1,
     PENDING: 1,
     IN_PROGRESS: 5,
@@ -49,28 +53,6 @@ export class DeploymentStepperComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Calculates a virtual step index based solely on elapsed time.
-   * - If elapsed time is less than WAITING's estimated time, returns 0.
-   * - If elapsed time is between WAITING and WAITING+PENDING, returns 1.
-   * - If between WAITING+PENDING and WAITING+PENDING+IN_PROGRESS, returns 2.
-   * - Otherwise, returns 3 (i.e. SUCCESS).
-   */
-  get virtualStepIndex(): number {
-    if (!this.deployment || !this.deployment.createdAt) return 0;
-    const start = new Date(this.deployment.createdAt).getTime();
-    const elapsedMinutes = (this.time - start) / 60000;
-    if (elapsedMinutes >= this.estimatedTimes.WAITING + this.estimatedTimes.PENDING + this.estimatedTimes.IN_PROGRESS) {
-      return 3;
-    } else if (elapsedMinutes >= this.estimatedTimes.WAITING + this.estimatedTimes.PENDING) {
-      return 2;
-    } else if (elapsedMinutes >= this.estimatedTimes.WAITING) {
-      return 1;
-    } else {
-      return 0;
-    }
-  }
-
-  /**
    * Determines the effective step index.
    * If the deployment state is terminal (SUCCESS, ERROR, FAILURE), use that state.
    * Otherwise, use the virtual (elapsed-time based) step.
@@ -84,8 +66,12 @@ export class DeploymentStepperComponent implements OnInit, OnDestroy {
     // return this.virtualStepIndex;
   }
 
-  get isErrorState(): boolean {
+  isErrorState(): boolean {
     return ['ERROR', 'FAILURE'].includes(this.deployment?.state || '');
+  }
+
+  isUnknownState(): boolean {
+    return ['UNKNOWN', 'INACTIVE'].includes(this.deployment?.state || '');
   }
 
   /**
@@ -96,8 +82,9 @@ export class DeploymentStepperComponent implements OnInit, OnDestroy {
    */
   getStepStatus(index: number): string {
     const effectiveStep = this.currentEffectiveStepIndex;
-    if (index < effectiveStep) return 'completed';
-    if (index === effectiveStep) return this.isErrorState ? 'error' : 'active';
+    if (this.isUnknownState()) return 'unknown'; // all steps should be unkown
+    if (index < effectiveStep) return 'completed'; //it's already done
+    if (index === effectiveStep) return this.isErrorState() ? 'error' : this.steps[index] == 'SUCCESS' ? 'completed' : 'active';
     return 'upcoming';
   }
 
@@ -111,42 +98,31 @@ export class DeploymentStepperComponent implements OnInit, OnDestroy {
   get dynamicProgress(): number {
     if (!this.deployment || !this.deployment.createdAt) return 0;
     // If the server indicates a terminal state, show full progress.
-    if (['SUCCESS', 'ERROR', 'FAILURE'].includes(this.deployment.state || '')) {
+    if (['UNKNOWN', 'INACTIVE'].includes(this.deployment.state || '')) {
+      return 0;
+    } else if (['SUCCESS', 'ERROR', 'FAILURE'].includes(this.deployment.state || '')) {
       return 100;
     }
-    const start = new Date(this.deployment.createdAt).getTime();
-    const elapsedMs = this.time - start;
+    const start = new Date(this.deployment.createdAt).getTime(); // start time is when the deployment was created
+    const elapsedMs = this.time - start > 0 ? this.time - start : 0; // elapsed time
     // If the virtual step is 3, show 100%.
     if (this.currentEffectiveStepIndex === 3) return 100;
 
     let progress = 0;
     let cumulativeEstimateMs = 0;
     // There are three segments: 0 (0–25%), 1 (25–50%), 2 (50–75%).
-    for (let i = 0; i < 3; i++) {
-      const segStart = i * 25;
-      const segEnd = (i + 1) * 25;
-      const estimatedMs = this.estimatedTimes[this.steps[i] as keyof typeof this.estimatedTimes] * 60000;
-      // If this step is fully complete, assign the full segment.
-      if (this.currentEffectiveStepIndex > i) {
-        progress = segEnd;
-        cumulativeEstimateMs += estimatedMs;
-      }
-      // If we're in the middle of this segment, compute the ratio.
-      else if (this.currentEffectiveStepIndex === i) {
-        const elapsedForSegmentMs = elapsedMs - cumulativeEstimateMs;
-        let ratio = elapsedForSegmentMs / estimatedMs;
-        console.log('elapsed for segment ', elapsedForSegmentMs);
-        console.log('estimated ms ', estimatedMs);
-        if (ratio > 1) {
-          ratio = 1;
-        }
-        progress = segStart + ratio * 25;
-        console.log('progress ', progress);
-        break;
-      } else {
-        break;
-      }
+    const segStart = this.currentEffectiveStepIndex * 33;
+    const estimatedMs = this.estimatedTimes[this.steps[this.currentEffectiveStepIndex] as keyof typeof this.estimatedTimes] * 60000;
+
+    const elapsedForSegmentMs = elapsedMs - cumulativeEstimateMs > 0 ? elapsedMs - cumulativeEstimateMs : 0;
+    let ratio = elapsedForSegmentMs / estimatedMs;
+    console.log('elapsed for segment ', elapsedForSegmentMs);
+    console.log('estimated ms ', estimatedMs);
+    if (ratio > 1) {
+      ratio = 1;
     }
+    progress = segStart + ratio * 33;
+    console.log('progress ', progress);
     return Math.floor(progress);
   }
 
@@ -161,7 +137,9 @@ export class DeploymentStepperComponent implements OnInit, OnDestroy {
     let cumulative = 0;
     for (let i = 0; i < 3; i++) {
       const est = this.estimatedTimes[this.steps[i] as keyof typeof this.estimatedTimes];
-      cumulative += est;
+      if (this.getStepStatus(i) !== 'completed') {
+        cumulative += est;
+      }
       if (i === index) {
         if (this.getStepStatus(i) === 'completed') {
           return '0m 0s';
