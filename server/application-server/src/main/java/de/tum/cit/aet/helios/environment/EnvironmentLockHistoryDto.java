@@ -11,6 +11,7 @@ import org.springframework.lang.NonNull;
 public record EnvironmentLockHistoryDto(
     @NonNull Long id,
     UserInfoDto lockedBy,
+    UserInfoDto unlockedBy,
     @Nullable OffsetDateTime lockedAt,
     @Nullable OffsetDateTime unlockedAt,
     EnvironmentDto environment) {
@@ -23,6 +24,7 @@ public record EnvironmentLockHistoryDto(
     return new EnvironmentLockHistoryDto(
         environmentLockHistory.getId(),
         UserInfoDto.fromUser(environmentLockHistory.getLockedBy()),
+        UserInfoDto.fromUser(environmentLockHistory.getUnlockedBy()),
         environmentLockHistory.getLockedAt(),
         environmentLockHistory.getUnlockedAt(),
         EnvironmentDto.fromEnvironment(

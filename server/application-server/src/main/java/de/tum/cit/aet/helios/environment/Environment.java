@@ -20,6 +20,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
+import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -35,7 +36,8 @@ import lombok.ToString;
 @NoArgsConstructor
 @ToString
 public class Environment extends RepositoryFilterEntity {
-  @Id private Long id;
+  @Id
+  private Long id;
 
   @Column(nullable = false)
   private String name;
@@ -51,14 +53,16 @@ public class Environment extends RepositoryFilterEntity {
   @Column(name = "updated_at")
   private OffsetDateTime updatedAt;
 
-  @Version private Integer version;
+  @Version
+  private Integer version;
 
   @OneToMany(fetch = FetchType.EAGER, mappedBy = "environment")
   @OrderBy("createdAt ASC")
   private List<Deployment> deployments;
 
   /**
-   * Whether the environment is enabled or not. It is set to false by default. Needs to be set to
+   * Whether the environment is enabled or not. It is set to false by default.
+   * Needs to be set to
    * true in Helios environment settings page.
    */
   private boolean enabled = false;
@@ -98,9 +102,33 @@ public class Environment extends RepositoryFilterEntity {
   @Column(name = "status_check_type", length = 20)
   private StatusCheckType statusCheckType;
 
+  @Column(name = "status_changed_at", nullable = true)
+  private Instant statusChangedAt;
+
   @OneToMany(mappedBy = "environment", cascade = CascadeType.ALL, orphanRemoval = true)
   @OrderBy("checkTimestamp DESC")
   private List<EnvironmentStatus> statusHistory;
+
+  // Once the threshold is reached, the lock automatically expires and the environment becomes
+  // available again.
+  // This field has presedence over the one in GitRepoSettings.
+  @Column(name = "lock_expiration_threshold")
+  private Long lockExpirationThreshold;
+
+  // After this period, any user can unlock the environment.
+  // This field has presedence over the one in GitRepoSettings.
+  @Column(name = "lock_reservation_threshold")
+  private Long lockReservationThreshold;
+
+  // The time when the lock will expire calculated via the lockExpirationThreshold above or the one
+  // in GitRepoSettings.
+  @Column(name = "lock_will_expire_at")
+  private OffsetDateTime lockWillExpireAt;
+
+  // The time when the lock reservation will expire calculated via the lockReservationThreshold
+  // above or the one in GitRepoSettings.
+  @Column(name = "lock_reservation_expires_at")
+  private OffsetDateTime lockReservationExpiresAt;
 
   public Optional<EnvironmentStatus> getLatestStatus() {
     return statusHistory.stream().findFirst();

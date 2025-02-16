@@ -5,6 +5,7 @@
     size="normal"
     [image]="user()?.avatarUrl"
     [pTooltip]="getTooltipText()"
+    tooltipPosition="top"
     [styleClass]="getAvatarBorderClass(user()?.login || '')"
     (click)="openUserProfile(user()?.login || '')"
   >
