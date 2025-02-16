@@ -3,10 +3,14 @@ package de.tum.cit.aet.helios.github.app;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.tum.cit.aet.helios.github.GitHubClientManager;
 import de.tum.cit.aet.helios.github.GitHubCustomMessageHandler;
+import de.tum.cit.aet.helios.github.sync.DataSyncStatusService;
 import de.tum.cit.aet.helios.github.sync.GitHubDataSyncService;
 import de.tum.cit.aet.helios.gitrepo.RepositoryService;
+import de.tum.cit.aet.helios.nats.NatsConsumerService;
 import java.util.List;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -15,20 +19,27 @@ public class GitHubInstallationRepositoriesMessageHandler
     extends GitHubCustomMessageHandler<GitHubInstallationPayload> {
 
   private final GitHubClientManager clientManager;
-
-  private final GitHubDataSyncService dataSyncService;
-
   private final RepositoryService repositoryService;
+  private final GitHubDataSyncService gitHubDataSyncService;
+  private final DataSyncStatusService dataSyncStatusService;
+  private final NatsConsumerService natsConsumerService;
+  private final GitHubClientManager gitHubClientManager;
 
+  @Autowired
   private GitHubInstallationRepositoriesMessageHandler(
       ObjectMapper objectMapper,
       GitHubClientManager clientManager,
-      GitHubDataSyncService dataSyncService,
-      RepositoryService repositoryService) {
+      RepositoryService repositoryService,
+      GitHubDataSyncService gitHubDataSyncService,
+      DataSyncStatusService dataSyncStatusService,
+      @Lazy NatsConsumerService natsConsumerService, GitHubClientManager gitHubClientManager) {
     super(GitHubInstallationPayload.class, objectMapper);
     this.clientManager = clientManager;
-    this.dataSyncService = dataSyncService;
     this.repositoryService = repositoryService;
+    this.gitHubDataSyncService = gitHubDataSyncService;
+    this.dataSyncStatusService = dataSyncStatusService;
+    this.natsConsumerService = natsConsumerService;
+    this.gitHubClientManager = gitHubClientManager;
   }
 
 
@@ -63,8 +74,8 @@ public class GitHubInstallationRepositoriesMessageHandler
         repository -> {
           log.info("[Installation Event Handler] Sync will start for repository: {}",
               repository.getFullName());
-          dataSyncService.syncRepository(repository.getFullName());
-          log.info("[Installation Event Handler] Sync triggered asynchronously for repository: {}",
+          gitHubDataSyncService.syncRepositoryData(repository.getFullName());
+          log.info("[Installation Event Handler] Sync completed for repository: {}",
               repository.getFullName());
         });
 
@@ -77,9 +88,15 @@ public class GitHubInstallationRepositoriesMessageHandler
           log.info("[Installation Event Handler] Deletion will start for repository: {}",
               repository.getFullName());
           repositoryService.deleteRepository(repository.getFullName());
+          dataSyncStatusService.deleteByRepositoryNameWithOwner(repository.getFullName());
           log.info("[Installation Event Handler] Deletion completed for repository: {}",
               repository.getFullName());
         });
+
+    // Force refresh the GitHub client to ensure the latest installation repositories are exist
+    gitHubClientManager.forceRefreshClient();
+    // Update NATS consumer subjects
+    natsConsumerService.reinitializeConsumer();
   }
 
   @Override

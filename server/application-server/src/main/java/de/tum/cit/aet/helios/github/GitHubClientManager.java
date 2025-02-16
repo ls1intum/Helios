@@ -151,6 +151,20 @@ public class GitHubClientManager {
     return gitHubClient;
   }
 
+  public void forceRefreshClient() {
+    lock.lock();
+    try {
+      log.info("Forcing GitHub client refresh...");
+      gitHubClient = createGitHubClientWithCache();
+      if (authType == AuthType.APP) {
+        fetchGitHubAppNodeId();
+      }
+      log.info("Forced GitHub client refresh successful");
+    } finally {
+      lock.unlock();
+    }
+  }
+
   /** Refreshes the GitHub client in every 20 minutes. */
   private void refreshClient() {
     lock.lock();
