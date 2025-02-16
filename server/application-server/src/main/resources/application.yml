@@ -3,6 +3,11 @@ spring:
         name: Helios
     config:
         import: optional:file:.env[.properties]
+    task:
+        scheduling:
+            pool:
+                # This sets the maximum number of threads for scheduled tasks.
+                size: 10
 
 springdoc:
     default-produces-media-type: application/json
@@ -10,3 +15,18 @@ springdoc:
 logging:
     level:
         org.kohsuke.github.GitHubClient: INFO
+
+status-check:
+    # How often the status check should run for
+    # environments whose status changed recently
+    recent-interval: 10s
+    # How often the status check should run for
+    # environments whose status did not change recently
+    # has to be lower than recent-interval
+    stable-interval: 120s
+    # How long until an environment is considered stable
+    # if the status did not change
+    recent-threshold: 5m
+    # How many status checks should be stored in the database
+    # for an environment
+    keep-count: 10

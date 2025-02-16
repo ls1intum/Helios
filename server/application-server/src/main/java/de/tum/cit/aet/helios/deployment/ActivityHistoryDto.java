@@ -15,7 +15,8 @@ public record ActivityHistoryDto(
     Deployment.State state,
     String sha,
     String ref,
-    UserInfoDto user,
+    UserInfoDto user, // lockedBy or DeployedBy
+    UserInfoDto user2, // unlockedBy
     OffsetDateTime timestamp,
     OffsetDateTime createdAt,
     OffsetDateTime updatedAt) {
@@ -29,6 +30,7 @@ public record ActivityHistoryDto(
         heliosDeployment.getSha(),
         heliosDeployment.getBranchName(),
         UserInfoDto.fromUser(heliosDeployment.getCreator()),
+        null,
         heliosDeployment.getCreatedAt(),
         heliosDeployment.getCreatedAt(),
         heliosDeployment.getUpdatedAt());
@@ -43,6 +45,7 @@ public record ActivityHistoryDto(
         deployment.getSha(),
         deployment.getRef(),
         UserInfoDto.fromUser(deployment.getCreator()),
+        null,
         deployment.getCreatedAt(),
         deployment.getCreatedAt(),
         deployment.getUpdatedAt());
@@ -58,6 +61,9 @@ public record ActivityHistoryDto(
         null,
         null,
         UserInfoDto.fromUser(environmentLockHistory.getLockedBy()),
+        "UNLOCK_EVENT".equals(type)
+            ? UserInfoDto.fromUser(environmentLockHistory.getUnlockedBy())
+            : null,
         "UNLOCK_EVENT".equals(type)
             ? environmentLockHistory.getUnlockedAt()
             : environmentLockHistory.getLockedAt(),

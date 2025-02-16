@@ -19,12 +19,14 @@ import java.util.Set;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import org.hibernate.annotations.Filter;
 
 @Entity
 @Getter
 @Setter
 @IdClass(ReleaseCandidateId.class)
 @ToString(callSuper = true)
+@Filter(name = "gitRepositoryFilter")
 public class ReleaseCandidate {
   @Id
   @ManyToOne

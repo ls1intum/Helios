@@ -1,0 +1,45 @@
+name: Mock Artemis Staging Deployment with Helios
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch_name:
+        description: 'Branch to deploy'
+        required: true
+      commit_sha:
+        description: 'Commit SHA to deploy'
+        required: true
+      environment_name:
+        description: 'Environment to deploy to'
+        required: true
+        type: choice
+        options: 
+          - artemis-staging-localci.artemis.cit.tum.de
+
+concurrency: ${{ github.event.inputs.environment_name }}
+
+env:
+  build_workflow_name: build.yml
+
+jobs:
+  check-build-status:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Print inputs
+        run: |
+          echo "Branch: ${{ github.event.inputs.branch_name }}"
+          echo "Commit SHA: ${{ github.event.inputs.commit_sha }}"
+          echo "Environment: ${{ github.event.inputs.environment_name }}"
+      
+  deploy:
+    needs: check-build-status
+    runs-on: ubuntu-latest
+    environment: 
+        name: ${{ github.event.inputs.environment_name }}
+    
+    steps:
+      - name: Fake deployment
+        run: |
+          echo "Start deployment to ${{ github.event.inputs.environment_name }}"
+          sleep 30
+          echo "Finish deployment"
