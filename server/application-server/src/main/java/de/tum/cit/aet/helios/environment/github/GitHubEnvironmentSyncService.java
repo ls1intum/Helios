@@ -5,8 +5,8 @@ import de.tum.cit.aet.helios.environment.EnvironmentRepository;
 import de.tum.cit.aet.helios.github.GitHubService;
 import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
-import java.io.IOException;
-import java.util.List;
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.jetbrains.annotations.NotNull;
 import org.kohsuke.github.GHRepository;
@@ -14,55 +14,13 @@ import org.springframework.stereotype.Service;
 
 @Service
 @Log4j2
+@RequiredArgsConstructor
 public class GitHubEnvironmentSyncService {
 
   private final EnvironmentRepository environmentRepository;
   private final GitRepoRepository gitRepoRepository;
-  private final GitHubService gitHubService;
   private final GitHubEnvironmentConverter environmentConverter;
 
-  public GitHubEnvironmentSyncService(
-      EnvironmentRepository environmentRepository,
-      GitRepoRepository gitRepoRepository,
-      GitHubService gitHubService,
-      GitHubEnvironmentConverter environmentConverter) {
-    this.environmentRepository = environmentRepository;
-    this.gitRepoRepository = gitRepoRepository;
-    this.gitHubService = gitHubService;
-    this.environmentConverter = environmentConverter;
-  }
-
-  /**
-   * Synchronizes all environments from the specified GitHub repositories.
-   *
-   * @param repositories the list of GitHub repositories to sync environments from
-   */
-  public void syncEnvironmentsOfAllRepositories(@NotNull List<GHRepository> repositories) {
-    repositories.forEach(this::syncEnvironmentsOfRepository);
-  }
-
-  /**
-   * Synchronizes all environments from a specific GitHub repository.
-   *
-   * @param ghRepository the GitHub repository to sync environments from
-   */
-  public void syncEnvironmentsOfRepository(GHRepository ghRepository) {
-    try {
-      List<GitHubEnvironmentDto> gitHubEnvironmentDtoS =
-          gitHubService.getEnvironments(ghRepository);
-
-      for (GitHubEnvironmentDto gitHubEnvironmentDto : gitHubEnvironmentDtoS) {
-        processEnvironment(gitHubEnvironmentDto, ghRepository);
-      }
-
-      // TODO: handle deletion of environments that are not present in the GitHub repository anymore
-    } catch (IOException e) {
-      log.error(
-          "Failed to sync environments for repository {}: {}",
-          ghRepository.getFullName(),
-          e.getMessage());
-    }
-  }
 
   /**
    * Processes a single GitHubEnvironmentDto by updating or creating it in the local repository.
@@ -70,7 +28,8 @@ public class GitHubEnvironmentSyncService {
    * @param gitHubEnvironmentDto the GitHubEnvironmentDto to process
    * @param ghRepository the GitHub repository the environment belongs to
    */
-  private void processEnvironment(
+  @Transactional
+  public void processEnvironment(
       @NotNull GitHubEnvironmentDto gitHubEnvironmentDto, @NotNull GHRepository ghRepository) {
     Environment environment =
         environmentRepository.findById(gitHubEnvironmentDto.getId()).orElseGet(Environment::new);

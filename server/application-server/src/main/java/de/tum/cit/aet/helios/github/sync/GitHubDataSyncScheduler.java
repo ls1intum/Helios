@@ -32,7 +32,7 @@ public class GitHubDataSyncScheduler {
     if (runOnStartup) {
       log.info("Initial GitHub data sync started...");
       syncGitHubData();
-      log.info("Initial GitHub data sync triggered asynchronously.");
+      log.info("Initial GitHub data sync finished.");
     }
   }
 
@@ -40,7 +40,7 @@ public class GitHubDataSyncScheduler {
   public void syncDataCron() {
     log.info("Scheduled GitHub data sync started...");
     syncGitHubData();
-    log.info("Scheduled GitHub data sync triggered asynchronously.");
+    log.info("Scheduled GitHub data sync finished.");
   }
 
   private void syncGitHubData() {
@@ -64,7 +64,7 @@ public class GitHubDataSyncScheduler {
           repositoriesThatNeedsToBeDeleted);
 
       // Sync the repositories that are installed
-      syncRepositories.forEach(dataSyncService::syncRepository);
+      syncRepositories.forEach(dataSyncService::syncRepositoryData);
       // Delete the repositories that are not installed anymore
       repositoriesThatNeedsToBeDeleted.forEach(gitRepositoryRepository::deleteByNameWithOwner);
     } catch (Exception ex) {
