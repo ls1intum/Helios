@@ -17,7 +17,20 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 @Component({
   selector: 'app-main-layout',
   standalone: true,
-  imports: [RouterOutlet, ToastModule, IconsModule, ButtonModule, TooltipModule, DividerModule, AvatarModule, CardModule, NgClass, FooterComponent, NavigationBarComponent, ConfirmDialogModule],
+  imports: [
+    RouterOutlet,
+    ToastModule,
+    IconsModule,
+    ButtonModule,
+    TooltipModule,
+    DividerModule,
+    AvatarModule,
+    CardModule,
+    NgClass,
+    FooterComponent,
+    NavigationBarComponent,
+    ConfirmDialogModule,
+  ],
   templateUrl: './main-layout.component.html',
 })
 export class MainLayoutComponent implements OnInit {
