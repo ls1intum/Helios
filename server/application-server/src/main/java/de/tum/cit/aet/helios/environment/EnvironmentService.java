@@ -441,7 +441,6 @@ public class EnvironmentService {
     // Check if timeout has elapsed
     if (deployment.getStatus() == HeliosDeployment.Status.IN_PROGRESS
         || deployment.getStatus() == HeliosDeployment.Status.WAITING
-        || deployment.getStatus() == HeliosDeployment.Status.PENDING
         || deployment.getStatus() == HeliosDeployment.Status.QUEUED) {
       OffsetDateTime now = OffsetDateTime.now();
       if (deployment.getStatusUpdatedAt().plusMinutes(timeoutMinutes).isAfter(now)) {

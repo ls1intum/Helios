@@ -40,13 +40,3 @@ ALTER TABLE workflow
 -- Add new column for workflow run html url
 ALTER TABLE helios_deployment
     ADD COLUMN workflow_run_html_url VARCHAR(255);
-
--- Add pending status to helios deployment
--- we want to allow the waiting status here
-ALTER TABLE helios_deployment DROP CONSTRAINT helios_deployment_status_check;
-ALTER TABLE helios_deployment
-    ADD CONSTRAINT helios_deployment_status_check CHECK (
-        status::text = ANY (
-            ARRAY ['PENDING'::varchar, 'WAITING'::varchar, 'QUEUED'::varchar, 'IN_PROGRESS'::varchar, 'DEPLOYMENT_SUCCESS'::varchar, 'FAILED'::varchar, 'IO_ERROR'::varchar, 'UNKNOWN'::varchar, 'PENDING'::varchar]::text []
-        )
-    );

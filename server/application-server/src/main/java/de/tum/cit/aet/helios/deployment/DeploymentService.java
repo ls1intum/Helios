@@ -150,7 +150,7 @@ public class DeploymentService {
     HeliosDeployment heliosDeployment = new HeliosDeployment();
     heliosDeployment.setEnvironment(environment);
     heliosDeployment.setUser(authService.getUserId());
-    heliosDeployment.setStatus(HeliosDeployment.Status.PENDING);
+    heliosDeployment.setStatus(HeliosDeployment.Status.WAITING);
     heliosDeployment.setBranchName(deployRequest.branchName());
     heliosDeployment.setSha(commitSha);
     heliosDeployment.setCreator(authService.getUserFromGithubId());
@@ -238,7 +238,6 @@ public class DeploymentService {
 
     // Check if timeout has elapsed
     if (deployment.getStatus() == HeliosDeployment.Status.IN_PROGRESS
-        || deployment.getStatus() == HeliosDeployment.Status.PENDING
         || deployment.getStatus() == HeliosDeployment.Status.WAITING
         || deployment.getStatus() == HeliosDeployment.Status.QUEUED) {
       OffsetDateTime now = OffsetDateTime.now();
