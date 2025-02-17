@@ -3,8 +3,6 @@
 -- will also be automatically removed. This ensures a single DELETE statement on 'repository'
 -- will cascade and remove all referencing data (branches, commits, issues, etc.).
 
-BEGIN;
-
 -------------------------------------------------------------------------------
 -- branch -> repository
 -------------------------------------------------------------------------------
@@ -319,4 +317,3 @@ ALTER TABLE public.release_candidate_evaluation
             REFERENCES public.release_candidate(name, repository_id)
             ON DELETE CASCADE;
 
-COMMIT;
