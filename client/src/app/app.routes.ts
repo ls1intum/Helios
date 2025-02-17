@@ -54,6 +54,7 @@ export const routes: Routes = [
           {
             path: 'release',
             loadComponent: () => import('./pages/release/release.component').then(m => m.ReleaseComponent),
+            canActivate: [maintainerGuard],
             children: [
               {
                 path: '',

@@ -89,6 +89,12 @@ public class AuthService {
     return githubUserSyncService.processUser(ghUser);
   }
 
+  public boolean hasRole(String role) {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    return authentication != null
+        && authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals(role));
+  }
+
   public boolean isAtLeastMaintainer() {
     return SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream()
         .anyMatch(

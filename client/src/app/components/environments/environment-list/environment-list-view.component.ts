@@ -69,12 +69,17 @@ export class EnvironmentListViewComponent implements OnDestroy {
   editable = input<boolean | undefined>();
   deployable = input<boolean | undefined>();
   hideLinkToList = input<boolean | undefined>();
+  showTestEnvironmentsOnly = input<boolean | undefined>();
 
   isLoggedIn = computed(() => this.keycloakService.isLoggedIn());
   isAdmin = computed(() => this.permissionService.isAdmin());
   hasUnlockPermissions = computed(() => this.permissionService.isAtLeastMaintainer());
   hasDeployPermissions = computed(() => this.permissionService.hasWritePermission());
   hasEditEnvironmentPermissions = computed(() => this.permissionService.isAdmin());
+
+  userCanDeploy(environment: EnvironmentDto): boolean {
+    return !!(this.isLoggedIn() && this.deployable() && (!environment.locked || this.isCurrentUserLocked(environment)) && this.hasDeployPermissions());
+  }
   deploy = output<EnvironmentDto>();
 
   searchInput = signal<string>('');
@@ -154,7 +159,11 @@ export class EnvironmentListViewComponent implements OnDestroy {
   }
 
   filteredEnvironments = computed(() => {
-    const environments = this.environmentQuery.data();
+    let environments = this.environmentQuery.data();
+    if (this.showTestEnvironmentsOnly()) {
+      environments = environments?.filter(environment => environment.type === 'TEST');
+    }
+
     const search = this.searchInput();
 
     if (!environments) {
@@ -224,5 +233,9 @@ export class EnvironmentListViewComponent implements OnDestroy {
       // If the user is not locked and the time has not expired, show the time left
       return timeLeftMinutes > 1 ? `You can unlock this environment in ${timeLeftMinutes} minutes` : 'You can unlock this environment in 1 minute';
     }
+  }
+
+  formatEnvironmentType(type: string): string {
+    return type.charAt(0).toUpperCase() + type.slice(1).toLowerCase();
   }
 }

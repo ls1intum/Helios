@@ -18,7 +18,7 @@ public interface WorkflowRunRepository extends JpaRepository<WorkflowRun, Long> 
           + "WHERE pr.id = :pullRequestId "
           + "AND wr.headSha = :headSha")
   List<WorkflowRun> findByPullRequestsIdAndHeadShaWithTestSuites(
-      Long pullRequestsId, String headSha);
+      Long pullRequestId, String headSha);
 
   // This loads the test suites for the workflow run eagerly
   @Query(
@@ -33,4 +33,7 @@ public interface WorkflowRunRepository extends JpaRepository<WorkflowRun, Long> 
   List<WorkflowRun> findByPullRequestsIdAndHeadSha(Long pullRequestsId, String headSha);
 
   List<WorkflowRun> findByHeadBranchAndHeadShaAndPullRequestsIsNull(String branch, String headSha);
+
+  WorkflowRun findFirstByHeadBranchAndHeadShaAndWorkflowOrderByCreatedAtDesc(
+      String headBranch, String headSha, Workflow workflow);
 }

@@ -27,7 +27,7 @@ export class ReleaseCandidateDetailsComponent {
   private queryClient = inject(QueryClient);
 
   name = input.required<string>();
-  releaseCandidateQuery = injectQuery(() => getReleaseCandidateByNameOptions({ path: { name: this.name() } }));
+  releaseCandidateQuery = injectQuery(() => ({ ...getReleaseCandidateByNameOptions({ path: { name: this.name() } }), refetchInterval: 3000 }));
 
   evaluateReleaseCandidateMutation = injectMutation(() => ({
     ...evaluateMutation(),

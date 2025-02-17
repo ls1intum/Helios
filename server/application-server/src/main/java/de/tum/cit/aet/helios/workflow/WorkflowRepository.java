@@ -17,5 +17,5 @@ public interface WorkflowRepository extends JpaRepository<Workflow, Long> {
   List<Workflow> findByLabelAndRepositoryRepositoryId(Label label, Long repositoryId);
 
   Workflow findFirstByLabelAndRepositoryRepositoryIdOrderByCreatedAtDesc(
-      Label deployment, Long repositoryId);
+      Label label, Long repositoryId);
 }

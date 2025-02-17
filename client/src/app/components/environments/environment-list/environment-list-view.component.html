@@ -29,6 +29,10 @@
               @if (environment.latestStatus; as status) {
                 <app-environment-status-tag [status]="status" />
               }
+
+              @if (environment.type) {
+                <p-tag [value]="formatEnvironmentType(environment.type)" severity="secondary" rounded="true" />
+              }
             </div>
             @if (environment.latestDeployment; as deployment) {
               <div class="flex gap-1 items-center text-sm mt-2">
@@ -77,7 +81,7 @@
             }
           }
 
-          @if (isLoggedIn() && deployable() && (!environment.locked || isCurrentUserLocked(environment)) && hasDeployPermissions()) {
+          @if (userCanDeploy(environment)) {
             <button (click)="deployEnvironment(environment); $event.stopPropagation()" class="p-button p-button-secondary p-2">
               <i-tabler name="cloud-upload" class="mr-1 flex-shrink-0" />Deploy
             </button>

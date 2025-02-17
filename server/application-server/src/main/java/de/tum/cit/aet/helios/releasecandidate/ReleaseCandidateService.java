@@ -6,23 +6,27 @@ import de.tum.cit.aet.helios.branch.BranchInfoDto;
 import de.tum.cit.aet.helios.branch.BranchRepository;
 import de.tum.cit.aet.helios.commit.CommitInfoDto;
 import de.tum.cit.aet.helios.commit.CommitRepository;
-import de.tum.cit.aet.helios.deployment.DeploymentDto;
+import de.tum.cit.aet.helios.deployment.Deployment;
 import de.tum.cit.aet.helios.deployment.DeploymentRepository;
+import de.tum.cit.aet.helios.deployment.LatestDeploymentUnion;
 import de.tum.cit.aet.helios.filters.RepositoryContext;
 import de.tum.cit.aet.helios.github.GitHubService;
 import de.tum.cit.aet.helios.github.sync.GitHubDataSyncOrchestrator;
 import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
+import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
+import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
 import de.tum.cit.aet.helios.releasecandidate.ReleaseCandidateDetailsDto.ReleaseCandidateEvaluationDto;
 import de.tum.cit.aet.helios.user.User;
 import de.tum.cit.aet.helios.user.UserInfoDto;
 import de.tum.cit.aet.helios.user.UserRepository;
-import de.tum.cit.aet.helios.user.github.GitHubUserSyncService;
 import jakarta.transaction.Transactional;
 import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.kohsuke.github.GHCompare;
@@ -41,15 +45,62 @@ public class ReleaseCandidateService {
   private final GitHubService gitHubService;
   private final BranchRepository branchRepository;
   private final UserRepository userRepository;
-  private final GitHubUserSyncService userSyncService;
   private final ReleaseCandidateEvaluationRepository releaseCandidateEvaluationRepository;
   private final AuthService authService;
+  private final HeliosDeploymentRepository heliosDeploymentRepository;
   private final GitHubDataSyncOrchestrator gitHubDataSyncOrchestrator;
 
   public List<ReleaseCandidateInfoDto> getAllReleaseCandidates() {
     return releaseCandidateRepository.findAllByOrderByNameAsc().stream()
         .map(ReleaseCandidateInfoDto::fromReleaseCandidate)
         .toList();
+  }
+
+  /**
+   * Returns all deployments for a given release candidate, meaning a specific commit and
+   * repository. It considers HeliosDeployment and Deployment entities and returns the latest one
+   * for each environment.
+   *
+   * @param candidate The release candidate to get deployments for
+   * @return A list of LatestDeploymentUnion objects, each representing the latest deployment for an
+   *     environment
+   */
+  private List<LatestDeploymentUnion> getCandidateDeployments(final ReleaseCandidate candidate) {
+    Map<Long, LatestDeploymentUnion> deploymentsByEnvironment = new HashMap<>();
+
+    List<HeliosDeployment> heliosDeployments =
+        heliosDeploymentRepository.findByRepositoryIdAndSha(
+            candidate.getRepository().getRepositoryId(), candidate.getCommit().getSha());
+
+    List<Deployment> deployments =
+        deploymentRepository.findByRepositoryRepositoryIdAndSha(
+            candidate.getRepository().getRepositoryId(), candidate.getCommit().getSha());
+
+    for (HeliosDeployment heliosDeployment : heliosDeployments) {
+      deploymentsByEnvironment.put(
+          heliosDeployment.getEnvironment().getId(),
+          LatestDeploymentUnion.heliosDeployment(heliosDeployment));
+    }
+
+    for (Deployment deployment : deployments) {
+      if (!deploymentsByEnvironment.containsKey(deployment.getEnvironment().getId())) {
+        deploymentsByEnvironment.put(
+            deployment.getEnvironment().getId(), LatestDeploymentUnion.realDeployment(deployment));
+        continue;
+      }
+
+      LatestDeploymentUnion latestDeploymentUnion =
+          deploymentsByEnvironment.get(deployment.getEnvironment().getId());
+
+      if (latestDeploymentUnion.getCreatedAt().isAfter(deployment.getCreatedAt())) {
+        continue;
+      }
+
+      deploymentsByEnvironment.put(
+          deployment.getEnvironment().getId(), LatestDeploymentUnion.realDeployment(deployment));
+    }
+
+    return new ArrayList<>(deploymentsByEnvironment.values());
   }
 
   public ReleaseCandidateDetailsDto getReleaseCandidateByName(String name) {
@@ -59,13 +110,11 @@ public class ReleaseCandidateService {
         .findByRepositoryRepositoryIdAndName(repositoryId, name)
         .map(
             releaseCandidate -> {
-              final List<DeploymentDto> deployments =
-                  deploymentRepository
-                      .findByRepositoryRepositoryIdAndSha(
-                          repositoryId, releaseCandidate.getCommit().getSha())
-                      .stream()
-                      .map(DeploymentDto::fromDeployment)
+              var deployments =
+                  this.getCandidateDeployments(releaseCandidate).stream()
+                      .map(ReleaseCandidateDetailsDto.ReleaseCandidateDeploymentDto::fromDeployment)
                       .toList();
+
               return new ReleaseCandidateDetailsDto(
                   releaseCandidate.getName(),
                   CommitInfoDto.fromCommit(releaseCandidate.getCommit()),
