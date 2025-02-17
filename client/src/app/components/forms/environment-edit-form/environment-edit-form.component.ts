@@ -55,7 +55,7 @@ export class EnvironmentEditFormComponent implements OnInit {
   environmentForm!: FormGroup;
 
   environmentTypes = [
-    { label: 'None', value: undefined },
+    { label: 'None', value: null },
     { label: 'Test', value: 'TEST' },
     { label: 'Staging', value: 'STAGING' },
     { label: 'Production', value: 'PRODUCTION' },
