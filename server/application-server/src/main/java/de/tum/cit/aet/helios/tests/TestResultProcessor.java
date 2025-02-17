@@ -9,6 +9,7 @@ import de.tum.cit.aet.helios.workflow.WorkflowRun;
 import de.tum.cit.aet.helios.workflow.WorkflowRunRepository;
 import java.io.FilterInputStream;
 import java.io.IOException;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.ZipEntry;
@@ -38,6 +39,13 @@ public class TestResultProcessor {
 
     if (workflowRun.getStatus() != WorkflowRun.Status.COMPLETED
         || workflowRun.getWorkflow().getLabel() != Workflow.Label.TEST) {
+      return false;
+    }
+
+    // If it's older than 2 hours from now, don't process it. That should usually not
+    // happen. But in case we are receiving old events from NATS, we should not risk
+    // processing a lot of old runs (e.g. when the server was down).
+    if (workflowRun.getUpdatedAt().plusHours(2).isBefore(OffsetDateTime.now())) {
       return false;
     }
 

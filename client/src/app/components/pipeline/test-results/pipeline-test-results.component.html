@@ -4,11 +4,13 @@
     [ngClass]="['flex items-center gap-2 w-full p-2 rounded mb-2 mt-8', hasTestSuites() ? 'hover:bg-gray-100' : '']"
     (click)="isTestResultsCollapsed = !isTestResultsCollapsed"
   >
-    <h3 class="text-lg">Test suites</h3>
+    <h3 class="text-lg">Test Results</h3>
 
     @if (isProcessing()) {
       <p-tag class="ml-2" severity="warn" [rounded]="true" [pTooltip]="'Test results are being processed'">
         <i-tabler name="progress" class="!size-5 animate-spin"></i-tabler>
+
+        <span class="text-sm text-gray-600">Processing</span>
       </p-tag>
     }
 

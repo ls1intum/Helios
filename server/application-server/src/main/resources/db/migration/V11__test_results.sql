@@ -33,7 +33,13 @@ create unique index idx_test_suite_run_name on test_suite (workflow_run_id, name
 alter table workflow
 drop constraint workflow_label_check;
 
-alter table workflow_run add constraint fk_workflow_run_workflow foreign key (workflow_id) references workflow (id);
+alter table workflow add constraint workflow_label_check CHECK (((label)::text = ANY ((ARRAY['TEST'::character varying, 'BUILD'::character varying, 'DEPLOYMENT'::character varying, 'NONE'::character varying])::text[])));
+
+-- We need to remove all workflow run records that are not associated with a workflow
+-- (There shouldn't be any, but just in case)
+delete from workflow_run where workflow_id not in (select id from workflow);
+
+alter table workflow_run add constraint fk_workflow_run_workflow foreign key (workflow_id) references workflow (id) on delete cascade;
 
 alter table workflow_run
 add column test_processing_status varchar(20);
