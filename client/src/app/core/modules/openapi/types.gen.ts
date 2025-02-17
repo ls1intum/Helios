@@ -144,25 +144,25 @@ export type WorkflowRunDto = {
   name: string;
   displayTitle: string;
   status:
-  | 'QUEUED'
-  | 'IN_PROGRESS'
-  | 'COMPLETED'
-  | 'ACTION_REQUIRED'
-  | 'CANCELLED'
-  | 'FAILURE'
-  | 'NEUTRAL'
-  | 'SKIPPED'
-  | 'STALE'
-  | 'SUCCESS'
-  | 'TIMED_OUT'
-  | 'REQUESTED'
-  | 'WAITING'
-  | 'PENDING'
-  | 'UNKNOWN';
+    | 'QUEUED'
+    | 'IN_PROGRESS'
+    | 'COMPLETED'
+    | 'ACTION_REQUIRED'
+    | 'CANCELLED'
+    | 'FAILURE'
+    | 'NEUTRAL'
+    | 'SKIPPED'
+    | 'STALE'
+    | 'SUCCESS'
+    | 'TIMED_OUT'
+    | 'REQUESTED'
+    | 'WAITING'
+    | 'PENDING'
+    | 'UNKNOWN';
   workflowId: number;
   conclusion?: 'ACTION_REQUIRED' | 'CANCELLED' | 'FAILURE' | 'NEUTRAL' | 'SUCCESS' | 'SKIPPED' | 'STALE' | 'TIMED_OUT' | 'STARTUP_FAILURE' | 'UNKNOWN';
   htmlUrl: string;
-  label: 'BUILD' | 'DEPLOYMENT' | 'NONE' | 'TEST';
+  label: 'NONE' | 'DEPLOY_TEST_SERVER' | 'DEPLOY_STAGING_SERVER' | 'DEPLOY_PRODUCTION_SERVER' | 'TEST';
   testProcessingStatus?: 'PROCESSING' | 'PROCESSED' | 'FAILED';
   testSuites: Array<TestSuiteDto>;
 };
@@ -590,26 +590,25 @@ export type GetWorkflowsByStateResponses = {
 
 export type GetWorkflowsByStateResponse = GetWorkflowsByStateResponses[keyof GetWorkflowsByStateResponses];
 
-export type GetWorkflowRunUrlData = {
+export type GetLatestDeploymentWorkflowRunData = {
   body?: never;
-  path: {
-    environmentId: number;
-  };
+  path?: never;
   query: {
+    environmentId: number;
     branch: string;
     commitSha: string;
   };
-  url: '/api/workflows/runs/{environmentId}';
+  url: '/api/workflows/run';
 };
 
-export type GetWorkflowRunUrlResponses = {
+export type GetLatestDeploymentWorkflowRunResponses = {
   /**
    * OK
    */
-  200: string;
+  200: WorkflowRunDto;
 };
 
-export type GetWorkflowRunUrlResponse = GetWorkflowRunUrlResponses[keyof GetWorkflowRunUrlResponses];
+export type GetLatestDeploymentWorkflowRunResponse = GetLatestDeploymentWorkflowRunResponses[keyof GetLatestDeploymentWorkflowRunResponses];
 
 export type GetWorkflowsByRepositoryIdData = {
   body?: never;

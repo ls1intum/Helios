@@ -22,7 +22,7 @@ import type {
   GetAllWorkflowsData,
   GetWorkflowByIdData,
   GetWorkflowsByStateData,
-  GetWorkflowRunUrlData,
+  GetLatestDeploymentWorkflowRunData,
   GetWorkflowsByRepositoryIdData,
   GetLatestWorkflowRunsByPullRequestIdAndHeadCommitData,
   GetLatestWorkflowRunsByBranchAndHeadCommitData,
@@ -68,7 +68,7 @@ import {
   getAllWorkflows,
   getWorkflowById,
   getWorkflowsByState,
-  getWorkflowRunUrl,
+  getLatestDeploymentWorkflowRun,
   getWorkflowsByRepositoryId,
   getLatestWorkflowRunsByPullRequestIdAndHeadCommit,
   getLatestWorkflowRunsByBranchAndHeadCommit,
@@ -439,12 +439,12 @@ export const getWorkflowsByStateOptions = (options: Options<GetWorkflowsByStateD
   });
 };
 
-export const getWorkflowRunUrlQueryKey = (options: Options<GetWorkflowRunUrlData>) => [createQueryKey('getWorkflowRunUrl', options)];
+export const getLatestDeploymentWorkflowRunQueryKey = (options: Options<GetLatestDeploymentWorkflowRunData>) => [createQueryKey('getLatestDeploymentWorkflowRun', options)];
 
-export const getWorkflowRunUrlOptions = (options: Options<GetWorkflowRunUrlData>) => {
+export const getLatestDeploymentWorkflowRunOptions = (options: Options<GetLatestDeploymentWorkflowRunData>) => {
   return queryOptions({
     queryFn: async ({ queryKey, signal }) => {
-      const { data } = await getWorkflowRunUrl({
+      const { data } = await getLatestDeploymentWorkflowRun({
         ...options,
         ...queryKey[0],
         signal,
@@ -452,7 +452,7 @@ export const getWorkflowRunUrlOptions = (options: Options<GetWorkflowRunUrlData>
       });
       return data;
     },
-    queryKey: getWorkflowRunUrlQueryKey(options),
+    queryKey: getLatestDeploymentWorkflowRunQueryKey(options),
   });
 };
 

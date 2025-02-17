@@ -5,8 +5,8 @@ import {
   getAllEnabledEnvironmentsOptions,
   getAllEnabledEnvironmentsQueryKey,
   getEnvironmentByIdQueryKey,
-  getWorkflowRunUrlOptions,
-  getWorkflowRunUrlQueryKey,
+  getLatestDeploymentWorkflowRunOptions,
+  getLatestDeploymentWorkflowRunQueryKey,
 } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 import { PermissionService } from '@app/core/services/permission.service';
@@ -55,13 +55,11 @@ export class ReleaseCandidateDeploymentTableComponent {
     },
   }));
 
-  workflowRunUrlQuery = injectQuery(() => ({
-    ...getWorkflowRunUrlOptions({
+  workflowRunQuery = injectQuery(() => ({
+    ...getLatestDeploymentWorkflowRunOptions({
       query: {
         branch: this.releaseCandidate().branch.name,
         commitSha: this.releaseCandidate().commit.sha,
-      },
-      path: {
         environmentId: this.selectedEnvironmentId() ?? 0,
       },
     }),
@@ -87,12 +85,10 @@ export class ReleaseCandidateDeploymentTableComponent {
         onSuccess: () => {
           this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Deployment started successfully' });
           this.queryClient.invalidateQueries({
-            queryKey: getWorkflowRunUrlQueryKey({
+            queryKey: getLatestDeploymentWorkflowRunQueryKey({
               query: {
                 branch: this.releaseCandidate().branch.name,
                 commitSha: this.releaseCandidate().commit.sha,
-              },
-              path: {
                 environmentId: environment.id,
               },
             }),

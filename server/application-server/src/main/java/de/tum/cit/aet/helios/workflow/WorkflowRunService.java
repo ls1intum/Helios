@@ -101,10 +101,12 @@ public class WorkflowRunService {
     return latestRuns.map(wr -> WorkflowRunDto.fromWorkflowRun(wr, includeTestSuites)).toList();
   }
 
-  public String getWorkflowRunUrl(String branch, String commitSha, Long environmentId) {
+  public WorkflowRunDto getLatestDeploymentWorkflowRun(
+      String branch, String commitSha, Long environmentId) {
     Workflow workflow = this.workflowService.getDeploymentWorkflowForEnv(environmentId);
-    return workflowRunRepository
-        .findFirstByHeadBranchAndHeadShaAndWorkflowOrderByCreatedAtDesc(branch, commitSha, workflow)
-        .getHtmlUrl();
+    WorkflowRun workflowRun =
+        workflowRunRepository.findFirstByHeadBranchAndHeadShaAndWorkflowOrderByCreatedAtDesc(
+            branch, commitSha, workflow);
+    return WorkflowRunDto.fromWorkflowRun(workflowRun, true);
   }
 }

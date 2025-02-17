@@ -56,9 +56,9 @@
           @if (userCanDeploy() && deploymentStatus(environment) === 'WAITING') {
             <p-button
               styleClass="p-button-success"
-              [loading]="workflowRunUrlQuery.isPending()"
-              [disabled]="!workflowRunUrlQuery.data()"
-              (onClick)="workflowRunUrlQuery.data() && openWorkflowUrl(workflowRunUrlQuery.data()!)"
+              [loading]="workflowRunQuery.isPending()"
+              [disabled]="!workflowRunQuery.data()"
+              (onClick)="workflowRunQuery.data() && openWorkflowUrl(workflowRunQuery.data()?.htmlUrl!)"
             >
               <ng-template pTemplate="content">
                 <div class="flex items-center gap-2">

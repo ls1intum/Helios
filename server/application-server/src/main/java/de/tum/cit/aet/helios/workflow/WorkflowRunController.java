@@ -36,13 +36,13 @@ public class WorkflowRunController {
     return ResponseEntity.ok(workflowRuns);
   }
 
-  @GetMapping("/runs/{environmentId}")
-  public ResponseEntity<Optional<String>> getWorkflowRunUrl(
-      @PathVariable Long environmentId,
+  @GetMapping("/run")
+  public ResponseEntity<Optional<WorkflowRunDto>> getLatestDeploymentWorkflowRun(
+      @RequestParam Long environmentId,
       @RequestParam String branch,
       @RequestParam String commitSha) {
-    String getWorkflowRunUrl =
-        workflowRunService.getWorkflowRunUrl(branch, commitSha, environmentId);
-    return ResponseEntity.ok(Optional.ofNullable(getWorkflowRunUrl));
+    WorkflowRunDto run =
+        workflowRunService.getLatestDeploymentWorkflowRun(branch, commitSha, environmentId);
+    return ResponseEntity.ok(Optional.ofNullable(run));
   }
 }

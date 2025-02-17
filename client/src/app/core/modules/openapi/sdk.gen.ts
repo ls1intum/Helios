@@ -28,8 +28,8 @@ import type {
   GetWorkflowByIdResponse,
   GetWorkflowsByStateData,
   GetWorkflowsByStateResponse,
-  GetWorkflowRunUrlData,
-  GetWorkflowRunUrlResponse,
+  GetLatestDeploymentWorkflowRunData,
+  GetLatestDeploymentWorkflowRunResponse,
   GetWorkflowsByRepositoryIdData,
   GetWorkflowsByRepositoryIdResponse,
   GetLatestWorkflowRunsByPullRequestIdAndHeadCommitData,
@@ -227,10 +227,10 @@ export const getWorkflowsByState = <ThrowOnError extends boolean = false>(option
   });
 };
 
-export const getWorkflowRunUrl = <ThrowOnError extends boolean = false>(options: Options<GetWorkflowRunUrlData, ThrowOnError>) => {
-  return (options?.client ?? client).get<GetWorkflowRunUrlResponse, unknown, ThrowOnError>({
+export const getLatestDeploymentWorkflowRun = <ThrowOnError extends boolean = false>(options: Options<GetLatestDeploymentWorkflowRunData, ThrowOnError>) => {
+  return (options?.client ?? client).get<GetLatestDeploymentWorkflowRunResponse, unknown, ThrowOnError>({
     ...options,
-    url: '/api/workflows/runs/{environmentId}',
+    url: '/api/workflows/run',
   });
 };
 

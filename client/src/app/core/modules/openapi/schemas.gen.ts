@@ -486,7 +486,7 @@ export const WorkflowRunDtoSchema = {
     },
     label: {
       type: 'string',
-      enum: ['BUILD', 'DEPLOYMENT', 'NONE', 'TEST'],
+      enum: ['NONE', 'DEPLOY_TEST_SERVER', 'DEPLOY_STAGING_SERVER', 'DEPLOY_PRODUCTION_SERVER', 'TEST'],
     },
     testProcessingStatus: {
       type: 'string',

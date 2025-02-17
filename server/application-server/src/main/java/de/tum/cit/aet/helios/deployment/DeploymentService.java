@@ -22,12 +22,14 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 
 @Log4j2
 @Service
 @Transactional
+@RequiredArgsConstructor
 public class DeploymentService {
 
   private final DeploymentRepository deploymentRepository;
@@ -39,27 +41,6 @@ public class DeploymentService {
   private final EnvironmentLockHistoryRepository lockHistoryRepository;
   private final EnvironmentRepository environmentRepository;
   private final BranchService branchService;
-
-  public DeploymentService(
-      DeploymentRepository deploymentRepository,
-      GitHubService gitHubService,
-      EnvironmentService environmentService,
-      WorkflowService workflowService,
-      AuthService authService,
-      HeliosDeploymentRepository heliosDeploymentRepository,
-      BranchService branchService,
-      EnvironmentLockHistoryRepository lockHistoryRepository,
-      EnvironmentRepository environmentRepository) {
-    this.deploymentRepository = deploymentRepository;
-    this.gitHubService = gitHubService;
-    this.environmentService = environmentService;
-    this.workflowService = workflowService;
-    this.authService = authService;
-    this.heliosDeploymentRepository = heliosDeploymentRepository;
-    this.lockHistoryRepository = lockHistoryRepository;
-    this.environmentRepository = environmentRepository;
-    this.branchService = branchService;
-  }
 
   public Optional<DeploymentDto> getDeploymentById(Long id) {
     return deploymentRepository.findById(id).map(DeploymentDto::fromDeployment);
