@@ -1,13 +1,20 @@
 package de.tum.cit.aet.helios.util;
 
 import de.tum.cit.aet.helios.http.RateLimitInfo;
+import de.tum.cit.aet.helios.http.RateLimitInfoHolder;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 
 /**
  * Utility class for formatting rate limit information.
  */
+@Log4j2
+@RequiredArgsConstructor
 public class RateLimitUtil {
+
+  private final RateLimitInfoHolder rateLimitInfoHolder;
 
   private static final String DATE_PATTERN = "dd/MM/yyyy HH:mm:ss";
 
@@ -53,5 +60,16 @@ public class RateLimitUtil {
         formatRateLimitMessage("Before Sync", before),
         formatRateLimitMessage("After Sync", after),
         tokensUsed);
+  }
+
+  public void logRateLimit(String label) {
+    RateLimitInfo info = rateLimitInfoHolder.getLatestRateLimitInfo();
+    String message = RateLimitUtil.formatRateLimitMessage(label, info);
+    log.info(message);
+  }
+
+  public void logRateLimitSummary(RateLimitInfo before, RateLimitInfo after) {
+    String summary = RateLimitUtil.formatRateLimitSummary(before, after);
+    log.info(summary);
   }
 }
