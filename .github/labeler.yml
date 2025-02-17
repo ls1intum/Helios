@@ -2,6 +2,10 @@ application-server:
   - changed-files:
       - any-glob-to-any-file: server/application-server/**
 
+migration-script:
+  - changed-files:
+      - any-glob-to-any-file: server/application-server/src/main/resources/db/migration/**
+
 notification-server:
   - changed-files:
       - any-glob-to-any-file: server/notification/**
