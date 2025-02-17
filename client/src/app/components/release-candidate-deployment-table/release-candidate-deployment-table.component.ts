@@ -1,5 +1,5 @@
 import { Component, computed, inject, input, signal } from '@angular/core';
-import { EnvironmentDto, getReleaseCandidateByName, ReleaseCandidateDetailsDto } from '@app/core/modules/openapi';
+import { EnvironmentDto, ReleaseCandidateDetailsDto } from '@app/core/modules/openapi';
 import {
   deployToEnvironmentMutation,
   getAllEnabledEnvironmentsOptions,
