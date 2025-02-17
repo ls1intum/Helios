@@ -46,13 +46,15 @@
     </ng-template>
     <ng-template pTemplate="body" let-project>
       <tr class="cursor-pointer" (click)="navigateToProject(project)">
-        <td>
+        <td class="w-full">
           <div class="flex flex-wrap items-center gap-2">
             <span class="font-bold">{{ project.name }}</span>
           </div>
-          <div class="flex mt-2.5 gap-2 items-center text-xs">
-            {{ project.description }}
-          </div>
+          @if (project.description) {
+            <div class="flex mt-2.5 gap-2 items-center text-xs">
+              {{ project.description }}
+            </div>
+          }
         </td>
 
         <td>
