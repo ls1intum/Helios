@@ -55,6 +55,8 @@ import {
   IconClock,
   IconTag,
   IconX,
+  IconChevronsRight,
+  IconCircleChevronsRight,
   IconFileText,
 } from 'angular-tabler-icons/icons';
 
@@ -87,6 +89,8 @@ const icons = {
   IconGitPullRequestDraft,
   IconGitMerge,
   IconChevronRight,
+  IconChevronsRight,
+  IconCircleChevronsRight,
   IconChevronDown,
   IconChevronUp,
   IconChevronLeft,

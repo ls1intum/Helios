@@ -26,7 +26,6 @@ public class GitHubWorkflowRunConverter
     workflowRun.setName(source.getName());
     workflowRun.setDisplayTitle(source.getDisplayTitle());
     workflowRun.setRunNumber(source.getRunNumber());
-    workflowRun.setWorkflowId(source.getWorkflowId());
     workflowRun.setRunAttempt(source.getRunAttempt());
     try {
       workflowRun.setRunStartedAt(DateUtil.convertToOffsetDateTime(source.getRunStartedAt()));

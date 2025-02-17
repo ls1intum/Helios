@@ -5,9 +5,9 @@ import de.tum.cit.aet.helios.environment.Environment;
 import de.tum.cit.aet.helios.environment.EnvironmentLockHistory;
 import de.tum.cit.aet.helios.environment.EnvironmentLockHistoryRepository;
 import de.tum.cit.aet.helios.environment.EnvironmentRepository;
-import de.tum.cit.aet.helios.environment.github.GitHubEnvironmentSyncService;
 import de.tum.cit.aet.helios.github.GitHubFacade;
 import de.tum.cit.aet.helios.github.GitHubMessageHandler;
+import de.tum.cit.aet.helios.github.sync.GitHubDataSyncOrchestrator;
 import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import de.tum.cit.aet.helios.user.User;
@@ -31,30 +31,30 @@ public class GitHubDeploymentStatusMessageHandler
   private final GitHubDeploymentSyncService deploymentSyncService;
   private final GitRepoRepository gitRepoRepository;
   private final EnvironmentRepository environmentRepository;
-  private final GitHubEnvironmentSyncService environmentSyncService;
   private final DeploymentSourceFactory deploymentSourceFactory;
   private final GitHubUserSyncService userSyncService;
   private final EnvironmentLockHistoryRepository environmentLockHistoryRepository;
   private final GitHubFacade github;
+  private final GitHubDataSyncOrchestrator gitHubDataSyncOrchestrator;
 
   private GitHubDeploymentStatusMessageHandler(
       GitHubDeploymentSyncService deploymentSyncService,
       GitRepoRepository gitRepoRepository,
       EnvironmentRepository environmentRepository,
-      GitHubEnvironmentSyncService environmentSyncService,
       DeploymentSourceFactory deploymentSourceFactory,
       GitHubUserSyncService userSyncService,
       EnvironmentLockHistoryRepository environmentLockHistoryRepository,
-      GitHubFacade github) {
+      GitHubFacade github,
+      GitHubDataSyncOrchestrator gitHubDataSyncOrchestrator) {
     super(GHEventPayload.DeploymentStatus.class);
     this.deploymentSyncService = deploymentSyncService;
     this.gitRepoRepository = gitRepoRepository;
     this.environmentRepository = environmentRepository;
-    this.environmentSyncService = environmentSyncService;
     this.deploymentSourceFactory = deploymentSourceFactory;
     this.userSyncService = userSyncService;
     this.environmentLockHistoryRepository = environmentLockHistoryRepository;
     this.github = github;
+    this.gitHubDataSyncOrchestrator = gitHubDataSyncOrchestrator;
   }
 
   @Override
@@ -106,7 +106,7 @@ public class GitHubDeploymentStatusMessageHandler
           environmentName,
           repository.getNameWithOwner());
       // Sync environments of the repository
-      environmentSyncService.syncEnvironmentsOfRepository(eventPayload.getRepository());
+      gitHubDataSyncOrchestrator.syncEnvironmentsOfRepository(eventPayload.getRepository());
 
       // Re-check for the environment after syncing
       environment = environmentRepository.findByNameAndRepository(environmentName, repository);

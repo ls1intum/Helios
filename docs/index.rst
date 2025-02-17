@@ -35,10 +35,11 @@ The Artemis open-source project relies on GitHub Actions for its CI/CD workflows
   development/local/testing
 
 .. toctree::
-  :caption: Setup production
+  :caption: Production
   :includehidden:
   :maxdepth: 3
 
+  development/production/ls1intum
   development/production/setup
 
 .. toctree::

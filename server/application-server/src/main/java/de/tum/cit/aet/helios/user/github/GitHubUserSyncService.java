@@ -1,47 +1,52 @@
 package de.tum.cit.aet.helios.user.github;
 
-import de.tum.cit.aet.helios.github.GitHubFacade;
 import de.tum.cit.aet.helios.user.User;
 import de.tum.cit.aet.helios.user.UserRepository;
 import de.tum.cit.aet.helios.util.DateUtil;
-import jakarta.transaction.Transactional;
 import java.io.IOException;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.hibernate.exception.ConstraintViolationException;
 import org.kohsuke.github.GHUser;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Log4j2
+@RequiredArgsConstructor
 public class GitHubUserSyncService {
 
-  private final GitHubFacade github;
   private final UserRepository userRepository;
   private final GitHubUserConverter userConverter;
 
-  public GitHubUserSyncService(
-      GitHubFacade github, UserRepository userRepository, GitHubUserConverter userConverter) {
-    this.github = github;
-    this.userRepository = userRepository;
-    this.userConverter = userConverter;
-  }
 
-  /** Sync all existing users in the local repository with their GitHub data. */
-  public void syncAllExistingUsers() {
-    userRepository.findAll().stream().map(User::getLogin).forEach(this::syncUser);
-  }
-
-  /**
-   * Sync a GitHub user's data by their login and processes it to synchronize with the local
-   * repository.
-   *
-   * @param login The GitHub username (login) of the user to fetch.
-   */
-  public User syncUser(String login) {
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
+  public User getAnonymousUser() {
+    Long anonId = -1L;
     try {
-      return processUser(github.getUser(login));
-    } catch (IOException e) {
-      log.error("Failed to fetch user {}: {}", login, e.getMessage());
+      var existingAnonOpt = userRepository.findById(anonId);
+      return existingAnonOpt.orElseGet(() -> createAnonymousUser(anonId));
+    } catch (Exception e) {
+      log.error("Failed to get anonymous user for ID {}: {}", anonId, e.getMessage());
       return null;
+    }
+  }
+
+  private User createAnonymousUser(Long anonId) {
+    try {
+      User anonUser = userConverter.convertToAnonymous();
+      anonUser = userRepository.saveAndFlush(anonUser);
+      return anonUser;
+    } catch (DataIntegrityViolationException | ConstraintViolationException ex) {
+      // concurrency fallback: someone else created ID -1 in parallel
+      log.warn("Concurrent insert detected for anonymous user {}, fallback read.", anonId);
+      return userRepository.findById(anonId).orElse(null);
+    } catch (Exception e) {
+      log.error("Failed to create anonymous user {}: {}", anonId, e.getMessage());
+      // fallback read
+      return userRepository.findById(anonId).orElse(null);
     }
   }
 
@@ -51,9 +56,9 @@ public class GitHubUserSyncService {
    *
    * @param ghUser The GitHub user data to process.
    * @return The updated or newly created User entity, or {@code null} if an error occurred during
-   *     update.
+   *      update.
    */
-  @Transactional
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
   public User processUser(GHUser ghUser) {
     var result =
         userRepository
@@ -63,9 +68,9 @@ public class GitHubUserSyncService {
                   try {
                     if (user.getUpdatedAt() == null
                         || (ghUser.getUpdatedAt() != null
-                            && user.getUpdatedAt()
-                                .isBefore(
-                                    DateUtil.convertToOffsetDateTime(ghUser.getUpdatedAt())))) {
+                        && user.getUpdatedAt()
+                        .isBefore(
+                            DateUtil.convertToOffsetDateTime(ghUser.getUpdatedAt())))) {
                       return userConverter.update(ghUser, user);
                     }
                     return user;

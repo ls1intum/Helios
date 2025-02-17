@@ -46,6 +46,31 @@ public abstract class GitHubMessageHandler<T extends GHEventPayload> implements 
   }
 
   /**
+   * Determines whether this event applies globally across
+   * all repositories or is specific to individual repositories.
+   *
+   * <p>By default, this method returns {@code false},
+   * meaning the event is associated with a specific repository
+   * and will be monitored separately for each repository configured in the system.
+   *
+   * <p>If overridden to return {@code true},
+   * the event is considered global,
+   * meaning it is not tied to any particular
+   * repository and will be handled as a single event across all repositories.
+   *
+   * <p>The NATS consumer uses this method to determine the appropriate subjects to subscribe to.
+   * For example, events like {@code installation_repositories}
+   * should be marked as global since they apply to all repositories
+   * within an installation rather than a single repository.
+   *
+   * @return {@code true} if the event is global and
+   *      applies to all repositories; {@code false} if it is repository-specific.
+   */
+  public boolean isGlobalEvent() {
+    return false;
+  }
+
+  /**
    * Handles the parsed event payload.
    *
    * @param eventPayload The parsed GHEventPayload.

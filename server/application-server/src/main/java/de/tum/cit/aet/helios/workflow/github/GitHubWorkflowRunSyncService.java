@@ -2,7 +2,6 @@ package de.tum.cit.aet.helios.workflow.github;
 
 import static de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment.mapWorkflowRunStatus;
 
-import de.tum.cit.aet.helios.github.GitHubFacade;
 import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
@@ -10,110 +9,30 @@ import de.tum.cit.aet.helios.pullrequest.PullRequest;
 import de.tum.cit.aet.helios.pullrequest.PullRequestRepository;
 import de.tum.cit.aet.helios.util.DateUtil;
 import de.tum.cit.aet.helios.workflow.Workflow;
+import de.tum.cit.aet.helios.workflow.WorkflowRepository;
 import de.tum.cit.aet.helios.workflow.WorkflowRun;
 import de.tum.cit.aet.helios.workflow.WorkflowRunRepository;
 import de.tum.cit.aet.helios.workflow.WorkflowService;
 import jakarta.transaction.Transactional;
 import java.io.IOException;
-import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
 import java.util.Set;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GHWorkflowRun;
 import org.springframework.stereotype.Service;
 
 @Log4j2
 @Service
+@RequiredArgsConstructor
 public class GitHubWorkflowRunSyncService {
   private final WorkflowRunRepository workflowRunRepository;
   private final GitHubWorkflowRunConverter workflowRunConverter;
   private final GitRepoRepository gitRepoRepository;
   private final PullRequestRepository pullRequestRepository;
+  private final WorkflowRepository workflowRepository;
   private final WorkflowService workflowService;
   private final HeliosDeploymentRepository heliosDeploymentRepository;
-  private final GitHubFacade github;
-
-  public GitHubWorkflowRunSyncService(
-      WorkflowRunRepository workflowRunRepository,
-      GitHubWorkflowRunConverter workflowRunConverter,
-      GitRepoRepository gitRepoRepository,
-      PullRequestRepository pullRequestRepository,
-      WorkflowService workflowService,
-      HeliosDeploymentRepository heliosDeploymentRepository,
-      GitHubFacade github) {
-    this.workflowRunRepository = workflowRunRepository;
-    this.workflowRunConverter = workflowRunConverter;
-    this.gitRepoRepository = gitRepoRepository;
-    this.pullRequestRepository = pullRequestRepository;
-    this.workflowService = workflowService;
-    this.heliosDeploymentRepository = heliosDeploymentRepository;
-    this.github = github;
-  }
-
-  /**
-   * Synchronizes all workflow runs from the specified GitHub repositories.
-   *
-   * @param repositories the list of GitHub repositories to sync workflow runs from
-   * @param since an optional date to filter pull requests by their last update
-   * @return a list of GitHub workflow runs that were successfully fetched and processed
-   */
-  public List<GHWorkflowRun> syncRunsOfAllRepositories(
-      List<GHRepository> repositories, Optional<OffsetDateTime> since) {
-    return repositories.stream()
-        .map(repository -> syncRunsOfRepository(repository, since))
-        .flatMap(List::stream)
-        .toList();
-  }
-
-  /**
-   * Synchronizes all workflow runs from a specific GitHub repository.
-   *
-   * @param repository the GitHub repository to sync workflow runs from
-   * @param since an optional date to filter workflow runs by their last update
-   * @return a list of GitHub workflow runs requests that were successfully fetched and processed
-   */
-  public List<GHWorkflowRun> syncRunsOfRepository(
-      GHRepository repository, Optional<OffsetDateTime> since) {
-    var iterator = repository.queryWorkflowRuns().list().withPageSize(100).iterator();
-
-    var sinceDate = since.map(date -> Date.from(date.toInstant()));
-
-    var workflowRuns = new ArrayList<GHWorkflowRun>();
-
-    while (iterator.hasNext()) {
-      var ghWorkflowRuns = iterator.nextPage();
-      var keepWorkflowRuns =
-          ghWorkflowRuns.stream()
-              .filter(
-                  ghWorkflowRun -> {
-                    try {
-                      return sinceDate.isEmpty()
-                          || ghWorkflowRun.getUpdatedAt().after(sinceDate.get());
-                    } catch (IOException e) {
-                      log.error(
-                          "Failed to filter workflow run {}: {}",
-                          ghWorkflowRun.getId(),
-                          e.getMessage());
-                      return false;
-                    }
-                  })
-              .toList();
-
-      workflowRuns.addAll(keepWorkflowRuns);
-      if (keepWorkflowRuns.size() != ghWorkflowRuns.size()) {
-        break;
-      }
-    }
-
-    workflowRuns.forEach(this::processRun);
-
-    return workflowRuns;
-  }
 
   @Transactional
   public WorkflowRun processRun(GHWorkflowRun ghWorkflowRun) {
@@ -155,6 +74,21 @@ public class GitHubWorkflowRunSyncService {
       }
     }
 
+    if (result.getWorkflow() == null) {
+      var workflow = workflowRepository.findById(ghWorkflowRun.getWorkflowId());
+
+      // We don't want to create runs for workflows that are not in our database
+      if (workflow.isEmpty()) {
+        log.warn(
+            "Workflow {} not found in database, skipping workflow run {}",
+            ghWorkflowRun.getWorkflowId(),
+            ghWorkflowRun.getId());
+        return null;
+      }
+
+      result.setWorkflow(workflow.get());
+    }
+
     try {
       Set<PullRequest> pullRequests = new HashSet<>();
 
@@ -187,7 +121,9 @@ public class GitHubWorkflowRunSyncService {
           e.getMessage());
     }
 
-    return workflowRunRepository.save(result);
+    workflowRunRepository.save(result);
+
+    return result;
   }
 
   private void processRunForHeliosDeployment(GHWorkflowRun workflowRun) throws IOException {
