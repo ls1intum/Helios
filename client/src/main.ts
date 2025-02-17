@@ -13,6 +13,8 @@ Sentry.init({
   integrations: [Sentry.browserTracingIntegration(), Sentry.replayIntegration()],
   // Our sample rate for tracing is 20% in production
   tracesSampleRate: environment.production ? 0.2 : 1.0,
+  replaysSessionSampleRate: 0.0,
+  replaysOnErrorSampleRate: 1.0,
 });
 
 bootstrapApplication(AppComponent, appConfig).catch(err => console.error(err));
