@@ -7,11 +7,9 @@ import de.tum.cit.aet.helios.environment.EnvironmentLockHistory;
 import de.tum.cit.aet.helios.environment.EnvironmentLockHistoryRepository;
 import de.tum.cit.aet.helios.environment.EnvironmentRepository;
 import de.tum.cit.aet.helios.environment.EnvironmentService;
-import de.tum.cit.aet.helios.filters.RepositoryContext;
 import de.tum.cit.aet.helios.github.GitHubService;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
-import de.tum.cit.aet.helios.user.User;
 import de.tum.cit.aet.helios.workflow.Workflow;
 import de.tum.cit.aet.helios.workflow.WorkflowService;
 import jakarta.transaction.Transactional;
@@ -24,12 +22,14 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 
 @Log4j2
 @Service
 @Transactional
+@RequiredArgsConstructor
 public class DeploymentService {
 
   private final DeploymentRepository deploymentRepository;
@@ -41,27 +41,6 @@ public class DeploymentService {
   private final EnvironmentLockHistoryRepository lockHistoryRepository;
   private final EnvironmentRepository environmentRepository;
   private final BranchService branchService;
-
-  public DeploymentService(
-      DeploymentRepository deploymentRepository,
-      GitHubService gitHubService,
-      EnvironmentService environmentService,
-      WorkflowService workflowService,
-      AuthService authService,
-      HeliosDeploymentRepository heliosDeploymentRepository,
-      BranchService branchService,
-      EnvironmentLockHistoryRepository lockHistoryRepository,
-      EnvironmentRepository environmentRepository) {
-    this.deploymentRepository = deploymentRepository;
-    this.gitHubService = gitHubService;
-    this.environmentService = environmentService;
-    this.workflowService = workflowService;
-    this.authService = authService;
-    this.heliosDeploymentRepository = heliosDeploymentRepository;
-    this.lockHistoryRepository = lockHistoryRepository;
-    this.environmentRepository = environmentRepository;
-    this.branchService = branchService;
-  }
 
   public Optional<DeploymentDto> getDeploymentById(Long id) {
     return deploymentRepository.findById(id).map(DeploymentDto::fromDeployment);
@@ -86,75 +65,152 @@ public class DeploymentService {
   }
 
   public void deployToEnvironment(DeployRequest deployRequest) {
-    // TODO: Check DeployRequest validity before calling this method
+    validateDeployRequest(deployRequest);
+
+    Environment.Type environmentType =
+        validateEnvironmentAndPermissions(deployRequest.environmentId());
+    String commitSha = determineCommitSha(deployRequest, environmentType);
+
+    Environment environment = lockEnvironment(deployRequest.environmentId());
+    Workflow deploymentWorkflow =
+        workflowService.getDeploymentWorkflowForEnv(deployRequest.environmentId());
+
+    HeliosDeployment heliosDeployment =
+        createHeliosDeployment(environment, deployRequest, commitSha);
+    Map<String, Object> workflowParams =
+        createWorkflowParams(environmentType, deployRequest, environment);
+
+    dispatchWorkflow(
+        environment, deploymentWorkflow, deployRequest, workflowParams, heliosDeployment);
+  }
+
+  private void validateDeployRequest(DeployRequest deployRequest) {
     if (deployRequest.environmentId() == null || deployRequest.branchName() == null) {
       throw new DeploymentException("Environment ID and branch name must not be null");
     }
+  }
 
-    // Get the user ID of the user who triggered the deployment
-    final String user = this.authService.getUserId();
-    // Get the username of the user who triggered the deployment
-    final String username = this.authService.getPreferredUsername();
+  private Environment.Type validateEnvironmentAndPermissions(Long environmentId) {
+    Environment.Type environmentType =
+        this.environmentService
+            .getEnvironmentTypeById(environmentId)
+            .orElseThrow(() -> new DeploymentException("Environment not found"));
 
-    // Get the deployment workflow set by the managers
-    Workflow deploymentWorkflow =
-        this.workflowService.getDeploymentWorkflow(RepositoryContext.getRepositoryId());
-    if (deploymentWorkflow == null) {
-      throw new DeploymentException("No deployment workflow found");
+    if (!canDeployToEnvironment(environmentType)) {
+      throw new SecurityException("Insufficient permissions to deploy to this environment");
     }
-    final String deploymentWorkflowFileName = deploymentWorkflow.getFileNameWithExtension();
 
-    // Get the latest sha of the branch
-    final String branchCommitSha =
-        this.branchService
+    return environmentType;
+  }
+
+  private String determineCommitSha(DeployRequest deployRequest, Environment.Type environmentType) {
+    String commitSha = deployRequest.commitSha();
+
+    if (environmentType == Environment.Type.PRODUCTION
+        || environmentType == Environment.Type.STAGING) {
+      if (commitSha == null) {
+        throw new DeploymentException(
+            "Commit SHA should be provided for production/staging deployments");
+      }
+      return commitSha;
+    }
+
+    return commitSha != null
+        ? commitSha
+        : this.branchService
             .getBranchByName(deployRequest.branchName())
             .orElseThrow(() -> new DeploymentException("Branch not found"))
             .commitSha();
+  }
 
-    // Lock the environment
+  private Environment lockEnvironment(Long environmentId) {
+    // First, get the environment
     Environment environment =
-        this.environmentService
-            .lockEnvironment(deployRequest.environmentId())
-            .orElseThrow(() -> new DeploymentException("Environment was already locked"));
+        environmentRepository
+            .findById(environmentId)
+            .orElseThrow(() -> new DeploymentException("Environment not found"));
 
-    // Get the repository name with owners
-    final String repoNameWithOwners = environment.getRepository().getNameWithOwner();
+    // Only attempt to lock if it's a test environment
+    if (environment.getType() == Environment.Type.TEST) {
+      environment =
+          this.environmentService
+              .lockEnvironment(environmentId)
+              .orElseThrow(() -> new DeploymentException("Environment was already locked"));
+    }
 
-    // 20 minutes timeout for re-deployment
     if (!canRedeploy(environment, 20)) {
       throw new DeploymentException("Deployment is still in progress, please wait.");
     }
 
-    User githubUser = this.authService.getUserFromGithubId();
-    // Create a new HeliosDeployment record
+    return environment;
+  }
+
+  private HeliosDeployment createHeliosDeployment(
+      Environment environment, DeployRequest deployRequest, String commitSha) {
     HeliosDeployment heliosDeployment = new HeliosDeployment();
     heliosDeployment.setEnvironment(environment);
-    heliosDeployment.setUser(user);
+    heliosDeployment.setUser(authService.getUserId());
     heliosDeployment.setStatus(HeliosDeployment.Status.WAITING);
     heliosDeployment.setBranchName(deployRequest.branchName());
-    heliosDeployment.setSha(branchCommitSha);
-    heliosDeployment.setCreator(githubUser);
-    heliosDeployment = heliosDeploymentRepository.saveAndFlush(heliosDeployment);
+    heliosDeployment.setSha(commitSha);
+    heliosDeployment.setCreator(authService.getUserFromGithubId());
+    return heliosDeploymentRepository.saveAndFlush(heliosDeployment);
+  }
 
-    // Build parameters for the workflow
+  private Map<String, Object> createWorkflowParams(
+      Environment.Type environmentType, DeployRequest deployRequest, Environment environment) {
     Map<String, Object> workflowParams = new HashMap<>();
-    workflowParams.put("triggered_by", username);
+
+    if (environmentType == Environment.Type.PRODUCTION
+        || environmentType == Environment.Type.STAGING) {
+      workflowParams.put("commit_sha", deployRequest.commitSha());
+    } else if (environmentType == Environment.Type.TEST) {
+      workflowParams.put("triggered_by", authService.getPreferredUsername());
+    }
     workflowParams.put("branch_name", deployRequest.branchName());
     workflowParams.put("environment_name", environment.getName());
 
+    return workflowParams;
+  }
+
+  public boolean canDeployToEnvironment(Environment.Type environmentType) {
+    if (null != environmentType) {
+      switch (environmentType) {
+        case PRODUCTION -> {
+          return authService.hasRole("ROLE_ADMIN");
+        }
+        case STAGING -> {
+          return authService.hasRole("ROLE_ADMIN");
+        }
+        case TEST -> {
+          return authService.hasRole("ROLE_WRITE")
+              || authService.hasRole("ROLE_MAINTAINER")
+              || authService.hasRole("ROLE_ADMIN");
+        }
+        default -> {}
+      }
+    }
+    return false;
+  }
+
+  private void dispatchWorkflow(
+      Environment environment,
+      Workflow deploymentWorkflow,
+      DeployRequest deployRequest,
+      Map<String, Object> workflowParams,
+      HeliosDeployment heliosDeployment) {
     heliosDeployment.setWorkflowParams(workflowParams);
     heliosDeploymentRepository.save(heliosDeployment);
 
     try {
       this.gitHubService.dispatchWorkflow(
-          repoNameWithOwners,
-          deploymentWorkflowFileName,
+          environment.getRepository().getNameWithOwner(),
+          deploymentWorkflow.getFileNameWithExtension(),
           deployRequest.branchName(),
           workflowParams);
 
       this.environmentService.markStatusAsChanged(environment);
     } catch (IOException e) {
-      // Don't need to unlock the environment, since user might want to re-deploy
       heliosDeployment.setStatus(HeliosDeployment.Status.IO_ERROR);
       heliosDeploymentRepository.save(heliosDeployment);
       throw new DeploymentException("Failed to dispatch workflow due to IOException", e);

@@ -2,9 +2,10 @@
   <p-table [value]="[1, 2, 3, 4, 5]">
     <ng-template pTemplate="header">
       <tr>
-        <th>Name</th>
-        <th>Status</th>
-        <th>Deploy</th>
+        <th class="w-[30%]">Name</th>
+        <th class="w-[40%]">Status</th>
+        <th class="w-[15%]">Deploy</th>
+        <th class="w-[15%]">Actions</th>
       </tr>
     </ng-template>
     <ng-template pTemplate="body">
@@ -14,77 +15,54 @@
         </td>
         <td class="w-[0.1%]"><p-skeleton class="w-96" /></td>
         <td class="w-[0.1%]">
-          <p-button disabled pTooltip="Deployment will be available soon here!">Deploy</p-button>
+          <p-button disabled>Deploy</p-button>
         </td>
       </tr>
     </ng-template>
   </p-table>
 } @else {
-  <p-table #table [rowHover]="true" [value]="environmentQuery.data() || []" [paginator]="true" [rows]="20">
+  <p-table #table [rowHover]="true" [value]="deployableEnvironments() || []" [paginator]="true" [rows]="20">
     <ng-template #header>
       <tr>
-        <th>Name</th>
-        <th>Status</th>
-        <th>Deploy</th>
+        <th class="w-[30%]">Name</th>
+        <th class="w-[40%]">Status</th>
+        <th class="w-[15%]">Deploy</th>
+        <th class="w-[15%]">Actions</th>
       </tr>
     </ng-template>
     <ng-template pTemplate="body" let-environment>
       <tr>
         <td>
-          {{ environment.name }}
+          <span class="flex items-center gap-2">
+            {{ environment.name }}
+            @if (environment.serverUrl) {
+              <span [pTooltip]="'Open Environment'" class="cursor-pointer hover:bg-gray-200 px-2 py-1 rounded flex items-center" (click)="openEnvironment($event, environment)">
+                <i-tabler name="external-link" />
+              </span>
+            }
+          </span>
         </td>
         <td>
-          @switch (deploymentStatus(environment)) {
-            @case ('SUCCESS') {
-              <p-tag value="success" class="text-xs" severity="success" />
-            }
-            @case ('REPLACED') {
-              <div class="flex items-center gap-1">
-                <p-tag value="replaced" class="text-xs" severity="contrast" />
-                now at
-                @if (environment.latestDeployment.releaseCandidateName) {
-                  <p-tag class="text-xs">
-                    <i-tabler name="git-branch" class="!size-4" />
-                    {{ environment.latestDeployment.releaseCandidateName }}
-                  </p-tag>
-                } @else {
-                  <p-tag class="text-xs">
-                    <i-tabler name="git-branch" class="!size-4" />
-                    {{ environment.latestDeployment.ref }}
-                  </p-tag>
-                }
-              </div>
-            }
-            @case ('FAILURE') {
-              <p-tag value="failed" class="text-xs" severity="danger" />
-            }
-            @case ('NEVER_DEPLOYED') {
-              <div class="flex items-center gap-1">
-                @if (environment.latestDeployment.releaseCandidateName) {
-                  now at
-                  <p-tag class="text-xs">
-                    <i-tabler name="git-branch" class="!size-4" />
-                    {{ environment.latestDeployment.releaseCandidateName }}
-                  </p-tag>
-                } @else if (environment.latestDeployment.ref) {
-                  now at
-                  <p-tag class="text-xs">
-                    <i-tabler name="git-branch" class="!size-4" />
-                    {{ environment.latestDeployment.ref }}
-                  </p-tag>
-                } @else {
-                  no release candidate deployed yet
-                }
-              </div>
-            }
-            @default {
-              <p-tag value="unknown" class="text-xs" />
-              now at {{ environment.latestDeployment.releaseCandidateName }}
-            }
+          <div class="flex items-center gap-2">
+            <app-deployment-state-tag [state]="deploymentStatus(environment)" [verbose]="true" [showLatestDeployment]="true" [latestDeployment]="environment.latestDeployment" />
+          </div>
+        </td>
+        <td>
+          @if (userCanDeploy()) {
+            <p-button (onClick)="deployReleaseCandidate(environment)" [loading]="deployToEnvironment.isPending() && selectedEnvironmentId() === environment.id"> Deploy </p-button>
           }
         </td>
         <td>
-          <p-button disabled pTooltip="Deployment will be available soon here!">Deploy</p-button>
+          @if (userCanDeploy() && deploymentStatus(environment) === 'WAITING' && environment.latestDeployment?.workflowRunHtmlUrl) {
+            <p-button styleClass="p-button-success" (onClick)="openWorkflowUrl(environment.latestDeployment.workflowRunHtmlUrl)">
+              <ng-template pTemplate="content">
+                <div class="flex items-center gap-2">
+                  <span>Approve</span>
+                  <i-tabler name="external-link" class="!size-4" />
+                </div>
+              </ng-template>
+            </p-button>
+          }
         </td>
       </tr>
     </ng-template>
