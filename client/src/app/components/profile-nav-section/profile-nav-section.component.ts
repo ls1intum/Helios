@@ -8,13 +8,13 @@ import { ChipModule } from 'primeng/chip';
 import { DataViewModule } from 'primeng/dataview';
 import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
-import { TooltipModule } from 'primeng/tooltip';
+import { Tooltip } from 'primeng/tooltip';
 import { DividerModule } from 'primeng/divider';
 import { AvatarModule } from 'primeng/avatar';
 
 @Component({
   selector: 'app-profile-nav-section',
-  imports: [ToastModule, TooltipModule, DividerModule, AvatarModule, DataViewModule, ButtonModule, TagModule, CommonModule, CardModule, ChipModule, IconsModule],
+  imports: [ToastModule, Tooltip, DividerModule, AvatarModule, DataViewModule, ButtonModule, TagModule, CommonModule, CardModule, ChipModule, IconsModule],
   templateUrl: './profile-nav-section.component.html',
 })
 export class ProfileNavSectionComponent {
@@ -28,16 +28,6 @@ export class ProfileNavSectionComponent {
 
   logout() {
     this.keycloakService.logout();
-  }
-
-  initials() {
-    if (!this.isLoggedIn()) {
-      return '';
-    }
-
-    const profile = this.keycloakService.profile;
-
-    return `${profile?.firstName?.charAt(0) ?? ''}${profile?.lastName?.charAt(0) ?? ''}`;
   }
 
   fullName() {
