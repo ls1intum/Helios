@@ -35,7 +35,7 @@ export class MarkdownPipe implements PipeTransform {
     return markdownPatterns.some(pattern => pattern.test(text));
   }
 
-  transform(value: string): SafeHtml {
+  transform(value: string | undefined): SafeHtml {
     if (!value) return '';
     if (this.hasMarkdownSyntax(value)) {
       const html = marked.parse(value).toString();

@@ -21,6 +21,7 @@ import { TimeAgoPipe } from '@app/pipes/time-ago.pipe';
 import { FILTER_OPTIONS_TOKEN, SearchTableService } from '@app/core/services/search-table.service';
 import { TableFilterComponent } from '../table-filter/table-filter.component';
 import { WorkflowRunStatusComponent } from '@app/components/workflow-run-status-component/workflow-run-status.component';
+import { PullRequestStatusIconComponent } from '@app/components/pull-request-status-icon/pull-request-status-icon.component';
 
 const FILTER_OPTIONS = [
   { name: 'All pull requests', filter: (prs: PullRequestBaseInfoDto[]) => prs },
@@ -54,6 +55,7 @@ const FILTER_OPTIONS = [
     TableFilterComponent,
     DividerModule,
     WorkflowRunStatusComponent,
+    PullRequestStatusIconComponent,
   ],
   providers: [SearchTableService, { provide: FILTER_OPTIONS_TOKEN, useValue: FILTER_OPTIONS }],
   templateUrl: './pull-request-table.component.html',
@@ -80,22 +82,11 @@ export class PullRequestTableComponent {
 
   query = injectQuery(() => getAllPullRequestsOptions());
 
-  getPrIconInfo(pr: PullRequestInfoDto): { icon: string; color: string; tooltip: string } {
-    if (pr.isMerged) {
-      return { icon: 'git-merge', color: 'text-purple-500', tooltip: 'Merged' };
-    } else if (pr.state === 'CLOSED') {
-      return { icon: 'git-pull-request-closed', color: 'text-red-500', tooltip: 'Closed' };
-    } else if (pr.isDraft) {
-      return { icon: 'git-pull-request-draft', color: 'text-gray-600', tooltip: 'Draft' };
-    } else {
-      return { icon: 'git-pull-request', color: 'text-green-600', tooltip: 'Open' };
-    }
-  }
-
   filteredPrs = computed(() => this.searchTableService.activeFilter().filter(this.query.data() || [], this.keycloak.decodedToken()?.preferred_username));
 
-  openPRExternal(pr: PullRequestInfoDto): void {
+  openPRExternal(event: Event, pr: PullRequestInfoDto): void {
     window.open(pr.htmlUrl, '_blank');
+    event.stopPropagation();
   }
 
   // TODO: Find a better way to handle color of labels

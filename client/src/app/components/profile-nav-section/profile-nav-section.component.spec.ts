@@ -25,6 +25,7 @@ describe('ProfileNavSectionComponent', () => {
 
     fixture = TestBed.createComponent(ProfileNavSectionComponent);
     component = fixture.componentInstance;
+    fixture.componentRef.setInput('isExpanded', true);
     await fixture.whenStable();
   });
 

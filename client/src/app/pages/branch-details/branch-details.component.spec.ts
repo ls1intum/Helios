@@ -4,6 +4,7 @@ import { CUSTOM_ELEMENTS_SCHEMA, provideExperimentalZonelessChangeDetection, sig
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { By } from '@angular/platform-browser';
 import { provideQueryClient, QueryClient } from '@tanstack/angular-query-experimental';
+import { MarkdownPipe } from '@app/core/modules/markdown/markdown.pipe';
 
 describe('BranchDetailsComponent', () => {
   let component: BranchDetailsComponent;
@@ -16,7 +17,7 @@ describe('BranchDetailsComponent', () => {
       providers: [provideExperimentalZonelessChangeDetection(), provideNoopAnimations(), provideQueryClient(new QueryClient())],
     })
       .overrideComponent(BranchDetailsComponent, {
-        set: { imports: [], schemas: [CUSTOM_ELEMENTS_SCHEMA] },
+        set: { imports: [MarkdownPipe], schemas: [CUSTOM_ELEMENTS_SCHEMA] },
       })
       .compileComponents();
 
