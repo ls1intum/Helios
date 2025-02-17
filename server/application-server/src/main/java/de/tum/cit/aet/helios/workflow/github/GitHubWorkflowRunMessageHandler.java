@@ -55,7 +55,7 @@ public class GitHubWorkflowRunMessageHandler
 
     var run = workflowSyncService.processRun(githubRun);
 
-    if (testResultProcessor.shouldProcess(run)) {
+    if (run != null && testResultProcessor.shouldProcess(run)) {
       testResultProcessor.processRun(run);
     }
   }

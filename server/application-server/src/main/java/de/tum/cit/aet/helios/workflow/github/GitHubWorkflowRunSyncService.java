@@ -143,7 +143,12 @@ public class GitHubWorkflowRunSyncService {
     if (result.getWorkflow() == null) {
       var workflow = workflowRepository.findById(ghWorkflowRun.getWorkflowId());
 
+      // We don't want to create runs for workflows that are not in our database
       if (workflow.isEmpty()) {
+        log.warn(
+            "Workflow {} not found in database, skipping workflow run {}",
+            ghWorkflowRun.getWorkflowId(),
+            ghWorkflowRun.getId());
         return null;
       }
 
