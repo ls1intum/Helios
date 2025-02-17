@@ -2,8 +2,10 @@ import { Component, computed, input } from '@angular/core';
 import { TagModule } from 'primeng/tag';
 import { IconsModule } from 'icons.module';
 import { TooltipModule } from 'primeng/tooltip';
+import { DeploymentDto } from '@app/core/modules/openapi';
 
-type DeploymentState = 'SUCCESS' | 'WAITING' | 'PENDING' | 'IN_PROGRESS' | 'QUEUED' | 'ERROR' | 'FAILURE' | 'INACTIVE' | 'UNKNOWN' | 'NEVER_DEPLOYED' | 'REPLACED';
+type BaseDeploymentState = NonNullable<DeploymentDto['state']>;
+type ExtendedDeploymentState = BaseDeploymentState | 'NEVER_DEPLOYED' | 'REPLACED';
 
 @Component({
   selector: 'app-deployment-state-tag',
@@ -12,16 +14,15 @@ type DeploymentState = 'SUCCESS' | 'WAITING' | 'PENDING' | 'IN_PROGRESS' | 'QUEU
   templateUrl: './deployment-state-tag.component.html',
 })
 export class DeploymentStateTagComponent {
-  state = input.required<DeploymentState | undefined>();
+  state = input.required<ExtendedDeploymentState | undefined>();
   verbose = input(false);
   showLatestDeployment = input(false);
   latestDeployment = input<{ releaseCandidateName?: string; ref?: string } | null | undefined>(null);
 
   rounded = computed(() => !this.verbose());
   internalState = computed(() => this.state() || 'UNKNOWN');
-
-  getSeverity() {
-    const severityMap: Record<DeploymentState, Severity> = {
+  severity = computed(() => {
+    const severityMap: Record<ExtendedDeploymentState, Severity> = {
       SUCCESS: 'success',
       WAITING: 'warn',
       PENDING: 'warn',
@@ -35,10 +36,10 @@ export class DeploymentStateTagComponent {
       REPLACED: 'contrast',
     };
     return severityMap[this.internalState()];
-  }
+  });
 
-  getIcon() {
-    const iconMap: Record<DeploymentState, string> = {
+  icon = computed(() => {
+    const iconMap: Record<ExtendedDeploymentState, string> = {
       SUCCESS: 'check',
       WAITING: 'progress',
       PENDING: 'progress',
@@ -52,15 +53,15 @@ export class DeploymentStateTagComponent {
       REPLACED: 'progress',
     };
     return iconMap[this.internalState()];
-  }
+  });
 
-  getIconClass() {
-    const spinStates: DeploymentState[] = ['WAITING', 'PENDING', 'IN_PROGRESS', 'QUEUED', 'REPLACED'];
+  iconClass = computed(() => {
+    const spinStates: ExtendedDeploymentState[] = ['WAITING', 'PENDING', 'IN_PROGRESS', 'QUEUED', 'REPLACED'];
     return `!size-5 ${spinStates.includes(this.internalState()) ? 'animate-spin' : ''}`;
-  }
+  });
 
-  getValue() {
-    const valueMap: Record<DeploymentState, string> = {
+  value = computed(() => {
+    const valueMap: Record<ExtendedDeploymentState, string> = {
       SUCCESS: 'success',
       WAITING: 'waiting',
       PENDING: 'pending',
@@ -74,10 +75,10 @@ export class DeploymentStateTagComponent {
       REPLACED: 'replaced',
     };
     return valueMap[this.internalState()];
-  }
+  });
 
-  getTooltip() {
-    const tooltipMap: Record<DeploymentState, string> = {
+  tooltip = computed(() => {
+    const tooltipMap: Record<ExtendedDeploymentState, string> = {
       SUCCESS: 'Latest Deployment Successful',
       WAITING: 'Waiting deployment',
       PENDING: 'Deployment pending',
@@ -91,7 +92,7 @@ export class DeploymentStateTagComponent {
       REPLACED: 'Deployment was replaced',
     };
     return tooltipMap[this.internalState()];
-  }
+  });
 }
 
 type Severity = 'success' | 'secondary' | 'info' | 'warn' | 'danger' | 'contrast' | undefined;

@@ -1,7 +1,7 @@
 <div class="flex items-center gap-1">
-  <p-tag [severity]="getSeverity()" [rounded]="rounded()" [pTooltip]="!verbose() ? getTooltip() : undefined" [value]="verbose() ? getValue() : undefined">
+  <p-tag [severity]="severity()" [rounded]="rounded()" [pTooltip]="!verbose() ? tooltip() : undefined" [value]="verbose() ? value() : undefined">
     <div class="flex items-center gap-2">
-      <i-tabler [name]="getIcon()" [class]="getIconClass()"></i-tabler>
+      <i-tabler [name]="icon()" [class]="iconClass()"></i-tabler>
     </div>
   </p-tag>
 
