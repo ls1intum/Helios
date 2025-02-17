@@ -26,10 +26,12 @@ export type EnvironmentDeployment = {
   sha?: string;
   ref?: string;
   task?: string;
+  workflowRunHtmlUrl?: string;
   releaseCandidateName?: string;
   user?: UserInfoDto;
   createdAt?: string;
   updatedAt?: string;
+  type: 'GITHUB' | 'HELIOS';
 };
 
 export type EnvironmentDto = {
@@ -192,26 +194,17 @@ export type CommitInfoDto = {
   repository?: RepositoryInfoDto;
 };
 
-export type DeploymentDto = {
+export type ReleaseCandidateDeploymentDto = {
   id: number;
-  repository?: RepositoryInfoDto;
-  url: string;
-  state?: 'PENDING' | 'WAITING' | 'SUCCESS' | 'ERROR' | 'FAILURE' | 'IN_PROGRESS' | 'QUEUED' | 'INACTIVE' | 'UNKNOWN';
-  statusesUrl: string;
-  sha: string;
-  ref: string;
-  task: string;
-  environment: EnvironmentDto;
-  user?: UserInfoDto;
-  createdAt?: string;
-  updatedAt?: string;
+  type: 'GITHUB' | 'HELIOS';
+  environmentId: number;
 };
 
 export type ReleaseCandidateDetailsDto = {
   name: string;
   commit: CommitInfoDto;
   branch: BranchInfoDto;
-  deployments: Array<DeploymentDto>;
+  deployments: Array<ReleaseCandidateDeploymentDto>;
   evaluations: Array<ReleaseCandidateEvaluationDto>;
   createdBy: UserInfoDto;
   createdAt: string;
@@ -294,6 +287,21 @@ export type EnvironmentLockHistoryDto = {
   lockedAt?: string;
   unlockedAt?: string;
   environment?: EnvironmentDto;
+};
+
+export type DeploymentDto = {
+  id: number;
+  repository?: RepositoryInfoDto;
+  url: string;
+  state?: 'PENDING' | 'WAITING' | 'SUCCESS' | 'ERROR' | 'FAILURE' | 'IN_PROGRESS' | 'QUEUED' | 'INACTIVE' | 'UNKNOWN';
+  statusesUrl: string;
+  sha: string;
+  ref: string;
+  task: string;
+  environment: EnvironmentDto;
+  user?: UserInfoDto;
+  createdAt?: string;
+  updatedAt?: string;
 };
 
 export type ActivityHistoryDto = {
@@ -589,26 +597,6 @@ export type GetWorkflowsByStateResponses = {
 };
 
 export type GetWorkflowsByStateResponse = GetWorkflowsByStateResponses[keyof GetWorkflowsByStateResponses];
-
-export type GetLatestDeploymentWorkflowRunData = {
-  body?: never;
-  path?: never;
-  query: {
-    environmentId: number;
-    branch: string;
-    commitSha: string;
-  };
-  url: '/api/workflows/run';
-};
-
-export type GetLatestDeploymentWorkflowRunResponses = {
-  /**
-   * OK
-   */
-  200: WorkflowRunDto;
-};
-
-export type GetLatestDeploymentWorkflowRunResponse = GetLatestDeploymentWorkflowRunResponses[keyof GetLatestDeploymentWorkflowRunResponses];
 
 export type GetWorkflowsByRepositoryIdData = {
   body?: never;

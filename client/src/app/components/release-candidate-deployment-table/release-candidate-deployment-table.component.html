@@ -53,13 +53,8 @@
           }
         </td>
         <td>
-          @if (userCanDeploy() && deploymentStatus(environment) === 'WAITING') {
-            <p-button
-              styleClass="p-button-success"
-              [loading]="workflowRunQuery.isPending()"
-              [disabled]="!workflowRunQuery.data()"
-              (onClick)="workflowRunQuery.data() && openWorkflowUrl(workflowRunQuery.data()?.htmlUrl!)"
-            >
+          @if (userCanDeploy() && deploymentStatus(environment) === 'WAITING' && environment.latestDeployment?.workflowRunHtmlUrl) {
+            <p-button styleClass="p-button-success" (onClick)="openWorkflowUrl(environment.latestDeployment.workflowRunHtmlUrl)">
               <ng-template pTemplate="content">
                 <div class="flex items-center gap-2">
                   <span>Approve</span>

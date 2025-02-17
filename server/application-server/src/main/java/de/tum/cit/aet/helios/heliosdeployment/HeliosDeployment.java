@@ -72,6 +72,9 @@ public class HeliosDeployment {
   @Column(name = "deployment_id", nullable = true)
   private Long deploymentId;
 
+  @Column(name = "workflow_run_html_url", nullable = true)
+  private String workflowRunHtmlUrl;
+
   private String sha;
 
   @ManyToOne
@@ -94,6 +97,8 @@ public class HeliosDeployment {
   // Enum to represent deployment status
   public enum Status {
     /** Deployment called and waiting GitHub webhook listener. */
+    PENDING,
+    /** Deployment is waiting for approval. */
     WAITING,
     /** The queued. */
     QUEUED,
@@ -121,6 +126,8 @@ public class HeliosDeployment {
   public static HeliosDeployment.Status mapWorkflowRunStatus(
       GHWorkflowRun.Status workflowStatus, GHWorkflowRun.Conclusion workflowConclusion) {
     if (workflowStatus == GHWorkflowRun.Status.PENDING) {
+      return Status.PENDING;
+    } else if (workflowStatus == GHWorkflowRun.Status.WAITING) {
       return Status.WAITING;
     } else if (workflowStatus == GHWorkflowRun.Status.QUEUED) {
       return Status.QUEUED;
@@ -140,8 +147,9 @@ public class HeliosDeployment {
   public static Deployment.State mapHeliosStatusToDeploymentState(
       HeliosDeployment.Status heliosStatus) {
     return switch (heliosStatus) {
-      case WAITING -> Deployment.State.WAITING;
+      case PENDING -> Deployment.State.PENDING;
       case QUEUED -> Deployment.State.PENDING;
+      case WAITING -> Deployment.State.WAITING;
       case IN_PROGRESS -> Deployment.State.IN_PROGRESS;
       case DEPLOYMENT_SUCCESS -> Deployment.State.SUCCESS;
       case FAILED -> Deployment.State.FAILURE;
@@ -151,7 +159,8 @@ public class HeliosDeployment {
 
   public static HeliosDeployment.Status mapDeploymentStateToHeliosStatus(Deployment.State state) {
     return switch (state) {
-      case WAITING, PENDING -> Status.WAITING;
+      case PENDING -> Status.PENDING;
+      case WAITING -> Status.WAITING;
       case IN_PROGRESS -> Status.IN_PROGRESS;
       case SUCCESS -> Status.DEPLOYMENT_SUCCESS;
       case FAILURE, ERROR -> Status.FAILED;

@@ -83,6 +83,9 @@ export const EnvironmentDeploymentSchema = {
     task: {
       type: 'string',
     },
+    workflowRunHtmlUrl: {
+      type: 'string',
+    },
     releaseCandidateName: {
       type: 'string',
     },
@@ -97,8 +100,12 @@ export const EnvironmentDeploymentSchema = {
       type: 'string',
       format: 'date-time',
     },
+    type: {
+      type: 'string',
+      enum: ['GITHUB', 'HELIOS'],
+    },
   },
-  required: ['id'],
+  required: ['id', 'type'],
 } as const;
 
 export const EnvironmentDtoSchema = {
@@ -575,51 +582,23 @@ export const CommitInfoDtoSchema = {
   required: ['sha'],
 } as const;
 
-export const DeploymentDtoSchema = {
+export const ReleaseCandidateDeploymentDtoSchema = {
   type: 'object',
   properties: {
     id: {
       type: 'integer',
       format: 'int64',
     },
-    repository: {
-      $ref: '#/components/schemas/RepositoryInfoDto',
-    },
-    url: {
+    type: {
       type: 'string',
+      enum: ['GITHUB', 'HELIOS'],
     },
-    state: {
-      type: 'string',
-      enum: ['PENDING', 'WAITING', 'SUCCESS', 'ERROR', 'FAILURE', 'IN_PROGRESS', 'QUEUED', 'INACTIVE', 'UNKNOWN'],
-    },
-    statusesUrl: {
-      type: 'string',
-    },
-    sha: {
-      type: 'string',
-    },
-    ref: {
-      type: 'string',
-    },
-    task: {
-      type: 'string',
-    },
-    environment: {
-      $ref: '#/components/schemas/EnvironmentDto',
-    },
-    user: {
-      $ref: '#/components/schemas/UserInfoDto',
-    },
-    createdAt: {
-      type: 'string',
-      format: 'date-time',
-    },
-    updatedAt: {
-      type: 'string',
-      format: 'date-time',
+    environmentId: {
+      type: 'integer',
+      format: 'int64',
     },
   },
-  required: ['environment', 'id', 'ref', 'sha', 'statusesUrl', 'task', 'url'],
+  required: ['environmentId', 'id', 'type'],
 } as const;
 
 export const ReleaseCandidateDetailsDtoSchema = {
@@ -637,7 +616,7 @@ export const ReleaseCandidateDetailsDtoSchema = {
     deployments: {
       type: 'array',
       items: {
-        $ref: '#/components/schemas/DeploymentDto',
+        $ref: '#/components/schemas/ReleaseCandidateDeploymentDto',
       },
     },
     evaluations: {
@@ -888,6 +867,53 @@ export const EnvironmentLockHistoryDtoSchema = {
     },
   },
   required: ['id'],
+} as const;
+
+export const DeploymentDtoSchema = {
+  type: 'object',
+  properties: {
+    id: {
+      type: 'integer',
+      format: 'int64',
+    },
+    repository: {
+      $ref: '#/components/schemas/RepositoryInfoDto',
+    },
+    url: {
+      type: 'string',
+    },
+    state: {
+      type: 'string',
+      enum: ['PENDING', 'WAITING', 'SUCCESS', 'ERROR', 'FAILURE', 'IN_PROGRESS', 'QUEUED', 'INACTIVE', 'UNKNOWN'],
+    },
+    statusesUrl: {
+      type: 'string',
+    },
+    sha: {
+      type: 'string',
+    },
+    ref: {
+      type: 'string',
+    },
+    task: {
+      type: 'string',
+    },
+    environment: {
+      $ref: '#/components/schemas/EnvironmentDto',
+    },
+    user: {
+      $ref: '#/components/schemas/UserInfoDto',
+    },
+    createdAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+    updatedAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+  },
+  required: ['environment', 'id', 'ref', 'sha', 'statusesUrl', 'task', 'url'],
 } as const;
 
 export const ActivityHistoryDtoSchema = {

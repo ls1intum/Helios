@@ -165,6 +165,18 @@ public class GitHubWorkflowRunSyncService {
 
               // Update the deployment status
               heliosDeployment.setStatus(mappedStatus);
+
+              // Update the workflow run html url, so we can show the approval url
+              // to the user before the Github deployment is created
+              try {
+                heliosDeployment.setWorkflowRunHtmlUrl(workflowRun.getHtmlUrl().toString());
+              } catch (IOException e) {
+                log.error(
+                    "Failed to set workflow run html url for HeliosDeployment {}: {}",
+                    heliosDeployment.getId(),
+                    e.getMessage());
+              }
+
               log.info(
                   "Updated HeliosDeployment {} to status {}",
                   heliosDeployment.getId(),

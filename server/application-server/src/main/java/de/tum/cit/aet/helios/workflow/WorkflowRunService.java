@@ -5,7 +5,6 @@ import de.tum.cit.aet.helios.pullrequest.PullRequestRepository;
 import jakarta.transaction.Transactional;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.extern.log4j.Log4j2;
@@ -17,17 +16,14 @@ import org.springframework.stereotype.Service;
 public class WorkflowRunService {
 
   private final WorkflowRunRepository workflowRunRepository;
-  private final WorkflowService workflowService;
   private final PullRequestRepository pullRequestRepository;
   private final BranchRepository branchRepository;
 
   public WorkflowRunService(
       WorkflowRunRepository workflowRunRepository,
-      WorkflowService workflowService,
       PullRequestRepository pullRequestRepository,
       BranchRepository branchRepository) {
     this.workflowRunRepository = workflowRunRepository;
-    this.workflowService = workflowService;
     this.pullRequestRepository = pullRequestRepository;
     this.branchRepository = branchRepository;
   }
@@ -100,21 +96,5 @@ public class WorkflowRunService {
     var latestRuns = getLatestWorkflowRuns(runs);
 
     return latestRuns.map(wr -> WorkflowRunDto.fromWorkflowRun(wr, includeTestSuites)).toList();
-  }
-
-  public Optional<WorkflowRunDto> getLatestDeploymentWorkflowRun(
-      String branch, String commitSha, Long environmentId) {
-    Workflow workflow = this.workflowService.getDeploymentWorkflowForEnv(environmentId);
-    if (workflow == null) {
-      return Optional.empty();
-    }
-
-    WorkflowRun workflowRun =
-        workflowRunRepository.findFirstByHeadBranchAndHeadShaAndWorkflowOrderByCreatedAtDesc(
-            branch, commitSha, workflow);
-
-    return workflowRun != null
-        ? Optional.of(WorkflowRunDto.fromWorkflowRun(workflowRun, true))
-        : Optional.empty();
   }
 }

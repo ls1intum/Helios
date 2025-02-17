@@ -18,7 +18,6 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
@@ -36,7 +35,6 @@ public class EnvironmentService {
   @Lazy private final GitRepoSettingsService gitRepoSettingsService;
   private final EnvironmentScheduler environmentScheduler;
 
-  @Autowired
   public EnvironmentService(
       AuthService authService,
       EnvironmentRepository environmentRepository,
@@ -131,7 +129,7 @@ public class EnvironmentService {
 
       // Compare updatedAt timestamps to determine the latest
       if (latestDeployment.getCreatedAt().isAfter(latestHelios.getCreatedAt())) {
-        return LatestDeploymentUnion.realDeployment(latestDeployment);
+        return LatestDeploymentUnion.realDeployment(latestDeployment, latestHelios);
       } else {
         return LatestDeploymentUnion.heliosDeployment(latestHelios);
       }
@@ -148,10 +146,8 @@ public class EnvironmentService {
   /**
    * Locks the environment with the specified ID.
    *
-   * <p>This method attempts to lock the environment by setting its locked status to
-   * true. If the
-   * environment is already locked, it returns an empty Optional. If the
-   * environment is successfully
+   * <p>This method attempts to lock the environment by setting its locked status to true. If the
+   * environment is already locked, it returns an empty Optional. If the environment is successfully
    * locked, it returns an Optional containing the locked environment.
    *
    * <p>This method is transactional and handles optimistic locking failures.
@@ -165,9 +161,10 @@ public class EnvironmentService {
   public Optional<Environment> lockEnvironment(Long id) {
     final User currentUser = authService.getUserFromGithubId();
 
-    Environment environment = environmentRepository
-        .findById(id)
-        .orElseThrow(() -> new EntityNotFoundException("Environment not found with ID: " + id));
+    Environment environment =
+        environmentRepository
+            .findById(id)
+            .orElseThrow(() -> new EntityNotFoundException("Environment not found with ID: " + id));
 
     if (!environment.isEnabled()) {
       throw new IllegalStateException("Environment is disabled");
@@ -273,9 +270,10 @@ public class EnvironmentService {
   public EnvironmentDto unlockEnvironment(Long id) {
     final User currentUser = authService.getUserFromGithubId();
 
-    Environment environment = environmentRepository
-        .findById(id)
-        .orElseThrow(() -> new EntityNotFoundException("Environment not found with ID: " + id));
+    Environment environment =
+        environmentRepository
+            .findById(id)
+            .orElseThrow(() -> new EntityNotFoundException("Environment not found with ID: " + id));
 
     if (!environment.isLocked()) {
       throw new IllegalStateException("Environment is not locked");
@@ -334,8 +332,7 @@ public class EnvironmentService {
   /**
    * Updates the environment with the specified ID.
    *
-   * <p>This method updates the environment with the specified ID using the provided
-   * EnvironmentDto.
+   * <p>This method updates the environment with the specified ID using the provided EnvironmentDto.
    *
    * @param id the ID of the environment to update
    * @param environmentDto the EnvironmentDto containing the updated environment information
@@ -444,6 +441,7 @@ public class EnvironmentService {
     // Check if timeout has elapsed
     if (deployment.getStatus() == HeliosDeployment.Status.IN_PROGRESS
         || deployment.getStatus() == HeliosDeployment.Status.WAITING
+        || deployment.getStatus() == HeliosDeployment.Status.PENDING
         || deployment.getStatus() == HeliosDeployment.Status.QUEUED) {
       OffsetDateTime now = OffsetDateTime.now();
       if (deployment.getStatusUpdatedAt().plusMinutes(timeoutMinutes).isAfter(now)) {
