@@ -66,6 +66,11 @@ export class NavigationBarComponent {
       ...(this.keycloakService.profile && this.permissionService.isAtLeastMaintainer()
         ? [
             {
+              label: 'Release Management',
+              icon: 'rocket',
+              path: 'release',
+            },
+            {
               label: 'Project Settings',
               icon: 'adjustments-alt',
               path: ['repo', this.repositoryId(), 'settings'],
