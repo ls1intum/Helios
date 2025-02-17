@@ -12,11 +12,12 @@ import { TooltipModule } from 'primeng/tooltip';
 import { FooterComponent } from '@app/components/footer/footer.component';
 import { NavigationBarComponent } from '@app/components/navigation-bar/navigation-bar.component';
 import { filter } from 'rxjs';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
 
 @Component({
   selector: 'app-main-layout',
   standalone: true,
-  imports: [RouterOutlet, ToastModule, IconsModule, ButtonModule, TooltipModule, DividerModule, AvatarModule, CardModule, NgClass, FooterComponent, NavigationBarComponent],
+  imports: [RouterOutlet, ToastModule, IconsModule, ButtonModule, TooltipModule, DividerModule, AvatarModule, CardModule, NgClass, FooterComponent, NavigationBarComponent, ConfirmDialogModule],
   templateUrl: './main-layout.component.html',
 })
 export class MainLayoutComponent implements OnInit {

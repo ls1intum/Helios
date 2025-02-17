@@ -724,6 +724,24 @@ export type GetRepositoryByIdResponses = {
 
 export type GetRepositoryByIdResponse = GetRepositoryByIdResponses[keyof GetRepositoryByIdResponses];
 
+export type DeleteReleaseCandidateByNameData = {
+  body?: never;
+  path: {
+    name: string;
+  };
+  query?: never;
+  url: '/api/release-candidate/{name}';
+};
+
+export type DeleteReleaseCandidateByNameResponses = {
+  /**
+   * OK
+   */
+  200: ReleaseCandidateInfoDto;
+};
+
+export type DeleteReleaseCandidateByNameResponse = DeleteReleaseCandidateByNameResponses[keyof DeleteReleaseCandidateByNameResponses];
+
 export type GetReleaseCandidateByNameData = {
   body?: never;
   path: {
