@@ -42,8 +42,8 @@ export class AboutComponent implements OnInit {
     { name: 'Galiiabanu Bakirova', description: "Master's Thesis", website: null, githubHandle: 'gbanu', githubId: 56745022 },
     { name: 'Ege Kocabaş', description: "Master's Thesis", website: null, githubHandle: 'egekocabas', githubId: 48245934 },
     { name: 'Turker Koç', description: "Master's Thesis", website: null, githubHandle: 'TurkerKoc', githubId: 39654393 },
-    { name: 'Paul Thiel', description: 'Bachelor Thesis', website: null, githubHandle: 'thielpa', githubId: 10695477 },
-    { name: 'Stefan Németh', description: 'Bachelor Thesis', website: null, githubHandle: 'StefanNemeth', githubId: 5003405 },
+    { name: 'Paul Thiel', description: 'Bachelor’s Thesis', website: null, githubHandle: 'thielpa', githubId: 10695477 },
+    { name: 'Stefan Németh', description: 'Bachelor’s Thesis', website: null, githubHandle: 'StefanNemeth', githubId: 5003405 },
   ];
 
   // Fetched contributors from GitHub
