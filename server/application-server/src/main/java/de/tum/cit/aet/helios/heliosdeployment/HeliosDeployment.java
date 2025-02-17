@@ -93,11 +93,6 @@ public class HeliosDeployment {
   @JoinColumn(name = "pull_request_id")
   private PullRequest pullRequest;
 
-  // @PreUpdate
-  // protected void onUpdate() {
-  //   updatedAt = OffsetDateTime.now();
-  // }
-
   // Enum to represent deployment status
   public enum Status {
     /** Deployment called and waiting GitHub webhook listener. */
