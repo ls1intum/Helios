@@ -1,8 +1,8 @@
-import {Component, OnInit, signal} from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { PageHeadingComponent } from '@app/components/page-heading/page-heading.component';
-import {NgClass, NgOptimizedImage} from '@angular/common';
-import {UserInfoDto} from "@app/core/modules/openapi";
-import {UserAvatarComponent} from "@app/components/user-avatar/user-avatar.component";
+import { NgClass, NgOptimizedImage } from '@angular/common';
+import { UserInfoDto } from '@app/core/modules/openapi';
+import { UserAvatarComponent } from '@app/components/user-avatar/user-avatar.component';
 
 interface Feature {
   icon: string;
@@ -10,10 +10,17 @@ interface Feature {
   description: string;
 }
 
-export type ExtendedUserInfoDto = UserInfoDto & {
-  contributions: number;
+export type GitHubContributorInfo = {
+  id: number;
+  login: string;
+  avatar_url: string;
+  html_url: string;
+  contributions: string;
 };
 
+export type ExtendedUserInfoDto = UserInfoDto & {
+  contributions: string;
+};
 
 @Component({
   selector: 'app-about',
@@ -47,45 +54,41 @@ export class AboutComponent implements OnInit {
     {
       icon: 'pi pi-sitemap',
       title: 'Visualization of GitHub Actions pipelines',
-      description:
-        'See how your CI/CD pipelines connect and interact with a clear, visual diagram.',
+      description: 'See how your CI/CD pipelines connect and interact with a clear, visual diagram.',
     },
     {
       icon: 'pi pi-lock',
       title: 'Environment Locking/Unlocking',
-      description:
-        'Manage environment availability to prevent conflicts during critical deploys.',
+      description: 'Manage environment availability to prevent conflicts during critical deploys.',
     },
     {
       icon: 'pi pi-send',
       title: 'Deployment Management',
-      description:
-        'Track and control deployments through a user-friendly interface.',
+      description: 'Track and control deployments through a user-friendly interface.',
     },
     {
       icon: 'pi pi-chart-bar',
       title: 'Test Analytics (Coming Soon)',
-      description:
-        'Detailed analytics on test results, coverage, and performance trends.',
-    }
+      description: 'Detailed analytics on test results, coverage, and performance trends.',
+    },
   ];
 
   ngOnInit(): void {
     fetch('https://api.github.com/repos/ls1intum/Helios/contributors')
-        .then((response) => response.json())
-        .then((data: any[]) => {
-          this.githubContributors.set(
-              data.map((contributor) => ({
-                id: contributor.id,
-                login: contributor.login,
-                avatarUrl: contributor.avatar_url,
-                name: contributor.login,
-                htmlUrl: contributor.html_url,
-                contributions: contributor.contributions,
-              }))
-          );
-        })
-        .catch((error) => console.error('Error fetching contributors:', error));
+      .then(response => response.json())
+      .then((data: GitHubContributorInfo[]) => {
+        this.githubContributors.set(
+          data.map(contributor => ({
+            id: contributor.id,
+            login: contributor.login,
+            avatarUrl: contributor.avatar_url,
+            name: contributor.login,
+            htmlUrl: contributor.html_url,
+            contributions: contributor.contributions,
+          }))
+        );
+      })
+      .catch(error => console.error('Error fetching contributors:', error));
   }
 
   getGithubProfilePictureUrl(userId: number): string {

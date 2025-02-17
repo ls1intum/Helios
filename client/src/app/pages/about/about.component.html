@@ -9,160 +9,106 @@
 
 <!-- Container for all content -->
 <div class="container mx-auto p-6">
-    <!-- ==================== MAIN FEATURES + GET IN TOUCH ==================== -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <!-- LEFT COLUMN: MAIN FEATURES -->
-        <div class="p-4 border rounded-lg shadow-md">
-            <h2 class="text-lg font-semibold mb-2">Main Features</h2>
-            @for (feature of coreFeatures; track feature.title) {
-                <div class="mb-3 border-b pb-2 last:border-0 last:pb-0">
-                    <div class="flex items-center mb-1">
-                        <i [ngClass]="feature.icon + ' text-blue-600 mr-2'"></i>
-                        <h3 class="font-semibold">{{ feature.title }}</h3>
-                    </div>
-                    <p class="text-sm text-gray-700">{{ feature.description }}</p>
-                </div>
-            }
+  <!-- ==================== MAIN FEATURES + GET IN TOUCH ==================== -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <!-- LEFT COLUMN: MAIN FEATURES -->
+    <div class="p-4 border rounded-lg shadow-md">
+      <h2 class="text-lg font-semibold mb-2">Main Features</h2>
+      @for (feature of coreFeatures; track feature.title) {
+        <div class="mb-3 border-b pb-2 last:border-0 last:pb-0">
+          <div class="flex items-center mb-1">
+            <i [ngClass]="feature.icon + ' text-blue-600 mr-2'"></i>
+            <h3 class="font-semibold">{{ feature.title }}</h3>
+          </div>
+          <p class="text-sm text-gray-700">{{ feature.description }}</p>
         </div>
-
-        <!-- RIGHT COLUMN: GET IN TOUCH -->
-        <div class="p-4 border rounded-lg shadow-md">
-            <h2 class="text-lg font-semibold mb-2">Get in Touch</h2>
-            <p>
-                <a
-                        href="https://github.com/ls1intum/Helios/issues/new?template=1-bug-report.yml"
-                        class="text-blue-500 hover:underline"
-                        target="_blank"
-                >Report a Bug</a
-                >
-            </p>
-            <p>
-                <a
-                        href="https://github.com/ls1intum/Helios/issues/new?template=2-feature-request.yml"
-                        class="text-blue-500 hover:underline"
-                        target="_blank"
-                >Request a Feature</a
-                >
-            </p>
-            <p>
-                <a
-                        href="https://github.com/ls1intum/Helios/releases"
-                        class="text-blue-500 hover:underline"
-                        target="_blank"
-                >Release Notes</a
-                >
-            </p>
-        </div>
+      }
     </div>
 
+    <!-- RIGHT COLUMN: GET IN TOUCH -->
+    <div class="p-4 border rounded-lg shadow-md">
+      <h2 class="text-lg font-semibold mb-2">Get in Touch</h2>
+      <p>
+        <a href="https://github.com/ls1intum/Helios/issues/new?template=1-bug-report.yml" class="text-blue-500 hover:underline" target="_blank">Report a Bug</a>
+      </p>
+      <p>
+        <a href="https://github.com/ls1intum/Helios/issues/new?template=2-feature-request.yml" class="text-blue-500 hover:underline" target="_blank">Request a Feature</a>
+      </p>
+      <p>
+        <a href="https://github.com/ls1intum/Helios/releases" class="text-blue-500 hover:underline" target="_blank">Release Notes</a>
+      </p>
+    </div>
+  </div>
 
-    <!-- ==================== 3) PROJECT ADVISORS ==================== -->
-    <section class="mt-6 p-4 border rounded-lg shadow-md text-center">
-        <h2 class="text-lg font-semibold mb-4">Project Advisors</h2>
-        <div class="flex justify-center flex-wrap gap-4">
-            @for (advisor of projectAdvisors; track advisor.name) {
-                <div class="p-3 border rounded-md text-center w-48">
-                    <img
-                            [ngSrc]="getGithubProfilePictureUrl(advisor.githubId)"
-                            alt="{{ advisor.name }}"
-                            width="112"
-                            height="112"
-                            class="w-28 h-28 mx-auto rounded-full mb-2"
-                    />
-                    <p class="font-semibold">{{ advisor.name }}</p>
-                    <p class="text-sm text-gray-600">{{ advisor.description }}</p>
+  <!-- ==================== 3) PROJECT ADVISORS ==================== -->
+  <section class="mt-6 p-4 border rounded-lg shadow-md text-center">
+    <h2 class="text-lg font-semibold mb-4">Project Advisors</h2>
+    <div class="flex justify-center flex-wrap gap-4">
+      @for (advisor of projectAdvisors; track advisor.name) {
+        <div class="p-3 border rounded-md text-center w-48">
+          <img [ngSrc]="getGithubProfilePictureUrl(advisor.githubId)" alt="{{ advisor.name }}" width="112" height="112" class="w-28 h-28 mx-auto rounded-full mb-2" />
+          <p class="font-semibold">{{ advisor.name }}</p>
+          <p class="text-sm text-gray-600">{{ advisor.description }}</p>
 
-                    @if (advisor.website) {
-                        <a
-                                [href]="advisor.website"
-                                target="_blank"
-                                class="text-blue-500 inline-block mt-1"
-                        >Website</a
-                        >
-                    }
-                    @if (advisor.githubHandle) {
-                        <a
-                                [href]="getGithubProfileUrl(advisor.githubHandle)"
-                                target="_blank"
-                                class="text-blue-500 inline-block mt-1 ml-2"
-                        >GitHub</a
-                        >
-                    }
-                </div>
+          @if (advisor.website) {
+            <a [href]="advisor.website" target="_blank" class="text-blue-500 inline-block mt-1">Website</a>
+          }
+          @if (advisor.githubHandle) {
+            <a [href]="getGithubProfileUrl(advisor.githubHandle)" target="_blank" class="text-blue-500 inline-block mt-1 ml-2">GitHub</a>
+          }
+        </div>
+      }
+    </div>
+  </section>
+  <!-- ==================== 4) CONTRIBUTORS ==================== -->
+  <section class="mt-6 p-4 border rounded-lg shadow-md text-center">
+    <h2 class="text-lg font-semibold mb-4">Contributors</h2>
+
+    <!-- 4a) Your existing local contributors -->
+    <div class="mb-6">
+      <div class="flex justify-center flex-wrap gap-4">
+        @for (contributor of contributors; track contributor.name) {
+          <div class="p-3 border rounded-md text-center w-48">
+            <img [ngSrc]="getGithubProfilePictureUrl(contributor.githubId)" alt="{{ contributor.name }}" width="112" height="112" class="w-28 h-28 mx-auto rounded-full mb-2" />
+            <p class="font-semibold">{{ contributor.name }}</p>
+            <p class="text-sm text-gray-600">{{ contributor.description }}</p>
+
+            @if (contributor.website) {
+              <a [href]="contributor.website" class="text-blue-500 inline-block mt-1" target="_blank">Website</a>
             }
-        </div>
-    </section>
-    <!-- ==================== 4) CONTRIBUTORS ==================== -->
-    <section class="mt-6 p-4 border rounded-lg shadow-md text-center">
-        <h2 class="text-lg font-semibold mb-4">Contributors</h2>
+            @if (contributor.githubHandle) {
+              <a [href]="getGithubProfileUrl(contributor.githubHandle)" class="text-blue-500 inline-block mt-1 ml-2" target="_blank">GitHub</a>
+            }
+          </div>
+        }
+      </div>
+    </div>
 
-        <!-- 4a) Your existing local contributors -->
-        <div class="mb-6">
-            <div class="flex justify-center flex-wrap gap-4">
-                @for (contributor of contributors; track contributor.name) {
-                    <div class="p-3 border rounded-md text-center w-48">
-                        <img
-                                [ngSrc]="getGithubProfilePictureUrl(contributor.githubId)"
-                                alt="{{ contributor.name }}"
-                                width="112"
-                                height="112"
-                                class="w-28 h-28 mx-auto rounded-full mb-2"
-                        />
-                        <p class="font-semibold">{{ contributor.name }}</p>
-                        <p class="text-sm text-gray-600">{{ contributor.description }}</p>
+    <!-- 4b) Fetched GitHub contributors from the Helios repo -->
+    <div class="container mx-auto p-4">
+      <p class="text-lg font-semibold mb-4">GitHub Contributors</p>
 
-                        @if (contributor.website) {
-                            <a
-                                    [href]="contributor.website"
-                                    class="text-blue-500 inline-block mt-1"
-                                    target="_blank"
-                            >Website</a
-                            >
-                        }
-                        @if (contributor.githubHandle) {
-                            <a
-                                    [href]="getGithubProfileUrl(contributor.githubHandle)"
-                                    class="text-blue-500 inline-block mt-1 ml-2"
-                                    target="_blank"
-                            >GitHub</a
-                            >
-                        }
-                    </div>
-                }
-            </div>
-        </div>
+      <!-- Use a responsive grid or flex layout with gap -->
+      <div class="flex flex-wrap justify-center gap-8">
+        @for (gitCont of githubContributors(); track gitCont.id) {
+          <!-- A simple column layout with no border or background -->
+          <div class="flex flex-col items-center">
+            <!-- Avatar -->
+            <app-user-avatar [user]="gitCont" class="rounded-full mb-2"></app-user-avatar>
 
-        <!-- 4b) Fetched GitHub contributors from the Helios repo -->
-        <div class="container mx-auto p-4">
-            <p class="text-lg font-semibold mb-4">GitHub Contributors</p>
+            <!-- Login -->
+            <p class="text-sm text-gray-600">{{ gitCont.login }}</p>
 
-            <!-- Use a responsive grid or flex layout with gap -->
-            <div class="flex flex-wrap justify-center gap-8">
-                @for (gitCont of githubContributors(); track gitCont.id) {
-                    <!-- A simple column layout with no border or background -->
-                    <div class="flex flex-col items-center">
-                        <!-- Avatar -->
-                        <app-user-avatar
-                                [user]="gitCont"
-                                class="rounded-full mb-2"
-                        ></app-user-avatar>
-
-                        <!-- Login -->
-                        <p class="text-sm text-gray-600">{{ gitCont.login }}</p>
-
-                        <!-- Contributions -->
-                        <p class="mt-2 text-sm font-medium">
-                            Contributions:
-                            <span class="text-blue-500">{{ gitCont.contributions }}</span>
-                        </p>
-                    </div>
-                }
-            </div>
-        </div>
-
-
-
-    </section>
+            <!-- Contributions -->
+            <p class="mt-2 text-sm font-medium">
+              Contributions:
+              <span class="text-blue-500">{{ gitCont.contributions }}</span>
+            </p>
+          </div>
+        }
+      </div>
+    </div>
+  </section>
 
   <div class="mt-6 p-4 border rounded-lg shadow-md text-center">
     <h2 class="text-lg font-semibold mb-2">Operator</h2>
