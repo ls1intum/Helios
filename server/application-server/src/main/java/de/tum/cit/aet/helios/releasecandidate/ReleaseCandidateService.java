@@ -57,12 +57,13 @@ public class ReleaseCandidateService {
   }
 
   /**
-   * This method returns all deployments for a given release candidate, meaning a specific commit
-   * and repository. It considers HeliosDeployment and Deployment entities and returns the latest
-   * one for each environment.
+   * Returns all deployments for a given release candidate, meaning a specific commit and
+   * repository. It considers HeliosDeployment and Deployment entities and returns the latest one
+   * for each environment.
    *
-   * @param candidate
-   * @return
+   * @param candidate The release candidate to get deployments for
+   * @return A list of LatestDeploymentUnion objects, each representing the latest deployment for an
+   *     environment
    */
   private List<LatestDeploymentUnion> getCandidateDeployments(final ReleaseCandidate candidate) {
     Map<Long, LatestDeploymentUnion> deploymentsByEnvironment = new HashMap<>();
