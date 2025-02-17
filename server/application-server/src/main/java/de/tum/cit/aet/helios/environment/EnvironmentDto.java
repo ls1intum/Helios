@@ -67,6 +67,7 @@ public record EnvironmentDto(
       String ref,
       String task,
       String releaseCandidateName,
+      String prName,
       UserInfoDto user,
       OffsetDateTime createdAt,
       OffsetDateTime updatedAt) {
@@ -85,6 +86,7 @@ public record EnvironmentDto(
               .findByRepositoryRepositoryIdAndCommitSha(union.getRepository().id(), union.getSha())
               .map(ReleaseCandidate::getName)
               .orElse(null),
+          union.getPullRequestName(),
           UserInfoDto.fromUser(union.getCreator()),
           union.getCreatedAt(),
           union.getUpdatedAt());

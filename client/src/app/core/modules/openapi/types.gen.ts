@@ -27,6 +27,7 @@ export type EnvironmentDeployment = {
   ref?: string;
   task?: string;
   releaseCandidateName?: string;
+  prName?: string;
   user?: UserInfoDto;
   createdAt?: string;
   updatedAt?: string;

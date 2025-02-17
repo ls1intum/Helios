@@ -905,6 +905,8 @@ components:
           type: string
         releaseCandidateName:
           type: string
+        prName:
+          type: string
         user:
           $ref: "#/components/schemas/UserInfoDto"
         createdAt:

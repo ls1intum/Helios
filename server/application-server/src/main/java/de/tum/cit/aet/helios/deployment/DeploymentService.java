@@ -11,6 +11,8 @@ import de.tum.cit.aet.helios.filters.RepositoryContext;
 import de.tum.cit.aet.helios.github.GitHubService;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
+import de.tum.cit.aet.helios.pullrequest.PullRequest;
+import de.tum.cit.aet.helios.pullrequest.PullRequestRepository;
 import de.tum.cit.aet.helios.user.User;
 import de.tum.cit.aet.helios.workflow.Workflow;
 import de.tum.cit.aet.helios.workflow.WorkflowService;
@@ -41,6 +43,7 @@ public class DeploymentService {
   private final EnvironmentLockHistoryRepository lockHistoryRepository;
   private final EnvironmentRepository environmentRepository;
   private final BranchService branchService;
+  private final PullRequestRepository pullRequestRepository;
 
   public DeploymentService(
       DeploymentRepository deploymentRepository,
@@ -51,7 +54,8 @@ public class DeploymentService {
       HeliosDeploymentRepository heliosDeploymentRepository,
       BranchService branchService,
       EnvironmentLockHistoryRepository lockHistoryRepository,
-      EnvironmentRepository environmentRepository) {
+      EnvironmentRepository environmentRepository,
+      PullRequestRepository pullRequestRepository) {
     this.deploymentRepository = deploymentRepository;
     this.gitHubService = gitHubService;
     this.environmentService = environmentService;
@@ -61,6 +65,7 @@ public class DeploymentService {
     this.lockHistoryRepository = lockHistoryRepository;
     this.environmentRepository = environmentRepository;
     this.branchService = branchService;
+    this.pullRequestRepository = pullRequestRepository;
   }
 
   public Optional<DeploymentDto> getDeploymentById(Long id) {
@@ -125,6 +130,11 @@ public class DeploymentService {
       throw new DeploymentException("Deployment is still in progress, please wait.");
     }
 
+    // Set the PR associated with the deployment
+    Optional<PullRequest> optionalPullRequest =
+        pullRequestRepository.findByRepositoryRepositoryIdAndHeadRefNameOrHeadSha(
+            RepositoryContext.getRepositoryId(), deployRequest.branchName(), branchCommitSha);
+
     User githubUser = this.authService.getUserFromGithubId();
     // Create a new HeliosDeployment record
     HeliosDeployment heliosDeployment = new HeliosDeployment();
@@ -134,6 +144,7 @@ public class DeploymentService {
     heliosDeployment.setBranchName(deployRequest.branchName());
     heliosDeployment.setSha(branchCommitSha);
     heliosDeployment.setCreator(githubUser);
+    heliosDeployment.setPullRequest(optionalPullRequest.orElse(null));
     heliosDeployment = heliosDeploymentRepository.saveAndFlush(heliosDeployment);
 
     // Build parameters for the workflow

@@ -2,6 +2,7 @@ package de.tum.cit.aet.helios.heliosdeployment;
 
 import de.tum.cit.aet.helios.deployment.Deployment;
 import de.tum.cit.aet.helios.environment.Environment;
+import de.tum.cit.aet.helios.pullrequest.PullRequest;
 import de.tum.cit.aet.helios.user.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -84,6 +85,10 @@ public class HeliosDeployment {
     }
     updatedAt = OffsetDateTime.now();
   }
+
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "pull_request_id")
+  private PullRequest pullRequest;
 
   // @PreUpdate
   // protected void onUpdate() {

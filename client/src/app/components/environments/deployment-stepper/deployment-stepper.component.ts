@@ -33,7 +33,7 @@ export class DeploymentStepperComponent implements OnInit, OnDestroy {
   estimatedTimes = {
     QUEUED: 5,
     WAITING: 1,
-    PENDING: 1,
+    PENDING: 5,
     IN_PROGRESS: 5,
   };
 
@@ -45,6 +45,10 @@ export class DeploymentStepperComponent implements OnInit, OnDestroy {
     this.intervalId = window.setInterval(() => {
       this.time = Date.now();
     }, 1000);
+
+    if (this.deployment?.prName !== null && this.deployment?.prName !== undefined) {
+      this.estimatedTimes.PENDING = 1;
+    }
   }
 
   ngOnDestroy(): void {
@@ -117,13 +121,10 @@ export class DeploymentStepperComponent implements OnInit, OnDestroy {
 
     const elapsedForSegmentMs = elapsedMs - cumulativeEstimateMs > 0 ? elapsedMs - cumulativeEstimateMs : 0;
     let ratio = elapsedForSegmentMs / estimatedMs;
-    console.log('elapsed for segment ', elapsedForSegmentMs);
-    console.log('estimated ms ', estimatedMs);
     if (ratio > 1) {
       ratio = 1;
     }
     progress = segStart + ratio * 33;
-    console.log('progress ', progress);
     return Math.floor(progress);
   }
 

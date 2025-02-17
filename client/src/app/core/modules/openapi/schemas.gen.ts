@@ -86,6 +86,9 @@ export const EnvironmentDeploymentSchema = {
     releaseCandidateName: {
       type: 'string',
     },
+    prName: {
+      type: 'string',
+    },
     user: {
       $ref: '#/components/schemas/UserInfoDto',
     },
