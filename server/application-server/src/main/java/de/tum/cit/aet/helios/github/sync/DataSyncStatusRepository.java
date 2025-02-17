@@ -7,5 +7,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface DataSyncStatusRepository extends JpaRepository<DataSyncStatus, Long> {
 
-  public Optional<DataSyncStatus> findTopByOrderByStartTimeDesc();
+  Optional<DataSyncStatus> findTopByRepositoryNameWithOwner(String repositoryNameWithOwner);
+
+  void deleteByRepositoryNameWithOwner(String fullName);
 }

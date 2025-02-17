@@ -10,6 +10,7 @@ import de.tum.cit.aet.helios.deployment.DeploymentDto;
 import de.tum.cit.aet.helios.deployment.DeploymentRepository;
 import de.tum.cit.aet.helios.filters.RepositoryContext;
 import de.tum.cit.aet.helios.github.GitHubService;
+import de.tum.cit.aet.helios.github.sync.GitHubDataSyncOrchestrator;
 import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import de.tum.cit.aet.helios.releasecandidate.ReleaseCandidateDetailsDto.ReleaseCandidateEvaluationDto;
@@ -43,6 +44,7 @@ public class ReleaseCandidateService {
   private final GitHubUserSyncService userSyncService;
   private final ReleaseCandidateEvaluationRepository releaseCandidateEvaluationRepository;
   private final AuthService authService;
+  private final GitHubDataSyncOrchestrator gitHubDataSyncOrchestrator;
 
   public List<ReleaseCandidateInfoDto> getAllReleaseCandidates() {
     return releaseCandidateRepository.findAllByOrderByNameAsc().stream()
@@ -149,7 +151,7 @@ public class ReleaseCandidateService {
     newReleaseCandidate.setCreatedBy(
         userRepository
             .findByLoginIgnoreCase(login)
-            .orElseGet(() -> userSyncService.syncUser(login)));
+            .orElseGet(() -> gitHubDataSyncOrchestrator.syncUser(login)));
     newReleaseCandidate.setCreatedAt(OffsetDateTime.now());
     return ReleaseCandidateInfoDto.fromReleaseCandidate(
         releaseCandidateRepository.save(newReleaseCandidate));

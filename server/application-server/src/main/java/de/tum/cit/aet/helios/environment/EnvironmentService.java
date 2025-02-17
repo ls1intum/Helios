@@ -13,6 +13,7 @@ import de.tum.cit.aet.helios.releasecandidate.ReleaseCandidateRepository;
 import de.tum.cit.aet.helios.user.User;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
+import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -144,8 +145,10 @@ public class EnvironmentService {
   /**
    * Locks the environment with the specified ID.
    *
-   * <p>This method attempts to lock the environment by setting its locked status to true. If the
-   * environment is already locked, it returns an empty Optional. If the environment is successfully
+   * <p>This method attempts to lock the environment by setting its locked status to
+   * true. If the
+   * environment is already locked, it returns an empty Optional. If the
+   * environment is successfully
    * locked, it returns an Optional containing the locked environment.
    *
    * <p>This method is transactional and handles optimistic locking failures.
@@ -159,10 +162,9 @@ public class EnvironmentService {
   public Optional<Environment> lockEnvironment(Long id) {
     final User currentUser = authService.getUserFromGithubId();
 
-    Environment environment =
-        environmentRepository
-            .findById(id)
-            .orElseThrow(() -> new EntityNotFoundException("Environment not found with ID: " + id));
+    Environment environment = environmentRepository
+        .findById(id)
+        .orElseThrow(() -> new EntityNotFoundException("Environment not found with ID: " + id));
 
     if (!environment.isEnabled()) {
       throw new IllegalStateException("Environment is disabled");
@@ -237,6 +239,20 @@ public class EnvironmentService {
   }
 
   /**
+   * Marks the provided environment as having its status changed by setting the
+   * current timestamp. It updates the environment's status change timestamp to the
+   * current instant and persists the changes in the repository.
+   * This will cause the status check for the environment to run more frequently
+   * for some time.
+   *
+   * @param environment the Environment instance whose status has been altered
+   */
+  public void markStatusAsChanged(Environment environment) {
+    environment.setStatusChangedAt(Instant.now());
+    environmentRepository.save(environment);
+  }
+
+  /**
    * Unlocks the environment with the specified ID.
    *
    * <p>This method sets the locked status of the environment to false and saves the updated
@@ -249,10 +265,9 @@ public class EnvironmentService {
   public EnvironmentDto unlockEnvironment(Long id) {
     final User currentUser = authService.getUserFromGithubId();
 
-    Environment environment =
-        environmentRepository
-            .findById(id)
-            .orElseThrow(() -> new EntityNotFoundException("Environment not found with ID: " + id));
+    Environment environment = environmentRepository
+        .findById(id)
+        .orElseThrow(() -> new EntityNotFoundException("Environment not found with ID: " + id));
 
     if (!environment.isLocked()) {
       throw new IllegalStateException("Environment is not locked");
@@ -311,7 +326,8 @@ public class EnvironmentService {
   /**
    * Updates the environment with the specified ID.
    *
-   * <p>This method updates the environment with the specified ID using the provided EnvironmentDto.
+   * <p>This method updates the environment with the specified ID using the provided
+   * EnvironmentDto.
    *
    * @param id the ID of the environment to update
    * @param environmentDto the EnvironmentDto containing the updated environment information

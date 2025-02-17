@@ -4,93 +4,33 @@ import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
 import de.tum.cit.aet.helios.label.Label;
 import de.tum.cit.aet.helios.label.LabelRepository;
 import de.tum.cit.aet.helios.label.github.GitHubLabelConverter;
-import de.tum.cit.aet.helios.pullrequest.PullRequest;
 import de.tum.cit.aet.helios.pullrequest.PullRequestRepository;
 import de.tum.cit.aet.helios.user.User;
-import de.tum.cit.aet.helios.user.UserRepository;
-import de.tum.cit.aet.helios.user.github.GitHubUserConverter;
+import de.tum.cit.aet.helios.user.github.GitHubUserSyncService;
 import de.tum.cit.aet.helios.util.DateUtil;
-import jakarta.transaction.Transactional;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.kohsuke.github.GHDirection;
-import org.kohsuke.github.GHIssueState;
 import org.kohsuke.github.GHPullRequest;
-import org.kohsuke.github.GHPullRequestQueryBuilder.Sort;
-import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GHUser;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Log4j2
+@RequiredArgsConstructor
 public class GitHubPullRequestSyncService {
 
   private final PullRequestRepository pullRequestRepository;
   private final GitRepoRepository gitRepoRepository;
-  private final UserRepository userRepository;
   private final GitHubPullRequestConverter pullRequestConverter;
-  private final GitHubUserConverter userConverter;
   private final LabelRepository labelRepository;
   private final GitHubLabelConverter gitHubLabelConverter;
+  private final GitHubUserSyncService gitHubUserSyncService;
 
-  public GitHubPullRequestSyncService(
-      PullRequestRepository pullRequestRepository,
-      GitRepoRepository gitRepoRepository,
-      UserRepository userRepository,
-      GitHubPullRequestConverter pullRequestConverter,
-      GitHubUserConverter userConverter, LabelRepository labelRepository,
-      GitHubLabelConverter gitHubLabelConverter) {
-    this.pullRequestRepository = pullRequestRepository;
-    this.gitRepoRepository = gitRepoRepository;
-    this.userRepository = userRepository;
-    this.pullRequestConverter = pullRequestConverter;
-    this.userConverter = userConverter;
-    this.labelRepository = labelRepository;
-    this.gitHubLabelConverter = gitHubLabelConverter;
-  }
-
-  /**
-   * Synchronizes all pull requests from the specified GitHub repositories.
-   *
-   * @param repositories the list of GitHub repositories to sync pull requests from
-   * @return a list of GitHub pull requests that were successfully fetched and processed
-   */
-  public List<GHPullRequest> syncOpenPullRequestsOfAllRepositories(
-      List<GHRepository> repositories) {
-    return repositories.stream()
-        .map(this::syncPullRequestsOfRepository)
-        .flatMap(List::stream)
-        .toList();
-  }
-
-  /**
-   * Synchronizes all pull requests from a specific GitHub repository.
-   *
-   * @param repository the GitHub repository to sync pull requests from
-   * @return a list of GitHub pull requests that were successfully fetched and processed
-   */
-  public List<GHPullRequest> syncPullRequestsOfRepository(
-      GHRepository repository) {
-    var iterator =
-        repository
-            .queryPullRequests()
-            .state(GHIssueState.OPEN)
-            .sort(Sort.UPDATED)
-            .direction(GHDirection.DESC)
-            .list()
-            .withPageSize(100)
-            .iterator();
-
-    var pullRequests = new ArrayList<GHPullRequest>();
-    iterator.forEachRemaining(pullRequest -> {
-      pullRequests.add(pullRequest);
-      processPullRequest(pullRequest);
-    });
-    return pullRequests;
-  }
 
   /**
    * Processes a single GitHub pull request by updating or creating it in the local repository.
@@ -98,10 +38,9 @@ public class GitHubPullRequestSyncService {
    * users, and requested reviewers.
    *
    * @param ghPullRequest the GitHub pull request to process
-   * @return the updated or newly created PullRequest entity, or {@code null} if an error occurred
    */
   @Transactional
-  public PullRequest processPullRequest(GHPullRequest ghPullRequest) {
+  public void processPullRequest(GHPullRequest ghPullRequest) {
     var result =
         pullRequestRepository
             .findById(ghPullRequest.getId())
@@ -127,7 +66,7 @@ public class GitHubPullRequestSyncService {
             .orElseGet(() -> pullRequestConverter.convert(ghPullRequest));
 
     if (result == null) {
-      return null;
+      return;
     }
 
     // Link with existing repository if not already linked
@@ -160,11 +99,10 @@ public class GitHubPullRequestSyncService {
     // Link author
     try {
       var author = ghPullRequest.getUser();
-      var resultAuthor =
-          userRepository
-              .findById(author.getId())
-              .orElseGet(() -> userRepository.save(userConverter.convert(author)));
-      result.setAuthor(resultAuthor);
+      var resultAuthor = gitHubUserSyncService.processUser(author);
+      if (resultAuthor != null) {
+        result.setAuthor(resultAuthor);
+      }
     } catch (IOException e) {
       log.error(
           "Failed to link author for pull request {}: {}", ghPullRequest.getId(), e.getMessage());
@@ -175,11 +113,14 @@ public class GitHubPullRequestSyncService {
     var resultAssignees = new HashSet<User>();
     assignees.forEach(
         assignee -> {
-          var resultAssignee =
-              userRepository
-                  .findById(assignee.getId())
-                  .orElseGet(() -> userRepository.save(userConverter.convert(assignee)));
-          resultAssignees.add(resultAssignee);
+          try {
+            User assigned = gitHubUserSyncService.processUser(assignee);
+            if (assigned != null) {
+              resultAssignees.add(assigned);
+            }
+          } catch (Exception e) {
+            log.error("Failed to sync assignee {}: {}", assignee.getLogin(), e.getMessage());
+          }
         });
     result.setAssignees(resultAssignees);
 
@@ -188,14 +129,9 @@ public class GitHubPullRequestSyncService {
       var mergedByUser = ghPullRequest.getMergedBy();
       if (mergedByUser == null) {
         result.setMergedBy(
-            userRepository
-                .findById(Long.parseLong("-1"))
-                .orElseGet(() -> userRepository.save(userConverter.convertToAnonymous())));
+            gitHubUserSyncService.getAnonymousUser());
       } else {
-        var resultMergedBy =
-            userRepository
-                .findById(ghPullRequest.getMergedBy().getId())
-                .orElseGet(() -> userRepository.save(userConverter.convert(mergedByUser)));
+        var resultMergedBy = gitHubUserSyncService.processUser(mergedByUser);
         result.setMergedBy(resultMergedBy);
       }
     } catch (IOException e) {
@@ -225,14 +161,18 @@ public class GitHubPullRequestSyncService {
 
       var resultRequestedReviewers = new HashSet<User>();
 
-      resultRequestedReviewers.addAll(
-          requestedReviewers.stream()
-              .map(
-                  user ->
-                      userRepository
-                          .findById(user.getId())
-                          .orElseGet(() -> userRepository.save(userConverter.convert(user))))
-              .toList());
+      for (GHUser reviewer : requestedReviewers) {
+        try {
+          User user = gitHubUserSyncService.processUser(reviewer);
+          if (user != null) {
+            resultRequestedReviewers.add(user);
+          }
+        } catch (Exception e) {
+          log.error("Failed to link requested reviewer {}: {}", reviewer.getLogin(), e.getMessage(),
+              e);
+        }
+      }
+
       result.setRequestedReviewers(resultRequestedReviewers);
     } catch (IOException e) {
       log.error(
@@ -241,6 +181,6 @@ public class GitHubPullRequestSyncService {
           e.getMessage());
     }
 
-    return pullRequestRepository.save(result);
+    pullRequestRepository.save(result);
   }
 }
