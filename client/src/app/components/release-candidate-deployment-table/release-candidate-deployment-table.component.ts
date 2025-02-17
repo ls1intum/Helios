@@ -90,11 +90,9 @@ export class ReleaseCandidateDeploymentTableComponent {
     }
 
     // If the latest deployment is not part of the deployments list, but there were deployments to this environment, the release candidate was replaced
-    if (deployments.every(deployment => environment.latestDeployment?.id !== deployment.id && environment.latestDeployment?.type !== deployment.type)) {
+    if (deployments.every(deployment => environment.latestDeployment?.id !== deployment.id || environment.latestDeployment?.type !== deployment.type)) {
       return 'REPLACED';
     }
-
-    console.log(deployments);
 
     // If we were not replaced and we are deployed, we are the latest deployment
     return environment.latestDeployment?.state || 'UNKNOWN';
