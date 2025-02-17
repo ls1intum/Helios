@@ -54,11 +54,6 @@ export class NavigationBarComponent {
         path: ['repo', this.repositoryId(), 'ci-cd'],
       },
       {
-        label: 'Release Management',
-        icon: 'rocket',
-        path: ['repo', this.repositoryId(), 'release'],
-      },
-      {
         label: 'Environments',
         icon: 'server-cog',
         path: ['repo', this.repositoryId(), 'environment'],
@@ -68,7 +63,7 @@ export class NavigationBarComponent {
             {
               label: 'Release Management',
               icon: 'rocket',
-              path: 'release',
+              path: ['repo', this.repositoryId(), 'release'],
             },
             {
               label: 'Project Settings',
