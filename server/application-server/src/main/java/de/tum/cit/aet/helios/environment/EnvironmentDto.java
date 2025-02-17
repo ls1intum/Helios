@@ -1,6 +1,5 @@
 package de.tum.cit.aet.helios.environment;
 
-import de.tum.cit.aet.helios.deployment.Deployment;
 import de.tum.cit.aet.helios.deployment.LatestDeploymentUnion;
 import de.tum.cit.aet.helios.deployment.LatestDeploymentUnion.DeploymentType;
 import de.tum.cit.aet.helios.environment.status.EnvironmentStatus;
@@ -63,7 +62,7 @@ public record EnvironmentDto(
   public static record EnvironmentDeployment(
       @NonNull Long id,
       String url,
-      Deployment.State state,
+      LatestDeploymentUnion.State state,
       String statusesUrl,
       String sha,
       String ref,

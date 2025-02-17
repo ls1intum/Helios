@@ -1,9 +1,15 @@
-import { Component, Input, OnInit, OnDestroy } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IconsModule } from 'icons.module';
 import { ProgressBarModule } from 'primeng/progressbar';
 import { EnvironmentDeployment } from '@app/core/modules/openapi';
 import { TooltipModule } from 'primeng/tooltip';
+
+interface EstimatedTimes {
+  REQUESTED: number;
+  PENDING: number;
+  IN_PROGRESS: number;
+}
 
 @Component({
   selector: 'app-deployment-stepper',
@@ -11,15 +17,26 @@ import { TooltipModule } from 'primeng/tooltip';
   templateUrl: './deployment-stepper.component.html',
 })
 export class DeploymentStepperComponent implements OnInit, OnDestroy {
-  @Input() deployment: EnvironmentDeployment | undefined;
+  // Create a private signal to hold the deployment value.
+  private _deployment = signal<EnvironmentDeployment | undefined>(undefined);
+
+  @Input()
+  set deployment(value: EnvironmentDeployment | undefined) {
+    this._deployment.set(value);
+  }
+  get deployment(): EnvironmentDeployment | undefined {
+    return this._deployment();
+  }
 
   // Define the four steps. (Note: estimatedTimes are defined only for the first three.)
-  steps: ('WAITING' | 'PENDING' | 'IN_PROGRESS' | 'SUCCESS')[] = ['WAITING', 'PENDING', 'IN_PROGRESS', 'SUCCESS'];
+  steps: ('REQUESTED' | 'PENDING' | 'IN_PROGRESS' | 'SUCCESS')[] = ['REQUESTED', 'PENDING', 'IN_PROGRESS', 'SUCCESS'];
+
+  // Mapping of state keys to their display descriptions.
   stepDescriptions: {
-    [key in 'QUEUED' | 'WAITING' | 'PENDING' | 'IN_PROGRESS' | 'SUCCESS' | 'ERROR' | 'FAILURE' | 'UNKNOWN' | 'INACTIVE']: string;
+    [key in 'QUEUED' | 'REQUESTED' | 'PENDING' | 'IN_PROGRESS' | 'SUCCESS' | 'ERROR' | 'FAILURE' | 'UNKNOWN' | 'INACTIVE']: string;
   } = {
     QUEUED: 'Deployment Queued',
-    WAITING: 'Request sent to Github',
+    REQUESTED: 'Request sent to Github',
     PENDING: 'Preparing deployment',
     IN_PROGRESS: 'Deployment in progress',
     SUCCESS: 'Deployment successful',
@@ -30,12 +47,15 @@ export class DeploymentStepperComponent implements OnInit, OnDestroy {
   };
 
   // Estimated times in minutes for each non-terminal step.
-  estimatedTimes = {
-    QUEUED: 5,
-    WAITING: 1,
-    PENDING: 5,
-    IN_PROGRESS: 5,
-  };
+  // Define estimatedTimes as a computed signal that depends on the reactive deployment signal.
+  estimatedTimes = computed<EstimatedTimes>(() => {
+    const deployment = this._deployment();
+    return {
+      REQUESTED: 1,
+      PENDING: deployment?.prName != null ? 1 : 10, // if deployment started from PR then no build time it's 1 minute, if there is a build via branch then it's 4-7 minute in avg
+      IN_PROGRESS: 4, // deployment state takes around 1-3 mintues
+    };
+  });
 
   // A timer updated every second to drive the dynamic progress.
   time: number = Date.now();
@@ -45,10 +65,6 @@ export class DeploymentStepperComponent implements OnInit, OnDestroy {
     this.intervalId = window.setInterval(() => {
       this.time = Date.now();
     }, 1000);
-
-    if (this.deployment?.prName !== null && this.deployment?.prName !== undefined) {
-      this.estimatedTimes.PENDING = 1;
-    }
   }
 
   ngOnDestroy(): void {
@@ -64,17 +80,20 @@ export class DeploymentStepperComponent implements OnInit, OnDestroy {
    */
   get currentEffectiveStepIndex(): number {
     if (!this.deployment || !this.deployment.createdAt) return 0;
-    // if (['SUCCESS', 'ERROR', 'FAILURE'].includes(this.deployment.state || '')) {
-    const index = this.steps.indexOf(this.deployment.state as 'WAITING' | 'PENDING' | 'IN_PROGRESS' | 'SUCCESS');
+    const index = this.steps.indexOf(this.deployment.state as 'REQUESTED' | 'PENDING' | 'IN_PROGRESS' | 'SUCCESS');
     return index !== -1 ? index : 3;
-    // }
-    // return this.virtualStepIndex;
   }
 
+  /**
+   * Checks if the deployment is in an error state.
+   */
   isErrorState(): boolean {
     return ['ERROR', 'FAILURE'].includes(this.deployment?.state || '');
   }
 
+  /**
+   * Checks if the deployment is in an unknown state.
+   */
   isUnknownState(): boolean {
     return ['UNKNOWN', 'INACTIVE'].includes(this.deployment?.state || '');
   }
@@ -87,44 +106,38 @@ export class DeploymentStepperComponent implements OnInit, OnDestroy {
    */
   getStepStatus(index: number): string {
     const effectiveStep = this.currentEffectiveStepIndex;
-    if (this.isUnknownState()) return 'unknown'; // all steps should be unkown
-    if (index < effectiveStep) return 'completed'; //it's already done
-    if (index === effectiveStep) return this.isErrorState() ? 'error' : this.steps[index] == 'SUCCESS' ? 'completed' : 'active';
+    if (this.isUnknownState()) return 'unknown';
+    if (index < effectiveStep) return 'completed';
+    if (index === effectiveStep) return this.isErrorState() ? 'error' : this.steps[index] === 'SUCCESS' ? 'completed' : 'active';
     return 'upcoming';
   }
 
   /**
    * Computes overall progress in a piecewise manner.
-   * Each segment (WAITING, PENDING, IN_PROGRESS) is allotted 25% of the bar.
+   * Each segment (REQUESTED, PENDING, IN_PROGRESS) is allotted 25% of the bar.
    * For the current segment, progress is calculated as a ratio of its elapsed time;
    * if a segment is already completed (i.e. virtualStepIndex > segment index), that segment is full.
    * When the virtual step reaches 3, the progress returns 100%.
    */
   get dynamicProgress(): number {
     if (!this.deployment || !this.deployment.createdAt) return 0;
-    // If the server indicates a terminal state, show full progress.
     if (['UNKNOWN', 'INACTIVE'].includes(this.deployment.state || '')) {
       return 0;
     } else if (['SUCCESS', 'ERROR', 'FAILURE'].includes(this.deployment.state || '')) {
       return 100;
     }
-    const start = new Date(this.deployment.createdAt).getTime(); // start time is when the deployment was created
-    const elapsedMs = this.time - start > 0 ? this.time - start : 0; // elapsed time
-    // If the virtual step is 3, show 100%.
+    const start = new Date(this.deployment.createdAt).getTime();
+    const elapsedMs = this.time - start > 0 ? this.time - start : 0;
     if (this.currentEffectiveStepIndex === 3) return 100;
 
-    let progress = 0;
-    let cumulativeEstimateMs = 0;
-    // There are three segments: 0 (0–25%), 1 (25–50%), 2 (50–75%).
     const segStart = this.currentEffectiveStepIndex * 33;
-    const estimatedMs = this.estimatedTimes[this.steps[this.currentEffectiveStepIndex] as keyof typeof this.estimatedTimes] * 60000;
-
-    const elapsedForSegmentMs = elapsedMs - cumulativeEstimateMs > 0 ? elapsedMs - cumulativeEstimateMs : 0;
+    const estimatedMs = this.estimatedTimes()[this.steps[this.currentEffectiveStepIndex] as keyof EstimatedTimes] * 60000;
+    const elapsedForSegmentMs = elapsedMs > 0 ? elapsedMs : 0;
     let ratio = elapsedForSegmentMs / estimatedMs;
     if (ratio > 1) {
       ratio = 1;
     }
-    progress = segStart + ratio * 33;
+    const progress = segStart + ratio * 33;
     return Math.floor(progress);
   }
 
@@ -138,7 +151,7 @@ export class DeploymentStepperComponent implements OnInit, OnDestroy {
     const elapsedMinutes = (this.time - start) / 60000;
     let cumulative = 0;
     for (let i = 0; i < 3; i++) {
-      const est = this.estimatedTimes[this.steps[i] as keyof typeof this.estimatedTimes];
+      const est = this.estimatedTimes()[this.steps[i] as keyof EstimatedTimes];
       if (this.getStepStatus(i) !== 'completed') {
         cumulative += est;
       }
@@ -155,10 +168,13 @@ export class DeploymentStepperComponent implements OnInit, OnDestroy {
     return '';
   }
 
+  /**
+   * Returns a display name for a given step.
+   */
   getStepDisplayName(step: string): string {
     return (
       {
-        WAITING: 'REQUESTED',
+        REQUESTED: 'REQUESTED',
         PENDING: 'PRE-DEPLOYMENT',
         IN_PROGRESS: 'DEPLOYING',
         SUCCESS: 'SUCCESS',
@@ -173,12 +189,10 @@ export class DeploymentStepperComponent implements OnInit, OnDestroy {
   getDeploymentDuration(): string {
     if (!this.deployment || !this.deployment.createdAt) return '';
 
-    // For terminal states, use finishedAt if available; otherwise use current time.
     let endTime: number;
     if (['SUCCESS', 'ERROR', 'FAILURE'].includes(this.deployment.state || '')) {
       endTime = this.deployment.updatedAt ? new Date(this.deployment.updatedAt).getTime() : this.time;
     } else {
-      // For ongoing deployments, we use the current time.
       endTime = this.time;
     }
 

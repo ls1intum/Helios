@@ -917,6 +917,7 @@ components:
         state:
           type: string
           enum:
+          - REQUESTED
           - PENDING
           - WAITING
           - SUCCESS

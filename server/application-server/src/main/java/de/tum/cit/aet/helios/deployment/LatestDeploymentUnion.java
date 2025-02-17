@@ -111,15 +111,54 @@ public class LatestDeploymentUnion {
     }
   }
 
-  public Deployment.State getState() {
+  public State getState() {
     if (isRealDeployment()) {
-      return realDeployment.getState();
+      return State.fromDeploymentState(realDeployment.getState());
     } else if (isHeliosDeployment()) {
-      Deployment.State state =
-          HeliosDeployment.mapHeliosStatusToDeploymentState(heliosDeployment.getStatus());
-      return state;
+      return State.fromHeliosStatus(heliosDeployment.getStatus());
     } else {
       return null;
+    }
+  }
+
+  public static enum State {
+    REQUESTED,
+
+    // Deployment.State
+    PENDING,
+    WAITING,
+    SUCCESS,
+    ERROR,
+    FAILURE,
+    IN_PROGRESS,
+    QUEUED,
+    INACTIVE,
+    UNKNOWN;
+
+    public static State fromDeploymentState(Deployment.State state) {
+      return switch (state) {
+        case PENDING -> PENDING;
+        case WAITING -> WAITING;
+        case SUCCESS -> SUCCESS;
+        case ERROR -> ERROR;
+        case FAILURE -> FAILURE;
+        case IN_PROGRESS -> IN_PROGRESS;
+        case QUEUED -> QUEUED;
+        case INACTIVE -> INACTIVE;
+        case UNKNOWN -> UNKNOWN;
+        default -> throw new IllegalArgumentException("Invalid state: " + state);
+      };
+    }
+
+    public static State fromHeliosStatus(HeliosDeployment.Status status) {
+      return switch (status) {
+        case WAITING -> REQUESTED;
+        case QUEUED -> PENDING;
+        case IN_PROGRESS -> IN_PROGRESS;
+        case DEPLOYMENT_SUCCESS -> SUCCESS;
+        case FAILED -> FAILURE;
+        case IO_ERROR, UNKNOWN -> UNKNOWN;
+      };
     }
   }
 

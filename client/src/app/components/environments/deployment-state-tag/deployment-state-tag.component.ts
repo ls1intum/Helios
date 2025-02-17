@@ -2,9 +2,9 @@ import { Component, computed, input } from '@angular/core';
 import { TagModule } from 'primeng/tag';
 import { IconsModule } from 'icons.module';
 import { TooltipModule } from 'primeng/tooltip';
-import { DeploymentDto } from '@app/core/modules/openapi';
+import { EnvironmentDeployment } from '@app/core/modules/openapi';
 
-type BaseDeploymentState = NonNullable<DeploymentDto['state']>;
+type BaseDeploymentState = NonNullable<EnvironmentDeployment['state']>;
 type ExtendedDeploymentState = BaseDeploymentState | 'NEVER_DEPLOYED' | 'REPLACED';
 
 @Component({
@@ -34,6 +34,7 @@ export class DeploymentStateTagComponent {
       UNKNOWN: 'secondary',
       NEVER_DEPLOYED: 'secondary',
       REPLACED: 'contrast',
+      REQUESTED: 'warn',
     };
     return severityMap[this.internalState()];
   });
@@ -51,6 +52,7 @@ export class DeploymentStateTagComponent {
       UNKNOWN: 'question-mark',
       NEVER_DEPLOYED: 'question-mark',
       REPLACED: 'repeat',
+      REQUESTED: 'progress',
     };
     return iconMap[this.internalState()];
   });
@@ -73,6 +75,7 @@ export class DeploymentStateTagComponent {
       UNKNOWN: 'unknown',
       NEVER_DEPLOYED: 'never deployed',
       REPLACED: 'replaced',
+      REQUESTED: 'requested',
     };
     return valueMap[this.internalState()];
   });
@@ -90,6 +93,7 @@ export class DeploymentStateTagComponent {
       UNKNOWN: 'Deployment state unknown',
       NEVER_DEPLOYED: 'Never deployed',
       REPLACED: 'Deployment was replaced',
+      REQUESTED: 'Deployment requested',
     };
     return tooltipMap[this.internalState()];
   });
