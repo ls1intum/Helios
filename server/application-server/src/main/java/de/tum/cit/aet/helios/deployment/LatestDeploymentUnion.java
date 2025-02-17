@@ -1,5 +1,6 @@
 package de.tum.cit.aet.helios.deployment;
 
+import de.tum.cit.aet.helios.environment.Environment;
 import de.tum.cit.aet.helios.gitrepo.RepositoryInfoDto;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
 import de.tum.cit.aet.helios.user.User;
@@ -25,6 +26,18 @@ public class LatestDeploymentUnion {
     return new LatestDeploymentUnion(dep, null);
   }
 
+  /**
+   * Create a LatestDeploymentUnion with a real Deployment and a HeliosDeployment as a fallback.
+   *
+   * @param dep The github deployment
+   * @param helios The helios deployment as a fallback for some fields
+   * @return The LatestDeploymentUnion
+   */
+  public static LatestDeploymentUnion realDeployment(Deployment dep, HeliosDeployment helios) {
+    dep.setCreatedAt(helios.getCreatedAt());
+    return new LatestDeploymentUnion(dep, helios);
+  }
+
   public static LatestDeploymentUnion heliosDeployment(HeliosDeployment helios) {
     return new LatestDeploymentUnion(null, helios);
   }
@@ -38,6 +51,10 @@ public class LatestDeploymentUnion {
   }
 
   public boolean isHeliosDeployment() {
+    return heliosDeployment != null && realDeployment == null;
+  }
+
+  public boolean hasHeliosDeployment() {
     return heliosDeployment != null;
   }
 
@@ -59,6 +76,13 @@ public class LatestDeploymentUnion {
     }
   }
 
+  public String getWorkflowRunHtmlUrl() {
+    if (hasHeliosDeployment()) {
+      return this.getHeliosDeployment().getWorkflowRunHtmlUrl();
+    }
+    return null;
+  }
+
   public RepositoryInfoDto getRepository() {
     if (isRealDeployment()) {
       return RepositoryInfoDto.fromRepository(realDeployment.getRepository());
@@ -72,6 +96,16 @@ public class LatestDeploymentUnion {
   public String getUrl() {
     if (isRealDeployment()) {
       return realDeployment.getUrl();
+    } else {
+      return null;
+    }
+  }
+
+  public Environment getEnvironment() {
+    if (isRealDeployment()) {
+      return realDeployment.getEnvironment();
+    } else if (isHeliosDeployment()) {
+      return heliosDeployment.getEnvironment();
     } else {
       return null;
     }
@@ -173,5 +207,20 @@ public class LatestDeploymentUnion {
 
   public boolean isNone() {
     return !isRealDeployment() && !isHeliosDeployment();
+  }
+
+  public DeploymentType getType() {
+    if (isRealDeployment()) {
+      return DeploymentType.GITHUB;
+    } else if (isHeliosDeployment()) {
+      return DeploymentType.HELIOS;
+    } else {
+      return null;
+    }
+  }
+
+  public static enum DeploymentType {
+    GITHUB,
+    HELIOS
   }
 }

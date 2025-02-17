@@ -58,9 +58,10 @@ public class Workflow extends BaseGitServiceEntity {
   }
 
   public enum Label {
-    BUILD,
-    DEPLOYMENT,
     NONE,
+    DEPLOY_TEST_SERVER,
+    DEPLOY_STAGING_SERVER,
+    DEPLOY_PRODUCTION_SERVER,
     TEST
   }
 }

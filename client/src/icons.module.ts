@@ -37,6 +37,7 @@ import {
   IconGitMerge,
   IconPoint,
   IconPlus,
+  IconRepeat,
   IconFilter,
   IconFilterPlus,
   IconLock,
@@ -54,6 +55,7 @@ import {
   IconCircle,
   IconClock,
   IconTag,
+  IconTrash,
   IconX,
   IconChevronsRight,
   IconCircleChevronsRight,
@@ -100,6 +102,7 @@ const icons = {
   IconQuestionMark,
   IconPoint,
   IconPlus,
+  IconRepeat,
   IconFilter,
   IconFilterPlus,
   IconLock,
@@ -115,6 +118,7 @@ const icons = {
   IconCircle,
   IconClock,
   IconTag,
+  IconTrash,
   IconX,
 };
 

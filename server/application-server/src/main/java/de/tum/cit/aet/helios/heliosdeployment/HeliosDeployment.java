@@ -72,6 +72,9 @@ public class HeliosDeployment {
   @Column(name = "deployment_id", nullable = true)
   private Long deploymentId;
 
+  @Column(name = "workflow_run_html_url", nullable = true)
+  private String workflowRunHtmlUrl;
+
   private String sha;
 
   @ManyToOne
@@ -144,7 +147,7 @@ public class HeliosDeployment {
   public static Deployment.State mapHeliosStatusToDeploymentState(
       HeliosDeployment.Status heliosStatus) {
     return switch (heliosStatus) {
-      case WAITING -> Deployment.State.WAITING;
+      case WAITING -> Deployment.State.PENDING;
       case QUEUED -> Deployment.State.PENDING;
       case IN_PROGRESS -> Deployment.State.IN_PROGRESS;
       case DEPLOYMENT_SUCCESS -> Deployment.State.SUCCESS;

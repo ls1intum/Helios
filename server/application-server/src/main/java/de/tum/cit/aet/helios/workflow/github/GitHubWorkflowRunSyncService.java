@@ -16,6 +16,7 @@ import de.tum.cit.aet.helios.workflow.WorkflowService;
 import jakarta.transaction.Transactional;
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -128,13 +129,21 @@ public class GitHubWorkflowRunSyncService {
 
   private void processRunForHeliosDeployment(GHWorkflowRun workflowRun) throws IOException {
     // Get the deployment workflow set by the managers
-    Workflow deploymentWorkflow =
-        workflowService.getDeploymentWorkflow(workflowRun.getRepository().getId());
-    if (deploymentWorkflow == null) {
+    List<Workflow> deploymentWorkflows =
+        workflowService.getDeploymentWorkflowsForAllEnv(workflowRun.getRepository().getId());
+    if (deploymentWorkflows.isEmpty()) {
+      log.debug(
+          "No deployment workflow found while processing workflow run {}", workflowRun.getId());
       return;
     }
 
-    if (workflowRun.getWorkflowId() != deploymentWorkflow.getId()) {
+    boolean isDeploymentWorkflowRun =
+        deploymentWorkflows.stream()
+            .anyMatch(workflow -> workflow.getId().equals(workflowRun.getWorkflowId()));
+
+    if (!isDeploymentWorkflowRun) {
+      log.debug("Workflow run {} is not a deployment workflow run", workflowRun.getId());
+
       return;
     }
 
@@ -162,10 +171,15 @@ public class GitHubWorkflowRunSyncService {
 
                   // Update the deployment status
                   heliosDeployment.setStatus(mappedStatus);
+    
+                  // Update the workflow run html url, so we can show the approval url
+                  // to the user before the Github deployment is created
+                  heliosDeployment.setWorkflowRunHtmlUrl(workflowRun.getHtmlUrl().toString());
+
                   log.info(
-                      "Updated HeliosDeployment {} to status {}",
-                      heliosDeployment.getId(),
-                      mappedStatus);
+                          "Updated HeliosDeployment {} to status {}",
+                          heliosDeployment.getId(),
+                          mappedStatus);
                   heliosDeploymentRepository.save(heliosDeployment);
                 }
               } catch (IOException e) {

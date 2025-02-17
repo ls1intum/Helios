@@ -15,6 +15,7 @@ import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
 import { HeliosIconComponent } from '../../components/helios-icon/helios-icon.component';
 import { UserLockInfoComponent } from '@app/components/user-lock-info/user-lock-info.component';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
 
 @Component({
   selector: 'app-main-layout',
@@ -31,6 +32,7 @@ import { UserLockInfoComponent } from '@app/components/user-lock-info/user-lock-
     HeliosIconComponent,
     DividerModule,
     AvatarModule,
+    ConfirmDialogModule,
     CardModule,
     ProfileNavSectionComponent,
     UserLockInfoComponent,
@@ -67,11 +69,7 @@ export class MainLayoutComponent {
         icon: 'arrow-guide',
         path: 'ci-cd',
       },
-      {
-        label: 'Release Management',
-        icon: 'rocket',
-        path: 'release',
-      },
+
       {
         label: 'Environments',
         icon: 'server-cog',
@@ -79,6 +77,11 @@ export class MainLayoutComponent {
       },
       ...(this.keycloakService.profile && this.permissionService.isAtLeastMaintainer()
         ? [
+            {
+              label: 'Release Management',
+              icon: 'rocket',
+              path: 'release',
+            },
             {
               label: 'Project Settings',
               icon: 'adjustments-alt',

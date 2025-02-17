@@ -31,9 +31,10 @@ paths:
             schema:
               type: string
               enum:
-              - BUILD
-              - DEPLOYMENT
               - NONE
+              - DEPLOY_TEST_SERVER
+              - DEPLOY_STAGING_SERVER
+              - DEPLOY_PRODUCTION_SERVER
               - TEST
         required: true
       responses:
@@ -487,6 +488,23 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReleaseCandidateDetailsDto"
+    delete:
+      tags:
+      - release-candidate-controller
+      operationId: deleteReleaseCandidateByName
+      parameters:
+      - name: name
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReleaseCandidateInfoDto"
   /api/release-candidate/newcommits:
     get:
       tags:
@@ -916,6 +934,8 @@ components:
           type: string
         task:
           type: string
+        workflowRunHtmlUrl:
+          type: string
         releaseCandidateName:
           type: string
         prName:
@@ -928,8 +948,14 @@ components:
         updatedAt:
           type: string
           format: date-time
+        type:
+          type: string
+          enum:
+          - GITHUB
+          - HELIOS
       required:
       - id
+      - type
     EnvironmentDto:
       type: object
       properties:
@@ -978,6 +1004,12 @@ components:
         lockedAt:
           type: string
           format: date-time
+        type:
+          type: string
+          enum:
+          - TEST
+          - STAGING
+          - PRODUCTION
         lockExpirationThreshold:
           type: integer
           format: int64
@@ -1070,6 +1102,7 @@ components:
         branchName:
           type: string
       required:
+      - branchName
       - commitSha
       - name
     ReleaseCandidateInfoDto:
@@ -1088,6 +1121,8 @@ components:
           type: integer
           format: int64
         branchName:
+          type: string
+        commitSha:
           type: string
       required:
       - branchName
@@ -1124,9 +1159,10 @@ components:
         label:
           type: string
           enum:
-          - BUILD
-          - DEPLOYMENT
           - NONE
+          - DEPLOY_TEST_SERVER
+          - DEPLOY_STAGING_SERVER
+          - DEPLOY_PRODUCTION_SERVER
           - TEST
         createdAt:
           type: string
@@ -1261,9 +1297,10 @@ components:
         label:
           type: string
           enum:
-          - BUILD
-          - DEPLOYMENT
           - NONE
+          - DEPLOY_TEST_SERVER
+          - DEPLOY_STAGING_SERVER
+          - DEPLOY_PRODUCTION_SERVER
           - TEST
         testProcessingStatus:
           type: string
@@ -1339,54 +1376,24 @@ components:
           $ref: "#/components/schemas/RepositoryInfoDto"
       required:
       - sha
-    DeploymentDto:
+    ReleaseCandidateDeploymentDto:
       type: object
       properties:
         id:
           type: integer
           format: int64
-        repository:
-          $ref: "#/components/schemas/RepositoryInfoDto"
-        url:
-          type: string
-        state:
+        type:
           type: string
           enum:
-          - PENDING
-          - WAITING
-          - SUCCESS
-          - ERROR
-          - FAILURE
-          - IN_PROGRESS
-          - QUEUED
-          - INACTIVE
-          - UNKNOWN
-        statusesUrl:
-          type: string
-        sha:
-          type: string
-        ref:
-          type: string
-        task:
-          type: string
-        environment:
-          $ref: "#/components/schemas/EnvironmentDto"
-        user:
-          $ref: "#/components/schemas/UserInfoDto"
-        createdAt:
-          type: string
-          format: date-time
-        updatedAt:
-          type: string
-          format: date-time
+          - GITHUB
+          - HELIOS
+        environmentId:
+          type: integer
+          format: int64
       required:
-      - environment
+      - environmentId
       - id
-      - ref
-      - sha
-      - statusesUrl
-      - task
-      - url
+      - type
     ReleaseCandidateDetailsDto:
       type: object
       properties:
@@ -1399,7 +1406,7 @@ components:
         deployments:
           type: array
           items:
-            $ref: "#/components/schemas/DeploymentDto"
+            $ref: "#/components/schemas/ReleaseCandidateDeploymentDto"
         evaluations:
           type: array
           items:
@@ -1410,6 +1417,7 @@ components:
           type: string
           format: date-time
       required:
+      - branch
       - commit
       - createdAt
       - createdBy
@@ -1609,6 +1617,54 @@ components:
           $ref: "#/components/schemas/EnvironmentDto"
       required:
       - id
+    DeploymentDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        repository:
+          $ref: "#/components/schemas/RepositoryInfoDto"
+        url:
+          type: string
+        state:
+          type: string
+          enum:
+          - PENDING
+          - WAITING
+          - SUCCESS
+          - ERROR
+          - FAILURE
+          - IN_PROGRESS
+          - QUEUED
+          - INACTIVE
+          - UNKNOWN
+        statusesUrl:
+          type: string
+        sha:
+          type: string
+        ref:
+          type: string
+        task:
+          type: string
+        environment:
+          $ref: "#/components/schemas/EnvironmentDto"
+        user:
+          $ref: "#/components/schemas/UserInfoDto"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+      - environment
+      - id
+      - ref
+      - sha
+      - statusesUrl
+      - task
+      - url
     ActivityHistoryDto:
       type: object
       properties:

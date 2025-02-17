@@ -18,7 +18,6 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
@@ -36,7 +35,6 @@ public class EnvironmentService {
   @Lazy private final GitRepoSettingsService gitRepoSettingsService;
   private final EnvironmentScheduler environmentScheduler;
 
-  @Autowired
   public EnvironmentService(
       AuthService authService,
       EnvironmentRepository environmentRepository,
@@ -58,6 +56,10 @@ public class EnvironmentService {
 
   public Optional<EnvironmentDto> getEnvironmentById(Long id) {
     return environmentRepository.findById(id).map(EnvironmentDto::fromEnvironment);
+  }
+
+  public Optional<Environment.Type> getEnvironmentTypeById(Long id) {
+    return environmentRepository.findById(id).map(Environment::getType);
   }
 
   public List<EnvironmentDto> getAllEnvironments() {
@@ -128,7 +130,7 @@ public class EnvironmentService {
       // Compare updatedAt timestamps to determine the latest
       if (latestDeployment.getCreatedAt().isAfter(latestHelios.getCreatedAt())
           || latestDeployment.getCreatedAt().isEqual(latestHelios.getCreatedAt())) {
-        return LatestDeploymentUnion.realDeployment(latestDeployment, latestHelios.getCreatedAt());
+        return LatestDeploymentUnion.realDeployment(latestDeployment, latestHelios);
       } else {
         return LatestDeploymentUnion.heliosDeployment(latestHelios);
       }
@@ -145,10 +147,8 @@ public class EnvironmentService {
   /**
    * Locks the environment with the specified ID.
    *
-   * <p>This method attempts to lock the environment by setting its locked status to
-   * true. If the
-   * environment is already locked, it returns an empty Optional. If the
-   * environment is successfully
+   * <p>This method attempts to lock the environment by setting its locked status to true. If the
+   * environment is already locked, it returns an empty Optional. If the environment is successfully
    * locked, it returns an Optional containing the locked environment.
    *
    * <p>This method is transactional and handles optimistic locking failures.
@@ -162,21 +162,28 @@ public class EnvironmentService {
   public Optional<Environment> lockEnvironment(Long id) {
     final User currentUser = authService.getUserFromGithubId();
 
-    Environment environment = environmentRepository
-        .findById(id)
-        .orElseThrow(() -> new EntityNotFoundException("Environment not found with ID: " + id));
+    Environment environment =
+        environmentRepository
+            .findById(id)
+            .orElseThrow(() -> new EntityNotFoundException("Environment not found with ID: " + id));
 
     if (!environment.isEnabled()) {
       throw new IllegalStateException("Environment is disabled");
+    }
+
+    // Only proceed with locking if it's a TEST environment
+    if (environment.getType() != Environment.Type.TEST) {
+      // Return the environment without locking for non-TEST environments
+      return Optional.of(environment);
     }
 
     if (environment.isLocked()) {
       if (currentUser.equals(environment.getLockedBy())) {
         return Optional.of(environment);
       }
-
       return Optional.empty();
     }
+
     environment.setLockedBy(currentUser);
     environment.setLockedAt(OffsetDateTime.now());
     environment.setLocked(true);
@@ -239,11 +246,10 @@ public class EnvironmentService {
   }
 
   /**
-   * Marks the provided environment as having its status changed by setting the
-   * current timestamp. It updates the environment's status change timestamp to the
-   * current instant and persists the changes in the repository.
-   * This will cause the status check for the environment to run more frequently
-   * for some time.
+   * Marks the provided environment as having its status changed by setting the current timestamp.
+   * It updates the environment's status change timestamp to the current instant and persists the
+   * changes in the repository. This will cause the status check for the environment to run more
+   * frequently for some time.
    *
    * @param environment the Environment instance whose status has been altered
    */
@@ -265,9 +271,10 @@ public class EnvironmentService {
   public EnvironmentDto unlockEnvironment(Long id) {
     final User currentUser = authService.getUserFromGithubId();
 
-    Environment environment = environmentRepository
-        .findById(id)
-        .orElseThrow(() -> new EntityNotFoundException("Environment not found with ID: " + id));
+    Environment environment =
+        environmentRepository
+            .findById(id)
+            .orElseThrow(() -> new EntityNotFoundException("Environment not found with ID: " + id));
 
     if (!environment.isLocked()) {
       throw new IllegalStateException("Environment is not locked");
@@ -326,8 +333,7 @@ public class EnvironmentService {
   /**
    * Updates the environment with the specified ID.
    *
-   * <p>This method updates the environment with the specified ID using the provided
-   * EnvironmentDto.
+   * <p>This method updates the environment with the specified ID using the provided EnvironmentDto.
    *
    * @param id the ID of the environment to update
    * @param environmentDto the EnvironmentDto containing the updated environment information
@@ -372,6 +378,9 @@ public class EnvironmentService {
               } else {
                 environment.setStatusCheckType(null);
                 environment.setStatusUrl(null);
+              }
+              if (environmentDto.type() != null) {
+                environment.setType(environmentDto.type());
               }
               environment.setLockExpirationThreshold(environmentDto.lockExpirationThreshold());
               environment.setLockReservationThreshold(environmentDto.lockReservationThreshold());

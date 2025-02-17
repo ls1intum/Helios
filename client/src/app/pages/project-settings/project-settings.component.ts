@@ -1,18 +1,20 @@
+import { Component, computed, effect, inject, input, numberAttribute, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Component, signal, computed, input, numberAttribute, effect, inject } from '@angular/core';
 import { injectMutation, injectQuery, QueryClient } from '@tanstack/angular-query-experimental';
 
-import { TableModule } from 'primeng/table';
-import { ButtonModule } from 'primeng/button';
-import { PanelModule } from 'primeng/panel';
-import { DialogModule } from 'primeng/dialog';
-import { InputTextModule } from 'primeng/inputtext';
 import { IconsModule } from 'icons.module';
-import { DragDropModule } from 'primeng/dragdrop';
 import { ConfirmationService } from 'primeng/api';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { ButtonModule } from 'primeng/button';
+import { DialogModule } from 'primeng/dialog';
 import { DividerModule } from 'primeng/divider';
+import { DragDropModule } from 'primeng/dragdrop';
+import { InputTextModule } from 'primeng/inputtext';
+import { PanelModule } from 'primeng/panel';
+import { TableModule } from 'primeng/table';
 
+import { LockingThresholdsComponent } from '@app/components/locking-thresholds/locking-thresholds.component';
+import { PageHeadingComponent } from '@app/components/page-heading/page-heading.component';
+import { WorkflowDto, WorkflowGroupDto, WorkflowMembershipDto } from '@app/core/modules/openapi';
 import {
   createWorkflowGroupMutation,
   deleteWorkflowGroupMutation,
@@ -20,20 +22,16 @@ import {
   getGroupsWithWorkflowsQueryKey,
   getWorkflowsByRepositoryIdOptions,
   getWorkflowsByRepositoryIdQueryKey,
-  updateWorkflowGroupsMutation,
   updateWorkflowLabelMutation,
+  updateWorkflowGroupsMutation,
 } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
-import { WorkflowDto, WorkflowGroupDto, WorkflowMembershipDto } from '@app/core/modules/openapi';
 import { WorkflowDtoSchema } from '@app/core/modules/openapi/schemas.gen';
 import { MessageService } from 'primeng/api';
-import { PageHeadingComponent } from '@app/components/page-heading/page-heading.component';
-import { TooltipModule } from 'primeng/tooltip';
 import { SelectModule } from 'primeng/select';
-import { LockingThresholdsComponent } from '@app/components/locking-thresholds/locking-thresholds.component';
+import { TooltipModule } from 'primeng/tooltip';
 
 @Component({
   selector: 'app-project-settings',
-  standalone: true,
   imports: [
     FormsModule,
     TableModule,
@@ -47,7 +45,6 @@ import { LockingThresholdsComponent } from '@app/components/locking-thresholds/l
     InputTextModule,
     IconsModule,
     DragDropModule,
-    ConfirmDialogModule,
     DividerModule,
   ],
   templateUrl: './project-settings.component.html',
@@ -67,7 +64,7 @@ export class ProjectSettingsComponent {
   showAddGroupDialog = false;
   newGroupName = '';
   // Store the previous label temporarily for the confirmation dialog
-  private previousLabel: 'BUILD' | 'DEPLOYMENT' | 'NONE' | 'TEST' = 'NONE';
+  private previousLabel: 'NONE' | 'DEPLOY_TEST_SERVER' | 'DEPLOY_STAGING_SERVER' | 'DEPLOY_PRODUCTION_SERVER' | 'TEST' = 'NONE';
 
   // Drag & Drop logic for groupedWorkflowsArray
   private dragIndex: number | null = null;
@@ -216,9 +213,10 @@ export class ProjectSettingsComponent {
   getWorkflowLabelOptions(currentLabel: string) {
     const assignedLabels = this.workflows().map(wf => wf.label);
     return Object.values(WorkflowDtoSchema.properties.label.enum).filter(label => {
-      const isDeployment = label === 'DEPLOYMENT' && assignedLabels.includes('DEPLOYMENT');
-      const isBuild = label === 'BUILD' && assignedLabels.includes('BUILD');
-      return label === currentLabel || (!isDeployment && !isBuild);
+      const isTest = label === 'DEPLOY_TEST_SERVER' && assignedLabels.includes('DEPLOY_TEST_SERVER');
+      const isStaging = label === 'DEPLOY_STAGING_SERVER' && assignedLabels.includes('DEPLOY_STAGING_SERVER');
+      const isProduction = label === 'DEPLOY_PRODUCTION_SERVER' && assignedLabels.includes('DEPLOY_PRODUCTION_SERVER');
+      return label === currentLabel || (!isTest && !isStaging && !isProduction);
     });
   }
 
@@ -229,7 +227,7 @@ export class ProjectSettingsComponent {
 
   onChangeLabel(workflow: WorkflowDto) {
     const label = workflow.label;
-    if (label === 'DEPLOYMENT' || label === 'BUILD') {
+    if (uniqueLabels.includes(label)) {
       const existingLabel = this.workflows().find(wf => wf.label === label && wf.id !== workflow.id);
       if (existingLabel) {
         console.warn(`Only one workflow can be labeled as ${label}.`);
@@ -248,11 +246,12 @@ export class ProjectSettingsComponent {
             <div>
               <p class="font-semibold">Note:</p>
               <p class="text-sm text-gray-600 mb-2">
-                Only one workflow can be labeled as either <strong>DEPLOYMENT</strong> or <strong>BUILD</strong>.
+                Only one workflow can be labeled as either <strong>DEPLOY_TEST_SERVER</strong>, <strong>DEPLOY_STAGING_SERVER</strong> or <strong>DEPLOY_PRODUCTION_SERVER</strong>.
               </p>
               <ul class="list-disc list-inside text-sm text-gray-600">
-                <li><strong>DEPLOYMENT</strong>: This label sets the workflow to trigger server deployments.</li>
-                <li><strong>BUILD</strong>: This label sets the workflow to trigger build processes.</li>
+                <li><strong>DEPLOY_TEST_SERVER</strong>: This label sets the workflow to trigger test server deployments.</li>
+                <li><strong>DEPLOY_STAGING_SERVER</strong>: This label sets the workflow to staging test server deployments.</li>
+                <li><strong>DEPLOY_PRODUCTION_SERVER</strong>: This label sets the workflow to production test server deployments.</li>
                 <li><strong>TEST</strong>: This label sets the workflow to be searched for test artifacts.</li>
                 <li><strong>NONE</strong>: No label is set for this workflow.</li>
               </ul>
@@ -386,3 +385,5 @@ export class ProjectSettingsComponent {
     this.dragIndex = null;
   }
 }
+
+const uniqueLabels = ['DEPLOY_TEST_SERVER', 'DEPLOY_STAGING_SERVER', 'DEPLOY_PRODUCTION_SERVER'];

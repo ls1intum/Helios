@@ -26,11 +26,13 @@ export type EnvironmentDeployment = {
   sha?: string;
   ref?: string;
   task?: string;
+  workflowRunHtmlUrl?: string;
   releaseCandidateName?: string;
   prName?: string;
   user?: UserInfoDto;
   createdAt?: string;
   updatedAt?: string;
+  type: 'GITHUB' | 'HELIOS';
 };
 
 export type EnvironmentDto = {
@@ -52,6 +54,7 @@ export type EnvironmentDto = {
   latestStatus?: EnvironmentStatusDto;
   lockedBy?: UserInfoDto;
   lockedAt?: string;
+  type?: 'TEST' | 'STAGING' | 'PRODUCTION';
   lockExpirationThreshold?: number;
   lockReservationThreshold?: number;
   lockWillExpireAt?: string;
@@ -86,7 +89,7 @@ export type UserInfoDto = {
 export type ReleaseCandidateCreateDto = {
   name: string;
   commitSha: string;
-  branchName?: string;
+  branchName: string;
 };
 
 export type ReleaseCandidateInfoDto = {
@@ -98,6 +101,7 @@ export type ReleaseCandidateInfoDto = {
 export type DeployRequest = {
   environmentId: number;
   branchName: string;
+  commitSha?: string;
 };
 
 export type WorkflowDto = {
@@ -110,7 +114,7 @@ export type WorkflowDto = {
   url?: string;
   htmlUrl?: string;
   badgeUrl?: string;
-  label: 'BUILD' | 'DEPLOYMENT' | 'NONE' | 'TEST';
+  label: 'NONE' | 'DEPLOY_TEST_SERVER' | 'DEPLOY_STAGING_SERVER' | 'DEPLOY_PRODUCTION_SERVER' | 'TEST';
   createdAt?: string;
   updatedAt?: string;
 };
@@ -161,7 +165,7 @@ export type WorkflowRunDto = {
   workflowId: number;
   conclusion?: 'ACTION_REQUIRED' | 'CANCELLED' | 'FAILURE' | 'NEUTRAL' | 'SUCCESS' | 'SKIPPED' | 'STALE' | 'TIMED_OUT' | 'STARTUP_FAILURE' | 'UNKNOWN';
   htmlUrl: string;
-  label: 'BUILD' | 'DEPLOYMENT' | 'NONE' | 'TEST';
+  label: 'NONE' | 'DEPLOY_TEST_SERVER' | 'DEPLOY_STAGING_SERVER' | 'DEPLOY_PRODUCTION_SERVER' | 'TEST';
   testProcessingStatus?: 'PROCESSING' | 'PROCESSED' | 'FAILED';
   testSuites: Array<TestSuiteDto>;
 };
@@ -191,26 +195,17 @@ export type CommitInfoDto = {
   repository?: RepositoryInfoDto;
 };
 
-export type DeploymentDto = {
+export type ReleaseCandidateDeploymentDto = {
   id: number;
-  repository?: RepositoryInfoDto;
-  url: string;
-  state?: 'PENDING' | 'WAITING' | 'SUCCESS' | 'ERROR' | 'FAILURE' | 'IN_PROGRESS' | 'QUEUED' | 'INACTIVE' | 'UNKNOWN';
-  statusesUrl: string;
-  sha: string;
-  ref: string;
-  task: string;
-  environment: EnvironmentDto;
-  user?: UserInfoDto;
-  createdAt?: string;
-  updatedAt?: string;
+  type: 'GITHUB' | 'HELIOS';
+  environmentId: number;
 };
 
 export type ReleaseCandidateDetailsDto = {
   name: string;
   commit: CommitInfoDto;
-  branch?: BranchInfoDto;
-  deployments: Array<DeploymentDto>;
+  branch: BranchInfoDto;
+  deployments: Array<ReleaseCandidateDeploymentDto>;
   evaluations: Array<ReleaseCandidateEvaluationDto>;
   createdBy: UserInfoDto;
   createdAt: string;
@@ -295,6 +290,21 @@ export type EnvironmentLockHistoryDto = {
   environment?: EnvironmentDto;
 };
 
+export type DeploymentDto = {
+  id: number;
+  repository?: RepositoryInfoDto;
+  url: string;
+  state?: 'PENDING' | 'WAITING' | 'SUCCESS' | 'ERROR' | 'FAILURE' | 'IN_PROGRESS' | 'QUEUED' | 'INACTIVE' | 'UNKNOWN';
+  statusesUrl: string;
+  sha: string;
+  ref: string;
+  task: string;
+  environment: EnvironmentDto;
+  user?: UserInfoDto;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
 export type ActivityHistoryDto = {
   type?: string;
   id?: number;
@@ -323,7 +333,7 @@ export type BranchDetailsDto = {
 };
 
 export type UpdateWorkflowLabelData = {
-  body: 'BUILD' | 'DEPLOYMENT' | 'NONE' | 'TEST';
+  body: 'NONE' | 'DEPLOY_TEST_SERVER' | 'DEPLOY_STAGING_SERVER' | 'DEPLOY_PRODUCTION_SERVER' | 'TEST';
   path: {
     workflowId: number;
   };
@@ -714,6 +724,24 @@ export type GetRepositoryByIdResponses = {
 };
 
 export type GetRepositoryByIdResponse = GetRepositoryByIdResponses[keyof GetRepositoryByIdResponses];
+
+export type DeleteReleaseCandidateByNameData = {
+  body?: never;
+  path: {
+    name: string;
+  };
+  query?: never;
+  url: '/api/release-candidate/{name}';
+};
+
+export type DeleteReleaseCandidateByNameResponses = {
+  /**
+   * OK
+   */
+  200: ReleaseCandidateInfoDto;
+};
+
+export type DeleteReleaseCandidateByNameResponse = DeleteReleaseCandidateByNameResponses[keyof DeleteReleaseCandidateByNameResponses];
 
 export type GetReleaseCandidateByNameData = {
   body?: never;

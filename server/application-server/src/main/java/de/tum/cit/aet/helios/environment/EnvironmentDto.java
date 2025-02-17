@@ -2,6 +2,7 @@ package de.tum.cit.aet.helios.environment;
 
 import de.tum.cit.aet.helios.deployment.Deployment;
 import de.tum.cit.aet.helios.deployment.LatestDeploymentUnion;
+import de.tum.cit.aet.helios.deployment.LatestDeploymentUnion.DeploymentType;
 import de.tum.cit.aet.helios.environment.status.EnvironmentStatus;
 import de.tum.cit.aet.helios.environment.status.StatusCheckType;
 import de.tum.cit.aet.helios.gitrepo.RepositoryInfoDto;
@@ -34,6 +35,7 @@ public record EnvironmentDto(
     EnvironmentStatusDto latestStatus,
     UserInfoDto lockedBy,
     OffsetDateTime lockedAt,
+    Environment.Type type,
     Long lockExpirationThreshold,
     Long lockReservationThreshold,
     OffsetDateTime lockWillExpireAt,
@@ -66,11 +68,13 @@ public record EnvironmentDto(
       String sha,
       String ref,
       String task,
+      String workflowRunHtmlUrl,
       String releaseCandidateName,
       String prName,
       UserInfoDto user,
       OffsetDateTime createdAt,
-      OffsetDateTime updatedAt) {
+      OffsetDateTime updatedAt,
+      @NonNull DeploymentType type) {
     /** Builds an EnvironmentDeployment from a LatestDeploymentUnion. */
     public static EnvironmentDeployment fromUnion(
         LatestDeploymentUnion union, ReleaseCandidateRepository releaseCandidateRepository) {
@@ -82,6 +86,7 @@ public record EnvironmentDto(
           union.getSha(),
           union.getRef(),
           union.getTask(),
+          union.getWorkflowRunHtmlUrl(),
           releaseCandidateRepository
               .findByRepositoryRepositoryIdAndCommitSha(union.getRepository().id(), union.getSha())
               .map(ReleaseCandidate::getName)
@@ -89,7 +94,8 @@ public record EnvironmentDto(
           union.getPullRequestName(),
           UserInfoDto.fromUser(union.getCreator()),
           union.getCreatedAt(),
-          union.getUpdatedAt());
+          union.getUpdatedAt(),
+          union.getType());
     }
   }
 
@@ -127,6 +133,7 @@ public record EnvironmentDto(
         latestStatus.map(EnvironmentStatusDto::fromEnvironmentStatus).orElse(null),
         UserInfoDto.fromUser(environment.getLockedBy()),
         environment.getLockedAt(),
+        environment.getType(),
         environment.getLockExpirationThreshold(),
         environment.getLockReservationThreshold(),
         environment.getLockWillExpireAt(),
