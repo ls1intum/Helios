@@ -62,11 +62,10 @@ public class GitHubDeploymentSyncService {
    * Synchronizes deployments for all repositories.
    *
    * @param repositories the list of GitHub repositories to sync deployments from
-   * @param since        an optional timestamp to fetch deployments since
+   * @param since an optional timestamp to fetch deployments since
    */
   public void syncDeploymentsOfAllRepositories(
-      @NotNull List<GHRepository> repositories,
-      Optional<OffsetDateTime> since) {
+      @NotNull List<GHRepository> repositories, Optional<OffsetDateTime> since) {
     repositories.forEach(ghRepository -> syncDeploymentsOfRepository(ghRepository, since));
   }
 
@@ -74,11 +73,10 @@ public class GitHubDeploymentSyncService {
    * Synchronizes deployments for a specific repository.
    *
    * @param ghRepository the GitHub repository to sync deployments from
-   * @param since        an optional timestamp to fetch deployments since
+   * @param since an optional timestamp to fetch deployments since
    */
   public void syncDeploymentsOfRepository(
-      @NotNull GHRepository ghRepository,
-      Optional<OffsetDateTime> since) {
+      @NotNull GHRepository ghRepository, Optional<OffsetDateTime> since) {
     try {
       // Fetch the GitRepository entity
       String fullName = ghRepository.getFullName();
@@ -106,8 +104,8 @@ public class GitHubDeploymentSyncService {
    * Synchronizes deployments for a specific environment.
    *
    * @param ghRepository the GitHub repository
-   * @param environment  the environment entity
-   * @param since        an optional timestamp to fetch deployments since
+   * @param environment the environment entity
+   * @param since an optional timestamp to fetch deployments since
    */
   public void syncDeploymentsOfEnvironment(
       @NotNull GHRepository ghRepository,
@@ -171,9 +169,9 @@ public class GitHubDeploymentSyncService {
    * repository.
    *
    * @param deploymentSource the source (GHDeployment or GitHubDeploymentDto) wrapped as a
-   *                         DeploymentSource
-   * @param gitRepository    the associated GitRepository entity
-   * @param environment      the associated environment entity
+   *     DeploymentSource
+   * @param gitRepository the associated GitRepository entity
+   * @param environment the associated environment entity
    */
   @Transactional
   void processDeployment(
@@ -227,6 +225,12 @@ public class GitHubDeploymentSyncService {
         heliosDeployment.setDeploymentId(deployment.getId());
         heliosDeployment.setStatus(
             HeliosDeployment.mapDeploymentStateToHeliosStatus(deployment.getState()));
+        if (deployment
+            .getUpdatedAt()
+            .toInstant()
+            .isAfter(heliosDeployment.getUpdatedAt().toInstant())) {
+          heliosDeployment.setUpdatedAt(deployment.getUpdatedAt());
+        }
         heliosDeploymentRepository.save(heliosDeployment);
         log.info("Helios Deployment updated");
       }

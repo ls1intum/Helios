@@ -16,7 +16,6 @@ import de.tum.cit.aet.helios.workflow.WorkflowService;
 import jakarta.transaction.Transactional;
 import java.io.IOException;
 import java.time.OffsetDateTime;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
@@ -220,8 +219,7 @@ public class GitHubWorkflowRunSyncService {
                     .toInstant()
                     .isAfter(heliosDeployment.getUpdatedAt().toInstant())) {
                   heliosDeployment.setUpdatedAt(
-                      OffsetDateTime.ofInstant(
-                          workflowRun.getUpdatedAt().toInstant(), ZoneId.systemDefault()));
+                      DateUtil.convertToOffsetDateTime(workflowRun.getUpdatedAt()));
                   HeliosDeployment.Status mappedStatus =
                       mapWorkflowRunStatus(workflowRun.getStatus(), workflowRun.getConclusion());
                   log.debug("Mapped status {} to {}", workflowRun.getStatus(), mappedStatus);
