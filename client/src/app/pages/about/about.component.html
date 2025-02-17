@@ -8,24 +8,36 @@
 </app-page-heading>
 
 <div class="container mx-auto p-6">
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-    <div class="p-4 border rounded-lg shadow-md">
-      <h2 class="text-lg font-semibold mb-2">Main Features</h2>
-      <ul class="list-disc pl-5">
-        <li>Visualization of GitHub Actions pipelines</li>
-        <li>Environment locking/unlocking</li>
-        <li>Deployment management</li>
-        <li>Test analytics (coming soon)</li>
-      </ul>
-    </div>
+  <!-- ===================== MAIN FEATURES ====================== -->
+  <section class="mb-8">
+    <h2 class="text-2xl font-semibold mb-3">Main Features</h2>
+    <p class="text-gray-700 leading-relaxed mb-6">
+      Below are some core features built into Helios, along with optional, dynamically
+      loadable extensions to suit different workflows.
+    </p>
 
-    <div class="p-4 border rounded-lg shadow-md">
-      <h2 class="text-lg font-semibold mb-2">Get in Touch</h2>
-      <p><a href="https://github.com/ls1intum/Helios/issues/new?template=1-bug-report.yml" class="text-blue-500" target="_blank">Report a Bug</a></p>
-      <p><a href="https://github.com/ls1intum/Helios/issues/new?template=2-feature-request.yml" class="text-blue-500" target="_blank">Request a Feature</a></p>
-      <p><a href="https://github.com/ls1intum/Helios/releases" class="text-blue-500" target="_blank">Release Notes</a></p>
+    <!-- Core Features -->
+    <h3 class="text-xl font-semibold mt-4 mb-3">Core Features</h3>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      @for (feature of coreFeatures; track feature.title) {
+        <div class="p-4 border border-gray-200 rounded-lg shadow-sm">
+          <div class="flex items-center mb-2">
+            <!-- Example PrimeIcons usage -->
+            <i [ngClass]="feature.icon + ' text-blue-600 mr-2'"></i>
+            <h4 class="font-semibold text-lg">{{ feature.title }}</h4>
+          </div>
+          <p>{{ feature.description }}</p>
+        </div>
+      }
     </div>
-  </div>
+  </section>
+
+<!--  <div class="p-4 border rounded-lg shadow-md">-->
+<!--    <h2 class="text-lg font-semibold mb-2">Get in Touch</h2>-->
+<!--    <p><a href="https://github.com/ls1intum/Helios/issues/new?template=1-bug-report.yml" class="text-blue-500" target="_blank">Report a Bug</a></p>-->
+<!--    <p><a href="https://github.com/ls1intum/Helios/issues/new?template=2-feature-request.yml" class="text-blue-500" target="_blank">Request a Feature</a></p>-->
+<!--    <p><a href="https://github.com/ls1intum/Helios/releases" class="text-blue-500" target="_blank">Release Notes</a></p>-->
+<!--  </div>-->
 
   <div class="mt-6 p-4 border rounded-lg shadow-md text-center">
     <h2 class="text-lg font-semibold mb-2">Project Advisors</h2>

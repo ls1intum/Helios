@@ -1,10 +1,24 @@
 import { Component } from '@angular/core';
 import { PageHeadingComponent } from '@app/components/page-heading/page-heading.component';
-import { NgOptimizedImage } from '@angular/common';
+import {NgClass, NgOptimizedImage} from '@angular/common';
+
+interface Feature {
+  icon: string;
+  title: string;
+  description: string;
+}
+
+interface GithubContributor {
+  login: string;
+  id: number;
+  avatar_url: string;
+  html_url: string;
+  contributions: number;
+}
 
 @Component({
   selector: 'app-about',
-  imports: [PageHeadingComponent, NgOptimizedImage],
+  imports: [PageHeadingComponent, NgOptimizedImage, NgClass],
   templateUrl: './about.component.html',
 })
 export class AboutComponent {
@@ -25,6 +39,38 @@ export class AboutComponent {
     { name: 'Paul Thiel', description: 'Bachelor Thesis', website: null, githubHandle: 'thielpa', githubId: 10695477 },
     { name: 'Stefan Németh', description: 'Bachelor Thesis', website: null, githubHandle: 'StefanNemeth', githubId: 5003405 },
   ];
+
+  // The real-time fetched contributors from GitHub
+  githubContributors: GithubContributor[] = [];
+
+  // ============== FEATURES ==============
+  coreFeatures: Feature[] = [
+    {
+      icon: 'pi pi-sitemap',
+      title: 'Visualization of GitHub Actions pipelines',
+      description:
+        'See how your CI/CD pipelines connect and interact with a clear, visual diagram.',
+    },
+    {
+      icon: 'pi pi-lock',
+      title: 'Environment Locking/Unlocking',
+      description:
+        'Manage environment availability to prevent conflicts during critical deploys.',
+    },
+    {
+      icon: 'pi pi-send',
+      title: 'Deployment Management',
+      description:
+        'Track and control deployments through a user-friendly interface.',
+    },
+    {
+      icon: 'pi pi-chart-bar',
+      title: 'Test Analytics (Coming Soon)',
+      description:
+        'Detailed analytics on test results, coverage, and performance trends.',
+    }
+  ];
+
 
   getGithubProfilePictureUrl(userId: number): string {
     return `https://avatars.githubusercontent.com/u/${userId}`;
