@@ -348,7 +348,7 @@ export const WorkflowDtoSchema = {
     },
     label: {
       type: 'string',
-      enum: ['NONE', 'DEPLOY_TEST_SERVER', 'DEPLOY_STAGING_SERVER', 'DEPLOY_PRODUCTION_SERVER'],
+      enum: ['NONE', 'DEPLOY_TEST_SERVER', 'DEPLOY_STAGING_SERVER', 'DEPLOY_PRODUCTION_SERVER', 'TEST'],
     },
     createdAt: {
       type: 'string',
@@ -360,6 +360,84 @@ export const WorkflowDtoSchema = {
     },
   },
   required: ['id', 'label', 'name', 'path', 'state'],
+} as const;
+
+export const TestCaseDtoSchema = {
+  type: 'object',
+  properties: {
+    id: {
+      type: 'integer',
+      format: 'int64',
+    },
+    name: {
+      type: 'string',
+    },
+    className: {
+      type: 'string',
+    },
+    status: {
+      type: 'string',
+      enum: ['PASSED', 'FAILED', 'ERROR', 'SKIPPED'],
+    },
+    time: {
+      type: 'number',
+      format: 'double',
+    },
+    message: {
+      type: 'string',
+    },
+    stackTrace: {
+      type: 'string',
+    },
+    errorType: {
+      type: 'string',
+    },
+  },
+  required: ['className', 'id', 'name', 'status', 'time'],
+} as const;
+
+export const TestSuiteDtoSchema = {
+  type: 'object',
+  properties: {
+    id: {
+      type: 'integer',
+      format: 'int64',
+    },
+    name: {
+      type: 'string',
+    },
+    timestamp: {
+      type: 'string',
+      format: 'date-time',
+    },
+    tests: {
+      type: 'integer',
+      format: 'int32',
+    },
+    failures: {
+      type: 'integer',
+      format: 'int32',
+    },
+    errors: {
+      type: 'integer',
+      format: 'int32',
+    },
+    skipped: {
+      type: 'integer',
+      format: 'int32',
+    },
+    time: {
+      type: 'number',
+      format: 'double',
+    },
+    testCases: {
+      type: 'array',
+      items: {
+        $ref: '#/components/schemas/TestCaseDto',
+      },
+    },
+  },
+  required: ['errors', 'failures', 'id', 'name', 'skipped', 'testCases', 'tests', 'time', 'timestamp'],
 } as const;
 
 export const WorkflowRunDtoSchema = {
@@ -406,8 +484,22 @@ export const WorkflowRunDtoSchema = {
     htmlUrl: {
       type: 'string',
     },
+    label: {
+      type: 'string',
+      enum: ['BUILD', 'DEPLOYMENT', 'NONE', 'TEST'],
+    },
+    testProcessingStatus: {
+      type: 'string',
+      enum: ['PROCESSING', 'PROCESSED', 'FAILED'],
+    },
+    testSuites: {
+      type: 'array',
+      items: {
+        $ref: '#/components/schemas/TestSuiteDto',
+      },
+    },
   },
-  required: ['displayTitle', 'htmlUrl', 'id', 'name', 'status', 'workflowId'],
+  required: ['displayTitle', 'htmlUrl', 'id', 'label', 'name', 'status', 'testSuites', 'workflowId'],
 } as const;
 
 export const GitHubRepositoryRoleDtoSchema = {

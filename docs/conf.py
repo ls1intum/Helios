@@ -18,7 +18,7 @@
 # -- Project information -----------------------------------------------------
 
 project = 'Helios'
-copyright = '2024, Technical University of Munich, Applied Software Engineering'
+copyright = '2025, Technical University of Munich, Applied Software Engineering'
 author = 'Technical University of Munich, Applied Software Engineering'
 
 
@@ -76,7 +76,7 @@ html_context = {
     "display_github": True,
     "github_user": "ls1intum",
     "github_repo": "Helios",
-    "github_version": "develop",
+    "github_version": "staging",
     "conf_py_path": "/docs/",
 }
 html_style = 'css/style.css'

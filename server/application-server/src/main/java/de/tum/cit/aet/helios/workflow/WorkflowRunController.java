@@ -18,17 +18,21 @@ public class WorkflowRunController {
 
   @GetMapping("/pr/{pullRequestId}")
   public ResponseEntity<List<WorkflowRunDto>> getLatestWorkflowRunsByPullRequestIdAndHeadCommit(
-      @PathVariable Long pullRequestId) {
+      @PathVariable Long pullRequestId,
+      @RequestParam(defaultValue = "false") boolean includeTestSuites) {
     var workflowRuns =
-        workflowRunService.getLatestWorkflowRunsByPullRequestIdAndHeadCommit(pullRequestId);
+        workflowRunService.getLatestWorkflowRunsByPullRequestIdAndHeadCommit(
+            pullRequestId, includeTestSuites);
 
     return ResponseEntity.ok(workflowRuns);
   }
 
   @GetMapping("/branch")
   public ResponseEntity<List<WorkflowRunDto>> getLatestWorkflowRunsByBranchAndHeadCommit(
-      @RequestParam String branch) {
-    var workflowRuns = workflowRunService.getLatestWorkflowRunsByBranchAndHeadCommitSha(branch);
+      @RequestParam String branch,
+      @RequestParam(defaultValue = "false") boolean includeTestSuites) {
+    var workflowRuns =
+        workflowRunService.getLatestWorkflowRunsByBranchAndHeadCommitSha(branch, includeTestSuites);
     return ResponseEntity.ok(workflowRuns);
   }
 

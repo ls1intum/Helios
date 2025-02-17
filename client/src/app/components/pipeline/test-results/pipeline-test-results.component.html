@@ -1,0 +1,104 @@
+@if (hasTestSuites() || isProcessing()) {
+  <button
+    [disabled]="!hasTestSuites()"
+    [ngClass]="['flex items-center gap-2 w-full p-2 rounded mb-2 mt-8', hasTestSuites() ? 'hover:bg-gray-100' : '']"
+    (click)="isTestResultsCollapsed = !isTestResultsCollapsed"
+  >
+    <h3 class="text-lg">Test Results</h3>
+
+    @if (isProcessing()) {
+      <p-tag class="ml-2" severity="warn" [rounded]="true" [pTooltip]="'Test results are being processed'">
+        <i-tabler name="progress" class="!size-5 animate-spin"></i-tabler>
+
+        <span class="text-sm text-gray-600">Processing</span>
+      </p-tag>
+    }
+
+    @if (hasTestSuites()) {
+      @if (totalStats(); as totalStats) {
+        <div class="flex items-center gap-4 ml-2 text-sm text-gray-600">
+          <span class="flex items-center gap-1"><i-tabler name="check" class="text-green-500"></i-tabler> {{ totalStats.passed }} passed</span>
+          <span class="flex items-center gap-1"><i-tabler name="x" class="text-red-500"></i-tabler> {{ totalStats.failures }} failed</span>
+          <span class="flex items-center gap-1"><i-tabler name="chevrons-right" class="text-yellow-500"></i-tabler> {{ totalStats.skipped }} skipped</span>
+          <span class="flex items-center gap-1"><i-tabler name="clock" class="text-blue-500"></i-tabler> {{ totalStats.time | date: 'mm:ss' }}</span>
+        </div>
+      }
+    }
+
+    @if (hasTestSuites()) {
+      <i-tabler [name]="isTestResultsCollapsed ? 'chevron-down' : 'chevron-up'" class="ml-auto"></i-tabler>
+    }
+  </button>
+
+  @if (!isTestResultsCollapsed) {
+    @if (testSuites(); as testSuites) {
+      @if (testSuites.length === 0) {
+        <!-- No Results State -->
+        <div class="flex flex-col items-center p-4 border rounded-lg">
+          <i-tabler name="microscope" class="!size-12 text-primary mb-2"></i-tabler>
+          <span class="text-sm text-gray-500">No test results available</span>
+        </div>
+      } @else {
+        <!-- Test Results -->
+        <div class="flex flex-col gap-4">
+          @for (suite of testSuites.slice(testSuiteFirst(), testSuiteFirst() + testSuiteRows()); track suite.id) {
+            <p-panel [toggleable]="true" [collapsed]="true">
+              <ng-template pTemplate="header">
+                <div class="flex items-center gap-2">
+                  @switch (overallSuiteState(suite)) {
+                    @case ('SUCCESS') {
+                      <i-tabler name="circle-check" class="text-green-500"></i-tabler>
+                    }
+                    @case ('FAILURE') {
+                      <i-tabler name="circle-x" class="text-red-500"></i-tabler>
+                    }
+                    @case ('SKIPPED') {
+                      <i-tabler name="circle-chevrons-right" class="text-yellow-500"></i-tabler>
+                    }
+                  }
+                  <span class="font-medium">{{ suite.name }}</span>
+                  <span class="text-sm text-gray-500 ml-2"> ({{ suite.tests }} tests, {{ suite.failures + suite.errors }} failed, {{ suite.skipped }} skipped) </span>
+                </div>
+              </ng-template>
+
+              <div class="flex flex-col gap-2">
+                @for (testCase of sortTestCases(suite.testCases); track testCase.id) {
+                  <div class="flex items-center gap-2 p-2 border rounded">
+                    @switch (testCase.status) {
+                      @case ('PASSED') {
+                        <i-tabler name="check" class="text-green-500 w-4 h-4 flex-shrink-0"></i-tabler>
+                      }
+                      @case ('FAILED') {
+                        <i-tabler name="x" class="text-red-500 w-4 h-4 flex-shrink-0"></i-tabler>
+                      }
+                      @case ('ERROR') {
+                        <i-tabler name="x" class="text-red-500 w-4 h-4 flex-shrink-0"></i-tabler>
+                      }
+                      @case ('SKIPPED') {
+                        <i-tabler name="chevrons-right" class="text-gray-500 w-4 h-4 flex-shrink-0"></i-tabler>
+                      }
+                    }
+                    <div class="flex flex-col items-start min-w-0">
+                      <span class="text-sm truncate whitespace-nowrap overflow-hidden w-full">{{ testCase.name }} </span>
+                      @if (testCase.message) {
+                        <p-tag [severity]="testCase.status === 'FAILED' ? 'danger' : 'info'" [value]="testCase.message" styleClass="mt-2 text-xs"> </p-tag>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            </p-panel>
+          }
+        </div>
+
+        <p-paginator
+          (onPageChange)="onPageChange($event)"
+          [first]="testSuiteFirst()"
+          [rows]="testSuiteRows()"
+          [totalRecords]="testSuites.length"
+          [rowsPerPageOptions]="[10, 20, 30]"
+        />
+      }
+    }
+  }
+}

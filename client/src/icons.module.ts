@@ -56,6 +56,8 @@ import {
   IconClock,
   IconTag,
   IconX,
+  IconChevronsRight,
+  IconCircleChevronsRight,
 } from 'angular-tabler-icons/icons';
 
 // Select some icons (use an object, not an array)
@@ -87,6 +89,8 @@ const icons = {
   IconGitPullRequestDraft,
   IconGitMerge,
   IconChevronRight,
+  IconChevronsRight,
+  IconCircleChevronsRight,
   IconChevronDown,
   IconChevronUp,
   IconChevronLeft,

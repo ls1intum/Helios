@@ -67,7 +67,7 @@ export class ProjectSettingsComponent {
   showAddGroupDialog = false;
   newGroupName = '';
   // Store the previous label temporarily for the confirmation dialog
-  private previousLabel: 'NONE' | 'DEPLOY_TEST_SERVER' | 'DEPLOY_STAGING_SERVER' | 'DEPLOY_PRODUCTION_SERVER' = 'NONE';
+  private previousLabel: 'NONE' | 'DEPLOY_TEST_SERVER' | 'DEPLOY_STAGING_SERVER' | 'DEPLOY_PRODUCTION_SERVER' | 'TEST' = 'NONE';
 
   // Drag & Drop logic for groupedWorkflowsArray
   private dragIndex: number | null = null;
@@ -255,6 +255,7 @@ export class ProjectSettingsComponent {
                 <li><strong>DEPLOY_TEST_SERVER</strong>: This label sets the workflow to trigger test server deployments.</li>
                 <li><strong>DEPLOY_STAGING_SERVER</strong>: This label sets the workflow to staging test server deployments.</li>
                 <li><strong>DEPLOY_PRODUCTION_SERVER</strong>: This label sets the workflow to production test server deployments.</li>
+                <li><strong>TEST</strong>: This label sets the workflow to be searched for test artifacts.</li>
                 <li><strong>NONE</strong>: No label is set for this workflow.</li>
               </ul>
             </div>

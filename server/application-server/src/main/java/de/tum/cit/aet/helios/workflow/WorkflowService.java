@@ -117,4 +117,9 @@ public class WorkflowService {
     }
     return deploymentWorkflow;
   }
+
+  public List<Workflow> getTestWorkflows(Long repositoryId) {
+    return workflowRepository.findByLabelAndRepositoryRepositoryId(
+        Workflow.Label.TEST, repositoryId);
+  }
 }
