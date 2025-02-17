@@ -96,7 +96,7 @@ public class DeploymentService {
             .getEnvironmentTypeById(environmentId)
             .orElseThrow(() -> new DeploymentException("Environment not found"));
 
-    if (!authService.canDeployToEnvironment(environmentType)) {
+    if (!canDeployToEnvironment(environmentType)) {
       throw new SecurityException("Insufficient permissions to deploy to this environment");
     }
 
@@ -171,6 +171,26 @@ public class DeploymentService {
     workflowParams.put("environment_name", environment.getName());
 
     return workflowParams;
+  }
+
+  public boolean canDeployToEnvironment(Environment.Type environmentType) {
+    if (null != environmentType) {
+      switch (environmentType) {
+        case PRODUCTION -> {
+          return authService.hasRole("ROLE_ADMIN");
+        }
+        case STAGING -> {
+          return authService.hasRole("ROLE_ADMIN");
+        }
+        case TEST -> {
+          return authService.hasRole("ROLE_WRITE")
+              || authService.hasRole("ROLE_MAINTAINER")
+              || authService.hasRole("ROLE_ADMIN");
+        }
+        default -> {}
+      }
+    }
+    return false;
   }
 
   private void dispatchWorkflow(

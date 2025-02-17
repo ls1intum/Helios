@@ -5,6 +5,7 @@ import de.tum.cit.aet.helios.pullrequest.PullRequestRepository;
 import jakarta.transaction.Transactional;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.extern.log4j.Log4j2;
@@ -101,12 +102,19 @@ public class WorkflowRunService {
     return latestRuns.map(wr -> WorkflowRunDto.fromWorkflowRun(wr, includeTestSuites)).toList();
   }
 
-  public WorkflowRunDto getLatestDeploymentWorkflowRun(
+  public Optional<WorkflowRunDto> getLatestDeploymentWorkflowRun(
       String branch, String commitSha, Long environmentId) {
     Workflow workflow = this.workflowService.getDeploymentWorkflowForEnv(environmentId);
+    if (workflow == null) {
+      return Optional.empty();
+    }
+
     WorkflowRun workflowRun =
         workflowRunRepository.findFirstByHeadBranchAndHeadShaAndWorkflowOrderByCreatedAtDesc(
             branch, commitSha, workflow);
-    return WorkflowRunDto.fromWorkflowRun(workflowRun, true);
+
+    return workflowRun != null
+        ? Optional.of(WorkflowRunDto.fromWorkflowRun(workflowRun, true))
+        : Optional.empty();
   }
 }

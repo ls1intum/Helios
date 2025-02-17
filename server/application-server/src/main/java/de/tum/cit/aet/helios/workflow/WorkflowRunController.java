@@ -41,8 +41,8 @@ public class WorkflowRunController {
       @RequestParam Long environmentId,
       @RequestParam String branch,
       @RequestParam String commitSha) {
-    WorkflowRunDto run =
+    Optional<WorkflowRunDto> run =
         workflowRunService.getLatestDeploymentWorkflowRun(branch, commitSha, environmentId);
-    return ResponseEntity.ok(Optional.ofNullable(run));
+    return ResponseEntity.ok(run);
   }
 }

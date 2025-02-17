@@ -1,6 +1,5 @@
 package de.tum.cit.aet.helios.auth;
 
-import de.tum.cit.aet.helios.environment.Environment;
 import de.tum.cit.aet.helios.github.GitHubFacade;
 import de.tum.cit.aet.helios.user.User;
 import de.tum.cit.aet.helios.user.UserRepository;
@@ -94,24 +93,6 @@ public class AuthService {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     return authentication != null
         && authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals(role));
-  }
-
-  public boolean canDeployToEnvironment(Environment.Type environmentType) {
-    if (null != environmentType) {
-      switch (environmentType) {
-        case PRODUCTION -> {
-          return hasRole("ROLE_ADMIN");
-        }
-        case STAGING -> {
-          return hasRole("ROLE_ADMIN");
-        }
-        case TEST -> {
-          return hasRole("ROLE_WRITE") || hasRole("ROLE_MAINTAINER") || hasRole("ROLE_ADMIN");
-        }
-        default -> {}
-      }
-    }
-    return false;
   }
 
   public boolean isAtLeastMaintainer() {

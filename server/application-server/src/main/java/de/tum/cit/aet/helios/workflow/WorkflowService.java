@@ -82,7 +82,7 @@ public class WorkflowService {
         .collect(Collectors.toList());
   }
 
-  public Workflow.Label getLabel(Environment.Type type) {
+  public Workflow.Label getDeploymentWorkflowLabelForEnvType(Environment.Type type) {
     switch (type) {
       case PRODUCTION -> {
         return Workflow.Label.DEPLOY_PRODUCTION_SERVER;
@@ -105,7 +105,7 @@ public class WorkflowService {
             .getEnvironmentTypeById(environmentId)
             .orElseThrow(() -> new EntityNotFoundException("Environment not found"));
 
-    Workflow.Label label = this.getLabel(environmentType);
+    Workflow.Label label = this.getDeploymentWorkflowLabelForEnvType(environmentType);
     if (label == null) {
       throw new IllegalStateException("No workflow for this deployment environment found");
     }
