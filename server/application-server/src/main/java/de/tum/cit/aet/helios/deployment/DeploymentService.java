@@ -7,9 +7,12 @@ import de.tum.cit.aet.helios.environment.EnvironmentLockHistory;
 import de.tum.cit.aet.helios.environment.EnvironmentLockHistoryRepository;
 import de.tum.cit.aet.helios.environment.EnvironmentRepository;
 import de.tum.cit.aet.helios.environment.EnvironmentService;
+import de.tum.cit.aet.helios.filters.RepositoryContext;
 import de.tum.cit.aet.helios.github.GitHubService;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
+import de.tum.cit.aet.helios.pullrequest.PullRequest;
+import de.tum.cit.aet.helios.pullrequest.PullRequestRepository;
 import de.tum.cit.aet.helios.workflow.Workflow;
 import de.tum.cit.aet.helios.workflow.WorkflowService;
 import jakarta.transaction.Transactional;
@@ -41,6 +44,7 @@ public class DeploymentService {
   private final EnvironmentLockHistoryRepository lockHistoryRepository;
   private final EnvironmentRepository environmentRepository;
   private final BranchService branchService;
+  private final PullRequestRepository pullRequestRepository;
 
   public Optional<DeploymentDto> getDeploymentById(Long id) {
     return deploymentRepository.findById(id).map(DeploymentDto::fromDeployment);
@@ -75,8 +79,13 @@ public class DeploymentService {
     Workflow deploymentWorkflow =
         workflowService.getDeploymentWorkflowForEnv(deployRequest.environmentId());
 
+    // Set the PR associated with the deployment
+    Optional<PullRequest> optionalPullRequest =
+        pullRequestRepository.findByRepositoryRepositoryIdAndHeadRefNameOrHeadSha(
+            RepositoryContext.getRepositoryId(), deployRequest.branchName(), commitSha);
+
     HeliosDeployment heliosDeployment =
-        createHeliosDeployment(environment, deployRequest, commitSha);
+        createHeliosDeployment(environment, deployRequest, commitSha, optionalPullRequest);
     Map<String, Object> workflowParams =
         createWorkflowParams(environmentType, deployRequest, environment);
 
@@ -146,7 +155,10 @@ public class DeploymentService {
   }
 
   private HeliosDeployment createHeliosDeployment(
-      Environment environment, DeployRequest deployRequest, String commitSha) {
+      Environment environment,
+      DeployRequest deployRequest,
+      String commitSha,
+      Optional<PullRequest> optionalPullRequest) {
     HeliosDeployment heliosDeployment = new HeliosDeployment();
     heliosDeployment.setEnvironment(environment);
     heliosDeployment.setUser(authService.getUserId());
@@ -154,6 +166,7 @@ public class DeploymentService {
     heliosDeployment.setBranchName(deployRequest.branchName());
     heliosDeployment.setSha(commitSha);
     heliosDeployment.setCreator(authService.getUserFromGithubId());
+    heliosDeployment.setPullRequest(optionalPullRequest.orElse(null));
     return heliosDeploymentRepository.saveAndFlush(heliosDeployment);
   }
 

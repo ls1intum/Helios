@@ -21,13 +21,14 @@ export type WorkflowMembershipDto = {
 export type EnvironmentDeployment = {
   id: number;
   url?: string;
-  state?: 'PENDING' | 'WAITING' | 'SUCCESS' | 'ERROR' | 'FAILURE' | 'IN_PROGRESS' | 'QUEUED' | 'INACTIVE' | 'UNKNOWN';
+  state?: 'REQUESTED' | 'PENDING' | 'WAITING' | 'SUCCESS' | 'ERROR' | 'FAILURE' | 'IN_PROGRESS' | 'QUEUED' | 'INACTIVE' | 'UNKNOWN';
   statusesUrl?: string;
   sha?: string;
   ref?: string;
   task?: string;
   workflowRunHtmlUrl?: string;
   releaseCandidateName?: string;
+  prName?: string;
   user?: UserInfoDto;
   createdAt?: string;
   updatedAt?: string;

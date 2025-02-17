@@ -30,6 +30,10 @@ import { TimeAgoPipe } from '@app/pipes/time-ago.pipe';
 import { UserAvatarComponent } from '@app/components/user-avatar/user-avatar.component';
 import { EnvironmentStatusInfoComponent } from '../environment-status-info/environment-status-info.component';
 import { EnvironmentStatusTagComponent } from '../environment-status-tag/environment-status-tag.component';
+import { DeploymentStepperComponent } from '../deployment-stepper/deployment-stepper.component';
+import { ToggleButtonModule } from 'primeng/togglebutton';
+import { FormsModule } from '@angular/forms';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
 
 @Component({
   selector: 'app-environment-list-view',
@@ -43,6 +47,7 @@ import { EnvironmentStatusTagComponent } from '../environment-status-tag/environ
     ButtonModule,
     TooltipModule,
     DeploymentStateTagComponent,
+    DeploymentStepperComponent,
     EnvironmentStatusTagComponent,
     EnvironmentDeploymentInfoComponent,
     EnvironmentStatusInfoComponent,
@@ -51,6 +56,9 @@ import { EnvironmentStatusTagComponent } from '../environment-status-tag/environ
     CommonModule,
     TimeAgoPipe,
     UserAvatarComponent,
+    ToggleButtonModule,
+    FormsModule,
+    ToggleSwitchModule,
   ],
   providers: [DatePipe],
   templateUrl: './environment-list-view.component.html',
@@ -63,6 +71,8 @@ export class EnvironmentListViewComponent implements OnDestroy {
   private permissionService = inject(PermissionService);
   private currentTime = signal(Date.now());
   private intervalId: number | undefined;
+
+  showLatestDeployment: boolean = true;
 
   editable = input<boolean | undefined>();
   deployable = input<boolean | undefined>();
@@ -235,5 +245,14 @@ export class EnvironmentListViewComponent implements OnDestroy {
 
   formatEnvironmentType(type: string): string {
     return type.charAt(0).toUpperCase() + type.slice(1).toLowerCase();
+  }
+
+  isDeploymentOngoing(environment: EnvironmentDto) {
+    if (!environment.latestDeployment) {
+      return false;
+    } else if (environment.latestDeployment.state && ['SUCCESS', 'FAILURE', 'ERROR', 'INACTIVE', 'UNKNOWN'].includes(environment.latestDeployment.state)) {
+      return false;
+    }
+    return true;
   }
 }

@@ -152,36 +152,39 @@ public class GitHubWorkflowRunSyncService {
     // triggered the workflow run
     // Then we can check whether it's triggered via Helios-App or a Github User via Github UI.
     // We only need to update heliosDeployment if it's triggered via Helios-App
-
     heliosDeploymentRepository
         .findTopByBranchNameAndCreatedAtLessThanEqualOrderByCreatedAtDesc(
             workflowRun.getHeadBranch(),
             DateUtil.convertToOffsetDateTime(workflowRun.getRunStartedAt()))
         .ifPresent(
             heliosDeployment -> {
-              HeliosDeployment.Status mappedStatus =
-                  mapWorkflowRunStatus(workflowRun.getStatus(), workflowRun.getConclusion());
-              log.debug("Mapped status {} to {}", workflowRun.getStatus(), mappedStatus);
-
-              // Update the deployment status
-              heliosDeployment.setStatus(mappedStatus);
-
-              // Update the workflow run html url, so we can show the approval url
-              // to the user before the Github deployment is created
               try {
-                heliosDeployment.setWorkflowRunHtmlUrl(workflowRun.getHtmlUrl().toString());
-              } catch (IOException e) {
-                log.error(
-                    "Failed to set workflow run html url for HeliosDeployment {}: {}",
-                    heliosDeployment.getId(),
-                    e.getMessage());
-              }
+                if (workflowRun
+                    .getUpdatedAt()
+                    .toInstant()
+                    .isAfter(heliosDeployment.getUpdatedAt().toInstant())) {
+                  heliosDeployment.setUpdatedAt(
+                      DateUtil.convertToOffsetDateTime(workflowRun.getUpdatedAt()));
+                  HeliosDeployment.Status mappedStatus =
+                      mapWorkflowRunStatus(workflowRun.getStatus(), workflowRun.getConclusion());
+                  log.debug("Mapped status {} to {}", workflowRun.getStatus(), mappedStatus);
 
-              log.info(
-                  "Updated HeliosDeployment {} to status {}",
-                  heliosDeployment.getId(),
-                  mappedStatus);
-              heliosDeploymentRepository.save(heliosDeployment);
+                  // Update the deployment status
+                  heliosDeployment.setStatus(mappedStatus);
+    
+                  // Update the workflow run html url, so we can show the approval url
+                  // to the user before the Github deployment is created
+                  heliosDeployment.setWorkflowRunHtmlUrl(workflowRun.getHtmlUrl().toString());
+
+                  log.info(
+                          "Updated HeliosDeployment {} to status {}",
+                          heliosDeployment.getId(),
+                          mappedStatus);
+                  heliosDeploymentRepository.save(heliosDeployment);
+                }
+              } catch (IOException e) {
+                e.printStackTrace();
+              }
             });
   }
 }

@@ -2,6 +2,7 @@ package de.tum.cit.aet.helios.heliosdeployment;
 
 import de.tum.cit.aet.helios.deployment.Deployment;
 import de.tum.cit.aet.helios.environment.Environment;
+import de.tum.cit.aet.helios.pullrequest.PullRequest;
 import de.tum.cit.aet.helios.user.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -14,7 +15,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import java.time.OffsetDateTime;
 import java.util.Map;
@@ -89,10 +89,9 @@ public class HeliosDeployment {
     updatedAt = OffsetDateTime.now();
   }
 
-  @PreUpdate
-  protected void onUpdate() {
-    updatedAt = OffsetDateTime.now();
-  }
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "pull_request_id")
+  private PullRequest pullRequest;
 
   // Enum to represent deployment status
   public enum Status {

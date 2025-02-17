@@ -917,6 +917,7 @@ components:
         state:
           type: string
           enum:
+          - REQUESTED
           - PENDING
           - WAITING
           - SUCCESS
@@ -937,6 +938,8 @@ components:
         workflowRunHtmlUrl:
           type: string
         releaseCandidateName:
+          type: string
+        prName:
           type: string
         user:
           $ref: "#/components/schemas/UserInfoDto"

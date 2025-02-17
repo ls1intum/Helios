@@ -32,9 +32,9 @@ public class GitHubDeploymentSyncService {
    * repository.
    *
    * @param deploymentSource the source (GHDeployment or GitHubDeploymentDto) wrapped as a
-   *                         DeploymentSource
-   * @param gitRepository    the associated GitRepository entity
-   * @param environment      the associated environment entity
+   *     DeploymentSource
+   * @param gitRepository the associated GitRepository entity
+   * @param environment the associated environment entity
    */
   @Transactional
   public void processDeployment(
@@ -88,6 +88,12 @@ public class GitHubDeploymentSyncService {
         heliosDeployment.setDeploymentId(deployment.getId());
         heliosDeployment.setStatus(
             HeliosDeployment.mapDeploymentStateToHeliosStatus(deployment.getState()));
+        if (deployment
+            .getUpdatedAt()
+            .toInstant()
+            .isAfter(heliosDeployment.getUpdatedAt().toInstant())) {
+          heliosDeployment.setUpdatedAt(deployment.getUpdatedAt());
+        }
         heliosDeploymentRepository.save(heliosDeployment);
         log.info("Helios Deployment updated");
       }
