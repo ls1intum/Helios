@@ -96,38 +96,53 @@
         </div>
       </p-accordion-header>
       <p-accordion-content>
-        <div class="flex w-full">
-          <div class="flex flex-col gap-1">
-            @if (environment.latestDeployment; as deployment) {
-              <app-environment-deployment-info class="max-w-2xl" [deployment]="deployment" [repositoryId]="environment.repository?.id || 0" />
-            }
+        <div class="flex w-full flex-col gap-4">
+          <!-- Toggle Button -->
+          <div class="flex justify-end gap-2">
+            <span class="text-gray-500">Details</span>
+            <p-toggleswitch [ngModel]="showLatestDeployment" (click)="showLatestDeployment = !showLatestDeployment" />
+            <span class="text-gray-500">Deployment</span>
           </div>
-          <div class="flex-grow"></div>
-          <div class="flex flex-col gap-1">
-            @if (environment.latestStatus; as status) {
-              <app-environment-status-info class="max-w-xs mt-2 ml-14" [status]="status" />
-            }
-          </div>
-          <span class="w-2"></span>
-          @if (environment.latestDeployment; as deployment) {
-            <app-deployment-stepper [deployment]="environment.latestDeployment" class="w-full mt-4" />
-          }
-        </div>
 
-        <div class="flex gap-4 mt-3 items-center justify-between">
-          <div class="flex gap-1 mt-2 items-center">
-            <a
-              icon
-              [routerLink]="'/repo/' + environment.repository?.id + '/environment/' + environment.id + '/history'"
-              class="p-button p-button-text text-gray-500 py-2 flex items-center"
-              ><i-tabler class="mr-1" name="history" />View Activity History</a
-            >
-          </div>
-          <div class="flex flex-grow"></div>
-          <div class="flex gap-2">
-            @for (installedApp of environment.installedApps; track installedApp) {
-              <p-tag class="bg-gray-300 gap-0">{{ installedApp }}</p-tag>
-            }
+          <!-- Conditionally display information based on the toggle -->
+          @if (showLatestDeployment) {
+            <div class="flex w-full">
+              <app-deployment-stepper [deployment]="environment.latestDeployment" class="w-full" />
+            </div>
+          } @else {
+            <div class="flex w-full">
+              <div class="flex flex-col gap-1">
+                @if (environment.latestDeployment; as deployment) {
+                  <app-environment-deployment-info class="max-w-2xl" [deployment]="deployment" [repositoryId]="environment.repository?.id || 0" />
+                }
+              </div>
+              <div class="flex-grow"></div>
+              <div class="flex flex-col gap-1">
+                @if (environment.latestStatus; as status) {
+                  <app-environment-status-info class="max-w-xs mt-2 ml-14" [status]="status" />
+                }
+              </div>
+            </div>
+          }
+
+          <!-- Footer links and tags -->
+          <div class="flex gap-4 items-center justify-between">
+            <div class="flex gap-1 mt-2 items-center">
+              <a
+                icon
+                [routerLink]="'/repo/' + environment.repository?.id + '/environment/' + environment.id + '/history'"
+                class="p-button p-button-text text-gray-500 py-2 flex items-center"
+              >
+                <i-tabler class="mr-1" name="history" />
+                View Activity History
+              </a>
+            </div>
+            <div class="flex flex-grow"></div>
+            <div class="flex gap-2">
+              @for (installedApp of environment.installedApps; track installedApp) {
+                <p-tag class="bg-gray-300 gap-0">{{ installedApp }}</p-tag>
+              }
+            </div>
           </div>
         </div>
       </p-accordion-content>

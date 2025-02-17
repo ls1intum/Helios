@@ -3,10 +3,11 @@ import { CommonModule } from '@angular/common';
 import { IconsModule } from 'icons.module';
 import { ProgressBarModule } from 'primeng/progressbar';
 import { EnvironmentDeployment } from '@app/core/modules/openapi';
+import { TooltipModule } from 'primeng/tooltip';
 
 @Component({
   selector: 'app-deployment-stepper',
-  imports: [CommonModule, IconsModule, ProgressBarModule],
+  imports: [CommonModule, IconsModule, ProgressBarModule, TooltipModule],
   templateUrl: './deployment-stepper.component.html',
 })
 export class DeploymentStepperComponent implements OnInit, OnDestroy {
@@ -18,8 +19,8 @@ export class DeploymentStepperComponent implements OnInit, OnDestroy {
     [key in 'QUEUED' | 'WAITING' | 'PENDING' | 'IN_PROGRESS' | 'SUCCESS' | 'ERROR' | 'FAILURE' | 'UNKNOWN' | 'INACTIVE']: string;
   } = {
     QUEUED: 'Deployment Queued',
-    WAITING: 'Waiting for approval',
-    PENDING: 'Pending deployment',
+    WAITING: 'Request sent to Github',
+    PENDING: 'Preparing deployment',
     IN_PROGRESS: 'Deployment in progress',
     SUCCESS: 'Deployment successful',
     ERROR: 'Deployment error',
@@ -142,14 +143,50 @@ export class DeploymentStepperComponent implements OnInit, OnDestroy {
       }
       if (i === index) {
         if (this.getStepStatus(i) === 'completed') {
-          return '0m 0s';
+          return '';
         }
         const remaining = cumulative - elapsedMinutes;
         const minutes = Math.floor(remaining);
         const seconds = Math.floor((remaining - minutes) * 60);
-        return remaining > 0 ? `${minutes}m ${seconds}s` : '0m 0s';
+        return remaining > 0 ? `${minutes}m ${seconds}s` : '';
       }
     }
     return '';
+  }
+
+  getStepDisplayName(step: string): string {
+    return (
+      {
+        WAITING: 'REQUESTED',
+        PENDING: 'PRE-DEPLOYMENT',
+        IN_PROGRESS: 'DEPLOYING',
+        SUCCESS: 'SUCCESS',
+      }[step] || step
+    );
+  }
+
+  /**
+   * Computes the deployment duration by subtracting the deployment creation time
+   * from the finish time (or current time if finishedAt isn’t available).
+   */
+  getDeploymentDuration(): string {
+    if (!this.deployment || !this.deployment.createdAt) return '';
+
+    // For terminal states, use finishedAt if available; otherwise use current time.
+    let endTime: number;
+    if (['SUCCESS', 'ERROR', 'FAILURE'].includes(this.deployment.state || '')) {
+      endTime = this.deployment.updatedAt ? new Date(this.deployment.updatedAt).getTime() : this.time;
+    } else {
+      // For ongoing deployments, we use the current time.
+      endTime = this.time;
+    }
+
+    const startTime = new Date(this.deployment.createdAt).getTime();
+    const elapsedMs = endTime - startTime;
+    if (elapsedMs < 0) return '0m 0s';
+
+    const minutes = Math.floor(elapsedMs / 60000);
+    const seconds = Math.floor((elapsedMs % 60000) / 1000);
+    return `${minutes}m ${seconds}s`;
   }
 }

@@ -123,7 +123,7 @@ public class EnvironmentService {
     if (latestHeliosOpt.isPresent() && latestDeploymentOpt.isPresent()) {
       HeliosDeployment latestHelios = latestHeliosOpt.get();
       Deployment latestDeployment = latestDeploymentOpt.get();
-
+      // TODO: add logs and check what's returned in ehre
       // Compare updatedAt timestamps to determine the latest
       if (latestDeployment.getCreatedAt().isAfter(latestHelios.getCreatedAt())) {
         return LatestDeploymentUnion.realDeployment(latestDeployment, latestHelios.getCreatedAt());

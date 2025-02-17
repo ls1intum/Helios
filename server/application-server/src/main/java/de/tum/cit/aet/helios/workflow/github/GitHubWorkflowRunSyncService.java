@@ -16,6 +16,7 @@ import de.tum.cit.aet.helios.workflow.WorkflowService;
 import jakarta.transaction.Transactional;
 import java.io.IOException;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
@@ -207,24 +208,35 @@ public class GitHubWorkflowRunSyncService {
     // triggered the workflow run
     // Then we can check whether it's triggered via Helios-App or a Github User via Github UI.
     // We only need to update heliosDeployment if it's triggered via Helios-App
-
     heliosDeploymentRepository
         .findTopByBranchNameAndCreatedAtLessThanEqualOrderByCreatedAtDesc(
             workflowRun.getHeadBranch(),
             DateUtil.convertToOffsetDateTime(workflowRun.getRunStartedAt()))
         .ifPresent(
             heliosDeployment -> {
-              HeliosDeployment.Status mappedStatus =
-                  mapWorkflowRunStatus(workflowRun.getStatus(), workflowRun.getConclusion());
-              log.debug("Mapped status {} to {}", workflowRun.getStatus(), mappedStatus);
+              try {
+                if (workflowRun
+                    .getUpdatedAt()
+                    .toInstant()
+                    .isAfter(heliosDeployment.getUpdatedAt().toInstant())) {
+                  heliosDeployment.setUpdatedAt(
+                      OffsetDateTime.ofInstant(
+                          workflowRun.getUpdatedAt().toInstant(), ZoneId.systemDefault()));
+                  HeliosDeployment.Status mappedStatus =
+                      mapWorkflowRunStatus(workflowRun.getStatus(), workflowRun.getConclusion());
+                  log.debug("Mapped status {} to {}", workflowRun.getStatus(), mappedStatus);
 
-              // Update the deployment status
-              heliosDeployment.setStatus(mappedStatus);
-              log.info(
-                  "Updated HeliosDeployment {} to status {}",
-                  heliosDeployment.getId(),
-                  mappedStatus);
-              heliosDeploymentRepository.save(heliosDeployment);
+                  // Update the deployment status
+                  heliosDeployment.setStatus(mappedStatus);
+                  log.info(
+                      "Updated HeliosDeployment {} to status {}",
+                      heliosDeployment.getId(),
+                      mappedStatus);
+                  heliosDeploymentRepository.save(heliosDeployment);
+                }
+              } catch (IOException e) {
+                e.printStackTrace();
+              }
             });
   }
 }
