@@ -17,7 +17,6 @@ import { injectMutation, injectQuery, QueryClient } from '@tanstack/angular-quer
 import { IconsModule } from 'icons.module';
 import { ConfirmationService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { TagModule } from 'primeng/tag';
 import { EnvironmentDeploymentInfoComponent } from '../deployment-info/environment-deployment-info.component';
@@ -49,7 +48,6 @@ import { EnvironmentStatusTagComponent } from '../environment-status-tag/environ
     EnvironmentStatusInfoComponent,
     LockTimeComponent,
     AvatarModule,
-    ConfirmDialogModule,
     CommonModule,
     TimeAgoPipe,
     UserAvatarComponent,

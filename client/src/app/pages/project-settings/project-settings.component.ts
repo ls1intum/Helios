@@ -5,7 +5,6 @@ import { injectMutation, injectQuery, QueryClient } from '@tanstack/angular-quer
 import { IconsModule } from 'icons.module';
 import { ConfirmationService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { DialogModule } from 'primeng/dialog';
 import { DividerModule } from 'primeng/divider';
 import { DragDropModule } from 'primeng/dragdrop';
@@ -33,7 +32,6 @@ import { TooltipModule } from 'primeng/tooltip';
 
 @Component({
   selector: 'app-project-settings',
-  standalone: true,
   imports: [
     FormsModule,
     TableModule,
@@ -47,7 +45,6 @@ import { TooltipModule } from 'primeng/tooltip';
     InputTextModule,
     IconsModule,
     DragDropModule,
-    ConfirmDialogModule,
     DividerModule,
   ],
   templateUrl: './project-settings.component.html',

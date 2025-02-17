@@ -42,6 +42,8 @@ import type {
   GetAllRepositoriesResponse,
   GetRepositoryByIdData,
   GetRepositoryByIdResponse,
+  DeleteReleaseCandidateByNameData,
+  DeleteReleaseCandidateByNameResponse,
   GetReleaseCandidateByNameData,
   GetReleaseCandidateByNameResponse,
   GetCommitsSinceLastReleaseCandidateData,
@@ -275,6 +277,13 @@ export const getRepositoryById = <ThrowOnError extends boolean = false>(options:
   return (options?.client ?? client).get<GetRepositoryByIdResponse, unknown, ThrowOnError>({
     ...options,
     url: '/api/repository/{id}',
+  });
+};
+
+export const deleteReleaseCandidateByName = <ThrowOnError extends boolean = false>(options: Options<DeleteReleaseCandidateByNameData, ThrowOnError>) => {
+  return (options?.client ?? client).delete<DeleteReleaseCandidateByNameResponse, unknown, ThrowOnError>({
+    ...options,
+    url: '/api/release-candidate/{name}',
   });
 };
 

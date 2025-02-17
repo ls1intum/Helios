@@ -19,4 +19,6 @@ public interface ReleaseCandidateRepository
       Long repositoryId, String commitSha);
 
   boolean existsByRepositoryRepositoryIdAndName(Long repositoryId, String name);
+
+  Optional<ReleaseCandidate> deleteByRepositoryRepositoryIdAndName(Long repositoryId, String name);
 }
