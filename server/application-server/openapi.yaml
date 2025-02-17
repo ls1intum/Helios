@@ -488,6 +488,23 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReleaseCandidateDetailsDto"
+    delete:
+      tags:
+      - release-candidate-controller
+      operationId: deleteReleaseCandidateByName
+      parameters:
+      - name: name
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReleaseCandidateInfoDto"
   /api/release-candidate/newcommits:
     get:
       tags:
