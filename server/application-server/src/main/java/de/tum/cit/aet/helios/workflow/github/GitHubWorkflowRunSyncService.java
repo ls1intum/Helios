@@ -9,6 +9,8 @@ import de.tum.cit.aet.helios.pullrequest.PullRequest;
 import de.tum.cit.aet.helios.pullrequest.PullRequestRepository;
 import de.tum.cit.aet.helios.util.DateUtil;
 import de.tum.cit.aet.helios.workflow.Workflow;
+import de.tum.cit.aet.helios.workflow.WorkflowRepository;
+import de.tum.cit.aet.helios.workflow.WorkflowRun;
 import de.tum.cit.aet.helios.workflow.WorkflowRunRepository;
 import de.tum.cit.aet.helios.workflow.WorkflowService;
 import jakarta.transaction.Transactional;
@@ -28,12 +30,12 @@ public class GitHubWorkflowRunSyncService {
   private final GitHubWorkflowRunConverter workflowRunConverter;
   private final GitRepoRepository gitRepoRepository;
   private final PullRequestRepository pullRequestRepository;
+  private final WorkflowRepository workflowRepository;
   private final WorkflowService workflowService;
   private final HeliosDeploymentRepository heliosDeploymentRepository;
 
-
   @Transactional
-  public void processRun(GHWorkflowRun ghWorkflowRun) {
+  public WorkflowRun processRun(GHWorkflowRun ghWorkflowRun) {
     var result =
         workflowRunRepository
             .findById(ghWorkflowRun.getId())
@@ -59,7 +61,7 @@ public class GitHubWorkflowRunSyncService {
             .orElseGet(() -> workflowRunConverter.convert(ghWorkflowRun));
 
     if (result == null) {
-      return;
+      return null;
     }
 
     // Link with existing repository if not already linked
@@ -70,6 +72,21 @@ public class GitHubWorkflowRunSyncService {
       if (repository != null) {
         result.setRepository(repository);
       }
+    }
+
+    if (result.getWorkflow() == null) {
+      var workflow = workflowRepository.findById(ghWorkflowRun.getWorkflowId());
+
+      // We don't want to create runs for workflows that are not in our database
+      if (workflow.isEmpty()) {
+        log.warn(
+            "Workflow {} not found in database, skipping workflow run {}",
+            ghWorkflowRun.getWorkflowId(),
+            ghWorkflowRun.getId());
+        return null;
+      }
+
+      result.setWorkflow(workflow.get());
     }
 
     try {
@@ -105,6 +122,8 @@ public class GitHubWorkflowRunSyncService {
     }
 
     workflowRunRepository.save(result);
+
+    return result;
   }
 
   private void processRunForHeliosDeployment(GHWorkflowRun workflowRun) throws IOException {
