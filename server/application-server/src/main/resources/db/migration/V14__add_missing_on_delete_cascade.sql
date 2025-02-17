@@ -5,6 +5,6 @@
 ALTER TABLE public.workflow_group_membership DROP CONSTRAINT fkixdlgaqu4hykyehs17gbvyvfj;
 ALTER TABLE public.workflow_group_membership
     ADD CONSTRAINT fkixdlgaqu4hykyehs17gbvyvfj
-        FOREIGN KEY (repository_id)
-            REFERENCES public.workflow(repository_id)
+        FOREIGN KEY (workflow_id)
+            REFERENCES public.workflow(id)
             ON DELETE CASCADE;
