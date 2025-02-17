@@ -55,7 +55,7 @@
       <tr class="cursor-pointer" (click)="openPR(pr)">
         <td>
           <div class="flex flex-wrap items-center gap-2">
-            <i-tabler [pTooltip]="getPrIconInfo(pr).tooltip" [name]="getPrIconInfo(pr).icon" [class]="getPrIconInfo(pr).color" />
+            <app-pull-request-status-icon [pullRequest]="pr" tooltipPosition="top" />
             <span class="font-bold"><span [innerHTML]="pr.title | markdown"></span></span>
             <app-workflow-run-status [selector]="{ type: 'pullRequest', pullRequestId: pr.id }"></app-workflow-run-status>
 
@@ -106,7 +106,7 @@
           }
         </td>
         <td>
-          <p-button text (click)="openPRExternal(pr)">
+          <p-button text (click)="openPRExternal($event, pr)">
             <i-tabler name="external-link" />
           </p-button>
         </td>

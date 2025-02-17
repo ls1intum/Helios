@@ -36,7 +36,7 @@
             </div>
             @if (environment.latestDeployment; as deployment) {
               <div class="flex gap-1 items-center text-sm mt-2">
-                <app-user-avatar [user]="environment?.latestDeployment?.user" />
+                <app-user-avatar [user]="environment?.latestDeployment?.user" tooltipPosition="top" />
                 @if (environment.latestDeployment.user?.name) {
                   {{ environment.latestDeployment.user?.name }} deployed
                 }
@@ -59,7 +59,7 @@
 
           @if (environment.locked) {
             <div class="flex gap-1 items-center">
-              <app-user-avatar [user]="environment.lockedBy" [toolTipText]="'Locked By'" />
+              <app-user-avatar [user]="environment.lockedBy" [toolTipText]="'Locked By'" tooltipPosition="top" />
             </div>
             @if (environment.lockedAt) {
               <app-lock-time [timeLockWillExpire]="environment.lockWillExpireAt"></app-lock-time>
@@ -83,7 +83,7 @@
 
           @if (userCanDeploy(environment)) {
             <button (click)="deployEnvironment(environment); $event.stopPropagation()" class="p-button p-button-secondary p-2">
-              <i-tabler name="cloud-upload" class="mr-1" />Deploy
+              <i-tabler name="cloud-upload" class="mr-1 flex-shrink-0" />Deploy
             </button>
           }
 
@@ -92,7 +92,11 @@
             @if (!environment.enabled) {
               <p-tag value="Disabled" severity="danger" rounded="true" />
             }
-            <a icon [routerLink]="'/repo/' + environment.repository?.id + '/environment/' + environment.id + '/edit'" class="p-button p-button-secondary p-2"
+            <a
+              icon
+              [routerLink]="'/repo/' + environment.repository?.id + '/environment/' + environment.id + '/edit'"
+              class="p-button p-button-secondary p-2"
+              (click)="$event.stopPropagation()"
               ><i-tabler name="pencil"
             /></a>
           }
