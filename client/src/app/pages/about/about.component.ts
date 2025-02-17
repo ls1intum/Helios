@@ -23,7 +23,7 @@ export type ExtendedUserInfoDto = UserInfoDto & {
 export class AboutComponent implements OnInit {
   projectAdvisors = [
     {
-      name: 'Stephan Krusche',
+      name: 'Prof. Dr. Stephan Krusche',
       description: 'Project Advisor',
       website: 'https://ase.cit.tum.de/people/krusche/',
       githubHandle: 'krusche',
