@@ -234,4 +234,8 @@ export class EnvironmentListViewComponent implements OnDestroy {
       return timeLeftMinutes > 1 ? `You can unlock this environment in ${timeLeftMinutes} minutes` : 'You can unlock this environment in 1 minute';
     }
   }
+
+  formatEnvironmentType(type: string): string {
+    return type.charAt(0).toUpperCase() + type.slice(1).toLowerCase();
+  }
 }

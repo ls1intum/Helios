@@ -29,6 +29,10 @@
               @if (environment.latestStatus; as status) {
                 <app-environment-status-tag [status]="status" />
               }
+
+              @if (environment.type) {
+                <p-tag [value]="formatEnvironmentType(environment.type)" severity="secondary" rounded="true" />
+              }
             </div>
             @if (environment.latestDeployment; as deployment) {
               <div class="flex gap-1 items-center text-sm mt-2">
