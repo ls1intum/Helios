@@ -1,6 +1,8 @@
-import { Component } from '@angular/core';
+import {Component, OnInit, signal} from '@angular/core';
 import { PageHeadingComponent } from '@app/components/page-heading/page-heading.component';
 import {NgClass, NgOptimizedImage} from '@angular/common';
+import {UserInfoDto} from "@app/core/modules/openapi";
+import {UserAvatarComponent} from "@app/components/user-avatar/user-avatar.component";
 
 interface Feature {
   icon: string;
@@ -8,20 +10,17 @@ interface Feature {
   description: string;
 }
 
-interface GithubContributor {
-  login: string;
-  id: number;
-  avatar_url: string;
-  html_url: string;
+export type ExtendedUserInfoDto = UserInfoDto & {
   contributions: number;
-}
+};
+
 
 @Component({
   selector: 'app-about',
-  imports: [PageHeadingComponent, NgOptimizedImage, NgClass],
+  imports: [PageHeadingComponent, NgOptimizedImage, NgClass, UserAvatarComponent],
   templateUrl: './about.component.html',
 })
-export class AboutComponent {
+export class AboutComponent implements OnInit {
   projectAdvisors = [
     {
       name: 'Stephan Krusche',
@@ -40,8 +39,8 @@ export class AboutComponent {
     { name: 'Stefan Németh', description: 'Bachelor Thesis', website: null, githubHandle: 'StefanNemeth', githubId: 5003405 },
   ];
 
-  // The real-time fetched contributors from GitHub
-  githubContributors: GithubContributor[] = [];
+  // Fetched contributors from GitHub
+  githubContributors = signal<ExtendedUserInfoDto[]>([]);
 
   // ============== FEATURES ==============
   coreFeatures: Feature[] = [
@@ -71,6 +70,23 @@ export class AboutComponent {
     }
   ];
 
+  ngOnInit(): void {
+    fetch('https://api.github.com/repos/ls1intum/Helios/contributors')
+        .then((response) => response.json())
+        .then((data: any[]) => {
+          this.githubContributors.set(
+              data.map((contributor) => ({
+                id: contributor.id,
+                login: contributor.login,
+                avatarUrl: contributor.avatar_url,
+                name: contributor.login,
+                htmlUrl: contributor.html_url,
+                contributions: contributor.contributions,
+              }))
+          );
+        })
+        .catch((error) => console.error('Error fetching contributors:', error));
+  }
 
   getGithubProfilePictureUrl(userId: number): string {
     return `https://avatars.githubusercontent.com/u/${userId}`;
