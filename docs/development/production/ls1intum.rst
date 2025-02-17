@@ -2,8 +2,8 @@
 Repository Integration Guide
 ===============================
 
-How to Start Using Helios
--------------------------
+This documentation is for repository admins/maintainers who want to set up Helios for their GitHub repositories.
+Steps explain how to configure your GitHub repository, install the Helios GitHub app, configure Helios settings, and trigger deployments.
 
 1. **Define Your Environments**:
 
