@@ -111,7 +111,7 @@ export type WorkflowDto = {
   url?: string;
   htmlUrl?: string;
   badgeUrl?: string;
-  label: 'NONE' | 'TEST_SERVER' | 'STAGING_SERVER' | 'PRODUCTION_SERVER';
+  label: 'NONE' | 'DEPLOY_TEST_SERVER' | 'DEPLOY_STAGING_SERVER' | 'DEPLOY_PRODUCTION_SERVER';
   createdAt?: string;
   updatedAt?: string;
 };
@@ -298,7 +298,7 @@ export type BranchDetailsDto = {
 };
 
 export type UpdateWorkflowLabelData = {
-  body: 'NONE' | 'TEST_SERVER' | 'STAGING_SERVER' | 'PRODUCTION_SERVER';
+  body: 'NONE' | 'DEPLOY_TEST_SERVER' | 'DEPLOY_STAGING_SERVER' | 'DEPLOY_PRODUCTION_SERVER';
   path: {
     workflowId: number;
   };

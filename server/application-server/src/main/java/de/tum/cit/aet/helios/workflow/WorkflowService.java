@@ -71,9 +71,9 @@ public class WorkflowService {
     return Arrays.stream(Workflow.Label.values())
         .filter(
             label ->
-                label == Workflow.Label.TEST_SERVER
-                    || label == Workflow.Label.STAGING_SERVER
-                    || label == Workflow.Label.PRODUCTION_SERVER)
+                label == Workflow.Label.DEPLOY_TEST_SERVER
+                    || label == Workflow.Label.DEPLOY_STAGING_SERVER
+                    || label == Workflow.Label.DEPLOY_PRODUCTION_SERVER)
         .map(
             label ->
                 workflowRepository.findFirstByLabelAndRepositoryRepositoryIdOrderByCreatedAtDesc(
@@ -85,13 +85,13 @@ public class WorkflowService {
   public Workflow.Label getLabel(Environment.Type type) {
     switch (type) {
       case PRODUCTION -> {
-        return Workflow.Label.PRODUCTION_SERVER;
+        return Workflow.Label.DEPLOY_PRODUCTION_SERVER;
       }
       case STAGING -> {
-        return Workflow.Label.STAGING_SERVER;
+        return Workflow.Label.DEPLOY_STAGING_SERVER;
       }
       case TEST -> {
-        return Workflow.Label.TEST_SERVER;
+        return Workflow.Label.DEPLOY_TEST_SERVER;
       }
       default -> {
         return null;

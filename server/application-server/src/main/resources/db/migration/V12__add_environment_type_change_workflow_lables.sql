@@ -10,21 +10,21 @@ ADD COLUMN type VARCHAR(255) DEFAULT 'TEST' NOT NULL,
 -- Drop the old label constraint
 ALTER TABLE workflow DROP CONSTRAINT workflow_label_check;
 
--- Add new constraint for label with updated values
-ALTER TABLE workflow
-    ADD CONSTRAINT workflow_label_check CHECK (
-        label::text = ANY (
-            ARRAY ['NONE'::varchar, 'TEST_SERVER'::varchar, 'STAGING_SERVER'::varchar, 'PRODUCTION_SERVER'::varchar]::text []
-        )
-    );
-
 -- Update existing data to match new values
 UPDATE workflow
 SET label = CASE
         WHEN label = 'BUILD' THEN 'NONE'
-        WHEN label = 'DEPLOYMENT' THEN 'TEST_SERVER'
+        WHEN label = 'DEPLOYMENT' THEN 'DEPLOY_TEST_SERVER'
         WHEN label = 'NONE' THEN 'NONE'
     END;
+
+-- Add new constraint for label with updated values
+ALTER TABLE workflow
+    ADD CONSTRAINT workflow_label_check CHECK (
+        label::text = ANY (
+            ARRAY ['NONE'::varchar, 'DEPLOY_TEST_SERVER'::varchar, 'DEPLOY_STAGING_SERVER'::varchar, 'DEPLOY_PRODUCTION_SERVER'::varchar]::text []
+        )
+    );
 
 -- Make sure label has a default value
 ALTER TABLE workflow 
