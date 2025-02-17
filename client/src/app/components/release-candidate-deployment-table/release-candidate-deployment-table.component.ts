@@ -32,8 +32,6 @@ export class ReleaseCandidateDeploymentTableComponent {
   releaseCandidate = input.required<ReleaseCandidateDetailsDto>();
   queryClient = inject(QueryClient);
   selectedEnvironmentId = signal<number | undefined>(undefined);
-  isLoadingWorkflow = signal<boolean>(false);
-  startQueryingWorkflow = signal<boolean>(false);
   messageService = inject(MessageService);
   keycloakService = inject(KeycloakService);
   permissions = inject(PermissionService);
@@ -67,14 +65,15 @@ export class ReleaseCandidateDeploymentTableComponent {
         environmentId: this.selectedEnvironmentId() ?? 0,
       },
     }),
-    enabled: this.selectedEnvironmentId() !== undefined && this.deployToEnvironment.isSuccess() && this.startQueryingWorkflow(),
-    refetchInterval: data => (data ? false : 3000),
+    enabled:
+      this.selectedEnvironmentId() !== undefined &&
+      this.deployToEnvironment.isSuccess() &&
+      this.deployableEnvironments()?.find(environment => environment.id === this.selectedEnvironmentId()) !== undefined &&
+      this.deploymentStatus(this.deployableEnvironments()!.find(environment => environment.id === this.selectedEnvironmentId())!) === 'WAITING',
   }));
 
   deployReleaseCandidate = (environment: EnvironmentDto) => {
     this.selectedEnvironmentId.set(environment.id);
-    this.isLoadingWorkflow.set(true);
-    this.startQueryingWorkflow.set(false);
 
     this.deployToEnvironment.mutate(
       {
@@ -98,16 +97,9 @@ export class ReleaseCandidateDeploymentTableComponent {
               },
             }),
           });
-
-          // Wait 10 seconds before starting to query the workflow URL
-          setTimeout(() => {
-            this.startQueryingWorkflow.set(true);
-          }, 10 * 1000);
         },
         onError: () => {
-          this.isLoadingWorkflow.set(false);
           this.selectedEnvironmentId.set(undefined);
-          this.startQueryingWorkflow.set(false);
         },
       }
     );
@@ -133,10 +125,7 @@ export class ReleaseCandidateDeploymentTableComponent {
       return 'REPLACED';
     }
 
-    if (deployment.state !== undefined) {
-      return deployment.state;
-    }
-    return 'UNKNOWN';
+    return deployment.state || 'UNKNOWN';
   };
 
   openWorkflowUrl(url: string) {

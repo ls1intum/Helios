@@ -2,8 +2,8 @@
   <p-table [value]="[1, 2, 3, 4, 5]">
     <ng-template pTemplate="header">
       <tr>
-        <th class="w-[40%]">Name</th>
-        <th class="w-[30%]">Status</th>
+        <th class="w-[30%]">Name</th>
+        <th class="w-[40%]">Status</th>
         <th class="w-[15%]">Deploy</th>
         <th class="w-[15%]">Actions</th>
       </tr>
@@ -24,8 +24,8 @@
   <p-table #table [rowHover]="true" [value]="deployableEnvironments() || []" [paginator]="true" [rows]="20">
     <ng-template #header>
       <tr>
-        <th class="w-[40%]">Name</th>
-        <th class="w-[30%]">Status</th>
+        <th class="w-[30%]">Name</th>
+        <th class="w-[40%]">Status</th>
         <th class="w-[15%]">Deploy</th>
         <th class="w-[15%]">Actions</th>
       </tr>
@@ -53,10 +53,10 @@
           }
         </td>
         <td>
-          @if (userCanDeploy() && selectedEnvironmentId() === environment.id && deployToEnvironment.isSuccess()) {
+          @if (userCanDeploy() && deploymentStatus(environment) === 'WAITING') {
             <p-button
               styleClass="p-button-success"
-              [loading]="!startQueryingWorkflow() || !workflowRunUrlQuery.data()"
+              [loading]="workflowRunUrlQuery.isPending()"
               [disabled]="!workflowRunUrlQuery.data()"
               (onClick)="workflowRunUrlQuery.data() && openWorkflowUrl(workflowRunUrlQuery.data()!)"
             >

@@ -49,13 +49,13 @@ export class DeploymentStateTagComponent {
       INACTIVE: 'time-duration-off',
       UNKNOWN: 'question-mark',
       NEVER_DEPLOYED: 'question-mark',
-      REPLACED: 'repeat',
+      REPLACED: 'progress',
     };
     return iconMap[this.internalState()];
   }
 
   getIconClass() {
-    const spinStates: DeploymentState[] = ['WAITING', 'PENDING', 'IN_PROGRESS', 'QUEUED'];
+    const spinStates: DeploymentState[] = ['WAITING', 'PENDING', 'IN_PROGRESS', 'QUEUED', 'REPLACED'];
     return `!size-5 ${spinStates.includes(this.internalState()) ? 'animate-spin' : ''}`;
   }
 
