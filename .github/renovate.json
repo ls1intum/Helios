@@ -7,7 +7,9 @@
     "dependencies"
   ],
   "draftPR": true,
-  "baseBranches": ["staging"],
+  "baseBranches": [
+    "staging"
+  ],
   "rebaseWhen": "conflicted",
   "prHourlyLimit": 10,
   "packageRules": [
@@ -41,6 +43,14 @@
       ],
       "labels": [
         "client"
+      ]
+    },
+    {
+      "matchPaths": [
+        "keycloakify/**"
+      ],
+      "labels": [
+        "keycloakify"
       ]
     },
     {
@@ -114,6 +124,20 @@
       ],
       "groupName": "all non-major client dependencies",
       "groupSlug": "all-minor-patch-client"
+    },
+    {
+      "matchPackagePatterns": [
+        "*"
+      ],
+      "matchPaths": [
+        "keycloakify/**"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
+      "groupName": "all non-major keycloakify dependencies",
+      "groupSlug": "all-minor-patch-keycloakify"
     },
     {
       "matchPackagePatterns": [
