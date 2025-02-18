@@ -81,7 +81,7 @@ public class DeploymentService {
 
     // Set the PR associated with the deployment
     Optional<PullRequest> optionalPullRequest =
-        pullRequestRepository.findByRepositoryRepositoryIdAndHeadRefNameOrHeadSha(
+        pullRequestRepository.findOpenPrByBranchNameOrSha(
             RepositoryContext.getRepositoryId(), deployRequest.branchName(), commitSha);
 
     HeliosDeployment heliosDeployment =
