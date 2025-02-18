@@ -26,7 +26,6 @@ public class GitHubDeploymentSyncService {
   private final DeploymentConverter deploymentConverter;
   private final HeliosDeploymentRepository heliosDeploymentRepository;
 
-
   /**
    * Processes a single DeploymentSource by updating or creating a Deployment in the local
    * repository.
@@ -54,7 +53,7 @@ public class GitHubDeploymentSyncService {
 
     // Set the PR associated with the deployment
     Optional<PullRequest> optionalPullRequest =
-        pullRequestRepository.findByRepositoryRepositoryIdAndHeadRefNameOrHeadSha(
+        pullRequestRepository.findOpenPrByBranchNameOrSha(
             gitRepository.getRepositoryId(), deployment.getRef(), deployment.getSha());
 
     optionalPullRequest.ifPresent(deployment::setPullRequest);
