@@ -81,6 +81,9 @@ export class DeploymentStepperComponent implements OnInit, OnDestroy {
   get currentEffectiveStepIndex(): number {
     if (!this.deployment || !this.deployment.createdAt) return 0;
     const index = this.steps.indexOf(this.deployment.state as 'REQUESTED' | 'PENDING' | 'IN_PROGRESS' | 'SUCCESS');
+    if (this.deployment?.type === 'HELIOS' && this.deployment?.state === 'IN_PROGRESS') {
+      return 1;
+    }
     return index !== -1 ? index : 3;
   }
 
