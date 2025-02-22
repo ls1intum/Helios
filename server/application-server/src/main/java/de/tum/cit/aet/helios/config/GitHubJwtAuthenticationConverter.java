@@ -55,7 +55,10 @@ public class GitHubJwtAuthenticationConverter
     Collection<GrantedAuthority> authorities = new ArrayList<>();
 
     // Hardcoded Helios developers
-    String[] heliosDevelopers = {"gbanu", "thielpa", "egekocabas", "turkerkoc", "stefannemeth"};
+    String[] heliosDevelopers = {
+        "gbanu", "thielpa", "egekocabas", "turkerkoc", "stefannemeth",
+        "bensofficial"
+    };
     if (Arrays.asList(heliosDevelopers).contains(username)) {
       authorities.add(new SimpleGrantedAuthority(rolePrefix + RepoPermissionType.ADMIN));
       return authorities;
