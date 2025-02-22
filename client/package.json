@@ -21,7 +21,7 @@
     "@angular/router": "^19.0.4",
     "@hey-api/client-fetch": "^0.6.0",
     "@primeng/themes": "19.0.2",
-    "@sentry/angular": "^8.53.0",
+    "@sentry/angular": "^9.0.0",
     "@sentry/cli": "^2.40.0",
     "@tanstack/angular-query-experimental": "^5.62.8",
     "angular-tabler-icons": "^3.1.0",
