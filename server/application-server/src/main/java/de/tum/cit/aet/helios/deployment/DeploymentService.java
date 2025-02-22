@@ -3,6 +3,7 @@ package de.tum.cit.aet.helios.deployment;
 import de.tum.cit.aet.helios.auth.AuthService;
 import de.tum.cit.aet.helios.branch.BranchService;
 import de.tum.cit.aet.helios.environment.Environment;
+import de.tum.cit.aet.helios.environment.EnvironmentDto;
 import de.tum.cit.aet.helios.environment.EnvironmentLockHistory;
 import de.tum.cit.aet.helios.environment.EnvironmentLockHistoryRepository;
 import de.tum.cit.aet.helios.environment.EnvironmentRepository;
@@ -141,10 +142,15 @@ public class DeploymentService {
 
     // Only attempt to lock if it's a test environment
     if (environment.getType() == Environment.Type.TEST) {
-      environment =
-          this.environmentService
-              .lockEnvironment(environmentId)
-              .orElseThrow(() -> new DeploymentException("Environment was already locked"));
+      EnvironmentDto environmentDto = this.environmentService.lockEnvironment(environmentId);
+      if (environmentDto == null) {
+        throw new DeploymentException("Failed to lock environment");
+      } else {
+        environment = environmentRepository.findById(environmentDto.id()).orElse(null);
+        if (environment == null) {
+          throw new DeploymentException("Failed to lock environment");
+        }
+      }
     }
 
     if (!canRedeploy(environment, 20)) {

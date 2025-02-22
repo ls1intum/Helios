@@ -159,7 +159,7 @@ public class EnvironmentService {
    * @throws EntityNotFoundException if no environment is found with the specified ID
    */
   @Transactional
-  public Optional<Environment> lockEnvironment(Long id) {
+  public EnvironmentDto lockEnvironment(Long id) {
     final User currentUser = authService.getUserFromGithubId();
 
     Environment environment =
@@ -174,14 +174,14 @@ public class EnvironmentService {
     // Only proceed with locking if it's a TEST environment
     if (environment.getType() != Environment.Type.TEST) {
       // Return the environment without locking for non-TEST environments
-      return Optional.of(environment);
+      return EnvironmentDto.fromEnvironment(environment);
     }
 
     if (environment.isLocked()) {
       if (currentUser.equals(environment.getLockedBy())) {
-        return Optional.of(environment);
+        return EnvironmentDto.fromEnvironment(environment);
       }
-      return Optional.empty();
+      return null;
     }
 
     environment.setLockedBy(currentUser);
@@ -201,10 +201,10 @@ public class EnvironmentService {
       environmentRepository.save(environment);
     } catch (OptimisticLockingFailureException e) {
       // The environment was locked by another transaction
-      return Optional.empty();
+      return null;
     }
 
-    return Optional.of(environment);
+    return EnvironmentDto.fromEnvironment(environment);
   }
 
   @Transactional
