@@ -59,7 +59,7 @@ public class EnvironmentController {
       @PathVariable Long environmentId) {
     List<EnvironmentLockHistoryDto> lockHistory =
         environmentService.getLockHistoryByEnvironmentId(environmentId);
-  
+
     return ResponseEntity.ok(lockHistory);
   }
 
@@ -67,6 +67,13 @@ public class EnvironmentController {
   @PutMapping("/{id}/unlock")
   public ResponseEntity<?> unlockEnvironment(@PathVariable Long id) {
     EnvironmentDto environment = environmentService.unlockEnvironment(id);
+    return ResponseEntity.ok(environment);
+  }
+
+  @EnforceAtLeastWritePermission
+  @PutMapping("/{id}/lock")
+  public ResponseEntity<?> lockEnvironment(@PathVariable Long id) {
+    EnvironmentDto environment = environmentService.lockEnvironment(id);
     return ResponseEntity.ok(environment);
   }
 
