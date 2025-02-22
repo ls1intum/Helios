@@ -1,7 +1,6 @@
-import { Component, computed, inject, input, output, signal, OnDestroy } from '@angular/core';
+import { Component, computed, inject, input, OnDestroy, output, signal } from '@angular/core';
 import { AccordionModule } from 'primeng/accordion';
-
-import { DatePipe, CommonModule } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { EnvironmentDto } from '@app/core/modules/openapi';
 import {
@@ -10,6 +9,7 @@ import {
   getAllEnvironmentsOptions,
   getAllEnvironmentsQueryKey,
   getEnvironmentsByUserLockingQueryKey,
+  lockEnvironmentMutation,
   unlockEnvironmentMutation,
 } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { PermissionService } from '@app/core/services/permission.service';
@@ -85,9 +85,18 @@ export class EnvironmentListViewComponent implements OnDestroy {
   hasDeployPermissions = computed(() => this.permissionService.hasWritePermission());
   hasEditEnvironmentPermissions = computed(() => this.permissionService.isAdmin());
 
+  lockEnvironmentMutation = injectMutation(() => ({
+    ...lockEnvironmentMutation(),
+    onSuccess: () => {
+      this.queryClient.invalidateQueries({ queryKey: this.queryKey() });
+      this.queryClient.invalidateQueries({ queryKey: getEnvironmentsByUserLockingQueryKey() });
+    },
+  }));
+
   userCanDeploy(environment: EnvironmentDto): boolean {
     return !!(this.isLoggedIn() && this.deployable() && (!environment.locked || this.isCurrentUserLocked(environment)) && this.hasDeployPermissions());
   }
+
   deploy = output<EnvironmentDto>();
 
   searchInput = signal<string>('');
@@ -128,6 +137,16 @@ export class EnvironmentListViewComponent implements OnDestroy {
     },
   }));
 
+  lockEnvironment(environment: EnvironmentDto) {
+    this.confirmationService.confirm({
+      header: 'Lock Environment',
+      message: `Are you sure you want to lock ${environment.name}?`,
+      accept: () => {
+        this.lockEnvironmentMutation.mutate({ path: { id: environment.id } });
+      },
+    });
+  }
+
   constructor() {
     this.intervalId = window.setInterval(() => {
       this.currentTime.set(Date.now());
@@ -148,6 +167,11 @@ export class EnvironmentListViewComponent implements OnDestroy {
 
   onUnlockEnvironment(event: Event, environment: EnvironmentDto) {
     this.unlockEnvironment.mutate({ path: { id: environment.id } });
+    event.stopPropagation();
+  }
+
+  onLockEnvironment(event: Event, environment: EnvironmentDto) {
+    this.lockEnvironment(environment);
     event.stopPropagation();
   }
 

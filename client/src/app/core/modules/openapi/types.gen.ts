@@ -448,6 +448,22 @@ export type UnlockEnvironmentResponses = {
   200: unknown;
 };
 
+export type LockEnvironmentData = {
+  body?: never;
+  path: {
+    id: number;
+  };
+  query?: never;
+  url: '/api/environments/{id}/lock';
+};
+
+export type LockEnvironmentResponses = {
+  /**
+   * OK
+   */
+  200: unknown;
+};
+
 export type CreateWorkflowGroupData = {
   body: WorkflowGroupDto;
   path: {
