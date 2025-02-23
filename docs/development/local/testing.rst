@@ -50,7 +50,7 @@ Server-Side Unit Testing
       Long id = this.branches.get(0).repository().id();
       String branchName = this.branches.get(0).name();
 
-      when(branchService.getBranchInfo(id, branchName)).thenReturn(Optional.of(branches.get(0)));
+      when(branchService.getBranchByRepositoryIdAndName(id, branchName)).thenReturn(Optional.of(branches.get(0)));
       ResultActions request =
           this.mockMvc
               .perform(
@@ -71,7 +71,7 @@ Server-Side Unit Testing
       Long id = -1L;
       String branchName = this.branches.get(0).name();
 
-      when(branchService.getBranchInfo(id, branchName)).thenReturn(Optional.empty());
+      when(branchService.getBranchByRepositoryIdAndName(id, branchName)).thenReturn(Optional.empty());
       this.mockMvc
           .perform(
               get("/api/branches/repository/{repoId}/branch", id)

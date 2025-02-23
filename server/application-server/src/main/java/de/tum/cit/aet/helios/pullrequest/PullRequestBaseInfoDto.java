@@ -1,15 +1,16 @@
 package de.tum.cit.aet.helios.pullrequest;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import de.tum.cit.aet.helios.gitrepo.RepositoryInfoDto;
 import de.tum.cit.aet.helios.issue.Issue;
 import de.tum.cit.aet.helios.issue.Issue.State;
 import de.tum.cit.aet.helios.label.LabelInfoDto;
 import de.tum.cit.aet.helios.user.UserInfoDto;
+import de.tum.cit.aet.helios.userpreference.UserPreference;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.lang.NonNull;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
@@ -20,17 +21,17 @@ public record PullRequestBaseInfoDto(
     @NonNull State state,
     @NonNull Boolean isDraft,
     @NonNull Boolean isMerged,
-    RepositoryInfoDto repository,
+    Boolean isPinned,
     @NonNull String htmlUrl,
     OffsetDateTime createdAt,
     OffsetDateTime updatedAt,
     UserInfoDto author,
     List<LabelInfoDto> labels,
     List<UserInfoDto> assignees,
-    List<UserInfoDto> reviewers
-) {
+    List<UserInfoDto> reviewers) {
 
-  public static PullRequestBaseInfoDto fromPullRequest(PullRequest pullRequest) {
+  public static PullRequestBaseInfoDto fromPullRequestAndUserPreference(
+      PullRequest pullRequest, Optional<UserPreference> userPreference) {
     return new PullRequestBaseInfoDto(
         pullRequest.getId(),
         pullRequest.getNumber(),
@@ -38,7 +39,9 @@ public record PullRequestBaseInfoDto(
         pullRequest.getState(),
         pullRequest.isDraft(),
         pullRequest.isMerged(),
-        RepositoryInfoDto.fromRepository(pullRequest.getRepository()),
+        userPreference
+            .map(up -> up.getFavouritePullRequests().contains(pullRequest))
+            .orElseGet(() -> false),
         pullRequest.getHtmlUrl(),
         pullRequest.getCreatedAt(),
         pullRequest.getUpdatedAt(),
@@ -65,7 +68,7 @@ public record PullRequestBaseInfoDto(
         issue.getState(),
         false,
         false,
-        RepositoryInfoDto.fromRepository(issue.getRepository()),
+        false,
         issue.getHtmlUrl(),
         issue.getCreatedAt(),
         issue.getUpdatedAt(),
@@ -78,7 +81,6 @@ public record PullRequestBaseInfoDto(
             .map(UserInfoDto::fromUser)
             .sorted(Comparator.comparing(UserInfoDto::login))
             .toList(),
-        new ArrayList<>() 
-        );
+        new ArrayList<>());
   }
 }

@@ -18,8 +18,10 @@ import type {
   CreateReleaseCandidateData,
   CreateReleaseCandidateResponse,
   EvaluateData,
+  SetPrPinnedByNumberData,
   DeployToEnvironmentData,
   DeployToEnvironmentResponse,
+  SetBranchPinnedByRepositoryIdAndNameAndUserIdData,
   HealthCheckData,
   HealthCheckResponse,
   GetAllWorkflowsData,
@@ -188,6 +190,13 @@ export const evaluate = <ThrowOnError extends boolean = false>(options: Options<
   });
 };
 
+export const setPrPinnedByNumber = <ThrowOnError extends boolean = false>(options: Options<SetPrPinnedByNumberData, ThrowOnError>) => {
+  return (options?.client ?? client).post<unknown, unknown, ThrowOnError>({
+    ...options,
+    url: '/api/pullrequests/{pr}/pin',
+  });
+};
+
 export const deployToEnvironment = <ThrowOnError extends boolean = false>(options: Options<DeployToEnvironmentData, ThrowOnError>) => {
   return (options?.client ?? client).post<DeployToEnvironmentResponse, unknown, ThrowOnError>({
     ...options,
@@ -196,6 +205,15 @@ export const deployToEnvironment = <ThrowOnError extends boolean = false>(option
       ...options?.headers,
     },
     url: '/api/deployments/deploy',
+  });
+};
+
+export const setBranchPinnedByRepositoryIdAndNameAndUserId = <ThrowOnError extends boolean = false>(
+  options: Options<SetBranchPinnedByRepositoryIdAndNameAndUserIdData, ThrowOnError>
+) => {
+  return (options?.client ?? client).post<unknown, unknown, ThrowOnError>({
+    ...options,
+    url: '/api/branches/repository/{repoId}/pin',
   });
 };
 

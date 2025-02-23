@@ -127,7 +127,9 @@ public class DeploymentService {
     return commitSha != null
         ? commitSha
         : this.branchService
-            .getBranchByName(deployRequest.branchName())
+            .getBranchByRepositoryIdAndName(
+              RepositoryContext.getRepositoryId(), 
+              deployRequest.branchName()) 
             .orElseThrow(() -> new DeploymentException("Branch not found"))
             .commitSha();
   }

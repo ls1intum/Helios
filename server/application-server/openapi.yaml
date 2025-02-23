@@ -240,6 +240,26 @@ paths:
       responses:
         "200":
           description: OK
+  /api/pullrequests/{pr}/pin:
+    post:
+      tags:
+      - pull-request-controller
+      operationId: setPrPinnedByNumber
+      parameters:
+      - name: pr
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: isPinned
+        in: query
+        required: true
+        schema:
+          type: boolean
+      responses:
+        "200":
+          description: OK
   /api/deployments/deploy:
     post:
       tags:
@@ -258,6 +278,31 @@ paths:
             application/json:
               schema:
                 type: string
+  /api/branches/repository/{repoId}/pin:
+    post:
+      tags:
+      - branch-controller
+      operationId: setBranchPinnedByRepositoryIdAndNameAndUserId
+      parameters:
+      - name: repoId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: name
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: isPinned
+        in: query
+        required: true
+        schema:
+          type: boolean
+      responses:
+        "200":
+          description: OK
   /status/health:
     get:
       tags:
@@ -1351,6 +1396,8 @@ components:
           type: boolean
         isProtected:
           type: boolean
+        isPinned:
+          type: boolean
         updatedAt:
           type: string
           format: date-time
@@ -1491,8 +1538,8 @@ components:
           type: boolean
         isMerged:
           type: boolean
-        repository:
-          $ref: "#/components/schemas/RepositoryInfoDto"
+        isPinned:
+          type: boolean
         htmlUrl:
           type: string
         createdAt:

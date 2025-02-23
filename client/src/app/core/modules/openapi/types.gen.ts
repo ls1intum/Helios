@@ -182,6 +182,7 @@ export type BranchInfoDto = {
   behindBy?: number;
   isDefault?: boolean;
   isProtected?: boolean;
+  isPinned?: boolean;
   updatedAt?: string;
   updatedBy?: UserInfoDto;
   repository?: RepositoryInfoDto;
@@ -247,7 +248,7 @@ export type PullRequestBaseInfoDto = {
   state: 'OPEN' | 'CLOSED';
   isDraft: boolean;
   isMerged: boolean;
-  repository?: RepositoryInfoDto;
+  isPinned?: boolean;
   htmlUrl: string;
   createdAt?: string;
   updatedAt?: string;
@@ -515,6 +516,24 @@ export type EvaluateResponses = {
   200: unknown;
 };
 
+export type SetPrPinnedByNumberData = {
+  body?: never;
+  path: {
+    pr: number;
+  };
+  query: {
+    isPinned: boolean;
+  };
+  url: '/api/pullrequests/{pr}/pin';
+};
+
+export type SetPrPinnedByNumberResponses = {
+  /**
+   * OK
+   */
+  200: unknown;
+};
+
 export type DeployToEnvironmentData = {
   body: DeployRequest;
   path?: never;
@@ -530,6 +549,25 @@ export type DeployToEnvironmentResponses = {
 };
 
 export type DeployToEnvironmentResponse = DeployToEnvironmentResponses[keyof DeployToEnvironmentResponses];
+
+export type SetBranchPinnedByRepositoryIdAndNameAndUserIdData = {
+  body?: never;
+  path: {
+    repoId: number;
+  };
+  query: {
+    name: string;
+    isPinned: boolean;
+  };
+  url: '/api/branches/repository/{repoId}/pin';
+};
+
+export type SetBranchPinnedByRepositoryIdAndNameAndUserIdResponses = {
+  /**
+   * OK
+   */
+  200: unknown;
+};
 
 export type HealthCheckData = {
   body?: never;

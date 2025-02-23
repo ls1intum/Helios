@@ -51,4 +51,12 @@ public class Branch {
   @JoinColumn(name = "updated_by_id")
   @ToString.Exclude
   private User updatedBy;
+
+  @Override
+  public boolean equals(Object obj) {
+    return this.getRepository()
+            .getRepositoryId()
+            .equals(((Branch) obj).getRepository().getRepositoryId())
+        && this.getName().equals(((Branch) obj).getName());
+  }
 }

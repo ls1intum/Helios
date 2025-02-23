@@ -60,6 +60,8 @@ import {
   IconChevronsRight,
   IconCircleChevronsRight,
   IconFileText,
+  IconPinned,
+  IconPinnedOff,
 } from 'angular-tabler-icons/icons';
 
 // Select some icons (use an object, not an array)
@@ -122,6 +124,8 @@ const icons = {
   IconTrash,
   IconX,
   IconFileText,
+  IconPinned,
+  IconPinnedOff,
 };
 
 @NgModule({
