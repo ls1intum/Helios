@@ -90,7 +90,7 @@ jobs:
             type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'main') }}
             type=ref,event=branch
             type=ref,event=pr
-            type=sha
+            type=sha,suffix=-${{ github.ref_name }}
 
       - name: Build and push Docker Image
         uses: docker/build-push-action@v6
