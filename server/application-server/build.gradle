@@ -157,6 +157,14 @@ tasks.register("bootRunOpenApi", BootRun) {
     mainClass.set("de.tum.cit.aet.helios.HeliosApplication")
 }
 
+tasks.register("makemigration", BootRun) {
+    group = "application"
+    description = "Proposes a new Flyway migration script"
+    systemProperty "spring.profiles.active", "migration"
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass.set("de.tum.cit.aet.helios.HeliosApplication")
+}
+
 openApi {
     apiDocsUrl = 'http://localhost:8080/v3/api-docs.yaml'
     outputDir = file('.')
