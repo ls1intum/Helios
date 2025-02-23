@@ -33,7 +33,7 @@ public class PullRequestService {
               } else if (!pr1.isPinned() && pr2.isPinned()) {
                 return 1;
               } else {
-                return pr2.updatedAt().compareTo(pr1.updatedAt());
+                return 0;
               }
             })
         .collect(Collectors.toList());
