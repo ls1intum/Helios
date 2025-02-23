@@ -550,6 +550,9 @@ export const BranchInfoDtoSchema = {
     isProtected: {
       type: 'boolean',
     },
+    isPinned: {
+      type: 'boolean',
+    },
     updatedAt: {
       type: 'string',
       format: 'date-time',
@@ -721,8 +724,8 @@ export const PullRequestBaseInfoDtoSchema = {
     isMerged: {
       type: 'boolean',
     },
-    repository: {
-      $ref: '#/components/schemas/RepositoryInfoDto',
+    isPinned: {
+      type: 'boolean',
     },
     htmlUrl: {
       type: 'string',
