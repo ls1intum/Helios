@@ -1,0 +1,37 @@
+name: Build and Deploy to Staging
+
+on:
+  push:
+    branches: [ staging ]
+    paths-ignore:
+      - '.codacy.yaml'
+      - '.env.example'
+      - '.gitignore'
+      - 'compose.prod.yaml'
+      - 'compose.yaml'
+      - 'helios-example-realm.json'
+      - 'LICENSE'
+      - 'nginx.conf'
+      - 'openapitools.json'
+      - 'README.md'
+      - '.github/**'
+      - '.vscode/**'
+      - 'docs/**'
+      - 'keycloakify/**'
+
+jobs:
+  validate-flyway:
+    uses: ./.github/workflows/flyway-validate.yml
+  build-staging-container:
+    needs: validate-flyway
+    uses: ./.github/workflows/build_docker.yml
+    secrets: inherit
+  deploy-staging-container:
+    needs: build-staging-container
+    uses: ./.github/workflows/deploy_docker.yml
+    secrets: inherit
+    with:
+      environment: staging
+      client_image_tag: "staging"
+      application_server_image_tag: "staging"
+      webhook_listener_image_tag: "staging"
