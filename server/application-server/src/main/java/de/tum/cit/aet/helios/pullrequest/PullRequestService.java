@@ -1,24 +1,41 @@
 package de.tum.cit.aet.helios.pullrequest;
 
+import de.tum.cit.aet.helios.auth.AuthService;
+import de.tum.cit.aet.helios.userpreference.UserPreference;
+import de.tum.cit.aet.helios.userpreference.UserPreferenceRepository;
+import jakarta.persistence.EntityNotFoundException;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Transactional
+@RequiredArgsConstructor
 public class PullRequestService {
 
   private final PullRequestRepository pullRequestRepository;
-
-  public PullRequestService(PullRequestRepository pullRequestRepository) {
-    this.pullRequestRepository = pullRequestRepository;
-  }
+  private final UserPreferenceRepository userPreferenceRepository;
+  private final AuthService authService;
 
   public List<PullRequestBaseInfoDto> getAllPullRequests() {
+    final Optional<UserPreference> userPreference =
+        userPreferenceRepository.findByUser(authService.getUserFromGithubId());
     return pullRequestRepository.findAllByOrderByUpdatedAtDesc().stream()
-        .map(PullRequestBaseInfoDto::fromPullRequest)
+        .map((pr) -> PullRequestBaseInfoDto.fromPullRequestAndUserPreference(pr, userPreference))
+        .sorted(
+            (pr1, pr2) -> {
+              if (pr1.isPinned() && !pr2.isPinned()) {
+                return -1;
+              } else if (!pr1.isPinned() && pr2.isPinned()) {
+                return 1;
+              } else {
+                return pr2.updatedAt().compareTo(pr1.updatedAt());
+              }
+            })
         .collect(Collectors.toList());
   }
 
@@ -27,10 +44,36 @@ public class PullRequestService {
   }
 
   public List<PullRequestInfoDto> getPullRequestByRepositoryId(Long repositoryId) {
-    return pullRequestRepository.findByRepositoryRepositoryIdOrderByUpdatedAtDesc(repositoryId)
+    return pullRequestRepository
+        .findByRepositoryRepositoryIdOrderByUpdatedAtDesc(repositoryId)
         .stream()
         .map(PullRequestInfoDto::fromPullRequest)
         .collect(Collectors.toList());
+  }
+
+  public void setPrPinnedByNumberAndUserId(Long prId, Boolean isPinned) {
+    final UserPreference userPreference =
+        userPreferenceRepository
+            .findByUser(authService.getUserFromGithubId())
+            .orElseGet(
+                () -> {
+                  final UserPreference pref = new UserPreference();
+                  pref.setUser(authService.getUserFromGithubId());
+                  pref.setFavouriteBranches(new HashSet<>());
+                  pref.setFavouritePullRequests(new HashSet<>());
+                  return userPreferenceRepository.saveAndFlush(pref);
+                });
+
+    if (!isPinned) {
+      userPreference.getFavouritePullRequests().removeIf(pr -> pr.getId().equals(prId));
+    } else {
+      final PullRequest pullRequest =
+          pullRequestRepository
+              .findById(prId)
+              .orElseThrow(() -> new EntityNotFoundException("PR " + prId + " not found"));
+      userPreference.getFavouritePullRequests().add(pullRequest);
+    }
+    userPreferenceRepository.save(userPreference);
   }
 
   public Optional<PullRequestInfoDto> getPullRequestByRepositoryIdAndNumber(

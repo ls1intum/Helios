@@ -2,7 +2,7 @@ import { Component, computed, inject } from '@angular/core';
 import { TableModule } from 'primeng/table';
 import { AvatarModule } from 'primeng/avatar';
 import { TagModule } from 'primeng/tag';
-import { injectQuery } from '@tanstack/angular-query-experimental';
+import { injectMutation, injectQuery, QueryClient } from '@tanstack/angular-query-experimental';
 import { IconsModule } from 'icons.module';
 import { SkeletonModule } from 'primeng/skeleton';
 import { InputIconModule } from 'primeng/inputicon';
@@ -12,7 +12,11 @@ import { TreeTableModule } from 'primeng/treetable';
 import { ButtonModule } from 'primeng/button';
 import { BranchViewPreferenceService } from '@app/core/services/branches-table/branch-view-preference';
 import { Router } from '@angular/router';
-import { getAllBranchesOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
+import {
+  getAllBranchesOptions,
+  getAllBranchesQueryKey,
+  setBranchPinnedByRepositoryIdAndNameAndUserIdMutation,
+} from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { BranchInfoDto } from '@app/core/modules/openapi';
 import { ProgressBarModule } from 'primeng/progressbar';
 import { DividerModule } from 'primeng/divider';
@@ -23,6 +27,7 @@ import { FILTER_OPTIONS_TOKEN, SearchTableService } from '@app/core/services/sea
 import { TableFilterComponent } from '../table-filter/table-filter.component';
 import { WorkflowRunStatusComponent } from '@app/components/workflow-run-status-component/workflow-run-status.component';
 import { HighlightPipe } from '@app/pipes/highlight.pipe';
+import { MessageService } from 'primeng/api';
 
 type BranchInfoWithLink = BranchInfoDto & { link: string; lastCommitLink: string };
 
@@ -83,13 +88,25 @@ const FILTER_OPTIONS = [
 export class BranchTableComponent {
   router = inject(Router);
   viewPreference = inject(BranchViewPreferenceService);
+  messageService = inject(MessageService);
+  queryClient = inject(QueryClient);
   searchTableService = inject(SearchTableService<BranchInfoWithLink>);
 
-  featureBranchesTree = computed(() => this.convertBranchesToTreeNodes(this.searchTableService.activeFilter().filter(this.branches())));
-
   query = injectQuery(() => getAllBranchesOptions());
+  setPinnedMutation = injectMutation(() => ({
+    ...setBranchPinnedByRepositoryIdAndNameAndUserIdMutation(),
+    onSuccess: () => {
+      this.messageService.add({ severity: 'success', summary: 'Pin Pull Request', detail: 'The pull request was pinned successfully' });
+      this.queryClient.invalidateQueries({ queryKey: getAllBranchesQueryKey() });
+    },
+  }));
+
+  // Use only branch name for map, because it is unique in this view
+  isHovered = new Map<string, boolean>();
 
   globalFilterFields = ['name', 'commitSha'];
+
+  featureBranchesTree = computed(() => this.convertBranchesToTreeNodes(this.searchTableService.activeFilter().filter(this.branches())));
 
   branches = computed<BranchInfoWithLink[]>(
     () =>
@@ -115,6 +132,13 @@ export class BranchTableComponent {
     if (branch.repository?.id) {
       this.router.navigate(['repo', branch.repository?.id, 'ci-cd', 'branch', branch.name]);
     }
+  }
+
+  setPinned(event: Event, branch: BranchInfoDto, isPinned: boolean): void {
+    event.stopPropagation();
+    if (!branch.repository) return;
+    this.setPinnedMutation.mutate({ path: { repoId: branch.repository.id }, query: { name: branch.name, isPinned } });
+    this.isHovered.set(branch.name, false);
   }
 
   convertBranchesToTreeNodes(branches: BranchInfoWithLink[]): TreeNode[] {

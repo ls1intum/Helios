@@ -5,12 +5,12 @@ import { Component, computed, inject } from '@angular/core';
 import { TableModule } from 'primeng/table';
 import { AvatarModule } from 'primeng/avatar';
 import { TagModule } from 'primeng/tag';
-import { injectQuery } from '@tanstack/angular-query-experimental';
+import { injectMutation, injectQuery, QueryClient } from '@tanstack/angular-query-experimental';
 import { IconsModule } from 'icons.module';
 import { SkeletonModule } from 'primeng/skeleton';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DateService } from '@app/core/services/date.service';
-import { getAllPullRequestsOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
+import { getAllPullRequestsOptions, getAllPullRequestsQueryKey, setPrPinnedByNumberMutation } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { PullRequestBaseInfoDto, PullRequestInfoDto } from '@app/core/modules/openapi';
 import { ButtonModule } from 'primeng/button';
 import { DividerModule } from 'primeng/divider';
@@ -22,6 +22,7 @@ import { FILTER_OPTIONS_TOKEN, SearchTableService } from '@app/core/services/sea
 import { TableFilterComponent } from '../table-filter/table-filter.component';
 import { WorkflowRunStatusComponent } from '@app/components/workflow-run-status-component/workflow-run-status.component';
 import { PullRequestStatusIconComponent } from '@app/components/pull-request-status-icon/pull-request-status-icon.component';
+import { MessageService } from 'primeng/api';
 
 const FILTER_OPTIONS = [
   { name: 'All pull requests', filter: (prs: PullRequestBaseInfoDto[]) => prs },
@@ -76,11 +77,22 @@ const FILTER_OPTIONS = [
 export class PullRequestTableComponent {
   dateService = inject(DateService);
   searchTableService = inject(SearchTableService<PullRequestBaseInfoDto>);
+  messageService = inject(MessageService);
+  queryClient = inject(QueryClient);
   router = inject(Router);
   route = inject(ActivatedRoute);
   keycloak = inject(KeycloakService);
 
   query = injectQuery(() => getAllPullRequestsOptions());
+  setPinnedMutation = injectMutation(() => ({
+    ...setPrPinnedByNumberMutation(),
+    onSuccess: () => {
+      this.messageService.add({ severity: 'success', summary: 'Pin Pull Request', detail: 'The pull request was pinned successfully' });
+      this.queryClient.invalidateQueries({ queryKey: getAllPullRequestsQueryKey() });
+    },
+  }));
+
+  isHovered = new Map<number, boolean>();
 
   filteredPrs = computed(() => this.searchTableService.activeFilter().filter(this.query.data() || [], this.keycloak.decodedToken()?.preferred_username));
 
@@ -110,5 +122,11 @@ export class PullRequestTableComponent {
     this.router.navigate([pr.number], {
       relativeTo: this.route.parent,
     });
+  }
+
+  setPinned(event: Event, pr: PullRequestInfoDto, isPinned: boolean): void {
+    this.setPinnedMutation.mutate({ path: { pr: pr.id }, query: { isPinned } });
+    this.isHovered.set(pr.id, false);
+    event.stopPropagation();
   }
 }

@@ -76,6 +76,11 @@ public class PullRequest extends Issue {
 
   @ManyToMany private Set<WorkflowRun> workflowRuns;
 
+  @Override
+  public boolean equals(Object o) {
+    return this.id.equals(((PullRequest) o).id);
+  }
+
   // Missing properties:
   // - PullRequestReview
   // - PullRequestReviewComment
