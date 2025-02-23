@@ -170,11 +170,6 @@ export class EnvironmentListViewComponent implements OnDestroy {
     event.stopPropagation();
   }
 
-  onLockEnvironment(event: Event, environment: EnvironmentDto) {
-    this.lockEnvironment(environment);
-    event.stopPropagation();
-  }
-
   deployEnvironment(environment: EnvironmentDto) {
     this.confirmationService.confirm({
       header: 'Deployment',
