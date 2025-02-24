@@ -2,7 +2,7 @@ name: Build and Deploy to Staging
 
 on:
   push:
-    branches: [ staging ]
+    branches: [ chore/staging-setup ]
     paths-ignore:
       - '.codacy.yaml'
       - '.env.example'
@@ -32,6 +32,6 @@ jobs:
     secrets: inherit
     with:
       environment: staging
-      client_image_tag: "staging"
-      application_server_image_tag: "staging"
-      webhook_listener_image_tag: "staging"
+      client_image_tag: "chore/staging-setup"
+      application_server_image_tag: "chore/staging-setup"
+      webhook_listener_image_tag: "chore/staging-setup"
