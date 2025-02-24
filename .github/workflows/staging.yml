@@ -19,6 +19,10 @@ on:
       - 'docs/**'
       - 'keycloakify/**'
 
+concurrency:
+  group: staging
+  cancel-in-progress: true
+
 jobs:
   validate-flyway:
     uses: ./.github/workflows/flyway-validate.yml
