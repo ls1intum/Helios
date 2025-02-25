@@ -42,7 +42,8 @@ public class SecurityConfig {
         .csrf(AbstractHttpConfigurer::disable) // Disable CSRF
         .authorizeHttpRequests(
             auth -> {
-              auth.requestMatchers(HttpMethod.GET, "/api/**")
+              auth.requestMatchers(HttpMethod.GET,
+                      "/api/**")
                   .permitAll()
                   .requestMatchers(
                       "/auth/**",
@@ -76,14 +77,18 @@ public class SecurityConfig {
     return (web) ->
         web.ignoring()
             .requestMatchers(
-                "/v3/api-docs/**", "/v3/api-docs.yaml", "/swagger-ui/**", "/swagger-ui.html");
+                "/v3/api-docs/**",
+                "/v3/api-docs.yaml",
+                "/swagger-ui/**",
+                "/swagger-ui.html");
   }
 
   @Bean
   public WebMvcConfigurer corsConfigurer() {
 
     return new WebMvcConfigurer() {
-      @Autowired private RepositoryInterceptor requestInterceptor;
+      @Autowired
+      private RepositoryInterceptor requestInterceptor;
 
       @Override
       public void addInterceptors(@NonNull InterceptorRegistry registry) {
@@ -97,7 +102,23 @@ public class SecurityConfig {
           registry
               .addMapping("/api/**")
               .allowedOrigins("https://helios.aet.cit.tum.de")
-              .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+              .allowedMethods("GET",
+                  "POST",
+                  "PUT",
+                  "DELETE",
+                  "OPTIONS")
+              .allowedHeaders("*")
+              .allowCredentials(true);
+        } else if (environment.matchesProfiles("staging")) {
+          // Allow staging domain
+          registry
+              .addMapping("/api/**")
+              .allowedOrigins("https://helios-staging.aet.cit.tum.de")
+              .allowedMethods("GET",
+                  "POST",
+                  "PUT",
+                  "DELETE",
+                  "OPTIONS")
               .allowedHeaders("*")
               .allowCredentials(true);
         } else {
@@ -110,7 +131,11 @@ public class SecurityConfig {
                   "http://localhost:*",
                   "http://127.0.0.1",
                   "http://127.0.0.1:*")
-              .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+              .allowedMethods("GET",
+                  "POST",
+                  "PUT",
+                  "DELETE",
+                  "OPTIONS")
               .allowedHeaders("*")
               .allowCredentials(true);
         }
