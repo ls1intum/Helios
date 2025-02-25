@@ -1,4 +1,4 @@
-import { Component, computed, input, signal } from '@angular/core';
+import { Component, computed, input, signal, viewChild } from '@angular/core';
 import { TableModule } from 'primeng/table';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { PanelModule } from 'primeng/panel';
@@ -12,10 +12,29 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { TestSuiteDto } from '@app/core/modules/openapi';
 import { injectQuery } from '@tanstack/angular-query-experimental';
 import { getLatestTestResultsByBranchOptions, getLatestTestResultsByPullRequestIdOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
+import { Popover, PopoverModule } from 'primeng/popover';
+import { ButtonModule } from 'primeng/button';
+import { InputTextModule } from 'primeng/inputtext';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-pipeline-test-results',
-  imports: [TableModule, ProgressSpinnerModule, PanelModule, IconsModule, TooltipModule, SkeletonModule, TagModule, PaginatorModule, DatePipe, CommonModule],
+  imports: [
+    TableModule,
+    ProgressSpinnerModule,
+    PanelModule,
+    IconsModule,
+    TooltipModule,
+    SkeletonModule,
+    TagModule,
+    PaginatorModule,
+    DatePipe,
+    CommonModule,
+    PopoverModule,
+    ButtonModule,
+    InputTextModule,
+    FormsModule,
+  ],
   templateUrl: './pipeline-test-results.component.html',
 })
 export class PipelineTestResultsComponent {
@@ -53,6 +72,17 @@ export class PipelineTestResultsComponent {
   resultsQuery = computed(() => {
     return this.branchName() ? this.branchQuery : this.pullRequestQuery;
   });
+  op = viewChild.required<Popover>('op');
+  searchValue = signal<string>('');
+  showOnlyFailed = signal<boolean>(false);
+
+  toggleFilterMenu(event: Event) {
+    this.op().toggle(event);
+  }
+
+  toggleShowOnlyFailed() {
+    this.showOnlyFailed.set(!this.showOnlyFailed());
+  }
 
   testSuites = computed(() => {
     const suites = this.resultsQuery().data()?.testSuites || [];
@@ -72,6 +102,24 @@ export class PipelineTestResultsComponent {
         return 1;
       }
       return 0;
+    });
+  });
+
+  filteredTestSuites = computed(() => {
+    const testSuites = this.testSuites();
+    const searchValue = this.searchValue().toLowerCase();
+    const showOnlyFailed = this.showOnlyFailed();
+
+    return testSuites.filter(suite => {
+      if (showOnlyFailed && suite.failures + suite.errors === 0) {
+        return false;
+      }
+
+      if (searchValue) {
+        return suite.name.toLowerCase().includes(searchValue) || suite.testCases.some(testCase => testCase.name.toLowerCase().includes(searchValue));
+      }
+
+      return true;
     });
   });
 
