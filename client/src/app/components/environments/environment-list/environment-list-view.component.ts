@@ -77,7 +77,6 @@ export class EnvironmentListViewComponent implements OnDestroy {
   editable = input<boolean | undefined>();
   deployable = input<boolean | undefined>();
   hideLinkToList = input<boolean | undefined>();
-  showTestEnvironmentsOnly = input<boolean | undefined>();
 
   isLoggedIn = computed(() => this.keycloakService.isLoggedIn());
   isAdmin = computed(() => this.permissionService.isAdmin());
@@ -168,9 +167,6 @@ export class EnvironmentListViewComponent implements OnDestroy {
 
   filteredEnvironments = computed(() => {
     let environments = this.environmentQuery.data();
-    if (this.showTestEnvironmentsOnly()) {
-      environments = environments?.filter(environment => environment.type === 'TEST');
-    }
 
     const search = this.searchInput();
 
