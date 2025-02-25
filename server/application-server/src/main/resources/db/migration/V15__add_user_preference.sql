@@ -22,8 +22,8 @@ alter table if exists public.user_preference add constraint UKs5oeayykfc7bpkpdwy
 create table
     user_preference_favourite_branches (
         user_preference_id bigint not null,
-        favourite_branches_name varchar(255) not null on delete CASCADE,
-        favourite_branches_repository_id bigint not null on delete CASCADE,
+        favourite_branches_name varchar(255) not null,
+        favourite_branches_repository_id bigint not null,
         primary key (
             user_preference_id,
             favourite_branches_name,
@@ -45,8 +45,8 @@ alter table if exists user_preference_favourite_branches add constraint FKgyxf2r
     favourite_branches_name
 ) references branch;
 
-alter table if exists user_preference_favourite_branches add constraint FKj734saube6d10apw9l8q038e3 foreign key (user_preference_id) references public.user_preference;
+alter table if exists user_preference_favourite_branches add constraint FKj734saube6d10apw9l8q038e3 foreign key (user_preference_id) references public.user_preference ON DELETE CASCADE;
 
 alter table if exists user_preference_favourite_pull_requests add constraint FK773fsk43ewsg4oy5ut1hvslec foreign key (favourite_pull_requests_id) references issue;
 
-alter table if exists user_preference_favourite_pull_requests add constraint FKtnbluehl24n2x8nwh2gxvqr8 foreign key (user_preference_id) references public.user_preference;
+alter table if exists user_preference_favourite_pull_requests add constraint FKtnbluehl24n2x8nwh2gxvqr8 foreign key (user_preference_id) references public.user_preference ON DELETE CASCADE;
