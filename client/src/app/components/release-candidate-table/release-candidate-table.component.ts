@@ -8,11 +8,11 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { TableModule } from 'primeng/table';
 import { TableFilterComponent } from '../table-filter/table-filter.component';
 import { TagModule } from 'primeng/tag';
-import { ReleaseCandidateInfoDto } from '@app/core/modules/openapi';
+import { ReleaseInfoListDto } from '@app/core/modules/openapi';
 import { Router, RouterLink } from '@angular/router';
 import { SlicePipe } from '@angular/common';
 
-const FILTER_OPTIONS: { name: string; filter: (prs: ReleaseCandidateInfoDto[]) => ReleaseCandidateInfoDto[] }[] = [];
+const FILTER_OPTIONS: { name: string; filter: (prs: ReleaseInfoListDto[]) => ReleaseInfoListDto[] }[] = [];
 
 @Component({
   selector: 'app-release-candidate-table',

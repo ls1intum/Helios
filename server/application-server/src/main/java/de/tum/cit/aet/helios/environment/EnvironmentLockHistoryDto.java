@@ -1,7 +1,7 @@
 package de.tum.cit.aet.helios.environment;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import de.tum.cit.aet.helios.releasecandidate.ReleaseCandidateRepository;
+import de.tum.cit.aet.helios.releaseinfo.releasecandidate.ReleaseCandidateRepository;
 import de.tum.cit.aet.helios.user.UserInfoDto;
 import io.micrometer.common.lang.Nullable;
 import java.time.OffsetDateTime;
