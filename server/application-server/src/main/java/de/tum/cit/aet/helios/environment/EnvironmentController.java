@@ -73,8 +73,8 @@ public class EnvironmentController {
   @EnforceAtLeastWritePermission
   @PutMapping("/{id}/lock")
   public ResponseEntity<?> lockEnvironment(@PathVariable Long id) {
-    EnvironmentDto environment = environmentService.lockEnvironment(id);
-    return ResponseEntity.ok(environment);
+    Optional<Environment> environment = environmentService.lockEnvironment(id);
+    return ResponseEntity.ok(EnvironmentDto.fromEnvironment(environment.get()));
   }
 
   @EnforceAtLeastMaintainer
@@ -82,7 +82,8 @@ public class EnvironmentController {
   public ResponseEntity<?> updateEnvironment(
       @PathVariable Long id, @RequestBody EnvironmentDto environmentDto) {
     Optional<EnvironmentDto> updatedEnvironment =
-        environmentService.updateEnvironment(id, environmentDto);
+        environmentService.updateEnvironment(id,
+            environmentDto);
     return updatedEnvironment.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
   }
 }

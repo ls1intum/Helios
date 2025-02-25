@@ -32,7 +32,8 @@ public class EnvironmentService {
   private final HeliosDeploymentRepository heliosDeploymentRepository;
   private final ReleaseCandidateRepository releaseCandidateRepository;
   private final DeploymentRepository deploymentRepository;
-  @Lazy private final GitRepoSettingsService gitRepoSettingsService;
+  @Lazy
+  private final GitRepoSettingsService gitRepoSettingsService;
   private final EnvironmentScheduler environmentScheduler;
 
   public EnvironmentService(
@@ -69,7 +70,10 @@ public class EnvironmentService {
               environmentScheduler.unlockExpiredEnvironments();
               LatestDeploymentUnion latest = findLatestDeployment(environment);
               return EnvironmentDto.fromEnvironment(
-                  environment, latest, environment.getLatestStatus(), releaseCandidateRepository);
+                  environment,
+                  latest,
+                  environment.getLatestStatus(),
+                  releaseCandidateRepository);
             })
         .collect(Collectors.toList());
   }
@@ -81,7 +85,10 @@ public class EnvironmentService {
               environmentScheduler.unlockExpiredEnvironments();
               LatestDeploymentUnion latest = findLatestDeployment(environment);
               return EnvironmentDto.fromEnvironment(
-                  environment, latest, environment.getLatestStatus(), releaseCandidateRepository);
+                  environment,
+                  latest,
+                  environment.getLatestStatus(),
+                  releaseCandidateRepository);
             })
         .collect(Collectors.toList());
   }
@@ -108,7 +115,7 @@ public class EnvironmentService {
    *
    * @param env The environment to search for deployments.
    * @return A wrapper object containing the latest Deployment or HeliosDeployment, or an empty
-   *     result if no deployments exist.
+   * result if no deployments exist.
    */
   public LatestDeploymentUnion findLatestDeployment(Environment env) {
     // Retrieve the latest HeliosDeployment
@@ -130,7 +137,8 @@ public class EnvironmentService {
       // Compare updatedAt timestamps to determine the latest
       if (latestDeployment.getCreatedAt().isAfter(latestHelios.getCreatedAt())
           || latestDeployment.getCreatedAt().isEqual(latestHelios.getCreatedAt())) {
-        return LatestDeploymentUnion.realDeployment(latestDeployment, latestHelios);
+        return LatestDeploymentUnion.realDeployment(latestDeployment,
+            latestHelios);
       } else {
         return LatestDeploymentUnion.heliosDeployment(latestHelios);
       }
@@ -155,11 +163,11 @@ public class EnvironmentService {
    *
    * @param id the ID of the environment to lock
    * @return an Optional containing the locked environment if successful, or an empty Optional if
-   *     the environment is already locked or if an optimistic locking failure occurs
+   * the environment is already locked or if an optimistic locking failure occurs
    * @throws EntityNotFoundException if no environment is found with the specified ID
    */
   @Transactional
-  public EnvironmentDto lockEnvironment(Long id) {
+  public Optional<Environment> lockEnvironment(Long id) {
     final User currentUser = authService.getUserFromGithubId();
 
     Environment environment =
@@ -174,14 +182,14 @@ public class EnvironmentService {
     // Only proceed with locking if it's a TEST environment
     if (environment.getType() != Environment.Type.TEST) {
       // Return the environment without locking for non-TEST environments
-      return EnvironmentDto.fromEnvironment(environment);
+      return Optional.of(environment);
     }
 
     if (environment.isLocked()) {
       if (currentUser.equals(environment.getLockedBy())) {
-        return EnvironmentDto.fromEnvironment(environment);
+        return Optional.of(environment);
       }
-      return null;
+      return Optional.empty();
     }
 
     environment.setLockedBy(currentUser);
@@ -201,10 +209,10 @@ public class EnvironmentService {
       environmentRepository.save(environment);
     } catch (OptimisticLockingFailureException e) {
       // The environment was locked by another transaction
-      return null;
+      return Optional.empty();
     }
 
-    return EnvironmentDto.fromEnvironment(environment);
+    return Optional.of(environment);
   }
 
   @Transactional
@@ -213,10 +221,10 @@ public class EnvironmentService {
         environment.getLockExpirationThreshold() != null
             ? environment.getLockExpirationThreshold()
             : gitRepoSettingsService
-                .getOrCreateGitRepoSettingsByRepositoryId(
-                    environment.getRepository().getRepositoryId())
-                .map(GitRepoSettingsDto::lockExpirationThreshold)
-                .orElse(-1L);
+            .getOrCreateGitRepoSettingsByRepositoryId(
+                environment.getRepository().getRepositoryId())
+            .map(GitRepoSettingsDto::lockExpirationThreshold)
+            .orElse(-1L);
     if (environment.isLocked() && environment.getLockedAt() != null) {
       return lockExpirationThreshold != -1
           ? environment.getLockedAt().plusMinutes(lockExpirationThreshold)
@@ -232,10 +240,10 @@ public class EnvironmentService {
         environment.getLockReservationThreshold() != null
             ? environment.getLockReservationThreshold()
             : gitRepoSettingsService
-                .getOrCreateGitRepoSettingsByRepositoryId(
-                    environment.getRepository().getRepositoryId())
-                .map(GitRepoSettingsDto::lockReservationThreshold)
-                .orElse(-1L);
+            .getOrCreateGitRepoSettingsByRepositoryId(
+                environment.getRepository().getRepositoryId())
+            .map(GitRepoSettingsDto::lockReservationThreshold)
+            .orElse(-1L);
     if (environment.isLocked() && environment.getLockedAt() != null) {
       return lockReservationThreshold != -1
           ? environment.getLockedAt().plusMinutes(lockReservationThreshold)
@@ -285,10 +293,10 @@ public class EnvironmentService {
         environment.getLockReservationThreshold() != null
             ? environment.getLockReservationThreshold()
             : gitRepoSettingsService
-                .getOrCreateGitRepoSettingsByRepositoryId(
-                    environment.getRepository().getRepositoryId())
-                .map(GitRepoSettingsDto::lockReservationThreshold)
-                .orElse(-1L);
+            .getOrCreateGitRepoSettingsByRepositoryId(
+                environment.getRepository().getRepositoryId())
+            .map(GitRepoSettingsDto::lockReservationThreshold)
+            .orElse(-1L);
 
     OffsetDateTime now = OffsetDateTime.now();
     OffsetDateTime lockedAt = environment.getLockedAt();
@@ -306,7 +314,8 @@ public class EnvironmentService {
     }
 
     // 20 minutes timeout for redeployment
-    if (!canUnlock(environment, 20)) {
+    if (!canUnlock(environment,
+        20)) {
       throw new DeploymentException("Deployment is still in progress, please wait.");
     }
 
@@ -335,10 +344,10 @@ public class EnvironmentService {
    *
    * <p>This method updates the environment with the specified ID using the provided EnvironmentDto.
    *
-   * @param id the ID of the environment to update
+   * @param id             the ID of the environment to update
    * @param environmentDto the EnvironmentDto containing the updated environment information
    * @return an Optional containing the updated environment if successful, or an empty Optional if
-   *     no environment is found with the specified ID
+   * no environment is found with the specified ID
    * @throws EnvironmentException if the environment is locked and cannot be disabled
    */
   public Optional<EnvironmentDto> updateEnvironment(Long id, EnvironmentDto environmentDto)
@@ -414,7 +423,9 @@ public class EnvironmentService {
         .map(
             lock ->
                 EnvironmentLockHistoryDto.fromEnvironmentLockHistory(
-                    lock, this, releaseCandidateRepository))
+                    lock,
+                    this,
+                    releaseCandidateRepository))
         .orElse(null);
   }
 
@@ -423,7 +434,9 @@ public class EnvironmentService {
         .map(
             lock ->
                 EnvironmentLockHistoryDto.fromEnvironmentLockHistory(
-                    lock, this, releaseCandidateRepository))
+                    lock,
+                    this,
+                    releaseCandidateRepository))
         .collect(Collectors.toList());
   }
 
