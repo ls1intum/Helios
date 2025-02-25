@@ -34,6 +34,7 @@ import { DeploymentStepperComponent } from '../deployment-stepper/deployment-ste
 import { ToggleButtonModule } from 'primeng/togglebutton';
 import { FormsModule } from '@angular/forms';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
+import { DividerModule } from 'primeng/divider';
 
 @Component({
   selector: 'app-environment-list-view',
@@ -59,6 +60,7 @@ import { ToggleSwitchModule } from 'primeng/toggleswitch';
     ToggleButtonModule,
     FormsModule,
     ToggleSwitchModule,
+    DividerModule,
   ],
   providers: [DatePipe],
   templateUrl: './environment-list-view.component.html',
