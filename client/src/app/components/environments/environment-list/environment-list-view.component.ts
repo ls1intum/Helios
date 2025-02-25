@@ -227,10 +227,13 @@ export class EnvironmentListViewComponent implements OnDestroy {
     });
   });
 
+  private readonly environmentTypeOrder = ['test', 'staging'];
+
   environmentGroups = computed(() => {
     const environments = this.filteredEnvironments();
     const groups = new Map<string, EnvironmentDto[]>();
 
+    // Group environments
     environments.forEach(environment => {
       const type = environment.type || 'Other';
       if (!groups.has(type)) {
@@ -239,7 +242,21 @@ export class EnvironmentListViewComponent implements OnDestroy {
       groups.get(type)?.push(environment);
     });
 
-    return groups;
+    // Sort by predefined order
+    return new Map(
+      Array.from(groups.entries()).sort(([a], [b]) => {
+        const indexA = this.environmentTypeOrder.indexOf(a.toLowerCase());
+        const indexB = this.environmentTypeOrder.indexOf(b.toLowerCase());
+
+        // If both types are not in the order array, sort alphabetically
+        if (indexA === -1 && indexB === -1) return a.localeCompare(b);
+        // If one type is not in the order array, it goes last
+        if (indexA === -1) return 1;
+        if (indexB === -1) return -1;
+        // Otherwise, sort by the predefined order
+        return indexA - indexB;
+      })
+    );
   });
 
   getFullUrl(url: string): string {
