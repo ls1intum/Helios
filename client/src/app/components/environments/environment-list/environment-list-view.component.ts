@@ -78,6 +78,7 @@ export class EnvironmentListViewComponent implements OnDestroy {
   deployable = input<boolean | undefined>();
   hideLinkToList = input<boolean | undefined>();
 
+  groupByType = computed(() => this.deployable());
   isLoggedIn = computed(() => this.keycloakService.isLoggedIn());
   isAdmin = computed(() => this.permissionService.isAdmin());
   hasUnlockPermissions = computed(() => this.permissionService.isAtLeastMaintainer());
@@ -179,6 +180,21 @@ export class EnvironmentListViewComponent implements OnDestroy {
     });
   });
 
+  environmentGroups = computed(() => {
+    const environments = this.filteredEnvironments();
+    const groups = new Map<string, EnvironmentDto[]>();
+
+    environments.forEach(environment => {
+      const type = environment.type || 'Other';
+      if (!groups.has(type)) {
+        groups.set(type, []);
+      }
+      groups.get(type)?.push(environment);
+    });
+
+    return groups;
+  });
+
   getFullUrl(url: string): string {
     if (url && !url.startsWith('http') && !url.startsWith('https')) {
       return 'http://' + url;
@@ -250,5 +266,9 @@ export class EnvironmentListViewComponent implements OnDestroy {
       return false;
     }
     return true;
+  }
+
+  capitalizeFirstLetter(str: string): string {
+    return str.charAt(0).toUpperCase() + str.toLowerCase().slice(1);
   }
 }
