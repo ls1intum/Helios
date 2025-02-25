@@ -113,10 +113,11 @@ export type ReleaseCandidateCreateDto = {
   branchName: string;
 };
 
-export type ReleaseCandidateInfoDto = {
+export type ReleaseInfoListDto = {
   name?: string;
   commitSha?: string;
   branchName?: string;
+  isPublished?: boolean;
 };
 
 export type DeployRequest = {
@@ -229,19 +230,27 @@ export type ReleaseCandidateDeploymentDto = {
   environmentId: number;
 };
 
-export type ReleaseCandidateDetailsDto = {
-  name: string;
-  commit: CommitInfoDto;
-  branch: BranchInfoDto;
-  deployments: Array<ReleaseCandidateDeploymentDto>;
-  evaluations: Array<ReleaseCandidateEvaluationDto>;
-  createdBy: UserInfoDto;
-  createdAt: string;
-};
-
 export type ReleaseCandidateEvaluationDto = {
   user: UserInfoDto;
   isWorking: boolean;
+};
+
+export type ReleaseDto = {
+  isDraft: boolean;
+  isPrerelease: boolean;
+  body: string;
+  githubUrl: string;
+};
+
+export type ReleaseInfoDetailsDto = {
+  name: string;
+  commit: CommitInfoDto;
+  branch?: BranchInfoDto;
+  deployments: Array<ReleaseCandidateDeploymentDto>;
+  evaluations: Array<ReleaseCandidateEvaluationDto>;
+  release?: ReleaseDto;
+  createdBy?: UserInfoDto;
+  createdAt: string;
 };
 
 export type CommitsSinceReleaseCandidateDto = {
@@ -576,14 +585,14 @@ export type GetAllReleaseCandidatesData = {
   body?: never;
   path?: never;
   query?: never;
-  url: '/api/release-candidate';
+  url: '/api/release-info';
 };
 
 export type GetAllReleaseCandidatesResponses = {
   /**
    * OK
    */
-  200: Array<ReleaseCandidateInfoDto>;
+  200: Array<ReleaseInfoListDto>;
 };
 
 export type GetAllReleaseCandidatesResponse = GetAllReleaseCandidatesResponses[keyof GetAllReleaseCandidatesResponses];
@@ -592,17 +601,33 @@ export type CreateReleaseCandidateData = {
   body: ReleaseCandidateCreateDto;
   path?: never;
   query?: never;
-  url: '/api/release-candidate';
+  url: '/api/release-info';
 };
 
 export type CreateReleaseCandidateResponses = {
   /**
    * OK
    */
-  200: ReleaseCandidateInfoDto;
+  200: ReleaseInfoListDto;
 };
 
 export type CreateReleaseCandidateResponse = CreateReleaseCandidateResponses[keyof CreateReleaseCandidateResponses];
+
+export type PublishReleaseDraftData = {
+  body?: never;
+  path: {
+    name: string;
+  };
+  query?: never;
+  url: '/api/release-info/{name}/publish';
+};
+
+export type PublishReleaseDraftResponses = {
+  /**
+   * OK
+   */
+  200: unknown;
+};
 
 export type EvaluateData = {
   body?: never;
@@ -611,7 +636,7 @@ export type EvaluateData = {
     isWorking: boolean;
   };
   query?: never;
-  url: '/api/release-candidate/{name}/evaluate/{isWorking}';
+  url: '/api/release-info/{name}/evaluate/{isWorking}';
 };
 
 export type EvaluateResponses = {
@@ -943,35 +968,35 @@ export type DeleteReleaseCandidateByNameData = {
     name: string;
   };
   query?: never;
-  url: '/api/release-candidate/{name}';
+  url: '/api/release-info/{name}';
 };
 
 export type DeleteReleaseCandidateByNameResponses = {
   /**
    * OK
    */
-  200: ReleaseCandidateInfoDto;
+  200: ReleaseInfoListDto;
 };
 
 export type DeleteReleaseCandidateByNameResponse = DeleteReleaseCandidateByNameResponses[keyof DeleteReleaseCandidateByNameResponses];
 
-export type GetReleaseCandidateByNameData = {
+export type GetReleaseInfoByNameData = {
   body?: never;
   path: {
     name: string;
   };
   query?: never;
-  url: '/api/release-candidate/{name}';
+  url: '/api/release-info/{name}';
 };
 
-export type GetReleaseCandidateByNameResponses = {
+export type GetReleaseInfoByNameResponses = {
   /**
    * OK
    */
-  200: ReleaseCandidateDetailsDto;
+  200: ReleaseInfoDetailsDto;
 };
 
-export type GetReleaseCandidateByNameResponse = GetReleaseCandidateByNameResponses[keyof GetReleaseCandidateByNameResponses];
+export type GetReleaseInfoByNameResponse = GetReleaseInfoByNameResponses[keyof GetReleaseInfoByNameResponses];
 
 export type GetCommitsSinceLastReleaseCandidateData = {
   body?: never;
@@ -979,7 +1004,7 @@ export type GetCommitsSinceLastReleaseCandidateData = {
   query: {
     branch: string;
   };
-  url: '/api/release-candidate/newcommits';
+  url: '/api/release-info/newcommits';
 };
 
 export type GetCommitsSinceLastReleaseCandidateResponses = {

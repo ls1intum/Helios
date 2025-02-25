@@ -1,4 +1,4 @@
-package de.tum.cit.aet.helios.releasecandidate;
+package de.tum.cit.aet.helios.releaseinfo.releasecandidate;
 
 import java.util.List;
 import org.springframework.lang.NonNull;

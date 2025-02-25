@@ -78,6 +78,7 @@ import type {
   GetAllReleaseCandidatesData,
   CreateReleaseCandidateData,
   CreateReleaseCandidateResponse,
+  PublishReleaseDraftData,
   EvaluateData,
   SetPrPinnedByNumberData,
   DeployToEnvironmentData,
@@ -100,7 +101,7 @@ import type {
   GetRepositoryByIdData,
   DeleteReleaseCandidateByNameData,
   DeleteReleaseCandidateByNameResponse,
-  GetReleaseCandidateByNameData,
+  GetReleaseInfoByNameData,
   GetCommitsSinceLastReleaseCandidateData,
   GetAllPullRequestsData,
   GetPullRequestByIdData,
@@ -793,10 +794,10 @@ export const deleteReleaseCandidateByNameMutation = (options?: Partial<Options<D
 
 export const getReleaseCandidateByNameQueryKey = (options: Options<GetReleaseCandidateByNameData>) => createQueryKey('getReleaseCandidateByName', options);
 
-export const getReleaseCandidateByNameOptions = (options: Options<GetReleaseCandidateByNameData>) => {
+export const getReleaseInfoByNameOptions = (options: Options<GetReleaseInfoByNameData>) => {
   return queryOptions({
     queryFn: async ({ queryKey, signal }) => {
-      const { data } = await getReleaseCandidateByName({
+      const { data } = await getReleaseInfoByName({
         ...options,
         ...queryKey[0],
         signal,
@@ -804,7 +805,7 @@ export const getReleaseCandidateByNameOptions = (options: Options<GetReleaseCand
       });
       return data;
     },
-    queryKey: getReleaseCandidateByNameQueryKey(options),
+    queryKey: getReleaseInfoByNameQueryKey(options),
   });
 };
 
