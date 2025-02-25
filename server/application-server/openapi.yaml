@@ -81,7 +81,8 @@ paths:
           description: OK
           content:
             application/json:
-              schema: {}
+              schema:
+                type: object
   /api/settings/{repositoryId}/groups/update:
     put:
       tags:
@@ -146,7 +147,8 @@ paths:
           description: OK
           content:
             application/json:
-              schema: {}
+              schema:
+                type: object
   /api/environments/{id}/unlock:
     put:
       tags:
@@ -164,7 +166,8 @@ paths:
           description: OK
           content:
             application/json:
-              schema: {}
+              schema:
+                type: object
   /api/environments/{id}/lock:
     put:
       tags:
@@ -182,7 +185,8 @@ paths:
           description: OK
           content:
             application/json:
-              schema: {}
+              schema:
+                type: object
   /api/settings/{repositoryId}/groups/create:
     post:
       tags:
@@ -1065,7 +1069,8 @@ components:
           - ARTEMIS_INFO
         metadata:
           type: object
-          additionalProperties: {}
+          additionalProperties:
+            type: object
       required:
       - checkType
       - checkedAt
