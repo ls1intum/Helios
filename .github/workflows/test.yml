@@ -20,7 +20,7 @@ jobs:
         - name: Run Client Unit Tests
           run: yarn test:unit:ci
         - name: "Codacy: Report coverage"
-          uses: codacy/codacy-coverage-reporter-action@55c3b57cb3bb6833c8c1a6614fee4cebb140de2d
+          uses: codacy/codacy-coverage-reporter-action@a38818475bb21847788496e9f0fddaa4e84955ba
           with:
             project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
             coverage-reports: client/coverage/lcov.info
@@ -38,7 +38,7 @@ jobs:
           run:
             working-directory: server/application-server
         steps:
-        - uses: actions/checkout@v3
+        - uses: actions/checkout@v4
         - name: Setup Java
           uses: actions/setup-java@v4
           with:
@@ -50,7 +50,7 @@ jobs:
           if: failure()
           run: grep "Test >.* FAILED\$" tests.log || echo "No failed tests."
         - name: "Codacy: Report coverage"
-          uses: codacy/codacy-coverage-reporter-action@55c3b57cb3bb6833c8c1a6614fee4cebb140de2d
+          uses: codacy/codacy-coverage-reporter-action@a38818475bb21847788496e9f0fddaa4e84955ba
           with:
             project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
             coverage-reports: server/application-server/build/reports/jacoco/test/jacocoTestReport.xml

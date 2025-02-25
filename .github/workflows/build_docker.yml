@@ -2,17 +2,6 @@ name: Build Docker Image
 
 on:
   workflow_call:
-    outputs:
-      client_image_tag:
-        description: "The tag of the client image that was built"
-        value: ${{ jobs.build.outputs.client_image_tag }}
-      application_server_image_tag:
-        description: "The tag of the application server image that was built"
-        value: ${{ jobs.build.outputs.application_server_image_tag }}
-      webhook_listener_image_tag:
-        description: "The tag of the webhook listener image that was built"
-        value: ${{ jobs.build.outputs.webhook_listener_image_tag }}
-
 
 jobs:
   build:
@@ -33,36 +22,13 @@ jobs:
             image: ghcr.io/ls1intum/helios/webhook-listener
             context: ./server/webhook-listener
             path: webhook-listener
-    outputs:
-      client_image_tag: "${{ steps.output-tag-client.outputs.client_image_tag }}"
-      application_server_image_tag: "${{ steps.output-tag-application-server.outputs.application_server_image_tag }}"
-      webhook_listener_image_tag: "${{ steps.output-tag-webhook-listener.outputs.webhook_listener_image_tag }}"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
 
-      - name: Get changed files in the client folder
-        id: changed-files-client-folder
-        uses: tj-actions/changed-files@v45
-        with:
-          files: client/**
-
-      - name: Get changed files in the application server folder
-        id: changed-files-application-server-folder
-        uses: tj-actions/changed-files@v45
-        with:
-          files: server/application-server/**
-
-      - name: Get changed files in the webhook listener folder
-        id: changed-files-webhook-listener-folder
-        uses: tj-actions/changed-files@v45
-        with:
-          files: server/webhook-listener/**
-
       - name: Log in to the Container registry
-        if: ${{ (steps.changed-files-client-folder.outputs.any_changed == 'true') || (steps.changed-files-application-server-folder.outputs.any_changed == 'true') || (steps.changed-files-webhook-listener-folder.outputs.any_changed == 'true') }}
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
@@ -70,13 +36,11 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up QEMU
-        if: ${{ (steps.changed-files-client-folder.outputs.any_changed == 'true') || (steps.changed-files-application-server-folder.outputs.any_changed == 'true') || (steps.changed-files-webhook-listener-folder.outputs.any_changed == 'true') }}
         uses: docker/setup-qemu-action@v3
         with:
           platforms: all
 
       - name: Install Docker Buildx
-        if: ${{ (steps.changed-files-client-folder.outputs.any_changed == 'true') || (steps.changed-files-application-server-folder.outputs.any_changed == 'true') || (steps.changed-files-webhook-listener-folder.outputs.any_changed == 'true') }}
         id: buildx
         uses: docker/setup-buildx-action@v3
 
@@ -90,11 +54,10 @@ jobs:
             type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'main') }}
             type=ref,event=branch
             type=ref,event=pr
-            type=sha
+            type=sha,suffix=-${{ github.ref_name }}
 
       - name: Build and push Docker Image
         uses: docker/build-push-action@v6
-        if: ${{ (steps.changed-files-client-folder.outputs.any_changed == 'true' && matrix.path == 'client') || (steps.changed-files-application-server-folder.outputs.any_changed == 'true' && matrix.path == 'server') || (steps.changed-files-webhook-listener-folder.outputs.any_changed == 'true' && matrix.path == 'webhook-listener') }}
         with:
           context: ${{ matrix.context }}
           file: ${{ matrix.dockerfile }}
@@ -103,27 +66,5 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
-      - id: output-tag-client
-        run: |
-          if [[ "${{ matrix.path }}" == "client" ]] && [[ "${{ steps.changed-files-client-folder.outputs.any_changed }}" == "true" ]]; then
-            echo "client_image_tag=${{ steps.meta.outputs.version }}" >> "$GITHUB_OUTPUT"
-          elif [[ "${{ matrix.path }}" == "client" ]]; then
-            echo "client_image_tag=latest" >> "$GITHUB_OUTPUT"
-          fi
-
-      - id: output-tag-application-server
-        run: |
-          if [[ "${{ matrix.path }}" == "server" ]] && [[ "${{ steps.changed-files-application-server-folder.outputs.any_changed }}" == "true" ]]; then
-            echo "application_server_image_tag=${{ steps.meta.outputs.version }}" >> "$GITHUB_OUTPUT"
-          elif [[ "${{ matrix.path }}" == "server" ]]; then
-            echo "application_server_image_tag=latest" >> "$GITHUB_OUTPUT"
-          fi
-
-      - id: output-tag-webhook-listener
-        run: |
-          if [[ "${{ matrix.path }}" == "webhook-listener" ]] && [[ "${{ steps.changed-files-webhook-listener-folder.outputs.any_changed }}" == "true" ]]; then
-            echo "webhook_listener_image_tag=${{ steps.meta.outputs.version }}" >> "$GITHUB_OUTPUT"
-          elif [[ "${{ matrix.path }}" == "webhook-listener" ]]; then
-            echo "webhook_listener_image_tag=latest" >> "$GITHUB_OUTPUT"
-          fi
+          build-args: |
+            ${{ matrix.path == 'client' && github.ref_name == 'main' && 'BUILD_CONFIG=production' || matrix.path == 'client' && github.ref_name == 'staging' && 'BUILD_CONFIG=staging' || '' }}

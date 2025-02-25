@@ -13,8 +13,11 @@ RUN yarn install --network-timeout 1000000
 # Copy the entire project to the working directory
 COPY . .
 
-# Build the Angular app
-RUN yarn run build --configuration production
+# Set the build configuration based on the environment variable
+ARG BUILD_CONFIG=production
+
+# Build the Angular app using the specified configuration
+RUN yarn run build --configuration $BUILD_CONFIG
 
 # Stage 2: Serve Angular app using Nginx
 FROM nginx:1.27.3-alpine

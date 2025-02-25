@@ -10,6 +10,7 @@ import type {
   GetEnvironmentByIdData,
   UpdateEnvironmentData,
   UnlockEnvironmentData,
+  LockEnvironmentData,
   CreateWorkflowGroupData,
   CreateWorkflowGroupResponse,
   GetAllReleaseCandidatesData,
@@ -60,6 +61,7 @@ import {
   getEnvironmentById,
   updateEnvironment,
   unlockEnvironment,
+  lockEnvironment,
   createWorkflowGroup,
   getAllReleaseCandidates,
   createReleaseCandidate,
@@ -221,6 +223,20 @@ export const unlockEnvironmentMutation = (options?: Partial<Options<UnlockEnviro
   const mutationOptions: MutationOptions<unknown, DefaultError, Options<UnlockEnvironmentData>> = {
     mutationFn: async localOptions => {
       const { data } = await unlockEnvironment({
+        ...options,
+        ...localOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const lockEnvironmentMutation = (options?: Partial<Options<LockEnvironmentData>>) => {
+  const mutationOptions: MutationOptions<unknown, DefaultError, Options<LockEnvironmentData>> = {
+    mutationFn: async localOptions => {
+      const { data } = await lockEnvironment({
         ...options,
         ...localOptions,
         throwOnError: true,

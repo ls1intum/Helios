@@ -13,7 +13,7 @@ jobs:
           checkstyle_config: ./server/checkstyle.xml
           checkstyle_version: 10.21.0
           fail_on_error: true
-  build:
+  lint-client:
     name: Linting Client (Angular)
     runs-on: ubuntu-latest
     steps:
@@ -23,4 +23,15 @@ jobs:
         run: yarn
       - name: Run ESLint
         working-directory: ./client
+        run: npx eslint --max-warnings 0 .
+  lint-keycloakify:
+    name: Linting Keycloakify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install modules
+        working-directory: ./keycloakify
+        run: yarn
+      - name: Run ESLint
+        working-directory: ./keycloakify
         run: npx eslint --max-warnings 0 .
