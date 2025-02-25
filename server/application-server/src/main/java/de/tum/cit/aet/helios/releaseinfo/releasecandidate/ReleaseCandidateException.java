@@ -1,4 +1,4 @@
-package de.tum.cit.aet.helios.releasecandidate;
+package de.tum.cit.aet.helios.releaseinfo.releasecandidate;
 
 public class ReleaseCandidateException extends RuntimeException {
   public ReleaseCandidateException(String message) {

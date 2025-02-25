@@ -2,7 +2,7 @@ package de.tum.cit.aet.helios.error;
 
 import de.tum.cit.aet.helios.deployment.DeploymentException;
 import de.tum.cit.aet.helios.environment.EnvironmentException;
-import de.tum.cit.aet.helios.releasecandidate.ReleaseCandidateException;
+import de.tum.cit.aet.helios.releaseinfo.releasecandidate.ReleaseCandidateException;
 import io.sentry.Sentry;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
