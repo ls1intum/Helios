@@ -20,7 +20,7 @@ ARG BUILD_CONFIG=production
 RUN yarn run build --configuration $BUILD_CONFIG
 
 # Stage 2: Serve Angular app using Nginx
-FROM nginx:1.27.3-alpine
+FROM nginx:1.27.4-alpine
 
 # Remove the default Nginx configuration file
 RUN rm /etc/nginx/conf.d/default.conf
