@@ -32,7 +32,8 @@ public class EnvironmentService {
   private final HeliosDeploymentRepository heliosDeploymentRepository;
   private final ReleaseCandidateRepository releaseCandidateRepository;
   private final DeploymentRepository deploymentRepository;
-  @Lazy private final GitRepoSettingsService gitRepoSettingsService;
+  @Lazy
+  private final GitRepoSettingsService gitRepoSettingsService;
   private final EnvironmentScheduler environmentScheduler;
 
   public EnvironmentService(
@@ -69,7 +70,10 @@ public class EnvironmentService {
               environmentScheduler.unlockExpiredEnvironments();
               LatestDeploymentUnion latest = findLatestDeployment(environment);
               return EnvironmentDto.fromEnvironment(
-                  environment, latest, environment.getLatestStatus(), releaseCandidateRepository);
+                  environment,
+                  latest,
+                  environment.getLatestStatus(),
+                  releaseCandidateRepository);
             })
         .collect(Collectors.toList());
   }
@@ -81,7 +85,10 @@ public class EnvironmentService {
               environmentScheduler.unlockExpiredEnvironments();
               LatestDeploymentUnion latest = findLatestDeployment(environment);
               return EnvironmentDto.fromEnvironment(
-                  environment, latest, environment.getLatestStatus(), releaseCandidateRepository);
+                  environment,
+                  latest,
+                  environment.getLatestStatus(),
+                  releaseCandidateRepository);
             })
         .collect(Collectors.toList());
   }
@@ -130,7 +137,8 @@ public class EnvironmentService {
       // Compare updatedAt timestamps to determine the latest
       if (latestDeployment.getCreatedAt().isAfter(latestHelios.getCreatedAt())
           || latestDeployment.getCreatedAt().isEqual(latestHelios.getCreatedAt())) {
-        return LatestDeploymentUnion.realDeployment(latestDeployment, latestHelios);
+        return LatestDeploymentUnion.realDeployment(latestDeployment,
+            latestHelios);
       } else {
         return LatestDeploymentUnion.heliosDeployment(latestHelios);
       }
@@ -213,10 +221,10 @@ public class EnvironmentService {
         environment.getLockExpirationThreshold() != null
             ? environment.getLockExpirationThreshold()
             : gitRepoSettingsService
-                .getOrCreateGitRepoSettingsByRepositoryId(
-                    environment.getRepository().getRepositoryId())
-                .map(GitRepoSettingsDto::lockExpirationThreshold)
-                .orElse(-1L);
+            .getOrCreateGitRepoSettingsByRepositoryId(
+                environment.getRepository().getRepositoryId())
+            .map(GitRepoSettingsDto::lockExpirationThreshold)
+            .orElse(-1L);
     if (environment.isLocked() && environment.getLockedAt() != null) {
       return lockExpirationThreshold != -1
           ? environment.getLockedAt().plusMinutes(lockExpirationThreshold)
@@ -232,10 +240,10 @@ public class EnvironmentService {
         environment.getLockReservationThreshold() != null
             ? environment.getLockReservationThreshold()
             : gitRepoSettingsService
-                .getOrCreateGitRepoSettingsByRepositoryId(
-                    environment.getRepository().getRepositoryId())
-                .map(GitRepoSettingsDto::lockReservationThreshold)
-                .orElse(-1L);
+            .getOrCreateGitRepoSettingsByRepositoryId(
+                environment.getRepository().getRepositoryId())
+            .map(GitRepoSettingsDto::lockReservationThreshold)
+            .orElse(-1L);
     if (environment.isLocked() && environment.getLockedAt() != null) {
       return lockReservationThreshold != -1
           ? environment.getLockedAt().plusMinutes(lockReservationThreshold)
@@ -285,10 +293,10 @@ public class EnvironmentService {
         environment.getLockReservationThreshold() != null
             ? environment.getLockReservationThreshold()
             : gitRepoSettingsService
-                .getOrCreateGitRepoSettingsByRepositoryId(
-                    environment.getRepository().getRepositoryId())
-                .map(GitRepoSettingsDto::lockReservationThreshold)
-                .orElse(-1L);
+            .getOrCreateGitRepoSettingsByRepositoryId(
+                environment.getRepository().getRepositoryId())
+            .map(GitRepoSettingsDto::lockReservationThreshold)
+            .orElse(-1L);
 
     OffsetDateTime now = OffsetDateTime.now();
     OffsetDateTime lockedAt = environment.getLockedAt();
@@ -306,7 +314,8 @@ public class EnvironmentService {
     }
 
     // 20 minutes timeout for redeployment
-    if (!canUnlock(environment, 20)) {
+    if (!canUnlock(environment,
+        20)) {
       throw new DeploymentException("Deployment is still in progress, please wait.");
     }
 
@@ -414,7 +423,9 @@ public class EnvironmentService {
         .map(
             lock ->
                 EnvironmentLockHistoryDto.fromEnvironmentLockHistory(
-                    lock, this, releaseCandidateRepository))
+                    lock,
+                    this,
+                    releaseCandidateRepository))
         .orElse(null);
   }
 
@@ -423,7 +434,9 @@ public class EnvironmentService {
         .map(
             lock ->
                 EnvironmentLockHistoryDto.fromEnvironmentLockHistory(
-                    lock, this, releaseCandidateRepository))
+                    lock,
+                    this,
+                    releaseCandidateRepository))
         .collect(Collectors.toList());
   }
 
