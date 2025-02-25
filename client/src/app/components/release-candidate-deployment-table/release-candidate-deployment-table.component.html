@@ -21,7 +21,7 @@
     </ng-template>
   </p-table>
 } @else {
-  <p-table #table [rowHover]="true" [value]="deployableEnvironments() || []" [paginator]="true" [rows]="20">
+  <p-table #table [rowHover]="true" [value]="environmentQuery.data() || []" rowGroupMode="subheader" groupRowsBy="type">
     <ng-template #header>
       <tr>
         <th class="w-[30%]">Name</th>
@@ -30,6 +30,16 @@
         <th class="w-[15%]">Actions</th>
       </tr>
     </ng-template>
+    <ng-template #groupheader let-environment>
+      <tr pRowGroupHeader class="bg-gray-100">
+        <td colspan="4">
+          <div class="flex gap-2">
+            <span class="font-bold">{{ capitalizeFirstLetter(environment.type) }}</span>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+
     <ng-template pTemplate="body" let-environment>
       <tr>
         <td>

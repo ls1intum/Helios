@@ -40,8 +40,6 @@ export class ReleaseCandidateDeploymentTableComponent {
 
   environmentQuery = injectQuery(() => ({ ...getAllEnabledEnvironmentsOptions(), refetchInterval: 3000 }));
 
-  deployableEnvironments = computed(() => this.environmentQuery.data()?.filter(environment => environment.type === 'STAGING' || environment.type === 'PRODUCTION'));
-
   deployToEnvironment = injectMutation(() => ({
     ...deployToEnvironmentMutation(),
     onSuccess: (_, variables) => {
@@ -110,6 +108,10 @@ export class ReleaseCandidateDeploymentTableComponent {
     if (environment.serverUrl) {
       window.open(this.getFullUrl(environment.serverUrl), '_blank');
     }
+  }
+
+  capitalizeFirstLetter(string: string): string {
+    return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
   }
 
   private getFullUrl(url: string): string {
