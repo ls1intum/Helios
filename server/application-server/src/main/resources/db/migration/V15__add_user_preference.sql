@@ -22,8 +22,8 @@ alter table if exists public.user_preference add constraint UKs5oeayykfc7bpkpdwy
 create table
     user_preference_favourite_branches (
         user_preference_id bigint not null,
-        favourite_branches_name varchar(255) not null,
-        favourite_branches_repository_id bigint not null,
+        favourite_branches_name varchar(255) not null on delete CASCADE,
+        favourite_branches_repository_id bigint not null on delete CASCADE,
         primary key (
             user_preference_id,
             favourite_branches_name,

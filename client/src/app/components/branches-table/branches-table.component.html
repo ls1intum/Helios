@@ -39,18 +39,18 @@
     </ng-template>
 
     <ng-template pTemplate="body" let-rowNode let-branch="rowData">
-      <tr [class.bg-gray-100]="branch.isPinned" [ttRow]="rowNode">
+      <tr [class.bg-gray-50]="branch.isPinned" [ttRow]="rowNode">
         @if (!rowNode.node.subheader) {
           <td class="p-0">
             <div class="flex h-full items-stretch gap-2">
               <div
-                class="flex items-center border-r-4 pl-2"
+                class="flex items-center border-r-4 px-2"
                 [class]="branch.isPinned ? 'border-r-primary-700' : 'border-r-primary-300'"
                 (mouseenter)="isHovered.set(branch.name, true)"
                 (mouseleave)="isHovered.set(branch.name, false)"
               >
                 <div class="align-middle">
-                  @if (isHovered.get(branch.name)) {
+                  @if (!rowNode.node.children && isHovered.get(branch.name) && keycloakService.isLoggedIn()) {
                     @if (branch.isPinned) {
                       <p-button text (onClick)="setPinned($event, branch, false)" class="bg-transparent h-full">
                         <i-tabler name="pinned-off" class="!h-5 !w-5 text-primary-700 hover:text-primary-900" />
@@ -63,7 +63,7 @@
                   }
                 </div>
               </div>
-              <div class="flex items-center">
+              <div class="flex items-center py-2">
                 <p-treeTableToggler [rowNode]="rowNode" />
 
                 <p-tag class="cursor-pointer" (click)="openBranch(branch)">

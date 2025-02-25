@@ -28,6 +28,7 @@ import { TableFilterComponent } from '../table-filter/table-filter.component';
 import { WorkflowRunStatusComponent } from '@app/components/workflow-run-status-component/workflow-run-status.component';
 import { HighlightPipe } from '@app/pipes/highlight.pipe';
 import { MessageService } from 'primeng/api';
+import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 
 type BranchInfoWithLink = BranchInfoDto & { link: string; lastCommitLink: string };
 
@@ -91,6 +92,7 @@ export class BranchTableComponent {
   messageService = inject(MessageService);
   queryClient = inject(QueryClient);
   searchTableService = inject(SearchTableService<BranchInfoWithLink>);
+  keycloakService = inject(KeycloakService);
 
   query = injectQuery(() => getAllBranchesOptions());
   setPinnedMutation = injectMutation(() => ({
@@ -143,6 +145,15 @@ export class BranchTableComponent {
 
   convertBranchesToTreeNodes(branches: BranchInfoWithLink[]): TreeNode[] {
     const rootNodes: TreeNode[] = [
+      {
+        data: {
+          name: 'Pinned',
+          type: 'Folder',
+        },
+        children: [],
+        expanded: true,
+        subheader: true,
+      },
       {
         data: {
           name: 'Default',
@@ -202,14 +213,18 @@ export class BranchTableComponent {
 
           nodeMap.set(currentPath, newNode);
 
+          if (branch.isPinned) {
+            rootNodes[0].children!.push(newNode);
+          }
+
           // If it's the first level, add to root nodes
           if (index === 0) {
             if (branch.isDefault) {
-              rootNodes[0].children!.push(newNode);
-            } else if (branch.isProtected) {
               rootNodes[1].children!.push(newNode);
-            } else {
+            } else if (branch.isProtected) {
               rootNodes[2].children!.push(newNode);
+            } else {
+              rootNodes[3].children!.push(newNode);
             }
           } else {
             // Add as child to parent node

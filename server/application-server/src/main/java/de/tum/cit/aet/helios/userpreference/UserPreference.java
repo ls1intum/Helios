@@ -3,6 +3,7 @@ package de.tum.cit.aet.helios.userpreference;
 import de.tum.cit.aet.helios.branch.Branch;
 import de.tum.cit.aet.helios.pullrequest.PullRequest;
 import de.tum.cit.aet.helios.user.User;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -30,9 +31,9 @@ public class UserPreference {
   @JoinColumn(name = "user_id", nullable = false, unique = true)
   private User user;
 
-  @ManyToMany
+  @ManyToMany(cascade = CascadeType.REMOVE)
   private Set<Branch> favouriteBranches;
 
-  @ManyToMany
+  @ManyToMany(cascade = CascadeType.REMOVE)
   private Set<PullRequest> favouritePullRequests;
 }

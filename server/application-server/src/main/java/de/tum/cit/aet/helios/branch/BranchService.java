@@ -26,7 +26,9 @@ public class BranchService {
 
   public List<BranchInfoDto> getAllBranches() {
     final Optional<UserPreference> userPreference =
-        userPreferenceRepository.findByUser(authService.getUserFromGithubId());
+        authService.isLoggedIn()
+            ? userPreferenceRepository.findByUser(authService.getUserFromGithubId())
+            : Optional.empty();
     return branchRepository.findAll().stream()
         .map((branch) -> BranchInfoDto.fromBranchAndUserPreference(branch, userPreference))
         .sorted(

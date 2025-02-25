@@ -23,7 +23,9 @@ public class PullRequestService {
 
   public List<PullRequestBaseInfoDto> getAllPullRequests() {
     final Optional<UserPreference> userPreference =
-        userPreferenceRepository.findByUser(authService.getUserFromGithubId());
+        authService.isLoggedIn()
+            ? userPreferenceRepository.findByUser(authService.getUserFromGithubId())
+            : Optional.empty();
     return pullRequestRepository.findAllByOrderByUpdatedAtDesc().stream()
         .map((pr) -> PullRequestBaseInfoDto.fromPullRequestAndUserPreference(pr, userPreference))
         .sorted(
