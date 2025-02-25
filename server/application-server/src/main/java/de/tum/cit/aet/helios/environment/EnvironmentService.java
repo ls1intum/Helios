@@ -115,7 +115,7 @@ public class EnvironmentService {
    *
    * @param env The environment to search for deployments.
    * @return A wrapper object containing the latest Deployment or HeliosDeployment, or an empty
-   * result if no deployments exist.
+   *     result if no deployments exist.
    */
   public LatestDeploymentUnion findLatestDeployment(Environment env) {
     // Retrieve the latest HeliosDeployment
@@ -163,7 +163,7 @@ public class EnvironmentService {
    *
    * @param id the ID of the environment to lock
    * @return an Optional containing the locked environment if successful, or an empty Optional if
-   * the environment is already locked or if an optimistic locking failure occurs
+   *     the environment is already locked or if an optimistic locking failure occurs
    * @throws EntityNotFoundException if no environment is found with the specified ID
    */
   @Transactional
@@ -344,10 +344,10 @@ public class EnvironmentService {
    *
    * <p>This method updates the environment with the specified ID using the provided EnvironmentDto.
    *
-   * @param id             the ID of the environment to update
+   * @param id the ID of the environment to update
    * @param environmentDto the EnvironmentDto containing the updated environment information
    * @return an Optional containing the updated environment if successful, or an empty Optional if
-   * no environment is found with the specified ID
+   *     no environment is found with the specified ID
    * @throws EnvironmentException if the environment is locked and cannot be disabled
    */
   public Optional<EnvironmentDto> updateEnvironment(Long id, EnvironmentDto environmentDto)

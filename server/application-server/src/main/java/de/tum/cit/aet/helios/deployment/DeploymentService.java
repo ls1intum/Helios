@@ -301,13 +301,13 @@ public class DeploymentService {
    *
    * @param environmentId The ID of the environment to fetch history for
    * @return Combined list of {@link ActivityHistoryDto} objects representing all activity, sorted
-   * by timestamp descending. Returns empty list if no activities found.
+   *     by timestamp descending. Returns empty list if no activities found.
    * @implNote Special handling for Helios deployments:
-   * <ul>
-   *   <li>Helios deployments are only added if they represent the latest deployment activity
-   *   <li>Will not duplicate if already present in deployment records
-   *   <li>Requires separate environment lookup to verify deployment recency
-   * </ul>
+   *     <ul>
+   *       <li>Helios deployments are only added if they represent the latest deployment activity
+   *       <li>Will not duplicate if already present in deployment records
+   *       <li>Requires separate environment lookup to verify deployment recency
+   *     </ul>
    */
   public List<ActivityHistoryDto> getActivityHistoryByEnvironmentId(Long environmentId) {
     // 1) Real deployments
