@@ -239,7 +239,7 @@ export class EnvironmentListViewComponent implements OnDestroy {
 
     // Group environments
     environments.forEach(environment => {
-      const type = environment.type || 'Other';
+      const type = environment.type || 'Ungrouped';
       if (!groups.has(type)) {
         groups.set(type, []);
       }

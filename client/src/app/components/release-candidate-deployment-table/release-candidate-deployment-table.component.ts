@@ -40,6 +40,11 @@ export class ReleaseCandidateDeploymentTableComponent {
 
   environmentQuery = injectQuery(() => ({ ...getAllEnabledEnvironmentsOptions(), refetchInterval: 3000 }));
 
+  groupedEnvironments = computed(() => {
+    const environments = this.environmentQuery.data() || [];
+    return environments.map(env => ({ ...env, type: env.type || 'Ungrouped' }));
+  });
+
   deployToEnvironment = injectMutation(() => ({
     ...deployToEnvironmentMutation(),
     onSuccess: (_, variables) => {

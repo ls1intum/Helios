@@ -21,7 +21,7 @@
     </ng-template>
   </p-table>
 } @else {
-  <p-table #table [rowHover]="true" [value]="environmentQuery.data() || []" rowGroupMode="subheader" groupRowsBy="type">
+  <p-table #table [rowHover]="true" [value]="groupedEnvironments()" rowGroupMode="subheader" groupRowsBy="type">
     <ng-template #header>
       <tr>
         <th class="w-[30%]">Name</th>
