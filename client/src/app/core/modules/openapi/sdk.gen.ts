@@ -12,6 +12,7 @@ import type {
   UpdateEnvironmentData,
   UnlockEnvironmentData,
   LockEnvironmentData,
+  ExtendEnvironmentLockData,
   CreateWorkflowGroupData,
   CreateWorkflowGroupResponse,
   GetAllReleaseCandidatesData,
@@ -157,6 +158,13 @@ export const lockEnvironment = <ThrowOnError extends boolean = false>(options: O
   return (options?.client ?? client).put<unknown, unknown, ThrowOnError>({
     ...options,
     url: '/api/environments/{id}/lock',
+  });
+};
+
+export const extendEnvironmentLock = <ThrowOnError extends boolean = false>(options: Options<ExtendEnvironmentLockData, ThrowOnError>) => {
+  return (options?.client ?? client).put<unknown, unknown, ThrowOnError>({
+    ...options,
+    url: '/api/environments/{id}/extend-lock',
   });
 };
 

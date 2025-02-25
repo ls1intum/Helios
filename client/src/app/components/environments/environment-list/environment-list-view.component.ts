@@ -4,6 +4,7 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { EnvironmentDto } from '@app/core/modules/openapi';
 import {
+  extendEnvironmentLockMutation,
   getAllEnabledEnvironmentsOptions,
   getAllEnabledEnvironmentsQueryKey,
   getAllEnvironmentsOptions,
@@ -93,6 +94,15 @@ export class EnvironmentListViewComponent implements OnDestroy {
     },
   }));
 
+  extendEnvironmentLockMutation = injectMutation(() => ({
+    ...extendEnvironmentLockMutation(),
+    onSuccess: () => {
+      this.queryClient.invalidateQueries({ queryKey: getAllEnvironmentsQueryKey() });
+      this.queryClient.invalidateQueries({ queryKey: getAllEnabledEnvironmentsQueryKey() });
+      this.queryClient.invalidateQueries({ queryKey: getEnvironmentsByUserLockingQueryKey() });
+    },
+  }));
+
   userCanDeploy(environment: EnvironmentDto): boolean {
     return !!(this.isLoggedIn() && this.deployable() && (!environment.locked || this.isCurrentUserLocked(environment)) && this.hasDeployPermissions());
   }
@@ -145,6 +155,11 @@ export class EnvironmentListViewComponent implements OnDestroy {
         this.lockEnvironmentMutation.mutate({ path: { id: environment.id } });
       },
     });
+  }
+
+  extendLock(event: Event, environment: EnvironmentDto) {
+    this.extendEnvironmentLockMutation.mutate({ path: { id: environment.id } });
+    event.stopPropagation();
   }
 
   constructor() {

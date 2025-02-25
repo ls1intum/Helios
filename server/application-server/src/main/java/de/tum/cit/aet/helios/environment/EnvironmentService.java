@@ -109,8 +109,8 @@ public class EnvironmentService {
    * placeholder. 4) If no HeliosDeployment exists, the latest real Deployment from the environment
    * is used.
    *
-   * <p>The method compares the `updatedAt` timestamps of the latest HeliosDeployment and the latest
-   * real Deployment to determine which one is the most recent. It returns a wrapper object
+   * <p>The method compares the `updatedAt` timestamps of the latest HeliosDeployment and the
+   * latest real Deployment to determine which one is the most recent. It returns a wrapper object
    * containing either the latest HeliosDeployment or the latest real Deployment.
    *
    * @param env The environment to search for deployments.
@@ -216,7 +216,7 @@ public class EnvironmentService {
   }
 
   @Transactional
-  private OffsetDateTime getLockWillExpireAt(Environment environment) {
+  protected OffsetDateTime getLockWillExpireAt(Environment environment) {
     Long lockExpirationThreshold =
         environment.getLockExpirationThreshold() != null
             ? environment.getLockExpirationThreshold()
@@ -235,7 +235,7 @@ public class EnvironmentService {
   }
 
   @Transactional
-  private OffsetDateTime getLockReservationExpiresAt(Environment environment) {
+  protected OffsetDateTime getLockReservationExpiresAt(Environment environment) {
     Long lockReservationThreshold =
         environment.getLockReservationThreshold() != null
             ? environment.getLockReservationThreshold()
@@ -251,6 +251,95 @@ public class EnvironmentService {
     } else {
       return null;
     }
+  }
+
+  /**
+   * Extends the lock duration for an already locked environment.
+   *
+   * <p>This method attempts to extend the lock duration by resetting the lockWillExpireAt and
+   * lockReservationExpiresAt timestamps based on the current time. The environment must already be
+   * locked by the current user.
+   *
+   * <p>This method is transactional and handles optimistic locking failures.
+   *
+   * @param id the ID of the environment to extend the lock for
+   * @return an Optional containing the updated environment if successful, or an empty Optional if
+   *     the environment isn't locked, is locked by another user, or if an optimistic locking
+   *     failure occurs
+   * @throws EntityNotFoundException if no environment is found with the specified ID
+   * @throws IllegalStateException if the environment is disabled or isn't a TEST environment
+   */
+  @Transactional
+  public Optional<Environment> extendEnvironmentLock(Long id) {
+    final User currentUser = authService.getUserFromGithubId();
+
+    Environment environment = environmentRepository
+        .findById(id)
+        .orElseThrow(() -> new EntityNotFoundException("Environment not found with ID: " + id));
+
+    // Check environment status
+    if (!environment.isEnabled()) {
+      throw new IllegalStateException("Environment is disabled");
+    }
+
+    if (environment.getType() != Environment.Type.TEST) {
+      throw new IllegalStateException("Only TEST environments can have their locks extended");
+    }
+
+    // Verify the environment is locked and by the current user
+    if (!environment.isLocked() || !currentUser.equals(environment.getLockedBy())) {
+      return Optional.empty();
+    }
+
+    // Calculate new expiration times based on current time
+    environment.setLockWillExpireAt(calculateNewLockExpiration(environment));
+    environment.setLockReservationExpiresAt(calculateNewReservationExpiration(environment));
+
+    try {
+      environmentRepository.save(environment);
+    } catch (OptimisticLockingFailureException e) {
+      // The environment was modified by another transaction
+      return Optional.empty();
+    }
+
+    return Optional.of(environment);
+  }
+
+  /**
+   * Calculates the new lock expiration time based on current time and threshold settings.
+   */
+  @Transactional
+  protected OffsetDateTime calculateNewLockExpiration(Environment environment) {
+    Long lockExpirationThreshold = environment.getLockExpirationThreshold() != null
+        ? environment.getLockExpirationThreshold()
+        : gitRepoSettingsService
+        .getOrCreateGitRepoSettingsByRepositoryId(
+            environment.getRepository().getRepositoryId())
+        .map(GitRepoSettingsDto::lockExpirationThreshold)
+        .orElse(-1L);
+
+    return lockExpirationThreshold != -1
+        ? OffsetDateTime.now().plusMinutes(lockExpirationThreshold)
+        : null;
+  }
+
+  /**
+   * Calculates the new lock reservation expiration time based on current time and threshold
+   * settings.
+   */
+  @Transactional
+  protected OffsetDateTime calculateNewReservationExpiration(Environment environment) {
+    Long lockReservationThreshold = environment.getLockReservationThreshold() != null
+        ? environment.getLockReservationThreshold()
+        : gitRepoSettingsService
+        .getOrCreateGitRepoSettingsByRepositoryId(
+            environment.getRepository().getRepositoryId())
+        .map(GitRepoSettingsDto::lockReservationThreshold)
+        .orElse(-1L);
+
+    return lockReservationThreshold != -1
+        ? OffsetDateTime.now().plusMinutes(lockReservationThreshold)
+        : null;
   }
 
   /**
@@ -342,7 +431,8 @@ public class EnvironmentService {
   /**
    * Updates the environment with the specified ID.
    *
-   * <p>This method updates the environment with the specified ID using the provided EnvironmentDto.
+   * <p>This method updates the environment with the specified ID using the provided
+   * EnvironmentDto.
    *
    * @param id the ID of the environment to update
    * @param environmentDto the EnvironmentDto containing the updated environment information

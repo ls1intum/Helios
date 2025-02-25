@@ -183,6 +183,24 @@ paths:
           content:
             application/json:
               schema: {}
+  /api/environments/{id}/extend-lock:
+    put:
+      tags:
+      - environment-controller
+      operationId: extendEnvironmentLock
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {}
   /api/settings/{repositoryId}/groups/create:
     post:
       tags:
