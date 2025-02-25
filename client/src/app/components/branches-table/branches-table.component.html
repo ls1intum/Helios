@@ -63,7 +63,7 @@
                   }
                 </div>
               </div>
-              <div class="flex items-center py-2">
+              <div class="flex items-center py-2 gap-2">
                 <p-treeTableToggler [rowNode]="rowNode" />
 
                 <p-tag class="cursor-pointer" (click)="openBranch(branch)">
@@ -77,14 +77,14 @@
                     }
                   </div>
                 </p-tag>
+                @if (branch.isProtected) {
+                  <i-tabler name="shield-half" pTooltip="Protected Branch" />
+                }
+                @if (!rowNode.node.children) {
+                  <i-tabler name="external-link" (click)="openLink($event, branch.link)"></i-tabler>
+                  <app-workflow-run-status [selector]="{ type: 'branch', branchName: branch.name }"></app-workflow-run-status>
+                }
               </div>
-              @if (branch.isProtected) {
-                <i-tabler name="shield-half" pTooltip="Protected Branch" />
-              }
-              @if (!rowNode.node.children) {
-                <i-tabler name="external-link" (click)="openLink($event, branch.link)"></i-tabler>
-                <app-workflow-run-status [selector]="{ type: 'branch', branchName: branch.name }"></app-workflow-run-status>
-              }
             </div>
           </td>
         } @else if (rowNode.node.children.length > 0) {
