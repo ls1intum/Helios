@@ -224,7 +224,9 @@ export const EnvironmentStatusDtoSchema = {
     },
     metadata: {
       type: 'object',
-      additionalProperties: {},
+      additionalProperties: {
+        type: 'object',
+      },
     },
   },
   required: ['checkType', 'checkedAt', 'httpStatusCode', 'id', 'success'],

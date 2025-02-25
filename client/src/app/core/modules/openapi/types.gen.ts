@@ -67,7 +67,11 @@ export type EnvironmentStatusDto = {
   httpStatusCode: number;
   checkedAt: string;
   checkType: 'HTTP_STATUS' | 'ARTEMIS_INFO';
-  metadata?: {};
+  metadata?: {
+    [key: string]: {
+      [key: string]: unknown;
+    };
+  };
 };
 
 export type RepositoryInfoDto = {
@@ -379,8 +383,12 @@ export type UpdateGitRepoSettingsResponses = {
   /**
    * OK
    */
-  200: unknown;
+  200: {
+    [key: string]: unknown;
+  };
 };
+
+export type UpdateGitRepoSettingsResponse = UpdateGitRepoSettingsResponses[keyof UpdateGitRepoSettingsResponses];
 
 export type UpdateWorkflowGroupsData = {
   body: Array<WorkflowGroupDto>;
@@ -429,8 +437,12 @@ export type UpdateEnvironmentResponses = {
   /**
    * OK
    */
-  200: unknown;
+  200: {
+    [key: string]: unknown;
+  };
 };
+
+export type UpdateEnvironmentResponse = UpdateEnvironmentResponses[keyof UpdateEnvironmentResponses];
 
 export type UnlockEnvironmentData = {
   body?: never;
@@ -445,8 +457,12 @@ export type UnlockEnvironmentResponses = {
   /**
    * OK
    */
-  200: unknown;
+  200: {
+    [key: string]: unknown;
+  };
 };
+
+export type UnlockEnvironmentResponse = UnlockEnvironmentResponses[keyof UnlockEnvironmentResponses];
 
 export type LockEnvironmentData = {
   body?: never;
@@ -461,8 +477,12 @@ export type LockEnvironmentResponses = {
   /**
    * OK
    */
-  200: unknown;
+  200: {
+    [key: string]: unknown;
+  };
 };
+
+export type LockEnvironmentResponse = LockEnvironmentResponses[keyof LockEnvironmentResponses];
 
 export type CreateWorkflowGroupData = {
   body: WorkflowGroupDto;

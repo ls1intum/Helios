@@ -6,11 +6,15 @@ import type {
   UpdateWorkflowLabelData,
   GetGitRepoSettingsData,
   UpdateGitRepoSettingsData,
+  UpdateGitRepoSettingsResponse,
   UpdateWorkflowGroupsData,
   GetEnvironmentByIdData,
   UpdateEnvironmentData,
+  UpdateEnvironmentResponse,
   UnlockEnvironmentData,
+  UnlockEnvironmentResponse,
   LockEnvironmentData,
+  LockEnvironmentResponse,
   CreateWorkflowGroupData,
   CreateWorkflowGroupResponse,
   GetAllReleaseCandidatesData,
@@ -161,7 +165,7 @@ export const getGitRepoSettingsOptions = (options: Options<GetGitRepoSettingsDat
 };
 
 export const updateGitRepoSettingsMutation = (options?: Partial<Options<UpdateGitRepoSettingsData>>) => {
-  const mutationOptions: MutationOptions<unknown, DefaultError, Options<UpdateGitRepoSettingsData>> = {
+  const mutationOptions: MutationOptions<UpdateGitRepoSettingsResponse, DefaultError, Options<UpdateGitRepoSettingsData>> = {
     mutationFn: async localOptions => {
       const { data } = await updateGitRepoSettings({
         ...options,
@@ -206,7 +210,7 @@ export const getEnvironmentByIdOptions = (options: Options<GetEnvironmentByIdDat
 };
 
 export const updateEnvironmentMutation = (options?: Partial<Options<UpdateEnvironmentData>>) => {
-  const mutationOptions: MutationOptions<unknown, DefaultError, Options<UpdateEnvironmentData>> = {
+  const mutationOptions: MutationOptions<UpdateEnvironmentResponse, DefaultError, Options<UpdateEnvironmentData>> = {
     mutationFn: async localOptions => {
       const { data } = await updateEnvironment({
         ...options,
@@ -220,7 +224,7 @@ export const updateEnvironmentMutation = (options?: Partial<Options<UpdateEnviro
 };
 
 export const unlockEnvironmentMutation = (options?: Partial<Options<UnlockEnvironmentData>>) => {
-  const mutationOptions: MutationOptions<unknown, DefaultError, Options<UnlockEnvironmentData>> = {
+  const mutationOptions: MutationOptions<UnlockEnvironmentResponse, DefaultError, Options<UnlockEnvironmentData>> = {
     mutationFn: async localOptions => {
       const { data } = await unlockEnvironment({
         ...options,
@@ -234,7 +238,7 @@ export const unlockEnvironmentMutation = (options?: Partial<Options<UnlockEnviro
 };
 
 export const lockEnvironmentMutation = (options?: Partial<Options<LockEnvironmentData>>) => {
-  const mutationOptions: MutationOptions<unknown, DefaultError, Options<LockEnvironmentData>> = {
+  const mutationOptions: MutationOptions<LockEnvironmentResponse, DefaultError, Options<LockEnvironmentData>> = {
     mutationFn: async localOptions => {
       const { data } = await lockEnvironment({
         ...options,

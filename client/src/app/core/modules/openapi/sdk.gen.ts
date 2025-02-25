@@ -6,12 +6,16 @@ import type {
   GetGitRepoSettingsData,
   GetGitRepoSettingsResponse,
   UpdateGitRepoSettingsData,
+  UpdateGitRepoSettingsResponse,
   UpdateWorkflowGroupsData,
   GetEnvironmentByIdData,
   GetEnvironmentByIdResponse,
   UpdateEnvironmentData,
+  UpdateEnvironmentResponse,
   UnlockEnvironmentData,
+  UnlockEnvironmentResponse,
   LockEnvironmentData,
+  LockEnvironmentResponse,
   CreateWorkflowGroupData,
   CreateWorkflowGroupResponse,
   GetAllReleaseCandidatesData,
@@ -107,7 +111,7 @@ export const getGitRepoSettings = <ThrowOnError extends boolean = false>(options
 };
 
 export const updateGitRepoSettings = <ThrowOnError extends boolean = false>(options: Options<UpdateGitRepoSettingsData, ThrowOnError>) => {
-  return (options?.client ?? client).put<unknown, unknown, ThrowOnError>({
+  return (options?.client ?? client).put<UpdateGitRepoSettingsResponse, unknown, ThrowOnError>({
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -136,7 +140,7 @@ export const getEnvironmentById = <ThrowOnError extends boolean = false>(options
 };
 
 export const updateEnvironment = <ThrowOnError extends boolean = false>(options: Options<UpdateEnvironmentData, ThrowOnError>) => {
-  return (options?.client ?? client).put<unknown, unknown, ThrowOnError>({
+  return (options?.client ?? client).put<UpdateEnvironmentResponse, unknown, ThrowOnError>({
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -147,14 +151,14 @@ export const updateEnvironment = <ThrowOnError extends boolean = false>(options:
 };
 
 export const unlockEnvironment = <ThrowOnError extends boolean = false>(options: Options<UnlockEnvironmentData, ThrowOnError>) => {
-  return (options?.client ?? client).put<unknown, unknown, ThrowOnError>({
+  return (options?.client ?? client).put<UnlockEnvironmentResponse, unknown, ThrowOnError>({
     ...options,
     url: '/api/environments/{id}/unlock',
   });
 };
 
 export const lockEnvironment = <ThrowOnError extends boolean = false>(options: Options<LockEnvironmentData, ThrowOnError>) => {
-  return (options?.client ?? client).put<unknown, unknown, ThrowOnError>({
+  return (options?.client ?? client).put<LockEnvironmentResponse, unknown, ThrowOnError>({
     ...options,
     url: '/api/environments/{id}/lock',
   });
