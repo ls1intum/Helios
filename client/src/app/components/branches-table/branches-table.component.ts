@@ -213,7 +213,7 @@ export class BranchTableComponent {
 
           nodeMap.set(currentPath, newNode);
 
-          if (branch.isPinned) {
+          if (branch.isPinned && isLeaf) {
             rootNodes[0].children!.push(newNode);
           }
 
