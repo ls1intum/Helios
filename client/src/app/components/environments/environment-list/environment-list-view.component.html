@@ -17,8 +17,9 @@
   } @else {
     @for (group of environmentGroups(); track group[0]) {
       @if (group[1].length > 0) {
-        <div class="mb-4">
-          <h3 class="text-lg font-semibold mb-2">{{ capitalizeFirstLetter(group[0]) }}</h3>
+        <div>
+          <h3 class="text-lg font-semibold p-2 bg-slate-100">{{ capitalizeFirstLetter(group[0]) }}</h3>
+          <p-divider class="mt-0" />
           <p-accordion [multiple]="true">
             @for (environment of group[1]; track environment.id) {
               <p-accordion-panel [value]="environment.id">

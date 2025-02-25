@@ -24,10 +24,12 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { AvatarModule } from 'primeng/avatar';
 import { ButtonModule } from 'primeng/button';
 import { ButtonGroupModule } from 'primeng/buttongroup';
+import { DividerModule } from 'primeng/divider';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { TagModule } from 'primeng/tag';
 import { ToggleButtonModule } from 'primeng/togglebutton';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { TooltipModule } from 'primeng/tooltip';
 import { EnvironmentDeploymentInfoComponent } from '../deployment-info/environment-deployment-info.component';
 import { DeploymentStateTagComponent } from '../deployment-state-tag/deployment-state-tag.component';
@@ -62,6 +64,8 @@ import { LockTimeComponent } from '../lock-time/lock-time.component';
     ToggleButtonModule,
     FormsModule,
     SelectButtonModule,
+    ToggleSwitchModule,
+    DividerModule,
   ],
   providers: [DatePipe],
   templateUrl: './environment-list-view.component.html',
