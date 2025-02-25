@@ -38,15 +38,15 @@ create table
         primary key (user_preference_id, favourite_pull_requests_id)
     );
 
-alter table if exists public.user_preference add constraint FKq5oj1co3wu38ltb5g1xg9wel4 foreign key (user_id) references public.user;
+alter table if exists public.user_preference add constraint FKq5oj1co3wu38ltb5g1xg9wel4 foreign key (user_id) references public.user ON DELETE CASCADE;
 
 alter table if exists user_preference_favourite_branches add constraint FKgyxf2ri6f3j4pourba7shdsma foreign key (
     favourite_branches_repository_id,    
     favourite_branches_name
-) references branch;
+) references branch ON DELETE CASCADE;
 
 alter table if exists user_preference_favourite_branches add constraint FKj734saube6d10apw9l8q038e3 foreign key (user_preference_id) references public.user_preference ON DELETE CASCADE;
 
-alter table if exists user_preference_favourite_pull_requests add constraint FK773fsk43ewsg4oy5ut1hvslec foreign key (favourite_pull_requests_id) references issue;
+alter table if exists user_preference_favourite_pull_requests add constraint FK773fsk43ewsg4oy5ut1hvslec foreign key (favourite_pull_requests_id) references issue ON DELETE CASCADE;
 
 alter table if exists user_preference_favourite_pull_requests add constraint FKtnbluehl24n2x8nwh2gxvqr8 foreign key (user_preference_id) references public.user_preference ON DELETE CASCADE;
