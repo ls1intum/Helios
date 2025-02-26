@@ -34,6 +34,7 @@ import { DeploymentStepperComponent } from '../deployment-stepper/deployment-ste
 import { ToggleButtonModule } from 'primeng/togglebutton';
 import { FormsModule } from '@angular/forms';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
+import { ButtonGroupModule } from 'primeng/buttongroup';
 
 @Component({
   selector: 'app-environment-list-view',
@@ -54,6 +55,7 @@ import { ToggleSwitchModule } from 'primeng/toggleswitch';
     LockTimeComponent,
     AvatarModule,
     CommonModule,
+    ButtonGroupModule,
     TimeAgoPipe,
     UserAvatarComponent,
     ToggleButtonModule,
@@ -93,8 +95,8 @@ export class EnvironmentListViewComponent implements OnDestroy {
     },
   }));
 
-  userCanDeploy(environment: EnvironmentDto): boolean {
-    return !!(this.isLoggedIn() && this.deployable() && (!environment.locked || this.isCurrentUserLocked(environment)) && this.hasDeployPermissions());
+  canUserDeploy(environment: EnvironmentDto): boolean {
+    return !!(this.isLoggedIn() && (!environment.locked || this.isCurrentUserLocked(environment)) && this.hasDeployPermissions());
   }
 
   deploy = output<EnvironmentDto>();
@@ -145,6 +147,15 @@ export class EnvironmentListViewComponent implements OnDestroy {
         this.lockEnvironmentMutation.mutate({ path: { id: environment.id } });
       },
     });
+  }
+
+  getLockTooltip(environment: EnvironmentDto): string {
+    return this.canUserDeploy(environment) ? 'This will only lock the environment without any deployment.' : 'You do not have permission to lock this environment.';
+  }
+
+  getDeployTooltip(environment: EnvironmentDto): string {
+    if (!this.canUserDeploy(environment)) return 'You do not have permission to deploy to this environment.';
+    return environment.locked ? 'This will deploy to the server.' : 'This will lock the environment then deploy.';
   }
 
   constructor() {
@@ -234,7 +245,8 @@ export class EnvironmentListViewComponent implements OnDestroy {
     }
   }
 
-  unlockToolTip(environment: EnvironmentDto) {
+  getUnlockToolTip(environment: EnvironmentDto) {
+    if (!this.canUnlock(environment)) return 'You do not have permission to unlock this environment.';
     const timeLeft = this.timeUntilReservationExpires().get(environment.id);
     const timeLeftMinutes = timeLeft !== undefined && timeLeft !== null ? Math.ceil(timeLeft / 60000) : 0;
     if (this.isCurrentUserLocked(environment) || this.hasUnlockPermissions()) {
