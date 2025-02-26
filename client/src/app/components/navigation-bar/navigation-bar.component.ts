@@ -35,8 +35,8 @@ export class NavigationBarComponent {
   private permissionService = inject(PermissionService);
 
   // Toggle sidebar state
-  isExpanded = signal(this.loadSidebarState());
-  isVisible = signal(true);
+  isExpanded = signal<boolean>(this.loadSidebarState());
+  isVisible = signal<boolean>(true);
 
   repositoryId = input.required<number | undefined>();
 
