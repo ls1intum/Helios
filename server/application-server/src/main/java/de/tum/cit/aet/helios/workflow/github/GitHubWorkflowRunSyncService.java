@@ -162,7 +162,9 @@ public class GitHubWorkflowRunSyncService {
                 if (workflowRun
                     .getUpdatedAt()
                     .toInstant()
-                    .isAfter(heliosDeployment.getUpdatedAt().toInstant())) {
+                    .isAfter(heliosDeployment.getUpdatedAt().toInstant())
+                    || workflowRun.getUpdatedAt().toInstant()
+                        .equals(heliosDeployment.getUpdatedAt().toInstant())) {
                   heliosDeployment.setUpdatedAt(
                       DateUtil.convertToOffsetDateTime(workflowRun.getUpdatedAt()));
                   HeliosDeployment.Status mappedStatus =
