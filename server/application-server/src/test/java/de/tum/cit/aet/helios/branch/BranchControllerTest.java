@@ -40,10 +40,11 @@ public class BranchControllerTest {
               0,
               false,
               false,
+              false,
               null,
               null,
               new RepositoryInfoDto(1L, "repo", "repo", null, "url")),
-          new BranchInfoDto("branch2", "sha2", 0, 0, false, false, null, null, null));
+          new BranchInfoDto("branch2", "sha2", 0, 0, false, false, false, null, null, null));
 
   private final BranchDetailsDto branch =
       new BranchDetailsDto(
@@ -106,7 +107,7 @@ public class BranchControllerTest {
     Long id = -1L;
     String branchName = this.branches.get(0).name();
 
-    when(branchService.getBranchInfo(id, branchName)).thenReturn(Optional.empty());
+    when(branchService.getBranchByRepositoryIdAndName(id, branchName)).thenReturn(Optional.empty());
     this.mockMvc
         .perform(
             get("/api/branches/repository/{repoId}/branch", id)
@@ -121,7 +122,7 @@ public class BranchControllerTest {
     Long id = this.branches.get(0).repository().id();
     String branchName = "invalid";
 
-    when(branchService.getBranchInfo(id, branchName)).thenReturn(Optional.empty());
+    when(branchService.getBranchByRepositoryIdAndName(id, branchName)).thenReturn(Optional.empty());
     this.mockMvc
         .perform(
             get("/api/branches/repository/{repoId}/branch", id)

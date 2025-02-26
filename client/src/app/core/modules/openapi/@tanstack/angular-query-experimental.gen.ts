@@ -21,8 +21,10 @@ import type {
   CreateReleaseCandidateData,
   CreateReleaseCandidateResponse,
   EvaluateData,
+  SetPrPinnedByNumberData,
   DeployToEnvironmentData,
   DeployToEnvironmentResponse,
+  SetBranchPinnedByRepositoryIdAndNameAndUserIdData,
   HealthCheckData,
   GetAllWorkflowsData,
   GetWorkflowByIdData,
@@ -70,7 +72,9 @@ import {
   getAllReleaseCandidates,
   createReleaseCandidate,
   evaluate,
+  setPrPinnedByNumber,
   deployToEnvironment,
+  setBranchPinnedByRepositoryIdAndNameAndUserId,
   healthCheck,
   getAllWorkflows,
   getWorkflowById,
@@ -361,6 +365,37 @@ export const evaluateMutation = (options?: Partial<Options<EvaluateData>>) => {
   return mutationOptions;
 };
 
+export const setPrPinnedByNumberQueryKey = (options: Options<SetPrPinnedByNumberData>) => [createQueryKey('setPrPinnedByNumber', options)];
+
+export const setPrPinnedByNumberOptions = (options: Options<SetPrPinnedByNumberData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await setPrPinnedByNumber({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: setPrPinnedByNumberQueryKey(options),
+  });
+};
+
+export const setPrPinnedByNumberMutation = (options?: Partial<Options<SetPrPinnedByNumberData>>) => {
+  const mutationOptions: MutationOptions<unknown, DefaultError, Options<SetPrPinnedByNumberData>> = {
+    mutationFn: async localOptions => {
+      const { data } = await setPrPinnedByNumber({
+        ...options,
+        ...localOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
 export const deployToEnvironmentQueryKey = (options: Options<DeployToEnvironmentData>) => [createQueryKey('deployToEnvironment', options)];
 
 export const deployToEnvironmentOptions = (options: Options<DeployToEnvironmentData>) => {
@@ -382,6 +417,39 @@ export const deployToEnvironmentMutation = (options?: Partial<Options<DeployToEn
   const mutationOptions: MutationOptions<DeployToEnvironmentResponse, DefaultError, Options<DeployToEnvironmentData>> = {
     mutationFn: async localOptions => {
       const { data } = await deployToEnvironment({
+        ...options,
+        ...localOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const setBranchPinnedByRepositoryIdAndNameAndUserIdQueryKey = (options: Options<SetBranchPinnedByRepositoryIdAndNameAndUserIdData>) => [
+  createQueryKey('setBranchPinnedByRepositoryIdAndNameAndUserId', options),
+];
+
+export const setBranchPinnedByRepositoryIdAndNameAndUserIdOptions = (options: Options<SetBranchPinnedByRepositoryIdAndNameAndUserIdData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await setBranchPinnedByRepositoryIdAndNameAndUserId({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: setBranchPinnedByRepositoryIdAndNameAndUserIdQueryKey(options),
+  });
+};
+
+export const setBranchPinnedByRepositoryIdAndNameAndUserIdMutation = (options?: Partial<Options<SetBranchPinnedByRepositoryIdAndNameAndUserIdData>>) => {
+  const mutationOptions: MutationOptions<unknown, DefaultError, Options<SetBranchPinnedByRepositoryIdAndNameAndUserIdData>> = {
+    mutationFn: async localOptions => {
+      const { data } = await setBranchPinnedByRepositoryIdAndNameAndUserId({
         ...options,
         ...localOptions,
         throwOnError: true,

@@ -52,22 +52,47 @@
       </tr>
     </ng-template>
     <ng-template pTemplate="body" let-pr>
-      <tr class="cursor-pointer" (click)="openPR(pr)">
-        <td>
-          <div class="flex flex-wrap items-center gap-2">
-            <app-pull-request-status-icon [pullRequest]="pr" tooltipPosition="top" />
-            <span class="font-bold"><span [innerHTML]="pr.title | markdown"></span></span>
-            <app-workflow-run-status [selector]="{ type: 'pullRequest', pullRequestId: pr.id }"></app-workflow-run-status>
+      <tr [class.bg-gray-100]="pr.isPinned">
+        <td class="p-0">
+          <div class="flex h-full items-stretch gap-2">
+            <div
+              class="flex items-center border-r-4 px-2"
+              [class]="pr.isPinned ? 'border-r-primary-700' : 'border-r-primary-300'"
+              (mouseenter)="isHovered.set(pr.id, true)"
+              (mouseleave)="isHovered.set(pr.id, false)"
+            >
+              <div class="align-middle">
+                @if (isHovered.get(pr.id) && keycloak.isLoggedIn()) {
+                  @if (pr.isPinned) {
+                    <p-button text (onClick)="setPinned($event, pr, false)" class="bg-transparent h-full">
+                      <i-tabler name="pinned-off" class="!h-5 !w-5 text-primary-700 hover:text-primary-900" />
+                    </p-button>
+                  } @else {
+                    <p-button text (onClick)="setPinned($event, pr, true)" class="bg-transparent h-full">
+                      <i-tabler name="pinned" class="!h-5 !w-5 text-primary-700 hover:text-primary-900" />
+                    </p-button>
+                  }
+                }
+              </div>
+            </div>
 
-            @for (label of pr.labels; track label.id) {
-              <p-tag [value]="label.name" [rounded]="true" class="border font-medium text-xs py-0.5 whitespace-nowrap" [style]="getLabelClasses(label.color)" />
-            }
-          </div>
-          <div class="flex mt-2.5 gap-2 items-center text-xs">
-            <p-avatar [image]="pr.author?.avatarUrl" shape="circle" class="h-5 w-5" [styleClass]="getAvatarBorderClass(pr.author?.login)" />
-            <span>{{ pr.author?.name }} opened #{{ pr.number }} {{ pr.createdAt | timeAgo }}</span>
-            <i-tabler name="point" class="!h-3 !w-3" />
-            <span>updated {{ pr.updatedAt | timeAgo }}</span>
+            <div class="flex flex-col gap-2.5">
+              <div class="flex flex-wrap items-center gap-2">
+                <app-pull-request-status-icon [pullRequest]="pr" tooltipPosition="top" />
+                <span class="font-bold cursor-pointer" (click)="openPR(pr)"><span [innerHTML]="pr.title | markdown"></span></span>
+                <app-workflow-run-status [selector]="{ type: 'pullRequest', pullRequestId: pr.id }"></app-workflow-run-status>
+
+                @for (label of pr.labels; track label.id) {
+                  <p-tag [value]="label.name" [rounded]="true" class="border font-medium text-xs py-0.5 whitespace-nowrap" [style]="getLabelClasses(label.color)" />
+                }
+              </div>
+              <div class="flex gap-2 items-center text-xs">
+                <p-avatar [image]="pr.author?.avatarUrl" shape="circle" class="h-5 w-5" [styleClass]="getAvatarBorderClass(pr.author?.login)" />
+                <span>{{ pr.author?.name }} opened #{{ pr.number }} {{ pr.createdAt | timeAgo }}</span>
+                <i-tabler name="point" class="!h-3 !w-3" />
+                <span>updated {{ pr.updatedAt | timeAgo }}</span>
+              </div>
+            </div>
           </div>
         </td>
 

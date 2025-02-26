@@ -73,8 +73,7 @@ public class DeploymentService {
 
     Environment.Type environmentType =
         validateEnvironmentAndPermissions(deployRequest.environmentId());
-    String commitSha = determineCommitSha(deployRequest,
-        environmentType);
+    String commitSha = determineCommitSha(deployRequest, environmentType);
 
     Environment environment = lockEnvironment(deployRequest.environmentId());
     Workflow deploymentWorkflow =
@@ -83,26 +82,15 @@ public class DeploymentService {
     // Set the PR associated with the deployment
     Optional<PullRequest> optionalPullRequest =
         pullRequestRepository.findOpenPrByBranchNameOrSha(
-            RepositoryContext.getRepositoryId(),
-            deployRequest.branchName(),
-            commitSha);
+            RepositoryContext.getRepositoryId(), deployRequest.branchName(), commitSha);
 
     HeliosDeployment heliosDeployment =
-        createHeliosDeployment(environment,
-            deployRequest,
-            commitSha,
-            optionalPullRequest);
+        createHeliosDeployment(environment, deployRequest, commitSha, optionalPullRequest);
     Map<String, Object> workflowParams =
-        createWorkflowParams(environmentType,
-            deployRequest,
-            environment);
+        createWorkflowParams(environmentType, deployRequest, environment);
 
     dispatchWorkflow(
-        environment,
-        deploymentWorkflow,
-        deployRequest,
-        workflowParams,
-        heliosDeployment);
+        environment, deploymentWorkflow, deployRequest, workflowParams, heliosDeployment);
   }
 
   private void validateDeployRequest(DeployRequest deployRequest) {
@@ -139,9 +127,10 @@ public class DeploymentService {
     return commitSha != null
         ? commitSha
         : this.branchService
-        .getBranchByName(deployRequest.branchName())
-        .orElseThrow(() -> new DeploymentException("Branch not found"))
-        .commitSha();
+            .getBranchByRepositoryIdAndName(
+                RepositoryContext.getRepositoryId(), deployRequest.branchName())
+            .orElseThrow(() -> new DeploymentException("Branch not found"))
+            .commitSha();
   }
 
   private Environment lockEnvironment(Long environmentId) {
@@ -153,13 +142,13 @@ public class DeploymentService {
 
     // Only attempt to lock if it's a test environment
     if (environment.getType() == Environment.Type.TEST) {
-      environment = this.environmentService
-          .lockEnvironment(environmentId)
-          .orElseThrow(() -> new DeploymentException("Environment was already locked"));
+      environment =
+          this.environmentService
+              .lockEnvironment(environmentId)
+              .orElseThrow(() -> new DeploymentException("Environment was already locked"));
     }
 
-    if (!canRedeploy(environment,
-        20)) {
+    if (!canRedeploy(environment, 20)) {
       throw new DeploymentException("Deployment is still in progress, please wait.");
     }
 
@@ -188,16 +177,12 @@ public class DeploymentService {
 
     if (environmentType == Environment.Type.PRODUCTION
         || environmentType == Environment.Type.STAGING) {
-      workflowParams.put("commit_sha",
-          deployRequest.commitSha());
+      workflowParams.put("commit_sha", deployRequest.commitSha());
     } else if (environmentType == Environment.Type.TEST) {
-      workflowParams.put("triggered_by",
-          authService.getPreferredUsername());
+      workflowParams.put("triggered_by", authService.getPreferredUsername());
     }
-    workflowParams.put("branch_name",
-        deployRequest.branchName());
-    workflowParams.put("environment_name",
-        environment.getName());
+    workflowParams.put("branch_name", deployRequest.branchName());
+    workflowParams.put("environment_name", environment.getName());
 
     return workflowParams;
   }
@@ -216,8 +201,7 @@ public class DeploymentService {
               || authService.hasRole("ROLE_MAINTAINER")
               || authService.hasRole("ROLE_ADMIN");
         }
-        default -> {
-        }
+        default -> {}
       }
     }
     return false;
@@ -243,8 +227,7 @@ public class DeploymentService {
     } catch (IOException e) {
       heliosDeployment.setStatus(HeliosDeployment.Status.IO_ERROR);
       heliosDeploymentRepository.save(heliosDeployment);
-      throw new DeploymentException("Failed to dispatch workflow due to IOException",
-          e);
+      throw new DeploymentException("Failed to dispatch workflow due to IOException", e);
     }
   }
 
@@ -324,14 +307,11 @@ public class DeploymentService {
             .flatMap(
                 lock -> {
                   ActivityHistoryDto lockEvent =
-                      ActivityHistoryDto.fromEnvironmentLockHistory("LOCK_EVENT",
-                          lock);
+                      ActivityHistoryDto.fromEnvironmentLockHistory("LOCK_EVENT", lock);
                   if (lock.getUnlockedAt() != null) {
                     ActivityHistoryDto unlockEvent =
-                        ActivityHistoryDto.fromEnvironmentLockHistory("UNLOCK_EVENT",
-                            lock);
-                    return Stream.of(lockEvent,
-                        unlockEvent);
+                        ActivityHistoryDto.fromEnvironmentLockHistory("UNLOCK_EVENT", lock);
+                    return Stream.of(lockEvent, unlockEvent);
                   } else {
                     return Stream.of(lockEvent);
                   }
