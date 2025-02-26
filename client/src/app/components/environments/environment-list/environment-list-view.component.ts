@@ -93,6 +93,7 @@ export class EnvironmentListViewComponent implements OnDestroy {
     },
   }));
 
+
   userCanDeploy(environment: EnvironmentDto): boolean {
     return !!(this.isLoggedIn() && this.deployable() && (!environment.locked || this.isCurrentUserLocked(environment)) && this.hasDeployPermissions());
   }
