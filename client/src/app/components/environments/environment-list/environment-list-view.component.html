@@ -57,6 +57,8 @@
 
           <div class="flex-grow"></div>
 
+          <!-- TODO: Refactor button rendering -->
+
           @if (environment.locked) {
             <div class="flex gap-1 items-center">
               <app-user-avatar [user]="environment.lockedBy" [toolTipText]="'Locked By'" tooltipPosition="top" />
