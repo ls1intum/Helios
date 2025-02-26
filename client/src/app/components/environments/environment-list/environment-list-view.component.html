@@ -101,7 +101,6 @@
                     borderRadius: '0',
                   }"
                   (click)="lockEnvironment(environment); $event.stopPropagation()"
-                  [disabled]="!userCanDeploy(environment)"
                   [pTooltip]="'This will only lock the environment without any deployment.'"
                   tooltipPosition="top"
                 >
