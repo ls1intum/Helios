@@ -147,6 +147,10 @@ export class EnvironmentListViewComponent implements OnDestroy {
     });
   }
 
+  getLockTooltip(environment: EnvironmentDto): string {
+    return this.userCanDeploy(environment) ? 'This will only lock the environment without any deployment.' : 'You do not have permission to lock this environment.';
+  }
+
   constructor() {
     this.intervalId = window.setInterval(() => {
       this.currentTime.set(Date.now());
@@ -234,7 +238,8 @@ export class EnvironmentListViewComponent implements OnDestroy {
     }
   }
 
-  unlockToolTip(environment: EnvironmentDto) {
+  getUnlockToolTip(environment: EnvironmentDto) {
+    if (!this.canUnlock(environment)) return 'You do not have permission to unlock this environment.';
     const timeLeft = this.timeUntilReservationExpires().get(environment.id);
     const timeLeftMinutes = timeLeft !== undefined && timeLeft !== null ? Math.ceil(timeLeft / 60000) : 0;
     if (this.isCurrentUserLocked(environment) || this.hasUnlockPermissions()) {

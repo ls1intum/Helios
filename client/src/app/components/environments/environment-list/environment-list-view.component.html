@@ -95,19 +95,13 @@
               @if (!environment.locked) {
                 <p-button
                   styleClass="p-button-secondary"
-                  [style]="{
-                    padding: '0.5rem 0.75rem',
-                    backgroundColor: 'white',
-                    color: '#DC2626',
-                    border: 'none',
-                    borderRadius: '0',
-                  }"
                   (click)="lockEnvironment(environment); $event.stopPropagation()"
-                  [pTooltip]="'This will only lock the environment without any deployment.'"
+                  [disabled]="!userCanDeploy(environment)"
+                  [pTooltip]="getLockTooltip(environment)"
                   tooltipPosition="top"
                 >
                   <div class="flex items-center">
-                    <i-tabler name="lock" class="w-4 h-4 flex-shrink-0" />
+                    <i-tabler name="lock" class="w-4 h-4 flex-shrink-0 text-red-500" />
                   </div>
                 </p-button>
               } @else {
@@ -126,11 +120,11 @@
                     }"
                     (click)="onUnlockEnvironment($event, environment)"
                     [disabled]="!canUnlock(environment)"
-                    [pTooltip]="unlockToolTip(environment)"
+                    [pTooltip]="getUnlockToolTip(environment)"
                     tooltipPosition="top"
                   >
                     <div class="flex items-center">
-                      <i-tabler name="lock-open" class="w-4 h-4 flex-shrink-0" />
+                      <i-tabler name="lock-open" class="w-4 h-4 flex-shrink-0 text-red-500" />
                       <span>Unlock</span>
                     </div>
                   </p-button>
