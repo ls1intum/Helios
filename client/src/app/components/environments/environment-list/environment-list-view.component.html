@@ -86,11 +86,11 @@
                   <span>Deploy</span>
                 </div>
               </p-button>
+              <div class="w-px bg-gray-300 self-stretch"></div>
             }
 
             @if (environment.enabled) {
               @if (!environment.locked) {
-                <div class="w-px bg-gray-300 self-stretch"></div>
                 <p-button
                   styleClass="p-button-secondary"
                   [style]="{
