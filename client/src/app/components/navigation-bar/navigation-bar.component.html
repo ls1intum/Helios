@@ -1,103 +1,113 @@
 <!-- Sidebar Wrapper (Two-column Layout) -->
-<div class="flex h-full rounded-2xl mr-4 bg-gray-100 transition-all duration-300 ease-in-out relative" [ngClass]="{ 'w-16': !isExpanded(), 'w-48': isExpanded() }">
+<div
+  class="flex h-full rounded-2xl mr-4 bg-gray-100 transition-all duration-300 ease-in-out relative"
+  [ngClass]="{ 'w-2': !isVisible(), 'w-16': isVisible() && !isExpanded(), 'w-48': isVisible() && isExpanded() }"
+>
   <!-- Left Section: Main Navigation -->
-  <div class="flex flex-col p-3 items-center justify-between w-full">
-    <!-- Helios Icon -->
-    <a routerLink="/" [pTooltip]="!isExpanded() ? 'Home' : undefined" class="rounded-xl flex items-center gap-2 hover:bg-gray-200 w-full">
-      <app-helios-icon size="2rem" class="rounded-xl w-8 cursor-pointer" />
-      @if (isExpanded()) {
-        <span class="text-gray-700 text-sm font-semibold">Home</span>
-      }
-    </a>
-
-    <p-divider />
-
-    @if (repositoryId()) {
-      <!-- Repository Info (Avatar + Full Name) -->
-      <div class="flex items-center gap-2 w-full rounded-xl transition-all">
-        <!-- Repository Initials Avatar -->
-        <p-avatar label="{{ repositoryQuery.data()?.name | slice: 0 : 1 }}" pTooltip="{{ repositoryQuery.data()?.nameWithOwner }}" size="normal" />
-
-        <!-- Show Full Repository Name When Expanded -->
+  @if (isVisible()) {
+    <div class="flex flex-col p-3 items-center justify-between w-full">
+      <!-- Helios Icon -->
+      <a routerLink="/" [pTooltip]="!isExpanded() ? 'Home' : undefined" class="rounded-xl flex items-center gap-2 hover:bg-gray-200 w-full">
+        <app-helios-icon size="2rem" class="rounded-xl w-8 cursor-pointer" />
         @if (isExpanded()) {
-          <span class="text-gray-700 text-sm font-medium truncate flex-1">{{ repositoryQuery.data()?.name }}</span>
+          <span class="text-gray-700 text-sm font-semibold">Home</span>
         }
-      </div>
+      </a>
 
       <p-divider />
 
-      <!-- Repository pages -->
-      <div class="flex flex-col gap-3 w-full">
-        @for (item of items(); track item.label) {
+      @if (repositoryId()) {
+        <!-- Repository Info (Avatar + Full Name) -->
+        <div class="flex items-center gap-2 w-full rounded-xl transition-all">
+          <!-- Repository Initials Avatar -->
+          <p-avatar label="{{ repositoryQuery.data()?.name | slice: 0 : 1 }}" pTooltip="{{ repositoryQuery.data()?.nameWithOwner }}" size="normal" />
+
+          <!-- Show Full Repository Name When Expanded -->
+          @if (isExpanded()) {
+            <span class="text-gray-700 text-sm font-medium truncate flex-1">{{ repositoryQuery.data()?.name }}</span>
+          }
+        </div>
+
+        <p-divider />
+
+        <!-- Repository pages -->
+        <div class="flex flex-col gap-3 w-full">
+          @for (item of items(); track item.label) {
+            <a
+              class="rounded-xl p-2 flex items-center text-gray-500 hover:text-gray-700 hover:bg-gray-200 transition-all"
+              [routerLink]="item.path"
+              [pTooltip]="!isExpanded() ? item.label : undefined"
+              [routerLinkActive]="'!bg-slate-800 !text-slate-100 !hover:text-slate-100'"
+            >
+              <i-tabler [name]="item.icon" class="!size-6 !stroke-1"></i-tabler>
+              @if (isExpanded()) {
+                <span class="whitespace-nowrap text-xs ml-2">{{ item.label }}</span>
+              }
+            </a>
+          }
+        </div>
+      } @else {
+        <!-- Static Pages -->
+        <div class="flex flex-col gap-3 w-full">
           <a
-            class="rounded-xl p-2 flex items-center text-gray-500 hover:text-gray-700 hover:bg-gray-200 transition-all"
-            [routerLink]="item.path"
-            [pTooltip]="!isExpanded() ? item.label : undefined"
+            routerLink="/about"
             [routerLinkActive]="'!bg-slate-800 !text-slate-100 !hover:text-slate-100'"
+            [pTooltip]="!isExpanded() ? 'About' : undefined"
+            class="rounded-xl p-2 flex items-center text-gray-500 hover:text-gray-700 hover:bg-gray-200 transition-all"
           >
-            <i-tabler [name]="item.icon" class="!size-6 !stroke-1"></i-tabler>
+            <i-tabler name="info-circle" class="!size-6 !stroke-1"></i-tabler>
             @if (isExpanded()) {
-              <span class="whitespace-nowrap text-xs ml-2">{{ item.label }}</span>
+              <span class="whitespace-nowrap text-xs ml-2">About</span>
             }
           </a>
-        }
-      </div>
-    } @else {
-      <!-- Static Pages -->
-      <div class="flex flex-col gap-3 w-full">
-        <a
-          routerLink="/about"
-          [routerLinkActive]="'!bg-slate-800 !text-slate-100 !hover:text-slate-100'"
-          [pTooltip]="!isExpanded() ? 'About' : undefined"
-          class="rounded-xl p-2 flex items-center text-gray-500 hover:text-gray-700 hover:bg-gray-200 transition-all"
-        >
-          <i-tabler name="info-circle" class="!size-6 !stroke-1"></i-tabler>
-          @if (isExpanded()) {
-            <span class="whitespace-nowrap text-xs ml-2">About</span>
-          }
-        </a>
 
-        <a
-          routerLink="/privacy"
-          [routerLinkActive]="'!bg-slate-800 !text-slate-100 !hover:text-slate-100'"
-          [pTooltip]="!isExpanded() ? 'Privacy' : undefined"
-          class="rounded-xl p-2 flex items-center text-gray-500 hover:text-gray-700 hover:bg-gray-200 transition-all"
-        >
-          <i-tabler name="lock" class="!size-6 !stroke-1"></i-tabler>
-          @if (isExpanded()) {
-            <span class="whitespace-nowrap text-xs ml-2">Privacy Policy</span>
-          }
-        </a>
+          <a
+            routerLink="/privacy"
+            [routerLinkActive]="'!bg-slate-800 !text-slate-100 !hover:text-slate-100'"
+            [pTooltip]="!isExpanded() ? 'Privacy' : undefined"
+            class="rounded-xl p-2 flex items-center text-gray-500 hover:text-gray-700 hover:bg-gray-200 transition-all"
+          >
+            <i-tabler name="lock" class="!size-6 !stroke-1"></i-tabler>
+            @if (isExpanded()) {
+              <span class="whitespace-nowrap text-xs ml-2">Privacy Policy</span>
+            }
+          </a>
 
-        <a
-          routerLink="/imprint"
-          [routerLinkActive]="'!bg-slate-800 !text-slate-100 !hover:text-slate-100'"
-          [pTooltip]="!isExpanded() ? 'Imprint' : undefined"
-          class="rounded-xl p-2 flex items-center text-gray-500 hover:text-gray-700 hover:bg-gray-200 transition-all"
-        >
-          <i-tabler name="file-text" class="!size-6 !stroke-1"></i-tabler>
-          @if (isExpanded()) {
-            <span class="whitespace-nowrap text-xs ml-2">Imprint</span>
-          }
-        </a>
-      </div>
-    }
+          <a
+            routerLink="/imprint"
+            [routerLinkActive]="'!bg-slate-800 !text-slate-100 !hover:text-slate-100'"
+            [pTooltip]="!isExpanded() ? 'Imprint' : undefined"
+            class="rounded-xl p-2 flex items-center text-gray-500 hover:text-gray-700 hover:bg-gray-200 transition-all"
+          >
+            <i-tabler name="file-text" class="!size-6 !stroke-1"></i-tabler>
+            @if (isExpanded()) {
+              <span class="whitespace-nowrap text-xs ml-2">Imprint</span>
+            }
+          </a>
+        </div>
+      }
 
-    <span class="flex-grow"></span>
+      <span class="flex-grow"></span>
 
-    <!-- Lock Info -->
-    <app-user-lock-info />
+      <!-- Lock Info -->
+      <app-user-lock-info />
 
-    <p-divider />
+      <p-divider />
 
-    <!-- Login/Logout Button -->
-    <app-profile-nav-section [isExpanded]="isExpanded()" />
-  </div>
+      <!-- Login/Logout Button -->
+      <app-profile-nav-section [isExpanded]="isExpanded()" />
+    </div>
 
-  <!-- Right Section: Small Toggle Button -->
-  <div class="absolute -right-3 top-1/2 -translate-y-1/2 z-10">
-    <button class="h-6 w-6 flex items-center justify-center bg-gray-50 hover:bg-gray-200 rounded-md hover:scale-105 transition-all" (click)="toggleSidebar()">
-      <i-tabler [name]="isExpanded() ? 'chevron-left' : 'chevron-right'" class="!size-4"></i-tabler>
+    <!-- Right Section: Small Toggle Button -->
+    <div class="absolute -right-3 top-1/2 -translate-y-1/2 z-10">
+      <button class="h-6 w-6 flex items-center justify-center bg-gray-50 hover:bg-gray-200 rounded-md hover:scale-105 transition-all" (click)="toggleSidebarExpansion()">
+        <i-tabler [name]="isExpanded() ? 'chevron-left' : 'chevron-right'" class="!size-4"></i-tabler>
+      </button>
+    </div>
+  }
+  <div class="absolute -left-2 top-1/2 -translate-y-1/2 z-10">
+    <button class="h-6 w-6 flex items-center justify-center bg-gray-50 hover:bg-gray-200 rounded-md hover:scale-105 transition-all" (click)="toggleSidebarVisibility()">
+      <i-tabler [name]="isVisible() ? 'chevron-left' : 'chevron-right'" class="!size-4"></i-tabler>
     </button>
   </div>
 </div>
