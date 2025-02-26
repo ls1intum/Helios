@@ -123,10 +123,19 @@ You can also find the workflow that is in use for Artemis repository `here <http
       - Artifact name should be exactly ``JUnit Test Results``.
       - Please check out `this Artemis PR <https://github.com/ls1intum/Artemis/pull/10335>`__ for more information.)
 
-    - Set ``DEPLOYMENT`` label for your deployment workflow
-    - Set ``DEPLOYMENT`` label for your deployment workflow
-    - Set ``DEPLOYMENT`` label for your deployment workflow
-    - Set ``DEPLOYMENT`` label for your deployment workflow
+    - Set ``DEPLOYMENT_TEST_SERVER`` label for your test server deployment workflow. This label is used to trigger deployments to the test server environment.
+
+      - Users who has ``WRITE`` permissions to the repository in GitHub can trigger deployments using the PR/branch view in Helios.
+
+    - Set ``DEPLOYMENT_STAGING_SERVER`` label for your staging server deployment workflow. This label is used to trigger deployments to the staging server environment.
+
+      - Users who has ``MAINTAIN`` or ``ADMIN`` permissions to the repository in GitHub can trigger deployments using the release candidate view in Helios.
+
+    - Set ``DEPLOYMENT_PRODUCTION_SERVER`` label for your production server deployment workflow. This label is used to trigger deployments to the production server environment.
+
+      - Work in progress...
+
+    - **NOTE:** Right now, we only let you set one label per workflow. In the next days, we will allow you to set multiple labels for one workflow. (e.g., you can set ``DEPLOYMENT_TEST_SERVER`` and ``DEPLOYMENT_STAGING_SERVER`` for the same workflow.)
     - Create workflow groups for logical grouping in PR/Branch views
     - Adjust default lock reservation/expiration times
 
@@ -138,7 +147,9 @@ You can also find the workflow that is in use for Artemis repository `here <http
    - Configure environment parameters:
 
      * Update server URL
+     * Set environment type
      * Set up status checks:
+
 
        - HTTP Status Check (GET request with status validation)
        - Custom Status Check (GET request with body validation, e.g., ``https://artemis-test2.artemis.cit.tum.de/management/info``): This option requires the endpoint to return a specific output format for validation.
