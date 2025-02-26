@@ -231,6 +231,9 @@ public class DeploymentService {
     }
   }
 
+  // TODO: Move this to a more appropriate location
+  //  since we have the same code in two places
+  //  below method (DeploymentService) & canUnlock method in EnvironmentService
   private boolean canRedeploy(Environment environment, long timeoutMinutes) {
     // Fetch the most recent deployment for the environment
     Optional<HeliosDeployment> latestDeployment =
