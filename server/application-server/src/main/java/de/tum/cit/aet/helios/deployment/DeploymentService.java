@@ -70,10 +70,9 @@ public class DeploymentService {
 
   public void deployToEnvironment(DeployRequest deployRequest) {
     validateDeployRequest(deployRequest);
+    validateEnvironmentAndPermissions(deployRequest.environmentId());
 
-    Environment.Type environmentType =
-        validateEnvironmentAndPermissions(deployRequest.environmentId());
-    String commitSha = determineCommitSha(deployRequest, environmentType);
+    String commitSha = determineCommitSha(deployRequest);
 
     Environment environment = lockEnvironment(deployRequest.environmentId());
     Workflow deploymentWorkflow =
@@ -86,8 +85,7 @@ public class DeploymentService {
 
     HeliosDeployment heliosDeployment =
         createHeliosDeployment(environment, deployRequest, commitSha, optionalPullRequest);
-    Map<String, Object> workflowParams =
-        createWorkflowParams(environmentType, deployRequest, environment);
+    Map<String, Object> workflowParams = createWorkflowParams(deployRequest, environment);
 
     dispatchWorkflow(
         environment, deploymentWorkflow, deployRequest, workflowParams, heliosDeployment);
@@ -99,7 +97,7 @@ public class DeploymentService {
     }
   }
 
-  private Environment.Type validateEnvironmentAndPermissions(Long environmentId) {
+  private void validateEnvironmentAndPermissions(Long environmentId) {
     Environment.Type environmentType =
         this.environmentService
             .getEnvironmentTypeById(environmentId)
@@ -108,21 +106,10 @@ public class DeploymentService {
     if (!canDeployToEnvironment(environmentType)) {
       throw new SecurityException("Insufficient permissions to deploy to this environment");
     }
-
-    return environmentType;
   }
 
-  private String determineCommitSha(DeployRequest deployRequest, Environment.Type environmentType) {
+  private String determineCommitSha(DeployRequest deployRequest) {
     String commitSha = deployRequest.commitSha();
-
-    if (environmentType == Environment.Type.PRODUCTION
-        || environmentType == Environment.Type.STAGING) {
-      if (commitSha == null) {
-        throw new DeploymentException(
-            "Commit SHA should be provided for production/staging deployments");
-      }
-      return commitSha;
-    }
 
     return commitSha != null
         ? commitSha
@@ -172,17 +159,13 @@ public class DeploymentService {
   }
 
   private Map<String, Object> createWorkflowParams(
-      Environment.Type environmentType, DeployRequest deployRequest, Environment environment) {
+      DeployRequest deployRequest, Environment environment) {
     Map<String, Object> workflowParams = new HashMap<>();
 
-    if (environmentType == Environment.Type.PRODUCTION
-        || environmentType == Environment.Type.STAGING) {
-      workflowParams.put("commit_sha", deployRequest.commitSha());
-    } else if (environmentType == Environment.Type.TEST) {
-      workflowParams.put("triggered_by", authService.getPreferredUsername());
-    }
     workflowParams.put("branch_name", deployRequest.branchName());
     workflowParams.put("environment_name", environment.getName());
+    workflowParams.put("commit_sha", deployRequest.commitSha());
+    workflowParams.put("triggered_by", authService.getPreferredUsername());
 
     return workflowParams;
   }

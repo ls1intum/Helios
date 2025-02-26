@@ -13,7 +13,19 @@ Steps explain how to configure your GitHub repository, install the Helios GitHub
 
 2. **Configure Deployment Workflow**:
 
-Create a GitHub Actions workflow (example ``deploy-with-helios.yml``) with ``workflow_dispatch`` trigger:
+Create a GitHub Actions workflow (example ``deploy-with-helios.yml``) for deployments. You can have different workflows for different environments or a single workflow that can deploy to multiple environments.
+
+  **Requirements for the workflows:**
+
+  - has ``workflow_dispatch`` trigger
+  - accepts inputs for 
+
+    - ``branch_name``
+    - ``commit_sha``
+    - ``environment_name``
+    - ``triggered_by`` 
+    
+ .. note:: While some inputs can be marked as ``required: false``, all four inputs must be defined in the workflow for Helios to function properly.
 
 .. code-block:: yaml
 
@@ -22,11 +34,15 @@ Create a GitHub Actions workflow (example ``deploy-with-helios.yml``) with ``wor
   on:
     workflow_dispatch:
       inputs:
-        # The inputs below must match exactly to work with Helios
+        # These is the example of the workflow that uses 3 of 4 inputs, only 2 inputs are required
+        # The inputs names below must match exactly to work with Helios
         branch_name:
           description: "Which branch to deploy"
           required: true
           type: string
+        commit_sha:
+          description: 'Commit SHA to deploy'
+          required: false
         environment_name:
           description: "Which environment to deploy (e.g. environment defined in GitHub)"
           required: true
