@@ -88,52 +88,54 @@
               </p-button>
             }
 
-            @if (!environment.locked) {
-              <div class="w-px bg-gray-300 self-stretch"></div>
-              <p-button
-                styleClass="p-button-secondary"
-                [style]="{
-                  padding: '0.5rem 0.75rem',
-                  backgroundColor: 'white',
-                  color: '#DC2626',
-                  border: 'none',
-                  borderRadius: '0',
-                }"
-                (click)="lockEnvironment(environment); $event.stopPropagation()"
-                [disabled]="!userCanDeploy(environment)"
-                [pTooltip]="'This will only lock the environment without any deployment.'"
-                tooltipPosition="top"
-              >
-                <div class="flex items-center">
-                  <i-tabler name="lock" class="w-4 h-4 flex-shrink-0" />
-                </div>
-              </p-button>
-            } @else {
-              @if (isLoggedIn() && (environment.lockReservationWillExpireAt !== null || isCurrentUserLocked(environment) || hasUnlockPermissions())) {
-                @if (userCanDeploy(environment)) {
-                  <div class="w-px bg-gray-300 self-stretch"></div>
-                }
+            @if (environment.enabled) {
+              @if (!environment.locked) {
+                <div class="w-px bg-gray-300 self-stretch"></div>
                 <p-button
-                  styleClass="p-button-danger"
+                  styleClass="p-button-secondary"
                   [style]="{
                     padding: '0.5rem 0.75rem',
-                    backgroundColor: '#DC2626',
-                    color: 'white',
+                    backgroundColor: 'white',
+                    color: '#DC2626',
                     border: 'none',
                     borderRadius: '0',
                   }"
-                  (click)="onUnlockEnvironment($event, environment)"
-                  [disabled]="!canUnlock(environment)"
-                  [pTooltip]="unlockToolTip(environment)"
+                  (click)="lockEnvironment(environment); $event.stopPropagation()"
+                  [disabled]="!userCanDeploy(environment)"
+                  [pTooltip]="'This will only lock the environment without any deployment.'"
                   tooltipPosition="top"
                 >
                   <div class="flex items-center">
-                    <i-tabler name="lock-open" class="w-4 h-4 flex-shrink-0" />
-                    @if (!userCanDeploy(environment)) {
-                      <span>Unlock</span>
-                    }
+                    <i-tabler name="lock" class="w-4 h-4 flex-shrink-0" />
                   </div>
                 </p-button>
+              } @else {
+                @if (isLoggedIn() && (environment.lockReservationWillExpireAt !== null || isCurrentUserLocked(environment) || hasUnlockPermissions())) {
+                  @if (userCanDeploy(environment)) {
+                    <div class="w-px bg-gray-300 self-stretch"></div>
+                  }
+                  <p-button
+                    styleClass="p-button-danger"
+                    [style]="{
+                      padding: '0.5rem 0.75rem',
+                      backgroundColor: '#DC2626',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '0',
+                    }"
+                    (click)="onUnlockEnvironment($event, environment)"
+                    [disabled]="!canUnlock(environment)"
+                    [pTooltip]="unlockToolTip(environment)"
+                    tooltipPosition="top"
+                  >
+                    <div class="flex items-center">
+                      <i-tabler name="lock-open" class="w-4 h-4 flex-shrink-0" />
+                      @if (!userCanDeploy(environment)) {
+                        <span>Unlock</span>
+                      }
+                    </div>
+                  </p-button>
+                }
               }
             }
           </div>
