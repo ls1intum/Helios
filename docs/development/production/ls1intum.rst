@@ -117,6 +117,15 @@ You can also find the workflow that is in use for Artemis repository `here <http
   - Navigate to project settings (Admin/maintainer access required)
   - Configure essential settings:
 
+    - Set ``TEST`` label for your test workflow
+
+      - Right now we only support JUnit reports.
+      - Artifact name should be exactly ``JUnit Test Results``.
+      - Please check out `this Artemis PR <https://github.com/ls1intum/Artemis/pull/10335>`__ for more information.)
+
+    - Set ``DEPLOYMENT`` label for your deployment workflow
+    - Set ``DEPLOYMENT`` label for your deployment workflow
+    - Set ``DEPLOYMENT`` label for your deployment workflow
     - Set ``DEPLOYMENT`` label for your deployment workflow
     - Create workflow groups for logical grouping in PR/Branch views
     - Adjust default lock reservation/expiration times
