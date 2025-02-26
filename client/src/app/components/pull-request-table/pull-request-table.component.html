@@ -10,8 +10,8 @@
             <input pInputText type="text" pSize="small" placeholder="Search" class="w-full" disabled />
           </div>
         </th>
-        <th>Assignee</th>
-        <th>Reviewers</th>
+        <th class="hidden lg:table-cell">Assignee</th>
+        <th class="hidden lg:table-cell">Reviewers</th>
         <th></th>
       </tr>
     </ng-template>
@@ -29,9 +29,9 @@
             <p-skeleton styleClass="!w-28" />
           </div>
         </td>
-        <td class="w-[0.1%]"><p-skeleton shape="circle" styleClass="!size-7" /></td>
-        <td class="w-[0.1%]"><p-skeleton shape="circle" styleClass="!size-7" /></td>
-        <td class="w-[0.1%]">
+        <td class="w-[0.1%] hidden lg:table-cell"><p-skeleton shape="circle" styleClass="!size-7" /></td>
+        <td class="w-[0.1%] hidden lg:table-cell"><p-skeleton shape="circle" styleClass="!size-7" /></td>
+        <td class="w-[0.1%] hidden lg:table-cell">
           <p-button text disabled>
             <i-tabler name="external-link" />
           </p-button>
@@ -46,9 +46,9 @@
         <th>
           <app-table-filter [table]="table" [searchTableService]="searchTableService" />
         </th>
-        <th>Assignee</th>
-        <th>Reviewers</th>
-        <th></th>
+        <th class="hidden lg:table-cell">Assignee</th>
+        <th class="hidden lg:table-cell">Reviewers</th>
+        <th class="hidden lg:table-cell"></th>
       </tr>
     </ng-template>
     <ng-template pTemplate="body" let-pr>
@@ -96,7 +96,7 @@
           </div>
         </td>
 
-        <td>
+        <td class="hidden lg:table-cell">
           @if (pr.assignees?.length) {
             <div class="flex align-items-center gap-2">
               <p-avatarGroup>
@@ -113,7 +113,7 @@
             </div>
           }
         </td>
-        <td>
+        <td class="hidden lg:table-cell">
           @if (pr.reviewers?.length) {
             <div class="flex align-items-center gap-2">
               <p-avatarGroup>
@@ -130,7 +130,7 @@
             </div>
           }
         </td>
-        <td>
+        <td class="hidden lg:table-cell">
           <p-button text (click)="openPRExternal($event, pr)">
             <i-tabler name="external-link" />
           </p-button>
