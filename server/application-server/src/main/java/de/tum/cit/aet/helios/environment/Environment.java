@@ -5,6 +5,7 @@ import de.tum.cit.aet.helios.environment.status.EnvironmentStatus;
 import de.tum.cit.aet.helios.environment.status.StatusCheckType;
 import de.tum.cit.aet.helios.filters.RepositoryFilterEntity;
 import de.tum.cit.aet.helios.user.User;
+import de.tum.cit.aet.helios.workflow.Workflow;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
@@ -144,6 +145,10 @@ public class Environment extends RepositoryFilterEntity {
     STAGING,
     PRODUCTION
   }
+
+  @ManyToOne(fetch = FetchType.EAGER)
+  @JoinColumn(name = "deployment_workflow_id")
+  private Workflow deploymentWorkflow;
 
   // Missing properties
   // nodeId --> GraphQl ID
