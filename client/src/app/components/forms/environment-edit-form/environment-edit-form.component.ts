@@ -1,27 +1,29 @@
-import { Component, computed, inject, input, OnInit } from '@angular/core';
+import { Component, computed, inject, input, OnInit, signal } from '@angular/core';
+import { toObservable } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ButtonModule } from 'primeng/button';
-import { InputSwitchModule } from 'primeng/inputswitch';
-import { InputTextModule } from 'primeng/inputtext';
-import { AutoCompleteModule } from 'primeng/autocomplete';
 import { ActivatedRoute, Router } from '@angular/router';
-import { injectMutation, injectQuery, QueryClient } from '@tanstack/angular-query-experimental';
 import {
+  getAllEnabledEnvironmentsQueryKey,
   getAllEnvironmentsQueryKey,
   getEnvironmentByIdOptions,
   getEnvironmentByIdQueryKey,
-  updateEnvironmentMutation,
   getEnvironmentsByUserLockingQueryKey,
-  getAllEnabledEnvironmentsQueryKey,
+  getWorkflowsByRepositoryIdOptions,
+  updateEnvironmentMutation,
 } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
+import { injectMutation, injectQuery, QueryClient } from '@tanstack/angular-query-experimental';
 import { MessageService } from 'primeng/api';
+import { AutoCompleteModule } from 'primeng/autocomplete';
+import { ButtonModule } from 'primeng/button';
 import { Checkbox } from 'primeng/checkbox';
+import { InputSwitchModule } from 'primeng/inputswitch';
+import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
-import { toObservable } from '@angular/core/rxjs-interop';
+import { ToggleSwitch } from 'primeng/toggleswitch';
 
 @Component({
   selector: 'app-environment-edit-form',
-  imports: [AutoCompleteModule, ReactiveFormsModule, InputTextModule, InputSwitchModule, ButtonModule, Checkbox, SelectModule],
+  imports: [AutoCompleteModule, ReactiveFormsModule, InputTextModule, InputSwitchModule, ButtonModule, Checkbox, SelectModule, ToggleSwitch],
   templateUrl: './environment-edit-form.component.html',
 })
 export class EnvironmentEditFormComponent implements OnInit {
@@ -29,6 +31,8 @@ export class EnvironmentEditFormComponent implements OnInit {
   private queryClient = inject(QueryClient);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
+
+  repositoryId = input.required<number>();
 
   constructor(private messageService: MessageService) {
     // This subscription is needed, because the form is initialized before the data is fetched.
@@ -74,6 +78,18 @@ export class EnvironmentEditFormComponent implements OnInit {
     },
   }));
 
+  workflowsQuery = injectQuery(() => ({
+    ...getWorkflowsByRepositoryIdOptions({ path: { repositoryId: this.repositoryId() } }),
+    enabled: () => !!this.repositoryId(),
+    refetchOnWindowFocus: false,
+  }));
+
+  workflowOptions = computed(() => {
+    const workflows = this.workflowsQuery.data() || [];
+    workflows.filter(w => w.state === 'ACTIVE').sort();
+    return workflows.map(w => ({ name: w.name, file: w.fileNameWithExtension, value: w }));
+  });
+
   mutateEnvironment = injectMutation(() => ({
     ...updateEnvironmentMutation(),
     onSuccess: () => {
@@ -94,6 +110,7 @@ export class EnvironmentEditFormComponent implements OnInit {
     this.environmentForm = this.formBuilder.group({
       name: [environment?.name || '', Validators.required],
       type: [this.environment()?.type || 'TEST'],
+      deploymentWorkflow: [environment?.deploymentWorkflow || null],
       installedApps: [environment?.installedApps || []],
       description: [environment?.description || ''],
       serverUrl: [environment?.serverUrl || ''],

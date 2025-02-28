@@ -55,6 +55,7 @@ export type EnvironmentDto = {
   lockedBy?: UserInfoDto;
   lockedAt?: string;
   type?: 'TEST' | 'STAGING' | 'PRODUCTION';
+  deploymentWorkflow?: Workflow;
   lockExpirationThreshold?: number;
   lockReservationThreshold?: number;
   lockWillExpireAt?: string;
@@ -74,6 +75,93 @@ export type EnvironmentStatusDto = {
   };
 };
 
+export type GitRepository = {
+  repositoryId?: number;
+  createdAt?: string;
+  updatedAt?: string;
+  name: string;
+  nameWithOwner: string;
+  htmlUrl: string;
+  description?: string;
+  homepage?: string;
+  pushedAt: string;
+  visibility: 'PUBLIC' | 'PRIVATE' | 'INTERNAL' | 'UNKNOWN';
+  stargazersCount?: number;
+  watchersCount?: number;
+  defaultBranch: string;
+  hasIssues?: boolean;
+  hasProjects?: boolean;
+  hasWiki?: boolean;
+  labels?: Array<Label>;
+  private?: boolean;
+  archived?: boolean;
+  disabled?: boolean;
+};
+
+export type Issue = {
+  repository?: GitRepository;
+  id?: number;
+  createdAt?: string;
+  updatedAt?: string;
+  number?: number;
+  state: 'OPEN' | 'CLOSED';
+  title: string;
+  body?: string;
+  htmlUrl: string;
+  closedAt?: string;
+  commentsCount?: number;
+  author?: User;
+  labels?: Array<Label>;
+  assignees?: Array<User>;
+  locked?: boolean;
+  pullRequest?: boolean;
+};
+
+export type Label = {
+  id?: number;
+  name?: string;
+  description?: string;
+  color?: string;
+  issues?: Array<Issue>;
+  repository?: GitRepository;
+};
+
+export type PullRequest = {
+  repository?: GitRepository;
+  id?: number;
+  createdAt?: string;
+  updatedAt?: string;
+  number?: number;
+  state: 'OPEN' | 'CLOSED';
+  title: string;
+  body?: string;
+  htmlUrl: string;
+  closedAt?: string;
+  commentsCount?: number;
+  author?: User;
+  labels?: Array<Label>;
+  assignees?: Array<User>;
+  mergedAt?: string;
+  mergeCommitSha?: string;
+  headRefName?: string;
+  headRefRepoNameWithOwner?: string;
+  headSha?: string;
+  isMergeable?: boolean;
+  mergeableState?: string;
+  maintainerCanModify?: boolean;
+  commits?: number;
+  additions?: number;
+  deletions?: number;
+  changedFiles?: number;
+  mergedBy?: User;
+  requestedReviewers?: Array<User>;
+  workflowRuns?: Array<WorkflowRun>;
+  draft?: boolean;
+  pullRequest?: boolean;
+  merged?: boolean;
+  locked?: boolean;
+};
+
 export type RepositoryInfoDto = {
   id: number;
   name: string;
@@ -82,12 +170,116 @@ export type RepositoryInfoDto = {
   htmlUrl: string;
 };
 
+export type TestCase = {
+  id?: number;
+  testSuite?: TestSuite;
+  name?: string;
+  className?: string;
+  time?: number;
+  status?: 'PASSED' | 'FAILED' | 'ERROR' | 'SKIPPED';
+  message?: string;
+  stackTrace?: string;
+  errorType?: string;
+};
+
+export type TestSuite = {
+  id?: number;
+  workflowRun?: WorkflowRun;
+  name?: string;
+  timestamp?: string;
+  tests?: number;
+  failures?: number;
+  errors?: number;
+  skipped?: number;
+  time?: number;
+  testCases?: Array<TestCase>;
+};
+
+export type User = {
+  repository?: GitRepository;
+  id?: number;
+  createdAt?: string;
+  updatedAt?: string;
+  login: string;
+  avatarUrl: string;
+  description?: string;
+  name: string;
+  company?: string;
+  blog?: string;
+  location?: string;
+  email?: string;
+  htmlUrl: string;
+  type: 'USER' | 'ORGANIZATION' | 'BOT';
+  followers?: number;
+  following?: number;
+};
+
 export type UserInfoDto = {
   id: number;
   login: string;
   avatarUrl: string;
   name: string;
   htmlUrl: string;
+};
+
+export type Workflow = {
+  repository?: GitRepository;
+  id?: number;
+  createdAt?: string;
+  updatedAt?: string;
+  name?: string;
+  path?: string;
+  fileNameWithExtension?: string;
+  state?: 'ACTIVE' | 'DELETED' | 'DISABLED_FORK' | 'DISABLED_INACTIVITY' | 'DISABLED_MANUALLY' | 'UNKNOWN';
+  workflowRuns?: Array<WorkflowRun>;
+  url?: string;
+  htmlUrl?: string;
+  badgeUrl?: string;
+  label?: 'NONE' | 'DEPLOY_TEST_SERVER' | 'DEPLOY_STAGING_SERVER' | 'DEPLOY_PRODUCTION_SERVER' | 'TEST';
+};
+
+export type WorkflowRun = {
+  repository?: GitRepository;
+  id?: number;
+  createdAt?: string;
+  updatedAt?: string;
+  pullRequests?: Array<PullRequest>;
+  name?: string;
+  displayTitle?: string;
+  runNumber?: number;
+  runAttempt?: number;
+  runStartedAt?: string;
+  htmlUrl?: string;
+  jobsUrl?: string;
+  logsUrl?: string;
+  checkSuiteUrl?: string;
+  artifactsUrl?: string;
+  cancelUrl?: string;
+  rerunUrl?: string;
+  workflowUrl?: string;
+  headBranch?: string;
+  headSha?: string;
+  status?:
+    | 'QUEUED'
+    | 'IN_PROGRESS'
+    | 'COMPLETED'
+    | 'ACTION_REQUIRED'
+    | 'CANCELLED'
+    | 'FAILURE'
+    | 'NEUTRAL'
+    | 'SKIPPED'
+    | 'STALE'
+    | 'SUCCESS'
+    | 'TIMED_OUT'
+    | 'REQUESTED'
+    | 'WAITING'
+    | 'PENDING'
+    | 'UNKNOWN';
+  conclusion?: 'ACTION_REQUIRED' | 'CANCELLED' | 'FAILURE' | 'NEUTRAL' | 'SUCCESS' | 'SKIPPED' | 'STALE' | 'TIMED_OUT' | 'STARTUP_FAILURE' | 'UNKNOWN';
+  testProcessingStatus?: 'PROCESSING' | 'PROCESSED' | 'FAILED';
+  testSuites?: Array<TestSuite>;
+  workflow?: Workflow;
+  workflowId?: number;
 };
 
 export type ReleaseCandidateCreateDto = {

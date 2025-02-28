@@ -180,6 +180,9 @@ export const EnvironmentDtoSchema = {
       type: 'string',
       enum: ['TEST', 'STAGING', 'PRODUCTION'],
     },
+    deploymentWorkflow: {
+      $ref: '#/components/schemas/Workflow',
+    },
     lockExpirationThreshold: {
       type: 'integer',
       format: 'int64',
@@ -232,6 +235,317 @@ export const EnvironmentStatusDtoSchema = {
   required: ['checkType', 'checkedAt', 'httpStatusCode', 'id', 'success'],
 } as const;
 
+export const GitRepositorySchema = {
+  type: 'object',
+  properties: {
+    repositoryId: {
+      type: 'integer',
+      format: 'int64',
+    },
+    createdAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+    updatedAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+    name: {
+      type: 'string',
+    },
+    nameWithOwner: {
+      type: 'string',
+    },
+    htmlUrl: {
+      type: 'string',
+    },
+    description: {
+      type: 'string',
+    },
+    homepage: {
+      type: 'string',
+    },
+    pushedAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+    visibility: {
+      type: 'string',
+      enum: ['PUBLIC', 'PRIVATE', 'INTERNAL', 'UNKNOWN'],
+    },
+    stargazersCount: {
+      type: 'integer',
+      format: 'int32',
+    },
+    watchersCount: {
+      type: 'integer',
+      format: 'int32',
+    },
+    defaultBranch: {
+      type: 'string',
+    },
+    hasIssues: {
+      type: 'boolean',
+    },
+    hasProjects: {
+      type: 'boolean',
+    },
+    hasWiki: {
+      type: 'boolean',
+    },
+    labels: {
+      type: 'array',
+      items: {
+        $ref: '#/components/schemas/Label',
+      },
+      uniqueItems: true,
+    },
+    private: {
+      type: 'boolean',
+    },
+    archived: {
+      type: 'boolean',
+    },
+    disabled: {
+      type: 'boolean',
+    },
+  },
+  required: ['defaultBranch', 'htmlUrl', 'name', 'nameWithOwner', 'pushedAt', 'visibility'],
+} as const;
+
+export const IssueSchema = {
+  type: 'object',
+  properties: {
+    repository: {
+      $ref: '#/components/schemas/GitRepository',
+    },
+    id: {
+      type: 'integer',
+      format: 'int64',
+    },
+    createdAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+    updatedAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+    number: {
+      type: 'integer',
+      format: 'int32',
+    },
+    state: {
+      type: 'string',
+      enum: ['OPEN', 'CLOSED'],
+    },
+    title: {
+      type: 'string',
+    },
+    body: {
+      type: 'string',
+    },
+    htmlUrl: {
+      type: 'string',
+    },
+    closedAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+    commentsCount: {
+      type: 'integer',
+      format: 'int32',
+    },
+    author: {
+      $ref: '#/components/schemas/User',
+    },
+    labels: {
+      type: 'array',
+      items: {
+        $ref: '#/components/schemas/Label',
+      },
+      uniqueItems: true,
+    },
+    assignees: {
+      type: 'array',
+      items: {
+        $ref: '#/components/schemas/User',
+      },
+      uniqueItems: true,
+    },
+    locked: {
+      type: 'boolean',
+    },
+    pullRequest: {
+      type: 'boolean',
+    },
+  },
+  required: ['htmlUrl', 'state', 'title'],
+} as const;
+
+export const LabelSchema = {
+  type: 'object',
+  properties: {
+    id: {
+      type: 'integer',
+      format: 'int64',
+    },
+    name: {
+      type: 'string',
+    },
+    description: {
+      type: 'string',
+    },
+    color: {
+      type: 'string',
+    },
+    issues: {
+      type: 'array',
+      items: {
+        $ref: '#/components/schemas/Issue',
+      },
+      uniqueItems: true,
+    },
+    repository: {
+      $ref: '#/components/schemas/GitRepository',
+    },
+  },
+} as const;
+
+export const PullRequestSchema = {
+  type: 'object',
+  properties: {
+    repository: {
+      $ref: '#/components/schemas/GitRepository',
+    },
+    id: {
+      type: 'integer',
+      format: 'int64',
+    },
+    createdAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+    updatedAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+    number: {
+      type: 'integer',
+      format: 'int32',
+    },
+    state: {
+      type: 'string',
+      enum: ['OPEN', 'CLOSED'],
+    },
+    title: {
+      type: 'string',
+    },
+    body: {
+      type: 'string',
+    },
+    htmlUrl: {
+      type: 'string',
+    },
+    closedAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+    commentsCount: {
+      type: 'integer',
+      format: 'int32',
+    },
+    author: {
+      $ref: '#/components/schemas/User',
+    },
+    labels: {
+      type: 'array',
+      items: {
+        $ref: '#/components/schemas/Label',
+      },
+      uniqueItems: true,
+    },
+    assignees: {
+      type: 'array',
+      items: {
+        $ref: '#/components/schemas/User',
+      },
+      uniqueItems: true,
+    },
+    mergedAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+    mergeCommitSha: {
+      type: 'string',
+    },
+    headRefName: {
+      type: 'string',
+    },
+    headRefRepoNameWithOwner: {
+      type: 'string',
+    },
+    headSha: {
+      type: 'string',
+    },
+    isMergeable: {
+      type: 'boolean',
+    },
+    mergeableState: {
+      type: 'string',
+    },
+    maintainerCanModify: {
+      type: 'boolean',
+    },
+    commits: {
+      type: 'integer',
+      format: 'int32',
+    },
+    additions: {
+      type: 'integer',
+      format: 'int32',
+    },
+    deletions: {
+      type: 'integer',
+      format: 'int32',
+    },
+    changedFiles: {
+      type: 'integer',
+      format: 'int32',
+    },
+    mergedBy: {
+      $ref: '#/components/schemas/User',
+    },
+    requestedReviewers: {
+      type: 'array',
+      items: {
+        $ref: '#/components/schemas/User',
+      },
+      uniqueItems: true,
+    },
+    workflowRuns: {
+      type: 'array',
+      items: {
+        $ref: '#/components/schemas/WorkflowRun',
+      },
+      uniqueItems: true,
+    },
+    draft: {
+      type: 'boolean',
+    },
+    pullRequest: {
+      type: 'boolean',
+    },
+    merged: {
+      type: 'boolean',
+    },
+    locked: {
+      type: 'boolean',
+    },
+  },
+  required: ['htmlUrl', 'state', 'title'],
+} as const;
+
 export const RepositoryInfoDtoSchema = {
   type: 'object',
   properties: {
@@ -255,6 +569,153 @@ export const RepositoryInfoDtoSchema = {
   required: ['htmlUrl', 'id', 'name', 'nameWithOwner'],
 } as const;
 
+export const TestCaseSchema = {
+  type: 'object',
+  properties: {
+    id: {
+      type: 'integer',
+      format: 'int64',
+    },
+    testSuite: {
+      $ref: '#/components/schemas/TestSuite',
+    },
+    name: {
+      type: 'string',
+    },
+    className: {
+      type: 'string',
+    },
+    time: {
+      type: 'number',
+      format: 'double',
+    },
+    status: {
+      type: 'string',
+      enum: ['PASSED', 'FAILED', 'ERROR', 'SKIPPED'],
+    },
+    message: {
+      type: 'string',
+    },
+    stackTrace: {
+      type: 'string',
+    },
+    errorType: {
+      type: 'string',
+    },
+  },
+} as const;
+
+export const TestSuiteSchema = {
+  type: 'object',
+  properties: {
+    id: {
+      type: 'integer',
+      format: 'int64',
+    },
+    workflowRun: {
+      $ref: '#/components/schemas/WorkflowRun',
+    },
+    name: {
+      type: 'string',
+    },
+    timestamp: {
+      type: 'string',
+      format: 'date-time',
+    },
+    tests: {
+      type: 'integer',
+      format: 'int32',
+      minimum: 0,
+    },
+    failures: {
+      type: 'integer',
+      format: 'int32',
+      minimum: 0,
+    },
+    errors: {
+      type: 'integer',
+      format: 'int32',
+      minimum: 0,
+    },
+    skipped: {
+      type: 'integer',
+      format: 'int32',
+      minimum: 0,
+    },
+    time: {
+      type: 'number',
+      format: 'double',
+    },
+    testCases: {
+      type: 'array',
+      items: {
+        $ref: '#/components/schemas/TestCase',
+      },
+    },
+  },
+} as const;
+
+export const UserSchema = {
+  type: 'object',
+  properties: {
+    repository: {
+      $ref: '#/components/schemas/GitRepository',
+    },
+    id: {
+      type: 'integer',
+      format: 'int64',
+    },
+    createdAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+    updatedAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+    login: {
+      type: 'string',
+    },
+    avatarUrl: {
+      type: 'string',
+    },
+    description: {
+      type: 'string',
+    },
+    name: {
+      type: 'string',
+    },
+    company: {
+      type: 'string',
+    },
+    blog: {
+      type: 'string',
+    },
+    location: {
+      type: 'string',
+    },
+    email: {
+      type: 'string',
+    },
+    htmlUrl: {
+      type: 'string',
+    },
+    type: {
+      type: 'string',
+      enum: ['USER', 'ORGANIZATION', 'BOT'],
+    },
+    followers: {
+      type: 'integer',
+      format: 'int32',
+    },
+    following: {
+      type: 'integer',
+      format: 'int32',
+    },
+  },
+  required: ['avatarUrl', 'htmlUrl', 'login', 'name', 'type'],
+} as const;
+
 export const UserInfoDtoSchema = {
   type: 'object',
   properties: {
@@ -276,6 +737,176 @@ export const UserInfoDtoSchema = {
     },
   },
   required: ['avatarUrl', 'htmlUrl', 'id', 'login', 'name'],
+} as const;
+
+export const WorkflowSchema = {
+  type: 'object',
+  properties: {
+    repository: {
+      $ref: '#/components/schemas/GitRepository',
+    },
+    id: {
+      type: 'integer',
+      format: 'int64',
+    },
+    createdAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+    updatedAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+    name: {
+      type: 'string',
+    },
+    path: {
+      type: 'string',
+    },
+    fileNameWithExtension: {
+      type: 'string',
+    },
+    state: {
+      type: 'string',
+      enum: ['ACTIVE', 'DELETED', 'DISABLED_FORK', 'DISABLED_INACTIVITY', 'DISABLED_MANUALLY', 'UNKNOWN'],
+    },
+    workflowRuns: {
+      type: 'array',
+      items: {
+        $ref: '#/components/schemas/WorkflowRun',
+      },
+    },
+    url: {
+      type: 'string',
+    },
+    htmlUrl: {
+      type: 'string',
+    },
+    badgeUrl: {
+      type: 'string',
+    },
+    label: {
+      type: 'string',
+      enum: ['NONE', 'DEPLOY_TEST_SERVER', 'DEPLOY_STAGING_SERVER', 'DEPLOY_PRODUCTION_SERVER', 'TEST'],
+    },
+  },
+} as const;
+
+export const WorkflowRunSchema = {
+  type: 'object',
+  properties: {
+    repository: {
+      $ref: '#/components/schemas/GitRepository',
+    },
+    id: {
+      type: 'integer',
+      format: 'int64',
+    },
+    createdAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+    updatedAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+    pullRequests: {
+      type: 'array',
+      items: {
+        $ref: '#/components/schemas/PullRequest',
+      },
+      uniqueItems: true,
+    },
+    name: {
+      type: 'string',
+    },
+    displayTitle: {
+      type: 'string',
+    },
+    runNumber: {
+      type: 'integer',
+      format: 'int64',
+    },
+    runAttempt: {
+      type: 'integer',
+      format: 'int64',
+    },
+    runStartedAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+    htmlUrl: {
+      type: 'string',
+    },
+    jobsUrl: {
+      type: 'string',
+    },
+    logsUrl: {
+      type: 'string',
+    },
+    checkSuiteUrl: {
+      type: 'string',
+    },
+    artifactsUrl: {
+      type: 'string',
+    },
+    cancelUrl: {
+      type: 'string',
+    },
+    rerunUrl: {
+      type: 'string',
+    },
+    workflowUrl: {
+      type: 'string',
+    },
+    headBranch: {
+      type: 'string',
+    },
+    headSha: {
+      type: 'string',
+    },
+    status: {
+      type: 'string',
+      enum: [
+        'QUEUED',
+        'IN_PROGRESS',
+        'COMPLETED',
+        'ACTION_REQUIRED',
+        'CANCELLED',
+        'FAILURE',
+        'NEUTRAL',
+        'SKIPPED',
+        'STALE',
+        'SUCCESS',
+        'TIMED_OUT',
+        'REQUESTED',
+        'WAITING',
+        'PENDING',
+        'UNKNOWN',
+      ],
+    },
+    conclusion: {
+      type: 'string',
+      enum: ['ACTION_REQUIRED', 'CANCELLED', 'FAILURE', 'NEUTRAL', 'SUCCESS', 'SKIPPED', 'STALE', 'TIMED_OUT', 'STARTUP_FAILURE', 'UNKNOWN'],
+    },
+    testProcessingStatus: {
+      type: 'string',
+      enum: ['PROCESSING', 'PROCESSED', 'FAILED'],
+    },
+    testSuites: {
+      type: 'array',
+      items: {
+        $ref: '#/components/schemas/TestSuite',
+      },
+    },
+    workflow: {
+      $ref: '#/components/schemas/Workflow',
+    },
+    workflowId: {
+      type: 'integer',
+      format: 'int64',
+    },
+  },
 } as const;
 
 export const ReleaseCandidateCreateDtoSchema = {

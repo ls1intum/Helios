@@ -9,13 +9,40 @@
       </div>
 
       <div class="flex flex-col gap-2">
-        <label for="server-url">Server URL</label>
-        <input pInputText id="server-url" type="text" formControlName="serverUrl" />
+        <label for="type">Environment Type</label>
+        <p-select id="type" formControlName="type" [options]="environmentTypes" placeholder="Select Environment Type" [style]="{ width: '100%' }"></p-select>
       </div>
 
       <div class="flex flex-col gap-2">
-        <label for="type">Environment Type</label>
-        <p-select id="type" formControlName="type" [options]="environmentTypes" placeholder="Select Environment Type" [style]="{ width: '100%' }"></p-select>
+        <label for="deployment-workflow">Deployment Workflow</label>
+        <span class="text-sm text-gray-500"> Select a workflow to deploy to this environment. (Only active workflows are shown.) </span>
+        <p-select
+          id="deployment-workflow"
+          formControlName="deploymentWorkflow"
+          [options]="workflowOptions()"
+          placeholder="Select a Deployment Workflow"
+          [style]="{ width: '100%' }"
+          [disabled]="workflowsQuery.isLoading()"
+        >
+          <ng-template #selectedItem let-workflow>
+            <div class="flex items-center gap-2">
+              <span>{{ workflow.file }}</span>
+            </div>
+          </ng-template>
+          <ng-template let-workflow #item>
+            <div class="flex items-center gap-2">
+              <span class="font-semibold">{{ workflow.file }}</span> <span>{{ workflow.name }}</span>
+            </div>
+          </ng-template>
+        </p-select>
+        @if (workflowsQuery.isLoading()) {
+          <span class="text-sm text-gray-500">Loading workflows...</span>
+        }
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <label for="server-url">Server URL</label>
+        <input pInputText id="server-url" type="text" formControlName="serverUrl" />
       </div>
 
       <div class="flex flex-col gap-2">
@@ -86,7 +113,7 @@
       <!-- Environment Enable/Disable Checkbox -->
       <div class="flex gap-2">
         <label for="enabled" class="mr-2">Enabled</label>
-        <p-checkbox id="enabled" formControlName="enabled" [binary]="true"></p-checkbox>
+        <p-toggleswitch id="enabled" formControlName="enabled" />
       </div>
 
       <p-button type="submit">Update</p-button>
