@@ -64,7 +64,7 @@ export class ProjectSettingsComponent {
   showAddGroupDialog = false;
   newGroupName = '';
   // Store the previous label temporarily for the confirmation dialog
-  private previousLabel: 'NONE' | 'DEPLOY_TEST_SERVER' | 'DEPLOY_STAGING_SERVER' | 'DEPLOY_PRODUCTION_SERVER' | 'TEST' = 'NONE';
+  private previousLabel: WorkflowDto['label'] = 'NONE';
 
   // Drag & Drop logic for groupedWorkflowsArray
   private dragIndex: number | null = null;
@@ -210,15 +210,7 @@ export class ProjectSettingsComponent {
     },
   }));
 
-  getWorkflowLabelOptions(currentLabel: string) {
-    const assignedLabels = this.workflows().map(wf => wf.label);
-    return Object.values(WorkflowDtoSchema.properties.label.enum).filter(label => {
-      const isTest = label === 'DEPLOY_TEST_SERVER' && assignedLabels.includes('DEPLOY_TEST_SERVER');
-      const isStaging = label === 'DEPLOY_STAGING_SERVER' && assignedLabels.includes('DEPLOY_STAGING_SERVER');
-      const isProduction = label === 'DEPLOY_PRODUCTION_SERVER' && assignedLabels.includes('DEPLOY_PRODUCTION_SERVER');
-      return label === currentLabel || (!isTest && !isStaging && !isProduction);
-    });
-  }
+  workflowLabelOptions = Object.values(WorkflowDtoSchema.properties.label.enum);
 
   storePreviousLabel(workflow: WorkflowDto) {
     // Store the current label before change
@@ -227,13 +219,6 @@ export class ProjectSettingsComponent {
 
   onChangeLabel(workflow: WorkflowDto) {
     const label = workflow.label;
-    if (uniqueLabels.includes(label)) {
-      const existingLabel = this.workflows().find(wf => wf.label === label && wf.id !== workflow.id);
-      if (existingLabel) {
-        console.warn(`Only one workflow can be labeled as ${label}.`);
-        return;
-      }
-    }
     this.confirmationService.confirm({
       header: 'Change Label',
       message: `
@@ -245,13 +230,7 @@ export class ProjectSettingsComponent {
             <i class="pi pi-exclamation-triangle text-yellow-500 text-xl"></i>
             <div>
               <p class="font-semibold">Note:</p>
-              <p class="text-sm text-gray-600 mb-2">
-                Only one workflow can be labeled as either <strong>DEPLOY_TEST_SERVER</strong>, <strong>DEPLOY_STAGING_SERVER</strong> or <strong>DEPLOY_PRODUCTION_SERVER</strong>.
-              </p>
               <ul class="list-disc list-inside text-sm text-gray-600">
-                <li><strong>DEPLOY_TEST_SERVER</strong>: This label sets the workflow to trigger test server deployments.</li>
-                <li><strong>DEPLOY_STAGING_SERVER</strong>: This label sets the workflow to staging test server deployments.</li>
-                <li><strong>DEPLOY_PRODUCTION_SERVER</strong>: This label sets the workflow to production test server deployments.</li>
                 <li><strong>TEST</strong>: This label sets the workflow to be searched for test artifacts.</li>
                 <li><strong>NONE</strong>: No label is set for this workflow.</li>
               </ul>
@@ -385,5 +364,3 @@ export class ProjectSettingsComponent {
     this.dragIndex = null;
   }
 }
-
-const uniqueLabels = ['DEPLOY_TEST_SERVER', 'DEPLOY_STAGING_SERVER', 'DEPLOY_PRODUCTION_SERVER'];
