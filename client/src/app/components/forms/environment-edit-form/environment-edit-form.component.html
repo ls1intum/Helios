@@ -2,7 +2,7 @@
   Loading
 } @else if (environmentForm) {
   <div>
-    <form [formGroup]="environmentForm" (ngSubmit)="submitForm()" class="flex flex-col gap-4 w-1/3">
+    <form [formGroup]="environmentForm" (ngSubmit)="submitForm()" class="flex flex-col gap-4 max-w-lg">
       <div class="flex flex-col gap-2">
         <label for="name">Environment Name</label>
         <input pInputText id="name" type="text" formControlName="name" placeholder="Your Environment" readonly />
@@ -23,6 +23,7 @@
           placeholder="Select a Deployment Workflow"
           [style]="{ width: '100%' }"
           [disabled]="workflowsQuery.isLoading()"
+          [class]="environmentForm.invalid ? 'ng-dirty ng-invalid' : ''"
         >
           <ng-template #selectedItem let-workflow>
             <div class="flex items-center gap-2">
@@ -110,13 +111,21 @@
         </div>
       </div>
 
-      <!-- Environment Enable/Disable Checkbox -->
       <div class="flex gap-2">
         <label for="enabled" class="mr-2">Enabled</label>
         <p-toggleswitch id="enabled" formControlName="enabled" />
       </div>
 
-      <p-button type="submit">Update</p-button>
+      <!-- Cross-field validation error message -->
+      @if (environmentForm.invalid) {
+        <p-message severity="error">
+          <ng-template #icon>
+            <i-tabler name="exclamation-circle" />
+          </ng-template>
+          <span class="ml-2">Enabled environments must have a deployment workflow specified.</span>
+        </p-message>
+      }
+      <p-button type="submit" [disabled]="environmentForm.invalid">Update</p-button>
     </form>
   </div>
 } @else {

@@ -1,6 +1,6 @@
-import { Component, computed, inject, input, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, input, OnInit } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, FormGroup, ReactiveFormsModule, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
   getAllEnabledEnvironmentsQueryKey,
@@ -15,15 +15,16 @@ import { injectMutation, injectQuery, QueryClient } from '@tanstack/angular-quer
 import { MessageService } from 'primeng/api';
 import { AutoCompleteModule } from 'primeng/autocomplete';
 import { ButtonModule } from 'primeng/button';
-import { Checkbox } from 'primeng/checkbox';
 import { InputSwitchModule } from 'primeng/inputswitch';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { ToggleSwitch } from 'primeng/toggleswitch';
+import { MessageModule } from 'primeng/message';
+import { IconsModule } from 'icons.module';
 
 @Component({
   selector: 'app-environment-edit-form',
-  imports: [AutoCompleteModule, ReactiveFormsModule, InputTextModule, InputSwitchModule, ButtonModule, Checkbox, SelectModule, ToggleSwitch],
+  imports: [AutoCompleteModule, ReactiveFormsModule, InputTextModule, InputSwitchModule, ButtonModule, MessageModule, SelectModule, ToggleSwitch, IconsModule],
   templateUrl: './environment-edit-form.component.html',
 })
 export class EnvironmentEditFormComponent implements OnInit {
@@ -107,19 +108,24 @@ export class EnvironmentEditFormComponent implements OnInit {
   ngOnInit(): void {
     const environment = this.environment();
 
-    this.environmentForm = this.formBuilder.group({
-      name: [environment?.name || '', Validators.required],
-      type: [this.environment()?.type || 'TEST'],
-      deploymentWorkflow: [environment?.deploymentWorkflow || null],
-      installedApps: [environment?.installedApps || []],
-      description: [environment?.description || ''],
-      serverUrl: [environment?.serverUrl || ''],
-      enabled: [environment?.enabled || false],
-      statusCheckType: [environment?.statusCheckType || null],
-      statusUrl: [environment?.statusUrl || ''],
-      lockExpirationThreshold: [environment?.lockExpirationThreshold],
-      lockReservationThreshold: [environment?.lockReservationThreshold],
-    });
+    this.environmentForm = this.formBuilder.group(
+      {
+        name: [environment?.name || '', Validators.required],
+        type: [this.environment()?.type || 'TEST'],
+        deploymentWorkflow: [environment?.deploymentWorkflow || null],
+        installedApps: [environment?.installedApps || []],
+        description: [environment?.description || ''],
+        serverUrl: [environment?.serverUrl || ''],
+        enabled: [environment?.enabled || false],
+        statusCheckType: [environment?.statusCheckType || null],
+        statusUrl: [environment?.statusUrl || ''],
+        lockExpirationThreshold: [environment?.lockExpirationThreshold],
+        lockReservationThreshold: [environment?.lockReservationThreshold],
+      },
+      {
+        validators: requireWorkflowWhenEnabledValidator,
+      }
+    );
   }
 
   redirectToEnvironmentList = () => {
@@ -135,3 +141,10 @@ export class EnvironmentEditFormComponent implements OnInit {
     }
   };
 }
+
+export const requireWorkflowWhenEnabledValidator: ValidatorFn = (control: AbstractControl): ValidationErrors | null => {
+  const enabled = control.get('enabled')?.value;
+  const deploymentWorkflow = control.get('deploymentWorkflow')?.value;
+
+  return enabled && !deploymentWorkflow ? { requireWorkflowWhenEnabled: true } : null;
+};
