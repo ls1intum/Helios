@@ -61,8 +61,8 @@ public class PullRequestService {
   public PageResponse<PullRequestBaseInfoDto> getPaginatedPullRequests(
       PullRequestPageRequest pageRequest) {
     log.debug("Starting pagination process");
-    log.debug("Input parameters - Filter: {}, Page: {}, Size: {}",
-        pageRequest.getFilterType(), pageRequest.getPage(), pageRequest.getSize());
+    log.debug("Input parameters - Filter: {}, Page: {}, Size: {}, Search Term: {}",
+        pageRequest.getFilterType(), pageRequest.getPage(), pageRequest.getSize(), pageRequest.getSearchTerm());
 
     final String currentUserId = authService.isLoggedIn()
         ? authService.getGithubId()
@@ -114,7 +114,7 @@ public class PullRequestService {
     List<PullRequestBaseInfoDto> pageContent = new ArrayList<>();
 
     // Calculate global start and end indices
-    int globalStartIndex = (currentPage - 1) * pageSize;
+    int globalStartIndex = currentPage * pageSize;
     int globalEndIndex = Math.min(globalStartIndex + pageSize, (int) totalElements);
     log.debug("Global Indexing - Start Index: {}, End Index: {}", globalStartIndex, globalEndIndex);
 
@@ -131,10 +131,10 @@ public class PullRequestService {
     log.debug("Pinned Items - To Add: {}, Start Index: {}", pinnedItemsToAdd, pinnedStartIndex);
 
     // Add pinned PRs if applicable
-    if (pinnedItemsToAdd > 0) {
+    if (pinnedItemsToAdd > 0 && pinnedStartIndex >= 0 && pinnedStartIndex < pinnedDtos.size()) {
       List<PullRequestBaseInfoDto> pinnedItemsForPage = pinnedDtos.subList(
           pinnedStartIndex,
-          pinnedStartIndex + pinnedItemsToAdd
+          Math.min(pinnedStartIndex + pinnedItemsToAdd, pinnedDtos.size())
       );
       pageContent.addAll(pinnedItemsForPage);
       log.debug("Added Pinned Items - Count: {}", pinnedItemsToAdd);
@@ -167,7 +167,7 @@ public class PullRequestService {
 
       List<PullRequestBaseInfoDto> nonPinnedDtos = nonPinnedPage.getContent().stream()
           .map(pr -> PullRequestBaseInfoDto.fromPullRequestAndUserPreference(pr, userPreference))
-          .collect(Collectors.toList());
+          .toList();
 
       // Add non-pinned PRs to page content
       pageContent.addAll(nonPinnedDtos);
