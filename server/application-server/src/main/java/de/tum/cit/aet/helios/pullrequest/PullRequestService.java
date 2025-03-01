@@ -72,7 +72,7 @@ public class PullRequestService {
             ? userPreferenceRepository.findByUser(authService.getUserFromGithubId())
             : Optional.empty();
 
-    // First, get all pinned pull requests that match the filter criteria
+    // First, get ALL pinned pull requests that match the filter criteria
     Specification<PullRequest> pinnedSpec = buildSpecification(pageRequest, currentUserId, true);
     List<PullRequest> pinnedPullRequests = pullRequestRepository.findAll(pinnedSpec);
 
@@ -81,144 +81,73 @@ public class PullRequestService {
         .map(pr -> PullRequestBaseInfoDto.fromPullRequestAndUserPreference(pr, userPreference))
         .collect(Collectors.toList());
 
-    log.debug("Found {} pinned PRs matching filter", pinnedDtos.size());
-    if (!pinnedDtos.isEmpty()) {
-      log.debug("Pinned PR IDs: {}",
-          pinnedDtos.stream().map(PullRequestBaseInfoDto::id).collect(Collectors.toList()));
-    }
+    // Separate pinned PRs and non-pinned PRs for accurate pagination
+    Specification<PullRequest> nonPinnedSpec =
+        buildSpecification(pageRequest, currentUserId, false);
 
-    // Calculate how many regular (non-pinned) items we need for this page
-    int remainingItemsNeeded = pageRequest.getSize();
-    log.debug("Remaining items needed: {}", remainingItemsNeeded);
-    int offset = 0;
+    // Calculate total elements for pagination
+    long totalPinnedCount = pinnedDtos.size();
+    long totalNonPinnedCount = pullRequestRepository.count(nonPinnedSpec);
+    long totalElements = totalPinnedCount + totalNonPinnedCount;
 
-    // If we're on the first page, adjust for pinned items
-    if (pageRequest.getPage() == 0) {
-      log.debug("Adjusting for pinned items on first page");
-      remainingItemsNeeded -= pinnedDtos.size();
-      if (remainingItemsNeeded < 0) {
-        remainingItemsNeeded = 0; // Ensure we don't get negative
-      }
+    // Calculate total pages
+    int pageSize = pageRequest.getSize();
+    int totalPages = (int) Math.ceil((double) totalElements / pageSize);
 
-      // If we have more pinned items than page size, we need to handle that
-      if (remainingItemsNeeded <= 0) {
-        // In this case, we have more pinned items than can fit on a page
-        // We'll need to paginate the pinned items themselves
-        int pinnedStartIndex = 0;
-        int pinnedEndIndex = Math.min(pageRequest.getSize(), pinnedDtos.size());
-        PageResponse<PullRequestBaseInfoDto> response = new PageResponse<>();
-        response.setContent(pinnedDtos.subList(pinnedStartIndex, pinnedEndIndex));
-        response.setPage(pageRequest.getPage());
-        response.setSize(pageRequest.getSize());
-        response.setTotalElements(
-            pinnedDtos.size() + countNonPinnedMatchingPRs(pageRequest, currentUserId));
-        response.setTotalPages(
-            (int) Math.ceil((double) response.getTotalElements() / pageRequest.getSize()));
+    // Prepare the final list of PRs for the current page
+    List<PullRequestBaseInfoDto> pageContent = new ArrayList<>();
 
-        log.debug("Returning {} pinned PRs only (page {}/{})",
-            response.getContent().size(), response.getPage() + 1, response.getTotalPages());
-        return response;
-      }
-    } else {
-      log.debug("Adjusting for pinned items on subsequent pages");
-      // For pages after the first, we need to adjust the offset to account for pinned items
-      offset = (pageRequest.getPage() * pageRequest.getSize()) - pinnedDtos.size();
-      log.debug("Adjusted offset: {}", offset);
-      if (offset >= 0) {
-        log.debug("Returning pinned PRs only (page 1)");
-        // We're still paginating through the pinned items
-        int pinnedStartIndex = Math.abs(offset);
-        int pinnedEndIndex = Math.min(pinnedStartIndex + pageRequest.getSize(), pinnedDtos.size());
-        log.debug("Pinned start index: {}, end index: {}", pinnedStartIndex, pinnedEndIndex);
-        PageResponse<PullRequestBaseInfoDto> response = new PageResponse<>();
-        response.setContent(pinnedDtos.subList(pinnedStartIndex, pinnedEndIndex));
-        response.setPage(pageRequest.getPage());
-        response.setSize(pageRequest.getSize());
-        response.setTotalElements(
-            pinnedDtos.size() + countNonPinnedMatchingPRs(pageRequest, currentUserId));
-        response.setTotalPages(
-            (int) Math.ceil((double) response.getTotalElements() / pageRequest.getSize()));
+    // Determine the start and end indices for the current page
+    int startIndex = pageRequest.getPage() * pageSize;
+    int endIndex = Math.min(startIndex + pageSize, (int) totalElements);
 
-        log.debug("Returning paginated pinned PRs (page {}/{})",
-            response.getPage() + 1, response.getTotalPages());
-        return response;
-      }
-      offset = Math.max(0, offset);
-      log.debug("Adjusted offset: {}", offset);
-    }
+    // First, add pinned PRs that fall within this page
+    int pinnedItemsToAdd = Math.min(
+        Math.max(0, pageSize - Math.max(0, startIndex - (int) totalPinnedCount)),
+        pinnedDtos.size()
+    );
+    int pinnedStartIndex = Math.max(0, startIndex - (int) totalPinnedCount);
+    pageContent.addAll(
+        pinnedDtos.subList(pinnedStartIndex,
+            Math.min(pinnedStartIndex + pinnedItemsToAdd, pinnedDtos.size()))
+    );
 
-    log.debug("Remaining items needed after adjusting for pinned: {}", remainingItemsNeeded);
-
-    // Only get non-pinned PRs if we need them (remainingItemsNeeded > 0)
-    List<PullRequestBaseInfoDto> nonPinnedDtos = new ArrayList<>();
-    long totalNonPinned = 0;
-
+    // If we need more items, fetch non-pinned PRs
+    int remainingItemsNeeded = pageSize - pageContent.size();
     if (remainingItemsNeeded > 0) {
-      // Now get non-pinned PRs for the current page
-      Specification<PullRequest> nonPinnedSpec =
-          buildSpecification(pageRequest, currentUserId, false);
+      // Calculate the page and offset for non-pinned PRs
+      int nonPinnedPageNumber = Math.max(0,
+          (startIndex >= totalPinnedCount)
+              ? (startIndex - (int) totalPinnedCount) / remainingItemsNeeded
+              : 0
+      );
 
-      // Create spring pageable for the non-pinned items
-      Pageable pageable;
-      if (pageRequest.getSortField() != null && !pageRequest.getSortField().isEmpty()) {
-        Sort.Direction direction = "desc".equalsIgnoreCase(pageRequest.getSortDirection())
-            ? Sort.Direction.DESC : Sort.Direction.ASC;
-        pageable = PageRequest.of(
-            offset / Math.max(1, remainingItemsNeeded),
-            remainingItemsNeeded, Sort.by(direction, pageRequest.getSortField()));
-      } else {
-        // Default sort by updatedAt
-        pageable = PageRequest.of(
-            offset / Math.max(1, remainingItemsNeeded),
-            remainingItemsNeeded, Sort.by(Sort.Direction.DESC, "updatedAt"));
-      }
+      // Create pageable for non-pinned PRs
+      Pageable pageable = PageRequest.of(
+          nonPinnedPageNumber,
+          remainingItemsNeeded,
+          Sort.by(Sort.Direction.DESC, "updatedAt")
+      );
 
-      // Get page of non-pinned PRs
+      // Fetch non-pinned PRs
       Page<PullRequest> nonPinnedPage = pullRequestRepository.findAll(nonPinnedSpec, pageable);
-      totalNonPinned = nonPinnedPage.getTotalElements();
-
-      log.debug("Found {} non-pinned PRs matching filter (total: {})",
-          nonPinnedPage.getContent().size(), totalNonPinned);
-
-      // Convert to DTOs
-      nonPinnedDtos = nonPinnedPage.getContent().stream()
+      List<PullRequestBaseInfoDto> nonPinnedDtos = nonPinnedPage.getContent().stream()
           .map(pr -> PullRequestBaseInfoDto.fromPullRequestAndUserPreference(pr, userPreference))
           .collect(Collectors.toList());
 
-      log.debug("Found {} non-pinned PRs matching filter (total: {})",
-          nonPinnedDtos.size(), nonPinnedPage.getTotalElements());
-      if (!nonPinnedDtos.isEmpty()) {
-        log.debug("Non-pinned PR IDs: {}",
-            nonPinnedDtos.stream().map(PullRequestBaseInfoDto::id).collect(Collectors.toList()));
-      }
+      pageContent.addAll(nonPinnedDtos);
     }
 
-    // Combine pinned and non-pinned for the final result
-    List<PullRequestBaseInfoDto> combinedContent = new ArrayList<>();
-
-    // Add pinned items if we're on the first page
-    if (pageRequest.getPage() == 0) {
-      combinedContent.addAll(pinnedDtos);
-    }
-
-    // Add non-pinned items
-    combinedContent.addAll(nonPinnedDtos);
-
-    // Create the final response
+    // Create and return the page response
     PageResponse<PullRequestBaseInfoDto> response = new PageResponse<>();
-    response.setContent(combinedContent);
+    response.setContent(pageContent);
     response.setPage(pageRequest.getPage());
-    response.setSize(pageRequest.getSize());
-    response.setTotalElements(pinnedDtos.size() + totalNonPinned);
-    response.setTotalPages(
-        (int) Math.ceil((double) response.getTotalElements() / pageRequest.getSize()));
+    response.setSize(pageSize);
+    response.setTotalElements(totalElements);
+    response.setTotalPages(totalPages);
 
-    log.debug("Returning {} combined PRs (page {}/{})",
-        combinedContent.size(), response.getPage() + 1, response.getTotalPages());
-    if (!combinedContent.isEmpty()) {
-      log.debug("Combined PR IDs: {}",
-          combinedContent.stream().map(PullRequestBaseInfoDto::id).collect(Collectors.toList()));
-    }
+    log.debug("Returning {} PRs (page {}/{})",
+        pageContent.size(), response.getPage() + 1, response.getTotalPages());
 
     return response;
   }
