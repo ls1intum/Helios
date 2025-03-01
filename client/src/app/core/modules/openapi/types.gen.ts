@@ -67,7 +67,11 @@ export type EnvironmentStatusDto = {
   httpStatusCode: number;
   checkedAt: string;
   checkType: 'HTTP_STATUS' | 'ARTEMIS_INFO';
-  metadata?: {};
+  metadata?: {
+    [key: string]: {
+      [key: string]: unknown;
+    };
+  };
 };
 
 export type RepositoryInfoDto = {
@@ -182,6 +186,7 @@ export type BranchInfoDto = {
   behindBy?: number;
   isDefault?: boolean;
   isProtected?: boolean;
+  isPinned?: boolean;
   updatedAt?: string;
   updatedBy?: UserInfoDto;
   repository?: RepositoryInfoDto;
@@ -247,7 +252,7 @@ export type PullRequestBaseInfoDto = {
   state: 'OPEN' | 'CLOSED';
   isDraft: boolean;
   isMerged: boolean;
-  repository?: RepositoryInfoDto;
+  isPinned?: boolean;
   htmlUrl: string;
   createdAt?: string;
   updatedAt?: string;
@@ -379,8 +384,12 @@ export type UpdateGitRepoSettingsResponses = {
   /**
    * OK
    */
-  200: unknown;
+  200: {
+    [key: string]: unknown;
+  };
 };
+
+export type UpdateGitRepoSettingsResponse = UpdateGitRepoSettingsResponses[keyof UpdateGitRepoSettingsResponses];
 
 export type UpdateWorkflowGroupsData = {
   body: Array<WorkflowGroupDto>;
@@ -429,8 +438,12 @@ export type UpdateEnvironmentResponses = {
   /**
    * OK
    */
-  200: unknown;
+  200: {
+    [key: string]: unknown;
+  };
 };
+
+export type UpdateEnvironmentResponse = UpdateEnvironmentResponses[keyof UpdateEnvironmentResponses];
 
 export type UnlockEnvironmentData = {
   body?: never;
@@ -445,8 +458,12 @@ export type UnlockEnvironmentResponses = {
   /**
    * OK
    */
-  200: unknown;
+  200: {
+    [key: string]: unknown;
+  };
 };
+
+export type UnlockEnvironmentResponse = UnlockEnvironmentResponses[keyof UnlockEnvironmentResponses];
 
 export type LockEnvironmentData = {
   body?: never;
@@ -461,8 +478,12 @@ export type LockEnvironmentResponses = {
   /**
    * OK
    */
-  200: unknown;
+  200: {
+    [key: string]: unknown;
+  };
 };
+
+export type LockEnvironmentResponse = LockEnvironmentResponses[keyof LockEnvironmentResponses];
 
 export type ExtendEnvironmentLockData = {
   body?: never;
@@ -477,8 +498,12 @@ export type ExtendEnvironmentLockResponses = {
   /**
    * OK
    */
-  200: unknown;
+  200: {
+    [key: string]: unknown;
+  };
 };
+
+export type ExtendEnvironmentLockResponse = ExtendEnvironmentLockResponses[keyof ExtendEnvironmentLockResponses];
 
 export type CreateWorkflowGroupData = {
   body: WorkflowGroupDto;
@@ -547,6 +572,24 @@ export type EvaluateResponses = {
   200: unknown;
 };
 
+export type SetPrPinnedByNumberData = {
+  body?: never;
+  path: {
+    pr: number;
+  };
+  query: {
+    isPinned: boolean;
+  };
+  url: '/api/pullrequests/{pr}/pin';
+};
+
+export type SetPrPinnedByNumberResponses = {
+  /**
+   * OK
+   */
+  200: unknown;
+};
+
 export type DeployToEnvironmentData = {
   body: DeployRequest;
   path?: never;
@@ -562,6 +605,25 @@ export type DeployToEnvironmentResponses = {
 };
 
 export type DeployToEnvironmentResponse = DeployToEnvironmentResponses[keyof DeployToEnvironmentResponses];
+
+export type SetBranchPinnedByRepositoryIdAndNameAndUserIdData = {
+  body?: never;
+  path: {
+    repoId: number;
+  };
+  query: {
+    name: string;
+    isPinned: boolean;
+  };
+  url: '/api/branches/repository/{repoId}/pin';
+};
+
+export type SetBranchPinnedByRepositoryIdAndNameAndUserIdResponses = {
+  /**
+   * OK
+   */
+  200: unknown;
+};
 
 export type HealthCheckData = {
   body?: never;

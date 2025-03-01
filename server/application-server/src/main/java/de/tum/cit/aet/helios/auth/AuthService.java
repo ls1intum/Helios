@@ -6,6 +6,7 @@ import de.tum.cit.aet.helios.user.UserRepository;
 import de.tum.cit.aet.helios.user.github.GitHubUserSyncService;
 import java.io.IOException;
 import org.kohsuke.github.GHUser;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -53,7 +54,10 @@ public class AuthService {
   }
 
   public boolean isLoggedIn() {
-    return SecurityContextHolder.getContext().getAuthentication() != null;
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    return authentication != null
+        && !(authentication instanceof AnonymousAuthenticationToken)
+        && authentication.isAuthenticated();
   }
 
   public String getGithubId() {

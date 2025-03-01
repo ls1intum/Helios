@@ -11,7 +11,7 @@
           </div>
         </th>
         <th>Last Update</th>
-        <th class="text-center w-36">Behind | Ahead</th>
+        <th class="text-center w-36 hidden md:table-cell">Behind | Ahead</th>
         <th class="w-32">Head</th>
       </tr>
     </ng-template>
@@ -32,47 +32,71 @@
         <th>
           <app-table-filter [table]="table" [searchTableService]="searchTableService" />
         </th>
-        <th>Last Update</th>
-        <th class="text-center w-36">Behind | Ahead</th>
-        <th class="w-32">Head</th>
+        <th class="hidden lg:table-cell">Last Update</th>
+        <th class="text-center w-36 hidden lg:table-cell">Behind | Ahead</th>
+        <th class="w-32 hidden lg:table-cell">Head</th>
       </tr>
     </ng-template>
 
     <ng-template pTemplate="body" let-rowNode let-branch="rowData">
-      <tr [ttRow]="rowNode" class="cursor-pointer" (click)="openBranch(branch)">
+      <tr [class.bg-gray-50]="branch.isPinned" [ttRow]="rowNode">
         @if (!rowNode.node.subheader) {
-          <td>
-            <div class="flex items-center gap-2">
-              <p-treeTableToggler [rowNode]="rowNode" />
-
-              <p-tag>
-                <div class="whitespace-normal inline-flex flex-wrap items-baseline">
-                  @for (part of branch.name | highlight: searchTableService.searchValue(); track part.text) {
-                    @if (part.highlight) {
-                      <mark>{{ part.text }}</mark>
+          <td class="p-0">
+            <div class="flex flex-wrap h-full items-stretch gap-2">
+              <div
+                class="flex items-center border-r-4 px-2"
+                [class]="branch.isPinned ? 'border-r-primary-700' : 'border-r-primary-300'"
+                (mouseenter)="isHovered.set(branch.name, true)"
+                (mouseleave)="isHovered.set(branch.name, false)"
+              >
+                <div class="align-middle">
+                  @if (!rowNode.node.children && isHovered.get(branch.name) && keycloakService.isLoggedIn()) {
+                    @if (branch.isPinned) {
+                      <p-button text (onClick)="setPinned($event, branch, false)" class="bg-transparent h-full">
+                        <i-tabler name="pinned-off" class="!h-5 !w-5 text-primary-700 hover:text-primary-900" />
+                      </p-button>
                     } @else {
-                      <span>{{ part.text }}</span>
+                      <p-button text (onClick)="setPinned($event, branch, true)" class="bg-transparent h-full">
+                        <i-tabler name="pinned" class="!h-5 !w-5 text-primary-700 hover:text-primary-900" />
+                      </p-button>
                     }
                   }
                 </div>
-              </p-tag>
-              @if (branch.isProtected) {
-                <i-tabler name="shield-half" pTooltip="Protected Branch" />
-              }
-              @if (!rowNode.node.children) {
-                <i-tabler name="external-link" (click)="openLink($event, branch.link)"></i-tabler>
-                <app-workflow-run-status [selector]="{ type: 'branch', branchName: branch.name }"></app-workflow-run-status>
-              }
+              </div>
+              <div class="flex flex-wrap items-center py-2 gap-2">
+                <div class="flex flex-nowrap">
+                  <p-treeTableToggler [rowNode]="rowNode" />
+
+                  <p-tag class="cursor-pointer" (click)="openBranch(branch)">
+                    <div class="whitespace-normal inline-flex flex-wrap items-baseline">
+                      @for (part of branch.name | highlight: searchTableService.searchValue(); track part.text) {
+                        @if (part.highlight) {
+                          <mark>{{ part.text }}</mark>
+                        } @else {
+                          <span>{{ part.text }}</span>
+                        }
+                      }
+                    </div>
+                  </p-tag>
+                </div>
+                @if (branch.isProtected) {
+                  <i-tabler name="shield-half" pTooltip="Protected Branch" />
+                }
+                @if (!rowNode.node.children) {
+                  <i-tabler name="external-link" (click)="openLink($event, branch.link)"></i-tabler>
+                  <app-workflow-run-status [selector]="{ type: 'branch', branchName: branch.name }"></app-workflow-run-status>
+                }
+              </div>
             </div>
           </td>
         } @else if (rowNode.node.children.length > 0) {
           <td>
-            <div class="flex items-end gap-2 h-10">
+            <div class="flex flex-wrap items-end gap-2 h-10">
               <span class="font-semibold">{{ branch.name }}</span>
             </div>
           </td>
         }
-        <td class="whitespace-nowrap">
+        <td class="lg:whitespace-nowrap hidden lg:table-cell">
           @if (branch.updatedBy && branch.updatedAt) {
             <div class="flex gap-1 items-center text-sm">
               <p-avatar [image]="branch.updatedBy?.avatarUrl" shape="circle" class="h-5 w-5" />
@@ -81,7 +105,7 @@
           }
         </td>
 
-        <td class="w-36 whitespace-nowrap">
+        <td class="w-36 md:whitespace-nowrap hidden lg:table-cell">
           @if (branch.isDefault) {
             <div class="w-full flex justify-center">
               <p-tag value="Default Branch" />
@@ -100,7 +124,7 @@
             </div>
           }
         </td>
-        <td class="w-32 whitespace-nowrap">
+        <td class="w-32 whitespace-nowrap hidden lg:table-cell">
           @if (branch.commitSha) {
             <div class="flex items-center gap-2">
               <i-tabler name="git-commit" class="-mr-2"></i-tabler>

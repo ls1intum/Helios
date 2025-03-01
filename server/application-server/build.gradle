@@ -5,19 +5,19 @@ import org.springframework.boot.gradle.tasks.run.BootRun
 buildscript {
     dependencies {
         classpath('org.postgresql:postgresql:42.7.5')
-        classpath('org.flywaydb:flyway-database-postgresql:11.1.1')
+        classpath('org.flywaydb:flyway-database-postgresql:11.3.3')
     }
 }
 
 plugins {
     id 'java'
     id 'jacoco'
-    id 'org.springframework.boot' version '3.4.1'
+    id 'org.springframework.boot' version '3.4.3'
     id 'io.spring.dependency-management' version '1.1.7'
-    id 'io.freefair.lombok' version '8.11'
+    id 'io.freefair.lombok' version '8.12.2'
     id 'org.springdoc.openapi-gradle-plugin' version '1.9.0'
     id 'org.openapi.generator' version '6.6.0'
-    id 'org.flywaydb.flyway' version '11.2.0'
+    id 'org.flywaydb.flyway' version '11.3.3'
 }
 
 group = 'de.tum.cit.aet'
@@ -56,17 +56,17 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
     implementation 'org.springframework.security:spring-security-oauth2-jose'
-    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.1'
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.5'
     implementation 'org.openapitools:jackson-databind-nullable:0.2.6'
     implementation 'io.nats:jnats:2.20.5'
-    implementation 'org.kohsuke:github-api:1.326'
+    implementation 'org.kohsuke:github-api:1.327'
     implementation 'com.squareup.okhttp3:okhttp:4.12.0'
     implementation 'com.squareup.okhttp3:logging-interceptor:4.12.0'
     implementation 'javax.annotation:javax.annotation-api:1.3.2'
-    implementation 'org.flywaydb:flyway-core:11.1.1'
-    implementation 'org.flywaydb:flyway-database-postgresql:11.1.1'
+    implementation 'org.flywaydb:flyway-core:11.3.3'
+    implementation 'org.flywaydb:flyway-database-postgresql:11.3.3'
     implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
-    implementation 'io.sentry:sentry-spring-boot-starter-jakarta:7.21.0'
+    implementation 'io.sentry:sentry-spring-boot-starter-jakarta:7.22.0'
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
     runtimeOnly 'org.postgresql:postgresql'
@@ -74,7 +74,7 @@ dependencies {
     testImplementation 'org.springframework.security:spring-security-test'
     testImplementation 'io.zonky.test:embedded-database-spring-test:2.6.0'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-    runtimeAgent1 "org.springframework:spring-instrument:6.2.1"
+    runtimeAgent1 "org.springframework:spring-instrument:6.2.3"
     runtimeAgent2 "org.aspectj:aspectjweaver:1.9.22.1"
 }
 
@@ -153,6 +153,14 @@ tasks.register("bootRunOpenApi", BootRun) {
     group = "application"
     description = "Runs the Spring Boot application with the openapi profile"
     systemProperty "spring.profiles.active", "openapi"
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass.set("de.tum.cit.aet.helios.HeliosApplication")
+}
+
+tasks.register("makemigration", BootRun) {
+    group = "application"
+    description = "Proposes a new Flyway migration script"
+    systemProperty "spring.profiles.active", "migration"
     classpath = sourceSets.main.runtimeClasspath
     mainClass.set("de.tum.cit.aet.helios.HeliosApplication")
 }

@@ -17,9 +17,7 @@ const LoginPageExpired = lazy(() => import("./pages/LoginPageExpired"));
 const doMakeUserConfirmPassword = true;
 
 export default function KcPage(props: { kcContext: KcContext }) {
-    return (
-        <KcPageContextualized {...props} />
-    );
+    return <KcPageContextualized {...props} />;
 }
 
 function KcPageContextualized(props: { kcContext: KcContext }) {

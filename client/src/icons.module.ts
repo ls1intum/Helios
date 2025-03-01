@@ -43,6 +43,8 @@ import {
   IconLogin,
   IconLogout,
   IconPencil,
+  IconPinned,
+  IconPinnedOff,
   IconPlus,
   IconPoint,
   IconProgress,
@@ -123,6 +125,8 @@ const icons = {
   IconTrash,
   IconX,
   IconFileText,
+  IconPinned,
+  IconPinnedOff,
   IconLockPlus,
 };
 

@@ -56,7 +56,6 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
         } else {
             applyTheme(currentTheme ?? AppTheme.LIGHT);
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentTheme]);
 
     const setLightTheme = () => {

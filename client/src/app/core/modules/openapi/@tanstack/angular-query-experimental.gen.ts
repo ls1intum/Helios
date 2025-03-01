@@ -6,20 +6,27 @@ import type {
   UpdateWorkflowLabelData,
   GetGitRepoSettingsData,
   UpdateGitRepoSettingsData,
+  UpdateGitRepoSettingsResponse,
   UpdateWorkflowGroupsData,
   GetEnvironmentByIdData,
   UpdateEnvironmentData,
+  UpdateEnvironmentResponse,
   UnlockEnvironmentData,
+  UnlockEnvironmentResponse,
   LockEnvironmentData,
+  LockEnvironmentResponse,
   ExtendEnvironmentLockData,
+  ExtendEnvironmentLockResponse,
   CreateWorkflowGroupData,
   CreateWorkflowGroupResponse,
   GetAllReleaseCandidatesData,
   CreateReleaseCandidateData,
   CreateReleaseCandidateResponse,
   EvaluateData,
+  SetPrPinnedByNumberData,
   DeployToEnvironmentData,
   DeployToEnvironmentResponse,
+  SetBranchPinnedByRepositoryIdAndNameAndUserIdData,
   HealthCheckData,
   GetAllWorkflowsData,
   GetWorkflowByIdData,
@@ -68,7 +75,9 @@ import {
   getAllReleaseCandidates,
   createReleaseCandidate,
   evaluate,
+  setPrPinnedByNumber,
   deployToEnvironment,
+  setBranchPinnedByRepositoryIdAndNameAndUserId,
   healthCheck,
   getAllWorkflows,
   getWorkflowById,
@@ -163,7 +172,7 @@ export const getGitRepoSettingsOptions = (options: Options<GetGitRepoSettingsDat
 };
 
 export const updateGitRepoSettingsMutation = (options?: Partial<Options<UpdateGitRepoSettingsData>>) => {
-  const mutationOptions: MutationOptions<unknown, DefaultError, Options<UpdateGitRepoSettingsData>> = {
+  const mutationOptions: MutationOptions<UpdateGitRepoSettingsResponse, DefaultError, Options<UpdateGitRepoSettingsData>> = {
     mutationFn: async localOptions => {
       const { data } = await updateGitRepoSettings({
         ...options,
@@ -208,7 +217,7 @@ export const getEnvironmentByIdOptions = (options: Options<GetEnvironmentByIdDat
 };
 
 export const updateEnvironmentMutation = (options?: Partial<Options<UpdateEnvironmentData>>) => {
-  const mutationOptions: MutationOptions<unknown, DefaultError, Options<UpdateEnvironmentData>> = {
+  const mutationOptions: MutationOptions<UpdateEnvironmentResponse, DefaultError, Options<UpdateEnvironmentData>> = {
     mutationFn: async localOptions => {
       const { data } = await updateEnvironment({
         ...options,
@@ -222,7 +231,7 @@ export const updateEnvironmentMutation = (options?: Partial<Options<UpdateEnviro
 };
 
 export const unlockEnvironmentMutation = (options?: Partial<Options<UnlockEnvironmentData>>) => {
-  const mutationOptions: MutationOptions<unknown, DefaultError, Options<UnlockEnvironmentData>> = {
+  const mutationOptions: MutationOptions<UnlockEnvironmentResponse, DefaultError, Options<UnlockEnvironmentData>> = {
     mutationFn: async localOptions => {
       const { data } = await unlockEnvironment({
         ...options,
@@ -236,7 +245,7 @@ export const unlockEnvironmentMutation = (options?: Partial<Options<UnlockEnviro
 };
 
 export const lockEnvironmentMutation = (options?: Partial<Options<LockEnvironmentData>>) => {
-  const mutationOptions: MutationOptions<unknown, DefaultError, Options<LockEnvironmentData>> = {
+  const mutationOptions: MutationOptions<LockEnvironmentResponse, DefaultError, Options<LockEnvironmentData>> = {
     mutationFn: async localOptions => {
       const { data } = await lockEnvironment({
         ...options,
@@ -250,7 +259,7 @@ export const lockEnvironmentMutation = (options?: Partial<Options<LockEnvironmen
 };
 
 export const extendEnvironmentLockMutation = (options?: Partial<Options<ExtendEnvironmentLockData>>) => {
-  const mutationOptions: MutationOptions<unknown, DefaultError, Options<ExtendEnvironmentLockData>> = {
+  const mutationOptions: MutationOptions<ExtendEnvironmentLockResponse, DefaultError, Options<ExtendEnvironmentLockData>> = {
     mutationFn: async localOptions => {
       const { data } = await extendEnvironmentLock({
         ...options,
@@ -373,6 +382,37 @@ export const evaluateMutation = (options?: Partial<Options<EvaluateData>>) => {
   return mutationOptions;
 };
 
+export const setPrPinnedByNumberQueryKey = (options: Options<SetPrPinnedByNumberData>) => [createQueryKey('setPrPinnedByNumber', options)];
+
+export const setPrPinnedByNumberOptions = (options: Options<SetPrPinnedByNumberData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await setPrPinnedByNumber({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: setPrPinnedByNumberQueryKey(options),
+  });
+};
+
+export const setPrPinnedByNumberMutation = (options?: Partial<Options<SetPrPinnedByNumberData>>) => {
+  const mutationOptions: MutationOptions<unknown, DefaultError, Options<SetPrPinnedByNumberData>> = {
+    mutationFn: async localOptions => {
+      const { data } = await setPrPinnedByNumber({
+        ...options,
+        ...localOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
 export const deployToEnvironmentQueryKey = (options: Options<DeployToEnvironmentData>) => [createQueryKey('deployToEnvironment', options)];
 
 export const deployToEnvironmentOptions = (options: Options<DeployToEnvironmentData>) => {
@@ -394,6 +434,39 @@ export const deployToEnvironmentMutation = (options?: Partial<Options<DeployToEn
   const mutationOptions: MutationOptions<DeployToEnvironmentResponse, DefaultError, Options<DeployToEnvironmentData>> = {
     mutationFn: async localOptions => {
       const { data } = await deployToEnvironment({
+        ...options,
+        ...localOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const setBranchPinnedByRepositoryIdAndNameAndUserIdQueryKey = (options: Options<SetBranchPinnedByRepositoryIdAndNameAndUserIdData>) => [
+  createQueryKey('setBranchPinnedByRepositoryIdAndNameAndUserId', options),
+];
+
+export const setBranchPinnedByRepositoryIdAndNameAndUserIdOptions = (options: Options<SetBranchPinnedByRepositoryIdAndNameAndUserIdData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await setBranchPinnedByRepositoryIdAndNameAndUserId({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: setBranchPinnedByRepositoryIdAndNameAndUserIdQueryKey(options),
+  });
+};
+
+export const setBranchPinnedByRepositoryIdAndNameAndUserIdMutation = (options?: Partial<Options<SetBranchPinnedByRepositoryIdAndNameAndUserIdData>>) => {
+  const mutationOptions: MutationOptions<unknown, DefaultError, Options<SetBranchPinnedByRepositoryIdAndNameAndUserIdData>> = {
+    mutationFn: async localOptions => {
+      const { data } = await setBranchPinnedByRepositoryIdAndNameAndUserId({
         ...options,
         ...localOptions,
         throwOnError: true,

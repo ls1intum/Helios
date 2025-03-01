@@ -6,13 +6,18 @@ import type {
   GetGitRepoSettingsData,
   GetGitRepoSettingsResponse,
   UpdateGitRepoSettingsData,
+  UpdateGitRepoSettingsResponse,
   UpdateWorkflowGroupsData,
   GetEnvironmentByIdData,
   GetEnvironmentByIdResponse,
   UpdateEnvironmentData,
+  UpdateEnvironmentResponse,
   UnlockEnvironmentData,
+  UnlockEnvironmentResponse,
   LockEnvironmentData,
+  LockEnvironmentResponse,
   ExtendEnvironmentLockData,
+  ExtendEnvironmentLockResponse,
   CreateWorkflowGroupData,
   CreateWorkflowGroupResponse,
   GetAllReleaseCandidatesData,
@@ -20,8 +25,10 @@ import type {
   CreateReleaseCandidateData,
   CreateReleaseCandidateResponse,
   EvaluateData,
+  SetPrPinnedByNumberData,
   DeployToEnvironmentData,
   DeployToEnvironmentResponse,
+  SetBranchPinnedByRepositoryIdAndNameAndUserIdData,
   HealthCheckData,
   HealthCheckResponse,
   GetAllWorkflowsData,
@@ -108,7 +115,7 @@ export const getGitRepoSettings = <ThrowOnError extends boolean = false>(options
 };
 
 export const updateGitRepoSettings = <ThrowOnError extends boolean = false>(options: Options<UpdateGitRepoSettingsData, ThrowOnError>) => {
-  return (options?.client ?? client).put<unknown, unknown, ThrowOnError>({
+  return (options?.client ?? client).put<UpdateGitRepoSettingsResponse, unknown, ThrowOnError>({
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -137,7 +144,7 @@ export const getEnvironmentById = <ThrowOnError extends boolean = false>(options
 };
 
 export const updateEnvironment = <ThrowOnError extends boolean = false>(options: Options<UpdateEnvironmentData, ThrowOnError>) => {
-  return (options?.client ?? client).put<unknown, unknown, ThrowOnError>({
+  return (options?.client ?? client).put<UpdateEnvironmentResponse, unknown, ThrowOnError>({
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -148,21 +155,21 @@ export const updateEnvironment = <ThrowOnError extends boolean = false>(options:
 };
 
 export const unlockEnvironment = <ThrowOnError extends boolean = false>(options: Options<UnlockEnvironmentData, ThrowOnError>) => {
-  return (options?.client ?? client).put<unknown, unknown, ThrowOnError>({
+  return (options?.client ?? client).put<UnlockEnvironmentResponse, unknown, ThrowOnError>({
     ...options,
     url: '/api/environments/{id}/unlock',
   });
 };
 
 export const lockEnvironment = <ThrowOnError extends boolean = false>(options: Options<LockEnvironmentData, ThrowOnError>) => {
-  return (options?.client ?? client).put<unknown, unknown, ThrowOnError>({
+  return (options?.client ?? client).put<LockEnvironmentResponse, unknown, ThrowOnError>({
     ...options,
     url: '/api/environments/{id}/lock',
   });
 };
 
 export const extendEnvironmentLock = <ThrowOnError extends boolean = false>(options: Options<ExtendEnvironmentLockData, ThrowOnError>) => {
-  return (options?.client ?? client).put<unknown, unknown, ThrowOnError>({
+  return (options?.client ?? client).put<ExtendEnvironmentLockResponse, unknown, ThrowOnError>({
     ...options,
     url: '/api/environments/{id}/extend-lock',
   });
@@ -204,6 +211,13 @@ export const evaluate = <ThrowOnError extends boolean = false>(options: Options<
   });
 };
 
+export const setPrPinnedByNumber = <ThrowOnError extends boolean = false>(options: Options<SetPrPinnedByNumberData, ThrowOnError>) => {
+  return (options?.client ?? client).post<unknown, unknown, ThrowOnError>({
+    ...options,
+    url: '/api/pullrequests/{pr}/pin',
+  });
+};
+
 export const deployToEnvironment = <ThrowOnError extends boolean = false>(options: Options<DeployToEnvironmentData, ThrowOnError>) => {
   return (options?.client ?? client).post<DeployToEnvironmentResponse, unknown, ThrowOnError>({
     ...options,
@@ -212,6 +226,15 @@ export const deployToEnvironment = <ThrowOnError extends boolean = false>(option
       ...options?.headers,
     },
     url: '/api/deployments/deploy',
+  });
+};
+
+export const setBranchPinnedByRepositoryIdAndNameAndUserId = <ThrowOnError extends boolean = false>(
+  options: Options<SetBranchPinnedByRepositoryIdAndNameAndUserIdData, ThrowOnError>
+) => {
+  return (options?.client ?? client).post<unknown, unknown, ThrowOnError>({
+    ...options,
+    url: '/api/branches/repository/{repoId}/pin',
   });
 };
 

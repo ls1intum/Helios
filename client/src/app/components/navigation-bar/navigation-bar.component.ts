@@ -35,7 +35,8 @@ export class NavigationBarComponent {
   private permissionService = inject(PermissionService);
 
   // Toggle sidebar state
-  isExpanded = signal(this.loadSidebarState());
+  isExpanded = signal<boolean>(this.loadSidebarState());
+  isVisible = signal<boolean>(true);
 
   repositoryId = input.required<number | undefined>();
 
@@ -79,10 +80,15 @@ export class NavigationBarComponent {
     this.keycloakService.login();
   }
 
-  toggleSidebar() {
+  toggleSidebarExpansion() {
     const newState = !this.isExpanded();
     this.isExpanded.set(newState);
     this.saveSidebarState(newState);
+  }
+
+  toggleSidebarVisibility() {
+    const newState = !this.isVisible();
+    this.isVisible.set(newState);
   }
 
   private saveSidebarState(state: boolean) {

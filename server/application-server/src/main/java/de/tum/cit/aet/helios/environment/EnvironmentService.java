@@ -530,6 +530,9 @@ public class EnvironmentService {
         .collect(Collectors.toList());
   }
 
+  // TODO: Move this to a more appropriate location
+  //  since we have the same code in two places
+  //  below method (EnvironmentService) & canRedeploy method in DeploymentService
   private boolean canUnlock(Environment environment, long timeoutMinutes) {
     // Fetch the most recent deployment for the environment
     Optional<HeliosDeployment> latestDeployment =
@@ -541,6 +544,12 @@ public class EnvironmentService {
     }
 
     HeliosDeployment deployment = latestDeployment.get();
+
+    if (deployment.getStatus() == HeliosDeployment.Status.FAILED
+        || deployment.getStatus() == HeliosDeployment.Status.IO_ERROR
+        || deployment.getStatus() == HeliosDeployment.Status.UNKNOWN) {
+      return true;
+    }
 
     // Check if timeout has elapsed
     if (deployment.getStatus() == HeliosDeployment.Status.IN_PROGRESS

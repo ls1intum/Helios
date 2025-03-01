@@ -70,11 +70,9 @@ public class DeploymentService {
 
   public void deployToEnvironment(DeployRequest deployRequest) {
     validateDeployRequest(deployRequest);
+    validateEnvironmentAndPermissions(deployRequest.environmentId());
 
-    Environment.Type environmentType =
-        validateEnvironmentAndPermissions(deployRequest.environmentId());
-    String commitSha = determineCommitSha(deployRequest,
-        environmentType);
+    String commitSha = determineCommitSha(deployRequest);
 
     Environment environment = lockEnvironment(deployRequest.environmentId());
     Workflow deploymentWorkflow =
@@ -83,26 +81,14 @@ public class DeploymentService {
     // Set the PR associated with the deployment
     Optional<PullRequest> optionalPullRequest =
         pullRequestRepository.findOpenPrByBranchNameOrSha(
-            RepositoryContext.getRepositoryId(),
-            deployRequest.branchName(),
-            commitSha);
+            RepositoryContext.getRepositoryId(), deployRequest.branchName(), commitSha);
 
     HeliosDeployment heliosDeployment =
-        createHeliosDeployment(environment,
-            deployRequest,
-            commitSha,
-            optionalPullRequest);
-    Map<String, Object> workflowParams =
-        createWorkflowParams(environmentType,
-            deployRequest,
-            environment);
+        createHeliosDeployment(environment, deployRequest, commitSha, optionalPullRequest);
+    Map<String, Object> workflowParams = createWorkflowParams(deployRequest, environment);
 
     dispatchWorkflow(
-        environment,
-        deploymentWorkflow,
-        deployRequest,
-        workflowParams,
-        heliosDeployment);
+        environment, deploymentWorkflow, deployRequest, workflowParams, heliosDeployment);
   }
 
   private void validateDeployRequest(DeployRequest deployRequest) {
@@ -111,7 +97,7 @@ public class DeploymentService {
     }
   }
 
-  private Environment.Type validateEnvironmentAndPermissions(Long environmentId) {
+  private void validateEnvironmentAndPermissions(Long environmentId) {
     Environment.Type environmentType =
         this.environmentService
             .getEnvironmentTypeById(environmentId)
@@ -120,28 +106,18 @@ public class DeploymentService {
     if (!canDeployToEnvironment(environmentType)) {
       throw new SecurityException("Insufficient permissions to deploy to this environment");
     }
-
-    return environmentType;
   }
 
-  private String determineCommitSha(DeployRequest deployRequest, Environment.Type environmentType) {
+  private String determineCommitSha(DeployRequest deployRequest) {
     String commitSha = deployRequest.commitSha();
-
-    if (environmentType == Environment.Type.PRODUCTION
-        || environmentType == Environment.Type.STAGING) {
-      if (commitSha == null) {
-        throw new DeploymentException(
-            "Commit SHA should be provided for production/staging deployments");
-      }
-      return commitSha;
-    }
 
     return commitSha != null
         ? commitSha
         : this.branchService
-        .getBranchByName(deployRequest.branchName())
-        .orElseThrow(() -> new DeploymentException("Branch not found"))
-        .commitSha();
+            .getBranchByRepositoryIdAndName(
+                RepositoryContext.getRepositoryId(), deployRequest.branchName())
+            .orElseThrow(() -> new DeploymentException("Branch not found"))
+            .commitSha();
   }
 
   private Environment lockEnvironment(Long environmentId) {
@@ -153,13 +129,13 @@ public class DeploymentService {
 
     // Only attempt to lock if it's a test environment
     if (environment.getType() == Environment.Type.TEST) {
-      environment = this.environmentService
-          .lockEnvironment(environmentId)
-          .orElseThrow(() -> new DeploymentException("Environment was already locked"));
+      environment =
+          this.environmentService
+              .lockEnvironment(environmentId)
+              .orElseThrow(() -> new DeploymentException("Environment was already locked"));
     }
 
-    if (!canRedeploy(environment,
-        20)) {
+    if (!canRedeploy(environment, 20)) {
       throw new DeploymentException("Deployment is still in progress, please wait.");
     }
 
@@ -183,21 +159,13 @@ public class DeploymentService {
   }
 
   private Map<String, Object> createWorkflowParams(
-      Environment.Type environmentType, DeployRequest deployRequest, Environment environment) {
+      DeployRequest deployRequest, Environment environment) {
     Map<String, Object> workflowParams = new HashMap<>();
 
-    if (environmentType == Environment.Type.PRODUCTION
-        || environmentType == Environment.Type.STAGING) {
-      workflowParams.put("commit_sha",
-          deployRequest.commitSha());
-    } else if (environmentType == Environment.Type.TEST) {
-      workflowParams.put("triggered_by",
-          authService.getPreferredUsername());
-    }
-    workflowParams.put("branch_name",
-        deployRequest.branchName());
-    workflowParams.put("environment_name",
-        environment.getName());
+    workflowParams.put("branch_name", deployRequest.branchName());
+    workflowParams.put("environment_name", environment.getName());
+    workflowParams.put("commit_sha", deployRequest.commitSha());
+    workflowParams.put("triggered_by", authService.getPreferredUsername());
 
     return workflowParams;
   }
@@ -216,8 +184,7 @@ public class DeploymentService {
               || authService.hasRole("ROLE_MAINTAINER")
               || authService.hasRole("ROLE_ADMIN");
         }
-        default -> {
-        }
+        default -> {}
       }
     }
     return false;
@@ -243,11 +210,13 @@ public class DeploymentService {
     } catch (IOException e) {
       heliosDeployment.setStatus(HeliosDeployment.Status.IO_ERROR);
       heliosDeploymentRepository.save(heliosDeployment);
-      throw new DeploymentException("Failed to dispatch workflow due to IOException",
-          e);
+      throw new DeploymentException("Failed to dispatch workflow due to IOException", e);
     }
   }
 
+  // TODO: Move this to a more appropriate location
+  //  since we have the same code in two places
+  //  below method (DeploymentService) & canUnlock method in EnvironmentService
   private boolean canRedeploy(Environment environment, long timeoutMinutes) {
     // Fetch the most recent deployment for the environment
     Optional<HeliosDeployment> latestDeployment =
@@ -324,14 +293,11 @@ public class DeploymentService {
             .flatMap(
                 lock -> {
                   ActivityHistoryDto lockEvent =
-                      ActivityHistoryDto.fromEnvironmentLockHistory("LOCK_EVENT",
-                          lock);
+                      ActivityHistoryDto.fromEnvironmentLockHistory("LOCK_EVENT", lock);
                   if (lock.getUnlockedAt() != null) {
                     ActivityHistoryDto unlockEvent =
-                        ActivityHistoryDto.fromEnvironmentLockHistory("UNLOCK_EVENT",
-                            lock);
-                    return Stream.of(lockEvent,
-                        unlockEvent);
+                        ActivityHistoryDto.fromEnvironmentLockHistory("UNLOCK_EVENT", lock);
+                    return Stream.of(lockEvent, unlockEvent);
                   } else {
                     return Stream.of(lockEvent);
                   }
