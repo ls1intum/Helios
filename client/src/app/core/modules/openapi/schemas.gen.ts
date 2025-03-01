@@ -849,6 +849,34 @@ export const PullRequestInfoDtoSchema = {
   required: ['additions', 'commentsCount', 'deletions', 'headRefName', 'headRefRepoNameWithOwner', 'headSha', 'htmlUrl', 'id', 'isDraft', 'isMerged', 'number', 'state', 'title'],
 } as const;
 
+export const PageResponsePullRequestBaseInfoDtoSchema = {
+  type: 'object',
+  properties: {
+    content: {
+      type: 'array',
+      items: {
+        $ref: '#/components/schemas/PullRequestBaseInfoDto',
+      },
+    },
+    page: {
+      type: 'integer',
+      format: 'int32',
+    },
+    size: {
+      type: 'integer',
+      format: 'int32',
+    },
+    totalElements: {
+      type: 'integer',
+      format: 'int64',
+    },
+    totalPages: {
+      type: 'integer',
+      format: 'int32',
+    },
+  },
+} as const;
+
 export const EnvironmentLockHistoryDtoSchema = {
   type: 'object',
   properties: {

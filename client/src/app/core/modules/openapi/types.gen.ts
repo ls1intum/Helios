@@ -286,6 +286,14 @@ export type PullRequestInfoDto = {
   updatedAt?: string;
 };
 
+export type PageResponsePullRequestBaseInfoDto = {
+  content?: Array<PullRequestBaseInfoDto>;
+  page?: number;
+  size?: number;
+  totalElements?: number;
+  totalPages?: number;
+};
+
 export type EnvironmentLockHistoryDto = {
   id: number;
   lockedBy?: UserInfoDto;
@@ -923,6 +931,29 @@ export type GetPullRequestByRepositoryIdResponses = {
 };
 
 export type GetPullRequestByRepositoryIdResponse = GetPullRequestByRepositoryIdResponses[keyof GetPullRequestByRepositoryIdResponses];
+
+export type GetPaginatedPullRequestsData = {
+  body?: never;
+  path?: never;
+  query?: {
+    page?: number;
+    size?: number;
+    sortField?: string;
+    sortDirection?: string;
+    filterType?: 'ALL' | 'OPEN' | 'OPEN_READY_FOR_REVIEW' | 'DRAFT' | 'MERGED' | 'CLOSED' | 'USER_AUTHORED' | 'ASSIGNED_TO_USER' | 'REVIEW_REQUESTED';
+    searchTerm?: string;
+  };
+  url: '/api/pullrequests/paginated';
+};
+
+export type GetPaginatedPullRequestsResponses = {
+  /**
+   * OK
+   */
+  200: PageResponsePullRequestBaseInfoDto;
+};
+
+export type GetPaginatedPullRequestsResponse = GetPaginatedPullRequestsResponses[keyof GetPaginatedPullRequestsResponses];
 
 export type GetAllEnvironmentsData = {
   body?: never;

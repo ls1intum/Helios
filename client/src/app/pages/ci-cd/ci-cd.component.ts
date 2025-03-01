@@ -16,6 +16,7 @@ export class CiCdComponent implements OnInit {
   tabs = signal<{ label: string; id: string }[]>([
     { label: 'Pull Requests', id: 'pr' },
     { label: 'Branches', id: 'branch' },
+    { label: 'Paginated Table', id: 'paginated' },
   ]);
 
   activeTabId = this.tabs()[0].id;
