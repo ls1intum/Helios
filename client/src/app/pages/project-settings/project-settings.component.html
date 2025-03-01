@@ -2,8 +2,6 @@
   <app-page-heading [repositoryId]="repositoryId()">
     <div class="flex justify-between items-center w-full" heading>
       <div>Repository Settings</div>
-      <!-- TODO: Remove and replace by update handlers directly on dropdowns -->
-      <p-button label="Update Groups" size="small" severity="success" (click)="updateGroups()" [disabled]="isPending()" />
     </div>
     <span description> In the repository settings you can setup the repository as you like. You can add new groups, update existing groups, and assign workflows to groups. </span>
   </app-page-heading>
@@ -23,7 +21,21 @@
     </div>
 
     <!-- Grouped Workflows Panels -->
-    <h3 class="text-xl mb-2">Grouped Workflows</h3>
+    <div class="flex justify-between items-center mb-2">
+      <h3 class="text-xl">Grouped Workflows</h3>
+
+      <div class="flex items-center gap-2">
+        @if (hasUnsavedChanges()) {
+          <p-message severity="info">
+            <ng-template #icon>
+              <i-tabler name="exclamation-circle" />
+            </ng-template>
+            <span class="ml-2">Changes must be saved.</span>
+          </p-message>
+        }
+        <p-button label="Update Groups" severity="success" (click)="updateGroups()" [disabled]="isPending()" />
+      </div>
+    </div>
 
     <!-- Drag & Drop Hint -->
     @if (groupedWorkflowsArray().length > 0) {
@@ -145,10 +157,12 @@
     <div class="flex flex-col gap-2 p-2">
       <label class="font-semibold" for="groupNameInput">Group Name</label>
       <input id="groupNameInput" type="text" pInputText [(ngModel)]="newGroupName" class="w-full p-2 border border-gray-300 rounded" placeholder="Enter new group name" />
-
+      @if (groupNameExists()) {
+        <p-message severity="error" text="Group name already exists."></p-message>
+      }
       <div class="flex justify-end gap-2 mt-4">
         <button pButton label="Cancel" class="p-button-text" (click)="showAddGroupDialog = false"></button>
-        <button pButton label="Add" class="p-button-primary" (click)="addNewGroup()"></button>
+        <button pButton label="Add" class="p-button-primary" (click)="addNewGroup()" [disabled]="groupNameExists()"></button>
       </div>
     </div>
   </p-dialog>

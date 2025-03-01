@@ -30,6 +30,7 @@ import { MessageService } from 'primeng/api';
 import { SelectModule } from 'primeng/select';
 import { TooltipModule } from 'primeng/tooltip';
 import { TagModule } from 'primeng/tag';
+import { MessageModule } from 'primeng/message';
 
 @Component({
   selector: 'app-project-settings',
@@ -48,6 +49,7 @@ import { TagModule } from 'primeng/tag';
     DragDropModule,
     DividerModule,
     TagModule,
+    MessageModule,
   ],
   templateUrl: './project-settings.component.html',
 })
@@ -289,6 +291,7 @@ export class ProjectSettingsComponent {
       // new object => rerender
       this.workflowGroupsMap.set(updatedMap);
     }
+    this.updateGroups();
   }
 
   // Create a new empty group
@@ -304,6 +307,11 @@ export class ProjectSettingsComponent {
 
     this.createWorkflowGroupMutation.mutate({ path: { repositoryId: this.repositoryId() }, body: newGroup });
   }
+
+  groupNameExists = () => {
+    const newGroupNameTrimmed = this.newGroupName.trim();
+    return this.workflowGroups().some(group => group.name.toLowerCase() === newGroupNameTrimmed.toLowerCase());
+  };
 
   // Reset the dialog state
   resetDialog() {
@@ -365,5 +373,40 @@ export class ProjectSettingsComponent {
 
     // Reset drag state
     this.dragIndex = null;
+    this.updateGroups();
   }
+
+  hasUnsavedChanges = computed(() => {
+    // If we're still loading or updating data, no unsaved changes to show
+    if (this.isPending() || this.updateWorkflowGroupMutation.isPending()) {
+      return false;
+    }
+
+    // Convert local state to a comparable format (normalized to match server format)
+    const localGroups = this.localGroupedWorkflowsArray()
+      .map((group, index) => ({
+        name: group.groupName,
+        orderIndex: index,
+        memberships: group.workflows
+          .map(wf => ({
+            workflowId: wf.id,
+          }))
+          .sort((a, b) => a.workflowId - b.workflowId),
+      }))
+      .sort((a, b) => a.orderIndex - b.orderIndex);
+
+    // Get server groups in a simplified format (removing fields we don't care about for comparison)
+    const serverGroups = (this.groupsQuery.data() || [])
+      .map(group => ({
+        name: group.name,
+        orderIndex: group.orderIndex,
+        memberships: (group.memberships || [])
+          .map(m => ({
+            workflowId: m.workflowId,
+          }))
+          .sort((a, b) => a.workflowId - b.workflowId),
+      }))
+      .sort((a, b) => a.orderIndex - b.orderIndex);
+    return JSON.stringify(localGroups) !== JSON.stringify(serverGroups);
+  });
 }
