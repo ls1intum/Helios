@@ -90,7 +90,10 @@ export const routes: Routes = [
               {
                 path: 'paginated',
                 children: [
-                  { path: '', loadComponent: () => import('./components/pull-request-table-paginated/pull-request-table-paginated.component').then(m => m.PullRequestTablePaginatedComponent) },
+                  {
+                    path: '',
+                    loadComponent: () => import('./components/pull-request-table-paginated/pull-request-table-paginated.component').then(m => m.PullRequestTablePaginatedComponent),
+                  },
                   {
                     path: ':pullRequestNumber',
                     loadComponent: () => import('./pages/pull-request-details/pull-request-details.component').then(m => m.PullRequestDetailsComponent),
