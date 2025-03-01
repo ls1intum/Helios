@@ -74,18 +74,14 @@ public class EnvironmentController {
   @PutMapping("/{id}/lock")
   public ResponseEntity<?> lockEnvironment(@PathVariable Long id) {
     Optional<Environment> environment = environmentService.lockEnvironment(id);
-    return environment
-        .map(env -> ResponseEntity.ok(EnvironmentDto.fromEnvironment(env)))
-        .orElse(ResponseEntity.status(403).build());
+    return ResponseEntity.ok(EnvironmentDto.fromEnvironment(environment.get()));
   }
 
   @EnforceAtLeastWritePermission
   @PutMapping("/{id}/extend-lock")
   public ResponseEntity<?> extendEnvironmentLock(@PathVariable Long id) {
     Optional<Environment> environment = environmentService.extendEnvironmentLock(id);
-    return environment
-        .map(env -> ResponseEntity.ok(EnvironmentDto.fromEnvironment(env)))
-        .orElse(ResponseEntity.status(403).build());
+    return ResponseEntity.ok(EnvironmentDto.fromEnvironment(environment.get()));
   }
 
   @EnforceAtLeastMaintainer

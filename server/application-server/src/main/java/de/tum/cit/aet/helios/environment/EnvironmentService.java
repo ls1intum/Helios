@@ -15,9 +15,12 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
@@ -187,9 +190,12 @@ public class EnvironmentService {
 
     if (environment.isLocked()) {
       if (currentUser.equals(environment.getLockedBy())) {
+        // Already locked by current user, return the environment
         return Optional.of(environment);
       }
-      return Optional.empty();
+      // Locked by some other user
+      String msg = getLockedByAnotherUserErrorMessage(environment);
+      throw new EnvironmentException(msg);
     }
 
     environment.setLockedBy(currentUser);
@@ -287,8 +293,12 @@ public class EnvironmentService {
     }
 
     // Verify the environment is locked and by the current user
-    if (!environment.isLocked() || !currentUser.equals(environment.getLockedBy())) {
-      return Optional.empty();
+    if (!environment.isLocked()) {
+      throw new EnvironmentException("Environment is not locked. Cannot extend lock.");
+    } else if (!environment.getLockedBy().equals(currentUser)) {
+      // The Environment is locked, but by someone else
+      String msg = getLockedByAnotherUserErrorMessage(environment);
+      throw new EnvironmentException(msg);
     }
 
     // Calculate new expiration times based on current time
@@ -303,6 +313,32 @@ public class EnvironmentService {
     }
 
     return Optional.of(environment);
+  }
+
+  @NotNull
+  private static String getLockedByAnotherUserErrorMessage(Environment environment) {
+    String msg = "Environment is locked by another user.\n";
+    ZoneId localZone = ZoneId.systemDefault();
+
+    DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+    if (environment.getLockedBy() != null) {
+      msg += " (User: " + environment.getLockedBy().getLogin() + ")\n";
+    }
+    if (environment.getLockedAt() != null) {
+      OffsetDateTime lockedAtUtc = environment.getLockedAt(); // assume stored in UTC
+      OffsetDateTime lockedAtLocal = lockedAtUtc.atZoneSameInstant(localZone).toOffsetDateTime();
+      String lockedAtString = dateFormatter.format(lockedAtLocal);
+      msg += " (Locked at: " + lockedAtString + ")\n";
+    }
+    if (environment.getLockWillExpireAt() != null) {
+      OffsetDateTime expireAtUtc = environment.getLockWillExpireAt();
+      OffsetDateTime expireAtLocal = expireAtUtc.atZoneSameInstant(localZone).toOffsetDateTime();
+      String expireAtString = dateFormatter.format(expireAtLocal);
+      msg +=
+          " (Lock will expire at: " + expireAtString + ")";
+    }
+    return msg;
   }
 
   /**
