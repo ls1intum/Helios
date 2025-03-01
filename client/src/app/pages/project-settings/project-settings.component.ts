@@ -29,6 +29,7 @@ import { WorkflowDtoSchema } from '@app/core/modules/openapi/schemas.gen';
 import { MessageService } from 'primeng/api';
 import { SelectModule } from 'primeng/select';
 import { TooltipModule } from 'primeng/tooltip';
+import { TagModule } from 'primeng/tag';
 
 @Component({
   selector: 'app-project-settings',
@@ -46,6 +47,7 @@ import { TooltipModule } from 'primeng/tooltip';
     IconsModule,
     DragDropModule,
     DividerModule,
+    TagModule,
   ],
   templateUrl: './project-settings.component.html',
 })
@@ -162,13 +164,14 @@ export class ProjectSettingsComponent {
 
   workflows = computed(() => {
     // Sort the workflows
-    // Show "Active" workflows first, then by state alphabetically, withing the same state by ID
+    // Show "Active" workflows first, then everything else, then alphabetically by fileNameWithExtension, then by ID
     const workflows = this.fetchWorkflowsQuery.data() || [];
     workflows.sort((a, b) => {
-      // Example: "Active" workflows first, then by state alphabetically, then by ID
       if (a.state === 'ACTIVE' && b.state !== 'ACTIVE') return -1;
       if (a.state !== 'ACTIVE' && b.state === 'ACTIVE') return 1;
-      if (a.state !== b.state) return a.state.localeCompare(b.state);
+      if (a.fileNameWithExtension !== b.fileNameWithExtension) {
+        return (a.fileNameWithExtension ?? '').localeCompare(b.fileNameWithExtension ?? '');
+      }
       return a.id - b.id;
     });
     return workflows;

@@ -86,20 +86,20 @@
     <p-table [value]="workflows()" styleClass="w-full mb-6">
       <ng-template pTemplate="header">
         <tr>
-          <th>Workflow ID</th>
-          <th>Status</th>
           <th>File Name</th>
           <th>Workflow Name</th>
+          <th>Status</th>
           <th>Assign Group</th>
           <th>Label</th>
         </tr>
       </ng-template>
       <ng-template pTemplate="body" let-workflow>
         <tr>
-          <td>{{ workflow.id }}</td>
-          <td>{{ workflow.state }}</td>
           <td>{{ workflow.fileNameWithExtension }}</td>
           <td>{{ workflow.name }}</td>
+          <td>
+            <p-tag [severity]="workflow.state === 'ACTIVE' ? 'success' : 'secondary'">{{ workflow.state }}</p-tag>
+          </td>
           <td>
             <p-select
               [options]="groupDropdownOptions"
@@ -116,7 +116,15 @@
               (onClick)="storePreviousLabel(workflow)"
               (onChange)="onChangeLabel(workflow)"
               [appendTo]="'body'"
-            />
+            >
+              <ng-template #selectedItem let-selectedOption>
+                @if (selectedOption) {
+                  <div class="flex items-center gap-2">
+                    <div [class]="selectedOption === 'NONE' ? 'text-slate-400' : 'font-bold'">{{ selectedOption }}</div>
+                  </div>
+                }
+              </ng-template>
+            </p-select>
           </td>
         </tr>
       </ng-template>
