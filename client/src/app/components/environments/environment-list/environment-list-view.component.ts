@@ -67,7 +67,7 @@ import { ButtonGroupModule } from 'primeng/buttongroup';
   templateUrl: './environment-list-view.component.html',
 })
 export class EnvironmentListViewComponent implements OnDestroy {
-  private queryClient = inject(QueryClient);
+  private queryClient = inject<QueryClient>(QueryClient);
   private confirmationService = inject(ConfirmationService);
   private keycloakService = inject(KeycloakService);
   private datePipe = inject(DatePipe);
