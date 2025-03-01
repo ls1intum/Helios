@@ -375,38 +375,4 @@ export class ProjectSettingsComponent {
     this.dragIndex = null;
     this.updateGroups();
   }
-
-  hasUnsavedChanges = computed(() => {
-    // If we're still loading or updating data, no unsaved changes to show
-    if (this.isPending() || this.updateWorkflowGroupMutation.isPending()) {
-      return false;
-    }
-
-    // Convert local state to a comparable format (normalized to match server format)
-    const localGroups = this.localGroupedWorkflowsArray()
-      .map((group, index) => ({
-        name: group.groupName,
-        orderIndex: index,
-        memberships: group.workflows
-          .map(wf => ({
-            workflowId: wf.id,
-          }))
-          .sort((a, b) => a.workflowId - b.workflowId),
-      }))
-      .sort((a, b) => a.orderIndex - b.orderIndex);
-
-    // Get server groups in a simplified format (removing fields we don't care about for comparison)
-    const serverGroups = (this.groupsQuery.data() || [])
-      .map(group => ({
-        name: group.name,
-        orderIndex: group.orderIndex,
-        memberships: (group.memberships || [])
-          .map(m => ({
-            workflowId: m.workflowId,
-          }))
-          .sort((a, b) => a.workflowId - b.workflowId),
-      }))
-      .sort((a, b) => a.orderIndex - b.orderIndex);
-    return JSON.stringify(localGroups) !== JSON.stringify(serverGroups);
-  });
 }

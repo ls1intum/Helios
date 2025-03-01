@@ -23,18 +23,6 @@
     <!-- Grouped Workflows Panels -->
     <div class="flex justify-between items-center mb-2">
       <h3 class="text-xl">Grouped Workflows</h3>
-
-      <div class="flex items-center gap-2">
-        @if (hasUnsavedChanges()) {
-          <p-message severity="info">
-            <ng-template #icon>
-              <i-tabler name="exclamation-circle" />
-            </ng-template>
-            <span class="ml-2">Changes must be saved.</span>
-          </p-message>
-        }
-        <p-button label="Update Groups" severity="success" (click)="updateGroups()" [disabled]="isPending()" />
-      </div>
     </div>
 
     <!-- Drag & Drop Hint -->
