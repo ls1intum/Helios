@@ -77,7 +77,10 @@ public class PullRequestService {
 
     // Fetch pinned pull requests
     Specification<PullRequest> pinnedSpec = buildSpecification(pageRequest, currentUserId, true);
-    List<PullRequest> pinnedPullRequests = pullRequestRepository.findAll(pinnedSpec);
+    List<PullRequest> pinnedPullRequests = pullRequestRepository.findAll(
+        pinnedSpec,
+        Sort.by(Sort.Direction.DESC, "updatedAt")
+    );
     log.debug("Total Pinned PRs Found: {}", pinnedPullRequests.size());
 
     // Convert pinned PRs to DTOs
@@ -91,7 +94,8 @@ public class PullRequestService {
     }
 
     // Fetch non-pinned pull requests specification
-    Specification<PullRequest> nonPinnedSpec = buildSpecification(pageRequest, currentUserId, false);
+    Specification<PullRequest> nonPinnedSpec =
+        buildSpecification(pageRequest, currentUserId, false);
 
     // Calculate total elements
     long totalPinnedCount = pinnedDtos.size();
@@ -102,58 +106,51 @@ public class PullRequestService {
 
     // Calculate pagination details
     int pageSize = pageRequest.getSize();
+    int currentPage = pageRequest.getPage();
     int totalPages = (int) Math.ceil((double) totalElements / pageSize);
     log.debug("Pagination Details - Page Size: {}, Total Pages: {}", pageSize, totalPages);
 
     // Prepare the final list of PRs for the current page
     List<PullRequestBaseInfoDto> pageContent = new ArrayList<>();
 
-    // Determine the start and end indices for the current page
-    int startIndex = pageRequest.getPage() * pageSize;
-    int endIndex = Math.min(startIndex + pageSize, (int) totalElements);
-    log.debug("Page Indexing - Start Index: {}, End Index: {}", startIndex, endIndex);
+    // Calculate global start and end indices
+    int globalStartIndex = (currentPage - 1) * pageSize;
+    int globalEndIndex = Math.min(globalStartIndex + pageSize, (int) totalElements);
+    log.debug("Global Indexing - Start Index: {}, End Index: {}", globalStartIndex, globalEndIndex);
 
-    // Calculate pinned items to add
-    int pinnedItemsToAdd = Math.min(
-        Math.max(0, pageSize - Math.max(0, startIndex - (int) totalPinnedCount)),
-        pinnedDtos.size()
-    );
-    int pinnedStartIndex = Math.max(0, startIndex - (int) totalPinnedCount);
-    log.debug("Pinned Items - To Add: {}, Start Index: {}", pinnedItemsToAdd, pinnedStartIndex);
+    // Handle pinned PRs first
+    int pinnedItemsToAdd = 0;
+    int pinnedStartIndex = 0;
 
-    // Add pinned PRs that fall within this page
-    List<PullRequestBaseInfoDto> pinnedItemsForPage = pinnedDtos.subList(
-        pinnedStartIndex,
-        Math.min(pinnedStartIndex + pinnedItemsToAdd, pinnedDtos.size())
-    );
-    pageContent.addAll(pinnedItemsForPage);
-    log.debug("Added Pinned Items - Count: {}", pinnedItemsForPage.size());
-
-    if (log.isDebugEnabled()) {
-      log.debug("Pinned Items Added - IDs: {}",
-          pinnedItemsForPage.stream().map(PullRequestBaseInfoDto::id).collect(Collectors.toList()));
+    // Calculate how many pinned items should be on this page
+    if (globalStartIndex < totalPinnedCount) {
+      pinnedStartIndex = globalStartIndex;
+      pinnedItemsToAdd = Math.min(pageSize, pinnedDtos.size() - pinnedStartIndex);
     }
 
-    // If we need more items, fetch non-pinned PRs
+    log.debug("Pinned Items - To Add: {}, Start Index: {}", pinnedItemsToAdd, pinnedStartIndex);
+
+    // Add pinned PRs if applicable
+    if (pinnedItemsToAdd > 0) {
+      List<PullRequestBaseInfoDto> pinnedItemsForPage = pinnedDtos.subList(
+          pinnedStartIndex,
+          pinnedStartIndex + pinnedItemsToAdd
+      );
+      pageContent.addAll(pinnedItemsForPage);
+      log.debug("Added Pinned Items - Count: {}", pinnedItemsToAdd);
+    }
+
+    // Calculate remaining items needed from non-pinned PRs
     int remainingItemsNeeded = pageSize - pageContent.size();
     log.debug("Remaining Items Needed: {}", remainingItemsNeeded);
 
     if (remainingItemsNeeded > 0) {
-      // Calculate the page and offset for non-pinned PRs
-      int nonPinnedPageNumber = Math.max(0,
-          (startIndex >= totalPinnedCount)
-              ? (startIndex - (int) totalPinnedCount) / pageSize
-              : 0
-      );
-      log.debug("Non-Pinned Page Number: {}", nonPinnedPageNumber);
+      // Calculate non-pinned page number and offset
+      int nonPinnedPageNumber = globalStartIndex >= totalPinnedCount
+          ? (globalStartIndex - (int) totalPinnedCount) / pageSize
+          : 0;
 
-      // Calculate offset for non-pinned PRs
-      int nonPinnedOffset = Math.max(0,
-          (startIndex >= totalPinnedCount)
-              ? startIndex - (int) totalPinnedCount
-              : 0
-      );
-      log.debug("Non-Pinned Offset: {}", nonPinnedOffset);
+      log.debug("Non-Pinned Page Number: {}", nonPinnedPageNumber);
 
       // Create pageable for non-pinned PRs
       Pageable pageable = PageRequest.of(
@@ -161,11 +158,10 @@ public class PullRequestService {
           remainingItemsNeeded,
           Sort.by(Sort.Direction.DESC, "updatedAt")
       );
-      log.debug("Non-Pinned Pageable - Page: {}, Size: {}, Sort: updatedAt DESC",
-          nonPinnedPageNumber, remainingItemsNeeded);
 
       // Fetch non-pinned PRs
       Page<PullRequest> nonPinnedPage = pullRequestRepository.findAll(nonPinnedSpec, pageable);
+
       log.debug("Non-Pinned Page - Total Elements: {}, Content Size: {}",
           nonPinnedPage.getTotalElements(), nonPinnedPage.getContent().size());
 
@@ -174,26 +170,15 @@ public class PullRequestService {
           .collect(Collectors.toList());
 
       // Add non-pinned PRs to page content
-      if (!nonPinnedDtos.isEmpty()) {
-        // Determine the slice of non-pinned PRs to add
-        int fromIndex = 0;
-        int toIndex = Math.min(remainingItemsNeeded, nonPinnedDtos.size());
+      pageContent.addAll(nonPinnedDtos);
 
-        List<PullRequestBaseInfoDto> slicedNonPinnedDtos = nonPinnedDtos.subList(fromIndex, toIndex);
-        pageContent.addAll(slicedNonPinnedDtos);
-
-        log.debug("Added Non-Pinned Items - Count: {}", slicedNonPinnedDtos.size());
-        if (log.isDebugEnabled()) {
-          log.debug("Non-Pinned Items Added - IDs: {}",
-              slicedNonPinnedDtos.stream().map(PullRequestBaseInfoDto::id).collect(Collectors.toList()));
-        }
-      }
+      log.debug("Added Non-Pinned Items - Count: {}", nonPinnedDtos.size());
     }
 
     // Create and return the page response
     PageResponse<PullRequestBaseInfoDto> response = new PageResponse<>();
     response.setContent(pageContent);
-    response.setPage(pageRequest.getPage());
+    response.setPage(currentPage);
     response.setSize(pageSize);
     response.setTotalElements(totalElements);
     response.setTotalPages(totalPages);

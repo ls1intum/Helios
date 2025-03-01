@@ -24,7 +24,7 @@ public class PullRequestController {
 
   @GetMapping("/paginated")
   public ResponseEntity<PageResponse<PullRequestBaseInfoDto>> getPaginatedPullRequests(
-      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "1") int page,
       @RequestParam(defaultValue = "20") int size,
       @RequestParam(required = false) String sortField,
       @RequestParam(required = false) String sortDirection,
