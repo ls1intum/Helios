@@ -120,7 +120,7 @@ export class PaginatedTableService<T> {
   // Helper method to handle search term changes
   setSearchTerm(term: string | undefined): void {
     this.searchTerm.set(term || '');
-    this.page.set(0);
+    this.page.set(1);
   }
 
   // Clear all filters

@@ -114,7 +114,7 @@ public class PullRequestService {
     List<PullRequestBaseInfoDto> pageContent = new ArrayList<>();
 
     // Calculate global start and end indices
-    int globalStartIndex = currentPage * pageSize;
+    int globalStartIndex = (currentPage - 1) * pageSize;
     int globalEndIndex = Math.min(globalStartIndex + pageSize, (int) totalElements);
     log.debug("Global Indexing - Start Index: {}, End Index: {}", globalStartIndex, globalEndIndex);
 
