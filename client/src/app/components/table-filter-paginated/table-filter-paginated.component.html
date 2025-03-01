@@ -8,15 +8,7 @@
       }
     </p-button>
   }
-  <input
-    pInputText
-    [(ngModel)]="localSearchTerm"
-    (input)="onInput($event)"
-    type="text"
-    pSize="small"
-    placeholder="Search"
-    class="w-full"
-  />
+  <input pInputText [(ngModel)]="localSearchTerm" (input)="onInput($event)" type="text" pSize="small" placeholder="Search" class="w-full" />
 </div>
 
 <p-popover #op>
@@ -29,7 +21,7 @@
               {{ filter.name }}
             </li>
           } @else {
-            <li class="flex items-center gap-2 p-2 hover:bg-gray-300 cursor-pointer rounded-border" (click)="paginationService().setFilterType(filter.value)">
+            <li class="flex items-center gap-2 p-2 hover:bg-gray-300 cursor-pointer rounded-border" (click)="paginationService().setFilterType(filter.value); toggle($event)">
               {{ filter.name }}
             </li>
           }

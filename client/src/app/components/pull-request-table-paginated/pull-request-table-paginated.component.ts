@@ -2,7 +2,7 @@ import { MarkdownPipe } from '@app/core/modules/markdown/markdown.pipe';
 import { AvatarGroupModule } from 'primeng/avatargroup';
 import { TooltipModule } from 'primeng/tooltip';
 import { Component, computed, effect, inject, ViewChild } from '@angular/core';
-import {Table, TableModule, TablePageEvent} from 'primeng/table';
+import { Table, TableModule, TablePageEvent } from 'primeng/table';
 import { AvatarModule } from 'primeng/avatar';
 import { TagModule } from 'primeng/tag';
 import { injectMutation, injectQuery, QueryClient } from '@tanstack/angular-query-experimental';
@@ -10,11 +10,7 @@ import { IconsModule } from 'icons.module';
 import { SkeletonModule } from 'primeng/skeleton';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DateService } from '@app/core/services/date.service';
-import {
-  getPaginatedPullRequestsOptions,
-  getPaginatedPullRequestsQueryKey,
-  setPrPinnedByNumberMutation
-} from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
+import { getPaginatedPullRequestsOptions, getPaginatedPullRequestsQueryKey, setPrPinnedByNumberMutation } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { PullRequestBaseInfoDto } from '@app/core/modules/openapi';
 import { ButtonModule } from 'primeng/button';
 import { DividerModule } from 'primeng/divider';
@@ -25,8 +21,8 @@ import { TimeAgoPipe } from '@app/pipes/time-ago.pipe';
 import { MessageService } from 'primeng/api';
 import { WorkflowRunStatusComponent } from '@app/components/workflow-run-status-component/workflow-run-status.component';
 import { PullRequestStatusIconComponent } from '@app/components/pull-request-status-icon/pull-request-status-icon.component';
-import {PAGINATED_FILTER_OPTIONS_TOKEN, PaginatedTableService} from '@app/core/services/paginated-table.service';
-import {TableFilterPaginatedComponent} from '@app/components/table-filter-paginated/table-filter-paginated.component';
+import { PAGINATED_FILTER_OPTIONS_TOKEN, PaginatedTableService } from '@app/core/services/paginated-table.service';
+import { TableFilterPaginatedComponent } from '@app/components/table-filter-paginated/table-filter-paginated.component';
 
 // Define filter options for pull requests
 const PR_FILTER_OPTIONS = [
@@ -38,9 +34,8 @@ const PR_FILTER_OPTIONS = [
   { name: 'Closed pull requests', value: 'CLOSED' },
   { name: 'Your pull requests', value: 'USER_AUTHORED' },
   { name: 'Everything assigned to you', value: 'ASSIGNED_TO_USER' },
-  { name: 'Everything that requests a review by you', value: 'REVIEW_REQUESTED' }
+  { name: 'Everything that requests a review by you', value: 'REVIEW_REQUESTED' },
 ];
-
 
 @Component({
   selector: 'app-pull-request-table-paginated',
@@ -63,10 +58,7 @@ const PR_FILTER_OPTIONS = [
     WorkflowRunStatusComponent,
     PullRequestStatusIconComponent,
   ],
-  providers: [
-    PaginatedTableService,
-    { provide: PAGINATED_FILTER_OPTIONS_TOKEN, useValue: PR_FILTER_OPTIONS }
-  ],
+  providers: [PaginatedTableService, { provide: PAGINATED_FILTER_OPTIONS_TOKEN, useValue: PR_FILTER_OPTIONS }],
   templateUrl: './pull-request-table-paginated.component.html',
   styles: [
     `
@@ -84,6 +76,7 @@ const PR_FILTER_OPTIONS = [
 })
 export class PullRequestTablePaginatedComponent {
   @ViewChild('table') table!: Table;
+  @ViewChild(TableFilterPaginatedComponent) filterComponent!: TableFilterPaginatedComponent;
 
   dateService = inject(DateService);
   messageService = inject(MessageService);
@@ -107,8 +100,8 @@ export class PullRequestTablePaginatedComponent {
         sortField: paginationState.sortField,
         sortDirection: paginationState.sortDirection,
         filterType: filterType,
-        searchTerm: paginationState.searchTerm
-      }
+        searchTerm: paginationState.searchTerm,
+      },
     });
   });
 
@@ -168,7 +161,7 @@ export class PullRequestTablePaginatedComponent {
     event.stopPropagation();
   }
 
-  onPage(event : TablePageEvent) {
+  onPage(event: TablePageEvent) {
     console.log('Page event received:', event);
 
     // Update the pagination state
@@ -183,6 +176,7 @@ export class PullRequestTablePaginatedComponent {
   }
 
   clearFilters() {
+    this.filterComponent.clearSearch();
     this.paginationService.clearFilters(this.table);
   }
 }

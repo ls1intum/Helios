@@ -1,5 +1,5 @@
-import {computed, effect, inject, Injectable, InjectionToken, signal} from '@angular/core';
-import {Table, TablePageEvent} from 'primeng/table';
+import { computed, effect, inject, Injectable, InjectionToken, signal } from '@angular/core';
+import { Table, TablePageEvent } from 'primeng/table';
 import { TreeTable } from 'primeng/treetable';
 
 export type PaginatedTable = TreeTable | Table;
@@ -28,7 +28,7 @@ export class PaginatedTableService<T> {
   filterOptions = inject<PaginatedFilterOption[]>(PAGINATED_FILTER_OPTIONS_TOKEN);
 
   // Pagination state
-  page = signal(0);
+  page = signal(1);
   size = signal(20);
   sortField = signal<string | undefined>(undefined);
   sortDirection = signal<string | undefined>('desc');
@@ -44,7 +44,7 @@ export class PaginatedTableService<T> {
     sortField: this.sortField(),
     sortDirection: this.sortDirection(),
     filterType: this.activeFilter().value,
-    searchTerm: this.searchTerm() || undefined
+    searchTerm: this.searchTerm() || undefined,
   }));
 
   constructor() {
@@ -136,11 +136,11 @@ export class PaginatedTableService<T> {
   }
 
   // PrimeNG table event handlers
-  onPage(event : TablePageEvent) {
+  onPage(event: TablePageEvent) {
     console.log('Page event received:', event);
 
     // Calculate the actual page number from first and rows
-    const calculatedPage = event.rows > 0 ? Math.floor(event.first / event.rows) : 0;
+    const calculatedPage = event.rows > 0 ? Math.floor(event.first / event.rows) + 1 : 1;
 
     // Update both size and page
     this.size.set(event.rows);

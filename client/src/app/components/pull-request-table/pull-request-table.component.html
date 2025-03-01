@@ -1,20 +1,5 @@
 @if (query.isPending() || query.isError()) {
   <p-table [value]="[1, 2, 3, 4, 5]">
-    <ng-template pTemplate="header">
-      <tr>
-        <th>
-          <div class="flex items-center gap-2">
-            <p-button type="button" outlined disabled size="small">
-              <i-tabler name="filter-plus" />
-            </p-button>
-            <input pInputText type="text" pSize="small" placeholder="Search" class="w-full" disabled />
-          </div>
-        </th>
-        <th class="hidden lg:table-cell">Assignee</th>
-        <th class="hidden lg:table-cell">Reviewers</th>
-        <th></th>
-      </tr>
-    </ng-template>
     <ng-template pTemplate="body">
       <tr>
         <td>
