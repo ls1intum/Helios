@@ -127,12 +127,7 @@ export class PaginatedTableService<T> {
   clearFilters(table: PaginatedTable): void {
     this.activeFilter.set(this.filterOptions[0]);
     this.searchTerm.set('');
-    this.page.set(0);
-
-    // If we have a table reference, reset its state too
-    if (table) {
-      table.first = 0;
-    }
+    this.page.set(1);
   }
 
   // PrimeNG table event handlers
@@ -152,17 +147,6 @@ export class PaginatedTableService<T> {
   onSort(event: any) {
     this.sortField.set(event.field);
     this.sortDirection.set(event.order === 1 ? 'asc' : 'desc');
-  }
-
-  // Input handler for search (similar to your existing code)
-  onInput(table: PaginatedTable, event: Event): void {
-    const value = (event.target as HTMLInputElement).value;
-    this.searchTerm.set(value);
-    this.page.set(0);
-
-    if (table) {
-      table.first = 0;
-    }
   }
 
   // Check if any filter is active (other than the default)
