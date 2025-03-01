@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
@@ -88,10 +89,12 @@ public class PullRequestService {
 
     // Calculate how many regular (non-pinned) items we need for this page
     int remainingItemsNeeded = pageRequest.getSize();
+    log.debug("Remaining items needed: {}", remainingItemsNeeded);
     int offset = 0;
 
     // If we're on the first page, adjust for pinned items
     if (pageRequest.getPage() == 0) {
+      log.debug("Adjusting for pinned items on first page");
       remainingItemsNeeded -= pinnedDtos.size();
       if (remainingItemsNeeded < 0) {
         remainingItemsNeeded = 0; // Ensure we don't get negative
@@ -117,12 +120,16 @@ public class PullRequestService {
         return response;
       }
     } else {
+      log.debug("Adjusting for pinned items on subsequent pages");
       // For pages after the first, we need to adjust the offset to account for pinned items
       offset = (pageRequest.getPage() * pageRequest.getSize()) - pinnedDtos.size();
-      if (offset < 0) {
+      log.debug("Adjusted offset: {}", offset);
+      if (offset >= 0) {
+        log.debug("Returning pinned PRs only (page 1)");
         // We're still paginating through the pinned items
         int pinnedStartIndex = Math.abs(offset);
         int pinnedEndIndex = Math.min(pinnedStartIndex + pageRequest.getSize(), pinnedDtos.size());
+        log.debug("Pinned start index: {}, end index: {}", pinnedStartIndex, pinnedEndIndex);
         PageResponse<PullRequestBaseInfoDto> response = new PageResponse<>();
         response.setContent(pinnedDtos.subList(pinnedStartIndex, pinnedEndIndex));
         response.setPage(pageRequest.getPage());
@@ -137,7 +144,10 @@ public class PullRequestService {
         return response;
       }
       offset = Math.max(0, offset);
+      log.debug("Adjusted offset: {}", offset);
     }
+
+    log.debug("Remaining items needed after adjusting for pinned: {}", remainingItemsNeeded);
 
     // Only get non-pinned PRs if we need them (remainingItemsNeeded > 0)
     List<PullRequestBaseInfoDto> nonPinnedDtos = new ArrayList<>();
@@ -153,12 +163,12 @@ public class PullRequestService {
       if (pageRequest.getSortField() != null && !pageRequest.getSortField().isEmpty()) {
         Sort.Direction direction = "desc".equalsIgnoreCase(pageRequest.getSortDirection())
             ? Sort.Direction.DESC : Sort.Direction.ASC;
-        pageable = org.springframework.data.domain.PageRequest.of(
+        pageable = PageRequest.of(
             offset / Math.max(1, remainingItemsNeeded),
             remainingItemsNeeded, Sort.by(direction, pageRequest.getSortField()));
       } else {
         // Default sort by updatedAt
-        pageable = org.springframework.data.domain.PageRequest.of(
+        pageable = PageRequest.of(
             offset / Math.max(1, remainingItemsNeeded),
             remainingItemsNeeded, Sort.by(Sort.Direction.DESC, "updatedAt"));
       }
@@ -166,6 +176,9 @@ public class PullRequestService {
       // Get page of non-pinned PRs
       Page<PullRequest> nonPinnedPage = pullRequestRepository.findAll(nonPinnedSpec, pageable);
       totalNonPinned = nonPinnedPage.getTotalElements();
+
+      log.debug("Found {} non-pinned PRs matching filter (total: {})",
+          nonPinnedPage.getContent().size(), totalNonPinned);
 
       // Convert to DTOs
       nonPinnedDtos = nonPinnedPage.getContent().stream()
