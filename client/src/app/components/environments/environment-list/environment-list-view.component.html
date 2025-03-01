@@ -114,8 +114,8 @@
                         <i-tabler name="lock-open" class="w-4 h-4 flex-shrink-0 text-white" />
                       </div>
                     </p-button>
-                    <p-button styleClass="p-button-secondary" (click)="extendLock($event, environment)">
-                      <i-tabler name="lock-plus" class="w-4 h-4 flex-shrink-0" />
+                    <p-button outlined (click)="extendLock($event, environment)" [pTooltip]="'Extend my lock expiration'" tooltipPosition="top">
+                      <i-tabler name="lock-plus" class="w-4 h-4 flex-shrink-0 text-green-700" />
                     </p-button>
                   }
                 }

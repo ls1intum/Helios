@@ -16,7 +16,7 @@ import {
 import { PermissionService } from '@app/core/services/permission.service';
 import { injectMutation, injectQuery, QueryClient } from '@tanstack/angular-query-experimental';
 import { IconsModule } from 'icons.module';
-import { ConfirmationService } from 'primeng/api';
+import { ConfirmationService, MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { TagModule } from 'primeng/tag';
@@ -74,6 +74,7 @@ export class EnvironmentListViewComponent implements OnDestroy {
   private permissionService = inject(PermissionService);
   private currentTime = signal(Date.now());
   private intervalId: number | undefined;
+  private messageService = inject(MessageService);
 
   showLatestDeployment: boolean = true;
 
@@ -102,6 +103,7 @@ export class EnvironmentListViewComponent implements OnDestroy {
       this.queryClient.invalidateQueries({ queryKey: getAllEnvironmentsQueryKey() });
       this.queryClient.invalidateQueries({ queryKey: getAllEnabledEnvironmentsQueryKey() });
       this.queryClient.invalidateQueries({ queryKey: getEnvironmentsByUserLockingQueryKey() });
+      this.messageService.add({ severity: 'success', summary: 'Extend Lock', detail: 'Lock was extended successfully' });
     },
   }));
 
