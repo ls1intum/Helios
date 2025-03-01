@@ -92,10 +92,3 @@ export const appConfig: ApplicationConfig = {
     }),
   ],
 };
-
-export default {
-  toggleswitch: {
-    checked: { background: '#FFC107' },
-    border: { color: '#FFC107' },
-  },
-};

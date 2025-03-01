@@ -87,8 +87,8 @@ export class EnvironmentEditFormComponent implements OnInit {
 
   workflowOptions = computed(() => {
     const workflows = this.workflowsQuery.data() || [];
-    workflows.filter(w => w.state === 'ACTIVE').sort();
-    return workflows.map(w => ({ name: w.name, file: w.fileNameWithExtension, value: w }));
+    workflows.filter(w => w.state === 'ACTIVE');
+    return workflows.map(w => ({ name: w.name, file: w.fileNameWithExtension || '', value: w })).sort((a, b) => a.file.localeCompare(b.file));
   });
 
   mutateEnvironment = injectMutation(() => ({

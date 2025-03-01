@@ -2,7 +2,7 @@
   Loading
 } @else if (environmentForm) {
   <div>
-    <form [formGroup]="environmentForm" (ngSubmit)="submitForm()" class="flex flex-col gap-6 max-w-6xl">
+    <form [formGroup]="environmentForm" (ngSubmit)="submitForm()" class="flex flex-col gap-6 max-w-6xl m-auto">
       <!-- Two-column section container -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Left Column (Environment Configuration) -->
@@ -165,7 +165,7 @@
         <div>
           <h3 class="font-medium">Save all configuration changes</h3>
         </div>
-        <p-button type="submit" [disabled]="environmentForm.invalid">Update</p-button>
+        <p-button type="submit" size="large" [disabled]="environmentForm.invalid" class="px-4"><span class="px-2">Update</span></p-button>
       </div>
     </form>
   </div>
