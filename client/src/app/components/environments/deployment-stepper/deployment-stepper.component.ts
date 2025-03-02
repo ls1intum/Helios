@@ -114,17 +114,27 @@ export class DeploymentStepperComponent implements OnInit, OnDestroy {
     return remaining > 0 ? `${minutes}m ${seconds}s remaining` : '0m 0s remaining';
   }
 
-  getTotalTimeEstimate(): string {
+  getTotalTimeEstimate(index: number): string {
     if (!this.deployment || !this.deployment.createdAt) return '';
     const start = new Date(this.deployment.createdAt).getTime();
-    const elapsedMs = this.time - start > 0 ? this.time - start : 0;
-    const elapsedMinutes = elapsedMs / 60000;
-
-    const totalEstimated = this.estimatedTimes().REQUESTED + this.estimatedTimes().PENDING + this.estimatedTimes().IN_PROGRESS;
-    const remaining = totalEstimated - elapsedMinutes;
-    const minutes = Math.floor(remaining);
-    const seconds = Math.floor((remaining - minutes) * 60);
-    return remaining > 0 ? `${minutes}m ${seconds}s` : '0m 0s';
+    const elapsedMinutes = (this.time - start) / 60000;
+    let cumulative = 0;
+    for (let i = 0; i < 3; i++) {
+      const est = this.estimatedTimes()[this.steps[i] as keyof EstimatedTimes];
+      if (this.getStepStatus(i) !== 'completed') {
+        cumulative += est;
+      }
+      if (i === index) {
+        if (this.getStepStatus(i) === 'completed') {
+          return '';
+        }
+        const remaining = cumulative - elapsedMinutes;
+        const minutes = Math.floor(remaining);
+        const seconds = Math.floor((remaining - minutes) * 60);
+        return remaining > 0 ? `${minutes}m ${seconds}s` : '';
+      }
+    }
+    return '';
   }
 
   getStepDisplayName(step: string): string {
