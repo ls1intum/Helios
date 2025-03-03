@@ -123,29 +123,6 @@ export type WorkflowDto = {
   updatedAt?: string;
 };
 
-export type TestCaseDto = {
-  id: number;
-  name: string;
-  className: string;
-  status: 'PASSED' | 'FAILED' | 'ERROR' | 'SKIPPED';
-  time: number;
-  message?: string;
-  stackTrace?: string;
-  errorType?: string;
-};
-
-export type TestSuiteDto = {
-  id: number;
-  name: string;
-  timestamp: string;
-  tests: number;
-  failures: number;
-  errors: number;
-  skipped: number;
-  time: number;
-  testCases: Array<TestCaseDto>;
-};
-
 export type WorkflowRunDto = {
   id: number;
   name: string;
@@ -171,12 +148,40 @@ export type WorkflowRunDto = {
   htmlUrl: string;
   label: 'NONE' | 'DEPLOY_TEST_SERVER' | 'DEPLOY_STAGING_SERVER' | 'DEPLOY_PRODUCTION_SERVER' | 'TEST';
   testProcessingStatus?: 'PROCESSING' | 'PROCESSED' | 'FAILED';
-  testSuites: Array<TestSuiteDto>;
 };
 
 export type GitHubRepositoryRoleDto = {
   permission?: 'ADMIN' | 'WRITE' | 'READ' | 'NONE';
   roleName?: string;
+};
+
+export type TestCaseDto = {
+  id: number;
+  name: string;
+  className: string;
+  status: 'PASSED' | 'FAILED' | 'ERROR' | 'SKIPPED';
+  previousStatusProvider?: 'PASSED' | 'FAILED' | 'ERROR' | 'SKIPPED';
+  time: number;
+  message?: string;
+  stackTrace?: string;
+  errorType?: string;
+};
+
+export type TestResultsDto = {
+  testSuites: Array<TestSuiteDto>;
+  isProcessing?: boolean;
+};
+
+export type TestSuiteDto = {
+  id: number;
+  name: string;
+  timestamp: string;
+  tests: number;
+  failures: number;
+  errors: number;
+  skipped: number;
+  time: number;
+  testCases: Array<TestCaseDto>;
 };
 
 export type BranchInfoDto = {
@@ -696,9 +701,7 @@ export type GetLatestWorkflowRunsByPullRequestIdAndHeadCommitData = {
   path: {
     pullRequestId: number;
   };
-  query?: {
-    includeTestSuites?: boolean;
-  };
+  query?: never;
   url: '/api/workflows/pr/{pullRequestId}';
 };
 
@@ -717,7 +720,6 @@ export type GetLatestWorkflowRunsByBranchAndHeadCommitData = {
   path?: never;
   query: {
     branch: string;
-    includeTestSuites?: boolean;
   };
   url: '/api/workflows/branch';
 };
@@ -746,6 +748,42 @@ export type GetUserPermissionsResponses = {
 };
 
 export type GetUserPermissionsResponse = GetUserPermissionsResponses[keyof GetUserPermissionsResponses];
+
+export type GetLatestTestResultsByPullRequestIdData = {
+  body?: never;
+  path: {
+    pullRequestId: number;
+  };
+  query?: never;
+  url: '/api/tests/pr/{pullRequestId}';
+};
+
+export type GetLatestTestResultsByPullRequestIdResponses = {
+  /**
+   * OK
+   */
+  200: TestResultsDto;
+};
+
+export type GetLatestTestResultsByPullRequestIdResponse = GetLatestTestResultsByPullRequestIdResponses[keyof GetLatestTestResultsByPullRequestIdResponses];
+
+export type GetLatestTestResultsByBranchData = {
+  body?: never;
+  path?: never;
+  query: {
+    branch: string;
+  };
+  url: '/api/tests/branch';
+};
+
+export type GetLatestTestResultsByBranchResponses = {
+  /**
+   * OK
+   */
+  200: TestResultsDto;
+};
+
+export type GetLatestTestResultsByBranchResponse = GetLatestTestResultsByBranchResponses[keyof GetLatestTestResultsByBranchResponses];
 
 export type GetGroupsWithWorkflowsData = {
   body?: never;

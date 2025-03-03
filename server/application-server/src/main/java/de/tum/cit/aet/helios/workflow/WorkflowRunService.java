@@ -1,6 +1,7 @@
 package de.tum.cit.aet.helios.workflow;
 
 import de.tum.cit.aet.helios.branch.BranchRepository;
+import de.tum.cit.aet.helios.filters.RepositoryContext;
 import de.tum.cit.aet.helios.pullrequest.PullRequestRepository;
 import jakarta.transaction.Transactional;
 import java.util.Comparator;
@@ -43,7 +44,7 @@ public class WorkflowRunService {
   }
 
   public List<WorkflowRunDto> getLatestWorkflowRunsByPullRequestIdAndHeadCommit(
-      Long pullRequestId, boolean includeTestSuites) {
+      Long pullRequestId) {
 
     var pullRequest = pullRequestRepository.findById(pullRequestId).orElse(null);
     if (pullRequest == null) {
@@ -52,16 +53,10 @@ public class WorkflowRunService {
     }
 
     var runs =
-        includeTestSuites
-            ? workflowRunRepository.findByPullRequestsIdAndHeadShaWithTestSuites(
-                pullRequestId, pullRequest.getHeadSha())
-            : workflowRunRepository.findByPullRequestsIdAndHeadSha(
-                pullRequestId, pullRequest.getHeadSha());
+        workflowRunRepository.findByPullRequestsIdAndHeadSha(
+            pullRequestId, pullRequest.getHeadSha());
 
-    var latestRuns =
-        getLatestWorkflowRuns(runs)
-            .map(wr -> WorkflowRunDto.fromWorkflowRun(wr, includeTestSuites))
-            .toList();
+    var latestRuns = getLatestWorkflowRuns(runs).map(WorkflowRunDto::fromWorkflowRun).toList();
 
     // Combine pull request workflow runs with branch workflows runs if we are on the same
     // repository
@@ -70,17 +65,16 @@ public class WorkflowRunService {
         .equals(pullRequest.getRepository().getNameWithOwner())) {
       return Stream.concat(
               latestRuns.stream(),
-              getLatestWorkflowRunsByBranchAndHeadCommitSha(
-                  pullRequest.getHeadRefName(), includeTestSuites)
-                  .stream())
+              getLatestWorkflowRunsByBranchAndHeadCommitSha(pullRequest.getHeadRefName()).stream())
           .collect(Collectors.toList());
     }
 
     return latestRuns;
   }
 
-  public List<WorkflowRunDto> getLatestWorkflowRunsByBranchAndHeadCommitSha(
-      String branchName, boolean includeTestSuites) {
+  public List<WorkflowRunDto> getLatestWorkflowRunsByBranchAndHeadCommitSha(String branchName) {
+    final Long repositoryId = RepositoryContext.getRepositoryId();
+
     var branch = branchRepository.findByName(branchName).orElse(null);
     if (branch == null) {
       log.error("Branch with name {} not found!", branchName);
@@ -88,13 +82,12 @@ public class WorkflowRunService {
     }
 
     var runs =
-        includeTestSuites
-            ? workflowRunRepository.findByHeadBranchAndHeadShaAndPullRequestsIsNullWithTestSuites(
-                branchName, branch.getCommitSha())
-            : workflowRunRepository.findByHeadBranchAndHeadShaAndPullRequestsIsNull(
-                branchName, branch.getCommitSha());
+        workflowRunRepository
+            .findByHeadBranchAndHeadShaAndRepositoryRepositoryIdAndPullRequestsIsNull(
+                branchName, branch.getCommitSha(), repositoryId);
+
     var latestRuns = getLatestWorkflowRuns(runs);
 
-    return latestRuns.map(wr -> WorkflowRunDto.fromWorkflowRun(wr, includeTestSuites)).toList();
+    return latestRuns.map(WorkflowRunDto::fromWorkflowRun).toList();
   }
 }
