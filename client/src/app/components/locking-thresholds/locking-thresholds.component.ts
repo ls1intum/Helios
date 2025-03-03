@@ -37,7 +37,6 @@ export class LockingThresholdsComponent {
   fetchGitRepoThresholdsQuery = injectQuery(() => ({
     ...getGitRepoSettingsOptions({ path: { repositoryId: this.repositoryId() } }),
     enabled: () => !!this.repositoryId(),
-    refetchOnWindowFocus: false,
   }));
 
   mutateGitRepoSettings = injectMutation(() => ({

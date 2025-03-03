@@ -161,7 +161,6 @@ export class ProjectSettingsComponent {
   fetchWorkflowsQuery = injectQuery(() => ({
     ...getWorkflowsByRepositoryIdOptions({ path: { repositoryId: this.repositoryId() } }),
     enabled: () => !!this.repositoryId(),
-    refetchOnWindowFocus: false,
   }));
 
   workflows = computed(() => {

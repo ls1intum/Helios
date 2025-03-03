@@ -82,7 +82,6 @@ export class EnvironmentEditFormComponent implements OnInit {
   workflowsQuery = injectQuery(() => ({
     ...getWorkflowsByRepositoryIdOptions({ path: { repositoryId: this.repositoryId() } }),
     enabled: () => !!this.repositoryId(),
-    refetchOnWindowFocus: false,
   }));
 
   workflowOptions = computed(() => {
