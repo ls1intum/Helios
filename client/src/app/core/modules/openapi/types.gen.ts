@@ -160,7 +160,7 @@ export type TestCaseDto = {
   name: string;
   className: string;
   status: 'PASSED' | 'FAILED' | 'ERROR' | 'SKIPPED';
-  previousStatusProvider?: 'PASSED' | 'FAILED' | 'ERROR' | 'SKIPPED';
+  previousStatus?: 'PASSED' | 'FAILED' | 'ERROR' | 'SKIPPED';
   time: number;
   message?: string;
   stackTrace?: string;

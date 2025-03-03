@@ -1367,7 +1367,7 @@ components:
           - FAILED
           - ERROR
           - SKIPPED
-        previousStatusProvider:
+        previousStatus:
           type: string
           enum:
           - PASSED

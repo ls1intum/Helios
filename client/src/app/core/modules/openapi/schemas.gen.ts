@@ -460,7 +460,7 @@ export const TestCaseDtoSchema = {
       type: 'string',
       enum: ['PASSED', 'FAILED', 'ERROR', 'SKIPPED'],
     },
-    previousStatusProvider: {
+    previousStatus: {
       type: 'string',
       enum: ['PASSED', 'FAILED', 'ERROR', 'SKIPPED'],
     },

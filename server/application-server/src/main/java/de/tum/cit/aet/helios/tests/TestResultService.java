@@ -32,10 +32,7 @@ public class TestResultService {
     var latestTestRuns =
         workflowRunRepository
             .findByHeadBranchAndHeadShaAndRepositoryIdAndPullRequestsIsNullWithTestSuites(
-                branchName, branch.getCommitSha(), repositoryId)
-            .stream()
-            .filter(run -> run.getWorkflow().getLabel() == Workflow.Label.TEST)
-            .toList();
+                branchName, branch.getCommitSha(), repositoryId);
 
     var previousCommitSha =
         workflowRunRepository.findNthLatestCommitShaBehindHeadByBranchAndRepoId(
@@ -46,52 +43,17 @@ public class TestResultService {
             ? List.of()
             : workflowRunRepository
                 .findByHeadBranchAndHeadShaAndRepositoryIdAndPullRequestsIsNullWithTestSuites(
-                    branchName, previousCommitSha.get(), repositoryId)
-                .stream()
-                .filter(run -> run.getWorkflow().getLabel() == Workflow.Label.TEST)
-                .toList();
+                    branchName, previousCommitSha.get(), repositoryId);
 
-    var testSuites = getTestSuitesForWorkflowRuns(latestTestRuns);
-    var previousTestCases =
-        getTestSuitesForWorkflowRuns(previousTestRuns).stream()
-            .flatMap(testSuite -> testSuite.getTestCases().stream())
-            .toList();
-
-    boolean isProcessing =
-        latestTestRuns.stream()
-            .anyMatch(
-                run ->
-                    run.getTestProcessingStatus() == WorkflowRun.TestProcessingStatus.PROCESSING);
-
-    Function<TestCase, Optional<TestStatus>> previousStatusProvider =
-        (testCase) -> {
-          return previousTestCases.stream()
-              .filter(
-                  previousTestCase ->
-                      previousTestCase.getName().equals(testCase.getName())
-                          && previousTestCase.getClassName().equals(testCase.getClassName()))
-              .findFirst()
-              .map(TestCase::getStatus);
-        };
-
-    return new TestResultsDto(
-        testSuites.stream()
-            .map(
-                testSuite ->
-                    TestResultsDto.TestSuiteDto.fromTestSuite(testSuite, previousStatusProvider))
-            .toList(),
-        isProcessing);
+    return this.getResultsFromRuns(latestTestRuns, previousTestRuns);
   }
 
   public TestResultsDto getLatestTestResultsForPr(Long pullRequestId) {
     var pullRequest = pullRequestRepository.findById(pullRequestId).orElseThrow();
 
     var latestTestRuns =
-        workflowRunRepository
-            .findByPullRequestsIdAndHeadShaWithTestSuites(pullRequestId, pullRequest.getHeadSha())
-            .stream()
-            .filter(run -> run.getWorkflow().getLabel() == Workflow.Label.TEST)
-            .toList();
+        workflowRunRepository.findByPullRequestsIdAndHeadShaWithTestSuites(
+            pullRequestId, pullRequest.getHeadSha());
 
     var previousCommitSha =
         workflowRunRepository.findNthLatestCommitShaBehindHeadByPullRequestId(
@@ -100,12 +62,24 @@ public class TestResultService {
     List<WorkflowRun> previousTestRuns =
         previousCommitSha.isEmpty()
             ? List.of()
-            : workflowRunRepository
-                .findByPullRequestsIdAndHeadShaWithTestSuites(
-                    pullRequestId, previousCommitSha.get())
-                .stream()
-                .filter(run -> run.getWorkflow().getLabel() == Workflow.Label.TEST)
-                .toList();
+            : workflowRunRepository.findByPullRequestsIdAndHeadShaWithTestSuites(
+                pullRequestId, previousCommitSha.get());
+
+    return this.getResultsFromRuns(latestTestRuns, previousTestRuns);
+  }
+
+  private TestResultsDto getResultsFromRuns(
+      List<WorkflowRun> latestWorkflowRuns, List<WorkflowRun> previousWorkflowRuns) {
+
+    var latestTestRuns =
+        latestWorkflowRuns.stream()
+            .filter(run -> run.getWorkflow().getLabel() == Workflow.Label.TEST)
+            .toList();
+
+    var previousTestRuns =
+        previousWorkflowRuns.stream()
+            .filter(run -> run.getWorkflow().getLabel() == Workflow.Label.TEST)
+            .toList();
 
     var testSuites = getTestSuitesForWorkflowRuns(latestTestRuns);
     var previousTestCases =

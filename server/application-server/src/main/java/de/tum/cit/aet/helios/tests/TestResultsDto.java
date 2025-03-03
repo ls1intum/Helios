@@ -41,7 +41,7 @@ public record TestResultsDto(@NonNull List<TestSuiteDto> testSuites, boolean isP
       @NonNull String name,
       @NonNull String className,
       @NonNull TestStatus status,
-      TestStatus previousStatusProvider,
+      TestStatus previousStatus,
       @NonNull Double time,
       String message,
       String stackTrace,
