@@ -221,20 +221,57 @@ public class EnvironmentService {
     return Optional.of(environment);
   }
 
+  /**
+   * Calculates lock expiration time based on a base time and threshold settings.
+   *
+   * @param environment the environment to calculate lock expiration for
+   * @param baseTime the base time from which to calculate expiration
+   * @return the calculated expiration time or null if no threshold is set
+   */
+  @Transactional
+  protected OffsetDateTime calculateLockExpiration(Environment environment,
+                                                   OffsetDateTime baseTime) {
+    Long lockExpirationThreshold = environment.getLockExpirationThreshold() != null
+        ? environment.getLockExpirationThreshold()
+        : gitRepoSettingsService
+        .getOrCreateGitRepoSettingsByRepositoryId(
+            environment.getRepository().getRepositoryId())
+        .map(GitRepoSettingsDto::lockExpirationThreshold)
+        .orElse(-1L);
+
+    return lockExpirationThreshold != -1
+        ? baseTime.plusMinutes(lockExpirationThreshold)
+        : null;
+  }
+
+  /**
+   * Calculates reservation expiration time based on a base time and threshold settings.
+   *
+   * @param environment the environment to calculate reservation expiration for
+   * @param baseTime the base time from which to calculate expiration
+   * @return the calculated expiration time or null if no threshold is set
+   */
+  @Transactional
+  protected OffsetDateTime calculateReservationExpiration(Environment environment,
+                                                          OffsetDateTime baseTime) {
+    Long lockReservationThreshold = environment.getLockReservationThreshold() != null
+        ? environment.getLockReservationThreshold()
+        : gitRepoSettingsService
+        .getOrCreateGitRepoSettingsByRepositoryId(
+            environment.getRepository().getRepositoryId())
+        .map(GitRepoSettingsDto::lockReservationThreshold)
+        .orElse(-1L);
+
+    return lockReservationThreshold != -1
+        ? baseTime.plusMinutes(lockReservationThreshold)
+        : null;
+  }
+
   @Transactional
   protected OffsetDateTime getLockWillExpireAt(Environment environment) {
-    Long lockExpirationThreshold =
-        environment.getLockExpirationThreshold() != null
-            ? environment.getLockExpirationThreshold()
-            : gitRepoSettingsService
-            .getOrCreateGitRepoSettingsByRepositoryId(
-                environment.getRepository().getRepositoryId())
-            .map(GitRepoSettingsDto::lockExpirationThreshold)
-            .orElse(-1L);
     if (environment.isLocked() && environment.getLockedAt() != null) {
-      return lockExpirationThreshold != -1
-          ? environment.getLockedAt().plusMinutes(lockExpirationThreshold)
-          : null;
+      return calculateLockExpiration(environment,
+          environment.getLockedAt());
     } else {
       return null;
     }
@@ -242,18 +279,9 @@ public class EnvironmentService {
 
   @Transactional
   protected OffsetDateTime getLockReservationExpiresAt(Environment environment) {
-    Long lockReservationThreshold =
-        environment.getLockReservationThreshold() != null
-            ? environment.getLockReservationThreshold()
-            : gitRepoSettingsService
-            .getOrCreateGitRepoSettingsByRepositoryId(
-                environment.getRepository().getRepositoryId())
-            .map(GitRepoSettingsDto::lockReservationThreshold)
-            .orElse(-1L);
     if (environment.isLocked() && environment.getLockedAt() != null) {
-      return lockReservationThreshold != -1
-          ? environment.getLockedAt().plusMinutes(lockReservationThreshold)
-          : null;
+      return calculateReservationExpiration(environment,
+          environment.getLockedAt());
     } else {
       return null;
     }
@@ -302,8 +330,10 @@ public class EnvironmentService {
     }
 
     // Calculate new expiration times based on current time
-    environment.setLockWillExpireAt(calculateNewLockExpiration(environment));
-    environment.setLockReservationExpiresAt(calculateNewReservationExpiration(environment));
+    environment.setLockWillExpireAt(calculateLockExpiration(environment,
+        OffsetDateTime.now()));
+    environment.setLockReservationExpiresAt(calculateReservationExpiration(environment,
+        OffsetDateTime.now()));
 
     try {
       environmentRepository.save(environment);
@@ -317,65 +347,28 @@ public class EnvironmentService {
 
   @NotNull
   private static String getLockedByAnotherUserErrorMessage(Environment environment) {
-    String msg = "Environment is locked by another user.\n";
-    ZoneId localZone = ZoneId.systemDefault();
-
-    DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    final StringBuilder msg = new StringBuilder("Environment is locked by another user.\n");
+    final ZoneId localZone = ZoneId.systemDefault();
+    final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     if (environment.getLockedBy() != null) {
-      msg += " (User: " + environment.getLockedBy().getLogin() + ")\n";
+      msg.append(" (User: ").append(environment.getLockedBy().getLogin()).append(")\n");
     }
     if (environment.getLockedAt() != null) {
-      OffsetDateTime lockedAtUtc = environment.getLockedAt(); // assume stored in UTC
-      OffsetDateTime lockedAtLocal = lockedAtUtc.atZoneSameInstant(localZone).toOffsetDateTime();
-      String lockedAtString = dateFormatter.format(lockedAtLocal);
-      msg += " (Locked at: " + lockedAtString + ")\n";
+      final OffsetDateTime lockedAtUtc = environment.getLockedAt(); // assume stored in UTC
+      final OffsetDateTime lockedAtLocal =
+          lockedAtUtc.atZoneSameInstant(localZone).toOffsetDateTime();
+      final String lockedAtString = dateFormatter.format(lockedAtLocal);
+      msg.append(" (Locked at: ").append(lockedAtString).append(")\n");
     }
     if (environment.getLockWillExpireAt() != null) {
-      OffsetDateTime expireAtUtc = environment.getLockWillExpireAt();
-      OffsetDateTime expireAtLocal = expireAtUtc.atZoneSameInstant(localZone).toOffsetDateTime();
-      String expireAtString = dateFormatter.format(expireAtLocal);
-      msg +=
-          " (Lock will expire at: " + expireAtString + ")";
+      final OffsetDateTime expireAtUtc = environment.getLockWillExpireAt();
+      final OffsetDateTime expireAtLocal =
+          expireAtUtc.atZoneSameInstant(localZone).toOffsetDateTime();
+      final String expireAtString = dateFormatter.format(expireAtLocal);
+      msg.append(" (Lock will expire at: ").append(expireAtString).append(")");
     }
-    return msg;
-  }
-
-  /**
-   * Calculates the new lock expiration time based on current time and threshold settings.
-   */
-  @Transactional
-  protected OffsetDateTime calculateNewLockExpiration(Environment environment) {
-    Long lockExpirationThreshold = environment.getLockExpirationThreshold() != null
-        ? environment.getLockExpirationThreshold()
-        : gitRepoSettingsService
-        .getOrCreateGitRepoSettingsByRepositoryId(
-            environment.getRepository().getRepositoryId())
-        .map(GitRepoSettingsDto::lockExpirationThreshold)
-        .orElse(-1L);
-
-    return lockExpirationThreshold != -1
-        ? OffsetDateTime.now().plusMinutes(lockExpirationThreshold)
-        : null;
-  }
-
-  /**
-   * Calculates the new lock reservation expiration time based on current time and threshold
-   * settings.
-   */
-  @Transactional
-  protected OffsetDateTime calculateNewReservationExpiration(Environment environment) {
-    Long lockReservationThreshold = environment.getLockReservationThreshold() != null
-        ? environment.getLockReservationThreshold()
-        : gitRepoSettingsService
-        .getOrCreateGitRepoSettingsByRepositoryId(
-            environment.getRepository().getRepositoryId())
-        .map(GitRepoSettingsDto::lockReservationThreshold)
-        .orElse(-1L);
-
-    return lockReservationThreshold != -1
-        ? OffsetDateTime.now().plusMinutes(lockReservationThreshold)
-        : null;
+    return msg.toString();
   }
 
   /**

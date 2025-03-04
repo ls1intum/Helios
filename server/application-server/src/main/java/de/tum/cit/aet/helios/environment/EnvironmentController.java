@@ -81,7 +81,9 @@ public class EnvironmentController {
   @PutMapping("/{id}/extend-lock")
   public ResponseEntity<?> extendEnvironmentLock(@PathVariable Long id) {
     Optional<Environment> environment = environmentService.extendEnvironmentLock(id);
-    return ResponseEntity.ok(EnvironmentDto.fromEnvironment(environment.get()));
+    return environment
+        .map(env -> ResponseEntity.ok(EnvironmentDto.fromEnvironment(env)))
+        .orElse(ResponseEntity.notFound().build());
   }
 
   @EnforceAtLeastMaintainer
