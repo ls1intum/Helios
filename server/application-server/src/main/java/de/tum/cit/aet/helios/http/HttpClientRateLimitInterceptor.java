@@ -3,6 +3,7 @@ package de.tum.cit.aet.helios.http;
 import de.tum.cit.aet.helios.util.RateLimitUtil;
 import java.io.IOException;
 import java.time.Instant;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import okhttp3.HttpUrl;
 import okhttp3.Interceptor;
@@ -15,6 +16,7 @@ import org.jetbrains.annotations.NotNull;
  * the rate limit info holder.
  */
 @Log4j2
+@RequiredArgsConstructor
 public class HttpClientRateLimitInterceptor implements Interceptor {
 
   private static final String GITHUB_API_HOST = "api.github.com";
@@ -26,11 +28,6 @@ public class HttpClientRateLimitInterceptor implements Interceptor {
   private static final String HEADER_RATE_RESET = "x-ratelimit-reset";
 
   private final RateLimitInfoHolder rateLimitInfoHolder;
-
-
-  public HttpClientRateLimitInterceptor(RateLimitInfoHolder rateLimitInfoHolder) {
-    this.rateLimitInfoHolder = rateLimitInfoHolder;
-  }
 
   @NotNull
   @Override
@@ -63,8 +60,8 @@ public class HttpClientRateLimitInterceptor implements Interceptor {
         try {
           info.setRemaining(Integer.parseInt(remainingHeader));
         } catch (NumberFormatException e) {
-          log.warn("Unable to parse '{}' header value: {}", HEADER_RATE_REMAINING, remainingHeader,
-              e);
+          log.warn(
+              "Unable to parse '{}' header value: {}", HEADER_RATE_REMAINING, remainingHeader, e);
         }
 
         try {

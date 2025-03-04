@@ -5,20 +5,16 @@ import jakarta.transaction.Transactional;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+@RequiredArgsConstructor
 @Service
 @Transactional
 public class WorkflowService {
 
   private final WorkflowRepository workflowRepository;
   private final EnvironmentService environmentService;
-
-  public WorkflowService(
-      WorkflowRepository workflowRepository, EnvironmentService environmentService) {
-    this.workflowRepository = workflowRepository;
-    this.environmentService = environmentService;
-  }
 
   public Optional<WorkflowDto> getWorkflowById(Long id) {
     return workflowRepository.findById(id).map(WorkflowDto::fromWorkflow);

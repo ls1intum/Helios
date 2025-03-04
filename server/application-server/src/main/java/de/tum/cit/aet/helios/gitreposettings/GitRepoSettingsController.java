@@ -4,6 +4,7 @@ import de.tum.cit.aet.helios.config.security.annotations.EnforceAtLeastMaintaine
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Optional;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -16,18 +17,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @Validated
+@RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/settings/{repositoryId}")
 public class GitRepoSettingsController {
 
   private final WorkflowGroupService workflowGroupService;
   private final GitRepoSettingsService gitRepoSettingsService;
-
-  public GitRepoSettingsController(
-      WorkflowGroupService workflowGroupService, GitRepoSettingsService gitRepoSettingsService) {
-    this.workflowGroupService = workflowGroupService;
-    this.gitRepoSettingsService = gitRepoSettingsService;
-  }
 
   @GetMapping("/settings")
   @EnforceAtLeastMaintainer

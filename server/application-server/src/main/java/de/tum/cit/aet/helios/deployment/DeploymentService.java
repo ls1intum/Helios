@@ -14,7 +14,6 @@ import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
 import de.tum.cit.aet.helios.pullrequest.PullRequest;
 import de.tum.cit.aet.helios.pullrequest.PullRequestRepository;
 import de.tum.cit.aet.helios.workflow.Workflow;
-import de.tum.cit.aet.helios.workflow.WorkflowService;
 import jakarta.transaction.Transactional;
 import java.io.IOException;
 import java.time.OffsetDateTime;
@@ -39,7 +38,6 @@ public class DeploymentService {
   private final DeploymentRepository deploymentRepository;
   private final GitHubService gitHubService;
   private final EnvironmentService environmentService;
-  private final WorkflowService workflowService;
   private final AuthService authService;
   private final HeliosDeploymentRepository heliosDeploymentRepository;
   private final EnvironmentLockHistoryRepository lockHistoryRepository;
