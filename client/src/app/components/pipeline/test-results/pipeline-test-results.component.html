@@ -78,10 +78,6 @@
                   <div class="absolute left-[-5px] -top-1 w-2.5 h-2.5 bg-blue-400 rounded-full flex items-center justify-center" pTooltip="Changed"></div>
                 }
                 <div class="flex items-center gap-2 overflow-hidden">
-                @if (suiteHasUpdates(suite)) {
-                  <div class="absolute left-[-5px] -top-1 w-2.5 h-2.5 bg-blue-400 rounded-full flex items-center justify-center" pTooltip="Changed"></div>
-                }
-                <div class="flex items-center gap-2 overflow-hidden">
                   @switch (overallSuiteState(suite)) {
                     @case ('SUCCESS') {
                       <i-tabler name="circle-check" class="text-green-500 flex-shrink-0"></i-tabler>
