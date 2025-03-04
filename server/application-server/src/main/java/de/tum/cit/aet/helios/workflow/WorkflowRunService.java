@@ -8,10 +8,12 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 
 @Log4j2
+@RequiredArgsConstructor
 @Service
 @Transactional
 public class WorkflowRunService {
@@ -19,15 +21,6 @@ public class WorkflowRunService {
   private final WorkflowRunRepository workflowRunRepository;
   private final PullRequestRepository pullRequestRepository;
   private final BranchRepository branchRepository;
-
-  public WorkflowRunService(
-      WorkflowRunRepository workflowRunRepository,
-      PullRequestRepository pullRequestRepository,
-      BranchRepository branchRepository) {
-    this.workflowRunRepository = workflowRunRepository;
-    this.pullRequestRepository = pullRequestRepository;
-    this.branchRepository = branchRepository;
-  }
 
   public List<WorkflowRun> getAllWorkflowRuns() {
     return workflowRunRepository.findAll();

@@ -5,16 +5,13 @@ import de.tum.cit.aet.helios.gitrepo.RepositoryInfoDto;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
 import de.tum.cit.aet.helios.user.User;
 import java.time.OffsetDateTime;
+import lombok.RequiredArgsConstructor;
 
 /** Represents a union of either a real Deployment, a HeliosDeployment, or none. */
+@RequiredArgsConstructor
 public class LatestDeploymentUnion {
   private final Deployment realDeployment;
   private final HeliosDeployment heliosDeployment;
-
-  private LatestDeploymentUnion(Deployment realDeployment, HeliosDeployment heliosDeployment) {
-    this.realDeployment = realDeployment;
-    this.heliosDeployment = heliosDeployment;
-  }
 
   public static LatestDeploymentUnion realDeployment(
       Deployment dep, OffsetDateTime heliosDeploymentCreatedAt) {

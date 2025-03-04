@@ -3,6 +3,7 @@ package de.tum.cit.aet.helios.nats;
 import io.nats.client.Connection;
 import io.nats.client.Nats;
 import io.nats.client.Options;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -11,6 +12,7 @@ import org.springframework.core.env.Environment;
 
 @Configuration
 @Log4j2
+@RequiredArgsConstructor
 public class NatsConfig {
 
   @Value("${nats.enabled}")
@@ -23,10 +25,6 @@ public class NatsConfig {
   private String natsAuthToken;
 
   private final Environment environment;
-
-  public NatsConfig(Environment env) {
-    this.environment = env;
-  }
 
   @Bean
   public Connection natsConnection() throws Exception {
