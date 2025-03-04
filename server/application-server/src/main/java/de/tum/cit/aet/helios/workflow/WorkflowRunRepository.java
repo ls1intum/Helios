@@ -44,7 +44,7 @@ public interface WorkflowRunRepository extends JpaRepository<WorkflowRun, Long> 
                   MAX(wr.created_at) AS latest_run
               FROM workflow_run wr
               JOIN workflow_run_pull_requests wrpr ON wr.id = wrpr.workflow_run_id
-              WHERE wrpr.pull_request_id = :prId
+              WHERE wrpr.pull_requests_id = :prId
               GROUP BY wr.head_sha
               ORDER BY latest_run DESC
           )
