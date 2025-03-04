@@ -30,7 +30,7 @@ public interface WorkflowRunRepository extends JpaRepository<WorkflowRun, Long> 
    * @param prId the ID of the pull request for which the commit history is queried
    * @param offset the offset in the commit list (0 for the first commit behind the head, 1 for the
    *     second, etc.)
-   * @param head the commit SHA to exclude from the results (the head commit)
+   * @param headCommit the commit SHA to exclude from the results (the head commit)
    * @return an Optional containing the n-th latest commit SHA behind the head commit, or empty if
    *     such commit does not exist
    */
@@ -55,7 +55,7 @@ public interface WorkflowRunRepository extends JpaRepository<WorkflowRun, Long> 
           LIMIT 1
           """)
   Optional<String> findNthLatestCommitShaBehindHeadByPullRequestId(
-      @Param("prId") Long prId, @Param("offset") int offset, @Param("head") String head);
+      @Param("prId") Long prId, @Param("offset") int offset, @Param("head") String headCommit);
 
   /**
    * Returns the n-th latest commit SHA from the commit history for a given pull request, excluding
@@ -67,7 +67,7 @@ public interface WorkflowRunRepository extends JpaRepository<WorkflowRun, Long> 
    * @param repoId the ID of the repository for which the commit history is queried
    * @param offset the offset in the commit list (0 for the first commit behind the head, 1 for the
    *     second, etc.)
-   * @param head the commit SHA to exclude from the results (the head commit)
+   * @param headCommit the commit SHA to exclude from the results (the head commit)
    * @return an Optional containing the n-th latest commit SHA behind the head commit, or empty if
    *     such commit does not exist
    */

@@ -55,13 +55,53 @@ export class PipelineTestResultsComponent {
   });
 
   testSuites = computed(() => {
-    return this.resultsQuery().data()?.testSuites || [];
+    const suites = this.resultsQuery().data()?.testSuites || [];
+
+    // Let's show updated test suites first and then failed ones
+    return suites.sort((a, b) => {
+      if (this.suiteHasUpdates(a)) {
+        return -1;
+      }
+      if (this.suiteHasUpdates(b)) {
+        return 1;
+      }
+      if (a.failures > 0 || a.errors > 0) {
+        return -1;
+      }
+      if (b.failures > 0 || b.errors > 0) {
+        return 1;
+      }
+      return 0;
+    });
   });
 
   sortTestCases(cases: TestSuiteDto['testCases']) {
-    // We want to show the failed/error test cases first
-    return cases.sort(a => (a.status === 'ERROR' || a.status === 'FAILED' ? -1 : 1));
+    // We want to show updated ones before the others
+    // and then failed ones before the others
+    return cases.sort((a, b) => {
+      if (a.status !== a.previousStatus && a.previousStatus) {
+        return -1;
+      }
+      if (b.status !== b.previousStatus && b.previousStatus) {
+        return 1;
+      }
+      if (a.status === 'FAILED' || a.status === 'ERROR') {
+        return -1;
+      }
+      if (b.status === 'FAILED' || b.status === 'ERROR') {
+        return 1;
+      }
+      return 0;
+    });
   }
+
+  suiteHasUpdates = (suite: TestSuiteDto) => {
+    return suite.testCases.some(testCase => testCase.status !== testCase.previousStatus && testCase.previousStatus);
+  };
+
+  resultsHaveUpdated = computed(() => {
+    return this.testSuites().some(this.suiteHasUpdates);
+  });
 
   overallSuiteState = (suite: TestSuiteDto) => {
     if (suite.failures > 0 || suite.errors > 0) {
