@@ -16,6 +16,8 @@ import { Popover, PopoverModule } from 'primeng/popover';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { FormsModule } from '@angular/forms';
+import { injectQuery } from '@tanstack/angular-query-experimental';
+import { getLatestTestResultsByBranchOptions, getLatestTestResultsByPullRequestIdOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 
 @Component({
   selector: 'app-pipeline-test-results',
@@ -83,6 +85,33 @@ export class PipelineTestResultsComponent {
   toggleShowOnlyFailed() {
     this.showOnlyFailed.set(!this.showOnlyFailed());
   }
+  branchName = computed(() => {
+    const selector = this.selector();
+    if (!selector) return null;
+    return 'branchName' in selector ? selector.branchName : null;
+  });
+
+  pullRequestId = computed(() => {
+    const selector = this.selector();
+    if (!selector) return null;
+    return 'pullRequestId' in selector ? selector.pullRequestId : null;
+  });
+
+  branchQuery = injectQuery(() => ({
+    ...getLatestTestResultsByBranchOptions({ query: { branch: this.branchName()! } }),
+    enabled: this.branchName() !== null,
+    refetchInterval: 15000,
+  }));
+
+  pullRequestQuery = injectQuery(() => ({
+    ...getLatestTestResultsByPullRequestIdOptions({ path: { pullRequestId: this.pullRequestId() || 0 } }),
+    enabled: this.pullRequestId() !== null,
+    refetchInterval: 15000,
+  }));
+
+  resultsQuery = computed(() => {
+    return this.branchName() ? this.branchQuery : this.pullRequestQuery;
+  });
 
   testSuites = computed(() => {
     const suites = this.resultsQuery().data()?.testSuites || [];
