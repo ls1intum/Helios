@@ -66,6 +66,7 @@ public class TestResultProcessor {
     } catch (Exception e) {
       log.error("Failed to process test results for workflow run {}", workflowRun.getName(), e);
       workflowRun.setTestProcessingStatus(WorkflowRun.TestProcessingStatus.FAILED);
+      workflowRun.setTestSuites(null);
     } finally {
       this.workflowRunRepository.save(workflowRun);
     }
