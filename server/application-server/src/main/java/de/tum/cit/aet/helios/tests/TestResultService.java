@@ -27,7 +27,10 @@ public class TestResultService {
   public TestResultsDto getLatestTestResultsForBranch(String branchName) {
     final Long repositoryId = RepositoryContext.getRepositoryId();
 
-    var branch = branchRepository.findByName(branchName).orElseThrow();
+    var branch =
+        branchRepository
+            .findByNameAndRepositoryRepositoryId(branchName, repositoryId)
+            .orElseThrow();
 
     var latestTestRuns =
         workflowRunRepository
