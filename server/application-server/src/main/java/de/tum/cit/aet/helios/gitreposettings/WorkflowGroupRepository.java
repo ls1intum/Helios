@@ -26,6 +26,15 @@ public interface WorkflowGroupRepository extends JpaRepository<WorkflowGroup, Lo
   List<WorkflowGroup> findAllByGitRepoSettings(
       @Param("gitRepoSettings") GitRepoSettings gitRepoSettings);
 
+  @Query(
+      "SELECT wg "
+          + "FROM WorkflowGroup wg "
+          + "WHERE wg.gitRepoSettings.repository.repositoryId = :repositoryId "
+          + "AND wg.name = :name "
+          + "ORDER BY wg.orderIndex ASC")
+  WorkflowGroup findByRepositoryIdAndName(
+      @Param("repositoryId") Long repositoryId, @Param("name") String name);
+
   // Find the latest order index for a given GitRepoSettings
   // If no order index is found, return -1
   @Query(

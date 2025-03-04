@@ -55,6 +55,7 @@ export type EnvironmentDto = {
   lockedBy?: UserInfoDto;
   lockedAt?: string;
   type?: 'TEST' | 'STAGING' | 'PRODUCTION';
+  deploymentWorkflow?: WorkflowDto;
   lockExpirationThreshold?: number;
   lockReservationThreshold?: number;
   lockWillExpireAt?: string;
@@ -90,6 +91,21 @@ export type UserInfoDto = {
   htmlUrl: string;
 };
 
+export type WorkflowDto = {
+  id: number;
+  repository?: RepositoryInfoDto;
+  name: string;
+  path: string;
+  fileNameWithExtension?: string;
+  state: 'ACTIVE' | 'DELETED' | 'DISABLED_FORK' | 'DISABLED_INACTIVITY' | 'DISABLED_MANUALLY' | 'UNKNOWN';
+  url?: string;
+  htmlUrl?: string;
+  badgeUrl?: string;
+  label: 'NONE' | 'TEST';
+  createdAt?: string;
+  updatedAt?: string;
+};
+
 export type ReleaseCandidateCreateDto = {
   name: string;
   commitSha: string;
@@ -106,21 +122,6 @@ export type DeployRequest = {
   environmentId: number;
   branchName: string;
   commitSha?: string;
-};
-
-export type WorkflowDto = {
-  id: number;
-  repository?: RepositoryInfoDto;
-  name: string;
-  path: string;
-  fileNameWithExtension?: string;
-  state: 'ACTIVE' | 'DELETED' | 'DISABLED_FORK' | 'DISABLED_INACTIVITY' | 'DISABLED_MANUALLY' | 'UNKNOWN';
-  url?: string;
-  htmlUrl?: string;
-  badgeUrl?: string;
-  label: 'NONE' | 'DEPLOY_TEST_SERVER' | 'DEPLOY_STAGING_SERVER' | 'DEPLOY_PRODUCTION_SERVER' | 'TEST';
-  createdAt?: string;
-  updatedAt?: string;
 };
 
 export type WorkflowRunDto = {
@@ -146,7 +147,7 @@ export type WorkflowRunDto = {
   workflowId: number;
   conclusion?: 'ACTION_REQUIRED' | 'CANCELLED' | 'FAILURE' | 'NEUTRAL' | 'SUCCESS' | 'SKIPPED' | 'STALE' | 'TIMED_OUT' | 'STARTUP_FAILURE' | 'UNKNOWN';
   htmlUrl: string;
-  label: 'NONE' | 'DEPLOY_TEST_SERVER' | 'DEPLOY_STAGING_SERVER' | 'DEPLOY_PRODUCTION_SERVER' | 'TEST';
+  label: 'NONE' | 'TEST';
   testProcessingStatus?: 'PROCESSING' | 'PROCESSED' | 'FAILED';
 };
 
@@ -343,7 +344,7 @@ export type BranchDetailsDto = {
 };
 
 export type UpdateWorkflowLabelData = {
-  body: 'NONE' | 'DEPLOY_TEST_SERVER' | 'DEPLOY_STAGING_SERVER' | 'DEPLOY_PRODUCTION_SERVER' | 'TEST';
+  body: 'NONE' | 'TEST';
   path: {
     workflowId: number;
   };
@@ -489,6 +490,26 @@ export type LockEnvironmentResponses = {
 };
 
 export type LockEnvironmentResponse = LockEnvironmentResponses[keyof LockEnvironmentResponses];
+
+export type ExtendEnvironmentLockData = {
+  body?: never;
+  path: {
+    id: number;
+  };
+  query?: never;
+  url: '/api/environments/{id}/extend-lock';
+};
+
+export type ExtendEnvironmentLockResponses = {
+  /**
+   * OK
+   */
+  200: {
+    [key: string]: unknown;
+  };
+};
+
+export type ExtendEnvironmentLockResponse = ExtendEnvironmentLockResponses[keyof ExtendEnvironmentLockResponses];
 
 export type CreateWorkflowGroupData = {
   body: WorkflowGroupDto;

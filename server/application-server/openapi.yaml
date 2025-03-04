@@ -32,9 +32,6 @@ paths:
               type: string
               enum:
               - NONE
-              - DEPLOY_TEST_SERVER
-              - DEPLOY_STAGING_SERVER
-              - DEPLOY_PRODUCTION_SERVER
               - TEST
         required: true
       responses:
@@ -173,6 +170,25 @@ paths:
       tags:
       - environment-controller
       operationId: lockEnvironment
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+  /api/environments/{id}/extend-lock:
+    put:
+      tags:
+      - environment-controller
+      operationId: extendEnvironmentLock
       parameters:
       - name: id
         in: path
@@ -1103,6 +1119,8 @@ components:
           - TEST
           - STAGING
           - PRODUCTION
+        deploymentWorkflow:
+          $ref: "#/components/schemas/WorkflowDto"
         lockExpirationThreshold:
           type: integer
           format: int64
@@ -1186,6 +1204,52 @@ components:
       - id
       - login
       - name
+    WorkflowDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        repository:
+          $ref: "#/components/schemas/RepositoryInfoDto"
+        name:
+          type: string
+        path:
+          type: string
+        fileNameWithExtension:
+          type: string
+        state:
+          type: string
+          enum:
+          - ACTIVE
+          - DELETED
+          - DISABLED_FORK
+          - DISABLED_INACTIVITY
+          - DISABLED_MANUALLY
+          - UNKNOWN
+        url:
+          type: string
+        htmlUrl:
+          type: string
+        badgeUrl:
+          type: string
+        label:
+          type: string
+          enum:
+          - NONE
+          - TEST
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+      - id
+      - label
+      - name
+      - path
+      - state
     ReleaseCandidateCreateDto:
       type: object
       properties:
@@ -1221,55 +1285,6 @@ components:
       required:
       - branchName
       - environmentId
-    WorkflowDto:
-      type: object
-      properties:
-        id:
-          type: integer
-          format: int64
-        repository:
-          $ref: "#/components/schemas/RepositoryInfoDto"
-        name:
-          type: string
-        path:
-          type: string
-        fileNameWithExtension:
-          type: string
-        state:
-          type: string
-          enum:
-          - ACTIVE
-          - DELETED
-          - DISABLED_FORK
-          - DISABLED_INACTIVITY
-          - DISABLED_MANUALLY
-          - UNKNOWN
-        url:
-          type: string
-        htmlUrl:
-          type: string
-        badgeUrl:
-          type: string
-        label:
-          type: string
-          enum:
-          - NONE
-          - DEPLOY_TEST_SERVER
-          - DEPLOY_STAGING_SERVER
-          - DEPLOY_PRODUCTION_SERVER
-          - TEST
-        createdAt:
-          type: string
-          format: date-time
-        updatedAt:
-          type: string
-          format: date-time
-      required:
-      - id
-      - label
-      - name
-      - path
-      - state
     WorkflowRunDto:
       type: object
       properties:
@@ -1320,9 +1335,6 @@ components:
           type: string
           enum:
           - NONE
-          - DEPLOY_TEST_SERVER
-          - DEPLOY_STAGING_SERVER
-          - DEPLOY_PRODUCTION_SERVER
           - TEST
         testProcessingStatus:
           type: string

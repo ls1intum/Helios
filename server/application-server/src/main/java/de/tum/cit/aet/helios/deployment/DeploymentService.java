@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -75,9 +76,12 @@ public class DeploymentService {
     String commitSha = determineCommitSha(deployRequest);
 
     Environment environment = lockEnvironment(deployRequest.environmentId());
-    Workflow deploymentWorkflow =
-        workflowService.getDeploymentWorkflowForEnv(deployRequest.environmentId());
+    Workflow deploymentWorkflow = environment.getDeploymentWorkflow();
 
+    if (deploymentWorkflow == null) {
+      throw new NoSuchElementException(
+          "No deployment workflow found for environment " + environment.getName());
+    }
     // Set the PR associated with the deployment
     Optional<PullRequest> optionalPullRequest =
         pullRequestRepository.findOpenPrByBranchNameOrSha(
