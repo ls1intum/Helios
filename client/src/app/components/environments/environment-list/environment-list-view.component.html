@@ -150,10 +150,17 @@
       <p-accordion-content>
         <div class="flex w-full flex-col gap-4">
           <!-- Toggle Button -->
-          <div class="flex justify-end gap-2">
-            <span class="text-gray-500">Details</span>
-            <p-toggleswitch [ngModel]="showLatestDeployment" (click)="showLatestDeployment = !showLatestDeployment" />
-            <span class="text-gray-500">Deployment</span>
+          <div class="flex justify-start gap-2">
+            <p-selectbutton
+              [options]="[
+                { label: 'Details', value: false },
+                { label: 'Deployment', value: true },
+              ]"
+              [(ngModel)]="showLatestDeployment"
+              optionLabel="label"
+              optionValue="value"
+              aria-labelledby="basic"
+            />
           </div>
 
           <!-- Conditionally display information based on the toggle -->
