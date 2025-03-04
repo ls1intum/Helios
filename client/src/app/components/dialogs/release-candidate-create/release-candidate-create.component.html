@@ -22,7 +22,48 @@
           <span class="font-semibold">The commit sha could not be loaded.</span>
         }
       </div>
-      <div class="flex">
+      <!-- Show: behind by, ahead by -->
+      <div class="text-sm mt-2">
+        The release candidate is <b>behind by {{ commitListData.behindBy || 0 }}</b> and <b>ahead by {{ commitListData.aheadBy || 0 }}</b> commits compared to the latest release
+        candidate.
+      </div>
+
+      @if (commitListData.commits.length > 0) {
+        <span class="text-sm">New commits included in this release candidate:</span>
+
+        <div class="flex flex-col">
+          @for (commit of commitListData.commits.slice(0, 3); track commit.sha) {
+            <p-card class="p-1 shadow-1">
+              <div class="flex flex-col gap-1">
+                <!-- Commit Message -->
+                <p class="text-sm text-gray-800 line-clamp-1 font-medium">
+                  {{ commit.message }}
+                </p>
+
+                <!-- Metadata -->
+                <div class="flex justify-between items-center text-xs">
+                  <div class="flex gap-2 text-gray-500">
+                    <span class="font-mono">{{ commit.sha | slice: 0 : 6 }}</span>
+                    <span class="text-gray-400">|</span>
+                    <span class="truncate max-w-[120px]">{{ commit.authorName }}</span>
+                  </div>
+                </div>
+              </div>
+            </p-card>
+          }
+
+          <!-- Show: and x more -->
+          @if (commitListData.commits.length > 3) {
+            <p-card class="p-2 shadow-1">
+              <div class="flex gap-2 text-center">
+                <span class="text-xs font-medium">and {{ commitListData.commits.length - 3 }} more</span>
+              </div>
+            </p-card>
+          }
+        </div>
+      }
+
+      <!-- <div class="flex">
         @if (commitListData.commitsLength > 0) {
           <div class="font-semibold">
             <p-button link pTooltip="Commit info can be seen soon!" (onClick)="isCommitListVisible.set(!isCommitListVisible())">
@@ -35,11 +76,11 @@
         } @else {
           <span class="font-semibold">There is no new commit since the last release candidate, please create one first before creating another release candidate!</span>
         }
-      </div>
+      </div> -->
     </div>
   }
   <ng-template #footer>
     <p-button label="Cancel" [text]="true" (click)="onClose()" />
-    <p-button label="Save" severity="primary" [disabled]="newCommitListQuery.data()?.commitsLength === 0 || releaseCandidateName() === ''" (click)="createReleaseCandidate()" />
+    <p-button label="Save" severity="primary" [disabled]="isIdentical() || releaseCandidateName() === ''" (click)="createReleaseCandidate()" />
   </ng-template>
 </p-dialog>

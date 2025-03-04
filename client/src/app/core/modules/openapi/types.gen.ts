@@ -222,8 +222,16 @@ export type ReleaseCandidateEvaluationDto = {
 };
 
 export type CommitsSinceReleaseCandidateDto = {
-  commitsLength: number;
-  commits: Array<CommitInfoDto>;
+  aheadBy: number;
+  behindBy: number;
+  commits: Array<CompareCommitInfoDto>;
+};
+
+export type CompareCommitInfoDto = {
+  sha: string;
+  message: string;
+  authorName: string;
+  authorEmail: string;
 };
 
 export type LabelInfoDto = {

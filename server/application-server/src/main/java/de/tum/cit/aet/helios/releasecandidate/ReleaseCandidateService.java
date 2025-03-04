@@ -30,6 +30,7 @@ import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.kohsuke.github.GHCompare;
+import org.kohsuke.github.GHCompare.Commit;
 import org.kohsuke.github.GHRepository;
 import org.springframework.stereotype.Service;
 
@@ -57,25 +58,24 @@ public class ReleaseCandidateService {
   }
 
   /**
-   * Returns all deployments for a given release candidate, meaning a specific
-   * commit and
-   * repository. It considers HeliosDeployment and Deployment entities and returns
-   * the latest one
+   * Returns all deployments for a given release candidate, meaning a specific commit and
+   * repository. It considers HeliosDeployment and Deployment entities and returns the latest one
    * for each environment.
    *
    * @param candidate The release candidate to get deployments for
-   * @return A list of LatestDeploymentUnion objects, each representing the latest
-   *         deployment for an
-   *         environment
+   * @return A list of LatestDeploymentUnion objects, each representing the latest deployment for an
+   *     environment
    */
   private List<LatestDeploymentUnion> getCandidateDeployments(final ReleaseCandidate candidate) {
     Map<Long, LatestDeploymentUnion> deploymentsByEnvironment = new HashMap<>();
 
-    List<HeliosDeployment> heliosDeployments = heliosDeploymentRepository.findByRepositoryIdAndSha(
-        candidate.getRepository().getRepositoryId(), candidate.getCommit().getSha());
+    List<HeliosDeployment> heliosDeployments =
+        heliosDeploymentRepository.findByRepositoryIdAndSha(
+            candidate.getRepository().getRepositoryId(), candidate.getCommit().getSha());
 
-    List<Deployment> deployments = deploymentRepository.findByRepositoryRepositoryIdAndSha(
-        candidate.getRepository().getRepositoryId(), candidate.getCommit().getSha());
+    List<Deployment> deployments =
+        deploymentRepository.findByRepositoryRepositoryIdAndSha(
+            candidate.getRepository().getRepositoryId(), candidate.getCommit().getSha());
 
     for (HeliosDeployment heliosDeployment : heliosDeployments) {
       deploymentsByEnvironment.put(
@@ -90,8 +90,8 @@ public class ReleaseCandidateService {
         continue;
       }
 
-      LatestDeploymentUnion latestDeploymentUnion = deploymentsByEnvironment
-          .get(deployment.getEnvironment().getId());
+      LatestDeploymentUnion latestDeploymentUnion =
+          deploymentsByEnvironment.get(deployment.getEnvironment().getId());
 
       if (latestDeploymentUnion.getCreatedAt().isAfter(deployment.getCreatedAt())) {
         continue;
@@ -111,9 +111,10 @@ public class ReleaseCandidateService {
         .findByRepositoryRepositoryIdAndName(repositoryId, name)
         .map(
             releaseCandidate -> {
-              var deployments = this.getCandidateDeployments(releaseCandidate).stream()
-                  .map(ReleaseCandidateDetailsDto.ReleaseCandidateDeploymentDto::fromDeployment)
-                  .toList();
+              var deployments =
+                  this.getCandidateDeployments(releaseCandidate).stream()
+                      .map(ReleaseCandidateDetailsDto.ReleaseCandidateDeploymentDto::fromDeployment)
+                      .toList();
 
               return new ReleaseCandidateDetailsDto(
                   releaseCandidate.getName(),
@@ -133,37 +134,49 @@ public class ReleaseCandidateService {
       String branchName) {
     final Long repositoryId = RepositoryContext.getRepositoryId();
     try {
-      final GitRepository repository = gitRepoRepository
-          .findById(repositoryId)
-          .orElseThrow(() -> new ReleaseCandidateException("Repository not found"));
+      final GitRepository repository =
+          gitRepoRepository
+              .findById(repositoryId)
+              .orElseThrow(() -> new ReleaseCandidateException("Repository not found"));
 
-      final GHRepository githubRepository = gitHubService
-          .getRepository(repository.getNameWithOwner());
+      final GHRepository githubRepository =
+          gitHubService.getRepository(repository.getNameWithOwner());
 
-      final Branch branch = branchRepository
-          .findByRepositoryRepositoryIdAndName(repositoryId, branchName)
-          .orElseThrow(() -> new ReleaseCandidateException("Branch not found"));
+      final Branch branch =
+          branchRepository
+              .findByRepositoryRepositoryIdAndName(repositoryId, branchName)
+              .orElseThrow(() -> new ReleaseCandidateException("Branch not found"));
 
-      final ReleaseCandidate lastReleaseCandidate = releaseCandidateRepository
-          .findByRepository(repository)
-          .stream()
-          .sorted(ReleaseCandidate::compareToByDate)
-          .findFirst()
-          .orElseGet(() -> null);
+      final ReleaseCandidate lastReleaseCandidate =
+          releaseCandidateRepository.findByRepository(repository).stream()
+              .sorted(ReleaseCandidate::compareToByDate)
+              .findFirst()
+              .orElseGet(() -> null);
 
       if (lastReleaseCandidate == null) {
-        return new CommitsSinceReleaseCandidateDto(-1, new ArrayList<>());
+        return new CommitsSinceReleaseCandidateDto(-1, -1, new ArrayList<>());
       }
 
-      final GHCompare compare = githubRepository.getCompare(
-          lastReleaseCandidate.getCommit().getSha(), branch.getCommitSha());
+      final GHCompare compare =
+          githubRepository.getCompare(
+              lastReleaseCandidate.getCommit().getSha(), branch.getCommitSha());
 
-      return new CommitsSinceReleaseCandidateDto(compare.getTotalCommits(), new ArrayList<>());
-      // Add this snippet later when showing commit info
-      // Arrays.stream(compare.getCommits())
-      // .map(commitConverter::convert)
-      // .map(CommitInfoDto::fromCommit)
-      // .toList()));
+      final List<CommitsSinceReleaseCandidateDto.CompareCommitInfoDto> commitInfoDtos =
+          new ArrayList<>();
+
+      for (Commit commit : compare.getCommits()) {
+        var innerCommit = commit.getCommit();
+
+        commitInfoDtos.add(
+            new CommitsSinceReleaseCandidateDto.CompareCommitInfoDto(
+                commit.getSHA1(),
+                innerCommit.getMessage(),
+                innerCommit.getCommitter().getName(),
+                innerCommit.getCommitter().getEmail()));
+      }
+
+      return new CommitsSinceReleaseCandidateDto(
+          compare.getAheadBy(), compare.getBehindBy(), commitInfoDtos);
     } catch (IOException e) {
       log.error("Failed to compare commits for branch {}: {}", branchName, e.getMessage());
       throw new ReleaseCandidateException("Failed to fetch compare commit data from GitHub");
@@ -176,7 +189,8 @@ public class ReleaseCandidateService {
     final String login = authService.getPreferredUsername();
 
     if (releaseCandidateRepository.existsByRepositoryRepositoryIdAndName(
-        repositoryId, releaseCandidate.name()) == true) {
+            repositoryId, releaseCandidate.name())
+        == true) {
       throw new ReleaseCandidateException("ReleaseCandidate with this name already exists");
     }
 
@@ -206,9 +220,10 @@ public class ReleaseCandidateService {
   public void evaluateReleaseCandidate(String name, boolean isWorking) {
     final Long repositoryId = RepositoryContext.getRepositoryId();
 
-    final ReleaseCandidate releaseCandidate = releaseCandidateRepository
-        .findByRepositoryRepositoryIdAndName(repositoryId, name)
-        .orElseThrow(() -> new ReleaseCandidateException("ReleaseCandidate not found"));
+    final ReleaseCandidate releaseCandidate =
+        releaseCandidateRepository
+            .findByRepositoryRepositoryIdAndName(repositoryId, name)
+            .orElseThrow(() -> new ReleaseCandidateException("ReleaseCandidate not found"));
 
     final User user = authService.getUserFromGithubId();
 
@@ -216,15 +231,16 @@ public class ReleaseCandidateService {
       throw new ReleaseCandidateException("User not found");
     }
 
-    final ReleaseCandidateEvaluation evaluation = releaseCandidateEvaluationRepository
-        .findByReleaseCandidateAndEvaluatedById(releaseCandidate, user.getId())
-        .orElseGet(
-            () -> {
-              ReleaseCandidateEvaluation newEvaluation = new ReleaseCandidateEvaluation();
-              newEvaluation.setReleaseCandidate(releaseCandidate);
-              newEvaluation.setEvaluatedBy(user);
-              return newEvaluation;
-            });
+    final ReleaseCandidateEvaluation evaluation =
+        releaseCandidateEvaluationRepository
+            .findByReleaseCandidateAndEvaluatedById(releaseCandidate, user.getId())
+            .orElseGet(
+                () -> {
+                  ReleaseCandidateEvaluation newEvaluation = new ReleaseCandidateEvaluation();
+                  newEvaluation.setReleaseCandidate(releaseCandidate);
+                  newEvaluation.setEvaluatedBy(user);
+                  return newEvaluation;
+                });
 
     evaluation.setWorking(isWorking);
     releaseCandidateEvaluationRepository.save(evaluation);
@@ -233,13 +249,14 @@ public class ReleaseCandidateService {
   public ReleaseCandidateInfoDto deleteReleaseCandidateByName(String name) {
     final Long repositoryId = RepositoryContext.getRepositoryId();
 
-    ReleaseCandidateInfoDto rc = releaseCandidateRepository
-        .findByRepositoryRepositoryIdAndName(repositoryId, name)
-        .map(ReleaseCandidateInfoDto::fromReleaseCandidate)
-        .orElseThrow(() -> new ReleaseCandidateException("ReleaseCandidate could not be found."));
+    ReleaseCandidateInfoDto rc =
+        releaseCandidateRepository
+            .findByRepositoryRepositoryIdAndName(repositoryId, name)
+            .map(ReleaseCandidateInfoDto::fromReleaseCandidate)
+            .orElseThrow(
+                () -> new ReleaseCandidateException("ReleaseCandidate could not be found."));
 
-    releaseCandidateRepository
-        .deleteByRepositoryRepositoryIdAndName(repositoryId, name);
+    releaseCandidateRepository.deleteByRepositoryRepositoryIdAndName(repositoryId, name);
 
     return rc;
   }

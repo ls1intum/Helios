@@ -660,18 +660,41 @@ export const ReleaseCandidateEvaluationDtoSchema = {
 export const CommitsSinceReleaseCandidateDtoSchema = {
   type: 'object',
   properties: {
-    commitsLength: {
+    aheadBy: {
+      type: 'integer',
+      format: 'int32',
+    },
+    behindBy: {
       type: 'integer',
       format: 'int32',
     },
     commits: {
       type: 'array',
       items: {
-        $ref: '#/components/schemas/CommitInfoDto',
+        $ref: '#/components/schemas/CompareCommitInfoDto',
       },
     },
   },
-  required: ['commits', 'commitsLength'],
+  required: ['aheadBy', 'behindBy', 'commits'],
+} as const;
+
+export const CompareCommitInfoDtoSchema = {
+  type: 'object',
+  properties: {
+    sha: {
+      type: 'string',
+    },
+    message: {
+      type: 'string',
+    },
+    authorName: {
+      type: 'string',
+    },
+    authorEmail: {
+      type: 'string',
+    },
+  },
+  required: ['authorEmail', 'authorName', 'message', 'sha'],
 } as const;
 
 export const LabelInfoDtoSchema = {
