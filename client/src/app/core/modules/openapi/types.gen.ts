@@ -490,6 +490,26 @@ export type LockEnvironmentResponses = {
 
 export type LockEnvironmentResponse = LockEnvironmentResponses[keyof LockEnvironmentResponses];
 
+export type ExtendEnvironmentLockData = {
+  body?: never;
+  path: {
+    id: number;
+  };
+  query?: never;
+  url: '/api/environments/{id}/extend-lock';
+};
+
+export type ExtendEnvironmentLockResponses = {
+  /**
+   * OK
+   */
+  200: {
+    [key: string]: unknown;
+  };
+};
+
+export type ExtendEnvironmentLockResponse = ExtendEnvironmentLockResponses[keyof ExtendEnvironmentLockResponses];
+
 export type CreateWorkflowGroupData = {
   body: WorkflowGroupDto;
   path: {

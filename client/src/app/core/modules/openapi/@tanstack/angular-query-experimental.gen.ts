@@ -15,6 +15,8 @@ import type {
   UnlockEnvironmentResponse,
   LockEnvironmentData,
   LockEnvironmentResponse,
+  ExtendEnvironmentLockData,
+  ExtendEnvironmentLockResponse,
   CreateWorkflowGroupData,
   CreateWorkflowGroupResponse,
   GetAllReleaseCandidatesData,
@@ -70,6 +72,7 @@ import {
   updateEnvironment,
   unlockEnvironment,
   lockEnvironment,
+  extendEnvironmentLock,
   createWorkflowGroup,
   getAllReleaseCandidates,
   createReleaseCandidate,
@@ -249,6 +252,20 @@ export const lockEnvironmentMutation = (options?: Partial<Options<LockEnvironmen
   const mutationOptions: MutationOptions<LockEnvironmentResponse, DefaultError, Options<LockEnvironmentData>> = {
     mutationFn: async localOptions => {
       const { data } = await lockEnvironment({
+        ...options,
+        ...localOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const extendEnvironmentLockMutation = (options?: Partial<Options<ExtendEnvironmentLockData>>) => {
+  const mutationOptions: MutationOptions<ExtendEnvironmentLockResponse, DefaultError, Options<ExtendEnvironmentLockData>> = {
+    mutationFn: async localOptions => {
+      const { data } = await extendEnvironmentLock({
         ...options,
         ...localOptions,
         throwOnError: true,

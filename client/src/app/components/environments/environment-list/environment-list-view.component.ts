@@ -4,6 +4,7 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { EnvironmentDto } from '@app/core/modules/openapi';
 import {
+  extendEnvironmentLockMutation,
   getAllEnabledEnvironmentsOptions,
   getAllEnabledEnvironmentsQueryKey,
   getAllEnvironmentsOptions,
@@ -15,7 +16,7 @@ import {
 import { PermissionService } from '@app/core/services/permission.service';
 import { injectMutation, injectQuery, QueryClient } from '@tanstack/angular-query-experimental';
 import { IconsModule } from 'icons.module';
-import { ConfirmationService } from 'primeng/api';
+import { ConfirmationService, MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { TagModule } from 'primeng/tag';
@@ -66,13 +67,14 @@ import { ButtonGroupModule } from 'primeng/buttongroup';
   templateUrl: './environment-list-view.component.html',
 })
 export class EnvironmentListViewComponent implements OnDestroy {
-  private queryClient = inject(QueryClient);
+  private queryClient = inject<QueryClient>(QueryClient);
   private confirmationService = inject(ConfirmationService);
   private keycloakService = inject(KeycloakService);
   private datePipe = inject(DatePipe);
   private permissionService = inject(PermissionService);
   private currentTime = signal(Date.now());
   private intervalId: number | undefined;
+  private messageService = inject(MessageService);
 
   showLatestDeployment: boolean = true;
 
@@ -92,6 +94,16 @@ export class EnvironmentListViewComponent implements OnDestroy {
     onSuccess: () => {
       this.queryClient.invalidateQueries({ queryKey: this.queryKey() });
       this.queryClient.invalidateQueries({ queryKey: getEnvironmentsByUserLockingQueryKey() });
+    },
+  }));
+
+  extendEnvironmentLockMutation = injectMutation(() => ({
+    ...extendEnvironmentLockMutation(),
+    onSuccess: () => {
+      this.queryClient.invalidateQueries({ queryKey: getAllEnvironmentsQueryKey() });
+      this.queryClient.invalidateQueries({ queryKey: getAllEnabledEnvironmentsQueryKey() });
+      this.queryClient.invalidateQueries({ queryKey: getEnvironmentsByUserLockingQueryKey() });
+      this.messageService.add({ severity: 'success', summary: 'Extend Lock', detail: 'Lock was extended successfully' });
     },
   }));
 
@@ -147,6 +159,11 @@ export class EnvironmentListViewComponent implements OnDestroy {
         this.lockEnvironmentMutation.mutate({ path: { id: environment.id } });
       },
     });
+  }
+
+  extendLock(event: Event, environment: EnvironmentDto) {
+    this.extendEnvironmentLockMutation.mutate({ path: { id: environment.id } });
+    event.stopPropagation();
   }
 
   getLockTooltip(environment: EnvironmentDto): string {
