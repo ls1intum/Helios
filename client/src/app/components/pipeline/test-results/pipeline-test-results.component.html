@@ -4,6 +4,10 @@
     [ngClass]="['flex items-center gap-2 w-full p-2 rounded mb-2 mt-8', hasTestSuites() ? 'hover:bg-gray-100' : '']"
     (click)="isTestResultsCollapsed = !isTestResultsCollapsed"
   >
+    @if (resultsHaveUpdated()) {
+      <p-tag [severity]="'info'" [rounded]="true" pTooltip="Since the last commit, the test results changed">Changed</p-tag>
+    }
+
     <h3 class="text-lg">Test Results</h3>
 
     @if (isProcessing()) {
@@ -35,15 +39,17 @@
       @if (testSuites.length === 0) {
         <!-- No Results State -->
         <div class="flex flex-col items-center p-4 border rounded-lg">
-          <i-tabler name="microscope" class="!size-12 text-primary mb-2"></i-tabler>
           <span class="text-sm text-gray-500">No test results available</span>
         </div>
       } @else {
         <!-- Test Results -->
         <div class="flex flex-col gap-4">
           @for (suite of testSuites.slice(testSuiteFirst(), testSuiteFirst() + testSuiteRows()); track suite.id) {
-            <p-panel [toggleable]="true" [collapsed]="true">
+            <p-panel [toggleable]="true" [collapsed]="true" [styleClass]="suiteHasUpdates(suite) ? 'border-blue-400 border-2 relative' : ''">
               <ng-template pTemplate="header">
+                @if (suiteHasUpdates(suite)) {
+                  <div class="absolute left-[-5px] -top-1 w-2.5 h-2.5 bg-blue-400 rounded-full flex items-center justify-center" pTooltip="Changed"></div>
+                }
                 <div class="flex items-center gap-2">
                   @switch (overallSuiteState(suite)) {
                     @case ('SUCCESS') {
@@ -78,8 +84,14 @@
                         <i-tabler name="chevrons-right" class="text-gray-500 w-4 h-4 flex-shrink-0"></i-tabler>
                       }
                     }
+
                     <div class="flex flex-col items-start min-w-0">
-                      <span class="text-sm truncate whitespace-nowrap overflow-hidden w-full">{{ testCase.name }} </span>
+                      <div class="flex items-center gap-2">
+                        @if (testCase.previousStatus !== testCase.status && testCase.previousStatus) {
+                          <span class="text-xs text-blue-400 font-medium flex-shrink-0">previously {{ testCase.previousStatus.toLowerCase() }}</span>
+                        }
+                        <span class="text-sm truncate whitespace-nowrap overflow-hidden w-full">{{ testCase.name }} </span>
+                      </div>
                       @if (testCase.message) {
                         <p-tag [severity]="testCase.status === 'FAILED' ? 'danger' : 'info'" [value]="testCase.message" styleClass="mt-2 text-xs"> </p-tag>
                       }

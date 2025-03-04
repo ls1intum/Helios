@@ -43,6 +43,10 @@ import type {
   GetLatestWorkflowRunsByBranchAndHeadCommitResponse,
   GetUserPermissionsData,
   GetUserPermissionsResponse,
+  GetLatestTestResultsByPullRequestIdData,
+  GetLatestTestResultsByPullRequestIdResponse,
+  GetLatestTestResultsByBranchData,
+  GetLatestTestResultsByBranchResponse,
   GetGroupsWithWorkflowsData,
   GetGroupsWithWorkflowsResponse,
   GetAllRepositoriesData,
@@ -286,6 +290,20 @@ export const getUserPermissions = <ThrowOnError extends boolean = false>(options
   return (options?.client ?? client).get<GetUserPermissionsResponse, unknown, ThrowOnError>({
     ...options,
     url: '/api/user-permissions',
+  });
+};
+
+export const getLatestTestResultsByPullRequestId = <ThrowOnError extends boolean = false>(options: Options<GetLatestTestResultsByPullRequestIdData, ThrowOnError>) => {
+  return (options?.client ?? client).get<GetLatestTestResultsByPullRequestIdResponse, unknown, ThrowOnError>({
+    ...options,
+    url: '/api/tests/pr/{pullRequestId}',
+  });
+};
+
+export const getLatestTestResultsByBranch = <ThrowOnError extends boolean = false>(options: Options<GetLatestTestResultsByBranchData, ThrowOnError>) => {
+  return (options?.client ?? client).get<GetLatestTestResultsByBranchResponse, unknown, ThrowOnError>({
+    ...options,
+    url: '/api/tests/branch',
   });
 };
 
