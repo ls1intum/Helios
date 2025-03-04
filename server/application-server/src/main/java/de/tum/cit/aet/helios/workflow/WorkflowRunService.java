@@ -75,7 +75,8 @@ public class WorkflowRunService {
   public List<WorkflowRunDto> getLatestWorkflowRunsByBranchAndHeadCommitSha(String branchName) {
     final Long repositoryId = RepositoryContext.getRepositoryId();
 
-    var branch = branchRepository.findByName(branchName).orElse(null);
+    var branch =
+        branchRepository.findByNameAndRepositoryRepositoryId(branchName, repositoryId).orElse(null);
     if (branch == null) {
       log.error("Branch with name {} not found!", branchName);
       return List.of();
