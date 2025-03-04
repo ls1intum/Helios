@@ -1,5 +1,6 @@
 // / <reference types="vitest" />
 import { defineConfig } from 'vite';
+import { coverageConfigDefaults } from 'vitest/config';
 
 import angular from '@analogjs/vite-plugin-angular';
 import tsconfigPaths from "vite-tsconfig-paths";
@@ -14,6 +15,7 @@ export default defineConfig(({ mode }) => ({
     coverage: {
       provider: 'istanbul',
       reporter: ['text', 'lcov'],
+      exclude: ['**/*.config.*', '**/*.gen.*', ...coverageConfigDefaults.exclude],
     }
   },
   define: {
