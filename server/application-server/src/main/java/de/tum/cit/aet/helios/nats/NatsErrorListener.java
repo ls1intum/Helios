@@ -12,6 +12,7 @@ import io.sentry.Sentry;
 import io.sentry.SentryLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 /**
@@ -23,7 +24,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class NatsErrorListener extends ErrorListenerConsoleImpl {
 
-  private final NatsConsumerService natsConsumerService;
+  @Lazy private final NatsConsumerService natsConsumerService;
 
   /**
    * Handles pull status errors for the NATS connection. Logs the error and trys consumer
