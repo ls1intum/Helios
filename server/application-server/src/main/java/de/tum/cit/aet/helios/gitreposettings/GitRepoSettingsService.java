@@ -5,7 +5,6 @@ import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import jakarta.transaction.Transactional;
 import java.util.Optional;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,7 +18,6 @@ public class GitRepoSettingsService {
   private final GitRepoRepository gitRepository;
   @Lazy private final EnvironmentService environmentService;
 
-  @Autowired
   public GitRepoSettingsService(
       GitRepoSettingsRepository gitRepoRepository,
       GitRepoRepository gitRepository,
