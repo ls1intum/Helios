@@ -15,7 +15,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Run
-        uses: tj-actions/docker-run@v2
+        uses: tj-actions/docker-run@68424e50d5326da41f9197f31797493cb6d7c917
         id: docker-run
         with:
           image: ghcr.io/ls1intum/helios/client:${{ inputs.client_image_tag }}
@@ -23,13 +23,13 @@ jobs:
           options: -d
           args: sleep 10
       - name: Copy from container to host
-        uses: tj-actions/docker-cp@v2
+        uses: tj-actions/docker-cp@d604bf259c630f3d7c8da3b39eb8a31c9519da7a
         with:
           container: ${{ steps.docker-run.outputs.container-id }}
           source: /usr/share/nginx/html
           destination: ./dist
       - name: Create Sentry release for Client
-        uses: getsentry/action-release@v3
+        uses: getsentry/action-release@4e3a28f192830e60b94e76b492bb975277150652
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
