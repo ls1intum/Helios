@@ -35,9 +35,3 @@ jobs:
       - name: Run ESLint
         working-directory: ./keycloakify
         run: npx eslint --max-warnings 0 .
-  # ONLY FOR TESTING, REMOVE THIS FROM HERE!
-  release-sentry:
-    uses: ./.github/workflows/release-sentry.yml
-    secrets: inherit
-    with:
-      client_image_tag: "latest"
