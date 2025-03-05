@@ -23,7 +23,7 @@ jobs:
         uses: tj-actions/docker-cp@v2
         with:
           container: ${{ steps.docker-run.outputs.container-id }}
-          source: /app/dist
+          source: /usr/share/nginx/html
           destination: ./dist
       - name: Create Sentry release for Client
         uses: getsentry/action-release@v3
