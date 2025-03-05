@@ -15,7 +15,7 @@ jobs:
         uses: tj-actions/docker-run@v2
         id: docker-run
         with:
-          image: ${{ inputs.client_image_tag }}
+          image: ghcr.io/ls1intum/helios/client:${{ inputs.client_image_tag }}
           name: client-build
           options: -d
           args: sleep 10
