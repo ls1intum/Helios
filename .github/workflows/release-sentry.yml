@@ -31,6 +31,7 @@ jobs:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
           SENTRY_PROJECT: ${{ secrets.SENTRY_CLIENT_PROJECT }}
+          SENTRY_URL: ${{ secrets.SENTRY_URL }}
         with:
           environment: production
           version: ${{ github.ref_name }}
@@ -47,6 +48,7 @@ jobs:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
           SENTRY_PROJECT: ${{ secrets.SENTRY_SERVER_PROJECT }}
+          SENTRY_URL: ${{ secrets.SENTRY_URL }}
         with:
           environment: production
           version: ${{ github.ref_name }}
