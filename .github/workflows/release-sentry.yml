@@ -1,4 +1,4 @@
-name: Deploy Docker Image
+name: Release to Sentry
 
 on:
   workflow_call:
