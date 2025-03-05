@@ -11,6 +11,9 @@ jobs:
   release-client-sentry:
     runs-on: ubuntu-latest
     steps: 
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Run
         uses: tj-actions/docker-run@v2
         id: docker-run
@@ -39,6 +42,9 @@ jobs:
   release-server-sentry:
     runs-on: ubuntu-latest
     steps: 
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Create Sentry release for Server
         uses: getsentry/action-release@v3
         env:
