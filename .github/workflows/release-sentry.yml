@@ -1,0 +1,52 @@
+name: Deploy Docker Image
+
+on:
+  workflow_call:
+    inputs:
+      client_image_tag:
+        default: "latest"
+        type: string
+
+jobs:
+  release-client-sentry:
+    runs-on: ubuntu-latest
+    steps: 
+      - name: Run
+        uses: tj-actions/docker-run@v2
+        id: docker-run
+        with:
+          image: ${{ inputs.client_image_tag }}
+          name: client-build
+          options: -d
+          args: sleep 10
+      - name: Copy from container to host
+        uses: tj-actions/docker-cp@v2
+        with:
+          container: ${{ steps.docker-run.outputs.container-id }}
+          source: /app/dist
+          destination: ./dist
+      - name: Create Sentry release for Client
+        uses: getsentry/action-release@v3
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_CLIENT_PROJECT }}
+        with:
+          environment: production
+          version: ${{ github.ref_name }}
+          sourcemaps: "./dist"
+  release-server-sentry:
+    runs-on: ubuntu-latest
+    steps: 
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Create Sentry release for Server
+        uses: getsentry/action-release@v3
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_SERVER_PROJECT }}
+        with:
+          environment: production
+          version: ${{ github.ref_name }}
