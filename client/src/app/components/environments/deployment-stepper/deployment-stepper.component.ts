@@ -67,8 +67,21 @@ export class DeploymentStepperComponent implements OnInit, OnDestroy {
 
   get currentEffectiveStepIndex(): number {
     if (!this.deployment || !this.deployment.createdAt) return 0;
+
+    // If in error state, find the last known valid state
+    if (this.isErrorState()) {
+      // Look through the stepStartTimes to find the last step that was started
+      const startedSteps = Array.from(this.stepStartTimes().keys());
+      for (let i = this.steps.length - 1; i >= 0; i--) {
+        if (startedSteps.includes(this.steps[i])) {
+          return i;
+        }
+      }
+      return -1; // Special value to indicate no valid step found in error state
+    }
+
     const index = this.steps.indexOf(this.deployment.state as 'REQUESTED' | 'PENDING' | 'IN_PROGRESS');
-    return index !== -1 ? index : 2;
+    return index !== -1 ? index : 0;
   }
 
   isErrorState(): boolean {
@@ -85,27 +98,45 @@ export class DeploymentStepperComponent implements OnInit, OnDestroy {
 
   getStepStatus(index: number): string {
     const effectiveStep = this.currentEffectiveStepIndex;
+
     if (this.isUnknownState()) return 'unknown';
     if (this.isSuccessState()) return 'completed';
+
+    // If in error state, handle each step appropriately
+    if (this.isErrorState()) {
+      if (effectiveStep === -1) return 'error'; // Show all steps as error when no valid step found
+      if (index < effectiveStep) return 'completed';
+      if (index === effectiveStep) return 'error';
+      return 'unknown';
+    }
+
+    // Normal flow (no error)
     if (index < effectiveStep) return 'completed';
-    if (index === effectiveStep) return this.isErrorState() ? 'error' : 'active';
+    if (index === effectiveStep) return 'active';
     return 'upcoming';
   }
 
   getProgress(index: number): number {
     if (!this.deployment || !this.deployment.createdAt) return 0;
-    if (this.isErrorState() && this.currentEffectiveStepIndex === index) return 100;
     if (this.deployment.state === 'SUCCESS') return 100;
 
     const stepKey = this.steps[index] as keyof EstimatedTimes;
     const currentState = this.deployment.state;
+    const effectiveStep = this.currentEffectiveStepIndex;
+
+    // If in error state with no valid step, show empty progress bars
+    if (this.isErrorState() && effectiveStep === -1) return 0;
 
     if (index < this.currentEffectiveStepIndex) return 100;
     if (index > this.currentEffectiveStepIndex || (this.isErrorState() && index > this.currentEffectiveStepIndex)) return 0;
 
     // For current step
     const stepStartTime = this.stepStartTimes().get(currentState!) || new Date(this.deployment.createdAt).getTime();
-    const elapsedMs = this.currentTime() - stepStartTime;
+
+    // If in error state, use the updatedAt time to calculate the progress at failure
+    const currentTime = this.isErrorState() && this.deployment.updatedAt ? new Date(this.deployment.updatedAt).getTime() : this.currentTime();
+
+    const elapsedMs = currentTime - stepStartTime;
     const estimatedMs = this.estimatedTimes()[stepKey] * 60000;
 
     const ratio = Math.min(elapsedMs / estimatedMs, 1);
@@ -144,16 +175,25 @@ export class DeploymentStepperComponent implements OnInit, OnDestroy {
 
   getStepTime(index: number): string {
     if (!this.deployment?.state || !this.deployment.createdAt) return '';
-    if (this.isErrorState() && index > this.currentEffectiveStepIndex) return '';
 
     const currentIndex = this.currentEffectiveStepIndex;
 
-    if (index < currentIndex || (this.isSuccessState() && index === this.steps.length - 1)) {
+    // Handle error state
+    if (this.isErrorState()) {
+      if (currentIndex === -1) return 'Failed'; // Show all steps as failed when no valid step found
+      if (index < currentIndex) return 'Completed';
+      if (index === currentIndex) return 'Failed';
+      return '';
+    }
+
+    // Handle success state
+    if (this.isSuccessState()) {
       return 'Completed';
     }
 
-    if (this.isErrorState() || this.isSuccessState()) {
-      return '';
+    // Handle normal flow
+    if (index < currentIndex) {
+      return 'Completed';
     }
 
     if (index > currentIndex) {
