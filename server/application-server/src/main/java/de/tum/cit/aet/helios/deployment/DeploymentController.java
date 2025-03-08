@@ -4,6 +4,7 @@ import de.tum.cit.aet.helios.config.security.annotations.EnforceAtLeastWritePerm
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Optional;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -12,15 +13,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/deployments")
 public class DeploymentController {
 
   private final DeploymentService deploymentService;
-
-  public DeploymentController(DeploymentService deploymentService) {
-    this.deploymentService = deploymentService;
-  }
 
   @GetMapping
   public ResponseEntity<List<DeploymentDto>> getAllDeployments() {
@@ -60,9 +58,8 @@ public class DeploymentController {
 
   @GetMapping("/environment/{environmentId}/activity-history")
   public ResponseEntity<List<ActivityHistoryDto>> getActivityHistoryByEnvironmentId(
-      @PathVariable Long environmentId
-  ) {
-    List<ActivityHistoryDto> activityHistory = 
+      @PathVariable Long environmentId) {
+    List<ActivityHistoryDto> activityHistory =
         deploymentService.getActivityHistoryByEnvironmentId(environmentId);
     return ResponseEntity.ok(activityHistory);
   }

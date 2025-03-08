@@ -4,17 +4,14 @@ import de.tum.cit.aet.helios.deployment.Deployment;
 import de.tum.cit.aet.helios.deployment.github.DeploymentSource;
 import java.io.IOException;
 import java.time.OffsetDateTime;
+import lombok.RequiredArgsConstructor;
 import org.kohsuke.github.GHDeployment;
 
+@RequiredArgsConstructor
 public class GhDeploymentSourceAdapter implements DeploymentSource {
 
   private final GHDeployment ghDeployment;
   private final Deployment.State state;
-
-  public GhDeploymentSourceAdapter(GHDeployment ghDeployment, Deployment.State state) {
-    this.ghDeployment = ghDeployment;
-    this.state = state;
-  }
 
   @Override
   public Long getId() {

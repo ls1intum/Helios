@@ -3,6 +3,7 @@ package de.tum.cit.aet.helios.config;
 import static org.springframework.security.config.Customizer.withDefaults;
 
 import de.tum.cit.aet.helios.filters.RepositoryInterceptor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +23,7 @@ import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Log4j2
+@RequiredArgsConstructor
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true)
@@ -30,20 +32,13 @@ public class SecurityConfig {
   private final Environment environment;
   private final GitHubJwtAuthenticationConverter gitHubJwtAuthenticationConverter;
 
-  public SecurityConfig(
-      Environment environment, GitHubJwtAuthenticationConverter gitHubJwtAuthenticationConverter) {
-    this.environment = environment;
-    this.gitHubJwtAuthenticationConverter = gitHubJwtAuthenticationConverter;
-  }
-
   @Bean
   public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
     http.cors(withDefaults()) // Enable CORS
         .csrf(AbstractHttpConfigurer::disable) // Disable CSRF
         .authorizeHttpRequests(
             auth -> {
-              auth.requestMatchers(HttpMethod.GET,
-                      "/api/**")
+              auth.requestMatchers(HttpMethod.GET, "/api/**")
                   .permitAll()
                   .requestMatchers(
                       "/auth/**",
@@ -77,18 +72,14 @@ public class SecurityConfig {
     return (web) ->
         web.ignoring()
             .requestMatchers(
-                "/v3/api-docs/**",
-                "/v3/api-docs.yaml",
-                "/swagger-ui/**",
-                "/swagger-ui.html");
+                "/v3/api-docs/**", "/v3/api-docs.yaml", "/swagger-ui/**", "/swagger-ui.html");
   }
 
   @Bean
   public WebMvcConfigurer corsConfigurer() {
 
     return new WebMvcConfigurer() {
-      @Autowired
-      private RepositoryInterceptor requestInterceptor;
+      @Autowired private RepositoryInterceptor requestInterceptor;
 
       @Override
       public void addInterceptors(@NonNull InterceptorRegistry registry) {
@@ -102,11 +93,7 @@ public class SecurityConfig {
           registry
               .addMapping("/api/**")
               .allowedOrigins("https://helios.aet.cit.tum.de")
-              .allowedMethods("GET",
-                  "POST",
-                  "PUT",
-                  "DELETE",
-                  "OPTIONS")
+              .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
               .allowedHeaders("*")
               .allowCredentials(true);
         } else if (environment.matchesProfiles("staging")) {
@@ -114,11 +101,7 @@ public class SecurityConfig {
           registry
               .addMapping("/api/**")
               .allowedOrigins("https://helios-staging.aet.cit.tum.de")
-              .allowedMethods("GET",
-                  "POST",
-                  "PUT",
-                  "DELETE",
-                  "OPTIONS")
+              .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
               .allowedHeaders("*")
               .allowCredentials(true);
         } else {
@@ -131,11 +114,7 @@ public class SecurityConfig {
                   "http://localhost:*",
                   "http://127.0.0.1",
                   "http://127.0.0.1:*")
-              .allowedMethods("GET",
-                  "POST",
-                  "PUT",
-                  "DELETE",
-                  "OPTIONS")
+              .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
               .allowedHeaders("*")
               .allowCredentials(true);
         }

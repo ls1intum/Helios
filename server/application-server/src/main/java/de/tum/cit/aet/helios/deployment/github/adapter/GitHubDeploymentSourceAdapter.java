@@ -4,18 +4,13 @@ import de.tum.cit.aet.helios.deployment.Deployment;
 import de.tum.cit.aet.helios.deployment.github.DeploymentSource;
 import de.tum.cit.aet.helios.deployment.github.GitHubDeploymentDto;
 import java.time.OffsetDateTime;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class GitHubDeploymentSourceAdapter implements DeploymentSource {
 
   private final GitHubDeploymentDto gitHubDeploymentDto;
-
   private final Deployment.State state;
-
-  public GitHubDeploymentSourceAdapter(
-      GitHubDeploymentDto gitHubDeploymentDto, Deployment.State state) {
-    this.gitHubDeploymentDto = gitHubDeploymentDto;
-    this.state = state;
-  }
 
   @Override
   public Long getId() {
