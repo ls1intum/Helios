@@ -23,6 +23,7 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import lombok.Getter;
@@ -105,7 +106,7 @@ public class Environment extends RepositoryFilterEntity {
 
   @OneToMany(mappedBy = "environment", cascade = CascadeType.ALL, orphanRemoval = true)
   @OrderBy("checkTimestamp DESC")
-  private List<EnvironmentStatus> statusHistory;
+  private List<EnvironmentStatus> statusHistory = new ArrayList<>();
 
   // Once the threshold is reached, the lock automatically expires and the environment becomes
   // available again.

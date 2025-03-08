@@ -159,13 +159,13 @@ public class EnvironmentService {
             .orElseThrow(() -> new EntityNotFoundException("Environment not found with ID: " + id));
 
     if (!environment.isEnabled()) {
-      throw new IllegalStateException("Environment is disabled");
+      throw new EnvironmentException("Environment is disabled");
     }
 
     // Only proceed with locking if it's a TEST environment
     if (environment.getType() != Environment.Type.TEST) {
       // Return the environment without locking for non-TEST environments
-      return Optional.of(environment);
+      throw new EnvironmentException("Only test environments can be locked");
     }
 
     if (environment.isLocked()) {
@@ -277,7 +277,7 @@ public class EnvironmentService {
    *     the environment isn't locked, is locked by another user, or if an optimistic locking
    *     failure occurs
    * @throws EntityNotFoundException if no environment is found with the specified ID
-   * @throws IllegalStateException if the environment is disabled or isn't a TEST environment
+   * @throws EnvironmentException if the environment is disabled or isn't a TEST environment
    */
   @Transactional
   public Optional<Environment> extendEnvironmentLock(Long id) {
@@ -290,17 +290,19 @@ public class EnvironmentService {
 
     // Check environment status
     if (!environment.isEnabled()) {
-      throw new IllegalStateException("Environment is disabled");
+      throw new EnvironmentException("Environment is disabled");
     }
 
     if (environment.getType() != Environment.Type.TEST) {
-      throw new IllegalStateException("Only TEST environments can have their locks extended");
+      throw new EnvironmentException("Only TEST environments can have their locks extended");
     }
 
     // Verify the environment is locked and by the current user
     if (!environment.isLocked()) {
       throw new EnvironmentException("Environment is not locked. Cannot extend lock.");
-    } else if (!environment.getLockedBy().equals(currentUser)) {
+    }
+
+    if (!environment.getLockedBy().equals(currentUser)) {
       // The Environment is locked, but by someone else
       String msg = getLockedByAnotherUserErrorMessage(environment);
       throw new EnvironmentException(msg);
@@ -379,7 +381,7 @@ public class EnvironmentService {
             .orElseThrow(() -> new EntityNotFoundException("Environment not found with ID: " + id));
 
     if (!environment.isLocked()) {
-      throw new IllegalStateException("Environment is not locked");
+      throw new EnvironmentException("Environment is not locked");
     }
 
     // TODO User environment lockReservationExpiresAt instead of calcualting it as below

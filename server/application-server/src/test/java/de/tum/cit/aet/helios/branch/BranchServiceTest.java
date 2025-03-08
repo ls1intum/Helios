@@ -11,16 +11,17 @@ import de.tum.cit.aet.helios.userpreference.UserPreferenceRepository;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import org.junit.Test;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 @RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class BranchServiceTest {
 
   @InjectMocks private BranchService branchService;
@@ -28,11 +29,6 @@ public class BranchServiceTest {
   @Mock private ReleaseCandidateRepository releaseCandidateRepository;
   @Mock private UserPreferenceRepository userPreferenceRepository;
   @Mock private AuthService authService;
-
-  @BeforeEach
-  public void init() {
-    MockitoAnnotations.openMocks(this);
-  }
 
   @Test
   public void testPinnedBranchesAreShownFirst() {
@@ -53,15 +49,18 @@ public class BranchServiceTest {
     userPreference.setFavouriteBranches(Set.of(b2));
 
     when(branchRepository.findAll()).thenReturn(branches);
+    when(authService.isLoggedIn()).thenReturn(true);
     when(authService.getUserFromGithubId()).thenReturn(null);
     when(userPreferenceRepository.findByUser(null)).thenReturn(Optional.of(userPreference));
+
+    List<BranchInfoDto> allBranches = branchService.getAllBranches();
 
     BranchInfoDto b1Dto =
         BranchInfoDto.fromBranchAndUserPreference(b1, Optional.of(userPreference));
     BranchInfoDto b2Dto =
         BranchInfoDto.fromBranchAndUserPreference(b2, Optional.of(userPreference));
 
-    assertEquals(2, branchService.getAllBranches().size());
-    Assertions.assertIterableEquals(List.of(b2Dto, b1Dto), branchService.getAllBranches());
+    assertEquals(2, allBranches.size());
+    Assertions.assertIterableEquals(List.of(b2Dto, b1Dto), allBranches);
   }
 }
