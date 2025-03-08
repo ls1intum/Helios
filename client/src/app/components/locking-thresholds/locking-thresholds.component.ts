@@ -37,7 +37,6 @@ export class LockingThresholdsComponent {
   fetchGitRepoThresholdsQuery = injectQuery(() => ({
     ...getGitRepoSettingsOptions({ path: { repositoryId: this.repositoryId() } }),
     enabled: () => !!this.repositoryId(),
-    refetchOnWindowFocus: false,
   }));
 
   mutateGitRepoSettings = injectMutation(() => ({
@@ -105,4 +104,32 @@ export class LockingThresholdsComponent {
       },
     });
   }
+
+  hasUnsavedChanges = computed(() => {
+    const serverData = this.fetchGitRepoThresholdsQuery.data();
+    if (!serverData) return false;
+
+    // Get current values
+    const currentExpirationEnabled = this.isLockExpirationEnabled();
+    const currentReservationEnabled = this.isLockReservationEnabled();
+    const currentExpirationThreshold = this.lockingExpirationThreshold();
+    const currentReservationThreshold = this.lockingReservationThreshold();
+
+    // Get server values
+    const serverExpirationEnabled = serverData.lockExpirationThreshold !== undefined && serverData.lockExpirationThreshold >= 0;
+    const serverReservationEnabled = serverData.lockReservationThreshold !== undefined && serverData.lockReservationThreshold >= 0;
+    const serverExpirationThreshold = serverExpirationEnabled ? serverData.lockExpirationThreshold : undefined;
+    const serverReservationThreshold = serverReservationEnabled ? serverData.lockReservationThreshold : undefined;
+
+    // Compare enabled states
+    if (currentExpirationEnabled !== serverExpirationEnabled) return true;
+    if (currentReservationEnabled !== serverReservationEnabled) return true;
+
+    // Compare threshold values (only if respective feature is enabled)
+    if (currentExpirationEnabled && currentExpirationThreshold !== serverExpirationThreshold) return true;
+    if (currentReservationEnabled && currentReservationThreshold !== serverReservationThreshold) return true;
+
+    // No changes detected
+    return false;
+  });
 }

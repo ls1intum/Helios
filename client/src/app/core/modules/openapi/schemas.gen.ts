@@ -180,6 +180,9 @@ export const EnvironmentDtoSchema = {
       type: 'string',
       enum: ['TEST', 'STAGING', 'PRODUCTION'],
     },
+    deploymentWorkflow: {
+      $ref: '#/components/schemas/WorkflowDto',
+    },
     lockExpirationThreshold: {
       type: 'integer',
       format: 'int64',
@@ -278,6 +281,54 @@ export const UserInfoDtoSchema = {
   required: ['avatarUrl', 'htmlUrl', 'id', 'login', 'name'],
 } as const;
 
+export const WorkflowDtoSchema = {
+  type: 'object',
+  properties: {
+    id: {
+      type: 'integer',
+      format: 'int64',
+    },
+    repository: {
+      $ref: '#/components/schemas/RepositoryInfoDto',
+    },
+    name: {
+      type: 'string',
+    },
+    path: {
+      type: 'string',
+    },
+    fileNameWithExtension: {
+      type: 'string',
+    },
+    state: {
+      type: 'string',
+      enum: ['ACTIVE', 'DELETED', 'DISABLED_FORK', 'DISABLED_INACTIVITY', 'DISABLED_MANUALLY', 'UNKNOWN'],
+    },
+    url: {
+      type: 'string',
+    },
+    htmlUrl: {
+      type: 'string',
+    },
+    badgeUrl: {
+      type: 'string',
+    },
+    label: {
+      type: 'string',
+      enum: ['NONE', 'TEST'],
+    },
+    createdAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+    updatedAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+  },
+  required: ['id', 'label', 'name', 'path', 'state'],
+} as const;
+
 export const ReleaseCandidateCreateDtoSchema = {
   type: 'object',
   properties: {
@@ -326,132 +377,6 @@ export const DeployRequestSchema = {
   required: ['branchName', 'environmentId'],
 } as const;
 
-export const WorkflowDtoSchema = {
-  type: 'object',
-  properties: {
-    id: {
-      type: 'integer',
-      format: 'int64',
-    },
-    repository: {
-      $ref: '#/components/schemas/RepositoryInfoDto',
-    },
-    name: {
-      type: 'string',
-    },
-    path: {
-      type: 'string',
-    },
-    fileNameWithExtension: {
-      type: 'string',
-    },
-    state: {
-      type: 'string',
-      enum: ['ACTIVE', 'DELETED', 'DISABLED_FORK', 'DISABLED_INACTIVITY', 'DISABLED_MANUALLY', 'UNKNOWN'],
-    },
-    url: {
-      type: 'string',
-    },
-    htmlUrl: {
-      type: 'string',
-    },
-    badgeUrl: {
-      type: 'string',
-    },
-    label: {
-      type: 'string',
-      enum: ['NONE', 'DEPLOY_TEST_SERVER', 'DEPLOY_STAGING_SERVER', 'DEPLOY_PRODUCTION_SERVER', 'TEST'],
-    },
-    createdAt: {
-      type: 'string',
-      format: 'date-time',
-    },
-    updatedAt: {
-      type: 'string',
-      format: 'date-time',
-    },
-  },
-  required: ['id', 'label', 'name', 'path', 'state'],
-} as const;
-
-export const TestCaseDtoSchema = {
-  type: 'object',
-  properties: {
-    id: {
-      type: 'integer',
-      format: 'int64',
-    },
-    name: {
-      type: 'string',
-    },
-    className: {
-      type: 'string',
-    },
-    status: {
-      type: 'string',
-      enum: ['PASSED', 'FAILED', 'ERROR', 'SKIPPED'],
-    },
-    time: {
-      type: 'number',
-      format: 'double',
-    },
-    message: {
-      type: 'string',
-    },
-    stackTrace: {
-      type: 'string',
-    },
-    errorType: {
-      type: 'string',
-    },
-  },
-  required: ['className', 'id', 'name', 'status', 'time'],
-} as const;
-
-export const TestSuiteDtoSchema = {
-  type: 'object',
-  properties: {
-    id: {
-      type: 'integer',
-      format: 'int64',
-    },
-    name: {
-      type: 'string',
-    },
-    timestamp: {
-      type: 'string',
-      format: 'date-time',
-    },
-    tests: {
-      type: 'integer',
-      format: 'int32',
-    },
-    failures: {
-      type: 'integer',
-      format: 'int32',
-    },
-    errors: {
-      type: 'integer',
-      format: 'int32',
-    },
-    skipped: {
-      type: 'integer',
-      format: 'int32',
-    },
-    time: {
-      type: 'number',
-      format: 'double',
-    },
-    testCases: {
-      type: 'array',
-      items: {
-        $ref: '#/components/schemas/TestCaseDto',
-      },
-    },
-  },
-  required: ['errors', 'failures', 'id', 'name', 'skipped', 'testCases', 'tests', 'time', 'timestamp'],
-} as const;
-
 export const WorkflowRunDtoSchema = {
   type: 'object',
   properties: {
@@ -498,20 +423,14 @@ export const WorkflowRunDtoSchema = {
     },
     label: {
       type: 'string',
-      enum: ['NONE', 'DEPLOY_TEST_SERVER', 'DEPLOY_STAGING_SERVER', 'DEPLOY_PRODUCTION_SERVER', 'TEST'],
+      enum: ['NONE', 'TEST'],
     },
     testProcessingStatus: {
       type: 'string',
       enum: ['PROCESSING', 'PROCESSED', 'FAILED'],
     },
-    testSuites: {
-      type: 'array',
-      items: {
-        $ref: '#/components/schemas/TestSuiteDto',
-      },
-    },
   },
-  required: ['displayTitle', 'htmlUrl', 'id', 'label', 'name', 'status', 'testSuites', 'workflowId'],
+  required: ['displayTitle', 'htmlUrl', 'id', 'label', 'name', 'status', 'workflowId'],
 } as const;
 
 export const GitHubRepositoryRoleDtoSchema = {
@@ -525,6 +444,104 @@ export const GitHubRepositoryRoleDtoSchema = {
       type: 'string',
     },
   },
+} as const;
+
+export const TestCaseDtoSchema = {
+  type: 'object',
+  properties: {
+    id: {
+      type: 'integer',
+      format: 'int64',
+    },
+    name: {
+      type: 'string',
+    },
+    className: {
+      type: 'string',
+    },
+    status: {
+      type: 'string',
+      enum: ['PASSED', 'FAILED', 'ERROR', 'SKIPPED'],
+    },
+    previousStatus: {
+      type: 'string',
+      enum: ['PASSED', 'FAILED', 'ERROR', 'SKIPPED'],
+    },
+    time: {
+      type: 'number',
+      format: 'double',
+    },
+    message: {
+      type: 'string',
+    },
+    stackTrace: {
+      type: 'string',
+    },
+    errorType: {
+      type: 'string',
+    },
+  },
+  required: ['className', 'id', 'name', 'status', 'time'],
+} as const;
+
+export const TestResultsDtoSchema = {
+  type: 'object',
+  properties: {
+    testSuites: {
+      type: 'array',
+      items: {
+        $ref: '#/components/schemas/TestSuiteDto',
+      },
+    },
+    isProcessing: {
+      type: 'boolean',
+    },
+  },
+  required: ['testSuites'],
+} as const;
+
+export const TestSuiteDtoSchema = {
+  type: 'object',
+  properties: {
+    id: {
+      type: 'integer',
+      format: 'int64',
+    },
+    name: {
+      type: 'string',
+    },
+    timestamp: {
+      type: 'string',
+      format: 'date-time',
+    },
+    tests: {
+      type: 'integer',
+      format: 'int32',
+    },
+    failures: {
+      type: 'integer',
+      format: 'int32',
+    },
+    errors: {
+      type: 'integer',
+      format: 'int32',
+    },
+    skipped: {
+      type: 'integer',
+      format: 'int32',
+    },
+    time: {
+      type: 'number',
+      format: 'double',
+    },
+    testCases: {
+      type: 'array',
+      items: {
+        $ref: '#/components/schemas/TestCaseDto',
+      },
+    },
+  },
+  required: ['errors', 'failures', 'id', 'name', 'skipped', 'testCases', 'tests', 'time', 'timestamp'],
 } as const;
 
 export const BranchInfoDtoSchema = {

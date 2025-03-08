@@ -15,6 +15,8 @@ import type {
   UnlockEnvironmentResponse,
   LockEnvironmentData,
   LockEnvironmentResponse,
+  ExtendEnvironmentLockData,
+  ExtendEnvironmentLockResponse,
   CreateWorkflowGroupData,
   CreateWorkflowGroupResponse,
   GetAllReleaseCandidatesData,
@@ -33,6 +35,8 @@ import type {
   GetLatestWorkflowRunsByPullRequestIdAndHeadCommitData,
   GetLatestWorkflowRunsByBranchAndHeadCommitData,
   GetUserPermissionsData,
+  GetLatestTestResultsByPullRequestIdData,
+  GetLatestTestResultsByBranchData,
   GetGroupsWithWorkflowsData,
   GetAllRepositoriesData,
   GetRepositoryByIdData,
@@ -68,6 +72,7 @@ import {
   updateEnvironment,
   unlockEnvironment,
   lockEnvironment,
+  extendEnvironmentLock,
   createWorkflowGroup,
   getAllReleaseCandidates,
   createReleaseCandidate,
@@ -83,6 +88,8 @@ import {
   getLatestWorkflowRunsByPullRequestIdAndHeadCommit,
   getLatestWorkflowRunsByBranchAndHeadCommit,
   getUserPermissions,
+  getLatestTestResultsByPullRequestId,
+  getLatestTestResultsByBranch,
   getGroupsWithWorkflows,
   getAllRepositories,
   getRepositoryById,
@@ -245,6 +252,20 @@ export const lockEnvironmentMutation = (options?: Partial<Options<LockEnvironmen
   const mutationOptions: MutationOptions<LockEnvironmentResponse, DefaultError, Options<LockEnvironmentData>> = {
     mutationFn: async localOptions => {
       const { data } = await lockEnvironment({
+        ...options,
+        ...localOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const extendEnvironmentLockMutation = (options?: Partial<Options<ExtendEnvironmentLockData>>) => {
+  const mutationOptions: MutationOptions<ExtendEnvironmentLockResponse, DefaultError, Options<ExtendEnvironmentLockData>> = {
+    mutationFn: async localOptions => {
+      const { data } = await extendEnvironmentLock({
         ...options,
         ...localOptions,
         throwOnError: true,
@@ -597,6 +618,42 @@ export const getUserPermissionsOptions = (options?: Options<GetUserPermissionsDa
       return data;
     },
     queryKey: getUserPermissionsQueryKey(options),
+  });
+};
+
+export const getLatestTestResultsByPullRequestIdQueryKey = (options: Options<GetLatestTestResultsByPullRequestIdData>) => [
+  createQueryKey('getLatestTestResultsByPullRequestId', options),
+];
+
+export const getLatestTestResultsByPullRequestIdOptions = (options: Options<GetLatestTestResultsByPullRequestIdData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getLatestTestResultsByPullRequestId({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: getLatestTestResultsByPullRequestIdQueryKey(options),
+  });
+};
+
+export const getLatestTestResultsByBranchQueryKey = (options: Options<GetLatestTestResultsByBranchData>) => [createQueryKey('getLatestTestResultsByBranch', options)];
+
+export const getLatestTestResultsByBranchOptions = (options: Options<GetLatestTestResultsByBranchData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getLatestTestResultsByBranch({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: getLatestTestResultsByBranchQueryKey(options),
   });
 };
 

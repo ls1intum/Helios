@@ -9,6 +9,8 @@ import jakarta.xml.bind.annotation.XmlRootElement;
 import jakarta.xml.bind.annotation.XmlValue;
 import java.io.InputStream;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.extern.log4j.Log4j2;
@@ -17,6 +19,16 @@ import org.springframework.stereotype.Component;
 @Component
 @Log4j2
 public class JunitParser implements TestResultParser {
+  private static LocalDateTime parseDateTime(String dateTime) {
+    try {
+      // Try parsing as OffsetDateTime first (for Z suffix)
+      return OffsetDateTime.parse(dateTime).toLocalDateTime();
+    } catch (DateTimeParseException e) {
+      // Fallback to LocalDateTime parsing if no Z
+      return LocalDateTime.parse(dateTime);
+    }
+  }
+
   public TestResultParser.TestSuite parse(InputStream inputStream) throws TestResultParseException {
     try {
       JAXBContext context = JAXBContext.newInstance(TestSuite.class);
@@ -25,7 +37,7 @@ public class JunitParser implements TestResultParser {
 
       return new TestResultParser.TestSuite(
           suite.name,
-          LocalDateTime.parse(suite.timestamp),
+          parseDateTime(suite.timestamp),
           suite.tests,
           suite.failures,
           suite.errors,

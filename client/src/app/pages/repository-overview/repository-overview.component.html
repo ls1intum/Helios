@@ -37,10 +37,12 @@
     </ng-template>
   </p-table>
 } @else {
-  <p-table #table [rowHover]="true" [value]="query.data() || []" [paginator]="true" [rows]="20">
+  <p-table #table [rowHover]="true" [value]="filteredRepositories()" [paginator]="true" [rows]="20" [globalFilterFields]="['name', 'description']">
     <ng-template #header>
       <tr>
-        <th>Repository</th>
+        <th>
+          <app-table-filter [table]="table" [searchTableService]="searchTableService" />
+        </th>
         <th></th>
       </tr>
     </ng-template>

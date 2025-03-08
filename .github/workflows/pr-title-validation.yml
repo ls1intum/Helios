@@ -17,10 +17,10 @@ jobs:
       pull-requests: write
     steps:
       - name: validate conventional commit message
-        id: lint
-        uses: amannn/action-semantic-pull-request@v5
+        uses:  ytanikin/pr-conventional-commits@8267db1bacc237419f9ed0228bb9d94e94271a1d
         with:
-          subjectPattern: ^[A-Z].+[^. ]$ # subject must start with uppercase letter and may not end with a dot/space
+          task_types: '["feat","fix","docs","test","ci","refactor","perf","chore","revert"]'
+          add_label: 'false'
         env:
           GITHUB_TOKEN: ${{ github.token }}
       - name: post comment about invalid PR title

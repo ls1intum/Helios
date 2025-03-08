@@ -1,9 +1,11 @@
-import { Component, computed, inject, input, OnDestroy, output, signal } from '@angular/core';
-import { AccordionModule } from 'primeng/accordion';
 import { CommonModule, DatePipe } from '@angular/common';
+import { Component, computed, inject, input, OnDestroy, output, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { UserAvatarComponent } from '@app/components/user-avatar/user-avatar.component';
 import { EnvironmentDto } from '@app/core/modules/openapi';
 import {
+  extendEnvironmentLockMutation,
   getAllEnabledEnvironmentsOptions,
   getAllEnabledEnvironmentsQueryKey,
   getAllEnvironmentsOptions,
@@ -12,29 +14,28 @@ import {
   lockEnvironmentMutation,
   unlockEnvironmentMutation,
 } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
+import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 import { PermissionService } from '@app/core/services/permission.service';
+import { TimeAgoPipe } from '@app/pipes/time-ago.pipe';
 import { injectMutation, injectQuery, QueryClient } from '@tanstack/angular-query-experimental';
 import { IconsModule } from 'icons.module';
-import { ConfirmationService } from 'primeng/api';
+import { AccordionModule } from 'primeng/accordion';
+import { ConfirmationService, MessageService } from 'primeng/api';
+import { AvatarModule } from 'primeng/avatar';
 import { ButtonModule } from 'primeng/button';
+import { ButtonGroupModule } from 'primeng/buttongroup';
 import { InputTextModule } from 'primeng/inputtext';
+import { SelectButtonModule } from 'primeng/selectbutton';
 import { TagModule } from 'primeng/tag';
+import { ToggleButtonModule } from 'primeng/togglebutton';
+import { TooltipModule } from 'primeng/tooltip';
 import { EnvironmentDeploymentInfoComponent } from '../deployment-info/environment-deployment-info.component';
 import { DeploymentStateTagComponent } from '../deployment-state-tag/deployment-state-tag.component';
-import { LockTagComponent } from '../lock-tag/lock-tag.component';
-import { LockTimeComponent } from '../lock-time/lock-time.component';
-import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
-import { AvatarModule } from 'primeng/avatar';
-import { TooltipModule } from 'primeng/tooltip';
-import { TimeAgoPipe } from '@app/pipes/time-ago.pipe';
-import { UserAvatarComponent } from '@app/components/user-avatar/user-avatar.component';
+import { DeploymentStepperComponent } from '../deployment-stepper/deployment-stepper.component';
 import { EnvironmentStatusInfoComponent } from '../environment-status-info/environment-status-info.component';
 import { EnvironmentStatusTagComponent } from '../environment-status-tag/environment-status-tag.component';
-import { DeploymentStepperComponent } from '../deployment-stepper/deployment-stepper.component';
-import { ToggleButtonModule } from 'primeng/togglebutton';
-import { FormsModule } from '@angular/forms';
-import { ToggleSwitchModule } from 'primeng/toggleswitch';
-import { ButtonGroupModule } from 'primeng/buttongroup';
+import { LockTagComponent } from '../lock-tag/lock-tag.component';
+import { LockTimeComponent } from '../lock-time/lock-time.component';
 
 @Component({
   selector: 'app-environment-list-view',
@@ -60,19 +61,20 @@ import { ButtonGroupModule } from 'primeng/buttongroup';
     UserAvatarComponent,
     ToggleButtonModule,
     FormsModule,
-    ToggleSwitchModule,
+    SelectButtonModule,
   ],
   providers: [DatePipe],
   templateUrl: './environment-list-view.component.html',
 })
 export class EnvironmentListViewComponent implements OnDestroy {
-  private queryClient = inject(QueryClient);
+  private queryClient = inject<QueryClient>(QueryClient);
   private confirmationService = inject(ConfirmationService);
   private keycloakService = inject(KeycloakService);
   private datePipe = inject(DatePipe);
   private permissionService = inject(PermissionService);
   private currentTime = signal(Date.now());
   private intervalId: number | undefined;
+  private messageService = inject(MessageService);
 
   showLatestDeployment: boolean = true;
 
@@ -92,6 +94,16 @@ export class EnvironmentListViewComponent implements OnDestroy {
     onSuccess: () => {
       this.queryClient.invalidateQueries({ queryKey: this.queryKey() });
       this.queryClient.invalidateQueries({ queryKey: getEnvironmentsByUserLockingQueryKey() });
+    },
+  }));
+
+  extendEnvironmentLockMutation = injectMutation(() => ({
+    ...extendEnvironmentLockMutation(),
+    onSuccess: () => {
+      this.queryClient.invalidateQueries({ queryKey: getAllEnvironmentsQueryKey() });
+      this.queryClient.invalidateQueries({ queryKey: getAllEnabledEnvironmentsQueryKey() });
+      this.queryClient.invalidateQueries({ queryKey: getEnvironmentsByUserLockingQueryKey() });
+      this.messageService.add({ severity: 'success', summary: 'Extend Lock', detail: 'Lock was extended successfully' });
     },
   }));
 
@@ -147,6 +159,11 @@ export class EnvironmentListViewComponent implements OnDestroy {
         this.lockEnvironmentMutation.mutate({ path: { id: environment.id } });
       },
     });
+  }
+
+  extendLock(event: Event, environment: EnvironmentDto) {
+    this.extendEnvironmentLockMutation.mutate({ path: { id: environment.id } });
+    event.stopPropagation();
   }
 
   getLockTooltip(environment: EnvironmentDto): string {
