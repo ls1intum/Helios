@@ -23,7 +23,7 @@ jobs:
       name: ${{ inputs.environment }}
     steps:
       - name: SSH to VM and Execute Docker-Compose Down
-        uses: appleboy/ssh-action@v1.2.0
+        uses: appleboy/ssh-action@v1.2.1
         with:
           host: ${{ vars.VM_HOST }}
           username: ${{ secrets.VM_USERNAME }}
@@ -54,7 +54,7 @@ jobs:
           target: ${{ vars.WORKING_DIR }}
 
       - name: SSH to VM and create .env file
-        uses: appleboy/ssh-action@v1.2.0
+        uses: appleboy/ssh-action@v1.2.1
         with:
           host: ${{ vars.VM_HOST }}
           username: ${{ secrets.VM_USERNAME }}
@@ -105,7 +105,7 @@ jobs:
             echo "WEBHOOK_LISTENER_IMAGE_TAG=${{ inputs.webhook_listener_image_tag }}" >> .env
 
       - name: SSH to VM and Execute Docker-Compose Up
-        uses: appleboy/ssh-action@v1.2.0
+        uses: appleboy/ssh-action@v1.2.1
         with:
           host: ${{ vars.VM_HOST }}
           username: ${{ secrets.VM_USERNAME }}
