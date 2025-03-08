@@ -46,7 +46,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Create Sentry release for Server
-        uses: getsentry/action-release@v3
+        uses: getsentry/action-release@4e3a28f192830e60b94e76b492bb975277150652
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
