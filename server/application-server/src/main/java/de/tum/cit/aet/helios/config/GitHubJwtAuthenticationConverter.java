@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.lang.NonNull;
@@ -19,6 +20,7 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.stereotype.Component;
 
 @Log4j2
+@RequiredArgsConstructor
 @Component
 public class GitHubJwtAuthenticationConverter
     implements Converter<Jwt, AbstractAuthenticationToken> {
@@ -26,11 +28,6 @@ public class GitHubJwtAuthenticationConverter
   final String rolePrefix = "ROLE_";
   private final GitHubService gitHubService;
   private final HttpServletRequest request;
-
-  public GitHubJwtAuthenticationConverter(GitHubService gitHubService, HttpServletRequest request) {
-    this.gitHubService = gitHubService;
-    this.request = request;
-  }
 
   @Override
   public AbstractAuthenticationToken convert(@NonNull Jwt jwt) {
@@ -56,8 +53,7 @@ public class GitHubJwtAuthenticationConverter
 
     // Hardcoded Helios developers
     String[] heliosDevelopers = {
-        "gbanu", "thielpa", "egekocabas", "turkerkoc", "stefannemeth",
-        "bensofficial"
+      "gbanu", "thielpa", "egekocabas", "turkerkoc", "stefannemeth", "bensofficial"
     };
     if (Arrays.asList(heliosDevelopers).contains(username)) {
       authorities.add(new SimpleGrantedAuthority(rolePrefix + RepoPermissionType.ADMIN));

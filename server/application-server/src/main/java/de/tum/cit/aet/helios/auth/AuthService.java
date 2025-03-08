@@ -5,6 +5,7 @@ import de.tum.cit.aet.helios.user.User;
 import de.tum.cit.aet.helios.user.UserRepository;
 import de.tum.cit.aet.helios.user.github.GitHubUserSyncService;
 import java.io.IOException;
+import lombok.RequiredArgsConstructor;
 import org.kohsuke.github.GHUser;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -14,19 +15,11 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class AuthService {
   private final UserRepository userRepository;
   private final GitHubFacade githubFacade;
   private final GitHubUserSyncService githubUserSyncService;
-
-  public AuthService(
-      UserRepository userRepository,
-      GitHubFacade githubFacade,
-      GitHubUserSyncService githubUserSyncService) {
-    this.userRepository = userRepository;
-    this.githubFacade = githubFacade;
-    this.githubUserSyncService = githubUserSyncService;
-  }
 
   /**
    * Retrieves the preferred username from the JWT. This is the GitHub username of the user.
