@@ -511,6 +511,22 @@ export type ExtendEnvironmentLockResponses = {
 
 export type ExtendEnvironmentLockResponse = ExtendEnvironmentLockResponses[keyof ExtendEnvironmentLockResponses];
 
+export type SyncWorkflowsByRepositoryIdData = {
+  body?: never;
+  path: {
+    repositoryId: number;
+  };
+  query?: never;
+  url: '/api/workflows/repository/{repositoryId}/sync';
+};
+
+export type SyncWorkflowsByRepositoryIdResponses = {
+  /**
+   * OK
+   */
+  200: unknown;
+};
+
 export type CreateWorkflowGroupData = {
   body: WorkflowGroupDto;
   path: {
