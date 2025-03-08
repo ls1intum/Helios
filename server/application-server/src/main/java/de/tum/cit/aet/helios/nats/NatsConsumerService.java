@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.stream.Stream;
 import lombok.extern.log4j.Log4j2;
 import org.kohsuke.github.GHEvent;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.annotation.Lazy;
@@ -65,13 +64,10 @@ public class NatsConsumerService {
   @Value("${nats.auth.token}")
   private String natsAuthToken;
 
-
   private Connection natsConnection;
   private ConsumerContext consumerContext;
 
-  /**
-   * Active NATS message consumer.
-   */
+  /** Active NATS message consumer. */
   private MessageConsumer messageConsumer;
 
   private final Environment environment;
@@ -84,7 +80,6 @@ public class NatsConsumerService {
 
   private final NatsErrorListener natsErrorListener;
 
-  @Autowired
   public NatsConsumerService(
       Environment environment,
       GitHubMessageHandlerRegistry handlerRegistry,
@@ -160,9 +155,8 @@ public class NatsConsumerService {
       StreamContext streamContext = connection.getStreamContext("github");
       // Get the subjects to monitor
       String[] subjects = getSubjects();
-      log.info("Setting up consumer for stream 'github' with subjects: {}",
-          Arrays.toString(subjects));
-
+      log.info(
+          "Setting up consumer for stream 'github' with subjects: {}", Arrays.toString(subjects));
 
       ConsumerConfiguration.Builder consumerConfigBuilder = null;
 
@@ -181,19 +175,21 @@ public class NatsConsumerService {
         // Use existing configuration as base
         ConsumerConfiguration existingConfig = existingConsumer.getConsumerConfiguration();
         log.info("Consumer '{}' already exists. Updating subjects.", durableConsumerName);
-        consumerConfigBuilder = ConsumerConfiguration.builder(existingConfig)
-            .inactiveThreshold(Duration.ofMinutes(consumerInactiveThresholdMinutes))
-            .ackWait(Duration.ofSeconds(consumerAckWaitSeconds))
-            .filterSubjects(subjects);
+        consumerConfigBuilder =
+            ConsumerConfiguration.builder(existingConfig)
+                .inactiveThreshold(Duration.ofMinutes(consumerInactiveThresholdMinutes))
+                .ackWait(Duration.ofSeconds(consumerAckWaitSeconds))
+                .filterSubjects(subjects);
       } else {
         log.info("Creating new configuration for consumer.");
         // Create new configuration with deliver policy and start time
-        consumerConfigBuilder = ConsumerConfiguration.builder()
-            .deliverPolicy(DeliverPolicy.ByStartTime)
-            .startTime(ZonedDateTime.now().minusDays(timeframe))
-            .inactiveThreshold(Duration.ofMinutes(consumerInactiveThresholdMinutes))
-            .ackWait(Duration.ofSeconds(consumerAckWaitSeconds))
-            .filterSubjects(subjects);
+        consumerConfigBuilder =
+            ConsumerConfiguration.builder()
+                .deliverPolicy(DeliverPolicy.ByStartTime)
+                .startTime(ZonedDateTime.now().minusDays(timeframe))
+                .inactiveThreshold(Duration.ofMinutes(consumerInactiveThresholdMinutes))
+                .ackWait(Duration.ofSeconds(consumerAckWaitSeconds))
+                .filterSubjects(subjects);
 
         if (durableConsumerName != null && !durableConsumerName.isEmpty()) {
           consumerConfigBuilder = consumerConfigBuilder.durable(durableConsumerName);
@@ -202,8 +198,10 @@ public class NatsConsumerService {
 
       ConsumerConfiguration consumerConfig = consumerConfigBuilder.build();
       consumerContext = streamContext.createOrUpdateConsumer(consumerConfig);
-      log.info("Consumer created or updated with name '{}' and configuration: {}",
-          consumerContext.getConsumerInfo().getName(), consumerConfig);
+      log.info(
+          "Consumer created or updated with name '{}' and configuration: {}",
+          consumerContext.getConsumerInfo().getName(),
+          consumerConfig);
 
       messageConsumer = consumerContext.consume(this::handleMessage);
       log.info("Successfully started consuming messages.");
@@ -220,7 +218,6 @@ public class NatsConsumerService {
     try {
       String subject = msg.getSubject();
       String lastPart = subject.substring(subject.lastIndexOf(".") + 1);
-
 
       log.info("Received message with subject: {}", subject);
 
@@ -275,9 +272,7 @@ public class NatsConsumerService {
     }
   }
 
-  /**
-   * Reinitialize the NATS consumer.
-   */
+  /** Reinitialize the NATS consumer. */
   public synchronized void reinitializeConsumer() {
     log.info("NATS Consumer reinitialization process started.");
     if (natsConnection != null) {
@@ -296,8 +291,8 @@ public class NatsConsumerService {
   }
 
   /**
-   * Retrieves all subjects to monitor by combining
-   * custom event subjects and normal GitHub event subjects.
+   * Retrieves all subjects to monitor by combining custom event subjects and normal GitHub event
+   * subjects.
    *
    * @return an array of unique subjects.
    */
@@ -313,9 +308,7 @@ public class NatsConsumerService {
     Stream<String> normalSubjects = getNormalEventSubjects(repositories);
 
     // Combine, remove duplicates, and convert to array.
-    return Stream.concat(customSubjects, normalSubjects)
-        .distinct()
-        .toArray(String[]::new);
+    return Stream.concat(customSubjects, normalSubjects).distinct().toArray(String[]::new);
   }
 
   /**
@@ -341,19 +334,21 @@ public class NatsConsumerService {
    */
   private Stream<String> getCustomEventSubjects(List<String> repositories) {
     return customHandlerRegistry.getSupportedEvents().stream()
-        .flatMap(customEvent -> {
-          GitHubCustomMessageHandler<?> customHandler =
-              customHandlerRegistry.getHandler(customEvent);
-          if (customHandler == null) {
-            return Stream.empty();
-          }
-          String eventName = customEvent.toLowerCase();
+        .flatMap(
+            customEvent -> {
+              GitHubCustomMessageHandler<?> customHandler =
+                  customHandlerRegistry.getHandler(customEvent);
+              if (customHandler == null) {
+                return Stream.empty();
+              }
+              String eventName = customEvent.toLowerCase();
 
-          // If the event is global, use a wildcard; otherwise, build a subject for each repository.
-          return customHandler.isGlobalEvent()
-              ? Stream.of(buildGlobalSubject(eventName))
-              : repositories.stream().map(repo -> buildRepositorySubject(repo, eventName));
-        });
+              // If the event is global, use a wildcard; otherwise, build a subject for each
+              // repository.
+              return customHandler.isGlobalEvent()
+                  ? Stream.of(buildGlobalSubject(eventName))
+                  : repositories.stream().map(repo -> buildRepositorySubject(repo, eventName));
+            });
   }
 
   /**
@@ -364,29 +359,31 @@ public class NatsConsumerService {
    */
   private Stream<String> getNormalEventSubjects(List<String> repositories) {
     return handlerRegistry.getSupportedEvents().stream()
-        .flatMap(event -> {
-          GitHubMessageHandler<?> handler = handlerRegistry.getHandler(event);
-          if (handler == null) {
-            return Stream.empty();
-          }
-          String eventName = event.name().toLowerCase();
+        .flatMap(
+            event -> {
+              GitHubMessageHandler<?> handler = handlerRegistry.getHandler(event);
+              if (handler == null) {
+                return Stream.empty();
+              }
+              String eventName = event.name().toLowerCase();
 
-          // If the event is global, use a wildcard; otherwise, build a subject for each repository.
-          return handler.isGlobalEvent()
-              ? Stream.of(buildGlobalSubject(eventName))
-              : repositories.stream().map(repo -> buildRepositorySubject(repo, eventName));
-        });
+              // If the event is global, use a wildcard; otherwise, build a subject for each
+              // repository.
+              return handler.isGlobalEvent()
+                  ? Stream.of(buildGlobalSubject(eventName))
+                  : repositories.stream().map(repo -> buildRepositorySubject(repo, eventName));
+            });
   }
 
   /**
    * Constructs a subject for global events.
    *
-   * <p>This method returns a subject string formatted as:
-   * <code>github.?.?.&lt;eventName&gt;</code>.</p>
+   * <p>This method returns a subject string formatted as: <code>github.?.?.&lt;eventName&gt;</code>
+   * .
    *
    * @param eventName the name of the event.
-   * @return a subject string for global events, e.g.
-   *      <code>github.?.?.push</code> when <code>eventName</code> is "push".
+   * @return a subject string for global events, e.g. <code>github.?.?.push</code> when <code>
+   *     eventName</code> is "push".
    */
   private String buildGlobalSubject(String eventName) {
     return "github.?.?." + eventName;
@@ -395,16 +392,13 @@ public class NatsConsumerService {
   /**
    * Constructs a subject string specific to a repository and event.
    *
-   * <p>This method formats the subject as:
-   * <code>&lt;subjectPrefix&gt;.&lt;eventName&gt;</code>,
-   * where the subject prefix is generated based on the
-   * repository identifier provided.</p>
+   * <p>This method formats the subject as: <code>&lt;subjectPrefix&gt;.&lt;eventName&gt;</code>,
+   * where the subject prefix is generated based on the repository identifier provided.
    *
-   * @param repo      the repository identifier in the format <code>"owner/repository"</code>.
+   * @param repo the repository identifier in the format <code>"owner/repository"</code>.
    * @param eventName the name of the event.
-   * @return the fully constructed subject string. For example, if
-   *      <code>eventName</code> is <code>"push"</code>, then the returned subject will be
-   *      <code>github.myOrg.myRepo.push</code>.
+   * @return the fully constructed subject string. For example, if <code>eventName</code> is <code>
+   *     "push"</code>, then the returned subject will be <code>github.myOrg.myRepo.push</code>.
    */
   private String buildRepositorySubject(String repo, String eventName) {
     return getSubjectPrefix(repo) + "." + eventName;

@@ -2,7 +2,6 @@ package de.tum.cit.aet.helios.environment.github;
 
 import de.tum.cit.aet.helios.environment.Environment;
 import de.tum.cit.aet.helios.environment.EnvironmentRepository;
-import de.tum.cit.aet.helios.github.GitHubService;
 import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import jakarta.transaction.Transactional;
@@ -20,7 +19,6 @@ public class GitHubEnvironmentSyncService {
   private final EnvironmentRepository environmentRepository;
   private final GitRepoRepository gitRepoRepository;
   private final GitHubEnvironmentConverter environmentConverter;
-
 
   /**
    * Processes a single GitHubEnvironmentDto by updating or creating it in the local repository.
