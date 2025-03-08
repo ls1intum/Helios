@@ -225,6 +225,7 @@ export type CommitsSinceReleaseCandidateDto = {
   aheadBy: number;
   behindBy: number;
   commits: Array<CompareCommitInfoDto>;
+  compareUrl?: string;
 };
 
 export type CompareCommitInfoDto = {
@@ -232,6 +233,7 @@ export type CompareCommitInfoDto = {
   message: string;
   authorName: string;
   authorEmail: string;
+  url: string;
 };
 
 export type LabelInfoDto = {

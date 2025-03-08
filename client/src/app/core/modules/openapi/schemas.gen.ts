@@ -674,6 +674,9 @@ export const CommitsSinceReleaseCandidateDtoSchema = {
         $ref: '#/components/schemas/CompareCommitInfoDto',
       },
     },
+    compareUrl: {
+      type: 'string',
+    },
   },
   required: ['aheadBy', 'behindBy', 'commits'],
 } as const;
@@ -693,8 +696,11 @@ export const CompareCommitInfoDtoSchema = {
     authorEmail: {
       type: 'string',
     },
+    url: {
+      type: 'string',
+    },
   },
-  required: ['authorEmail', 'authorName', 'message', 'sha'],
+  required: ['authorEmail', 'authorName', 'message', 'sha', 'url'],
 } as const;
 
 export const LabelInfoDtoSchema = {

@@ -12,7 +12,6 @@ import { injectMutation, injectQuery, QueryClient } from '@tanstack/angular-quer
 import { IconsModule } from 'icons.module';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
-import { CardModule } from 'primeng/card';
 import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { TagModule } from 'primeng/tag';
@@ -20,7 +19,7 @@ import { TooltipModule } from 'primeng/tooltip';
 
 @Component({
   selector: 'app-release-candidate-create',
-  imports: [ButtonModule, DialogModule, IconsModule, FormsModule, InputTextModule, TagModule, SlicePipe, TooltipModule, CardModule],
+  imports: [ButtonModule, DialogModule, IconsModule, FormsModule, InputTextModule, TagModule, SlicePipe, TooltipModule],
   templateUrl: './release-candidate-create.component.html',
 })
 export class ReleaseCandidateCreateComponent {

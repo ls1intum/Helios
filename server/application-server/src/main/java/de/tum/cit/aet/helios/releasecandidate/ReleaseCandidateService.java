@@ -154,7 +154,7 @@ public class ReleaseCandidateService {
               .orElseGet(() -> null);
 
       if (lastReleaseCandidate == null) {
-        return new CommitsSinceReleaseCandidateDto(-1, -1, new ArrayList<>());
+        return new CommitsSinceReleaseCandidateDto(-1, -1, new ArrayList<>(), null);
       }
 
       final GHCompare compare =
@@ -172,11 +172,15 @@ public class ReleaseCandidateService {
                 commit.getSHA1(),
                 innerCommit.getMessage(),
                 innerCommit.getCommitter().getName(),
-                innerCommit.getCommitter().getEmail()));
+                innerCommit.getCommitter().getEmail(),
+                commit.getHtmlUrl().toString()));
       }
 
+      // Get compare url
+      String compareUrl = compare.getHtmlUrl().toString();
+
       return new CommitsSinceReleaseCandidateDto(
-          compare.getAheadBy(), compare.getBehindBy(), commitInfoDtos);
+          compare.getAheadBy(), compare.getBehindBy(), commitInfoDtos, compareUrl);
     } catch (IOException e) {
       log.error("Failed to compare commits for branch {}: {}", branchName, e.getMessage());
       throw new ReleaseCandidateException("Failed to fetch compare commit data from GitHub");

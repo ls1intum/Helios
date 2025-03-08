@@ -6,10 +6,12 @@ import org.springframework.lang.NonNull;
 public record CommitsSinceReleaseCandidateDto(
     @NonNull Integer aheadBy,
     @NonNull Integer behindBy,
-    @NonNull List<CompareCommitInfoDto> commits) {
+    @NonNull List<CompareCommitInfoDto> commits,
+    String compareUrl) {
   public static record CompareCommitInfoDto(
       @NonNull String sha,
       @NonNull String message,
       @NonNull String authorName,
-      @NonNull String authorEmail) {}
+      @NonNull String authorEmail,
+      @NonNull String url) {}
 }

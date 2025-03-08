@@ -1518,6 +1518,8 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/CompareCommitInfoDto"
+        compareUrl:
+          type: string
       required:
       - aheadBy
       - behindBy
@@ -1533,11 +1535,14 @@ components:
           type: string
         authorEmail:
           type: string
+        url:
+          type: string
       required:
       - authorEmail
       - authorName
       - message
       - sha
+      - url
     LabelInfoDto:
       type: object
       properties:
