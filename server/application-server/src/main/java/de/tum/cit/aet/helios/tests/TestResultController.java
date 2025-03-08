@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class TestResultController {
   private final TestResultService testResultService;
 
+  // TODO: blend or create new endpoint for E2E tests
   @GetMapping("/pr/{pullRequestId}")
   public ResponseEntity<TestResultsDto> getLatestTestResultsByPullRequestId(
       @PathVariable Long pullRequestId) {

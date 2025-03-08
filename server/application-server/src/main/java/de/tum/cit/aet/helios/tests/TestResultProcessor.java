@@ -38,7 +38,8 @@ public class TestResultProcessor {
         "Checking if test results should be processed for workflow run {}", workflowRun.getName());
 
     if (workflowRun.getStatus() != WorkflowRun.Status.COMPLETED
-        || workflowRun.getWorkflow().getLabel() != Workflow.Label.TEST) {
+        || workflowRun.getWorkflow().getLabel()
+            != Workflow.Label.TEST) { // TODO: should also check for E2E tests
       return false;
     }
 
@@ -164,7 +165,9 @@ public class TestResultProcessor {
 
             while ((entry = zipInput.getNextEntry()) != null) {
               if (!entry.isDirectory()) {
-                if (this.junitParser.supports(entry.getName())) {
+                if (this.junitParser.supports(
+                    entry.getName())) { // TODO: supports should change to check also E2E test file
+                  // names
                   var nonClosingStream =
                       new FilterInputStream(zipInput) {
                         @Override
@@ -174,6 +177,7 @@ public class TestResultProcessor {
                       };
 
                   try {
+                    // TODO: call different parser for E2E tests and Java tests
                     results.add(this.junitParser.parse(nonClosingStream));
                   } catch (TestResultParseException e) {
                     log.error("Failed to parse JUnit XML file {}", entry.getName(), e);

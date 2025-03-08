@@ -29,6 +29,7 @@ public class JunitParser implements TestResultParser {
     }
   }
 
+  // TODO: should also support E2E test file format (all testsuites in a single file)
   public TestResultParser.TestSuite parse(InputStream inputStream) throws TestResultParseException {
     try {
       JAXBContext context = JAXBContext.newInstance(TestSuite.class);
@@ -50,7 +51,8 @@ public class JunitParser implements TestResultParser {
   }
 
   public boolean supports(String fileName) {
-    return fileName.startsWith("TEST-") && fileName.endsWith(".xml");
+    return fileName.startsWith("TEST-")
+        && fileName.endsWith(".xml"); // TODO: should support also E2E test file names
   }
 
   private TestResultParser.TestCase parseTestCase(TestCase tc) {
