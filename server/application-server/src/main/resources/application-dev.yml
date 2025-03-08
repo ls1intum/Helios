@@ -12,7 +12,7 @@ spring:
         baselineOnMigrate: false
     jpa:
         database: POSTGRESQL
-        show-sql: false
+        show-sql: true
         hibernate:
             ddl-auto: validate
     security:
