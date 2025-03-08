@@ -51,7 +51,9 @@
                 }
               ],
               "outputHashing": "all",
-              "sourceMap": true
+              "sourceMap": {
+                "scripts": true
+              }
             },
             "staging": {
               "fileReplacements": [
