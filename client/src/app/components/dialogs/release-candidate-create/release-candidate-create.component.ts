@@ -1,5 +1,5 @@
 import { SlicePipe } from '@angular/common';
-import { Component, inject, input, model, signal } from '@angular/core';
+import { Component, computed, inject, input, model, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommitInfoDto } from '@app/core/modules/openapi';
 import {
@@ -12,6 +12,7 @@ import { injectMutation, injectQuery, QueryClient } from '@tanstack/angular-quer
 import { IconsModule } from 'icons.module';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
+import { CardModule } from 'primeng/card';
 import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { TagModule } from 'primeng/tag';
@@ -19,7 +20,7 @@ import { TooltipModule } from 'primeng/tooltip';
 
 @Component({
   selector: 'app-release-candidate-create',
-  imports: [ButtonModule, DialogModule, IconsModule, FormsModule, InputTextModule, TagModule, SlicePipe, TooltipModule],
+  imports: [ButtonModule, DialogModule, IconsModule, FormsModule, InputTextModule, TagModule, SlicePipe, TooltipModule, CardModule],
   templateUrl: './release-candidate-create.component.html',
 })
 export class ReleaseCandidateCreateComponent {
@@ -49,6 +50,8 @@ export class ReleaseCandidateCreateComponent {
       this.onClose();
     },
   }));
+
+  isIdentical = computed(() => this.newCommitListQuery.data()?.aheadBy === 0 && this.newCommitListQuery.data()?.behindBy === 0);
 
   onClose = () => {
     this.isVisible.update(() => false);
