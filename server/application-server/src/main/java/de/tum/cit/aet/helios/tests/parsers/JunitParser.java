@@ -30,6 +30,14 @@ public class JunitParser implements TestResultParser {
     }
   }
 
+  /**
+   * Parses JUnit XML test results from an input stream.
+   * Handles both single test suite and multiple test suites XML formats.
+   *
+   * @param inputStream The input stream containing the JUnit XML content
+   * @return A list of parsed test suites
+   * @throws TestResultParseException if there is an error parsing the XML content
+   */
   public List<TestResultParser.TestSuite> parse(InputStream inputStream)
       throws TestResultParseException {
     try {
