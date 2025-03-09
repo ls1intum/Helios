@@ -39,3 +39,4 @@ jobs:
       client_image_tag: "staging"
       application_server_image_tag: "staging"
       webhook_listener_image_tag: "staging"
+      keycloak_image_tag: "staging"
