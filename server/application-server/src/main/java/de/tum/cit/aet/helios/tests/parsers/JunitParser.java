@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Component;
@@ -29,30 +30,46 @@ public class JunitParser implements TestResultParser {
     }
   }
 
-  // TODO: should also support E2E test file format (all testsuites in a single file)
-  public TestResultParser.TestSuite parse(InputStream inputStream) throws TestResultParseException {
+  public List<TestResultParser.TestSuite> parse(InputStream inputStream)
+      throws TestResultParseException {
     try {
-      JAXBContext context = JAXBContext.newInstance(TestSuite.class);
+      // Create JAXBContext with both TestSuite and TestSuites classes
+      JAXBContext context = JAXBContext.newInstance(TestSuite.class, TestSuites.class);
       Unmarshaller unmarshaller = context.createUnmarshaller();
-      TestSuite suite = (TestSuite) unmarshaller.unmarshal(inputStream);
+      Object unmarshalled = unmarshaller.unmarshal(inputStream);
 
-      return new TestResultParser.TestSuite(
-          suite.name,
-          parseDateTime(suite.timestamp),
-          suite.tests,
-          suite.failures,
-          suite.errors,
-          suite.skipped,
-          suite.time,
-          suite.testcases.stream().map(this::parseTestCase).toList());
+      if (unmarshalled instanceof TestSuites) {
+        TestSuites testSuites = (TestSuites) unmarshalled;
+        List<TestResultParser.TestSuite> result = new ArrayList<>();
+        for (TestSuite suite : testSuites.testsuites) {
+          result.add(convertJunitTestSuite(suite));
+        }
+        return result;
+      } else if (unmarshalled instanceof TestSuite) {
+        return Collections.singletonList(convertJunitTestSuite((TestSuite) unmarshalled));
+      } else {
+        throw new TestResultParseException("Unexpected root element type");
+      }
     } catch (JAXBException e) {
       throw new TestResultParseException("Failed to parse JUnit XML", e);
     }
   }
 
+  private TestResultParser.TestSuite convertJunitTestSuite(TestSuite suite) {
+    return new TestResultParser.TestSuite(
+        suite.name,
+        parseDateTime(suite.timestamp),
+        suite.tests,
+        suite.failures,
+        suite.errors,
+        suite.skipped,
+        suite.time,
+        suite.testcases.stream().map(this::parseTestCase).toList());
+  }
+
   public boolean supports(String fileName) {
-    return fileName.startsWith("TEST-")
-        && fileName.endsWith(".xml"); // TODO: should support also E2E test file names
+    return (fileName.startsWith("TEST-") && fileName.endsWith(".xml"))
+        || fileName.equals("results.xml");
   }
 
   private TestResultParser.TestCase parseTestCase(TestCase tc) {
@@ -80,6 +97,12 @@ public class JunitParser implements TestResultParser {
         errorType,
         message,
         stackTrace);
+  }
+
+  @XmlRootElement(name = "testsuites")
+  public static class TestSuites {
+    @XmlElement(name = "testsuite")
+    public List<TestSuite> testsuites = new ArrayList<>();
   }
 
   @XmlRootElement(name = "testsuite")
