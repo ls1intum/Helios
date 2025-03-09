@@ -64,7 +64,7 @@ export class ReleaseCandidateDeploymentTableComponent {
       {
         body: {
           environmentId: environment.id,
-          branchName: this.releaseCandidate().branch.name,
+          branchName: this.releaseCandidate().branch?.name,
           commitSha: this.releaseCandidate().commit.sha,
         },
       },

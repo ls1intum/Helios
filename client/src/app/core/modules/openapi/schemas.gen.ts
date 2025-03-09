@@ -381,7 +381,7 @@ export const DeployRequestSchema = {
       type: 'string',
     },
   },
-  required: ['branchName', 'environmentId'],
+  required: ['commitSha', 'environmentId'],
 } as const;
 
 export const WorkflowRunDtoSchema = {

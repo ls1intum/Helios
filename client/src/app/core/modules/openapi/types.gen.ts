@@ -122,8 +122,8 @@ export type ReleaseInfoListDto = {
 
 export type DeployRequest = {
   environmentId: number;
-  branchName: string;
-  commitSha?: string;
+  branchName?: string;
+  commitSha: string;
 };
 
 export type WorkflowRunDto = {

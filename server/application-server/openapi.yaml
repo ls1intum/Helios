@@ -1354,7 +1354,7 @@ components:
         commitSha:
           type: string
       required:
-      - branchName
+      - commitSha
       - environmentId
     WorkflowRunDto:
       type: object
