@@ -32,7 +32,7 @@
         <div class="flex gap-1 items-center text-sm">
           <div>created by</div>
           @if (releaseCandidate.createdBy?.avatarUrl) {
-            <p-avatar class="size-4" shape="circle" [image]="releaseCandidate.createdBy.avatarUrl" />
+            <p-avatar class="size-4" shape="circle" [image]="releaseCandidate.createdBy?.avatarUrl" />
           } @else {
             <i-tabler name="user" class="size-4 text-gray-600 border-2 rounded-full" />
           }
