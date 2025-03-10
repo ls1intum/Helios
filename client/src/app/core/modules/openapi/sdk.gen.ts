@@ -18,6 +18,7 @@ import type {
   LockEnvironmentResponse,
   ExtendEnvironmentLockData,
   ExtendEnvironmentLockResponse,
+  SyncWorkflowsByRepositoryIdData,
   CreateWorkflowGroupData,
   CreateWorkflowGroupResponse,
   GetAllReleaseCandidatesData,
@@ -180,6 +181,13 @@ export const extendEnvironmentLock = <ThrowOnError extends boolean = false>(opti
   return (options?.client ?? client).put<ExtendEnvironmentLockResponse, unknown, ThrowOnError>({
     ...options,
     url: '/api/environments/{id}/extend-lock',
+  });
+};
+
+export const syncWorkflowsByRepositoryId = <ThrowOnError extends boolean = false>(options: Options<SyncWorkflowsByRepositoryIdData, ThrowOnError>) => {
+  return (options?.client ?? client).post<unknown, unknown, ThrowOnError>({
+    ...options,
+    url: '/api/workflows/repository/{repositoryId}/sync',
   });
 };
 

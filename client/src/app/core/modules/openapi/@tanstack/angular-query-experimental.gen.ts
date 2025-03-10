@@ -17,6 +17,7 @@ import type {
   LockEnvironmentResponse,
   ExtendEnvironmentLockData,
   ExtendEnvironmentLockResponse,
+  SyncWorkflowsByRepositoryIdData,
   CreateWorkflowGroupData,
   CreateWorkflowGroupResponse,
   GetAllReleaseCandidatesData,
@@ -75,6 +76,7 @@ import {
   unlockEnvironment,
   lockEnvironment,
   extendEnvironmentLock,
+  syncWorkflowsByRepositoryId,
   createWorkflowGroup,
   getAllReleaseCandidates,
   createReleaseCandidate,
@@ -270,6 +272,37 @@ export const extendEnvironmentLockMutation = (options?: Partial<Options<ExtendEn
   const mutationOptions: MutationOptions<ExtendEnvironmentLockResponse, DefaultError, Options<ExtendEnvironmentLockData>> = {
     mutationFn: async localOptions => {
       const { data } = await extendEnvironmentLock({
+        ...options,
+        ...localOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const syncWorkflowsByRepositoryIdQueryKey = (options: Options<SyncWorkflowsByRepositoryIdData>) => [createQueryKey('syncWorkflowsByRepositoryId', options)];
+
+export const syncWorkflowsByRepositoryIdOptions = (options: Options<SyncWorkflowsByRepositoryIdData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await syncWorkflowsByRepositoryId({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: syncWorkflowsByRepositoryIdQueryKey(options),
+  });
+};
+
+export const syncWorkflowsByRepositoryIdMutation = (options?: Partial<Options<SyncWorkflowsByRepositoryIdData>>) => {
+  const mutationOptions: MutationOptions<unknown, DefaultError, Options<SyncWorkflowsByRepositoryIdData>> = {
+    mutationFn: async localOptions => {
+      const { data } = await syncWorkflowsByRepositoryId({
         ...options,
         ...localOptions,
         throwOnError: true,

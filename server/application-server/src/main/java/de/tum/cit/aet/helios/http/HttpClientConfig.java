@@ -2,6 +2,7 @@ package de.tum.cit.aet.helios.http;
 
 import java.io.File;
 import java.util.concurrent.TimeUnit;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import okhttp3.Cache;
 import okhttp3.OkHttpClient;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Component;
 
 @Log4j2
 @Component
+@RequiredArgsConstructor
 public class HttpClientConfig {
 
   @Value("${http.cache.enabled:false}")
@@ -25,18 +27,11 @@ public class HttpClientConfig {
   private int cacheSize;
 
   private final Environment environment;
-
   private final RateLimitInfoHolder rateLimitInfoHolder;
 
-
-  public HttpClientConfig(Environment environment, RateLimitInfoHolder rateLimitInfoHolder) {
-    this.environment = environment;
-    this.rateLimitInfoHolder = rateLimitInfoHolder;
-  }
-
   /**
-   * Builds an OkHttpClient.Builder with cache, logging interceptor,
-   * rate limit interceptor, and timeouts.
+   * Builds an OkHttpClient.Builder with cache, logging interceptor, rate limit interceptor, and
+   * timeouts.
    *
    * @return the OkHttpClient.Builder
    */
@@ -84,5 +79,4 @@ public class HttpClientConfig {
   public OkHttpClient okHttpClient() {
     return buildOkHttpClientBuilder().build();
   }
-
 }

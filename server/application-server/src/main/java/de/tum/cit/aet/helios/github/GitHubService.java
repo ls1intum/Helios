@@ -17,6 +17,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
@@ -31,38 +32,18 @@ import org.kohsuke.github.GHWorkflow;
 import org.kohsuke.github.PagedIterable;
 import org.springframework.stereotype.Service;
 
-@Service
 @Log4j2
+@RequiredArgsConstructor
+@Service
 @Transactional
 public class GitHubService {
   private final GitHubFacade github;
-
   private final GitHubConfig gitHubConfig;
-
   private final ObjectMapper objectMapper;
-
   private final OkHttpClient okHttpClient;
-
   private final AuthService authService;
-
   private final GitHubClientManager clientManager;
-
   private GHOrganization gitHubOrganization;
-
-  public GitHubService(
-      GitHubFacade github,
-      GitHubConfig gitHubConfig,
-      ObjectMapper objectMapper,
-      OkHttpClient okHttpClient,
-      AuthService authService,
-      GitHubClientManager clientManager) {
-    this.github = github;
-    this.gitHubConfig = gitHubConfig;
-    this.objectMapper = objectMapper;
-    this.okHttpClient = okHttpClient;
-    this.authService = authService;
-    this.clientManager = clientManager;
-  }
 
   public Builder getRequestBuilder() {
     return new Request.Builder()
