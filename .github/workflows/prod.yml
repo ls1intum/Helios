@@ -39,3 +39,4 @@ jobs:
       client_image_tag: "latest"
       application_server_image_tag: "latest"
       webhook_listener_image_tag: "latest"
+      keycloak_image_tag: "latest"

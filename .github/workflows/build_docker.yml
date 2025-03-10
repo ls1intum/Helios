@@ -22,6 +22,10 @@ jobs:
             image: ghcr.io/ls1intum/helios/webhook-listener
             context: ./server/webhook-listener
             path: webhook-listener
+          - dockerfile: ./keycloakify/Dockerfile
+            image: ghcr.io/ls1intum/helios/keycloak
+            context: ./keycloakify
+            path: keycloakify
     steps:
       - name: Checkout
         uses: actions/checkout@v4

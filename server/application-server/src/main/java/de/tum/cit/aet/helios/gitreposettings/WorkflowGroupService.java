@@ -10,10 +10,12 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@RequiredArgsConstructor
 public class WorkflowGroupService {
 
   private final WorkflowGroupRepository workflowGroupRepository;
@@ -22,22 +24,16 @@ public class WorkflowGroupService {
   private final WorkflowRepository workflowRepository;
   private final WorkflowGroupMembershipRepository workflowGroupMembershipRepository;
 
-  public WorkflowGroupService(
-      WorkflowGroupRepository workflowGroupRepository,
-      GitRepoSettingsRepository gitRepoSettingsRepository,
-      GitRepoRepository gitRepoRepository,
-      WorkflowRepository workflowRepository,
-      WorkflowGroupMembershipRepository workflowGroupMembershipRepository) {
-    this.workflowGroupRepository = workflowGroupRepository;
-    this.gitRepoSettingsRepository = gitRepoSettingsRepository;
-    this.gitRepoRepository = gitRepoRepository;
-    this.workflowRepository = workflowRepository;
-    this.workflowGroupMembershipRepository = workflowGroupMembershipRepository;
-  }
-
   @Transactional
   public WorkflowGroupDto createWorkflowGroup(
       Long repositoryId, WorkflowGroupDto workflowGroupDto) {
+
+    WorkflowGroup existingGroup =
+        workflowGroupRepository.findByRepositoryIdAndName(repositoryId, workflowGroupDto.name());
+    if (existingGroup != null) {
+      throw new IllegalArgumentException(
+          "WorkflowGroup with name " + workflowGroupDto.name() + " already exists.");
+    }
     // Validate input, check if name or orderIndex is empty
     if (workflowGroupDto.name() == null || workflowGroupDto.name().isEmpty()) {
       throw new IllegalArgumentException(
@@ -70,7 +66,10 @@ public class WorkflowGroupService {
                         "WorkflowGroup with id " + workflowGroupId + " not found."));
 
     // Ensure the WorkflowGroup belongs to the given repository
-    if (!workflowGroup.getGitRepoSettings().getRepository().getRepositoryId()
+    if (!workflowGroup
+        .getGitRepoSettings()
+        .getRepository()
+        .getRepositoryId()
         .equals(repositoryId)) {
       throw new IllegalArgumentException(
           "WorkflowGroup does not belong to the specified repository.");

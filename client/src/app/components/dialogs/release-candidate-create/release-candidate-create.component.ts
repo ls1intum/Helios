@@ -1,5 +1,5 @@
 import { SlicePipe } from '@angular/common';
-import { Component, inject, input, model, signal } from '@angular/core';
+import { Component, computed, inject, input, model, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommitInfoDto } from '@app/core/modules/openapi';
 import {
@@ -49,6 +49,8 @@ export class ReleaseCandidateCreateComponent {
       this.onClose();
     },
   }));
+
+  isIdentical = computed(() => this.newCommitListQuery.data()?.aheadBy === 0 && this.newCommitListQuery.data()?.behindBy === 0);
 
   onClose = () => {
     this.isVisible.update(() => false);

@@ -1,30 +1,19 @@
 package de.tum.cit.aet.helios.workflow;
 
-import de.tum.cit.aet.helios.environment.Environment;
 import de.tum.cit.aet.helios.environment.EnvironmentService;
-import de.tum.cit.aet.helios.filters.RepositoryContext;
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
-import java.util.Arrays;
 import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
 @Transactional
+@RequiredArgsConstructor
 public class WorkflowService {
-
   private final WorkflowRepository workflowRepository;
   private final EnvironmentService environmentService;
-
-  public WorkflowService(
-      WorkflowRepository workflowRepository, EnvironmentService environmentService) {
-    this.workflowRepository = workflowRepository;
-    this.environmentService = environmentService;
-  }
 
   public Optional<WorkflowDto> getWorkflowById(Long id) {
     return workflowRepository.findById(id).map(WorkflowDto::fromWorkflow);
@@ -59,63 +48,16 @@ public class WorkflowService {
     workflowRepository.save(workflow);
   }
 
-  public Workflow getDeploymentWorkflowByLabel(Workflow.Label label, Long repositoryId) {
-    Workflow workflow =
-        workflowRepository.findFirstByLabelAndRepositoryRepositoryIdOrderByCreatedAtDesc(
-            label, repositoryId);
-    return workflow;
-  }
-
   public List<Workflow> getDeploymentWorkflowsForAllEnv(Long repositoryId) {
-
-    return Arrays.stream(Workflow.Label.values())
-        .filter(
-            label ->
-                label == Workflow.Label.DEPLOY_TEST_SERVER
-                    || label == Workflow.Label.DEPLOY_STAGING_SERVER
-                    || label == Workflow.Label.DEPLOY_PRODUCTION_SERVER)
-        .map(
-            label ->
-                workflowRepository.findFirstByLabelAndRepositoryRepositoryIdOrderByCreatedAtDesc(
-                    label, repositoryId))
-        .filter(Objects::nonNull)
+    return environmentService.getAllEnabledEnvironments().stream()
+        .filter(env -> env.repository().id().equals(repositoryId))
+        .filter(env -> env.deploymentWorkflow() != null)
+        .map(env -> env.deploymentWorkflow().id())
+        .distinct()
+        .map(workflowId -> workflowRepository.findById(workflowId))
+        .filter(Optional::isPresent)
+        .map(Optional::get)
         .collect(Collectors.toList());
-  }
-
-  public Workflow.Label getDeploymentWorkflowLabelForEnvType(Environment.Type type) {
-    switch (type) {
-      case PRODUCTION -> {
-        return Workflow.Label.DEPLOY_PRODUCTION_SERVER;
-      }
-      case STAGING -> {
-        return Workflow.Label.DEPLOY_STAGING_SERVER;
-      }
-      case TEST -> {
-        return Workflow.Label.DEPLOY_TEST_SERVER;
-      }
-      default -> {
-        return null;
-      }
-    }
-  }
-
-  public Workflow getDeploymentWorkflowForEnv(Long environmentId) {
-    Environment.Type environmentType =
-        this.environmentService
-            .getEnvironmentTypeById(environmentId)
-            .orElseThrow(() -> new EntityNotFoundException("Environment not found"));
-
-    Workflow.Label label = this.getDeploymentWorkflowLabelForEnvType(environmentType);
-    if (label == null) {
-      throw new IllegalStateException("No workflow for this deployment environment found");
-    }
-
-    Workflow deploymentWorkflow =
-        this.getDeploymentWorkflowByLabel(label, RepositoryContext.getRepositoryId());
-    if (deploymentWorkflow == null) {
-      throw new NoSuchElementException("No deployment workflow found");
-    }
-    return deploymentWorkflow;
   }
 
   public List<Workflow> getTestWorkflows(Long repositoryId) {
