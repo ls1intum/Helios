@@ -10,10 +10,12 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@RequiredArgsConstructor
 public class WorkflowGroupService {
 
   private final WorkflowGroupRepository workflowGroupRepository;
@@ -21,19 +23,6 @@ public class WorkflowGroupService {
   private final GitRepoRepository gitRepoRepository;
   private final WorkflowRepository workflowRepository;
   private final WorkflowGroupMembershipRepository workflowGroupMembershipRepository;
-
-  public WorkflowGroupService(
-      WorkflowGroupRepository workflowGroupRepository,
-      GitRepoSettingsRepository gitRepoSettingsRepository,
-      GitRepoRepository gitRepoRepository,
-      WorkflowRepository workflowRepository,
-      WorkflowGroupMembershipRepository workflowGroupMembershipRepository) {
-    this.workflowGroupRepository = workflowGroupRepository;
-    this.gitRepoSettingsRepository = gitRepoSettingsRepository;
-    this.gitRepoRepository = gitRepoRepository;
-    this.workflowRepository = workflowRepository;
-    this.workflowGroupMembershipRepository = workflowGroupMembershipRepository;
-  }
 
   @Transactional
   public WorkflowGroupDto createWorkflowGroup(
