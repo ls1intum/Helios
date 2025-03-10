@@ -35,109 +35,178 @@
   </button>
 
   @if (!isTestResultsCollapsed) {
-    <div class="flex items-center gap-2 w-full max-w-sm mb-2">
-      <p-button type="button" outlined (onClick)="toggleFilterMenu($event)" size="small">
-        @if (showOnlyFailed()) {
-          <i-tabler name="filter" />
-        } @else {
-          <i-tabler name="filter-plus" />
-        }
-      </p-button>
-      <input pInputText [(ngModel)]="searchValue" type="text" pSize="small" placeholder="Search" class="w-full" />
-    </div>
-
-    <p-popover #op>
-      <div class="flex flex-col gap-4">
-        <div>
-          <ul class="list-none p-0 m-0 flex flex-col gap-1">
-            @if (showOnlyFailed()) {
-              <li class="flex items-center gap-2 p-2 hover:bg-gray-300 cursor-pointer rounded-border" (click)="toggleShowOnlyFailed()">All tests</li>
-              <li class="flex items-center gap-2 p-2 bg-gray-700 text-gray-200 cursor-pointer rounded-border">Only failed tests</li>
-            } @else {
-              <li class="flex items-center gap-2 p-2 bg-gray-700 text-gray-200 cursor-pointer rounded-border">All tests</li>
-              <li class="flex items-center gap-2 p-2 hover:bg-gray-300 cursor-pointer rounded-border" (click)="toggleShowOnlyFailed()">Only failed tests</li>
-            }
-          </ul>
-        </div>
-      </div>
-    </p-popover>
-
-    @if (filteredTestSuites(); as testSuites) {
-      @if (testSuites.length === 0) {
-        <!-- No Results State -->
-        <div class="flex flex-col items-center p-4 border rounded-lg">
-          <span class="text-sm text-gray-500">No test results available</span>
-        </div>
-      } @else {
-        <!-- Test Results -->
-        <div class="flex flex-col gap-4">
-          @for (suite of testSuites.slice(testSuiteFirst(), testSuiteFirst() + testSuiteRows()); track suite.id) {
-            <p-panel [toggleable]="true" [collapsed]="true" [styleClass]="suiteHasUpdates(suite) ? 'border-blue-400 border-2 relative' : ''">
+    <!-- Workflow Tabs -->
+    @if (sortedWorkflows().length > 0) {
+      @defer {
+        <p-tabView [activeIndex]="effectiveWorkflowTab()" (activeIndexChange)="onTabChange($event)">
+          @for (workflow of sortedWorkflows(); track workflow.name) {
+            <p-tabPanel>
               <ng-template pTemplate="header">
-                @if (suiteHasUpdates(suite)) {
-                  <div class="absolute left-[-5px] -top-1 w-2.5 h-2.5 bg-blue-400 rounded-full flex items-center justify-center" pTooltip="Changed"></div>
-                }
-                <div class="flex items-center gap-2 overflow-hidden">
-                  @switch (overallSuiteState(suite)) {
+                <div class="flex items-center gap-2">
+                  @switch (workflowState(workflow)) {
                     @case ('SUCCESS') {
-                      <i-tabler name="circle-check" class="text-green-500 flex-shrink-0"></i-tabler>
+                      <i-tabler name="circle-check" class="text-green-500 w-4 h-4"></i-tabler>
                     }
                     @case ('FAILURE') {
-                      <i-tabler name="circle-x" class="text-red-500 flex-shrink-0"></i-tabler>
+                      <i-tabler name="circle-x" class="text-red-500 w-4 h-4"></i-tabler>
                     }
                     @case ('SKIPPED') {
-                      <i-tabler name="circle-chevrons-right" class="text-yellow-500 flex-shrink-0"></i-tabler>
+                      <i-tabler name="circle-chevrons-right" class="text-yellow-500 w-4 h-4"></i-tabler>
                     }
                   }
-                  <span class="font-medium truncate">{{ suite.name }}</span>
-                  <span class="text-sm text-gray-500 ml-2 flex-shrink-0"> ({{ suite.tests }} tests, {{ suite.failures + suite.errors }} failed, {{ suite.skipped }} skipped) </span>
+                  <span>{{ workflow.name }}</span>
+                  @if (workflow.isProcessing) {
+                    <i-tabler name="progress" class="w-4 h-4 animate-spin text-gray-600 ml-1"></i-tabler>
+                  }
                 </div>
               </ng-template>
-
-              <div class="flex flex-col gap-2">
-                @for (testCase of sortTestCases(suite.testCases); track testCase.id) {
-                  <div class="flex items-center gap-2 p-2 border rounded">
-                    @switch (testCase.status) {
-                      @case ('PASSED') {
-                        <i-tabler name="check" class="text-green-500 w-4 h-4 flex-shrink-0"></i-tabler>
-                      }
-                      @case ('FAILED') {
-                        <i-tabler name="x" class="text-red-500 w-4 h-4 flex-shrink-0"></i-tabler>
-                      }
-                      @case ('ERROR') {
-                        <i-tabler name="x" class="text-red-500 w-4 h-4 flex-shrink-0"></i-tabler>
-                      }
-                      @case ('SKIPPED') {
-                        <i-tabler name="chevrons-right" class="text-gray-500 w-4 h-4 flex-shrink-0"></i-tabler>
-                      }
-                    }
-
-                    <div class="flex flex-col items-start min-w-0">
-                      <div class="flex items-center gap-2">
-                        @if (testCase.previousStatus !== testCase.status && testCase.previousStatus) {
-                          <span class="text-xs text-blue-400 font-medium flex-shrink-0">previously {{ testCase.previousStatus.toLowerCase() }}</span>
-                        }
-                        <span class="text-sm truncate whitespace-nowrap overflow-hidden w-full">{{ testCase.name }} </span>
-                      </div>
-                      @if (testCase.message) {
-                        <p-tag [severity]="testCase.status === 'FAILED' ? 'danger' : 'info'" [value]="testCase.message" styleClass="mt-2 text-xs"> </p-tag>
-                      }
-                    </div>
-                  </div>
-                }
-              </div>
-            </p-panel>
+            </p-tabPanel>
           }
+        </p-tabView>
+      } @loading {
+        <div class="p-3 flex justify-center">
+          <p-progressSpinner [style]="{ width: '30px', height: '30px' }" styleClass="custom-spinner" strokeWidth="4"></p-progressSpinner>
         </div>
-
-        <p-paginator
-          (onPageChange)="onPageChange($event)"
-          [first]="testSuiteFirst()"
-          [rows]="testSuiteRows()"
-          [totalRecords]="testSuites.length"
-          [rowsPerPageOptions]="[10, 20, 30]"
-        />
       }
+    }
+
+    <!-- Current Workflow Test Details -->
+    @if (activeWorkflow(); as workflow) {
+      <div class="flex items-center gap-2 w-full max-w-sm mb-2 mt-4">
+        <p-button type="button" outlined (onClick)="toggleFilterMenu($event)" size="small">
+          @if (showOnlyFailed()) {
+            <i-tabler name="filter" />
+          } @else {
+            <i-tabler name="filter-plus" />
+          }
+        </p-button>
+        <input pInputText [(ngModel)]="searchValue" type="text" pSize="small" placeholder="Search" class="w-full" />
+      </div>
+
+      <!-- Workflow Stats Summary -->
+      @if (workflowStats(); as stats) {
+        <div class="flex items-center gap-4 mb-3 text-sm text-gray-600 p-2 bg-gray-50 rounded">
+          <span class="flex items-center gap-1"><i-tabler name="check" class="text-green-500"></i-tabler> {{ stats.passed }} passed</span>
+          <span class="flex items-center gap-1"><i-tabler name="x" class="text-red-500"></i-tabler> {{ stats.failures }} failed</span>
+          <span class="flex items-center gap-1"><i-tabler name="chevrons-right" class="text-yellow-500"></i-tabler> {{ stats.skipped }} skipped</span>
+          <span class="flex items-center gap-1"><i-tabler name="clock" class="text-blue-500"></i-tabler> {{ stats.time | date: 'mm:ss' }}</span>
+        </div>
+      }
+
+      <p-popover #op>
+        <div class="flex flex-col gap-4">
+          <div>
+            <ul class="list-none p-0 m-0 flex flex-col gap-1">
+              @if (showOnlyFailed()) {
+                <li class="flex items-center gap-2 p-2 hover:bg-gray-300 cursor-pointer rounded-border" (click)="toggleShowOnlyFailed()">All tests</li>
+                <li class="flex items-center gap-2 p-2 bg-gray-700 text-gray-200 cursor-pointer rounded-border">Only failed tests</li>
+              } @else {
+                <li class="flex items-center gap-2 p-2 bg-gray-700 text-gray-200 cursor-pointer rounded-border">All tests</li>
+                <li class="flex items-center gap-2 p-2 hover:bg-gray-300 cursor-pointer rounded-border" (click)="toggleShowOnlyFailed()">Only failed tests</li>
+              }
+            </ul>
+          </div>
+        </div>
+      </p-popover>
+
+      @if (filteredTestSuites(); as testSuites) {
+        @if (testSuites.length === 0) {
+          <!-- No Results State -->
+          <div class="flex flex-col items-center p-4 border rounded-lg">
+            <span class="text-sm text-gray-500">No test results available for {{ workflow.name }}</span>
+          </div>
+        } @else {
+          <!-- Test Results -->
+          <div class="flex flex-col gap-4">
+            @for (suite of testSuites.slice(testSuiteFirst(), testSuiteFirst() + testSuiteRows()); track suite.id) {
+              @defer {
+                <p-panel [toggleable]="true" [collapsed]="true" [styleClass]="suiteHasUpdates(suite) ? 'border-blue-400 border-2 relative' : ''">
+                  <ng-template pTemplate="header">
+                    @if (suiteHasUpdates(suite)) {
+                      <div class="absolute left-[-5px] -top-1 w-2.5 h-2.5 bg-blue-400 rounded-full flex items-center justify-center" pTooltip="Changed"></div>
+                    }
+                    <div class="flex items-center gap-2 overflow-hidden">
+                      @switch (overallSuiteState(suite)) {
+                        @case ('SUCCESS') {
+                          <i-tabler name="circle-check" class="text-green-500 flex-shrink-0"></i-tabler>
+                        }
+                        @case ('FAILURE') {
+                          <i-tabler name="circle-x" class="text-red-500 flex-shrink-0"></i-tabler>
+                        }
+                        @case ('SKIPPED') {
+                          <i-tabler name="circle-chevrons-right" class="text-yellow-500 flex-shrink-0"></i-tabler>
+                        }
+                      }
+                      <span class="font-medium truncate">{{ suite.name }}</span>
+                      <span class="text-sm text-gray-500 ml-2 flex-shrink-0">
+                        ({{ suite.tests }} tests, {{ suite.failures + suite.errors }} failed, {{ suite.skipped }} skipped)
+                      </span>
+                    </div>
+                  </ng-template>
+
+                  <div class="flex flex-col gap-2">
+                    @for (testCase of sortTestCases(suite.testCases); track testCase.id) {
+                      <div class="flex items-center gap-2 p-2 border rounded">
+                        @switch (testCase.status) {
+                          @case ('PASSED') {
+                            <i-tabler name="check" class="text-green-500 w-4 h-4 flex-shrink-0"></i-tabler>
+                          }
+                          @case ('FAILED') {
+                            <i-tabler name="x" class="text-red-500 w-4 h-4 flex-shrink-0"></i-tabler>
+                          }
+                          @case ('ERROR') {
+                            <i-tabler name="x" class="text-red-500 w-4 h-4 flex-shrink-0"></i-tabler>
+                          }
+                          @case ('SKIPPED') {
+                            <i-tabler name="chevrons-right" class="text-gray-500 w-4 h-4 flex-shrink-0"></i-tabler>
+                          }
+                        }
+
+                        <div class="flex flex-col items-start min-w-0">
+                          <div class="flex items-center gap-2">
+                            @if (testCase.previousStatus !== testCase.status && testCase.previousStatus) {
+                              <span class="text-xs text-blue-400 font-medium flex-shrink-0">previously {{ testCase.previousStatus.toLowerCase() }}</span>
+                            }
+                            <span class="text-sm truncate whitespace-nowrap overflow-hidden w-full">{{ testCase.name }} </span>
+                          </div>
+                          @if (testCase.message) {
+                            <p-tag [severity]="testCase.status === 'FAILED' ? 'danger' : 'info'" [value]="testCase.message" styleClass="mt-2 text-xs"> </p-tag>
+                          }
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </p-panel>
+              } @loading (minimum 100ms) {
+                <div class="border rounded p-3 bg-gray-50 mt-1 mb-1">
+                  <div class="flex items-center">
+                    <p-skeleton width="30px" height="30px" styleClass="mr-2"></p-skeleton>
+                    <p-skeleton width="60%" height="1.5rem"></p-skeleton>
+                  </div>
+                </div>
+              }
+            }
+          </div>
+
+          <p-paginator
+            (onPageChange)="onPageChange($event)"
+            [first]="testSuiteFirst()"
+            [rows]="testSuiteRows()"
+            [totalRecords]="testSuites.length"
+            [rowsPerPageOptions]="[10, 20, 30]"
+          />
+        }
+      }
+    } @else if (hasTestSuites()) {
+      <!-- No active workflow but we have test suites -->
+      <div class="flex flex-col items-center p-4 border rounded-lg mt-4">
+        <span class="text-sm text-gray-500">Please select a workflow tab to view test results</span>
+      </div>
+    } @else {
+      <!-- No test suites at all -->
+      <div class="flex flex-col items-center p-4 border rounded-lg mt-4">
+        <span class="text-sm text-gray-500">No test results available</span>
+      </div>
     }
   }
 }
