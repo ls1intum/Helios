@@ -18,7 +18,9 @@ public record TestResultsDto(@NonNull List<TestSuiteDto> testSuites, boolean isP
       @NonNull Integer errors,
       @NonNull Integer skipped,
       @NonNull Double time,
-      @NonNull List<TestCaseDto> testCases) {
+      @NonNull List<TestCaseDto> testCases,
+      Long workflowId,
+      String workflowName) {
     public static TestSuiteDto fromTestSuite(
         TestSuite testSuite, Function<TestCase, Optional<TestStatus>> previousStatusProvider) {
       return new TestSuiteDto(
@@ -32,7 +34,9 @@ public record TestResultsDto(@NonNull List<TestSuiteDto> testSuites, boolean isP
           testSuite.getTime(),
           testSuite.getTestCases().stream()
               .map(tc -> TestCaseDto.fromTestCase(tc, previousStatusProvider.apply(tc)))
-              .toList());
+              .toList(),
+          testSuite.getWorkflowRun().getWorkflow().getId(),
+          testSuite.getWorkflowRun().getWorkflow().getName());
     }
   }
 
