@@ -24,6 +24,7 @@ import type {
   GetAllReleaseCandidatesResponse,
   CreateReleaseCandidateData,
   CreateReleaseCandidateResponse,
+  PublishReleaseDraftData,
   EvaluateData,
   SetPrPinnedByNumberData,
   DeployToEnvironmentData,
@@ -57,8 +58,8 @@ import type {
   GetRepositoryByIdResponse,
   DeleteReleaseCandidateByNameData,
   DeleteReleaseCandidateByNameResponse,
-  GetReleaseCandidateByNameData,
-  GetReleaseCandidateByNameResponse,
+  GetReleaseInfoByNameData,
+  GetReleaseInfoByNameResponse,
   GetCommitsSinceLastReleaseCandidateData,
   GetCommitsSinceLastReleaseCandidateResponse,
   GetAllPullRequestsData,
@@ -193,7 +194,7 @@ export const createWorkflowGroup = <ThrowOnError extends boolean = false>(option
 export const getAllReleaseCandidates = <ThrowOnError extends boolean = false>(options?: Options<GetAllReleaseCandidatesData, ThrowOnError>) => {
   return (options?.client ?? client).get<GetAllReleaseCandidatesResponse, unknown, ThrowOnError>({
     ...options,
-    url: '/api/release-candidate',
+    url: '/api/release-info',
   });
 };
 
@@ -204,14 +205,21 @@ export const createReleaseCandidate = <ThrowOnError extends boolean = false>(opt
       'Content-Type': 'application/json',
       ...options?.headers,
     },
-    url: '/api/release-candidate',
+    url: '/api/release-info',
+  });
+};
+
+export const publishReleaseDraft = <ThrowOnError extends boolean = false>(options: Options<PublishReleaseDraftData, ThrowOnError>) => {
+  return (options?.client ?? client).post<unknown, unknown, ThrowOnError>({
+    ...options,
+    url: '/api/release-info/{name}/publish',
   });
 };
 
 export const evaluate = <ThrowOnError extends boolean = false>(options: Options<EvaluateData, ThrowOnError>) => {
   return (options?.client ?? client).post<unknown, unknown, ThrowOnError>({
     ...options,
-    url: '/api/release-candidate/{name}/evaluate/{isWorking}',
+    url: '/api/release-info/{name}/evaluate/{isWorking}',
   });
 };
 
@@ -340,21 +348,21 @@ export const getRepositoryById = <ThrowOnError extends boolean = false>(options:
 export const deleteReleaseCandidateByName = <ThrowOnError extends boolean = false>(options: Options<DeleteReleaseCandidateByNameData, ThrowOnError>) => {
   return (options?.client ?? client).delete<DeleteReleaseCandidateByNameResponse, unknown, ThrowOnError>({
     ...options,
-    url: '/api/release-candidate/{name}',
+    url: '/api/release-info/{name}',
   });
 };
 
-export const getReleaseCandidateByName = <ThrowOnError extends boolean = false>(options: Options<GetReleaseCandidateByNameData, ThrowOnError>) => {
-  return (options?.client ?? client).get<GetReleaseCandidateByNameResponse, unknown, ThrowOnError>({
+export const getReleaseInfoByName = <ThrowOnError extends boolean = false>(options: Options<GetReleaseInfoByNameData, ThrowOnError>) => {
+  return (options?.client ?? client).get<GetReleaseInfoByNameResponse, unknown, ThrowOnError>({
     ...options,
-    url: '/api/release-candidate/{name}',
+    url: '/api/release-info/{name}',
   });
 };
 
 export const getCommitsSinceLastReleaseCandidate = <ThrowOnError extends boolean = false>(options: Options<GetCommitsSinceLastReleaseCandidateData, ThrowOnError>) => {
   return (options?.client ?? client).get<GetCommitsSinceLastReleaseCandidateResponse, unknown, ThrowOnError>({
     ...options,
-    url: '/api/release-candidate/newcommits',
+    url: '/api/release-info/newcommits',
   });
 };
 

@@ -2,8 +2,9 @@ import { Component, inject, input } from '@angular/core';
 import {
   deleteReleaseCandidateByNameMutation,
   evaluateMutation,
-  getReleaseCandidateByNameOptions,
-  getReleaseCandidateByNameQueryKey,
+  getReleaseInfoByNameOptions,
+  getReleaseInfoByNameQueryKey,
+  publishReleaseDraftMutation,
 } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { injectMutation, injectQuery, QueryClient } from '@tanstack/angular-query-experimental';
 import { ButtonModule } from 'primeng/button';
@@ -19,12 +20,25 @@ import { TagModule } from 'primeng/tag';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 import { PermissionService } from '@app/core/services/permission.service';
-import { ReleaseCandidateDetailsDto } from '@app/core/modules/openapi';
 import { ActivatedRoute, Router } from '@angular/router';
+import { ReleaseInfoDetailsDto } from '@app/core/modules/openapi';
+import { MarkdownPipe } from '@app/core/modules/markdown/markdown.pipe';
 
 @Component({
   selector: 'app-release-candidate-details',
-  imports: [SkeletonModule, ButtonModule, ReleaseCandidateDeploymentTableComponent, ButtonGroupModule, AvatarModule, IconsModule, TimeAgoPipe, TooltipModule, SlicePipe, TagModule],
+  imports: [
+    SkeletonModule,
+    ButtonModule,
+    MarkdownPipe,
+    ReleaseCandidateDeploymentTableComponent,
+    ButtonGroupModule,
+    AvatarModule,
+    IconsModule,
+    TimeAgoPipe,
+    TooltipModule,
+    SlicePipe,
+    TagModule,
+  ],
   templateUrl: './release-candidate-details.component.html',
 })
 export class ReleaseCandidateDetailsComponent {
@@ -37,13 +51,21 @@ export class ReleaseCandidateDetailsComponent {
   private route = inject(ActivatedRoute);
 
   name = input.required<string>();
-  releaseCandidateQuery = injectQuery(() => ({ ...getReleaseCandidateByNameOptions({ path: { name: this.name() } }), refetchInterval: 3000 }));
+  releaseCandidateQuery = injectQuery(() => ({ ...getReleaseInfoByNameOptions({ path: { name: this.name() } }), refetchInterval: 3000 }));
 
   evaluateReleaseCandidateMutation = injectMutation(() => ({
     ...evaluateMutation(),
     onSuccess: () => {
       this.messageService.add({ severity: 'success', summary: 'Release Candidate Evaluation', detail: 'Your evaluation has been saved successfully' });
-      this.queryClient.invalidateQueries({ queryKey: getReleaseCandidateByNameQueryKey({ path: { name: this.name() } }) });
+      this.queryClient.invalidateQueries({ queryKey: getReleaseInfoByNameQueryKey({ path: { name: this.name() } }) });
+    },
+  }));
+
+  publishReleaseDraftMutation = injectMutation(() => ({
+    ...publishReleaseDraftMutation(),
+    onSuccess: () => {
+      this.messageService.add({ severity: 'success', summary: 'Release Candidate Deletion', detail: 'Release candidate has been deleted successfully' });
+      this.router.navigate(['..'], { relativeTo: this.route });
     },
   }));
 
@@ -59,7 +81,7 @@ export class ReleaseCandidateDetailsComponent {
     this.evaluateReleaseCandidateMutation.mutate({ path: { name: this.name(), isWorking } });
   };
 
-  deleteReleaseCandidate = (rc: ReleaseCandidateDetailsDto) => {
+  deleteReleaseCandidate = (rc: ReleaseInfoDetailsDto) => {
     this.confirmationService.confirm({
       header: 'Delete Release Candidate',
       message: `Are you sure you want to delete release candidate ${rc.name}? This cannot be undone.`,
@@ -74,5 +96,23 @@ export class ReleaseCandidateDetailsComponent {
     if (!evaluations) return false;
     const userEvaluation = evaluations.find(evaluation => evaluation.user.login.toLowerCase() === this.keycloakService.getPreferredUsername()?.toLowerCase());
     return userEvaluation?.isWorking === isWorking;
+  }
+
+  publishReleaseDraft() {
+    const rc = this.releaseCandidateQuery.data();
+    if (!rc) return;
+    this.confirmationService.confirm({
+      header: 'Publish Release Candidate',
+      message: `Are you sure you want to publish release candidate ${rc.name} as a draft to GitHub? This can only be undone in GitHub itself.`,
+      accept: () => {
+        this.publishReleaseDraftMutation.mutate({ path: { name: rc.name } });
+      },
+    });
+  }
+
+  openReleaseInGitHub() {
+    const rc = this.releaseCandidateQuery.data();
+    if (!rc || !rc.release) return;
+    window.open(rc.release?.githubUrl, '_blank');
   }
 }
