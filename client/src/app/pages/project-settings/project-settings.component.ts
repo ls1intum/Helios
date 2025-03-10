@@ -327,8 +327,9 @@ export class ProjectSettingsComponent {
   }
 
   syncWorkflows() {
-    if (!this.repositoryId()) return;
-    this.syncWorkflowsMutation.mutate({ path: { repositoryId: this.repositoryId() } });
+    const repositoryId = this.repositoryId();
+    if (!repositoryId) return;
+    this.syncWorkflowsMutation.mutate({ path: { repositoryId } });
   }
 
   // Update the groups on the server
