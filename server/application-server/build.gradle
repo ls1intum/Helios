@@ -10,32 +10,16 @@ buildscript {
 }
 
 plugins {
-    id 'java'
-    id 'jacoco'
-    id 'org.springframework.boot' version '3.4.3'
-    id 'io.spring.dependency-management' version '1.1.7'
-    id 'io.freefair.lombok' version '8.12.2'
+    id 'org.springframework.boot'
+    id 'io.freefair.lombok'
     id 'org.springdoc.openapi-gradle-plugin' version '1.9.0'
     id 'org.openapi.generator' version '7.12.0'
     id 'org.flywaydb.flyway' version '11.3.3'
 }
 
-group = 'de.tum.cit.aet'
-version = '0.0.1-SNAPSHOT'
-
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
-    }
-}
-
-repositories {
-    mavenCentral()
-}
-
 // Detect if the generateOpenApiDocs task is being executed
 gradle.taskGraph.whenReady { taskGraph ->
-    if (taskGraph.hasTask(':generateOpenApiDocs') || taskGraph.hasTask(':bootRunOpenApi')) {
+    if (taskGraph.hasTask(':application-server:generateOpenApiDocs') || taskGraph.hasTask(':application-server:bootRunOpenApi')) {
         println "OpenAPI task detected. Adding H2 dependency."
         // Add the H2 dependency dynamically
         dependencies {
