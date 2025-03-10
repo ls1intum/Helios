@@ -36,6 +36,8 @@ import type {
   GetLatestWorkflowRunsByBranchAndHeadCommitData,
   GetUserPermissionsData,
   GetLatestTestResultsByPullRequestIdData,
+  GetLatestGroupedTestResultsByPullRequestIdData,
+  GetLatestGroupedTestResultsByBranchData,
   GetLatestTestResultsByBranchData,
   GetGroupsWithWorkflowsData,
   GetAllRepositoriesData,
@@ -89,6 +91,8 @@ import {
   getLatestWorkflowRunsByBranchAndHeadCommit,
   getUserPermissions,
   getLatestTestResultsByPullRequestId,
+  getLatestGroupedTestResultsByPullRequestId,
+  getLatestGroupedTestResultsByBranch,
   getLatestTestResultsByBranch,
   getGroupsWithWorkflows,
   getAllRepositories,
@@ -637,6 +641,44 @@ export const getLatestTestResultsByPullRequestIdOptions = (options: Options<GetL
       return data;
     },
     queryKey: getLatestTestResultsByPullRequestIdQueryKey(options),
+  });
+};
+
+export const getLatestGroupedTestResultsByPullRequestIdQueryKey = (options: Options<GetLatestGroupedTestResultsByPullRequestIdData>) => [
+  createQueryKey('getLatestGroupedTestResultsByPullRequestId', options),
+];
+
+export const getLatestGroupedTestResultsByPullRequestIdOptions = (options: Options<GetLatestGroupedTestResultsByPullRequestIdData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getLatestGroupedTestResultsByPullRequestId({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: getLatestGroupedTestResultsByPullRequestIdQueryKey(options),
+  });
+};
+
+export const getLatestGroupedTestResultsByBranchQueryKey = (options: Options<GetLatestGroupedTestResultsByBranchData>) => [
+  createQueryKey('getLatestGroupedTestResultsByBranch', options),
+];
+
+export const getLatestGroupedTestResultsByBranchOptions = (options: Options<GetLatestGroupedTestResultsByBranchData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getLatestGroupedTestResultsByBranch({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: getLatestGroupedTestResultsByBranchQueryKey(options),
   });
 };
 

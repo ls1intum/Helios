@@ -47,6 +47,10 @@ import type {
   GetUserPermissionsResponse,
   GetLatestTestResultsByPullRequestIdData,
   GetLatestTestResultsByPullRequestIdResponse,
+  GetLatestGroupedTestResultsByPullRequestIdData,
+  GetLatestGroupedTestResultsByPullRequestIdResponse,
+  GetLatestGroupedTestResultsByBranchData,
+  GetLatestGroupedTestResultsByBranchResponse,
   GetLatestTestResultsByBranchData,
   GetLatestTestResultsByBranchResponse,
   GetGroupsWithWorkflowsData,
@@ -306,6 +310,22 @@ export const getLatestTestResultsByPullRequestId = <ThrowOnError extends boolean
   return (options?.client ?? client).get<GetLatestTestResultsByPullRequestIdResponse, unknown, ThrowOnError>({
     ...options,
     url: '/api/tests/pr/{pullRequestId}',
+  });
+};
+
+export const getLatestGroupedTestResultsByPullRequestId = <ThrowOnError extends boolean = false>(
+  options: Options<GetLatestGroupedTestResultsByPullRequestIdData, ThrowOnError>
+) => {
+  return (options?.client ?? client).get<GetLatestGroupedTestResultsByPullRequestIdResponse, unknown, ThrowOnError>({
+    ...options,
+    url: '/api/tests/grouped/pr/{pullRequestId}',
+  });
+};
+
+export const getLatestGroupedTestResultsByBranch = <ThrowOnError extends boolean = false>(options: Options<GetLatestGroupedTestResultsByBranchData, ThrowOnError>) => {
+  return (options?.client ?? client).get<GetLatestGroupedTestResultsByBranchResponse, unknown, ThrowOnError>({
+    ...options,
+    url: '/api/tests/grouped/branch',
   });
 };
 
