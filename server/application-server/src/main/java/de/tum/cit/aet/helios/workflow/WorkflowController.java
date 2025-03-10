@@ -1,23 +1,26 @@
 package de.tum.cit.aet.helios.workflow;
 
 import de.tum.cit.aet.helios.config.security.annotations.EnforceAtLeastMaintainer;
+import de.tum.cit.aet.helios.workflow.github.GitHubWorkflowSyncService;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-@RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/workflows")
+@RequiredArgsConstructor
 public class WorkflowController {
 
   private final WorkflowService workflowService;
+  private final GitHubWorkflowSyncService workflowSyncService;
 
   @GetMapping
   public ResponseEntity<List<WorkflowDto>> getAllWorkflows() {
@@ -50,5 +53,12 @@ public class WorkflowController {
   public ResponseEntity<List<WorkflowDto>> getWorkflowsByState(@PathVariable Workflow.State state) {
     List<WorkflowDto> workflows = workflowService.getWorkflowsByState(state);
     return ResponseEntity.ok(workflows);
+  }
+
+  @EnforceAtLeastMaintainer
+  @PostMapping("/repository/{repositoryId}/sync")
+  public ResponseEntity<Void> syncWorkflowsByRepositoryId(@PathVariable Long repositoryId) {
+    workflowSyncService.syncRepositoryWorkflows(repositoryId);
+    return ResponseEntity.ok().build();
   }
 }

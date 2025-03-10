@@ -203,6 +203,21 @@ paths:
             application/json:
               schema:
                 type: object
+  /api/workflows/repository/{repositoryId}/sync:
+    post:
+      tags:
+      - workflow-controller
+      operationId: syncWorkflowsByRepositoryId
+      parameters:
+      - name: repositoryId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
   /api/settings/{repositoryId}/groups/create:
     post:
       tags:
