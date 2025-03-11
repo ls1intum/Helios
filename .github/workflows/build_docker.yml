@@ -55,7 +55,8 @@ jobs:
           images: ${{ matrix.image }}
           tags: |
             # Apply 'latest' tag if the branch is main
-            type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'main') }}
+            type=raw,value=latest,enable=${{ github.event_name == 'release' && github.event.action == 'published' }}
+            type=ref,event=tag
             type=ref,event=branch
             type=ref,event=pr
             type=sha,suffix=-${{ github.ref_name }}
