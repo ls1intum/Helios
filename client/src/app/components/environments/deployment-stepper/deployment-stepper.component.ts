@@ -6,6 +6,7 @@ import { EnvironmentDeployment } from '@app/core/modules/openapi';
 import { TooltipModule } from 'primeng/tooltip';
 
 interface EstimatedTimes {
+  REQUESTED: number;
   PENDING: number;
   IN_PROGRESS: number;
 }
@@ -23,40 +24,30 @@ export class DeploymentStepperComponent implements OnInit, OnDestroy {
 
   @Input()
   set deployment(value: EnvironmentDeployment | undefined) {
-    if (!value) {
-      this._deployment.set(undefined);
-      return;
-    }
+    // Track step transitions
+    if (value?.state && value.state !== this.lastKnownState()) {
+      // For a new step, use the current time, not the potentially delayed updatedAt
+      const stepStartTime = Date.now();
 
+      this.stepStartTimes.update(times => {
+        times.set(value.state!, stepStartTime);
+        return times;
+      });
+      this.lastKnownState.set(value.state);
+    }
     this._deployment.set(value);
-
-    // If the state has changed, record the start time for the new state
-    if (value.state && value.state !== this.lastKnownState()) {
-      const currentState = value.state;
-
-      // Only set the start time if it hasn't been set before
-      if (!this.stepStartTimes().has(currentState)) {
-        this.stepStartTimes.update(times => {
-          // When transitioning to a new state, set the start time to now
-          // to ensure we start with the full estimated time for this step
-          const startTime = Date.now();
-          times.set(currentState, startTime);
-          return times;
-        });
-      }
-
-      this.lastKnownState.set(currentState);
-    }
   }
   get deployment(): EnvironmentDeployment | undefined {
     return this._deployment();
   }
 
-  steps: ('PENDING' | 'IN_PROGRESS')[] = ['PENDING', 'IN_PROGRESS'];
+  steps: ('REQUESTED' | 'PENDING' | 'IN_PROGRESS')[] = ['REQUESTED', 'PENDING', 'IN_PROGRESS'];
 
   estimatedTimes = computed<EstimatedTimes>(() => {
+    const deployment = this._deployment();
     return {
-      PENDING: this.deployment?.prName != null ? 2 : 11, // Combined time for REQUESTED + PENDING
+      REQUESTED: 1,
+      PENDING: deployment?.prName != null ? 1 : 10,
       IN_PROGRESS: 4,
     };
   });
@@ -74,9 +65,7 @@ export class DeploymentStepperComponent implements OnInit, OnDestroy {
     if (this.deployment?.state && !this.stepStartTimes().has(this.deployment.state)) {
       const currentState = this.deployment.state;
       this.stepStartTimes.update(times => {
-        // For initial state, use the current time to ensure full estimated time
-        const startTime = Date.now();
-        times.set(currentState, startTime);
+        times.set(currentState, Date.now());
         return times;
       });
       this.lastKnownState.set(currentState);
@@ -90,7 +79,7 @@ export class DeploymentStepperComponent implements OnInit, OnDestroy {
   }
 
   get currentEffectiveStepIndex(): number {
-    if (!this.deployment || !this.deployment.createdAt) return -1;
+    if (!this.deployment || !this.deployment.createdAt) return 0;
 
     // If in error state, find the last known valid state
     if (this.isErrorState()) {
@@ -104,7 +93,7 @@ export class DeploymentStepperComponent implements OnInit, OnDestroy {
       return -1; // Special value to indicate no valid step found in error state
     }
 
-    const index = this.steps.indexOf(this.deployment.state as 'PENDING' | 'IN_PROGRESS');
+    const index = this.steps.indexOf(this.deployment.state as 'REQUESTED' | 'PENDING' | 'IN_PROGRESS');
     return index !== -1 ? index : 0;
   }
 
@@ -168,99 +157,77 @@ export class DeploymentStepperComponent implements OnInit, OnDestroy {
   }
 
   getRemainingTimeForCurrentStep(): number {
-    if (!this.deployment?.state) {
-      return 0;
-    }
+    if (!this.deployment?.state || !this.deployment.createdAt) return 0;
 
-    const currentIndex = this.currentEffectiveStepIndex;
-    if (currentIndex < 0 || currentIndex >= this.steps.length) {
-      return 0;
-    }
-
-    const currentStep = this.steps[currentIndex];
-    const stepStartTime = this.stepStartTimes().get(this.deployment.state) || Date.now();
-
-    const estimatedMinutes = this.estimatedTimes()[currentStep] || 0;
-    const estimatedMs = estimatedMinutes * 60 * 1000;
+    const currentState = this.deployment.state;
+    // Use the stored step start time or fall back to the current time
+    // This ensures we start from the full estimated time if no stepStartTime is available
+    const stepStartTime = this.stepStartTimes().get(currentState) || Date.now();
     const elapsedMs = this.currentTime() - stepStartTime;
-    const remainingMs = Math.max(0, estimatedMs - elapsedMs);
+    const estimatedMs = (this.estimatedTimes()[currentState as keyof EstimatedTimes] || 0) * 60000;
 
-    // Return in seconds
-    return Math.floor(remainingMs / 1000);
+    return Math.max(0, estimatedMs - elapsedMs);
   }
 
   getTotalRemainingTime(): string {
-    if (!this.deployment) {
-      return '0m 0s';
-    }
+    if (!this.deployment?.state || !this.deployment.createdAt) return '';
+    if (this.isErrorState() || this.isSuccessState()) return '';
 
     const currentIndex = this.currentEffectiveStepIndex;
-    const estimatedTimes = this.estimatedTimes();
+    let totalRemainingMs = this.getRemainingTimeForCurrentStep();
 
-    // If we're in an error or success state, don't show remaining time
-    if (this.isErrorState() || this.isSuccessState()) {
-      return '0m 0s';
+    // Add estimated time for upcoming steps
+    for (let i = currentIndex + 1; i < this.steps.length; i++) {
+      const stepKey = this.steps[i] as keyof EstimatedTimes;
+      totalRemainingMs += this.estimatedTimes()[stepKey] * 60000;
     }
 
-    // Calculate remaining time for current step
-    let totalRemainingSeconds = 0;
-
-    // If we have a current step
-    if (currentIndex >= 0 && currentIndex < this.steps.length) {
-      // Add remaining time for current step
-      totalRemainingSeconds += this.getRemainingTimeForCurrentStep();
-
-      // Add time for future steps
-      for (let i = currentIndex + 1; i < this.steps.length; i++) {
-        const stepName = this.steps[i];
-        totalRemainingSeconds += (estimatedTimes[stepName] || 0) * 60;
-      }
-    } else {
-      // If no step is active yet, show total time for all steps
-      for (let i = 0; i < this.steps.length; i++) {
-        const stepName = this.steps[i];
-        totalRemainingSeconds += (estimatedTimes[stepName] || 0) * 60;
-      }
-    }
-
-    // Format the remaining time
-    const minutes = Math.floor(totalRemainingSeconds / 60);
-    const seconds = Math.floor(totalRemainingSeconds % 60);
-    return `${minutes}m ${seconds}s`;
+    const minutes = Math.floor(totalRemainingMs / 60000);
+    const seconds = Math.floor((totalRemainingMs % 60000) / 1000);
+    return totalRemainingMs > 0 ? `${minutes}m ${seconds}s` : '';
   }
 
   getStepTime(index: number): string {
-    if (!this.deployment) {
+    if (!this.deployment?.state || !this.deployment.createdAt) return '';
+
+    const currentIndex = this.currentEffectiveStepIndex;
+
+    // Handle error state
+    if (this.isErrorState()) {
+      if (currentIndex === -1) return 'Failed'; // Show all steps as failed when no valid step found
+      if (index < currentIndex) return 'Completed';
+      if (index === currentIndex) return 'Failed';
       return '';
     }
 
-    const currentEffectiveIndex = this.currentEffectiveStepIndex;
-    const stepName = this.steps[index];
-    const estimatedTimeMinutes = this.estimatedTimes()[stepName] || 0;
-
-    // For completed steps
-    if (index < currentEffectiveIndex) {
+    // Handle success state
+    if (this.isSuccessState()) {
       return 'Completed';
     }
 
-    // For the current step
-    if (index === currentEffectiveIndex) {
-      // Get the remaining time for the current step
-      if (this.deployment.state === stepName) {
-        const remainingSeconds = this.getRemainingTimeForCurrentStep();
-        const minutes = Math.floor(remainingSeconds / 60);
-        const seconds = Math.floor(remainingSeconds % 60);
-        return `${minutes}m ${seconds}s`;
-      }
+    // Handle normal flow
+    if (index < currentIndex) {
+      return 'Completed';
     }
 
-    // For future steps
-    return `${estimatedTimeMinutes}m 0s`;
+    if (index > currentIndex) {
+      // For upcoming steps, show estimated time
+      const stepKey = this.steps[index] as keyof EstimatedTimes;
+      const estimatedMinutes = this.estimatedTimes()[stepKey];
+      return `~${estimatedMinutes}m 0s\nestimated`;
+    }
+
+    // For current step
+    const remainingMs = this.getRemainingTimeForCurrentStep();
+    const minutes = Math.floor(remainingMs / 60000);
+    const seconds = Math.floor((remainingMs % 60000) / 1000);
+    return remainingMs > 0 ? `${minutes}m ${seconds}s\nremaining` : `0m 0s\nremaining`;
   }
 
   getStepDisplayName(step: string): string {
     return (
       {
+        REQUESTED: 'REQUESTED',
         PENDING: 'PRE-DEPLOYMENT',
         IN_PROGRESS: 'DEPLOYMENT',
       }[step] || step
