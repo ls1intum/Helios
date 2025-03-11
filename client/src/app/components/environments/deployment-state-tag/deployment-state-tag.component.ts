@@ -58,7 +58,7 @@ export class DeploymentStateTagComponent {
   });
 
   iconClass = computed(() => {
-    const spinStates: ExtendedDeploymentState[] = ['WAITING', 'PENDING', 'IN_PROGRESS', 'QUEUED'];
+    const spinStates: ExtendedDeploymentState[] = ['REQUESTED', 'WAITING', 'PENDING', 'IN_PROGRESS', 'QUEUED'];
     return `!size-5 ${spinStates.includes(this.internalState()) ? 'animate-spin' : ''}`;
   });
 

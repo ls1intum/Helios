@@ -26,8 +26,9 @@ export class DeploymentStepperComponent implements OnInit, OnDestroy {
   set deployment(value: EnvironmentDeployment | undefined) {
     // Track step transitions
     if (value?.state && value.state !== this.lastKnownState()) {
-      // Use the deployment's updatedAt timestamp for the step start time
-      const stepStartTime = value.updatedAt ? new Date(value.updatedAt).getTime() : Date.now();
+      // For a new step, use the current time, not the potentially delayed updatedAt
+      const stepStartTime = Date.now();
+
       this.stepStartTimes.update(times => {
         times.set(value.state!, stepStartTime);
         return times;
@@ -54,9 +55,21 @@ export class DeploymentStepperComponent implements OnInit, OnDestroy {
   intervalId: number | undefined;
 
   ngOnInit(): void {
+    // Set up interval to update current time every second
     this.intervalId = window.setInterval(() => {
       this.currentTime.set(Date.now());
     }, 1000);
+
+    // If a deployment is already set, initialize the step start time for the current state
+    // This handles the case where the component is initialized with a deployment already in progress
+    if (this.deployment?.state && !this.stepStartTimes().has(this.deployment.state)) {
+      const currentState = this.deployment.state;
+      this.stepStartTimes.update(times => {
+        times.set(currentState, Date.now());
+        return times;
+      });
+      this.lastKnownState.set(currentState);
+    }
   }
 
   ngOnDestroy(): void {
@@ -147,8 +160,9 @@ export class DeploymentStepperComponent implements OnInit, OnDestroy {
     if (!this.deployment?.state || !this.deployment.createdAt) return 0;
 
     const currentState = this.deployment.state;
-    // Use the stored step start time or fall back to the deployment's creation time
-    const stepStartTime = this.stepStartTimes().get(currentState) || new Date(this.deployment.createdAt).getTime();
+    // Use the stored step start time or fall back to the current time
+    // This ensures we start from the full estimated time if no stepStartTime is available
+    const stepStartTime = this.stepStartTimes().get(currentState) || Date.now();
     const elapsedMs = this.currentTime() - stepStartTime;
     const estimatedMs = (this.estimatedTimes()[currentState as keyof EstimatedTimes] || 0) * 60000;
 
