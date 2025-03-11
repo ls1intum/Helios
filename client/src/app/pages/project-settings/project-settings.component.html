@@ -82,7 +82,11 @@
     }
 
     <!-- Workflow Table -->
-    <h3 class="text-xl mb-2">Workflows</h3>
+    <div class="flex justify-between items-center mb-2">
+      <h3 class="text-xl">Workflows</h3>
+      <button pButton label="Fetch latest workflows" class="p-button-primary" (click)="syncWorkflows()" [loading]="syncWorkflowsMutation.isPending()"></button>
+    </div>
+
     <p-table [value]="workflows()" styleClass="w-full mb-6">
       <ng-template pTemplate="header">
         <tr>

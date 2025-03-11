@@ -24,6 +24,7 @@ import {
   getWorkflowsByRepositoryIdQueryKey,
   updateWorkflowLabelMutation,
   updateWorkflowGroupsMutation,
+  syncWorkflowsByRepositoryIdMutation,
 } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { WorkflowDtoSchema } from '@app/core/modules/openapi/schemas.gen';
 import { MessageService } from 'primeng/api';
@@ -213,6 +214,13 @@ export class ProjectSettingsComponent {
       this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Workflow groups updated successfully' });
     },
   }));
+  syncWorkflowsMutation = injectMutation(() => ({
+    ...syncWorkflowsByRepositoryIdMutation(),
+    onSuccess: () => {
+      this.queryClient.invalidateQueries({ queryKey: getWorkflowsByRepositoryIdQueryKey({ path: { repositoryId: this.repositoryId() } }) });
+      this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Workflows synced successfully' });
+    },
+  }));
 
   workflowLabelOptions = Object.values(WorkflowDtoSchema.properties.label.enum);
 
@@ -316,6 +324,12 @@ export class ProjectSettingsComponent {
   resetDialog() {
     this.showAddGroupDialog = false;
     this.newGroupName = '';
+  }
+
+  syncWorkflows() {
+    const repositoryId = this.repositoryId();
+    if (!repositoryId) return;
+    this.syncWorkflowsMutation.mutate({ path: { repositoryId } });
   }
 
   // Update the groups on the server

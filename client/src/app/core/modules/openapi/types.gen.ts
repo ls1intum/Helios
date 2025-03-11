@@ -228,8 +228,18 @@ export type ReleaseCandidateEvaluationDto = {
 };
 
 export type CommitsSinceReleaseCandidateDto = {
-  commitsLength: number;
-  commits: Array<CommitInfoDto>;
+  aheadBy: number;
+  behindBy: number;
+  commits: Array<CompareCommitInfoDto>;
+  compareUrl?: string;
+};
+
+export type CompareCommitInfoDto = {
+  sha: string;
+  message: string;
+  authorName: string;
+  authorEmail: string;
+  url: string;
 };
 
 export type LabelInfoDto = {
@@ -510,6 +520,22 @@ export type ExtendEnvironmentLockResponses = {
 };
 
 export type ExtendEnvironmentLockResponse = ExtendEnvironmentLockResponses[keyof ExtendEnvironmentLockResponses];
+
+export type SyncWorkflowsByRepositoryIdData = {
+  body?: never;
+  path: {
+    repositoryId: number;
+  };
+  query?: never;
+  url: '/api/workflows/repository/{repositoryId}/sync';
+};
+
+export type SyncWorkflowsByRepositoryIdResponses = {
+  /**
+   * OK
+   */
+  200: unknown;
+};
 
 export type CreateWorkflowGroupData = {
   body: WorkflowGroupDto;

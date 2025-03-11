@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/ban-types */
 import type { ExtendKcContext } from "keycloakify/login";
 import type { KcEnvName, ThemeName } from "../kc.gen";
 
