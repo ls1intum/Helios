@@ -43,8 +43,13 @@ public class NatsMessageHandlerRegistry {
       String patternPart = patternParts[i];
       String subjectPart = subjectParts[i];
 
-      if (patternPart.equals("*")) continue;
-      if (!patternPart.equals(subjectPart)) return false;
+      if (patternPart.equals("*")) {
+        continue;
+      }
+
+      if (!patternPart.equals(subjectPart)) {
+        return false;
+      }
     }
 
     return patternParts.length == subjectParts.length;
