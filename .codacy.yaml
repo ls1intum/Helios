@@ -1,5 +1,4 @@
 ---
 exclude_paths:
-  - "**.spec.ts"
-  - "**/test/**"
-  - "**/test-setup.ts"
+  - "*.gen.ts"
+  - "test-setup.ts"

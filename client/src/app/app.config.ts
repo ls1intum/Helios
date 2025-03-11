@@ -47,6 +47,14 @@ export const appConfig: ApplicationConfig = {
               950: '{gray.950}',
             },
           },
+          components: {
+            toggleswitch: {
+              colorScheme: {
+                checkedBackground: '{emerald.500}',
+                checkedHoverBackground: '{emerald.500}',
+              },
+            },
+          },
         }),
         options: {
           darkModeSelector: '.dark-selector',

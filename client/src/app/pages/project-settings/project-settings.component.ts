@@ -24,11 +24,14 @@ import {
   getWorkflowsByRepositoryIdQueryKey,
   updateWorkflowLabelMutation,
   updateWorkflowGroupsMutation,
+  syncWorkflowsByRepositoryIdMutation,
 } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { WorkflowDtoSchema } from '@app/core/modules/openapi/schemas.gen';
 import { MessageService } from 'primeng/api';
 import { SelectModule } from 'primeng/select';
 import { TooltipModule } from 'primeng/tooltip';
+import { TagModule } from 'primeng/tag';
+import { MessageModule } from 'primeng/message';
 
 @Component({
   selector: 'app-project-settings',
@@ -46,6 +49,8 @@ import { TooltipModule } from 'primeng/tooltip';
     IconsModule,
     DragDropModule,
     DividerModule,
+    TagModule,
+    MessageModule,
   ],
   templateUrl: './project-settings.component.html',
 })
@@ -64,7 +69,7 @@ export class ProjectSettingsComponent {
   showAddGroupDialog = false;
   newGroupName = '';
   // Store the previous label temporarily for the confirmation dialog
-  private previousLabel: 'NONE' | 'DEPLOY_TEST_SERVER' | 'DEPLOY_STAGING_SERVER' | 'DEPLOY_PRODUCTION_SERVER' | 'TEST' = 'NONE';
+  private previousLabel: WorkflowDto['label'] = 'NONE';
 
   // Drag & Drop logic for groupedWorkflowsArray
   private dragIndex: number | null = null;
@@ -157,18 +162,18 @@ export class ProjectSettingsComponent {
   fetchWorkflowsQuery = injectQuery(() => ({
     ...getWorkflowsByRepositoryIdOptions({ path: { repositoryId: this.repositoryId() } }),
     enabled: () => !!this.repositoryId(),
-    refetchOnWindowFocus: false,
   }));
 
   workflows = computed(() => {
     // Sort the workflows
-    // Show "Active" workflows first, then by state alphabetically, withing the same state by ID
+    // Show "Active" workflows first, then everything else, then alphabetically by fileNameWithExtension, then by ID
     const workflows = this.fetchWorkflowsQuery.data() || [];
     workflows.sort((a, b) => {
-      // Example: "Active" workflows first, then by state alphabetically, then by ID
       if (a.state === 'ACTIVE' && b.state !== 'ACTIVE') return -1;
       if (a.state !== 'ACTIVE' && b.state === 'ACTIVE') return 1;
-      if (a.state !== b.state) return a.state.localeCompare(b.state);
+      if (a.fileNameWithExtension !== b.fileNameWithExtension) {
+        return (a.fileNameWithExtension ?? '').localeCompare(b.fileNameWithExtension ?? '');
+      }
       return a.id - b.id;
     });
     return workflows;
@@ -209,16 +214,15 @@ export class ProjectSettingsComponent {
       this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Workflow groups updated successfully' });
     },
   }));
+  syncWorkflowsMutation = injectMutation(() => ({
+    ...syncWorkflowsByRepositoryIdMutation(),
+    onSuccess: () => {
+      this.queryClient.invalidateQueries({ queryKey: getWorkflowsByRepositoryIdQueryKey({ path: { repositoryId: this.repositoryId() } }) });
+      this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Workflows synced successfully' });
+    },
+  }));
 
-  getWorkflowLabelOptions(currentLabel: string) {
-    const assignedLabels = this.workflows().map(wf => wf.label);
-    return Object.values(WorkflowDtoSchema.properties.label.enum).filter(label => {
-      const isTest = label === 'DEPLOY_TEST_SERVER' && assignedLabels.includes('DEPLOY_TEST_SERVER');
-      const isStaging = label === 'DEPLOY_STAGING_SERVER' && assignedLabels.includes('DEPLOY_STAGING_SERVER');
-      const isProduction = label === 'DEPLOY_PRODUCTION_SERVER' && assignedLabels.includes('DEPLOY_PRODUCTION_SERVER');
-      return label === currentLabel || (!isTest && !isStaging && !isProduction);
-    });
-  }
+  workflowLabelOptions = Object.values(WorkflowDtoSchema.properties.label.enum);
 
   storePreviousLabel(workflow: WorkflowDto) {
     // Store the current label before change
@@ -227,13 +231,6 @@ export class ProjectSettingsComponent {
 
   onChangeLabel(workflow: WorkflowDto) {
     const label = workflow.label;
-    if (uniqueLabels.includes(label)) {
-      const existingLabel = this.workflows().find(wf => wf.label === label && wf.id !== workflow.id);
-      if (existingLabel) {
-        console.warn(`Only one workflow can be labeled as ${label}.`);
-        return;
-      }
-    }
     this.confirmationService.confirm({
       header: 'Change Label',
       message: `
@@ -245,13 +242,7 @@ export class ProjectSettingsComponent {
             <i class="pi pi-exclamation-triangle text-yellow-500 text-xl"></i>
             <div>
               <p class="font-semibold">Note:</p>
-              <p class="text-sm text-gray-600 mb-2">
-                Only one workflow can be labeled as either <strong>DEPLOY_TEST_SERVER</strong>, <strong>DEPLOY_STAGING_SERVER</strong> or <strong>DEPLOY_PRODUCTION_SERVER</strong>.
-              </p>
               <ul class="list-disc list-inside text-sm text-gray-600">
-                <li><strong>DEPLOY_TEST_SERVER</strong>: This label sets the workflow to trigger test server deployments.</li>
-                <li><strong>DEPLOY_STAGING_SERVER</strong>: This label sets the workflow to staging test server deployments.</li>
-                <li><strong>DEPLOY_PRODUCTION_SERVER</strong>: This label sets the workflow to production test server deployments.</li>
                 <li><strong>TEST</strong>: This label sets the workflow to be searched for test artifacts.</li>
                 <li><strong>NONE</strong>: No label is set for this workflow.</li>
               </ul>
@@ -307,6 +298,7 @@ export class ProjectSettingsComponent {
       // new object => rerender
       this.workflowGroupsMap.set(updatedMap);
     }
+    this.updateGroups();
   }
 
   // Create a new empty group
@@ -323,10 +315,21 @@ export class ProjectSettingsComponent {
     this.createWorkflowGroupMutation.mutate({ path: { repositoryId: this.repositoryId() }, body: newGroup });
   }
 
+  groupNameExists = () => {
+    const newGroupNameTrimmed = this.newGroupName.trim();
+    return this.workflowGroups().some(group => group.name.toLowerCase() === newGroupNameTrimmed.toLowerCase());
+  };
+
   // Reset the dialog state
   resetDialog() {
     this.showAddGroupDialog = false;
     this.newGroupName = '';
+  }
+
+  syncWorkflows() {
+    const repositoryId = this.repositoryId();
+    if (!repositoryId) return;
+    this.syncWorkflowsMutation.mutate({ path: { repositoryId } });
   }
 
   // Update the groups on the server
@@ -383,7 +386,6 @@ export class ProjectSettingsComponent {
 
     // Reset drag state
     this.dragIndex = null;
+    this.updateGroups();
   }
 }
-
-const uniqueLabels = ['DEPLOY_TEST_SERVER', 'DEPLOY_STAGING_SERVER', 'DEPLOY_PRODUCTION_SERVER'];

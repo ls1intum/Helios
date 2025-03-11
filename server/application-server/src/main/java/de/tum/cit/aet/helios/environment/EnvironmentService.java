@@ -11,19 +11,28 @@ import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
 import de.tum.cit.aet.helios.releasecandidate.ReleaseCandidateRepository;
 import de.tum.cit.aet.helios.user.User;
+import de.tum.cit.aet.helios.workflow.Workflow;
+import de.tum.cit.aet.helios.workflow.WorkflowRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 
 @Service
 @Transactional
+@Log4j2
+@RequiredArgsConstructor
 public class EnvironmentService {
 
   private final AuthService authService;
@@ -32,28 +41,9 @@ public class EnvironmentService {
   private final HeliosDeploymentRepository heliosDeploymentRepository;
   private final ReleaseCandidateRepository releaseCandidateRepository;
   private final DeploymentRepository deploymentRepository;
-  @Lazy
-  private final GitRepoSettingsService gitRepoSettingsService;
+  @Lazy private final GitRepoSettingsService gitRepoSettingsService;
   private final EnvironmentScheduler environmentScheduler;
-
-  public EnvironmentService(
-      AuthService authService,
-      EnvironmentRepository environmentRepository,
-      EnvironmentLockHistoryRepository lockHistoryRepository,
-      HeliosDeploymentRepository heliosDeploymentRepository,
-      ReleaseCandidateRepository releaseCandidateRepository,
-      DeploymentRepository deploymentRepository,
-      @Lazy GitRepoSettingsService gitRepoSettingsService,
-      EnvironmentScheduler environmentScheduler) {
-    this.authService = authService;
-    this.environmentRepository = environmentRepository;
-    this.lockHistoryRepository = lockHistoryRepository;
-    this.heliosDeploymentRepository = heliosDeploymentRepository;
-    this.releaseCandidateRepository = releaseCandidateRepository;
-    this.deploymentRepository = deploymentRepository;
-    this.gitRepoSettingsService = gitRepoSettingsService;
-    this.environmentScheduler = environmentScheduler;
-  }
+  private final WorkflowRepository workflowRepository;
 
   public Optional<EnvironmentDto> getEnvironmentById(Long id) {
     return environmentRepository.findById(id).map(EnvironmentDto::fromEnvironment);
@@ -70,10 +60,7 @@ public class EnvironmentService {
               environmentScheduler.unlockExpiredEnvironments();
               LatestDeploymentUnion latest = findLatestDeployment(environment);
               return EnvironmentDto.fromEnvironment(
-                  environment,
-                  latest,
-                  environment.getLatestStatus(),
-                  releaseCandidateRepository);
+                  environment, latest, environment.getLatestStatus(), releaseCandidateRepository);
             })
         .collect(Collectors.toList());
   }
@@ -85,10 +72,7 @@ public class EnvironmentService {
               environmentScheduler.unlockExpiredEnvironments();
               LatestDeploymentUnion latest = findLatestDeployment(environment);
               return EnvironmentDto.fromEnvironment(
-                  environment,
-                  latest,
-                  environment.getLatestStatus(),
-                  releaseCandidateRepository);
+                  environment, latest, environment.getLatestStatus(), releaseCandidateRepository);
             })
         .collect(Collectors.toList());
   }
@@ -137,8 +121,7 @@ public class EnvironmentService {
       // Compare updatedAt timestamps to determine the latest
       if (latestDeployment.getCreatedAt().isAfter(latestHelios.getCreatedAt())
           || latestDeployment.getCreatedAt().isEqual(latestHelios.getCreatedAt())) {
-        return LatestDeploymentUnion.realDeployment(latestDeployment,
-            latestHelios);
+        return LatestDeploymentUnion.realDeployment(latestDeployment, latestHelios);
       } else {
         return LatestDeploymentUnion.heliosDeployment(latestHelios);
       }
@@ -176,20 +159,23 @@ public class EnvironmentService {
             .orElseThrow(() -> new EntityNotFoundException("Environment not found with ID: " + id));
 
     if (!environment.isEnabled()) {
-      throw new IllegalStateException("Environment is disabled");
+      throw new EnvironmentException("Environment is disabled");
     }
 
     // Only proceed with locking if it's a TEST environment
     if (environment.getType() != Environment.Type.TEST) {
       // Return the environment without locking for non-TEST environments
-      return Optional.of(environment);
+      throw new EnvironmentException("Only test environments can be locked");
     }
 
     if (environment.isLocked()) {
       if (currentUser.equals(environment.getLockedBy())) {
+        // Already locked by current user, return the environment
         return Optional.of(environment);
       }
-      return Optional.empty();
+      // Locked by some other user
+      String msg = getLockedByAnotherUserErrorMessage(environment);
+      throw new EnvironmentException(msg);
     }
 
     environment.setLockedBy(currentUser);
@@ -215,42 +201,152 @@ public class EnvironmentService {
     return Optional.of(environment);
   }
 
+  /**
+   * Calculates lock expiration time based on a base time and threshold settings.
+   *
+   * @param environment the environment to calculate lock expiration for
+   * @param baseTime the base time from which to calculate expiration
+   * @return the calculated expiration time or null if no threshold is set
+   */
   @Transactional
-  private OffsetDateTime getLockWillExpireAt(Environment environment) {
+  protected OffsetDateTime calculateLockExpiration(
+      Environment environment, OffsetDateTime baseTime) {
     Long lockExpirationThreshold =
         environment.getLockExpirationThreshold() != null
             ? environment.getLockExpirationThreshold()
             : gitRepoSettingsService
-            .getOrCreateGitRepoSettingsByRepositoryId(
-                environment.getRepository().getRepositoryId())
-            .map(GitRepoSettingsDto::lockExpirationThreshold)
-            .orElse(-1L);
+                .getOrCreateGitRepoSettingsByRepositoryId(
+                    environment.getRepository().getRepositoryId())
+                .map(GitRepoSettingsDto::lockExpirationThreshold)
+                .orElse(-1L);
+
+    return lockExpirationThreshold != -1 ? baseTime.plusMinutes(lockExpirationThreshold) : null;
+  }
+
+  /**
+   * Calculates reservation expiration time based on a base time and threshold settings.
+   *
+   * @param environment the environment to calculate reservation expiration for
+   * @param baseTime the base time from which to calculate expiration
+   * @return the calculated expiration time or null if no threshold is set
+   */
+  @Transactional
+  protected OffsetDateTime calculateReservationExpiration(
+      Environment environment, OffsetDateTime baseTime) {
+    Long lockReservationThreshold =
+        environment.getLockReservationThreshold() != null
+            ? environment.getLockReservationThreshold()
+            : gitRepoSettingsService
+                .getOrCreateGitRepoSettingsByRepositoryId(
+                    environment.getRepository().getRepositoryId())
+                .map(GitRepoSettingsDto::lockReservationThreshold)
+                .orElse(-1L);
+
+    return lockReservationThreshold != -1 ? baseTime.plusMinutes(lockReservationThreshold) : null;
+  }
+
+  @Transactional
+  protected OffsetDateTime getLockWillExpireAt(Environment environment) {
     if (environment.isLocked() && environment.getLockedAt() != null) {
-      return lockExpirationThreshold != -1
-          ? environment.getLockedAt().plusMinutes(lockExpirationThreshold)
-          : null;
+      return calculateLockExpiration(environment, environment.getLockedAt());
     } else {
       return null;
     }
   }
 
   @Transactional
-  private OffsetDateTime getLockReservationExpiresAt(Environment environment) {
-    Long lockReservationThreshold =
-        environment.getLockReservationThreshold() != null
-            ? environment.getLockReservationThreshold()
-            : gitRepoSettingsService
-            .getOrCreateGitRepoSettingsByRepositoryId(
-                environment.getRepository().getRepositoryId())
-            .map(GitRepoSettingsDto::lockReservationThreshold)
-            .orElse(-1L);
+  protected OffsetDateTime getLockReservationExpiresAt(Environment environment) {
     if (environment.isLocked() && environment.getLockedAt() != null) {
-      return lockReservationThreshold != -1
-          ? environment.getLockedAt().plusMinutes(lockReservationThreshold)
-          : null;
+      return calculateReservationExpiration(environment, environment.getLockedAt());
     } else {
       return null;
     }
+  }
+
+  /**
+   * Extends the lock duration for an already locked environment.
+   *
+   * <p>This method attempts to extend the lock duration by resetting the lockWillExpireAt and
+   * lockReservationExpiresAt timestamps based on the current time. The environment must already be
+   * locked by the current user.
+   *
+   * <p>This method is transactional and handles optimistic locking failures.
+   *
+   * @param id the ID of the environment to extend the lock for
+   * @return an Optional containing the updated environment if successful, or an empty Optional if
+   *     the environment isn't locked, is locked by another user, or if an optimistic locking
+   *     failure occurs
+   * @throws EntityNotFoundException if no environment is found with the specified ID
+   * @throws EnvironmentException if the environment is disabled or isn't a TEST environment
+   */
+  @Transactional
+  public Optional<Environment> extendEnvironmentLock(Long id) {
+    final User currentUser = authService.getUserFromGithubId();
+
+    Environment environment =
+        environmentRepository
+            .findById(id)
+            .orElseThrow(() -> new EntityNotFoundException("Environment not found with ID: " + id));
+
+    // Check environment status
+    if (!environment.isEnabled()) {
+      throw new EnvironmentException("Environment is disabled");
+    }
+
+    if (environment.getType() != Environment.Type.TEST) {
+      throw new EnvironmentException("Only TEST environments can have their locks extended");
+    }
+
+    // Verify the environment is locked and by the current user
+    if (!environment.isLocked()) {
+      throw new EnvironmentException("Environment is not locked. Cannot extend lock.");
+    }
+
+    if (!environment.getLockedBy().equals(currentUser)) {
+      // The Environment is locked, but by someone else
+      String msg = getLockedByAnotherUserErrorMessage(environment);
+      throw new EnvironmentException(msg);
+    }
+
+    // Calculate new expiration times based on current time
+    environment.setLockWillExpireAt(calculateLockExpiration(environment, OffsetDateTime.now()));
+    environment.setLockReservationExpiresAt(
+        calculateReservationExpiration(environment, OffsetDateTime.now()));
+
+    try {
+      environmentRepository.save(environment);
+    } catch (OptimisticLockingFailureException e) {
+      // The environment was modified by another transaction
+      return Optional.empty();
+    }
+
+    return Optional.of(environment);
+  }
+
+  @NotNull
+  private static String getLockedByAnotherUserErrorMessage(Environment environment) {
+    final StringBuilder msg = new StringBuilder("Environment is locked by another user.\n");
+    final ZoneId localZone = ZoneId.systemDefault();
+    final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+    if (environment.getLockedBy() != null) {
+      msg.append(" (User: ").append(environment.getLockedBy().getLogin()).append(")\n");
+    }
+    if (environment.getLockedAt() != null) {
+      final OffsetDateTime lockedAtUtc = environment.getLockedAt(); // assume stored in UTC
+      final OffsetDateTime lockedAtLocal =
+          lockedAtUtc.atZoneSameInstant(localZone).toOffsetDateTime();
+      final String lockedAtString = dateFormatter.format(lockedAtLocal);
+      msg.append(" (Locked at: ").append(lockedAtString).append(")\n");
+    }
+    if (environment.getLockWillExpireAt() != null) {
+      final OffsetDateTime expireAtUtc = environment.getLockWillExpireAt();
+      final OffsetDateTime expireAtLocal =
+          expireAtUtc.atZoneSameInstant(localZone).toOffsetDateTime();
+      final String expireAtString = dateFormatter.format(expireAtLocal);
+      msg.append(" (Lock will expire at: ").append(expireAtString).append(")");
+    }
+    return msg.toString();
   }
 
   /**
@@ -285,7 +381,7 @@ public class EnvironmentService {
             .orElseThrow(() -> new EntityNotFoundException("Environment not found with ID: " + id));
 
     if (!environment.isLocked()) {
-      throw new IllegalStateException("Environment is not locked");
+      throw new EnvironmentException("Environment is not locked");
     }
 
     // TODO User environment lockReservationExpiresAt instead of calcualting it as below
@@ -293,10 +389,10 @@ public class EnvironmentService {
         environment.getLockReservationThreshold() != null
             ? environment.getLockReservationThreshold()
             : gitRepoSettingsService
-            .getOrCreateGitRepoSettingsByRepositoryId(
-                environment.getRepository().getRepositoryId())
-            .map(GitRepoSettingsDto::lockReservationThreshold)
-            .orElse(-1L);
+                .getOrCreateGitRepoSettingsByRepositoryId(
+                    environment.getRepository().getRepositoryId())
+                .map(GitRepoSettingsDto::lockReservationThreshold)
+                .orElse(-1L);
 
     OffsetDateTime now = OffsetDateTime.now();
     OffsetDateTime lockedAt = environment.getLockedAt();
@@ -314,8 +410,7 @@ public class EnvironmentService {
     }
 
     // 20 minutes timeout for redeployment
-    if (!canUnlock(environment,
-        20)) {
+    if (!canUnlock(environment, 20)) {
       throw new DeploymentException("Deployment is still in progress, please wait.");
     }
 
@@ -391,6 +486,17 @@ public class EnvironmentService {
               if (environmentDto.type() != null) {
                 environment.setType(environmentDto.type());
               }
+              if (environmentDto.deploymentWorkflow() != null) {
+                Long workflowId = environmentDto.deploymentWorkflow().id();
+                Workflow wf =
+                    workflowRepository
+                        .findById(workflowId)
+                        .orElseThrow(
+                            () ->
+                                new EntityNotFoundException(
+                                    "Workflow not found with ID: " + workflowId));
+                environment.setDeploymentWorkflow(wf);
+              }
               environment.setLockExpirationThreshold(environmentDto.lockExpirationThreshold());
               environment.setLockReservationThreshold(environmentDto.lockReservationThreshold());
               if (environment.isLocked() && environment.getLockedAt() != null) {
@@ -423,9 +529,7 @@ public class EnvironmentService {
         .map(
             lock ->
                 EnvironmentLockHistoryDto.fromEnvironmentLockHistory(
-                    lock,
-                    this,
-                    releaseCandidateRepository))
+                    lock, this, releaseCandidateRepository))
         .orElse(null);
   }
 
@@ -434,9 +538,7 @@ public class EnvironmentService {
         .map(
             lock ->
                 EnvironmentLockHistoryDto.fromEnvironmentLockHistory(
-                    lock,
-                    this,
-                    releaseCandidateRepository))
+                    lock, this, releaseCandidateRepository))
         .collect(Collectors.toList());
   }
 
