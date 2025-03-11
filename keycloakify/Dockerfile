@@ -4,10 +4,11 @@ FROM node:22 AS build
 # Set the working directory
 WORKDIR /app
 
+# Install maven for the build step
+RUN apt-get update && apt-get install maven=3.8.7-1 -y
+
 # Copy package.json and yarn.lock
 COPY package.json yarn.lock ./
-
-RUN apt-get update && apt-get install maven=3.8.7-1 -y
 
 # Install dependencies
 RUN yarn install --network-timeout 1000000
