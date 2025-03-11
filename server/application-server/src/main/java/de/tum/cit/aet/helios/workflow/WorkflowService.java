@@ -8,11 +8,10 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-@RequiredArgsConstructor
 @Service
 @Transactional
+@RequiredArgsConstructor
 public class WorkflowService {
-
   private final WorkflowRepository workflowRepository;
   private final EnvironmentService environmentService;
 

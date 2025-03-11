@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
-import { client } from './core/modules/openapi/sdk.gen';
+import { client } from '@app/core/modules/openapi/client.gen';
 import { environment } from '../environments/environment';
 import { MessageService } from 'primeng/api';
 import { ReportProblemButtonComponent } from './components/report-problem-button/report-problem-button.component';
