@@ -28,11 +28,33 @@ export class DeploymentStepperComponent implements OnInit, OnDestroy {
     if (value?.state && value.state !== this.lastKnownState()) {
       // For a new step, use the current time, not the potentially delayed updatedAt
       const stepStartTime = Date.now();
+      const previousState = this.lastKnownState();
 
-      this.stepStartTimes.update(times => {
-        times.set(value.state!, stepStartTime);
-        return times;
-      });
+      // Special case: If transitioning from REQUESTED to PENDING, don't reset the timer
+      // since they're both part of the PRE-DEPLOYMENT step in the UI
+      if (previousState === 'REQUESTED' && value.state === 'PENDING') {
+        // Keep the REQUESTED start time for PENDING
+        const requestedStartTime = this.stepStartTimes().get('REQUESTED');
+        if (requestedStartTime) {
+          this.stepStartTimes.update(times => {
+            times.set(value.state!, requestedStartTime);
+            return times;
+          });
+        } else {
+          // Fallback if there's no REQUESTED start time for some reason
+          this.stepStartTimes.update(times => {
+            times.set(value.state!, stepStartTime);
+            return times;
+          });
+        }
+      } else {
+        // Normal case: set new start time for the current state
+        this.stepStartTimes.update(times => {
+          times.set(value.state!, stepStartTime);
+          return times;
+        });
+      }
+
       this.lastKnownState.set(value.state);
     }
     this._deployment.set(value);
@@ -41,13 +63,14 @@ export class DeploymentStepperComponent implements OnInit, OnDestroy {
     return this._deployment();
   }
 
-  steps: ('REQUESTED' | 'PENDING' | 'IN_PROGRESS')[] = ['REQUESTED', 'PENDING', 'IN_PROGRESS'];
+  steps: ('PENDING' | 'IN_PROGRESS')[] = ['PENDING', 'IN_PROGRESS'];
 
   estimatedTimes = computed<EstimatedTimes>(() => {
     const deployment = this._deployment();
+    const prExists = deployment?.prName != null;
     return {
-      REQUESTED: 1,
-      PENDING: deployment?.prName != null ? 1 : 10,
+      REQUESTED: prExists ? 2 : 11, // REQUESTED is not shown but still part of logic
+      PENDING: prExists ? 2 : 11,
       IN_PROGRESS: 4,
     };
   });
@@ -93,7 +116,14 @@ export class DeploymentStepperComponent implements OnInit, OnDestroy {
       return -1; // Special value to indicate no valid step found in error state
     }
 
-    const index = this.steps.indexOf(this.deployment.state as 'REQUESTED' | 'PENDING' | 'IN_PROGRESS');
+    const currentState = this.deployment.state;
+
+    // Special handling for REQUESTED state (map to PENDING in UI)
+    if (currentState === 'REQUESTED') {
+      return 0; // PENDING is now the first step in the UI
+    }
+
+    const index = this.steps.indexOf(currentState as 'PENDING' | 'IN_PROGRESS');
     return index !== -1 ? index : 0;
   }
 
@@ -227,7 +257,7 @@ export class DeploymentStepperComponent implements OnInit, OnDestroy {
   getStepDisplayName(step: string): string {
     return (
       {
-        REQUESTED: 'REQUESTED',
+        REQUESTED: 'PRE-DEPLOYMENT', // Map REQUESTED to PRE-DEPLOYMENT (though not shown in UI)
         PENDING: 'PRE-DEPLOYMENT',
         IN_PROGRESS: 'DEPLOYMENT',
       }[step] || step
