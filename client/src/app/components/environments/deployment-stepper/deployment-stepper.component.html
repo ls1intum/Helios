@@ -1,51 +1,49 @@
-<div class="relative items-center ml-10 mr-10">
-  <span class="text-m uppercase tracking-tighter font-bold text-gray-500 mb-8"> Latest Deployment Progress </span>
+<div class="relative items-center">
+  <div class="flex-col items-start mb-2">
+    <span class="text-xs uppercase tracking-tighter font-bold text-gray-500">Latest Deployment Progress</span>
 
-  <!-- Top Time Display -->
-  <div class="text-center mb-4">
-    @if (deployment && deployment.state === 'SUCCESS') {
-      <div class="inline-flex flex-col items-center">
-        <div class="inline-flex items-center bg-green-50 px-4 py-2 rounded-full mb-1">
-          <i-tabler name="clock" class="w-5 h-5 text-green-600 mr-2"></i-tabler>
-          <span class="text-lg font-semibold text-green-600">
-            {{ getDeploymentDuration() }}
-          </span>
+    <div class="flex gap-4 items-center mb-4 mt-2">
+      <span class="font-semibold text-lg">
+        @if (deployment && deployment.state === 'SUCCESS') {
+          Deployment completed
+        } @else if (deployment && isErrorState()) {
+          Deployment failed
+        } @else if (deployment && isUnknownState()) {
+          Deployment status unknown
+        } @else {
+          Deployment in progress
+        }
+      </span>
+      <span class="text-gray-300">|</span>
+
+      <!-- Integrated Time Display -->
+      @if (deployment && deployment.state === 'SUCCESS') {
+        <div class="inline-flex items-center bg-green-50 px-2 py-0.5 rounded-full text-sm">
+          <i-tabler name="clock" class="w-4 h-4 text-green-600 mr-1"></i-tabler>
+          <span class="font-medium text-green-600">{{ getDeploymentDuration() }}</span>
         </div>
-        <div class="text-xs text-gray-500 italic">(Deployment completed in)</div>
-      </div>
-    } @else if (deployment && isErrorState()) {
-      <div class="inline-flex flex-col items-center">
-        <div class="inline-flex items-center bg-red-50 px-4 py-2 rounded-full mb-1">
-          <i-tabler name="clock" class="w-5 h-5 text-red-600 mr-2"></i-tabler>
-          <span class="text-lg font-semibold text-red-600">
-            {{ getDeploymentDuration() }}
-          </span>
+      } @else if (deployment && isErrorState()) {
+        <div class="inline-flex items-center bg-red-50 px-2 py-0.5 rounded-full text-sm">
+          <i-tabler name="clock" class="w-4 h-4 text-red-600 mr-1"></i-tabler>
+          <span class="font-medium text-red-600">{{ getDeploymentDuration() }}</span>
         </div>
-        <div class="text-xs text-red-500 italic">(Deployment failed in)</div>
-      </div>
-    } @else if (deployment && isUnknownState()) {
-      <div class="inline-flex flex-col items-center">
-        <div class="inline-flex items-center bg-gray-50 px-4 py-2 rounded-full mb-1">
-          <i-tabler name="clock" class="w-5 h-5 text-gray-600 mr-2"></i-tabler>
-          <span class="text-lg font-semibold text-gray-600"> 0m 0s </span>
+      } @else if (deployment && isUnknownState()) {
+        <div class="inline-flex items-center bg-gray-50 px-2 py-0.5 rounded-full text-sm">
+          <i-tabler name="clock" class="w-4 h-4 text-gray-600 mr-1"></i-tabler>
+          <span class="font-medium text-gray-600">0m 0s</span>
         </div>
-        <div class="text-xs text-gray-500 italic">(Unknown deployment duration)</div>
-      </div>
-    } @else {
-      <div class="inline-flex flex-col items-center">
-        <div class="inline-flex items-center bg-blue-50 px-4 py-2 rounded-full mb-1">
-          <i-tabler name="clock" class="w-5 h-5 text-blue-600 mr-2"></i-tabler>
-          <span class="text-lg font-semibold text-blue-600">
-            {{ getTotalRemainingTime() }}
-          </span>
+      } @else {
+        <div class="inline-flex items-center bg-blue-50 px-2 py-0.5 rounded-full text-sm">
+          <i-tabler name="clock" class="w-4 h-4 text-blue-600 mr-1"></i-tabler>
+          <span class="font-medium text-blue-600">{{ getTotalRemainingTime() }}</span>
         </div>
-        <div class="text-xs text-gray-500 italic">(Estimated total time remaining)</div>
-      </div>
-    }
+      }
+      <div class="flex-grow"></div>
+    </div>
   </div>
 
   <!-- Vertically Aligned Steps -->
-  <div class="flex flex-col gap-6">
+  <div class="flex flex-col gap-6 mt-6">
     @for (step of steps; track step; let i = $index) {
       <div class="flex items-center gap-4">
         <!-- Step Icon and Label with Fixed Width -->
@@ -80,16 +78,14 @@
         </div>
 
         <!-- Progress Bar and Timer with Fixed Widths -->
-        @if (i === 1 || i === 2) {
-          <div class="flex items-center gap-2 w-[800px]">
-            <div class="w-[750px]">
-              <p-progressbar [value]="getProgress(i)" [showValue]="true" class="h-6"></p-progressbar>
-            </div>
-            <div class="w-[100px] text-right text-xs text-gray-500">
-              {{ getStepTime(i) }}
-            </div>
+        <div class="flex items-center gap-2 w-[800px]">
+          <div class="w-[750px]">
+            <p-progressbar [value]="getProgress(i)" [showValue]="true" class="h-6"></p-progressbar>
           </div>
-        }
+          <div class="w-[100px] text-right text-xs text-gray-500">
+            {{ getStepTime(i) }}
+          </div>
+        </div>
       </div>
     }
   </div>
