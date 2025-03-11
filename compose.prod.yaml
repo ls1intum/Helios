@@ -151,7 +151,7 @@ services:
       - postgres
     volumes:
       - ./helios-realm.json:/opt/keycloak/data/import/prod-realm-export.json
-    command: start-dev --import-realm --http-port=8081 --proxy-headers xforwarded --hostname-strict=true
+    command: start-dev --import-realm --http-port=8081 --proxy-headers xforwarded --hostname-strict=true --features=preview
     networks:
       - helios-network
 
