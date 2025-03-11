@@ -1,23 +1,20 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ProjectSettingsComponent } from './project-settings.component';
+import { PullRequestListComponent } from './pull-request-list.component';
 import { importProvidersFrom } from '@angular/core';
 import { TestModule } from '@app/test.module';
 
-describe('Integration Test Pull Request Project Settings Page', () => {
-  let component: ProjectSettingsComponent;
-  let fixture: ComponentFixture<ProjectSettingsComponent>;
+describe('Integration Test Pull Request List Page', () => {
+  let component: PullRequestListComponent;
+  let fixture: ComponentFixture<PullRequestListComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ProjectSettingsComponent],
+      imports: [PullRequestListComponent],
       providers: [importProvidersFrom(TestModule)],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(ProjectSettingsComponent);
+    fixture = TestBed.createComponent(PullRequestListComponent);
     component = fixture.componentInstance;
-
-    // Set input properties
-    fixture.componentRef.setInput('repositoryId', 1);
 
     await fixture.whenStable();
   });
