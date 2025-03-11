@@ -66,7 +66,7 @@ dependencies {
     implementation 'org.flywaydb:flyway-core:11.3.4'
     implementation 'org.flywaydb:flyway-database-postgresql:11.3.4'
     implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
-    implementation 'io.sentry:sentry-spring-boot-starter-jakarta:7.22.1'
+    implementation 'io.sentry:sentry-spring-boot-starter-jakarta:8.3.0'
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
     runtimeOnly 'org.postgresql:postgresql'
