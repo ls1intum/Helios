@@ -17,7 +17,6 @@ on:
       - '.github/**'
       - '.vscode/**'
       - 'docs/**'
-      - 'keycloakify/**'
 
 concurrency:
   group: staging
