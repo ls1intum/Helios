@@ -17,7 +17,7 @@ markdown-it-py==3.0.0
 markupsafe==3.0.2
 mdurl==0.1.2
 nats-py==2.9.0
-pydantic-core==2.27.2
+pydantic-core==2.31.1
 pydantic-settings==2.8.1
 pydantic==2.10.6
 pygments==2.19.1
