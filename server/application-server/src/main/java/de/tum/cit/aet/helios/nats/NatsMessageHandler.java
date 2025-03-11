@@ -36,7 +36,7 @@ public abstract class NatsMessageHandler<T> implements MessageHandler {
       handleMessage(payload);
     } catch (Exception e) {
       log.error(
-          String.format("Failed to handle NATS message with subject {}", msg.getSubject()), e);
+          String.format("Failed to handle NATS message with subject %s", msg.getSubject()), e);
     }
   }
 }

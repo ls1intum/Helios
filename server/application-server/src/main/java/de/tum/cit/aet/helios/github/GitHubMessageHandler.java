@@ -9,11 +9,10 @@ import org.kohsuke.github.GHEvent;
 import org.kohsuke.github.GHEventPayload;
 import org.kohsuke.github.GitHub;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.Cacheable;
 
 @Log4j2
 public abstract class GitHubMessageHandler<T extends GHEventPayload> extends NatsMessageHandler<T> {
-  @Autowired private GitHubFacade gitHubFacade;
+  @Autowired private GitHubService gitHubService;
 
   protected abstract Class<T> getPayloadClass();
 
@@ -31,13 +30,6 @@ public abstract class GitHubMessageHandler<T extends GHEventPayload> extends Nat
     }
   }
 
-  // We are caching the installed repositories to avoid making a request to GitHub for every
-  // incoming event. The cache is invalidated when a new installation event happened.
-  @Cacheable("installedRepositories")
-  protected List<String> getInstalledRepositories() throws IOException {
-    return gitHubFacade.getInstalledRepositoriesForGitHubApp();
-  }
-
   /**
    * Processes a GitHub webhook event for a repository that is installed
    *
@@ -51,7 +43,7 @@ public abstract class GitHubMessageHandler<T extends GHEventPayload> extends Nat
     List<String> repos = List.of();
 
     try {
-      repos = this.getInstalledRepositories();
+      repos = gitHubService.getInstalledRepositories();
     } catch (final IOException ex) {
       log.error("Failed to get installed repositories", ex);
       return;

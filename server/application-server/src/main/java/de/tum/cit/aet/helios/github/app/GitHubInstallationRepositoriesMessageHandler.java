@@ -1,6 +1,7 @@
 package de.tum.cit.aet.helios.github.app;
 
 import de.tum.cit.aet.helios.github.GitHubClientManager;
+import de.tum.cit.aet.helios.github.GitHubService;
 import de.tum.cit.aet.helios.github.sync.DataSyncStatusService;
 import de.tum.cit.aet.helios.github.sync.GitHubDataSyncService;
 import de.tum.cit.aet.helios.gitrepo.RepositoryService;
@@ -8,7 +9,6 @@ import de.tum.cit.aet.helios.nats.JacksonMessageHandler;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -22,6 +22,7 @@ public class GitHubInstallationRepositoriesMessageHandler
   private final GitHubDataSyncService gitHubDataSyncService;
   private final DataSyncStatusService dataSyncStatusService;
   private final GitHubClientManager gitHubClientManager;
+  private final GitHubService gitHubService;
 
   @Override
   public String getSubjectPattern() {
@@ -93,13 +94,6 @@ public class GitHubInstallationRepositoriesMessageHandler
     // Force refresh the GitHub client to ensure the latest installation repositories are exist
     gitHubClientManager.forceRefreshClient();
     // Ensure we listen to the events for the newly installed repositories
-    this.clearInstalledRepositoriesCache();
-  }
-
-  // Clear the cache for installed repositories when an installation_repositories event is received
-  // so we can listen to the events for the newly installed repositories
-  @CacheEvict(value = "installedRepositories", allEntries = true)
-  private void clearInstalledRepositoriesCache() {
-    log.info("Clearing cache for installed repositories");
+    gitHubService.clearInstalledRepositoriesCache();
   }
 }
