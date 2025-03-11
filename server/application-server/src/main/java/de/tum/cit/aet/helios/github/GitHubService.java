@@ -30,6 +30,8 @@ import org.kohsuke.github.GHOrganization;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GHWorkflow;
 import org.kohsuke.github.PagedIterable;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 @Log4j2
@@ -49,6 +51,19 @@ public class GitHubService {
     return new Request.Builder()
         .header("Authorization", "token " + clientManager.getCurrentToken())
         .header("Accept", "application/vnd.github+json");
+  }
+
+  // We are caching the installed repositories to avoid making a request to GitHub for every
+  // incoming event. The cache is invalidated when a new installation event happened.
+  @Cacheable("installedRepositories")
+  public List<String> getInstalledRepositories() throws IOException {
+    log.info("Fetching installed repositories from GitHub");
+    return github.getInstalledRepositoriesForGitHubApp();
+  }
+
+  @CacheEvict(value = "installedRepositories", allEntries = true)
+  public void clearInstalledRepositoriesCache() {
+    log.info("Clearing cache for installed repositories");
   }
 
   /**

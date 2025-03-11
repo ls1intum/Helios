@@ -5,6 +5,7 @@ import de.tum.cit.aet.helios.github.GitHubMessageHandler;
 import de.tum.cit.aet.helios.github.GitHubService;
 import de.tum.cit.aet.helios.gitrepo.github.GitHubRepositorySyncService;
 import java.io.IOException;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.kohsuke.github.GHBranch;
 import org.kohsuke.github.GHCommit;
@@ -15,26 +16,25 @@ import org.springframework.stereotype.Component;
 
 @Component
 @Log4j2
+@RequiredArgsConstructor
 public class GitHubPushMessageHandler extends GitHubMessageHandler<GHEventPayload.Push> {
   private final GitHubCommitSyncService commitSyncService;
   private final GitHubRepositorySyncService repositorySyncService;
   private final GitHubBranchSyncService branchSyncService;
   private final GitHubService gitHubService;
 
-  private GitHubPushMessageHandler(
-      GitHubCommitSyncService commitSyncService,
-      GitHubRepositorySyncService repositorySyncService,
-      GitHubBranchSyncService branchSyncService,
-      GitHubService gitHubService) {
-    super(GHEventPayload.Push.class);
-    this.commitSyncService = commitSyncService;
-    this.repositorySyncService = repositorySyncService;
-    this.branchSyncService = branchSyncService;
-    this.gitHubService = gitHubService;
+  @Override
+  protected Class<GHEventPayload.Push> getPayloadClass() {
+    return GHEventPayload.Push.class;
   }
 
   @Override
-  protected void handleEvent(GHEventPayload.Push eventPayload) {
+  protected GHEvent getPayloadType() {
+    return GHEvent.PUSH;
+  }
+
+  @Override
+  protected void handleInstalledRepositoryEvent(GHEventPayload.Push eventPayload) {
     String sha = eventPayload.getHeadCommit().getSha();
     String ref = eventPayload.getRef();
 
@@ -59,10 +59,5 @@ public class GitHubPushMessageHandler extends GitHubMessageHandler<GHEventPayloa
       e.printStackTrace();
     }
     return;
-  }
-
-  @Override
-  protected GHEvent getHandlerEvent() {
-    return GHEvent.PUSH;
   }
 }

@@ -4,6 +4,7 @@ import de.tum.cit.aet.helios.github.GitHubMessageHandler;
 import de.tum.cit.aet.helios.github.GitHubService;
 import de.tum.cit.aet.helios.gitrepo.github.GitHubRepositorySyncService;
 import java.io.IOException;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.kohsuke.github.GHBranch;
 import org.kohsuke.github.GHEvent;
@@ -13,24 +14,23 @@ import org.springframework.stereotype.Component;
 
 @Component
 @Log4j2
+@RequiredArgsConstructor
 public class GitHubCreateMessageHandler extends GitHubMessageHandler<GHEventPayload.Create> {
-
   private final GitHubBranchSyncService branchSyncService;
   private final GitHubRepositorySyncService repositorySyncService;
   private final GitHubService gitHubService;
 
-  private GitHubCreateMessageHandler(
-      GitHubBranchSyncService branchSyncService,
-      GitHubRepositorySyncService repositorySyncService,
-      GitHubService gitHubService) {
-    super(GHEventPayload.Create.class);
-    this.branchSyncService = branchSyncService;
-    this.repositorySyncService = repositorySyncService;
-    this.gitHubService = gitHubService;
+  protected Class<GHEventPayload.Create> getPayloadClass() {
+    return GHEventPayload.Create.class;
   }
 
   @Override
-  protected void handleEvent(GHEventPayload.Create eventPayload) {
+  protected GHEvent getPayloadType() {
+    return GHEvent.CREATE;
+  }
+
+  @Override
+  protected void handleInstalledRepositoryEvent(GHEventPayload.Create eventPayload) {
     String refType = eventPayload.getRefType();
     String ref = eventPayload.getRef();
     GHRepository repository;
@@ -57,10 +57,5 @@ public class GitHubCreateMessageHandler extends GitHubMessageHandler<GHEventPayl
       }
       return;
     }
-  }
-
-  @Override
-  protected GHEvent getHandlerEvent() {
-    return GHEvent.CREATE;
   }
 }
