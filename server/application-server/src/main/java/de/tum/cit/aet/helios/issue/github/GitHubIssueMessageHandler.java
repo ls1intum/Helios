@@ -9,13 +9,18 @@ import org.springframework.stereotype.Component;
 @Component
 @Log4j2
 public class GitHubIssueMessageHandler extends GitHubMessageHandler<GHEventPayload.Issue> {
-
-  private GitHubIssueMessageHandler() {
-    super(GHEventPayload.Issue.class);
+  @Override
+  protected Class<GHEventPayload.Issue> getPayloadClass() {
+    return GHEventPayload.Issue.class;
   }
 
   @Override
-  protected void handleEvent(GHEventPayload.Issue eventPayload) {
+  protected GHEvent getPayloadType() {
+    return GHEvent.ISSUES;
+  }
+
+  @Override
+  protected void handleInstalledRepositoryEvent(GHEventPayload.Issue eventPayload) {
     var action = eventPayload.getAction();
     var repository = eventPayload.getRepository();
     var issue = eventPayload.getIssue();
@@ -24,10 +29,5 @@ public class GitHubIssueMessageHandler extends GitHubMessageHandler<GHEventPaylo
         repository.getFullName(),
         issue.getNumber(),
         action);
-  }
-
-  @Override
-  protected GHEvent getHandlerEvent() {
-    return GHEvent.ISSUES;
   }
 }
