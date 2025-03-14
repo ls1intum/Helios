@@ -8,6 +8,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.kohsuke.github.GHEvent;
 import org.kohsuke.github.GHEventPayload;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.Profiles;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -19,6 +21,7 @@ public class GitHubPullRequestMessageHandler
   private final GitHubPullRequestSyncService pullRequestSyncService;
   private final GitHubRepositorySyncService repositorySyncService;
   private final GitHubService gitHubService;
+  private final Environment environment;
 
   @Override
   protected Class<GHEventPayload.PullRequest> getPayloadClass() {
@@ -55,6 +58,10 @@ public class GitHubPullRequestMessageHandler
    *   <li>ready_for_review - When a draft pull request is marked as ready for review</li>
    * </ul>
    *
+   * <p>In the staging environment, commit statuses are only created for the
+   * ls1intum/Helios repository.
+   * In production and development environments, commit statuses are created for all repositories.
+   *
    * @param eventPayload The GitHub pull request event payload
    */
   private void createCommitStatus(GHEventPayload.PullRequest eventPayload) {
@@ -64,6 +71,17 @@ public class GitHubPullRequestMessageHandler
         "reopened",
         "ready_for_review"
     );
+
+    // Check if we should skip based on repository and environment
+    String repoFullName = eventPayload.getRepository().getFullName();
+    boolean isStagingEnvironment = environment.acceptsProfiles(Profiles.of("staging"));
+    boolean isHeliosRepo = "ls1intum/Helios".equals(repoFullName);
+
+    if (isStagingEnvironment && !isHeliosRepo) {
+      log.info("Skipping commit status creation for repository {} in staging environment.",
+          repoFullName);
+      return;
+    }
 
     if (actionsTriggeringCommitStatus.contains(eventPayload.getAction().toLowerCase())) {
       gitHubService.createCommitStatusForPullRequest(eventPayload.getPullRequest());
