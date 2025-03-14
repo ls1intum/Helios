@@ -33,7 +33,7 @@ public interface GitHubFacade {
    * <p>This method creates a commit status that can be used to indicate build status, test results,
    * or other CI/CD information associated with a specific commit.
    *
-   * @param repositoryNameWithOwner The full repository name including the owner (e.g., "owner/repo")
+   * @param repositoryNameWithOwner The repository name including the owner (e.g., "owner/repo")
    * @param sha The SHA hash of the commit for which to create the status
    * @param state The state of the commit status (e.g., PENDING, SUCCESS, ERROR, FAILURE)
    * @param targetUrl The URL that will be linked from the status for more details

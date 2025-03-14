@@ -55,7 +55,7 @@ public class GitHubPullRequestMessageHandler
    *   <li>ready_for_review - When a draft pull request is marked as ready for review</li>
    * </ul>
    *
-   * @param eventPayload The GitHub pull request event payload containing action and pull request data
+   * @param eventPayload The GitHub pull request event payload
    */
   private void createCommitStatus(GHEventPayload.PullRequest eventPayload) {
     Set<String> actionsTriggeringCommitStatus = Set.of(
