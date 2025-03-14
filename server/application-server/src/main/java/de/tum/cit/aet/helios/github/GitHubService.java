@@ -26,10 +26,13 @@ import okhttp3.Request.Builder;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 import org.kohsuke.github.GHArtifact;
+import org.kohsuke.github.GHCommitState;
 import org.kohsuke.github.GHOrganization;
+import org.kohsuke.github.GHPullRequest;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GHWorkflow;
 import org.kohsuke.github.PagedIterable;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
@@ -46,6 +49,9 @@ public class GitHubService {
   private final AuthService authService;
   private final GitHubClientManager clientManager;
   private GHOrganization gitHubOrganization;
+
+  @Value("${helios.clientBaseUrl:http://localhost:4200}")
+  private String heliosClientBaseUrl;
 
   public Builder getRequestBuilder() {
     return new Request.Builder()
@@ -299,6 +305,40 @@ public class GitHubService {
     } catch (Exception e) {
       log.error("Unexpected error occurred: {}", e.getMessage());
       throw new IOException("Unexpected error occurred", e);
+    }
+  }
+
+  /**
+   * Creates a successful commit status for a GitHub pull request with a link to the Helios page.
+   *
+   * <p>This method sets up a commit status with the following characteristics:
+   * <ul>
+   *   <li>State: SUCCESS</li>
+   *   <li>Context: "Helios"</li>
+   *   <li>Target URL: A formatted URL to the Helios page for this specific pull request</li>
+   *   <li>Description: A message indicating what the link leads to</li>
+   * </ul>
+   *
+   * <p>The commit status is created for the HEAD commit of the pull request.
+   * Any IO exceptions during the status creation are logged as errors.
+   *
+   * @param pullRequest The GitHub pull request object for which to create the commit status
+   */
+  public void createCommitStatusForPullRequest(GHPullRequest pullRequest) {
+    final String targetUrl = String.format("%s/repo/%d/ci-cd/pr/%d",
+        heliosClientBaseUrl, pullRequest.getRepository().getId(), pullRequest.getNumber());
+    final String description = "Click to view the Helios page of this pull request.";
+    final String context = "Helios";
+    try {
+      github.createCommitStatus(
+          pullRequest.getRepository().getFullName(),
+          pullRequest.getHead().getSha(),
+          GHCommitState.SUCCESS,
+          targetUrl,
+          description,
+          context);
+    } catch (IOException e) {
+      log.error("Error occurred while creating commit status: {}", e.getMessage());
     }
   }
 }
