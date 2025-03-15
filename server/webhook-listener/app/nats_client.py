@@ -2,7 +2,7 @@ import asyncio
 from nats.aio.client import Client as NATS
 from app.config import settings
 from app.logger import logger, uvicorn_error
-import ssl
+
 class NATSClient:
     MAX_RETRIES = 10
     RETRY_BACKOFF_FACTOR = 2
