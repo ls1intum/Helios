@@ -23,6 +23,8 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          lfs: true
       - uses: FelixTJDietrich/sphinx-action@java
         with:
           docs-folder: "docs/"
