@@ -1,19 +1,27 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ProjectSettingsComponent } from './project-settings.component';
+import { CiCdComponent } from './ci-cd.component';
 import { importProvidersFrom } from '@angular/core';
 import { TestModule } from '@app/test.module';
 
-describe('Integration Test Pull Request Project Settings Page', () => {
-  let component: ProjectSettingsComponent;
-  let fixture: ComponentFixture<ProjectSettingsComponent>;
+class ResizeObserver {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+
+describe('Integration Test CI/CD Page', () => {
+  let component: CiCdComponent;
+  let fixture: ComponentFixture<CiCdComponent>;
+
+  window.ResizeObserver = ResizeObserver;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ProjectSettingsComponent],
+      imports: [CiCdComponent],
       providers: [importProvidersFrom(TestModule)],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(ProjectSettingsComponent);
+    fixture = TestBed.createComponent(CiCdComponent);
     component = fixture.componentInstance;
 
     // Set input properties

@@ -1,19 +1,19 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ProjectSettingsComponent } from './project-settings.component';
+import { ReleaseComponent } from './release.component';
 import { importProvidersFrom } from '@angular/core';
 import { TestModule } from '@app/test.module';
 
-describe('Integration Test Pull Request Project Settings Page', () => {
-  let component: ProjectSettingsComponent;
-  let fixture: ComponentFixture<ProjectSettingsComponent>;
+describe('Integration Test Release Page', () => {
+  let component: ReleaseComponent;
+  let fixture: ComponentFixture<ReleaseComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ProjectSettingsComponent],
+      imports: [ReleaseComponent],
       providers: [importProvidersFrom(TestModule)],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(ProjectSettingsComponent);
+    fixture = TestBed.createComponent(ReleaseComponent);
     component = fixture.componentInstance;
 
     // Set input properties

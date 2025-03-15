@@ -1,23 +1,25 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ProjectSettingsComponent } from './project-settings.component';
+import { EnvironmentEditComponent } from './environment-edit.component';
 import { importProvidersFrom } from '@angular/core';
 import { TestModule } from '@app/test.module';
 
-describe('Integration Test Pull Request Project Settings Page', () => {
-  let component: ProjectSettingsComponent;
-  let fixture: ComponentFixture<ProjectSettingsComponent>;
+describe('BranchDetailsComponent', () => {
+  let component: EnvironmentEditComponent;
+  let fixture: ComponentFixture<EnvironmentEditComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ProjectSettingsComponent],
+      imports: [EnvironmentEditComponent],
+      // Todo: figure out how to remove query client provider
       providers: [importProvidersFrom(TestModule)],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(ProjectSettingsComponent);
+    fixture = TestBed.createComponent(EnvironmentEditComponent);
     component = fixture.componentInstance;
 
     // Set input properties
     fixture.componentRef.setInput('repositoryId', 1);
+    fixture.componentRef.setInput('id', 1);
 
     await fixture.whenStable();
   });

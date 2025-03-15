@@ -60,19 +60,6 @@ const FILTER_OPTIONS = [
   ],
   providers: [SearchTableService, { provide: FILTER_OPTIONS_TOKEN, useValue: FILTER_OPTIONS }],
   templateUrl: './pull-request-table.component.html',
-  styles: [
-    `
-      :host ::ng-deep {
-        .p-avatar {
-          img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-          }
-        }
-      }
-    `,
-  ],
 })
 export class PullRequestTableComponent {
   dateService = inject(DateService);

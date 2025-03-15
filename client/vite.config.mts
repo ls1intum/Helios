@@ -15,7 +15,7 @@ export default defineConfig(({ mode }) => ({
     coverage: {
       provider: 'istanbul',
       reporter: ['text', 'lcov'],
-      exclude: ['**/*.config.*', '**/*.gen.*', ...coverageConfigDefaults.exclude],
+      exclude: ['**/*.config.*', '**/*.gen.*', '**/assets/**', ...coverageConfigDefaults.exclude],
     }
   },
   define: {
