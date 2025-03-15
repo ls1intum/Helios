@@ -30,6 +30,7 @@ export type EnvironmentDeployment = {
   releaseCandidateName?: string;
   prName?: string;
   user?: UserInfoDto;
+  pullRequestNumber?: number;
   createdAt?: string;
   updatedAt?: string;
   type: 'GITHUB' | 'HELIOS';
