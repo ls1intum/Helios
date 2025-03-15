@@ -241,6 +241,20 @@ public class LatestDeploymentUnion {
     }
   }
 
+  public Integer getPullRequestNumber() {
+    if (isRealDeployment()) {
+      return realDeployment.getPullRequest() != null
+          ? realDeployment.getPullRequest().getNumber()
+          : null;
+    } else if (isHeliosDeployment()) {
+      return heliosDeployment.getPullRequest() != null
+          ? heliosDeployment.getPullRequest().getNumber()
+          : null;
+    } else {
+      return null;
+    }
+  }
+
   public boolean isNone() {
     return !isRealDeployment() && !isHeliosDeployment();
   }

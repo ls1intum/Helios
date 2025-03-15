@@ -1066,6 +1066,9 @@ components:
           type: string
         user:
           $ref: "#/components/schemas/UserInfoDto"
+        pullRequestNumber:
+          type: integer
+          format: int32
         createdAt:
           type: string
           format: date-time
