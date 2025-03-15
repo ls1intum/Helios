@@ -44,7 +44,14 @@
                   <span [pTooltip]="getDeploymentTime(environment) || ''">{{ environment.latestDeployment.updatedAt || '' | timeAgo }}</span>
                 }
                 <app-deployment-state-tag [state]="deployment.state" />
-                <p-tag severity="secondary" rounded="true" class="max-w-[350px] flex items-center" [pTooltip]="tooltipTemplate" tooltipPosition="top">
+                <p-tag
+                  severity="secondary"
+                  rounded="true"
+                  class="max-w-[350px] flex items-center"
+                  [pTooltip]="tooltipTemplate"
+                  tooltipPosition="top"
+                  [routerLink]="getPrOrBranchLink(environment)"
+                >
                   <i-tabler name="git-branch" class="!size-5 mr-0.5 flex-shrink-0"></i-tabler>
                   <span class="ml-1 truncate flex-1">{{ deployment.ref }}</span>
                   <ng-template #tooltipTemplate>

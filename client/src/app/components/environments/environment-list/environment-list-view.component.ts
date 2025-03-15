@@ -303,4 +303,16 @@ export class EnvironmentListViewComponent implements OnDestroy {
     }
     return true;
   }
+
+  getPrOrBranchLink(env: EnvironmentDto) {
+    const deployment = env.latestDeployment;
+    if (!deployment) {
+      return [];
+    }
+    if (deployment.pullRequestNumber) {
+      return ['/repo', env.repository?.id, 'ci-cd', 'pr', deployment.pullRequestNumber.toString()];
+    } else {
+      return ['/repo', env.repository?.id, 'ci-cd', 'branch', deployment.ref];
+    }
+  }
 }
