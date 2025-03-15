@@ -1,5 +1,5 @@
 
-# Artemis Code of Conduct
+# Helios Code of Conduct
 
 ## Our Pledge
 

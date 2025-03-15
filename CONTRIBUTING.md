@@ -1,4 +1,4 @@
-# Contribution Guidelines for Artemis
+# Contribution Guidelines for Helios
 
 Read the [setup guide](https://ls1intum.github.io/Helios/development/local/setup/) on how to set up your local development environment.
 
