@@ -189,3 +189,5 @@ CMakeUserPresets.json
 
 # Ignore test files
 test/*
+
+.cursor/*
