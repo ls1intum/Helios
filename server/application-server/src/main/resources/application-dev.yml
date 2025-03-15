@@ -21,6 +21,9 @@ spring:
                 jwt:
                     issuer-uri: ${OAUTH_ISSUER_URL}
 
+helios:
+    clientBaseUrl: "http://localhost:4200"
+
 logging:
     level:
         de.tum.cit.aet.helios: DEBUG

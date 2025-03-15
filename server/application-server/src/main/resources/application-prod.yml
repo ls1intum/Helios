@@ -22,6 +22,9 @@ spring:
                 jwt:
                     issuer-uri: ${OAUTH_ISSUER_URL}
 
+helios:
+    clientBaseUrl: "https://helios.aet.cit.tum.de"
+
 nats:
     enabled: true
     timeframe: ${MONITORING_TIMEFRAME:7}

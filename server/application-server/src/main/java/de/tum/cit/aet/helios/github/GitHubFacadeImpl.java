@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.kohsuke.github.GHCommitState;
 import org.kohsuke.github.GHOrganization;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GHRepositorySearchBuilder;
@@ -48,6 +49,20 @@ public class GitHubFacadeImpl implements GitHubFacade {
   @Override
   public GHRepository getRepositoryById(long id) throws IOException {
     return clientManager.getGitHubClient().getRepositoryById(id);
+  }
+
+  @Override
+  public void createCommitStatus(
+      String repositoryNameWithOwner,
+      String sha,
+      GHCommitState state,
+      String targetUrl,
+      String description,
+      String context
+  )
+      throws IOException {
+    getRepository(repositoryNameWithOwner).createCommitStatus(sha, state, targetUrl,
+        description, context);
   }
 
   @Override
