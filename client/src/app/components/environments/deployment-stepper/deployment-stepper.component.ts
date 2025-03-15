@@ -1,9 +1,10 @@
-import { Component, computed, Input, OnDestroy, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, Input, OnDestroy, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IconsModule } from 'icons.module';
 import { ProgressBarModule } from 'primeng/progressbar';
 import { EnvironmentDeployment } from '@app/core/modules/openapi';
 import { TooltipModule } from 'primeng/tooltip';
+import { DeploymentTimingService } from '@app/core/services/deployment-timing.service';
 
 interface EstimatedTimes {
   REQUESTED: number;
@@ -18,46 +19,18 @@ interface EstimatedTimes {
 })
 export class DeploymentStepperComponent implements OnInit, OnDestroy {
   private _deployment = signal<EnvironmentDeployment | undefined>(undefined);
-  private lastKnownState = signal<string | undefined>(undefined);
-  private stepStartTimes = signal<Map<string, number>>(new Map());
   private currentTime = signal<number>(Date.now());
+  private timingService = inject(DeploymentTimingService);
 
   @Input()
   set deployment(value: EnvironmentDeployment | undefined) {
-    // Track step transitions
-    if (value?.state && value.state !== this.lastKnownState()) {
-      // For a new step, use the current time, not the potentially delayed updatedAt
-      const stepStartTime = Date.now();
-      const previousState = this.lastKnownState();
-
-      // Special case: If transitioning from REQUESTED to PENDING, don't reset the timer
-      // since they're both part of the PRE-DEPLOYMENT step in the UI
-      if (previousState === 'REQUESTED' && value.state === 'PENDING') {
-        // Keep the REQUESTED start time for PENDING
-        const requestedStartTime = this.stepStartTimes().get('REQUESTED');
-        if (requestedStartTime) {
-          this.stepStartTimes.update(times => {
-            times.set(value.state!, requestedStartTime);
-            return times;
-          });
-        } else {
-          // Fallback if there's no REQUESTED start time for some reason
-          this.stepStartTimes.update(times => {
-            times.set(value.state!, stepStartTime);
-            return times;
-          });
-        }
-      } else {
-        // Normal case: set new start time for the current state
-        this.stepStartTimes.update(times => {
-          times.set(value.state!, stepStartTime);
-          return times;
-        });
-      }
-
-      this.lastKnownState.set(value.state);
-    }
+    // Update the deployment signal
     this._deployment.set(value);
+
+    // Update timing service with new deployment state
+    if (value?.id && value?.state) {
+      this.timingService.updateDeploymentState(value);
+    }
   }
   get deployment(): EnvironmentDeployment | undefined {
     return this._deployment();
@@ -83,16 +56,8 @@ export class DeploymentStepperComponent implements OnInit, OnDestroy {
       this.currentTime.set(Date.now());
     }, 1000);
 
-    // If a deployment is already set, initialize the step start time for the current state
-    // This handles the case where the component is initialized with a deployment already in progress
-    if (this.deployment?.state && !this.stepStartTimes().has(this.deployment.state)) {
-      const currentState = this.deployment.state;
-      this.stepStartTimes.update(times => {
-        times.set(currentState, Date.now());
-        return times;
-      });
-      this.lastKnownState.set(currentState);
-    }
+    // Run cleanup for old timing data
+    this.timingService.cleanupOldData();
   }
 
   ngOnDestroy(): void {
@@ -102,14 +67,16 @@ export class DeploymentStepperComponent implements OnInit, OnDestroy {
   }
 
   get currentEffectiveStepIndex(): number {
-    if (!this.deployment || !this.deployment.createdAt) return 0;
+    if (!this.deployment || !this.deployment.createdAt || !this.deployment.id) return 0;
 
     // If in error state, find the last known valid state
     if (this.isErrorState()) {
       // Look through the stepStartTimes to find the last step that was started
-      const startedSteps = Array.from(this.stepStartTimes().keys());
+      const deploymentId = this.deployment.id;
+
       for (let i = this.steps.length - 1; i >= 0; i--) {
-        if (startedSteps.includes(this.steps[i])) {
+        const step = this.steps[i];
+        if (this.timingService.getStepStartTime(deploymentId, step)) {
           return i;
         }
       }
@@ -160,21 +127,25 @@ export class DeploymentStepperComponent implements OnInit, OnDestroy {
   }
 
   getProgress(index: number): number {
-    if (!this.deployment || !this.deployment.createdAt) return 0;
+    if (!this.deployment || !this.deployment.createdAt || !this.deployment.id) return 0;
     if (this.deployment.state === 'SUCCESS') return 100;
 
     const stepKey = this.steps[index] as keyof EstimatedTimes;
     const currentState = this.deployment.state;
     const effectiveStep = this.currentEffectiveStepIndex;
+    const deploymentId = this.deployment.id;
 
     // If in error state with no valid step, show empty progress bars
     if (this.isErrorState() && effectiveStep === -1) return 0;
 
-    if (index < this.currentEffectiveStepIndex) return 100;
-    if (index > this.currentEffectiveStepIndex || (this.isErrorState() && index > this.currentEffectiveStepIndex)) return 0;
+    // Skip the remaining checks if effectiveStep is -1 to avoid incorrect comparisons
+    if (effectiveStep === -1) return 0;
+
+    if (index < effectiveStep) return 100;
+    if (index > effectiveStep || (this.isErrorState() && index > effectiveStep)) return 0;
 
     // For current step
-    const stepStartTime = this.stepStartTimes().get(currentState!) || new Date(this.deployment.createdAt).getTime();
+    const stepStartTime = this.timingService.getStepStartTime(deploymentId, currentState!) || new Date(this.deployment.createdAt).getTime();
 
     // If in error state, use the updatedAt time to calculate the progress at failure
     const currentTime = this.isErrorState() && this.deployment.updatedAt ? new Date(this.deployment.updatedAt).getTime() : this.currentTime();
@@ -187,12 +158,13 @@ export class DeploymentStepperComponent implements OnInit, OnDestroy {
   }
 
   getRemainingTimeForCurrentStep(): number {
-    if (!this.deployment?.state || !this.deployment.createdAt) return 0;
+    if (!this.deployment?.state || !this.deployment.createdAt || !this.deployment.id) return 0;
 
     const currentState = this.deployment.state;
+    const deploymentId = this.deployment.id;
+
     // Use the stored step start time or fall back to the current time
-    // This ensures we start from the full estimated time if no stepStartTime is available
-    const stepStartTime = this.stepStartTimes().get(currentState) || Date.now();
+    const stepStartTime = this.timingService.getStepStartTime(deploymentId, currentState) || Date.now();
     const elapsedMs = this.currentTime() - stepStartTime;
     const estimatedMs = (this.estimatedTimes()[currentState as keyof EstimatedTimes] || 0) * 60000;
 
