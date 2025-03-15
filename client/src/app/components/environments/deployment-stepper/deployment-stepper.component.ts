@@ -179,11 +179,11 @@ export class DeploymentStepperComponent implements OnInit, OnDestroy {
     // If in error state, use the updatedAt time to calculate the progress at failure
     const currentTime = this.isErrorState() && this.deployment.updatedAt ? new Date(this.deployment.updatedAt).getTime() : this.currentTime();
 
-    const elapsedMs = currentTime - stepStartTime;
+    const elapsedMs = Math.max(0, currentTime - stepStartTime); // Ensure elapsed time is never negative
     const estimatedMs = this.estimatedTimes()[stepKey] * 60000;
 
     const ratio = Math.min(elapsedMs / estimatedMs, 1);
-    return Math.floor(ratio * 100);
+    return Math.max(0, Math.floor(ratio * 100)); // Ensure we never return a negative percentage
   }
 
   getRemainingTimeForCurrentStep(): number {
