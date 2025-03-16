@@ -145,7 +145,7 @@
                   </ng-template>
 
                   <div class="flex flex-col gap-2">
-                    @for (testCase of sortTestCases(suite.testCases); track testCase.id) {
+                    @for (testCase of suite.testCases; track testCase.id) {
                       <div class="flex items-center gap-2 p-2 border rounded">
                         @switch (testCase.status) {
                           @case ('PASSED') {

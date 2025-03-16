@@ -207,26 +207,6 @@ export class PipelineTestResultsComponent {
     });
   });
 
-  sortTestCases(cases: TestSuiteDto['testCases']) {
-    // We want to show updated ones before the others
-    // and then failed ones before the others
-    return cases.sort((a, b) => {
-      if (a.status !== a.previousStatus && a.previousStatus) {
-        return -1;
-      }
-      if (b.status !== b.previousStatus && b.previousStatus) {
-        return 1;
-      }
-      if (a.status === 'FAILED' || a.status === 'ERROR') {
-        return -1;
-      }
-      if (b.status === 'FAILED' || b.status === 'ERROR') {
-        return 1;
-      }
-      return 0;
-    });
-  }
-
   onTabChange(event: number) {
     // Only update if the index is valid
     if (event >= 0 && event < this.sortedWorkflows().length) {

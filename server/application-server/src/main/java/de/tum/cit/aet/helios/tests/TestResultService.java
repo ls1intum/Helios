@@ -125,10 +125,67 @@ public class TestResultService {
     return new TestResultsDto(
         testSuites.stream()
             .map(
-                testSuite ->
-                    TestResultsDto.TestSuiteDto.fromTestSuite(testSuite, previousStatusProvider))
+                testSuite -> {
+                  // Sort test cases before creating the DTO
+                  List<TestCase> sortedTestCases =
+                      sortTestCases(testSuite.getTestCases(), previousStatusProvider);
+                  testSuite.setTestCases(sortedTestCases);
+                  return TestResultsDto.TestSuiteDto.fromTestSuite(
+                      testSuite, previousStatusProvider);
+                })
             .toList(),
         isProcessing);
+  }
+
+  /**
+   * Sort test cases with the following priority: 1. Test cases with updated status 2. Failed or
+   * error test cases 3. Alphabetical order by name for stable sorting
+   *
+   * @param testCases the test cases to sort
+   * @param previousStatusProvider function to get previous status
+   * @return sorted list of test cases
+   */
+  private List<TestCase> sortTestCases(
+      List<TestCase> testCases, Function<TestCase, Optional<TestStatus>> previousStatusProvider) {
+
+    return testCases.stream()
+        .sorted(
+            (a, b) -> {
+              // Get previous statuses
+              Optional<TestStatus> prevStatusA = previousStatusProvider.apply(a);
+              Optional<TestStatus> prevStatusB = previousStatusProvider.apply(b);
+
+              // Check for status changes
+              boolean statusChangedA =
+                  prevStatusA.isPresent() && a.getStatus() != prevStatusA.get();
+              boolean statusChangedB =
+                  prevStatusB.isPresent() && b.getStatus() != prevStatusB.get();
+
+              // 1. First priority: Status changed
+              if (statusChangedA && !statusChangedB) {
+                return -1;
+              }
+              if (!statusChangedA && statusChangedB) {
+                return 1;
+              }
+
+              // 2. Second priority: Failed or error status
+              boolean failedA =
+                  a.getStatus() == TestStatus.FAILED || a.getStatus() == TestStatus.ERROR;
+              boolean failedB =
+                  b.getStatus() == TestStatus.FAILED || b.getStatus() == TestStatus.ERROR;
+
+              if (failedA && !failedB) {
+                return -1;
+              }
+              if (!failedA && failedB) {
+                return 1;
+              }
+
+              // 3. Third priority: Alphabetical by name for stable sorting
+              return a.getName().compareTo(b.getName());
+            })
+        .collect(Collectors.toList());
   }
 
   /**
@@ -240,8 +297,14 @@ public class TestResultService {
     List<TestResultsDto.TestSuiteDto> testSuiteDtos =
         testSuites.stream()
             .map(
-                testSuite ->
-                    TestResultsDto.TestSuiteDto.fromTestSuite(testSuite, previousStatusProvider))
+                testSuite -> {
+                  // Sort test cases before creating the DTO
+                  List<TestCase> sortedTestCases =
+                      sortTestCases(testSuite.getTestCases(), previousStatusProvider);
+                  testSuite.setTestCases(sortedTestCases);
+                  return TestResultsDto.TestSuiteDto.fromTestSuite(
+                      testSuite, previousStatusProvider);
+                })
             .toList();
 
     // Group test suites by workflow
