@@ -23,7 +23,7 @@ jobs:
           options: -d
           args: sleep 10
       - name: Copy from container to host
-        uses: tj-actions/docker-cp@d604bf259c630f3d7c8da3b39eb8a31c9519da7a
+        uses: tj-actions/docker-cp@d37d77e45c7ab028f068f724c96b9458e1f2d7cc
         with:
           container: ${{ steps.docker-run.outputs.container-id }}
           source: /usr/share/nginx/html
