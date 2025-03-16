@@ -57,7 +57,6 @@ public class Workflow extends BaseGitServiceEntity {
     UNKNOWN,
   }
 
-  // TODO: add E2E tests
   public enum Label {
     NONE,
     TEST

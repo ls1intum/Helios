@@ -189,7 +189,6 @@ public class TestResultProcessor {
             while ((entry = zipInput.getNextEntry()) != null) {
               if (!entry.isDirectory()) {
                 if (this.junitParser.supports(entry.getName())) {
-                  // names
                   var nonClosingStream =
                       new FilterInputStream(zipInput) {
                         @Override
