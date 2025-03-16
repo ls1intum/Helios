@@ -1593,7 +1593,7 @@
       "enabled": true,
       "updateProfileFirstLoginMode": "on",
       "trustEmail": false,
-      "storeToken": false,
+      "storeToken": true,
       "addReadTokenRoleOnCreate": false,
       "authenticateByDefault": false,
       "linkOnly": false,
@@ -1605,7 +1605,8 @@
         "filteredByClaim": "false",
         "syncMode": "LEGACY",
         "clientSecret": "d4465624691ff36b973e8b53bbc0f1896cb62067",
-        "caseSensitiveOriginalUsername": "false"
+        "caseSensitiveOriginalUsername": "false",
+        "defaultScope": "read:user workflow"
       }
     }
   ],
