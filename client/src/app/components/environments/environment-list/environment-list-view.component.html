@@ -52,6 +52,7 @@
                   class="max-w-[350px] flex items-center"
                   [pTooltip]="isRelease(deployment) ? '' : 'Go to ' + deployment.ref"
                   tooltipPosition="top"
+                  (click)="$event.stopPropagation()"
                   [routerLink]="isRelease(deployment) ? null : getBranchLink(environment)"
                 >
                   @if (isRelease(deployment)) {
@@ -69,6 +70,7 @@
                     class="max-w-[350px] flex items-center"
                     [pTooltip]="'Go to ' + (deployment.prName || 'Pull Request #' + deployment.pullRequestNumber)"
                     tooltipPosition="top"
+                    (click)="$event.stopPropagation()"
                     [routerLink]="getPrLink(environment)"
                   >
                     <i-tabler name="git-pull-request" class="!size-5 mr-0.5 flex-shrink-0"></i-tabler>
