@@ -10,9 +10,9 @@ import { injectQuery } from '@tanstack/angular-query-experimental';
 import { SkeletonModule } from 'primeng/skeleton';
 import { getBranchByRepositoryIdAndNameOptions, getCommitByRepositoryIdAndNameOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { ReleaseCandidateCreateComponent } from '@app/components/dialogs/release-candidate-create/release-candidate-create.component';
-import { RouterLink } from '@angular/router';
 import { PermissionService } from '@app/core/services/permission.service';
 import { MarkdownPipe } from '@app/core/modules/markdown/markdown.pipe';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-branch-details',
@@ -20,7 +20,6 @@ import { MarkdownPipe } from '@app/core/modules/markdown/markdown.pipe';
     DeploymentSelectionComponent,
     InputTextModule,
     RouterLink,
-    TagModule,
     TagModule,
     IconsModule,
     ButtonModule,

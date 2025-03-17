@@ -49,7 +49,7 @@ services:
       - postgres
     volumes:
       - ./helios-example-realm.json:/opt/keycloak/data/import/dev-realm-export.json
-    command: start-dev --import-realm --http-port=8081
+    command: start-dev --import-realm --http-port=8081 --features="token-exchange,admin-fine-grained-authz"
     networks:
       - helios-network
 
@@ -68,7 +68,7 @@ services:
       - helios-network
 
   nats-server:
-    image: nats:2.10.25-alpine
+    image: nats:2.10.26-alpine
     ports:
       - "4222:4222"
       - "8222:8222"

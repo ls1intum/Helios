@@ -1,48 +1,46 @@
 package de.tum.cit.aet.helios.github.app;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import de.tum.cit.aet.helios.github.GitHubClientManager;
-import de.tum.cit.aet.helios.github.GitHubCustomMessageHandler;
+import de.tum.cit.aet.helios.github.GitHubService;
 import de.tum.cit.aet.helios.github.sync.DataSyncStatusService;
 import de.tum.cit.aet.helios.github.sync.GitHubDataSyncService;
 import de.tum.cit.aet.helios.gitrepo.RepositoryService;
-import de.tum.cit.aet.helios.nats.NatsConsumerService;
+import de.tum.cit.aet.helios.nats.JacksonMessageHandler;
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 @Component
 @Log4j2
+@RequiredArgsConstructor
 public class GitHubInstallationRepositoriesMessageHandler
-    extends GitHubCustomMessageHandler<GitHubInstallationPayload> {
+    extends JacksonMessageHandler<GitHubInstallationPayload> {
 
   private final GitHubClientManager clientManager;
   private final RepositoryService repositoryService;
   private final GitHubDataSyncService gitHubDataSyncService;
   private final DataSyncStatusService dataSyncStatusService;
-  private final NatsConsumerService natsConsumerService;
   private final GitHubClientManager gitHubClientManager;
+  private final GitHubService gitHubService;
 
-  private GitHubInstallationRepositoriesMessageHandler(
-      ObjectMapper objectMapper,
-      GitHubClientManager clientManager,
-      RepositoryService repositoryService,
-      GitHubDataSyncService gitHubDataSyncService,
-      DataSyncStatusService dataSyncStatusService,
-      @Lazy NatsConsumerService natsConsumerService,
-      GitHubClientManager gitHubClientManager) {
-    super(GitHubInstallationPayload.class, objectMapper);
-    this.clientManager = clientManager;
-    this.repositoryService = repositoryService;
-    this.gitHubDataSyncService = gitHubDataSyncService;
-    this.dataSyncStatusService = dataSyncStatusService;
-    this.natsConsumerService = natsConsumerService;
-    this.gitHubClientManager = gitHubClientManager;
+  @Override
+  public String getSubjectPattern() {
+    return "github.*.*.installation_repositories";
   }
 
   @Override
-  protected void handleEvent(GitHubInstallationPayload eventPayload) {
+  protected Class<GitHubInstallationPayload> getPayloadClass() {
+    return GitHubInstallationPayload.class;
+  }
+
+  @Override
+  public boolean shouldAcknowledgeEarly() {
+    return true;
+  }
+
+  @Override
+  protected void handleMessage(GitHubInstallationPayload eventPayload) {
     // Check if the GitHub App is configured.
     if (!GitHubClientManager.AuthType.APP.equals(clientManager.getAuthType())) {
       log.warn("Received installation_repositories event, but no GitHub App is configured.");
@@ -95,17 +93,7 @@ public class GitHubInstallationRepositoriesMessageHandler
 
     // Force refresh the GitHub client to ensure the latest installation repositories are exist
     gitHubClientManager.forceRefreshClient();
-    // Update NATS consumer subjects
-    natsConsumerService.reinitializeConsumer();
-  }
-
-  @Override
-  public boolean isGlobalEvent() {
-    return true;
-  }
-
-  @Override
-  protected String getEventType() {
-    return "installation_repositories";
+    // Ensure we listen to the events for the newly installed repositories
+    gitHubService.clearInstalledRepositoriesCache();
   }
 }

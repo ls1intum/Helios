@@ -14,6 +14,7 @@ import de.tum.cit.aet.helios.user.User;
 import de.tum.cit.aet.helios.user.github.GitHubUserSyncService;
 import java.io.IOException;
 import java.util.Optional;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.kohsuke.github.GHDeployment;
 import org.kohsuke.github.GHDeploymentStatus;
@@ -25,6 +26,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @Log4j2
+@RequiredArgsConstructor
 public class GitHubDeploymentStatusMessageHandler
     extends GitHubMessageHandler<GHEventPayload.DeploymentStatus> {
 
@@ -37,28 +39,18 @@ public class GitHubDeploymentStatusMessageHandler
   private final GitHubFacade github;
   private final GitHubDataSyncOrchestrator gitHubDataSyncOrchestrator;
 
-  private GitHubDeploymentStatusMessageHandler(
-      GitHubDeploymentSyncService deploymentSyncService,
-      GitRepoRepository gitRepoRepository,
-      EnvironmentRepository environmentRepository,
-      DeploymentSourceFactory deploymentSourceFactory,
-      GitHubUserSyncService userSyncService,
-      EnvironmentLockHistoryRepository environmentLockHistoryRepository,
-      GitHubFacade github,
-      GitHubDataSyncOrchestrator gitHubDataSyncOrchestrator) {
-    super(GHEventPayload.DeploymentStatus.class);
-    this.deploymentSyncService = deploymentSyncService;
-    this.gitRepoRepository = gitRepoRepository;
-    this.environmentRepository = environmentRepository;
-    this.deploymentSourceFactory = deploymentSourceFactory;
-    this.userSyncService = userSyncService;
-    this.environmentLockHistoryRepository = environmentLockHistoryRepository;
-    this.github = github;
-    this.gitHubDataSyncOrchestrator = gitHubDataSyncOrchestrator;
+  @Override
+  protected Class<GHEventPayload.DeploymentStatus> getPayloadClass() {
+    return GHEventPayload.DeploymentStatus.class;
   }
 
   @Override
-  protected void handleEvent(GHEventPayload.DeploymentStatus eventPayload) {
+  protected GHEvent getPayloadType() {
+    return GHEvent.DEPLOYMENT_STATUS;
+  }
+
+  @Override
+  protected void handleInstalledRepositoryEvent(GHEventPayload.DeploymentStatus eventPayload) {
     log.info(
         "Received deployment status event for repository: {}, deployment: {}, action: {}",
         eventPayload.getRepository().getFullName(),
@@ -146,10 +138,5 @@ public class GitHubDeploymentStatusMessageHandler
     // Process this single deployment
     deploymentSyncService.processDeployment(
         deploymentSource, repository, environment, convertedUser);
-  }
-
-  @Override
-  protected GHEvent getHandlerEvent() {
-    return GHEvent.DEPLOYMENT_STATUS;
   }
 }

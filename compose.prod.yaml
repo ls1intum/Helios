@@ -45,7 +45,7 @@ services:
       - helios-network
 
   nats-server:
-    image: nats:2.10.25-alpine
+    image: nats:2.10.26-alpine
     ports:
       - "4222:4222"
       - "8222:8222"
@@ -151,7 +151,7 @@ services:
       - postgres
     volumes:
       - ./helios-realm.json:/opt/keycloak/data/import/prod-realm-export.json
-    command: start-dev --import-realm --http-port=8081 --proxy-headers xforwarded --hostname-strict=true
+    command: start-dev --import-realm --http-port=8081 --proxy-headers xforwarded --hostname-strict=true --features="token-exchange,admin-fine-grained-authz"
     networks:
       - helios-network
 

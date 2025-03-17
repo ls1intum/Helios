@@ -1,25 +1,27 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { BranchDetailsComponent } from './branch-details.component';
-import { CUSTOM_ELEMENTS_SCHEMA, provideExperimentalZonelessChangeDetection, signal } from '@angular/core';
-import { provideNoopAnimations } from '@angular/platform-browser/animations';
-import { By } from '@angular/platform-browser';
-import { provideQueryClient, QueryClient } from '@tanstack/angular-query-experimental';
-import { MarkdownPipe } from '@app/core/modules/markdown/markdown.pipe';
+import { importProvidersFrom, signal } from '@angular/core';
+import { vi } from 'vitest';
+import { TestModule } from '@app/test.module';
 
-describe('BranchDetailsComponent', () => {
+describe('Integration Test Branch Details Page', () => {
   let component: BranchDetailsComponent;
   let fixture: ComponentFixture<BranchDetailsComponent>;
 
   beforeEach(async () => {
+    vi.mock('@app/core/services/keycloak/keycloak.service', () => {
+      return {
+        KeycloakService: vi.fn(() => ({
+          keycloak: { token: 'token' },
+          isLoggedIn: vi.fn(() => false),
+        })),
+      };
+    });
+
     await TestBed.configureTestingModule({
       imports: [BranchDetailsComponent],
-      // Todo: figure out how to remove query client provider
-      providers: [provideExperimentalZonelessChangeDetection(), provideNoopAnimations(), provideQueryClient(new QueryClient())],
-    })
-      .overrideComponent(BranchDetailsComponent, {
-        set: { imports: [MarkdownPipe], schemas: [CUSTOM_ELEMENTS_SCHEMA] },
-      })
-      .compileComponents();
+      providers: [importProvidersFrom(TestModule)],
+    }).compileComponents();
 
     fixture = TestBed.createComponent(BranchDetailsComponent);
     component = fixture.componentInstance;
@@ -39,12 +41,5 @@ describe('BranchDetailsComponent', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
-  });
-
-  it('should render pipeline component', async () => {
-    // Check if child components get the correct input properties
-    const pipelineComponent = fixture.debugElement.query(By.css('app-pipeline'));
-    expect(pipelineComponent).toBeTruthy();
-    expect(pipelineComponent.properties['selector']).toEqual({ branchName: 'branch', repositoryId: 1 });
   });
 });

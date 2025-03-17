@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { ActivatedRouteSnapshot, CanActivateChild, GuardResult, MaybeAsync } from '@angular/router';
 import { QueryClient } from '@tanstack/angular-query-experimental';
-import { client } from '../modules/openapi';
+import { client } from '@app/core/modules/openapi/client.gen';
 import { RepositoryService } from '../services/repository.service';
 
 @Injectable()
