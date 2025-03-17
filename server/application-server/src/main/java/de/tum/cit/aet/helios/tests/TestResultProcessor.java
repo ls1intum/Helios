@@ -74,7 +74,9 @@ public class TestResultProcessor {
     try {
       workflowRun.setTestSuites(this.processRunSync(workflowRun));
       workflowRun.setTestProcessingStatus(WorkflowRun.TestProcessingStatus.PROCESSED);
-      log.debug("Successfully persisted test results for workflow run {}", workflowRun.getName());
+      log.debug(
+          "Successfully persisted test results for workflow run, workflow name: {}",
+          workflowRun.getName());
     } catch (Exception e) {
       log.error("Failed to process test results for workflow run {}", workflowRun.getName(), e);
       workflowRun.setTestProcessingStatus(WorkflowRun.TestProcessingStatus.FAILED);
