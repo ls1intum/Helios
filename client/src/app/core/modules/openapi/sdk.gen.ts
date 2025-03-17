@@ -337,16 +337,16 @@ export const getLatestTestResultsByPullRequestId = <ThrowOnError extends boolean
 export const getLatestGroupedTestResultsByPullRequestId = <ThrowOnError extends boolean = false>(
   options: Options<GetLatestGroupedTestResultsByPullRequestIdData, ThrowOnError>
 ) => {
-  return (options?.client ?? client).get<GetLatestGroupedTestResultsByPullRequestIdResponse, unknown, ThrowOnError>({
-    ...options,
+  return (options.client ?? _heyApiClient).get<GetLatestGroupedTestResultsByPullRequestIdResponse, unknown, ThrowOnError>({
     url: '/api/tests/grouped/pr/{pullRequestId}',
+    ...options,
   });
 };
 
 export const getLatestGroupedTestResultsByBranch = <ThrowOnError extends boolean = false>(options: Options<GetLatestGroupedTestResultsByBranchData, ThrowOnError>) => {
-  return (options?.client ?? client).get<GetLatestGroupedTestResultsByBranchResponse, unknown, ThrowOnError>({
-    ...options,
+  return (options.client ?? _heyApiClient).get<GetLatestGroupedTestResultsByBranchResponse, unknown, ThrowOnError>({
     url: '/api/tests/grouped/branch',
+    ...options,
   });
 };
 

@@ -28,6 +28,8 @@ import {
   getLatestWorkflowRunsByBranchAndHeadCommit,
   getUserPermissions,
   getLatestTestResultsByPullRequestId,
+  getLatestGroupedTestResultsByPullRequestId,
+  getLatestGroupedTestResultsByBranch,
   getLatestTestResultsByBranch,
   getGroupsWithWorkflows,
   getAllRepositories,
@@ -119,62 +121,7 @@ import type {
   GetBranchByRepositoryIdAndNameData,
   DeleteWorkflowGroupData,
 } from '../types.gen';
-import {
-  updateWorkflowLabel,
-  getGitRepoSettings,
-  updateGitRepoSettings,
-  updateWorkflowGroups,
-  getEnvironmentById,
-  updateEnvironment,
-  unlockEnvironment,
-  lockEnvironment,
-  extendEnvironmentLock,
-  syncWorkflowsByRepositoryId,
-  createWorkflowGroup,
-  getAllReleaseCandidates,
-  createReleaseCandidate,
-  evaluate,
-  setPrPinnedByNumber,
-  deployToEnvironment,
-  setBranchPinnedByRepositoryIdAndNameAndUserId,
-  healthCheck,
-  getAllWorkflows,
-  getWorkflowById,
-  getWorkflowsByState,
-  getWorkflowsByRepositoryId,
-  getLatestWorkflowRunsByPullRequestIdAndHeadCommit,
-  getLatestWorkflowRunsByBranchAndHeadCommit,
-  getUserPermissions,
-  getLatestTestResultsByPullRequestId,
-  getLatestGroupedTestResultsByPullRequestId,
-  getLatestGroupedTestResultsByBranch,
-  getLatestTestResultsByBranch,
-  getGroupsWithWorkflows,
-  getAllRepositories,
-  getRepositoryById,
-  deleteReleaseCandidateByName,
-  getReleaseCandidateByName,
-  getCommitsSinceLastReleaseCandidate,
-  getAllPullRequests,
-  getPullRequestById,
-  getPullRequestByRepositoryIdAndNumber,
-  getPullRequestByRepositoryId,
-  getAllEnvironments,
-  getEnvironmentsByUserLocking,
-  getEnvironmentsByRepositoryId,
-  getLockHistoryByEnvironmentId,
-  getAllEnabledEnvironments,
-  getAllDeployments,
-  getDeploymentById,
-  getDeploymentsByEnvironmentId,
-  getLatestDeploymentByEnvironmentId,
-  getActivityHistoryByEnvironmentId,
-  getCommitByRepositoryIdAndName,
-  getAllBranches,
-  getBranchByRepositoryIdAndName,
-  deleteWorkflowGroup,
-  client,
-} from '../sdk.gen';
+import { client as _heyApiClient } from '../client.gen';
 
 export const updateWorkflowLabelMutation = (options?: Partial<Options<UpdateWorkflowLabelData>>) => {
   const mutationOptions: MutationOptions<unknown, DefaultError, Options<UpdateWorkflowLabelData>> = {
@@ -726,9 +673,8 @@ export const getLatestTestResultsByPullRequestIdOptions = (options: Options<GetL
   });
 };
 
-export const getLatestGroupedTestResultsByPullRequestIdQueryKey = (options: Options<GetLatestGroupedTestResultsByPullRequestIdData>) => [
-  createQueryKey('getLatestGroupedTestResultsByPullRequestId', options),
-];
+export const getLatestGroupedTestResultsByPullRequestIdQueryKey = (options: Options<GetLatestGroupedTestResultsByPullRequestIdData>) =>
+  createQueryKey('getLatestGroupedTestResultsByPullRequestId', options);
 
 export const getLatestGroupedTestResultsByPullRequestIdOptions = (options: Options<GetLatestGroupedTestResultsByPullRequestIdData>) => {
   return queryOptions({
@@ -745,9 +691,8 @@ export const getLatestGroupedTestResultsByPullRequestIdOptions = (options: Optio
   });
 };
 
-export const getLatestGroupedTestResultsByBranchQueryKey = (options: Options<GetLatestGroupedTestResultsByBranchData>) => [
-  createQueryKey('getLatestGroupedTestResultsByBranch', options),
-];
+export const getLatestGroupedTestResultsByBranchQueryKey = (options: Options<GetLatestGroupedTestResultsByBranchData>) =>
+  createQueryKey('getLatestGroupedTestResultsByBranch', options);
 
 export const getLatestGroupedTestResultsByBranchOptions = (options: Options<GetLatestGroupedTestResultsByBranchData>) => {
   return queryOptions({
