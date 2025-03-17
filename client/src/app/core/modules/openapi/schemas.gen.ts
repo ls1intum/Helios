@@ -95,6 +95,10 @@ export const EnvironmentDeploymentSchema = {
     user: {
       $ref: '#/components/schemas/UserInfoDto',
     },
+    pullRequestNumber: {
+      type: 'integer',
+      format: 'int32',
+    },
     createdAt: {
       type: 'string',
       format: 'date-time',
