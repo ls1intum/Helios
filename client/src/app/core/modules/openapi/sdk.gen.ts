@@ -48,6 +48,10 @@ import type {
   GetUserPermissionsResponse,
   GetLatestTestResultsByPullRequestIdData,
   GetLatestTestResultsByPullRequestIdResponse,
+  GetLatestGroupedTestResultsByPullRequestIdData,
+  GetLatestGroupedTestResultsByPullRequestIdResponse,
+  GetLatestGroupedTestResultsByBranchData,
+  GetLatestGroupedTestResultsByBranchResponse,
   GetLatestTestResultsByBranchData,
   GetLatestTestResultsByBranchResponse,
   GetGroupsWithWorkflowsData,
@@ -326,6 +330,22 @@ export const getUserPermissions = <ThrowOnError extends boolean = false>(options
 export const getLatestTestResultsByPullRequestId = <ThrowOnError extends boolean = false>(options: Options<GetLatestTestResultsByPullRequestIdData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetLatestTestResultsByPullRequestIdResponse, unknown, ThrowOnError>({
     url: '/api/tests/pr/{pullRequestId}',
+    ...options,
+  });
+};
+
+export const getLatestGroupedTestResultsByPullRequestId = <ThrowOnError extends boolean = false>(
+  options: Options<GetLatestGroupedTestResultsByPullRequestIdData, ThrowOnError>
+) => {
+  return (options.client ?? _heyApiClient).get<GetLatestGroupedTestResultsByPullRequestIdResponse, unknown, ThrowOnError>({
+    url: '/api/tests/grouped/pr/{pullRequestId}',
+    ...options,
+  });
+};
+
+export const getLatestGroupedTestResultsByBranch = <ThrowOnError extends boolean = false>(options: Options<GetLatestGroupedTestResultsByBranchData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<GetLatestGroupedTestResultsByBranchResponse, unknown, ThrowOnError>({
+    url: '/api/tests/grouped/branch',
     ...options,
   });
 };

@@ -521,6 +521,43 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/TestResultsDto"
+  /api/tests/grouped/pr/{pullRequestId}:
+    get:
+      tags:
+      - test-result-controller
+      operationId: getLatestGroupedTestResultsByPullRequestId
+      parameters:
+      - name: pullRequestId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GroupedTestResultsDto"
+  /api/tests/grouped/branch:
+    get:
+      tags:
+      - test-result-controller
+      operationId: getLatestGroupedTestResultsByBranch
+      parameters:
+      - name: branch
+        in: query
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GroupedTestResultsDto"
   /api/tests/branch:
     get:
       tags:
@@ -1460,6 +1497,11 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/TestCaseDto"
+        workflowId:
+          type: integer
+          format: int64
+        workflowName:
+          type: string
       required:
       - errors
       - failures
@@ -1470,6 +1512,35 @@ components:
       - tests
       - time
       - timestamp
+    GroupedTestResultsDto:
+      type: object
+      properties:
+        testResults:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/WorkflowTestResults"
+        isProcessing:
+          type: boolean
+      required:
+      - testResults
+    WorkflowTestResults:
+      type: object
+      properties:
+        workflowId:
+          type: integer
+          format: int64
+        workflowName:
+          type: string
+        testSuites:
+          type: array
+          items:
+            $ref: "#/components/schemas/TestSuiteDto"
+        isProcessing:
+          type: boolean
+      required:
+      - testSuites
+      - workflowId
+      - workflowName
     BranchInfoDto:
       type: object
       properties:

@@ -544,8 +544,54 @@ export const TestSuiteDtoSchema = {
         $ref: '#/components/schemas/TestCaseDto',
       },
     },
+    workflowId: {
+      type: 'integer',
+      format: 'int64',
+    },
+    workflowName: {
+      type: 'string',
+    },
   },
   required: ['errors', 'failures', 'id', 'name', 'skipped', 'testCases', 'tests', 'time', 'timestamp'],
+} as const;
+
+export const GroupedTestResultsDtoSchema = {
+  type: 'object',
+  properties: {
+    testResults: {
+      type: 'object',
+      additionalProperties: {
+        $ref: '#/components/schemas/WorkflowTestResults',
+      },
+    },
+    isProcessing: {
+      type: 'boolean',
+    },
+  },
+  required: ['testResults'],
+} as const;
+
+export const WorkflowTestResultsSchema = {
+  type: 'object',
+  properties: {
+    workflowId: {
+      type: 'integer',
+      format: 'int64',
+    },
+    workflowName: {
+      type: 'string',
+    },
+    testSuites: {
+      type: 'array',
+      items: {
+        $ref: '#/components/schemas/TestSuiteDto',
+      },
+    },
+    isProcessing: {
+      type: 'boolean',
+    },
+  },
+  required: ['testSuites', 'workflowId', 'workflowName'],
 } as const;
 
 export const BranchInfoDtoSchema = {

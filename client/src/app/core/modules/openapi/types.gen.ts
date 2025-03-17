@@ -184,6 +184,22 @@ export type TestSuiteDto = {
   skipped: number;
   time: number;
   testCases: Array<TestCaseDto>;
+  workflowId?: number;
+  workflowName?: string;
+};
+
+export type GroupedTestResultsDto = {
+  testResults: {
+    [key: string]: WorkflowTestResults;
+  };
+  isProcessing?: boolean;
+};
+
+export type WorkflowTestResults = {
+  workflowId: number;
+  workflowName: string;
+  testSuites: Array<TestSuiteDto>;
+  isProcessing?: boolean;
 };
 
 export type BranchInfoDto = {
@@ -814,6 +830,42 @@ export type GetLatestTestResultsByPullRequestIdResponses = {
 };
 
 export type GetLatestTestResultsByPullRequestIdResponse = GetLatestTestResultsByPullRequestIdResponses[keyof GetLatestTestResultsByPullRequestIdResponses];
+
+export type GetLatestGroupedTestResultsByPullRequestIdData = {
+  body?: never;
+  path: {
+    pullRequestId: number;
+  };
+  query?: never;
+  url: '/api/tests/grouped/pr/{pullRequestId}';
+};
+
+export type GetLatestGroupedTestResultsByPullRequestIdResponses = {
+  /**
+   * OK
+   */
+  200: GroupedTestResultsDto;
+};
+
+export type GetLatestGroupedTestResultsByPullRequestIdResponse = GetLatestGroupedTestResultsByPullRequestIdResponses[keyof GetLatestGroupedTestResultsByPullRequestIdResponses];
+
+export type GetLatestGroupedTestResultsByBranchData = {
+  body?: never;
+  path?: never;
+  query: {
+    branch: string;
+  };
+  url: '/api/tests/grouped/branch';
+};
+
+export type GetLatestGroupedTestResultsByBranchResponses = {
+  /**
+   * OK
+   */
+  200: GroupedTestResultsDto;
+};
+
+export type GetLatestGroupedTestResultsByBranchResponse = GetLatestGroupedTestResultsByBranchResponses[keyof GetLatestGroupedTestResultsByBranchResponses];
 
 export type GetLatestTestResultsByBranchData = {
   body?: never;
