@@ -107,7 +107,7 @@ public interface WorkflowRunRepository extends JpaRepository<WorkflowRun, Long> 
           + "LEFT JOIN FETCH wr.testSuites "
           + "WHERE wr.headBranch = :branch "
           + "AND wr.headSha = :headSha "
-          + "AND wr.repository.id = :repositoryId "
+          + "AND wr.repository.repositoryId = :repositoryId "
           + "AND wr.pullRequests IS EMPTY")
   List<WorkflowRun> findByHeadBranchAndHeadShaAndRepositoryIdAndPullRequestsIsNullWithTestSuites(
       String branch, String headSha, Long repositoryId);

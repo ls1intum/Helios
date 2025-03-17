@@ -33,9 +33,16 @@ public class TestResultProcessor {
   @Value("${tests.artifactName:JUnit Test Results}")
   private String testArtifactName;
 
+  /**
+   * Determines if a workflow run's test results should be processed.
+   *
+   * @param workflowRun the workflow run to check
+   * @return true if the workflow run's test results should be processed, false otherwise
+   */
   public boolean shouldProcess(WorkflowRun workflowRun) {
     log.debug(
-        "Checking if test results should be processed for workflow run {}", workflowRun.getName());
+        "Checking if test results should be processed for workflow run, workflow name {}",
+        workflowRun.getName());
 
     if (workflowRun.getStatus() != WorkflowRun.Status.COMPLETED
         || workflowRun.getWorkflow().getLabel() != Workflow.Label.TEST) {
@@ -52,6 +59,11 @@ public class TestResultProcessor {
     return workflowRun.getTestProcessingStatus() == null;
   }
 
+  /**
+   * Processes a workflow run's test results asynchronously.
+   *
+   * @param workflowRun the workflow run to process
+   */
   @Async("testResultProcessorExecutor")
   public void processRun(WorkflowRun workflowRun) {
     log.debug("Processing test results for workflow run {}", workflowRun.getName());
@@ -62,7 +74,9 @@ public class TestResultProcessor {
     try {
       workflowRun.setTestSuites(this.processRunSync(workflowRun));
       workflowRun.setTestProcessingStatus(WorkflowRun.TestProcessingStatus.PROCESSED);
-      log.debug("Successfully persisted test results for workflow run {}", workflowRun.getName());
+      log.debug(
+          "Successfully persisted test results for workflow run, workflow name: {}",
+          workflowRun.getName());
     } catch (Exception e) {
       log.error("Failed to process test results for workflow run {}", workflowRun.getName(), e);
       workflowRun.setTestProcessingStatus(WorkflowRun.TestProcessingStatus.FAILED);
@@ -72,6 +86,12 @@ public class TestResultProcessor {
     }
   }
 
+  /**
+   * Processes a workflow run's test results synchronously.
+   *
+   * @param workflowRun the workflow run to process
+   * @return the test suites extracted from the workflow run's artifacts
+   */
   private List<TestSuite> processRunSync(WorkflowRun workflowRun) {
     GHArtifact testResultsArtifact = null;
 
@@ -82,7 +102,7 @@ public class TestResultProcessor {
 
       // Traverse page iterable to find the first artifact with the configured name
       for (GHArtifact artifact : artifacts) {
-        if (artifact.getName().equals(this.testArtifactName)) {
+        if (artifact.getName().equals(testArtifactName)) {
           testResultsArtifact = artifact;
           break;
         }
@@ -92,7 +112,7 @@ public class TestResultProcessor {
     }
 
     if (testResultsArtifact == null) {
-      throw new TestResultException("Test results artifact not found");
+      throw new TestResultException("Test results artifact not found: " + testArtifactName);
     }
 
     log.debug("Found test results artifact {}", testResultsArtifact.getName());
@@ -105,7 +125,7 @@ public class TestResultProcessor {
       throw new TestResultException("Failed to process test results artifact", e);
     }
 
-    log.debug("Parsed {} test suits. Persisting...", results.size());
+    log.debug("Parsed {} test suites. Persisting...", results.size());
 
     List<TestSuite> testSuites = new ArrayList<>();
 
@@ -148,6 +168,13 @@ public class TestResultProcessor {
     return testSuites;
   }
 
+  /**
+   * Processes a test result artifact.
+   *
+   * @param artifact the artifact to process
+   * @return the test suites extracted from the artifact
+   * @throws IOException if an I/O error occurs
+   */
   private List<TestResultParser.TestSuite> processTestResultArtifact(GHArtifact artifact)
       throws IOException {
     // Download the ZIP artifact, find all parsable XML files and parse them
@@ -174,7 +201,7 @@ public class TestResultProcessor {
                       };
 
                   try {
-                    results.add(this.junitParser.parse(nonClosingStream));
+                    results.addAll(this.junitParser.parse(nonClosingStream));
                   } catch (TestResultParseException e) {
                     log.error("Failed to parse JUnit XML file {}", entry.getName(), e);
                   }

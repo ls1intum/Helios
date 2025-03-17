@@ -1,4 +1,4 @@
-import { Component, computed, input, signal, viewChild } from '@angular/core';
+import { Component, computed, input, signal, viewChild, effect } from '@angular/core';
 import { TableModule } from 'primeng/table';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { PanelModule } from 'primeng/panel';
@@ -15,7 +15,16 @@ import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { FormsModule } from '@angular/forms';
 import { injectQuery } from '@tanstack/angular-query-experimental';
-import { getLatestTestResultsByBranchOptions, getLatestTestResultsByPullRequestIdOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
+import { getLatestGroupedTestResultsByBranchOptions, getLatestGroupedTestResultsByPullRequestIdOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
+import { TabViewModule } from 'primeng/tabview';
+
+// Interface for our internal workflow representation
+interface WorkflowResult {
+  name: string;
+  workflowId: number;
+  testSuites: TestSuiteDto[];
+  isProcessing?: boolean;
+}
 
 @Component({
   selector: 'app-pipeline-test-results',
@@ -34,6 +43,7 @@ import { getLatestTestResultsByBranchOptions, getLatestTestResultsByPullRequestI
     ButtonModule,
     InputTextModule,
     FormsModule,
+    TabViewModule,
   ],
   templateUrl: './pipeline-test-results.component.html',
 })
@@ -42,6 +52,7 @@ export class PipelineTestResultsComponent {
 
   testSuiteRows = signal(10);
   testSuiteFirst = signal(0);
+  activeWorkflowTab = signal(0);
 
   isTestResultsCollapsed = true;
 
@@ -58,13 +69,13 @@ export class PipelineTestResultsComponent {
   });
 
   branchQuery = injectQuery(() => ({
-    ...getLatestTestResultsByBranchOptions({ query: { branch: this.branchName()! } }),
+    ...getLatestGroupedTestResultsByBranchOptions({ query: { branch: this.branchName()! } }),
     enabled: this.branchName() !== null,
     refetchInterval: 15000,
   }));
 
   pullRequestQuery = injectQuery(() => ({
-    ...getLatestTestResultsByPullRequestIdOptions({ path: { pullRequestId: this.pullRequestId() || 0 } }),
+    ...getLatestGroupedTestResultsByPullRequestIdOptions({ path: { pullRequestId: this.pullRequestId() || 0 } }),
     enabled: this.pullRequestId() !== null,
     refetchInterval: 15000,
   }));
@@ -85,11 +96,83 @@ export class PipelineTestResultsComponent {
     this.showOnlyFailed.set(!this.showOnlyFailed());
   }
 
-  testSuites = computed(() => {
-    const suites = this.resultsQuery().data()?.testSuites || [];
+  workflowResults = computed<WorkflowResult[]>(() => {
+    const results = this.resultsQuery().data()?.testResults || {};
+    return Object.entries(results).map(([key, value]) => ({
+      name: key,
+      workflowId: value.workflowId,
+      testSuites: value.testSuites,
+      isProcessing: value.isProcessing,
+    }));
+  });
 
-    // Let's show updated test suites first and then failed ones
-    return suites.sort((a, b) => {
+  // Cache workflow failure and update status to avoid recalculating for every sort
+  workflowHasFailures = (workflow: WorkflowResult): boolean => {
+    return workflow.testSuites.some(suite => suite.failures > 0 || suite.errors > 0);
+  };
+
+  workflowHasUpdates = (workflow: WorkflowResult): boolean => {
+    return workflow.testSuites.some(this.suiteHasUpdates);
+  };
+
+  // Optimize sorted workflows by only sorting when the underlying data changes
+  sortedWorkflows = computed(() => {
+    return this.workflowResults().sort((a, b) => {
+      // Workflows with failures first
+      const aHasFailures = this.workflowHasFailures(a);
+      const bHasFailures = this.workflowHasFailures(b);
+
+      if (aHasFailures && !bHasFailures) return -1;
+      if (!aHasFailures && bHasFailures) return 1;
+
+      // Then workflows with updates
+      const aHasUpdates = this.workflowHasUpdates(a);
+      const bHasUpdates = this.workflowHasUpdates(b);
+
+      if (aHasUpdates && !bHasUpdates) return -1;
+      if (!aHasUpdates && bHasUpdates) return 1;
+
+      // Finally alphabetical
+      return a.name.localeCompare(b.name);
+    });
+  });
+
+  // Make sure the active tab is updated when workflows change
+  constructor() {
+    effect(() => {
+      const workflows = this.sortedWorkflows();
+      if (workflows.length === 0) return;
+
+      // Make sure the active tab is in range
+      const currentTab = this.activeWorkflowTab();
+      if (currentTab >= workflows.length) {
+        this.activeWorkflowTab.set(workflows.length - 1);
+      }
+    });
+  }
+
+  // Get the currently active workflow based on tab selection
+  activeWorkflow = computed(() => {
+    const workflows = this.sortedWorkflows();
+    if (workflows.length === 0) return null;
+
+    // Make sure the active tab is in range, but don't update the signal here
+    const index = Math.min(this.activeWorkflowTab(), workflows.length - 1);
+    return workflows[index];
+  });
+
+  // Ensure activeWorkflowTab is valid when workflows change
+  effectiveWorkflowTab = computed(() => {
+    const maxIndex = this.sortedWorkflows().length - 1;
+    return Math.min(this.activeWorkflowTab(), Math.max(0, maxIndex));
+  });
+
+  testSuites = computed(() => {
+    const workflow = this.activeWorkflow();
+    if (!workflow) return [];
+
+    // Sort suites within the workflow, updates first, then failures
+    return [...workflow.testSuites].sort((a, b) => {
       if (this.suiteHasUpdates(a)) {
         return -1;
       }
@@ -124,32 +207,22 @@ export class PipelineTestResultsComponent {
     });
   });
 
-  sortTestCases(cases: TestSuiteDto['testCases']) {
-    // We want to show updated ones before the others
-    // and then failed ones before the others
-    return cases.sort((a, b) => {
-      if (a.status !== a.previousStatus && a.previousStatus) {
-        return -1;
-      }
-      if (b.status !== b.previousStatus && b.previousStatus) {
-        return 1;
-      }
-      if (a.status === 'FAILED' || a.status === 'ERROR') {
-        return -1;
-      }
-      if (b.status === 'FAILED' || b.status === 'ERROR') {
-        return 1;
-      }
-      return 0;
-    });
+  onTabChange(event: number) {
+    // Only update if the index is valid
+    if (event >= 0 && event < this.sortedWorkflows().length) {
+      this.activeWorkflowTab.set(event);
+      // Reset pagination when changing tabs
+      this.testSuiteFirst.set(0);
+    }
   }
 
   suiteHasUpdates = (suite: TestSuiteDto) => {
     return suite.testCases.some(testCase => testCase.status !== testCase.previousStatus && testCase.previousStatus);
   };
 
+  // Check if any test suite in any workflow has updates
   resultsHaveUpdated = computed(() => {
-    return this.testSuites().some(this.suiteHasUpdates);
+    return this.workflowResults().some(workflow => workflow.testSuites.some(this.suiteHasUpdates));
   });
 
   overallSuiteState = (suite: TestSuiteDto) => {
@@ -164,6 +237,19 @@ export class PipelineTestResultsComponent {
     return 'SUCCESS';
   };
 
+  // Workflow status badges
+  workflowState = (workflow: WorkflowResult) => {
+    if (workflow.testSuites.some(suite => suite.failures > 0 || suite.errors > 0)) {
+      return 'FAILURE';
+    }
+
+    if (workflow.testSuites.every(suite => suite.skipped === suite.tests)) {
+      return 'SKIPPED';
+    }
+
+    return 'SUCCESS';
+  };
+
   // We want to show some kind of loading indicator in case all test workflows are still running
   // but already show the results of the completed ones
   isProcessing = computed(() => {
@@ -171,19 +257,36 @@ export class PipelineTestResultsComponent {
   });
 
   hasTestSuites = computed(() => {
-    return this.testSuites().length > 0;
+    return this.workflowResults().some(workflow => workflow.testSuites.length > 0);
   });
 
   totalStats = computed(() => {
-    const testSuites = this.testSuites();
+    const workflows = this.workflowResults();
+    const allSuites = workflows.flatMap(workflow => workflow.testSuites);
+
     const totalStats = {
-      total: testSuites.length,
-      passed: testSuites.reduce((acc, suite) => acc + suite.tests - suite.failures - suite.errors - suite.skipped, 0),
-      failures: testSuites.reduce((acc, suite) => acc + suite.errors + suite.failures, 0),
-      skipped: testSuites.reduce((acc, suite) => acc + suite.skipped, 0),
-      time: testSuites.reduce((acc, suite) => acc + suite.time, 0) * 1000,
+      total: allSuites.length,
+      passed: allSuites.reduce((acc, suite) => acc + suite.tests - suite.failures - suite.errors - suite.skipped, 0),
+      failures: allSuites.reduce((acc, suite) => acc + suite.errors + suite.failures, 0),
+      skipped: allSuites.reduce((acc, suite) => acc + suite.skipped, 0),
+      time: allSuites.reduce((acc, suite) => acc + suite.time, 0) * 1000,
     };
     return totalStats;
+  });
+
+  // Stats for the current workflow tab
+  workflowStats = computed(() => {
+    const workflow = this.activeWorkflow();
+    if (!workflow) return null;
+
+    const suites = workflow.testSuites;
+    return {
+      total: suites.length,
+      passed: suites.reduce((acc, suite) => acc + suite.tests - suite.failures - suite.errors - suite.skipped, 0),
+      failures: suites.reduce((acc, suite) => acc + suite.errors + suite.failures, 0),
+      skipped: suites.reduce((acc, suite) => acc + suite.skipped, 0),
+      time: suites.reduce((acc, suite) => acc + suite.time, 0) * 1000,
+    };
   });
 
   onPageChange = (event: PaginatorState) => {
