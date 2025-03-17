@@ -41,7 +41,8 @@ public class TestResultProcessor {
    */
   public boolean shouldProcess(WorkflowRun workflowRun) {
     log.debug(
-        "Checking if test results should be processed for workflow run {}", workflowRun.getName());
+        "Checking if test results should be processed for workflow run, workflow name {}",
+        workflowRun.getName());
 
     if (workflowRun.getStatus() != WorkflowRun.Status.COMPLETED
         || workflowRun.getWorkflow().getLabel() != Workflow.Label.TEST) {
