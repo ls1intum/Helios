@@ -20,7 +20,7 @@ COPY . .
 RUN yarn run build-keycloak-theme
 
 # Stage 2: Build Keycloak image
-FROM quay.io/keycloak/keycloak:26.1.3
+FROM quay.io/keycloak/keycloak:26.1.4
 
 # Copy the built keycloakify theme to keycloak
 COPY --from=build /app/dist_keycloak /opt/keycloak/providers/
