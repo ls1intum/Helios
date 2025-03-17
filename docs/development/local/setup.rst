@@ -150,6 +150,7 @@ Below are typical steps and recommended settings:
 
     - **Repository Permissions**:
         - Actions: read & write
+        - Commit statuses: read & write
         - Contents: read-only
         - Deployments: read & write
         - Environments: read-only

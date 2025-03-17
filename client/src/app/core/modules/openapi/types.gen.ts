@@ -30,6 +30,7 @@ export type EnvironmentDeployment = {
   releaseCandidateName?: string;
   prName?: string;
   user?: UserInfoDto;
+  pullRequestNumber?: number;
   createdAt?: string;
   updatedAt?: string;
   type: 'GITHUB' | 'HELIOS';
@@ -1251,4 +1252,8 @@ export type DeleteWorkflowGroupResponses = {
    * OK
    */
   200: unknown;
+};
+
+export type ClientOptions = {
+  baseUrl: `${string}://${string}` | (string & {});
 };

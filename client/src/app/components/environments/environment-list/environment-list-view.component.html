@@ -44,13 +44,38 @@
                   <span [pTooltip]="getDeploymentTime(environment) || ''">{{ environment.latestDeployment.updatedAt || '' | timeAgo }}</span>
                 }
                 <app-deployment-state-tag [state]="deployment.state" [deployment]="deployment" />
-                <p-tag severity="secondary" rounded="true" class="max-w-[350px] flex items-center" [pTooltip]="tooltipTemplate" tooltipPosition="top">
-                  <i-tabler name="git-branch" class="!size-5 mr-0.5 flex-shrink-0"></i-tabler>
+                <!-- Branch or Release Tag -->
+                <p-tag
+                  severity="secondary"
+                  rounded="true"
+                  class="max-w-[350px] flex items-center"
+                  [pTooltip]="isRelease(deployment) ? '' : 'Go to ' + deployment.ref"
+                  tooltipPosition="top"
+                  (click)="$event.stopPropagation()"
+                  [routerLink]="isRelease(deployment) ? null : getBranchLink(environment)"
+                >
+                  @if (isRelease(deployment)) {
+                    <i-tabler name="tag" class="!size-5 mr-0.5 flex-shrink-0"></i-tabler>
+                  } @else {
+                    <i-tabler name="git-branch" class="!size-5 mr-0.5 flex-shrink-0"></i-tabler>
+                  }
                   <span class="ml-1 truncate flex-1">{{ deployment.ref }}</span>
-                  <ng-template #tooltipTemplate>
-                    <div class="flex items-center">{{ deployment.ref }}</div>
-                  </ng-template>
                 </p-tag>
+                @if (deployment.pullRequestNumber) {
+                  <!-- PR Tag -->
+                  <p-tag
+                    severity="secondary"
+                    rounded="true"
+                    class="max-w-[350px] flex items-center"
+                    [pTooltip]="'Go to ' + (deployment.prName || 'Pull Request #' + deployment.pullRequestNumber)"
+                    tooltipPosition="top"
+                    (click)="$event.stopPropagation()"
+                    [routerLink]="getPrLink(environment)"
+                  >
+                    <i-tabler name="git-pull-request" class="!size-5 mr-0.5 flex-shrink-0"></i-tabler>
+                    <span class="ml-1 truncate flex-1">#{{ deployment.pullRequestNumber }}</span>
+                  </p-tag>
+                }
               </div>
             }
           </div>

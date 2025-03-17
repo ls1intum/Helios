@@ -73,6 +73,7 @@ public record EnvironmentDto(
       String releaseCandidateName,
       String prName,
       UserInfoDto user,
+      Integer pullRequestNumber,
       OffsetDateTime createdAt,
       OffsetDateTime updatedAt,
       @NonNull DeploymentType type) {
@@ -94,6 +95,7 @@ public record EnvironmentDto(
               .orElse(null),
           union.getPullRequestName(),
           UserInfoDto.fromUser(union.getCreator()),
+          union.getPullRequestNumber(),
           union.getCreatedAt(),
           union.getUpdatedAt(),
           union.getType());

@@ -22,6 +22,9 @@ spring:
                 jwt:
                     issuer-uri: ${OAUTH_ISSUER_URL}
 
+helios:
+    clientBaseUrl: "https://helios.aet.cit.tum.de"
+
 nats:
     enabled: true
     timeframe: ${MONITORING_TIMEFRAME:7}
@@ -64,7 +67,7 @@ monitoring:
     timeframe: 7
     # Cooldown in minutes before running the monitoring again
     runOnStartupCooldownInMinutes: ${RUN_ON_STARTUP_COOLDOWN:15}
-    repository-sync-cron: "0 0 * * * *"
+    repository-sync-cron: "0 0 4 * * *"
 
 sentry:
   dsn: ${SENTRY_DSN}

@@ -5,37 +5,21 @@ import org.springframework.boot.gradle.tasks.run.BootRun
 buildscript {
     dependencies {
         classpath('org.postgresql:postgresql:42.7.5')
-        classpath('org.flywaydb:flyway-database-postgresql:11.3.4')
+        classpath('org.flywaydb:flyway-database-postgresql:11.4.0')
     }
 }
 
 plugins {
-    id 'java'
-    id 'jacoco'
-    id 'org.springframework.boot' version '3.4.3'
-    id 'io.spring.dependency-management' version '1.1.7'
-    id 'io.freefair.lombok' version '8.12.2.1'
+    id 'org.springframework.boot'
+    id 'io.freefair.lombok'
     id 'org.springdoc.openapi-gradle-plugin' version '1.9.0'
     id 'org.openapi.generator' version '7.12.0'
-    id 'org.flywaydb.flyway' version '11.3.4'
-}
-
-group = 'de.tum.cit.aet'
-version = '0.0.1-SNAPSHOT'
-
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
-    }
-}
-
-repositories {
-    mavenCentral()
+    id 'org.flywaydb.flyway' version '11.4.0'
 }
 
 // Detect if the generateOpenApiDocs task is being executed
 gradle.taskGraph.whenReady { taskGraph ->
-    if (taskGraph.hasTask(':generateOpenApiDocs') || taskGraph.hasTask(':bootRunOpenApi')) {
+    if (taskGraph.hasTask(':application-server:generateOpenApiDocs') || taskGraph.hasTask(':application-server:bootRunOpenApi')) {
         println "OpenAPI task detected. Adding H2 dependency."
         // Add the H2 dependency dynamically
         dependencies {
@@ -55,6 +39,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
+    implementation 'org.springframework.boot:spring-boot-starter-cache'
     implementation 'org.springframework.security:spring-security-oauth2-jose'
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.5'
     implementation 'org.openapitools:jackson-databind-nullable:0.2.6'
@@ -63,10 +48,10 @@ dependencies {
     implementation 'com.squareup.okhttp3:okhttp:4.12.0'
     implementation 'com.squareup.okhttp3:logging-interceptor:4.12.0'
     implementation 'javax.annotation:javax.annotation-api:1.3.2'
-    implementation 'org.flywaydb:flyway-core:11.3.4'
-    implementation 'org.flywaydb:flyway-database-postgresql:11.3.4'
+    implementation 'org.flywaydb:flyway-core:11.4.0'
+    implementation 'org.flywaydb:flyway-database-postgresql:11.4.0'
     implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
-    implementation 'io.sentry:sentry-spring-boot-starter-jakarta:7.22.1'
+    implementation 'io.sentry:sentry-spring-boot-starter-jakarta:8.4.0'
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
     runtimeOnly 'org.postgresql:postgresql'
@@ -74,8 +59,8 @@ dependencies {
     testImplementation 'org.springframework.security:spring-security-test'
     testImplementation 'io.zonky.test:embedded-database-spring-test:2.6.0'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-    runtimeAgent1 "org.springframework:spring-instrument:6.2.3"
-    runtimeAgent2 "org.aspectj:aspectjweaver:1.9.22.1"
+    runtimeAgent1 "org.springframework:spring-instrument:6.2.4"
+    runtimeAgent2 "org.aspectj:aspectjweaver:1.9.23"
 }
 
 springBoot {

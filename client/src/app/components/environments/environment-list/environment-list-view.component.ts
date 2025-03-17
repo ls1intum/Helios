@@ -3,7 +3,7 @@ import { Component, computed, inject, input, OnDestroy, output, signal } from '@
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { UserAvatarComponent } from '@app/components/user-avatar/user-avatar.component';
-import { EnvironmentDto } from '@app/core/modules/openapi';
+import { EnvironmentDeployment, EnvironmentDto } from '@app/core/modules/openapi';
 import {
   extendEnvironmentLockMutation,
   getAllEnabledEnvironmentsOptions,
@@ -302,5 +302,19 @@ export class EnvironmentListViewComponent implements OnDestroy {
       return false;
     }
     return true;
+  }
+
+  isRelease(deployment: EnvironmentDeployment): boolean {
+    // TODO: This is a temporary solution to check if a deployment is a release
+    // until Paul's PR is merged which enables syncing of releases from GitHub to find a corresponding release
+    return !!deployment.releaseCandidateName || (!!deployment.ref && /^v?\d+\.\d+\.\d+/.test(deployment.ref));
+  }
+
+  getPrLink(env: EnvironmentDto) {
+    return ['/repo', env.repository?.id, 'ci-cd', 'pr', env.latestDeployment?.pullRequestNumber?.toString()];
+  }
+
+  getBranchLink(env: EnvironmentDto) {
+    return ['/repo', env.repository?.id, 'ci-cd', 'branch', env.latestDeployment?.ref];
   }
 }
