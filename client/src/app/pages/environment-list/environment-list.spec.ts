@@ -1,12 +1,12 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { BranchDetailsComponent } from './branch-details.component';
-import { importProvidersFrom, signal } from '@angular/core';
-import { vi } from 'vitest';
+import { EnvironmentListComponent } from './environment-list.component';
+import { importProvidersFrom } from '@angular/core';
 import { TestModule } from '@app/test.module';
+import { vi } from 'vitest';
 
-describe('Integration Test Branch Details Page', () => {
-  let component: BranchDetailsComponent;
-  let fixture: ComponentFixture<BranchDetailsComponent>;
+describe('Integration Test Environment List Page', () => {
+  let component: EnvironmentListComponent;
+  let fixture: ComponentFixture<EnvironmentListComponent>;
 
   beforeEach(async () => {
     vi.mock('@app/core/services/keycloak/keycloak.service', () => {
@@ -19,22 +19,15 @@ describe('Integration Test Branch Details Page', () => {
     });
 
     await TestBed.configureTestingModule({
-      imports: [BranchDetailsComponent],
+      imports: [EnvironmentListComponent],
       providers: [importProvidersFrom(TestModule)],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(BranchDetailsComponent);
+    fixture = TestBed.createComponent(EnvironmentListComponent);
     component = fixture.componentInstance;
 
     // Set input properties
     fixture.componentRef.setInput('repositoryId', 1);
-    fixture.componentRef.setInput('branchName', 'branch');
-
-    // Mock tanstack query data
-    component.query = {
-      ...component.query,
-      data: signal({ name: 'branch', commitSha: '' }),
-    };
 
     await fixture.whenStable();
   });

@@ -1,23 +1,20 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ProjectSettingsComponent } from './project-settings.component';
+import { ImprintComponent } from './imprint.component';
 import { importProvidersFrom } from '@angular/core';
 import { TestModule } from '@app/test.module';
 
-describe('Integration Test Pull Request Project Settings Page', () => {
-  let component: ProjectSettingsComponent;
-  let fixture: ComponentFixture<ProjectSettingsComponent>;
+describe('Integration Test Imprint Page', () => {
+  let component: ImprintComponent;
+  let fixture: ComponentFixture<ImprintComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ProjectSettingsComponent],
+      imports: [ImprintComponent],
       providers: [importProvidersFrom(TestModule)],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(ProjectSettingsComponent);
+    fixture = TestBed.createComponent(ImprintComponent);
     component = fixture.componentInstance;
-
-    // Set input properties
-    fixture.componentRef.setInput('repositoryId', 1);
 
     await fixture.whenStable();
   });
