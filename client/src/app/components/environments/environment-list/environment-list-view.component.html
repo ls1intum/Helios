@@ -43,8 +43,7 @@
                 @if (environment.latestDeployment.updatedAt) {
                   <span [pTooltip]="getDeploymentTime(environment) || ''">{{ environment.latestDeployment.updatedAt || '' | timeAgo }}</span>
                 }
-                <app-deployment-state-tag [state]="deployment.state" />
-
+                <app-deployment-state-tag [state]="deployment.state" [deployment]="deployment" />
                 <!-- Branch or Release Tag -->
                 <p-tag
                   severity="secondary"

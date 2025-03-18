@@ -1,7 +1,10 @@
 <div class="flex items-center gap-1">
   <p-tag [severity]="severity()" [rounded]="rounded()" [pTooltip]="!verbose() ? tooltip() : undefined" [value]="verbose() ? value() : undefined">
     <div class="flex items-center gap-2">
-      <i-tabler [name]="icon()" [class]="iconClass()"></i-tabler>
+      <i-tabler [name]="icon()" [class]="iconClass()"> </i-tabler>
+      @if (shouldShowRemainingTime() && getRemainingTime()) {
+        {{ getRemainingTime() }}
+      }
     </div>
   </p-tag>
 
