@@ -55,18 +55,18 @@
                 <p-tag
                   severity="secondary"
                   rounded="true"
-                  class="max-w-[350px] flex items-center"
+                  class="max-w-[250px] flex items-center"
                   [pTooltip]="isRelease(deployment) ? '' : 'Go to ' + deployment.ref"
                   tooltipPosition="top"
                   (click)="$event.stopPropagation()"
                   [routerLink]="isRelease(deployment) ? null : getBranchLink(environment)"
                 >
                   @if (isRelease(deployment)) {
-                    <i-tabler name="tag" class="!size-5 mr-0.5 flex-shrink-0"></i-tabler>
+                    <i-tabler name="tag" class="!size-5 flex-shrink-0"></i-tabler>
                   } @else {
-                    <i-tabler name="git-branch" class="!size-5 mr-0.5 flex-shrink-0"></i-tabler>
+                    <i-tabler name="git-branch" class="!size-5 flex-shrink-0"></i-tabler>
                   }
-                  <span class="ml-1 truncate flex-1">{{ deployment.ref }}</span>
+                  <span class="truncate flex-1">{{ deployment.ref }}</span>
                 </p-tag>
                 @if (deployment.pullRequestNumber) {
                   <!-- PR Tag -->
@@ -79,8 +79,8 @@
                     (click)="$event.stopPropagation()"
                     [routerLink]="getPrLink(environment)"
                   >
-                    <i-tabler name="git-pull-request" class="!size-5 mr-0.5 flex-shrink-0"></i-tabler>
-                    <span class="ml-1 truncate flex-1">#{{ deployment.pullRequestNumber }}</span>
+                    <i-tabler name="git-pull-request" class="!size-5 flex-shrink-0"></i-tabler>
+                    <span class="truncate flex-1">#{{ deployment.pullRequestNumber }}</span>
                   </p-tag>
                 }
               </div>
