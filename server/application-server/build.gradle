@@ -43,7 +43,7 @@ dependencies {
     implementation 'org.springframework.security:spring-security-oauth2-jose'
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.5'
     implementation 'org.openapitools:jackson-databind-nullable:0.2.6'
-    implementation 'io.nats:jnats:2.20.5'
+    implementation 'io.nats:jnats:2.20.6'
     implementation 'org.kohsuke:github-api:1.327'
     implementation 'com.squareup.okhttp3:okhttp:4.12.0'
     implementation 'com.squareup.okhttp3:logging-interceptor:4.12.0'
