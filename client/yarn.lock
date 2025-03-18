@@ -1424,21 +1424,21 @@
   resolved "https://registry.yarnpkg.com/@hey-api/client-fetch/-/client-fetch-0.8.3.tgz#704adf5a4813e8181daa983a0f1e6c72a8128b01"
   integrity sha512-EBVa8wwUMyBSeQ32PtCz6u5bFQZIMAufvwCT1ZtpjqT3caJQEza4NokbGU50q1ZVrMsM5Ot6GuDNJOF3TMo26Q==
 
-"@hey-api/json-schema-ref-parser@1.0.2":
-  version "1.0.2"
-  resolved "https://registry.yarnpkg.com/@hey-api/json-schema-ref-parser/-/json-schema-ref-parser-1.0.2.tgz#c3824c5d9d531eeb5c2b2557857a8ad20b5c75a7"
-  integrity sha512-F6LSkttZcT/XiX3ydeDqTY3uRN3BLJMwyMTk4kg/ichZlKUp3+3Odv0WokSmXGSoZGTW/N66FROMYAm5NPdJlA==
+"@hey-api/json-schema-ref-parser@1.0.3":
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/@hey-api/json-schema-ref-parser/-/json-schema-ref-parser-1.0.3.tgz#d20ed12edcbe679540af2647fb28ed61b7fbca7e"
+  integrity sha512-jgyNFPUReGpdB0ihWv6m+Q3dcawtXx4t6cvi0NS4xxblulcCfEjThP5xVwShFiTRScckIQ/GsuZv20arRTIDkg==
   dependencies:
     "@jsdevtools/ono" "^7.1.3"
     "@types/json-schema" "^7.0.15"
     js-yaml "^4.1.0"
 
 "@hey-api/openapi-ts@^0.64.0":
-  version "0.64.12"
-  resolved "https://registry.yarnpkg.com/@hey-api/openapi-ts/-/openapi-ts-0.64.12.tgz#0a14ee845d8a8152e42d31fd5bf13bb6d83f29f5"
-  integrity sha512-Y1UUJWgSYHTqU33sRzv+ASs9Txqz+wJ4UE/f6g69X81SoOPMpa2LXLbNvAtNFUpTMcdCV2hd7+m2/gxmkx79DQ==
+  version "0.64.13"
+  resolved "https://registry.yarnpkg.com/@hey-api/openapi-ts/-/openapi-ts-0.64.13.tgz#e66b0bf5270ec5215d8b16284a980e297d360510"
+  integrity sha512-KOf/bQ9JbGJFsdQjUrne3ZttoJm/68kG00oc/5VovduMAoX0gUyGNpZ+yppvUdLvmxL1GvaGut2JFk0XSZxIlw==
   dependencies:
-    "@hey-api/json-schema-ref-parser" "1.0.2"
+    "@hey-api/json-schema-ref-parser" "1.0.3"
     c12 "2.0.1"
     commander "13.0.0"
     handlebars "4.7.8"
@@ -2093,10 +2093,10 @@
   resolved "https://registry.yarnpkg.com/@polka/url/-/url-1.0.0-next.28.tgz#d45e01c4a56f143ee69c54dd6b12eade9e270a73"
   integrity sha512-8LduaNlMZGwdZ6qWrKlfa+2M4gahzFkprZiAt2TF8uS0qQgBizKXpXURqvTJ4WtmupWxaLqjRb2UCTe72mu+Aw==
 
-"@primeng/themes@19.0.9":
-  version "19.0.9"
-  resolved "https://registry.yarnpkg.com/@primeng/themes/-/themes-19.0.9.tgz#fdce1fed388d13f1b1ac132f0eaf99cf5a87ad28"
-  integrity sha512-8oITYftt/0v6sXKth/6n1mEw4UY88acNow0/aAF5yi29N6cpBaOiH/MEvj4nCoYjNCCGUSFhPrGdkTJH/GNo6A==
+"@primeng/themes@19.0.10":
+  version "19.0.10"
+  resolved "https://registry.yarnpkg.com/@primeng/themes/-/themes-19.0.10.tgz#af8191e686ca05a23a3a2a177b1590ab29d56c89"
+  integrity sha512-2sQsl46q3720lbropItBh8WjK98itFlG4clBO36B/QDxv9Ic/7DLGxJCvKdMQP0bcVSX/y+99HwPu0JNNNkkoA==
   dependencies:
     "@primeuix/styled" "^0.3.2"
 
@@ -7066,10 +7066,10 @@ primeicons@^7.0.0:
   resolved "https://registry.yarnpkg.com/primeicons/-/primeicons-7.0.0.tgz#6b25c3fdcb29bb745a3035bdc1ed5902f4a419cf"
   integrity sha512-jK3Et9UzwzTsd6tzl2RmwrVY/b8raJ3QZLzoDACj+oTJ0oX7L9Hy+XnVwgo4QVKlKpnP/Ur13SXV/pVh4LzaDw==
 
-primeng@19.0.9:
-  version "19.0.9"
-  resolved "https://registry.yarnpkg.com/primeng/-/primeng-19.0.9.tgz#4d1dba22279d54b28967ef209b67ba8cca78bbff"
-  integrity sha512-Y994f4JDsdjwe1uK1J8Gvq94Mk2qQfV+M1zdW+XClXHK8EXzZp7kvBzfrlk607valJmUhLr/5DxSkVfVQGZhxA==
+primeng@19.0.10:
+  version "19.0.10"
+  resolved "https://registry.yarnpkg.com/primeng/-/primeng-19.0.10.tgz#6b22409e79e75de798621fee8eae4709404e8554"
+  integrity sha512-pVvywU6WoDtS6cwyGm5wyHp/RPqsqtTL3Z6eNgwsP7wMRpNYxVQB2W5ewF64byP8bqFqRQMWY2ZPj0lDeTQ/sA==
   dependencies:
     "@primeuix/styled" "^0.3.2"
     "@primeuix/utils" "^0.3.2"
