@@ -20,7 +20,6 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
-import org.springframework.core.env.Environment;
 
 @Log4j2
 public abstract class BaseNatsConsumerService {
@@ -51,15 +50,11 @@ public abstract class BaseNatsConsumerService {
   private ConsumerContext consumerContext;
   private MessageConsumer messageConsumer;
 
-  private final Environment environment;
   private final NatsErrorListener natsErrorListener;
   private final NatsMessageHandlerRegistry handlerRegistry;
 
   protected BaseNatsConsumerService(
-      Environment environment,
-      NatsMessageHandlerRegistry handlerRegistry,
-      NatsErrorListener natsErrorListener) {
-    this.environment = environment;
+      NatsMessageHandlerRegistry handlerRegistry, NatsErrorListener natsErrorListener) {
     this.handlerRegistry = handlerRegistry;
     this.natsErrorListener = natsErrorListener;
   }

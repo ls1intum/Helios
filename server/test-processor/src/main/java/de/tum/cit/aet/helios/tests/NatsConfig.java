@@ -1,4 +1,4 @@
-package de.tum.cit.aet.helios.nats;
+package de.tum.cit.aet.helios.tests;
 
 import de.tum.cit.aet.helios.common.nats.NatsCommonConfig;
 import de.tum.cit.aet.helios.common.nats.NatsMessageHandler;
