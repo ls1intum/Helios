@@ -1,4 +1,4 @@
-package de.tum.cit.aet.helios.nats;
+package de.tum.cit.aet.helios.common.nats;
 
 import io.nats.client.Connection;
 import io.nats.client.Consumer;
@@ -6,7 +6,6 @@ import io.nats.client.ErrorListener;
 import io.nats.client.JetStreamSubscription;
 import io.nats.client.Message;
 import io.nats.client.Subscription;
-import io.nats.client.impl.ErrorListenerConsoleImpl;
 import io.nats.client.support.Status;
 import io.sentry.Sentry;
 import io.sentry.SentryLevel;
@@ -22,9 +21,9 @@ import org.springframework.stereotype.Component;
 @Log4j2
 @Component
 @RequiredArgsConstructor
-public class NatsErrorListener extends ErrorListenerConsoleImpl {
+public class NatsErrorListener implements ErrorListener {
 
-  @Lazy private final NatsConsumerService natsConsumerService;
+  @Lazy private final BaseNatsConsumerService natsConsumerService;
 
   /**
    * Handles pull status errors for the NATS connection. Logs the error and trys consumer
@@ -33,12 +32,7 @@ public class NatsErrorListener extends ErrorListenerConsoleImpl {
   @Override
   public void pullStatusError(Connection conn, JetStreamSubscription sub, Status status) {
     String message =
-        this.supplyMessage(
-            "[SEVERE] pullStatusError",
-            conn,
-            (Consumer) null,
-            sub,
-            new Object[] {"Status: ", status});
+        formatMessage("[SEVERE] pullStatusError", conn, null, sub, "Status: " + status);
     log.error(message);
     // Check if the consumer was deleted
     if (status.getCode() == 409 && "Consumer Deleted".equals(status.getMessage())) {
@@ -60,85 +54,53 @@ public class NatsErrorListener extends ErrorListenerConsoleImpl {
       long lastStreamSequence,
       long lastConsumerSequence) {
     String message =
-        this.supplyMessage(
+        formatMessage(
             "[SEVERE] heartbeatAlarm",
             conn,
-            (Consumer) null,
+            null,
             sub,
-            new Object[] {
-              "lastStreamSequence: ",
-              lastStreamSequence,
-              "lastConsumerSequence: ",
-              lastConsumerSequence
-            });
+            String.format(
+                "lastStreamSequence: %d, lastConsumerSequence: %d",
+                lastStreamSequence, lastConsumerSequence));
     log.error(message);
   }
 
   @Override
   public void errorOccurred(Connection conn, String error) {
-    String message =
-        this.supplyMessage(
-            "[SEVERE] errorOccurred",
-            conn,
-            (Consumer) null,
-            (Subscription) null,
-            new Object[] {"Error: ", error});
+    String message = formatMessage("[SEVERE] errorOccurred", conn, null, null, "Error: " + error);
     log.error(message);
   }
 
   @Override
   public void exceptionOccurred(Connection conn, Exception exp) {
     String message =
-        this.supplyMessage(
-            "[SEVERE] exceptionOccurred",
-            conn,
-            (Consumer) null,
-            (Subscription) null,
-            new Object[] {"Exception: ", exp});
+        formatMessage(
+            "[SEVERE] exceptionOccurred", conn, null, null, "Exception: " + exp.getMessage());
     log.error(message);
   }
 
   @Override
   public void slowConsumerDetected(Connection conn, Consumer consumer) {
-    String message =
-        this.supplyMessage(
-            "[WARN] slowConsumerDetected", conn, consumer, (Subscription) null, new Object[0]);
+    String message = formatMessage("[WARN] slowConsumerDetected", conn, consumer, null, null);
     log.warn(message);
   }
 
   @Override
   public void messageDiscarded(Connection conn, Message msg) {
-    String message =
-        this.supplyMessage(
-            "[INFO] messageDiscarded",
-            conn,
-            (Consumer) null,
-            (Subscription) null,
-            new Object[] {"Message: ", msg});
+    String message = formatMessage("[INFO] messageDiscarded", conn, null, null, "Message: " + msg);
     log.info(message);
   }
 
   @Override
   public void unhandledStatus(Connection conn, JetStreamSubscription sub, Status status) {
-    String message =
-        this.supplyMessage(
-            "[WARN] unhandledStatus",
-            conn,
-            (Consumer) null,
-            sub,
-            new Object[] {"Status: ", status});
+    String message = formatMessage("[WARN] unhandledStatus", conn, null, sub, "Status: " + status);
     log.warn(message);
   }
 
   @Override
   public void pullStatusWarning(Connection conn, JetStreamSubscription sub, Status status) {
     String message =
-        this.supplyMessage(
-            "[WARN] pullStatusWarning",
-            conn,
-            (Consumer) null,
-            sub,
-            new Object[] {"Status: ", status});
+        formatMessage("[WARN] pullStatusWarning", conn, null, sub, "Status: " + status);
     log.warn(message);
   }
 
@@ -149,24 +111,44 @@ public class NatsErrorListener extends ErrorListenerConsoleImpl {
       String id,
       ErrorListener.FlowControlSource source) {
     String message =
-        this.supplyMessage(
-            "[INFO] flowControlProcessed",
-            conn,
-            (Consumer) null,
-            sub,
-            new Object[] {"FlowControlSource: ", source});
+        formatMessage(
+            "[INFO] flowControlProcessed", conn, null, sub, "FlowControlSource: " + source);
     log.info(message);
   }
 
-  @Override
-  public void socketWriteTimeout(Connection conn) {
-    String message =
-        this.supplyMessage(
-            "[SEVERE] socketWriteTimeout",
-            conn,
-            (Consumer) null,
-            (Subscription) null,
-            new Object[0]);
-    log.error(message);
+  // @Override
+  // public void socketWriteTimeout(Connection conn) {
+  //   String message = formatMessage("[SEVERE] socketWriteTimeout", conn, null, null, null);
+  //   log.error(message);
+  // }
+
+  /** Formats a message with connection, consumer, subscription, and additional details. */
+  private String formatMessage(
+      String prefix,
+      Connection conn,
+      Consumer consumer,
+      Subscription subscription,
+      String additionalInfo) {
+
+    StringBuilder sb = new StringBuilder();
+    sb.append(prefix);
+
+    if (conn != null) {
+      sb.append(" [Server: ").append(conn.getConnectedUrl()).append("]");
+    }
+
+    if (consumer != null) {
+      // sb.append(" [Consumer: ").append(consumer.getConsumerName()).append("]");
+    }
+
+    if (subscription != null) {
+      sb.append(" [Subscription: ").append(subscription.getSubject()).append("]");
+    }
+
+    if (additionalInfo != null && !additionalInfo.isEmpty()) {
+      sb.append(" - ").append(additionalInfo);
+    }
+
+    return sb.toString();
   }
 }

@@ -1,11 +1,11 @@
 package de.tum.cit.aet.helios.github.app;
 
+import de.tum.cit.aet.helios.common.nats.JacksonMessageHandler;
 import de.tum.cit.aet.helios.github.GitHubClientManager;
 import de.tum.cit.aet.helios.github.GitHubService;
 import de.tum.cit.aet.helios.github.sync.DataSyncStatusService;
 import de.tum.cit.aet.helios.github.sync.GitHubDataSyncService;
 import de.tum.cit.aet.helios.gitrepo.RepositoryService;
-import de.tum.cit.aet.helios.nats.JacksonMessageHandler;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;

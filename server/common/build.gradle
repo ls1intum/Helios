@@ -1,0 +1,16 @@
+plugins {
+    id 'java-library'
+    id 'io.freefair.lombok'
+}
+
+dependencies {
+    api 'io.nats:jnats:2.17.1'
+    api 'org.springframework.boot:spring-boot-starter'
+    api 'org.springframework:spring-context'
+    api 'io.sentry:sentry-spring-boot-starter:6.28.0'
+    api 'com.fasterxml.jackson.core:jackson-databind:2.15.3'
+    api 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.3'
+    
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+}

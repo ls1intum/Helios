@@ -1,0 +1,79 @@
+import org.springframework.boot.gradle.tasks.run.BootRun
+
+plugins {
+    id 'org.springframework.boot'
+    id 'io.freefair.lombok'
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-aop'
+    implementation 'org.openapitools:jackson-databind-nullable:0.2.6'
+    implementation 'io.nats:jnats:2.20.5'
+    implementation 'org.kohsuke:github-api:1.327'
+    implementation 'io.sentry:sentry-spring-boot-starter-jakarta:8.4.0'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+springBoot {
+    mainClass = "de.tum.cit.aet.helios.tests.TestProcessor"
+}
+
+// Custom bootRun task to force the user to specify an active profile
+tasks.named("bootRun") {
+    doFirst {
+        def activeProfile = System.getProperty("spring.profiles.active")
+                ?: project.findProperty("spring.profiles.active")
+                ?: System.getenv("SPRING_PROFILES_ACTIVE")
+        if (!activeProfile) {
+            throw new GradleException("""
+    Error: 'spring.profiles.active' is not set.
+    
+    Please specify an active profile using one of the following methods:
+    
+    - Use a predefined task like 'bootRunDev'.
+    - Set the 'SPRING_PROFILES_ACTIVE' environment variable.                
+    - Use the '-Dspring.profiles.active=<profile>' JVM argument.
+    
+    Available profiles: dev, openapi (Don't use this profile directly).
+    
+    Examples:
+    
+    1. Using predefined task:
+       ./gradlew bootRunDev
+    
+    2. Setting environment variable:
+       export SPRING_PROFILES_ACTIVE=dev
+       ./gradlew bootRun
+    
+    3. Passing JVM argument:
+       ./gradlew -Dspring.profiles.active=dev bootRun
+    
+    4. Using project property:
+       ./gradlew bootRun -Pspring.profiles.active=dev
+                """
+            )
+        } else {
+            println "Running with profile: ${activeProfile}"
+            systemProperty "spring.profiles.active", activeProfile
+        }
+    }
+}
+
+tasks.register("bootRunDev", BootRun) {
+    jvmArgs = []
+    group = "application"
+    description = "Runs the Spring Boot application with the dev profile"
+    // Set the active profile to 'dev'
+    systemProperty "spring.profiles.active", "dev"
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass.set("de.tum.cit.aet.helios.tests.TestProcessor")
+}
+
+tasks.named("test") {
+    group = "application"
+    description = "Runs the Spring Boot application with the test profile"
+    // Set the active profile to 'test'
+    systemProperty "spring.profiles.active", "test"
+    finalizedBy "jacocoTestReport"
+}
