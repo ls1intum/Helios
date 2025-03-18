@@ -16,17 +16,17 @@
     "@jridgewell/trace-mapping" "^0.3.24"
 
 "@analogjs/vite-plugin-angular@^1.14.0":
-  version "1.14.0"
-  resolved "https://registry.yarnpkg.com/@analogjs/vite-plugin-angular/-/vite-plugin-angular-1.14.0.tgz#b54924cd1bf3f53d55765bc1116489bc722eb876"
-  integrity sha512-SNoDN3zjOlDtknfXqKX7RxR1kcnwJ0QI0Q6wzgMdCbP6re8przInF2i/2axmtYBmInPYorGwI5MmtoJeJZCg0A==
+  version "1.14.1"
+  resolved "https://registry.yarnpkg.com/@analogjs/vite-plugin-angular/-/vite-plugin-angular-1.14.1.tgz#888c39a1a6ae21978b1a59ac10d9f37f922f27bf"
+  integrity sha512-nCoRQpLu5t8DtBoN+lNbWAJ3p6X4TnKJZQqOh0ZmcADeHf07vEOq6HiGcEi461SedKawQVAu9SZmRTsNeDfz6A==
   dependencies:
     ts-morph "^21.0.0"
     vfile "^6.0.3"
 
 "@analogjs/vitest-angular@^1.14.0":
-  version "1.14.0"
-  resolved "https://registry.yarnpkg.com/@analogjs/vitest-angular/-/vitest-angular-1.14.0.tgz#dfdc38990eac17efe3c07bf7fab7ffac773464b3"
-  integrity sha512-1eU/7lxiTcx2yyRlSuZslqgPf3hvLLTJIkjc/iS7JdZn2AENBRSg7KOWJZH/iRqgFwdwBcbctIll9TQReE6pyg==
+  version "1.14.1"
+  resolved "https://registry.yarnpkg.com/@analogjs/vitest-angular/-/vitest-angular-1.14.1.tgz#35e966842ced1f6851f3f9b4fb0933112ac69d6b"
+  integrity sha512-NriyAS81Ikqf936OoXNfrpdVqFY4Q5LsUFlHusaFwhtzU2Sl/AXBO35eoqbJlYCgGDDn92RGEHQm0nYLGGXGmg==
 
 "@angular-devkit/architect@0.1902.3":
   version "0.1902.3"
@@ -2477,17 +2477,17 @@
   integrity sha512-LtoMMhxAlorcGhmFYI+LhPgbPZCkgP6ra1YL604EeF6U98pLlQ3iWIGMdWSC+vWmPBWBNgmDBAhnAobLROJmwg==
 
 "@tanstack/angular-query-experimental@^5.62.8":
-  version "5.68.1"
-  resolved "https://registry.yarnpkg.com/@tanstack/angular-query-experimental/-/angular-query-experimental-5.68.1.tgz#75a0787facdf7328aca4603c54fe57fb4dedc44f"
-  integrity sha512-uIG7LGFmL9kvQJV23slfHYfNmpqShERyXWHd9j/RK6/gurxIM3mgV0H36sfTrzZqXGmon01A2+0C1Ig7xj9Trg==
+  version "5.69.0"
+  resolved "https://registry.yarnpkg.com/@tanstack/angular-query-experimental/-/angular-query-experimental-5.69.0.tgz#d67573cba072e8d3b6fa2bcf745c1b076f9e45b8"
+  integrity sha512-g8W4fOoSWbq1JruvXrggGkUdbZUJkjqgtsaRfNFN1Gjh4z+PgSsdu0SJX2MzdJutSmP7nDj0rmArIgInZigrPQ==
   dependencies:
-    "@tanstack/query-core" "5.68.0"
+    "@tanstack/query-core" "5.69.0"
     "@tanstack/query-devtools" "5.67.2"
 
-"@tanstack/query-core@5.68.0":
-  version "5.68.0"
-  resolved "https://registry.yarnpkg.com/@tanstack/query-core/-/query-core-5.68.0.tgz#3765573de58741c68fb80b128d3e3ffb4d80cb68"
-  integrity sha512-r8rFYYo8/sY/LNaOqX84h12w7EQev4abFXDWy4UoDVUJzJ5d9Fbmb8ayTi7ScG+V0ap44SF3vNs/45mkzDGyGw==
+"@tanstack/query-core@5.69.0":
+  version "5.69.0"
+  resolved "https://registry.yarnpkg.com/@tanstack/query-core/-/query-core-5.69.0.tgz#c434505987ade936dc53e6e27aa1406b0295516f"
+  integrity sha512-Kn410jq6vs1P8Nm+ZsRj9H+U3C0kjuEkYLxbiCyn3MDEiYor1j2DGVULqAz62SLZtUZ/e9Xt6xMXiJ3NJ65WyQ==
 
 "@tanstack/query-devtools@5.67.2":
   version "5.67.2"
