@@ -63,7 +63,7 @@
           }
         </td>
         <td>
-          @if (userCanDeploy() && deploymentStatus(environment) === 'WAITING' && environment.latestDeployment?.workflowRunHtmlUrl) {
+          @if (userCanDeploy() && environment.latestDeployment?.state === 'WAITING') {
             <p-button styleClass="p-button-success" (onClick)="openWorkflowUrl(environment.latestDeployment.workflowRunHtmlUrl)">
               <ng-template pTemplate="content">
                 <div class="flex items-center gap-2">
