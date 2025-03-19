@@ -23,7 +23,7 @@
     ts-morph "^21.0.0"
     vfile "^6.0.3"
 
-"@analogjs/vitest-angular@^1.14.0":
+"@analogjs/vitest-angular@1.14.1":
   version "1.14.1"
   resolved "https://registry.yarnpkg.com/@analogjs/vitest-angular/-/vitest-angular-1.14.1.tgz#35e966842ced1f6851f3f9b4fb0933112ac69d6b"
   integrity sha512-NriyAS81Ikqf936OoXNfrpdVqFY4Q5LsUFlHusaFwhtzU2Sl/AXBO35eoqbJlYCgGDDn92RGEHQm0nYLGGXGmg==
