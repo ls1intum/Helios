@@ -79,6 +79,8 @@ public class WorkflowRun extends BaseGitServiceEntity {
   @JoinColumn(name = "workflow_id", nullable = false)
   private Workflow workflow;
 
+  private Long triggeredWorkflowRunId;
+
   public Optional<Conclusion> getConclusion() {
     return Optional.ofNullable(conclusion);
   }
