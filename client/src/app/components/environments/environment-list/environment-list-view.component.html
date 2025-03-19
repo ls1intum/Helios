@@ -1,9 +1,7 @@
 <div class="flex items-center justify-between mb-3">
   <input pInputText id="commit-hash" (input)="onSearch($event)" [value]="searchInput()" type="text" placeholder="Search for installed systems" class="w-1/3" />
   @if (!hideLinkToList()) {
-    <p-button [routerLink]="'../../../environment'" class="self-end">
-      {{ isAdmin() ? 'Manage Environments' : 'Go to Environments' }}
-    </p-button>
+    <p-button [routerLink]="'../../../environment'" class="self-end">{{ isAdmin() ? 'Manage Environments' : 'Go to Environments' }} </p-button>
   }
 </div>
 
@@ -17,19 +15,19 @@
   } @else {
     @for (group of environmentGroups(); track group[0]) {
       @if (group[1].length > 0) {
-        <div>
-          <h3 class="text-lg font-semibold p-2 bg-slate-100">{{ capitalizeFirstLetter(group[0]) }}</h3>
-          <p-divider class="mt-0" />
+        <div class="mb-4">
+          <h3 class="text-lg font-semibold mb-2">{{ capitalizeFirstLetter(group[0]) }}</h3>
           <p-accordion [multiple]="true">
             @for (environment of group[1]; track environment.id) {
               <p-accordion-panel [value]="environment.id">
                 <p-accordion-header>
-                  <div class="flex gap-2 items-center w-full">
-                    <div class="flex flex-col gap-1">
+                  <div class="flex gap-2 items-start w-full flex-wrap md:flex-nowrap flex-col md:items-center md:flex-row">
+                    <div class="flex flex-col gap-1 flex-wrap">
                       <div class="flex gap-1 items-center mr-3">
                         <span [pTooltip]="'Open Environment'" class="cursor-pointer hover:bg-gray-200 px-2 py-1 rounded" (click)="openExternalLink($event, environment)">
                           {{ environment.name }}
                         </span>
+
                         <app-lock-tag [isLocked]="!!environment.locked"></app-lock-tag>
 
                         @if (environment.latestStatus; as status) {
@@ -41,7 +39,7 @@
                         }
                       </div>
                       @if (environment.latestDeployment; as deployment) {
-                        <div class="flex gap-1 items-center text-sm mt-2">
+                        <div class="flex gap-1 items-center text-sm mt-2 flex-wrap">
                           <app-user-avatar [user]="environment?.latestDeployment?.user" tooltipPosition="top" />
                           @if (environment.latestDeployment.user?.name) {
                             {{ environment.latestDeployment.user?.name }} deployed
@@ -49,14 +47,39 @@
                           @if (environment.latestDeployment.updatedAt) {
                             <span [pTooltip]="getDeploymentTime(environment) || ''">{{ environment.latestDeployment.updatedAt || '' | timeAgo }}</span>
                           }
-                          <app-deployment-state-tag [state]="deployment.state" />
-                          <p-tag severity="secondary" rounded="true" class="max-w-[350px] flex items-center" [pTooltip]="tooltipTemplate" tooltipPosition="top">
-                            <i-tabler name="git-branch" class="!size-5 mr-0.5 flex-shrink-0"></i-tabler>
-                            <span class="ml-1 truncate flex-1">{{ deployment.ref }}</span>
-                            <ng-template #tooltipTemplate>
-                              <div class="flex items-center">{{ deployment.ref }}</div>
-                            </ng-template>
+                          <app-deployment-state-tag [state]="deployment.state" [deployment]="deployment" />
+                          <!-- Branch or Release Tag -->
+                          <p-tag
+                            severity="secondary"
+                            rounded="true"
+                            class="max-w-[250px] flex items-center"
+                            [pTooltip]="isRelease(deployment) ? '' : 'Go to ' + deployment.ref"
+                            tooltipPosition="top"
+                            (click)="$event.stopPropagation()"
+                            [routerLink]="isRelease(deployment) ? null : getBranchLink(environment)"
+                          >
+                            @if (isRelease(deployment)) {
+                              <i-tabler name="tag" class="!size-5 flex-shrink-0"></i-tabler>
+                            } @else {
+                              <i-tabler name="git-branch" class="!size-5 flex-shrink-0"></i-tabler>
+                            }
+                            <span class="truncate flex-1">{{ deployment.ref }}</span>
                           </p-tag>
+                          @if (deployment.pullRequestNumber) {
+                            <!-- PR Tag -->
+                            <p-tag
+                              severity="secondary"
+                              rounded="true"
+                              class="max-w-[350px] flex items-center"
+                              [pTooltip]="'Go to ' + (deployment.prName || 'Pull Request #' + deployment.pullRequestNumber)"
+                              tooltipPosition="top"
+                              (click)="$event.stopPropagation()"
+                              [routerLink]="getPrLink(environment)"
+                            >
+                              <i-tabler name="git-pull-request" class="!size-5 flex-shrink-0"></i-tabler>
+                              <span class="truncate flex-1">#{{ deployment.pullRequestNumber }}</span>
+                            </p-tag>
+                          }
                         </div>
                       }
                     </div>
