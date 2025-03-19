@@ -20,7 +20,7 @@ jobs:
         - name: Install Dependencies
           run: yarn install --frozen-lockfile
         - name: Run Client Unit Tests
-          run: yarn test:unit:ci
+          run: yarn vitest run
         - name: "Codacy: Report coverage"
           uses: codacy/codacy-coverage-reporter-action@a38818475bb21847788496e9f0fddaa4e84955ba
           with:
