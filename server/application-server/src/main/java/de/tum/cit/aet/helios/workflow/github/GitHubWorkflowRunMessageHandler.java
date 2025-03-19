@@ -76,9 +76,16 @@ public class GitHubWorkflowRunMessageHandler
     var run = workflowSyncService.processRun(githubRun);
 
     // Check if this is a workflow_run event
+    // (??) When we check artifacts for each status,
+    // then for the completed status artifact list return an empty list
+    // When it is fixed, we may want to check the artifacts for each status
+    // but, we need to delay the processing events when the event name is workflow_run
+    // since in the beginning of the workflow, we are uploading the context file,
+    // it may or may not be seen when the workflow_run event is received.
     if ("workflow_run".equalsIgnoreCase(githubEvent.name())) {
       try {
-        // Original code continues here after delay
+        // If the workflow run is completed, and it is a test workflow
+        // Get the context from the artifact and update the workflow run
         if (run.getStatus() == WorkflowRun.Status.COMPLETED
             && run.getWorkflow().getLabel() == Workflow.Label.TEST) {
           log.info("Trying to find the triggering workflow run ID of: {}", githubRun.getId());
@@ -89,6 +96,8 @@ public class GitHubWorkflowRunMessageHandler
             run.setHeadBranch(context.headBranch());
             run.setHeadSha(context.headSha());
             run = workflowRunRepository.saveAndFlush(run);
+            // After this point, the workflow run is updated with correct git context
+            // Start processing it
             if (testResultProcessor.shouldProcess(run)) {
               testResultProcessor.processRun(run);
             }
