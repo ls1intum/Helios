@@ -59,15 +59,6 @@ public class GitHubWorkflowRunMessageHandler
         action,
         githubEvent);
 
-
-    System.out.println("Workflow Run: " + githubRun);
-    System.out.println("Workflow Run ID: " + githubRun.getId());
-    System.out.println("Workflow Run Head Branch: " + githubRun.getHeadBranch());
-    System.out.println("Workflow Run Head Sha: " + githubRun.getHeadSha());
-    System.out.println("Workflow Run URL: " + githubRun.getUrl());
-    System.out.println("Workflow Run Status: " + githubRun.getStatus());
-    System.out.println("Workflow Run Conclusion: " + githubRun.getConclusion());
-
     try {
       eventPayload
           .getWorkflowRun()
