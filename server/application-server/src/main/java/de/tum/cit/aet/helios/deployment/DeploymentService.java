@@ -87,7 +87,8 @@ public class DeploymentService {
 
     HeliosDeployment heliosDeployment =
         createHeliosDeployment(environment, deployRequest, commitSha, optionalPullRequest);
-    Map<String, Object> workflowParams = createWorkflowParams(deployRequest, environment);
+    Map<String, Object> workflowParams =
+        createWorkflowParams(deployRequest, environment, commitSha);
 
     dispatchWorkflow(
         environment, deploymentWorkflow, deployRequest, workflowParams, heliosDeployment);
@@ -161,12 +162,12 @@ public class DeploymentService {
   }
 
   private Map<String, Object> createWorkflowParams(
-      DeployRequest deployRequest, Environment environment) {
+      DeployRequest deployRequest, Environment environment, String commitSha) {
     Map<String, Object> workflowParams = new HashMap<>();
 
     workflowParams.put("branch_name", deployRequest.branchName());
     workflowParams.put("environment_name", environment.getName());
-    workflowParams.put("commit_sha", deployRequest.commitSha());
+    workflowParams.put("commit_sha", commitSha);
     workflowParams.put("triggered_by", authService.getPreferredUsername());
 
     return workflowParams;
