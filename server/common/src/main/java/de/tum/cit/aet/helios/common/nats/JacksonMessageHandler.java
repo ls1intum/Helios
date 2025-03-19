@@ -1,4 +1,4 @@
-package de.tum.cit.aet.helios.nats;
+package de.tum.cit.aet.helios.common.nats;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;

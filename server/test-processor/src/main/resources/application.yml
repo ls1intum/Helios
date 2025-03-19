@@ -1,0 +1,17 @@
+spring:
+    application:
+        name: Helios-Test-Processor
+    config:
+        import: optional:file:.env[.properties]
+    task:
+        scheduling:
+            pool:
+                # This sets the maximum number of threads for scheduled tasks.
+                size: 10
+
+springdoc:
+    default-produces-media-type: application/json
+
+logging:
+    level:
+        org.kohsuke.github.GitHubClient: INFO

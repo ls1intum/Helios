@@ -1,4 +1,4 @@
-package de.tum.cit.aet.helios.nats;
+package de.tum.cit.aet.helios.common.nats;
 
 import io.nats.client.Message;
 import io.nats.client.MessageHandler;

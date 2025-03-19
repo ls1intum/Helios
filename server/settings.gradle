@@ -1,3 +1,5 @@
 rootProject.name = 'Helios'
 
+include 'common'
 include 'application-server'
+include 'test-processor'

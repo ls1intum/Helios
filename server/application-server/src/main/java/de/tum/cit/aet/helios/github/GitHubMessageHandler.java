@@ -1,6 +1,6 @@
 package de.tum.cit.aet.helios.github;
 
-import de.tum.cit.aet.helios.nats.NatsMessageHandler;
+import de.tum.cit.aet.helios.common.nats.NatsMessageHandler;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.List;

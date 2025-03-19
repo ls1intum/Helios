@@ -59,6 +59,7 @@ dependencies {
     testImplementation 'org.springframework.security:spring-security-test'
     testImplementation 'io.zonky.test:embedded-database-spring-test:2.6.0'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    implementation project(':common')
     runtimeAgent1 "org.springframework:spring-instrument:6.2.4"
     runtimeAgent2 "org.aspectj:aspectjweaver:1.9.23"
 }
