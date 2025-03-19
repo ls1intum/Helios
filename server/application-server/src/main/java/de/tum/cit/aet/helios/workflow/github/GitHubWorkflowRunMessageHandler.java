@@ -97,7 +97,7 @@ public class GitHubWorkflowRunMessageHandler
             run.setTriggeredWorkflowRunId(context.runId());
             run.setHeadBranch(context.headBranch());
             run.setHeadSha(context.headSha());
-            run = workflowRunRepository.save(run);
+            run = workflowRunRepository.saveAndFlush(run);
             if (testResultProcessor.shouldProcess(run)) {
               testResultProcessor.processRun(run);
             }
