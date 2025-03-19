@@ -66,7 +66,7 @@ monitoring:
     # List of repositories to monitor in the format owner/repository
     # Example: ls1intum/Helios or ls1intum/Helios,ls1intum/Artemis
     repositories: ${REPOSITORY_NAME:}
-    runOnStartup: true
+    runOnStartup: ${DATA_SYNC_RUN_ON_STARTUP:true}
     # Fetching timeframe in days
     timeframe: 7
     # Cooldown in minutes before running the monitoring again
