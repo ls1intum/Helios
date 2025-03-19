@@ -3,7 +3,6 @@ package de.tum.cit.aet.helios.workflow;
 import de.tum.cit.aet.helios.branch.BranchRepository;
 import de.tum.cit.aet.helios.filters.RepositoryContext;
 import de.tum.cit.aet.helios.pullrequest.PullRequestRepository;
-import jakarta.transaction.Transactional;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -11,6 +10,7 @@ import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Log4j2
 @RequiredArgsConstructor
@@ -83,5 +83,9 @@ public class WorkflowRunService {
     var latestRuns = getLatestWorkflowRuns(runs);
 
     return latestRuns.map(WorkflowRunDto::fromWorkflowRun).toList();
+  }
+
+  public void deleteWorkflowRun(Long workflowRunId) {
+    workflowRunRepository.deleteById(workflowRunId);
   }
 }

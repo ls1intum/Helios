@@ -1,15 +1,18 @@
 package de.tum.cit.aet.helios.workflow.github;
 
-import de.tum.cit.aet.helios.github.GitHubFacade;
 import de.tum.cit.aet.helios.github.GitHubMessageHandler;
+import de.tum.cit.aet.helios.github.GitHubService;
 import de.tum.cit.aet.helios.gitrepo.github.GitHubRepositorySyncService;
 import de.tum.cit.aet.helios.tests.TestResultProcessor;
 import de.tum.cit.aet.helios.workflow.GitHubWorkflowContext;
+import de.tum.cit.aet.helios.workflow.Workflow;
+import de.tum.cit.aet.helios.workflow.WorkflowRun;
+import de.tum.cit.aet.helios.workflow.WorkflowRunRepository;
+import de.tum.cit.aet.helios.workflow.WorkflowRunService;
 import java.io.BufferedReader;
+import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.List;
-import java.util.Optional;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +20,7 @@ import lombok.extern.log4j.Log4j2;
 import org.kohsuke.github.GHArtifact;
 import org.kohsuke.github.GHEvent;
 import org.kohsuke.github.GHEventPayload;
+import org.kohsuke.github.PagedIterable;
 import org.springframework.stereotype.Component;
 
 @Log4j2
@@ -27,7 +31,9 @@ public class GitHubWorkflowRunMessageHandler
   private final GitHubRepositorySyncService repositorySyncService;
   private final GitHubWorkflowRunSyncService workflowSyncService;
   private final TestResultProcessor testResultProcessor;
-  private final GitHubFacade gitHub;
+  private final GitHubService gitHubService;
+  private final WorkflowRunService workflowRunService;
+  private final WorkflowRunRepository workflowRunRepository;
 
   @Override
   protected Class<GHEventPayload.WorkflowRun> getPayloadClass() {
@@ -53,6 +59,15 @@ public class GitHubWorkflowRunMessageHandler
         action,
         githubEvent);
 
+
+    System.out.println("Workflow Run: " + githubRun);
+    System.out.println("Workflow Run ID: " + githubRun.getId());
+    System.out.println("Workflow Run Head Branch: " + githubRun.getHeadBranch());
+    System.out.println("Workflow Run Head Sha: " + githubRun.getHeadSha());
+    System.out.println("Workflow Run URL: " + githubRun.getUrl());
+    System.out.println("Workflow Run Status: " + githubRun.getStatus());
+    System.out.println("Workflow Run Conclusion: " + githubRun.getConclusion());
+
     try {
       eventPayload
           .getWorkflowRun()
@@ -67,67 +82,82 @@ public class GitHubWorkflowRunMessageHandler
 
     repositorySyncService.processRepository(eventPayload.getRepository());
 
-    GitHubWorkflowContext context = null;
+    var run = workflowSyncService.processRun(githubRun);
 
     // Check if this is a workflow_run event
     if ("workflow_run".equalsIgnoreCase(githubEvent.name())) {
-      log.info("Trying to find the triggering workflow run ID of: {}", githubRun.getId());
-      context = extractWorkflowContext(repository.getFullName(), githubRun.getId());
-      if (context == null) {
-        log.error("Failed to extract workflow context for workflow run: {}", githubRun.getId());
-        return;
+      try {
+        // Original code continues here after delay
+        if (run.getStatus() == WorkflowRun.Status.COMPLETED
+            && run.getWorkflow().getLabel() == Workflow.Label.TEST) {
+          log.info("Trying to find the triggering workflow run ID of: {}", githubRun.getId());
+          GitHubWorkflowContext context =
+              extractWorkflowContext(repository.getId(), githubRun.getId());
+          if (context != null) {
+            run.setTriggeredWorkflowRunId(context.runId());
+            run.setHeadBranch(context.headBranch());
+            run.setHeadSha(context.headSha());
+            run = workflowRunRepository.save(run);
+            if (testResultProcessor.shouldProcess(run)) {
+              testResultProcessor.processRun(run);
+            }
+          } else {
+            log.error("Failed to extract workflow context for workflow run: {}", githubRun.getId());
+            workflowRunService.deleteWorkflowRun(githubRun.getId());
+          }
+        } else {
+          log.info("Not a test workflow run, skipping processing");
+          workflowRunService.deleteWorkflowRun(githubRun.getId());
+        }
+      } catch (Exception e) {
+        log.error("Error in delayed workflow processing: {}", e.getMessage(), e);
       }
-    }
-
-    var run = workflowSyncService.processRun(githubRun);
-
-    if (context != null) {
-      run.setTriggeredWorkflowRunId(context.runId());
-      run.setHeadBranch(context.headBranch());
-      run.setHeadSha(context.headSha());
-    }
-
-
-    if (run != null && testResultProcessor.shouldProcess(run)) {
+    } else if (run != null && testResultProcessor.shouldProcess(run)) {
       testResultProcessor.processRun(run);
     }
   }
 
+
   /**
    * Extracts workflow context from the workflow-context artifact.
    *
-   * @param repositoryFullName The full name of the repository
+   * @param repositoryId The ID of the repository
    * @param runId The ID of the workflow run
    * @return The extracted GitHubWorkflowContext or null if not found or error occurred
    */
-  private GitHubWorkflowContext extractWorkflowContext(String repositoryFullName, long runId) {
+  private GitHubWorkflowContext extractWorkflowContext(long repositoryId, long runId) {
+    GHArtifact ghArtifact = null;
+
+    // Fetch artifacts to get the triggering workflow run ID
     try {
-      // Fetch artifacts to get the triggering workflow run ID
-      List<GHArtifact> artifacts = gitHub
-          .getRepository(repositoryFullName)
-          .getWorkflowRun(runId)
-          .listArtifacts()
-          .toList();
+      PagedIterable<GHArtifact> artifacts =
+          this.gitHubService.getWorkflowRunArtifacts(repositoryId, runId);
 
-      // Look for the "workflow-context" artifact
-      Optional<GHArtifact> contextArtifact = artifacts.stream()
-          .filter(a -> "workflow-context".equalsIgnoreCase(a.getName()))
-          .findFirst();
-
-      if (contextArtifact.isPresent()) {
-        try {
-          // Parse the artifact to extract the triggering workflow information
-          return parseWorkflowContextArtifact(contextArtifact.get());
-        } catch (Exception e) {
-          log.error("Failed to parse workflow context artifact: {}", e.getMessage());
-          return null;
+      // First artifact with the configured name
+      for (GHArtifact artifact : artifacts) {
+        if (artifact.getName().equals("workflow-context")) {
+          ghArtifact = artifact;
+          break;
         }
-      } else {
-        log.error("No workflow-context artifact found for E2E Tests workflow_run: {}", runId);
-        return null;
       }
-    } catch (IOException e) {
-      log.error("Failed to fetch artifacts for workflow run: {}", e.getMessage());
+    } catch (Exception e) {
+      log.warn("Failed to fetch artifacts for workflow run: {}", e.getMessage());
+      return null;
+    }
+
+    if (ghArtifact == null) {
+      log.warn("No workflow-context artifact found for E2E Tests workflow_run: {}",
+          runId);
+      return null;
+    }
+
+    log.debug("Found artifact {}", ghArtifact.getName());
+
+    try {
+      // Parse the artifact to extract the triggering workflow information
+      return parseWorkflowContextArtifact(ghArtifact);
+    } catch (Exception e) {
+      log.error("Failed to parse workflow context artifact: {}", e.getMessage());
       return null;
     }
   }
@@ -154,8 +184,18 @@ public class GitHubWorkflowRunMessageHandler
             while ((entry = zipInput.getNextEntry()) != null) {
               if (!entry.isDirectory()
                   && "workflow-context.txt".equalsIgnoreCase(entry.getName())) {
+
+                var nonClosingStream =
+                    new FilterInputStream(zipInput) {
+                      @Override
+                      public void close() throws IOException {
+                        // Do nothing, so the underlying stream stays open.
+                      }
+                    };
+
                 // Read file content
-                try (BufferedReader reader = new BufferedReader(new InputStreamReader(zipInput))) {
+                try (BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(nonClosingStream))) {
                   String line;
                   while ((line = reader.readLine()) != null) {
                     // Skip empty lines
@@ -179,7 +219,6 @@ public class GitHubWorkflowRunMessageHandler
                     }
                   }
                 }
-
               }
               zipInput.closeEntry();
             }
@@ -196,6 +235,9 @@ public class GitHubWorkflowRunMessageHandler
           if (headSha == null) {
             throw new RuntimeException("Could not find TRIGGERING_WORKFLOW_HEAD_SHA in artifact");
           }
+
+          log.info("Context extracted: workflowRunId: {}, headBranch: {}, headSha: {}",
+              workflowRunId, headBranch, headSha);
 
           return new GitHubWorkflowContext(workflowRunId, headBranch, headSha);
         });
