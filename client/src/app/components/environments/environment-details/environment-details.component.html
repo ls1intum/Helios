@@ -1,0 +1,11 @@
+<div class="flex flex-col gap-1">
+  @if (environment.latestDeployment; as deployment) {
+    <app-environment-deployment-info class="max-w-2xl" [deployment]="deployment" [repositoryId]="environment.repository?.id || 0" />
+  }
+</div>
+<div class="flex-grow"></div>
+<div class="flex flex-col gap-1">
+  @if (environment.latestStatus; as status) {
+    <app-environment-status-info class="max-w-xs mt-2 ml-14" [status]="status" />
+  }
+</div>
