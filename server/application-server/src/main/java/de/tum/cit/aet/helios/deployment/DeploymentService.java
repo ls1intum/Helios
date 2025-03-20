@@ -179,10 +179,7 @@ public class DeploymentService {
         case PRODUCTION -> {
           return authService.hasRole("ROLE_ADMIN");
         }
-        case STAGING -> {
-          return authService.hasRole("ROLE_ADMIN");
-        }
-        case TEST -> {
+        case STAGING, TEST -> {
           return authService.hasRole("ROLE_WRITE")
               || authService.hasRole("ROLE_MAINTAINER")
               || authService.hasRole("ROLE_ADMIN");
