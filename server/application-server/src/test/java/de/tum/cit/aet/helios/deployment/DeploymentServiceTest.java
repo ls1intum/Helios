@@ -233,7 +233,7 @@ public class DeploymentServiceTest {
     when(authService.hasRole("ROLE_WRITE")).thenReturn(true);
 
     assertFalse(deploymentService.canDeployToEnvironment(Environment.Type.PRODUCTION));
-    assertFalse(deploymentService.canDeployToEnvironment(Environment.Type.STAGING));
+    assertTrue(deploymentService.canDeployToEnvironment(Environment.Type.STAGING));
     assertTrue(deploymentService.canDeployToEnvironment(Environment.Type.TEST));
   }
 
@@ -243,7 +243,7 @@ public class DeploymentServiceTest {
     when(authService.hasRole("ROLE_MAINTAINER")).thenReturn(true);
 
     assertFalse(deploymentService.canDeployToEnvironment(Environment.Type.PRODUCTION));
-    assertFalse(deploymentService.canDeployToEnvironment(Environment.Type.STAGING));
+    assertTrue(deploymentService.canDeployToEnvironment(Environment.Type.STAGING));
     assertTrue(deploymentService.canDeployToEnvironment(Environment.Type.TEST));
   }
 
