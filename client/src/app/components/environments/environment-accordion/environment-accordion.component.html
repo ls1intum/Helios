@@ -43,8 +43,6 @@
             >
               @if (isRelease(deployment)) {
                 <i-tabler name="tag" class="!size-5 flex-shrink-0"></i-tabler>
-              } @else {
-                <i-tabler name="git-branch" class="!size-5 flex-shrink-0"></i-tabler>
               }
               <span class="truncate flex-1">{{ deployment.ref }}</span>
             </p-tag>
