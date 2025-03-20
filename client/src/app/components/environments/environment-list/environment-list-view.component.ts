@@ -270,13 +270,13 @@ export class EnvironmentListViewComponent implements OnDestroy {
     return url;
   }
 
-  openExternalLink(event: MouseEvent, environment: EnvironmentDto): void {
+  openExternalLink(event: MouseEvent, link?: string): void {
     // Prevent the click event from propagating
     event.stopPropagation();
 
     // Only proceed if the server URL is available
-    if (environment.serverUrl) {
-      window.open(this.getFullUrl(environment.serverUrl), '_blank');
+    if (link) {
+      window.open(this.getFullUrl(link), '_blank');
     }
   }
 
