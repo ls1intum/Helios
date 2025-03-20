@@ -2,8 +2,7 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { Component, computed, inject, input, OnDestroy, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { UserAvatarComponent } from '@app/components/user-avatar/user-avatar.component';
-import { EnvironmentDeployment, EnvironmentDto } from '@app/core/modules/openapi';
+import { EnvironmentDto } from '@app/core/modules/openapi';
 import {
   extendEnvironmentLockMutation,
   getAllEnabledEnvironmentsOptions,
@@ -16,7 +15,6 @@ import {
 } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 import { PermissionService } from '@app/core/services/permission.service';
-import { TimeAgoPipe } from '@app/pipes/time-ago.pipe';
 import { injectMutation, injectQuery, QueryClient } from '@tanstack/angular-query-experimental';
 import { IconsModule } from 'icons.module';
 import { AccordionModule } from 'primeng/accordion';
@@ -24,44 +22,34 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { AvatarModule } from 'primeng/avatar';
 import { ButtonModule } from 'primeng/button';
 import { ButtonGroupModule } from 'primeng/buttongroup';
+import { DividerModule } from 'primeng/divider';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { TagModule } from 'primeng/tag';
 import { ToggleButtonModule } from 'primeng/togglebutton';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { TooltipModule } from 'primeng/tooltip';
-import { EnvironmentDeploymentInfoComponent } from '../deployment-info/environment-deployment-info.component';
-import { DeploymentStateTagComponent } from '../deployment-state-tag/deployment-state-tag.component';
-import { DeploymentStepperComponent } from '../deployment-stepper/deployment-stepper.component';
-import { EnvironmentStatusInfoComponent } from '../environment-status-info/environment-status-info.component';
-import { EnvironmentStatusTagComponent } from '../environment-status-tag/environment-status-tag.component';
-import { LockTagComponent } from '../lock-tag/lock-tag.component';
-import { LockTimeComponent } from '../lock-time/lock-time.component';
+import { EnvironmentAccordionComponent } from '../environment-accordion/environment-accordion.component';
 
 @Component({
   selector: 'app-environment-list-view',
   imports: [
     InputTextModule,
     AccordionModule,
-    LockTagComponent,
     RouterLink,
     TagModule,
     IconsModule,
     ButtonModule,
     TooltipModule,
-    DeploymentStateTagComponent,
-    DeploymentStepperComponent,
-    EnvironmentStatusTagComponent,
-    EnvironmentDeploymentInfoComponent,
-    EnvironmentStatusInfoComponent,
-    LockTimeComponent,
     AvatarModule,
     CommonModule,
     ButtonGroupModule,
-    TimeAgoPipe,
-    UserAvatarComponent,
     ToggleButtonModule,
     FormsModule,
     SelectButtonModule,
+    ToggleSwitchModule,
+    DividerModule,
+    EnvironmentAccordionComponent,
   ],
   providers: [DatePipe],
   templateUrl: './environment-list-view.component.html',
@@ -70,7 +58,6 @@ export class EnvironmentListViewComponent implements OnDestroy {
   private queryClient = inject<QueryClient>(QueryClient);
   private confirmationService = inject(ConfirmationService);
   private keycloakService = inject(KeycloakService);
-  private datePipe = inject(DatePipe);
   private permissionService = inject(PermissionService);
   private currentTime = signal(Date.now());
   private intervalId: number | undefined;
@@ -81,7 +68,6 @@ export class EnvironmentListViewComponent implements OnDestroy {
   editable = input<boolean | undefined>();
   deployable = input<boolean | undefined>();
   hideLinkToList = input<boolean | undefined>();
-  showTestEnvironmentsOnly = input<boolean | undefined>();
 
   isLoggedIn = computed(() => this.keycloakService.isLoggedIn());
   isAdmin = computed(() => this.permissionService.isAdmin());
@@ -215,9 +201,6 @@ export class EnvironmentListViewComponent implements OnDestroy {
 
   filteredEnvironments = computed(() => {
     let environments = this.environmentQuery.data();
-    if (this.showTestEnvironmentsOnly()) {
-      environments = environments?.filter(environment => environment.type === 'TEST');
-    }
 
     const search = this.searchInput();
 
@@ -230,91 +213,45 @@ export class EnvironmentListViewComponent implements OnDestroy {
     });
   });
 
-  getFullUrl(url: string): string {
-    if (url && !url.startsWith('http') && !url.startsWith('https')) {
-      return 'http://' + url;
-    }
-    return url;
-  }
+  private readonly environmentTypeOrder = ['test', 'staging'];
 
-  openExternalLink(event: MouseEvent, environment: EnvironmentDto): void {
-    // Prevent the click event from propagating
-    event.stopPropagation();
+  environmentGroups = computed(() => {
+    const environments = this.filteredEnvironments();
+    const groups = new Map<string, EnvironmentDto[]>();
 
-    // Only proceed if the server URL is available
-    if (environment.serverUrl) {
-      window.open(this.getFullUrl(environment.serverUrl), '_blank');
-    }
-  }
+    // Group environments
+    environments.forEach(environment => {
+      const type = environment.type || 'Ungrouped';
 
-  getDeploymentTime(environment: EnvironmentDto) {
-    const date = environment.latestDeployment?.updatedAt;
-    return date ? this.datePipe.transform(date, 'd MMMM y, h:mm a') : null; // Format date
-  }
-
-  canUnlock(environment: EnvironmentDto) {
-    if (this.hasUnlockPermissions() || this.isCurrentUserLocked(environment)) {
-      return true;
-    } else if (!this.isCurrentUserLocked(environment) && (this.timeUntilReservationExpires()?.get(environment.id) ?? -1) === 0) {
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-  getUnlockToolTip(environment: EnvironmentDto) {
-    if (!this.canUnlock(environment)) return 'You do not have permission to unlock this environment.';
-    const timeLeft = this.timeUntilReservationExpires().get(environment.id);
-    const timeLeftMinutes = timeLeft !== undefined && timeLeft !== null ? Math.ceil(timeLeft / 60000) : 0;
-    if (this.isCurrentUserLocked(environment) || this.hasUnlockPermissions()) {
-      if (timeLeft !== undefined && timeLeft !== null) {
-        if (timeLeft > 0) {
-          // if the user is locked and the time has not expired, show the time left
-          return timeLeftMinutes > 1 ? `Other users can unlock this environment in ${timeLeftMinutes} minutes` : 'Other users can unlock this environment in 1 minute';
-        } else if (timeLeft === 0) {
-          // If the user is locked and the time has expired, show only unlock environment
-          return 'Reservation has expired. Any user can unlock this environment.';
-        }
+      // Skip ungrouped environments if deployable is true
+      if (this.deployable() && type === 'Ungrouped') {
+        return;
       }
-      // If the user is locked and the time has expired, show only unlock environment
-      return 'Unlock Environment';
-    }
-    if (timeLeft === undefined || timeLeft === null) {
-      // If the user is not locked and the time is not set, then user can not unlock
-      return 'You can not unlock this environment';
-    } else if (timeLeft === 0) {
-      // If the user is not locked and the time has expired, show reservation expired
-      return 'Reservation Expired. You can unlock this environment.';
-    } else {
-      // If the user is not locked and the time has not expired, show the time left
-      return timeLeftMinutes > 1 ? `You can unlock this environment in ${timeLeftMinutes} minutes` : 'You can unlock this environment in 1 minute';
-    }
-  }
 
-  formatEnvironmentType(type: string): string {
-    return type.charAt(0).toUpperCase() + type.slice(1).toLowerCase();
-  }
+      if (!groups.has(type)) {
+        groups.set(type, []);
+      }
+      groups.get(type)?.push(environment);
+    });
 
-  isDeploymentOngoing(environment: EnvironmentDto) {
-    if (!environment.latestDeployment) {
-      return false;
-    } else if (environment.latestDeployment.state && ['SUCCESS', 'FAILURE', 'ERROR', 'INACTIVE', 'UNKNOWN'].includes(environment.latestDeployment.state)) {
-      return false;
-    }
-    return true;
-  }
+    // Sort by predefined order
+    return new Map(
+      Array.from(groups.entries()).sort(([a], [b]) => {
+        const indexA = this.environmentTypeOrder.indexOf(a.toLowerCase());
+        const indexB = this.environmentTypeOrder.indexOf(b.toLowerCase());
 
-  isRelease(deployment: EnvironmentDeployment): boolean {
-    // TODO: This is a temporary solution to check if a deployment is a release
-    // until Paul's PR is merged which enables syncing of releases from GitHub to find a corresponding release
-    return !!deployment.releaseCandidateName || (!!deployment.ref && /^v?\d+\.\d+\.\d+/.test(deployment.ref));
-  }
+        // If both types are not in the order array, sort alphabetically
+        if (indexA === -1 && indexB === -1) return a.localeCompare(b);
+        // If one type is not in the order array, it goes last
+        if (indexA === -1) return 1;
+        if (indexB === -1) return -1;
+        // Otherwise, sort by the predefined order
+        return indexA - indexB;
+      })
+    );
+  });
 
-  getPrLink(env: EnvironmentDto) {
-    return ['/repo', env.repository?.id, 'ci-cd', 'pr', env.latestDeployment?.pullRequestNumber?.toString()];
-  }
-
-  getBranchLink(env: EnvironmentDto) {
-    return ['/repo', env.repository?.id, 'ci-cd', 'branch', env.latestDeployment?.ref];
+  capitalizeFirstLetter(str: string): string {
+    return str.charAt(0).toUpperCase() + str.toLowerCase().slice(1);
   }
 }

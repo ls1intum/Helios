@@ -54,6 +54,7 @@ import {
   IconRepeat,
   IconRocket,
   IconServerCog,
+  IconServer,
   IconSettings,
   IconSun,
   IconUser,
@@ -71,6 +72,7 @@ import {
 const icons = {
   IconHeart,
   IconServerCog,
+  IconServer,
   IconSun,
   IconSettings,
   IconRocket,

@@ -47,7 +47,7 @@ export class DeploymentStateTagComponent {
   icon = this.timingService.timeAwareComputed(() => {
     const iconMap: Record<ExtendedDeploymentState, string> = {
       SUCCESS: 'check',
-      WAITING: 'progress',
+      WAITING: 'clock',
       PENDING: 'progress',
       IN_PROGRESS: 'progress',
       QUEUED: 'progress',
@@ -63,7 +63,7 @@ export class DeploymentStateTagComponent {
   });
 
   iconClass = this.timingService.timeAwareComputed(() => {
-    const spinStates: ExtendedDeploymentState[] = ['REQUESTED', 'WAITING', 'PENDING', 'IN_PROGRESS', 'QUEUED'];
+    const spinStates: ExtendedDeploymentState[] = ['REQUESTED', 'PENDING', 'IN_PROGRESS', 'QUEUED'];
     return `!size-5 ${spinStates.includes(this.internalState()) ? 'animate-spin' : ''}`;
   });
 
@@ -88,7 +88,7 @@ export class DeploymentStateTagComponent {
   tooltip = this.timingService.timeAwareComputed(() => {
     const tooltipMap: Record<ExtendedDeploymentState, string> = {
       SUCCESS: 'Latest Deployment Successful',
-      WAITING: 'Waiting deployment',
+      WAITING: 'Waiting for approval',
       PENDING: 'Deployment pending',
       IN_PROGRESS: 'Deployment in progress',
       QUEUED: 'Deployment queued',
@@ -104,7 +104,7 @@ export class DeploymentStateTagComponent {
   });
 
   shouldShowRemainingTime = this.timingService.timeAwareComputed(() => {
-    const inProgressStates: ExtendedDeploymentState[] = ['REQUESTED', 'WAITING', 'PENDING', 'IN_PROGRESS', 'QUEUED'];
+    const inProgressStates: ExtendedDeploymentState[] = ['REQUESTED', 'PENDING', 'IN_PROGRESS', 'QUEUED'];
     return inProgressStates.includes(this.internalState()) && !!this.deployment();
   });
 
