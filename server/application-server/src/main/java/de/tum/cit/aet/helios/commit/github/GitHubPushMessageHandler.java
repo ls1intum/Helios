@@ -53,7 +53,17 @@ public class GitHubPushMessageHandler extends GitHubMessageHandler<GHEventPayloa
       GHCommit commit = curRepo.getCommit(sha);
       commitSyncService.processCommit(commit, repository);
 
-      GHBranch branch = curRepo.getBranch(ref.split("/")[2]);
+      // Extract branch name by taking everything after the second slash
+      String[] refParts = ref.split("/");
+      StringBuilder branchNameBuilder = new StringBuilder();
+      for (int i = 2; i < refParts.length; i++) {
+        branchNameBuilder.append(refParts[i]);
+        if (i < refParts.length - 1) {
+          branchNameBuilder.append("/");
+        }
+      }
+      String branchName = branchNameBuilder.toString();
+      GHBranch branch = curRepo.getBranch(branchName);
       branchSyncService.processBranch(branch);
     } catch (IOException e) {
       e.printStackTrace();
