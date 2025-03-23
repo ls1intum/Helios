@@ -1,6 +1,7 @@
 package de.tum.cit.aet.helios.deployment.github;
 
 import de.tum.cit.aet.helios.deployment.Deployment;
+import de.tum.cit.aet.helios.deployment.approval.ApprovalService;
 import de.tum.cit.aet.helios.environment.Environment;
 import de.tum.cit.aet.helios.environment.EnvironmentLockHistory;
 import de.tum.cit.aet.helios.environment.EnvironmentLockHistoryRepository;
@@ -31,6 +32,7 @@ public class GitHubDeploymentStatusMessageHandler
     extends GitHubMessageHandler<GHEventPayload.DeploymentStatus> {
 
   private final GitHubDeploymentSyncService deploymentSyncService;
+  private final ApprovalService approvalService;
   private final GitRepoRepository gitRepoRepository;
   private final EnvironmentRepository environmentRepository;
   private final DeploymentSourceFactory deploymentSourceFactory;
@@ -138,5 +140,11 @@ public class GitHubDeploymentStatusMessageHandler
     // Process this single deployment
     deploymentSyncService.processDeployment(
         deploymentSource, repository, environment, convertedUser);
+
+    // TODO: Don't approve deployment on data sync
+    if (deploymentSource.getState() == Deployment.State.WAITING) {
+      log.info("Deployment is in WAITING state. Reviewing the deployment.");
+      approvalService.reviewDeployment(deploymentSource, repository, environment, convertedUser);
+    }
   }
 }
