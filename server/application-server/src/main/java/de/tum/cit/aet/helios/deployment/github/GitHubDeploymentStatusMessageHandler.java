@@ -14,6 +14,7 @@ import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import de.tum.cit.aet.helios.user.User;
 import de.tum.cit.aet.helios.user.github.GitHubUserSyncService;
 import java.io.IOException;
+import java.time.Instant;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -40,6 +41,8 @@ public class GitHubDeploymentStatusMessageHandler
   private final EnvironmentLockHistoryRepository environmentLockHistoryRepository;
   private final GitHubFacade github;
   private final GitHubDataSyncOrchestrator gitHubDataSyncOrchestrator;
+
+  private final Instant applicationStartTime = Instant.now();
 
   @Override
   protected Class<GHEventPayload.DeploymentStatus> getPayloadClass() {
@@ -141,10 +144,21 @@ public class GitHubDeploymentStatusMessageHandler
     deploymentSyncService.processDeployment(
         deploymentSource, repository, environment, convertedUser);
 
-    // TODO: Don't approve deployment on data sync
+    // Auto-approve deployments in WAITING state
     if (deploymentSource.getState() == Deployment.State.WAITING) {
-      log.info("Deployment is in WAITING state. Reviewing the deployment.");
-      approvalService.reviewDeployment(deploymentSource, repository, environment, convertedUser);
+      // Check if this is a recent event (after app startup) or an old event being replayed
+      Instant eventTime;
+      try {
+        eventTime = eventPayload.getDeploymentStatus().getCreatedAt().toInstant();
+      } catch (IOException e) {
+        eventTime = Instant.now();
+      }
+
+      // Only automatically approve if the event is recent (after application startup)
+      if (eventTime.isAfter(applicationStartTime)) {
+        log.info("Recent deployment in WAITING state. Reviewing the deployment.");
+        approvalService.reviewDeployment(deploymentSource, repository, environment, convertedUser);
+      }
     }
   }
 }
