@@ -25,7 +25,7 @@ public class Release extends BaseGitServiceEntity {
   @Column(name = "name")
   private String name;
 
-  @Column(name = "tag_name", unique = true)
+  @Column(name = "tag_name")
   private String tagName;
 
   @Column(columnDefinition = "TEXT")

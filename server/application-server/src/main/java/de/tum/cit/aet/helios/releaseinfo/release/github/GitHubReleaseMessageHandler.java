@@ -2,43 +2,50 @@ package de.tum.cit.aet.helios.releaseinfo.release.github;
 
 import de.tum.cit.aet.helios.github.GitHubMessageHandler;
 import de.tum.cit.aet.helios.gitrepo.github.GitHubRepositorySyncService;
+import de.tum.cit.aet.helios.releaseinfo.release.ReleaseRepository;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.kohsuke.github.GHEvent;
 import org.kohsuke.github.GHEventPayload;
+import org.kohsuke.github.GHEventPayload.Release;
 import org.springframework.stereotype.Component;
 
 @Component
 @Log4j2
+@RequiredArgsConstructor
 public class GitHubReleaseMessageHandler extends GitHubMessageHandler<GHEventPayload.Release> {
 
   private final GitHubReleaseSyncService releaseSyncService;
   private final GitHubRepositorySyncService repositorySyncService;
-
-  private GitHubReleaseMessageHandler(
-      GitHubReleaseSyncService releaseSyncService,
-      GitHubRepositorySyncService repositorySyncService) {
-    super(GHEventPayload.Release.class);
-    this.releaseSyncService = releaseSyncService;
-    this.repositorySyncService = repositorySyncService;
-  }
+  private final ReleaseRepository releaseRepository;
 
   @Override
-  protected void handleEvent(GHEventPayload.Release eventPayload) {
-    if (eventPayload.getAction().equals("created")) {
-      return;
-    }
+  protected void handleInstalledRepositoryEvent(GHEventPayload.Release eventPayload) {
     log.info(
         "Received release event for repository: {}, release: {}, action: {}",
         eventPayload.getRepository().getFullName(),
         eventPayload.getRelease().getName(),
         eventPayload.getAction());
-    repositorySyncService.processRepository(eventPayload.getRepository());
-    // We don't need to handle the deleted action here, as pull requests are not deleted
-    releaseSyncService.processRelease(eventPayload.getRelease());
+    if (eventPayload.getAction().equals("created")
+        || eventPayload.getAction().equals("edited")
+        || eventPayload.getAction().equals("published")) {
+      if (eventPayload.getRelease().isDraft()) {
+        return;
+      }
+      repositorySyncService.processRepository(eventPayload.getRepository());
+      releaseSyncService.processRelease(eventPayload.getRelease());
+    } else if (eventPayload.getAction().equals("deleted")) {
+      releaseRepository.deleteById(eventPayload.getRelease().getId());
+    }
   }
 
   @Override
-  protected GHEvent getHandlerEvent() {
+  protected Class<Release> getPayloadClass() {
+    return GHEventPayload.Release.class;
+  }
+
+  @Override
+  protected GHEvent getPayloadType() {
     return GHEvent.RELEASE;
   }
 }

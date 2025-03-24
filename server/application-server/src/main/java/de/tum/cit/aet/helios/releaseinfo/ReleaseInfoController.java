@@ -22,8 +22,8 @@ public class ReleaseInfoController {
   private final ReleaseInfoService releaseInfoService;
 
   @GetMapping
-  public ResponseEntity<List<ReleaseInfoListDto>> getAllReleaseCandidates() {
-    return ResponseEntity.ok(releaseInfoService.getAllReleaseCandidates());
+  public ResponseEntity<List<ReleaseInfoListDto>> getAllReleaseInfos() {
+    return ResponseEntity.ok(releaseInfoService.getAllReleaseInfos());
   }
 
   @GetMapping("/{name}")

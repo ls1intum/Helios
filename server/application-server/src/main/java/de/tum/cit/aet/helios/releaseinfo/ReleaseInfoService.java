@@ -62,7 +62,7 @@ public class ReleaseInfoService {
   private final GitHubDataSyncOrchestrator gitHubDataSyncOrchestrator;
   private final GitHubReleaseSyncService gitHubReleaseSyncService;
 
-  public List<ReleaseInfoListDto> getAllReleaseCandidates() {
+  public List<ReleaseInfoListDto> getAllReleaseInfos() {
     return releaseCandidateRepository.findAllByOrderByNameAsc().stream()
         .map(ReleaseInfoListDto::fromReleaseCandidate)
         .toList();

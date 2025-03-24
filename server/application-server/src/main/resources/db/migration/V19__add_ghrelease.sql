@@ -28,8 +28,6 @@ alter table if exists public.release add constraint UKroicl6ap0hedm08ivbpvj4bji 
 alter table if exists public.release
 drop constraint if exists UK5ksyl3m7jp7dmsd6bcutkv7s;
 
-alter table if exists public.release add constraint UK5ksyl3m7jp7dmsd6bcutkv7s unique (tag_name);
-
 alter table if exists public.release add constraint FK3ikmsdlts7wm4wa8p1nc793f5 foreign key (repository_id) references repository;
 
 alter table if exists public.release
