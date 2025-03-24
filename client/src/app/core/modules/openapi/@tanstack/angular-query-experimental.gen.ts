@@ -13,8 +13,9 @@ import {
   extendEnvironmentLock,
   syncWorkflowsByRepositoryId,
   createWorkflowGroup,
-  getAllReleaseCandidates,
+  getAllReleaseInfos,
   createReleaseCandidate,
+  publishReleaseDraft,
   evaluate,
   setPrPinnedByNumber,
   deployToEnvironment,
@@ -35,7 +36,7 @@ import {
   getAllRepositories,
   getRepositoryById,
   deleteReleaseCandidateByName,
-  getReleaseCandidateByName,
+  getReleaseInfoByName,
   getCommitsSinceLastReleaseCandidate,
   getAllPullRequests,
   getPullRequestById,
@@ -75,7 +76,7 @@ import type {
   SyncWorkflowsByRepositoryIdData,
   CreateWorkflowGroupData,
   CreateWorkflowGroupResponse,
-  GetAllReleaseCandidatesData,
+  GetAllReleaseInfosData,
   CreateReleaseCandidateData,
   CreateReleaseCandidateResponse,
   PublishReleaseDraftData,
@@ -345,12 +346,12 @@ export const createWorkflowGroupMutation = (options?: Partial<Options<CreateWork
   return mutationOptions;
 };
 
-export const getAllReleaseCandidatesQueryKey = (options?: Options<GetAllReleaseCandidatesData>) => createQueryKey('getAllReleaseCandidates', options);
+export const getAllReleaseInfosQueryKey = (options?: Options<GetAllReleaseInfosData>) => createQueryKey('getAllReleaseInfos', options);
 
-export const getAllReleaseCandidatesOptions = (options?: Options<GetAllReleaseCandidatesData>) => {
+export const getAllReleaseInfosOptions = (options?: Options<GetAllReleaseInfosData>) => {
   return queryOptions({
     queryFn: async ({ queryKey, signal }) => {
-      const { data } = await getAllReleaseCandidates({
+      const { data } = await getAllReleaseInfos({
         ...options,
         ...queryKey[0],
         signal,
@@ -358,7 +359,7 @@ export const getAllReleaseCandidatesOptions = (options?: Options<GetAllReleaseCa
       });
       return data;
     },
-    queryKey: getAllReleaseCandidatesQueryKey(options),
+    queryKey: getAllReleaseInfosQueryKey(options),
   });
 };
 
@@ -383,6 +384,37 @@ export const createReleaseCandidateMutation = (options?: Partial<Options<CreateR
   const mutationOptions: MutationOptions<CreateReleaseCandidateResponse, DefaultError, Options<CreateReleaseCandidateData>> = {
     mutationFn: async localOptions => {
       const { data } = await createReleaseCandidate({
+        ...options,
+        ...localOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const publishReleaseDraftQueryKey = (options: Options<PublishReleaseDraftData>) => createQueryKey('publishReleaseDraft', options);
+
+export const publishReleaseDraftOptions = (options: Options<PublishReleaseDraftData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await publishReleaseDraft({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: publishReleaseDraftQueryKey(options),
+  });
+};
+
+export const publishReleaseDraftMutation = (options?: Partial<Options<PublishReleaseDraftData>>) => {
+  const mutationOptions: MutationOptions<unknown, DefaultError, Options<PublishReleaseDraftData>> = {
+    mutationFn: async localOptions => {
+      const { data } = await publishReleaseDraft({
         ...options,
         ...localOptions,
         throwOnError: true,
@@ -792,7 +824,7 @@ export const deleteReleaseCandidateByNameMutation = (options?: Partial<Options<D
   return mutationOptions;
 };
 
-export const getReleaseCandidateByNameQueryKey = (options: Options<GetReleaseCandidateByNameData>) => createQueryKey('getReleaseCandidateByName', options);
+export const getReleaseInfoByNameQueryKey = (options: Options<GetReleaseInfoByNameData>) => createQueryKey('getReleaseInfoByName', options);
 
 export const getReleaseInfoByNameOptions = (options: Options<GetReleaseInfoByNameData>) => {
   return queryOptions({

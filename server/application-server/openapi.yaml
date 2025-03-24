@@ -247,7 +247,7 @@ paths:
     get:
       tags:
       - release-info-controller
-      operationId: getAllReleaseCandidates
+      operationId: getAllReleaseInfos
       responses:
         "200":
           description: OK

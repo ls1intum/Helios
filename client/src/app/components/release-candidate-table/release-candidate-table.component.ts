@@ -1,5 +1,5 @@
 import { Component, computed, inject } from '@angular/core';
-import { getAllReleaseCandidatesOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
+import { getAllReleaseInfosOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { FILTER_OPTIONS_TOKEN, SearchTableService } from '@app/core/services/search-table.service';
 import { injectQuery } from '@tanstack/angular-query-experimental';
 import { IconsModule } from 'icons.module';
@@ -21,7 +21,7 @@ const FILTER_OPTIONS: { name: string; filter: (prs: ReleaseInfoListDto[]) => Rel
   templateUrl: './release-candidate-table.component.html',
 })
 export class ReleaseCandidateTableComponent {
-  releaseCandidatesQuery = injectQuery(() => getAllReleaseCandidatesOptions());
+  releaseCandidatesQuery = injectQuery(() => getAllReleaseInfosOptions());
   router = inject(Router);
   searchTableService = inject(SearchTableService);
 

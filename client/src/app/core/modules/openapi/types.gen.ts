@@ -581,21 +581,21 @@ export type CreateWorkflowGroupResponses = {
 
 export type CreateWorkflowGroupResponse = CreateWorkflowGroupResponses[keyof CreateWorkflowGroupResponses];
 
-export type GetAllReleaseCandidatesData = {
+export type GetAllReleaseInfosData = {
   body?: never;
   path?: never;
   query?: never;
   url: '/api/release-info';
 };
 
-export type GetAllReleaseCandidatesResponses = {
+export type GetAllReleaseInfosResponses = {
   /**
    * OK
    */
   200: Array<ReleaseInfoListDto>;
 };
 
-export type GetAllReleaseCandidatesResponse = GetAllReleaseCandidatesResponses[keyof GetAllReleaseCandidatesResponses];
+export type GetAllReleaseInfosResponse = GetAllReleaseInfosResponses[keyof GetAllReleaseInfosResponses];
 
 export type CreateReleaseCandidateData = {
   body: ReleaseCandidateCreateDto;
