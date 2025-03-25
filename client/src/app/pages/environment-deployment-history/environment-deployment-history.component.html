@@ -4,12 +4,13 @@
   </div>
   <span description> Here you can see all the locking, unlocking and deployment history. </span>
 </app-page-heading>
+<div class="text-gray-500 text-sm uppercase font-semibold tracking-wider mb-1" subheading>Environment: {{ environment()?.name }}</div>
 
 <div class="p-4">
   <style>
-    /* 
-      This class will be applied to <tr> elements for UNLOCK_EVENT. 
-      We force a bottom border to separate events visually. 
+    /*
+      This class will be applied to <tr> elements for UNLOCK_EVENT.
+      We force a bottom border to separate events visually.
     */
     tr.lock-event td {
       border-bottom: 1px solid black;
