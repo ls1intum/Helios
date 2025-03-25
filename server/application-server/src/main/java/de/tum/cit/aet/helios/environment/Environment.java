@@ -5,6 +5,7 @@ import de.tum.cit.aet.helios.environment.status.EnvironmentStatus;
 import de.tum.cit.aet.helios.environment.status.StatusCheckType;
 import de.tum.cit.aet.helios.filters.RepositoryFilterEntity;
 import de.tum.cit.aet.helios.user.User;
+import de.tum.cit.aet.helios.workflow.Workflow;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
@@ -22,6 +23,7 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import lombok.Getter;
@@ -104,7 +106,7 @@ public class Environment extends RepositoryFilterEntity {
 
   @OneToMany(mappedBy = "environment", cascade = CascadeType.ALL, orphanRemoval = true)
   @OrderBy("checkTimestamp DESC")
-  private List<EnvironmentStatus> statusHistory;
+  private List<EnvironmentStatus> statusHistory = new ArrayList<>();
 
   // Once the threshold is reached, the lock automatically expires and the environment becomes
   // available again.
@@ -144,6 +146,10 @@ public class Environment extends RepositoryFilterEntity {
     STAGING,
     PRODUCTION
   }
+
+  @ManyToOne(fetch = FetchType.EAGER)
+  @JoinColumn(name = "deployment_workflow_id")
+  private Workflow deploymentWorkflow;
 
   // Missing properties
   // nodeId --> GraphQl ID

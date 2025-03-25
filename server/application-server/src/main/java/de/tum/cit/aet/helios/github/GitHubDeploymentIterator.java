@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Queue;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -20,6 +21,7 @@ import okhttp3.Response;
 import org.kohsuke.github.GHRepository;
 
 @Log4j2
+@RequiredArgsConstructor
 public class GitHubDeploymentIterator implements Iterator<GitHubDeploymentDto> {
 
   private final GHRepository repository;
@@ -30,24 +32,9 @@ public class GitHubDeploymentIterator implements Iterator<GitHubDeploymentDto> {
   private final Optional<OffsetDateTime> since;
 
   private int currentPage = 1;
-  private final int perPage = 100;
+  private static final int PER_PAGE = 100;
   private boolean hasMore = true;
   private final Queue<GitHubDeploymentDto> deploymentQueue = new LinkedList<>();
-
-  public GitHubDeploymentIterator(
-      GHRepository repository,
-      String environmentName,
-      OkHttpClient okHttpClient,
-      Request.Builder requestBuilder,
-      ObjectMapper objectMapper,
-      Optional<OffsetDateTime> since) {
-    this.repository = repository;
-    this.environmentName = environmentName;
-    this.okHttpClient = okHttpClient;
-    this.requestBuilder = requestBuilder;
-    this.objectMapper = objectMapper;
-    this.since = since;
-  }
 
   @Override
   public boolean hasNext() {
@@ -76,7 +63,7 @@ public class GitHubDeploymentIterator implements Iterator<GitHubDeploymentDto> {
             baseUrl,
             URLEncoder.encode(environmentName, StandardCharsets.UTF_8),
             currentPage,
-            perPage);
+            PER_PAGE);
 
     Request request = requestBuilder.url(url).build();
 
@@ -95,8 +82,7 @@ public class GitHubDeploymentIterator implements Iterator<GitHubDeploymentDto> {
 
       String responseBody = response.body().string();
       List<GitHubDeploymentDto> deployments =
-          objectMapper.readValue(responseBody, new TypeReference<>() {
-          });
+          objectMapper.readValue(responseBody, new TypeReference<>() {});
 
       // Filter deployments based on the `since` parameter if provided
       if (since.isPresent()) {
@@ -104,7 +90,7 @@ public class GitHubDeploymentIterator implements Iterator<GitHubDeploymentDto> {
         deployments.removeIf(deployment -> deployment.getCreatedAt().isBefore(sinceTime));
       }
 
-      if (deployments.size() < perPage) {
+      if (deployments.size() < PER_PAGE) {
         hasMore = false;
       } else {
         currentPage++;

@@ -22,6 +22,9 @@ spring:
                 jwt:
                     issuer-uri: ${OAUTH_ISSUER_URL}
 
+helios:
+    clientBaseUrl: "https://helios.aet.cit.tum.de"
+
 nats:
     enabled: true
     timeframe: ${MONITORING_TIMEFRAME:7}
@@ -59,12 +62,12 @@ monitoring:
     # List of repositories to monitor in the format owner/repository
     # Example: ls1intum/Helios or ls1intum/Helios,ls1intum/Artemis
     repositories: ${REPOSITORY_NAME:}
-    runOnStartup: true
+    runOnStartup: ${DATA_SYNC_RUN_ON_STARTUP:true}
     # Fetching timeframe in days
     timeframe: 7
     # Cooldown in minutes before running the monitoring again
     runOnStartupCooldownInMinutes: ${RUN_ON_STARTUP_COOLDOWN:15}
-    repository-sync-cron: "0 0 * * * *"
+    repository-sync-cron: "0 0 4 * * *"
 
 sentry:
   dsn: ${SENTRY_DSN}

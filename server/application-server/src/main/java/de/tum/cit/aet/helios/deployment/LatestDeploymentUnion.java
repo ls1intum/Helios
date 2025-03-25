@@ -5,16 +5,13 @@ import de.tum.cit.aet.helios.gitrepo.RepositoryInfoDto;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
 import de.tum.cit.aet.helios.user.User;
 import java.time.OffsetDateTime;
+import lombok.RequiredArgsConstructor;
 
 /** Represents a union of either a real Deployment, a HeliosDeployment, or none. */
+@RequiredArgsConstructor
 public class LatestDeploymentUnion {
   private final Deployment realDeployment;
   private final HeliosDeployment heliosDeployment;
-
-  private LatestDeploymentUnion(Deployment realDeployment, HeliosDeployment heliosDeployment) {
-    this.realDeployment = realDeployment;
-    this.heliosDeployment = heliosDeployment;
-  }
 
   public static LatestDeploymentUnion realDeployment(
       Deployment dep, OffsetDateTime heliosDeploymentCreatedAt) {
@@ -153,8 +150,7 @@ public class LatestDeploymentUnion {
     public static State fromHeliosStatus(HeliosDeployment.Status status) {
       return switch (status) {
         case WAITING -> REQUESTED;
-        case QUEUED -> PENDING;
-        case IN_PROGRESS -> IN_PROGRESS;
+        case QUEUED, IN_PROGRESS -> PENDING;
         case DEPLOYMENT_SUCCESS -> SUCCESS;
         case FAILED -> FAILURE;
         case IO_ERROR, UNKNOWN -> UNKNOWN;
@@ -238,6 +234,20 @@ public class LatestDeploymentUnion {
     } else if (isHeliosDeployment()) {
       return heliosDeployment.getPullRequest() != null
           ? heliosDeployment.getPullRequest().getTitle()
+          : null;
+    } else {
+      return null;
+    }
+  }
+
+  public Integer getPullRequestNumber() {
+    if (isRealDeployment()) {
+      return realDeployment.getPullRequest() != null
+          ? realDeployment.getPullRequest().getNumber()
+          : null;
+    } else if (isHeliosDeployment()) {
+      return heliosDeployment.getPullRequest() != null
+          ? heliosDeployment.getPullRequest().getNumber()
           : null;
     } else {
       return null;

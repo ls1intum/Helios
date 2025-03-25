@@ -1,50 +1,70 @@
 <div>
   <h3 class="text-xl mb-2">Locking Thresholds</h3>
-  <div class="flex flex-col gap-8 p-2 w-2/4 mx-auto">
-    <div class="flex flex-col">
-      <label class="font-semibold" for="lockExpThres">Locking Expiration Threshold</label>
-      <p class="text-sm text-gray-600 mb-4">Lock of any environment will be released after this threshold.</p>
-      <div class="flex flex-row items-center w-full gap-2">
-        <p-toggleswitch [ngModel]="isLockExpirationEnabled()" (onChange)="onThresholdToggle('expiration')" />
-        <p-inputnumber
-          [disabled]="!isLockExpirationEnabled()"
-          id="lockExpThres"
-          [ngModel]="lockingExpirationThreshold()"
-          [showButtons]="true"
-          buttonLayout="horizontal"
-          inputId="horizontal"
-          spinnerMode="horizontal"
-          [step]="1"
-          [min]="1"
-          class="w-full"
-          suffix=" minutes"
-          (ngModelChange)="onExpirationThresholdChange($event)"
-        />
+  <div class="max-w-4xl p-2">
+    <!-- Locking Expiration Threshold -->
+    <div class="mb-6">
+      <div class="flex items-center mb-2">
+        <p-toggleswitch [ngModel]="isLockExpirationEnabled()" (onChange)="onThresholdToggle('expiration')" class="mr-3" />
+        <div class="mr-6">
+          <label class="font-semibold transition-colors" [class.text-gray-400]="!isLockExpirationEnabled()" [class.text-gray-800]="isLockExpirationEnabled()" for="lockExpThres">
+            Locking Expiration Threshold
+          </label>
+          <p class="text-sm transition-colors" [class.text-gray-400]="!isLockExpirationEnabled()" [class.text-gray-600]="isLockExpirationEnabled()">
+            Lock of any environment will be released after this threshold.
+          </p>
+        </div>
+        <div class="ml-auto">
+          <p-inputnumber
+            [disabled]="!isLockExpirationEnabled()"
+            id="lockExpThres"
+            [ngModel]="lockingExpirationThreshold()"
+            [showButtons]="true"
+            buttonLayout="horizontal"
+            inputId="horizontal"
+            spinnerMode="horizontal"
+            [step]="1"
+            [min]="1"
+            suffix=" minutes"
+            (ngModelChange)="onExpirationThresholdChange($event)"
+          />
+        </div>
       </div>
     </div>
-    <div class="flex flex-col">
-      <label class="font-semibold" for="lockExpThres">Locking Reservation Threshold</label>
-      <p class="text-sm text-gray-600 mb-4">Lock of any environment can be unlocked by any user after this threshold.</p>
-      <div class="flex flex-row items-center w-full gap-2">
-        <p-toggleswitch [ngModel]="isLockReservationEnabled()" (onChange)="onThresholdToggle('reservation')" />
-        <p-inputnumber
-          [disabled]="!isLockReservationEnabled()"
-          id="lockResThres"
-          [ngModel]="lockingReservationThreshold()"
-          [showButtons]="true"
-          buttonLayout="horizontal"
-          inputId="horizontal"
-          spinnerMode="horizontal"
-          [step]="1"
-          [min]="1"
-          class="w-full"
-          suffix=" minutes"
-          (ngModelChange)="onReservationThresholdChange($event)"
-        />
+
+    <!-- Locking Reservation Threshold -->
+    <div class="mb-6">
+      <div class="flex items-center mb-2">
+        <p-toggleswitch [ngModel]="isLockReservationEnabled()" (onChange)="onThresholdToggle('reservation')" class="mr-3" />
+        <div class="mr-6">
+          <label class="font-semibold transition-colors" [class.text-gray-400]="!isLockReservationEnabled()" [class.text-gray-800]="isLockReservationEnabled()" for="lockResThres">
+            Locking Reservation Threshold
+          </label>
+          <p class="text-sm transition-colors" [class.text-gray-400]="!isLockReservationEnabled()" [class.text-gray-600]="isLockReservationEnabled()">
+            Lock of any environment can be unlocked by any user after this threshold.
+          </p>
+        </div>
+
+        <div class="ml-auto">
+          <p-inputnumber
+            [disabled]="!isLockReservationEnabled()"
+            id="lockResThres"
+            [ngModel]="lockingReservationThreshold()"
+            [showButtons]="true"
+            buttonLayout="horizontal"
+            inputId="horizontal"
+            spinnerMode="horizontal"
+            [step]="1"
+            [min]="1"
+            suffix=" minutes"
+            (ngModelChange)="onReservationThresholdChange($event)"
+          />
+        </div>
       </div>
     </div>
-    <div class="flex justify-end">
-      <p-button label="Update Thresholds" severity="success" class="mt-2" (click)="updateLockingThresholds()" />
+
+    <!-- Update Button -->
+    <div class="flex justify-end mt-6">
+      <p-button label="Update Thresholds" severity="success" (click)="updateLockingThresholds()" [disabled]="!hasUnsavedChanges()" />
     </div>
   </div>
 </div>

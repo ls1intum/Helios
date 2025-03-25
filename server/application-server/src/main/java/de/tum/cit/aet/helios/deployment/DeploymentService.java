@@ -14,7 +14,6 @@ import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
 import de.tum.cit.aet.helios.pullrequest.PullRequest;
 import de.tum.cit.aet.helios.pullrequest.PullRequestRepository;
 import de.tum.cit.aet.helios.workflow.Workflow;
-import de.tum.cit.aet.helios.workflow.WorkflowService;
 import jakarta.transaction.Transactional;
 import java.io.IOException;
 import java.time.OffsetDateTime;
@@ -22,6 +21,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -38,7 +38,6 @@ public class DeploymentService {
   private final DeploymentRepository deploymentRepository;
   private final GitHubService gitHubService;
   private final EnvironmentService environmentService;
-  private final WorkflowService workflowService;
   private final AuthService authService;
   private final HeliosDeploymentRepository heliosDeploymentRepository;
   private final EnvironmentLockHistoryRepository lockHistoryRepository;
@@ -75,9 +74,12 @@ public class DeploymentService {
     String commitSha = determineCommitSha(deployRequest);
 
     Environment environment = lockEnvironment(deployRequest.environmentId());
-    Workflow deploymentWorkflow =
-        workflowService.getDeploymentWorkflowForEnv(deployRequest.environmentId());
+    Workflow deploymentWorkflow = environment.getDeploymentWorkflow();
 
+    if (deploymentWorkflow == null) {
+      throw new NoSuchElementException(
+          "No deployment workflow found for environment " + environment.getName());
+    }
     // Set the PR associated with the deployment
     Optional<PullRequest> optionalPullRequest =
         pullRequestRepository.findOpenPrByBranchNameOrSha(

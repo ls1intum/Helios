@@ -30,6 +30,7 @@ export type EnvironmentDeployment = {
   releaseCandidateName?: string;
   prName?: string;
   user?: UserInfoDto;
+  pullRequestNumber?: number;
   createdAt?: string;
   updatedAt?: string;
   type: 'GITHUB' | 'HELIOS';
@@ -55,6 +56,7 @@ export type EnvironmentDto = {
   lockedBy?: UserInfoDto;
   lockedAt?: string;
   type?: 'TEST' | 'STAGING' | 'PRODUCTION';
+  deploymentWorkflow?: WorkflowDto;
   lockExpirationThreshold?: number;
   lockReservationThreshold?: number;
   lockWillExpireAt?: string;
@@ -90,6 +92,21 @@ export type UserInfoDto = {
   htmlUrl: string;
 };
 
+export type WorkflowDto = {
+  id: number;
+  repository?: RepositoryInfoDto;
+  name: string;
+  path: string;
+  fileNameWithExtension?: string;
+  state: 'ACTIVE' | 'DELETED' | 'DISABLED_FORK' | 'DISABLED_INACTIVITY' | 'DISABLED_MANUALLY' | 'UNKNOWN';
+  url?: string;
+  htmlUrl?: string;
+  badgeUrl?: string;
+  label: 'NONE' | 'TEST';
+  createdAt?: string;
+  updatedAt?: string;
+};
+
 export type ReleaseCandidateCreateDto = {
   name: string;
   commitSha: string;
@@ -106,44 +123,6 @@ export type DeployRequest = {
   environmentId: number;
   branchName: string;
   commitSha?: string;
-};
-
-export type WorkflowDto = {
-  id: number;
-  repository?: RepositoryInfoDto;
-  name: string;
-  path: string;
-  fileNameWithExtension?: string;
-  state: 'ACTIVE' | 'DELETED' | 'DISABLED_FORK' | 'DISABLED_INACTIVITY' | 'DISABLED_MANUALLY' | 'UNKNOWN';
-  url?: string;
-  htmlUrl?: string;
-  badgeUrl?: string;
-  label: 'NONE' | 'DEPLOY_TEST_SERVER' | 'DEPLOY_STAGING_SERVER' | 'DEPLOY_PRODUCTION_SERVER' | 'TEST';
-  createdAt?: string;
-  updatedAt?: string;
-};
-
-export type TestCaseDto = {
-  id: number;
-  name: string;
-  className: string;
-  status: 'PASSED' | 'FAILED' | 'ERROR' | 'SKIPPED';
-  time: number;
-  message?: string;
-  stackTrace?: string;
-  errorType?: string;
-};
-
-export type TestSuiteDto = {
-  id: number;
-  name: string;
-  timestamp: string;
-  tests: number;
-  failures: number;
-  errors: number;
-  skipped: number;
-  time: number;
-  testCases: Array<TestCaseDto>;
 };
 
 export type WorkflowRunDto = {
@@ -169,14 +148,58 @@ export type WorkflowRunDto = {
   workflowId: number;
   conclusion?: 'ACTION_REQUIRED' | 'CANCELLED' | 'FAILURE' | 'NEUTRAL' | 'SUCCESS' | 'SKIPPED' | 'STALE' | 'TIMED_OUT' | 'STARTUP_FAILURE' | 'UNKNOWN';
   htmlUrl: string;
-  label: 'NONE' | 'DEPLOY_TEST_SERVER' | 'DEPLOY_STAGING_SERVER' | 'DEPLOY_PRODUCTION_SERVER' | 'TEST';
+  label: 'NONE' | 'TEST';
   testProcessingStatus?: 'PROCESSING' | 'PROCESSED' | 'FAILED';
-  testSuites: Array<TestSuiteDto>;
 };
 
 export type GitHubRepositoryRoleDto = {
   permission?: 'ADMIN' | 'WRITE' | 'READ' | 'NONE';
   roleName?: string;
+};
+
+export type TestCaseDto = {
+  id: number;
+  name: string;
+  className: string;
+  status: 'PASSED' | 'FAILED' | 'ERROR' | 'SKIPPED';
+  previousStatus?: 'PASSED' | 'FAILED' | 'ERROR' | 'SKIPPED';
+  time: number;
+  message?: string;
+  stackTrace?: string;
+  errorType?: string;
+};
+
+export type TestResultsDto = {
+  testSuites: Array<TestSuiteDto>;
+  isProcessing?: boolean;
+};
+
+export type TestSuiteDto = {
+  id: number;
+  name: string;
+  timestamp: string;
+  tests: number;
+  failures: number;
+  errors: number;
+  skipped: number;
+  time: number;
+  testCases: Array<TestCaseDto>;
+  workflowId?: number;
+  workflowName?: string;
+};
+
+export type GroupedTestResultsDto = {
+  testResults: {
+    [key: string]: WorkflowTestResults;
+  };
+  isProcessing?: boolean;
+};
+
+export type WorkflowTestResults = {
+  workflowId: number;
+  workflowName: string;
+  testSuites: Array<TestSuiteDto>;
+  isProcessing?: boolean;
 };
 
 export type BranchInfoDto = {
@@ -222,8 +245,18 @@ export type ReleaseCandidateEvaluationDto = {
 };
 
 export type CommitsSinceReleaseCandidateDto = {
-  commitsLength: number;
-  commits: Array<CommitInfoDto>;
+  aheadBy: number;
+  behindBy: number;
+  commits: Array<CompareCommitInfoDto>;
+  compareUrl?: string;
+};
+
+export type CompareCommitInfoDto = {
+  sha: string;
+  message: string;
+  authorName: string;
+  authorEmail: string;
+  url: string;
 };
 
 export type LabelInfoDto = {
@@ -346,7 +379,7 @@ export type BranchDetailsDto = {
 };
 
 export type UpdateWorkflowLabelData = {
-  body: 'NONE' | 'DEPLOY_TEST_SERVER' | 'DEPLOY_STAGING_SERVER' | 'DEPLOY_PRODUCTION_SERVER' | 'TEST';
+  body: 'NONE' | 'TEST';
   path: {
     workflowId: number;
   };
@@ -492,6 +525,42 @@ export type LockEnvironmentResponses = {
 };
 
 export type LockEnvironmentResponse = LockEnvironmentResponses[keyof LockEnvironmentResponses];
+
+export type ExtendEnvironmentLockData = {
+  body?: never;
+  path: {
+    id: number;
+  };
+  query?: never;
+  url: '/api/environments/{id}/extend-lock';
+};
+
+export type ExtendEnvironmentLockResponses = {
+  /**
+   * OK
+   */
+  200: {
+    [key: string]: unknown;
+  };
+};
+
+export type ExtendEnvironmentLockResponse = ExtendEnvironmentLockResponses[keyof ExtendEnvironmentLockResponses];
+
+export type SyncWorkflowsByRepositoryIdData = {
+  body?: never;
+  path: {
+    repositoryId: number;
+  };
+  query?: never;
+  url: '/api/workflows/repository/{repositoryId}/sync';
+};
+
+export type SyncWorkflowsByRepositoryIdResponses = {
+  /**
+   * OK
+   */
+  200: unknown;
+};
 
 export type CreateWorkflowGroupData = {
   body: WorkflowGroupDto;
@@ -704,9 +773,7 @@ export type GetLatestWorkflowRunsByPullRequestIdAndHeadCommitData = {
   path: {
     pullRequestId: number;
   };
-  query?: {
-    includeTestSuites?: boolean;
-  };
+  query?: never;
   url: '/api/workflows/pr/{pullRequestId}';
 };
 
@@ -725,7 +792,6 @@ export type GetLatestWorkflowRunsByBranchAndHeadCommitData = {
   path?: never;
   query: {
     branch: string;
-    includeTestSuites?: boolean;
   };
   url: '/api/workflows/branch';
 };
@@ -754,6 +820,78 @@ export type GetUserPermissionsResponses = {
 };
 
 export type GetUserPermissionsResponse = GetUserPermissionsResponses[keyof GetUserPermissionsResponses];
+
+export type GetLatestTestResultsByPullRequestIdData = {
+  body?: never;
+  path: {
+    pullRequestId: number;
+  };
+  query?: never;
+  url: '/api/tests/pr/{pullRequestId}';
+};
+
+export type GetLatestTestResultsByPullRequestIdResponses = {
+  /**
+   * OK
+   */
+  200: TestResultsDto;
+};
+
+export type GetLatestTestResultsByPullRequestIdResponse = GetLatestTestResultsByPullRequestIdResponses[keyof GetLatestTestResultsByPullRequestIdResponses];
+
+export type GetLatestGroupedTestResultsByPullRequestIdData = {
+  body?: never;
+  path: {
+    pullRequestId: number;
+  };
+  query?: never;
+  url: '/api/tests/grouped/pr/{pullRequestId}';
+};
+
+export type GetLatestGroupedTestResultsByPullRequestIdResponses = {
+  /**
+   * OK
+   */
+  200: GroupedTestResultsDto;
+};
+
+export type GetLatestGroupedTestResultsByPullRequestIdResponse = GetLatestGroupedTestResultsByPullRequestIdResponses[keyof GetLatestGroupedTestResultsByPullRequestIdResponses];
+
+export type GetLatestGroupedTestResultsByBranchData = {
+  body?: never;
+  path?: never;
+  query: {
+    branch: string;
+  };
+  url: '/api/tests/grouped/branch';
+};
+
+export type GetLatestGroupedTestResultsByBranchResponses = {
+  /**
+   * OK
+   */
+  200: GroupedTestResultsDto;
+};
+
+export type GetLatestGroupedTestResultsByBranchResponse = GetLatestGroupedTestResultsByBranchResponses[keyof GetLatestGroupedTestResultsByBranchResponses];
+
+export type GetLatestTestResultsByBranchData = {
+  body?: never;
+  path?: never;
+  query: {
+    branch: string;
+  };
+  url: '/api/tests/branch';
+};
+
+export type GetLatestTestResultsByBranchResponses = {
+  /**
+   * OK
+   */
+  200: TestResultsDto;
+};
+
+export type GetLatestTestResultsByBranchResponse = GetLatestTestResultsByBranchResponses[keyof GetLatestTestResultsByBranchResponses];
 
 export type GetGroupsWithWorkflowsData = {
   body?: never;
@@ -1197,4 +1335,8 @@ export type DeleteWorkflowGroupResponses = {
    * OK
    */
   200: unknown;
+};
+
+export type ClientOptions = {
+  baseUrl: `${string}://${string}` | (string & {});
 };

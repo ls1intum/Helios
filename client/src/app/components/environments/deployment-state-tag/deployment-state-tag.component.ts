@@ -1,8 +1,9 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, inject, input } from '@angular/core';
 import { TagModule } from 'primeng/tag';
 import { IconsModule } from 'icons.module';
 import { TooltipModule } from 'primeng/tooltip';
 import { EnvironmentDeployment } from '@app/core/modules/openapi';
+import { DeploymentTimingService } from '@app/core/services/deployment-timing.service';
 
 type BaseDeploymentState = NonNullable<EnvironmentDeployment['state']>;
 type ExtendedDeploymentState = BaseDeploymentState | 'NEVER_DEPLOYED' | 'REPLACED';
@@ -14,14 +15,18 @@ type ExtendedDeploymentState = BaseDeploymentState | 'NEVER_DEPLOYED' | 'REPLACE
   templateUrl: './deployment-state-tag.component.html',
 })
 export class DeploymentStateTagComponent {
+  private timingService = inject(DeploymentTimingService);
+
   state = input.required<ExtendedDeploymentState | undefined>();
   verbose = input(false);
   showLatestDeployment = input(false);
   latestDeployment = input<{ releaseCandidateName?: string; ref?: string } | null | undefined>(null);
+  deployment = input<EnvironmentDeployment | null | undefined>(null);
 
-  rounded = computed(() => !this.verbose());
-  internalState = computed(() => this.state() || 'UNKNOWN');
-  severity = computed(() => {
+  rounded = this.timingService.timeAwareComputed(() => !this.verbose());
+  internalState = this.timingService.timeAwareComputed(() => this.state() || 'UNKNOWN');
+
+  severity = this.timingService.timeAwareComputed(() => {
     const severityMap: Record<ExtendedDeploymentState, Severity> = {
       SUCCESS: 'success',
       WAITING: 'warn',
@@ -39,7 +44,7 @@ export class DeploymentStateTagComponent {
     return severityMap[this.internalState()];
   });
 
-  icon = computed(() => {
+  icon = this.timingService.timeAwareComputed(() => {
     const iconMap: Record<ExtendedDeploymentState, string> = {
       SUCCESS: 'check',
       WAITING: 'progress',
@@ -57,12 +62,12 @@ export class DeploymentStateTagComponent {
     return iconMap[this.internalState()];
   });
 
-  iconClass = computed(() => {
-    const spinStates: ExtendedDeploymentState[] = ['WAITING', 'PENDING', 'IN_PROGRESS', 'QUEUED'];
+  iconClass = this.timingService.timeAwareComputed(() => {
+    const spinStates: ExtendedDeploymentState[] = ['REQUESTED', 'WAITING', 'PENDING', 'IN_PROGRESS', 'QUEUED'];
     return `!size-5 ${spinStates.includes(this.internalState()) ? 'animate-spin' : ''}`;
   });
 
-  value = computed(() => {
+  value = this.timingService.timeAwareComputed(() => {
     const valueMap: Record<ExtendedDeploymentState, string> = {
       SUCCESS: 'success',
       WAITING: 'waiting',
@@ -80,7 +85,7 @@ export class DeploymentStateTagComponent {
     return valueMap[this.internalState()];
   });
 
-  tooltip = computed(() => {
+  tooltip = this.timingService.timeAwareComputed(() => {
     const tooltipMap: Record<ExtendedDeploymentState, string> = {
       SUCCESS: 'Latest Deployment Successful',
       WAITING: 'Waiting deployment',
@@ -96,6 +101,17 @@ export class DeploymentStateTagComponent {
       REQUESTED: 'Deployment requested',
     };
     return tooltipMap[this.internalState()];
+  });
+
+  shouldShowRemainingTime = this.timingService.timeAwareComputed(() => {
+    const inProgressStates: ExtendedDeploymentState[] = ['REQUESTED', 'WAITING', 'PENDING', 'IN_PROGRESS', 'QUEUED'];
+    return inProgressStates.includes(this.internalState()) && !!this.deployment();
+  });
+
+  getRemainingTime = this.timingService.timeAwareComputed(() => {
+    const deployment = this.deployment();
+    if (!deployment) return '';
+    return this.timingService.getTotalRemainingTime(deployment);
   });
 }
 

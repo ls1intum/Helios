@@ -1,9 +1,12 @@
 package de.tum.cit.aet.helios.workflow.github;
 
+import de.tum.cit.aet.helios.github.GitHubService;
+import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import de.tum.cit.aet.helios.workflow.Workflow;
 import de.tum.cit.aet.helios.workflow.WorkflowRepository;
 import jakarta.transaction.Transactional;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.jetbrains.annotations.NotNull;
@@ -18,7 +21,8 @@ public class GitHubWorkflowSyncService {
 
   private final GitHubWorkflowConverter workflowConverter;
   private final WorkflowRepository workflowRepository;
-
+  private final GitRepoRepository gitRepoRepository;
+  private final GitHubService gitHubService;
 
   /**
    * Processes a single GitHub workflow by updating or creating it in the local repository.
@@ -41,5 +45,21 @@ public class GitHubWorkflowSyncService {
 
     // Save the workflow
     workflowRepository.save(workflow);
+  }
+
+  public void syncRepositoryWorkflows(final long repositoryId) {
+    var repo = gitRepoRepository.findById(repositoryId).orElseThrow();
+
+    try {
+      var ghRepo = this.gitHubService.getRepository(repo.getNameWithOwner());
+      List<GHWorkflow> ghWorkflows = gitHubService.getWorkflows(repo.getNameWithOwner());
+
+      for (GHWorkflow ghWorkflow : ghWorkflows) {
+        this.processWorkflow(ghWorkflow, repo, ghRepo);
+      }
+    } catch (Exception e) {
+      throw new IllegalStateException(
+          "Failed to sync workflows for repository " + repo.getNameWithOwner(), e);
+    }
   }
 }

@@ -17,7 +17,6 @@ on:
       - '.github/**'
       - '.vscode/**'
       - 'docs/**'
-      - 'keycloakify/**'
 
 concurrency:
   group: staging
@@ -39,3 +38,4 @@ jobs:
       client_image_tag: "staging"
       application_server_image_tag: "staging"
       webhook_listener_image_tag: "staging"
+      keycloak_image_tag: "staging"

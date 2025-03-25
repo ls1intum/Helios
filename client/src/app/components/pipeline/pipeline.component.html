@@ -60,8 +60,8 @@
                       }
                     </div>
                     <!-- Fixed width to ensure consistent alignment -->
-                    <span class="font-medium flex items-center justify-between w-full">
-                      <span [pTooltip]="workflowRun.name">{{ workflowRun.name }}</span>
+                    <span class="font-medium flex items-center justify-between w-full overflow-hidden">
+                      <span [pTooltip]="workflowRun.name" class="truncate">{{ workflowRun.name }}</span>
                       <a class="ml-1" [href]="workflowRun.htmlUrl" target="_new"><i-tabler name="external-link" class="w-20 h-20"></i-tabler></a>
                     </span>
                   </div>
@@ -84,6 +84,6 @@
       }
     </div>
 
-    <app-pipeline-test-results [pipeline]="pipeline" />
+    <app-pipeline-test-results [selector]="selector()" />
   }
 }

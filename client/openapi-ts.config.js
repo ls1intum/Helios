@@ -1,7 +1,6 @@
 /** @type {import('@hey-api/openapi-ts').UserConfig} */
 import { defaultPlugins } from '@hey-api/openapi-ts';
 module.exports = {
-  client: '@hey-api/client-fetch',
   experimentalParser: true,
   input: '../server/application-server/openapi.yaml',
   output: {
@@ -17,5 +16,6 @@ module.exports = {
       name: '@hey-api/typescript',
     },
     '@tanstack/angular-query-experimental',
+    '@hey-api/client-fetch',
   ],
 };

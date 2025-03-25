@@ -15,6 +15,9 @@ on:
       webhook_listener_image_tag:
         default: "latest"
         type: string
+      keycloak_image_tag:
+        default: "latest"
+        type: string
 
 jobs:
   deploy:
@@ -23,7 +26,7 @@ jobs:
       name: ${{ inputs.environment }}
     steps:
       - name: SSH to VM and Execute Docker-Compose Down
-        uses: appleboy/ssh-action@v1.2.0
+        uses: appleboy/ssh-action@v1.2.2
         with:
           host: ${{ vars.VM_HOST }}
           username: ${{ secrets.VM_USERNAME }}
@@ -54,7 +57,7 @@ jobs:
           target: ${{ vars.WORKING_DIR }}
 
       - name: SSH to VM and create .env file
-        uses: appleboy/ssh-action@v1.2.0
+        uses: appleboy/ssh-action@v1.2.2
         with:
           host: ${{ vars.VM_HOST }}
           username: ${{ secrets.VM_USERNAME }}
@@ -103,9 +106,10 @@ jobs:
             echo "CLIENT_IMAGE_TAG=${{ inputs.client_image_tag }}" >> .env
             echo "APPLICATION_SERVER_IMAGE_TAG=${{ inputs.application_server_image_tag }}" >> .env
             echo "WEBHOOK_LISTENER_IMAGE_TAG=${{ inputs.webhook_listener_image_tag }}" >> .env
+            echo "KEYCLOAK_IMAGE_TAG=${{ inputs.keycloak_image_tag }}" >> .env
 
       - name: SSH to VM and Execute Docker-Compose Up
-        uses: appleboy/ssh-action@v1.2.0
+        uses: appleboy/ssh-action@v1.2.2
         with:
           host: ${{ vars.VM_HOST }}
           username: ${{ secrets.VM_USERNAME }}

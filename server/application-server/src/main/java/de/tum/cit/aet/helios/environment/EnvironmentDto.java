@@ -8,6 +8,7 @@ import de.tum.cit.aet.helios.gitrepo.RepositoryInfoDto;
 import de.tum.cit.aet.helios.releasecandidate.ReleaseCandidate;
 import de.tum.cit.aet.helios.releasecandidate.ReleaseCandidateRepository;
 import de.tum.cit.aet.helios.user.UserInfoDto;
+import de.tum.cit.aet.helios.workflow.WorkflowDto;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -35,6 +36,7 @@ public record EnvironmentDto(
     UserInfoDto lockedBy,
     OffsetDateTime lockedAt,
     Environment.Type type,
+    WorkflowDto deploymentWorkflow,
     Long lockExpirationThreshold,
     Long lockReservationThreshold,
     OffsetDateTime lockWillExpireAt,
@@ -71,6 +73,7 @@ public record EnvironmentDto(
       String releaseCandidateName,
       String prName,
       UserInfoDto user,
+      Integer pullRequestNumber,
       OffsetDateTime createdAt,
       OffsetDateTime updatedAt,
       @NonNull DeploymentType type) {
@@ -92,6 +95,7 @@ public record EnvironmentDto(
               .orElse(null),
           union.getPullRequestName(),
           UserInfoDto.fromUser(union.getCreator()),
+          union.getPullRequestNumber(),
           union.getCreatedAt(),
           union.getUpdatedAt(),
           union.getType());
@@ -133,6 +137,9 @@ public record EnvironmentDto(
         UserInfoDto.fromUser(environment.getLockedBy()),
         environment.getLockedAt(),
         environment.getType(),
+        environment.getDeploymentWorkflow() != null
+            ? WorkflowDto.fromWorkflow(environment.getDeploymentWorkflow())
+            : null,
         environment.getLockExpirationThreshold(),
         environment.getLockReservationThreshold(),
         environment.getLockWillExpireAt(),

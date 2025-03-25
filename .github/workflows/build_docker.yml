@@ -16,17 +16,22 @@ jobs:
             path: client
           - dockerfile: ./server/application-server/Dockerfile
             image: ghcr.io/ls1intum/helios/application-server
-            context: ./server/application-server
+            context: ./server
             path: server
           - dockerfile: ./server/webhook-listener/Dockerfile
             image: ghcr.io/ls1intum/helios/webhook-listener
             context: ./server/webhook-listener
             path: webhook-listener
+          - dockerfile: ./keycloakify/Dockerfile
+            image: ghcr.io/ls1intum/helios/keycloak
+            context: ./keycloakify
+            path: keycloakify
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
+          lfs: true
 
       - name: Log in to the Container registry
         uses: docker/login-action@v3
@@ -51,7 +56,8 @@ jobs:
           images: ${{ matrix.image }}
           tags: |
             # Apply 'latest' tag if the branch is main
-            type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'main') }}
+            type=raw,value=latest,enable=${{ github.event_name == 'release' && github.event.action == 'published' }}
+            type=ref,event=tag
             type=ref,event=branch
             type=ref,event=pr
             type=sha,suffix=-${{ github.ref_name }}

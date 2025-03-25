@@ -1,23 +1,8 @@
 name: Build and Deploy to Prod
 
 on:
-  push:
-    branches: [main]
-    paths-ignore:
-      - '.codacy.yaml'
-      - '.env.example'
-      - '.gitignore'
-      - 'compose.prod.yaml'
-      - 'compose.yaml'
-      - 'helios-example-realm.json'
-      - 'LICENSE'
-      - 'nginx.conf'
-      - 'openapitools.json'
-      - 'README.md'
-      - '.github/**'
-      - '.vscode/**'
-      - 'docs/**'
-      - 'keycloakify/**'
+  release:
+    types: [published]
 
 concurrency:
   group: production
@@ -39,3 +24,10 @@ jobs:
       client_image_tag: "latest"
       application_server_image_tag: "latest"
       webhook_listener_image_tag: "latest"
+      keycloak_image_tag: "latest"
+  release-sentry:
+    needs: deploy-prod-container
+    uses: ./.github/workflows/release-sentry.yml
+    secrets: inherit
+    with:
+      client_image_tag: "latest"

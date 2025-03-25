@@ -12,16 +12,16 @@ services:
     command: >
       bash -c "
         set -m
-      
+
         # Start default entrypoint in the background:
         docker-entrypoint.sh postgres &
-  
+
         # Wait for Postgres to come up (pg_isready blocks until server is accepting connections)
         until pg_isready -h localhost -p 5432 --timeout=0; do
           echo 'Waiting for Postgres to be ready...';
           sleep 1;
         done;
-  
+
         # Create 'keycloak' DB if it doesn’t exist
         psql -v ON_ERROR_STOP=1 -U ${POSTGRES_USER} -tc \"SELECT 1 FROM pg_database WHERE datname = 'keycloak'\" | grep -q 1 || psql -U ${POSTGRES_USER} -c \"CREATE DATABASE keycloak;\"
 
@@ -31,9 +31,9 @@ services:
     networks:
       - helios-network
 
-
   keycloak:
-    image: quay.io/keycloak/keycloak:26.1.2
+    build:
+      context: keycloakify
     container_name: keycloak
     environment:
       KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}
@@ -49,8 +49,7 @@ services:
       - postgres
     volumes:
       - ./helios-example-realm.json:/opt/keycloak/data/import/dev-realm-export.json
-      - ./keycloakify/dist_keycloak:/opt/keycloak/providers/
-    command: start-dev --import-realm --http-port=8081
+    command: start-dev --import-realm --http-port=8081 --features="token-exchange,admin-fine-grained-authz"
     networks:
       - helios-network
 
@@ -69,11 +68,33 @@ services:
       - helios-network
 
   nats-server:
-    image: nats:2.10.25-alpine
+    image: nats:2.10.26-alpine
     ports:
       - "4222:4222"
       - "8222:8222"
-    command: [ "/bin/sh", "-c", "echo 'listen: \"0.0.0.0:4222\"\n\nhttp_port: 8222\n\njetstream {\n  store_dir: \"/data\"\n}\n\nauthorization {\n  token: \"${NATS_AUTH_TOKEN}\"\n}' > /etc/nats/nats-server.conf.template && sed 's|{{NATS_AUTH_TOKEN}}|'\"$NATS_AUTH_TOKEN\"'|g' /etc/nats/nats-server.conf.template > /etc/nats/nats-server.conf && exec nats-server --config /etc/nats/nats-server.conf" ]
+    command:
+      [
+        "/bin/sh",
+        "-c",
+        "echo 'listen: \"0.0.0.0:4222\"
+
+
+          http_port: 8222
+
+
+          jetstream {
+
+          \  store_dir: \"/data\"
+
+          }
+
+
+          authorization {
+
+          \  token: \"${NATS_AUTH_TOKEN}\"
+
+          }' > /etc/nats/nats-server.conf.template && sed 's|{{NATS_AUTH_TOKEN}}|'\"$NATS_AUTH_TOKEN\"'|g' /etc/nats/nats-server.conf.template > /etc/nats/nats-server.conf && exec nats-server --config /etc/nats/nats-server.conf"
+      ]
     environment:
       - NATS_AUTH_TOKEN=${NATS_AUTH_TOKEN}
     volumes:
@@ -112,6 +133,7 @@ volumes:
   db-data:
   nats-data:
   keycloak_data:
+
 
 networks:
   helios-network:

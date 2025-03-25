@@ -54,8 +54,8 @@ jobs:
 
       - name: Run Gradle to generate OpenAPI docs
         if: steps.check_changes.outputs.CHANGE_DETECTED == 'true'
-        working-directory: ./server/application-server
-        run: ./gradlew generateOpenApiDocs
+        working-directory: ./server
+        run: ./gradlew :application-server:generateOpenApiDocs
 
       - name: Check for OpenAPI spec differences
         if: steps.check_changes.outputs.CHANGE_DETECTED == 'true'
@@ -79,8 +79,8 @@ jobs:
             The OpenAPI specs in `openapi.yaml` differ from the generated version.
             Please update the OpenAPI specs by running:
             ```bash
-            cd ./server/application-server
-            ./gradlew generateOpenApiDocs
+            cd ./server
+            ./gradlew :application-server:generateOpenApiDocs
             ```
             Commit and push the updated file.
 
