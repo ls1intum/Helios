@@ -1,32 +1,32 @@
-<p-accordion-panel [value]="environment.id">
+<p-accordion-panel [value]="environment().id">
   <p-accordion-header>
     <div class="flex gap-2 items-start w-full flex-wrap md:flex-nowrap flex-col md:items-center md:flex-row">
       <div class="flex flex-col gap-1 flex-wrap">
         <div class="flex gap-1 items-center mr-3">
-          <span [pTooltip]="'Open Environment'" class="cursor-pointer hover:bg-gray-200 px-2 py-1 rounded" (click)="openExternalLink($event, environment.serverUrl)">
-            {{ environment.name }}
+          <span [pTooltip]="'Open Environment'" class="cursor-pointer hover:bg-gray-200 px-2 py-1 rounded" (click)="openExternalLink($event, environment().serverUrl)">
+            {{ environment().name }}
           </span>
 
-          <app-lock-tag [isLocked]="!!environment.locked"></app-lock-tag>
+          <app-lock-tag [isLocked]="!!environment().locked"></app-lock-tag>
 
-          @if (environment.latestStatus; as status) {
+          @if (environment().latestStatus; as status) {
             <app-environment-status-tag [status]="status" />
           }
 
-          @if (environment.type) {
-            <p-tag [value]="formatEnvironmentType(environment.type)" severity="secondary" rounded="true" />
+          @if (environment().type) {
+            <p-tag [value]="formatEnvironmentType(environment().type || '')" severity="secondary" rounded="true" />
           }
         </div>
 
-        @if (environment.latestDeployment; as deployment) {
+        @if (environment().latestDeployment; as deployment) {
           <div class="flex gap-1 items-center text-sm mt-2 flex-wrap">
-            <app-user-avatar [user]="environment.latestDeployment.user" tooltipPosition="top" />
-            @if (environment.latestDeployment.user?.name) {
-              {{ environment.latestDeployment.user?.name }} deployed
+            <app-user-avatar [user]="environment().latestDeployment?.user" tooltipPosition="top" />
+            @if (environment().latestDeployment?.user?.name) {
+              {{ environment().latestDeployment?.user?.name }} deployed
             }
-            @if (environment.latestDeployment.updatedAt) {
-              <span [pTooltip]="getDeploymentTime(environment) || ''">
-                {{ environment.latestDeployment.updatedAt | timeAgo }}
+            @if (environment().latestDeployment?.updatedAt) {
+              <span [pTooltip]="getDeploymentTime(environment()) || ''">
+                {{ environment().latestDeployment?.updatedAt || '' | timeAgo }}
               </span>
             }
             <app-deployment-state-tag [state]="deployment.state" [deployment]="deployment" />
@@ -70,10 +70,10 @@
 
       <!-- Environment Actions Component -->
       <app-environment-actions
-        [environment]="environment"
-        [deployable]="deployable"
-        [canViewAllEnvironments]="canViewAllEnvironments"
-        [timeUntilReservationExpires]="timeUntilReservationExpires"
+        [environment]="environment()"
+        [deployable]="deployable()"
+        [canViewAllEnvironments]="canViewAllEnvironments()"
+        [timeUntilReservationExpires]="timeUntilReservationExpires()"
         (deploy)="onDeploy($event)"
         (unlock)="onUnlock($event)"
         (extend)="onExtend($event)"
@@ -101,11 +101,11 @@
 
       <!-- Content container div that wraps both details and deployment views -->
       <div class="flex w-full">
-        @if (showLatestDeployment) {
+        @if (showLatestDeployment()) {
           <!-- Direct use of deployment stepper -->
-          <app-deployment-stepper [deployment]="environment.latestDeployment" class="w-full" />
+          <app-deployment-stepper [deployment]="environment().latestDeployment" class="w-full" />
         } @else {
-          <app-environment-details [environment]="environment"></app-environment-details>
+          <app-environment-details [environment]="environment()"></app-environment-details>
         }
       </div>
 
@@ -114,7 +114,7 @@
         <div class="flex gap-1 mt-2 items-center">
           <a
             icon
-            [routerLink]="'/repo/' + environment.repository?.id + '/environment/' + environment.id + '/history'"
+            [routerLink]="'/repo/' + environment().repository?.id + '/environment/' + environment().id + '/history'"
             class="p-button p-button-text text-gray-500 py-2 flex items-center"
           >
             <i-tabler class="mr-1" name="history" />
@@ -123,7 +123,7 @@
         </div>
         <div class="flex flex-grow"></div>
         <div class="flex gap-2">
-          @for (installedApp of environment.installedApps; track installedApp) {
+          @for (installedApp of environment().installedApps; track installedApp) {
             <p-tag class="bg-gray-300 gap-0">{{ installedApp }}</p-tag>
           }
         </div>

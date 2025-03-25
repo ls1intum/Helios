@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, inject, Input, Output } from '@angular/core';
+import { Component, inject, input, output, computed } from '@angular/core';
 import { UserAvatarComponent } from '@app/components/user-avatar/user-avatar.component';
 import { EnvironmentDto } from '@app/core/modules/openapi';
 import { LockTimeComponent } from '../lock-time/lock-time.component';
@@ -18,73 +18,66 @@ import { PermissionService } from '@app/core/services/permission.service';
   templateUrl: './environment-actions.component.html',
 })
 export class EnvironmentActionsComponent {
-  @Input() environment!: EnvironmentDto;
-  @Input() deployable: boolean = false;
-  @Input() canViewAllEnvironments: boolean = false;
-  @Input() timeUntilReservationExpires: number | undefined;
+  // Convert inputs to signal inputs
+  readonly environment = input.required<EnvironmentDto>();
+  readonly deployable = input<boolean>(false);
+  readonly canViewAllEnvironments = input<boolean>(false);
+  readonly timeUntilReservationExpires = input<number | undefined>(undefined);
 
-  @Output() deploy = new EventEmitter<Event>();
-  @Output() unlock = new EventEmitter<Event>();
-  @Output() extend = new EventEmitter<Event>();
-  @Output() lock = new EventEmitter<Event>();
+  // Convert outputs to signal outputs
+  readonly deploy = output<Event>();
+  readonly unlock = output<Event>();
+  readonly extend = output<Event>();
+  readonly lock = output<Event>();
 
   // Inject required services
   private keycloakService = inject(KeycloakService);
   private permissionService = inject(PermissionService);
 
-  isLoggedIn() {
-    return this.keycloakService.isLoggedIn();
-  }
+  // Convert methods to computed signals where appropriate
+  readonly isLoggedIn = computed(() => this.keycloakService.isLoggedIn());
+  readonly hasDeployPermissions = computed(() => this.permissionService.hasWritePermission());
+  readonly hasUnlockPermissions = computed(() => this.permissionService.isAtLeastMaintainer());
 
-  hasDeployPermissions() {
-    return this.permissionService.hasWritePermission();
-  }
-
-  hasUnlockPermissions() {
-    return this.permissionService.isAtLeastMaintainer();
-  }
-
-  isCurrentUserLocked() {
+  readonly isCurrentUserLocked = computed(() => {
     const currentUserGithubId = Number(this.keycloakService.getUserGithubId());
-    const environmentLockedById = Number(this.environment.lockedBy?.id);
+    const environmentLockedById = Number(this.environment().lockedBy?.id);
     return environmentLockedById === currentUserGithubId;
-  }
+  });
 
-  canUserDeploy(): boolean {
-    return !!(this.isLoggedIn() && (!this.environment.locked || this.isCurrentUserLocked()) && this.hasDeployPermissions());
-  }
+  readonly canUserDeploy = computed(() => !!(this.isLoggedIn() && (!this.environment().locked || this.isCurrentUserLocked()) && this.hasDeployPermissions()));
 
-  canUnlockShow(): boolean {
-    return !!(this.isLoggedIn() && (this.environment.lockReservationWillExpireAt !== null || this.isCurrentUserLocked() || this.hasUnlockPermissions()));
-  }
+  readonly canUnlockShow = computed(
+    () => !!(this.isLoggedIn() && (this.environment().lockReservationWillExpireAt !== null || this.isCurrentUserLocked() || this.hasUnlockPermissions()))
+  );
 
-  canUnlock(): boolean {
+  readonly canUnlock = computed(() => {
     if (this.hasUnlockPermissions() || this.isCurrentUserLocked()) {
       return true;
-    } else if (!this.isCurrentUserLocked() && (this.timeUntilReservationExpires ?? -1) === 0) {
+    } else if (!this.isCurrentUserLocked() && (this.timeUntilReservationExpires() ?? -1) === 0) {
       return true;
     } else {
       return false;
     }
-  }
+  });
 
-  getLockTooltip(): string {
-    return this.canUserDeploy() ? 'This will only lock the environment without any deployment.' : 'You do not have permission to lock this environment.';
-  }
+  readonly getLockTooltip = computed(() =>
+    this.canUserDeploy() ? 'This will only lock the environment without any deployment.' : 'You do not have permission to lock this environment.'
+  );
 
-  getDeployTooltip(): string {
+  readonly getDeployTooltip = computed(() => {
     if (!this.canUserDeploy()) {
       return 'You do not have permission to deploy to this environment.';
     }
-    return this.environment.locked ? 'This will deploy to the server.' : 'This will lock the environment then deploy.';
-  }
+    return this.environment().locked ? 'This will deploy to the server.' : 'This will lock the environment then deploy.';
+  });
 
-  getUnlockToolTip(): string {
+  readonly getUnlockToolTip = computed(() => {
     if (!this.canUnlock()) {
       return 'You do not have permission to unlock this environment.';
     }
 
-    const timeLeft = this.timeUntilReservationExpires;
+    const timeLeft = this.timeUntilReservationExpires();
     const timeLeftMinutes = timeLeft !== undefined ? Math.ceil(timeLeft / 60000) : 0;
 
     if (this.isCurrentUserLocked() || this.hasUnlockPermissions()) {
@@ -105,7 +98,7 @@ export class EnvironmentActionsComponent {
     } else {
       return timeLeftMinutes > 1 ? `You can unlock this environment in ${timeLeftMinutes} minutes` : 'You can unlock this environment in 1 minute';
     }
-  }
+  });
 
   openExternalLink(event: MouseEvent, link?: string): void {
     event.stopPropagation();

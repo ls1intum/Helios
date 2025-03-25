@@ -1,4 +1,4 @@
-import { Component, inject, Input, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IconsModule } from 'icons.module';
 import { ProgressBarModule } from 'primeng/progressbar';
@@ -21,19 +21,17 @@ export class DeploymentStepperComponent implements OnInit {
   private _deployment = signal<EnvironmentDeployment | undefined>(undefined);
   private timingService = inject(DeploymentTimingService);
 
-  @Input()
-  set deployment(value: EnvironmentDeployment | undefined) {
-    // Update the deployment signal
-    this._deployment.set(value);
+  readonly deployment = input<EnvironmentDeployment | undefined, EnvironmentDeployment | undefined>(undefined, {
+    transform: (value: EnvironmentDeployment | undefined) => {
+      this._deployment.set(value);
 
-    // Update timing service with new deployment state
-    if (value?.id && value?.state) {
-      this.timingService.updateDeploymentState(value);
-    }
-  }
-  get deployment(): EnvironmentDeployment | undefined {
-    return this._deployment();
-  }
+      if (value?.id && value?.state) {
+        this.timingService.updateDeploymentState(value);
+      }
+
+      return value;
+    },
+  });
 
   steps = this.timingService.steps;
 

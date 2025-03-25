@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { EnvironmentDto } from '@app/core/modules/openapi';
 import { EnvironmentDeploymentInfoComponent } from '../deployment-info/environment-deployment-info.component';
 import { EnvironmentStatusInfoComponent } from '../environment-status-info/environment-status-info.component';
@@ -10,5 +10,5 @@ import { EnvironmentStatusInfoComponent } from '../environment-status-info/envir
   templateUrl: './environment-details.component.html',
 })
 export class EnvironmentDetailsComponent {
-  @Input() environment!: EnvironmentDto;
+  readonly environment = input.required<EnvironmentDto>();
 }

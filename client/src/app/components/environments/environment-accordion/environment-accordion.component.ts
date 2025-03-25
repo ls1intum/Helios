@@ -1,4 +1,4 @@
-import { Component, EventEmitter, inject, Input, Output } from '@angular/core';
+import { Component, inject, input, output } from '@angular/core';
 import { EnvironmentDeployment, EnvironmentDto } from '@app/core/modules/openapi';
 import { DeploymentStepperComponent } from '../deployment-stepper/deployment-stepper.component';
 import { EnvironmentActionsComponent } from '../environment-actions/environment-actions.component';
@@ -16,6 +16,7 @@ import { SelectButtonModule } from 'primeng/selectbutton';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { EnvironmentStatusTagComponent } from '../environment-status-tag/environment-status-tag.component';
+import { signal } from '@angular/core';
 
 @Component({
   selector: 'app-environment-accordion',
@@ -40,36 +41,36 @@ import { EnvironmentStatusTagComponent } from '../environment-status-tag/environ
   templateUrl: './environment-accordion.component.html',
 })
 export class EnvironmentAccordionComponent {
-  @Input() environment!: EnvironmentDto;
-  @Input() deployable: boolean = false;
-  @Input() canViewAllEnvironments: boolean = false;
-  @Input() timeUntilReservationExpires: number | undefined;
+  readonly environment = input.required<EnvironmentDto>();
+  readonly deployable = input<boolean>(false);
+  readonly canViewAllEnvironments = input<boolean>(false);
+  readonly timeUntilReservationExpires = input<number | undefined>(undefined);
 
-  @Output() deploy = new EventEmitter<EnvironmentDto>();
-  @Output() unlock = new EventEmitter<{ event: Event; environment: EnvironmentDto }>();
-  @Output() extend = new EventEmitter<{ event: Event; environment: EnvironmentDto }>();
-  @Output() lock = new EventEmitter<EnvironmentDto>();
+  readonly deploy = output<EnvironmentDto>();
+  readonly unlock = output<{ event: Event; environment: EnvironmentDto }>();
+  readonly extend = output<{ event: Event; environment: EnvironmentDto }>();
+  readonly lock = output<EnvironmentDto>();
 
-  showLatestDeployment: boolean = true;
+  showLatestDeployment = signal<boolean>(true);
 
   private datePipe = inject(DatePipe);
 
   onDeploy(event: Event) {
     event.stopPropagation();
-    this.deploy.emit(this.environment);
+    this.deploy.emit(this.environment());
   }
 
   onUnlock(event: Event) {
-    this.unlock.emit({ event, environment: this.environment });
+    this.unlock.emit({ event, environment: this.environment() });
   }
 
   onExtend(event: Event) {
-    this.extend.emit({ event, environment: this.environment });
+    this.extend.emit({ event, environment: this.environment() });
   }
 
   onLock(event: Event) {
     event.stopPropagation();
-    this.lock.emit(this.environment);
+    this.lock.emit(this.environment());
   }
 
   formatEnvironmentType(type: string): string {
@@ -100,10 +101,10 @@ export class EnvironmentAccordionComponent {
   }
 
   getPrLink() {
-    return ['/repo', this.environment.repository?.id, 'ci-cd', 'pr', this.environment.latestDeployment?.pullRequestNumber?.toString()];
+    return ['/repo', this.environment().repository?.id, 'ci-cd', 'pr', this.environment().latestDeployment?.pullRequestNumber?.toString()];
   }
 
   getBranchLink() {
-    return ['/repo', this.environment.repository?.id, 'ci-cd', 'branch', this.environment.latestDeployment?.ref];
+    return ['/repo', this.environment().repository?.id, 'ci-cd', 'branch', this.environment().latestDeployment?.ref];
   }
 }

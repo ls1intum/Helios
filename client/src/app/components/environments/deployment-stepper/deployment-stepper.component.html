@@ -4,11 +4,11 @@
 
     <div class="flex gap-4 items-center mb-4 mt-2">
       <span class="font-semibold text-lg">
-        @if (deployment && deployment.state === 'SUCCESS') {
+        @if (deployment() && deployment()?.state === 'SUCCESS') {
           Deployment Completed
-        } @else if (deployment && isErrorState()) {
+        } @else if (deployment() && isErrorState()) {
           Deployment Failed
-        } @else if (deployment && isUnknownState()) {
+        } @else if (deployment() && isUnknownState()) {
           Deployment Status Unknown
         } @else {
           Deployment in Progress
@@ -17,17 +17,17 @@
       <span class="text-gray-300">|</span>
 
       <!-- Integrated Time Display -->
-      @if (deployment && deployment.state === 'SUCCESS') {
+      @if (deployment() && deployment()?.state === 'SUCCESS') {
         <div class="inline-flex items-center bg-green-50 px-2 py-0.5 rounded-full text-sm">
           <i-tabler name="clock" class="w-4 h-4 text-green-600 mr-1"></i-tabler>
           <span class="font-medium text-green-600">{{ getDeploymentDuration() }}</span>
         </div>
-      } @else if (deployment && isErrorState()) {
+      } @else if (deployment() && isErrorState()) {
         <div class="inline-flex items-center bg-red-50 px-2 py-0.5 rounded-full text-sm">
           <i-tabler name="clock" class="w-4 h-4 text-red-600 mr-1"></i-tabler>
           <span class="font-medium text-red-600">{{ getDeploymentDuration() }}</span>
         </div>
-      } @else if (deployment && isUnknownState()) {
+      } @else if (deployment() && isUnknownState()) {
         <div class="inline-flex items-center bg-gray-50 px-2 py-0.5 rounded-full text-sm">
           <i-tabler name="clock" class="w-4 h-4 text-gray-600 mr-1"></i-tabler>
           <span class="font-medium text-gray-600">0m 0s</span>
