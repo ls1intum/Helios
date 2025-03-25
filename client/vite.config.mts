@@ -8,6 +8,7 @@ import tsconfigPaths from "vite-tsconfig-paths";
 export default defineConfig(({ mode }) => ({
   plugins: [angular(), tsconfigPaths()],
   test: {
+    pool: 'forks',
     globals: true,
     setupFiles: ['src/test-setup.ts'],
     environment: 'jsdom',
