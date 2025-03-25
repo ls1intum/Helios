@@ -41,6 +41,7 @@ import {
   getPullRequestById,
   getPullRequestByRepositoryIdAndNumber,
   getPullRequestByRepositoryId,
+  getPaginatedPullRequests,
   getAllEnvironments,
   getEnvironmentsByUserLocking,
   getEnvironmentsByRepositoryId,
@@ -56,7 +57,7 @@ import {
   getBranchByRepositoryIdAndName,
   deleteWorkflowGroup,
 } from '../sdk.gen';
-import { type MutationOptions, type DefaultError, queryOptions } from '@tanstack/angular-query-experimental';
+import { type MutationOptions, type DefaultError, queryOptions, infiniteQueryOptions, type InfiniteData } from '@tanstack/angular-query-experimental';
 import type {
   UpdateWorkflowLabelData,
   GetGitRepoSettingsData,
@@ -106,6 +107,8 @@ import type {
   GetPullRequestByIdData,
   GetPullRequestByRepositoryIdAndNumberData,
   GetPullRequestByRepositoryIdData,
+  GetPaginatedPullRequestsData,
+  GetPaginatedPullRequestsResponse,
   GetAllEnvironmentsData,
   GetEnvironmentsByUserLockingData,
   GetEnvironmentsByRepositoryIdData,
@@ -893,6 +896,89 @@ export const getPullRequestByRepositoryIdOptions = (options: Options<GetPullRequ
     },
     queryKey: getPullRequestByRepositoryIdQueryKey(options),
   });
+};
+
+export const getPaginatedPullRequestsQueryKey = (options?: Options<GetPaginatedPullRequestsData>) => createQueryKey('getPaginatedPullRequests', options);
+
+export const getPaginatedPullRequestsOptions = (options?: Options<GetPaginatedPullRequestsData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getPaginatedPullRequests({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: getPaginatedPullRequestsQueryKey(options),
+  });
+};
+
+const createInfiniteParams = <K extends Pick<QueryKey<Options>[0], 'body' | 'headers' | 'path' | 'query'>>(queryKey: QueryKey<Options>, page: K) => {
+  const params = queryKey[0];
+  if (page.body) {
+    params.body = {
+      ...(queryKey[0].body as any),
+      ...(page.body as any),
+    };
+  }
+  if (page.headers) {
+    params.headers = {
+      ...queryKey[0].headers,
+      ...page.headers,
+    };
+  }
+  if (page.path) {
+    params.path = {
+      ...(queryKey[0].path as any),
+      ...(page.path as any),
+    };
+  }
+  if (page.query) {
+    params.query = {
+      ...(queryKey[0].query as any),
+      ...(page.query as any),
+    };
+  }
+  return params as unknown as typeof page;
+};
+
+export const getPaginatedPullRequestsInfiniteQueryKey = (options?: Options<GetPaginatedPullRequestsData>): QueryKey<Options<GetPaginatedPullRequestsData>> =>
+  createQueryKey('getPaginatedPullRequests', options, true);
+
+export const getPaginatedPullRequestsInfiniteOptions = (options?: Options<GetPaginatedPullRequestsData>) => {
+  return infiniteQueryOptions<
+    GetPaginatedPullRequestsResponse,
+    DefaultError,
+    InfiniteData<GetPaginatedPullRequestsResponse>,
+    QueryKey<Options<GetPaginatedPullRequestsData>>,
+    number | Pick<QueryKey<Options<GetPaginatedPullRequestsData>>[0], 'body' | 'headers' | 'path' | 'query'>
+  >(
+    // @ts-ignore
+    {
+      queryFn: async ({ pageParam, queryKey, signal }) => {
+        // @ts-ignore
+        const page: Pick<QueryKey<Options<GetPaginatedPullRequestsData>>[0], 'body' | 'headers' | 'path' | 'query'> =
+          typeof pageParam === 'object'
+            ? pageParam
+            : {
+                query: {
+                  page: pageParam,
+                },
+              };
+        const params = createInfiniteParams(queryKey, page);
+        const { data } = await getPaginatedPullRequests({
+          ...options,
+          ...params,
+          signal,
+          throwOnError: true,
+        });
+        return data;
+      },
+      queryKey: getPaginatedPullRequestsInfiniteQueryKey(options),
+    }
+  );
 };
 
 export const getAllEnvironmentsQueryKey = (options?: Options<GetAllEnvironmentsData>) => createQueryKey('getAllEnvironments', options);

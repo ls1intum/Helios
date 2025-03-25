@@ -430,9 +430,9 @@ export const getPullRequestByRepositoryId = <ThrowOnError extends boolean = fals
 };
 
 export const getPaginatedPullRequests = <ThrowOnError extends boolean = false>(options?: Options<GetPaginatedPullRequestsData, ThrowOnError>) => {
-  return (options?.client ?? client).get<GetPaginatedPullRequestsResponse, unknown, ThrowOnError>({
-    ...options,
+  return (options?.client ?? _heyApiClient).get<GetPaginatedPullRequestsResponse, unknown, ThrowOnError>({
     url: '/api/pullrequests/paginated',
+    ...options,
   });
 };
 
