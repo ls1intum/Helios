@@ -34,8 +34,8 @@
     "tslib": "^2.3.0"
   },
   "devDependencies": {
-    "@analogjs/vite-plugin-angular": "^1.14.0",
-    "@analogjs/vitest-angular": "^1.14.0",
+    "@analogjs/vite-plugin-angular": "^1.14.1",
+    "@analogjs/vitest-angular": "^1.14.1",
     "@angular-devkit/build-angular": "^19.2.1",
     "@angular-eslint/builder": "^19.0.0",
     "@angular-eslint/eslint-plugin": "^19.0.0",
@@ -69,6 +69,6 @@
     "typescript": "5.8.2",
     "vite": "^6.0.0",
     "vite-tsconfig-paths": "^5.1.4",
-    "vitest": "^3.0.8"
+    "vitest": "3.0.9"
   }
 }
