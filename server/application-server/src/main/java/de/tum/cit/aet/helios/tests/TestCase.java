@@ -10,6 +10,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Transient;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -57,6 +58,18 @@ public class TestCase {
 
   @Column(name = "error_type")
   private String errorType;
+
+  /**
+   * Transient field indicating whether this test is flaky. Determined based on test case
+   * statistics.
+   */
+  @Transient private boolean isFlaky;
+
+  /**
+   * Transient field for the failure rate of this test on its branch. Retrieved from test case
+   * statistics.
+   */
+  @Transient private double failureRate;
 
   public static enum TestStatus {
     PASSED,

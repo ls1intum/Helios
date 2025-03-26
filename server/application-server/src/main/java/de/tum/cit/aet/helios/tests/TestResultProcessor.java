@@ -1,6 +1,8 @@
 package de.tum.cit.aet.helios.tests;
 
 import de.tum.cit.aet.helios.github.GitHubService;
+import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
+import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import de.tum.cit.aet.helios.tests.parsers.JunitParser;
 import de.tum.cit.aet.helios.tests.parsers.TestResultParseException;
 import de.tum.cit.aet.helios.tests.parsers.TestResultParser;
@@ -12,6 +14,7 @@ import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +24,7 @@ import org.kohsuke.github.PagedIterable;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -28,7 +32,9 @@ import org.springframework.stereotype.Service;
 public class TestResultProcessor {
   private final GitHubService gitHubService;
   private final WorkflowRunRepository workflowRunRepository;
+  private final GitRepoRepository gitRepoRepository;
   private final JunitParser junitParser;
+  private final TestCaseStatisticsService statisticsService;
 
   @Value("${tests.artifactName:JUnit Test Results}")
   private String testArtifactName;
@@ -72,11 +78,15 @@ public class TestResultProcessor {
     this.workflowRunRepository.save(workflowRun);
 
     try {
-      workflowRun.setTestSuites(this.processRunSync(workflowRun));
+      List<TestSuite> testSuites = this.processRunSync(workflowRun);
+      workflowRun.setTestSuites(testSuites);
       workflowRun.setTestProcessingStatus(WorkflowRun.TestProcessingStatus.PROCESSED);
       log.debug(
           "Successfully persisted test results for workflow run, workflow name: {}",
           workflowRun.getName());
+
+      // Update test statistics if the workflow run is on the default branch
+      updateTestStatisticsIfDefaultBranch(testSuites, workflowRun);
     } catch (Exception e) {
       log.error("Failed to process test results for workflow run {}", workflowRun.getName(), e);
       workflowRun.setTestProcessingStatus(WorkflowRun.TestProcessingStatus.FAILED);
@@ -214,5 +224,66 @@ public class TestResultProcessor {
 
           return results;
         });
+  }
+
+  /**
+   * Updates test statistics if the workflow run is on the default branch. This method safely
+   * retrieves the repository and default branch information.
+   *
+   * @param testSuites the test suites containing test cases
+   * @param workflowRun the workflow run
+   */
+  @Transactional
+  protected void updateTestStatisticsIfDefaultBranch(
+      List<TestSuite> testSuites, WorkflowRun workflowRun) {
+    try {
+      String headBranch = workflowRun.getHeadBranch();
+      if (headBranch == null) {
+        log.debug("Skipping test statistics update: head branch is null");
+        return;
+      }
+
+      // Safely retrieve repository with its properties in a transaction
+      Optional<GitRepository> repository =
+          gitRepoRepository.findById(workflowRun.getRepository().getRepositoryId());
+
+      if (repository.isEmpty()) {
+        log.debug("Skipping test statistics update: repository not found");
+        return;
+      }
+
+      String defaultBranch = repository.get().getDefaultBranch();
+
+      if (headBranch.equals(defaultBranch)) {
+        log.debug("Updating test statistics for default branch: {}", headBranch);
+        updateTestStatistics(testSuites, headBranch);
+      } else {
+        log.debug(
+            "Skipping test statistics update for non-default branch: {}, default branch: {}",
+            headBranch,
+            defaultBranch);
+      }
+    } catch (Exception e) {
+      log.error("Error while trying to update test statistics", e);
+      // Don't fail the overall process if statistics update fails
+    }
+  }
+
+  /**
+   * Updates test case statistics for all test cases in the given test suites.
+   *
+   * @param testSuites the test suites containing test cases
+   * @param branchName the branch name where the tests were run
+   */
+  private void updateTestStatistics(List<TestSuite> testSuites, String branchName) {
+    try {
+      for (TestSuite testSuite : testSuites) {
+        statisticsService.updateStatisticsForTestSuite(testSuite, branchName);
+      }
+      log.debug("Successfully updated test statistics for branch: {}", branchName);
+    } catch (Exception e) {
+      log.error("Failed to update test statistics for branch: {}", branchName, e);
+      // Don't fail the overall process if statistics update fails
+    }
   }
 }
