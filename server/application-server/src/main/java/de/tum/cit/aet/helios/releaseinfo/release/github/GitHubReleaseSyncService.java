@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.kohsuke.github.GHRef;
 import org.kohsuke.github.GHRelease;
+import org.kohsuke.github.GHRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,8 +35,8 @@ public class GitHubReleaseSyncService {
    * @param ghRelease the GitHub release to process
    */
   @Transactional
-  public void processRelease(GHRelease ghRelease) {
-    var repository = gitRepoRepository.findByNameWithOwner(ghRelease.getOwner().getFullName());
+  public void processRelease(GHRelease ghRelease, GHRepository ghRepository) {
+    var repository = gitRepoRepository.findByNameWithOwner(ghRepository.getFullName());
     var result =
         releaseRepository
             .findById(ghRelease.getId())
@@ -51,7 +52,7 @@ public class GitHubReleaseSyncService {
 
     // Link release candidate to this release
     releaseCandidateRepository
-        .findByRepositoryRepositoryIdAndName(ghRelease.getOwner().getId(), ghRelease.getTagName())
+        .findByRepositoryRepositoryIdAndName(repository.getRepositoryId(), ghRelease.getTagName())
         .map(
             releaseCandidate -> {
               releaseCandidate.setRelease(result);
@@ -60,17 +61,16 @@ public class GitHubReleaseSyncService {
         .orElseGet(
             () -> {
               try {
-                final GHRef ref = ghRelease.getOwner().getRef("tags/" + ghRelease.getTagName());
+                final GHRef ref = ghRepository.getRef("tags/" + ghRelease.getTagName());
                 final Commit commit =
                     commitRepository
                         .findByShaAndRepositoryRepositoryId(
-                            ref.getObject().getSha(), ghRelease.getOwner().getId())
+                            ref.getObject().getSha(), repository.getRepositoryId())
                         .orElseGet(
                             () -> {
                               try {
                                 return commitSyncService.processCommit(
-                                    ghRelease.getOwner().getCommit(ref.getObject().getSha()),
-                                    ghRelease.getOwner());
+                                    ghRepository.getCommit(ref.getObject().getSha()), ghRepository);
                               } catch (IOException e) {
                                 log.error(
                                     "Failed to get commit for release candidate {}: {}",

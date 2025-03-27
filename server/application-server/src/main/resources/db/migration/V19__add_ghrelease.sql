@@ -44,3 +44,6 @@ drop constraint if exists UK4dud3l2tq5mfv86psi7awtqgw;
 alter table if exists release_candidate add constraint UK4dud3l2tq5mfv86psi7awtqgw unique (release_id);
 
 alter table if exists release_candidate add constraint FKc7u3wj6b3oh8imnwxxwgboaes foreign key (release_id) references public.release;
+
+alter table if exists release_candidate
+drop constraint if exists pkey_commit_repository_id_commit_sha;

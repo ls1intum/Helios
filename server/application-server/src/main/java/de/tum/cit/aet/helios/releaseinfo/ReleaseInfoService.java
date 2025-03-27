@@ -293,7 +293,8 @@ public class ReleaseInfoService {
               .name(tagName)
               .create();
 
-      gitHubReleaseSyncService.processRelease(ghRelease);
+      gitHubReleaseSyncService.processRelease(
+          ghRelease, gitHubService.getRepository(repository.getNameWithOwner()));
     } catch (IOException e) {
       log.error("Failed to publish release: {}", e.getMessage());
       throw new ReleaseCandidateException("Release candidate could not be pushed to GitHub.");

@@ -15,6 +15,9 @@ public interface ReleaseCandidateRepository
 
   Optional<ReleaseCandidate> findByRepositoryRepositoryIdAndName(Long repositoryId, String name);
 
+  Optional<ReleaseCandidate> findByRepositoryRepositoryIdAndReleaseId(
+      Long repositoryId, Long releaseId);
+
   Optional<ReleaseCandidate> findByRepositoryRepositoryIdAndCommitSha(
       Long repositoryId, String commitSha);
 

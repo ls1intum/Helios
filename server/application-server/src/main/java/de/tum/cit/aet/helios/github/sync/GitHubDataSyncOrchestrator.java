@@ -367,7 +367,7 @@ public class GitHubDataSyncOrchestrator {
         // Only process non-draft releases, because drafts are not unique in GitHub
         ghReleases.stream()
             .filter(Predicate.not(GHRelease::isDraft))
-            .forEach(releaseSyncService::processRelease);
+            .forEach((ghRelease) -> releaseSyncService.processRelease(ghRelease, repository));
       }
     } catch (IOException e) {
       log.error(

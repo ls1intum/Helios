@@ -3,6 +3,7 @@ package de.tum.cit.aet.helios.releaseinfo.release.github;
 import de.tum.cit.aet.helios.github.GitHubMessageHandler;
 import de.tum.cit.aet.helios.gitrepo.github.GitHubRepositorySyncService;
 import de.tum.cit.aet.helios.releaseinfo.release.ReleaseRepository;
+import de.tum.cit.aet.helios.releaseinfo.releasecandidate.ReleaseCandidateRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.kohsuke.github.GHEvent;
@@ -18,6 +19,7 @@ public class GitHubReleaseMessageHandler extends GitHubMessageHandler<GHEventPay
   private final GitHubReleaseSyncService releaseSyncService;
   private final GitHubRepositorySyncService repositorySyncService;
   private final ReleaseRepository releaseRepository;
+  private final ReleaseCandidateRepository releaseCandidateRepository;
 
   @Override
   protected void handleInstalledRepositoryEvent(GHEventPayload.Release eventPayload) {
@@ -33,8 +35,17 @@ public class GitHubReleaseMessageHandler extends GitHubMessageHandler<GHEventPay
         return;
       }
       repositorySyncService.processRepository(eventPayload.getRepository());
-      releaseSyncService.processRelease(eventPayload.getRelease());
+      releaseSyncService.processRelease(eventPayload.getRelease(), eventPayload.getRepository());
     } else if (eventPayload.getAction().equals("deleted")) {
+      releaseCandidateRepository
+          .findByRepositoryRepositoryIdAndReleaseId(
+              eventPayload.getRepository().getId(), eventPayload.getRelease().getId())
+          .map(
+              (release) -> {
+                release.setRelease(null);
+                return releaseCandidateRepository.saveAndFlush(release);
+              });
+
       releaseRepository.deleteById(eventPayload.getRelease().getId());
     }
   }
