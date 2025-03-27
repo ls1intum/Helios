@@ -15,7 +15,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Run
-        uses: tj-actions/docker-run@bafff4f9cddea7b4f878ae35cec05cf21d611112
+        uses: tj-actions/docker-run@6f385f618656f6394c364a006c9145d021b73e26
         id: docker-run
         with:
           image: ghcr.io/ls1intum/helios/client:${{ inputs.client_image_tag }}
