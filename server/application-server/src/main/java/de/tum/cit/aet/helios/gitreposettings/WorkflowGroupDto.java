@@ -8,7 +8,7 @@ import org.springframework.lang.NonNull;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public record WorkflowGroupDto(
     @NonNull Long id,
-    @NotBlank String name,
+    @NonNull String name,
     @NonNull Integer orderIndex,
     List<WorkflowMembershipDto> memberships) {
 
