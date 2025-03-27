@@ -1043,6 +1043,7 @@ components:
           format: int64
         name:
           type: string
+          minLength: 1
         orderIndex:
           type: integer
           format: int32
@@ -1052,7 +1053,6 @@ components:
             $ref: "#/components/schemas/WorkflowMembershipDto"
       required:
       - id
-      - name
       - orderIndex
     WorkflowMembershipDto:
       type: object

@@ -8,7 +8,7 @@ export type GitRepoSettingsDto = {
 
 export type WorkflowGroupDto = {
   id: number;
-  name: string;
+  name?: string;
   orderIndex: number;
   memberships?: Array<WorkflowMembershipDto>;
 };

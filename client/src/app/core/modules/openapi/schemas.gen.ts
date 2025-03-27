@@ -27,6 +27,7 @@ export const WorkflowGroupDtoSchema = {
     },
     name: {
       type: 'string',
+      minLength: 1,
     },
     orderIndex: {
       type: 'integer',
@@ -39,7 +40,7 @@ export const WorkflowGroupDtoSchema = {
       },
     },
   },
-  required: ['id', 'name', 'orderIndex'],
+  required: ['id', 'orderIndex'],
 } as const;
 
 export const WorkflowMembershipDtoSchema = {
