@@ -1,4 +1,4 @@
-package de.tum.cit.aet.helios.nats;
+package de.tum.cit.aet.helios.common.nats;
 
 import java.util.ArrayList;
 import java.util.HashMap;
