@@ -38,6 +38,13 @@ public class BranchService {
               } else if (!pr1.isPinned() && pr2.isPinned()) {
                 return 1;
               } else {
+                if (pr1.updatedAt() == null && pr2.updatedAt() == null) {
+                  return 0;
+                } else if (pr1.updatedAt() == null) {
+                  return 1;
+                } else if (pr2.updatedAt() == null) {
+                  return -1;
+                }
                 return pr2.updatedAt().compareTo(pr1.updatedAt());
               }
             })
