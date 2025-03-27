@@ -38,7 +38,8 @@ public class PullRequestController {
     pageRequest.setFilterType(filterType != null ? filterType : PullRequestFilterType.ALL);
     pageRequest.setSearchTerm(searchTerm);
 
-    PageResponse<PullRequestBaseInfoDto> response = pullRequestService.getPaginatedPullRequests(pageRequest);
+    PageResponse<PullRequestBaseInfoDto> response =
+        pullRequestService.getPaginatedPullRequests(pageRequest);
     return ResponseEntity.ok(response);
   }
 

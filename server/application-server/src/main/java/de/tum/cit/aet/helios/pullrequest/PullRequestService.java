@@ -62,7 +62,8 @@ public class PullRequestService {
       PullRequestPageRequest pageRequest) {
     log.debug("Starting pagination process");
     log.debug("Input parameters - Filter: {}, Page: {}, Size: {}, Search Term: {}",
-        pageRequest.getFilterType(), pageRequest.getPage(), pageRequest.getSize(), pageRequest.getSearchTerm());
+        pageRequest.getFilterType(), pageRequest.getPage(), pageRequest.getSize(),
+        pageRequest.getSearchTerm());
 
     final String currentUserId = authService.isLoggedIn()
         ? authService.getGithubId()
@@ -76,11 +77,19 @@ public class PullRequestService {
     log.debug("User Preference Present: {}", userPreference.isPresent());
 
     // Fetch pinned pull requests
-    Specification<PullRequest> pinnedSpec = buildSpecification(pageRequest, currentUserId, true);
-    List<PullRequest> pinnedPullRequests = pullRequestRepository.findAll(
-        pinnedSpec,
-        Sort.by(Sort.Direction.DESC, "updatedAt")
-    );
+    List<PullRequest> pinnedPullRequests =
+        userPreference.map(preference -> preference.getFavouritePullRequests().stream().sorted(
+            (pr1, pr2) -> {
+              if (pr1.getUpdatedAt().isAfter(pr2.getUpdatedAt())) {
+                return -1;
+              } else if (pr1.getUpdatedAt().isBefore(pr2.getUpdatedAt())) {
+                return 1;
+              } else {
+                return 0;
+              }
+            }
+        ).toList()).orElseGet(ArrayList::new);
+
     log.debug("Total Pinned PRs Found: {}", pinnedPullRequests.size());
 
     // Convert pinned PRs to DTOs
@@ -88,14 +97,12 @@ public class PullRequestService {
         .map(pr -> PullRequestBaseInfoDto.fromPullRequestAndUserPreference(pr, userPreference))
         .collect(Collectors.toList());
 
-    if (log.isDebugEnabled()) {
-      log.debug("Pinned PR IDs: {}",
-          pinnedDtos.stream().map(PullRequestBaseInfoDto::id).collect(Collectors.toList()));
-    }
+    log.debug("Pinned PR IDs: {}",
+        pinnedDtos.stream().map(PullRequestBaseInfoDto::id).collect(Collectors.toList()));
 
     // Fetch non-pinned pull requests specification
     Specification<PullRequest> nonPinnedSpec =
-        buildSpecification(pageRequest, currentUserId, false);
+        buildNonPinnedPullRequestSpecification(pageRequest, currentUserId);
 
     // Calculate total elements
     long totalPinnedCount = pinnedDtos.size();
@@ -111,7 +118,6 @@ public class PullRequestService {
     log.debug("Pagination Details - Page Size: {}, Total Pages: {}", pageSize, totalPages);
 
     // Prepare the final list of PRs for the current page
-    List<PullRequestBaseInfoDto> pageContent = new ArrayList<>();
 
     // Calculate global start and end indices
     int globalStartIndex = (currentPage - 1) * pageSize;
@@ -130,6 +136,8 @@ public class PullRequestService {
 
     log.debug("Pinned Items - To Add: {}, Start Index: {}", pinnedItemsToAdd, pinnedStartIndex);
 
+    List<PullRequestBaseInfoDto> pageContent = new ArrayList<>();
+
     // Add pinned PRs if applicable
     if (pinnedItemsToAdd > 0 && pinnedStartIndex >= 0 && pinnedStartIndex < pinnedDtos.size()) {
       List<PullRequestBaseInfoDto> pinnedItemsForPage = pinnedDtos.subList(
@@ -140,40 +148,34 @@ public class PullRequestService {
       log.debug("Added Pinned Items - Count: {}", pinnedItemsToAdd);
     }
 
-    // Calculate remaining items needed from non-pinned PRs
-    int remainingItemsNeeded = pageSize - pageContent.size();
-    log.debug("Remaining Items Needed: {}", remainingItemsNeeded);
+    // Calculate non-pinned page number and offset
+    int nonPinnedPageNumber = globalStartIndex >= totalPinnedCount
+        ? (globalStartIndex - (int) totalPinnedCount) / pageSize
+        : 0;
 
-    if (remainingItemsNeeded > 0) {
-      // Calculate non-pinned page number and offset
-      int nonPinnedPageNumber = globalStartIndex >= totalPinnedCount
-          ? (globalStartIndex - (int) totalPinnedCount) / pageSize
-          : 0;
+    log.debug("Non-Pinned Page Number: {}", nonPinnedPageNumber);
 
-      log.debug("Non-Pinned Page Number: {}", nonPinnedPageNumber);
+    // Create pageable for non-pinned PRs
+    Pageable pageable = PageRequest.of(
+        nonPinnedPageNumber,
+        20,
+        Sort.by(Sort.Direction.DESC, "updatedAt")
+    );
 
-      // Create pageable for non-pinned PRs
-      Pageable pageable = PageRequest.of(
-          nonPinnedPageNumber,
-          remainingItemsNeeded,
-          Sort.by(Sort.Direction.DESC, "updatedAt")
-      );
+    // Fetch non-pinned PRs
+    Page<PullRequest> nonPinnedPage = pullRequestRepository.findAll(nonPinnedSpec, pageable);
 
-      // Fetch non-pinned PRs
-      Page<PullRequest> nonPinnedPage = pullRequestRepository.findAll(nonPinnedSpec, pageable);
+    log.debug("Non-Pinned Page - Total Elements: {}, Content Size: {}",
+        nonPinnedPage.getTotalElements(), nonPinnedPage.getContent().size());
 
-      log.debug("Non-Pinned Page - Total Elements: {}, Content Size: {}",
-          nonPinnedPage.getTotalElements(), nonPinnedPage.getContent().size());
+    List<PullRequestBaseInfoDto> nonPinnedDtos = nonPinnedPage.getContent().stream()
+        .map(pr -> PullRequestBaseInfoDto.fromPullRequestAndUserPreference(pr, userPreference))
+        .toList();
 
-      List<PullRequestBaseInfoDto> nonPinnedDtos = nonPinnedPage.getContent().stream()
-          .map(pr -> PullRequestBaseInfoDto.fromPullRequestAndUserPreference(pr, userPreference))
-          .toList();
+    // Add non-pinned PRs to page content
+    pageContent.addAll(nonPinnedDtos);
 
-      // Add non-pinned PRs to page content
-      pageContent.addAll(nonPinnedDtos);
-
-      log.debug("Added Non-Pinned Items - Count: {}", nonPinnedDtos.size());
-    }
+    log.debug("Added Non-Pinned Items - Count: {}", nonPinnedDtos.size());
 
     // Create and return the page response
     PageResponse<PullRequestBaseInfoDto> response = new PageResponse<>();
@@ -198,9 +200,9 @@ public class PullRequestService {
     return response;
   }
 
-  private Specification<PullRequest> buildSpecification(PullRequestPageRequest pageRequest,
-                                                        String currentUserId,
-                                                        boolean isPinned) {
+  private Specification<PullRequest> buildNonPinnedPullRequestSpecification(
+      PullRequestPageRequest pageRequest,
+      String currentUserId) {
     return (root, query, cb) -> {
       List<Predicate> predicates = new ArrayList<>();
 
@@ -215,17 +217,8 @@ public class PullRequestService {
         pinnedSubquery.select(prJoin.get("id"))
             .where(cb.equal(userJoin.get("id"), Long.valueOf(currentUserId)));
 
-        if (isPinned) {
-          // For pinned PRs, require that they ARE in the favourites
-          predicates.add(root.get("id").in(pinnedSubquery));
-        } else {
-          // For non-pinned, require that they are NOT in the favourites
-          predicates.add(cb.not(root.get("id").in(pinnedSubquery)));
-        }
-      } else if (isPinned) {
-        // If no user is logged in, there can't be any pinned PRs
-        // Add an impossible condition to ensure empty result
-        predicates.add(cb.equal(cb.literal(1), 0));
+        // For non-pinned, require that they are NOT in the favourites
+        predicates.add(cb.not(root.get("id").in(pinnedSubquery)));
       }
 
       // Add search term predicate if provided
@@ -303,7 +296,8 @@ public class PullRequestService {
   @SuppressWarnings("checkstyle:AbbreviationAsWordInName")
   private long countNonPinnedMatchingPRs(PullRequestPageRequest pageRequest,
                                          String currentUserId) {
-    Specification<PullRequest> spec = buildSpecification(pageRequest, currentUserId, false);
+    Specification<PullRequest> spec =
+        buildNonPinnedPullRequestSpecification(pageRequest, currentUserId);
     return pullRequestRepository.count(spec);
   }
 

@@ -8,7 +8,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class PageRequest {
-  private int page = 0;
+  private int page = 1;
   private int size = 20;
   private String sortField;
   private String sortDirection;
