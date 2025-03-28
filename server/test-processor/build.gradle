@@ -11,9 +11,14 @@ dependencies {
     implementation 'io.nats:jnats:2.20.5'
     implementation 'org.kohsuke:github-api:1.327'
     implementation 'io.sentry:sentry-spring-boot-starter-jakarta:8.4.0'
+    implementation 'jakarta.xml.bind:jakarta.xml.bind-api:4.0.2'
+    implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+    implementation 'com.squareup.okhttp3:logging-interceptor:4.12.0'
     implementation project(':common')
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
 }
 
 springBoot {
