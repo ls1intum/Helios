@@ -1664,7 +1664,6 @@ components:
         isWorking:
           type: boolean
       required:
-      - isWorking
       - user
     CommitsSinceReleaseCandidateDto:
       type: object

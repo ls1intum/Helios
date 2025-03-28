@@ -248,7 +248,7 @@ export type ReleaseCandidateDetailsDto = {
 
 export type ReleaseCandidateEvaluationDto = {
   user: UserInfoDto;
-  isWorking: boolean;
+  isWorking?: boolean;
 };
 
 export type CommitsSinceReleaseCandidateDto = {

@@ -750,7 +750,7 @@ export const ReleaseCandidateEvaluationDtoSchema = {
       type: 'boolean',
     },
   },
-  required: ['isWorking', 'user'],
+  required: ['user'],
 } as const;
 
 export const CommitsSinceReleaseCandidateDtoSchema = {
