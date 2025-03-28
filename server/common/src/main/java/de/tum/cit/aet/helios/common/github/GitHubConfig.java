@@ -1,4 +1,4 @@
-package de.tum.cit.aet.helios.github;
+package de.tum.cit.aet.helios.common.github;
 
 import lombok.Getter;
 import lombok.extern.log4j.Log4j2;

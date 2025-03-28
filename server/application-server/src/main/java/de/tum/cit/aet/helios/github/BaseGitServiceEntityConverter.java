@@ -1,6 +1,6 @@
 package de.tum.cit.aet.helios.github;
 
-import de.tum.cit.aet.helios.util.DateUtil;
+import de.tum.cit.aet.helios.common.util.DateUtil;
 import java.io.IOException;
 import lombok.extern.log4j.Log4j2;
 import org.kohsuke.github.GHObject;

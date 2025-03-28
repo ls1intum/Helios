@@ -1,7 +1,6 @@
 package de.tum.cit.aet.helios.github.sync;
 
-
-import de.tum.cit.aet.helios.github.GitHubFacade;
+import de.tum.cit.aet.helios.common.github.GitHubFacade;
 import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import de.tum.cit.aet.helios.gitrepo.RepositoryService;
@@ -58,21 +57,23 @@ public class GitHubDataSyncScheduler {
       log.info("Repositories will be synced: {}", syncRepositories);
 
       // Find the repositories that are not installed anymore
-      List<String> repositoriesThatNeedsToBeDeleted = gitRepositoryRepository.findAll().stream()
-          .map(GitRepository::getNameWithOwner)
-          .filter(repo -> !syncRepositories.contains(repo))
-          .toList();
+      List<String> repositoriesThatNeedsToBeDeleted =
+          gitRepositoryRepository.findAll().stream()
+              .map(GitRepository::getNameWithOwner)
+              .filter(repo -> !syncRepositories.contains(repo))
+              .toList();
 
-      log.info("Repositories that needs to be deleted from db: {}",
-          repositoriesThatNeedsToBeDeleted);
+      log.info(
+          "Repositories that needs to be deleted from db: {}", repositoriesThatNeedsToBeDeleted);
 
       // Sync the repositories that are installed
       syncRepositories.forEach(dataSyncService::syncRepositoryData);
       // Delete the repositories that are not installed anymore
-      repositoriesThatNeedsToBeDeleted.forEach(repoNameWithOwner -> {
-        repositoryService.deleteRepository(repoNameWithOwner);
-        dataSyncStatusService.deleteByRepositoryNameWithOwner(repoNameWithOwner);
-      });
+      repositoriesThatNeedsToBeDeleted.forEach(
+          repoNameWithOwner -> {
+            repositoryService.deleteRepository(repoNameWithOwner);
+            dataSyncStatusService.deleteByRepositoryNameWithOwner(repoNameWithOwner);
+          });
     } catch (Exception ex) {
       log.error("Failed to sync installed repositories: {} {}", ex.getMessage(), ex);
     }

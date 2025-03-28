@@ -1,9 +1,9 @@
 package de.tum.cit.aet.helios.pullrequest.github;
 
+import de.tum.cit.aet.helios.common.util.DateUtil;
 import de.tum.cit.aet.helios.github.BaseGitServiceEntityConverter;
 import de.tum.cit.aet.helios.issue.github.GitHubIssueConverter;
 import de.tum.cit.aet.helios.pullrequest.PullRequest;
-import de.tum.cit.aet.helios.util.DateUtil;
 import java.io.IOException;
 import lombok.extern.log4j.Log4j2;
 import org.kohsuke.github.GHPullRequest;

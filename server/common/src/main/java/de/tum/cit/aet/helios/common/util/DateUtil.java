@@ -1,4 +1,4 @@
-package de.tum.cit.aet.helios.util;
+package de.tum.cit.aet.helios.common.util;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -27,7 +27,7 @@ public class DateUtil {
    * Convert an Instant to OffsetDateTime using the specified ZoneId.
    *
    * @param instant the Instant to convert
-   * @param zone    the ZoneId to use
+   * @param zone the ZoneId to use
    * @return the converted OffsetDateTime
    */
   public static OffsetDateTime convertToOffsetDateTime(Instant instant, ZoneId zone) {
@@ -38,7 +38,7 @@ public class DateUtil {
    * Format an OffsetDateTime using the given pattern.
    *
    * @param offsetDateTime the OffsetDateTime to format
-   * @param pattern        the pattern to use
+   * @param pattern the pattern to use
    * @return the formatted date string
    */
   public static String format(OffsetDateTime offsetDateTime, String pattern) {

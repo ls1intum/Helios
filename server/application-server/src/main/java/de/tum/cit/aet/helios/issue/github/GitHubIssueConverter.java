@@ -1,8 +1,8 @@
 package de.tum.cit.aet.helios.issue.github;
 
+import de.tum.cit.aet.helios.common.util.DateUtil;
 import de.tum.cit.aet.helios.github.BaseGitServiceEntityConverter;
 import de.tum.cit.aet.helios.issue.Issue;
-import de.tum.cit.aet.helios.util.DateUtil;
 import org.kohsuke.github.GHIssue;
 import org.kohsuke.github.GHIssueState;
 import org.springframework.lang.NonNull;

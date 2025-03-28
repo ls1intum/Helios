@@ -14,3 +14,14 @@ nats:
     server: ${NATS_SERVER}
     auth:
         token: ${NATS_AUTH_TOKEN}
+
+github:
+    # Personal Access Token
+    authToken: ${GITHUB_AUTH_TOKEN:}
+    # GitHub App configuration
+    organizationName: ${ORGANIZATION_NAME:}
+    appName: ${GITHUB_APP_NAME:}
+    appId: ${GITHUB_APP_ID:}
+    clientId: ${GITHUB_CLIENT_ID:}
+    installationId: ${GITHUB_INSTALLATION_ID:}
+    privateKeyPath: ${GITHUB_PRIVATE_KEY_PATH:}

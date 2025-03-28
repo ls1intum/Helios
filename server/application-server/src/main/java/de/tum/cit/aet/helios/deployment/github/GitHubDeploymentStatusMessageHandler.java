@@ -1,11 +1,11 @@
 package de.tum.cit.aet.helios.deployment.github;
 
+import de.tum.cit.aet.helios.common.github.GitHubFacade;
 import de.tum.cit.aet.helios.deployment.Deployment;
 import de.tum.cit.aet.helios.environment.Environment;
 import de.tum.cit.aet.helios.environment.EnvironmentLockHistory;
 import de.tum.cit.aet.helios.environment.EnvironmentLockHistoryRepository;
 import de.tum.cit.aet.helios.environment.EnvironmentRepository;
-import de.tum.cit.aet.helios.github.GitHubFacade;
 import de.tum.cit.aet.helios.github.GitHubMessageHandler;
 import de.tum.cit.aet.helios.github.sync.GitHubDataSyncOrchestrator;
 import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;

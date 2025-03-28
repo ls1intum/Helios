@@ -1,4 +1,4 @@
-package de.tum.cit.aet.helios.github;
+package de.tum.cit.aet.helios.common.github;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -13,13 +13,10 @@ import org.kohsuke.github.GHRepositorySearchBuilder;
 import org.kohsuke.github.GHUser;
 import org.springframework.beans.factory.annotation.Value;
 
-/**
- * Facade for GitHub API.
- */
+/** Facade for GitHub API. */
 @Log4j2
 @RequiredArgsConstructor
 public class GitHubFacadeImpl implements GitHubFacade {
-
 
   @Value("${monitoring.repositories:}")
   private String[] repositoriesToMonitor;
@@ -58,11 +55,10 @@ public class GitHubFacadeImpl implements GitHubFacade {
       GHCommitState state,
       String targetUrl,
       String description,
-      String context
-  )
+      String context)
       throws IOException {
-    getRepository(repositoryNameWithOwner).createCommitStatus(sha, state, targetUrl,
-        description, context);
+    getRepository(repositoryNameWithOwner)
+        .createCommitStatus(sha, state, targetUrl, description, context);
   }
 
   @Override
@@ -84,17 +80,13 @@ public class GitHubFacadeImpl implements GitHubFacade {
       return envRepoNames.toList();
     }
 
-    List<String> installedRepositories = clientManager.getGitHubClient()
-        .getInstallation()
-        .listRepositories()
-        .toList()
-        .stream()
-        .map(GHRepository::getFullName)
-        .toList();
+    List<String> installedRepositories =
+        clientManager.getGitHubClient().getInstallation().listRepositories().toList().stream()
+            .map(GHRepository::getFullName)
+            .toList();
 
-    List<String> allRepositories = Stream.concat(envRepoNames, installedRepositories.stream())
-        .distinct()
-        .toList();
+    List<String> allRepositories =
+        Stream.concat(envRepoNames, installedRepositories.stream()).distinct().toList();
 
     log.info("Final list of repositories to sync: {}", allRepositories);
     return allRepositories;

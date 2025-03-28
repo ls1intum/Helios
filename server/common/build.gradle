@@ -10,6 +10,11 @@ dependencies {
     api 'io.sentry:sentry-spring-boot-starter:6.28.0'
     api 'com.fasterxml.jackson.core:jackson-databind:2.15.3'
     api 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.3'
+    api 'com.squareup.okhttp3:okhttp:4.12.0'
+    api 'com.squareup.okhttp3:logging-interceptor:4.12.0'
+    api 'org.kohsuke:github-api:1.327'
+    api 'io.jsonwebtoken:jjwt-api:0.12.6'
+    api 'jakarta.annotation:jakarta.annotation-api:2.1.1'
     
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'

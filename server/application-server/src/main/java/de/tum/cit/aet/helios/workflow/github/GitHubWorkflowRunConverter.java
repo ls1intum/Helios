@@ -1,7 +1,7 @@
 package de.tum.cit.aet.helios.workflow.github;
 
+import de.tum.cit.aet.helios.common.util.DateUtil;
 import de.tum.cit.aet.helios.github.BaseGitServiceEntityConverter;
-import de.tum.cit.aet.helios.util.DateUtil;
 import de.tum.cit.aet.helios.workflow.WorkflowRun;
 import java.io.IOException;
 import java.util.Optional;

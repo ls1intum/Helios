@@ -1,7 +1,7 @@
 package de.tum.cit.aet.helios.gitrepo.github;
 
+import de.tum.cit.aet.helios.common.util.DateUtil;
 import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
-import de.tum.cit.aet.helios.util.DateUtil;
 import jakarta.transaction.Transactional;
 import java.io.IOException;
 import lombok.RequiredArgsConstructor;

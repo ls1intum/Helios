@@ -1,6 +1,5 @@
-package de.tum.cit.aet.helios.github;
+package de.tum.cit.aet.helios.common.github;
 
-import de.tum.cit.aet.helios.util.GitHubAppJwtHelper;
 import jakarta.annotation.PostConstruct;
 import java.io.File;
 import java.io.IOException;
@@ -290,9 +289,9 @@ public class GitHubClientManager {
             installs.stream()
                 .filter(
                     inst -> {
-                        log.info("Installation details: {}", inst);
-                        return organizationName != null
-                            && organizationName.equalsIgnoreCase(inst.getAccount().getLogin());
+                      log.info("Installation details: {}", inst);
+                      return organizationName != null
+                          && organizationName.equalsIgnoreCase(inst.getAccount().getLogin());
                     })
                 .map(GHAppInstallation::getId)
                 .findFirst()

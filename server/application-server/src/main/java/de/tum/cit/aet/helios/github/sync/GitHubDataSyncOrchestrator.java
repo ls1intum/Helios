@@ -3,6 +3,7 @@ package de.tum.cit.aet.helios.github.sync;
 import de.tum.cit.aet.helios.branch.BranchRepository;
 import de.tum.cit.aet.helios.branch.github.GitHubBranchSyncService;
 import de.tum.cit.aet.helios.commit.github.GitHubCommitSyncService;
+import de.tum.cit.aet.helios.common.github.GitHubFacade;
 import de.tum.cit.aet.helios.deployment.Deployment;
 import de.tum.cit.aet.helios.deployment.DeploymentRepository;
 import de.tum.cit.aet.helios.deployment.github.DeploymentSource;
@@ -13,7 +14,6 @@ import de.tum.cit.aet.helios.environment.Environment;
 import de.tum.cit.aet.helios.environment.EnvironmentRepository;
 import de.tum.cit.aet.helios.environment.github.GitHubEnvironmentDto;
 import de.tum.cit.aet.helios.environment.github.GitHubEnvironmentSyncService;
-import de.tum.cit.aet.helios.github.GitHubFacade;
 import de.tum.cit.aet.helios.github.GitHubService;
 import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
@@ -67,7 +67,6 @@ public class GitHubDataSyncOrchestrator {
   private final BranchRepository branchRepository;
   private final UserRepository userRepository;
 
-
   /**
    * Syncs a single GitHub repository by its full name (e.g., "owner/repo").
    *
@@ -87,8 +86,7 @@ public class GitHubDataSyncOrchestrator {
   }
 
   /**
-   * Synchronizes labels for a specific GitHub repository with the local
-   * repository.
+   * Synchronizes labels for a specific GitHub repository with the local repository.
    *
    * @param repository the GitHub repository whose labels are to be synchronized
    */
@@ -96,8 +94,8 @@ public class GitHubDataSyncOrchestrator {
     try {
       repository.listLabels().withPageSize(100).forEach(gitHubLabelSyncService::processLabel);
     } catch (IOException e) {
-      log.error("Failed to fetch labels for repository {}: {}", repository.getFullName(),
-          e.getMessage());
+      log.error(
+          "Failed to fetch labels for repository {}: {}", repository.getFullName(), e.getMessage());
     }
   }
 
@@ -106,8 +104,7 @@ public class GitHubDataSyncOrchestrator {
    *
    * @param repository the GitHub repository to sync pull requests from
    */
-  public void syncPullRequestsOfRepository(
-      GHRepository repository) {
+  public void syncPullRequestsOfRepository(GHRepository repository) {
     var iterator =
         repository
             .queryPullRequests()
@@ -120,7 +117,6 @@ public class GitHubDataSyncOrchestrator {
 
     iterator.forEachRemaining(pullRequestSyncService::processPullRequest);
   }
-
 
   /**
    * Synchronizes all environments from a specific GitHub repository.
@@ -149,11 +145,10 @@ public class GitHubDataSyncOrchestrator {
    * Synchronizes deployments for a specific repository.
    *
    * @param ghRepository the GitHub repository to sync deployments from
-   * @param since        an optional timestamp to fetch deployments since
+   * @param since an optional timestamp to fetch deployments since
    */
   public void syncDeploymentsOfRepository(
-      @NotNull GHRepository ghRepository,
-      Optional<OffsetDateTime> since) {
+      @NotNull GHRepository ghRepository, Optional<OffsetDateTime> since) {
     try {
       // Fetch the GitRepository entity
       String fullName = ghRepository.getFullName();
@@ -181,8 +176,8 @@ public class GitHubDataSyncOrchestrator {
    * Synchronizes deployments for a specific environment.
    *
    * @param ghRepository the GitHub repository
-   * @param environment  the environment entity
-   * @param since        an optional timestamp to fetch deployments since
+   * @param environment the environment entity
+   * @param since an optional timestamp to fetch deployments since
    */
   public void syncDeploymentsOfEnvironment(
       @NotNull GHRepository ghRepository,
@@ -241,7 +236,6 @@ public class GitHubDataSyncOrchestrator {
     }
   }
 
-
   /**
    * Synchronizes all workflows from a specific GitHub repository.
    *
@@ -270,7 +264,6 @@ public class GitHubDataSyncOrchestrator {
     }
   }
 
-
   /**
    * Synchronizes all branches from a specific GitHub repository.
    *
@@ -295,7 +288,6 @@ public class GitHubDataSyncOrchestrator {
           e.getMessage());
     }
   }
-
 
   /**
    * Synchronizes all commits from a specific GitHub repository.
@@ -357,15 +349,13 @@ public class GitHubDataSyncOrchestrator {
     return commits;
   }
 
-
   /**
    * Synchronizes all workflow runs from a specific GitHub repository.
    *
    * @param repository the GitHub repository to sync workflow runs from
-   * @param since      an optional date to filter workflow runs by their last update
+   * @param since an optional date to filter workflow runs by their last update
    */
-  public void syncRunsOfRepository(
-      GHRepository repository, Optional<OffsetDateTime> since) {
+  public void syncRunsOfRepository(GHRepository repository, Optional<OffsetDateTime> since) {
     var iterator = repository.queryWorkflowRuns().list().withPageSize(100).iterator();
 
     var sinceDate = since.map(date -> Date.from(date.toInstant()));
@@ -398,7 +388,6 @@ public class GitHubDataSyncOrchestrator {
     }
 
     workflowRuns.forEach(workflowRunSyncService::processRun);
-
   }
 
   /** Sync all existing users in the local repository with their GitHub data. */
@@ -420,5 +409,4 @@ public class GitHubDataSyncOrchestrator {
       return null;
     }
   }
-
 }

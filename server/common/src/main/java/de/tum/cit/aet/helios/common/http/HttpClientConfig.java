@@ -1,4 +1,4 @@
-package de.tum.cit.aet.helios.http;
+package de.tum.cit.aet.helios.common.http;
 
 import java.io.File;
 import java.util.concurrent.TimeUnit;
@@ -9,12 +9,14 @@ import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 @Log4j2
 @Component
 @RequiredArgsConstructor
+@Configuration
 public class HttpClientConfig {
 
   @Value("${http.cache.enabled:false}")

@@ -1,5 +1,6 @@
 package de.tum.cit.aet.helios.pullrequest.github;
 
+import de.tum.cit.aet.helios.common.util.DateUtil;
 import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
 import de.tum.cit.aet.helios.label.Label;
 import de.tum.cit.aet.helios.label.LabelRepository;
@@ -7,7 +8,6 @@ import de.tum.cit.aet.helios.label.github.GitHubLabelConverter;
 import de.tum.cit.aet.helios.pullrequest.PullRequestRepository;
 import de.tum.cit.aet.helios.user.User;
 import de.tum.cit.aet.helios.user.github.GitHubUserSyncService;
-import de.tum.cit.aet.helios.util.DateUtil;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -31,7 +31,6 @@ public class GitHubPullRequestSyncService {
   private final GitHubLabelConverter gitHubLabelConverter;
   private final GitHubUserSyncService gitHubUserSyncService;
 
-
   /**
    * Processes a single GitHub pull request by updating or creating it in the local repository.
    * Manages associations with repositories, labels, milestones, authors, assignees, merged by
@@ -49,9 +48,9 @@ public class GitHubPullRequestSyncService {
                   try {
                     if (pullRequest.getUpdatedAt() == null
                         || pullRequest
-                        .getUpdatedAt()
-                        .isBefore(
-                            DateUtil.convertToOffsetDateTime(ghPullRequest.getUpdatedAt()))) {
+                            .getUpdatedAt()
+                            .isBefore(
+                                DateUtil.convertToOffsetDateTime(ghPullRequest.getUpdatedAt()))) {
                       return pullRequestConverter.update(ghPullRequest, pullRequest);
                     }
                     return pullRequest;
@@ -83,16 +82,19 @@ public class GitHubPullRequestSyncService {
     // Link new labels and remove labels that are not present anymore
     var ghLabels = ghPullRequest.getLabels();
     var resultLabels = new HashSet<Label>();
-    ghLabels.forEach(ghLabel -> {
-      var resultLabel = labelRepository
-          .findById(ghLabel.getId())
-          .orElseGet(() -> {
-            var label = gitHubLabelConverter.convert(ghLabel);
-            label.setRepository(result.getRepository());
-            return labelRepository.save(label);
-          });
-      resultLabels.add(resultLabel);
-    });
+    ghLabels.forEach(
+        ghLabel -> {
+          var resultLabel =
+              labelRepository
+                  .findById(ghLabel.getId())
+                  .orElseGet(
+                      () -> {
+                        var label = gitHubLabelConverter.convert(ghLabel);
+                        label.setRepository(result.getRepository());
+                        return labelRepository.save(label);
+                      });
+          resultLabels.add(resultLabel);
+        });
     result.getLabels().clear();
     result.getLabels().addAll(resultLabels);
 
@@ -128,8 +130,7 @@ public class GitHubPullRequestSyncService {
     try {
       var mergedByUser = ghPullRequest.getMergedBy();
       if (mergedByUser == null) {
-        result.setMergedBy(
-            gitHubUserSyncService.getAnonymousUser());
+        result.setMergedBy(gitHubUserSyncService.getAnonymousUser());
       } else {
         var resultMergedBy = gitHubUserSyncService.processUser(mergedByUser);
         result.setMergedBy(resultMergedBy);
@@ -168,8 +169,8 @@ public class GitHubPullRequestSyncService {
             resultRequestedReviewers.add(user);
           }
         } catch (Exception e) {
-          log.error("Failed to link requested reviewer {}: {}", reviewer.getLogin(), e.getMessage(),
-              e);
+          log.error(
+              "Failed to link requested reviewer {}: {}", reviewer.getLogin(), e.getMessage(), e);
         }
       }
 

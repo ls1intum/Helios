@@ -1,15 +1,12 @@
-package de.tum.cit.aet.helios.util;
+package de.tum.cit.aet.helios.common.http;
 
-import de.tum.cit.aet.helios.http.RateLimitInfo;
-import de.tum.cit.aet.helios.http.RateLimitInfoHolder;
+import de.tum.cit.aet.helios.common.util.DateUtil;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 
-/**
- * Utility class for formatting rate limit information.
- */
+/** Utility class for formatting rate limit information. */
 @Log4j2
 @RequiredArgsConstructor
 public class RateLimitUtil {
@@ -22,7 +19,7 @@ public class RateLimitUtil {
    * Builds a formatted rate limit message.
    *
    * @param label a label to prefix the message
-   * @param info  the RateLimitInfo to format
+   * @param info the RateLimitInfo to format
    * @return a formatted string describing the rate limit
    */
   public static String formatRateLimitMessage(String label, RateLimitInfo info) {
@@ -41,11 +38,11 @@ public class RateLimitUtil {
   }
 
   /**
-   * Returns a formatted summary comparing the rate limit before and after an operation.
-   * The token usage is calculated based on the difference in remaining tokens.
+   * Returns a formatted summary comparing the rate limit before and after an operation. The token
+   * usage is calculated based on the difference in remaining tokens.
    *
    * @param before the RateLimitInfo snapshot before the operation.
-   * @param after  the RateLimitInfo snapshot after the operation.
+   * @param after the RateLimitInfo snapshot after the operation.
    * @return a formatted string summarizing the changes.
    */
   public static String formatRateLimitSummary(RateLimitInfo before, RateLimitInfo after) {

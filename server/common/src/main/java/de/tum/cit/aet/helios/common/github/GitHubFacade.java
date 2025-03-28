@@ -1,4 +1,4 @@
-package de.tum.cit.aet.helios.github;
+package de.tum.cit.aet.helios.common.github;
 
 import java.io.IOException;
 import java.util.List;
@@ -41,9 +41,13 @@ public interface GitHubFacade {
    * @param context A string label to differentiate this status from statuses of other systems
    * @throws IOException If there's an error communicating with the GitHub API
    */
-  public void createCommitStatus(String repositoryNameWithOwner, String sha,
-                                 GHCommitState state,
-                                 String targetUrl, String description, String context)
+  public void createCommitStatus(
+      String repositoryNameWithOwner,
+      String sha,
+      GHCommitState state,
+      String targetUrl,
+      String description,
+      String context)
       throws IOException;
 
   public String getGithubAppName();
@@ -52,14 +56,14 @@ public interface GitHubFacade {
    * Retrieves the list of repositories associated with the GitHub App.
    *
    * <p>The method determines the repositories based on the available credentials:
-   * </p>
+   *
    * <ul>
-   *   <li>If no credentials are found, an empty list is returned.</li>
+   *   <li>If no credentials are found, an empty list is returned.
    *   <li>If a Personal Access Token (PAT) is available, the method returns the repositories
-   *       specified in the corresponding environment variable.</li>
-   *   <li>If GitHub App credentials are found, the method returns a combined list containing
-   *       both the repositories from the environment variable and the actual installed repositories
-   *       of the GitHub App.</li>
+   *       specified in the corresponding environment variable.
+   *   <li>If GitHub App credentials are found, the method returns a combined list containing both
+   *       the repositories from the environment variable and the actual installed repositories of
+   *       the GitHub App.
    * </ul>
    *
    * @return a list of repository full names in the format {@code owner/repository}.

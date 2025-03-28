@@ -1,7 +1,7 @@
 package de.tum.cit.aet.helios.github.app;
 
+import de.tum.cit.aet.helios.common.github.GitHubClientManager;
 import de.tum.cit.aet.helios.common.nats.JacksonMessageHandler;
-import de.tum.cit.aet.helios.github.GitHubClientManager;
 import de.tum.cit.aet.helios.github.GitHubService;
 import de.tum.cit.aet.helios.github.sync.DataSyncStatusService;
 import de.tum.cit.aet.helios.github.sync.GitHubDataSyncService;

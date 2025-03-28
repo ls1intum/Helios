@@ -2,7 +2,7 @@ spring:
     application:
         name: Helios
     config:
-        import: optional:file:.env[.properties]
+        import: optional:file:../.env[.properties]
     task:
         scheduling:
             pool:

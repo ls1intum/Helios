@@ -1,6 +1,6 @@
 package de.tum.cit.aet.helios.auth;
 
-import de.tum.cit.aet.helios.github.GitHubFacade;
+import de.tum.cit.aet.helios.common.github.GitHubFacade;
 import de.tum.cit.aet.helios.user.User;
 import de.tum.cit.aet.helios.user.UserRepository;
 import de.tum.cit.aet.helios.user.github.GitHubUserSyncService;

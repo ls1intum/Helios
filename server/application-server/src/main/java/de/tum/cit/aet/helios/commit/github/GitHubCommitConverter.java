@@ -1,7 +1,7 @@
 package de.tum.cit.aet.helios.commit.github;
 
 import de.tum.cit.aet.helios.commit.Commit;
-import de.tum.cit.aet.helios.util.DateUtil;
+import de.tum.cit.aet.helios.common.util.DateUtil;
 import lombok.extern.log4j.Log4j2;
 import org.kohsuke.github.GHCommit;
 import org.springframework.core.convert.converter.Converter;

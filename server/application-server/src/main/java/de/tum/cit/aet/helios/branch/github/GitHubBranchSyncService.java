@@ -1,10 +1,10 @@
 package de.tum.cit.aet.helios.branch.github;
 
 import de.tum.cit.aet.helios.branch.BranchRepository;
+import de.tum.cit.aet.helios.common.util.DateUtil;
 import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
 import de.tum.cit.aet.helios.user.UserRepository;
 import de.tum.cit.aet.helios.user.github.GitHubUserConverter;
-import de.tum.cit.aet.helios.util.DateUtil;
 import jakarta.transaction.Transactional;
 import java.io.IOException;
 import lombok.RequiredArgsConstructor;
@@ -13,9 +13,7 @@ import org.kohsuke.github.GHBranch;
 import org.kohsuke.github.GHRepository;
 import org.springframework.stereotype.Service;
 
-/**
- * Service for synchronizing branches from GitHub repositories.
- */
+/** Service for synchronizing branches from GitHub repositories. */
 @Service
 @Log4j2
 @RequiredArgsConstructor
@@ -26,7 +24,6 @@ public class GitHubBranchSyncService {
   private final UserRepository userRepository;
   private final GitHubBranchConverter branchConverter;
   private final GitHubUserConverter userConverter;
-
 
   /**
    * Processes a single GitHub branch by updating or creating it in the local repository. Manages

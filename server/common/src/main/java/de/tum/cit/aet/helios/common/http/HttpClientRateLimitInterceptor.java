@@ -1,6 +1,5 @@
-package de.tum.cit.aet.helios.http;
+package de.tum.cit.aet.helios.common.http;
 
-import de.tum.cit.aet.helios.util.RateLimitUtil;
 import java.io.IOException;
 import java.time.Instant;
 import lombok.RequiredArgsConstructor;

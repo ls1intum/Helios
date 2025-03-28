@@ -2,12 +2,12 @@ package de.tum.cit.aet.helios.workflow.github;
 
 import static de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment.mapWorkflowRunStatus;
 
+import de.tum.cit.aet.helios.common.util.DateUtil;
 import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
 import de.tum.cit.aet.helios.pullrequest.PullRequest;
 import de.tum.cit.aet.helios.pullrequest.PullRequestRepository;
-import de.tum.cit.aet.helios.util.DateUtil;
 import de.tum.cit.aet.helios.workflow.Workflow;
 import de.tum.cit.aet.helios.workflow.WorkflowRepository;
 import de.tum.cit.aet.helios.workflow.WorkflowRun;
@@ -160,10 +160,12 @@ public class GitHubWorkflowRunSyncService {
             heliosDeployment -> {
               try {
                 if (workflowRun
-                    .getUpdatedAt()
-                    .toInstant()
-                    .isAfter(heliosDeployment.getUpdatedAt().toInstant())
-                    || workflowRun.getUpdatedAt().toInstant()
+                        .getUpdatedAt()
+                        .toInstant()
+                        .isAfter(heliosDeployment.getUpdatedAt().toInstant())
+                    || workflowRun
+                        .getUpdatedAt()
+                        .toInstant()
                         .equals(heliosDeployment.getUpdatedAt().toInstant())) {
                   heliosDeployment.setUpdatedAt(
                       DateUtil.convertToOffsetDateTime(workflowRun.getUpdatedAt()));
@@ -173,15 +175,15 @@ public class GitHubWorkflowRunSyncService {
 
                   // Update the deployment status
                   heliosDeployment.setStatus(mappedStatus);
-    
+
                   // Update the workflow run html url, so we can show the approval url
                   // to the user before the Github deployment is created
                   heliosDeployment.setWorkflowRunHtmlUrl(workflowRun.getHtmlUrl().toString());
 
                   log.info(
-                          "Updated HeliosDeployment {} to status {}",
-                          heliosDeployment.getId(),
-                          mappedStatus);
+                      "Updated HeliosDeployment {} to status {}",
+                      heliosDeployment.getId(),
+                      mappedStatus);
                   heliosDeploymentRepository.save(heliosDeployment);
                 }
               } catch (IOException e) {

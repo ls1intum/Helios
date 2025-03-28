@@ -1,7 +1,7 @@
 package de.tum.cit.aet.helios.gitrepo.github;
 
+import de.tum.cit.aet.helios.common.util.DateUtil;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
-import de.tum.cit.aet.helios.util.DateUtil;
 import java.io.IOException;
 import lombok.extern.log4j.Log4j2;
 import org.kohsuke.github.GHRepository;
@@ -12,8 +12,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @Log4j2
-public class GitHubRepositoryConverter
-    implements Converter<GHRepository, GitRepository> {
+public class GitHubRepositoryConverter implements Converter<GHRepository, GitRepository> {
   @Override
   public GitRepository convert(@NonNull GHRepository source) {
     return update(source, new GitRepository());

@@ -1,8 +1,8 @@
 package de.tum.cit.aet.helios.user.github;
 
+import de.tum.cit.aet.helios.common.util.DateUtil;
 import de.tum.cit.aet.helios.user.User;
 import de.tum.cit.aet.helios.user.UserRepository;
-import de.tum.cit.aet.helios.util.DateUtil;
 import java.io.IOException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -20,7 +20,6 @@ public class GitHubUserSyncService {
 
   private final UserRepository userRepository;
   private final GitHubUserConverter userConverter;
-
 
   @Transactional(propagation = Propagation.REQUIRES_NEW)
   public User getAnonymousUser() {
@@ -56,7 +55,7 @@ public class GitHubUserSyncService {
    *
    * @param ghUser The GitHub user data to process.
    * @return The updated or newly created User entity, or {@code null} if an error occurred during
-   *      update.
+   *     update.
    */
   @Transactional(propagation = Propagation.REQUIRES_NEW)
   public User processUser(GHUser ghUser) {
@@ -68,9 +67,9 @@ public class GitHubUserSyncService {
                   try {
                     if (user.getUpdatedAt() == null
                         || (ghUser.getUpdatedAt() != null
-                        && user.getUpdatedAt()
-                        .isBefore(
-                            DateUtil.convertToOffsetDateTime(ghUser.getUpdatedAt())))) {
+                            && user.getUpdatedAt()
+                                .isBefore(
+                                    DateUtil.convertToOffsetDateTime(ghUser.getUpdatedAt())))) {
                       return userConverter.update(ghUser, user);
                     }
                     return user;
