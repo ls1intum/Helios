@@ -1111,8 +1111,10 @@ components:
           type: string
         workflowRunHtmlUrl:
           type: string
-        releaseCandidateName:
-          type: string
+        releaseCandidateNames:
+          type: array
+          items:
+            type: string
         prName:
           type: string
         user:
@@ -1988,8 +1990,10 @@ components:
           type: boolean
         isProtected:
           type: boolean
-        releaseCandidateName:
-          type: string
+        releaseCandidateNames:
+          type: array
+          items:
+            type: string
         updatedAt:
           type: string
           format: date-time

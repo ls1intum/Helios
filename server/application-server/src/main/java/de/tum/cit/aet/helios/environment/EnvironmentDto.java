@@ -70,7 +70,7 @@ public record EnvironmentDto(
       String ref,
       String task,
       String workflowRunHtmlUrl,
-      String releaseCandidateName,
+      List<String> releaseCandidateNames,
       String prName,
       UserInfoDto user,
       Integer pullRequestNumber,
@@ -91,8 +91,8 @@ public record EnvironmentDto(
           union.getWorkflowRunHtmlUrl(),
           releaseCandidateRepository
               .findByRepositoryRepositoryIdAndCommitSha(union.getRepository().id(), union.getSha())
-              .map(ReleaseCandidate::getName)
-              .orElse(null),
+              .stream()
+              .map(ReleaseCandidate::getName).toList(),
           union.getPullRequestName(),
           UserInfoDto.fromUser(union.getCreator()),
           union.getPullRequestNumber(),

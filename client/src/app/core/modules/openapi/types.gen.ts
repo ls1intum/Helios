@@ -27,7 +27,7 @@ export type EnvironmentDeployment = {
   ref?: string;
   task?: string;
   workflowRunHtmlUrl?: string;
-  releaseCandidateName?: string;
+  releaseCandidateNames?: Array<string>;
   prName?: string;
   user?: UserInfoDto;
   pullRequestNumber?: number;
@@ -373,7 +373,7 @@ export type BranchDetailsDto = {
   behindBy?: number;
   isDefault?: boolean;
   isProtected?: boolean;
-  releaseCandidateName?: string;
+  releaseCandidateNames?: Array<string>;
   updatedAt?: string;
   updatedBy?: UserInfoDto;
   repository?: RepositoryInfoDto;

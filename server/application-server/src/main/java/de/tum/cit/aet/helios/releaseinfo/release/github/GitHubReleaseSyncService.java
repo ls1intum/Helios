@@ -3,6 +3,7 @@ package de.tum.cit.aet.helios.releaseinfo.release.github;
 import de.tum.cit.aet.helios.commit.Commit;
 import de.tum.cit.aet.helios.commit.CommitRepository;
 import de.tum.cit.aet.helios.commit.github.GitHubCommitSyncService;
+import de.tum.cit.aet.helios.github.GitHubService;
 import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
 import de.tum.cit.aet.helios.releaseinfo.release.ReleaseRepository;
 import de.tum.cit.aet.helios.releaseinfo.releasecandidate.ReleaseCandidate;
@@ -27,6 +28,7 @@ public class GitHubReleaseSyncService {
   private final GitRepoRepository gitRepoRepository;
   private final ReleaseCandidateRepository releaseCandidateRepository;
   private final CommitRepository commitRepository;
+  private final GitHubService gitHubService;
 
   /**
    * Processes a single GitHub release by updating or creating it in the local repository. Manages
@@ -61,7 +63,9 @@ public class GitHubReleaseSyncService {
         .orElseGet(
             () -> {
               try {
-                final GHRef ref = ghRepository.getRef("tags/" + ghRelease.getTagName());
+                GHRepository currentRepository = gitHubService
+                    .getRepository(ghRepository.getFullName());
+                final GHRef ref = currentRepository.getRef("tags/" + ghRelease.getTagName());
                 final Commit commit =
                     commitRepository
                         .findByShaAndRepositoryRepositoryId(
@@ -70,7 +74,8 @@ public class GitHubReleaseSyncService {
                             () -> {
                               try {
                                 return commitSyncService.processCommit(
-                                    ghRepository.getCommit(ref.getObject().getSha()), ghRepository);
+                                  currentRepository
+                                      .getCommit(ref.getObject().getSha()), ghRepository);
                               } catch (IOException e) {
                                 log.error(
                                     "Failed to get commit for release candidate {}: {}",

@@ -18,7 +18,7 @@ public interface ReleaseCandidateRepository
   Optional<ReleaseCandidate> findByRepositoryRepositoryIdAndReleaseId(
       Long repositoryId, Long releaseId);
 
-  Optional<ReleaseCandidate> findByRepositoryRepositoryIdAndCommitSha(
+  List<ReleaseCandidate> findByRepositoryRepositoryIdAndCommitSha(
       Long repositoryId, String commitSha);
 
   boolean existsByRepositoryRepositoryIdAndName(Long repositoryId, String name);

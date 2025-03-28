@@ -65,9 +65,8 @@ public class BranchService {
                     branch,
                     releaseCandidateRepository
                         .findByRepositoryRepositoryIdAndCommitSha(
-                            repositoryId, branch.getCommitSha())
-                        .map(ReleaseCandidate::getName)
-                        .orElseGet(() -> null)));
+                            repositoryId, branch.getCommitSha()).stream()
+                        .map(ReleaseCandidate::getName).toList()));
   }
 
   public void setBranchPinnedByRepositoryIdAndName(Long repoId, String name, Boolean isPinned) {

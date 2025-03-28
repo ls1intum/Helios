@@ -86,8 +86,11 @@ export const EnvironmentDeploymentSchema = {
     workflowRunHtmlUrl: {
       type: 'string',
     },
-    releaseCandidateName: {
-      type: 'string',
+    releaseCandidateNames: {
+      type: 'array',
+      items: {
+        type: 'string',
+      },
     },
     prName: {
       type: 'string',
@@ -1112,8 +1115,11 @@ export const BranchDetailsDtoSchema = {
     isProtected: {
       type: 'boolean',
     },
-    releaseCandidateName: {
-      type: 'string',
+    releaseCandidateNames: {
+      type: 'array',
+      items: {
+        type: 'string',
+      },
     },
     updatedAt: {
       type: 'string',
