@@ -1,12 +1,20 @@
 <main class="h-screen overflow-hidden">
-  @if (!isLoggedIn()) {
-    <!-- Top Bar -->
-    <div class="top-1 bg-gray-700 text-white rounded-b-2xl z-50 text-center flex items-center justify-center gap-1">
-      You are currently using Helios in readonly mode.
-      <button (click)="login()" class="p-0 text-white hover:text-gray-300 underline">Login here.</button>
+  <div class="px-6 py-1.5 flex items-center justify-between">
+    <div class="flex items-center gap-6">
+      <div class="flex items-center gap-2 cursor-pointer" routerLink="/">
+        <div class="size-12">
+          <app-helios-icon size="2.5rem" class="rounded-xl w-8 cursor-pointer" />
+        </div>
+        <div class="text-gray-700 hover:text-gray-800 text-2xl font-semibold">Helios</div>
+      </div>
+      <p-tag class="bg-gray-700 text-white md:block hidden" pTooltip="Login to Edit" tooltipPosition="bottom">You are currently using Helios in readonly mode</p-tag>
+      <p-tag class="bg-gray-700 text-white md:hidden block" pTooltip="Login to Edit" tooltipPosition="bottom">Readonly Mode</p-tag>
     </div>
-  }
-  <div class="flex flex-grow p-3" [ngClass]="dynamicHeight()">
+    <div>
+      <app-profile-nav-section [isExpanded]="true" />
+    </div>
+  </div>
+  <div class="flex flex-grow p-3 pt-0 h-[calc(100vh-3.75rem)]">
     <!-- Fixed Navigation Bar -->
     <div class="h-full sticky top-3 flex">
       <app-navigation-bar [repositoryId]="repositoryId()"></app-navigation-bar>
@@ -14,13 +22,15 @@
 
     <!-- Scrollable Content Area -->
     <div class="flex-grow overflow-hidden h-full border border-gray-200 rounded-2xl">
-      <div class="h-full overflow-auto p-6 mx-auto">
-        <router-outlet />
+      <div class="flex flex-col justify-between overflow-auto h-full mx-auto">
+        <div class="p-6">
+          <router-outlet />
+        </div>
+        <!-- Scrollable Footer -->
+        <app-footer></app-footer>
       </div>
     </div>
     <p-toast></p-toast>
     <p-confirmdialog />
   </div>
-  <!-- Footer (outside of scrollable content) -->
-  <app-footer></app-footer>
 </main>
