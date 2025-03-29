@@ -167,6 +167,9 @@ export type TestCaseDto = {
   message?: string;
   stackTrace?: string;
   errorType?: string;
+  isFlaky?: boolean;
+  failureRate?: number;
+  failsInDefaultBranch?: boolean;
 };
 
 export type TestResultsDto = {

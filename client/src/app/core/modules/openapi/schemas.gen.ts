@@ -484,6 +484,16 @@ export const TestCaseDtoSchema = {
     errorType: {
       type: 'string',
     },
+    isFlaky: {
+      type: 'boolean',
+    },
+    failureRate: {
+      type: 'number',
+      format: 'double',
+    },
+    failsInDefaultBranch: {
+      type: 'boolean',
+    },
   },
   required: ['className', 'id', 'name', 'status', 'time'],
 } as const;
