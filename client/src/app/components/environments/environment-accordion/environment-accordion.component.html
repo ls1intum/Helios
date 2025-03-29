@@ -1,0 +1,133 @@
+<p-accordion-panel [value]="environment().id">
+  <p-accordion-header>
+    <div class="flex gap-2 items-start w-full flex-wrap md:flex-nowrap flex-col md:items-center md:flex-row">
+      <div class="flex flex-col gap-1 flex-wrap">
+        <div class="flex gap-1 items-center mr-3">
+          <span [pTooltip]="'Open Environment'" class="cursor-pointer hover:bg-gray-200 px-2 py-1 rounded" (click)="openExternalLink($event, environment().serverUrl)">
+            {{ environment().name }}
+          </span>
+
+          <app-lock-tag [isLocked]="!!environment().locked"></app-lock-tag>
+
+          @if (environment().latestStatus; as status) {
+            <app-environment-status-tag [status]="status" />
+          }
+
+          @if (environment().type) {
+            <p-tag [value]="formatEnvironmentType(environment().type || '')" severity="secondary" rounded="true" />
+          }
+        </div>
+
+        @if (environment().latestDeployment; as deployment) {
+          <div class="flex gap-1 items-center text-sm mt-2 flex-wrap">
+            <app-user-avatar [user]="environment().latestDeployment?.user" tooltipPosition="top" />
+            @if (environment().latestDeployment?.user?.name) {
+              {{ environment().latestDeployment?.user?.name }} deployed
+            }
+            @if (environment().latestDeployment?.updatedAt) {
+              <span [pTooltip]="getDeploymentTime(environment()) || ''">
+                {{ environment().latestDeployment?.updatedAt || '' | timeAgo }}
+              </span>
+            }
+            <app-deployment-state-tag [state]="deployment.state" [deployment]="deployment" />
+
+            <!-- Branch or Release Tag -->
+            <p-tag
+              severity="secondary"
+              rounded="true"
+              class="max-w-[250px] flex items-center"
+              [pTooltip]="isRelease(deployment) ? '' : 'Go to ' + deployment.ref"
+              tooltipPosition="top"
+              (click)="$event.stopPropagation()"
+              [routerLink]="isRelease(deployment) ? null : getBranchLink()"
+            >
+              @if (isRelease(deployment)) {
+                <i-tabler name="tag" class="!size-5 flex-shrink-0"></i-tabler>
+              }
+              <span class="truncate flex-1">{{ deployment.ref }}</span>
+            </p-tag>
+
+            @if (deployment.pullRequestNumber) {
+              <!-- PR Tag -->
+              <p-tag
+                severity="secondary"
+                rounded="true"
+                class="max-w-[350px] flex items-center"
+                [pTooltip]="'Go to ' + (deployment.prName || 'Pull Request #' + deployment.pullRequestNumber)"
+                tooltipPosition="top"
+                (click)="$event.stopPropagation()"
+                [routerLink]="getPrLink()"
+              >
+                <i-tabler name="git-pull-request" class="!size-5 flex-shrink-0"></i-tabler>
+                <span class="truncate flex-1">#{{ deployment.pullRequestNumber }}</span>
+              </p-tag>
+            }
+          </div>
+        }
+      </div>
+
+      <div class="flex-grow"></div>
+
+      <!-- Environment Actions Component -->
+      <app-environment-actions
+        [environment]="environment()"
+        [deployable]="deployable()"
+        [canViewAllEnvironments]="canViewAllEnvironments()"
+        [timeUntilReservationExpires]="timeUntilReservationExpires()"
+        (deploy)="onDeploy($event)"
+        (unlock)="onUnlock($event)"
+        (extend)="onExtend($event)"
+        (lock)="onLock($event)"
+      >
+      </app-environment-actions>
+    </div>
+  </p-accordion-header>
+
+  <p-accordion-content>
+    <div class="flex w-full flex-col gap-4">
+      <!-- Toggle Button -->
+      <div class="flex justify-start gap-2">
+        <p-selectbutton
+          [options]="[
+            { label: 'Details', value: false },
+            { label: 'Deployment', value: true },
+          ]"
+          [(ngModel)]="showLatestDeployment"
+          optionLabel="label"
+          optionValue="value"
+          aria-labelledby="basic"
+        />
+      </div>
+
+      <!-- Content container div that wraps both details and deployment views -->
+      <div class="flex w-full">
+        @if (showLatestDeployment()) {
+          <!-- Direct use of deployment stepper -->
+          <app-deployment-stepper [deployment]="environment().latestDeployment" class="w-full" />
+        } @else {
+          <app-environment-details [environment]="environment()"></app-environment-details>
+        }
+      </div>
+
+      <!-- Footer links and tags -->
+      <div class="flex gap-4 items-center justify-between">
+        <div class="flex gap-1 mt-2 items-center">
+          <a
+            icon
+            [routerLink]="'/repo/' + environment().repository?.id + '/environment/' + environment().id + '/history'"
+            class="p-button p-button-text text-gray-500 py-2 flex items-center"
+          >
+            <i-tabler class="mr-1" name="history" />
+            View Activity History
+          </a>
+        </div>
+        <div class="flex flex-grow"></div>
+        <div class="flex gap-2">
+          @for (installedApp of environment().installedApps; track installedApp) {
+            <p-tag class="bg-gray-300 gap-0">{{ installedApp }}</p-tag>
+          }
+        </div>
+      </div>
+    </div>
+  </p-accordion-content>
+</p-accordion-panel>

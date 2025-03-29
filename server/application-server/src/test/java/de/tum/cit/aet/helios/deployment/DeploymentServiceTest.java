@@ -137,7 +137,7 @@ public class DeploymentServiceTest {
   public void testDeployWithInvalidDeployRequest() {
     DeployRequest deployRequest = mock(DeployRequest.class);
     when(deployRequest.environmentId()).thenReturn(null);
-    when(deployRequest.branchName()).thenReturn("main");
+    when(deployRequest.commitSha()).thenReturn("main");
 
     Exception exception =
         assertThrows(
@@ -146,10 +146,10 @@ public class DeploymentServiceTest {
               deploymentService.deployToEnvironment(deployRequest);
             });
 
-    assertTrue(exception.getMessage().contains("Environment ID and branch name must not be null"));
+    assertTrue(exception.getMessage().contains("Environment ID and commit sha must not be null"));
 
     when(deployRequest.environmentId()).thenReturn(1L);
-    when(deployRequest.branchName()).thenReturn(null);
+    when(deployRequest.commitSha()).thenReturn(null);
 
     Exception exception2 =
         assertThrows(
@@ -158,7 +158,7 @@ public class DeploymentServiceTest {
               deploymentService.deployToEnvironment(deployRequest);
             });
 
-    assertTrue(exception2.getMessage().contains("Environment ID and branch name must not be null"));
+    assertTrue(exception2.getMessage().contains("Environment ID and commit sha must not be null"));
   }
 
   @Test
@@ -233,7 +233,7 @@ public class DeploymentServiceTest {
     when(authService.hasRole("ROLE_WRITE")).thenReturn(true);
 
     assertFalse(deploymentService.canDeployToEnvironment(Environment.Type.PRODUCTION));
-    assertFalse(deploymentService.canDeployToEnvironment(Environment.Type.STAGING));
+    assertTrue(deploymentService.canDeployToEnvironment(Environment.Type.STAGING));
     assertTrue(deploymentService.canDeployToEnvironment(Environment.Type.TEST));
   }
 
@@ -243,7 +243,7 @@ public class DeploymentServiceTest {
     when(authService.hasRole("ROLE_MAINTAINER")).thenReturn(true);
 
     assertFalse(deploymentService.canDeployToEnvironment(Environment.Type.PRODUCTION));
-    assertFalse(deploymentService.canDeployToEnvironment(Environment.Type.STAGING));
+    assertTrue(deploymentService.canDeployToEnvironment(Environment.Type.STAGING));
     assertTrue(deploymentService.canDeployToEnvironment(Environment.Type.TEST));
   }
 

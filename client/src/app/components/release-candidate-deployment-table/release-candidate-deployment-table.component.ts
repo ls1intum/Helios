@@ -1,11 +1,11 @@
 import { Component, computed, inject, input, signal } from '@angular/core';
-import { EnvironmentDto, ReleaseCandidateDetailsDto } from '@app/core/modules/openapi';
+import { EnvironmentDto, ReleaseInfoDetailsDto } from '@app/core/modules/openapi';
 import {
   deployToEnvironmentMutation,
   getAllEnabledEnvironmentsOptions,
   getAllEnabledEnvironmentsQueryKey,
   getEnvironmentByIdQueryKey,
-  getReleaseCandidateByNameQueryKey,
+  getReleaseInfoByNameQueryKey,
 } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 import { PermissionService } from '@app/core/services/permission.service';
@@ -28,7 +28,7 @@ import { DeploymentStateTagComponent } from '../environments/deployment-state-ta
   templateUrl: './release-candidate-deployment-table.component.html',
 })
 export class ReleaseCandidateDeploymentTableComponent {
-  releaseCandidate = input.required<ReleaseCandidateDetailsDto>();
+  releaseCandidate = input.required<ReleaseInfoDetailsDto>();
   queryClient = inject(QueryClient);
   selectedEnvironmentId = signal<number | undefined>(undefined);
   messageService = inject(MessageService);
@@ -40,7 +40,10 @@ export class ReleaseCandidateDeploymentTableComponent {
 
   environmentQuery = injectQuery(() => ({ ...getAllEnabledEnvironmentsOptions(), refetchInterval: 3000 }));
 
-  deployableEnvironments = computed(() => this.environmentQuery.data()?.filter(environment => environment.type === 'STAGING' || environment.type === 'PRODUCTION'));
+  groupedEnvironments = computed(() => {
+    const environments = this.environmentQuery.data() || [];
+    return environments.map(env => ({ ...env, type: env.type || 'Ungrouped' }));
+  });
 
   deployToEnvironment = injectMutation(() => ({
     ...deployToEnvironmentMutation(),
@@ -61,14 +64,14 @@ export class ReleaseCandidateDeploymentTableComponent {
       {
         body: {
           environmentId: environment.id,
-          branchName: this.releaseCandidate().branch.name,
+          branchName: this.releaseCandidate().branch?.name,
           commitSha: this.releaseCandidate().commit.sha,
         },
       },
       {
         onSuccess: () => {
           this.queryClient.invalidateQueries({ queryKey: getAllEnabledEnvironmentsQueryKey() });
-          this.queryClient.invalidateQueries({ queryKey: getReleaseCandidateByNameQueryKey({ path: { name: this.releaseCandidate().name } }) });
+          this.queryClient.invalidateQueries({ queryKey: getReleaseInfoByNameQueryKey({ path: { name: this.releaseCandidate().name } }) });
 
           this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Deployment started successfully' });
         },
@@ -110,6 +113,10 @@ export class ReleaseCandidateDeploymentTableComponent {
     if (environment.serverUrl) {
       window.open(this.getFullUrl(environment.serverUrl), '_blank');
     }
+  }
+
+  capitalizeFirstLetter(string: string): string {
+    return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
   }
 
   private getFullUrl(url: string): string {

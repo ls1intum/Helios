@@ -1,8 +1,9 @@
-package de.tum.cit.aet.helios.releasecandidate;
+package de.tum.cit.aet.helios.releaseinfo.releasecandidate;
 
 import de.tum.cit.aet.helios.branch.Branch;
 import de.tum.cit.aet.helios.commit.Commit;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
+import de.tum.cit.aet.helios.releaseinfo.release.Release;
 import de.tum.cit.aet.helios.user.User;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
@@ -35,7 +36,7 @@ public class ReleaseCandidate {
 
   @Id private String name;
 
-  @OneToOne(optional = false)
+  @ManyToOne(optional = false)
   private Commit commit;
 
   @ManyToOne(fetch = FetchType.LAZY)
@@ -50,6 +51,8 @@ public class ReleaseCandidate {
   private Set<ReleaseCandidateEvaluation> evaluations = new HashSet<>();
 
   private OffsetDateTime createdAt;
+
+  @OneToOne private Release release;
 
   public int compareToByDate(ReleaseCandidate other) {
     return this.createdAt.compareTo(other.createdAt);

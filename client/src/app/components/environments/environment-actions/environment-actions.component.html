@@ -1,0 +1,81 @@
+<div class="flex gap-2 items-center self-end md:self-center">
+  @if (environment().locked) {
+    <div class="flex gap-1 items-center">
+      <app-user-avatar [user]="environment().lockedBy" [toolTipText]="'Locked By'" tooltipPosition="top" />
+    </div>
+    @if (environment().lockedAt) {
+      <app-lock-time [timeLockWillExpire]="environment().lockWillExpireAt"></app-lock-time>
+    }
+  }
+
+  <div class="flex items-center border border-gray-300 rounded-md overflow-hidden">
+    <!-- Deploy Button -->
+    @if (deployable()) {
+      <p-button outlined (click)="onDeploy($event)" [disabled]="!canUserDeploy()" [pTooltip]="getDeployTooltip()" tooltipPosition="top">
+        <div class="flex items-center">
+          <i-tabler name="cloud-upload" class="w-4 h-4 mr-1.5 flex-shrink-0 text-primary-700" />
+          <span>Deploy</span>
+        </div>
+      </p-button>
+      <div class="w-px bg-gray-300 self-stretch"></div>
+    }
+
+    <!-- Lock/Unlock Controls -->
+    @if (environment().enabled && environment().type === 'TEST') {
+      <p-buttongroup>
+        @if (!environment().locked) {
+          @if (deployable()) {
+            <p-button outlined (click)="onLock($event)" [disabled]="!canUserDeploy()" [pTooltip]="getLockTooltip()" tooltipPosition="top">
+              <div class="flex items-center">
+                <i-tabler name="lock" class="w-4 h-4 flex-shrink-0 text-red-700" />
+              </div>
+            </p-button>
+          }
+        } @else {
+          @if (canUnlockShow()) {
+            <p-button severity="danger" class="[&>*]:!rounded-none" (click)="onUnlock($event)" [disabled]="!canUnlock()" [pTooltip]="getUnlockToolTip()" tooltipPosition="top">
+              <div class="flex items-center">
+                <i-tabler name="lock-open" class="w-4 h-4 flex-shrink-0 text-white" />
+              </div>
+            </p-button>
+            @if (isCurrentUserLocked()) {
+              <p-button outlined (click)="onExtend($event)" [disabled]="!canUnlock()" [pTooltip]="'Extend my lock expiration'" tooltipPosition="top">
+                <i-tabler name="lock-plus" class="w-4 h-4 flex-shrink-0 text-green-700" />
+              </p-button>
+            }
+          }
+        }
+      </p-buttongroup>
+    }
+
+    <!-- Approve Button -->
+    @if (environment().latestDeployment?.state === 'WAITING') {
+      <p-button
+        severity="success"
+        (click)="openExternalLink($event, environment().latestDeployment?.workflowRunHtmlUrl)"
+        pTooltip="Approve deployment on GitHub"
+        tooltipPosition="top"
+      >
+        <div class="flex items-center">
+          <i-tabler name="check" class="w-4 h-4 flex-shrink-0" />
+        </div>
+      </p-button>
+    }
+  </div>
+
+  <!-- Edit & Disabled Tag -->
+  @if (canViewAllEnvironments()) {
+    @if (!environment().enabled) {
+      <p-tag value="Disabled" severity="danger" rounded="true" />
+    }
+    <a
+      icon
+      [routerLink]="'/repo/' + environment().repository?.id + '/environment/' + environment().id + '/edit'"
+      class="p-button p-button-secondary p-2"
+      (click)="$event.stopPropagation()"
+    >
+      <i-tabler name="pencil" />
+    </a>
+  }
+  <span class="w-2"></span>
+</div>

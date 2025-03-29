@@ -10,8 +10,8 @@
             <input pInputText type="text" pSize="small" placeholder="Search" class="w-full" disabled />
           </div>
         </th>
-        <th>Branch</th>
         <th>Commit</th>
+        <th>Branch</th>
       </tr>
     </ng-template>
     <ng-template pTemplate="body">
@@ -34,27 +34,33 @@
             <app-table-filter [table]="table" [searchTableService]="searchTableService" />
           </div>
         </th>
-        <th>Branch</th>
         <th>Commit</th>
+        <th>Branch</th>
       </tr>
     </ng-template>
     <ng-template pTemplate="body" let-releaseCandidate>
       <tr class="cursor-pointer" [routerLink]="'../' + releaseCandidate.name">
         <td>
-          <p-tag [value]="releaseCandidate.name" [rounded]="true" class="border font-medium text-xs py-0.5 whitespace-nowrap" />
+          <div class="flex gap-4">
+            <p-tag [value]="releaseCandidate.name" [rounded]="true" class="border font-medium text-xs py-0.5 whitespace-nowrap" />
+            @if (releaseCandidate.isPublished) {
+              <p-tag value="Published to GitHub" [rounded]="true" class="border font-medium text-xs py-0.5 whitespace-nowrap border-red-500 text-red-500" />
+            }
+          </div>
         </td>
-        <td>
-          <p-tag>
-            <i-tabler name="git-branch" class="!size-5" />
-            {{ releaseCandidate.branchName }}
-          </p-tag>
-        </td>
-
         <td>
           <p-tag>
             <i-tabler name="git-commit" class="!size-5" />
             {{ releaseCandidate.commitSha | slice: 0 : 6 }}
           </p-tag>
+        </td>
+        <td>
+          @if (releaseCandidate.branchName) {
+            <p-tag>
+              <i-tabler name="git-branch" class="!size-5" />
+              {{ releaseCandidate.branchName }}
+            </p-tag>
+          }
         </td>
       </tr>
     </ng-template>

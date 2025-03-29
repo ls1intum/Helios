@@ -5,8 +5,8 @@ import de.tum.cit.aet.helios.deployment.LatestDeploymentUnion.DeploymentType;
 import de.tum.cit.aet.helios.environment.status.EnvironmentStatus;
 import de.tum.cit.aet.helios.environment.status.StatusCheckType;
 import de.tum.cit.aet.helios.gitrepo.RepositoryInfoDto;
-import de.tum.cit.aet.helios.releasecandidate.ReleaseCandidate;
-import de.tum.cit.aet.helios.releasecandidate.ReleaseCandidateRepository;
+import de.tum.cit.aet.helios.releaseinfo.releasecandidate.ReleaseCandidate;
+import de.tum.cit.aet.helios.releaseinfo.releasecandidate.ReleaseCandidateRepository;
 import de.tum.cit.aet.helios.user.UserInfoDto;
 import de.tum.cit.aet.helios.workflow.WorkflowDto;
 import java.time.Instant;
@@ -70,7 +70,7 @@ public record EnvironmentDto(
       String ref,
       String task,
       String workflowRunHtmlUrl,
-      String releaseCandidateName,
+      List<String> releaseCandidateNames,
       String prName,
       UserInfoDto user,
       Integer pullRequestNumber,
@@ -91,8 +91,8 @@ public record EnvironmentDto(
           union.getWorkflowRunHtmlUrl(),
           releaseCandidateRepository
               .findByRepositoryRepositoryIdAndCommitSha(union.getRepository().id(), union.getSha())
-              .map(ReleaseCandidate::getName)
-              .orElse(null),
+              .stream()
+              .map(ReleaseCandidate::getName).toList(),
           union.getPullRequestName(),
           UserInfoDto.fromUser(union.getCreator()),
           union.getPullRequestNumber(),
