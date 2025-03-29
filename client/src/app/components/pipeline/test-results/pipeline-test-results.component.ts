@@ -293,4 +293,9 @@ export class PipelineTestResultsComponent {
     this.testSuiteFirst.set(event.first || 0);
     this.testSuiteRows.set(event.rows || 10);
   };
+
+  formatFailureRate = (failureRate: number | undefined) => {
+    if (failureRate === undefined) return 'N/A';
+    return failureRate.toFixed(2);
+  };
 }
