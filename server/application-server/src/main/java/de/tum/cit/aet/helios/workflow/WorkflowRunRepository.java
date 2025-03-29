@@ -112,6 +112,20 @@ public interface WorkflowRunRepository extends JpaRepository<WorkflowRun, Long> 
   List<WorkflowRun> findByHeadBranchAndHeadShaAndRepositoryIdAndPullRequestsIsNullWithTestSuites(
       String branch, String headSha, Long repositoryId);
 
+  @Query(
+      value =
+          """
+          SELECT DISTINCT wr FROM WorkflowRun wr
+          LEFT JOIN FETCH wr.testSuites
+          WHERE wr.headBranch = :branch
+          AND wr.repository.repositoryId = :repositoryId
+          AND wr.pullRequests IS EMPTY
+          ORDER BY wr.createdAt DESC
+          LIMIT 1
+          """)
+  List<WorkflowRun> findByHeadBranchAndRepositoryIdAndPullRequestsIsNullWithTestSuites(
+      @Param("branch") String branch, @Param("repositoryId") Long repositoryId);
+
   List<WorkflowRun> findByPullRequestsIdAndHeadSha(Long pullRequestsId, String headSha);
 
   List<WorkflowRun> findByHeadBranchAndHeadShaAndRepositoryRepositoryIdAndPullRequestsIsNull(

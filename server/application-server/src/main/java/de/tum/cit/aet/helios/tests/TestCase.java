@@ -71,6 +71,9 @@ public class TestCase {
    */
   @Transient private double failureRate;
 
+  /** Transient field indicating whether this test also fails in the default branch. */
+  @Transient private boolean failsInDefaultBranch;
+
   public static enum TestStatus {
     PASSED,
     FAILED,

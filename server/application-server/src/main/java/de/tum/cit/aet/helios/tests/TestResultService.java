@@ -1,12 +1,16 @@
 package de.tum.cit.aet.helios.tests;
 
+import de.tum.cit.aet.helios.branch.Branch;
 import de.tum.cit.aet.helios.branch.BranchRepository;
 import de.tum.cit.aet.helios.filters.RepositoryContext;
+import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
+import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import de.tum.cit.aet.helios.pullrequest.PullRequestRepository;
 import de.tum.cit.aet.helios.tests.TestCase.TestStatus;
 import de.tum.cit.aet.helios.workflow.Workflow;
 import de.tum.cit.aet.helios.workflow.WorkflowRun;
 import de.tum.cit.aet.helios.workflow.WorkflowRunRepository;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,6 +26,8 @@ public class TestResultService {
   private final WorkflowRunRepository workflowRunRepository;
   private final BranchRepository branchRepository;
   private final PullRequestRepository pullRequestRepository;
+  private final TestCaseStatisticsService statisticsService;
+  private final GitRepoRepository gitRepoRepository;
 
   private List<TestSuite> getTestSuitesForWorkflowRuns(List<WorkflowRun> runs) {
     return runs.stream().flatMap(run -> run.getTestSuites().stream()).toList();
@@ -122,19 +128,64 @@ public class TestResultService {
               .map(TestCase::getStatus);
         };
 
-    return new TestResultsDto(
-        testSuites.stream()
+    // Get repository ID from context
+    final Long repositoryId = RepositoryContext.getRepositoryId();
+
+    // Get repository by ID
+    Optional<GitRepository> repositoryOpt = gitRepoRepository.findById(repositoryId);
+    GitRepository repository = repositoryOpt.orElse(null);
+
+    // Get statistics for the default branch if repository is available
+    List<TestCaseStatistics> defaultBranchStats =
+        repository != null
+            ? statisticsService.getStatisticsForDefaultBranch(repository)
+            : List.of();
+
+    // Create a function to check if a test case with similar name exists in the default branch test
+    // runs
+    // and if it fails in the default branch
+    Map<String, Boolean> defaultBranchFailures = getLatestDefaultBranchResults(repository);
+
+    // Create statistics provider function
+    Function<TestCase, TestResultsDto.TestCaseStatisticsInfo> statisticsProvider =
+        testCase -> {
+          // Check if test is flaky from statistics
+          Optional<TestCaseStatistics> stats =
+              defaultBranchStats.stream()
+                  .filter(
+                      s ->
+                          s.getTestName().equals(testCase.getName())
+                              && s.getClassName().equals(testCase.getClassName()))
+                  .findFirst();
+
+          boolean isFlaky = stats.map(TestCaseStatistics::isFlaky).orElse(false);
+          double failureRate = stats.map(TestCaseStatistics::getFailureRate).orElse(0.0);
+
+          // Check if test fails in default branch latest run
+          String key = testCase.getClassName() + "." + testCase.getName();
+          boolean failsInDefaultBranch = defaultBranchFailures.getOrDefault(key, false);
+
+          return new TestResultsDto.TestCaseStatisticsInfo(
+              isFlaky, failureRate, failsInDefaultBranch);
+        };
+
+    // Convert test suites to DTOs with statistics
+    List<TestSuite> sortedTestSuites = new ArrayList<>();
+    for (TestSuite suite : testSuites) {
+      List<TestCase> sortedTestCases = sortTestCases(suite.getTestCases(), previousStatusProvider);
+      suite.setTestCases(sortedTestCases);
+      sortedTestSuites.add(suite);
+    }
+
+    List<TestResultsDto.TestSuiteDto> testSuiteDtos =
+        sortedTestSuites.stream()
             .map(
-                testSuite -> {
-                  // Sort test cases before creating the DTO
-                  List<TestCase> sortedTestCases =
-                      sortTestCases(testSuite.getTestCases(), previousStatusProvider);
-                  testSuite.setTestCases(sortedTestCases);
-                  return TestResultsDto.TestSuiteDto.fromTestSuite(
-                      testSuite, previousStatusProvider);
-                })
-            .toList(),
-        isProcessing);
+                suite ->
+                    TestResultsDto.TestSuiteDto.fromTestSuite(
+                        suite, previousStatusProvider, statisticsProvider))
+            .toList();
+
+    return new TestResultsDto(testSuiteDtos, isProcessing);
   }
 
   /**
@@ -182,7 +233,32 @@ public class TestResultService {
                 return 1;
               }
 
-              // 3. Third priority: Alphabetical by name for stable sorting
+              // If both failed, prioritize non-flaky failures and non-default branch failures
+              if (failedA && failedB) {
+                // Check if one is failing in default branch and the other is not
+                boolean aFailsInDefaultBranch = a.isFailsInDefaultBranch();
+                boolean bFailsInDefaultBranch = b.isFailsInDefaultBranch();
+
+                if (!aFailsInDefaultBranch && bFailsInDefaultBranch) {
+                  return -1; // a is more important (user's fault)
+                }
+                if (aFailsInDefaultBranch && !bFailsInDefaultBranch) {
+                  return 1; // b is more important (user's fault)
+                }
+
+                // Check if one is flaky and the other is not
+                boolean aIsFlaky = a.isFlaky();
+                boolean bIsFlaky = b.isFlaky();
+
+                if (!aIsFlaky && bIsFlaky) {
+                  return -1; // a is more important (not flaky)
+                }
+                if (aIsFlaky && !bIsFlaky) {
+                  return 1; // b is more important (not flaky)
+                }
+              }
+
+              // 3. Third priority: Alphabetical sort for stable ordering
               return a.getName().compareTo(b.getName());
             })
         .collect(Collectors.toList());
@@ -293,6 +369,47 @@ public class TestResultService {
               .map(TestCase::getStatus);
         };
 
+    // Get repository ID from context
+    final Long repositoryId = RepositoryContext.getRepositoryId();
+
+    // Get repository by ID
+    Optional<GitRepository> repositoryOpt = gitRepoRepository.findById(repositoryId);
+    GitRepository repository = repositoryOpt.orElse(null);
+
+    // Get statistics for the default branch if repository is available
+    List<TestCaseStatistics> defaultBranchStats =
+        repository != null
+            ? statisticsService.getStatisticsForDefaultBranch(repository)
+            : List.of();
+
+    // Create a function to check if a test case with similar name exists in the default branch test
+    // runs
+    // and if it fails in the default branch
+    Map<String, Boolean> defaultBranchFailures = getLatestDefaultBranchResults(repository);
+
+    // Create statistics provider function
+    Function<TestCase, TestResultsDto.TestCaseStatisticsInfo> statisticsProvider =
+        testCase -> {
+          // Check if test is flaky from statistics
+          Optional<TestCaseStatistics> stats =
+              defaultBranchStats.stream()
+                  .filter(
+                      s ->
+                          s.getTestName().equals(testCase.getName())
+                              && s.getClassName().equals(testCase.getClassName()))
+                  .findFirst();
+
+          boolean isFlaky = stats.map(TestCaseStatistics::isFlaky).orElse(false);
+          double failureRate = stats.map(TestCaseStatistics::getFailureRate).orElse(0.0);
+
+          // Check if test fails in default branch latest run
+          String key = testCase.getClassName() + "." + testCase.getName();
+          boolean failsInDefaultBranch = defaultBranchFailures.getOrDefault(key, false);
+
+          return new TestResultsDto.TestCaseStatisticsInfo(
+              isFlaky, failureRate, failsInDefaultBranch);
+        };
+
     // Convert test suites to DTOs
     List<TestResultsDto.TestSuiteDto> testSuiteDtos =
         testSuites.stream()
@@ -303,7 +420,7 @@ public class TestResultService {
                       sortTestCases(testSuite.getTestCases(), previousStatusProvider);
                   testSuite.setTestCases(sortedTestCases);
                   return TestResultsDto.TestSuiteDto.fromTestSuite(
-                      testSuite, previousStatusProvider);
+                      testSuite, previousStatusProvider, statisticsProvider);
                 })
             .toList();
 
@@ -339,5 +456,49 @@ public class TestResultService {
     }
 
     return new GroupedTestResultsDto(testResults, isProcessing);
+  }
+
+  /**
+   * Gets the latest test results from the default branch of a repository.
+   *
+   * @param repository the repository
+   * @return map of test case keys to failure status
+   */
+  private Map<String, Boolean> getLatestDefaultBranchResults(GitRepository repository) {
+    if (repository == null) {
+      return Map.of();
+    }
+
+    // Get default branch name
+    String defaultBranchName = repository.getDefaultBranch();
+    // Find the default branch
+    Optional<Branch> defaultBranch =
+        branchRepository.findAll().stream()
+            .filter(branch -> branch.getRepository().equals(repository) && branch.isDefault())
+            .findFirst();
+
+    if (defaultBranch.isEmpty()) {
+      return Map.of();
+    }
+
+    // Get the latest workflow runs with test suites from the default branch
+    List<WorkflowRun> defaultBranchRuns =
+        workflowRunRepository.findByHeadBranchAndRepositoryIdAndPullRequestsIsNullWithTestSuites(
+            defaultBranchName, repository.getRepositoryId());
+
+    // Collect test cases and their status
+    Map<String, Boolean> defaultBranchFailures = new HashMap<>();
+    List<TestSuite> defaultBranchTestSuites = getTestSuitesForWorkflowRuns(defaultBranchRuns);
+
+    for (TestSuite suite : defaultBranchTestSuites) {
+      for (TestCase testCase : suite.getTestCases()) {
+        String key = testCase.getClassName() + "." + testCase.getName();
+        boolean isFailed =
+            testCase.getStatus() == TestStatus.FAILED || testCase.getStatus() == TestStatus.ERROR;
+        defaultBranchFailures.put(key, isFailed);
+      }
+    }
+
+    return defaultBranchFailures;
   }
 }
