@@ -236,24 +236,24 @@ public class TestResultService {
               // If both failed, prioritize non-flaky failures and non-default branch failures
               if (failedA && failedB) {
                 // Check if one is failing in default branch and the other is not
-                boolean aFailsInDefaultBranch = a.isFailsInDefaultBranch();
-                boolean bFailsInDefaultBranch = b.isFailsInDefaultBranch();
+                boolean failsInDefault = a.isFailsInDefaultBranch();
+                boolean otherFailsInDefault = b.isFailsInDefaultBranch();
 
-                if (!aFailsInDefaultBranch && bFailsInDefaultBranch) {
+                if (!failsInDefault && otherFailsInDefault) {
                   return -1; // a is more important (user's fault)
                 }
-                if (aFailsInDefaultBranch && !bFailsInDefaultBranch) {
+                if (failsInDefault && !otherFailsInDefault) {
                   return 1; // b is more important (user's fault)
                 }
 
                 // Check if one is flaky and the other is not
-                boolean aIsFlaky = a.isFlaky();
-                boolean bIsFlaky = b.isFlaky();
+                boolean flaky = a.isFlaky();
+                boolean otherFlaky = b.isFlaky();
 
-                if (!aIsFlaky && bIsFlaky) {
+                if (!flaky && otherFlaky) {
                   return -1; // a is more important (not flaky)
                 }
-                if (aIsFlaky && !bIsFlaky) {
+                if (flaky && !otherFlaky) {
                   return 1; // b is more important (not flaky)
                 }
               }
