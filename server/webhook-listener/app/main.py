@@ -11,7 +11,7 @@ from app.nats_client import nats_client
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await nats_client.connect()
-    await nats_client.js.add_stream(name="github", subjects=["github.>"], config=StreamConfig(storage="file"))
+    await nats_client.js.add_stream(name="github", subjects=["github.>","helios.>"], config=StreamConfig(storage="file"))
     await nats_client.js.add_stream(name="notification", subjects=["notification.>"], config=StreamConfig(storage="file"))
     yield
     await nats_client.close()

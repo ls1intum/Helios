@@ -21,12 +21,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.EventListener;
-import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Service;
 
 @Log4j2
 @Service
-@Order(value = 1)
 public class NatsConsumerService {
   private static final int INITIAL_RECONNECT_DELAY_SECONDS = 2;
 
@@ -50,6 +48,9 @@ public class NatsConsumerService {
 
   @Value("${nats.auth.token}")
   private String natsAuthToken;
+
+  @Value("${nats.streamName:github}")
+  private String streamName;
 
   private Connection natsConnection;
   private ConsumerContext consumerContext;
@@ -114,9 +115,8 @@ public class NatsConsumerService {
         messageConsumer = null;
       }
 
-      final String streamName = "github";
-
       StreamContext streamContext = connection.getStreamContext(streamName);
+
       String[] subjects = this.handlerRegistry.getSupportedSubjects().toArray(String[]::new);
 
       log.info(
