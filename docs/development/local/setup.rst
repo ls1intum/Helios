@@ -50,7 +50,7 @@ Application Configuration
 -------------------------
 
 For running the docker containers or the application server with the necessary configuration, you need to set up the environment variables.
-The environment variables are stored in the `.env` file in the root directory of the project as well as in the application-server directory. 
+The environment variables are stored in the `.env` file in the root directory of the project as well as in the server directory. 
 You can find `.env.example` files with example data in the respective directories. Copy the `.env.example` file and rename it to `.env`. 
 You can then change/set the environment variables in the `.env` file to your needs.
 
@@ -73,11 +73,11 @@ Postgres Configuration
 - ``POSTGRES_USER``: Database user
 - ``POSTGRES_PASSWORD``: Database password
 
-Be sure that the database information here matches those in the application server configuration.
+Be sure that the database information here matches those in the server configuration.
 
-Application Server Configuration
+Server Configuration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-`(server/application-server/.env)`
+`(server/.env)`
 
 You can configure **Helios** to work with **either** a Personal Access Token
 (``GITHUB_AUTH_TOKEN``) **or** a GitHub App. Full functionality is only available
@@ -107,7 +107,7 @@ When Helios starts, it will look for all the **GitHub App** variables above:
 
 ---
 
-**Other Required Variables** (`server/application-server/.env`):
+**Other Required Variables** (`server/.env`):
 
 - ``DATASOURCE_URL``: URL to the database
 - ``DATASOURCE_USERNAME``: Database username
@@ -143,7 +143,7 @@ Below are typical steps and recommended settings:
     - **Enable Device Flow**: (Optional, depending on your needs.)
     - **Enable Webhooks**: Enable
         - **Webhook URL**: e.g. `https://<your-domain>/github` or `https://<ngrok-url>/github` (if ngrok is running and forwarding to port 4201 for local development).
-        - **Webhook Secret**: Must match your `WEBHOOK_SECRET` in `server/application-server/.env`
+        - **Webhook Secret**: Must match your `WEBHOOK_SECRET` in `server/.env`
 
 3. **Set Permissions**
    *(Minimal permissions for Helios.)*
@@ -183,7 +183,7 @@ Below are typical steps and recommended settings:
     ``openssl pkcs8 -topk8 -nocrypt -in original_key.pem -out converted_key_pkcs8.pem``
 
    - Save this `converted_key_pkcs8.pem` in a secure location. Then set
-     ``GITHUB_PRIVATE_KEY_PATH=/path/to/converted_key_pkcs8.pem`` in your `server/application-server/.env`.
+     ``GITHUB_PRIVATE_KEY_PATH=/path/to/converted_key_pkcs8.pem`` in your `server/.env`.
 
 5. **Install the GitHub App**
 
@@ -191,7 +191,7 @@ Below are typical steps and recommended settings:
    - Select the repositories you want Helios to manage, or "All repositories" if
      appropriate.
    - After installation, you will see an **Installation ID** (e.g. `12345678`) in the URL.
-      - If you do **not** know the Installation ID, you can provide ``ORGANIZATION_NAME=<org-name>`` in your `server/application-server/.env`, and Helios will look up the correct installation ID at runtime.
+      - If you do **not** know the Installation ID, you can provide ``ORGANIZATION_NAME=<org-name>`` in your `server/.env`, and Helios will look up the correct installation ID at runtime.
       - Otherwise, set ``GITHUB_INSTALLATION_ID=12345678`` to skip the dynamic look-up.
 
 6. **Collect and Set App Variables**
