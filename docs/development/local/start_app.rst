@@ -24,5 +24,6 @@ To run the server, follow these steps:
 2. **Run Server**: Run the command ``./gradlew :application-server:bootRunDev`` in the server directory of the project.
 3. **Check Server Status**: You can check if the server is running by accessing `http://localhost:8080/status/health <http://localhost:8080/status/health>`_.
 
+If you also want to show test result data, you'll need to run the test result processor as well. You can do this by running the command ``./gradlew :test-processor:bootRunDev`` in the server directory of the project.
 
 The server will start and you can access the application (client) at `http://localhost:4200 <http://localhost:4200>`_. You can login in the development mode with ``test`` as username and password.
