@@ -19,10 +19,15 @@ import java.util.Arrays;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.EventListener;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Service;
 
 @Log4j2
-public abstract class BaseNatsConsumerService {
+@Service
+@Order(value = 1)
+public class NatsConsumerService {
   private static final int INITIAL_RECONNECT_DELAY_SECONDS = 2;
 
   @Value("${nats.enabled}")
@@ -53,8 +58,8 @@ public abstract class BaseNatsConsumerService {
   private final NatsErrorListener natsErrorListener;
   private final NatsMessageHandlerRegistry handlerRegistry;
 
-  protected BaseNatsConsumerService(
-      NatsMessageHandlerRegistry handlerRegistry, NatsErrorListener natsErrorListener) {
+  protected NatsConsumerService(
+      NatsMessageHandlerRegistry handlerRegistry, @Lazy NatsErrorListener natsErrorListener) {
     this.handlerRegistry = handlerRegistry;
     this.natsErrorListener = natsErrorListener;
   }
@@ -109,12 +114,14 @@ public abstract class BaseNatsConsumerService {
         messageConsumer = null;
       }
 
-      StreamContext streamContext = connection.getStreamContext(getStreamName());
+      final String streamName = "github";
+
+      StreamContext streamContext = connection.getStreamContext(streamName);
       String[] subjects = this.handlerRegistry.getSupportedSubjects().toArray(String[]::new);
 
       log.info(
           "Setting up consumer for stream '{}' with subjects: {}",
-          getStreamName(),
+          streamName,
           Arrays.toString(subjects));
 
       ConsumerConfiguration.Builder consumerConfigBuilder = null;
@@ -212,7 +219,4 @@ public abstract class BaseNatsConsumerService {
       log.warn("NATS connection is null. Can not reinitialize consumer.");
     }
   }
-
-  // Abstract method to be implemented by concrete services
-  protected abstract String getStreamName();
 }

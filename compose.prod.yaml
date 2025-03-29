@@ -133,6 +133,30 @@ services:
     networks:
       - helios-network
 
+  test-processor:
+    image: "ghcr.io/ls1intum/helios/test-processor:${TEST_PROCESSOR_IMAGE_TAG}"
+    environment:
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
+      - NATS_SERVER=${NATS_SERVER}
+      - NATS_AUTH_TOKEN=${NATS_AUTH_TOKEN}
+      - NATS_DURABLE_CONSUMER_NAME=${NATS_DURABLE_CONSUMER_NAME}
+      - NATS_CONSUMER_INACTIVE_THRESHOLD_MINUTES=${NATS_CONSUMER_INACTIVE_THRESHOLD_MINUTES}
+      - NATS_CONSUMER_ACK_WAIT_SECONDS=${NATS_CONSUMER_ACK_WAIT_SECONDS}
+      - ORGANIZATION_NAME=${ORGANIZATION_NAME}
+      - GITHUB_AUTH_TOKEN=${GITHUB_AUTH_TOKEN}
+      - REPOSITORY_NAME=${REPOSITORY_NAME}
+      - GITHUB_APP_NAME=${GITHUB_APP_NAME}
+      - GITHUB_APP_ID=${GITHUB_APP_ID}
+      - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}
+      - GITHUB_INSTALLATION_ID=${GITHUB_INSTALLATION_ID}
+      - GITHUB_PRIVATE_KEY_PATH=${GITHUB_PRIVATE_KEY_PATH}
+    depends_on:
+      - nats-server
+    volumes:
+      - ./heliosapp.converted_key_pkcs8.pem:/app/heliosapp.converted_key_pkcs8.pem
+    networks:
+      - helios-network
+
   keycloak:
     image: ghcr.io/ls1intum/helios/keycloak:${KEYCLOAK_IMAGE_TAG}
     container_name: keycloak

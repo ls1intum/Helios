@@ -1,6 +1,7 @@
 package de.tum.cit.aet.helios.tests;
 
 import de.tum.cit.aet.helios.common.github.GitHubFacade;
+import de.tum.cit.aet.helios.common.nats.JacksonMessageHandler;
 import de.tum.cit.aet.helios.tests.parsers.JunitParser;
 import de.tum.cit.aet.helios.tests.parsers.TestResultParseException;
 import de.tum.cit.aet.helios.tests.parsers.TestResultParser;
@@ -16,16 +17,13 @@ import lombok.extern.log4j.Log4j2;
 import org.kohsuke.github.GHArtifact;
 import org.kohsuke.github.PagedIterable;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Component;
 
-@SpringBootApplication
+@Component
 @Log4j2
 @RequiredArgsConstructor
-@ComponentScan(basePackages = "de.tum.cit.aet.helios")
-public class TestProcessor {
+public class TestProcessRequestHandler extends JacksonMessageHandler<TestProcessRequestPayload> {
   private final GitHubFacade github;
   private final JunitParser junitParser;
 
@@ -33,7 +31,7 @@ public class TestProcessor {
   private String testArtifactName;
 
   @Async("testResultProcessorExecutor")
-  public void processRequest(ProcessTestResultsRequest request) {
+  public void processRequest(TestProcessRequestPayload request) {
     this.processRequestSync(request);
   }
 
@@ -43,7 +41,7 @@ public class TestProcessor {
    * @param workflowRun the workflow run to process
    * @return the test suites extracted from the workflow run's artifacts
    */
-  private List<TestSuite> processRequestSync(ProcessTestResultsRequest request) {
+  private List<TestSuite> processRequestSync(TestProcessRequestPayload request) {
     GHArtifact testResultsArtifact = null;
 
     try {
@@ -129,7 +127,18 @@ public class TestProcessor {
         });
   }
 
-  public static void main(String[] args) {
-    SpringApplication.run(TestProcessor.class, args);
+  @Override
+  protected Class<TestProcessRequestPayload> getPayloadClass() {
+    return TestProcessRequestPayload.class;
+  }
+
+  @Override
+  protected void handleMessage(TestProcessRequestPayload payload) {
+    this.processRequest(payload);
+  }
+
+  @Override
+  public String getSubjectPattern() {
+    return "helios.tests.process";
   }
 }

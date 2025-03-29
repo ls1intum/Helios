@@ -20,9 +20,9 @@ import org.springframework.stereotype.Component;
 @Component
 public class NatsErrorListener implements ErrorListener {
 
-  private final BaseNatsConsumerService natsConsumerService;
+  private final NatsConsumerService natsConsumerService;
 
-  public NatsErrorListener(BaseNatsConsumerService natsConsumerService) {
+  public NatsErrorListener(NatsConsumerService natsConsumerService) {
     this.natsConsumerService = natsConsumerService;
   }
 

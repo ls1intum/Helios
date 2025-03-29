@@ -1,5 +1,7 @@
 package de.tum.cit.aet.helios.common.nats;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.nats.client.Connection;
 import io.nats.client.Nats;
 import io.nats.client.Options;
@@ -14,7 +16,7 @@ import org.springframework.core.env.Profiles;
 @Configuration
 @Log4j2
 @RequiredArgsConstructor
-public class NatsCommonConfig {
+public class NatsConfig {
 
   @Value("${nats.enabled}")
   private boolean isNatsEnabled;
@@ -28,7 +30,7 @@ public class NatsCommonConfig {
   private final Environment environment;
 
   @Bean
-  public Connection natsConnection() throws Exception {
+  Connection natsConnection() throws Exception {
     if (environment.acceptsProfiles(Profiles.of("openapi"))) {
       log.info("No OpenAPI profile detected. Skipping NATS connection.");
       return null;
@@ -46,7 +48,9 @@ public class NatsCommonConfig {
   }
 
   @Bean
-  public NatsErrorListener natsErrorListener(BaseNatsConsumerService natsConsumerService) {
-    return new NatsErrorListener(natsConsumerService);
+  ObjectMapper objectMapper() {
+    ObjectMapper objectMapper = new ObjectMapper();
+    objectMapper.registerModule(new JavaTimeModule());
+    return objectMapper;
   }
 }

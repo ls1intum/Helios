@@ -7,13 +7,13 @@ plugins {
 
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-aop'
-    implementation 'org.openapitools:jackson-databind-nullable:0.2.6'
     implementation 'io.nats:jnats:2.20.5'
     implementation 'org.kohsuke:github-api:1.327'
     implementation 'io.sentry:sentry-spring-boot-starter-jakarta:8.4.0'
     implementation 'jakarta.xml.bind:jakarta.xml.bind-api:4.0.2'
     implementation 'com.squareup.okhttp3:okhttp:4.12.0'
     implementation 'com.squareup.okhttp3:logging-interceptor:4.12.0'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.3'
     implementation project(':common')
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
@@ -22,7 +22,7 @@ dependencies {
 }
 
 springBoot {
-    mainClass = "de.tum.cit.aet.helios.tests.TestProcessor"
+    mainClass = "de.tum.cit.aet.helios.tests.TestProcessorApp"
 }
 
 // Custom bootRun task to force the user to specify an active profile
@@ -73,7 +73,7 @@ tasks.register("bootRunDev", BootRun) {
     // Set the active profile to 'dev'
     systemProperty "spring.profiles.active", "dev"
     classpath = sourceSets.main.runtimeClasspath
-    mainClass.set("de.tum.cit.aet.helios.tests.TestProcessor")
+    mainClass.set("de.tum.cit.aet.helios.tests.TestProcessorApp")
 }
 
 tasks.named("test") {
