@@ -176,13 +176,24 @@
                           </div>
                           <div class="flex items-center gap-2">
                             @if (testCase.failsInDefaultBranch) {
-                              <p-tag severity="info" value="Also fails in default branch" styleClass="mt-2 text-xs"> </p-tag>
+                              <p-tag severity="info" value="Fails in default branch" styleClass="mt-2 text-xs" pTooltip="This test is also failing in the default branch"> </p-tag>
                             }
                             @if (testCase.isFlaky) {
                               <div class="flex flex-col gap-1">
-                                <p-tag severity="warn" value="Flaky" styleClass="mt-2 text-xs"> </p-tag>
-                                <!-- print failure rate -->
-                                <span class="text-xs text-gray-500"> {{ formatFailureRate(testCase.failureRate) }}% failure rate</span>
+                                <p-tag
+                                  severity="warn"
+                                  value="Flaky"
+                                  styleClass="mt-2 text-xs"
+                                  pTooltip="Failure rate of this test in default branch exceeds 50%. This test is unstable and should be investigated."
+                                >
+                                </p-tag>
+                                <p-tag
+                                  severity="danger"
+                                  value="{{ formatFailureRate(testCase.failureRate) }}% Failure rate"
+                                  styleClass="mt-2 text-xs"
+                                  pTooltip="Failure rate of this test in default branch"
+                                >
+                                </p-tag>
                               </div>
                             }
                           </div>
