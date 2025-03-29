@@ -6,9 +6,9 @@ import org.springframework.context.annotation.ComponentScan;
 
 @SpringBootApplication
 @ComponentScan(basePackages = "de.tum.cit.aet.helios")
-public class TestProcessorApp {
+public class TestResultProcessorApp {
 
   public static void main(String[] args) {
-    SpringApplication.run(TestProcessorApp.class, args);
+    SpringApplication.run(TestResultProcessorApp.class, args);
   }
 }

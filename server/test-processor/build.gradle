@@ -22,7 +22,7 @@ dependencies {
 }
 
 springBoot {
-    mainClass = "de.tum.cit.aet.helios.tests.TestProcessorApp"
+    mainClass = "de.tum.cit.aet.helios.tests.TestResultProcessorApp"
 }
 
 // Custom bootRun task to force the user to specify an active profile
@@ -73,7 +73,7 @@ tasks.register("bootRunDev", BootRun) {
     // Set the active profile to 'dev'
     systemProperty "spring.profiles.active", "dev"
     classpath = sourceSets.main.runtimeClasspath
-    mainClass.set("de.tum.cit.aet.helios.tests.TestProcessorApp")
+    mainClass.set("de.tum.cit.aet.helios.tests.TestResultProcessorApp")
 }
 
 tasks.named("test") {

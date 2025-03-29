@@ -14,10 +14,12 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
+@Log4j2
 public class TestResultService {
   private final WorkflowRunRepository workflowRunRepository;
   private final BranchRepository branchRepository;

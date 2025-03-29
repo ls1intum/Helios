@@ -1,5 +1,7 @@
 package de.tum.cit.aet.helios.tests.parsers;
 
+import de.tum.cit.aet.helios.common.dto.test.TestCase;
+import de.tum.cit.aet.helios.common.dto.test.TestSuite;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Unmarshaller;
@@ -38,23 +40,22 @@ public class JunitParser implements TestResultParser {
    * @return A list of parsed test suites
    * @throws TestResultParseException if there is an error parsing the XML content
    */
-  public List<TestResultParser.TestSuite> parse(InputStream inputStream)
-      throws TestResultParseException {
+  public List<TestSuite> parse(InputStream inputStream) throws TestResultParseException {
     try {
       // Create JAXBContext with both TestSuite and TestSuites classes
-      JAXBContext context = JAXBContext.newInstance(TestSuite.class, TestSuites.class);
+      JAXBContext context = JAXBContext.newInstance(JunitTestSuite.class, JunitTestSuites.class);
       Unmarshaller unmarshaller = context.createUnmarshaller();
       Object unmarshalled = unmarshaller.unmarshal(inputStream);
 
-      if (unmarshalled instanceof TestSuites) {
-        TestSuites testSuites = (TestSuites) unmarshalled;
-        List<TestResultParser.TestSuite> result = new ArrayList<>();
-        for (TestSuite suite : testSuites.testsuites) {
+      if (unmarshalled instanceof JunitTestSuites) {
+        JunitTestSuites testSuites = (JunitTestSuites) unmarshalled;
+        List<TestSuite> result = new ArrayList<>();
+        for (JunitTestSuite suite : testSuites.testsuites) {
           result.add(convertJunitTestSuite(suite));
         }
         return result;
-      } else if (unmarshalled instanceof TestSuite) {
-        return Collections.singletonList(convertJunitTestSuite((TestSuite) unmarshalled));
+      } else if (unmarshalled instanceof JunitTestSuite) {
+        return Collections.singletonList(convertJunitTestSuite((JunitTestSuite) unmarshalled));
       } else {
         throw new TestResultParseException("Unexpected root element type");
       }
@@ -63,8 +64,8 @@ public class JunitParser implements TestResultParser {
     }
   }
 
-  private TestResultParser.TestSuite convertJunitTestSuite(TestSuite suite) {
-    return new TestResultParser.TestSuite(
+  private TestSuite convertJunitTestSuite(JunitTestSuite suite) {
+    return new TestSuite(
         suite.name,
         parseDateTime(suite.timestamp),
         suite.tests,
@@ -80,7 +81,7 @@ public class JunitParser implements TestResultParser {
         || fileName.equals("results.xml");
   }
 
-  private TestResultParser.TestCase parseTestCase(TestCase tc) {
+  private TestCase parseTestCase(JunitTestCase tc) {
     String errorType = null;
     String message = null;
     String stackTrace = null;
@@ -95,7 +96,7 @@ public class JunitParser implements TestResultParser {
       stackTrace = tc.error.content;
     }
 
-    return new TestResultParser.TestCase(
+    return new TestCase(
         tc.name,
         tc.className,
         tc.time,
@@ -108,13 +109,13 @@ public class JunitParser implements TestResultParser {
   }
 
   @XmlRootElement(name = "testsuites")
-  public static class TestSuites {
+  private static class JunitTestSuites {
     @XmlElement(name = "testsuite")
-    public List<TestSuite> testsuites = new ArrayList<>();
+    public List<JunitTestSuite> testsuites = new ArrayList<>();
   }
 
   @XmlRootElement(name = "testsuite")
-  public static class TestSuite {
+  private static class JunitTestSuite {
     @XmlAttribute public String name;
     @XmlAttribute public int tests;
     @XmlAttribute public int failures;
@@ -124,10 +125,10 @@ public class JunitParser implements TestResultParser {
     @XmlAttribute public String timestamp;
 
     @XmlElement(name = "testcase")
-    public List<TestCase> testcases = new ArrayList<>();
+    public List<JunitTestCase> testcases = new ArrayList<>();
   }
 
-  public static class TestCase {
+  private static class JunitTestCase {
     @XmlAttribute public String name;
 
     @XmlAttribute(name = "classname")

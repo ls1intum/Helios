@@ -2,7 +2,7 @@ package de.tum.cit.aet.helios.workflow.github;
 
 import de.tum.cit.aet.helios.github.GitHubMessageHandler;
 import de.tum.cit.aet.helios.gitrepo.github.GitHubRepositorySyncService;
-import de.tum.cit.aet.helios.tests.TestResultProcessor;
+import de.tum.cit.aet.helios.tests.TestWorkflowOrchestrator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.kohsuke.github.GHEvent;
@@ -16,7 +16,7 @@ public class GitHubWorkflowRunMessageHandler
     extends GitHubMessageHandler<GHEventPayload.WorkflowRun> {
   private final GitHubRepositorySyncService repositorySyncService;
   private final GitHubWorkflowRunSyncService workflowSyncService;
-  private final TestResultProcessor testResultProcessor;
+  private final TestWorkflowOrchestrator testWorkflowOrchestrator;
 
   @Override
   protected Class<GHEventPayload.WorkflowRun> getPayloadClass() {
@@ -56,8 +56,8 @@ public class GitHubWorkflowRunMessageHandler
 
     var run = workflowSyncService.processRun(githubRun);
 
-    if (run != null && testResultProcessor.shouldProcess(run)) {
-      testResultProcessor.processRun(run);
+    if (run != null) {
+      testWorkflowOrchestrator.handleWorkflowRun(run);
     }
   }
 }
