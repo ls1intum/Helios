@@ -21,10 +21,11 @@ import type {
   SyncWorkflowsByRepositoryIdData,
   CreateWorkflowGroupData,
   CreateWorkflowGroupResponse,
-  GetAllReleaseCandidatesData,
-  GetAllReleaseCandidatesResponse,
+  GetAllReleaseInfosData,
+  GetAllReleaseInfosResponse,
   CreateReleaseCandidateData,
   CreateReleaseCandidateResponse,
+  PublishReleaseDraftData,
   EvaluateData,
   SetPrPinnedByNumberData,
   DeployToEnvironmentData,
@@ -62,8 +63,8 @@ import type {
   GetRepositoryByIdResponse,
   DeleteReleaseCandidateByNameData,
   DeleteReleaseCandidateByNameResponse,
-  GetReleaseCandidateByNameData,
-  GetReleaseCandidateByNameResponse,
+  GetReleaseInfoByNameData,
+  GetReleaseInfoByNameResponse,
   GetCommitsSinceLastReleaseCandidateData,
   GetCommitsSinceLastReleaseCandidateResponse,
   GetAllPullRequestsData,
@@ -215,16 +216,16 @@ export const createWorkflowGroup = <ThrowOnError extends boolean = false>(option
   });
 };
 
-export const getAllReleaseCandidates = <ThrowOnError extends boolean = false>(options?: Options<GetAllReleaseCandidatesData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetAllReleaseCandidatesResponse, unknown, ThrowOnError>({
-    url: '/api/release-candidate',
+export const getAllReleaseInfos = <ThrowOnError extends boolean = false>(options?: Options<GetAllReleaseInfosData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetAllReleaseInfosResponse, unknown, ThrowOnError>({
+    url: '/api/release-info',
     ...options,
   });
 };
 
 export const createReleaseCandidate = <ThrowOnError extends boolean = false>(options: Options<CreateReleaseCandidateData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).post<CreateReleaseCandidateResponse, unknown, ThrowOnError>({
-    url: '/api/release-candidate',
+    url: '/api/release-info',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -233,9 +234,16 @@ export const createReleaseCandidate = <ThrowOnError extends boolean = false>(opt
   });
 };
 
+export const publishReleaseDraft = <ThrowOnError extends boolean = false>(options: Options<PublishReleaseDraftData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).post<unknown, unknown, ThrowOnError>({
+    url: '/api/release-info/{name}/publish',
+    ...options,
+  });
+};
+
 export const evaluate = <ThrowOnError extends boolean = false>(options: Options<EvaluateData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).post<unknown, unknown, ThrowOnError>({
-    url: '/api/release-candidate/{name}/evaluate/{isWorking}',
+    url: '/api/release-info/{name}/evaluate/{isWorking}',
     ...options,
   });
 };
@@ -380,21 +388,21 @@ export const getRepositoryById = <ThrowOnError extends boolean = false>(options:
 
 export const deleteReleaseCandidateByName = <ThrowOnError extends boolean = false>(options: Options<DeleteReleaseCandidateByNameData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).delete<DeleteReleaseCandidateByNameResponse, unknown, ThrowOnError>({
-    url: '/api/release-candidate/{name}',
+    url: '/api/release-info/{name}',
     ...options,
   });
 };
 
-export const getReleaseCandidateByName = <ThrowOnError extends boolean = false>(options: Options<GetReleaseCandidateByNameData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).get<GetReleaseCandidateByNameResponse, unknown, ThrowOnError>({
-    url: '/api/release-candidate/{name}',
+export const getReleaseInfoByName = <ThrowOnError extends boolean = false>(options: Options<GetReleaseInfoByNameData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<GetReleaseInfoByNameResponse, unknown, ThrowOnError>({
+    url: '/api/release-info/{name}',
     ...options,
   });
 };
 
 export const getCommitsSinceLastReleaseCandidate = <ThrowOnError extends boolean = false>(options: Options<GetCommitsSinceLastReleaseCandidateData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetCommitsSinceLastReleaseCandidateResponse, unknown, ThrowOnError>({
-    url: '/api/release-candidate/newcommits',
+    url: '/api/release-info/newcommits',
     ...options,
   });
 };

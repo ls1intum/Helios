@@ -54,7 +54,7 @@ public class BranchControllerTest {
           0,
           false,
           false,
-          "releaseCandidate",
+          List.of("releaseCandidate"),
           null,
           null,
           new RepositoryInfoDto(1L, "repo", "repo", null, "url"));

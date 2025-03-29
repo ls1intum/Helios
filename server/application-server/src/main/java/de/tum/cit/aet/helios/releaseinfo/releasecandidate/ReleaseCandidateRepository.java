@@ -1,4 +1,4 @@
-package de.tum.cit.aet.helios.releasecandidate;
+package de.tum.cit.aet.helios.releaseinfo.releasecandidate;
 
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import java.util.List;
@@ -15,7 +15,10 @@ public interface ReleaseCandidateRepository
 
   Optional<ReleaseCandidate> findByRepositoryRepositoryIdAndName(Long repositoryId, String name);
 
-  Optional<ReleaseCandidate> findByRepositoryRepositoryIdAndCommitSha(
+  Optional<ReleaseCandidate> findByRepositoryRepositoryIdAndReleaseId(
+      Long repositoryId, Long releaseId);
+
+  List<ReleaseCandidate> findByRepositoryRepositoryIdAndCommitSha(
       Long repositoryId, String commitSha);
 
   boolean existsByRepositoryRepositoryIdAndName(Long repositoryId, String name);

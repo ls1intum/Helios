@@ -1,6 +1,8 @@
-package de.tum.cit.aet.helios.releasecandidate;
+package de.tum.cit.aet.helios.releaseinfo;
 
 import de.tum.cit.aet.helios.config.security.annotations.EnforceAtLeastMaintainer;
+import de.tum.cit.aet.helios.releaseinfo.releasecandidate.CommitsSinceReleaseCandidateDto;
+import de.tum.cit.aet.helios.releaseinfo.releasecandidate.ReleaseCandidateCreateDto;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -14,46 +16,52 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/release-candidate")
+@RequestMapping("/api/release-info")
 @RequiredArgsConstructor
-public class ReleaseCandidateController {
-  private final ReleaseCandidateService releaseCandidateService;
+public class ReleaseInfoController {
+  private final ReleaseInfoService releaseInfoService;
 
   @GetMapping
-  public ResponseEntity<List<ReleaseCandidateInfoDto>> getAllReleaseCandidates() {
-    return ResponseEntity.ok(releaseCandidateService.getAllReleaseCandidates());
+  public ResponseEntity<List<ReleaseInfoListDto>> getAllReleaseInfos() {
+    return ResponseEntity.ok(releaseInfoService.getAllReleaseInfos());
   }
 
   @GetMapping("/{name}")
-  public ResponseEntity<ReleaseCandidateDetailsDto> getReleaseCandidateByName(
-      @PathVariable String name) {
-    return ResponseEntity.ok(releaseCandidateService.getReleaseCandidateByName(name));
+  public ResponseEntity<ReleaseInfoDetailsDto> getReleaseInfoByName(@PathVariable String name) {
+    return ResponseEntity.ok(releaseInfoService.getReleaseInfoByName(name));
   }
 
   @GetMapping("/newcommits")
   public ResponseEntity<CommitsSinceReleaseCandidateDto> getCommitsSinceLastReleaseCandidate(
       @RequestParam String branch) {
     return ResponseEntity.ok(
-        releaseCandidateService.getCommitsFromBranchSinceLastReleaseCandidate(branch));
+        releaseInfoService.getCommitsFromBranchSinceLastReleaseCandidate(branch));
   }
 
   @PostMapping
   @EnforceAtLeastMaintainer
-  public ResponseEntity<ReleaseCandidateInfoDto> createReleaseCandidate(
+  public ResponseEntity<ReleaseInfoListDto> createReleaseCandidate(
       @RequestBody ReleaseCandidateCreateDto releaseCandidate) {
-    return ResponseEntity.ok(releaseCandidateService.createReleaseCandidate(releaseCandidate));
+    return ResponseEntity.ok(releaseInfoService.createReleaseCandidate(releaseCandidate));
   }
 
   @PostMapping("{name}/evaluate/{isWorking}")
   public ResponseEntity<Void> evaluate(@PathVariable String name, @PathVariable boolean isWorking) {
-    releaseCandidateService.evaluateReleaseCandidate(name, isWorking);
+    releaseInfoService.evaluateReleaseCandidate(name, isWorking);
     return ResponseEntity.ok().build();
   }
 
   @EnforceAtLeastMaintainer
   @DeleteMapping("/{name}")
-  public ResponseEntity<ReleaseCandidateInfoDto> deleteReleaseCandidateByName(
+  public ResponseEntity<ReleaseInfoListDto> deleteReleaseCandidateByName(
       @PathVariable String name) {
-    return ResponseEntity.ok(releaseCandidateService.deleteReleaseCandidateByName(name));
+    return ResponseEntity.ok(releaseInfoService.deleteReleaseCandidateByName(name));
+  }
+
+  @EnforceAtLeastMaintainer
+  @PostMapping("/{name}/publish")
+  public ResponseEntity<Void> publishReleaseDraft(@PathVariable String name) {
+    releaseInfoService.publishReleaseDraft(name);
+    return ResponseEntity.ok().build();
   }
 }

@@ -21,6 +21,7 @@ export class DeploymentSelectionComponent {
   queryClient = inject(QueryClient);
 
   sourceRef = input.required<string>();
+  commitSha = input.required<string>();
 
   private currentEnvironmentId: number | null = null;
 
@@ -40,6 +41,6 @@ export class DeploymentSelectionComponent {
 
   handleDeploy = (environment: EnvironmentDto) => {
     this.currentEnvironmentId = environment.id;
-    this.deployEnvironment.mutate({ body: { environmentId: environment.id, branchName: this.sourceRef() } });
+    this.deployEnvironment.mutate({ body: { environmentId: environment.id, branchName: this.sourceRef(), commitSha: this.commitSha() } });
   };
 }
