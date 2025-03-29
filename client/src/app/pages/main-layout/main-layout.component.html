@@ -7,8 +7,10 @@
         </div>
         <div class="text-gray-700 hover:text-gray-800 text-2xl font-semibold">Helios</div>
       </div>
-      <p-tag class="bg-gray-700 text-white md:block hidden" pTooltip="Login to Edit" tooltipPosition="bottom">You are currently using Helios in readonly mode</p-tag>
-      <p-tag class="bg-gray-700 text-white md:hidden block" pTooltip="Login to Edit" tooltipPosition="bottom">Readonly Mode</p-tag>
+      @if (!isLoggedIn()) {
+        <p-tag class="bg-gray-700 text-white md:block hidden" pTooltip="Login to Edit" tooltipPosition="bottom">You are currently using Helios in readonly mode</p-tag>
+        <p-tag class="bg-gray-700 text-white md:hidden block" pTooltip="Login to Edit" tooltipPosition="bottom">Readonly Mode</p-tag>
+      }
     </div>
     <div>
       <app-profile-nav-section [isExpanded]="true" />

@@ -63,6 +63,10 @@ export class NavigationBarComponent {
     ];
   });
 
+  bottomItems = computed(() => {
+    return this.items().filter(item => item.showAtBottom);
+  });
+
   login() {
     this.keycloakService.login();
   }
