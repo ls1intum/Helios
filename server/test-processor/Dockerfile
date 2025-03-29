@@ -5,7 +5,7 @@ RUN gradle :test-processor:build --no-daemon
 
 FROM eclipse-temurin:21
 
-EXPOSE 8080
+EXPOSE 8090
 
 RUN mkdir /app
 

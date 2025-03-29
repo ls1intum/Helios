@@ -7,7 +7,6 @@ import de.tum.cit.aet.helios.common.nats.TestSubjects;
 import de.tum.cit.aet.helios.workflow.WorkflowRun;
 import de.tum.cit.aet.helios.workflow.WorkflowRunRepository;
 import java.util.ArrayList;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Component;
@@ -19,6 +18,7 @@ public class ProcessTestResultResponseHandler
     extends JacksonMessageHandler<ProcessTestResultResponse> {
 
   private final WorkflowRunRepository workflowRunRepository;
+  private final TestProcessorClient testProcessorClient;
 
   @Override
   protected Class<ProcessTestResultResponse> getPayloadClass() {
@@ -40,25 +40,28 @@ public class ProcessTestResultResponseHandler
                             + response.workflowRunId()
                             + " not found in the database."));
 
-    if (response.status() == ProcessingStatus.SUCCESS) {
-      log.debug(
-          "Successfully processed test results for workflow run {}",
-          workflowRun.getName(),
-          response.status());
-
-      workflowRun.setTestProcessingStatus(WorkflowRun.TestProcessingStatus.PROCESSED);
-    } else {
+    if (response.status() != ProcessingStatus.SUCCESS) {
       log.error(
           "Failed to process test results for workflow run {}, error message: {}",
           workflowRun.getName(),
           response.errorMessage());
 
       workflowRun.setTestProcessingStatus(WorkflowRun.TestProcessingStatus.FAILED);
+      this.workflowRunRepository.save(workflowRun);
+      return;
     }
 
-    List<TestSuite> testSuites = new ArrayList<>();
+    log.debug(
+        "Successfully processed test results for workflow run {}",
+        workflowRun.getName(),
+        response.status());
 
-    for (var result : response.testSuites()) {
+    workflowRun.setTestProcessingStatus(WorkflowRun.TestProcessingStatus.PROCESSED);
+
+    var processorTestSuites = testProcessorClient.getTestResults(response.workflowRunId());
+    var testSuites = new ArrayList<TestSuite>();
+
+    for (var result : processorTestSuites) {
       TestSuite testSuite = new TestSuite();
       testSuite.setWorkflowRun(workflowRun);
       testSuite.setName(result.name());

@@ -87,6 +87,7 @@ jobs:
             echo "NATS_TP_DURABLE_CONSUMER_NAME=${{ vars.NATS_TP_DURABLE_CONSUMER_NAME }}" >> .env
             echo "NATS_CONSUMER_INACTIVE_THRESHOLD_MINUTES=${{ vars.NATS_CONSUMER_INACTIVE_THRESHOLD_MINUTES }}" >> .env
             echo "NATS_CONSUMER_ACK_WAIT_SECONDS=${{ vars.NATS_CONSUMER_ACK_WAIT_SECONDS }}" >> .env
+            echo "TEST_PROCESSOR_API_URL=${{ vars.TEST_PROCESSOR_API_URL }}" >> .env
             echo "WEBHOOK_SECRET=${{ secrets.WEBHOOK_SECRET }}" >> .env
             echo "REPOSITORY_NAME=${{ vars.REPOSITORY_NAME }}" >> .env
             echo "ORGANIZATION_NAME=${{ vars.ORGANIZATION_NAME }}" >> .env

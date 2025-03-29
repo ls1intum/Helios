@@ -23,6 +23,8 @@ spring:
 
 helios:
     clientBaseUrl: "http://localhost:4200"
+    testProcessor:
+        apiUrl: ${TEST_PROCESSOR_API_URL:http://localhost:8090/api}
 
 logging:
     level:

@@ -1,4 +1,4 @@
-package de.tum.cit.aet.helios.tests;
+package de.tum.cit.aet.helios.tests.processor;
 
 public class TestResultException extends RuntimeException {
   public TestResultException(String message) {

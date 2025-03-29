@@ -24,6 +24,8 @@ spring:
 
 helios:
     clientBaseUrl: "https://helios.aet.cit.tum.de"
+    testProcessor:
+        apiUrl: ${TEST_PROCESSOR_API_URL:}
 
 nats:
     enabled: true

@@ -1,4 +1,4 @@
-package de.tum.cit.aet.helios.tests;
+package de.tum.cit.aet.helios.tests.processor;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

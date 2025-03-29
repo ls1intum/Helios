@@ -15,3 +15,6 @@ springdoc:
 logging:
     level:
         org.kohsuke.github.GitHubClient: INFO
+
+server:
+    port: 8090

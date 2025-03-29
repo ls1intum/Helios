@@ -1,4 +1,4 @@
-package de.tum.cit.aet.helios.tests.parsers;
+package de.tum.cit.aet.helios.tests.processor.parsers;
 
 import de.tum.cit.aet.helios.common.dto.test.TestCase;
 import de.tum.cit.aet.helios.common.dto.test.TestSuite;

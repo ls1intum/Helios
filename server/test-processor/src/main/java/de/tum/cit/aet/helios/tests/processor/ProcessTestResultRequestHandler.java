@@ -1,4 +1,4 @@
-package de.tum.cit.aet.helios.tests;
+package de.tum.cit.aet.helios.tests.processor;
 
 import de.tum.cit.aet.helios.common.dto.test.ProcessTestResultRequest;
 import de.tum.cit.aet.helios.common.dto.test.ProcessTestResultResponse;
@@ -8,8 +8,9 @@ import de.tum.cit.aet.helios.common.github.GitHubFacade;
 import de.tum.cit.aet.helios.common.nats.JacksonMessageHandler;
 import de.tum.cit.aet.helios.common.nats.NatsPublisher;
 import de.tum.cit.aet.helios.common.nats.TestSubjects;
-import de.tum.cit.aet.helios.tests.parsers.JunitParser;
-import de.tum.cit.aet.helios.tests.parsers.TestResultParseException;
+import de.tum.cit.aet.helios.tests.processor.parsers.JunitParser;
+import de.tum.cit.aet.helios.tests.processor.parsers.TestResultParseException;
+import de.tum.cit.aet.helios.tests.processor.store.InMemoryTestResultStore;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -32,6 +33,7 @@ public class ProcessTestResultRequestHandler
   private final GitHubFacade github;
   private final JunitParser junitParser;
   private final NatsPublisher natsPublisher;
+  private final InMemoryTestResultStore testResultStore;
 
   @Value("${tests.artifactName:JUnit Test Results}")
   private String testArtifactName;
@@ -40,25 +42,19 @@ public class ProcessTestResultRequestHandler
   public void processRequest(ProcessTestResultRequest request) {
     this.processRequestSync(request);
 
-    ProcessTestResultResponse response;
-
     try {
-      response =
-          new ProcessTestResultResponse(
-              request.workflowRunId(),
-              this.processRequestSync(request),
-              ProcessingStatus.SUCCESS,
-              null);
+      testResultStore.store(request.workflowRunId(), this.processRequestSync(request));
+
+      natsPublisher.publish(
+          TestSubjects.PROCESS_TEST_RESULT_RESPONSE,
+          new ProcessTestResultResponse(request.workflowRunId(), ProcessingStatus.SUCCESS, null));
     } catch (TestResultException e) {
       log.error("Failed to process test results for workflow run {}", request.workflowRunId(), e);
-      response =
+      natsPublisher.publish(
+          TestSubjects.PROCESS_TEST_RESULT_RESPONSE,
           new ProcessTestResultResponse(
-              request.workflowRunId(), null, ProcessingStatus.PROCESSING_ERROR, e.getMessage());
+              request.workflowRunId(), ProcessingStatus.ERROR, e.getMessage()));
     }
-
-    natsPublisher.publish(TestSubjects.PROCESS_TEST_RESULT_RESPONSE, response);
-
-    log.debug("Published test result response for workflow run {}", request.workflowRunId());
   }
 
   /**
