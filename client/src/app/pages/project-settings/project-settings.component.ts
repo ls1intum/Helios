@@ -37,7 +37,6 @@ import { SelectModule } from 'primeng/select';
 import { TooltipModule } from 'primeng/tooltip';
 import { TagModule } from 'primeng/tag';
 import { MessageModule } from 'primeng/message';
-import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
   selector: 'app-project-settings',
