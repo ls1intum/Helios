@@ -106,24 +106,25 @@ public interface WorkflowRunRepository extends JpaRepository<WorkflowRun, Long> 
       "SELECT DISTINCT wr FROM WorkflowRun wr "
           + "WHERE wr.headBranch = :branch "
           + "AND wr.headSha = :headSha "
-          + "AND wr.repository.repositoryId = :repositoryId "
-          + "AND wr.pullRequests IS EMPTY")
+          + "AND wr.repository.repositoryId = :repositoryId ")
   @EntityGraph(attributePaths = {"testSuites"})
-  List<WorkflowRun> findByHeadBranchAndHeadShaAndRepositoryIdAndPullRequestsIsNullWithTestSuites(
+  List<WorkflowRun> findByHeadBranchAndHeadShaAndRepositoryIdWithTestSuites(
       String branch, String headSha, Long repositoryId);
 
   @Query(
-      "SELECT DISTINCT wr FROM WorkflowRun wr "
-          + "WHERE wr.headBranch = :branch "
-          + "AND wr.repository.repositoryId = :repositoryId "
-          + "AND wr.pullRequests IS EMPTY "
-          + "ORDER BY wr.createdAt DESC")
+      """
+      SELECT DISTINCT wr FROM WorkflowRun wr
+      WHERE wr.headBranch = :branch
+        AND wr.repository.repositoryId = :repositoryId
+      ORDER BY wr.createdAt DESC
+      LIMIT 1
+      """)
   @EntityGraph(attributePaths = {"testSuites"})
-  List<WorkflowRun> findByHeadBranchAndRepositoryIdAndPullRequestsIsNullWithTestSuites(
+  List<WorkflowRun> findByHeadBranchAndRepositoryIdWithTestSuites(
       @Param("branch") String branch, @Param("repositoryId") Long repositoryId);
 
   List<WorkflowRun> findByPullRequestsIdAndHeadSha(Long pullRequestsId, String headSha);
 
-  List<WorkflowRun> findByHeadBranchAndHeadShaAndRepositoryRepositoryIdAndPullRequestsIsNull(
+  List<WorkflowRun> findByHeadBranchAndHeadShaAndRepositoryRepositoryId(
       String branch, String headSha, Long repositoryId);
 }
