@@ -620,8 +620,8 @@ public class EnvironmentService {
                               }
                             })
                         .toList();
-
-                return new EnvironmentReviewersDto(rule.getPreventSelfReview(), reviewers);
+                Boolean preventSelfReview = Boolean.TRUE.equals(rule.getPreventSelfReview());
+                return new EnvironmentReviewersDto(preventSelfReview, reviewers);
               } catch (JsonProcessingException e) {
                 log.error(
                     "Failed to parse reviewers for environment {}: {}",

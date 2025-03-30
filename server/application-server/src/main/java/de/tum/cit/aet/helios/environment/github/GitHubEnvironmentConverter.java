@@ -5,13 +5,18 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import de.tum.cit.aet.helios.environment.Environment;
 import de.tum.cit.aet.helios.environment.protectionrules.ProtectionRule;
 import de.tum.cit.aet.helios.environment.protectionrules.ProtectionRuleRepository;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
+@Log4j2
 public class GitHubEnvironmentConverter implements Converter<GitHubEnvironmentDto, Environment> {
 
   private final ProtectionRuleRepository protectionRuleRepository;
@@ -38,7 +43,14 @@ public class GitHubEnvironmentConverter implements Converter<GitHubEnvironmentDt
   public void updateProtectionRules(
       @NonNull GitHubEnvironmentDto source, @NonNull Environment environment) {
 
-    // Process protection rules
+    // Get all existing protection rules for this environment
+    List<ProtectionRule> existingRules =
+        protectionRuleRepository.findByEnvironmentId(environment.getId());
+
+    // Create a set to track which rules we process from GitHub
+    Set<Long> processedRuleIds = new HashSet<>();
+
+    // Process protection rules from GitHub
     if (source.getProtectionRules() != null) {
       for (GitHubEnvironmentProtectionRuleDto ruleDto : source.getProtectionRules()) {
         ProtectionRule rule =
@@ -76,7 +88,19 @@ public class GitHubEnvironmentConverter implements Converter<GitHubEnvironmentDt
           }
           default -> throw new IllegalArgumentException("Unknown rule type: " + rule.getRuleType());
         }
-        protectionRuleRepository.save(rule);
+
+        // Save the rule and track its ID
+        rule = protectionRuleRepository.save(rule);
+        if (rule.getId() != null) {
+          processedRuleIds.add(rule.getId());
+        }
+      }
+    }
+
+    // Delete any existing rules that weren't in the GitHub data
+    for (ProtectionRule existingRule : existingRules) {
+      if (existingRule.getId() != null && !processedRuleIds.contains(existingRule.getId())) {
+        protectionRuleRepository.delete(existingRule);
       }
     }
   }
