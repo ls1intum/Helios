@@ -92,4 +92,13 @@ public class EnvironmentController {
         environmentService.updateEnvironment(id, environmentDto);
     return updatedEnvironment.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
   }
+
+  @GetMapping("/{environmentId}/reviewers")
+  public ResponseEntity<EnvironmentReviewersDto> getEnvironmentReviewers(
+      @PathVariable Long environmentId) {
+    return environmentService
+        .getEnvironmentReviewers(environmentId)
+        .map(ResponseEntity::ok)
+        .orElse(ResponseEntity.notFound().build());
+  }
 }
