@@ -108,6 +108,9 @@ jobs:
             echo "WEBHOOK_LISTENER_IMAGE_TAG=${{ inputs.webhook_listener_image_tag }}" >> .env
             echo "KEYCLOAK_IMAGE_TAG=${{ inputs.keycloak_image_tag }}" >> .env
 
+            echo "HELIOS_TOKEN_EXCHANGE_CLIENT=${{ secrets.HELIOS_TOKEN_EXCHANGE_CLIENT }}" >> .env
+            echo "HELIOS_TOKEN_EXCHANGE_SECRET=${{ secrets.HELIOS_TOKEN_EXCHANGE_SECRET }}" >> .env 
+
       - name: SSH to VM and Execute Docker-Compose Up
         uses: appleboy/ssh-action@v1.2.2
         with:

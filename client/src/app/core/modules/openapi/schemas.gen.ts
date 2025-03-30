@@ -261,8 +261,37 @@ export const RepositoryInfoDtoSchema = {
     htmlUrl: {
       type: 'string',
     },
+    updatedAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+    stargazersCount: {
+      type: 'integer',
+      format: 'int32',
+    },
+    pullRequestCount: {
+      type: 'integer',
+      format: 'int32',
+    },
+    branchCount: {
+      type: 'integer',
+      format: 'int32',
+    },
+    environmentCount: {
+      type: 'integer',
+      format: 'int32',
+    },
+    latestReleaseTagName: {
+      type: 'string',
+    },
+    contributors: {
+      type: 'array',
+      items: {
+        $ref: '#/components/schemas/UserInfoDto',
+      },
+    },
   },
-  required: ['htmlUrl', 'id', 'name', 'nameWithOwner'],
+  required: ['htmlUrl', 'id', 'name', 'nameWithOwner', 'updatedAt'],
 } as const;
 
 export const UserInfoDtoSchema = {
@@ -702,7 +731,7 @@ export const ReleaseCandidateEvaluationDtoSchema = {
       type: 'boolean',
     },
   },
-  required: ['isWorking', 'user'],
+  required: ['user'],
 } as const;
 
 export const ReleaseDtoSchema = {

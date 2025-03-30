@@ -1,8 +1,6 @@
 import { Component, computed, inject, input, signal } from '@angular/core';
 import { Avatar } from 'primeng/avatar';
 import { Divider } from 'primeng/divider';
-import { HeliosIconComponent } from '@app/components/helios-icon/helios-icon.component';
-import { ProfileNavSectionComponent } from '@app/components/profile-nav-section/profile-nav-section.component';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { NgClass, SlicePipe } from '@angular/common';
 import { TablerIconComponent } from 'angular-tabler-icons';
@@ -15,19 +13,7 @@ import { getRepositoryByIdOptions } from '@app/core/modules/openapi/@tanstack/an
 
 @Component({
   selector: 'app-navigation-bar',
-  imports: [
-    Avatar,
-    Divider,
-    HeliosIconComponent,
-    ProfileNavSectionComponent,
-    RouterLink,
-    SlicePipe,
-    TablerIconComponent,
-    Tooltip,
-    UserLockInfoComponent,
-    RouterLinkActive,
-    NgClass,
-  ],
+  imports: [Avatar, Divider, RouterLink, SlicePipe, TablerIconComponent, Tooltip, UserLockInfoComponent, RouterLinkActive, NgClass],
   templateUrl: './navigation-bar.component.html',
 })
 export class NavigationBarComponent {
@@ -70,10 +56,15 @@ export class NavigationBarComponent {
               label: 'Project Settings',
               icon: 'adjustments-alt',
               path: ['repo', this.repositoryId(), 'settings'],
+              showAtBottom: true,
             },
           ]
         : []),
     ];
+  });
+
+  bottomItems = computed(() => {
+    return this.items().filter(item => item.showAtBottom);
   });
 
   login() {
