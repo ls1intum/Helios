@@ -86,8 +86,11 @@ export const EnvironmentDeploymentSchema = {
     workflowRunHtmlUrl: {
       type: 'string',
     },
-    releaseCandidateName: {
-      type: 'string',
+    releaseCandidateNames: {
+      type: 'array',
+      items: {
+        type: 'string',
+      },
     },
     prName: {
       type: 'string',
@@ -378,7 +381,7 @@ export const ReleaseCandidateCreateDtoSchema = {
   required: ['branchName', 'commitSha', 'name'],
 } as const;
 
-export const ReleaseCandidateInfoDtoSchema = {
+export const ReleaseInfoListDtoSchema = {
   type: 'object',
   properties: {
     name: {
@@ -389,6 +392,9 @@ export const ReleaseCandidateInfoDtoSchema = {
     },
     branchName: {
       type: 'string',
+    },
+    isPublished: {
+      type: 'boolean',
     },
   },
 } as const;
@@ -407,7 +413,7 @@ export const DeployRequestSchema = {
       type: 'string',
     },
   },
-  required: ['branchName', 'environmentId'],
+  required: ['commitSha', 'environmentId'],
 } as const;
 
 export const WorkflowRunDtoSchema = {
@@ -705,7 +711,39 @@ export const ReleaseCandidateDeploymentDtoSchema = {
   required: ['environmentId', 'id', 'type'],
 } as const;
 
-export const ReleaseCandidateDetailsDtoSchema = {
+export const ReleaseCandidateEvaluationDtoSchema = {
+  type: 'object',
+  properties: {
+    user: {
+      $ref: '#/components/schemas/UserInfoDto',
+    },
+    isWorking: {
+      type: 'boolean',
+    },
+  },
+  required: ['user'],
+} as const;
+
+export const ReleaseDtoSchema = {
+  type: 'object',
+  properties: {
+    isDraft: {
+      type: 'boolean',
+    },
+    isPrerelease: {
+      type: 'boolean',
+    },
+    body: {
+      type: 'string',
+    },
+    githubUrl: {
+      type: 'string',
+    },
+  },
+  required: ['body', 'githubUrl', 'isDraft', 'isPrerelease'],
+} as const;
+
+export const ReleaseInfoDetailsDtoSchema = {
   type: 'object',
   properties: {
     name: {
@@ -729,6 +767,9 @@ export const ReleaseCandidateDetailsDtoSchema = {
         $ref: '#/components/schemas/ReleaseCandidateEvaluationDto',
       },
     },
+    release: {
+      $ref: '#/components/schemas/ReleaseDto',
+    },
     createdBy: {
       $ref: '#/components/schemas/UserInfoDto',
     },
@@ -737,20 +778,7 @@ export const ReleaseCandidateDetailsDtoSchema = {
       format: 'date-time',
     },
   },
-  required: ['branch', 'commit', 'createdAt', 'createdBy', 'deployments', 'evaluations', 'name'],
-} as const;
-
-export const ReleaseCandidateEvaluationDtoSchema = {
-  type: 'object',
-  properties: {
-    user: {
-      $ref: '#/components/schemas/UserInfoDto',
-    },
-    isWorking: {
-      type: 'boolean',
-    },
-  },
-  required: ['user'],
+  required: ['commit', 'createdAt', 'deployments', 'evaluations', 'name'],
 } as const;
 
 export const CommitsSinceReleaseCandidateDtoSchema = {
@@ -1116,8 +1144,11 @@ export const BranchDetailsDtoSchema = {
     isProtected: {
       type: 'boolean',
     },
-    releaseCandidateName: {
-      type: 'string',
+    releaseCandidateNames: {
+      type: 'array',
+      items: {
+        type: 'string',
+      },
     },
     updatedAt: {
       type: 'string',

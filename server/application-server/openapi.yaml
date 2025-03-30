@@ -243,11 +243,11 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/WorkflowGroupDto"
-  /api/release-candidate:
+  /api/release-info:
     get:
       tags:
-      - release-candidate-controller
-      operationId: getAllReleaseCandidates
+      - release-info-controller
+      operationId: getAllReleaseInfos
       responses:
         "200":
           description: OK
@@ -256,10 +256,10 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/ReleaseCandidateInfoDto"
+                  $ref: "#/components/schemas/ReleaseInfoListDto"
     post:
       tags:
-      - release-candidate-controller
+      - release-info-controller
       operationId: createReleaseCandidate
       requestBody:
         content:
@@ -273,11 +273,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ReleaseCandidateInfoDto"
-  /api/release-candidate/{name}/evaluate/{isWorking}:
+                $ref: "#/components/schemas/ReleaseInfoListDto"
+  /api/release-info/{name}/publish:
     post:
       tags:
-      - release-candidate-controller
+      - release-info-controller
+      operationId: publishReleaseDraft
+      parameters:
+      - name: name
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+  /api/release-info/{name}/evaluate/{isWorking}:
+    post:
+      tags:
+      - release-info-controller
       operationId: evaluate
       parameters:
       - name: name
@@ -630,11 +644,11 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/RepositoryInfoDto"
-  /api/release-candidate/{name}:
+  /api/release-info/{name}:
     get:
       tags:
-      - release-candidate-controller
-      operationId: getReleaseCandidateByName
+      - release-info-controller
+      operationId: getReleaseInfoByName
       parameters:
       - name: name
         in: path
@@ -647,10 +661,10 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ReleaseCandidateDetailsDto"
+                $ref: "#/components/schemas/ReleaseInfoDetailsDto"
     delete:
       tags:
-      - release-candidate-controller
+      - release-info-controller
       operationId: deleteReleaseCandidateByName
       parameters:
       - name: name
@@ -664,11 +678,11 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ReleaseCandidateInfoDto"
-  /api/release-candidate/newcommits:
+                $ref: "#/components/schemas/ReleaseInfoListDto"
+  /api/release-info/newcommits:
     get:
       tags:
-      - release-candidate-controller
+      - release-info-controller
       operationId: getCommitsSinceLastReleaseCandidate
       parameters:
       - name: branch
@@ -1097,8 +1111,10 @@ components:
           type: string
         workflowRunHtmlUrl:
           type: string
-        releaseCandidateName:
-          type: string
+        releaseCandidateNames:
+          type: array
+          items:
+            type: string
         prName:
           type: string
         user:
@@ -1340,7 +1356,7 @@ components:
       - branchName
       - commitSha
       - name
-    ReleaseCandidateInfoDto:
+    ReleaseInfoListDto:
       type: object
       properties:
         name:
@@ -1349,6 +1365,8 @@ components:
           type: string
         branchName:
           type: string
+        isPublished:
+          type: boolean
     DeployRequest:
       type: object
       properties:
@@ -1360,7 +1378,7 @@ components:
         commitSha:
           type: string
       required:
-      - branchName
+      - commitSha
       - environmentId
     WorkflowRunDto:
       type: object
@@ -1626,7 +1644,32 @@ components:
       - environmentId
       - id
       - type
-    ReleaseCandidateDetailsDto:
+    ReleaseCandidateEvaluationDto:
+      type: object
+      properties:
+        user:
+          $ref: "#/components/schemas/UserInfoDto"
+        isWorking:
+          type: boolean
+      required:
+      - user
+    ReleaseDto:
+      type: object
+      properties:
+        isDraft:
+          type: boolean
+        isPrerelease:
+          type: boolean
+        body:
+          type: string
+        githubUrl:
+          type: string
+      required:
+      - body
+      - githubUrl
+      - isDraft
+      - isPrerelease
+    ReleaseInfoDetailsDto:
       type: object
       properties:
         name:
@@ -1643,28 +1686,19 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/ReleaseCandidateEvaluationDto"
+        release:
+          $ref: "#/components/schemas/ReleaseDto"
         createdBy:
           $ref: "#/components/schemas/UserInfoDto"
         createdAt:
           type: string
           format: date-time
       required:
-      - branch
       - commit
       - createdAt
-      - createdBy
       - deployments
       - evaluations
       - name
-    ReleaseCandidateEvaluationDto:
-      type: object
-      properties:
-        user:
-          $ref: "#/components/schemas/UserInfoDto"
-        isWorking:
-          type: boolean
-      required:
-      - user
     CommitsSinceReleaseCandidateDto:
       type: object
       properties:
@@ -1977,8 +2011,10 @@ components:
           type: boolean
         isProtected:
           type: boolean
-        releaseCandidateName:
-          type: string
+        releaseCandidateNames:
+          type: array
+          items:
+            type: string
         updatedAt:
           type: string
           format: date-time
