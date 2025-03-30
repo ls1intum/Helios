@@ -1,6 +1,5 @@
-import { NgClass } from '@angular/common';
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
-import { ActivatedRoute, NavigationEnd, Router, RouterOutlet } from '@angular/router';
+import { ActivatedRoute, NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 import { IconsModule } from 'icons.module';
 import { AvatarModule } from 'primeng/avatar';
@@ -13,10 +12,12 @@ import { FooterComponent } from '@app/components/footer/footer.component';
 import { NavigationBarComponent } from '@app/components/navigation-bar/navigation-bar.component';
 import { filter } from 'rxjs';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { HeliosIconComponent } from '@app/components/helios-icon/helios-icon.component';
+import { ProfileNavSectionComponent } from '@app/components/profile-nav-section/profile-nav-section.component';
+import { TagModule } from 'primeng/tag';
 
 @Component({
   selector: 'app-main-layout',
-  standalone: true,
   imports: [
     RouterOutlet,
     ToastModule,
@@ -26,9 +27,12 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
     DividerModule,
     AvatarModule,
     CardModule,
-    NgClass,
     FooterComponent,
     NavigationBarComponent,
+    HeliosIconComponent,
+    ProfileNavSectionComponent,
+    TagModule,
+    RouterLink,
     ConfirmDialogModule,
   ],
   templateUrl: './main-layout.component.html',
@@ -40,7 +44,6 @@ export class MainLayoutComponent implements OnInit {
 
   repositoryId = signal<number | undefined>(undefined);
   isLoggedIn = computed(() => this.keycloakService.isLoggedIn());
-  dynamicHeight = computed(() => (this.isLoggedIn() ? 'h-[calc(100vh-24px)]' : 'h-[calc(100vh-48px)]'));
 
   ngOnInit(): void {
     // Initialize on first load (Refresh)
