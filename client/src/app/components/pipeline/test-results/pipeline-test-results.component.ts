@@ -296,6 +296,6 @@ export class PipelineTestResultsComponent {
 
   formatFailureRate = (failureRate: number | undefined) => {
     if (failureRate === undefined) return 'N/A';
-    return Math.floor((failureRate * 100) % 100).toString();
+    return Math.floor(failureRate * 100).toString();
   };
 }
