@@ -19,7 +19,7 @@ import lombok.ToString;
 @Getter
 @Setter
 @NoArgsConstructor
-@ToString(callSuper = true)
+@ToString(callSuper = true, exclude = "workflowRuns")
 // https://docs.github.com/en/rest/actions/workflows?apiVersion=2022-11-28#get-a-workflow
 public class Workflow extends BaseGitServiceEntity {
 

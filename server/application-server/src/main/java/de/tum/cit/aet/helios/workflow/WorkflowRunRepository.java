@@ -2,6 +2,7 @@ package de.tum.cit.aet.helios.workflow;
 
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -11,13 +12,12 @@ import org.springframework.stereotype.Repository;
 public interface WorkflowRunRepository extends JpaRepository<WorkflowRun, Long> {
   Optional<WorkflowRun> findById(long id);
 
-  // This loads the test suites for the workflow run eagerly
   @Query(
       "SELECT DISTINCT wr FROM WorkflowRun wr "
           + "JOIN wr.pullRequests pr "
-          + "LEFT JOIN FETCH wr.testSuites "
           + "WHERE pr.id = :pullRequestId "
           + "AND wr.headSha = :headSha")
+  @EntityGraph(attributePaths = {"testSuites"})
   List<WorkflowRun> findByPullRequestsIdAndHeadShaWithTestSuites(
       Long pullRequestId, String headSha);
 
@@ -104,16 +104,16 @@ public interface WorkflowRunRepository extends JpaRepository<WorkflowRun, Long> 
 
   @Query(
       "SELECT DISTINCT wr FROM WorkflowRun wr "
-          + "LEFT JOIN FETCH wr.testSuites "
           + "WHERE wr.headBranch = :branch "
           + "AND wr.headSha = :headSha "
           + "AND wr.repository.repositoryId = :repositoryId "
-          + "AND wr.pullRequests IS EMPTY")
-  List<WorkflowRun> findByHeadBranchAndHeadShaAndRepositoryIdAndPullRequestsIsNullWithTestSuites(
+          + "ORDER BY wr.createdAt DESC")
+  @EntityGraph(attributePaths = {"testSuites"})
+  List<WorkflowRun> findByHeadBranchAndHeadShaAndRepositoryIdWithTestSuites(
       String branch, String headSha, Long repositoryId);
 
   List<WorkflowRun> findByPullRequestsIdAndHeadSha(Long pullRequestsId, String headSha);
 
-  List<WorkflowRun> findByHeadBranchAndHeadShaAndRepositoryRepositoryIdAndPullRequestsIsNull(
+  List<WorkflowRun> findByHeadBranchAndHeadShaAndRepositoryRepositoryId(
       String branch, String headSha, Long repositoryId);
 }

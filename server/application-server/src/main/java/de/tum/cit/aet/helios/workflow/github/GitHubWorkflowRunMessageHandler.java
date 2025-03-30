@@ -3,6 +3,7 @@ package de.tum.cit.aet.helios.workflow.github;
 import de.tum.cit.aet.helios.github.GitHubMessageHandler;
 import de.tum.cit.aet.helios.github.GitHubService;
 import de.tum.cit.aet.helios.gitrepo.github.GitHubRepositorySyncService;
+import de.tum.cit.aet.helios.pullrequest.PullRequestRepository;
 import de.tum.cit.aet.helios.tests.TestResultProcessor;
 import de.tum.cit.aet.helios.workflow.GitHubWorkflowContext;
 import de.tum.cit.aet.helios.workflow.Workflow;
@@ -13,6 +14,7 @@ import java.io.BufferedReader;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +36,7 @@ public class GitHubWorkflowRunMessageHandler
   private final GitHubService gitHubService;
   private final WorkflowRunService workflowRunService;
   private final WorkflowRunRepository workflowRunRepository;
+  private final PullRequestRepository pullRequestRepository;
 
   @Override
   protected Class<GHEventPayload.WorkflowRun> getPayloadClass() {
@@ -95,6 +98,14 @@ public class GitHubWorkflowRunMessageHandler
             run.setTriggeredWorkflowRunId(context.runId());
             run.setHeadBranch(context.headBranch());
             run.setHeadSha(context.headSha());
+
+            // Get the pull request using head branch from pullRequestRepository and repositoryId
+            var pullRequest =
+                pullRequestRepository.findOpenPrByBranchNameOrSha(
+                    repository.getId(), context.headBranch(), context.headSha());
+            if (pullRequest.isPresent()) {
+              run.setPullRequests(Set.of(pullRequest.get()));
+            }
             run = workflowRunRepository.saveAndFlush(run);
             // After this point, the workflow run is updated with correct git context
             // Start processing it
@@ -116,7 +127,6 @@ public class GitHubWorkflowRunMessageHandler
       testResultProcessor.processRun(run);
     }
   }
-
 
   /**
    * Extracts workflow context from the workflow-context artifact.
@@ -146,8 +156,7 @@ public class GitHubWorkflowRunMessageHandler
     }
 
     if (ghArtifact == null) {
-      log.warn("No workflow-context artifact found for E2E Tests workflow_run: {}",
-          runId);
+      log.warn("No workflow-context artifact found for E2E Tests workflow_run: {}", runId);
       return null;
     }
 
@@ -162,9 +171,7 @@ public class GitHubWorkflowRunMessageHandler
     }
   }
 
-  /**
-   * Parses the workflow context artifact to extract the triggering workflow information.
-   */
+  /** Parses the workflow context artifact to extract the triggering workflow information. */
   private GitHubWorkflowContext parseWorkflowContextArtifact(GHArtifact artifact)
       throws IOException {
     // Download & Parse the artifact
@@ -194,8 +201,8 @@ public class GitHubWorkflowRunMessageHandler
                     };
 
                 // Read file content
-                try (BufferedReader reader = new BufferedReader(
-                    new InputStreamReader(nonClosingStream))) {
+                try (BufferedReader reader =
+                    new BufferedReader(new InputStreamReader(nonClosingStream))) {
                   String line;
                   while ((line = reader.readLine()) != null) {
                     // Skip empty lines
@@ -236,8 +243,11 @@ public class GitHubWorkflowRunMessageHandler
             throw new RuntimeException("Could not find TRIGGERING_WORKFLOW_HEAD_SHA in artifact");
           }
 
-          log.info("Context extracted: workflowRunId: {}, headBranch: {}, headSha: {}",
-              workflowRunId, headBranch, headSha);
+          log.info(
+              "Context extracted: workflowRunId: {}, headBranch: {}, headSha: {}",
+              workflowRunId,
+              headBranch,
+              headSha);
 
           return new GitHubWorkflowContext(workflowRunId, headBranch, headSha);
         });

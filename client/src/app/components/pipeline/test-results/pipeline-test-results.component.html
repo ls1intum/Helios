@@ -162,16 +162,41 @@
                           }
                         }
 
-                        <div class="flex flex-col items-start min-w-0">
-                          <div class="flex items-center gap-2">
-                            @if (testCase.previousStatus !== testCase.status && testCase.previousStatus) {
-                              <span class="text-xs text-blue-400 font-medium flex-shrink-0">previously {{ testCase.previousStatus.toLowerCase() }}</span>
+                        <div class="flex flex-1 items-center justify-between min-w-0">
+                          <div class="flex flex-col items-start min-w-0">
+                            <div class="flex items-center gap-2">
+                              @if (testCase.previousStatus !== testCase.status && testCase.previousStatus) {
+                                <span class="text-xs text-blue-400 font-medium flex-shrink-0">previously {{ testCase.previousStatus.toLowerCase() }}</span>
+                              }
+                              <span class="text-sm truncate whitespace-nowrap overflow-hidden w-full">{{ testCase.name }} </span>
+                            </div>
+                            @if (testCase.message) {
+                              <p-tag [severity]="testCase.status === 'FAILED' ? 'danger' : 'info'" [value]="testCase.message" styleClass="mt-2 text-xs"> </p-tag>
                             }
-                            <span class="text-sm truncate whitespace-nowrap overflow-hidden w-full">{{ testCase.name }} </span>
                           </div>
-                          @if (testCase.message) {
-                            <p-tag [severity]="testCase.status === 'FAILED' ? 'danger' : 'info'" [value]="testCase.message" styleClass="mt-2 text-xs"> </p-tag>
-                          }
+                          <div class="flex items-center gap-2">
+                            @if (testCase.failsInDefaultBranch) {
+                              <p-tag severity="info" value="Fails in default branch" styleClass="mt-2 text-xs" pTooltip="This test is also failing in the default branch"> </p-tag>
+                            }
+                            @if (testCase.isFlaky) {
+                              <div class="flex flex-col gap-1">
+                                <p-tag
+                                  severity="warn"
+                                  value="Flaky"
+                                  styleClass="mt-2 text-xs"
+                                  pTooltip="Failure rate of this test in default branch exceeds 50%. This test is unstable and should be investigated."
+                                >
+                                </p-tag>
+                                <p-tag
+                                  severity="danger"
+                                  value="{{ formatFailureRate(testCase.failureRate) }}% Failure rate"
+                                  styleClass="mt-2 text-xs"
+                                  pTooltip="Failure rate of this test in default branch"
+                                >
+                                </p-tag>
+                              </div>
+                            }
+                          </div>
                         </div>
                       </div>
                     }

@@ -24,7 +24,7 @@ import lombok.ToString;
 @Getter
 @Setter
 @NoArgsConstructor
-@ToString
+@ToString(exclude = "workflowRun")
 public class TestSuite {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
