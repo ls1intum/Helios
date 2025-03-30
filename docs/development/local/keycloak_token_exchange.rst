@@ -64,6 +64,7 @@ The section below duplicates the steps in the documentation in case the link is 
 
 #. Go to Identity Providers
 #. Select the external identity provider (e.g., GitHub)
+#. Enable 'Store tokens' option in the Settings tab
 #. Go to the Permissions tab
 #. Enable Permissions
 #. Click on the "impersonate" link
