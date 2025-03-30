@@ -51,7 +51,7 @@
     }
 
     <!-- Approve Button -->
-    @if (environment().latestDeployment?.state === 'WAITING') {
+    @if (environment().latestDeployment?.state === 'WAITING' && environment().latestDeployment?.workflowRunHtmlUrl) {
       <p-button
         severity="success"
         (click)="openExternalLink($event, environment().latestDeployment?.workflowRunHtmlUrl)"
