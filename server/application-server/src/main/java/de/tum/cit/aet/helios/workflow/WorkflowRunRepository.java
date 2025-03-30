@@ -106,22 +106,11 @@ public interface WorkflowRunRepository extends JpaRepository<WorkflowRun, Long> 
       "SELECT DISTINCT wr FROM WorkflowRun wr "
           + "WHERE wr.headBranch = :branch "
           + "AND wr.headSha = :headSha "
-          + "AND wr.repository.repositoryId = :repositoryId ")
+          + "AND wr.repository.repositoryId = :repositoryId "
+          + "ORDER BY wr.createdAt DESC")
   @EntityGraph(attributePaths = {"testSuites"})
   List<WorkflowRun> findByHeadBranchAndHeadShaAndRepositoryIdWithTestSuites(
       String branch, String headSha, Long repositoryId);
-
-  @Query(
-      """
-      SELECT DISTINCT wr FROM WorkflowRun wr
-      WHERE wr.headBranch = :branch
-        AND wr.repository.repositoryId = :repositoryId
-      ORDER BY wr.createdAt DESC
-      LIMIT 1
-      """)
-  @EntityGraph(attributePaths = {"testSuites"})
-  List<WorkflowRun> findByHeadBranchAndRepositoryIdWithTestSuites(
-      @Param("branch") String branch, @Param("repositoryId") Long repositoryId);
 
   List<WorkflowRun> findByPullRequestsIdAndHeadSha(Long pullRequestsId, String headSha);
 

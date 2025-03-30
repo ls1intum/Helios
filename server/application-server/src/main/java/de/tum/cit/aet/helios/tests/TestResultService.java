@@ -474,8 +474,8 @@ public class TestResultService {
     }
     // Get the latest workflow runs with test suites from the default branch
     List<WorkflowRun> defaultBranchRuns =
-        workflowRunRepository.findByHeadBranchAndRepositoryIdWithTestSuites(
-            defaultBranchName, repository.getRepositoryId());
+        workflowRunRepository.findByHeadBranchAndHeadShaAndRepositoryIdWithTestSuites(
+            defaultBranchName, defaultBranch.get().getCommitSha(), repository.getRepositoryId());
 
     // Collect test cases and their status
     Map<String, Boolean> defaultBranchFailures = new HashMap<>();
