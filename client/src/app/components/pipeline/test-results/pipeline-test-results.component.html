@@ -72,7 +72,7 @@
 
     <!-- Current Workflow Test Details -->
     @if (activeTestType(); as workflow) {
-      <div class="flex items-center gap-2 w-full max-w-sm mb-2 mt-4">
+      <div class="flex items-center gap-2 w-full max-w-sm mb-2">
         <p-button type="button" outlined (onClick)="toggleFilterMenu($event)" size="small">
           @if (showOnlyFailed()) {
             <i-tabler name="filter" />
@@ -162,8 +162,8 @@
                           }
                         }
 
-                        <div class="flex flex-col items-start min-w-0">
-                          <div class="flex items-center gap-2">
+                        <div class="flex flex-col items-start min-w-0 flex-grow">
+                          <div class="flex items-center gap-2 w-full">
                             @if (testCase.previousStatus !== testCase.status && testCase.previousStatus) {
                               <span class="text-xs text-blue-400 font-medium flex-shrink-0">previously {{ testCase.previousStatus.toLowerCase() }}</span>
                             }
@@ -173,6 +173,15 @@
                             <p-tag [severity]="testCase.status === 'FAILED' ? 'danger' : 'info'" [value]="testCase.message" styleClass="mt-2 text-xs"> </p-tag>
                           }
                         </div>
+
+                        <button
+                          pButton
+                          type="button"
+                          label="Details"
+                          class="p-button-text p-button-sm"
+                          (click)="showTestCaseDetails(testCase, suite)"
+                          [disabled]="!hasTestDetails(testCase, suite)"
+                        ></button>
                       </div>
                     }
                   </div>
@@ -210,3 +219,40 @@
     }
   }
 }
+
+<p-dialog header="Test Details" [(visible)]="showTestDetails" [style]="{ width: '50vw' }">
+  <ng-template #header>
+    <div class="font-bold text-xl">Test Details</div>
+  </ng-template>
+
+  @if (selectedTestCase()) {
+    <div class="flex flex-col gap-4">
+      @if (selectedTestCase()?.stackTrace) {
+        <div>
+          <h4 class="font-medium mb-2">Stack Trace</h4>
+          <div class="bg-gray-50 p-4 rounded overflow-auto max-h-[400px]">
+            <pre class="font-mono text-sm">{{ selectedTestCase()?.stackTrace }}</pre>
+          </div>
+        </div>
+      }
+
+      @if (selectedTestCase()?.systemOut) {
+        <div>
+          <h4 class="font-medium mb-2">Test Case Logs</h4>
+          <div class="bg-gray-50 p-4 rounded overflow-auto max-h-[400px]">
+            <pre class="font-mono text-sm">{{ selectedTestCase()?.systemOut }}</pre>
+          </div>
+        </div>
+      }
+
+      @if (selectedTestCase()?.suiteSystemOut) {
+        <div>
+          <h4 class="font-medium mb-2">Test Suite Logs</h4>
+          <div class="bg-gray-50 p-4 rounded overflow-auto max-h-[400px]">
+            <pre class="font-mono text-sm">{{ selectedTestCase()?.suiteSystemOut }}</pre>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</p-dialog>

@@ -58,6 +58,9 @@ public class TestCase {
   @Column(name = "error_type")
   private String errorType;
 
+  @Column(name = "system_out")
+  private String systemOut;
+
   public static enum TestStatus {
     PASSED,
     FAILED,

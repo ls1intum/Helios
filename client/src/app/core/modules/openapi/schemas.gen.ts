@@ -564,6 +564,9 @@ export const TestCaseDtoSchema = {
     stackTrace: {
       type: 'string',
     },
+    systemOut: {
+      type: 'string',
+    },
     errorType: {
       type: 'string',
     },
@@ -620,6 +623,9 @@ export const TestSuiteDtoSchema = {
     time: {
       type: 'number',
       format: 'double',
+    },
+    systemOut: {
+      type: 'string',
     },
     testCases: {
       type: 'array',

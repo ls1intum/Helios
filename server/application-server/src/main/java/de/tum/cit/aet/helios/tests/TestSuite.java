@@ -68,4 +68,7 @@ public class TestSuite {
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "test_type_id")
   private TestType testType;
+
+  @Column(name = "system_out")
+  private String systemOut;
 }

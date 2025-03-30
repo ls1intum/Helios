@@ -189,6 +189,7 @@ export type TestCaseDto = {
   time: number;
   message?: string;
   stackTrace?: string;
+  systemOut?: string;
   errorType?: string;
 };
 
@@ -206,6 +207,7 @@ export type TestSuiteDto = {
   errors: number;
   skipped: number;
   time: number;
+  systemOut?: string;
   testCases: Array<TestCaseDto>;
 };
 

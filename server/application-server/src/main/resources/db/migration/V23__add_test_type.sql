@@ -56,3 +56,7 @@ create index idx_test_suite_test_type_id on
    public.test_suite (
       test_type_id
    );
+
+-- We store our system out logs in the database
+ALTER TABLE test_suite ADD COLUMN system_out TEXT;
+ALTER TABLE test_case ADD COLUMN system_out TEXT;

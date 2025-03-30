@@ -46,6 +46,7 @@ public record TestResultsDto(@NonNull List<TestTypeResults> testResults, boolean
       @NonNull Integer errors,
       @NonNull Integer skipped,
       @NonNull Double time,
+      String systemOut,
       @NonNull List<TestCaseDto> testCases) {
     public static TestSuiteDto fromTestSuite(
         TestSuite testSuite, Function<TestCase, Optional<TestStatus>> previousStatusProvider) {
@@ -58,6 +59,7 @@ public record TestResultsDto(@NonNull List<TestTypeResults> testResults, boolean
           testSuite.getErrors(),
           testSuite.getSkipped(),
           testSuite.getTime(),
+          testSuite.getSystemOut(),
           testSuite.getTestCases().stream()
               .map(tc -> TestCaseDto.fromTestCase(tc, previousStatusProvider.apply(tc)))
               .toList());
@@ -73,6 +75,7 @@ public record TestResultsDto(@NonNull List<TestTypeResults> testResults, boolean
       @NonNull Double time,
       String message,
       String stackTrace,
+      String systemOut,
       String errorType) {
     public static TestCaseDto fromTestCase(
         TestCase testCase, Optional<TestStatus> previousStatusProvider) {
@@ -85,6 +88,7 @@ public record TestResultsDto(@NonNull List<TestTypeResults> testResults, boolean
           testCase.getTime(),
           testCase.getMessage(),
           testCase.getStackTrace(),
+          testCase.getSystemOut(),
           testCase.getErrorType());
     }
   }

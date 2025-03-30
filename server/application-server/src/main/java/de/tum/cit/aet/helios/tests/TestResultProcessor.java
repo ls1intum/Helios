@@ -150,6 +150,7 @@ public class TestResultProcessor {
               testSuite.setSkipped(result.skipped());
               testSuite.setTime(result.time());
               testSuite.setTimestamp(result.timestamp());
+              testSuite.setSystemOut(result.systemOut());
               testSuite.setTestCases(
                   result.testCases().stream().map(tc -> createTestCase(tc, testSuite)).toList());
               return testSuite;
@@ -172,6 +173,7 @@ public class TestResultProcessor {
     testCase.setMessage(tc.message());
     testCase.setStackTrace(tc.stackTrace());
     testCase.setErrorType(tc.errorType());
+    testCase.setSystemOut(tc.systemOut());
     return testCase;
   }
 

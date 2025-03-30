@@ -1941,6 +1941,8 @@ components:
           type: string
         stackTrace:
           type: string
+        systemOut:
+          type: string
         errorType:
           type: string
       required:
@@ -1986,6 +1988,8 @@ components:
         time:
           type: number
           format: double
+        systemOut:
+          type: string
         testCases:
           type: array
           items:

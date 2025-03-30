@@ -16,7 +16,8 @@ import { FormsModule } from '@angular/forms';
 import { injectQuery } from '@tanstack/angular-query-experimental';
 import { TabViewModule } from 'primeng/tabview';
 import { getLatestTestResultsByBranchOptions, getLatestTestResultsByPullRequestIdOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
-import { TestSuiteDto, TestTypeResults } from '@app/core/modules/openapi';
+import { TestCaseDto, TestSuiteDto, TestTypeResults } from '@app/core/modules/openapi';
+import { DialogModule } from 'primeng/dialog';
 
 @Component({
   selector: 'app-pipeline-test-results',
@@ -36,6 +37,7 @@ import { TestSuiteDto, TestTypeResults } from '@app/core/modules/openapi';
     InputTextModule,
     FormsModule,
     TabViewModule,
+    DialogModule,
   ],
   templateUrl: './pipeline-test-results.component.html',
 })
@@ -47,6 +49,22 @@ export class PipelineTestResultsComponent {
   activeTestTypeTab = signal(0);
 
   isTestResultsCollapsed = true;
+
+  showTestDetails = false;
+  selectedTestCase = signal<(TestCaseDto & { suiteSystemOut: string | undefined }) | null>(null);
+
+  showTestCaseDetails(testCase: TestCaseDto, testSuite: TestSuiteDto) {
+    this.selectedTestCase.set({
+      ...testCase,
+      suiteSystemOut: testSuite.systemOut,
+    });
+    this.showTestDetails = true;
+  }
+
+  hasTestDetails(testCase: TestCaseDto, testSuite: TestSuiteDto): boolean {
+    console.log(testCase.systemOut);
+    return !!(testCase.stackTrace || testCase.systemOut || testSuite.systemOut);
+  }
 
   branchName = computed(() => {
     const selector = this.selector();
