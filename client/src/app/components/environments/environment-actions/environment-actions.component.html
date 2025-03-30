@@ -8,6 +8,8 @@
     }
   }
 
+  <app-environment-reviewers [environmentId]="environment().id"></app-environment-reviewers>
+
   <div class="flex items-center border border-gray-300 rounded-md overflow-hidden">
     <!-- Deploy Button -->
     @if (deployable()) {
