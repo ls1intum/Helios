@@ -37,6 +37,45 @@ paths:
       responses:
         "200":
           description: OK
+  /api/test-types/{testTypeId}:
+    put:
+      tags:
+      - test-type-controller
+      operationId: updateTestType
+      parameters:
+      - name: testTypeId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TestTypeDto"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TestTypeDto"
+    delete:
+      tags:
+      - test-type-controller
+      operationId: deleteTestType
+      parameters:
+      - name: testTypeId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "204":
+          description: No Content
   /api/settings/{repositoryId}/settings:
     get:
       tags:
@@ -218,6 +257,37 @@ paths:
       responses:
         "200":
           description: OK
+  /api/test-types:
+    get:
+      tags:
+      - test-type-controller
+      operationId: getAllTestTypes
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TestTypeDto"
+    post:
+      tags:
+      - test-type-controller
+      operationId: createTestType
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TestTypeDto"
+        required: true
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TestTypeDto"
   /api/settings/{repositoryId}/groups/create:
     post:
       tags:
@@ -1000,6 +1070,25 @@ paths:
           description: OK
 components:
   schemas:
+    TestTypeDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+          maxLength: 255
+          minLength: 0
+        artifactName:
+          type: string
+          maxLength: 255
+          minLength: 0
+        workflowId:
+          type: integer
+          format: int64
+      required:
+      - workflowId
     GitRepoSettingsDto:
       type: object
       properties:

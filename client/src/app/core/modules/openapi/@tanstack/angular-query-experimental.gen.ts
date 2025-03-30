@@ -3,6 +3,8 @@
 import {
   type Options,
   updateWorkflowLabel,
+  deleteTestType,
+  updateTestType,
   getGitRepoSettings,
   updateGitRepoSettings,
   updateWorkflowGroups,
@@ -12,6 +14,8 @@ import {
   lockEnvironment,
   extendEnvironmentLock,
   syncWorkflowsByRepositoryId,
+  getAllTestTypes,
+  createTestType,
   createWorkflowGroup,
   getAllReleaseInfos,
   createReleaseCandidate,
@@ -58,6 +62,10 @@ import {
 import { type MutationOptions, type DefaultError, queryOptions } from '@tanstack/angular-query-experimental';
 import type {
   UpdateWorkflowLabelData,
+  DeleteTestTypeData,
+  DeleteTestTypeResponse,
+  UpdateTestTypeData,
+  UpdateTestTypeResponse,
   GetGitRepoSettingsData,
   UpdateGitRepoSettingsData,
   UpdateGitRepoSettingsResponse,
@@ -72,6 +80,9 @@ import type {
   ExtendEnvironmentLockData,
   ExtendEnvironmentLockResponse,
   SyncWorkflowsByRepositoryIdData,
+  GetAllTestTypesData,
+  CreateTestTypeData,
+  CreateTestTypeResponse,
   CreateWorkflowGroupData,
   CreateWorkflowGroupResponse,
   GetAllReleaseInfosData,
@@ -125,6 +136,34 @@ export const updateWorkflowLabelMutation = (options?: Partial<Options<UpdateWork
   const mutationOptions: MutationOptions<unknown, DefaultError, Options<UpdateWorkflowLabelData>> = {
     mutationFn: async localOptions => {
       const { data } = await updateWorkflowLabel({
+        ...options,
+        ...localOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const deleteTestTypeMutation = (options?: Partial<Options<DeleteTestTypeData>>) => {
+  const mutationOptions: MutationOptions<DeleteTestTypeResponse, DefaultError, Options<DeleteTestTypeData>> = {
+    mutationFn: async localOptions => {
+      const { data } = await deleteTestType({
+        ...options,
+        ...localOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const updateTestTypeMutation = (options?: Partial<Options<UpdateTestTypeData>>) => {
+  const mutationOptions: MutationOptions<UpdateTestTypeResponse, DefaultError, Options<UpdateTestTypeData>> = {
+    mutationFn: async localOptions => {
+      const { data } = await updateTestType({
         ...options,
         ...localOptions,
         throwOnError: true,
@@ -301,6 +340,54 @@ export const syncWorkflowsByRepositoryIdMutation = (options?: Partial<Options<Sy
   const mutationOptions: MutationOptions<unknown, DefaultError, Options<SyncWorkflowsByRepositoryIdData>> = {
     mutationFn: async localOptions => {
       const { data } = await syncWorkflowsByRepositoryId({
+        ...options,
+        ...localOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const getAllTestTypesQueryKey = (options?: Options<GetAllTestTypesData>) => createQueryKey('getAllTestTypes', options);
+
+export const getAllTestTypesOptions = (options?: Options<GetAllTestTypesData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getAllTestTypes({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: getAllTestTypesQueryKey(options),
+  });
+};
+
+export const createTestTypeQueryKey = (options: Options<CreateTestTypeData>) => createQueryKey('createTestType', options);
+
+export const createTestTypeOptions = (options: Options<CreateTestTypeData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await createTestType({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: createTestTypeQueryKey(options),
+  });
+};
+
+export const createTestTypeMutation = (options?: Partial<Options<CreateTestTypeData>>) => {
+  const mutationOptions: MutationOptions<CreateTestTypeResponse, DefaultError, Options<CreateTestTypeData>> = {
+    mutationFn: async localOptions => {
+      const { data } = await createTestType({
         ...options,
         ...localOptions,
         throwOnError: true,

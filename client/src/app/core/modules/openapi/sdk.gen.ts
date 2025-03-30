@@ -3,6 +3,10 @@
 import type { Options as ClientOptions, TDataShape, Client } from '@hey-api/client-fetch';
 import type {
   UpdateWorkflowLabelData,
+  DeleteTestTypeData,
+  DeleteTestTypeResponse,
+  UpdateTestTypeData,
+  UpdateTestTypeResponse,
   GetGitRepoSettingsData,
   GetGitRepoSettingsResponse,
   UpdateGitRepoSettingsData,
@@ -19,6 +23,10 @@ import type {
   ExtendEnvironmentLockData,
   ExtendEnvironmentLockResponse,
   SyncWorkflowsByRepositoryIdData,
+  GetAllTestTypesData,
+  GetAllTestTypesResponse,
+  CreateTestTypeData,
+  CreateTestTypeResponse,
   CreateWorkflowGroupData,
   CreateWorkflowGroupResponse,
   GetAllReleaseInfosData,
@@ -126,6 +134,24 @@ export const updateWorkflowLabel = <ThrowOnError extends boolean = false>(option
   });
 };
 
+export const deleteTestType = <ThrowOnError extends boolean = false>(options: Options<DeleteTestTypeData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).delete<DeleteTestTypeResponse, unknown, ThrowOnError>({
+    url: '/api/test-types/{testTypeId}',
+    ...options,
+  });
+};
+
+export const updateTestType = <ThrowOnError extends boolean = false>(options: Options<UpdateTestTypeData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).put<UpdateTestTypeResponse, unknown, ThrowOnError>({
+    url: '/api/test-types/{testTypeId}',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
 export const getGitRepoSettings = <ThrowOnError extends boolean = false>(options: Options<GetGitRepoSettingsData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetGitRepoSettingsResponse, unknown, ThrowOnError>({
     url: '/api/settings/{repositoryId}/settings',
@@ -198,6 +224,24 @@ export const syncWorkflowsByRepositoryId = <ThrowOnError extends boolean = false
   return (options.client ?? _heyApiClient).post<unknown, unknown, ThrowOnError>({
     url: '/api/workflows/repository/{repositoryId}/sync',
     ...options,
+  });
+};
+
+export const getAllTestTypes = <ThrowOnError extends boolean = false>(options?: Options<GetAllTestTypesData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetAllTestTypesResponse, unknown, ThrowOnError>({
+    url: '/api/test-types',
+    ...options,
+  });
+};
+
+export const createTestType = <ThrowOnError extends boolean = false>(options: Options<CreateTestTypeData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).post<CreateTestTypeResponse, unknown, ThrowOnError>({
+    url: '/api/test-types',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
   });
 };
 

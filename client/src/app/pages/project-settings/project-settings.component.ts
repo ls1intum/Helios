@@ -14,7 +14,7 @@ import { TableModule } from 'primeng/table';
 
 import { LockingThresholdsComponent } from '@app/components/locking-thresholds/locking-thresholds.component';
 import { PageHeadingComponent } from '@app/components/page-heading/page-heading.component';
-import { WorkflowDto, WorkflowGroupDto, WorkflowMembershipDto } from '@app/core/modules/openapi';
+import { TestTypeDto, WorkflowDto, WorkflowGroupDto, WorkflowMembershipDto } from '@app/core/modules/openapi';
 import {
   createWorkflowGroupMutation,
   deleteWorkflowGroupMutation,
@@ -25,6 +25,11 @@ import {
   updateWorkflowLabelMutation,
   updateWorkflowGroupsMutation,
   syncWorkflowsByRepositoryIdMutation,
+  updateTestTypeMutation,
+  createTestTypeMutation,
+  deleteTestTypeMutation,
+  getAllTestTypesQueryKey,
+  getAllTestTypesOptions,
 } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { WorkflowDtoSchema } from '@app/core/modules/openapi/schemas.gen';
 import { MessageService } from 'primeng/api';
@@ -32,6 +37,7 @@ import { SelectModule } from 'primeng/select';
 import { TooltipModule } from 'primeng/tooltip';
 import { TagModule } from 'primeng/tag';
 import { MessageModule } from 'primeng/message';
+import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
   selector: 'app-project-settings',
@@ -387,5 +393,103 @@ export class ProjectSettingsComponent {
     // Reset drag state
     this.dragIndex = null;
     this.updateGroups();
+  }
+
+  showAddTestTypeDialog = false;
+  editingTestType: TestTypeDto | null = null;
+  testTypeForm: Partial<TestTypeDto> = {
+    name: '',
+    artifactName: '',
+    workflowId: undefined,
+  };
+
+  testTypesQuery = injectQuery(() => ({
+    ...getAllTestTypesOptions(),
+    enabled: () => !!this.repositoryId(),
+  }));
+
+  testTypes = computed(() => this.testTypesQuery.data() || []);
+
+  createTestTypeMutation = injectMutation(() => ({
+    ...createTestTypeMutation(),
+    onSuccess: () => {
+      this.queryClient.invalidateQueries({ queryKey: getAllTestTypesQueryKey() });
+      this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Test type created successfully' });
+      this.resetTestTypeDialog();
+    },
+  }));
+
+  updateTestTypeMutation = injectMutation(() => ({
+    ...updateTestTypeMutation(),
+    onSuccess: () => {
+      this.queryClient.invalidateQueries({ queryKey: getAllTestTypesQueryKey() });
+      this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Test type updated successfully' });
+      this.resetTestTypeDialog();
+    },
+  }));
+
+  deleteTestTypeMutation = injectMutation(() => ({
+    ...deleteTestTypeMutation(),
+    onSuccess: () => {
+      this.queryClient.invalidateQueries({ queryKey: getAllTestTypesQueryKey() });
+      this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Test type deleted successfully' });
+    },
+  }));
+
+  editTestType(testType: TestTypeDto) {
+    this.editingTestType = testType;
+    this.testTypeForm = { ...testType };
+    this.showAddTestTypeDialog = true;
+  }
+
+  resetTestTypeDialog() {
+    this.showAddTestTypeDialog = false;
+    this.editingTestType = null;
+    this.testTypeForm = {
+      name: '',
+      artifactName: '',
+      workflowId: undefined,
+    };
+  }
+
+  saveTestType() {
+    if (!this.testTypeForm.name || !this.testTypeForm.artifactName || !this.testTypeForm.workflowId) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Validation Error',
+        detail: 'Please fill in all required fields',
+      });
+      return;
+    }
+
+    if (this.editingTestType) {
+      this.updateTestTypeMutation.mutate({
+        path: { testTypeId: this.editingTestType.id! },
+        body: this.testTypeForm as TestTypeDto,
+      });
+    } else {
+      this.createTestTypeMutation.mutate({
+        body: this.testTypeForm as TestTypeDto,
+      });
+    }
+  }
+
+  updateTestType(testType: TestTypeDto) {
+    this.updateTestTypeMutation.mutate({
+      path: { testTypeId: testType.id! },
+      body: testType,
+    });
+  }
+
+  confirmDeleteTestType(testType: TestTypeDto) {
+    this.confirmationService.confirm({
+      header: 'Delete Test Type',
+      message: `Are you sure you want to delete the test type "${testType.name}"?`,
+      accept: () => {
+        this.deleteTestTypeMutation.mutate({
+          path: { testTypeId: testType.id! },
+        });
+      },
+    });
   }
 }
