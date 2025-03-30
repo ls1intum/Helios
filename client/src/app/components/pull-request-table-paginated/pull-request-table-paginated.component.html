@@ -1,6 +1,32 @@
-@if (query.isPending() || query.isError()) {
-  <p-table [value]="[1, 2, 3, 4, 5]">
-    <ng-template pTemplate="body">
+<p-table
+  #table
+  [rowHover]="true"
+  [value]="query.data()?.content || []"
+  [lazy]="true"
+  [totalRecords]="query.data()?.totalElements || 0"
+  [paginator]="true"
+  [rows]="paginationService.size()"
+  [first]="(paginationService.page() - 1) * paginationService.size()"
+  [rowsPerPageOptions]="[1, 2, 3, 4, 5, 10, 15, 17, 20, 50]"
+  [loading]="query.isPending()"
+  (onPage)="onPage($event)"
+  (onSort)="onSort($event)"
+  [sortField]="paginationService.sortField()"
+  [sortOrder]="paginationService.sortDirection() === 'asc' ? 1 : -1"
+>
+  <ng-template pTemplate="header">
+    <tr>
+      <th>
+        <app-table-filter-paginated [paginationService]="typedPaginationService" [table]="table" />
+      </th>
+      <th class="hidden lg:table-cell">Assignee</th>
+      <th class="hidden lg:table-cell">Reviewers</th>
+      <th class="hidden lg:table-cell"></th>
+    </tr>
+  </ng-template>
+
+  <ng-template pTemplate="body" let-pr>
+    @if (query.isPending() || query.isError()) {
       <tr>
         <td>
           <div class="flex items-center gap-2">
@@ -22,23 +48,9 @@
           </p-button>
         </td>
       </tr>
-    </ng-template>
-  </p-table>
-} @else {
-  <p-table #table [rowHover]="true" [value]="filteredPrs()" [paginator]="true" [rows]="20" [globalFilterFields]="['title', 'id']">
-    <ng-template #header>
-      <tr>
-        <th>
-          <app-table-filter [input]="table" [searchTableService]="searchTableService" />
-        </th>
-        <th class="hidden lg:table-cell">Assignee</th>
-        <th class="hidden lg:table-cell">Reviewers</th>
-        <th class="hidden lg:table-cell"></th>
-      </tr>
-    </ng-template>
-    <ng-template pTemplate="body" let-pr>
+    } @else {
       <tr [class.bg-gray-100]="pr.isPinned">
-        <td class="px-0 py-2">
+        <td class="p-0">
           <div class="flex h-full items-stretch gap-2">
             <div
               class="flex items-center border-r-4 px-2"
@@ -121,18 +133,18 @@
           </p-button>
         </td>
       </tr>
-    </ng-template>
-    <ng-template #emptymessage>
-      <tr>
-        <td colspan="4">
-          <div class="flex flex-col gap-2 p-20 justify-center items-center">
-            <i-tabler name="git-pull-request" class="!h-20 !w-20 text-red-500" />
-            <span class="font-semibold text-xl">There are no pull requests found matching your filter criteria.</span>
-            <span>Try clearing the filter or reloading the page.</span>
-            <p-button (click)="searchTableService.clearFilter(table)">Clear Filter</p-button>
-          </div>
-        </td>
-      </tr>
-    </ng-template>
-  </p-table>
-}
+    }
+  </ng-template>
+  <ng-template #emptymessage>
+    <tr>
+      <td colspan="4">
+        <div class="flex flex-col gap-2 p-20 justify-center items-center">
+          <i-tabler name="git-pull-request" class="!h-20 !w-20 text-red-500" />
+          <span class="font-semibold text-xl">There are no pull requests found matching your filter criteria.</span>
+          <span>Try clearing the filter or reloading the page.</span>
+          <p-button (click)="clearFilters()">Clear Filter</p-button>
+        </div>
+      </td>
+    </tr>
+  </ng-template>
+</p-table>

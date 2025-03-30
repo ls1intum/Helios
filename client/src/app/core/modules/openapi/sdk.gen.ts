@@ -75,6 +75,8 @@ import type {
   GetPullRequestByRepositoryIdAndNumberResponse,
   GetPullRequestByRepositoryIdData,
   GetPullRequestByRepositoryIdResponse,
+  GetPaginatedPullRequestsData,
+  GetPaginatedPullRequestsResponse,
   GetAllEnvironmentsData,
   GetAllEnvironmentsResponse,
   GetEnvironmentsByUserLockingData,
@@ -431,6 +433,13 @@ export const getPullRequestByRepositoryIdAndNumber = <ThrowOnError extends boole
 export const getPullRequestByRepositoryId = <ThrowOnError extends boolean = false>(options: Options<GetPullRequestByRepositoryIdData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetPullRequestByRepositoryIdResponse, unknown, ThrowOnError>({
     url: '/api/pullrequests/repository/{id}',
+    ...options,
+  });
+};
+
+export const getPaginatedPullRequests = <ThrowOnError extends boolean = false>(options?: Options<GetPaginatedPullRequestsData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetPaginatedPullRequestsResponse, unknown, ThrowOnError>({
+    url: '/api/pullrequests/paginated',
     ...options,
   });
 };

@@ -1,5 +1,8 @@
 package de.tum.cit.aet.helios.pullrequest;
 
+import de.tum.cit.aet.helios.pagination.PageResponse;
+import de.tum.cit.aet.helios.pullrequest.pagination.PullRequestFilterType;
+import de.tum.cit.aet.helios.pullrequest.pagination.PullRequestPageRequest;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +19,29 @@ import org.springframework.web.bind.annotation.RestController;
 public class PullRequestController {
 
   private final PullRequestService pullRequestService;
+
+  @GetMapping("/paginated")
+  public ResponseEntity<PageResponse<PullRequestBaseInfoDto>> getPaginatedPullRequests(
+      @RequestParam(defaultValue = "1") int page,
+      @RequestParam(defaultValue = "20") int size,
+      @RequestParam(required = false) String sortField,
+      @RequestParam(required = false) String sortDirection,
+      @RequestParam(required = false) PullRequestFilterType filterType,
+      @RequestParam(required = false) String searchTerm) {
+
+    // Create a request object with type-safe parameters
+    PullRequestPageRequest pageRequest = new PullRequestPageRequest();
+    pageRequest.setPage(page);
+    pageRequest.setSize(size);
+    pageRequest.setSortField(sortField);
+    pageRequest.setSortDirection(sortDirection);
+    pageRequest.setFilterType(filterType != null ? filterType : PullRequestFilterType.ALL);
+    pageRequest.setSearchTerm(searchTerm);
+
+    PageResponse<PullRequestBaseInfoDto> response =
+        pullRequestService.getPaginatedPullRequests(pageRequest);
+    return ResponseEntity.ok(response);
+  }
 
   @GetMapping
   public ResponseEntity<List<PullRequestBaseInfoDto>> getAllPullRequests() {
