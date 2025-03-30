@@ -27,6 +27,9 @@ public class GitHubAuthBroker {
   @Value("${github.tokenExchangeClientSecret}")
   private String tokenExchangeSecret;
 
+  @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}")
+  private String issuerUri;
+
   /**
    * Performs a token exchange operation with the identity provider.
    *
@@ -48,7 +51,7 @@ public class GitHubAuthBroker {
 
     Request request =
         new Request.Builder()
-            .url("http://localhost:8081/realms/helios-example/protocol/openid-connect/token")
+            .url(issuerUri + "/protocol/openid-connect/token")
             .post(requestBody)
             .build();
 

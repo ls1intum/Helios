@@ -8,6 +8,7 @@ import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
 import de.tum.cit.aet.helios.user.User;
 import java.io.IOException;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
@@ -25,52 +26,37 @@ public class ApprovalService {
       Environment environment,
       User user) {
 
-    log.info(
-        "Approving deployment: {} {} {} {}", deploymentSource, gitRepository, environment, user);
+    Optional<HeliosDeployment> heliosDeploymentOpt =
+        heliosDeploymentRepository.findByDeploymentId(deploymentSource.getId());
 
-    Boolean shouldApprove = shouldApprove();
-
-    if (!shouldApprove) {
-      log.info("Ignoring non-Helios deployment approval");
-      return;
-    }
-    Boolean isHeliosBot = user.getLogin().equals("helios-bot");
-    log.info("Is Helios Bot: {}", isHeliosBot);
-
-    HeliosDeployment heliosDeployment =
-        heliosDeploymentRepository.findByDeploymentId(deploymentSource.getId()).orElse(null);
-
-    log.info("Helios Deployment: {}", heliosDeployment);
-    if (heliosDeployment == null) {
-      log.error("Deployment with ID {} not found", deploymentSource.getId());
+    // If deployment not found in Helios, it was triggered directly from GitHub
+    if (heliosDeploymentOpt.isEmpty()) {
+      log.info("Skipping approval for non-Helios deployment with ID {}", deploymentSource.getId());
       return;
     }
 
-    Long workflowRunId =
-        Long.valueOf(
-            heliosDeployment
-                .getWorkflowRunHtmlUrl()
-                .substring(heliosDeployment.getWorkflowRunHtmlUrl().lastIndexOf("/") + 1));
+    HeliosDeployment heliosDeployment = heliosDeploymentOpt.get();
 
+    // Check if this is a Helios deployment with workflow run ID
+    if (heliosDeployment.getWorkflowRunId() == null) {
+      // Workflow run ID missing - this is unusual for a Helios deployment
+      log.warn(
+          "Missing workflow run ID for Helios deployment with ID {}. Possible sync issue.",
+          deploymentSource.getId());
+      return;
+    }
+
+    log.info("Approving Helios Deployment: {}", heliosDeployment);
+
+    Long workflowRunId = heliosDeployment.getWorkflowRunId();
     String repoNameWithOwner = gitRepository.getNameWithOwner();
     String githubUserLogin = heliosDeployment.getCreator().getLogin();
 
-    log.info("Workflow Run ID: {}", workflowRunId);
-    log.info("Repo Name with Owner: {}", repoNameWithOwner);
-    log.info("GitHub User Login: {}", githubUserLogin);
     try {
       this.gitHubService.approveDeploymentOnBehalfOfUser(
           repoNameWithOwner, workflowRunId, environment.getId(), githubUserLogin);
     } catch (IOException e) {
       log.error("Error approving deployment: {}", e.getMessage());
     }
-
-    // cancel workflow if not possible to approve
-    // maybe add a new status to deployment "NOT_ENOUGH_PERMISSIONS"
-  }
-
-  private Boolean shouldApprove() {
-    // check if triggered via helios
-    return true;
   }
 }
