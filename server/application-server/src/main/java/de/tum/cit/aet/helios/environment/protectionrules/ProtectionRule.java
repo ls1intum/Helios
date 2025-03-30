@@ -6,11 +6,11 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import java.time.ZonedDateTime;
@@ -35,9 +35,7 @@ import org.hibernate.type.SqlTypes;
 @ToString(exclude = "environment")
 public class ProtectionRule {
 
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long id;
+  @Id private Long id;
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "environment_id", nullable = false)
@@ -78,5 +76,16 @@ public class ProtectionRule {
     WAIT_TIMER,
     REQUIRED_REVIEWERS,
     BRANCH_POLICY
+  }
+
+  @PrePersist
+  protected void onCreate() {
+    createdAt = ZonedDateTime.now();
+    updatedAt = ZonedDateTime.now();
+  }
+
+  @PreUpdate
+  protected void onUpdate() {
+    updatedAt = ZonedDateTime.now();
   }
 }
