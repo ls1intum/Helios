@@ -46,5 +46,8 @@ public class GitHubEnvironmentSyncService {
 
     // Save the environment
     environmentRepository.save(environment);
+
+    // Update protection rules
+    environmentConverter.updateProtectionRules(gitHubEnvironmentDto, environment);
   }
 }

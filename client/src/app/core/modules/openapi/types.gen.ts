@@ -338,6 +338,18 @@ export type PullRequestInfoDto = {
   updatedAt?: string;
 };
 
+export type EnvironmentReviewersDto = {
+  preventSelfReview?: boolean;
+  reviewers?: Array<Reviewer>;
+};
+
+export type Reviewer = {
+  id?: number;
+  login?: string;
+  name?: string;
+  type?: string;
+};
+
 export type EnvironmentLockHistoryDto = {
   id: number;
   lockedBy?: UserInfoDto;
@@ -1112,6 +1124,24 @@ export type GetAllEnvironmentsResponses = {
 };
 
 export type GetAllEnvironmentsResponse = GetAllEnvironmentsResponses[keyof GetAllEnvironmentsResponses];
+
+export type GetEnvironmentReviewersData = {
+  body?: never;
+  path: {
+    environmentId: number;
+  };
+  query?: never;
+  url: '/api/environments/{environmentId}/reviewers';
+};
+
+export type GetEnvironmentReviewersResponses = {
+  /**
+   * OK
+   */
+  200: EnvironmentReviewersDto;
+};
+
+export type GetEnvironmentReviewersResponse = GetEnvironmentReviewersResponses[keyof GetEnvironmentReviewersResponses];
 
 export type GetEnvironmentsByUserLockingData = {
   body?: never;
