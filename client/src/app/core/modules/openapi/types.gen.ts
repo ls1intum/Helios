@@ -82,6 +82,13 @@ export type RepositoryInfoDto = {
   nameWithOwner: string;
   description?: string;
   htmlUrl: string;
+  updatedAt: string;
+  stargazersCount?: number;
+  pullRequestCount?: number;
+  branchCount?: number;
+  environmentCount?: number;
+  latestReleaseTagName?: string;
+  contributors?: Array<UserInfoDto>;
 };
 
 export type UserInfoDto = {
@@ -232,7 +239,7 @@ export type ReleaseCandidateDeploymentDto = {
 
 export type ReleaseCandidateEvaluationDto = {
   user: UserInfoDto;
-  isWorking: boolean;
+  isWorking?: boolean;
 };
 
 export type ReleaseDto = {

@@ -1,12 +1,16 @@
 package de.tum.cit.aet.helios.gitrepo;
 
 import de.tum.cit.aet.helios.label.Label;
+import de.tum.cit.aet.helios.user.User;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.time.OffsetDateTime;
@@ -36,24 +40,20 @@ public class GitRepository {
 
   protected OffsetDateTime updatedAt;
 
-  @NonNull
-  private String name;
+  @NonNull private String name;
 
-  @NonNull
-  private String nameWithOwner;
+  @NonNull private String nameWithOwner;
 
   // Whether the repository is private or public.
   private boolean isPrivate;
 
-  @NonNull
-  private String htmlUrl;
+  @NonNull private String htmlUrl;
 
   private String description;
 
   private String homepage;
 
-  @NonNull
-  private OffsetDateTime pushedAt;
+  @NonNull private OffsetDateTime pushedAt;
 
   private boolean isArchived;
 
@@ -68,8 +68,23 @@ public class GitRepository {
 
   private int watchersCount;
 
-  @NonNull
-  private String defaultBranch;
+  private int pullRequestCount;
+
+  private int branchCount;
+
+  private int environmentCount;
+
+  private String latestReleaseTagName;
+
+  @ManyToMany
+  @JoinTable(
+      name = "repository_contributor",
+      joinColumns = @JoinColumn(name = "contributor_id"),
+      inverseJoinColumns = @JoinColumn(name = "user_id"))
+  @ToString.Exclude
+  private Set<User> contributors = new HashSet<>();
+
+  @NonNull private String defaultBranch;
 
   private boolean hasIssues;
 

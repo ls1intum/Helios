@@ -66,6 +66,8 @@ import {
   IconTimeDurationOff,
   IconTrash,
   IconX,
+  IconStar,
+  IconFocus,
 } from 'angular-tabler-icons/icons';
 
 // Select some icons (use an object, not an array)
@@ -92,6 +94,8 @@ const icons = {
   IconReload,
   IconProgressHelp,
   IconCircleX,
+  IconStar,
+  IconFocus,
   IconCloudUpload,
   IconCloudQuestion,
   IconCloudCheck,

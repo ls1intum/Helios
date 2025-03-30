@@ -21,8 +21,7 @@ public record ReleaseInfoDetailsDto(
     UserInfoDto createdBy,
     @NonNull OffsetDateTime createdAt) {
 
-  public record ReleaseCandidateEvaluationDto(
-      @NonNull UserInfoDto user, @NonNull boolean isWorking) {
+  public record ReleaseCandidateEvaluationDto(@NonNull UserInfoDto user, boolean isWorking) {
     public static ReleaseCandidateEvaluationDto fromEvaluation(
         @NonNull ReleaseCandidateEvaluation evaluation) {
       return new ReleaseCandidateEvaluationDto(

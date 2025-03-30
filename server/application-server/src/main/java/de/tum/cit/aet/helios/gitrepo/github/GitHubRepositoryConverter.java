@@ -12,8 +12,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @Log4j2
-public class GitHubRepositoryConverter
-    implements Converter<GHRepository, GitRepository> {
+public class GitHubRepositoryConverter implements Converter<GHRepository, GitRepository> {
   @Override
   public GitRepository convert(@NonNull GHRepository source) {
     return update(source, new GitRepository());
@@ -47,6 +46,7 @@ public class GitHubRepositoryConverter
     repository.setHasIssues(source.hasIssues());
     repository.setHasProjects(source.hasProjects());
     repository.setHasWiki(source.hasWiki());
+    repository.setPullRequestCount(source.getOpenIssueCount());
     return repository;
   }
 
