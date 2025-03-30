@@ -10,14 +10,17 @@ CREATE TABLE test_case_statistics (
     failure_rate DOUBLE PRECISION NOT NULL DEFAULT 0.0,
     is_flaky BOOLEAN NOT NULL DEFAULT FALSE,
     last_updated TIMESTAMP WITH TIME ZONE NOT NULL,
+    repository_id BIGINT NOT NULL,
     
-    CONSTRAINT uk_test_case_statistics UNIQUE (test_name, class_name, test_suite_name, branch_name)
+    CONSTRAINT uk_test_case_statistics UNIQUE (test_name, class_name, test_suite_name, branch_name, repository_id)
 );
 
+ALTER TABLE public.test_case_statistics ADD CONSTRAINT fk_test_case_statistics_repository FOREIGN KEY (repository_id) REFERENCES public.repository(repository_id) ON DELETE CASCADE;
+
 -- Add indexes for efficient querying
-CREATE INDEX idx_test_case_statistics ON test_case_statistics (test_name, class_name, test_suite_name, branch_name);
-CREATE INDEX idx_branch_name ON test_case_statistics (branch_name);
-CREATE INDEX idx_is_flaky ON test_case_statistics (branch_name, is_flaky);
+CREATE INDEX idx_test_case_statistics ON test_case_statistics (test_name, class_name, test_suite_name, branch_name, repository_id);
+CREATE INDEX idx_branch_name ON test_case_statistics (branch_name, repository_id);
+CREATE INDEX idx_is_flaky ON test_case_statistics (branch_name, is_flaky, repository_id);
 
 -- Add index for efficient workflow run querying for statistics migration
 CREATE INDEX idx_workflow_run_branch_repo_status ON workflow_run (head_branch, repository_id, test_processing_status); 
