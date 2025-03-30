@@ -5,7 +5,6 @@ import de.tum.cit.aet.helios.github.GitHubService;
 import de.tum.cit.aet.helios.gitrepo.github.GitHubRepositorySyncService;
 import de.tum.cit.aet.helios.tests.TestResultProcessor;
 import de.tum.cit.aet.helios.workflow.GitHubWorkflowContext;
-import de.tum.cit.aet.helios.workflow.Workflow;
 import de.tum.cit.aet.helios.workflow.WorkflowRun;
 import de.tum.cit.aet.helios.workflow.WorkflowRunRepository;
 import de.tum.cit.aet.helios.workflow.WorkflowRunService;
@@ -87,7 +86,7 @@ public class GitHubWorkflowRunMessageHandler
         // If the workflow run is completed, and it is a test workflow
         // Get the context from the artifact and update the workflow run
         if (run.getStatus() == WorkflowRun.Status.COMPLETED
-            && run.getWorkflow().getLabel() == Workflow.Label.TEST) {
+            && run.getWorkflow().getTestTypes().size() > 0) {
           log.info("Trying to find the triggering workflow run ID of: {}", githubRun.getId());
           GitHubWorkflowContext context =
               extractWorkflowContext(repository.getId(), githubRun.getId());
@@ -117,7 +116,6 @@ public class GitHubWorkflowRunMessageHandler
     }
   }
 
-
   /**
    * Extracts workflow context from the workflow-context artifact.
    *
@@ -146,8 +144,7 @@ public class GitHubWorkflowRunMessageHandler
     }
 
     if (ghArtifact == null) {
-      log.warn("No workflow-context artifact found for E2E Tests workflow_run: {}",
-          runId);
+      log.warn("No workflow-context artifact found for E2E Tests workflow_run: {}", runId);
       return null;
     }
 
@@ -162,9 +159,7 @@ public class GitHubWorkflowRunMessageHandler
     }
   }
 
-  /**
-   * Parses the workflow context artifact to extract the triggering workflow information.
-   */
+  /** Parses the workflow context artifact to extract the triggering workflow information. */
   private GitHubWorkflowContext parseWorkflowContextArtifact(GHArtifact artifact)
       throws IOException {
     // Download & Parse the artifact
@@ -194,8 +189,8 @@ public class GitHubWorkflowRunMessageHandler
                     };
 
                 // Read file content
-                try (BufferedReader reader = new BufferedReader(
-                    new InputStreamReader(nonClosingStream))) {
+                try (BufferedReader reader =
+                    new BufferedReader(new InputStreamReader(nonClosingStream))) {
                   String line;
                   while ((line = reader.readLine()) != null) {
                     // Skip empty lines
@@ -236,8 +231,11 @@ public class GitHubWorkflowRunMessageHandler
             throw new RuntimeException("Could not find TRIGGERING_WORKFLOW_HEAD_SHA in artifact");
           }
 
-          log.info("Context extracted: workflowRunId: {}, headBranch: {}, headSha: {}",
-              workflowRunId, headBranch, headSha);
+          log.info(
+              "Context extracted: workflowRunId: {}, headBranch: {}, headSha: {}",
+              workflowRunId,
+              headBranch,
+              headSha);
 
           return new GitHubWorkflowContext(workflowRunId, headBranch, headSha);
         });

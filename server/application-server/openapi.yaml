@@ -35,6 +35,12 @@ paths:
               - TEST
         required: true
       responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
   /api/test-types/{testTypeId}:
@@ -56,6 +62,12 @@ paths:
               $ref: "#/components/schemas/TestTypeDto"
         required: true
       responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -74,6 +86,12 @@ paths:
           type: integer
           format: int64
       responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
         "204":
           description: No Content
   /api/settings/{repositoryId}/settings:
@@ -89,6 +107,12 @@ paths:
           type: integer
           format: int64
       responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -113,6 +137,12 @@ paths:
               $ref: "#/components/schemas/GitRepoSettingsDto"
         required: true
       responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -140,6 +170,12 @@ paths:
                 $ref: "#/components/schemas/WorkflowGroupDto"
         required: true
       responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
   /api/environments/{id}:
@@ -155,6 +191,12 @@ paths:
           type: integer
           format: int64
       responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -179,6 +221,12 @@ paths:
               $ref: "#/components/schemas/EnvironmentDto"
         required: true
       responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -198,6 +246,12 @@ paths:
           type: integer
           format: int64
       responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -217,6 +271,12 @@ paths:
           type: integer
           format: int64
       responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -236,6 +296,12 @@ paths:
           type: integer
           format: int64
       responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -255,6 +321,12 @@ paths:
           type: integer
           format: int64
       responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
   /api/test-types:
@@ -263,6 +335,12 @@ paths:
       - test-type-controller
       operationId: getAllTestTypes
       responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -282,6 +360,12 @@ paths:
               $ref: "#/components/schemas/TestTypeDto"
         required: true
       responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
         "201":
           description: Created
           content:
@@ -307,6 +391,12 @@ paths:
               $ref: "#/components/schemas/WorkflowGroupDto"
         required: true
       responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -319,6 +409,12 @@ paths:
       - release-info-controller
       operationId: getAllReleaseInfos
       responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -338,6 +434,12 @@ paths:
               $ref: "#/components/schemas/ReleaseCandidateCreateDto"
         required: true
       responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -356,6 +458,12 @@ paths:
         schema:
           type: string
       responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
   /api/release-info/{name}/evaluate/{isWorking}:
@@ -375,6 +483,12 @@ paths:
         schema:
           type: boolean
       responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
   /api/pullrequests/{pr}/pin:
@@ -395,6 +509,12 @@ paths:
         schema:
           type: boolean
       responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
   /api/deployments/deploy:
@@ -409,6 +529,12 @@ paths:
               $ref: "#/components/schemas/DeployRequest"
         required: true
       responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -438,6 +564,12 @@ paths:
         schema:
           type: boolean
       responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
   /status/health:
@@ -446,6 +578,12 @@ paths:
       - status-controller
       operationId: healthCheck
       responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -458,6 +596,12 @@ paths:
       - workflow-controller
       operationId: getAllWorkflows
       responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -479,6 +623,12 @@ paths:
           type: integer
           format: int64
       responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -504,6 +654,12 @@ paths:
           - DISABLED_MANUALLY
           - UNKNOWN
       responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -525,6 +681,12 @@ paths:
           type: integer
           format: int64
       responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -546,6 +708,12 @@ paths:
           type: integer
           format: int64
       responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -566,6 +734,12 @@ paths:
         schema:
           type: string
       responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -580,17 +754,23 @@ paths:
       - user-permissions-controller
       operationId: getUserPermissions
       responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/GitHubRepositoryRoleDto"
-  /api/tests/grouped/pr/{pullRequestId}:
+  /api/tests/pr/{pullRequestId}:
     get:
       tags:
       - test-result-controller
-      operationId: getLatestGroupedTestResultsByPullRequestId
+      operationId: getLatestTestResultsByPullRequestId
       parameters:
       - name: pullRequestId
         in: path
@@ -598,31 +778,93 @@ paths:
         schema:
           type: integer
           format: int64
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 10
+      - name: search
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: onlyFailed
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
       responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/GroupedTestResultsDto"
-  /api/tests/grouped/branch:
+                $ref: "#/components/schemas/TestResultsDto"
+  /api/tests/branch:
     get:
       tags:
       - test-result-controller
-      operationId: getLatestGroupedTestResultsByBranch
+      operationId: getLatestTestResultsByBranch
       parameters:
       - name: branch
         in: query
         required: true
         schema:
           type: string
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 10
+      - name: search
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: onlyFailed
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
       responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/GroupedTestResultsDto"
+                $ref: "#/components/schemas/TestResultsDto"
   /api/settings/{repositoryId}/groups:
     get:
       tags:
@@ -636,6 +878,12 @@ paths:
           type: integer
           format: int64
       responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -650,6 +898,12 @@ paths:
       - repository-controller
       operationId: getAllRepositories
       responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -671,6 +925,12 @@ paths:
           type: integer
           format: int64
       responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -689,6 +949,12 @@ paths:
         schema:
           type: string
       responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -706,6 +972,12 @@ paths:
         schema:
           type: string
       responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -724,6 +996,12 @@ paths:
         schema:
           type: string
       responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -736,6 +1014,12 @@ paths:
       - pull-request-controller
       operationId: getAllPullRequests
       responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -757,6 +1041,12 @@ paths:
           type: integer
           format: int64
       responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -782,6 +1072,12 @@ paths:
           type: integer
           format: int32
       responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -801,6 +1097,12 @@ paths:
           type: integer
           format: int64
       responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -815,6 +1117,12 @@ paths:
       - environment-controller
       operationId: getAllEnvironments
       responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -829,6 +1137,12 @@ paths:
       - environment-controller
       operationId: getEnvironmentsByUserLocking
       responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -848,6 +1162,12 @@ paths:
           type: integer
           format: int64
       responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -869,6 +1189,12 @@ paths:
           type: integer
           format: int64
       responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -883,6 +1209,12 @@ paths:
       - environment-controller
       operationId: getAllEnabledEnvironments
       responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -897,6 +1229,12 @@ paths:
       - deployment-controller
       operationId: getAllDeployments
       responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -918,6 +1256,12 @@ paths:
           type: integer
           format: int64
       responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -937,6 +1281,12 @@ paths:
           type: integer
           format: int64
       responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -958,6 +1308,12 @@ paths:
           type: integer
           format: int64
       responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -977,6 +1333,12 @@ paths:
           type: integer
           format: int64
       responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -1003,6 +1365,12 @@ paths:
         schema:
           type: string
       responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -1015,6 +1383,12 @@ paths:
       - branch-controller
       operationId: getAllBranches
       responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -1041,6 +1415,12 @@ paths:
         schema:
           type: string
       responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -1066,10 +1446,31 @@ paths:
           type: integer
           format: int64
       responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
 components:
   schemas:
+    ApiError:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        error:
+          type: string
+        message:
+          type: string
+        path:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
     TestTypeDto:
       type: object
       properties:
@@ -1509,17 +1910,6 @@ components:
           - NONE
         roleName:
           type: string
-    GroupedTestResultsDto:
-      type: object
-      properties:
-        testResults:
-          type: object
-          additionalProperties:
-            $ref: "#/components/schemas/WorkflowTestResults"
-        isProcessing:
-          type: boolean
-      required:
-      - testResults
     TestCaseDto:
       type: object
       properties:
@@ -1559,6 +1949,17 @@ components:
       - name
       - status
       - time
+    TestResultsDto:
+      type: object
+      properties:
+        testResults:
+          type: array
+          items:
+            $ref: "#/components/schemas/TestTypeResults"
+        isProcessing:
+          type: boolean
+      required:
+      - testResults
     TestSuiteDto:
       type: object
       properties:
@@ -1589,11 +1990,6 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/TestCaseDto"
-        workflowId:
-          type: integer
-          format: int64
-        workflowName:
-          type: string
       required:
       - errors
       - failures
@@ -1604,13 +2000,13 @@ components:
       - tests
       - time
       - timestamp
-    WorkflowTestResults:
+    TestTypeResults:
       type: object
       properties:
-        workflowId:
+        testTypeId:
           type: integer
           format: int64
-        workflowName:
+        testTypeName:
           type: string
         testSuites:
           type: array
@@ -1618,10 +2014,50 @@ components:
             $ref: "#/components/schemas/TestSuiteDto"
         isProcessing:
           type: boolean
+        stats:
+          $ref: "#/components/schemas/TestTypeStats"
       required:
+      - isProcessing
+      - stats
       - testSuites
-      - workflowId
-      - workflowName
+      - testTypeId
+      - testTypeName
+    TestTypeStats:
+      type: object
+      properties:
+        totalSuites:
+          type: integer
+          format: int32
+        totalTests:
+          type: integer
+          format: int32
+        passed:
+          type: integer
+          format: int32
+        failures:
+          type: integer
+          format: int32
+        errors:
+          type: integer
+          format: int32
+        skipped:
+          type: integer
+          format: int32
+        totalTime:
+          type: number
+          format: double
+        totalUpdates:
+          type: integer
+          format: int32
+      required:
+      - errors
+      - failures
+      - passed
+      - skipped
+      - totalSuites
+      - totalTests
+      - totalTime
+      - totalUpdates
     BranchInfoDto:
       type: object
       properties:

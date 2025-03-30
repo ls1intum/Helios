@@ -36,14 +36,14 @@
 
   @if (!isTestResultsCollapsed) {
     <!-- Workflow Tabs -->
-    @if (sortedWorkflows().length > 0) {
+    @if (sortedTestTypes().length > 0) {
       @defer {
-        <p-tabView [activeIndex]="effectiveWorkflowTab()" (activeIndexChange)="onTabChange($event)">
-          @for (workflow of sortedWorkflows(); track workflow.name) {
+        <p-tabView [activeIndex]="effectiveTestTypeTab()" (activeIndexChange)="onTabChange($event)">
+          @for (workflow of sortedTestTypes(); track workflow.testTypeId) {
             <p-tabPanel>
               <ng-template pTemplate="header">
                 <div class="flex items-center gap-2">
-                  @switch (workflowState(workflow)) {
+                  @switch (testTypeState(workflow)) {
                     @case ('SUCCESS') {
                       <i-tabler name="circle-check" class="text-green-500 w-4 h-4"></i-tabler>
                     }
@@ -54,7 +54,7 @@
                       <i-tabler name="circle-chevrons-right" class="text-yellow-500 w-4 h-4"></i-tabler>
                     }
                   }
-                  <span>{{ workflow.name }}</span>
+                  <span>{{ workflow.testTypeName }}</span>
                   @if (workflow.isProcessing) {
                     <i-tabler name="progress" class="w-4 h-4 animate-spin text-gray-600 ml-1"></i-tabler>
                   }
@@ -71,7 +71,7 @@
     }
 
     <!-- Current Workflow Test Details -->
-    @if (activeWorkflow(); as workflow) {
+    @if (activeTestType(); as workflow) {
       <div class="flex items-center gap-2 w-full max-w-sm mb-2 mt-4">
         <p-button type="button" outlined (onClick)="toggleFilterMenu($event)" size="small">
           @if (showOnlyFailed()) {
@@ -80,11 +80,11 @@
             <i-tabler name="filter-plus" />
           }
         </p-button>
-        <input pInputText [(ngModel)]="searchValue" type="text" pSize="small" placeholder="Search" class="w-full" />
+        <input pInputText [ngModel]="searchValue()" (ngModelChange)="onSearchChange($event)" type="text" pSize="small" placeholder="Search" class="w-full" />
       </div>
 
       <!-- Workflow Stats Summary -->
-      @if (workflowStats(); as stats) {
+      @if (activeTestTypeStats(); as stats) {
         <div class="flex items-center gap-4 mb-3 text-sm text-gray-600 p-2 bg-gray-50 rounded">
           <span class="flex items-center gap-1"><i-tabler name="check" class="text-green-500"></i-tabler> {{ stats.passed }} passed</span>
           <span class="flex items-center gap-1"><i-tabler name="x" class="text-red-500"></i-tabler> {{ stats.failures }} failed</span>
@@ -109,16 +109,16 @@
         </div>
       </p-popover>
 
-      @if (filteredTestSuites(); as testSuites) {
+      @if (testSuites(); as testSuites) {
         @if (testSuites.length === 0) {
           <!-- No Results State -->
           <div class="flex flex-col items-center p-4 border rounded-lg">
-            <span class="text-sm text-gray-500">No test results available for {{ workflow.name }}</span>
+            <span class="text-sm text-gray-500">No test results available for {{ workflow.testTypeName }}</span>
           </div>
         } @else {
           <!-- Test Results -->
           <div class="flex flex-col gap-4">
-            @for (suite of testSuites.slice(testSuiteFirst(), testSuiteFirst() + testSuiteRows()); track suite.id) {
+            @for (suite of testSuites; track suite.id) {
               @defer {
                 <p-panel [toggleable]="true" [collapsed]="true" [styleClass]="suiteHasUpdates(suite) ? 'border-blue-400 border-2 relative' : ''">
                   <ng-template pTemplate="header">
@@ -192,7 +192,7 @@
             (onPageChange)="onPageChange($event)"
             [first]="testSuiteFirst()"
             [rows]="testSuiteRows()"
-            [totalRecords]="testSuites.length"
+            [totalRecords]="activeTestType()?.stats?.totalSuites || 0"
             [rowsPerPageOptions]="[10, 20, 30]"
           />
         }

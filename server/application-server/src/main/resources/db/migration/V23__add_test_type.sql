@@ -42,3 +42,17 @@ create index idx_test_type_name_repository_id on
       repository_id,
       name
    );
+
+-- Modify test_suite to have a reference to test_type
+alter table public.test_suite add column test_type_id bigint;
+
+alter table public.test_suite
+   add constraint fk_test_suite_test_type
+      foreign key ( test_type_id )
+         references public.test_type ( id )
+            on delete set null;
+
+create index idx_test_suite_test_type_id on
+   public.test_suite (
+      test_type_id
+   );

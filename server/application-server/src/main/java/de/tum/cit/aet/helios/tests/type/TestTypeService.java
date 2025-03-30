@@ -38,9 +38,16 @@ public class TestTypeService {
             .orElseThrow(() -> new IllegalArgumentException("Repository not found"));
     testType.setRepository(repo);
 
-    if (dto.workflowId() != null) {
-      workflowRepository.findById(dto.workflowId()).ifPresent(testType::setWorkflow);
+    Workflow workflow =
+        workflowRepository
+            .findById(dto.workflowId())
+            .orElseThrow(() -> new IllegalArgumentException("Workflow not found"));
+
+    if (!workflow.getRepository().getRepositoryId().equals(repositoryId)) {
+      throw new IllegalArgumentException("Workflow does not belong to this repository");
     }
+
+    testType.setWorkflow(workflow);
 
     return TestTypeDto.fromTestType(testTypeRepository.save(testType));
   }
@@ -80,17 +87,13 @@ public class TestTypeService {
             .orElseThrow(() -> new IllegalArgumentException("Repository not found"));
     testType.setRepository(repo);
 
-    if (dto.workflowId() != null) {
-      Workflow workflow =
-          workflowRepository
-              .findById(dto.workflowId())
-              .orElseThrow(() -> new IllegalArgumentException("Workflow not found"));
-      if (!workflow.getRepository().getRepositoryId().equals(repositoryId)) {
-        throw new IllegalArgumentException("Workflow does not belong to this repository");
-      }
-      testType.setWorkflow(workflow);
-    } else {
-      testType.setWorkflow(null);
+    Workflow workflow =
+        workflowRepository
+            .findById(dto.workflowId())
+            .orElseThrow(() -> new IllegalArgumentException("Workflow not found"));
+    if (!workflow.getRepository().getRepositoryId().equals(repositoryId)) {
+      throw new IllegalArgumentException("Workflow does not belong to this repository");
     }
+    testType.setWorkflow(workflow);
   }
 }

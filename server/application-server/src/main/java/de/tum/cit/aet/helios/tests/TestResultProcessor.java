@@ -4,7 +4,7 @@ import de.tum.cit.aet.helios.github.GitHubService;
 import de.tum.cit.aet.helios.tests.parsers.JunitParser;
 import de.tum.cit.aet.helios.tests.parsers.TestResultParseException;
 import de.tum.cit.aet.helios.tests.parsers.TestResultParser;
-import de.tum.cit.aet.helios.workflow.Workflow;
+import de.tum.cit.aet.helios.tests.type.TestType;
 import de.tum.cit.aet.helios.workflow.WorkflowRun;
 import de.tum.cit.aet.helios.workflow.WorkflowRunRepository;
 import java.io.FilterInputStream;
@@ -12,13 +12,13 @@ import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.kohsuke.github.GHArtifact;
 import org.kohsuke.github.PagedIterable;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -29,9 +29,6 @@ public class TestResultProcessor {
   private final GitHubService gitHubService;
   private final WorkflowRunRepository workflowRunRepository;
   private final JunitParser junitParser;
-
-  @Value("${tests.artifactName:JUnit Test Results}")
-  private String testArtifactName;
 
   /**
    * Determines if a workflow run's test results should be processed.
@@ -45,7 +42,7 @@ public class TestResultProcessor {
         workflowRun.getName());
 
     if (workflowRun.getStatus() != WorkflowRun.Status.COMPLETED
-        || workflowRun.getWorkflow().getLabel() != Workflow.Label.TEST) {
+        || workflowRun.getWorkflow().getTestTypes().isEmpty()) {
       return false;
     }
 
@@ -93,79 +90,89 @@ public class TestResultProcessor {
    * @return the test suites extracted from the workflow run's artifacts
    */
   private List<TestSuite> processRunSync(WorkflowRun workflowRun) {
-    GHArtifact testResultsArtifact = null;
+    List<TestSuite> allTestSuites = new ArrayList<>();
 
     try {
       PagedIterable<GHArtifact> artifacts =
           this.gitHubService.getWorkflowRunArtifacts(
               workflowRun.getRepository().getRepositoryId(), workflowRun.getId());
 
-      // Traverse page iterable to find the first artifact with the configured name
+      // Get all test types for this workflow
+      Set<TestType> testTypes = workflowRun.getWorkflow().getTestTypes();
+
+      // Process each artifact that matches a test type's artifact name
       for (GHArtifact artifact : artifacts) {
-        if (artifact.getName().equals(testArtifactName)) {
-          testResultsArtifact = artifact;
-          break;
+        TestType matchingTestType = findMatchingTestType(testTypes, artifact.getName());
+        if (matchingTestType != null) {
+          List<TestSuite> testSuites = processTestResultArtifact(artifact);
+          // Set the test type relationship for each test suite
+          testSuites.forEach(
+              testSuite -> {
+                testSuite.setWorkflowRun(workflowRun);
+                testSuite.setTestType(matchingTestType);
+              });
+          allTestSuites.addAll(testSuites);
+          log.debug(
+              "Processed artifact {} for test type {}",
+              artifact.getName(),
+              matchingTestType.getName());
         }
       }
     } catch (IOException e) {
-      throw new TestResultException("Failed to fetch artifacts", e);
+      throw new TestResultException("Failed to fetch or process artifacts", e);
     }
 
-    if (testResultsArtifact == null) {
-      throw new TestResultException("Test results artifact not found: " + testArtifactName);
+    if (allTestSuites.isEmpty()) {
+      log.warn("No matching test artifacts found for workflow run {}", workflowRun.getName());
+      throw new TestResultException("No matching test artifacts found");
     }
 
-    log.debug("Found test results artifact {}", testResultsArtifact.getName());
+    log.debug("Parsed {} test suites across all artifacts. Persisting...", allTestSuites.size());
+    return allTestSuites;
+  }
 
-    List<TestResultParser.TestSuite> results;
+  private TestType findMatchingTestType(Set<TestType> testTypes, String artifactName) {
+    return testTypes.stream()
+        .filter(testType -> testType.getArtifactName().equals(artifactName))
+        .findFirst()
+        .orElse(null);
+  }
 
-    try {
-      results = this.processTestResultArtifact(testResultsArtifact);
-    } catch (IOException e) {
-      throw new TestResultException("Failed to process test results artifact", e);
-    }
+  private List<TestSuite> convertToTestSuites(List<TestResultParser.TestSuite> results) {
+    return results.stream()
+        .map(
+            result -> {
+              TestSuite testSuite = new TestSuite();
+              testSuite.setName(result.name());
+              testSuite.setTests(result.tests());
+              testSuite.setFailures(result.failures());
+              testSuite.setErrors(result.errors());
+              testSuite.setSkipped(result.skipped());
+              testSuite.setTime(result.time());
+              testSuite.setTimestamp(result.timestamp());
+              testSuite.setTestCases(
+                  result.testCases().stream().map(tc -> createTestCase(tc, testSuite)).toList());
+              return testSuite;
+            })
+        .toList();
+  }
 
-    log.debug("Parsed {} test suites. Persisting...", results.size());
-
-    List<TestSuite> testSuites = new ArrayList<>();
-
-    for (TestResultParser.TestSuite result : results) {
-      TestSuite testSuite = new TestSuite();
-      testSuite.setWorkflowRun(workflowRun);
-      testSuite.setName(result.name());
-      testSuite.setTests(result.tests());
-      testSuite.setFailures(result.failures());
-      testSuite.setErrors(result.errors());
-      testSuite.setSkipped(result.skipped());
-      testSuite.setTime(result.time());
-      testSuite.setTimestamp(result.timestamp());
-      testSuite.setTestCases(
-          result.testCases().stream()
-              .map(
-                  tc -> {
-                    TestCase testCase = new TestCase();
-                    testCase.setTestSuite(testSuite);
-                    testCase.setName(tc.name());
-                    testCase.setClassName(tc.className());
-                    testCase.setTime(tc.time());
-                    testCase.setStatus(
-                        tc.failed()
-                            ? TestCase.TestStatus.FAILED
-                            : tc.error()
-                                ? TestCase.TestStatus.ERROR
-                                : tc.skipped()
-                                    ? TestCase.TestStatus.SKIPPED
-                                    : TestCase.TestStatus.PASSED);
-                    testCase.setMessage(tc.message());
-                    testCase.setStackTrace(tc.stackTrace());
-                    testCase.setErrorType(tc.errorType());
-                    return testCase;
-                  })
-              .toList());
-      testSuites.add(testSuite);
-    }
-
-    return testSuites;
+  private TestCase createTestCase(TestResultParser.TestCase tc, TestSuite testSuite) {
+    TestCase testCase = new TestCase();
+    testCase.setTestSuite(testSuite);
+    testCase.setName(tc.name());
+    testCase.setClassName(tc.className());
+    testCase.setTime(tc.time());
+    testCase.setStatus(
+        tc.failed()
+            ? TestCase.TestStatus.FAILED
+            : tc.error()
+                ? TestCase.TestStatus.ERROR
+                : tc.skipped() ? TestCase.TestStatus.SKIPPED : TestCase.TestStatus.PASSED);
+    testCase.setMessage(tc.message());
+    testCase.setStackTrace(tc.stackTrace());
+    testCase.setErrorType(tc.errorType());
+    return testCase;
   }
 
   /**
@@ -175,8 +182,7 @@ public class TestResultProcessor {
    * @return the test suites extracted from the artifact
    * @throws IOException if an I/O error occurs
    */
-  private List<TestResultParser.TestSuite> processTestResultArtifact(GHArtifact artifact)
-      throws IOException {
+  private List<TestSuite> processTestResultArtifact(GHArtifact artifact) throws IOException {
     // Download the ZIP artifact, find all parsable XML files and parse them
     return artifact.download(
         stream -> {
@@ -212,7 +218,7 @@ public class TestResultProcessor {
             }
           }
 
-          return results;
+          return convertToTestSuites(results);
         });
   }
 }
