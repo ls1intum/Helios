@@ -97,7 +97,7 @@ export class EnvironmentAccordionComponent {
   }
 
   isRelease(deployment: EnvironmentDeployment): boolean {
-    return !!deployment.releaseCandidateName || (!!deployment.ref && /^v?\d+\.\d+\.\d+/.test(deployment.ref));
+    return (deployment.releaseCandidateNames?.length || 0) > 0 || (!!deployment.ref && /^v?\d+\.\d+\.\d+/.test(deployment.ref));
   }
 
   getPrLink() {

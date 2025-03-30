@@ -8,13 +8,13 @@ import { ChipModule } from 'primeng/chip';
 import { DataViewModule } from 'primeng/dataview';
 import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
-import { Tooltip } from 'primeng/tooltip';
 import { DividerModule } from 'primeng/divider';
 import { AvatarModule } from 'primeng/avatar';
+import { PopoverModule } from 'primeng/popover';
 
 @Component({
   selector: 'app-profile-nav-section',
-  imports: [ToastModule, Tooltip, DividerModule, AvatarModule, DataViewModule, ButtonModule, TagModule, CommonModule, CardModule, ChipModule, IconsModule],
+  imports: [ToastModule, PopoverModule, DividerModule, AvatarModule, DataViewModule, ButtonModule, TagModule, CommonModule, CardModule, ChipModule, IconsModule],
   templateUrl: './profile-nav-section.component.html',
 })
 export class ProfileNavSectionComponent {

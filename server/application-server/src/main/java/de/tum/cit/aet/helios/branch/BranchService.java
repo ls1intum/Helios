@@ -1,8 +1,8 @@
 package de.tum.cit.aet.helios.branch;
 
 import de.tum.cit.aet.helios.auth.AuthService;
-import de.tum.cit.aet.helios.releasecandidate.ReleaseCandidate;
-import de.tum.cit.aet.helios.releasecandidate.ReleaseCandidateRepository;
+import de.tum.cit.aet.helios.releaseinfo.releasecandidate.ReleaseCandidate;
+import de.tum.cit.aet.helios.releaseinfo.releasecandidate.ReleaseCandidateRepository;
 import de.tum.cit.aet.helios.userpreference.UserPreference;
 import de.tum.cit.aet.helios.userpreference.UserPreferenceRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -65,9 +65,8 @@ public class BranchService {
                     branch,
                     releaseCandidateRepository
                         .findByRepositoryRepositoryIdAndCommitSha(
-                            repositoryId, branch.getCommitSha())
-                        .map(ReleaseCandidate::getName)
-                        .orElseGet(() -> null)));
+                            repositoryId, branch.getCommitSha()).stream()
+                        .map(ReleaseCandidate::getName).toList()));
   }
 
   public void setBranchPinnedByRepositoryIdAndName(Long repoId, String name, Boolean isPinned) {

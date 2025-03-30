@@ -1,21 +1,24 @@
-package de.tum.cit.aet.helios.releasecandidate;
+package de.tum.cit.aet.helios.releaseinfo;
 
 import de.tum.cit.aet.helios.branch.BranchInfoDto;
 import de.tum.cit.aet.helios.commit.CommitInfoDto;
 import de.tum.cit.aet.helios.deployment.LatestDeploymentUnion;
 import de.tum.cit.aet.helios.deployment.LatestDeploymentUnion.DeploymentType;
+import de.tum.cit.aet.helios.releaseinfo.release.ReleaseDto;
+import de.tum.cit.aet.helios.releaseinfo.releasecandidate.ReleaseCandidateEvaluation;
 import de.tum.cit.aet.helios.user.UserInfoDto;
 import java.time.OffsetDateTime;
 import java.util.List;
 import org.springframework.lang.NonNull;
 
-public record ReleaseCandidateDetailsDto(
+public record ReleaseInfoDetailsDto(
     @NonNull String name,
     @NonNull CommitInfoDto commit,
-    @NonNull BranchInfoDto branch,
+    BranchInfoDto branch,
     @NonNull List<ReleaseCandidateDeploymentDto> deployments,
     @NonNull List<ReleaseCandidateEvaluationDto> evaluations,
-    @NonNull UserInfoDto createdBy,
+    ReleaseDto release,
+    UserInfoDto createdBy,
     @NonNull OffsetDateTime createdAt) {
 
   public record ReleaseCandidateEvaluationDto(@NonNull UserInfoDto user, boolean isWorking) {

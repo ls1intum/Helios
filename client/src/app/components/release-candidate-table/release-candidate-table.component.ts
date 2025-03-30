@@ -1,5 +1,5 @@
 import { Component, computed, inject } from '@angular/core';
-import { getAllReleaseCandidatesOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
+import { getAllReleaseInfosOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { FILTER_OPTIONS_TOKEN, SearchTableService } from '@app/core/services/search-table.service';
 import { injectQuery } from '@tanstack/angular-query-experimental';
 import { IconsModule } from 'icons.module';
@@ -8,11 +8,11 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { TableModule } from 'primeng/table';
 import { TableFilterComponent } from '../table-filter/table-filter.component';
 import { TagModule } from 'primeng/tag';
-import { ReleaseCandidateInfoDto } from '@app/core/modules/openapi';
+import { ReleaseInfoListDto } from '@app/core/modules/openapi';
 import { Router, RouterLink } from '@angular/router';
 import { SlicePipe } from '@angular/common';
 
-const FILTER_OPTIONS: { name: string; filter: (prs: ReleaseCandidateInfoDto[]) => ReleaseCandidateInfoDto[] }[] = [];
+const FILTER_OPTIONS: { name: string; filter: (prs: ReleaseInfoListDto[]) => ReleaseInfoListDto[] }[] = [];
 
 @Component({
   selector: 'app-release-candidate-table',
@@ -21,7 +21,7 @@ const FILTER_OPTIONS: { name: string; filter: (prs: ReleaseCandidateInfoDto[]) =
   templateUrl: './release-candidate-table.component.html',
 })
 export class ReleaseCandidateTableComponent {
-  releaseCandidatesQuery = injectQuery(() => getAllReleaseCandidatesOptions());
+  releaseCandidatesQuery = injectQuery(() => getAllReleaseInfosOptions());
   router = inject(Router);
   searchTableService = inject(SearchTableService);
 

@@ -5,7 +5,7 @@ import static org.mockito.Mockito.when;
 
 import de.tum.cit.aet.helios.auth.AuthService;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
-import de.tum.cit.aet.helios.releasecandidate.ReleaseCandidateRepository;
+import de.tum.cit.aet.helios.releaseinfo.releasecandidate.ReleaseCandidateRepository;
 import de.tum.cit.aet.helios.userpreference.UserPreference;
 import de.tum.cit.aet.helios.userpreference.UserPreferenceRepository;
 import java.util.List;

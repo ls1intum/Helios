@@ -8,12 +8,21 @@
         }
       </span>
       <div class="flex-col items-center gap-4">
-        <h2 class="text-2xl">
+        <h2 class="text-2xl flex items-center gap-2">
           {{ releaseCandidate.name }}
           <p-tag class="text-xs">
             <i-tabler name="git-commit" class="!size-4" />
             {{ releaseCandidate.commit.sha | slice: 0 : 7 }}
           </p-tag>
+          @if (releaseCandidate.release) {
+            <p-tag value="Published to GitHub" [rounded]="true" class="border font-medium text-xs py-0.5 whitespace-nowrap border-red-500 text-red-500" />
+            @if (releaseCandidate.release.isDraft) {
+              <p-tag value="Draft" [rounded]="true" class="border font-medium text-xs py-0.5 whitespace-nowrap border-yellow-500 text-yellow-500" />
+            }
+            @if (releaseCandidate.release.isPrerelease) {
+              <p-tag value="Prerelease" [rounded]="true" class="border font-medium text-xs py-0.5 whitespace-nowrap border-black text-black" />
+            }
+          }
           @if (permissionService.isAtLeastMaintainer()) {
             <p-button text (onClick)="deleteReleaseCandidate(releaseCandidate)">
               <i-tabler name="trash" class="!size-5 text-red-500 hover:text-red-700" />
@@ -22,20 +31,36 @@
         </h2>
         <div class="flex gap-1 items-center text-sm">
           <div>created by</div>
-          @if (releaseCandidate.createdBy.avatarUrl) {
-            <p-avatar class="size-4" shape="circle" [image]="releaseCandidate.createdBy.avatarUrl" />
+          @if (releaseCandidate.createdBy?.avatarUrl) {
+            <p-avatar class="size-4" shape="circle" [image]="releaseCandidate.createdBy?.avatarUrl" />
           } @else {
-            <i-tabler name="user" class="size-4 text-gray-600" />
+            <i-tabler name="user" class="size-4 text-gray-600 border-2 rounded-full" />
           }
-          {{ releaseCandidate.createdBy.login }}
+          {{ releaseCandidate.createdBy?.login || 'Unknown' }}
           <span [pTooltip]="releaseCandidate.createdAt">{{ releaseCandidate.createdAt | timeAgo }}</span>
+        </div>
+        <div class="flex-col gap-1 mt-4">
+          @if (releaseCandidate.release && releaseCandidate.release.body) {
+            <span class="text-xl">Description</span>
+            <p class="text-sm" [innerHtml]="releaseCandidate.release.body | markdown">{{ releaseCandidate.release.body }}</p>
+          }
         </div>
       </div>
     </div>
 
-    <div class="flex flex-col items-center">
+    <div class="flex flex-col gap-2 items-center">
       @if (permissionService.isAtLeastMaintainer()) {
-        <p-buttongroup class="mb-5">
+        @if (releaseCandidate.release) {
+          <p-button label="Open on GitHub" (onClick)="openReleaseInGitHub()">
+            <i-tabler name="external-link" class="!size-5 text-white" />
+          </p-button>
+        } @else {
+          <p-button label="Publish to GitHub" (onClick)="publishReleaseDraft()">
+            <i-tabler name="cloud-upload" class="!size-5 text-white" />
+          </p-button>
+        }
+
+        <p-buttongroup>
           <p-button label="Working" severity="success" [disabled]="hasUserEvaluatedTo(true)" (onClick)="evaluateReleaseCandidate(true)">
             <i-tabler name="check" class="!size-5 text-white" />
           </p-button>
@@ -66,7 +91,7 @@
     </div>
   </div>
 
-  <h3 class="text-xl mb-2">Release Candidate Status on Environments</h3>
+  <h3 class="text-xl mb-2 mt-5">Release Candidate Status on Environments</h3>
   <app-release-candidate-deployment-table [releaseCandidate]="releaseCandidate" />
 } @else {
   <div class="flex flex-col items-start gap-2">

@@ -1,4 +1,4 @@
-package de.tum.cit.aet.helios.releasecandidate;
+package de.tum.cit.aet.helios.releaseinfo.releasecandidate;
 
 import de.tum.cit.aet.helios.user.User;
 import jakarta.persistence.Column;

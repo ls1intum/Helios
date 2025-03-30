@@ -3,6 +3,8 @@ package de.tum.cit.aet.helios.github;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.tum.cit.aet.helios.auth.AuthService;
+import de.tum.cit.aet.helios.auth.github.GitHubAuthBroker;
+import de.tum.cit.aet.helios.auth.github.TokenExchangeResponse;
 import de.tum.cit.aet.helios.deployment.github.GitHubDeploymentDto;
 import de.tum.cit.aet.helios.environment.github.GitHubEnvironmentApiResponse;
 import de.tum.cit.aet.helios.environment.github.GitHubEnvironmentDto;
@@ -25,6 +27,7 @@ import okhttp3.Request;
 import okhttp3.Request.Builder;
 import okhttp3.RequestBody;
 import okhttp3.Response;
+import okhttp3.ResponseBody;
 import org.kohsuke.github.GHArtifact;
 import org.kohsuke.github.GHCommitState;
 import org.kohsuke.github.GHOrganization;
@@ -47,6 +50,7 @@ public class GitHubService {
   private final ObjectMapper objectMapper;
   private final OkHttpClient okHttpClient;
   private final AuthService authService;
+  private final GitHubAuthBroker gitHubAuthBroker;
   private final GitHubClientManager clientManager;
   private GHOrganization gitHubOrganization;
 
@@ -339,6 +343,80 @@ public class GitHubService {
           context);
     } catch (IOException e) {
       log.error("Error occurred while creating commit status: {}", e.getMessage());
+    }
+  }
+
+  /**
+   * Approves GitHub pending deployments for a workflow run on behalf of user.
+   *
+   * @param repoNameWithOwner the repository name with owner
+   * @param runId the workflow run ID
+   * @param environmentId the IDs of environments to approve
+   * @param githubUserLogin the GitHub user login
+   * @throws IOException if an I/O error occurs during the API call
+   */
+  public void approveDeploymentOnBehalfOfUser(
+      String repoNameWithOwner, long runId, Long environmentId, String githubUserLogin)
+      throws IOException {
+    // Construct the approval payload
+    Map<String, Object> requestPayload =
+        Map.of(
+            "environment_ids", List.of(environmentId),
+            "state", "approved",
+            "comment", "Automatically approved by Helios");
+
+    String jsonPayload = objectMapper.writeValueAsString(requestPayload);
+
+    // Construct the URL
+    String url =
+        String.format(
+            "https://api.github.com/repos/%s/actions/runs/%d/pending_deployments",
+            repoNameWithOwner, runId);
+
+    // Build the request with the GitHub token from Keycloak
+    RequestBody requestBody =
+        RequestBody.create(jsonPayload, MediaType.get("application/json; charset=utf-8"));
+
+    TokenExchangeResponse tokenExchangeResponse =
+        this.gitHubAuthBroker.exchangeToken(githubUserLogin);
+    if (tokenExchangeResponse == null) {
+      log.error("Token exchange response is null");
+      return;
+    }
+    String userGithubToken = tokenExchangeResponse.getAccessToken();
+
+    Request request =
+        new Request.Builder()
+            .url(url)
+            .post(requestBody)
+            .header("Authorization", "Bearer " + userGithubToken)
+            .header("Accept", "application/json")
+            .build();
+
+    // Execute the request
+    try (Response response = okHttpClient.newCall(request).execute()) {
+      if (!response.isSuccessful()) {
+        String errorBody = "No error details";
+        ResponseBody responseBody = response.body();
+        if (responseBody != null) {
+          try {
+            errorBody = responseBody.string();
+          } catch (IOException e) {
+            log.warn("Failed to read error response body", e);
+          }
+        }
+
+        log.error(
+            "GitHub API call failed with response code: {} and body: {}",
+            response.code(),
+            errorBody);
+        throw new IOException("GitHub API call failed with response code: " + response.code());
+      }
+
+      log.info("Successfully approved deployment for run ID: {}", runId);
+    } catch (IOException e) {
+      log.error("Error occurred while approving deployment: {}", e.getMessage());
+      throw e;
     }
   }
 }

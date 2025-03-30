@@ -29,4 +29,6 @@ public interface HeliosDeploymentRepository extends JpaRepository<HeliosDeployme
           + "AND hd.sha = :sha "
           + "ORDER BY hd.createdAt")
   List<HeliosDeployment> findByRepositoryIdAndSha(Long repositoryId, String sha);
+
+  Optional<HeliosDeployment> findByDeploymentId(Long deploymentId);
 }
