@@ -256,7 +256,7 @@ public class TestResultProcessor {
 
       if (headBranch.equals(defaultBranch)) {
         log.debug("Updating test statistics for default branch: {}", headBranch);
-        updateTestStatistics(testSuites, headBranch);
+        updateTestStatistics(testSuites, headBranch, repository.get());
       } else {
         log.debug(
             "Skipping test statistics update for non-default branch: {}, default branch: {}",
@@ -274,11 +274,13 @@ public class TestResultProcessor {
    *
    * @param testSuites the test suites containing test cases
    * @param branchName the branch name where the tests were run
+   * @param repository the repository
    */
-  private void updateTestStatistics(List<TestSuite> testSuites, String branchName) {
+  private void updateTestStatistics(
+      List<TestSuite> testSuites, String branchName, GitRepository repository) {
     try {
       for (TestSuite testSuite : testSuites) {
-        statisticsService.updateStatisticsForTestSuite(testSuite, branchName);
+        statisticsService.updateStatisticsForTestSuite(testSuite, branchName, repository);
       }
       log.debug("Successfully updated test statistics for branch: {}", branchName);
     } catch (Exception e) {

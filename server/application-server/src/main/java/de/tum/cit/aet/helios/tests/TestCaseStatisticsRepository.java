@@ -19,6 +19,24 @@ public interface TestCaseStatisticsRepository extends JpaRepository<TestCaseStat
    * @param className the class name of the test
    * @param testSuiteName the test suite name
    * @param branchName the branch name
+   * @param repositoryId the repository ID
+   * @return the statistics if found
+   */
+  Optional<TestCaseStatistics>
+      findByTestNameAndClassNameAndTestSuiteNameAndBranchNameAndRepositoryRepositoryId(
+          String testName,
+          String className,
+          String testSuiteName,
+          String branchName,
+          Long repositoryId);
+
+  /**
+   * Find statistics for a specific test case on a specific branch.
+   *
+   * @param testName the name of the test
+   * @param className the class name of the test
+   * @param testSuiteName the test suite name
+   * @param branchName the branch name
    * @return the statistics if found
    */
   Optional<TestCaseStatistics> findByTestNameAndClassNameAndTestSuiteNameAndBranchName(
@@ -28,9 +46,11 @@ public interface TestCaseStatisticsRepository extends JpaRepository<TestCaseStat
    * Find all statistics for a specific branch.
    *
    * @param branchName the branch name
+   * @param repositoryId the repository ID
    * @return list of statistics for all tests on the branch
    */
-  List<TestCaseStatistics> findByBranchName(String branchName);
+  List<TestCaseStatistics> findByBranchNameAndRepositoryRepositoryId(
+      String branchName, Long repositoryId);
 
   /**
    * Find all flaky or non-flaky tests for a specific branch.

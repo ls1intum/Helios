@@ -48,9 +48,8 @@ public class TestResultService {
             .orElseThrow();
 
     var latestTestRuns =
-        workflowRunRepository
-            .findByHeadBranchAndHeadShaAndRepositoryIdAndPullRequestsIsNullWithTestSuites(
-                branchName, branch.getCommitSha(), repositoryId);
+        workflowRunRepository.findByHeadBranchAndHeadShaAndRepositoryIdWithTestSuites(
+            branchName, branch.getCommitSha(), repositoryId);
 
     var previousCommitSha =
         workflowRunRepository.findNthLatestCommitShaBehindHeadByBranchAndRepoId(
@@ -59,9 +58,8 @@ public class TestResultService {
     List<WorkflowRun> previousTestRuns =
         previousCommitSha.isEmpty()
             ? List.of()
-            : workflowRunRepository
-                .findByHeadBranchAndHeadShaAndRepositoryIdAndPullRequestsIsNullWithTestSuites(
-                    branchName, previousCommitSha.get(), repositoryId);
+            : workflowRunRepository.findByHeadBranchAndHeadShaAndRepositoryIdWithTestSuites(
+                branchName, previousCommitSha.get(), repositoryId);
 
     return this.getResultsFromRuns(latestTestRuns, previousTestRuns);
   }
@@ -278,12 +276,9 @@ public class TestResultService {
         branchRepository
             .findByNameAndRepositoryRepositoryId(branchName, repositoryId)
             .orElseThrow();
-
     var latestTestRuns =
-        workflowRunRepository
-            .findByHeadBranchAndHeadShaAndRepositoryIdAndPullRequestsIsNullWithTestSuites(
-                branchName, branch.getCommitSha(), repositoryId);
-
+        workflowRunRepository.findByHeadBranchAndHeadShaAndRepositoryIdWithTestSuites(
+            branchName, branch.getCommitSha(), repositoryId);
     var previousCommitSha =
         workflowRunRepository.findNthLatestCommitShaBehindHeadByBranchAndRepoId(
             branchName, repositoryId, 0, branch.getCommitSha());
@@ -291,9 +286,8 @@ public class TestResultService {
     List<WorkflowRun> previousTestRuns =
         previousCommitSha.isEmpty()
             ? List.of()
-            : workflowRunRepository
-                .findByHeadBranchAndHeadShaAndRepositoryIdAndPullRequestsIsNullWithTestSuites(
-                    branchName, previousCommitSha.get(), repositoryId);
+            : workflowRunRepository.findByHeadBranchAndHeadShaAndRepositoryIdWithTestSuites(
+                branchName, previousCommitSha.get(), repositoryId);
 
     return this.getGroupedResultsFromRuns(latestTestRuns, previousTestRuns);
   }
@@ -468,7 +462,6 @@ public class TestResultService {
     if (repository == null) {
       return Map.of();
     }
-
     // Get default branch name
     String defaultBranchName = repository.getDefaultBranch();
     // Find the default branch
@@ -476,14 +469,12 @@ public class TestResultService {
         branchRepository.findAll().stream()
             .filter(branch -> branch.getRepository().equals(repository) && branch.isDefault())
             .findFirst();
-
     if (defaultBranch.isEmpty()) {
       return Map.of();
     }
-
     // Get the latest workflow runs with test suites from the default branch
     List<WorkflowRun> defaultBranchRuns =
-        workflowRunRepository.findByHeadBranchAndRepositoryIdAndPullRequestsIsNullWithTestSuites(
+        workflowRunRepository.findByHeadBranchAndRepositoryIdWithTestSuites(
             defaultBranchName, repository.getRepositoryId());
 
     // Collect test cases and their status

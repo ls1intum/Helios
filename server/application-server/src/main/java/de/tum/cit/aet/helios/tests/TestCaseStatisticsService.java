@@ -28,6 +28,7 @@ public class TestCaseStatisticsService {
    * @param testSuiteName the test suite name
    * @param branchName the branch name
    * @param hasFailed whether the test failed in this run
+   * @param repository the repository
    * @return the updated statistics
    */
   @Transactional
@@ -36,10 +37,12 @@ public class TestCaseStatisticsService {
       String className,
       String testSuiteName,
       String branchName,
-      boolean hasFailed) {
+      boolean hasFailed,
+      GitRepository repository) {
     Optional<TestCaseStatistics> existingStats =
-        statisticsRepository.findByTestNameAndClassNameAndTestSuiteNameAndBranchName(
-            testName, className, testSuiteName, branchName);
+        statisticsRepository
+            .findByTestNameAndClassNameAndTestSuiteNameAndBranchNameAndRepositoryRepositoryId(
+                testName, className, testSuiteName, branchName, repository.getRepositoryId());
 
     TestCaseStatistics statistics;
     if (existingStats.isPresent()) {
@@ -55,6 +58,7 @@ public class TestCaseStatisticsService {
       statistics.setFailureRate(0.0);
       statistics.setFlaky(false);
       statistics.setLastUpdated(OffsetDateTime.now());
+      statistics.setRepository(repository);
     }
 
     statistics.addRun(hasFailed);
@@ -66,9 +70,11 @@ public class TestCaseStatisticsService {
    *
    * @param testSuite the test suite containing test cases
    * @param branchName the branch name
+   * @param repository the repository
    */
   @Transactional
-  public void updateStatisticsForTestSuite(TestSuite testSuite, String branchName) {
+  public void updateStatisticsForTestSuite(
+      TestSuite testSuite, String branchName, GitRepository repository) {
     String testSuiteName = testSuite.getName();
 
     for (TestCase testCase : testSuite.getTestCases()) {
@@ -77,7 +83,12 @@ public class TestCaseStatisticsService {
               || testCase.getStatus() == TestCase.TestStatus.ERROR;
 
       updateStatistics(
-          testCase.getName(), testCase.getClassName(), testSuiteName, branchName, hasFailed);
+          testCase.getName(),
+          testCase.getClassName(),
+          testSuiteName,
+          branchName,
+          hasFailed,
+          repository);
     }
   }
 
@@ -100,10 +111,11 @@ public class TestCaseStatisticsService {
    * Gets all statistics for a specific branch.
    *
    * @param branchName the branch name
+   * @param repositoryId the repository ID
    * @return list of statistics for all tests on the branch
    */
-  public List<TestCaseStatistics> getStatisticsForBranch(String branchName) {
-    return statisticsRepository.findByBranchName(branchName);
+  public List<TestCaseStatistics> getStatisticsForBranch(String branchName, Long repositoryId) {
+    return statisticsRepository.findByBranchNameAndRepositoryRepositoryId(branchName, repositoryId);
   }
 
   /**
@@ -152,7 +164,7 @@ public class TestCaseStatisticsService {
             .findFirst();
 
     if (defaultBranch.isPresent()) {
-      return getStatisticsForBranch(defaultBranch.get().getName());
+      return getStatisticsForBranch(defaultBranch.get().getName(), repository.getRepositoryId());
     } else {
       log.warn("No default branch found for repository {}", repository.getNameWithOwner());
       return List.of();
