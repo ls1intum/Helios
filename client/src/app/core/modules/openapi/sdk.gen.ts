@@ -47,14 +47,10 @@ import type {
   GetLatestWorkflowRunsByBranchAndHeadCommitResponse,
   GetUserPermissionsData,
   GetUserPermissionsResponse,
-  GetLatestTestResultsByPullRequestIdData,
-  GetLatestTestResultsByPullRequestIdResponse,
   GetLatestGroupedTestResultsByPullRequestIdData,
   GetLatestGroupedTestResultsByPullRequestIdResponse,
   GetLatestGroupedTestResultsByBranchData,
   GetLatestGroupedTestResultsByBranchResponse,
-  GetLatestTestResultsByBranchData,
-  GetLatestTestResultsByBranchResponse,
   GetGroupsWithWorkflowsData,
   GetGroupsWithWorkflowsResponse,
   GetAllRepositoriesData,
@@ -335,13 +331,6 @@ export const getUserPermissions = <ThrowOnError extends boolean = false>(options
   });
 };
 
-export const getLatestTestResultsByPullRequestId = <ThrowOnError extends boolean = false>(options: Options<GetLatestTestResultsByPullRequestIdData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).get<GetLatestTestResultsByPullRequestIdResponse, unknown, ThrowOnError>({
-    url: '/api/tests/pr/{pullRequestId}',
-    ...options,
-  });
-};
-
 export const getLatestGroupedTestResultsByPullRequestId = <ThrowOnError extends boolean = false>(
   options: Options<GetLatestGroupedTestResultsByPullRequestIdData, ThrowOnError>
 ) => {
@@ -354,13 +343,6 @@ export const getLatestGroupedTestResultsByPullRequestId = <ThrowOnError extends 
 export const getLatestGroupedTestResultsByBranch = <ThrowOnError extends boolean = false>(options: Options<GetLatestGroupedTestResultsByBranchData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetLatestGroupedTestResultsByBranchResponse, unknown, ThrowOnError>({
     url: '/api/tests/grouped/branch',
-    ...options,
-  });
-};
-
-export const getLatestTestResultsByBranch = <ThrowOnError extends boolean = false>(options: Options<GetLatestTestResultsByBranchData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).get<GetLatestTestResultsByBranchResponse, unknown, ThrowOnError>({
-    url: '/api/tests/branch',
     ...options,
   });
 };

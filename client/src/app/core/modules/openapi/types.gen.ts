@@ -165,6 +165,13 @@ export type GitHubRepositoryRoleDto = {
   roleName?: string;
 };
 
+export type GroupedTestResultsDto = {
+  testResults: {
+    [key: string]: WorkflowTestResults;
+  };
+  isProcessing?: boolean;
+};
+
 export type TestCaseDto = {
   id: number;
   name: string;
@@ -175,11 +182,6 @@ export type TestCaseDto = {
   message?: string;
   stackTrace?: string;
   errorType?: string;
-};
-
-export type TestResultsDto = {
-  testSuites: Array<TestSuiteDto>;
-  isProcessing?: boolean;
 };
 
 export type TestSuiteDto = {
@@ -194,13 +196,6 @@ export type TestSuiteDto = {
   testCases: Array<TestCaseDto>;
   workflowId?: number;
   workflowName?: string;
-};
-
-export type GroupedTestResultsDto = {
-  testResults: {
-    [key: string]: WorkflowTestResults;
-  };
-  isProcessing?: boolean;
 };
 
 export type WorkflowTestResults = {
@@ -845,24 +840,6 @@ export type GetUserPermissionsResponses = {
 
 export type GetUserPermissionsResponse = GetUserPermissionsResponses[keyof GetUserPermissionsResponses];
 
-export type GetLatestTestResultsByPullRequestIdData = {
-  body?: never;
-  path: {
-    pullRequestId: number;
-  };
-  query?: never;
-  url: '/api/tests/pr/{pullRequestId}';
-};
-
-export type GetLatestTestResultsByPullRequestIdResponses = {
-  /**
-   * OK
-   */
-  200: TestResultsDto;
-};
-
-export type GetLatestTestResultsByPullRequestIdResponse = GetLatestTestResultsByPullRequestIdResponses[keyof GetLatestTestResultsByPullRequestIdResponses];
-
 export type GetLatestGroupedTestResultsByPullRequestIdData = {
   body?: never;
   path: {
@@ -898,24 +875,6 @@ export type GetLatestGroupedTestResultsByBranchResponses = {
 };
 
 export type GetLatestGroupedTestResultsByBranchResponse = GetLatestGroupedTestResultsByBranchResponses[keyof GetLatestGroupedTestResultsByBranchResponses];
-
-export type GetLatestTestResultsByBranchData = {
-  body?: never;
-  path?: never;
-  query: {
-    branch: string;
-  };
-  url: '/api/tests/branch';
-};
-
-export type GetLatestTestResultsByBranchResponses = {
-  /**
-   * OK
-   */
-  200: TestResultsDto;
-};
-
-export type GetLatestTestResultsByBranchResponse = GetLatestTestResultsByBranchResponses[keyof GetLatestTestResultsByBranchResponses];
 
 export type GetGroupsWithWorkflowsData = {
   body?: never;

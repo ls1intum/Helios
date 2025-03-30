@@ -27,65 +27,6 @@ public class TestResultService {
     return runs.stream().flatMap(run -> run.getTestSuites().stream()).toList();
   }
 
-  /**
-   * Get the latest test results for a branch. This includes both Java and E2E test results.
-   *
-   * @param branchName the branch name
-   * @return the test results
-   */
-  public TestResultsDto getLatestTestResultsForBranch(String branchName) {
-    final Long repositoryId = RepositoryContext.getRepositoryId();
-
-    var branch =
-        branchRepository
-            .findByNameAndRepositoryRepositoryId(branchName, repositoryId)
-            .orElseThrow();
-
-    var latestTestRuns =
-        workflowRunRepository
-            .findByHeadBranchAndHeadShaAndRepositoryIdAndPullRequestsIsNullWithTestSuites(
-                branchName, branch.getCommitSha(), repositoryId);
-
-    var previousCommitSha =
-        workflowRunRepository.findNthLatestCommitShaBehindHeadByBranchAndRepoId(
-            branchName, repositoryId, 0, branch.getCommitSha());
-
-    List<WorkflowRun> previousTestRuns =
-        previousCommitSha.isEmpty()
-            ? List.of()
-            : workflowRunRepository
-                .findByHeadBranchAndHeadShaAndRepositoryIdAndPullRequestsIsNullWithTestSuites(
-                    branchName, previousCommitSha.get(), repositoryId);
-
-    return this.getResultsFromRuns(latestTestRuns, previousTestRuns);
-  }
-
-  /**
-   * Get the latest test results for a pull request. This includes both Java and E2E test results.
-   *
-   * @param pullRequestId the pull request ID
-   * @return the test results
-   */
-  public TestResultsDto getLatestTestResultsForPr(Long pullRequestId) {
-    var pullRequest = pullRequestRepository.findById(pullRequestId).orElseThrow();
-
-    var latestTestRuns =
-        workflowRunRepository.findByPullRequestsIdAndHeadShaWithTestSuites(
-            pullRequestId, pullRequest.getHeadSha());
-
-    var previousCommitSha =
-        workflowRunRepository.findNthLatestCommitShaBehindHeadByPullRequestId(
-            pullRequestId, 0, pullRequest.getHeadSha());
-
-    List<WorkflowRun> previousTestRuns =
-        previousCommitSha.isEmpty()
-            ? List.of()
-            : workflowRunRepository.findByPullRequestsIdAndHeadShaWithTestSuites(
-                pullRequestId, previousCommitSha.get());
-
-    return this.getResultsFromRuns(latestTestRuns, previousTestRuns);
-  }
-
   private TestResultsDto getResultsFromRuns(
       List<WorkflowRun> latestWorkflowRuns, List<WorkflowRun> previousWorkflowRuns) {
 

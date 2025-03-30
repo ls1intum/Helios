@@ -28,10 +28,8 @@ import {
   getLatestWorkflowRunsByPullRequestIdAndHeadCommit,
   getLatestWorkflowRunsByBranchAndHeadCommit,
   getUserPermissions,
-  getLatestTestResultsByPullRequestId,
   getLatestGroupedTestResultsByPullRequestId,
   getLatestGroupedTestResultsByBranch,
-  getLatestTestResultsByBranch,
   getGroupsWithWorkflows,
   getAllRepositories,
   getRepositoryById,
@@ -93,10 +91,8 @@ import type {
   GetLatestWorkflowRunsByPullRequestIdAndHeadCommitData,
   GetLatestWorkflowRunsByBranchAndHeadCommitData,
   GetUserPermissionsData,
-  GetLatestTestResultsByPullRequestIdData,
   GetLatestGroupedTestResultsByPullRequestIdData,
   GetLatestGroupedTestResultsByBranchData,
-  GetLatestTestResultsByBranchData,
   GetGroupsWithWorkflowsData,
   GetAllRepositoriesData,
   GetRepositoryByIdData,
@@ -688,24 +684,6 @@ export const getUserPermissionsOptions = (options?: Options<GetUserPermissionsDa
   });
 };
 
-export const getLatestTestResultsByPullRequestIdQueryKey = (options: Options<GetLatestTestResultsByPullRequestIdData>) =>
-  createQueryKey('getLatestTestResultsByPullRequestId', options);
-
-export const getLatestTestResultsByPullRequestIdOptions = (options: Options<GetLatestTestResultsByPullRequestIdData>) => {
-  return queryOptions({
-    queryFn: async ({ queryKey, signal }) => {
-      const { data } = await getLatestTestResultsByPullRequestId({
-        ...options,
-        ...queryKey[0],
-        signal,
-        throwOnError: true,
-      });
-      return data;
-    },
-    queryKey: getLatestTestResultsByPullRequestIdQueryKey(options),
-  });
-};
-
 export const getLatestGroupedTestResultsByPullRequestIdQueryKey = (options: Options<GetLatestGroupedTestResultsByPullRequestIdData>) =>
   createQueryKey('getLatestGroupedTestResultsByPullRequestId', options);
 
@@ -739,23 +717,6 @@ export const getLatestGroupedTestResultsByBranchOptions = (options: Options<GetL
       return data;
     },
     queryKey: getLatestGroupedTestResultsByBranchQueryKey(options),
-  });
-};
-
-export const getLatestTestResultsByBranchQueryKey = (options: Options<GetLatestTestResultsByBranchData>) => createQueryKey('getLatestTestResultsByBranch', options);
-
-export const getLatestTestResultsByBranchOptions = (options: Options<GetLatestTestResultsByBranchData>) => {
-  return queryOptions({
-    queryFn: async ({ queryKey, signal }) => {
-      const { data } = await getLatestTestResultsByBranch({
-        ...options,
-        ...queryKey[0],
-        signal,
-        throwOnError: true,
-      });
-      return data;
-    },
-    queryKey: getLatestTestResultsByBranchQueryKey(options),
   });
 };
 

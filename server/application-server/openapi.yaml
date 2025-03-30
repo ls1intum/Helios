@@ -516,25 +516,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/GitHubRepositoryRoleDto"
-  /api/tests/pr/{pullRequestId}:
-    get:
-      tags:
-      - test-result-controller
-      operationId: getLatestTestResultsByPullRequestId
-      parameters:
-      - name: pullRequestId
-        in: path
-        required: true
-        schema:
-          type: integer
-          format: int64
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/TestResultsDto"
   /api/tests/grouped/pr/{pullRequestId}:
     get:
       tags:
@@ -572,24 +553,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/GroupedTestResultsDto"
-  /api/tests/branch:
-    get:
-      tags:
-      - test-result-controller
-      operationId: getLatestTestResultsByBranch
-      parameters:
-      - name: branch
-        in: query
-        required: true
-        schema:
-          type: string
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/TestResultsDto"
   /api/settings/{repositoryId}/groups:
     get:
       tags:
@@ -1457,6 +1420,17 @@ components:
           - NONE
         roleName:
           type: string
+    GroupedTestResultsDto:
+      type: object
+      properties:
+        testResults:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/WorkflowTestResults"
+        isProcessing:
+          type: boolean
+      required:
+      - testResults
     TestCaseDto:
       type: object
       properties:
@@ -1496,17 +1470,6 @@ components:
       - name
       - status
       - time
-    TestResultsDto:
-      type: object
-      properties:
-        testSuites:
-          type: array
-          items:
-            $ref: "#/components/schemas/TestSuiteDto"
-        isProcessing:
-          type: boolean
-      required:
-      - testSuites
     TestSuiteDto:
       type: object
       properties:
@@ -1552,17 +1515,6 @@ components:
       - tests
       - time
       - timestamp
-    GroupedTestResultsDto:
-      type: object
-      properties:
-        testResults:
-          type: object
-          additionalProperties:
-            $ref: "#/components/schemas/WorkflowTestResults"
-        isProcessing:
-          type: boolean
-      required:
-      - testResults
     WorkflowTestResults:
       type: object
       properties:

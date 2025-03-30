@@ -485,6 +485,22 @@ export const GitHubRepositoryRoleDtoSchema = {
   },
 } as const;
 
+export const GroupedTestResultsDtoSchema = {
+  type: 'object',
+  properties: {
+    testResults: {
+      type: 'object',
+      additionalProperties: {
+        $ref: '#/components/schemas/WorkflowTestResults',
+      },
+    },
+    isProcessing: {
+      type: 'boolean',
+    },
+  },
+  required: ['testResults'],
+} as const;
+
 export const TestCaseDtoSchema = {
   type: 'object',
   properties: {
@@ -521,22 +537,6 @@ export const TestCaseDtoSchema = {
     },
   },
   required: ['className', 'id', 'name', 'status', 'time'],
-} as const;
-
-export const TestResultsDtoSchema = {
-  type: 'object',
-  properties: {
-    testSuites: {
-      type: 'array',
-      items: {
-        $ref: '#/components/schemas/TestSuiteDto',
-      },
-    },
-    isProcessing: {
-      type: 'boolean',
-    },
-  },
-  required: ['testSuites'],
 } as const;
 
 export const TestSuiteDtoSchema = {
@@ -588,22 +588,6 @@ export const TestSuiteDtoSchema = {
     },
   },
   required: ['errors', 'failures', 'id', 'name', 'skipped', 'testCases', 'tests', 'time', 'timestamp'],
-} as const;
-
-export const GroupedTestResultsDtoSchema = {
-  type: 'object',
-  properties: {
-    testResults: {
-      type: 'object',
-      additionalProperties: {
-        $ref: '#/components/schemas/WorkflowTestResults',
-      },
-    },
-    isProcessing: {
-      type: 'boolean',
-    },
-  },
-  required: ['testResults'],
 } as const;
 
 export const WorkflowTestResultsSchema = {
