@@ -160,10 +160,12 @@ public class GitHubWorkflowRunSyncService {
             heliosDeployment -> {
               try {
                 if (workflowRun
-                    .getUpdatedAt()
-                    .toInstant()
-                    .isAfter(heliosDeployment.getUpdatedAt().toInstant())
-                    || workflowRun.getUpdatedAt().toInstant()
+                        .getUpdatedAt()
+                        .toInstant()
+                        .isAfter(heliosDeployment.getUpdatedAt().toInstant())
+                    || workflowRun
+                        .getUpdatedAt()
+                        .toInstant()
                         .equals(heliosDeployment.getUpdatedAt().toInstant())) {
                   heliosDeployment.setUpdatedAt(
                       DateUtil.convertToOffsetDateTime(workflowRun.getUpdatedAt()));
@@ -173,15 +175,16 @@ public class GitHubWorkflowRunSyncService {
 
                   // Update the deployment status
                   heliosDeployment.setStatus(mappedStatus);
-    
+
                   // Update the workflow run html url, so we can show the approval url
                   // to the user before the Github deployment is created
+                  heliosDeployment.setWorkflowRunId(workflowRun.getId());
                   heliosDeployment.setWorkflowRunHtmlUrl(workflowRun.getHtmlUrl().toString());
 
                   log.info(
-                          "Updated HeliosDeployment {} to status {}",
-                          heliosDeployment.getId(),
-                          mappedStatus);
+                      "Updated HeliosDeployment {} to status {}",
+                      heliosDeployment.getId(),
+                      mappedStatus);
                   heliosDeploymentRepository.save(heliosDeployment);
                 }
               } catch (IOException e) {
