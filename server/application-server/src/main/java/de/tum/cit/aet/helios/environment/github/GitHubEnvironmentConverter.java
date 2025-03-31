@@ -77,13 +77,21 @@ public class GitHubEnvironmentConverter implements Converter<GitHubEnvironmentDt
           }
           case BRANCH_POLICY -> {
             var branchPolicy = ruleDto.getBranchPolicy();
-            rule.setProtectedBranches(branchPolicy.getProtectedBranches());
-            rule.setCustomBranchPolicies(branchPolicy.getCustomBranchPolicies());
-            try {
-              rule.setAllowedBranches(
-                  objectMapper.writeValueAsString(branchPolicy.getAllowedBranches()));
-            } catch (JsonProcessingException e) {
-              throw new RuntimeException("Failed to serialize allowed branches", e);
+            if (branchPolicy != null) {
+              rule.setProtectedBranches(branchPolicy.getProtectedBranches());
+              rule.setCustomBranchPolicies(branchPolicy.getCustomBranchPolicies());
+              try {
+                rule.setAllowedBranches(
+                    objectMapper.writeValueAsString(branchPolicy.getAllowedBranches()));
+              } catch (JsonProcessingException e) {
+                throw new RuntimeException("Failed to serialize allowed branches", e);
+              }
+            } else {
+              // Handle null branchPolicy with default values
+              log.warn("Null branchPolicy found for rule ID: {}", rule.getId());
+              rule.setProtectedBranches(false);
+              rule.setCustomBranchPolicies(false);
+              rule.setAllowedBranches("[]"); // Empty JSON array
             }
           }
           default -> throw new IllegalArgumentException("Unknown rule type: " + rule.getRuleType());
