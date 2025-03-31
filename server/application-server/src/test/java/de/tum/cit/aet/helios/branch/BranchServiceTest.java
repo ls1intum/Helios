@@ -26,12 +26,18 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 public class BranchServiceTest {
 
-  @InjectMocks private BranchService branchService;
-  @Mock private BranchRepository branchRepository;
-  @Mock private ReleaseCandidateRepository releaseCandidateRepository;
-  @Mock private UserPreferenceRepository userPreferenceRepository;
-  @Mock private CommitRepository commitRepository;
-  @Mock private AuthService authService;
+  @InjectMocks
+  private BranchService branchService;
+  @Mock
+  private BranchRepository branchRepository;
+  @Mock
+  private ReleaseCandidateRepository releaseCandidateRepository;
+  @Mock
+  private UserPreferenceRepository userPreferenceRepository;
+  @Mock
+  private CommitRepository commitRepository;
+  @Mock
+  private AuthService authService;
 
   @Test
   public void testPinnedBranchesAreShownFirst() {
@@ -61,9 +67,11 @@ public class BranchServiceTest {
     List<BranchInfoDto> allBranches = branchService.getAllBranches();
 
     BranchInfoDto b1Dto =
-        BranchInfoDto.fromBranchAndUserPreference(b1, Optional.of(userPreference), commitRepository);
+        BranchInfoDto.fromBranchAndUserPreference(b1, Optional.of(userPreference),
+            commitRepository);
     BranchInfoDto b2Dto =
-        BranchInfoDto.fromBranchAndUserPreference(b2, Optional.of(userPreference), commitRepository);
+        BranchInfoDto.fromBranchAndUserPreference(b2, Optional.of(userPreference),
+            commitRepository);
 
     assertEquals(2, allBranches.size());
     Assertions.assertIterableEquals(List.of(b2Dto, b1Dto), allBranches);

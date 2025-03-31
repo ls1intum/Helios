@@ -32,7 +32,8 @@ public class BranchService {
             ? userPreferenceRepository.findByUser(authService.getUserFromGithubId())
             : Optional.empty();
     return branchRepository.findAll().stream()
-        .map((branch) -> BranchInfoDto.fromBranchAndUserPreference(branch, userPreference, commitRepository))
+        .map((branch) -> BranchInfoDto.fromBranchAndUserPreference(branch, userPreference,
+            commitRepository))
         .sorted(
             (pr1, pr2) -> {
               if (pr1.isPinned() && !pr2.isPinned()) {
