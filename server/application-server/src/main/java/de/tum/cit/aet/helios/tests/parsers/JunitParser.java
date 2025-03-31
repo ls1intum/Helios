@@ -79,7 +79,8 @@ public class JunitParser implements TestResultParser {
 
   public boolean supports(String fileName) {
     return (fileName.startsWith("TEST-") && fileName.endsWith(".xml"))
-        || fileName.equals("results.xml");
+        || fileName.equals("results.xml")
+        || fileName.equals("junit.xml");
   }
 
   private TestResultParser.TestCase parseTestCase(TestCase tc) {
