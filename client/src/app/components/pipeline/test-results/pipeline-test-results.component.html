@@ -226,7 +226,7 @@
             (onPageChange)="onPageChange($event)"
             [first]="testSuiteFirst()"
             [rows]="testSuiteRows()"
-            [totalRecords]="activeTestType()?.stats?.totalSuites || 0"
+            [totalRecords]="filteredTestSuites().length || 0"
             [rowsPerPageOptions]="[10, 20, 30]"
           />
         }
