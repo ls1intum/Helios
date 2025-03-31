@@ -63,7 +63,7 @@ public class ReleaseInfoService {
   private final GitHubReleaseSyncService gitHubReleaseSyncService;
 
   public List<ReleaseInfoListDto> getAllReleaseInfos() {
-    return releaseCandidateRepository.findAllByOrderByNameAsc().stream()
+    return releaseCandidateRepository.findAllByOrderByCreatedAtDesc().stream()
         .map(ReleaseInfoListDto::fromReleaseCandidate)
         .toList();
   }
