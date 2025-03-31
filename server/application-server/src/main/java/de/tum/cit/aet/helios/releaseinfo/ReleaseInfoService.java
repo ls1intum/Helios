@@ -131,7 +131,7 @@ public class ReleaseInfoService {
                   releaseCandidate.getName(),
                   CommitInfoDto.fromCommit(releaseCandidate.getCommit()),
                   releaseCandidate.getBranch() != null
-                      ? BranchInfoDto.fromBranch(releaseCandidate.getBranch())
+                      ? BranchInfoDto.fromBranch(releaseCandidate.getBranch(), commitRepository)
                       : null,
                   deployments,
                   releaseCandidate.getEvaluations().stream()
