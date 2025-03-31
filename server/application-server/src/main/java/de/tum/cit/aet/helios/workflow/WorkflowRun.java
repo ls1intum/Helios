@@ -28,7 +28,7 @@ import lombok.ToString;
 @Getter
 @Setter
 @NoArgsConstructor
-@ToString(callSuper = true)
+@ToString(callSuper = true, exclude = "testSuites")
 public class WorkflowRun extends BaseGitServiceEntity {
   @ManyToMany private Set<PullRequest> pullRequests;
 

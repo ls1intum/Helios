@@ -1,10 +1,15 @@
 package de.tum.cit.aet.helios.environment;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import de.tum.cit.aet.helios.auth.AuthService;
 import de.tum.cit.aet.helios.deployment.Deployment;
 import de.tum.cit.aet.helios.deployment.DeploymentException;
 import de.tum.cit.aet.helios.deployment.DeploymentRepository;
 import de.tum.cit.aet.helios.deployment.LatestDeploymentUnion;
+import de.tum.cit.aet.helios.environment.github.GitHubEnvironmentProtectionRuleDto;
+import de.tum.cit.aet.helios.environment.protectionrules.ProtectionRule;
+import de.tum.cit.aet.helios.environment.protectionrules.ProtectionRuleRepository;
 import de.tum.cit.aet.helios.gitreposettings.GitRepoSettingsDto;
 import de.tum.cit.aet.helios.gitreposettings.GitRepoSettingsService;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
@@ -44,6 +49,8 @@ public class EnvironmentService {
   @Lazy private final GitRepoSettingsService gitRepoSettingsService;
   private final EnvironmentScheduler environmentScheduler;
   private final WorkflowRepository workflowRepository;
+  private final ProtectionRuleRepository protectionRuleRepository;
+  private final ObjectMapper objectMapper;
 
   public Optional<EnvironmentDto> getEnvironmentById(Long id) {
     return environmentRepository.findById(id).map(EnvironmentDto::fromEnvironment);
@@ -576,5 +583,52 @@ public class EnvironmentService {
       heliosDeploymentRepository.save(deployment);
     }
     return true;
+  }
+
+  public Optional<EnvironmentReviewersDto> getEnvironmentReviewers(Long environmentId) {
+    return protectionRuleRepository
+        .findByEnvironmentIdAndRuleType(environmentId, ProtectionRule.RuleType.REQUIRED_REVIEWERS)
+        .map(
+            rule -> {
+              try {
+                // Parse the stored JSON string as a list of ReviewerContainer objects
+                List<GitHubEnvironmentProtectionRuleDto.ReviewerContainer>
+                    githubReviewerContainers =
+                        objectMapper.readValue(
+                            rule.getReviewers(),
+                            objectMapper
+                                .getTypeFactory()
+                                .constructCollectionType(
+                                    List.class,
+                                    GitHubEnvironmentProtectionRuleDto.ReviewerContainer.class));
+
+                // Map to the simplified DTO structure
+                List<EnvironmentReviewersDto.Reviewer> reviewers =
+                    githubReviewerContainers.stream()
+                        .map(
+                            container -> {
+                              GitHubEnvironmentProtectionRuleDto.Reviewer ghReviewer =
+                                  container.getReviewer();
+
+                              // Create the appropriate DTO Reviewer based on the container type
+                              if ("User".equals(container.getType())) {
+                                return new EnvironmentReviewersDto.Reviewer(
+                                    ghReviewer.getId(), ghReviewer.getLogin());
+                              } else { // Team
+                                return new EnvironmentReviewersDto.Reviewer(
+                                    ghReviewer.getId(), ghReviewer.getName(), true);
+                              }
+                            })
+                        .toList();
+                Boolean preventSelfReview = Boolean.TRUE.equals(rule.getPreventSelfReview());
+                return new EnvironmentReviewersDto(preventSelfReview, reviewers);
+              } catch (JsonProcessingException e) {
+                log.error(
+                    "Failed to parse reviewers for environment {}: {}",
+                    environmentId,
+                    e.getMessage());
+                return null;
+              }
+            });
   }
 }

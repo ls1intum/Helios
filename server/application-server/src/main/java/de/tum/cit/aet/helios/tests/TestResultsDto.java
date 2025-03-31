@@ -50,6 +50,14 @@ public record TestResultsDto(@NonNull List<TestTypeResults> testResults, boolean
       @NonNull List<TestCaseDto> testCases) {
     public static TestSuiteDto fromTestSuite(
         TestSuite testSuite, Function<TestCase, Optional<TestStatus>> previousStatusProvider) {
+      return fromTestSuite(
+          testSuite, previousStatusProvider, tc -> new TestCaseStatisticsInfo(false, 0.0, false));
+    }
+
+    public static TestSuiteDto fromTestSuite(
+        TestSuite testSuite,
+        Function<TestCase, Optional<TestStatus>> previousStatusProvider,
+        Function<TestCase, TestCaseStatisticsInfo> statisticsProvider) {
       return new TestSuiteDto(
           testSuite.getId(),
           testSuite.getName(),
@@ -61,7 +69,14 @@ public record TestResultsDto(@NonNull List<TestTypeResults> testResults, boolean
           testSuite.getTime(),
           testSuite.getSystemOut(),
           testSuite.getTestCases().stream()
-              .map(tc -> TestCaseDto.fromTestCase(tc, previousStatusProvider.apply(tc)))
+              .map(
+                  tc -> {
+                    TestCaseStatisticsInfo stats = statisticsProvider.apply(tc);
+                    tc.setFlaky(stats.isFlaky());
+                    tc.setFailureRate(stats.failureRate());
+                    tc.setFailsInDefaultBranch(stats.failsInDefaultBranch());
+                    return TestCaseDto.fromTestCase(tc, previousStatusProvider.apply(tc));
+                  })
               .toList());
     }
   }
@@ -76,7 +91,10 @@ public record TestResultsDto(@NonNull List<TestTypeResults> testResults, boolean
       String message,
       String stackTrace,
       String systemOut,
-      String errorType) {
+      String errorType,
+      Boolean isFlaky,
+      Double failureRate,
+      Boolean failsInDefaultBranch) {
     public static TestCaseDto fromTestCase(
         TestCase testCase, Optional<TestStatus> previousStatusProvider) {
       return new TestCaseDto(
@@ -89,7 +107,14 @@ public record TestResultsDto(@NonNull List<TestTypeResults> testResults, boolean
           testCase.getMessage(),
           testCase.getStackTrace(),
           testCase.getSystemOut(),
-          testCase.getErrorType());
+          testCase.getErrorType(),
+          testCase.isFlaky(),
+          testCase.getFailureRate(),
+          testCase.isFailsInDefaultBranch());
     }
   }
+
+  /** Record for storing test case statistics information. */
+  record TestCaseStatisticsInfo(
+      boolean isFlaky, double failureRate, boolean failsInDefaultBranch) {}
 }

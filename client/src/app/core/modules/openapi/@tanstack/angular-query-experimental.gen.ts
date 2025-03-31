@@ -45,6 +45,7 @@ import {
   getPullRequestByRepositoryIdAndNumber,
   getPullRequestByRepositoryId,
   getAllEnvironments,
+  getEnvironmentReviewers,
   getEnvironmentsByUserLocking,
   getEnvironmentsByRepositoryId,
   getLockHistoryByEnvironmentId,
@@ -139,6 +140,7 @@ import type {
   GetPullRequestByRepositoryIdAndNumberData,
   GetPullRequestByRepositoryIdData,
   GetAllEnvironmentsData,
+  GetEnvironmentReviewersData,
   GetEnvironmentsByUserLockingData,
   GetEnvironmentsByRepositoryIdData,
   GetLockHistoryByEnvironmentIdData,
@@ -1117,6 +1119,23 @@ export const getAllEnvironmentsOptions = (options?: Options<GetAllEnvironmentsDa
       return data;
     },
     queryKey: getAllEnvironmentsQueryKey(options),
+  });
+};
+
+export const getEnvironmentReviewersQueryKey = (options: Options<GetEnvironmentReviewersData>) => createQueryKey('getEnvironmentReviewers', options);
+
+export const getEnvironmentReviewersOptions = (options: Options<GetEnvironmentReviewersData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getEnvironmentReviewers({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: getEnvironmentReviewersQueryKey(options),
   });
 };
 

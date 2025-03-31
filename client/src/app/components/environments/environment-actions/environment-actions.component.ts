@@ -11,10 +11,22 @@ import { RouterLink } from '@angular/router';
 import { IconsModule } from 'icons.module';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 import { PermissionService } from '@app/core/services/permission.service';
+import { EnvironmentReviewersComponent } from '../environment-reviewers/environment-reviewers.component';
 
 @Component({
   selector: 'app-environment-actions',
-  imports: [CommonModule, UserAvatarComponent, LockTimeComponent, ButtonModule, ButtonGroupModule, TooltipModule, TagModule, RouterLink, IconsModule],
+  imports: [
+    CommonModule,
+    UserAvatarComponent,
+    LockTimeComponent,
+    ButtonModule,
+    ButtonGroupModule,
+    TooltipModule,
+    TagModule,
+    RouterLink,
+    IconsModule,
+    EnvironmentReviewersComponent,
+  ],
   templateUrl: './environment-actions.component.html',
 })
 export class EnvironmentActionsComponent {

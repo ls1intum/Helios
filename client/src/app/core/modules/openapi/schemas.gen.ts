@@ -570,6 +570,16 @@ export const TestCaseDtoSchema = {
     errorType: {
       type: 'string',
     },
+    isFlaky: {
+      type: 'boolean',
+    },
+    failureRate: {
+      type: 'number',
+      format: 'double',
+    },
+    failsInDefaultBranch: {
+      type: 'boolean',
+    },
   },
   required: ['className', 'id', 'name', 'status', 'time'],
 } as const;
@@ -1073,6 +1083,40 @@ export const PullRequestInfoDtoSchema = {
     },
   },
   required: ['additions', 'commentsCount', 'deletions', 'headRefName', 'headRefRepoNameWithOwner', 'headSha', 'htmlUrl', 'id', 'isDraft', 'isMerged', 'number', 'state', 'title'],
+} as const;
+
+export const EnvironmentReviewersDtoSchema = {
+  type: 'object',
+  properties: {
+    preventSelfReview: {
+      type: 'boolean',
+    },
+    reviewers: {
+      type: 'array',
+      items: {
+        $ref: '#/components/schemas/Reviewer',
+      },
+    },
+  },
+} as const;
+
+export const ReviewerSchema = {
+  type: 'object',
+  properties: {
+    id: {
+      type: 'integer',
+      format: 'int32',
+    },
+    login: {
+      type: 'string',
+    },
+    name: {
+      type: 'string',
+    },
+    type: {
+      type: 'string',
+    },
+  },
 } as const;
 
 export const EnvironmentLockHistoryDtoSchema = {

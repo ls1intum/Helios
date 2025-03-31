@@ -124,6 +124,9 @@ import type {
   GetAllEnvironmentsData,
   GetAllEnvironmentsResponse,
   GetAllEnvironmentsError,
+  GetEnvironmentReviewersData,
+  GetEnvironmentReviewersResponse,
+  GetEnvironmentReviewersError,
   GetEnvironmentsByUserLockingData,
   GetEnvironmentsByUserLockingResponse,
   GetEnvironmentsByUserLockingError,
@@ -518,6 +521,13 @@ export const getPullRequestByRepositoryId = <ThrowOnError extends boolean = fals
 export const getAllEnvironments = <ThrowOnError extends boolean = false>(options?: Options<GetAllEnvironmentsData, ThrowOnError>) => {
   return (options?.client ?? _heyApiClient).get<GetAllEnvironmentsResponse, GetAllEnvironmentsError, ThrowOnError>({
     url: '/api/environments',
+    ...options,
+  });
+};
+
+export const getEnvironmentReviewers = <ThrowOnError extends boolean = false>(options: Options<GetEnvironmentReviewersData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<GetEnvironmentReviewersResponse, GetEnvironmentReviewersError, ThrowOnError>({
+    url: '/api/environments/{environmentId}/reviewers',
     ...options,
   });
 };

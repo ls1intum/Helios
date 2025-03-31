@@ -3,6 +3,7 @@ package de.tum.cit.aet.helios.workflow.github;
 import de.tum.cit.aet.helios.github.GitHubMessageHandler;
 import de.tum.cit.aet.helios.github.GitHubService;
 import de.tum.cit.aet.helios.gitrepo.github.GitHubRepositorySyncService;
+import de.tum.cit.aet.helios.pullrequest.PullRequestRepository;
 import de.tum.cit.aet.helios.tests.TestResultProcessor;
 import de.tum.cit.aet.helios.workflow.GitHubWorkflowContext;
 import de.tum.cit.aet.helios.workflow.WorkflowRun;
@@ -12,6 +13,7 @@ import java.io.BufferedReader;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +35,7 @@ public class GitHubWorkflowRunMessageHandler
   private final GitHubService gitHubService;
   private final WorkflowRunService workflowRunService;
   private final WorkflowRunRepository workflowRunRepository;
+  private final PullRequestRepository pullRequestRepository;
 
   @Override
   protected Class<GHEventPayload.WorkflowRun> getPayloadClass() {
@@ -94,6 +97,14 @@ public class GitHubWorkflowRunMessageHandler
             run.setTriggeredWorkflowRunId(context.runId());
             run.setHeadBranch(context.headBranch());
             run.setHeadSha(context.headSha());
+
+            // Get the pull request using head branch from pullRequestRepository and repositoryId
+            var pullRequest =
+                pullRequestRepository.findOpenPrByBranchNameOrSha(
+                    repository.getId(), context.headBranch(), context.headSha());
+            if (pullRequest.isPresent()) {
+              run.setPullRequests(Set.of(pullRequest.get()));
+            }
             run = workflowRunRepository.saveAndFlush(run);
             // After this point, the workflow run is updated with correct git context
             // Start processing it

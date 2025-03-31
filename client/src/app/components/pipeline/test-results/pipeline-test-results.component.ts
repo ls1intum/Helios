@@ -89,7 +89,7 @@ export class PipelineTestResultsComponent {
       },
     }),
     enabled: this.branchName() !== null,
-    refetchInterval: 15000,
+    // refetchInterval: 15000,
   }));
 
   pullRequestQuery = injectQuery(() => ({
@@ -103,7 +103,7 @@ export class PipelineTestResultsComponent {
       path: { pullRequestId: this.pullRequestId() || 0 },
     }),
     enabled: this.pullRequestId() !== null,
-    refetchInterval: 15000,
+    // refetchInterval: 15000,
   }));
 
   resultsQuery = computed(() => {
@@ -297,5 +297,10 @@ export class PipelineTestResultsComponent {
   onPageChange = (event: PaginatorState) => {
     this.testSuiteFirst.set(event.first || 0);
     this.testSuiteRows.set(event.rows || 10);
+  };
+
+  formatFailureRate = (failureRate: number | undefined) => {
+    if (failureRate === undefined) return 'N/A';
+    return Math.floor(failureRate * 100).toString();
   };
 }

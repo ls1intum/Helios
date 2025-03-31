@@ -191,6 +191,9 @@ export type TestCaseDto = {
   stackTrace?: string;
   systemOut?: string;
   errorType?: string;
+  isFlaky?: boolean;
+  failureRate?: number;
+  failsInDefaultBranch?: boolean;
 };
 
 export type TestResultsDto = {
@@ -353,6 +356,18 @@ export type PullRequestInfoDto = {
   htmlUrl: string;
   createdAt?: string;
   updatedAt?: string;
+};
+
+export type EnvironmentReviewersDto = {
+  preventSelfReview?: boolean;
+  reviewers?: Array<Reviewer>;
+};
+
+export type Reviewer = {
+  id?: number;
+  login?: string;
+  name?: string;
+  type?: string;
 };
 
 export type EnvironmentLockHistoryDto = {
@@ -1558,6 +1573,33 @@ export type GetAllEnvironmentsResponses = {
 };
 
 export type GetAllEnvironmentsResponse = GetAllEnvironmentsResponses[keyof GetAllEnvironmentsResponses];
+
+export type GetEnvironmentReviewersData = {
+  body?: never;
+  path: {
+    environmentId: number;
+  };
+  query?: never;
+  url: '/api/environments/{environmentId}/reviewers';
+};
+
+export type GetEnvironmentReviewersErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type GetEnvironmentReviewersError = GetEnvironmentReviewersErrors[keyof GetEnvironmentReviewersErrors];
+
+export type GetEnvironmentReviewersResponses = {
+  /**
+   * OK
+   */
+  200: EnvironmentReviewersDto;
+};
+
+export type GetEnvironmentReviewersResponse = GetEnvironmentReviewersResponses[keyof GetEnvironmentReviewersResponses];
 
 export type GetEnvironmentsByUserLockingData = {
   body?: never;
