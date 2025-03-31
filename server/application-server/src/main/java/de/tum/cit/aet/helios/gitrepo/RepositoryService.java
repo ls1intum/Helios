@@ -15,7 +15,8 @@ public class RepositoryService {
   private final GitRepoRepository repositoryRepository;
 
   public List<RepositoryInfoDto> getAllRepositories() {
-    return repositoryRepository.findAll().stream().map(RepositoryInfoDto::fromRepository).toList();
+    return repositoryRepository.findAllByOrderByUpdatedAtDesc().stream()
+        .map(RepositoryInfoDto::fromRepository).toList();
   }
 
   public Optional<RepositoryInfoDto> getRepositoryById(Long id) {
