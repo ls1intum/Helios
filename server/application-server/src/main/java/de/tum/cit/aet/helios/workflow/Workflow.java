@@ -1,13 +1,17 @@
 package de.tum.cit.aet.helios.workflow;
 
 import de.tum.cit.aet.helios.github.BaseGitServiceEntity;
+import de.tum.cit.aet.helios.tests.type.TestType;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
@@ -36,6 +40,13 @@ public class Workflow extends BaseGitServiceEntity {
 
   @OneToMany(mappedBy = "workflow", fetch = FetchType.LAZY)
   private List<WorkflowRun> workflowRuns;
+
+  @OneToMany(
+      mappedBy = "workflow",
+      cascade = CascadeType.ALL,
+      orphanRemoval = true,
+      fetch = FetchType.EAGER)
+  private Set<TestType> testTypes = new HashSet<>();
 
   private String url;
 

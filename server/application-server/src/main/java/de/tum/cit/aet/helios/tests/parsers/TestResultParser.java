@@ -17,6 +17,7 @@ public interface TestResultParser {
       Integer errors,
       Integer skipped,
       Double time,
+      String systemOut,
       List<TestCase> testCases) {}
 
   public static record TestCase(
@@ -28,5 +29,6 @@ public interface TestResultParser {
       boolean skipped,
       String errorType,
       String message,
-      String stackTrace) {}
+      String stackTrace,
+      String systemOut) {}
 }

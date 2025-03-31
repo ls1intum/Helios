@@ -6,7 +6,6 @@ import de.tum.cit.aet.helios.gitrepo.github.GitHubRepositorySyncService;
 import de.tum.cit.aet.helios.pullrequest.PullRequestRepository;
 import de.tum.cit.aet.helios.tests.TestResultProcessor;
 import de.tum.cit.aet.helios.workflow.GitHubWorkflowContext;
-import de.tum.cit.aet.helios.workflow.Workflow;
 import de.tum.cit.aet.helios.workflow.WorkflowRun;
 import de.tum.cit.aet.helios.workflow.WorkflowRunRepository;
 import de.tum.cit.aet.helios.workflow.WorkflowRunService;
@@ -90,7 +89,7 @@ public class GitHubWorkflowRunMessageHandler
         // If the workflow run is completed, and it is a test workflow
         // Get the context from the artifact and update the workflow run
         if (run.getStatus() == WorkflowRun.Status.COMPLETED
-            && run.getWorkflow().getLabel() == Workflow.Label.TEST) {
+            && run.getWorkflow().getTestTypes().size() > 0) {
           log.info("Trying to find the triggering workflow run ID of: {}", githubRun.getId());
           GitHubWorkflowContext context =
               extractWorkflowContext(repository.getId(), githubRun.getId());

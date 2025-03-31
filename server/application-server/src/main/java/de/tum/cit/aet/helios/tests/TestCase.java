@@ -59,6 +59,9 @@ public class TestCase {
   @Column(name = "error_type")
   private String errorType;
 
+  @Column(name = "system_out")
+  private String systemOut;
+
   /**
    * Transient field indicating whether this test is flaky. Determined based on test case
    * statistics.

@@ -36,14 +36,14 @@
 
   @if (!isTestResultsCollapsed) {
     <!-- Workflow Tabs -->
-    @if (sortedWorkflows().length > 0) {
+    @if (sortedTestTypes().length > 0) {
       @defer {
-        <p-tabView [activeIndex]="effectiveWorkflowTab()" (activeIndexChange)="onTabChange($event)">
-          @for (workflow of sortedWorkflows(); track workflow.name) {
+        <p-tabView [activeIndex]="effectiveTestTypeTab()" (activeIndexChange)="onTabChange($event)">
+          @for (workflow of sortedTestTypes(); track workflow.testTypeId) {
             <p-tabPanel>
               <ng-template pTemplate="header">
                 <div class="flex items-center gap-2">
-                  @switch (workflowState(workflow)) {
+                  @switch (testTypeState(workflow)) {
                     @case ('SUCCESS') {
                       <i-tabler name="circle-check" class="text-green-500 w-4 h-4"></i-tabler>
                     }
@@ -54,7 +54,7 @@
                       <i-tabler name="circle-chevrons-right" class="text-yellow-500 w-4 h-4"></i-tabler>
                     }
                   }
-                  <span>{{ workflow.name }}</span>
+                  <span>{{ workflow.testTypeName }}</span>
                   @if (workflow.isProcessing) {
                     <i-tabler name="progress" class="w-4 h-4 animate-spin text-gray-600 ml-1"></i-tabler>
                   }
@@ -71,8 +71,8 @@
     }
 
     <!-- Current Workflow Test Details -->
-    @if (activeWorkflow(); as workflow) {
-      <div class="flex items-center gap-2 w-full max-w-sm mb-2 mt-4">
+    @if (activeTestType(); as workflow) {
+      <div class="flex items-center gap-2 w-full max-w-sm mb-2">
         <p-button type="button" outlined (onClick)="toggleFilterMenu($event)" size="small">
           @if (showOnlyFailed()) {
             <i-tabler name="filter" />
@@ -84,7 +84,7 @@
       </div>
 
       <!-- Workflow Stats Summary -->
-      @if (workflowStats(); as stats) {
+      @if (activeTestTypeStats(); as stats) {
         <div class="flex items-center gap-4 mb-3 text-sm text-gray-600 p-2 bg-gray-50 rounded">
           <span class="flex items-center gap-1"><i-tabler name="check" class="text-green-500"></i-tabler> {{ stats.passed }} passed</span>
           <span class="flex items-center gap-1"><i-tabler name="x" class="text-red-500"></i-tabler> {{ stats.failures }} failed</span>
@@ -113,7 +113,7 @@
         @if (testSuites.length === 0) {
           <!-- No Results State -->
           <div class="flex flex-col items-center p-4 border rounded-lg">
-            <span class="text-sm text-gray-500">No test results available for {{ workflow.name }}</span>
+            <span class="text-sm text-gray-500">No test results available for {{ workflow.testTypeName }}</span>
           </div>
         } @else {
           <!-- Test Results -->
@@ -198,6 +198,15 @@
                             }
                           </div>
                         </div>
+
+                        <button
+                          pButton
+                          type="button"
+                          label="Details"
+                          class="p-button-text p-button-sm"
+                          (click)="showTestCaseDetails(testCase, suite)"
+                          [disabled]="!hasTestDetails(testCase, suite)"
+                        ></button>
                       </div>
                     }
                   </div>
@@ -217,7 +226,7 @@
             (onPageChange)="onPageChange($event)"
             [first]="testSuiteFirst()"
             [rows]="testSuiteRows()"
-            [totalRecords]="testSuites.length"
+            [totalRecords]="filteredTestSuites().length || 0"
             [rowsPerPageOptions]="[10, 20, 30]"
           />
         }
@@ -235,3 +244,40 @@
     }
   }
 }
+
+<p-dialog [(visible)]="showTestDetails" [style]="{ width: '50vw' }" [modal]="true">
+  <ng-template #header>
+    <div class="font-bold text-xl">Test Details</div>
+  </ng-template>
+
+  @if (selectedTestCase()) {
+    <div class="flex flex-col gap-4">
+      @if (selectedTestCase()?.stackTrace) {
+        <div>
+          <h4 class="font-medium mb-2">Stack Trace</h4>
+          <div class="bg-gray-50 p-4 rounded overflow-auto max-h-[400px]">
+            <pre class="font-mono text-sm">{{ selectedTestCase()?.stackTrace }}</pre>
+          </div>
+        </div>
+      }
+
+      @if (selectedTestCase()?.systemOut) {
+        <div>
+          <h4 class="font-medium mb-2">Test Case Logs</h4>
+          <div class="bg-gray-50 p-4 rounded overflow-auto max-h-[400px]">
+            <pre class="font-mono text-sm">{{ selectedTestCase()?.systemOut }}</pre>
+          </div>
+        </div>
+      }
+
+      @if (selectedTestCase()?.suiteSystemOut) {
+        <div>
+          <h4 class="font-medium mb-2">Test Suite Logs</h4>
+          <div class="bg-gray-50 p-4 rounded overflow-auto max-h-[400px]">
+            <pre class="font-mono text-sm">{{ selectedTestCase()?.suiteSystemOut }}</pre>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</p-dialog>

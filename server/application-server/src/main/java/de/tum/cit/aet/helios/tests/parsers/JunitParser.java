@@ -14,6 +14,7 @@ import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Component;
 
@@ -31,8 +32,8 @@ public class JunitParser implements TestResultParser {
   }
 
   /**
-   * Parses JUnit XML test results from an input stream.
-   * Handles both single test suite and multiple test suites XML formats.
+   * Parses JUnit XML test results from an input stream. Handles both single test suite and multiple
+   * test suites XML formats.
    *
    * @param inputStream The input stream containing the JUnit XML content
    * @return A list of parsed test suites
@@ -72,12 +73,14 @@ public class JunitParser implements TestResultParser {
         suite.errors,
         suite.skipped,
         suite.time,
+        concatenateSystemOut(suite.systemOut),
         suite.testcases.stream().map(this::parseTestCase).toList());
   }
 
   public boolean supports(String fileName) {
     return (fileName.startsWith("TEST-") && fileName.endsWith(".xml"))
-        || fileName.equals("results.xml");
+        || fileName.equals("results.xml")
+        || fileName.equals("junit.xml");
   }
 
   private TestResultParser.TestCase parseTestCase(TestCase tc) {
@@ -104,7 +107,8 @@ public class JunitParser implements TestResultParser {
         tc.skipped != null,
         errorType,
         message,
-        stackTrace);
+        stackTrace,
+        concatenateSystemOut(tc.systemOut));
   }
 
   @XmlRootElement(name = "testsuites")
@@ -125,6 +129,23 @@ public class JunitParser implements TestResultParser {
 
     @XmlElement(name = "testcase")
     public List<TestCase> testcases = new ArrayList<>();
+
+    @XmlElement(name = "system-out")
+    public List<SystemOut> systemOut = new ArrayList<>();
+  }
+
+  public static class SystemOut {
+    @XmlValue public String content;
+  }
+
+  private String concatenateSystemOut(List<SystemOut> systemOuts) {
+    if (systemOuts == null || systemOuts.isEmpty()) {
+      return null;
+    }
+    return systemOuts.stream()
+        .map(s -> s.content)
+        .filter(s -> s != null && !s.isEmpty())
+        .collect(Collectors.joining("\n"));
   }
 
   public static class TestCase {
@@ -143,6 +164,9 @@ public class JunitParser implements TestResultParser {
 
     @XmlElement(name = "skipped")
     public TestCaseSkipped skipped;
+
+    @XmlElement(name = "system-out")
+    public List<SystemOut> systemOut = new ArrayList<>();
   }
 
   public static class TestCaseFailure {

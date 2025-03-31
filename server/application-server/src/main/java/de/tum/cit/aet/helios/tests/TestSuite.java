@@ -1,5 +1,6 @@
 package de.tum.cit.aet.helios.tests;
 
+import de.tum.cit.aet.helios.tests.type.TestType;
 import de.tum.cit.aet.helios.workflow.WorkflowRun;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -63,4 +64,11 @@ public class TestSuite {
 
   @OneToMany(mappedBy = "testSuite", cascade = CascadeType.ALL)
   private List<TestCase> testCases = new ArrayList<>();
+
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "test_type_id")
+  private TestType testType;
+
+  @Column(name = "system_out")
+  private String systemOut;
 }
