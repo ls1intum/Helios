@@ -1,6 +1,7 @@
 package de.tum.cit.aet.helios.branch;
 
 import de.tum.cit.aet.helios.auth.AuthService;
+import de.tum.cit.aet.helios.commit.CommitRepository;
 import de.tum.cit.aet.helios.releaseinfo.releasecandidate.ReleaseCandidate;
 import de.tum.cit.aet.helios.releaseinfo.releasecandidate.ReleaseCandidateRepository;
 import de.tum.cit.aet.helios.userpreference.UserPreference;
@@ -23,6 +24,7 @@ public class BranchService {
   private final ReleaseCandidateRepository releaseCandidateRepository;
   private final UserPreferenceRepository userPreferenceRepository;
   private final AuthService authService;
+  private final CommitRepository commitRepository;
 
   public List<BranchInfoDto> getAllBranches() {
     final Optional<UserPreference> userPreference =
@@ -30,7 +32,8 @@ public class BranchService {
             ? userPreferenceRepository.findByUser(authService.getUserFromGithubId())
             : Optional.empty();
     return branchRepository.findAll().stream()
-        .map((branch) -> BranchInfoDto.fromBranchAndUserPreference(branch, userPreference))
+        .map((branch) -> BranchInfoDto.fromBranchAndUserPreference(branch, userPreference,
+            commitRepository))
         .sorted(
             (pr1, pr2) -> {
               if (pr1.isPinned() && !pr2.isPinned()) {
