@@ -415,9 +415,9 @@ public class TestResultService {
                       filterAndTransformTestSuites(
                           suites, previousStatusProvider, statisticsProvider, search, onlyFailed);
 
-                  // Apply pagination to filtered results
-                  List<TestResultsDto.TestSuiteDto> paginatedSuites =
-                      paginateTestSuites(filteredSuiteDtos, page, size);
+                  // Disable pagination for now
+                  //   List<TestResultsDto.TestSuiteDto> paginatedSuites =
+                  //       paginateTestSuites(filteredSuiteDtos, page, size);
 
                   // Check if this test type has any runs still processing
                   boolean testTypeProcessing =
@@ -434,7 +434,7 @@ public class TestResultService {
                   return new TestTypeResults(
                       testType.getId(),
                       testType.getName(),
-                      paginatedSuites,
+                      filteredSuiteDtos,
                       testTypeProcessing,
                       new TestResultsDto.TestTypeStats(
                           suites.size(),

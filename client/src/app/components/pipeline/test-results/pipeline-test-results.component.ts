@@ -1,4 +1,4 @@
-import { Component, computed, input, signal, viewChild, effect, ViewChild, ElementRef } from '@angular/core';
+import { Component, computed, input, signal, viewChild, effect } from '@angular/core';
 import { TableModule } from 'primeng/table';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { PanelModule } from 'primeng/panel';
@@ -82,10 +82,11 @@ export class PipelineTestResultsComponent {
     ...getLatestTestResultsByBranchOptions({
       query: {
         branch: this.branchName()!,
-        page: this.testSuiteFirst() / this.testSuiteRows(), // Convert to page number
-        size: this.testSuiteRows(),
-        search: this.searchValue(),
-        onlyFailed: this.showOnlyFailed(),
+        page: 1,
+        size: 10, // page: this.testSuiteFirst() / this.testSuiteRows(), // Convert to page number
+        // size: this.testSuiteRows(),
+        // search: this.searchValue(),
+        // onlyFailed: this.showOnlyFailed(),
       },
     }),
     enabled: this.branchName() !== null,
@@ -95,10 +96,12 @@ export class PipelineTestResultsComponent {
   pullRequestQuery = injectQuery(() => ({
     ...getLatestTestResultsByPullRequestIdOptions({
       query: {
-        page: this.testSuiteFirst() / this.testSuiteRows(), // Convert to page number
-        size: this.testSuiteRows(),
-        search: this.searchValue(),
-        onlyFailed: this.showOnlyFailed(),
+        page: 1,
+        size: 10,
+        // page: this.testSuiteFirst() / this.testSuiteRows(), // Convert to page number
+        // size: this.testSuiteRows(),
+        // search: this.searchValue(),
+        // onlyFailed: this.showOnlyFailed(),
       },
       path: { pullRequestId: this.pullRequestId() || 0 },
     }),
@@ -113,22 +116,6 @@ export class PipelineTestResultsComponent {
   op = viewChild.required<Popover>('op');
   searchValue = signal<string>('');
   showOnlyFailed = signal<boolean>(false);
-
-  @ViewChild('searchInput') searchInput!: ElementRef;
-  private searchTimeout: ReturnType<typeof setTimeout> | null = null;
-
-  onSearchChange(value: string) {
-    // Clear any existing timeout
-    if (this.searchTimeout) {
-      clearTimeout(this.searchTimeout);
-    }
-
-    // Set a new timeout to update the search value
-    this.searchTimeout = setTimeout(() => {
-      this.searchValue.set(value);
-      this.testSuiteFirst.set(0); // Reset pagination when search changes
-    }, 1000); // 1s debounce
-  }
 
   toggleFilterMenu(event: Event) {
     this.op().toggle(event);
@@ -208,6 +195,24 @@ export class PipelineTestResultsComponent {
     const activeTestType = this.activeTestType();
     if (!activeTestType) return [];
     return activeTestType.testSuites;
+  });
+
+  filteredTestSuites = computed(() => {
+    const testSuites = this.testSuites();
+    const searchValue = this.searchValue().toLowerCase();
+    const showOnlyFailed = this.showOnlyFailed();
+
+    return testSuites.filter(suite => {
+      if (showOnlyFailed && suite.failures + suite.errors === 0) {
+        return false;
+      }
+
+      if (searchValue) {
+        return suite.name.toLowerCase().includes(searchValue) || suite.testCases.some(testCase => testCase.name.toLowerCase().includes(searchValue));
+      }
+
+      return true;
+    });
   });
 
   onTabChange(event: number) {
