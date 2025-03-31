@@ -80,7 +80,7 @@
             <i-tabler name="filter-plus" />
           }
         </p-button>
-        <input pInputText [(ngModel)]="searchValue" type="text" pSize="small" placeholder="Search" class="w-full" />
+        <input pInputText [ngModel]="searchValue()" (ngModelChange)="onSearchChange($event)" type="text" pSize="small" placeholder="Search" class="w-full" />
       </div>
 
       <!-- Workflow Stats Summary -->
@@ -109,7 +109,7 @@
         </div>
       </p-popover>
 
-      @if (filteredTestSuites(); as testSuites) {
+      @if (testSuites(); as testSuites) {
         @if (testSuites.length === 0) {
           <!-- No Results State -->
           <div class="flex flex-col items-center p-4 border rounded-lg">
@@ -118,7 +118,7 @@
         } @else {
           <!-- Test Results -->
           <div class="flex flex-col gap-4">
-            @for (suite of testSuites.slice(testSuiteFirst(), testSuiteFirst() + testSuiteRows()); track suite.id) {
+            @for (suite of testSuites; track suite.id) {
               @defer {
                 <p-panel [toggleable]="true" [collapsed]="true" [styleClass]="suiteHasUpdates(suite) ? 'border-blue-400 border-2 relative' : ''">
                   <ng-template pTemplate="header">
@@ -226,7 +226,7 @@
             (onPageChange)="onPageChange($event)"
             [first]="testSuiteFirst()"
             [rows]="testSuiteRows()"
-            [totalRecords]="filteredTestSuites().length || 0"
+            [totalRecords]="activeTestTypeStats()?.total || 0"
             [rowsPerPageOptions]="[10, 20, 30]"
           />
         }
@@ -256,7 +256,7 @@
         <div>
           <h4 class="font-medium mb-2">Stack Trace</h4>
           <div class="bg-gray-50 p-4 rounded overflow-auto max-h-[400px]">
-            <pre class="font-mono text-sm">{{ selectedTestCase()?.stackTrace }}</pre>
+            <pre class="font-mono text-sm">{{ selectedTestCase()?.stackTrace?.trimStart() }}</pre>
           </div>
         </div>
       }

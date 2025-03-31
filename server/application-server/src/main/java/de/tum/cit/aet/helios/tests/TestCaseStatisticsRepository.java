@@ -1,5 +1,6 @@
 package de.tum.cit.aet.helios.tests;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -60,4 +61,16 @@ public interface TestCaseStatisticsRepository extends JpaRepository<TestCaseStat
    * @return list of flaky or non-flaky test statistics
    */
   List<TestCaseStatistics> findByBranchNameAndIsFlaky(String branchName, boolean isFlaky);
+
+  /**
+   * Find all statistics for test cases that belong to specific test suites on a branch in a
+   * repository.
+   *
+   * @param testSuiteNames collection of test suite names to search for
+   * @param branchName the branch name
+   * @param repositoryId the repository ID
+   * @return list of statistics for matching test cases
+   */
+  List<TestCaseStatistics> findByTestSuiteNameInAndBranchNameAndRepositoryRepositoryId(
+      Collection<String> testSuiteNames, String branchName, Long repositoryId);
 }

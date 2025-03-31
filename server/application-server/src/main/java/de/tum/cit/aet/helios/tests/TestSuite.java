@@ -12,6 +12,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderBy;
 import jakarta.validation.constraints.Min;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -63,6 +64,7 @@ public class TestSuite {
   private Double time;
 
   @OneToMany(mappedBy = "testSuite", cascade = CascadeType.ALL)
+  @OrderBy("id DESC")
   private List<TestCase> testCases = new ArrayList<>();
 
   @ManyToOne(fetch = FetchType.LAZY)

@@ -3,8 +3,6 @@ package de.tum.cit.aet.helios.tests;
 import de.tum.cit.aet.helios.tests.TestCase.TestStatus;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
-import java.util.function.Function;
 import org.springframework.lang.NonNull;
 
 /**
@@ -48,16 +46,7 @@ public record TestResultsDto(@NonNull List<TestTypeResults> testResults, boolean
       @NonNull Double time,
       String systemOut,
       @NonNull List<TestCaseDto> testCases) {
-    public static TestSuiteDto fromTestSuite(
-        TestSuite testSuite, Function<TestCase, Optional<TestStatus>> previousStatusProvider) {
-      return fromTestSuite(
-          testSuite, previousStatusProvider, tc -> new TestCaseStatisticsInfo(false, 0.0, false));
-    }
-
-    public static TestSuiteDto fromTestSuite(
-        TestSuite testSuite,
-        Function<TestCase, Optional<TestStatus>> previousStatusProvider,
-        Function<TestCase, TestCaseStatisticsInfo> statisticsProvider) {
+    public static TestSuiteDto fromTestSuite(TestSuite testSuite, List<TestCaseDto> testCases) {
       return new TestSuiteDto(
           testSuite.getId(),
           testSuite.getName(),
@@ -68,16 +57,7 @@ public record TestResultsDto(@NonNull List<TestTypeResults> testResults, boolean
           testSuite.getSkipped(),
           testSuite.getTime(),
           testSuite.getSystemOut(),
-          testSuite.getTestCases().stream()
-              .map(
-                  tc -> {
-                    TestCaseStatisticsInfo stats = statisticsProvider.apply(tc);
-                    tc.setFlaky(stats.isFlaky());
-                    tc.setFailureRate(stats.failureRate());
-                    tc.setFailsInDefaultBranch(stats.failsInDefaultBranch());
-                    return TestCaseDto.fromTestCase(tc, previousStatusProvider.apply(tc));
-                  })
-              .toList());
+          testCases);
     }
   }
 
@@ -95,14 +75,13 @@ public record TestResultsDto(@NonNull List<TestTypeResults> testResults, boolean
       Boolean isFlaky,
       Double failureRate,
       Boolean failsInDefaultBranch) {
-    public static TestCaseDto fromTestCase(
-        TestCase testCase, Optional<TestStatus> previousStatusProvider) {
+    public static TestCaseDto fromTestCase(TestCase testCase) {
       return new TestCaseDto(
           testCase.getId(),
           testCase.getName(),
           testCase.getClassName(),
           testCase.getStatus(),
-          previousStatusProvider.orElse(null),
+          testCase.getPreviousStatus(),
           testCase.getTime(),
           testCase.getMessage(),
           testCase.getStackTrace(),
