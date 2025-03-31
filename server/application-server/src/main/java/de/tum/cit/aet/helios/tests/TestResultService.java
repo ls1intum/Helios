@@ -147,7 +147,6 @@ public class TestResultService {
         .collect(Collectors.toList());
   }
 
-  /** Check if a test suite has any test cases with updated status */
   private boolean hasTestSuiteUpdates(
       TestSuite suite, Function<TestCase, Optional<TestStatus>> previousStatusProvider) {
     return suite.getTestCases().stream()
@@ -260,7 +259,6 @@ public class TestResultService {
         .collect(Collectors.toList());
   }
 
-  /** Check if a test case matches the filter criteria */
   private boolean matchesFilterCriteria(TestCase testCase, String search, boolean onlyFailed) {
     boolean matchesSearch =
         search == null
