@@ -9,6 +9,7 @@ import {
 import { injectMutation, QueryClient } from '@tanstack/angular-query-experimental';
 import { MessageService } from 'primeng/api';
 import { EnvironmentListViewComponent } from '../environments/environment-list/environment-list-view.component';
+import { celebrateDeployment } from '@app/core/services/particle.service';
 
 @Component({
   selector: 'app-deployment-selection',
@@ -36,6 +37,7 @@ export class DeploymentSelectionComponent {
         this.queryClient.invalidateQueries({ queryKey: getEnvironmentByIdQueryKey({ path: { id: this.currentEnvironmentId } }) });
       }
       this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Deployment started successfully' });
+      celebrateDeployment();
     },
   }));
 
