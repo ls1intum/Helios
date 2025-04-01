@@ -29,7 +29,9 @@ public class TestResultController {
       @RequestParam(required = false) String search,
       @RequestParam(defaultValue = "false") boolean onlyFailed) {
     return ResponseEntity.ok(
-        testResultService.getLatestTestResultsForPr(pullRequestId, page, size, search, onlyFailed));
+        testResultService.getLatestTestResultsForPr(
+            pullRequestId,
+            new TestResultService.TestSearchCriteria(page, size, search, onlyFailed)));
   }
 
   /**
@@ -47,6 +49,7 @@ public class TestResultController {
       @RequestParam(required = false) String search,
       @RequestParam(defaultValue = "false") boolean onlyFailed) {
     return ResponseEntity.ok(
-        testResultService.getLatestTestResultsForBranch(branch, page, size, search, onlyFailed));
+        testResultService.getLatestTestResultsForBranch(
+            branch, new TestResultService.TestSearchCriteria(page, size, search, onlyFailed)));
   }
 }

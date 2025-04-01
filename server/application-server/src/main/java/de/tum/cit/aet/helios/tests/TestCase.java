@@ -77,6 +77,12 @@ public class TestCase {
   /** Transient field indicating whether this test also fails in the default branch. */
   @Transient private boolean failsInDefaultBranch;
 
+  /**
+   * Transient field indicating the previous status of this test case. Used for change detection
+   * purposes.
+   */
+  @Transient TestStatus previousStatus;
+
   public static enum TestStatus {
     PASSED,
     FAILED,

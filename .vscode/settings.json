@@ -13,6 +13,5 @@
   "editor.formatOnSave": true,
   "editor.codeActionsOnSave": {
     "source.fixAll": "always"
-  },
-  "java.compile.nullAnalysis.mode": "disabled",
+  }
 }
