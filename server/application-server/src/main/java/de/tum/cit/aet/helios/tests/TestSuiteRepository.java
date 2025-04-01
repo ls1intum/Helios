@@ -42,20 +42,6 @@ public interface TestSuiteRepository extends JpaRepository<TestSuite, Long> {
       ))
       AND (:onlyFailed = false OR ts.failures > 0 OR ts.errors > 0)
       ORDER BY
-          CASE WHEN (:prevWorkflowRunId IS NOT NULL AND EXISTS (
-              SELECT 1
-              FROM TestCase tc
-              WHERE tc.testSuite = ts
-              AND EXISTS (
-                  SELECT 1
-                  FROM TestCase tcPrev
-                  WHERE tcPrev.name = tc.name
-                  AND tcPrev.className = tc.className
-                  AND tcPrev.testSuite.testType = ts.testType
-                  AND tcPrev.testSuite.workflowRun.id = :prevWorkflowRunId
-                  AND tcPrev.status != tc.status
-              )
-          )) THEN 1 ELSE 0 END DESC,
           (ts.failures + ts.errors) DESC,
           ts.name ASC
       """)
@@ -85,25 +71,7 @@ public interface TestSuiteRepository extends JpaRepository<TestSuite, Long> {
               SUM(ts.errors),
               SUM(ts.skipped),
               SUM(ts.time),
-              BOOL_OR(
-                CASE
-                    WHEN :prevWorkflowRunId IS NOT NULL AND (EXISTS (
-                        SELECT 1
-                        FROM TestCase tc
-                        WHERE tc.testSuite = ts
-                        AND EXISTS (
-                            SELECT 1
-                            FROM TestCase tcPrev
-                            WHERE tcPrev.name = tc.name
-                            AND tcPrev.className = tc.className
-                            AND tcPrev.testSuite.testType = ts.testType
-                            AND tcPrev.testSuite.workflowRun.id = :prevWorkflowRunId
-                            AND tcPrev.status != tc.status
-                        )
-                    )) THEN TRUE
-                    ELSE FALSE
-                END
-              )
+              FALSE
           )
           FROM TestSuite ts
           WHERE ts.workflowRun.id = :workflowRunId
