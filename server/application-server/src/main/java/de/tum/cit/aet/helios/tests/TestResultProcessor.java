@@ -160,7 +160,12 @@ public class TestResultProcessor {
               testSuite.setSkipped(result.skipped());
               testSuite.setTime(result.time());
               testSuite.setTimestamp(result.timestamp());
-              testSuite.setSystemOut(result.systemOut());
+              // We don't want to store system out for passed test suites, as it can be quite large
+              if (result.failures() > 0 || result.errors() > 0) {
+                testSuite.setSystemOut(result.systemOut());
+              } else {
+                testSuite.setSystemOut(null);
+              }
               testSuite.setTestCases(
                   result.testCases().stream().map(tc -> createTestCase(tc, testSuite)).toList());
               return testSuite;
@@ -183,7 +188,13 @@ public class TestResultProcessor {
     testCase.setMessage(tc.message());
     testCase.setStackTrace(tc.stackTrace());
     testCase.setErrorType(tc.errorType());
-    testCase.setSystemOut(tc.systemOut());
+
+    // We don't want to store system out for passed tests, as it can be quite large
+    if (tc.failed() || tc.error()) {
+      testCase.setSystemOut(tc.systemOut());
+    } else {
+      testCase.setSystemOut(null);
+    }
     return testCase;
   }
 

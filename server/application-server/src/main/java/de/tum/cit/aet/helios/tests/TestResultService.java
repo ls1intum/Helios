@@ -128,13 +128,13 @@ public class TestResultService {
         workflowRunRepository.findByHeadBranchAndHeadShaAndRepositoryRepositoryId(
             defaultBranch.getName(), defaultBranch.getCommitSha(), repository.getRepositoryId());
 
-    Map<TestType, Long> defaultWorkflowRunByTestType =
-        defaultRuns.stream()
-            .flatMap(
-                run ->
-                    run.getWorkflow().getTestTypes().stream()
-                        .map(type -> Map.entry(type, run.getId())))
-            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    Map<TestType, Long> defaultWorkflowRunByTestType = new HashMap<>();
+
+    for (WorkflowRun run : defaultRuns) {
+      for (TestType type : run.getWorkflow().getTestTypes()) {
+        defaultWorkflowRunByTestType.put(type, run.getId());
+      }
+    }
 
     return new TestRunContext(
         defaultRuns, List.of(), defaultBranch.getName(), defaultWorkflowRunByTestType);
@@ -283,9 +283,21 @@ public class TestResultService {
       String search,
       boolean onlyFailed) {
 
+    log.debug(
+        "Getting test results for type {} in workflow run {} with previous run {}",
+        type.getName(),
+        run.getId(),
+        prevWorkflowRunId);
+    long time = System.currentTimeMillis();
+
     var suites =
         testSuiteRepository.findByWorkflowRunIdAndTestTypeId(
             run.getId(), type.getId(), prevWorkflowRunId, search, onlyFailed, pageable);
+
+    log.debug(
+        "Found {} test suites in {} ms",
+        suites.getTotalElements(),
+        System.currentTimeMillis() - time);
 
     var summary =
         testSuiteRepository.findSummaryByWorkflowRunIdAndTestTypeId(
