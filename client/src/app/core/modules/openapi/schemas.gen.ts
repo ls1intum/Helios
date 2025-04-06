@@ -573,7 +573,11 @@ export const TestCaseDtoSchema = {
     isFlaky: {
       type: 'boolean',
     },
-    failureRate: {
+    defaultBranchFailureRate: {
+      type: 'number',
+      format: 'double',
+    },
+    combinedFailureRate: {
       type: 'number',
       format: 'double',
     },

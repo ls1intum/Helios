@@ -192,7 +192,8 @@ export type TestCaseDto = {
   systemOut?: string;
   errorType?: string;
   isFlaky?: boolean;
-  failureRate?: number;
+  defaultBranchFailureRate?: number;
+  combinedFailureRate?: number;
   failsInDefaultBranch?: boolean;
 };
 

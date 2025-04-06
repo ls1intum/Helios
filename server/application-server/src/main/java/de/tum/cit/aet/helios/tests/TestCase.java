@@ -74,6 +74,12 @@ public class TestCase {
    */
   @Transient private double failureRate;
 
+  /**
+   * Transient field for the failure rate of this test on all branches combined. Retrieved from test
+   * case statistics.
+   */
+  @Transient private double combinedFailureRate;
+
   /** Transient field indicating whether this test also fails in the default branch. */
   @Transient private boolean failsInDefaultBranch;
 

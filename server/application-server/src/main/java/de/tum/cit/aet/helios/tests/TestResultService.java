@@ -5,6 +5,7 @@ import de.tum.cit.aet.helios.filters.RepositoryContext;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import de.tum.cit.aet.helios.pullrequest.PullRequestRepository;
 import de.tum.cit.aet.helios.tests.TestCase.TestStatus;
+import de.tum.cit.aet.helios.tests.TestResultsDto.CombinedTestCaseStatisticsInfo;
 import de.tum.cit.aet.helios.tests.TestResultsDto.TestCaseDto;
 import de.tum.cit.aet.helios.tests.TestResultsDto.TestCaseStatisticsInfo;
 import de.tum.cit.aet.helios.tests.TestResultsDto.TestTypeResults;
@@ -313,6 +314,10 @@ public class TestResultService {
         testCaseStatisticsRepository.findByTestSuiteNameInAndBranchNameAndRepositoryRepositoryId(
             suiteClassNames, defaultBranch, RepositoryContext.getRepositoryId());
 
+    List<TestCaseStatistics> combinedStats =
+        testCaseStatisticsRepository.findByTestSuiteNameInAndBranchNameAndRepositoryRepositoryId(
+            suiteClassNames, "combined", RepositoryContext.getRepositoryId());
+
     Function<TestCase, TestResultsDto.TestCaseStatisticsInfo> statisticsProvider =
         testCase -> {
           Optional<TestCaseStatistics> stats =
@@ -337,6 +342,21 @@ public class TestResultService {
               isFlaky, failureRate, failsInDefaultBranch);
         };
 
+    Function<TestCase, TestResultsDto.CombinedTestCaseStatisticsInfo> combinedStatisticsProvider =
+        testCase -> {
+          Optional<TestCaseStatistics> stats =
+              combinedStats.stream()
+                  .filter(
+                      s ->
+                          s.getTestName().equals(testCase.getName())
+                              && s.getClassName().equals(testCase.getClassName()))
+                  .findFirst();
+
+          double combinedFailureRate = stats.map(TestCaseStatistics::getFailureRate).orElse(0.0);
+
+          return new TestResultsDto.CombinedTestCaseStatisticsInfo(combinedFailureRate);
+        };
+
     var prevStateCandidates =
         testCaseRepository.findByTestSuiteWorkflowIdAndClassNamesAndTestTypeId(
             prevWorkflowRunId, suiteClassNames, type.getId());
@@ -344,9 +364,12 @@ public class TestResultService {
     for (TestSuite suite : suites) {
       for (TestCase testCase : suite.getTestCases()) {
         TestCaseStatisticsInfo statistics = statisticsProvider.apply(testCase);
+        CombinedTestCaseStatisticsInfo combinedStatistics =
+            combinedStatisticsProvider.apply(testCase);
         testCase.setFlaky(statistics.isFlaky());
         testCase.setFailsInDefaultBranch(statistics.failsInDefaultBranch());
         testCase.setFailureRate(statistics.failureRate());
+        testCase.setCombinedFailureRate(combinedStatistics.combinedFailureRate());
         testCase.setPreviousStatus(
             prevStateCandidates.stream()
                 .filter(
