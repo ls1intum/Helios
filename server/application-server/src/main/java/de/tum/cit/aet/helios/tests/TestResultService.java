@@ -35,6 +35,7 @@ public class TestResultService {
   private final TestSuiteRepository testSuiteRepository;
   private final TestCaseRepository testCaseRepository;
   private final TestCaseStatisticsRepository testCaseStatisticsRepository;
+  private final TestCaseStatisticsService testCaseStatisticsService;
 
   public static record TestSearchCriteria(int page, int size, String search, boolean onlyFailed) {}
 
@@ -102,8 +103,8 @@ public class TestResultService {
                 }
 
                 // Check if one is flaky and the other is not
-                boolean flaky = a.isFlaky();
-                boolean otherFlaky = b.isFlaky();
+                boolean flaky = a.getFlakinessScore() > 30.0;
+                boolean otherFlaky = b.getFlakinessScore() > 30.0;
 
                 if (!flaky && otherFlaky) {
                   return -1; // a is more important (not flaky)
@@ -328,7 +329,6 @@ public class TestResultService {
                               && s.getClassName().equals(testCase.getClassName()))
                   .findFirst();
 
-          boolean isFlaky = stats.map(TestCaseStatistics::isFlaky).orElse(false);
           double failureRate = stats.map(TestCaseStatistics::getFailureRate).orElse(0.0);
 
           boolean failsInDefaultBranch =
@@ -338,8 +338,7 @@ public class TestResultService {
                           failedTest.getName().equals(testCase.getName())
                               && failedTest.getClassName().equals(testCase.getClassName()));
 
-          return new TestResultsDto.TestCaseStatisticsInfo(
-              isFlaky, failureRate, failsInDefaultBranch);
+          return new TestResultsDto.TestCaseStatisticsInfo(failureRate, failsInDefaultBranch);
         };
 
     Function<TestCase, TestResultsDto.CombinedTestCaseStatisticsInfo> combinedStatisticsProvider =
@@ -366,7 +365,9 @@ public class TestResultService {
         TestCaseStatisticsInfo statistics = statisticsProvider.apply(testCase);
         CombinedTestCaseStatisticsInfo combinedStatistics =
             combinedStatisticsProvider.apply(testCase);
-        testCase.setFlaky(statistics.isFlaky());
+        testCase.setFlakinessScore(
+            testCaseStatisticsService.calculateFlakinessScore(
+                statistics.failureRate(), combinedStatistics.combinedFailureRate()));
         testCase.setFailsInDefaultBranch(statistics.failsInDefaultBranch());
         testCase.setFailureRate(statistics.failureRate());
         testCase.setCombinedFailureRate(combinedStatistics.combinedFailureRate());

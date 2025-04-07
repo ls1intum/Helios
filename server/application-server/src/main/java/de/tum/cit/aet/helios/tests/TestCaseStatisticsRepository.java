@@ -54,15 +54,6 @@ public interface TestCaseStatisticsRepository extends JpaRepository<TestCaseStat
       String branchName, Long repositoryId);
 
   /**
-   * Find all flaky or non-flaky tests for a specific branch.
-   *
-   * @param branchName the branch name
-   * @param isFlaky whether to find flaky or non-flaky tests
-   * @return list of flaky or non-flaky test statistics
-   */
-  List<TestCaseStatistics> findByBranchNameAndIsFlaky(String branchName, boolean isFlaky);
-
-  /**
    * Find all statistics for test cases that belong to specific test suites on a branch in a
    * repository.
    *

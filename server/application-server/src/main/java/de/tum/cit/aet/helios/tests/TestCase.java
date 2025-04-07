@@ -66,7 +66,7 @@ public class TestCase {
    * Transient field indicating whether this test is flaky. Determined based on test case
    * statistics.
    */
-  @Transient private boolean isFlaky;
+  @Transient private double flakinessScore;
 
   /**
    * Transient field for the failure rate of this test on its branch. Retrieved from test case
