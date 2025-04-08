@@ -178,6 +178,32 @@ paths:
                 $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
+  /api/release-info/{name}/release-notes:
+    put:
+      tags:
+      - release-info-controller
+      operationId: updateReleaseNotes
+      parameters:
+      - name: name
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReleaseNotesDto"
+        required: true
+      responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "200":
+          description: OK
   /api/environments/{id}:
     get:
       tags:
@@ -446,6 +472,30 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReleaseInfoListDto"
+  /api/release-info/{tagName}/generate-release-notes:
+    post:
+      tags:
+      - release-info-controller
+      operationId: generateReleaseNotes
+      parameters:
+      - name: tagName
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: string
   /api/release-info/{name}/publish:
     post:
       tags:
@@ -937,30 +987,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/RepositoryInfoDto"
-  /api/release-info/{tagName}/release-notes:
-    get:
-      tags:
-      - release-info-controller
-      operationId: getReleaseNotes
-      parameters:
-      - name: tagName
-        in: path
-        required: true
-        schema:
-          type: string
-      responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: string
   /api/release-info/{name}:
     get:
       tags:
@@ -1582,6 +1608,11 @@ components:
       required:
       - orderIndex
       - workflowId
+    ReleaseNotesDto:
+      type: object
+      properties:
+        body:
+          type: string
     EnvironmentDeployment:
       type: object
       properties:
@@ -2234,6 +2265,8 @@ components:
         createdAt:
           type: string
           format: date-time
+        body:
+          type: string
       required:
       - commit
       - createdAt

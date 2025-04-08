@@ -33,6 +33,10 @@ export type WorkflowMembershipDto = {
   orderIndex: number;
 };
 
+export type ReleaseNotesDto = {
+  body?: string;
+};
+
 export type EnvironmentDeployment = {
   id: number;
   url?: string;
@@ -282,6 +286,7 @@ export type ReleaseInfoDetailsDto = {
   release?: ReleaseDto;
   createdBy?: UserInfoDto;
   createdAt: string;
+  body?: string;
 };
 
 export type CommitsSinceReleaseCandidateDto = {
@@ -582,6 +587,31 @@ export type UpdateWorkflowGroupsResponses = {
   200: unknown;
 };
 
+export type UpdateReleaseNotesData = {
+  body: ReleaseNotesDto;
+  path: {
+    name: string;
+  };
+  query?: never;
+  url: '/api/release-info/{name}/release-notes';
+};
+
+export type UpdateReleaseNotesErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type UpdateReleaseNotesError = UpdateReleaseNotesErrors[keyof UpdateReleaseNotesErrors];
+
+export type UpdateReleaseNotesResponses = {
+  /**
+   * OK
+   */
+  200: unknown;
+};
+
 export type GetEnvironmentByIdData = {
   body?: never;
   path: {
@@ -876,6 +906,33 @@ export type CreateReleaseCandidateResponses = {
 };
 
 export type CreateReleaseCandidateResponse = CreateReleaseCandidateResponses[keyof CreateReleaseCandidateResponses];
+
+export type GenerateReleaseNotesData = {
+  body?: never;
+  path: {
+    tagName: string;
+  };
+  query?: never;
+  url: '/api/release-info/{tagName}/generate-release-notes';
+};
+
+export type GenerateReleaseNotesErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type GenerateReleaseNotesError = GenerateReleaseNotesErrors[keyof GenerateReleaseNotesErrors];
+
+export type GenerateReleaseNotesResponses = {
+  /**
+   * OK
+   */
+  200: string;
+};
+
+export type GenerateReleaseNotesResponse = GenerateReleaseNotesResponses[keyof GenerateReleaseNotesResponses];
 
 export type PublishReleaseDraftData = {
   body?: never;
