@@ -38,7 +38,9 @@ public class AsyncConfig {
   @Bean("workflowRunTaskScheduler")
   public TaskScheduler workflowRunTaskScheduler() {
     ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
-    scheduler.setPoolSize(5);
+    // Set the pool size to 1 to ensure tasks are executed sequentially
+    // This guarantees that webhook events are processed one at a time
+    scheduler.setPoolSize(1);
     scheduler.setThreadNamePrefix("workflow-run-scheduler-");
     scheduler.initialize();
     return scheduler;
