@@ -317,21 +317,24 @@ public class GitHubService {
    * Creates a successful commit status for a GitHub pull request with a link to the Helios page.
    *
    * <p>This method sets up a commit status with the following characteristics:
+   *
    * <ul>
-   *   <li>State: SUCCESS</li>
-   *   <li>Context: "Helios"</li>
-   *   <li>Target URL: A formatted URL to the Helios page for this specific pull request</li>
-   *   <li>Description: A message indicating what the link leads to</li>
+   *   <li>State: SUCCESS
+   *   <li>Context: "Helios"
+   *   <li>Target URL: A formatted URL to the Helios page for this specific pull request
+   *   <li>Description: A message indicating what the link leads to
    * </ul>
    *
-   * <p>The commit status is created for the HEAD commit of the pull request.
-   * Any IO exceptions during the status creation are logged as errors.
+   * <p>The commit status is created for the HEAD commit of the pull request. Any IO exceptions
+   * during the status creation are logged as errors.
    *
    * @param pullRequest The GitHub pull request object for which to create the commit status
    */
   public void createCommitStatusForPullRequest(GHPullRequest pullRequest) {
-    final String targetUrl = String.format("%s/repo/%d/ci-cd/pr/%d",
-        heliosClientBaseUrl, pullRequest.getRepository().getId(), pullRequest.getNumber());
+    final String targetUrl =
+        String.format(
+            "%s/repo/%d/ci-cd/pr/%d",
+            heliosClientBaseUrl, pullRequest.getRepository().getId(), pullRequest.getNumber());
     final String description = "Click to view the Helios page of this pull request.";
     final String context = "Helios";
     try {
@@ -451,11 +454,8 @@ public class GitHubService {
       requestPayload.put("target_commitish", targetCommitish);
     }
 
-    if (previousTagName != null && !previousTagName.isEmpty()) {
-      requestPayload.put("previous_tag_name", previousTagName);
-    }
-
     String jsonPayload = objectMapper.writeValueAsString(requestPayload);
+    log.info("Request payload: {}", jsonPayload);
 
     // Build the request
     Request request =
@@ -470,9 +470,9 @@ public class GitHubService {
 
     // Execute the request
     try (Response response = okHttpClient.newCall(request).execute()) {
+      ResponseBody responseBody = response.body();
       if (!response.isSuccessful()) {
         String errorBody = "No error details";
-        ResponseBody responseBody = response.body();
         if (responseBody != null) {
           try {
             errorBody = responseBody.string();
@@ -487,8 +487,6 @@ public class GitHubService {
             errorBody);
         throw new IOException("GitHub API call failed with response code: " + response.code());
       }
-
-      ResponseBody responseBody = response.body();
 
       if (responseBody == null) {
         throw new IOException("Response body is null");

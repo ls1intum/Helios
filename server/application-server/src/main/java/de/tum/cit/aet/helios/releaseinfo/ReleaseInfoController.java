@@ -82,7 +82,7 @@ public class ReleaseInfoController {
    * Endpoint to update the release notes of a release candidate.
    *
    * @param name Name of the release candidate
-   * @param updateReleaseNotesDto DTO containing the updated release notes
+   * @param releaseNotes DTO containing the updated release notes
    * @return Updated release info details
    */
   @EnforceAtLeastMaintainer
