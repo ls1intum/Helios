@@ -42,6 +42,7 @@ import lombok.extern.log4j.Log4j2;
 import org.kohsuke.github.GHCompare;
 import org.kohsuke.github.GHCompare.Commit;
 import org.kohsuke.github.GHRelease;
+import org.kohsuke.github.GHReleaseBuilder;
 import org.kohsuke.github.GHRepository;
 import org.springframework.stereotype.Service;
 
@@ -143,7 +144,8 @@ public class ReleaseInfoService {
                       ? ReleaseDto.fromRelease(releaseCandidate.getRelease())
                       : null,
                   UserInfoDto.fromUser(releaseCandidate.getCreatedBy()),
-                  releaseCandidate.getCreatedAt());
+                  releaseCandidate.getCreatedAt(),
+                  releaseCandidate.getBody());
             })
         .orElseThrow(() -> new ReleaseCandidateException("ReleaseCandidate not found"));
   }
@@ -285,15 +287,27 @@ public class ReleaseInfoService {
   public void publishReleaseDraft(String tagName) {
     Long repositoryId = RepositoryContext.getRepositoryId();
     GitRepository repository = gitRepoRepository.findById(repositoryId).orElseThrow();
+    ReleaseCandidate releaseCandidate =
+        releaseCandidateRepository
+            .findByRepositoryRepositoryIdAndName(repositoryId, tagName)
+            .orElseThrow(() -> new ReleaseCandidateException("Release candidate not found"));
     try {
-      GHRelease ghRelease =
+      GHReleaseBuilder ghReleaseBuilder =
           gitHubService
               .getRepository(repository.getNameWithOwner())
               .createRelease(tagName)
-              .generateReleaseNotes(true)
               .draft(true)
               .name(tagName)
-              .create();
+              .commitish(releaseCandidate.getCommit().getSha());
+
+      // If the release candidate has a description, use it. Otherwise, generate release notes.
+      if (releaseCandidate.getBody() != null) {
+        ghReleaseBuilder.body(releaseCandidate.getBody());
+      } else {
+        ghReleaseBuilder.body(generateReleaseNotes(tagName));
+      }
+
+      GHRelease ghRelease = ghReleaseBuilder.create();
 
       gitHubReleaseSyncService.processRelease(
           ghRelease, gitHubService.getRepository(repository.getNameWithOwner()));
@@ -336,5 +350,20 @@ public class ReleaseInfoService {
       log.error("Failed to generate release notes: {}", e.getMessage());
       throw new ReleaseCandidateException("Failed to generate release notes");
     }
+  }
+
+  public void updateReleaseNotes(String tagName, String releaseNotes) {
+    final Long repositoryId = RepositoryContext.getRepositoryId();
+
+    releaseCandidateRepository
+        .findByRepositoryRepositoryIdAndName(repositoryId, tagName)
+        .ifPresentOrElse(
+            releaseCandidate -> {
+              releaseCandidate.setBody(releaseNotes);
+              releaseCandidateRepository.save(releaseCandidate);
+            },
+            () -> {
+              throw new ReleaseCandidateException("Release candidate not found");
+            });
   }
 }
