@@ -18,6 +18,7 @@ import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
 import de.tum.cit.aet.helios.releaseinfo.ReleaseInfoDetailsDto.ReleaseCandidateEvaluationDto;
 import de.tum.cit.aet.helios.releaseinfo.release.ReleaseDto;
+import de.tum.cit.aet.helios.releaseinfo.release.ReleaseRepository;
 import de.tum.cit.aet.helios.releaseinfo.release.github.GitHubReleaseSyncService;
 import de.tum.cit.aet.helios.releaseinfo.releasecandidate.CommitsSinceReleaseCandidateDto;
 import de.tum.cit.aet.helios.releaseinfo.releasecandidate.ReleaseCandidate;
@@ -52,6 +53,7 @@ public class ReleaseInfoService {
   private final GitHubService gitHubService;
   private final GitRepoRepository gitRepoRepository;
   private final ReleaseCandidateRepository releaseCandidateRepository;
+  private final ReleaseRepository releaseRepository;
   private final CommitRepository commitRepository;
   private final DeploymentRepository deploymentRepository;
   private final BranchRepository branchRepository;
@@ -298,6 +300,41 @@ public class ReleaseInfoService {
     } catch (IOException e) {
       log.error("Failed to publish release: {}", e.getMessage());
       throw new ReleaseCandidateException("Release candidate could not be pushed to GitHub.");
+    }
+  }
+
+  public String generateReleaseNotes(String tagName) {
+    final Long repositoryId = RepositoryContext.getRepositoryId();
+    final GitRepository repository =
+        gitRepoRepository
+            .findById(repositoryId)
+            .orElseThrow(() -> new ReleaseCandidateException("Repository not found"));
+
+    String targetCommitish = null;
+
+    // If release is not yet published, get commit SHA from release candidate
+    if (!releaseRepository
+        .findByTagNameAndRepositoryRepositoryId(tagName, repositoryId)
+        .isPresent()) {
+      targetCommitish =
+          releaseCandidateRepository
+              .findByRepositoryRepositoryIdAndName(repositoryId, tagName)
+              .map(rc -> rc.getCommit().getSha())
+              .orElseThrow(() -> new ReleaseCandidateException("Release candidate not found"));
+    }
+
+    String previousTagName =
+        releaseRepository
+            .findFirstByOrderByPublishedAtDesc()
+            .map(release -> release.getTagName())
+            .orElse(null);
+
+    try {
+      return gitHubService.generateReleaseNotes(
+          repository.getNameWithOwner(), tagName, targetCommitish, previousTagName);
+    } catch (IOException e) {
+      log.error("Failed to generate release notes: {}", e.getMessage());
+      throw new ReleaseCandidateException("Failed to generate release notes");
     }
   }
 }

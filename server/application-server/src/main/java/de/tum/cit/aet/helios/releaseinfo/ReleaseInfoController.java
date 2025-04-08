@@ -64,4 +64,10 @@ public class ReleaseInfoController {
     releaseInfoService.publishReleaseDraft(name);
     return ResponseEntity.ok().build();
   }
+
+  @EnforceAtLeastMaintainer
+  @GetMapping("/{tagName}/release-notes")
+  public ResponseEntity<String> getReleaseNotes(@PathVariable String tagName) {
+    return ResponseEntity.ok(releaseInfoService.generateReleaseNotes(tagName));
+  }
 }

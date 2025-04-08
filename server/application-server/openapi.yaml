@@ -937,6 +937,30 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/RepositoryInfoDto"
+  /api/release-info/{tagName}/release-notes:
+    get:
+      tags:
+      - release-info-controller
+      operationId: getReleaseNotes
+      parameters:
+      - name: tagName
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: string
   /api/release-info/{name}:
     get:
       tags:

@@ -15,6 +15,7 @@ import de.tum.cit.aet.helios.github.permissions.RepoPermissionType;
 import jakarta.transaction.Transactional;
 import java.io.IOException;
 import java.time.OffsetDateTime;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -417,6 +418,88 @@ public class GitHubService {
     } catch (IOException e) {
       log.error("Error occurred while approving deployment: {}", e.getMessage());
       throw e;
+    }
+  }
+
+  /**
+   * Generates release notes for a GitHub repository by comparing changes between versions.
+   *
+   * @param repositoryNameWithOwner The repository name including the owner (e.g., "owner/repo")
+   * @param tagName The tag name for the new release
+   * @param targetCommitish The commitish value that determines where the Git tag is created from
+   * @param previousTagName The previous tag name to compare against
+   * @return The generated release notes as a string
+   * @throws IOException If there's an error communicating with the GitHub API
+   */
+  public String generateReleaseNotes(
+      String repositoryNameWithOwner,
+      String tagName,
+      String targetCommitish,
+      String previousTagName)
+      throws IOException {
+    log.debug(
+        "Generating release notes for repository: {}, tag: {}, previous tag: {}",
+        repositoryNameWithOwner,
+        tagName,
+        previousTagName);
+
+    // Create the request payload with only non-null fields
+    Map<String, String> requestPayload = new HashMap<>();
+    requestPayload.put("tag_name", tagName);
+
+    if (targetCommitish != null && !targetCommitish.isEmpty()) {
+      requestPayload.put("target_commitish", targetCommitish);
+    }
+
+    if (previousTagName != null && !previousTagName.isEmpty()) {
+      requestPayload.put("previous_tag_name", previousTagName);
+    }
+
+    String jsonPayload = objectMapper.writeValueAsString(requestPayload);
+
+    // Build the request
+    Request request =
+        getRequestBuilder()
+            .url(
+                "https://api.github.com/repos/"
+                    + repositoryNameWithOwner
+                    + "/releases/generate-notes")
+            .post(
+                RequestBody.create(MediaType.parse("application/json; charset=utf-8"), jsonPayload))
+            .build();
+
+    // Execute the request
+    try (Response response = okHttpClient.newCall(request).execute()) {
+      if (!response.isSuccessful()) {
+        String errorBody = "No error details";
+        ResponseBody responseBody = response.body();
+        if (responseBody != null) {
+          try {
+            errorBody = responseBody.string();
+          } catch (IOException e) {
+            log.warn("Failed to read error response body", e);
+          }
+        }
+
+        log.error(
+            "GitHub API call failed with response code: {} and body: {}",
+            response.code(),
+            errorBody);
+        throw new IOException("GitHub API call failed with response code: " + response.code());
+      }
+
+      ResponseBody responseBody = response.body();
+
+      if (responseBody == null) {
+        throw new IOException("Response body is null");
+      }
+
+      // Parse the response
+      Map<String, Object> responseMap = objectMapper.readValue(responseBody.string(), Map.class);
+
+      // Return the generated notes
+      log.debug("Successfully generated release notes using the GitHub API");
+      return (String) responseMap.get("body");
     }
   }
 }
