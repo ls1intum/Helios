@@ -48,6 +48,17 @@ const FILTER_OPTIONS = [
       }),
   },
   {
+    name: 'Last 7 Day',
+    filter: (branches: BranchInfoWithLink[]) =>
+      branches.filter(branch => {
+        const date = new Date(branch.updatedAt || '');
+        const staleThreshold = new Date();
+        staleThreshold.setDate(staleThreshold.getDate() - 7);
+
+        return date >= staleThreshold;
+      }),
+  },
+  {
     name: 'Stale Branches',
     filter: (branches: BranchInfoWithLink[]) =>
       branches.filter(branch => {
