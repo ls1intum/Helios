@@ -1,4 +1,4 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, ViewChild } from '@angular/core';
 import { TableModule } from 'primeng/table';
 import { AvatarModule } from 'primeng/avatar';
 import { TagModule } from 'primeng/tag';
@@ -8,7 +8,7 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { InputIconModule } from 'primeng/inputicon';
 import { InputTextModule } from 'primeng/inputtext';
 import { IconFieldModule } from 'primeng/iconfield';
-import { TreeTableModule } from 'primeng/treetable';
+import { TreeTableModule, TreeTable } from 'primeng/treetable';
 import { ButtonModule } from 'primeng/button';
 import { BranchViewPreferenceService } from '@app/core/services/branches-table/branch-view-preference';
 import { Router } from '@angular/router';
@@ -104,6 +104,8 @@ export class BranchTableComponent {
   queryClient = inject(QueryClient);
   searchTableService = inject(SearchTableService<BranchInfoWithLink>);
   keycloakService = inject(KeycloakService);
+
+  @ViewChild('table') treeTable!: TreeTable;
 
   query = injectQuery(() => getAllBranchesOptions());
   setPinnedMutation = injectMutation(() => ({
@@ -264,6 +266,42 @@ export class BranchTableComponent {
       });
     });
     return rootNodes.filter(rootSubheader => rootSubheader.children!.length > 0);
+  }
+
+  public expandAll(): void {
+    // Create a new copy of the tree with all nodes expanded
+    const nodes = this.featureBranchesTree();
+    this.expandCollapseRecursive(nodes, true);
+
+    // Force the TreeTable to rerender with the updated nodes
+    if (this.treeTable) {
+      // Trigger filter or rerender to refresh the view
+      this.treeTable.filter('', 'global', 'contains');
+    }
+  }
+
+  public collapseAll(): void {
+    // Create a new copy of the tree with all nodes collapsed
+    const nodes = this.featureBranchesTree();
+    this.expandCollapseRecursive(nodes, false);
+
+    // Force the TreeTable to rerender with the updated nodes
+    if (this.treeTable) {
+      // Trigger filter or rerender to refresh the view
+      this.treeTable.filter('', 'global', 'contains');
+    }
+  }
+
+  private expandCollapseRecursive(nodes: TreeNode[], expand: boolean): void {
+    for (const node of nodes) {
+      // Always expand subheader nodes when expanding, or only collapse if not a subheader
+      if (expand || !node.subheader) {
+        node.expanded = expand;
+      }
+      if (node.children && node.children.length > 0) {
+        this.expandCollapseRecursive(node.children, expand);
+      }
+    }
   }
 }
 
