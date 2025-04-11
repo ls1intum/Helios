@@ -337,15 +337,9 @@ public class ReleaseInfoService {
               .orElseThrow(() -> new ReleaseCandidateException("Release candidate not found"));
     }
 
-    String previousTagName =
-        releaseRepository
-            .findFirstByOrderByPublishedAtDesc()
-            .map(release -> release.getTagName())
-            .orElse(null);
-
     try {
       return gitHubService.generateReleaseNotes(
-          repository.getNameWithOwner(), tagName, targetCommitish, previousTagName);
+          repository.getNameWithOwner(), tagName, targetCommitish);
     } catch (IOException e) {
       log.error("Failed to generate release notes: {}", e.getMessage());
       throw new ReleaseCandidateException("Failed to generate release notes");

@@ -430,21 +430,11 @@ public class GitHubService {
    * @param repositoryNameWithOwner The repository name including the owner (e.g., "owner/repo")
    * @param tagName The tag name for the new release
    * @param targetCommitish The commitish value that determines where the Git tag is created from
-   * @param previousTagName The previous tag name to compare against
    * @return The generated release notes as a string
    * @throws IOException If there's an error communicating with the GitHub API
    */
   public String generateReleaseNotes(
-      String repositoryNameWithOwner,
-      String tagName,
-      String targetCommitish,
-      String previousTagName)
-      throws IOException {
-    log.debug(
-        "Generating release notes for repository: {}, tag: {}, previous tag: {}",
-        repositoryNameWithOwner,
-        tagName,
-        previousTagName);
+      String repositoryNameWithOwner, String tagName, String targetCommitish) throws IOException {
 
     // Create the request payload with only non-null fields
     Map<String, String> requestPayload = new HashMap<>();
