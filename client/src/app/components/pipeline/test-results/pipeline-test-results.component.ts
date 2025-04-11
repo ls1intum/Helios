@@ -18,6 +18,27 @@ import { TabViewModule } from 'primeng/tabview';
 import { getLatestTestResultsByBranchOptions, getLatestTestResultsByPullRequestIdOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { TestCaseDto, TestSuiteDto, TestTypeResults } from '@app/core/modules/openapi';
 import { DialogModule } from 'primeng/dialog';
+import { SliderModule } from 'primeng/slider';
+
+// Define log level interface and constants
+interface LogLevel {
+  value: number;
+  name: string;
+  label: string;
+  color: string;
+  includes: string[];
+}
+
+const LOG_LEVELS: LogLevel[] = [
+  { value: 0, name: 'OFF', label: 'OFF', color: 'text-gray-900', includes: ['OFF'] },
+  { value: 1, name: 'FATAL', label: 'FATAL+', color: 'text-red-800', includes: ['FATAL', 'OFF'] },
+  { value: 2, name: 'ERROR', label: 'ERROR+', color: 'text-red-600', includes: ['ERROR', 'FATAL', 'OFF'] },
+  { value: 3, name: 'WARN', label: 'WARN+', color: 'text-amber-600', includes: ['WARN', 'ERROR', 'FATAL', 'OFF'] },
+  { value: 4, name: 'INFO', label: 'INFO+', color: 'text-blue-600', includes: ['INFO', 'WARN', 'ERROR', 'FATAL', 'OFF'] },
+  { value: 5, name: 'DEBUG', label: 'DEBUG+', color: 'text-gray-600', includes: ['DEBUG', 'INFO', 'WARN', 'ERROR', 'FATAL', 'OFF'] },
+  { value: 6, name: 'TRACE', label: 'TRACE+', color: 'text-gray-400', includes: ['TRACE', 'DEBUG', 'INFO', 'WARN', 'ERROR', 'FATAL', 'OFF'] },
+  { value: 7, name: 'ALL', label: 'ALL', color: '', includes: [] },
+];
 
 @Component({
   selector: 'app-pipeline-test-results',
@@ -38,6 +59,7 @@ import { DialogModule } from 'primeng/dialog';
     FormsModule,
     TabViewModule,
     DialogModule,
+    SliderModule,
   ],
   templateUrl: './pipeline-test-results.component.html',
 })
@@ -52,6 +74,74 @@ export class PipelineTestResultsComponent {
 
   showTestDetails = false;
   selectedTestCase = signal<(TestCaseDto & { suiteSystemOut: string | undefined }) | null>(null);
+
+  // Log level filtering
+  selectedLogLevelValue = signal<number>(7); // Default to ALL
+
+  // Get the current log level object based on the selected value
+  selectedLogLevel = computed(() => {
+    return LOG_LEVELS.find(level => level.value === this.selectedLogLevelValue()) || LOG_LEVELS[7];
+  });
+
+  // Get the array of log level names that should be included based on the selection
+  includedLogLevels = computed(() => {
+    const level = this.selectedLogLevel();
+    return level.includes;
+  });
+
+  // Function to filter logs by level
+  filterLogsByLevel(text: string | undefined): string {
+    if (!text) return '';
+
+    // If ALL is selected, return all logs
+    if (this.selectedLogLevelValue() === 7) return text;
+
+    const includedLevels = this.includedLogLevels();
+
+    // Split on newlines, then filter each line
+    return text
+      .split('\n')
+      .filter(line => {
+        // Parse log level from the line if it exists
+        // Look for patterns like "23:42:33.006 |  29 nPool-1-worker-3 | DEBUG | ..."
+        // We are mathcing line that contains | <uppercase_text> |
+        const match = line.match(/\|\s*([A-Z]+)\s*\|/);
+        if (!match) return true; // Keep lines without log level
+
+        const logLevel = match[1].trim(); // DEBUG, INFO, WARN, ERROR, FATAL, OFF
+        return includedLevels.includes(logLevel);
+      })
+      .join('\n');
+  }
+
+  // Computed signals for filtered content (excluding stack trace)
+  filteredTestCaseLogs = computed(() => {
+    return this.filterLogsByLevel(this.selectedTestCase()?.systemOut);
+  });
+
+  filteredTestSuiteLogs = computed(() => {
+    return this.filterLogsByLevel(this.selectedTestCase()?.suiteSystemOut);
+  });
+
+  // Helper function for log level styling (colors)
+  getLogLevelClass(line: string): string {
+    // Use the same regex pattern as in filterLogsByLevel
+    const match = line.match(/\|\s*([A-Z]+)\s*\|/);
+    if (!match) return '';
+
+    const level = match[1].trim();
+    const logLevel = LOG_LEVELS.find(l => l.name === level);
+    return logLevel?.color || '';
+  }
+
+  // Helper methods for two-way binding with signals
+  updateLogLevel(value: number) {
+    this.selectedLogLevelValue.set(value);
+  }
+
+  getLogLevelValue() {
+    return this.selectedLogLevelValue();
+  }
 
   showTestCaseDetails(testCase: TestCaseDto, testSuite: TestSuiteDto) {
     this.selectedTestCase.set({
