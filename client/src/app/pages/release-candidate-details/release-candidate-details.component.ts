@@ -69,18 +69,32 @@ export class ReleaseCandidateDetailsComponent implements OnInit {
     releaseNotes: new FormControl(''),
   });
 
+  // Computed property that handles the priorities as required
   releaseNotes = computed(() => {
     const releaseCandidate = this.releaseCandidateQuery.data();
+    if (!releaseCandidate) return '';
+
+    // Priority 1: If it's a full release, use release.body
     if (releaseCandidate?.release?.body) {
       return releaseCandidate.release.body;
-    } else if (releaseCandidate?.body) {
+    }
+    // Priority 2: If it's a draft published to GitHub, use releaseCandidate.body
+    else if (releaseCandidate?.body) {
       return releaseCandidate.body;
-    } else {
+    }
+    // Default empty if nothing is available
+    else {
       return '';
     }
   });
 
   isEditingReleaseNotes = signal(false);
+
+  // Check if editing is allowed (only if not published to GitHub)
+  canEditReleaseNotes = computed(() => {
+    const releaseCandidate = this.releaseCandidateQuery.data();
+    return !releaseCandidate?.release && this.permissionService.isAtLeastMaintainer();
+  });
 
   evaluateReleaseCandidateMutation = injectMutation(() => ({
     ...evaluateMutation(),
@@ -95,6 +109,8 @@ export class ReleaseCandidateDetailsComponent implements OnInit {
     onSuccess: () => {
       this.messageService.add({ severity: 'success', summary: 'Release Draft Published', detail: 'Release draft has been published to GitHub successfully' });
       this.queryClient.invalidateQueries({ queryKey: getReleaseInfoByNameQueryKey({ path: { name: this.name() } }) });
+      // Once published, editing should be disabled
+      this.isEditingReleaseNotes.set(false);
     },
   }));
 
@@ -132,14 +148,8 @@ export class ReleaseCandidateDetailsComponent implements OnInit {
   }));
 
   ngOnInit() {
-    // Initialize with existing release notes if available
-    const releaseCandidate = this.releaseCandidateQuery.data();
-    if (releaseCandidate?.release?.body) {
-      this.releaseNotesForm.get('releaseNotes')?.setValue(releaseCandidate.release.body);
-    }
-    if (releaseCandidate?.body) {
-      this.releaseNotesForm.get('releaseNotes')?.setValue(releaseCandidate.body);
-    }
+    // Initialize with existing release notes using the computed property
+    this.releaseNotesForm.get('releaseNotes')?.setValue(this.releaseNotes());
   }
 
   evaluateReleaseCandidate = (isWorking: boolean) => {
@@ -182,17 +192,26 @@ export class ReleaseCandidateDetailsComponent implements OnInit {
   }
 
   generateReleaseNotes() {
+    const rc = this.releaseCandidateQuery.data();
+    if (rc?.release) return; // Don't allow generation if already published
+
     this.generateReleaseNotesMutation.mutate({
       path: { tagName: this.name() },
     });
   }
 
   editReleaseNotes() {
+    const rc = this.releaseCandidateQuery.data();
+    if (rc?.release) return; // Don't allow editing if already published
+
     this.releaseNotesForm.get('releaseNotes')?.setValue(this.releaseNotes());
     this.isEditingReleaseNotes.set(true);
   }
 
   saveReleaseNotes() {
+    const rc = this.releaseCandidateQuery.data();
+    if (rc?.release) return; // Don't allow saving if already published
+
     const markdownContent = this.releaseNotesForm.get('releaseNotes')?.value || '';
 
     this.updateReleaseNotesMutation.mutate({
@@ -202,16 +221,8 @@ export class ReleaseCandidateDetailsComponent implements OnInit {
   }
 
   cancelEditing() {
-    const releaseCandidate = this.releaseCandidateQuery.data();
-    // Reset to original value
-    if (releaseCandidate?.release?.body) {
-      this.releaseNotesForm.get('releaseNotes')?.setValue(releaseCandidate.release.body);
-    } else if (releaseCandidate?.body) {
-      this.releaseNotesForm.get('releaseNotes')?.setValue(releaseCandidate.body);
-    } else {
-      this.releaseNotesForm.get('releaseNotes')?.setValue('');
-    }
-
+    // Reset to original value from the computed property
+    this.releaseNotesForm.get('releaseNotes')?.setValue(this.releaseNotes());
     this.isEditingReleaseNotes.set(false);
   }
 }
