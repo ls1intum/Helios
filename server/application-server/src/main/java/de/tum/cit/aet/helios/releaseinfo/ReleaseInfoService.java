@@ -42,7 +42,6 @@ import lombok.extern.log4j.Log4j2;
 import org.kohsuke.github.GHCompare;
 import org.kohsuke.github.GHCompare.Commit;
 import org.kohsuke.github.GHRelease;
-import org.kohsuke.github.GHReleaseBuilder;
 import org.kohsuke.github.GHRepository;
 import org.springframework.stereotype.Service;
 
@@ -291,26 +290,34 @@ public class ReleaseInfoService {
         releaseCandidateRepository
             .findByRepositoryRepositoryIdAndName(repositoryId, tagName)
             .orElseThrow(() -> new ReleaseCandidateException("Release candidate not found"));
-    try {
-      GHReleaseBuilder ghReleaseBuilder =
-          gitHubService
-              .getRepository(repository.getNameWithOwner())
-              .createRelease(tagName)
-              .draft(true)
-              .name(tagName)
-              .commitish(releaseCandidate.getCommit().getSha());
 
-      // If the release candidate has a description, use it. Otherwise, generate release notes.
+    try {
+      // Get the release notes (body)
+      String releaseNotes;
       if (releaseCandidate.getBody() != null) {
-        ghReleaseBuilder.body(releaseCandidate.getBody());
+        releaseNotes = releaseCandidate.getBody();
       } else {
-        ghReleaseBuilder.body(generateReleaseNotes(tagName));
+        releaseNotes = generateReleaseNotes(tagName);
       }
 
-      GHRelease ghRelease = ghReleaseBuilder.create();
+      // Get the current user's GitHub login
+      String githubUserLogin = authService.getPreferredUsername();
 
+      // Create the release using the user's token
+      GHRelease ghRelease =
+          gitHubService.createReleaseOnBehalfOfUser(
+              repository.getNameWithOwner(),
+              tagName,
+              releaseCandidate.getCommit().getSha(),
+              tagName, // Using tagName as the release name
+              releaseNotes,
+              false, // Setting draft to false to publish it immediately
+              githubUserLogin);
+
+      // Process the release in the system
       gitHubReleaseSyncService.processRelease(
           ghRelease, gitHubService.getRepository(repository.getNameWithOwner()));
+
     } catch (IOException e) {
       log.error("Failed to publish release: {}", e.getMessage());
       throw new ReleaseCandidateException("Release candidate could not be pushed to GitHub.");
