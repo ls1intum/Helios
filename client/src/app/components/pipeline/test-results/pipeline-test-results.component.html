@@ -162,40 +162,52 @@
                           }
                         }
 
-                        <div class="flex flex-1 items-center justify-between min-w-0">
-                          <div class="flex flex-col items-start min-w-0">
-                            <div class="flex items-center gap-2">
+                        <div class="flex flex-1 items-center justify-between min-w-0 gap-2">
+                          <div class="basis-10/12 flex flex-col items-start min-w-0">
+                            <div class="flex items-center gap-2 min-w-0 w-full">
                               @if (testCase.previousStatus !== testCase.status && testCase.previousStatus) {
                                 <span class="text-xs text-blue-400 font-medium flex-shrink-0">previously {{ testCase.previousStatus.toLowerCase() }}</span>
                               }
-                              <span class="text-sm truncate whitespace-nowrap overflow-hidden w-full">{{ testCase.name }} </span>
+                              <span class="text-sm truncate overflow-hidden flex-1 min-w-0" [pTooltip]="testCase.name">{{ testCase.name }}</span>
                             </div>
                             @if (testCase.message) {
                               <p-tag [severity]="testCase.status === 'FAILED' ? 'danger' : 'info'" [value]="testCase.message" styleClass="mt-2 text-xs"> </p-tag>
                             }
                           </div>
-                          <div class="flex items-center gap-2">
-                            @if (testCase.failsInDefaultBranch) {
-                              <p-tag severity="info" value="Fails in default branch" styleClass="mt-2 text-xs" pTooltip="This test is also failing in the default branch"> </p-tag>
-                            }
-                            @if (testCase.isFlaky) {
-                              <div class="flex flex-col gap-1">
-                                <p-tag
-                                  severity="warn"
-                                  value="Flaky"
-                                  styleClass="mt-2 text-xs"
-                                  pTooltip="Failure rate of this test in default branch exceeds 50%. This test is unstable and should be investigated."
-                                >
+                          <div class="basis-2/12 flex items-center justify-end gap-2">
+                            <div class="flex flex-col gap-1">
+                              @if (testCase.failsInDefaultBranch) {
+                                <p-tag severity="info" value="Fails in default branch" styleClass="mt-2 text-xs" pTooltip="This test is also failing in the default branch">
                                 </p-tag>
-                                <p-tag
-                                  severity="danger"
-                                  value="{{ formatFailureRate(testCase.failureRate) }}% Failure rate"
-                                  styleClass="mt-2 text-xs"
-                                  pTooltip="Failure rate of this test in default branch"
-                                >
-                                </p-tag>
-                              </div>
-                            }
+                              }
+                              @if (testCase.status === 'FAILED' || testCase.status === 'ERROR') {
+                                @if (testCase.flakinessScore && testCase.flakinessScore > 0.0) {
+                                  <p-tag severity="warn" styleClass="mt-2 text-xs" pTooltip="Score between 0 and 100, where 0 is not flaky and 100 is highly flaky">
+                                    Flakiness Score: {{ formatFlakinessScore(testCase.flakinessScore) }}
+                                    <span class="mx-1 text-gray-400">|</span>
+                                    <i-tabler (click)="showFlakinessScoreInfo = true" name="info-circle" class="text-xs cursor-pointer hover:text-gray-600" />
+                                  </p-tag>
+                                }
+                                @if (testCase.defaultBranchFailureRate && testCase.defaultBranchFailureRate > 0) {
+                                  <p-tag
+                                    severity="danger"
+                                    value="Default branch Failure rate:{{ formatFailureRate(testCase.defaultBranchFailureRate) }}%"
+                                    styleClass="mt-2 text-xs"
+                                    pTooltip="Failure rate of this test in default branch"
+                                  >
+                                  </p-tag>
+                                }
+                                @if (testCase.combinedFailureRate && testCase.combinedFailureRate > 0) {
+                                  <p-tag
+                                    severity="danger"
+                                    value="All branches Failure rate: {{ formatFailureRate(testCase.combinedFailureRate) }}%"
+                                    styleClass="mt-2 text-xs"
+                                    pTooltip="Failure rate of this test in all branches combined"
+                                  >
+                                  </p-tag>
+                                }
+                              }
+                            </div>
                           </div>
                         </div>
 
@@ -280,4 +292,39 @@
       }
     </div>
   }
+</p-dialog>
+
+<!-- Flakiness score calculation info pop-up -->
+<p-dialog [(visible)]="showFlakinessScoreInfo" [style]="{ width: '50vw' }" [modal]="true">
+  <ng-template #header>
+    <div class="font-bold text-xl">Flakiness Score Calculation</div>
+  </ng-template>
+  <div class="flex flex-col gap-4">
+    <p>
+      The <b>flakiness score</b> shows how unpredictable a test is, ranging from <b>0</b> (not flaky) to <b>100</b> (highly flaky). It’s based on failure rates from the default
+      branch and all branches combined.
+    </p>
+    <p>
+      <b>How It Works:</b>
+    </p>
+    <ol>
+      <li>
+        <b>Flakiness per Branch:</b><br />
+        &nbsp;&nbsp;&nbsp;&nbsp;If the failure rate is between 0% and 50%, we calculate:<br />
+        &nbsp;&nbsp;&nbsp;&nbsp;<code>flakiness = (50% - failure rate) / 50%</code><br />
+        &nbsp;&nbsp;&nbsp;&nbsp;If it’s 0% or over 50%, flakiness is 0.
+      </li>
+      <li>
+        <b>Weighted Score:</b><br />
+        &nbsp;&nbsp;&nbsp;&nbsp;Combine the flakiness values with weights (e.g., 70% default branch, 30% all branches) and scale to 0–100.
+      </li>
+    </ol>
+    <p>
+      <b>Quick Example:</b><br />
+      - <b>Failure rates:</b> 5% (default), 10% (all branches)<br />
+      - <b>Flakiness:</b> 0.9 (default), 0.8 (all branches)<br />
+      - <b>Score:</b> (0.9 × 0.7) + (0.8 × 0.3) = 0.87 → <b>87</b>
+    </p>
+    <p>This highlights tests that fail rarely but unexpectedly, helping you spot potential issues fast.</p>
+  </div>
 </p-dialog>

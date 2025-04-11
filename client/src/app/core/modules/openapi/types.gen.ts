@@ -191,8 +191,9 @@ export type TestCaseDto = {
   stackTrace?: string;
   systemOut?: string;
   errorType?: string;
-  isFlaky?: boolean;
-  failureRate?: number;
+  flakinessScore?: number;
+  defaultBranchFailureRate?: number;
+  combinedFailureRate?: number;
   failsInDefaultBranch?: boolean;
 };
 

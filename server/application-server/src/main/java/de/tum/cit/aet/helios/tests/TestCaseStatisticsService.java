@@ -1,7 +1,5 @@
 package de.tum.cit.aet.helios.tests;
 
-import de.tum.cit.aet.helios.branch.Branch;
-import de.tum.cit.aet.helios.branch.BranchRepository;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import jakarta.transaction.Transactional;
 import java.time.OffsetDateTime;
@@ -18,7 +16,10 @@ import org.springframework.stereotype.Service;
 public class TestCaseStatisticsService {
 
   private final TestCaseStatisticsRepository statisticsRepository;
-  private final BranchRepository branchRepository;
+  private static final double DEFAULT_BRANCH_WEIGHT = 0.7;
+  private static final double COMBINED_BRANCH_WEIGHT = 0.3;
+  private static final double MIN_FLAKY_RATE = 0.01; // 1%
+  private static final double MAX_FLAKY_RATE = 0.5; // 50%
 
   /**
    * Updates statistics for a test case, creating a new entry if it doesn't exist.
@@ -55,8 +56,6 @@ public class TestCaseStatisticsService {
       statistics.setBranchName(branchName);
       statistics.setTotalRuns(0);
       statistics.setFailedRuns(0);
-      statistics.setFailureRate(0.0);
-      statistics.setFlaky(false);
       statistics.setLastUpdated(OffsetDateTime.now());
       statistics.setRepository(repository);
     }
@@ -119,55 +118,34 @@ public class TestCaseStatisticsService {
   }
 
   /**
-   * Gets flaky or non-flaky tests for a specific branch.
+   * Calculates a flakiness score based on weighted default and combined branch failure rates. The
+   * score ranges from 0 to 100 (not flaky to highly flaky).
    *
-   * @param branchName the branch name
-   * @param isFlaky whether to find flaky or non-flaky tests
-   * @return list of flaky or non-flaky test statistics
+   * @param defaultBranchFailureRate Failure rate of the test on the default branch
+   * @param combinedBranchFailureRate Failure rate of the test across all branches combined
+   * @return A flakiness score between 0 and 100
    */
-  public List<TestCaseStatistics> getTestsByFlakinessForBranch(String branchName, boolean isFlaky) {
-    return statisticsRepository.findByBranchNameAndIsFlaky(branchName, isFlaky);
-  }
+  public double calculateFlakinessScore(
+      double defaultBranchFailureRate, double combinedBranchFailureRate) {
 
-  /**
-   * Gets flaky or non-flaky tests for the default branch of a repository.
-   *
-   * @param repository the repository
-   * @param isFlaky whether to find flaky or non-flaky tests
-   * @return list of flaky or non-flaky test statistics for the default branch
-   */
-  public List<TestCaseStatistics> getTestsByFlakinessForDefaultBranch(
-      GitRepository repository, boolean isFlaky) {
-    Optional<Branch> defaultBranch =
-        branchRepository.findAll().stream()
-            .filter(branch -> branch.getRepository().equals(repository) && branch.isDefault())
-            .findFirst();
-
-    if (defaultBranch.isPresent()) {
-      return getTestsByFlakinessForBranch(defaultBranch.get().getName(), isFlaky);
-    } else {
-      log.warn("No default branch found for repository {}", repository.getNameWithOwner());
-      return List.of();
+    // Default branch flakiness score
+    double defaultFlakiness = 0.0;
+    if (defaultBranchFailureRate > MIN_FLAKY_RATE && defaultBranchFailureRate < MAX_FLAKY_RATE) {
+      // Higher score for failure rates closer to MIN_FLAKY_RATE (slightly flaky)
+      // Lower score for failure rates closer to MAX_FLAKY_RATE (more broken than flaky)
+      defaultFlakiness = (MAX_FLAKY_RATE - defaultBranchFailureRate) / MAX_FLAKY_RATE;
     }
-  }
 
-  /**
-   * Gets all statistics for the default branch of a repository.
-   *
-   * @param repository the repository
-   * @return list of statistics for all tests on the default branch
-   */
-  public List<TestCaseStatistics> getStatisticsForDefaultBranch(GitRepository repository) {
-    Optional<Branch> defaultBranch =
-        branchRepository.findAll().stream()
-            .filter(branch -> branch.getRepository().equals(repository) && branch.isDefault())
-            .findFirst();
-
-    if (defaultBranch.isPresent()) {
-      return getStatisticsForBranch(defaultBranch.get().getName(), repository.getRepositoryId());
-    } else {
-      log.warn("No default branch found for repository {}", repository.getNameWithOwner());
-      return List.of();
+    // Combined branches flakiness score
+    double combinedFlakiness = 0.0;
+    if (combinedBranchFailureRate > MIN_FLAKY_RATE && combinedBranchFailureRate < MAX_FLAKY_RATE) {
+      combinedFlakiness = (MAX_FLAKY_RATE - combinedBranchFailureRate) / MAX_FLAKY_RATE;
     }
+    // Calculate weighted score and convert to a 0-100 scale
+    double weightedScore =
+        ((defaultFlakiness * DEFAULT_BRANCH_WEIGHT) + (combinedFlakiness * COMBINED_BRANCH_WEIGHT))
+            * 100;
+
+    return weightedScore;
   }
 }

@@ -1970,9 +1970,13 @@ components:
           type: string
         errorType:
           type: string
-        isFlaky:
-          type: boolean
-        failureRate:
+        flakinessScore:
+          type: number
+          format: double
+        defaultBranchFailureRate:
+          type: number
+          format: double
+        combinedFailureRate:
           type: number
           format: double
         failsInDefaultBranch:
