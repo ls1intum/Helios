@@ -1,4 +1,4 @@
-import { Component, computed, inject, ViewChild } from '@angular/core';
+import { Component, computed, inject, viewChild } from '@angular/core';
 import { TableModule } from 'primeng/table';
 import { AvatarModule } from 'primeng/avatar';
 import { TagModule } from 'primeng/tag';
@@ -105,7 +105,7 @@ export class BranchTableComponent {
   searchTableService = inject(SearchTableService<BranchInfoWithLink>);
   keycloakService = inject(KeycloakService);
 
-  @ViewChild('table') treeTable!: TreeTable;
+  treeTable = viewChild<TreeTable>('table');
 
   query = injectQuery(() => getAllBranchesOptions());
   setPinnedMutation = injectMutation(() => ({
@@ -274,9 +274,10 @@ export class BranchTableComponent {
     this.expandCollapseRecursive(nodes, true);
 
     // Force the TreeTable to rerender with the updated nodes
-    if (this.treeTable) {
+    const table = this.treeTable();
+    if (table) {
       // Trigger filter or rerender to refresh the view
-      this.treeTable.filter('', 'global', 'contains');
+      table.filter('', 'global', 'contains');
     }
   }
 
@@ -286,9 +287,10 @@ export class BranchTableComponent {
     this.expandCollapseRecursive(nodes, false);
 
     // Force the TreeTable to rerender with the updated nodes
-    if (this.treeTable) {
+    const table = this.treeTable();
+    if (table) {
       // Trigger filter or rerender to refresh the view
-      this.treeTable.filter('', 'global', 'contains');
+      table.filter('', 'global', 'contains');
     }
   }
 
