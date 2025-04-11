@@ -1,4 +1,4 @@
-import { Component, inject, input, OnInit } from '@angular/core';
+import { Component, inject, input, OnInit, signal } from '@angular/core';
 import {
   deleteReleaseCandidateByNameMutation,
   evaluateMutation,
@@ -25,9 +25,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { ReleaseInfoDetailsDto } from '@app/core/modules/openapi';
 import { MarkdownPipe } from '@app/core/modules/markdown/markdown.pipe';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { InplaceModule } from 'primeng/inplace';
 import { TextareaModule } from 'primeng/textarea';
-import { InputTextModule } from 'primeng/inputtext';
 import { SlicePipe } from '@angular/common';
 
 @Component({
@@ -45,9 +43,7 @@ import { SlicePipe } from '@angular/common';
     SlicePipe,
     TagModule,
     ReactiveFormsModule,
-    InplaceModule,
     TextareaModule,
-    InputTextModule,
   ],
   templateUrl: './release-candidate-details.component.html',
 })
@@ -67,7 +63,7 @@ export class ReleaseCandidateDetailsComponent implements OnInit {
     releaseNotes: new FormControl(''),
   });
 
-  inplaceActive = false;
+  isEditingReleaseNotes = signal(false);
 
   evaluateReleaseCandidateMutation = injectMutation(() => ({
     ...evaluateMutation(),
@@ -98,7 +94,7 @@ export class ReleaseCandidateDetailsComponent implements OnInit {
     onSuccess: data => {
       // Set the markdown content directly
       this.releaseNotesForm.get('releaseNotes')?.setValue(data.toString());
-      this.inplaceActive = true; // Open the editor
+      this.isEditingReleaseNotes.set(true);
       this.messageService.add({ severity: 'success', summary: 'Release Notes', detail: 'Release notes generated successfully' });
     },
     onError: error => {
@@ -110,7 +106,7 @@ export class ReleaseCandidateDetailsComponent implements OnInit {
     ...updateReleaseNotesMutation(),
     onSuccess: () => {
       this.messageService.add({ severity: 'success', summary: 'Release Notes', detail: 'Release notes saved successfully' });
-      this.inplaceActive = false; // Close the editor after saving
+      this.isEditingReleaseNotes.set(false);
       this.queryClient.invalidateQueries({ queryKey: getReleaseInfoByNameQueryKey({ path: { name: this.name() } }) });
     },
     onError: error => {
@@ -123,6 +119,9 @@ export class ReleaseCandidateDetailsComponent implements OnInit {
     const releaseCandidate = this.releaseCandidateQuery.data();
     if (releaseCandidate?.release?.body) {
       this.releaseNotesForm.get('releaseNotes')?.setValue(releaseCandidate.release.body);
+    }
+    if (releaseCandidate?.body) {
+      this.releaseNotesForm.get('releaseNotes')?.setValue(releaseCandidate.body);
     }
   }
 
@@ -171,6 +170,10 @@ export class ReleaseCandidateDetailsComponent implements OnInit {
     });
   }
 
+  editReleaseNotes() {
+    this.isEditingReleaseNotes.set(true);
+  }
+
   saveReleaseNotes() {
     const markdownContent = this.releaseNotesForm.get('releaseNotes')?.value || '';
 
@@ -180,7 +183,17 @@ export class ReleaseCandidateDetailsComponent implements OnInit {
     });
   }
 
-  closeInplace() {
-    this.inplaceActive = false;
+  cancelEditing() {
+    const releaseCandidate = this.releaseCandidateQuery.data();
+    // Reset to original value
+    if (releaseCandidate?.release?.body) {
+      this.releaseNotesForm.get('releaseNotes')?.setValue(releaseCandidate.release.body);
+    } else if (releaseCandidate?.body) {
+      this.releaseNotesForm.get('releaseNotes')?.setValue(releaseCandidate.body);
+    } else {
+      this.releaseNotesForm.get('releaseNotes')?.setValue('');
+    }
+
+    this.isEditingReleaseNotes.set(false);
   }
 }

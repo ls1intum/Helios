@@ -91,38 +91,54 @@
     </div>
   </div>
 
-  <!-- Release Notes Section with Inplace Editing -->
+  <!-- Release Notes Section with simpler Edit/Save/Cancel pattern -->
   <div class="my-6">
     <div class="flex justify-between items-center mb-3">
       <h3 class="text-xl">Release Notes</h3>
-      @if (permissionService.isAtLeastMaintainer()) {
-        <p-button label="Generate Release Notes" icon="pi pi-sync" (onClick)="generateReleaseNotes()" [loading]="generateReleaseNotesMutation.isPending()"></p-button>
-      }
+      <div class="flex gap-2">
+        @if (permissionService.isAtLeastMaintainer()) {
+          <p-button label="Generate Release Notes" (onClick)="generateReleaseNotes()" [loading]="generateReleaseNotesMutation.isPending()">
+            <i-tabler name="plus" />
+          </p-button>
+
+          @if (!isEditingReleaseNotes()) {
+            <p-button label="Edit" (onClick)="editReleaseNotes()">
+              <i-tabler name="pencil" />
+            </p-button>
+          }
+        }
+      </div>
     </div>
 
-    @if (permissionService.isAtLeastMaintainer()) {
-      <p-inplace [closable]="true" styleClass="w-full">
-        <ng-template pTemplate="display">
-          @if (releaseNotesForm.get('releaseNotes')?.value) {
-            <div class="p-3 border rounded-md cursor-pointer hover:bg-gray-50" [innerHtml]="releaseNotesForm.get('releaseNotes')?.value || '' | markdown"></div>
-          } @else {
-            <div class="p-3 border rounded-md cursor-pointer hover:bg-gray-50 text-gray-500">Click to add release notes or use the "Generate Release Notes" button.</div>
-          }
-        </ng-template>
-        <ng-template pTemplate="content" let-closeCallback="closeCallback">
-          <form [formGroup]="releaseNotesForm" class="w-full">
-            <textarea formControlName="releaseNotes" rows="15" cols="100" placeholder="Write release notes in markdown format" autoResize="true" autofocus></textarea>
-            <div class="flex justify-end gap-2 mt-2">
-              <p-button label="Save" icon="pi pi-save" (onClick)="saveReleaseNotes()" [loading]="updateReleaseNotesMutation.isPending()"></p-button>
-              <p-button label="Cancel" icon="pi pi-times" text severity="danger" (onClick)="closeCallback($event)"></p-button>
-            </div>
-          </form>
-        </ng-template>
-      </p-inplace>
-    } @else if (releaseCandidate.release && releaseCandidate.release.body) {
-      <div class="p-3 border rounded-md" [innerHtml]="releaseCandidate.release.body | markdown"></div>
+    @if (permissionService.isAtLeastMaintainer() && isEditingReleaseNotes()) {
+      <!-- Edit mode -->
+      <form [formGroup]="releaseNotesForm" class="w-full">
+        <textarea
+          rows="10"
+          cols="100"
+          pTextarea
+          placeholder="Write release notes in markdown format"
+          [autoResize]="true"
+          formControlName="releaseNotes"
+          [value]="releaseCandidate.body || releaseNotesForm.get('releaseNotes')?.value"
+        ></textarea>
+        <div class="flex justify-start gap-2">
+          <p-button label="Save" (onClick)="saveReleaseNotes()" [loading]="updateReleaseNotesMutation.isPending()"></p-button>
+          <p-button label="Cancel" text severity="danger" (onClick)="cancelEditing()"></p-button>
+        </div>
+      </form>
     } @else {
-      <div class="p-3 border rounded-md text-gray-500">No release notes available.</div>
+      <!-- Display mode -->
+      @if (releaseCandidate.body || releaseNotesForm.get('releaseNotes')?.value) {
+        <div class="p-3 border rounded-md bg-gray-50" [innerHtml]="releaseCandidate.body || releaseNotesForm.get('releaseNotes')?.value || '' | markdown"></div>
+      } @else {
+        <div class="p-3 border rounded-md bg-gray-50 text-gray-500">
+          No release notes available.
+          @if (permissionService.isAtLeastMaintainer()) {
+            Click the pencil icon to add release notes or use the "Generate Release Notes" button.
+          }
+        </div>
+      }
     }
   </div>
 
