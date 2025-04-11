@@ -258,7 +258,7 @@
 }
 
 <p-dialog [(visible)]="showTestDetails" [style]="{ width: '50vw' }" [modal]="true">
-  <ng-template #header>
+  <ng-template pTemplate="header">
     <div class="font-bold text-xl">Test Details</div>
   </ng-template>
 
@@ -273,11 +273,32 @@
         </div>
       }
 
+      @if (selectedTestCase()?.systemOut || selectedTestCase()?.suiteSystemOut) {
+        <!-- Log Level Filter -->
+        <div class="flex flex-col gap-1 mb-2">
+          <div class="flex justify-between items-center">
+            <span class="text-sm font-medium">Log Level Filter:</span>
+            <span class="text-sm font-medium" [class]="selectedLogLevel().color">
+              {{ selectedLogLevel().label }}
+            </span>
+          </div>
+          <p-slider [ngModel]="getLogLevelValue()" (ngModelChange)="updateLogLevel($event)" [min]="0" [max]="7" [step]="1"> </p-slider>
+          <div class="flex justify-between text-xs text-gray-500">
+            <span>Higher Severity</span>
+            <span>Lower Severity</span>
+          </div>
+        </div>
+      }
+
       @if (selectedTestCase()?.systemOut) {
         <div>
           <h4 class="font-medium mb-2">Test Case Logs</h4>
           <div class="bg-gray-50 p-4 rounded overflow-auto max-h-[400px]">
-            <pre class="font-mono text-sm">{{ selectedTestCase()?.systemOut }}</pre>
+            @if (filteredTestCaseLogs()) {
+              @for (line of filteredTestCaseLogs().split('\n'); track $index) {
+                <pre class="font-mono text-sm" [class]="getLogLevelClass(line)">{{ line }}</pre>
+              }
+            }
           </div>
         </div>
       }
@@ -286,7 +307,11 @@
         <div>
           <h4 class="font-medium mb-2">Test Suite Logs</h4>
           <div class="bg-gray-50 p-4 rounded overflow-auto max-h-[400px]">
-            <pre class="font-mono text-sm">{{ selectedTestCase()?.suiteSystemOut }}</pre>
+            @if (filteredTestSuiteLogs()) {
+              @for (line of filteredTestSuiteLogs().split('\n'); track $index) {
+                <pre class="font-mono text-sm" [class]="getLogLevelClass(line)">{{ line }}</pre>
+              }
+            }
           </div>
         </div>
       }
