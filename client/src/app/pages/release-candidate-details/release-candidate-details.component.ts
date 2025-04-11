@@ -1,4 +1,4 @@
-import { Component, inject, input, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, input, OnInit, signal } from '@angular/core';
 import {
   deleteReleaseCandidateByNameMutation,
   evaluateMutation,
@@ -57,10 +57,27 @@ export class ReleaseCandidateDetailsComponent implements OnInit {
   private route = inject(ActivatedRoute);
 
   name = input.required<string>();
-  releaseCandidateQuery = injectQuery(() => ({ ...getReleaseInfoByNameOptions({ path: { name: this.name() } }), refetchInterval: 3000 }));
+  releaseCandidateQuery = injectQuery(() => ({
+    ...getReleaseInfoByNameOptions({ path: { name: this.name() } }),
+    refetchInterval: 3000,
+    onSuccess: () => {
+      this.releaseNotesForm.get('releaseNotes')?.setValue(this.releaseNotes());
+    },
+  }));
 
   releaseNotesForm = new FormGroup({
     releaseNotes: new FormControl(''),
+  });
+
+  releaseNotes = computed(() => {
+    const releaseCandidate = this.releaseCandidateQuery.data();
+    if (releaseCandidate?.release?.body) {
+      return releaseCandidate.release.body;
+    } else if (releaseCandidate?.body) {
+      return releaseCandidate.body;
+    } else {
+      return '';
+    }
   });
 
   isEditingReleaseNotes = signal(false);
@@ -171,6 +188,7 @@ export class ReleaseCandidateDetailsComponent implements OnInit {
   }
 
   editReleaseNotes() {
+    this.releaseNotesForm.get('releaseNotes')?.setValue(this.releaseNotes());
     this.isEditingReleaseNotes.set(true);
   }
 
