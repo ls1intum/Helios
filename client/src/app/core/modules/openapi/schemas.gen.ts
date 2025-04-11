@@ -570,10 +570,15 @@ export const TestCaseDtoSchema = {
     errorType: {
       type: 'string',
     },
-    isFlaky: {
-      type: 'boolean',
+    flakinessScore: {
+      type: 'number',
+      format: 'double',
     },
-    failureRate: {
+    defaultBranchFailureRate: {
+      type: 'number',
+      format: 'double',
+    },
+    combinedFailureRate: {
       type: 'number',
       format: 'double',
     },

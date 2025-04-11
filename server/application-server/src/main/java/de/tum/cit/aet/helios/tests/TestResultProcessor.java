@@ -275,13 +275,20 @@ public class TestResultProcessor {
 
       if (headBranch.equals(defaultBranch)) {
         log.debug("Updating test statistics for default branch: {}", headBranch);
-        updateTestStatistics(testSuites, headBranch, repository.get());
+        updateTestStatistics(
+            testSuites, headBranch, repository.get()); // update statistics for the default branch
       } else {
         log.debug(
             "Skipping test statistics update for non-default branch: {}, default branch: {}",
             headBranch,
             defaultBranch);
       }
+
+      updateTestStatistics(
+          testSuites,
+          "combined",
+          repository.get()); // update statistics for all the branches combined
+      log.debug("Successfully updated test statistics for all branches combined");
     } catch (Exception e) {
       log.error("Error while trying to update test statistics", e);
       // Don't fail the overall process if statistics update fails

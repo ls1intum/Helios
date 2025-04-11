@@ -75,6 +75,7 @@ export class PipelineTestResultsComponent {
   showTestDetails = false;
   selectedTestCase = signal<(TestCaseDto & { suiteSystemOut: string | undefined }) | null>(null);
 
+
   // Log level filtering
   selectedLogLevelValue = signal<number>(7); // Default to ALL
 
@@ -142,6 +143,8 @@ export class PipelineTestResultsComponent {
   getLogLevelValue() {
     return this.selectedLogLevelValue();
   }
+
+  showFlakinessScoreInfo = false;
 
   showTestCaseDetails(testCase: TestCaseDto, testSuite: TestSuiteDto) {
     this.selectedTestCase.set({
@@ -391,5 +394,10 @@ export class PipelineTestResultsComponent {
   formatFailureRate = (failureRate: number | undefined) => {
     if (failureRate === undefined) return 'N/A';
     return Math.floor(failureRate * 100).toString();
+  };
+
+  formatFlakinessScore = (flakinessScore: number | undefined) => {
+    if (flakinessScore === undefined) return 'N/A';
+    return Math.floor(flakinessScore).toString();
   };
 }
