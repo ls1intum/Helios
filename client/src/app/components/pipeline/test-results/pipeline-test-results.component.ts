@@ -75,7 +75,6 @@ export class PipelineTestResultsComponent {
   showTestDetails = false;
   selectedTestCase = signal<(TestCaseDto & { suiteSystemOut: string | undefined }) | null>(null);
 
-
   // Log level filtering
   selectedLogLevelValue = signal<number>(7); // Default to ALL
 
