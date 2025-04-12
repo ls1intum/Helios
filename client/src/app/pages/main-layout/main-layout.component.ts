@@ -43,7 +43,7 @@ export class MainLayoutComponent implements OnInit {
   private router = inject(Router);
 
   repositoryId = signal<number | undefined>(undefined);
-  isDarkModeEnabled = signal(window?.matchMedia('(prefers-color-scheme: dark)').matches || false);
+  isDarkModeEnabled = signal(window.matchMedia('(prefers-color-scheme: dark)').matches);
   isLoggedIn = computed(() => this.keycloakService.isLoggedIn());
 
   constructor() {
