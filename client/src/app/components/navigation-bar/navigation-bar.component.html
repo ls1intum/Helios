@@ -30,14 +30,15 @@
           @for (item of items(); track item.label) {
             @if (!item.showAtBottom) {
               <a
-                class="p-button rounded-xl p-2 flex items-center transition-all"
+                class="p-button rounded-xl p-2 flex gap-2 items-center transition-all w-full"
+                [class]="isExpanded() ? 'justify-start' : 'justify-center'"
                 [routerLink]="item.path"
                 [pTooltip]="!isExpanded() ? item.label : undefined"
                 routerLinkActive="!bg-primary-emphasis"
               >
                 <i-tabler [name]="item.icon" class="!size-6 !stroke-1"></i-tabler>
                 @if (isExpanded()) {
-                  <span class="whitespace-nowrap text-xs ml-2">{{ item.label }}</span>
+                  <div class="whitespace-nowrap text-xs">{{ item.label }}</div>
                 }
               </a>
             }
@@ -57,14 +58,15 @@
           @for (item of bottomItems(); track item.label) {
             @if (item.showAtBottom) {
               <a
-                class="p-button rounded-xl p-2 flex items-center transition-all"
+                class="p-button rounded-xl p-2 flex gap-2 items-center transition-all w-full"
+                [class]="isExpanded() ? 'justify-start' : 'justify-center'"
                 [routerLink]="item.path"
                 routerLinkActive="!bg-primary-emphasis"
                 [pTooltip]="!isExpanded() ? item.label : undefined"
               >
                 <i-tabler [name]="item.icon" class="!size-6 !stroke-1"></i-tabler>
                 @if (isExpanded()) {
-                  <span class="whitespace-nowrap text-xs ml-2">{{ item.label }}</span>
+                  <span class="whitespace-nowrap text-xs">{{ item.label }}</span>
                 }
               </a>
             }

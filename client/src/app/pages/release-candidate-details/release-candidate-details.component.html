@@ -116,9 +116,9 @@
     } @else {
       <!-- Display mode based on release status -->
       @if (releaseNotes()) {
-        <div class="p-3 border rounded-md bg-gray-50" [innerHtml]="releaseNotes() | markdown"></div>
+        <div class="p-3 border rounded-md border-surface-500" [innerHtml]="releaseNotes() | markdown"></div>
       } @else {
-        <div class="p-3 border rounded-md bg-gray-50 text-gray-500">
+        <div class="p-3 border rounded-md border-surface-500">
           No release notes available.
           @if (permissionService.isAtLeastMaintainer() && !releaseCandidate.release) {
             Edit to add release notes or use the "Generate Release Notes" button.

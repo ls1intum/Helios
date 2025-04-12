@@ -7,7 +7,7 @@
         <p-toggleswitch [ngModel]="isLockExpirationEnabled()" (onChange)="onThresholdToggle('expiration')" class="mr-3" />
         <div class="mr-6">
           <label class="font-semibold transition-colors" for="lockExpThres"> Locking Expiration Threshold </label>
-          <p class="text-sm transition-colors" class="text-sm text-surface-300 dark:text-surface-700">Lock of any environment will be released after this threshold.</p>
+          <p class="text-sm transition-colors" class="text-sm text-surface-500">Lock of any environment will be released after this threshold.</p>
         </div>
         <div class="ml-auto">
           <p-inputnumber
@@ -33,7 +33,7 @@
         <p-toggleswitch [ngModel]="isLockReservationEnabled()" (onChange)="onThresholdToggle('reservation')" class="mr-3" />
         <div class="mr-6">
           <label class="font-semibold transition-colors" for="lockResThres"> Locking Reservation Threshold </label>
-          <p class="text-sm transition-colors" class="text-sm text-surface-300 dark:text-surface-700">Lock of any environment can be unlocked by any user after this threshold.</p>
+          <p class="text-sm transition-colors" class="text-sm text-surface-500">Lock of any environment can be unlocked by any user after this threshold.</p>
         </div>
 
         <div class="ml-auto">

@@ -49,22 +49,20 @@
       <div class="flex items-center gap-4">
         <!-- Step Icon and Label with Fixed Width -->
         <div class="w-[200px] flex items-center gap-2">
-          <p-badge [severity]="getSeverityFromStepStatus(i)" styleClass="size-8 transition-colors duration-300">
+          <p-tag [severity]="getSeverityFromStepStatus(i)" styleClass="size-8 transition-colors rounded-full duration-300 p-0 gap-0">
             @switch (getStepStatus(i)) {
               @case ('completed') {
-                <i-tabler name="check" class="w-6 h-6"></i-tabler>
+                <i-tabler name="check" class="!size-5" />
               }
               @case ('active') {
-                <i-tabler name="progress" class="w-6 h-6 animate-spin"></i-tabler>
+                <i-tabler name="progress" class="!size-5 animate-spin" />
               }
               @case ('error') {
-                <i-tabler name="x" class="w-6 h-6"></i-tabler>
+                <i-tabler name="x" class="!size-5" />
               }
-              @case ('upcoming') {
-                <div class="w-6 h-6"></div>
-              }
+              @case ('upcoming') {}
             }
-          </p-badge>
+          </p-tag>
           <div class="text-sm font-medium text-surface-500">
             {{ getStepDisplayName(step) }}
           </div>

@@ -6,7 +6,6 @@ import { EnvironmentDeployment } from '@app/core/modules/openapi';
 import { TooltipModule } from 'primeng/tooltip';
 import { DeploymentTimingService } from '@app/core/services/deployment-timing.service';
 import { TagModule } from 'primeng/tag';
-import { BadgeModule } from 'primeng/badge';
 
 interface EstimatedTimes {
   REQUESTED: number;
@@ -16,7 +15,7 @@ interface EstimatedTimes {
 
 @Component({
   selector: 'app-deployment-stepper',
-  imports: [CommonModule, IconsModule, BadgeModule, TagModule, ProgressBarModule, TooltipModule],
+  imports: [CommonModule, IconsModule, TagModule, ProgressBarModule, TooltipModule],
   templateUrl: './deployment-stepper.component.html',
 })
 export class DeploymentStepperComponent implements OnInit {
