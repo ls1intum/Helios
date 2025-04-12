@@ -5,7 +5,6 @@ import { client } from '@app/core/modules/openapi/client.gen';
 import { environment } from '../environments/environment';
 import { MessageService } from 'primeng/api';
 import { ReportProblemButtonComponent } from './components/report-problem-button/report-problem-button.component';
-import nightwind from 'nightwind/helper';
 
 @Component({
   selector: 'app-root',
@@ -18,8 +17,6 @@ export class AppComponent {
   private messageService = inject(MessageService);
 
   constructor() {
-    nightwind.init();
-
     client.setConfig({
       baseUrl: environment.serverUrl,
     });

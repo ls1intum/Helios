@@ -15,7 +15,6 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { HeliosIconComponent } from '@app/components/helios-icon/helios-icon.component';
 import { ProfileNavSectionComponent } from '@app/components/profile-nav-section/profile-nav-section.component';
 import { TagModule } from 'primeng/tag';
-import nightwind from 'nightwind/helper';
 
 @Component({
   selector: 'app-main-layout',
@@ -50,7 +49,6 @@ export class MainLayoutComponent implements OnInit {
   constructor() {
     effect(() => {
       document.querySelector('html')?.classList.toggle('dark-mode-enabled', this.isDarkModeEnabled());
-      nightwind.enable(this.isDarkModeEnabled());
     });
   }
 
