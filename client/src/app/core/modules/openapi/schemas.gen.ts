@@ -105,6 +105,15 @@ export const WorkflowMembershipDtoSchema = {
   required: ['orderIndex', 'workflowId'],
 } as const;
 
+export const ReleaseNotesDtoSchema = {
+  type: 'object',
+  properties: {
+    body: {
+      type: 'string',
+    },
+  },
+} as const;
+
 export const EnvironmentDeploymentSchema = {
   type: 'object',
   properties: {
@@ -864,6 +873,9 @@ export const ReleaseInfoDetailsDtoSchema = {
     createdAt: {
       type: 'string',
       format: 'date-time',
+    },
+    body: {
+      type: 'string',
     },
   },
   required: ['commit', 'createdAt', 'deployments', 'evaluations', 'name'],
