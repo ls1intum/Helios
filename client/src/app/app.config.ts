@@ -113,6 +113,18 @@ export const appConfig: ApplicationConfig = {
                 checkedHoverBackground: '{emerald.500}',
               },
             },
+            tabs: {
+              colorScheme: {
+                dark: {
+                  tab: {
+                    activeColor: '{primary.hoverColor}',
+                  },
+                  activeBar: {
+                    background: '{primary.hoverColor}',
+                  },
+                },
+              },
+            },
           },
         }),
         options: {
