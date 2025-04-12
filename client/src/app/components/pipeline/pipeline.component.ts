@@ -13,6 +13,7 @@ import {
 import { SkeletonModule } from 'primeng/skeleton';
 import { WorkflowRunDto } from '@app/core/modules/openapi';
 import { PipelineTestResultsComponent } from './test-results/pipeline-test-results.component';
+import { DividerModule } from 'primeng/divider';
 
 export type PipelineSelector = { repositoryId: number } & (
   | {
@@ -34,7 +35,7 @@ export interface Pipeline {
 
 @Component({
   selector: 'app-pipeline',
-  imports: [TableModule, ProgressSpinnerModule, PanelModule, IconsModule, TooltipModule, SkeletonModule, PipelineTestResultsComponent],
+  imports: [TableModule, DividerModule, ProgressSpinnerModule, PanelModule, IconsModule, TooltipModule, SkeletonModule, PipelineTestResultsComponent],
   templateUrl: './pipeline.component.html',
 })
 export class PipelineComponent {

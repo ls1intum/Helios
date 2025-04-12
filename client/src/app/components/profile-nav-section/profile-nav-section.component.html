@@ -1,11 +1,11 @@
 <div class="flex flex-col gap-3 items-center">
   @if (isLoggedIn()) {
-    <div class="flex gap-3 items-center cursor-pointer" (click)="profileMenu.toggle($event)">
+    <p-button class="flex gap-3 items-center cursor-pointer" (click)="profileMenu.toggle($event)">
       <p-avatar class="w-7 h-7 flex-shrink-0" shape="circle" size="normal" [image]="getProfilePictureUrl()" />
-      <span class="hidden md:block text-lg text-gray-700 truncate overflow-hidden whitespace-nowrap max-w-[130px]">{{ fullName() }}</span>
-    </div>
+      <span class="hidden md:block text-lg truncate overflow-hidden whitespace-nowrap max-w-[130px]">{{ fullName() }}</span>
+    </p-button>
   } @else {
-    <p-button (click)="login()" type="text" class="rounded-xl flex items-center justify-center gap-2 w-full" styleClass="bg-gray-700 hover:bg-gray-900">
+    <p-button (click)="login()" class="rounded-xl flex items-center justify-center gap-2 w-full" styleClass="">
       <i-tabler name="login" class="!size-7 !stroke-1"></i-tabler>
       <span>Sign In</span>
     </p-button>
@@ -13,8 +13,8 @@
 </div>
 
 <p-popover #profileMenu>
-  <p-button (click)="logout()" variant="text">
+  <p-button (click)="logout()" severity="secondary" text>
     <i-tabler name="logout" class="!size-7 !stroke-1 !text-red-500 !hover:text-red-700"></i-tabler>
-    <span class="text-primary-500">Sign Out</span>
+    <span>Sign Out</span>
   </p-button>
 </p-popover>

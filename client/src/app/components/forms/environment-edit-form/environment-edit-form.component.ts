@@ -21,10 +21,24 @@ import { SelectModule } from 'primeng/select';
 import { ToggleSwitch } from 'primeng/toggleswitch';
 import { MessageModule } from 'primeng/message';
 import { IconsModule } from 'icons.module';
+import { CardModule } from 'primeng/card';
+import { DividerModule } from 'primeng/divider';
 
 @Component({
   selector: 'app-environment-edit-form',
-  imports: [AutoCompleteModule, ReactiveFormsModule, InputTextModule, InputSwitchModule, ButtonModule, MessageModule, SelectModule, ToggleSwitch, IconsModule],
+  imports: [
+    AutoCompleteModule,
+    ReactiveFormsModule,
+    InputTextModule,
+    CardModule,
+    DividerModule,
+    InputSwitchModule,
+    ButtonModule,
+    MessageModule,
+    SelectModule,
+    ToggleSwitch,
+    IconsModule,
+  ],
   templateUrl: './environment-edit-form.component.html',
 })
 export class EnvironmentEditFormComponent implements OnInit {

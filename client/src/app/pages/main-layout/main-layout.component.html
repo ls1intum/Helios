@@ -1,18 +1,26 @@
-<main class="h-screen overflow-hidden">
-  <div class="px-6 py-1.5 flex items-center justify-between">
+<main class="h-screen overflow-hidden" style="background-color: var(--p-content-background)">
+  <div class="px-6 py-1.5 flex items-center justify-between bg-primary nightwind-prevent-block">
     <div class="flex items-center gap-6">
-      <div class="flex items-center gap-2 cursor-pointer" routerLink="/">
+      <div class="flex items-center gap-2 cursor-pointer" styleClass="p-0" routerLink="/">
         <div class="size-12">
           <app-helios-icon size="2.5rem" class="rounded-xl w-8 cursor-pointer" />
         </div>
-        <div class="text-gray-700 hover:text-gray-800 text-2xl font-semibold">Helios</div>
+        <div class="text-white text-2xl font-semibold">Helios</div>
       </div>
       @if (!isLoggedIn()) {
-        <p-tag class="bg-gray-700 text-white md:block hidden" pTooltip="Login to Edit" tooltipPosition="bottom">You are currently using Helios in readonly mode</p-tag>
-        <p-tag class="bg-gray-700 text-white md:hidden block" pTooltip="Login to Edit" tooltipPosition="bottom">Readonly Mode</p-tag>
+        <p-tag class="md:block hidden" pTooltip="Login to Edit" severity="warn" tooltipPosition="bottom">You are currently using Helios in readonly mode</p-tag>
+        <p-tag class="md:hidden block" pTooltip="Login to Edit" severity="warn" tooltipPosition="bottom">Readonly Mode</p-tag>
       }
     </div>
-    <div>
+    <div class="flex items-center gap-1">
+      <p-button (click)="toggleDarkMode()">
+        @if (isDarkModeEnabled()) {
+          <i-tabler name="sun" />
+        } @else {
+          <i-tabler name="moon" />
+        }
+      </p-button>
+
       <app-profile-nav-section [isExpanded]="true" />
     </div>
   </div>
@@ -23,9 +31,9 @@
     </div>
 
     <!-- Scrollable Content Area -->
-    <div class="flex-grow overflow-hidden h-full border border-gray-200 rounded-2xl">
+    <div class="flex-grow overflow-hidden h-full">
       <div class="flex flex-col justify-between overflow-auto h-full mx-auto">
-        <div class="p-6">
+        <div class="p-4">
           <router-outlet />
         </div>
         <!-- Scrollable Footer -->

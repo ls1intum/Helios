@@ -23,12 +23,12 @@
     </ng-template>
   </p-table>
 } @else {
-  <p-table #table [rowHover]="true" [value]="filteredReleaseCandidates()" [paginator]="true" [rows]="20" [globalFilterFields]="['name']">
+  <p-table #table [value]="filteredReleaseCandidates()" [paginator]="true" [rows]="20" [globalFilterFields]="['name']">
     <ng-template #header>
       <tr>
         <th>
           <div class="flex gap-2 items-center">
-            <p-button type="button" outlined size="small" routerLink="../../ci-cd/branch">
+            <p-button size="small" routerLink="../../ci-cd/branch">
               <i-tabler name="plus" />
             </p-button>
             <app-table-filter [input]="table" [searchTableService]="searchTableService" />
@@ -39,25 +39,25 @@
       </tr>
     </ng-template>
     <ng-template pTemplate="body" let-releaseCandidate>
-      <tr class="cursor-pointer" [routerLink]="'../' + releaseCandidate.name">
+      <tr>
         <td>
           <div class="flex gap-4">
-            <p-tag [value]="releaseCandidate.name" [rounded]="true" class="border font-medium text-xs py-0.5 whitespace-nowrap" />
+            <p-tag [value]="releaseCandidate.name" [rounded]="true" class="cursor-pointer text-xs whitespace-nowrap" [routerLink]="'../' + releaseCandidate.name" />
             @if (releaseCandidate.isPublished) {
-              <p-tag value="Published to GitHub" [rounded]="true" class="border font-medium text-xs py-0.5 whitespace-nowrap border-red-500 text-red-500" />
+              <p-tag value="Published to GitHub" [rounded]="true" severity="danger" class="text-xs" />
             }
           </div>
         </td>
         <td>
-          <p-tag>
-            <i-tabler name="git-commit" class="!size-5" />
+          <p-tag class="text-xs">
+            <i-tabler name="git-commit" class="!size-4" />
             {{ releaseCandidate.commitSha | slice: 0 : 6 }}
           </p-tag>
         </td>
         <td>
           @if (releaseCandidate.branchName) {
-            <p-tag>
-              <i-tabler name="git-branch" class="!size-5" />
+            <p-tag class="text-xs">
+              <i-tabler name="git-branch" class="!size-4" />
               {{ releaseCandidate.branchName }}
             </p-tag>
           }

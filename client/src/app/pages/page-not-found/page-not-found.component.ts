@@ -1,8 +1,15 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
+import { Router } from '@angular/router';
+import { ButtonModule } from 'primeng/button';
 
 @Component({
   selector: 'app-page-not-found',
-  imports: [],
+  imports: [ButtonModule],
   templateUrl: './page-not-found.component.html',
 })
-export class PageNotFoundComponent {}
+export class PageNotFoundComponent {
+  router = inject(Router);
+  navigateToHome() {
+    this.router.navigate(['/']);
+  }
+}

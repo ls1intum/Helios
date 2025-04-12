@@ -1,6 +1,6 @@
 <div class="relative items-center">
   <div class="flex-col items-start mb-2">
-    <span class="text-xs uppercase tracking-tighter font-bold text-gray-500">Latest Deployment Progress</span>
+    <span class="text-xs uppercase tracking-tighter font-bold text-surface-500">Latest Deployment Progress</span>
 
     <div class="flex gap-4 items-center mb-4 mt-2">
       <span class="font-semibold text-lg">
@@ -14,29 +14,30 @@
           Deployment in Progress
         }
       </span>
-      <span class="text-gray-300">|</span>
+      <span>|</span>
 
       <!-- Integrated Time Display -->
+
       @if (deployment() && deployment()?.state === 'SUCCESS') {
-        <div class="inline-flex items-center bg-green-50 px-2 py-0.5 rounded-full text-sm">
-          <i-tabler name="clock" class="w-4 h-4 text-green-600 mr-1"></i-tabler>
-          <span class="font-medium text-green-600">{{ getDeploymentDuration() }}</span>
-        </div>
+        <p-tag severity="success" rounded>
+          <i-tabler name="clock" class="w-4 h-4"></i-tabler>
+          <span>{{ getDeploymentDuration() }}</span>
+        </p-tag>
       } @else if (deployment() && isErrorState()) {
-        <div class="inline-flex items-center bg-red-50 px-2 py-0.5 rounded-full text-sm">
-          <i-tabler name="clock" class="w-4 h-4 text-red-600 mr-1"></i-tabler>
-          <span class="font-medium text-red-600">{{ getDeploymentDuration() }}</span>
-        </div>
+        <p-tag severity="danger" rounded>
+          <i-tabler name="clock" class="w-4 h-4"></i-tabler>
+          <span>{{ getDeploymentDuration() }}</span>
+        </p-tag>
       } @else if (deployment() && isUnknownState()) {
-        <div class="inline-flex items-center bg-gray-50 px-2 py-0.5 rounded-full text-sm">
-          <i-tabler name="clock" class="w-4 h-4 text-gray-600 mr-1"></i-tabler>
-          <span class="font-medium text-gray-600">0m 0s</span>
-        </div>
+        <p-tag severity="secondary" rounded>
+          <i-tabler name="clock" class="w-4 h-4"></i-tabler>
+          <span>0m 0s</span>
+        </p-tag>
       } @else {
-        <div class="inline-flex items-center bg-blue-50 px-2 py-0.5 rounded-full text-sm">
-          <i-tabler name="clock" class="w-4 h-4 text-blue-600 mr-1"></i-tabler>
-          <span class="font-medium text-blue-600">{{ getTotalRemainingTime() }}</span>
-        </div>
+        <p-tag severity="info" rounded>
+          <i-tabler name="clock" class="w-4 h-4"></i-tabler>
+          <span>{{ getTotalRemainingTime() }}</span>
+        </p-tag>
       }
       <div class="flex-grow"></div>
     </div>
@@ -48,31 +49,23 @@
       <div class="flex items-center gap-4">
         <!-- Step Icon and Label with Fixed Width -->
         <div class="w-[200px] flex items-center gap-2">
-          <div
-            [ngClass]="{
-              'bg-green-500': getStepStatus(i) === 'completed',
-              'bg-blue-500 animate-pulse': getStepStatus(i) === 'active',
-              'bg-red-500': getStepStatus(i) === 'error',
-              'bg-gray-200': getStepStatus(i) === 'upcoming' || getStepStatus(i) === 'unknown' || getStepStatus(i) === 'inactive',
-            }"
-            class="w-8 h-8 rounded-full flex items-center justify-center transition-colors duration-300 z-10"
-          >
+          <p-badge [severity]="getSeverityFromStepStatus(i)" styleClass="size-8 transition-colors duration-300">
             @switch (getStepStatus(i)) {
               @case ('completed') {
-                <i-tabler name="check" class="text-white w-6 h-6"></i-tabler>
+                <i-tabler name="check" class="w-6 h-6"></i-tabler>
               }
               @case ('active') {
-                <i-tabler name="progress" class="text-white w-6 h-6 animate-spin"></i-tabler>
+                <i-tabler name="progress" class="w-6 h-6 animate-spin"></i-tabler>
               }
               @case ('error') {
-                <i-tabler name="x" class="text-white w-6 h-6"></i-tabler>
+                <i-tabler name="x" class="w-6 h-6"></i-tabler>
               }
               @case ('upcoming') {
                 <div class="w-6 h-6"></div>
               }
             }
-          </div>
-          <div class="text-sm font-medium text-gray-700">
+          </p-badge>
+          <div class="text-sm font-medium text-surface-500">
             {{ getStepDisplayName(step) }}
           </div>
         </div>
@@ -82,7 +75,7 @@
           <div class="w-[750px]">
             <p-progressbar [value]="getProgress(i)" [showValue]="true" class="h-6"></p-progressbar>
           </div>
-          <div class="w-[100px] text-right text-xs text-gray-500">
+          <div class="w-[100px] text-right text-xs text-surface-500">
             {{ getStepTime(i) }}
           </div>
         </div>
@@ -90,5 +83,5 @@
     }
   </div>
 
-  <div class="text-right text-xs text-gray-500 italic mt-6">* All time estimates are approximate and based on historical data</div>
+  <div class="text-right text-xs text-surface-500 italic mt-6">* All time estimates are approximate and based on historical data</div>
 </div>
