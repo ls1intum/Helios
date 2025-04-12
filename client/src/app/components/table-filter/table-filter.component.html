@@ -1,6 +1,6 @@
 <div class="flex items-center gap-2 w-full">
   @if (searchTableService().filterOptions.length > 0) {
-    <p-button type="button" outlined (onClick)="toggle($event)" size="small">
+    <p-button (onClick)="toggle($event)" size="small">
       @if (searchTableService().hasActiveFilter()) {
         <i-tabler name="filter" />
       } @else {
@@ -20,21 +20,17 @@
 </div>
 
 <p-popover #op>
-  <div class="flex flex-col gap-4">
-    <div>
-      <ul class="list-none p-0 m-0 flex flex-col gap-1">
-        @for (filter of searchTableService().filterOptions; track filter.name) {
-          @if (filter.name === searchTableService().activeFilter().name) {
-            <li class="flex items-center gap-2 p-2 bg-gray-700 text-gray-200 cursor-pointer rounded-border">
-              {{ filter.name }}
-            </li>
-          } @else {
-            <li class="flex items-center gap-2 p-2 hover:bg-gray-300 cursor-pointer rounded-border" (click)="searchTableService().selectFilter(filter)">
-              {{ filter.name }}
-            </li>
-          }
-        }
-      </ul>
-    </div>
+  <div class="flex flex-col gap-1">
+    @for (filter of searchTableService().filterOptions; track filter.name) {
+      @if (filter.name === searchTableService().activeFilter().name) {
+        <p-button severity="secondary" styleClass="w-full justify-start">
+          {{ filter.name }}
+        </p-button>
+      } @else {
+        <p-button severity="secondary" text styleClass="w-full justify-start" (click)="searchTableService().selectFilter(filter)">
+          {{ filter.name }}
+        </p-button>
+      }
+    }
   </div>
 </p-popover>

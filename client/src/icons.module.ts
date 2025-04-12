@@ -71,6 +71,7 @@ import {
   IconStar,
   IconFocus,
   IconUsersGroup,
+  IconMoon,
 } from 'angular-tabler-icons/icons';
 
 // Select some icons (use an object, not an array)
@@ -129,6 +130,7 @@ const icons = {
   IconLogin,
   IconExclamationCircle,
   IconStatusChange,
+  IconMoon,
   IconInfoCircle,
   IconExclamationMark,
   IconTimeDurationOff,

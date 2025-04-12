@@ -3,9 +3,9 @@
     <div class="flex gap-2 items-start w-full flex-wrap md:flex-nowrap flex-col md:items-center md:flex-row">
       <div class="flex flex-col gap-1 flex-wrap">
         <div class="flex gap-1 items-center mr-3">
-          <span [pTooltip]="'Open Environment'" class="cursor-pointer hover:bg-gray-200 px-2 py-1 rounded" (click)="openExternalLink($event, environment().serverUrl)">
-            {{ environment().name }}
-          </span>
+          <p-button severity="secondary" text (click)="openExternalLink($event, environment().serverUrl)">
+            <span pTooltip="Open Environment" tooltipPosition="bottom">{{ environment().name }}</span>
+          </p-button>
 
           <app-lock-tag [isLocked]="!!environment().locked"></app-lock-tag>
 
@@ -115,7 +115,7 @@
           <a
             icon
             [routerLink]="'/repo/' + environment().repository?.id + '/environment/' + environment().id + '/history'"
-            class="p-button p-button-text text-gray-500 py-2 flex items-center"
+            class="p-button p-button-secondary p-button-text py-2 flex items-center"
           >
             <i-tabler class="mr-1" name="history" />
             View Activity History
@@ -124,7 +124,7 @@
         <div class="flex flex-grow"></div>
         <div class="flex gap-2">
           @for (installedApp of environment().installedApps; track installedApp) {
-            <p-tag class="bg-gray-300 gap-0">{{ installedApp }}</p-tag>
+            <p-tag severity="secondary" class="gap-0">{{ installedApp }}</p-tag>
           }
         </div>
       </div>

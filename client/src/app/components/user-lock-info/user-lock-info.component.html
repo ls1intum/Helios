@@ -1,7 +1,7 @@
 @if (latestLockExpiration(); as lock) {
   <a
     [routerLink]="['/repo', lock.environment?.repository?.id, 'environment', 'list']"
-    class="text-xs text-gray-500 flex flex-col items-center gap-1 mb-5"
+    class="text-xs text-surface-500 flex flex-col items-center gap-1 mb-5"
     [pTooltip]="tooltipContent"
   >
     <i-tabler name="lock" class="w-5 h-5"></i-tabler>
@@ -9,13 +9,13 @@
   </a>
   <ng-template #tooltipContent>
     <div class="flex flex-col">
-      <span class="text-xs text-gray-200 uppercase tracking-tighter font-bold">Locked Environment</span>
+      <span class="text-xs text-surface-300 dark:text-surface-700 uppercase tracking-tighter font-bold">Locked Environment</span>
       <span class="text-sm">{{ lock.environment?.name }}</span>
       @if (lock.environment?.latestDeployment?.ref) {
-        <div class="border-b border-gray-500 my-2"></div>
+        <div class="border-b border-surface-500 my-2"></div>
         <div class="flex gap-1 items-center">
           <span class="text-sm truncate">{{ lock.environment?.latestDeployment?.ref }}</span>
-          <i-tabler style="height: 16px; width: 16px" name="git-branch" class="text-gray-200 flex-shrink-0" />
+          <i-tabler style="height: 16px; width: 16px" name="git-branch" class="text-surface-300 dark:text-surface-700 flex-shrink-0" />
         </div>
       }
     </div>
