@@ -59,7 +59,6 @@ export class ReleaseCandidateDetailsComponent implements OnInit {
   name = input.required<string>();
   releaseCandidateQuery = injectQuery(() => ({
     ...getReleaseInfoByNameOptions({ path: { name: this.name() } }),
-    refetchInterval: 3000,
     onSuccess: () => {
       this.releaseNotesForm.get('releaseNotes')?.setValue(this.releaseNotes());
     },
