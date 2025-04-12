@@ -18,6 +18,8 @@ import type {
   UpdateGitRepoSettingsError,
   UpdateWorkflowGroupsData,
   UpdateWorkflowGroupsError,
+  UpdateReleaseNotesData,
+  UpdateReleaseNotesError,
   GetEnvironmentByIdData,
   GetEnvironmentByIdResponse,
   GetEnvironmentByIdError,
@@ -50,6 +52,9 @@ import type {
   CreateReleaseCandidateData,
   CreateReleaseCandidateResponse,
   CreateReleaseCandidateError,
+  GenerateReleaseNotesData,
+  GenerateReleaseNotesResponse,
+  GenerateReleaseNotesError,
   PublishReleaseDraftData,
   PublishReleaseDraftError,
   EvaluateData,
@@ -240,6 +245,17 @@ export const updateWorkflowGroups = <ThrowOnError extends boolean = false>(optio
   });
 };
 
+export const updateReleaseNotes = <ThrowOnError extends boolean = false>(options: Options<UpdateReleaseNotesData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).put<unknown, UpdateReleaseNotesError, ThrowOnError>({
+    url: '/api/release-info/{name}/release-notes',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
 export const getEnvironmentById = <ThrowOnError extends boolean = false>(options: Options<GetEnvironmentByIdData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetEnvironmentByIdResponse, GetEnvironmentByIdError, ThrowOnError>({
     url: '/api/environments/{id}',
@@ -330,6 +346,13 @@ export const createReleaseCandidate = <ThrowOnError extends boolean = false>(opt
       'Content-Type': 'application/json',
       ...options?.headers,
     },
+  });
+};
+
+export const generateReleaseNotes = <ThrowOnError extends boolean = false>(options: Options<GenerateReleaseNotesData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).post<GenerateReleaseNotesResponse, GenerateReleaseNotesError, ThrowOnError>({
+    url: '/api/release-info/{tagName}/generate-release-notes',
+    ...options,
   });
 };
 

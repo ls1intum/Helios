@@ -72,8 +72,9 @@ public record TestResultsDto(@NonNull List<TestTypeResults> testResults, boolean
       String stackTrace,
       String systemOut,
       String errorType,
-      Boolean isFlaky,
-      Double failureRate,
+      Double flakinessScore,
+      Double defaultBranchFailureRate,
+      Double combinedFailureRate,
       Boolean failsInDefaultBranch) {
     public static TestCaseDto fromTestCase(TestCase testCase) {
       return new TestCaseDto(
@@ -87,13 +88,15 @@ public record TestResultsDto(@NonNull List<TestTypeResults> testResults, boolean
           testCase.getStackTrace(),
           testCase.getSystemOut(),
           testCase.getErrorType(),
-          testCase.isFlaky(),
+          testCase.getFlakinessScore(),
           testCase.getFailureRate(),
+          testCase.getCombinedFailureRate(),
           testCase.isFailsInDefaultBranch());
     }
   }
 
   /** Record for storing test case statistics information. */
-  record TestCaseStatisticsInfo(
-      boolean isFlaky, double failureRate, boolean failsInDefaultBranch) {}
+  record TestCaseStatisticsInfo(double failureRate, boolean failsInDefaultBranch) {}
+
+  record CombinedTestCaseStatisticsInfo(double combinedFailureRate) {}
 }

@@ -15,6 +15,7 @@ import de.tum.cit.aet.helios.github.permissions.RepoPermissionType;
 import jakarta.transaction.Transactional;
 import java.io.IOException;
 import java.time.OffsetDateTime;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -316,21 +317,24 @@ public class GitHubService {
    * Creates a successful commit status for a GitHub pull request with a link to the Helios page.
    *
    * <p>This method sets up a commit status with the following characteristics:
+   *
    * <ul>
-   *   <li>State: SUCCESS</li>
-   *   <li>Context: "Helios"</li>
-   *   <li>Target URL: A formatted URL to the Helios page for this specific pull request</li>
-   *   <li>Description: A message indicating what the link leads to</li>
+   *   <li>State: SUCCESS
+   *   <li>Context: "Helios"
+   *   <li>Target URL: A formatted URL to the Helios page for this specific pull request
+   *   <li>Description: A message indicating what the link leads to
    * </ul>
    *
-   * <p>The commit status is created for the HEAD commit of the pull request.
-   * Any IO exceptions during the status creation are logged as errors.
+   * <p>The commit status is created for the HEAD commit of the pull request. Any IO exceptions
+   * during the status creation are logged as errors.
    *
    * @param pullRequest The GitHub pull request object for which to create the commit status
    */
   public void createCommitStatusForPullRequest(GHPullRequest pullRequest) {
-    final String targetUrl = String.format("%s/repo/%d/ci-cd/pr/%d",
-        heliosClientBaseUrl, pullRequest.getRepository().getId(), pullRequest.getNumber());
+    final String targetUrl =
+        String.format(
+            "%s/repo/%d/ci-cd/pr/%d",
+            heliosClientBaseUrl, pullRequest.getRepository().getId(), pullRequest.getNumber());
     final String description = "Click to view the Helios page of this pull request.";
     final String context = "Helios";
     try {
@@ -417,6 +421,73 @@ public class GitHubService {
     } catch (IOException e) {
       log.error("Error occurred while approving deployment: {}", e.getMessage());
       throw e;
+    }
+  }
+
+  /**
+   * Generates release notes for a GitHub repository by comparing changes between versions.
+   *
+   * @param repositoryNameWithOwner The repository name including the owner (e.g., "owner/repo")
+   * @param tagName The tag name for the new release
+   * @param targetCommitish The commitish value that determines where the Git tag is created from
+   * @return The generated release notes as a string
+   * @throws IOException If there's an error communicating with the GitHub API
+   */
+  public String generateReleaseNotes(
+      String repositoryNameWithOwner, String tagName, String targetCommitish) throws IOException {
+
+    // Create the request payload with only non-null fields
+    Map<String, String> requestPayload = new HashMap<>();
+    requestPayload.put("tag_name", tagName);
+
+    if (targetCommitish != null && !targetCommitish.isEmpty()) {
+      requestPayload.put("target_commitish", targetCommitish);
+    }
+
+    String jsonPayload = objectMapper.writeValueAsString(requestPayload);
+    log.info("Request payload: {}", jsonPayload);
+
+    // Build the request
+    Request request =
+        getRequestBuilder()
+            .url(
+                "https://api.github.com/repos/"
+                    + repositoryNameWithOwner
+                    + "/releases/generate-notes")
+            .post(
+                RequestBody.create(MediaType.parse("application/json; charset=utf-8"), jsonPayload))
+            .build();
+
+    // Execute the request
+    try (Response response = okHttpClient.newCall(request).execute()) {
+      ResponseBody responseBody = response.body();
+      if (!response.isSuccessful()) {
+        String errorBody = "No error details";
+        if (responseBody != null) {
+          try {
+            errorBody = responseBody.string();
+          } catch (IOException e) {
+            log.warn("Failed to read error response body", e);
+          }
+        }
+
+        log.error(
+            "GitHub API call failed with response code: {} and body: {}",
+            response.code(),
+            errorBody);
+        throw new IOException("GitHub API call failed with response code: " + response.code());
+      }
+
+      if (responseBody == null) {
+        throw new IOException("Response body is null");
+      }
+
+      // Parse the response
+      Map<String, Object> responseMap = objectMapper.readValue(responseBody.string(), Map.class);
+
+      // Return the generated notes
+      log.debug("Successfully generated release notes using the GitHub API");
+      return (String) responseMap.get("body");
     }
   }
 }

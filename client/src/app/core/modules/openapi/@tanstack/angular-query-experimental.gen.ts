@@ -8,6 +8,7 @@ import {
   getGitRepoSettings,
   updateGitRepoSettings,
   updateWorkflowGroups,
+  updateReleaseNotes,
   getEnvironmentById,
   updateEnvironment,
   unlockEnvironment,
@@ -19,6 +20,7 @@ import {
   createWorkflowGroup,
   getAllReleaseInfos,
   createReleaseCandidate,
+  generateReleaseNotes,
   publishReleaseDraft,
   evaluate,
   setPrPinnedByNumber,
@@ -76,6 +78,8 @@ import type {
   UpdateGitRepoSettingsResponse,
   UpdateWorkflowGroupsData,
   UpdateWorkflowGroupsError,
+  UpdateReleaseNotesData,
+  UpdateReleaseNotesError,
   GetEnvironmentByIdData,
   UpdateEnvironmentData,
   UpdateEnvironmentError,
@@ -102,6 +106,9 @@ import type {
   CreateReleaseCandidateData,
   CreateReleaseCandidateError,
   CreateReleaseCandidateResponse,
+  GenerateReleaseNotesData,
+  GenerateReleaseNotesError,
+  GenerateReleaseNotesResponse,
   PublishReleaseDraftData,
   PublishReleaseDraftError,
   EvaluateData,
@@ -262,6 +269,20 @@ export const updateWorkflowGroupsMutation = (options?: Partial<Options<UpdateWor
   const mutationOptions: MutationOptions<unknown, UpdateWorkflowGroupsError, Options<UpdateWorkflowGroupsData>> = {
     mutationFn: async localOptions => {
       const { data } = await updateWorkflowGroups({
+        ...options,
+        ...localOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const updateReleaseNotesMutation = (options?: Partial<Options<UpdateReleaseNotesData>>) => {
+  const mutationOptions: MutationOptions<unknown, UpdateReleaseNotesError, Options<UpdateReleaseNotesData>> = {
+    mutationFn: async localOptions => {
+      const { data } = await updateReleaseNotes({
         ...options,
         ...localOptions,
         throwOnError: true,
@@ -493,6 +514,37 @@ export const createReleaseCandidateMutation = (options?: Partial<Options<CreateR
   const mutationOptions: MutationOptions<CreateReleaseCandidateResponse, CreateReleaseCandidateError, Options<CreateReleaseCandidateData>> = {
     mutationFn: async localOptions => {
       const { data } = await createReleaseCandidate({
+        ...options,
+        ...localOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const generateReleaseNotesQueryKey = (options: Options<GenerateReleaseNotesData>) => createQueryKey('generateReleaseNotes', options);
+
+export const generateReleaseNotesOptions = (options: Options<GenerateReleaseNotesData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await generateReleaseNotes({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: generateReleaseNotesQueryKey(options),
+  });
+};
+
+export const generateReleaseNotesMutation = (options?: Partial<Options<GenerateReleaseNotesData>>) => {
+  const mutationOptions: MutationOptions<GenerateReleaseNotesResponse, GenerateReleaseNotesError, Options<GenerateReleaseNotesData>> = {
+    mutationFn: async localOptions => {
+      const { data } = await generateReleaseNotes({
         ...options,
         ...localOptions,
         throwOnError: true,

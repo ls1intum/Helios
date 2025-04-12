@@ -5,6 +5,7 @@ import de.tum.cit.aet.helios.filters.RepositoryContext;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import de.tum.cit.aet.helios.pullrequest.PullRequestRepository;
 import de.tum.cit.aet.helios.tests.TestCase.TestStatus;
+import de.tum.cit.aet.helios.tests.TestResultsDto.CombinedTestCaseStatisticsInfo;
 import de.tum.cit.aet.helios.tests.TestResultsDto.TestCaseDto;
 import de.tum.cit.aet.helios.tests.TestResultsDto.TestCaseStatisticsInfo;
 import de.tum.cit.aet.helios.tests.TestResultsDto.TestTypeResults;
@@ -34,6 +35,7 @@ public class TestResultService {
   private final TestSuiteRepository testSuiteRepository;
   private final TestCaseRepository testCaseRepository;
   private final TestCaseStatisticsRepository testCaseStatisticsRepository;
+  private final TestCaseStatisticsService testCaseStatisticsService;
 
   public static record TestSearchCriteria(int page, int size, String search, boolean onlyFailed) {}
 
@@ -101,8 +103,8 @@ public class TestResultService {
                 }
 
                 // Check if one is flaky and the other is not
-                boolean flaky = a.isFlaky();
-                boolean otherFlaky = b.isFlaky();
+                boolean flaky = a.getFlakinessScore() > 30.0;
+                boolean otherFlaky = b.getFlakinessScore() > 30.0;
 
                 if (!flaky && otherFlaky) {
                   return -1; // a is more important (not flaky)
@@ -313,6 +315,10 @@ public class TestResultService {
         testCaseStatisticsRepository.findByTestSuiteNameInAndBranchNameAndRepositoryRepositoryId(
             suiteClassNames, defaultBranch, RepositoryContext.getRepositoryId());
 
+    List<TestCaseStatistics> combinedStats =
+        testCaseStatisticsRepository.findByTestSuiteNameInAndBranchNameAndRepositoryRepositoryId(
+            suiteClassNames, "combined", RepositoryContext.getRepositoryId());
+
     Function<TestCase, TestResultsDto.TestCaseStatisticsInfo> statisticsProvider =
         testCase -> {
           Optional<TestCaseStatistics> stats =
@@ -323,7 +329,6 @@ public class TestResultService {
                               && s.getClassName().equals(testCase.getClassName()))
                   .findFirst();
 
-          boolean isFlaky = stats.map(TestCaseStatistics::isFlaky).orElse(false);
           double failureRate = stats.map(TestCaseStatistics::getFailureRate).orElse(0.0);
 
           boolean failsInDefaultBranch =
@@ -333,8 +338,22 @@ public class TestResultService {
                           failedTest.getName().equals(testCase.getName())
                               && failedTest.getClassName().equals(testCase.getClassName()));
 
-          return new TestResultsDto.TestCaseStatisticsInfo(
-              isFlaky, failureRate, failsInDefaultBranch);
+          return new TestResultsDto.TestCaseStatisticsInfo(failureRate, failsInDefaultBranch);
+        };
+
+    Function<TestCase, TestResultsDto.CombinedTestCaseStatisticsInfo> combinedStatisticsProvider =
+        testCase -> {
+          Optional<TestCaseStatistics> stats =
+              combinedStats.stream()
+                  .filter(
+                      s ->
+                          s.getTestName().equals(testCase.getName())
+                              && s.getClassName().equals(testCase.getClassName()))
+                  .findFirst();
+
+          double combinedFailureRate = stats.map(TestCaseStatistics::getFailureRate).orElse(0.0);
+
+          return new TestResultsDto.CombinedTestCaseStatisticsInfo(combinedFailureRate);
         };
 
     var prevStateCandidates =
@@ -344,9 +363,14 @@ public class TestResultService {
     for (TestSuite suite : suites) {
       for (TestCase testCase : suite.getTestCases()) {
         TestCaseStatisticsInfo statistics = statisticsProvider.apply(testCase);
-        testCase.setFlaky(statistics.isFlaky());
+        CombinedTestCaseStatisticsInfo combinedStatistics =
+            combinedStatisticsProvider.apply(testCase);
+        testCase.setFlakinessScore(
+            testCaseStatisticsService.calculateFlakinessScore(
+                statistics.failureRate(), combinedStatistics.combinedFailureRate()));
         testCase.setFailsInDefaultBranch(statistics.failsInDefaultBranch());
         testCase.setFailureRate(statistics.failureRate());
+        testCase.setCombinedFailureRate(combinedStatistics.combinedFailureRate());
         testCase.setPreviousStatus(
             prevStateCandidates.stream()
                 .filter(
