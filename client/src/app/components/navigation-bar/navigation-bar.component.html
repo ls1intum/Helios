@@ -1,7 +1,7 @@
 <!-- Sidebar Wrapper (Two-column Layout) -->
 @if (repositoryId()) {
   <div
-    class="flex h-full rounded-2xl mr-4 bg-gray-100 transition-all duration-300 ease-in-out relative"
+    class="flex h-full mr-4 bg-gray-100 transition-all duration-300 ease-in-out relative"
     [ngClass]="{ 'w-2': !isVisible(), 'w-16': isVisible() && !isExpanded(), 'w-48': isVisible() && isExpanded() }"
   >
     <!-- Left Section: Main Navigation -->
