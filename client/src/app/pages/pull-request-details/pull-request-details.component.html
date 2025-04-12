@@ -42,7 +42,7 @@
   }
 </div>
 
-<div class="flex flex-col gap-6 max-w-6xl mr-4">
+<div class="flex flex-col gap-6">
   <app-pipeline [selector]="pipelineSelector()" />
   @if (query.data(); as pr) {
     @if (pr.headRefRepoNameWithOwner === pr.repository?.nameWithOwner) {
