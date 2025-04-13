@@ -23,7 +23,7 @@
               <p-tag value="Prerelease" [rounded]="true" severity="secondary" class="text-xs whitespace-nowrap" />
             }
           }
-          @if (permissionService.isAtLeastMaintainer()) {
+          @if (permissionService.isAtLeastMaintainer() && !releaseCandidate.release) {
             <p-button text severity="danger" (onClick)="deleteReleaseCandidate(releaseCandidate)">
               <i-tabler name="trash" class="!size-5" />
             </p-button>
