@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -62,6 +63,33 @@ public class ReleaseInfoController {
   @PostMapping("/{name}/publish")
   public ResponseEntity<Void> publishReleaseDraft(@PathVariable String name) {
     releaseInfoService.publishReleaseDraft(name);
+    return ResponseEntity.ok().build();
+  }
+
+  /**
+   * Endpoint to generate release notes for a given tag.
+   *
+   * @param tagName Name of the tag
+   * @return Generated release notes
+   */
+  @EnforceAtLeastMaintainer
+  @PostMapping("/{tagName}/generate-release-notes")
+  public ResponseEntity<String> generateReleaseNotes(@PathVariable String tagName) {
+    return ResponseEntity.ok(releaseInfoService.generateReleaseNotes(tagName));
+  }
+
+  /**
+   * Endpoint to update the release notes of a release candidate.
+   *
+   * @param name Name of the release candidate
+   * @param releaseNotes DTO containing the updated release notes
+   * @return Updated release info details
+   */
+  @EnforceAtLeastMaintainer
+  @PutMapping("/{name}/release-notes")
+  public ResponseEntity<Void> updateReleaseNotes(
+      @PathVariable String name, @RequestBody ReleaseNotesDto releaseNotes) {
+    releaseInfoService.updateReleaseNotes(name, releaseNotes.body());
     return ResponseEntity.ok().build();
   }
 }

@@ -14,7 +14,7 @@
     <ng-template #grid let-projects>
       <div class="flex flex-wrap gap-4 mt-4">
         @for (project of projects; track project) {
-          <div class="flex gap-2 flex-col border border-gray-300 rounded-2xl p-5 shadow-md w-[32rem]">
+          <div class="flex gap-2 flex-col border border-surface-500 rounded-2xl p-5 shadow-md w-[32rem]">
             <div class="flex justify-between gap-2">
               <div class="flex gap-2 items-center">
                 <p-skeleton shape="circle" styleClass="!size-7" />
@@ -43,11 +43,12 @@
   <p-dataview #dataView [value]="query.data()" layout="grid" [paginator]="true" [rows]="6" filterBy="name">
     <ng-template #header>
       <app-table-filter [input]="dataView" [searchTableService]="searchDataViewService" />
+      <div class="mb-3"></div>
     </ng-template>
     <ng-template #grid let-projects>
       <div class="flex flex-wrap gap-4 mt-4">
         @for (project of projects; track project.id) {
-          <div class="flex gap-2 flex-col border border-gray-300 rounded-2xl p-5 shadow-md w-[32rem]">
+          <div class="flex gap-2 flex-col border border-surface-500 rounded-2xl p-5 shadow-md w-[32rem]">
             <div class="flex justify-between gap-2">
               <div class="flex gap-2 items-center">
                 <p-button text (click)="openProjectExternal($event, project)" styleClass="p-0" class="leading-none !hover:text-primary-500">
@@ -61,11 +62,11 @@
                 }
               </div>
               <div class="flex items-center gap-2">
-                <div class="flex items-center leading-none gap-1 cursor-default text-gray-600"><i-tabler name="star" class="!size-4" />{{ project.stargazersCount }}</div>
-                <div class="flex items-center leading-none gap-1 cursor-pointer text-gray-600 hover:text-gray-800" (click)="navigateToBranches(project)">
+                <div class="flex items-center leading-none gap-1 cursor-default text-secondary-600"><i-tabler name="star" class="!size-4" />{{ project.stargazersCount }}</div>
+                <div class="flex items-center leading-none gap-1 cursor-pointer text-secondary-600 hover:text-secondary-800" (click)="navigateToBranches(project)">
                   <i-tabler name="git-branch" class="!size-4" />{{ project.branchCount }}
                 </div>
-                <div class="flex items-center leading-none gap-1 cursor-pointer text-gray-600 hover:text-gray-800" (click)="navigateToPullRequests(project)">
+                <div class="flex items-center leading-none gap-1 cursor-pointer text-secondary-600 hover:text-secondary-800" (click)="navigateToPullRequests(project)">
                   <i-tabler name="git-pull-request" class="!size-4" />{{ project.pullRequestCount }}
                 </div>
               </div>
@@ -76,10 +77,10 @@
             <p-divider class="mb-2 m-0" />
             <div class="text-lg font-medium">Contributors</div>
             <p-avatarGroup>
-              @for (contributor of project.contributors.slice(0, 5); track contributor.id) {
+              @for (contributor of project.contributors?.slice(0, 5); track contributor.id) {
                 <app-user-avatar [user]="contributor" />
               }
-              @if (project.contributors.length === 6) {
+              @if (project.contributors?.length === 6) {
                 <span class="ml-2 text-xs"> and more</span>
               }
             </p-avatarGroup>

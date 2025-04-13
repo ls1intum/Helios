@@ -21,10 +21,10 @@ export class PullRequestStatusIconComponent {
   });
 
   iconColor = computed(() => {
-    if (!this.pullRequest()) return 'text-gray-400';
+    if (!this.pullRequest()) return 'text-surface-500';
     if (this.pullRequest()?.isMerged) return 'text-purple-500';
     if (this.pullRequest()?.state === 'CLOSED') return 'text-red-500';
-    if (this.pullRequest()?.isDraft) return 'text-gray-600';
+    if (this.pullRequest()?.isDraft) return 'text-surface-500';
     return 'text-green-600'; // Default for open PRs
   });
 

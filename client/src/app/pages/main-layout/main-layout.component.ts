@@ -1,4 +1,4 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal, effect } from '@angular/core';
 import { ActivatedRoute, NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 import { IconsModule } from 'icons.module';
@@ -43,7 +43,14 @@ export class MainLayoutComponent implements OnInit {
   private router = inject(Router);
 
   repositoryId = signal<number | undefined>(undefined);
+  isDarkModeEnabled = signal(window.matchMedia('(prefers-color-scheme: dark)').matches);
   isLoggedIn = computed(() => this.keycloakService.isLoggedIn());
+
+  constructor() {
+    effect(() => {
+      document.querySelector('html')?.classList.toggle('dark-mode-enabled', this.isDarkModeEnabled());
+    });
+  }
 
   ngOnInit(): void {
     // Initialize on first load (Refresh)
@@ -111,5 +118,9 @@ export class MainLayoutComponent implements OnInit {
 
   login() {
     this.keycloakService.login();
+  }
+
+  toggleDarkMode() {
+    this.isDarkModeEnabled.set(!this.isDarkModeEnabled());
   }
 }

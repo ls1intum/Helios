@@ -17,6 +17,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { EnvironmentStatusTagComponent } from '../environment-status-tag/environment-status-tag.component';
 import { signal } from '@angular/core';
+import { ButtonModule } from 'primeng/button';
 
 @Component({
   selector: 'app-environment-accordion',
@@ -27,6 +28,7 @@ import { signal } from '@angular/core';
     TagModule,
     UserAvatarComponent,
     TimeAgoPipe,
+    ButtonModule,
     DeploymentStateTagComponent,
     TooltipModule,
     IconsModule,

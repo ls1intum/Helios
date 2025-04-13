@@ -10,10 +10,11 @@ import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 import { PermissionService } from '@app/core/services/permission.service';
 import { injectQuery } from '@tanstack/angular-query-experimental';
 import { getRepositoryByIdOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
+import { ButtonModule } from 'primeng/button';
 
 @Component({
   selector: 'app-navigation-bar',
-  imports: [Avatar, Divider, RouterLink, SlicePipe, TablerIconComponent, Tooltip, UserLockInfoComponent, RouterLinkActive, NgClass],
+  imports: [Avatar, Divider, RouterLink, ButtonModule, SlicePipe, TablerIconComponent, Tooltip, UserLockInfoComponent, RouterLinkActive, NgClass],
   templateUrl: './navigation-bar.component.html',
 })
 export class NavigationBarComponent {

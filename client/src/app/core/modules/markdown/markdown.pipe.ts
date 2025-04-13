@@ -13,10 +13,20 @@ export class MarkdownPipe implements PipeTransform {
     // Configure marked renderer
     const renderer = new marked.Renderer();
     renderer.code = code => {
-      return `<span style="background-color: rgb(243 244 246); padding: 2px 8px; border-radius: 4px; font-family: monospace;">${code.text}</span>`;
+      return `<span class="bg-surface-300 dark:bg-surface-700" style="padding: 2px 8px; border-radius: 4px; font-family: monospace;">${code.text}</span>`;
     };
     renderer.codespan = code => {
-      return `<span style="background-color: rgb(243 244 246); padding: 2px 6px; border-radius: 4px; font-family: monospace;">${code.text}</span>`;
+      return `<span class="bg-surface-300 dark:bg-surface-700" style="padding: 2px 6px; border-radius: 4px; font-family: monospace;">${code.text}</span>`;
+    };
+    renderer.heading = ({ text, depth }) => {
+      const id = text.toLowerCase().replace(/\s+/g, '-');
+      return `<h${depth} id="${id}" style="font-size: 1.5em; font-weight: bold;">${text}</h${depth}>`;
+    };
+    renderer.listitem = ({ text }) => {
+      return `   • ${text}<br>`;
+    };
+    renderer.blockquote = text => {
+      return `<blockquote style="border-left: 4px solid #ccc; padding-left: 16px; color: #555;">${text}</blockquote>`;
     };
     marked.setOptions({ renderer });
   }

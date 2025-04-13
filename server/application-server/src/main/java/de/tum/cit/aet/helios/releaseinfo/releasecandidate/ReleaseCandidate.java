@@ -6,6 +6,7 @@ import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import de.tum.cit.aet.helios.releaseinfo.release.Release;
 import de.tum.cit.aet.helios.user.User;
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
@@ -53,6 +54,9 @@ public class ReleaseCandidate {
   private OffsetDateTime createdAt;
 
   @OneToOne private Release release;
+
+  @Column(columnDefinition = "TEXT")
+  private String body;
 
   public int compareToByDate(ReleaseCandidate other) {
     return this.createdAt.compareTo(other.createdAt);

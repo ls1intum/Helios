@@ -1,10 +1,12 @@
-import { Component, inject, input } from '@angular/core';
+import { Component, computed, inject, input, OnInit, signal } from '@angular/core';
 import {
   deleteReleaseCandidateByNameMutation,
   evaluateMutation,
   getReleaseInfoByNameOptions,
   getReleaseInfoByNameQueryKey,
   publishReleaseDraftMutation,
+  updateReleaseNotesMutation,
+  generateReleaseNotesMutation,
 } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { injectMutation, injectQuery, QueryClient } from '@tanstack/angular-query-experimental';
 import { ButtonModule } from 'primeng/button';
@@ -15,7 +17,6 @@ import { AvatarModule } from 'primeng/avatar';
 import { IconsModule } from 'icons.module';
 import { TimeAgoPipe } from '@app/pipes/time-ago.pipe';
 import { TooltipModule } from 'primeng/tooltip';
-import { SlicePipe } from '@angular/common';
 import { TagModule } from 'primeng/tag';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
@@ -23,6 +24,9 @@ import { PermissionService } from '@app/core/services/permission.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ReleaseInfoDetailsDto } from '@app/core/modules/openapi';
 import { MarkdownPipe } from '@app/core/modules/markdown/markdown.pipe';
+import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { TextareaModule } from 'primeng/textarea';
+import { SlicePipe } from '@angular/common';
 
 @Component({
   selector: 'app-release-candidate-details',
@@ -38,10 +42,12 @@ import { MarkdownPipe } from '@app/core/modules/markdown/markdown.pipe';
     TooltipModule,
     SlicePipe,
     TagModule,
+    ReactiveFormsModule,
+    TextareaModule,
   ],
   templateUrl: './release-candidate-details.component.html',
 })
-export class ReleaseCandidateDetailsComponent {
+export class ReleaseCandidateDetailsComponent implements OnInit {
   private messageService = inject(MessageService);
   private keycloakService = inject(KeycloakService);
   permissionService = inject(PermissionService);
@@ -51,7 +57,43 @@ export class ReleaseCandidateDetailsComponent {
   private route = inject(ActivatedRoute);
 
   name = input.required<string>();
-  releaseCandidateQuery = injectQuery(() => ({ ...getReleaseInfoByNameOptions({ path: { name: this.name() } }), refetchInterval: 3000 }));
+  releaseCandidateQuery = injectQuery(() => ({
+    ...getReleaseInfoByNameOptions({ path: { name: this.name() } }),
+    onSuccess: () => {
+      this.releaseNotesForm.get('releaseNotes')?.setValue(this.releaseNotes());
+    },
+  }));
+
+  releaseNotesForm = new FormGroup({
+    releaseNotes: new FormControl(''),
+  });
+
+  // Computed property that handles the priorities as required
+  releaseNotes = computed(() => {
+    const releaseCandidate = this.releaseCandidateQuery.data();
+    if (!releaseCandidate) return '';
+
+    // Priority 1: If it's a full release, use release.body
+    if (releaseCandidate?.release?.body) {
+      return releaseCandidate.release.body;
+    }
+    // Priority 2: If it's a draft published to GitHub, use releaseCandidate.body
+    else if (releaseCandidate?.body) {
+      return releaseCandidate.body;
+    }
+    // Default empty if nothing is available
+    else {
+      return '';
+    }
+  });
+
+  isEditingReleaseNotes = signal(false);
+
+  // Check if editing is allowed (only if not published to GitHub)
+  canEditReleaseNotes = computed(() => {
+    const releaseCandidate = this.releaseCandidateQuery.data();
+    return !releaseCandidate?.release && this.permissionService.isAtLeastMaintainer();
+  });
 
   evaluateReleaseCandidateMutation = injectMutation(() => ({
     ...evaluateMutation(),
@@ -64,8 +106,10 @@ export class ReleaseCandidateDetailsComponent {
   publishReleaseDraftMutation = injectMutation(() => ({
     ...publishReleaseDraftMutation(),
     onSuccess: () => {
-      this.messageService.add({ severity: 'success', summary: 'Release Candidate Deletion', detail: 'Release candidate has been deleted successfully' });
-      this.router.navigate(['..'], { relativeTo: this.route });
+      this.messageService.add({ severity: 'success', summary: 'Release Draft Published', detail: 'Release draft has been published to GitHub successfully' });
+      this.queryClient.invalidateQueries({ queryKey: getReleaseInfoByNameQueryKey({ path: { name: this.name() } }) });
+      // Once published, editing should be disabled
+      this.isEditingReleaseNotes.set(false);
     },
   }));
 
@@ -76,6 +120,36 @@ export class ReleaseCandidateDetailsComponent {
       this.router.navigate(['..'], { relativeTo: this.route });
     },
   }));
+
+  generateReleaseNotesMutation = injectMutation(() => ({
+    ...generateReleaseNotesMutation(),
+    onSuccess: data => {
+      // Set the markdown content directly
+      this.releaseNotesForm.get('releaseNotes')?.setValue(data.toString());
+      this.isEditingReleaseNotes.set(true);
+      this.messageService.add({ severity: 'success', summary: 'Release Notes', detail: 'Release notes generated successfully' });
+    },
+    onError: error => {
+      this.messageService.add({ severity: 'error', summary: 'Release Notes Generation Failed', detail: error.message });
+    },
+  }));
+
+  updateReleaseNotesMutation = injectMutation(() => ({
+    ...updateReleaseNotesMutation(),
+    onSuccess: () => {
+      this.messageService.add({ severity: 'success', summary: 'Release Notes', detail: 'Release notes saved successfully' });
+      this.isEditingReleaseNotes.set(false);
+      this.queryClient.invalidateQueries({ queryKey: getReleaseInfoByNameQueryKey({ path: { name: this.name() } }) });
+    },
+    onError: error => {
+      this.messageService.add({ severity: 'error', summary: 'Release Notes Update Failed', detail: error.message });
+    },
+  }));
+
+  ngOnInit() {
+    // Initialize with existing release notes using the computed property
+    this.releaseNotesForm.get('releaseNotes')?.setValue(this.releaseNotes());
+  }
 
   evaluateReleaseCandidate = (isWorking: boolean) => {
     this.evaluateReleaseCandidateMutation.mutate({ path: { name: this.name(), isWorking } });
@@ -114,5 +188,40 @@ export class ReleaseCandidateDetailsComponent {
     const rc = this.releaseCandidateQuery.data();
     if (!rc || !rc.release) return;
     window.open(rc.release?.githubUrl, '_blank');
+  }
+
+  generateReleaseNotes() {
+    const rc = this.releaseCandidateQuery.data();
+    if (rc?.release) return; // Don't allow generation if already published
+
+    this.generateReleaseNotesMutation.mutate({
+      path: { tagName: this.name() },
+    });
+  }
+
+  editReleaseNotes() {
+    const rc = this.releaseCandidateQuery.data();
+    if (rc?.release) return; // Don't allow editing if already published
+
+    this.releaseNotesForm.get('releaseNotes')?.setValue(this.releaseNotes());
+    this.isEditingReleaseNotes.set(true);
+  }
+
+  saveReleaseNotes() {
+    const rc = this.releaseCandidateQuery.data();
+    if (rc?.release) return; // Don't allow saving if already published
+
+    const markdownContent = this.releaseNotesForm.get('releaseNotes')?.value || '';
+
+    this.updateReleaseNotesMutation.mutate({
+      path: { name: this.name() },
+      body: { body: markdownContent },
+    });
+  }
+
+  cancelEditing() {
+    // Reset to original value from the computed property
+    this.releaseNotesForm.get('releaseNotes')?.setValue(this.releaseNotes());
+    this.isEditingReleaseNotes.set(false);
   }
 }

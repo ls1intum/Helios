@@ -37,6 +37,7 @@ import { SelectModule } from 'primeng/select';
 import { TooltipModule } from 'primeng/tooltip';
 import { TagModule } from 'primeng/tag';
 import { MessageModule } from 'primeng/message';
+import { ButtonGroupModule } from 'primeng/buttongroup';
 
 @Component({
   selector: 'app-project-settings',
@@ -44,6 +45,8 @@ import { MessageModule } from 'primeng/message';
     FormsModule,
     TableModule,
     ButtonModule,
+    ButtonGroupModule,
+    InputTextModule,
     PageHeadingComponent,
     LockingThresholdsComponent,
     PanelModule,
@@ -243,11 +246,10 @@ export class ProjectSettingsComponent {
           <p class="text-base font-medium mb-4">
             Are you sure you want to change the workflow label to <strong>${label}</strong>?
           </p>
-          <div class="flex items-start gap-2 p-3 bg-yellow-50 border border-yellow-300 rounded-md">
-            <i class="pi pi-exclamation-triangle text-yellow-500 text-xl"></i>
+          <div class="flex items-start gap-2 p-3 bg-orange-50 dark:bg-orange-300 border border-orange-500 text-orange-500 rounded-md">
             <div>
               <p class="font-semibold">Note:</p>
-              <ul class="list-disc list-inside text-sm text-gray-600">
+              <ul class="list-disc list-inside text-sm">
                 <li><strong>TEST</strong>: This label sets the workflow to be searched for test artifacts.</li>
                 <li><strong>NONE</strong>: No label is set for this workflow.</li>
               </ul>

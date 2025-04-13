@@ -47,16 +47,16 @@
                             <i-tabler name="circle-check" class="text-green-500" pTooltip="Success"></i-tabler>
                           }
                           @case ('FAILURE') {
-                            <i-tabler name="circle-x" class="text-red-500" pTooltip="Failure"></i-tabler>
+                            <i-tabler name="circle-x" class="text-red-700" pTooltip="Failure"></i-tabler>
                           }
                           @default {
-                            <i-tabler name="progress-help" class="text-gray-500" pTooltip="Unknown"></i-tabler>
+                            <i-tabler name="progress-help" class="text-surface-500" pTooltip="Unknown"></i-tabler>
                           }
                         }
                       } @else if (['IN_PROGRESS', 'QUEUED', 'PENDING', 'WAITING', 'REQUESTED'].includes(workflowRun.status)) {
                         <i-tabler name="progress" class="text-yellow-500 animate-spin" pTooltip="In progress"></i-tabler>
                       } @else {
-                        <i-tabler name="progress-help" class="text-gray-500" pTooltip="Unknown"></i-tabler>
+                        <i-tabler name="progress-help" class="text-surface-500" pTooltip="Unknown"></i-tabler>
                       }
                     </div>
                     <!-- Fixed width to ensure consistent alignment -->
@@ -71,7 +71,7 @@
 
             <!-- Connection line -->
             @if (!group.isLastWithWorkflows) {
-              <div class="w-10 h-px bg-gray-300 mt-7"></div>
+              <p-divider class="w-10 mt-7"></p-divider>
             }
           </ng-container>
         }

@@ -76,12 +76,6 @@ public class TestCaseStatistics {
   @Column(nullable = false, name = "failed_runs")
   private int failedRuns;
 
-  @Column(nullable = false, name = "failure_rate")
-  private double failureRate;
-
-  @Column(nullable = false, name = "is_flaky")
-  private boolean isFlaky;
-
   @Column(nullable = false, name = "last_updated")
   private OffsetDateTime lastUpdated;
 
@@ -132,16 +126,10 @@ public class TestCaseStatistics {
     if (hasFailed) {
       this.failedRuns++;
     }
-    this.calculateFailureRate();
     this.lastUpdated = OffsetDateTime.now();
   }
 
-  /**
-   * Calculates the failure rate and updates the flakiness status based on the configured threshold.
-   */
-  private void calculateFailureRate() {
-    this.failureRate = totalRuns > 0 ? (double) failedRuns / totalRuns : 0.0;
-    // A test is considered flaky if it fails more than 50% of the time
-    this.isFlaky = this.failureRate >= 0.5;
+  public double getFailureRate() {
+    return totalRuns > 0 ? (double) failedRuns / totalRuns : 0.0;
   }
 }

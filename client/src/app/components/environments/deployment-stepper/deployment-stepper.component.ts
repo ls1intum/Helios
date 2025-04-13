@@ -5,6 +5,7 @@ import { ProgressBarModule } from 'primeng/progressbar';
 import { EnvironmentDeployment } from '@app/core/modules/openapi';
 import { TooltipModule } from 'primeng/tooltip';
 import { DeploymentTimingService } from '@app/core/services/deployment-timing.service';
+import { TagModule } from 'primeng/tag';
 
 interface EstimatedTimes {
   REQUESTED: number;
@@ -14,7 +15,7 @@ interface EstimatedTimes {
 
 @Component({
   selector: 'app-deployment-stepper',
-  imports: [CommonModule, IconsModule, ProgressBarModule, TooltipModule],
+  imports: [CommonModule, IconsModule, TagModule, ProgressBarModule, TooltipModule],
   templateUrl: './deployment-stepper.component.html',
 })
 export class DeploymentStepperComponent implements OnInit {
@@ -76,6 +77,23 @@ export class DeploymentStepperComponent implements OnInit {
     if (!deployment) return 'unknown';
     return this.timingService.getStepStatus(deployment, index);
   });
+
+  getSeverityFromStepStatus = (index: number) => {
+    switch (this.getStepStatus(index)) {
+      case 'completed':
+        return 'success';
+      case 'active':
+        return 'info';
+      case 'error':
+        return 'danger';
+      case 'upcoming':
+      case 'unknown':
+      case 'inactive':
+        return 'secondary';
+      default:
+        return 'secondary';
+    }
+  };
 
   getProgress = this.timingService.createTimeAwareFunction((index: number): number => {
     const deployment = this._deployment();

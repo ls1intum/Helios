@@ -19,7 +19,8 @@ public record ReleaseInfoDetailsDto(
     @NonNull List<ReleaseCandidateEvaluationDto> evaluations,
     ReleaseDto release,
     UserInfoDto createdBy,
-    @NonNull OffsetDateTime createdAt) {
+    @NonNull OffsetDateTime createdAt,
+    String body) {
 
   public record ReleaseCandidateEvaluationDto(@NonNull UserInfoDto user, boolean isWorking) {
     public static ReleaseCandidateEvaluationDto fromEvaluation(

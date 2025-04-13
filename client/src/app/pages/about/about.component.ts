@@ -3,6 +3,7 @@ import { PageHeadingComponent } from '@app/components/page-heading/page-heading.
 import { NgClass, NgOptimizedImage } from '@angular/common';
 import { UserInfoDto } from '@app/core/modules/openapi';
 import { UserAvatarComponent } from '@app/components/user-avatar/user-avatar.component';
+import { ButtonModule } from 'primeng/button';
 
 interface Feature {
   icon: string;
@@ -24,7 +25,7 @@ export type ExtendedUserInfoDto = UserInfoDto & {
 
 @Component({
   selector: 'app-about',
-  imports: [PageHeadingComponent, NgOptimizedImage, NgClass, UserAvatarComponent],
+  imports: [PageHeadingComponent, ButtonModule, NgOptimizedImage, NgClass, UserAvatarComponent],
   templateUrl: './about.component.html',
 })
 export class AboutComponent implements OnInit {

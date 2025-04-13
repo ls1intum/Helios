@@ -10,24 +10,23 @@
 
   <app-environment-reviewers [environmentId]="environment().id"></app-environment-reviewers>
 
-  <div class="flex items-center border border-gray-300 rounded-md overflow-hidden">
-    <!-- Deploy Button -->
-    @if (deployable()) {
-      <p-button outlined (click)="onDeploy($event)" [disabled]="!canUserDeploy()" [pTooltip]="getDeployTooltip()" tooltipPosition="top">
-        <div class="flex items-center">
-          <i-tabler name="cloud-upload" class="w-4 h-4 mr-1.5 flex-shrink-0 text-primary-700" />
-          <span>Deploy</span>
-        </div>
-      </p-button>
-      <div class="w-px bg-gray-300 self-stretch"></div>
-    }
+  <div class="flex items-center overflow-hidden">
+    <p-buttongroup>
+      <!-- Deploy Button -->
+      @if (deployable()) {
+        <p-button (click)="onDeploy($event)" [disabled]="!canUserDeploy()" [pTooltip]="getDeployTooltip()" tooltipPosition="top">
+          <div class="flex items-center">
+            <i-tabler name="cloud-upload" class="w-4 h-4 mr-1.5 flex-shrink-0" />
+            <span>Deploy</span>
+          </div>
+        </p-button>
+      }
 
-    <!-- Lock/Unlock Controls -->
-    @if (environment().enabled && environment().type === 'TEST') {
-      <p-buttongroup>
+      <!-- Lock/Unlock Controls -->
+      @if (environment().enabled && environment().type === 'TEST') {
         @if (!environment().locked) {
           @if (deployable()) {
-            <p-button outlined (click)="onLock($event)" [disabled]="!canUserDeploy()" [pTooltip]="getLockTooltip()" tooltipPosition="top">
+            <p-button (click)="onLock($event)" [disabled]="!canUserDeploy()" [pTooltip]="getLockTooltip()" tooltipPosition="top">
               <div class="flex items-center">
                 <i-tabler name="lock" class="w-4 h-4 flex-shrink-0 text-red-700" />
               </div>
@@ -37,32 +36,32 @@
           @if (canUnlockShow()) {
             <p-button severity="danger" class="[&>*]:!rounded-none" (click)="onUnlock($event)" [disabled]="!canUnlock()" [pTooltip]="getUnlockToolTip()" tooltipPosition="top">
               <div class="flex items-center">
-                <i-tabler name="lock-open" class="w-4 h-4 flex-shrink-0 text-white" />
+                <i-tabler name="lock-open" class="w-4 h-4 flex-shrink-0" />
               </div>
             </p-button>
             @if (isCurrentUserLocked()) {
-              <p-button outlined (click)="onExtend($event)" [disabled]="!canUnlock()" [pTooltip]="'Extend my lock expiration'" tooltipPosition="top">
-                <i-tabler name="lock-plus" class="w-4 h-4 flex-shrink-0 text-green-700" />
+              <p-button severity="success" (click)="onExtend($event)" [disabled]="!canUnlock()" [pTooltip]="'Extend my lock expiration'" tooltipPosition="top">
+                <i-tabler name="lock-plus" class="w-4 h-4 flex-shrink-0" />
               </p-button>
             }
           }
         }
-      </p-buttongroup>
-    }
+      }
 
-    <!-- Approve Button -->
-    @if (environment().latestDeployment?.state === 'WAITING' && environment().latestDeployment?.workflowRunHtmlUrl) {
-      <p-button
-        severity="success"
-        (click)="openExternalLink($event, environment().latestDeployment?.workflowRunHtmlUrl)"
-        pTooltip="Approve deployment on GitHub"
-        tooltipPosition="top"
-      >
-        <div class="flex items-center">
-          <i-tabler name="check" class="w-4 h-4 flex-shrink-0" />
-        </div>
-      </p-button>
-    }
+      <!-- Approve Button -->
+      @if (environment().latestDeployment?.state === 'WAITING' && environment().latestDeployment?.workflowRunHtmlUrl) {
+        <p-button
+          severity="success"
+          (click)="openExternalLink($event, environment().latestDeployment?.workflowRunHtmlUrl)"
+          pTooltip="Approve deployment on GitHub"
+          tooltipPosition="top"
+        >
+          <div class="flex items-center">
+            <i-tabler name="check" class="w-4 h-4 flex-shrink-0" />
+          </div>
+        </p-button>
+      }
+    </p-buttongroup>
   </div>
 
   <!-- Edit & Disabled Tag -->
@@ -73,7 +72,7 @@
     <a
       icon
       [routerLink]="'/repo/' + environment().repository?.id + '/environment/' + environment().id + '/edit'"
-      class="p-button p-button-secondary p-2"
+      class="p-button p-button-text p-button-secondary p-2"
       (click)="$event.stopPropagation()"
     >
       <i-tabler name="pencil" />
