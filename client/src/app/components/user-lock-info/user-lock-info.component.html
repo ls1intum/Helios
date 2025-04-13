@@ -9,7 +9,7 @@
   </a>
   <ng-template #tooltipContent>
     <div class="flex flex-col">
-      <span class="text-xs text-surface-300 dark:text-surface-700 uppercase tracking-tighter font-bold">Locked Environment</span>
+      <span class="text-xs uppercase font-bold">Locked Environment</span>
       <span class="text-sm">{{ lock.environment?.name }}</span>
       @if (lock.environment?.latestDeployment?.ref) {
         <div class="border-b border-surface-500 my-2"></div>
