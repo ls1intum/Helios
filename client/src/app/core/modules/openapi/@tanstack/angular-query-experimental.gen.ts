@@ -8,6 +8,7 @@ import {
   getGitRepoSettings,
   updateGitRepoSettings,
   updateWorkflowGroups,
+  updateReleaseName,
   updateReleaseNotes,
   getEnvironmentById,
   updateEnvironment,
@@ -79,6 +80,8 @@ import type {
   UpdateGitRepoSettingsResponse,
   UpdateWorkflowGroupsData,
   UpdateWorkflowGroupsError,
+  UpdateReleaseNameData,
+  UpdateReleaseNameError,
   UpdateReleaseNotesData,
   UpdateReleaseNotesError,
   GetEnvironmentByIdData,
@@ -273,6 +276,20 @@ export const updateWorkflowGroupsMutation = (options?: Partial<Options<UpdateWor
   const mutationOptions: MutationOptions<unknown, UpdateWorkflowGroupsError, Options<UpdateWorkflowGroupsData>> = {
     mutationFn: async localOptions => {
       const { data } = await updateWorkflowGroups({
+        ...options,
+        ...localOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const updateReleaseNameMutation = (options?: Partial<Options<UpdateReleaseNameData>>) => {
+  const mutationOptions: MutationOptions<unknown, UpdateReleaseNameError, Options<UpdateReleaseNameData>> = {
+    mutationFn: async localOptions => {
+      const { data } = await updateReleaseName({
         ...options,
         ...localOptions,
         throwOnError: true,

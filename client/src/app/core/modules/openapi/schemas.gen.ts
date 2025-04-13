@@ -105,6 +105,15 @@ export const WorkflowMembershipDtoSchema = {
   required: ['orderIndex', 'workflowId'],
 } as const;
 
+export const ReleaseCandidateNameUpdateDtoSchema = {
+  type: 'object',
+  properties: {
+    newName: {
+      type: 'string',
+    },
+  },
+} as const;
+
 export const ReleaseNotesDtoSchema = {
   type: 'object',
   properties: {

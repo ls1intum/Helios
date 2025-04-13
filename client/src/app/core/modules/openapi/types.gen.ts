@@ -33,6 +33,10 @@ export type WorkflowMembershipDto = {
   orderIndex: number;
 };
 
+export type ReleaseCandidateNameUpdateDto = {
+  newName?: string;
+};
+
 export type ReleaseNotesDto = {
   body?: string;
 };
@@ -581,6 +585,31 @@ export type UpdateWorkflowGroupsErrors = {
 export type UpdateWorkflowGroupsError = UpdateWorkflowGroupsErrors[keyof UpdateWorkflowGroupsErrors];
 
 export type UpdateWorkflowGroupsResponses = {
+  /**
+   * OK
+   */
+  200: unknown;
+};
+
+export type UpdateReleaseNameData = {
+  body: ReleaseCandidateNameUpdateDto;
+  path: {
+    name: string;
+  };
+  query?: never;
+  url: '/api/release-info/{name}/update-name';
+};
+
+export type UpdateReleaseNameErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type UpdateReleaseNameError = UpdateReleaseNameErrors[keyof UpdateReleaseNameErrors];
+
+export type UpdateReleaseNameResponses = {
   /**
    * OK
    */

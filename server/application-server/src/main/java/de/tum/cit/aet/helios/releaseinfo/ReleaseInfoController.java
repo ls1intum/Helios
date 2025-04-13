@@ -92,4 +92,19 @@ public class ReleaseInfoController {
     releaseInfoService.updateReleaseNotes(name, releaseNotes.body());
     return ResponseEntity.ok().build();
   }
+
+  /**
+   * Endpoint to update the name of a release candidate.
+   *
+   * @param name Name of the release candidate to update
+   * @param updateNameDto DTO containing the new name
+   * @return Updated release info details
+   */
+  @EnforceAtLeastMaintainer
+  @PutMapping("/{name}/update-name")
+  public ResponseEntity<Void> updateReleaseName(
+      @PathVariable String name, @RequestBody ReleaseCandidateNameUpdateDto updateNameDto) {
+    releaseInfoService.updateReleaseName(name, updateNameDto.newName());
+    return ResponseEntity.ok().build();
+  }
 }
