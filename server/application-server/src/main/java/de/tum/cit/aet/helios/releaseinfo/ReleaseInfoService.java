@@ -311,7 +311,7 @@ public class ReleaseInfoService {
               releaseCandidate.getCommit().getSha(),
               tagName, // Using tagName as the release name
               releaseNotes,
-              false, // Setting draft to false to publish it immediately
+              true,
               githubUserLogin);
 
       // Process the release in the system

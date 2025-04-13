@@ -583,18 +583,20 @@ public class GitHubService {
         throw new IOException("GitHub API call failed with response code: " + response.code());
       }
 
-      if (response.body() == null) {
+      ResponseBody responseBody = response.body();
+      if (responseBody == null) {
         throw new IOException("Response body is null");
       }
-
-      // Parse the response and convert it to a GHRelease object
-      Map<String, Object> releaseMap = objectMapper.readValue(response.body().string(), Map.class);
 
       // Log success
       log.info("Successfully created release for tag: {}, draft: {}", tagName, draft);
 
+      Long id =
+          Long.valueOf(
+              objectMapper.readValue(responseBody.string(), Map.class).get("id").toString());
       // Return the created release information by fetching the complete release from GitHub
-      return getRepository(repoNameWithOwner).getReleaseByTagName(tagName);
+      GHRelease release = getRepository(repoNameWithOwner).getRelease(id);
+      return release;
     }
   }
 }
