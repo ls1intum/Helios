@@ -421,7 +421,7 @@ public class GitHubDataSyncOrchestrator {
       try {
 
         if (run.getEvent().equals(GHEvent.WORKFLOW_RUN)) {
-          log.info("Received workflow_run event, delaying processing");
+          log.info("Processing workflow_run event with workflow run id: {}", run.getId());
           GitHubWorkflowContext context = null;
           try {
             context =
