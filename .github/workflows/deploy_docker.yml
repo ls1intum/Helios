@@ -89,6 +89,7 @@ jobs:
             echo "GITHUB_AUTH_TOKEN=${{ secrets.GH_AUTH_TOKEN }}" >> .env
             echo "RUN_ON_STARTUP_COOLDOWN=${{ vars.RUN_ON_STARTUP_COOLDOWN }}" >> .env
             echo "SENTRY_DSN=${{ vars.SENTRY_DSN }}" >> .env
+            echo "DATA_SYNC_RUN_ON_STARTUP=${{ vars.DATA_SYNC_RUN_ON_STARTUP }}" >> .env
             
             echo "KC_BOOTSTRAP_ADMIN_USERNAME=${{ secrets.KC_BOOTSTRAP_ADMIN_USERNAME }}" >> .env
             echo "KC_BOOTSTRAP_ADMIN_PASSWORD=${{ secrets.KC_BOOTSTRAP_ADMIN_PASSWORD }}" >> .env
