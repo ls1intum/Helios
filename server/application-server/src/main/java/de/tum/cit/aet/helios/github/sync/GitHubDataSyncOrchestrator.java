@@ -24,6 +24,7 @@ import de.tum.cit.aet.helios.releaseinfo.release.github.GitHubReleaseSyncService
 import de.tum.cit.aet.helios.user.User;
 import de.tum.cit.aet.helios.user.UserRepository;
 import de.tum.cit.aet.helios.user.github.GitHubUserSyncService;
+import de.tum.cit.aet.helios.workflow.GitHubWorkflowContext;
 import de.tum.cit.aet.helios.workflow.github.GitHubWorkflowRunSyncService;
 import de.tum.cit.aet.helios.workflow.github.GitHubWorkflowSyncService;
 import java.io.IOException;
@@ -39,6 +40,7 @@ import lombok.extern.log4j.Log4j2;
 import org.jetbrains.annotations.NotNull;
 import org.kohsuke.github.GHCommit;
 import org.kohsuke.github.GHDirection;
+import org.kohsuke.github.GHEvent;
 import org.kohsuke.github.GHIssueState;
 import org.kohsuke.github.GHPullRequestQueryBuilder;
 import org.kohsuke.github.GHRelease;
@@ -415,10 +417,46 @@ public class GitHubDataSyncOrchestrator {
       }
     }
 
-    workflowRuns.forEach(workflowRunSyncService::processRun);
+    workflowRuns.forEach(run -> {
+      try {
+
+        if (run.getEvent().equals(GHEvent.WORKFLOW_RUN)) {
+          log.info("Processing workflow_run event with workflow run id: {}", run.getId());
+          GitHubWorkflowContext context = null;
+          try {
+            context =
+                gitHubService.extractWorkflowContext(repository.getId(), run.getId());
+          } catch (Exception e) {
+            log.error("Error while extracting workflow context: {}", e.getMessage());
+            return;
+          }
+
+          if (context == null) {
+            log.warn("No workflow context found for workflow run: {}", run.getId());
+            return;
+          }
+
+          log.info(
+              "Context found with triggering workflow run id: {}, head branch: {}, head sha: {}",
+              context.runId(), context.headBranch(), context.headSha());
+
+          workflowRunSyncService.processRunWithContext(run, context);
+        } else {
+          workflowRunSyncService.processRun(run);
+        }
+
+      } catch (Exception e) {
+        log.error(
+            "Failed to process workflow run {}: {}",
+            run.getId(),
+            e.getMessage());
+      }
+    });
   }
 
-  /** Sync all existing users in the local repository with their GitHub data. */
+  /**
+   * Sync all existing users in the local repository with their GitHub data.
+   */
   public void syncAllExistingUsers() {
     userRepository.findAll().stream().map(User::getLogin).forEach(this::syncUser);
   }
