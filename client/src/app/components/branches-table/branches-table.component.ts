@@ -1,4 +1,4 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, viewChild } from '@angular/core';
 import { TableModule } from 'primeng/table';
 import { AvatarModule } from 'primeng/avatar';
 import { TagModule } from 'primeng/tag';
@@ -8,7 +8,7 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { InputIconModule } from 'primeng/inputicon';
 import { InputTextModule } from 'primeng/inputtext';
 import { IconFieldModule } from 'primeng/iconfield';
-import { TreeTableModule } from 'primeng/treetable';
+import { TreeTableModule, TreeTable } from 'primeng/treetable';
 import { ButtonModule } from 'primeng/button';
 import { BranchViewPreferenceService } from '@app/core/services/branches-table/branch-view-preference';
 import { Router } from '@angular/router';
@@ -43,6 +43,17 @@ const FILTER_OPTIONS = [
         const date = new Date(branch.updatedAt || '');
         const staleThreshold = new Date();
         staleThreshold.setDate(staleThreshold.getDate() - 30);
+
+        return date >= staleThreshold;
+      }),
+  },
+  {
+    name: 'Last 7 Day',
+    filter: (branches: BranchInfoWithLink[]) =>
+      branches.filter(branch => {
+        const date = new Date(branch.updatedAt || '');
+        const staleThreshold = new Date();
+        staleThreshold.setDate(staleThreshold.getDate() - 7);
 
         return date >= staleThreshold;
       }),
@@ -93,6 +104,8 @@ export class BranchTableComponent {
   queryClient = inject(QueryClient);
   searchTableService = inject(SearchTableService<BranchInfoWithLink>);
   keycloakService = inject(KeycloakService);
+
+  treeTable = viewChild<TreeTable>('table');
 
   query = injectQuery(() => getAllBranchesOptions());
   setPinnedMutation = injectMutation(() => ({
@@ -253,6 +266,44 @@ export class BranchTableComponent {
       });
     });
     return rootNodes.filter(rootSubheader => rootSubheader.children!.length > 0);
+  }
+
+  public expandAll(): void {
+    // Create a new copy of the tree with all nodes expanded
+    const nodes = this.featureBranchesTree();
+    this.expandCollapseRecursive(nodes, true);
+
+    // Force the TreeTable to rerender with the updated nodes
+    const table = this.treeTable();
+    if (table) {
+      // Trigger filter or rerender to refresh the view
+      table.filter('', 'global', 'contains');
+    }
+  }
+
+  public collapseAll(): void {
+    // Create a new copy of the tree with all nodes collapsed
+    const nodes = this.featureBranchesTree();
+    this.expandCollapseRecursive(nodes, false);
+
+    // Force the TreeTable to rerender with the updated nodes
+    const table = this.treeTable();
+    if (table) {
+      // Trigger filter or rerender to refresh the view
+      table.filter('', 'global', 'contains');
+    }
+  }
+
+  private expandCollapseRecursive(nodes: TreeNode[], expand: boolean): void {
+    for (const node of nodes) {
+      // Always expand subheader nodes when expanding, or only collapse if not a subheader
+      if (expand || !node.subheader) {
+        node.expanded = expand;
+      }
+      if (node.children && node.children.length > 0) {
+        this.expandCollapseRecursive(node.children, expand);
+      }
+    }
   }
 }
 
