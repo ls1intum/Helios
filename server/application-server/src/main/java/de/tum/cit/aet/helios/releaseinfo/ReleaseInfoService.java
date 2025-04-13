@@ -367,4 +367,58 @@ public class ReleaseInfoService {
               throw new ReleaseCandidateException("Release candidate not found");
             });
   }
+
+  @Transactional
+  public void updateReleaseName(String currentName, String newName) {
+    final Long repositoryId = RepositoryContext.getRepositoryId();
+
+    // First check that the new name is different from the current name
+    if (currentName.equals(newName)) {
+      return; // No change needed
+    }
+
+    // Validate that the new name doesn't already exist in this repository
+    if (releaseCandidateRepository.existsByRepositoryRepositoryIdAndName(repositoryId, newName)) {
+      throw new ReleaseCandidateException(
+          "A release candidate with the name '" + newName + "' already exists");
+    }
+
+    // Find the release candidate to update
+    ReleaseCandidate oldReleaseCandidate =
+        releaseCandidateRepository
+            .findByRepositoryRepositoryIdAndName(repositoryId, currentName)
+            .orElseThrow(() -> new ReleaseCandidateException("Release candidate not found"));
+
+    // Check if it's already published - don't allow name changes after publishing
+    if (oldReleaseCandidate.getRelease() != null) {
+      throw new ReleaseCandidateException(
+          "Cannot update name of a release that has already been published to GitHub");
+    }
+
+    // Create a new release candidate with the new name
+    ReleaseCandidate newReleaseCandidate = new ReleaseCandidate();
+    newReleaseCandidate.setRepository(oldReleaseCandidate.getRepository());
+    newReleaseCandidate.setName(newName);
+    newReleaseCandidate.setCommit(oldReleaseCandidate.getCommit());
+    newReleaseCandidate.setBranch(oldReleaseCandidate.getBranch());
+    newReleaseCandidate.setCreatedBy(oldReleaseCandidate.getCreatedBy());
+    newReleaseCandidate.setCreatedAt(oldReleaseCandidate.getCreatedAt());
+    newReleaseCandidate.setRelease(oldReleaseCandidate.getRelease());
+    newReleaseCandidate.setBody(oldReleaseCandidate.getBody());
+
+    // Save the new entity
+    releaseCandidateRepository.save(newReleaseCandidate);
+
+    // Transfer evaluations to the new entity
+    for (ReleaseCandidateEvaluation evaluation : oldReleaseCandidate.getEvaluations()) {
+      ReleaseCandidateEvaluation newEvaluation = new ReleaseCandidateEvaluation();
+      newEvaluation.setReleaseCandidate(newReleaseCandidate);
+      newEvaluation.setEvaluatedBy(evaluation.getEvaluatedBy());
+      newEvaluation.setWorking(evaluation.isWorking());
+      releaseCandidateEvaluationRepository.save(newEvaluation);
+    }
+
+    // Delete the old entity
+    releaseCandidateRepository.delete(oldReleaseCandidate);
+  }
 }

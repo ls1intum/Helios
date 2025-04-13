@@ -7,6 +7,7 @@ import {
   publishReleaseDraftMutation,
   updateReleaseNotesMutation,
   generateReleaseNotesMutation,
+  updateReleaseNameMutation,
 } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { injectMutation, injectQuery, QueryClient } from '@tanstack/angular-query-experimental';
 import { ButtonModule } from 'primeng/button';
@@ -78,6 +79,12 @@ export class ReleaseCandidateDetailsComponent implements OnInit {
     },
   }));
 
+  releaseNameForm = new FormGroup({
+    releaseName: new FormControl(''),
+  });
+
+  isEditingName = signal(false);
+
   releaseNotesForm = new FormGroup({
     releaseNotes: new FormControl(''),
   });
@@ -108,6 +115,21 @@ export class ReleaseCandidateDetailsComponent implements OnInit {
     const releaseCandidate = this.releaseCandidateQuery.data();
     return !releaseCandidate?.release && this.permissionService.isAtLeastMaintainer();
   });
+
+  updateReleaseNameMutation = injectMutation(() => ({
+    ...updateReleaseNameMutation(),
+    onSuccess: () => {
+      this.messageService.add({ severity: 'success', summary: 'Release Name', detail: 'Release name updated successfully' });
+      this.isEditingName.set(false);
+      this.queryClient.invalidateQueries({ queryKey: getReleaseInfoByNameQueryKey({ path: { name: this.name() } }) });
+      // Update the URL to match the new name
+      const newName = this.releaseNameForm.get('releaseName')?.value || '';
+      this.router.navigate(['..', newName], { relativeTo: this.route });
+    },
+    onError: error => {
+      this.messageService.add({ severity: 'error', summary: 'Release Name Update Failed', detail: error.message });
+    },
+  }));
 
   evaluateReleaseCandidateMutation = injectMutation(() => ({
     ...evaluateMutation(),
@@ -237,5 +259,33 @@ export class ReleaseCandidateDetailsComponent implements OnInit {
     // Reset to original value from the computed property
     this.releaseNotesForm.get('releaseNotes')?.setValue(this.releaseNotes());
     this.isEditingReleaseNotes.set(false);
+  }
+
+  editName() {
+    const rc = this.releaseCandidateQuery.data();
+    if (rc?.release) return; // Don't allow editing if already published
+
+    this.releaseNameForm.get('releaseName')?.setValue(rc?.name || '');
+    this.isEditingName.set(true);
+  }
+
+  saveName() {
+    const rc = this.releaseCandidateQuery.data();
+    if (rc?.release) return; // Don't allow saving if already published
+
+    const newName = this.releaseNameForm.get('releaseName')?.value || '';
+    if (!newName.trim()) {
+      this.messageService.add({ severity: 'error', summary: 'Invalid Name', detail: 'Release name cannot be empty' });
+      return;
+    }
+
+    this.updateReleaseNameMutation.mutate({
+      path: { name: this.name() },
+      body: { newName: newName },
+    });
+  }
+
+  cancelEditingName() {
+    this.isEditingName.set(false);
   }
 }

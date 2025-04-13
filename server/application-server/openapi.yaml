@@ -178,6 +178,32 @@ paths:
                 $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
+  /api/release-info/{name}/update-name:
+    put:
+      tags:
+      - release-info-controller
+      operationId: updateReleaseName
+      parameters:
+      - name: name
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReleaseCandidateNameUpdateDto"
+        required: true
+      responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "200":
+          description: OK
   /api/release-info/{name}/release-notes:
     put:
       tags:
@@ -1626,6 +1652,11 @@ components:
       required:
       - orderIndex
       - workflowId
+    ReleaseCandidateNameUpdateDto:
+      type: object
+      properties:
+        newName:
+          type: string
     ReleaseNotesDto:
       type: object
       properties:

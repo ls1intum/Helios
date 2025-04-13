@@ -18,6 +18,8 @@ import type {
   UpdateGitRepoSettingsError,
   UpdateWorkflowGroupsData,
   UpdateWorkflowGroupsError,
+  UpdateReleaseNameData,
+  UpdateReleaseNameError,
   UpdateReleaseNotesData,
   UpdateReleaseNotesError,
   GetEnvironmentByIdData,
@@ -240,6 +242,17 @@ export const updateGitRepoSettings = <ThrowOnError extends boolean = false>(opti
 export const updateWorkflowGroups = <ThrowOnError extends boolean = false>(options: Options<UpdateWorkflowGroupsData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).put<unknown, UpdateWorkflowGroupsError, ThrowOnError>({
     url: '/api/settings/{repositoryId}/groups/update',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const updateReleaseName = <ThrowOnError extends boolean = false>(options: Options<UpdateReleaseNameData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).put<unknown, UpdateReleaseNameError, ThrowOnError>({
+    url: '/api/release-info/{name}/update-name',
     ...options,
     headers: {
       'Content-Type': 'application/json',
