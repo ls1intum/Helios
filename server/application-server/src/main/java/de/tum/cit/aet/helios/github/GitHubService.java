@@ -175,7 +175,11 @@ public class GitHubService {
 
     try (Response response = okHttpClient.newCall(request).execute()) {
       if (!response.isSuccessful()) {
-        throw new IOException("GitHub API call failed with response code: " + response.code());
+        throw new IOException(
+            "GitHub API call failed with response code: "
+                + response.code()
+                + " and body: "
+                + response.body().string());
       }
     } catch (IOException e) {
       log.error("Error occurred while dispatching workflow: {}", e.getMessage());

@@ -27,7 +27,7 @@
 
     <!-- Drag & Drop Hint -->
     @if (groupedWorkflowsArray().length > 0) {
-      <p class="text-sm text-gray-600 mb-4">Drag and drop the groups to reorder them.</p>
+      <p class="text-sm text-surface-500 mb-4">Drag and drop the groups to reorder them.</p>
     }
 
     @if (groupedWorkflowsArray().length > 0) {
@@ -52,11 +52,11 @@
 
             <!-- Horizontal line between panels -->
             @if (group !== localGroupedWorkflowsArray()[localGroupedWorkflowsArray().length - 1]) {
-              <div class="w-10 h-px bg-gray-300 mt-7"></div>
+              <p-divider />
             }
           </div>
         }
-        <p-button text class="text-center self-center" pTooltip="Add New Group" (click)="showAddGroupDialog = true">
+        <p-button severity="secondary" text class="text-center self-center" pTooltip="Add New Group" (click)="showAddGroupDialog = true">
           <i-tabler name="plus"></i-tabler>
         </p-button>
       </div>
@@ -68,7 +68,7 @@
             <div class="w-full flex justify-between items-center">
               <div class="font-semibold">No Groups Available</div>
               <div pTooltip="Create New Group">
-                <p-button text class="text-center self-end" (click)="showAddGroupDialog = true">
+                <p-button severity="secondary" text class="text-center self-end" (click)="showAddGroupDialog = true">
                   <i-tabler name="plus"></i-tabler>
                 </p-button>
               </div>
@@ -84,7 +84,7 @@
     <!-- Workflow Table -->
     <div class="flex justify-between items-center mb-2">
       <h3 class="text-xl">Workflows</h3>
-      <button pButton label="Fetch latest workflows" class="p-button-primary" (click)="syncWorkflows()" [loading]="syncWorkflowsMutation.isPending()"></button>
+      <p-button label="Fetch latest workflows" (click)="syncWorkflows()" [loading]="syncWorkflowsMutation.isPending()" />
     </div>
 
     <p-table [value]="workflows()" styleClass="w-full mb-6">
@@ -124,7 +124,7 @@
               <ng-template #selectedItem let-selectedOption>
                 @if (selectedOption) {
                   <div class="flex items-center gap-2">
-                    <div [class]="selectedOption === 'NONE' ? 'text-slate-400' : 'font-bold'">{{ selectedOption }}</div>
+                    <div [class]="selectedOption === 'NONE' ? 'text-surface-500' : 'font-bold'">{{ selectedOption }}</div>
                   </div>
                 }
               </ng-template>
@@ -137,7 +137,10 @@
 
   <div class="flex justify-between items-center mb-2">
     <h3 class="text-xl">Test Types</h3>
-    <button pButton label="Add Test Type" class="p-button-primary" (click)="showAddTestTypeDialog = true"></button>
+    <p-button text severity="secondary" (click)="showAddTestTypeDialog = true">
+      <i-tabler name="plus" />
+      Add Test Type
+    </p-button>
   </div>
 
   <p-table [value]="testTypes()" styleClass="w-full mb-6">
@@ -165,14 +168,14 @@
           />
         </td>
         <td>
-          <div class="flex gap-2">
-            <button pButton class="p-button-rounded p-button-text" (click)="editTestType(testType)">
+          <p-buttongroup>
+            <p-button text severity="secondary" (click)="editTestType(testType)">
               <i-tabler name="pencil" />
-            </button>
-            <button pButton class="p-button-rounded p-button-text p-button-danger" (click)="confirmDeleteTestType(testType)">
+            </p-button>
+            <p-button text severity="danger" (click)="confirmDeleteTestType(testType)">
               <i-tabler name="trash" />
-            </button>
-          </div>
+            </p-button>
+          </p-buttongroup>
         </td>
       </tr>
     </ng-template>
@@ -247,13 +250,13 @@
   >
     <div class="flex flex-col gap-2 p-2">
       <label class="font-semibold" for="groupNameInput">Group Name</label>
-      <input id="groupNameInput" type="text" pInputText [(ngModel)]="newGroupName" class="w-full p-2 border border-gray-300 rounded" placeholder="Enter new group name" />
+      <input pInputText id="groupNameInput" type="text" pInputText [(ngModel)]="newGroupName" placeholder="Enter new group name" />
       @if (groupNameExists()) {
         <p-message severity="error" text="Group name already exists."></p-message>
       }
       <div class="flex justify-end gap-2 mt-4">
-        <button pButton label="Cancel" class="p-button-text" (click)="showAddGroupDialog = false"></button>
-        <button pButton label="Add" class="p-button-primary" (click)="addNewGroup()" [disabled]="groupNameExists()"></button>
+        <p-button label="Cancel" text (click)="showAddGroupDialog = false" />
+        <p-button label="Add" (click)="addNewGroup()" [disabled]="groupNameExists()" />
       </div>
     </div>
   </p-dialog>

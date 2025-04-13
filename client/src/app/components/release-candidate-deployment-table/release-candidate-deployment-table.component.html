@@ -21,7 +21,7 @@
     </ng-template>
   </p-table>
 } @else {
-  <p-table #table [rowHover]="true" [value]="groupedEnvironments()" rowGroupMode="subheader" groupRowsBy="type">
+  <p-table #table [value]="groupedEnvironments()" rowGroupMode="subheader" groupRowsBy="type">
     <ng-template #header>
       <tr>
         <th class="w-[30%]">Name</th>
@@ -31,7 +31,7 @@
       </tr>
     </ng-template>
     <ng-template #groupheader let-environment>
-      <tr pRowGroupHeader class="bg-slate-100">
+      <tr pRowGroupHeader class="bg-surface-300 dark:bg-surface-700">
         <td colspan="4">
           <div class="flex gap-2">
             <span class="font-bold">{{ capitalizeFirstLetter(environment.type) }}</span>
@@ -46,9 +46,9 @@
           <span class="flex items-center gap-2">
             {{ environment.name }}
             @if (environment.serverUrl) {
-              <span [pTooltip]="'Open Environment'" class="cursor-pointer hover:bg-gray-200 px-2 py-1 rounded flex items-center" (click)="openEnvironment($event, environment)">
+              <p-button severity="secondary" text pTooltip="Open Environment" (click)="openEnvironment($event, environment)">
                 <i-tabler name="external-link" />
-              </span>
+              </p-button>
             }
           </span>
         </td>

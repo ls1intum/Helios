@@ -8,7 +8,7 @@
         <!-- Left Column (Environment Configuration) -->
         <div class="flex flex-col gap-6">
           <!-- Section 1: Environment Configuration -->
-          <div class="p-5 border rounded-lg shadow-sm bg-white">
+          <p-card class="border border-surface-200 rounded-lg">
             <h3 class="text-xl font-semibold mb-4 pb-2 border-b">Environment Configuration</h3>
 
             <div class="flex flex-col gap-4">
@@ -24,7 +24,7 @@
 
               <div class="flex flex-col gap-2">
                 <label for="deployment-workflow">Deployment Workflow</label>
-                <span class="text-sm text-gray-500"> Select a workflow to deploy to this environment. (Only active workflows are shown.) </span>
+                <span class="text-sm text-surface-500"> Select a workflow to deploy to this environment. (Only active workflows are shown.) </span>
                 <p-select
                   id="deployment-workflow"
                   formControlName="deploymentWorkflow"
@@ -46,7 +46,7 @@
                   </ng-template>
                 </p-select>
                 @if (workflowsQuery.isLoading()) {
-                  <span class="text-sm text-gray-500">Loading workflows...</span>
+                  <span class="text-sm text-surface-500">Loading workflows...</span>
                 }
               </div>
 
@@ -65,26 +65,26 @@
                 <p-autoComplete id="installed-apps" formControlName="installedApps" [multiple]="true" [minLength]="1" fluid [typeahead]="false"> </p-autoComplete>
               </div>
             </div>
-          </div>
+          </p-card>
         </div>
 
         <!-- Right Column (Status Check & Lock Configuration) -->
         <div class="flex flex-col gap-6">
           <!-- Section 2: Status Check Configuration -->
-          <div class="p-5 border rounded-lg shadow-sm bg-white">
+          <p-card class="border border-surface-200 rounded-lg">
             <h3 class="text-xl font-semibold mb-4 pb-2 border-b">Status Check Configuration</h3>
 
             <div class="flex flex-col gap-4">
               <div class="flex flex-col gap-1">
                 <label for="status-check-type">Status Check</label>
-                <span class="text-sm text-gray-500"> When enabled, the status check will run periodically to check the health of the environment. </span>
+                <span class="text-sm text-surface-500"> When enabled, the status check will run periodically to check the health of the environment. </span>
                 <p-select id="status-check-type" class="mt-2" [options]="statusCheckTypes" formControlName="statusCheckType"></p-select>
               </div>
 
               @if (environmentForm.get('statusCheckType')?.value !== null) {
                 <div class="flex flex-col gap-2">
                   <label for="status-check-url">Status URL</label>
-                  <span class="text-sm text-gray-500">
+                  <span class="text-sm text-surface-500">
                     This can be the URL of the Artemis management info endpoint (if set as the status check type) or any other URL that returns a 200 status code when the
                     environment is healthy.
                   </span>
@@ -92,16 +92,16 @@
                 </div>
               }
             </div>
-          </div>
+          </p-card>
 
           <!-- Section 3: Lock Configuration -->
-          <div class="p-5 border rounded-lg shadow-sm bg-white">
+          <p-card class="border border-surface-200 rounded-lg">
             <h3 class="text-xl font-semibold mb-4 pb-2 border-b">Lock Configuration</h3>
 
             <div class="flex flex-col gap-4">
               <div class="flex flex-col gap-2">
                 <label for="lock-expiration-threshold">Lock Expiration Threshold</label>
-                <span class="text-sm text-gray-500">
+                <span class="text-sm text-surface-500">
                   Lock of this environment will be released after this threshold. Leave this empty if you want to use the global lock expiration threshold. Set it to -1 if you want
                   to disable the lock expiration for this environment.
                 </span>
@@ -114,13 +114,13 @@
                     [disabled]="!environmentForm.get('enableLockExpiration')?.value"
                     class="w-full"
                   />
-                  <span class="text-sm text-gray-500">minutes</span>
+                  <span class="text-sm text-surface-500">minutes</span>
                 </div>
               </div>
 
               <div class="flex flex-col gap-2">
                 <label for="lock-reservation-threshold">Lock Reservation Threshold</label>
-                <span class="text-sm text-gray-500">
+                <span class="text-sm text-surface-500">
                   Lock of this environment can be unlocked by any user after this threshold. Leave this empty if you want to use the global lock reservation threshold. Set it to -1
                   if you want to disable the lock reservation for this environment.
                 </span>
@@ -133,22 +133,22 @@
                     [disabled]="!environmentForm.get('enableLockReservation')?.value"
                     class="w-full"
                   />
-                  <span class="text-sm text-gray-500">minutes</span>
+                  <span class="text-sm text-surface-500">minutes</span>
                 </div>
               </div>
             </div>
-          </div>
+          </p-card>
         </div>
       </div>
 
       <!-- Full-width sections below the columns -->
       <!-- Environment Enable/Disable (Separate Section) -->
-      <div class="p-4 border rounded-lg bg-gray-50 flex items-center">
+      <p-card class="border border-surface-200 rounded-lg">
         <div class="flex gap-2 items-center">
-          <label for="enabled" class="mr-2">Enabled</label>
+          <label for="enabled">Enabled</label>
           <p-toggleswitch id="enabled" formControlName="enabled" />
         </div>
-      </div>
+      </p-card>
 
       <!-- Cross-field validation error message -->
       @if (environmentForm.invalid) {
@@ -161,11 +161,12 @@
       }
 
       <!-- Save Button Section -->
-      <div class="p-4 border-t mt-2 bg-gray-50 flex flex-col lg:flex-row justify-between items-center gap-4">
+      <p-divider class="m-0" />
+      <div class="flex flex-col lg:flex-row justify-between items-center gap-4">
         <div>
           <h3 class="font-medium">Save all configuration changes</h3>
         </div>
-        <p-button type="submit" size="large" [disabled]="environmentForm.invalid" class="px-4"><span class="px-2">Update</span></p-button>
+        <p-button type="submit" [disabled]="environmentForm.invalid"><span>Update</span></p-button>
       </div>
     </form>
   </div>

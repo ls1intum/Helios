@@ -148,7 +148,7 @@ export type ReleaseInfoListDto = {
 
 export type DeployRequest = {
   environmentId: number;
-  branchName?: string;
+  branchName: string;
   commitSha: string;
 };
 

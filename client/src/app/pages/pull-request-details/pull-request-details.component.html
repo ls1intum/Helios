@@ -9,7 +9,7 @@
 
         <!-- PR Number -->
         <h2 class="text-2xl">
-          <a [href]="pr.htmlUrl" target="_blank" rel="noopener noreferrer" class="text-gray-600 hover:underline"> #{{ pr.number }} </a>
+          <a [href]="pr.htmlUrl" target="_blank" rel="noopener noreferrer" class="text-surface-500 hover:underline"> #{{ pr.number }} </a>
         </h2>
       </span>
 
@@ -20,11 +20,11 @@
           <app-user-avatar [user]="pr.author" toolTipText="Author" tooltipPosition="top" />
 
           <!-- Author Name and Merge Info -->
-          <span class="text-gray-700 text-sm font-semibold"> {{ pr.author.name || pr.author.login }} opened a pull request from </span>
+          <span class="text-surface-700 dark:text-surface-300 text-sm font-semibold"> {{ pr.author.name || pr.author.login }} opened a pull request from </span>
 
           <!-- Branch Name with Icon -->
-          <p-tag rounded class="font-normal flex items-center px-2 py-1">
-            <i-tabler name="git-branch" class="w-3 h-3"></i-tabler>
+          <p-tag class="flex items-center text-xs">
+            <i-tabler name="git-branch" class="!size-3.5"></i-tabler>
             <a [href]="pr.repository?.htmlUrl + '/tree/' + pr.headRefName" target="_blank" rel="noopener noreferrer" class="hover:underline">
               {{ pr.headRefName }}
             </a>
