@@ -33,6 +33,7 @@ import org.kohsuke.github.GHArtifact;
 import org.kohsuke.github.GHCommitState;
 import org.kohsuke.github.GHOrganization;
 import org.kohsuke.github.GHPullRequest;
+import org.kohsuke.github.GHRelease;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GHWorkflow;
 import org.kohsuke.github.PagedIterable;
@@ -492,6 +493,108 @@ public class GitHubService {
       // Return the generated notes
       log.debug("Successfully generated release notes using the GitHub API");
       return (String) responseMap.get("body");
+    }
+  }
+
+  /**
+   * Creates and publishes a GitHub release draft on behalf of a user.
+   *
+   * @param repoNameWithOwner the repository name with owner
+   * @param tagName the tag name for the release
+   * @param commitish the commitish value (branch or commit SHA)
+   * @param name the name of the release (title)
+   * @param body the body text of the release (release notes)
+   * @param draft whether this is a draft release (true) or a published release (false)
+   * @param githubUserLogin the GitHub user login
+   * @return the created GHRelease object
+   * @throws IOException if an I/O error occurs during the API call
+   */
+  public GHRelease createReleaseOnBehalfOfUser(
+      String repoNameWithOwner,
+      String tagName,
+      String commitish,
+      String name,
+      String body,
+      boolean draft,
+      String githubUserLogin)
+      throws IOException {
+
+    // Exchange token for the user
+    TokenExchangeResponse tokenExchangeResponse =
+        this.gitHubAuthBroker.exchangeToken(githubUserLogin);
+    if (tokenExchangeResponse == null) {
+      log.error("Token exchange response is null");
+      throw new IOException("Failed to exchange token for GitHub user: " + githubUserLogin);
+    }
+
+    // Construct the request payload
+    Map<String, Object> requestPayload = new HashMap<>();
+    requestPayload.put("tag_name", tagName);
+
+    if (commitish != null && !commitish.isEmpty()) {
+      requestPayload.put("target_commitish", commitish);
+    }
+
+    if (name != null && !name.isEmpty()) {
+      requestPayload.put("name", name);
+    }
+
+    if (body != null) {
+      requestPayload.put("body", body);
+    }
+
+    requestPayload.put("draft", draft);
+
+    String jsonPayload = objectMapper.writeValueAsString(requestPayload);
+
+    // Construct the URL for creating a release
+    String url = String.format("https://api.github.com/repos/%s/releases", repoNameWithOwner);
+
+    RequestBody requestBody =
+        RequestBody.create(jsonPayload, MediaType.get("application/json; charset=utf-8"));
+
+    String userGithubToken = tokenExchangeResponse.getAccessToken();
+
+    Request request =
+        new Request.Builder()
+            .url(url)
+            .post(requestBody)
+            .header("Authorization", "Bearer " + userGithubToken)
+            .header("Accept", "application/json")
+            .build();
+
+    // Execute the request
+    try (Response response = okHttpClient.newCall(request).execute()) {
+      if (!response.isSuccessful()) {
+        String errorBody = "No error details";
+        ResponseBody responseBody = response.body();
+        if (responseBody != null) {
+          try {
+            errorBody = responseBody.string();
+          } catch (IOException e) {
+            log.warn("Failed to read error response body", e);
+          }
+        }
+
+        log.error(
+            "GitHub API call failed to create release with response code: {} and body: {}",
+            response.code(),
+            errorBody);
+        throw new IOException("GitHub API call failed with response code: " + response.code());
+      }
+
+      if (response.body() == null) {
+        throw new IOException("Response body is null");
+      }
+
+      // Parse the response and convert it to a GHRelease object
+      Map<String, Object> releaseMap = objectMapper.readValue(response.body().string(), Map.class);
+
+      // Log success
+      log.info("Successfully created release for tag: {}, draft: {}", tagName, draft);
+
+      // Return the created release information by fetching the complete release from GitHub
+      return getRepository(repoNameWithOwner).getReleaseByTagName(tagName);
     }
   }
 }
