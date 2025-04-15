@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -100,5 +101,11 @@ public class EnvironmentController {
         .getEnvironmentReviewers(environmentId)
         .map(ResponseEntity::ok)
         .orElse(ResponseEntity.notFound().build());
+  }
+
+  @PostMapping("/sync")
+  public ResponseEntity<?> syncEnvironments() {
+    environmentService.syncRepositoryEnvironments();
+    return ResponseEntity.ok().build();
   }
 }

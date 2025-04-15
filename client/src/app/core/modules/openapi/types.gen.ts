@@ -1012,6 +1012,33 @@ export type SetPrPinnedByNumberResponses = {
   200: unknown;
 };
 
+export type SyncEnvironmentsData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/api/environments/sync';
+};
+
+export type SyncEnvironmentsErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type SyncEnvironmentsError = SyncEnvironmentsErrors[keyof SyncEnvironmentsErrors];
+
+export type SyncEnvironmentsResponses = {
+  /**
+   * OK
+   */
+  200: {
+    [key: string]: unknown;
+  };
+};
+
+export type SyncEnvironmentsResponse = SyncEnvironmentsResponses[keyof SyncEnvironmentsResponses];
+
 export type DeployToEnvironmentData = {
   body: DeployRequest;
   path?: never;

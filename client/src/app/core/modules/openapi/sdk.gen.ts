@@ -61,6 +61,9 @@ import type {
   EvaluateError,
   SetPrPinnedByNumberData,
   SetPrPinnedByNumberError,
+  SyncEnvironmentsData,
+  SyncEnvironmentsResponse,
+  SyncEnvironmentsError,
   DeployToEnvironmentData,
   DeployToEnvironmentResponse,
   DeployToEnvironmentError,
@@ -373,6 +376,13 @@ export const evaluate = <ThrowOnError extends boolean = false>(options: Options<
 export const setPrPinnedByNumber = <ThrowOnError extends boolean = false>(options: Options<SetPrPinnedByNumberData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).post<unknown, SetPrPinnedByNumberError, ThrowOnError>({
     url: '/api/pullrequests/{pr}/pin',
+    ...options,
+  });
+};
+
+export const syncEnvironments = <ThrowOnError extends boolean = false>(options?: Options<SyncEnvironmentsData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<SyncEnvironmentsResponse, SyncEnvironmentsError, ThrowOnError>({
+    url: '/api/environments/sync',
     ...options,
   });
 };

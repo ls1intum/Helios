@@ -7,9 +7,15 @@ import de.tum.cit.aet.helios.deployment.Deployment;
 import de.tum.cit.aet.helios.deployment.DeploymentException;
 import de.tum.cit.aet.helios.deployment.DeploymentRepository;
 import de.tum.cit.aet.helios.deployment.LatestDeploymentUnion;
+import de.tum.cit.aet.helios.environment.github.GitHubEnvironmentDto;
 import de.tum.cit.aet.helios.environment.github.GitHubEnvironmentProtectionRuleDto;
+import de.tum.cit.aet.helios.environment.github.GitHubEnvironmentSyncService;
 import de.tum.cit.aet.helios.environment.protectionrules.ProtectionRule;
 import de.tum.cit.aet.helios.environment.protectionrules.ProtectionRuleRepository;
+import de.tum.cit.aet.helios.filters.RepositoryContext;
+import de.tum.cit.aet.helios.github.GitHubService;
+import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
+import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import de.tum.cit.aet.helios.gitreposettings.GitRepoSettingsDto;
 import de.tum.cit.aet.helios.gitreposettings.GitRepoSettingsService;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
@@ -20,6 +26,7 @@ import de.tum.cit.aet.helios.workflow.Workflow;
 import de.tum.cit.aet.helios.workflow.WorkflowRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
+import java.io.IOException;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
@@ -30,6 +37,7 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.jetbrains.annotations.NotNull;
+import org.kohsuke.github.GHRepository;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
@@ -51,6 +59,9 @@ public class EnvironmentService {
   private final WorkflowRepository workflowRepository;
   private final ProtectionRuleRepository protectionRuleRepository;
   private final ObjectMapper objectMapper;
+  private final GitHubEnvironmentSyncService environmentSyncService;
+  private final GitRepoRepository gitRepoRepository;
+  private final GitHubService gitHubService;
 
   public Optional<EnvironmentDto> getEnvironmentById(Long id) {
     return environmentRepository.findById(id).map(EnvironmentDto::fromEnvironment);
@@ -630,5 +641,32 @@ public class EnvironmentService {
                 return null;
               }
             });
+  }
+
+  /** Synchronizes the environments of the current repository with the GitHub repository. */
+  public void syncRepositoryEnvironments() {
+    Long repoId = RepositoryContext.getRepositoryId();
+    GitRepository repo = gitRepoRepository.findById(repoId).orElseThrow();
+    GHRepository ghRepository;
+    try {
+      ghRepository = this.gitHubService.getRepository(repo.getNameWithOwner());
+    } catch (IOException e) {
+      log.error("Failed to get GitHub repository: {}", e.getMessage());
+      return;
+    }
+    try {
+      List<GitHubEnvironmentDto> gitHubEnvironmentDtoS =
+          gitHubService.getEnvironments(ghRepository);
+
+      for (GitHubEnvironmentDto gitHubEnvironmentDto : gitHubEnvironmentDtoS) {
+        environmentSyncService.processEnvironment(gitHubEnvironmentDto, ghRepository);
+      }
+
+    } catch (IOException e) {
+      log.error(
+          "Failed to sync environments for repository {}: {}",
+          ghRepository.getFullName(),
+          e.getMessage());
+    }
   }
 }

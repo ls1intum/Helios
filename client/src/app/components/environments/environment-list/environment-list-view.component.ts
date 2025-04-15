@@ -11,6 +11,7 @@ import {
   getAllEnvironmentsQueryKey,
   getEnvironmentsByUserLockingQueryKey,
   lockEnvironmentMutation,
+  syncEnvironmentsMutation,
   unlockEnvironmentMutation,
 } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
@@ -250,6 +251,18 @@ export class EnvironmentListViewComponent implements OnDestroy {
       })
     );
   });
+
+  syncEnvMutation = injectMutation(() => ({
+    ...syncEnvironmentsMutation(),
+    onSuccess: () => {
+      this.messageService.add({ severity: 'success', summary: 'Sync Environments', detail: 'The repository environments synced successfully' });
+      this.queryClient.invalidateQueries({ queryKey: getAllEnvironmentsQueryKey() });
+    },
+  }));
+
+  syncEnvironments() {
+    this.syncEnvMutation.mutate({});
+  }
 
   capitalizeFirstLetter(str: string): string {
     return str.charAt(0).toUpperCase() + str.toLowerCase().slice(1);

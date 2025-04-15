@@ -24,6 +24,7 @@ import {
   publishReleaseDraft,
   evaluate,
   setPrPinnedByNumber,
+  syncEnvironments,
   deployToEnvironment,
   setBranchPinnedByRepositoryIdAndNameAndUserId,
   healthCheck,
@@ -115,6 +116,9 @@ import type {
   EvaluateError,
   SetPrPinnedByNumberData,
   SetPrPinnedByNumberError,
+  SyncEnvironmentsData,
+  SyncEnvironmentsError,
+  SyncEnvironmentsResponse,
   DeployToEnvironmentData,
   DeployToEnvironmentError,
   DeployToEnvironmentResponse,
@@ -638,6 +642,37 @@ export const setPrPinnedByNumberMutation = (options?: Partial<Options<SetPrPinne
   const mutationOptions: MutationOptions<unknown, SetPrPinnedByNumberError, Options<SetPrPinnedByNumberData>> = {
     mutationFn: async localOptions => {
       const { data } = await setPrPinnedByNumber({
+        ...options,
+        ...localOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const syncEnvironmentsQueryKey = (options?: Options<SyncEnvironmentsData>) => createQueryKey('syncEnvironments', options);
+
+export const syncEnvironmentsOptions = (options?: Options<SyncEnvironmentsData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await syncEnvironments({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: syncEnvironmentsQueryKey(options),
+  });
+};
+
+export const syncEnvironmentsMutation = (options?: Partial<Options<SyncEnvironmentsData>>) => {
+  const mutationOptions: MutationOptions<SyncEnvironmentsResponse, SyncEnvironmentsError, Options<SyncEnvironmentsData>> = {
+    mutationFn: async localOptions => {
+      const { data } = await syncEnvironments({
         ...options,
         ...localOptions,
         throwOnError: true,
