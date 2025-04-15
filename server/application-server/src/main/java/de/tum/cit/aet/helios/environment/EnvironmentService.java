@@ -644,7 +644,7 @@ public class EnvironmentService {
   }
 
   /** Synchronizes the environments of the current repository with the GitHub repository. */
-  public void syncRepositoryEnvironments() {
+  public void syncRepositoryEnvironments() throws IOException {
     Long repoId = RepositoryContext.getRepositoryId();
     GitRepository repo = gitRepoRepository.findById(repoId).orElseThrow();
     GHRepository ghRepository;
@@ -652,7 +652,11 @@ public class EnvironmentService {
       ghRepository = this.gitHubService.getRepository(repo.getNameWithOwner());
     } catch (IOException e) {
       log.error("Failed to get GitHub repository: {}", e.getMessage());
-      return;
+      throw new EntityNotFoundException("GitHub repository not found for repository ID: " + repoId);
+    }
+    if (ghRepository == null) {
+      log.error("GitHub repository not found for repository ID: {}", repoId);
+      throw new EntityNotFoundException("GitHub repository not found for repository ID: " + repoId);
     }
     try {
       List<GitHubEnvironmentDto> gitHubEnvironmentDtoS =
@@ -667,6 +671,11 @@ public class EnvironmentService {
           "Failed to sync environments for repository {}: {}",
           ghRepository.getFullName(),
           e.getMessage());
+      throw new IOException(
+          "Failed to sync environments for repository "
+              + ghRepository.getFullName()
+              + ": "
+              + e.getMessage());
     }
   }
 }

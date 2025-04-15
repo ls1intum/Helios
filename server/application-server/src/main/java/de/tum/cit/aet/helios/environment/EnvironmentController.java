@@ -2,6 +2,7 @@ package de.tum.cit.aet.helios.environment;
 
 import de.tum.cit.aet.helios.config.security.annotations.EnforceAtLeastMaintainer;
 import de.tum.cit.aet.helios.config.security.annotations.EnforceAtLeastWritePermission;
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -105,7 +106,11 @@ public class EnvironmentController {
 
   @PostMapping("/sync")
   public ResponseEntity<?> syncEnvironments() {
-    environmentService.syncRepositoryEnvironments();
+    try {
+      environmentService.syncRepositoryEnvironments();
+    } catch (IOException e) {
+      return ResponseEntity.status(500).body("Error syncing environments: " + e.getMessage());
+    }
     return ResponseEntity.ok().build();
   }
 }
