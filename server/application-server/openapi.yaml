@@ -567,6 +567,24 @@ paths:
                 $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
+  /api/environments/sync:
+    post:
+      tags:
+      - environment-controller
+      operationId: syncEnvironments
+      responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
   /api/deployments/deploy:
     post:
       tags:
