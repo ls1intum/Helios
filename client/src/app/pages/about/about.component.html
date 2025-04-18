@@ -20,7 +20,7 @@
             <i [ngClass]="feature.icon + ' text-blue-600 mr-2'"></i>
             <h3 class="font-semibold">{{ feature.title }}</h3>
           </div>
-          <p class="text-sm text-surface-500">{{ feature.description }}</p>
+          <p class="text-sm text-muted-color">{{ feature.description }}</p>
         </div>
       }
     </div>
@@ -48,7 +48,7 @@
         <div class="p-3 border rounded-md text-center w-48">
           <img [ngSrc]="getGithubProfilePictureUrl(advisor.githubId)" alt="{{ advisor.name }}" width="112" height="112" class="w-28 h-28 mx-auto rounded-full mb-2" />
           <p class="font-semibold">{{ advisor.name }}</p>
-          <p class="text-sm text-surface-500">{{ advisor.description }}</p>
+          <p class="text-sm text-muted-color">{{ advisor.description }}</p>
 
           <div class="flex gap-2 justify-center">
             @if (advisor.website) {
@@ -73,7 +73,7 @@
           <div class="p-3 border rounded-md text-center w-48">
             <img [ngSrc]="getGithubProfilePictureUrl(contributor.githubId)" alt="{{ contributor.name }}" width="112" height="112" class="w-28 h-28 mx-auto rounded-full mb-2" />
             <p class="font-semibold">{{ contributor.name }}</p>
-            <p class="text-sm text-surface-500">{{ contributor.description }}</p>
+            <p class="text-sm text-muted-color">{{ contributor.description }}</p>
 
             <div class="flex gap-2 justify-center">
               @if (contributor.website) {
@@ -101,7 +101,7 @@
             <app-user-avatar [user]="gitCont" class="rounded-full mb-2"></app-user-avatar>
 
             <!-- Login -->
-            <p class="text-sm text-surface-500">{{ gitCont.login }}</p>
+            <p class="text-sm text-muted-color">{{ gitCont.login }}</p>
 
             <!-- Contributions -->
             <p class="mt-2 text-sm font-medium">
@@ -119,9 +119,9 @@
     <div class="flex justify-center">
       <div class="p-2 border rounded-md text-center">
         <p class="font-semibold">Name</p>
-        <p class="text-surface-500">Technical University of Munich</p>
+        <p class="text-muted-color">Technical University of Munich</p>
         <p class="font-semibold mt-2">Administrator</p>
-        <p class="text-surface-500">Prof. Dr. Stephan Krusche</p>
+        <p class="text-muted-color">Prof. Dr. Stephan Krusche</p>
         <p class="font-semibold mt-2">Contact Email</p>
         <a href="mailto:krusche@tum.de" class="text-blue-500 hover:underline">krusche&#64;tum.de</a>
       </div>

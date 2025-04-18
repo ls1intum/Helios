@@ -159,7 +159,7 @@ export class WorkflowRunStatusComponent {
     // Default or no runs --> unknown
     return {
       icon: 'question-mark',
-      color: 'text-surface-500',
+      color: 'text-muted-color',
       tooltip: 'No Workflows or Unknown Status',
     };
   });
