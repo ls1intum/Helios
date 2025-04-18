@@ -5,9 +5,9 @@
       <span class="hidden md:block text-lg truncate overflow-hidden whitespace-nowrap max-w-[130px]">{{ fullName() }}</span>
     </p-button>
   } @else {
-    <p-button (click)="login()" class="rounded-xl flex items-center justify-center gap-2 w-full" styleClass="">
+    <p-button (click)="login()" class="rounded-xl flex items-center justify-center gap-2 w-full">
       <i-tabler name="login" class="!size-7 !stroke-1"></i-tabler>
-      <span>Sign In</span>
+      <span class="hidden md:block">Sign In</span>
     </p-button>
   }
 </div>

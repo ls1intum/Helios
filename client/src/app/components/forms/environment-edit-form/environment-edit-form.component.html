@@ -24,7 +24,7 @@
 
               <div class="flex flex-col gap-2">
                 <label for="deployment-workflow">Deployment Workflow</label>
-                <span class="text-sm text-surface-500"> Select a workflow to deploy to this environment. (Only active workflows are shown.) </span>
+                <span class="text-sm text-muted-color"> Select a workflow to deploy to this environment. (Only active workflows are shown.) </span>
                 <p-select
                   id="deployment-workflow"
                   formControlName="deploymentWorkflow"
@@ -46,7 +46,7 @@
                   </ng-template>
                 </p-select>
                 @if (workflowsQuery.isLoading()) {
-                  <span class="text-sm text-surface-500">Loading workflows...</span>
+                  <span class="text-sm text-muted-color">Loading workflows...</span>
                 }
               </div>
 
@@ -77,14 +77,14 @@
             <div class="flex flex-col gap-4">
               <div class="flex flex-col gap-1">
                 <label for="status-check-type">Status Check</label>
-                <span class="text-sm text-surface-500"> When enabled, the status check will run periodically to check the health of the environment. </span>
+                <span class="text-sm text-muted-color"> When enabled, the status check will run periodically to check the health of the environment. </span>
                 <p-select id="status-check-type" class="mt-2" [options]="statusCheckTypes" formControlName="statusCheckType"></p-select>
               </div>
 
               @if (environmentForm.get('statusCheckType')?.value !== null) {
                 <div class="flex flex-col gap-2">
                   <label for="status-check-url">Status URL</label>
-                  <span class="text-sm text-surface-500">
+                  <span class="text-sm text-muted-color">
                     This can be the URL of the Artemis management info endpoint (if set as the status check type) or any other URL that returns a 200 status code when the
                     environment is healthy.
                   </span>
@@ -101,7 +101,7 @@
             <div class="flex flex-col gap-4">
               <div class="flex flex-col gap-2">
                 <label for="lock-expiration-threshold">Lock Expiration Threshold</label>
-                <span class="text-sm text-surface-500">
+                <span class="text-sm text-muted-color">
                   Lock of this environment will be released after this threshold. Leave this empty if you want to use the global lock expiration threshold. Set it to -1 if you want
                   to disable the lock expiration for this environment.
                 </span>
@@ -114,13 +114,13 @@
                     [disabled]="!environmentForm.get('enableLockExpiration')?.value"
                     class="w-full"
                   />
-                  <span class="text-sm text-surface-500">minutes</span>
+                  <span class="text-sm text-muted-color">minutes</span>
                 </div>
               </div>
 
               <div class="flex flex-col gap-2">
                 <label for="lock-reservation-threshold">Lock Reservation Threshold</label>
-                <span class="text-sm text-surface-500">
+                <span class="text-sm text-muted-color">
                   Lock of this environment can be unlocked by any user after this threshold. Leave this empty if you want to use the global lock reservation threshold. Set it to -1
                   if you want to disable the lock reservation for this environment.
                 </span>
@@ -133,7 +133,7 @@
                     [disabled]="!environmentForm.get('enableLockReservation')?.value"
                     class="w-full"
                   />
-                  <span class="text-sm text-surface-500">minutes</span>
+                  <span class="text-sm text-muted-color">minutes</span>
                 </div>
               </div>
             </div>

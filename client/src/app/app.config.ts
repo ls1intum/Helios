@@ -61,12 +61,17 @@ export const appConfig: ApplicationConfig = {
                   800: '{neutral.800}',
                   900: '{neutral.900}',
                   950: '{neutral.950}',
+                  text: '{neutral.600}',
                 },
                 primary: {
                   color: '{primary.900}',
                   contrastColor: '#ffffff',
                   hoverColor: '{primary.800}',
                   activeColor: '{primary.800}',
+                },
+                text: {
+                  mutedColor: '{neutral.600}',
+                  hoverMutedColor: '{surface.500}',
                 },
                 highlight: {
                   background: '{primary.800}',
@@ -92,9 +97,13 @@ export const appConfig: ApplicationConfig = {
                 },
                 primary: {
                   color: '{primary.800}',
-                  contrastColor: '{primary.100}',
+                  contrastColor: '{primary.50}',
                   hoverColor: '{primary.700}',
-                  activeColor: '{primary.700}',
+                  activeColor: '{primary.400}',
+                },
+                text: {
+                  mutedColor: '{neutral.400}',
+                  hoverMutedColor: '{surface.300}',
                 },
                 highlight: {
                   background: '{primary.800}',
@@ -113,14 +122,26 @@ export const appConfig: ApplicationConfig = {
                 checkedHoverBackground: '{emerald.500}',
               },
             },
+            button: {
+              colorScheme: {
+                dark: {
+                  text: {
+                    primary: {
+                      hoverBackground: '{surface.700}',
+                      color: '{primary.activeColor}',
+                    },
+                  },
+                },
+              },
+            },
             tabs: {
               colorScheme: {
                 dark: {
                   tab: {
-                    activeColor: '{primary.hoverColor}',
+                    activeColor: '{primary.activeColor}',
                   },
                   activeBar: {
-                    background: '{primary.hoverColor}',
+                    background: '{primary.activeColor}',
                   },
                 },
               },

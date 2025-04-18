@@ -46,8 +46,8 @@
           <span class="flex items-center gap-2">
             {{ environment.name }}
             @if (environment.serverUrl) {
-              <p-button severity="secondary" text pTooltip="Open Environment" (click)="openEnvironment($event, environment)">
-                <i-tabler name="external-link" />
+              <p-button text severity="secondary" (click)="openEnvironment($event, environment)" styleClass="p-1" class="leading-none">
+                <i-tabler name="brand-github" class="!size-4" />
               </p-button>
             }
           </span>
