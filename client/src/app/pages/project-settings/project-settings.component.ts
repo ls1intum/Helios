@@ -1,8 +1,6 @@
 import { Component, computed, effect, inject, input, numberAttribute, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { injectMutation, injectQuery, QueryClient } from '@tanstack/angular-query-experimental';
-
-import { IconsModule } from 'icons.module';
 import { ConfirmationService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
@@ -38,6 +36,8 @@ import { TooltipModule } from 'primeng/tooltip';
 import { TagModule } from 'primeng/tag';
 import { MessageModule } from 'primeng/message';
 import { ButtonGroupModule } from 'primeng/buttongroup';
+import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
+import { IconCircleCheck, IconPencil, IconPlus, IconTrash } from 'angular-tabler-icons/icons';
 
 @Component({
   selector: 'app-project-settings',
@@ -54,11 +54,19 @@ import { ButtonGroupModule } from 'primeng/buttongroup';
     TooltipModule,
     SelectModule,
     InputTextModule,
-    IconsModule,
+    TablerIconComponent,
     DragDropModule,
     DividerModule,
     TagModule,
     MessageModule,
+  ],
+  providers: [
+    provideTablerIcons({
+      IconCircleCheck,
+      IconPlus,
+      IconPencil,
+      IconTrash,
+    }),
   ],
   templateUrl: './project-settings.component.html',
 })

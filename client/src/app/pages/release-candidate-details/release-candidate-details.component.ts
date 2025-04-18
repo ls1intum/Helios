@@ -14,7 +14,6 @@ import { ButtonGroupModule } from 'primeng/buttongroup';
 import { SkeletonModule } from 'primeng/skeleton';
 import { ReleaseCandidateDeploymentTableComponent } from '@app/components/release-candidate-deployment-table/release-candidate-deployment-table.component';
 import { AvatarModule } from 'primeng/avatar';
-import { IconsModule } from 'icons.module';
 import { TimeAgoPipe } from '@app/pipes/time-ago.pipe';
 import { TooltipModule } from 'primeng/tooltip';
 import { TagModule } from 'primeng/tag';
@@ -27,6 +26,8 @@ import { MarkdownPipe } from '@app/core/modules/markdown/markdown.pipe';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { TextareaModule } from 'primeng/textarea';
 import { SlicePipe } from '@angular/common';
+import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
+import { IconCheck, IconCloudUpload, IconExternalLink, IconGitCommit, IconPencil, IconPlus, IconTrash, IconUser, IconX } from 'angular-tabler-icons/icons';
 
 @Component({
   selector: 'app-release-candidate-details',
@@ -37,13 +38,26 @@ import { SlicePipe } from '@angular/common';
     ReleaseCandidateDeploymentTableComponent,
     ButtonGroupModule,
     AvatarModule,
-    IconsModule,
+    TablerIconComponent,
     TimeAgoPipe,
     TooltipModule,
     SlicePipe,
     TagModule,
     ReactiveFormsModule,
     TextareaModule,
+  ],
+  providers: [
+    provideTablerIcons({
+      IconGitCommit,
+      IconTrash,
+      IconUser,
+      IconExternalLink,
+      IconCloudUpload,
+      IconCheck,
+      IconX,
+      IconPlus,
+      IconPencil,
+    }),
   ],
   templateUrl: './release-candidate-details.component.html',
 })

@@ -1,5 +1,4 @@
 import { Component, computed, inject, input } from '@angular/core';
-import { IconsModule } from 'icons.module';
 import { TagModule } from 'primeng/tag';
 import { EnvironmentDeployment } from '@app/core/modules/openapi';
 import { DatePipe, SlicePipe } from '@angular/common';
@@ -8,11 +7,19 @@ import { getCommitByRepositoryIdAndNameOptions } from '@app/core/modules/openapi
 import { AvatarModule } from 'primeng/avatar';
 import { TimeAgoPipe } from '@app/pipes/time-ago.pipe';
 import { TooltipModule } from 'primeng/tooltip';
+import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
+import { IconPoint, IconUser } from 'angular-tabler-icons/icons';
 
 @Component({
   selector: 'app-environment-deployment-info',
-  imports: [TagModule, IconsModule, AvatarModule, TimeAgoPipe, TooltipModule, SlicePipe],
-  providers: [DatePipe],
+  imports: [TagModule, TablerIconComponent, AvatarModule, TimeAgoPipe, TooltipModule, SlicePipe],
+  providers: [
+    DatePipe,
+    provideTablerIcons({
+      IconUser,
+      IconPoint,
+    }),
+  ],
   templateUrl: './environment-deployment-info.component.html',
 })
 export class EnvironmentDeploymentInfoComponent {

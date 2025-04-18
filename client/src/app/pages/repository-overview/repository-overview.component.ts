@@ -4,7 +4,6 @@ import { PageHeadingComponent } from '@app/components/page-heading/page-heading.
 import { RepositoryInfoDto } from '@app/core/modules/openapi';
 import { getAllRepositoriesOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { injectQuery } from '@tanstack/angular-query-experimental';
-import { IconsModule } from 'icons.module';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { ChipModule } from 'primeng/chip';
@@ -23,6 +22,8 @@ import { TooltipModule } from 'primeng/tooltip';
 import { UserAvatarComponent } from '@app/components/user-avatar/user-avatar.component';
 import { TimeAgoPipe } from '@app/pipes/time-ago.pipe';
 import { SearchDataViewService } from '@app/core/services/search-dataview.service';
+import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
+import { IconBrandGithub, IconExclamationCircle, IconGitBranch, IconGitPullRequest, IconStar, IconTag } from 'angular-tabler-icons/icons';
 
 const FILTER_OPTIONS = [{ name: 'All repositories', filter: (repos: RepositoryInfoDto[]) => repos }];
 
@@ -37,7 +38,7 @@ const FILTER_OPTIONS = [{ name: 'All repositories', filter: (repos: RepositoryIn
     AvatarModule,
     AvatarGroupModule,
     ChipModule,
-    IconsModule,
+    TablerIconComponent,
     PageHeadingComponent,
     ToastModule,
     Skeleton,
@@ -47,7 +48,18 @@ const FILTER_OPTIONS = [{ name: 'All repositories', filter: (repos: RepositoryIn
     TableModule,
     TableFilterComponent,
   ],
-  providers: [SearchTableService, { provide: FILTER_OPTIONS_TOKEN, useValue: FILTER_OPTIONS }],
+  providers: [
+    SearchTableService,
+    { provide: FILTER_OPTIONS_TOKEN, useValue: FILTER_OPTIONS },
+    provideTablerIcons({
+      IconBrandGithub,
+      IconTag,
+      IconStar,
+      IconGitBranch,
+      IconGitPullRequest,
+      IconExclamationCircle,
+    }),
+  ],
   templateUrl: './repository-overview.component.html',
 })
 export class RepositoryOverviewComponent {

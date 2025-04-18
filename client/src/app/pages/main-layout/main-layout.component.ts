@@ -1,7 +1,6 @@
 import { Component, computed, inject, OnInit, signal, effect } from '@angular/core';
 import { ActivatedRoute, NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
-import { IconsModule } from 'icons.module';
 import { AvatarModule } from 'primeng/avatar';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
@@ -15,13 +14,15 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { HeliosIconComponent } from '@app/components/helios-icon/helios-icon.component';
 import { ProfileNavSectionComponent } from '@app/components/profile-nav-section/profile-nav-section.component';
 import { TagModule } from 'primeng/tag';
+import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
+import { IconMoon, IconSun } from 'angular-tabler-icons/icons';
 
 @Component({
   selector: 'app-main-layout',
   imports: [
     RouterOutlet,
     ToastModule,
-    IconsModule,
+    TablerIconComponent,
     ButtonModule,
     TooltipModule,
     DividerModule,
@@ -34,6 +35,12 @@ import { TagModule } from 'primeng/tag';
     TagModule,
     RouterLink,
     ConfirmDialogModule,
+  ],
+  providers: [
+    provideTablerIcons({
+      IconSun,
+      IconMoon,
+    }),
   ],
   templateUrl: './main-layout.component.html',
 })

@@ -1,12 +1,18 @@
 import { Component, signal } from '@angular/core';
-import { IconsModule } from 'icons.module';
+import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
+import { IconBug } from 'angular-tabler-icons/icons';
 import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
 
 @Component({
   selector: 'app-report-problem-button',
   standalone: true,
-  imports: [ButtonModule, TooltipModule, IconsModule],
+  imports: [ButtonModule, TooltipModule, TablerIconComponent],
+  providers: [
+    provideTablerIcons({
+      IconBug,
+    }),
+  ],
   templateUrl: './report-problem-button.component.html',
 })
 export class ReportProblemButtonComponent {
