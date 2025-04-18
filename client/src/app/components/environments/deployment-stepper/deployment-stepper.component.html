@@ -46,7 +46,7 @@
   <!-- Vertically Aligned Steps -->
   <div class="flex flex-col gap-6 mt-6">
     @for (step of steps; track step; let i = $index) {
-      <div class="flex items-center gap-4">
+      <div class="flex flex-wrap md:flex-nowrap items-center gap-4">
         <!-- Step Icon and Label with Fixed Width -->
         <div class="w-[200px] flex items-center gap-2">
           <p-tag [severity]="getSeverityFromStepStatus(i)" styleClass="size-8 transition-colors rounded-full duration-300 p-0 gap-0">
@@ -63,17 +63,17 @@
               @case ('upcoming') {}
             }
           </p-tag>
-          <div class="text-sm font-medium text-surface-500">
+          <div class="text-sm font-medium whitespace-nowrap text-surface-500">
             {{ getStepDisplayName(step) }}
           </div>
         </div>
 
         <!-- Progress Bar and Timer with Fixed Widths -->
-        <div class="flex items-center gap-2 w-[800px]">
-          <div class="w-[750px]">
-            <p-progressbar [value]="getProgress(i)" [showValue]="true" class="h-6"></p-progressbar>
+        <div class="flex items-center gap-2 w-full">
+          <div class="w-full">
+            <p-progressbar [value]="getProgress(i)" [showValue]="true" class="h-6 w-full" styleClass="w-full"></p-progressbar>
           </div>
-          <div class="w-[100px] text-right text-xs text-surface-500">
+          <div class="text-right text-xs text-surface-500">
             {{ getStepTime(i) }}
           </div>
         </div>

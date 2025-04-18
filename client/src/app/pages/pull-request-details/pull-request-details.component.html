@@ -2,25 +2,26 @@
   @if (query.data(); as pr) {
     <div class="flex flex-col items-start">
       <span class="mb-1 flex gap-2 items-center">
-        <app-pull-request-status-icon [pullRequest]="pr" tooltipPosition="top" />
+        <app-pull-request-status-icon class="hidden md:block" [pullRequest]="pr" tooltipPosition="top" />
 
         <!-- PR Title -->
-        <h2 class="text-2xl" [innerHTML]="pr.title | markdown"></h2>
-
-        <!-- PR Number -->
         <h2 class="text-2xl">
-          <a [href]="pr.htmlUrl" target="_blank" rel="noopener noreferrer" class="text-surface-500 hover:underline"> #{{ pr.number }} </a>
+          <span [innerHTML]="pr.title | markdown"></span>
+          <!-- PR Number -->
+          <a [href]="pr.htmlUrl" target="_blank" rel="noopener noreferrer" class="text-muted-color hover:underline"> #{{ pr.number }} </a>
         </h2>
       </span>
 
       <!-- Merge Statement -->
       @if (pr.author) {
-        <div class="flex items-center gap-2">
-          <!-- Author Avatar -->
-          <app-user-avatar [user]="pr.author" toolTipText="Author" tooltipPosition="top" />
+        <div class="flex items-center gap-2 flex-wrap">
+          <div class="flex items-center gap-2">
+            <!-- Author Avatar -->
+            <app-user-avatar [user]="pr.author" toolTipText="Author" tooltipPosition="top" />
 
-          <!-- Author Name and Merge Info -->
-          <span class="text-surface-700 dark:text-surface-300 text-sm font-semibold"> {{ pr.author.name || pr.author.login }} opened a pull request from </span>
+            <!-- Author Name and Merge Info -->
+            <span class="text-surface-700 dark:text-surface-300 text-sm font-semibold"> {{ pr.author.name || pr.author.login }} opened a pull request from </span>
+          </div>
 
           <!-- Branch Name with Icon -->
           <p-tag class="flex items-center text-xs">

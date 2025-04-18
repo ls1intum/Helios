@@ -96,7 +96,6 @@ export class PullRequestTableComponent {
     // Also text color of black is also for better readability
     return {
       'border-color': `#${color}`,
-      color: '#000000',
       'background-color': color === 'ededed' ? `#${color}` : `#${color}75`,
     };
   }

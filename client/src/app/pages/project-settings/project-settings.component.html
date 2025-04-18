@@ -27,7 +27,7 @@
 
     <!-- Drag & Drop Hint -->
     @if (groupedWorkflowsArray().length > 0) {
-      <p class="text-sm text-surface-500 mb-4">Drag and drop the groups to reorder them.</p>
+      <p class="text-sm text-muted-color mb-4">Drag and drop the groups to reorder them.</p>
     }
 
     @if (groupedWorkflowsArray().length > 0) {
@@ -124,7 +124,7 @@
               <ng-template #selectedItem let-selectedOption>
                 @if (selectedOption) {
                   <div class="flex items-center gap-2">
-                    <div [class]="selectedOption === 'NONE' ? 'text-surface-500' : 'font-bold'">{{ selectedOption }}</div>
+                    <div [class]="selectedOption === 'NONE' ? 'text-muted-color' : 'font-bold'">{{ selectedOption }}</div>
                   </div>
                 }
               </ng-template>
