@@ -10,7 +10,6 @@ import { TagModule } from 'primeng/tag';
 import { CommonModule, DatePipe } from '@angular/common';
 import { TimeAgoPipe } from '@app/pipes/time-ago.pipe';
 import { TooltipModule } from 'primeng/tooltip';
-import { IconsModule } from 'icons.module';
 import { EnvironmentDetailsComponent } from '../environment-details/environment-details.component';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { FormsModule } from '@angular/forms';
@@ -18,6 +17,8 @@ import { RouterLink } from '@angular/router';
 import { EnvironmentStatusTagComponent } from '../environment-status-tag/environment-status-tag.component';
 import { signal } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
+import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
+import { IconGitPullRequest, IconHistory, IconTag } from 'angular-tabler-icons/icons';
 
 @Component({
   selector: 'app-environment-accordion',
@@ -31,7 +32,7 @@ import { ButtonModule } from 'primeng/button';
     ButtonModule,
     DeploymentStateTagComponent,
     TooltipModule,
-    IconsModule,
+    TablerIconComponent,
     EnvironmentActionsComponent,
     EnvironmentDetailsComponent,
     DeploymentStepperComponent,
@@ -39,6 +40,13 @@ import { ButtonModule } from 'primeng/button';
     FormsModule,
     RouterLink,
     EnvironmentStatusTagComponent,
+  ],
+  providers: [
+    provideTablerIcons({
+      IconTag,
+      IconGitPullRequest,
+      IconHistory,
+    }),
   ],
   templateUrl: './environment-accordion.component.html',
 })

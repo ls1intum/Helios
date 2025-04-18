@@ -3,7 +3,7 @@ import { Avatar } from 'primeng/avatar';
 import { Divider } from 'primeng/divider';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { NgClass, SlicePipe } from '@angular/common';
-import { TablerIconComponent } from 'angular-tabler-icons';
+import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
 import { Tooltip } from 'primeng/tooltip';
 import { UserLockInfoComponent } from '@app/components/user-lock-info/user-lock-info.component';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
@@ -11,10 +11,21 @@ import { PermissionService } from '@app/core/services/permission.service';
 import { injectQuery } from '@tanstack/angular-query-experimental';
 import { getRepositoryByIdOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { ButtonModule } from 'primeng/button';
+import { IconAdjustmentsAlt, IconArrowGuide, IconChevronLeft, IconChevronRight, IconRocket, IconServerCog } from 'angular-tabler-icons/icons';
 
 @Component({
   selector: 'app-navigation-bar',
   imports: [Avatar, Divider, RouterLink, ButtonModule, SlicePipe, TablerIconComponent, Tooltip, UserLockInfoComponent, RouterLinkActive, NgClass],
+  providers: [
+    provideTablerIcons({
+      IconArrowGuide,
+      IconServerCog,
+      IconRocket,
+      IconAdjustmentsAlt,
+      IconChevronLeft,
+      IconChevronRight,
+    }),
+  ],
   templateUrl: './navigation-bar.component.html',
 })
 export class NavigationBarComponent {
