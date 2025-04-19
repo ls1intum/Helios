@@ -4,12 +4,14 @@
     <p-button [routerLink]="'../../../environment'" class="self-end">
       {{ isAdmin() ? 'Manage Environments' : 'Go to Environments' }}
     </p-button>
-  } @else {
+  }
+
+  @if (!deployable() && isLoggedIn()) {
     <p-button
       severity="secondary"
       label="Sync Environments"
       (click)="syncEnvironments()"
-      pTooltip="May take ~10 seconds after environment creation on GitHub"
+      pTooltip="May take a moment after changes were made on GitHub"
       tooltipPosition="top"
       class="mr-2"
     >

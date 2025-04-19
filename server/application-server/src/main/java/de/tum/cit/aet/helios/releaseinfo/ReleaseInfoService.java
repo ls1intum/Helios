@@ -367,4 +367,30 @@ public class ReleaseInfoService {
               throw new ReleaseCandidateException("Release candidate not found");
             });
   }
+
+  public void updateReleaseName(String currentName, String newName) {
+    final Long repositoryId = RepositoryContext.getRepositoryId();
+
+    if (currentName.equals(newName)) {
+      return; // No change needed
+    }
+
+    if (releaseCandidateRepository.existsByRepositoryRepositoryIdAndName(repositoryId, newName)) {
+      throw new ReleaseCandidateException(
+          "A release candidate with the name '" + newName + "' already exists");
+    }
+
+    ReleaseCandidate releaseCandidate =
+        releaseCandidateRepository
+            .findByRepositoryRepositoryIdAndName(repositoryId, currentName)
+            .orElseThrow(() -> new ReleaseCandidateException("Release candidate not found"));
+
+    if (releaseCandidate.getRelease() != null) {
+      throw new ReleaseCandidateException(
+          "Cannot update name of a release that has already been published to GitHub");
+    }
+
+    releaseCandidate.setName(newName);
+    releaseCandidateRepository.save(releaseCandidate);
+  }
 }
