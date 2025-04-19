@@ -13,7 +13,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinColumns;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
@@ -50,21 +49,12 @@ public class ReleaseCandidate {
   private String name;
 
   @ManyToOne(optional = false)
-  @JoinColumns({
-    @JoinColumn(name = "commit_repository_id", referencedColumnName = "repository_id"),
-    @JoinColumn(name = "commit_sha", referencedColumnName = "sha")
-  })
   private Commit commit;
 
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumns({
-    @JoinColumn(name = "branch_repository_id", referencedColumnName = "repository_id"),
-    @JoinColumn(name = "branch_name", referencedColumnName = "name")
-  })
   private Branch branch;
 
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "created_by_id")
   private User createdBy;
 
   @OneToMany(mappedBy = "releaseCandidate", cascade = CascadeType.ALL)
@@ -73,9 +63,7 @@ public class ReleaseCandidate {
 
   private OffsetDateTime createdAt;
 
-  @OneToOne
-  @JoinColumn(name = "release_id")
-  private Release release;
+  @OneToOne private Release release;
 
   @Column(columnDefinition = "TEXT")
   private String body;

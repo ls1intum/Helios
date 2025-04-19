@@ -29,7 +29,6 @@ public class ReleaseCandidateEvaluation {
   private Long id;
 
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "release_candidate_id", nullable = false)
   private ReleaseCandidate releaseCandidate;
 
   @Column(name = "is_working")
