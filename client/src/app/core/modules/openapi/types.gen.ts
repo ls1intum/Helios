@@ -34,11 +34,13 @@ export type WorkflowMembershipDto = {
 };
 
 export type ReleaseCandidateNameUpdateDto = {
+  oldName?: string;
   newName?: string;
 };
 
-export type ReleaseNotesDto = {
-  body?: string;
+export type UpdateReleaseNotesDto = {
+  name?: string;
+  notes?: string;
 };
 
 export type EnvironmentDeployment = {
@@ -151,6 +153,66 @@ export type ReleaseInfoListDto = {
   isPublished?: boolean;
 };
 
+export type ReleaseNameDto = {
+  name?: string;
+};
+
+export type ReleaseEvaluationDto = {
+  name?: string;
+  isWorking?: boolean;
+};
+
+export type BranchInfoDto = {
+  name: string;
+  commitSha: string;
+  aheadBy?: number;
+  behindBy?: number;
+  isDefault?: boolean;
+  isProtected?: boolean;
+  isPinned?: boolean;
+  updatedAt?: string;
+  updatedBy?: UserInfoDto;
+  repository?: RepositoryInfoDto;
+};
+
+export type CommitInfoDto = {
+  sha: string;
+  author?: UserInfoDto;
+  message?: string;
+  authoredAt?: string;
+  repository?: RepositoryInfoDto;
+};
+
+export type ReleaseCandidateDeploymentDto = {
+  id: number;
+  type: 'GITHUB' | 'HELIOS';
+  environmentId: number;
+};
+
+export type ReleaseCandidateEvaluationDto = {
+  user: UserInfoDto;
+  isWorking?: boolean;
+};
+
+export type ReleaseDto = {
+  isDraft: boolean;
+  isPrerelease: boolean;
+  body: string;
+  githubUrl: string;
+};
+
+export type ReleaseInfoDetailsDto = {
+  name: string;
+  commit: CommitInfoDto;
+  branch?: BranchInfoDto;
+  deployments: Array<ReleaseCandidateDeploymentDto>;
+  evaluations: Array<ReleaseCandidateEvaluationDto>;
+  release?: ReleaseDto;
+  createdBy?: UserInfoDto;
+  createdAt: string;
+  body?: string;
+};
+
 export type DeployRequest = {
   environmentId: number;
   branchName: string;
@@ -241,57 +303,6 @@ export type TestTypeStats = {
   skipped: number;
   totalTime: number;
   totalUpdates: number;
-};
-
-export type BranchInfoDto = {
-  name: string;
-  commitSha: string;
-  aheadBy?: number;
-  behindBy?: number;
-  isDefault?: boolean;
-  isProtected?: boolean;
-  isPinned?: boolean;
-  updatedAt?: string;
-  updatedBy?: UserInfoDto;
-  repository?: RepositoryInfoDto;
-};
-
-export type CommitInfoDto = {
-  sha: string;
-  author?: UserInfoDto;
-  message?: string;
-  authoredAt?: string;
-  repository?: RepositoryInfoDto;
-};
-
-export type ReleaseCandidateDeploymentDto = {
-  id: number;
-  type: 'GITHUB' | 'HELIOS';
-  environmentId: number;
-};
-
-export type ReleaseCandidateEvaluationDto = {
-  user: UserInfoDto;
-  isWorking?: boolean;
-};
-
-export type ReleaseDto = {
-  isDraft: boolean;
-  isPrerelease: boolean;
-  body: string;
-  githubUrl: string;
-};
-
-export type ReleaseInfoDetailsDto = {
-  name: string;
-  commit: CommitInfoDto;
-  branch?: BranchInfoDto;
-  deployments: Array<ReleaseCandidateDeploymentDto>;
-  evaluations: Array<ReleaseCandidateEvaluationDto>;
-  release?: ReleaseDto;
-  createdBy?: UserInfoDto;
-  createdAt: string;
-  body?: string;
 };
 
 export type CommitsSinceReleaseCandidateDto = {
@@ -594,11 +605,9 @@ export type UpdateWorkflowGroupsResponses = {
 
 export type UpdateReleaseNameData = {
   body: ReleaseCandidateNameUpdateDto;
-  path: {
-    name: string;
-  };
+  path?: never;
   query?: never;
-  url: '/api/release-info/{name}/update-name';
+  url: '/api/release-info/update-name';
 };
 
 export type UpdateReleaseNameErrors = {
@@ -618,12 +627,10 @@ export type UpdateReleaseNameResponses = {
 };
 
 export type UpdateReleaseNotesData = {
-  body: ReleaseNotesDto;
-  path: {
-    name: string;
-  };
+  body: UpdateReleaseNotesDto;
+  path?: never;
   query?: never;
-  url: '/api/release-info/{name}/release-notes';
+  url: '/api/release-info/release-notes';
 };
 
 export type UpdateReleaseNotesErrors = {
@@ -887,6 +894,31 @@ export type CreateWorkflowGroupResponses = {
 
 export type CreateWorkflowGroupResponse = CreateWorkflowGroupResponses[keyof CreateWorkflowGroupResponses];
 
+export type DeleteReleaseCandidateByNameData = {
+  body: ReleaseNameDto;
+  path?: never;
+  query?: never;
+  url: '/api/release-info';
+};
+
+export type DeleteReleaseCandidateByNameErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type DeleteReleaseCandidateByNameError = DeleteReleaseCandidateByNameErrors[keyof DeleteReleaseCandidateByNameErrors];
+
+export type DeleteReleaseCandidateByNameResponses = {
+  /**
+   * OK
+   */
+  200: ReleaseInfoListDto;
+};
+
+export type DeleteReleaseCandidateByNameResponse = DeleteReleaseCandidateByNameResponses[keyof DeleteReleaseCandidateByNameResponses];
+
 export type GetAllReleaseInfosData = {
   body?: never;
   path?: never;
@@ -937,13 +969,34 @@ export type CreateReleaseCandidateResponses = {
 
 export type CreateReleaseCandidateResponse = CreateReleaseCandidateResponses[keyof CreateReleaseCandidateResponses];
 
-export type GenerateReleaseNotesData = {
-  body?: never;
-  path: {
-    tagName: string;
-  };
+export type PublishReleaseDraftData = {
+  body: ReleaseNameDto;
+  path?: never;
   query?: never;
-  url: '/api/release-info/{tagName}/generate-release-notes';
+  url: '/api/release-info/publish';
+};
+
+export type PublishReleaseDraftErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type PublishReleaseDraftError = PublishReleaseDraftErrors[keyof PublishReleaseDraftErrors];
+
+export type PublishReleaseDraftResponses = {
+  /**
+   * OK
+   */
+  200: unknown;
+};
+
+export type GenerateReleaseNotesData = {
+  body: ReleaseNameDto;
+  path?: never;
+  query?: never;
+  url: '/api/release-info/generate-release-notes';
 };
 
 export type GenerateReleaseNotesErrors = {
@@ -964,39 +1017,11 @@ export type GenerateReleaseNotesResponses = {
 
 export type GenerateReleaseNotesResponse = GenerateReleaseNotesResponses[keyof GenerateReleaseNotesResponses];
 
-export type PublishReleaseDraftData = {
-  body?: never;
-  path: {
-    name: string;
-  };
-  query?: never;
-  url: '/api/release-info/{name}/publish';
-};
-
-export type PublishReleaseDraftErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type PublishReleaseDraftError = PublishReleaseDraftErrors[keyof PublishReleaseDraftErrors];
-
-export type PublishReleaseDraftResponses = {
-  /**
-   * OK
-   */
-  200: unknown;
-};
-
 export type EvaluateData = {
-  body?: never;
-  path: {
-    name: string;
-    isWorking: boolean;
-  };
+  body: ReleaseEvaluationDto;
+  path?: never;
   query?: never;
-  url: '/api/release-info/{name}/evaluate/{isWorking}';
+  url: '/api/release-info/evaluate';
 };
 
 export type EvaluateErrors = {
@@ -1014,6 +1039,31 @@ export type EvaluateResponses = {
    */
   200: unknown;
 };
+
+export type GetReleaseInfoByNameData = {
+  body: ReleaseNameDto;
+  path?: never;
+  query?: never;
+  url: '/api/release-info/details';
+};
+
+export type GetReleaseInfoByNameErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type GetReleaseInfoByNameError = GetReleaseInfoByNameErrors[keyof GetReleaseInfoByNameErrors];
+
+export type GetReleaseInfoByNameResponses = {
+  /**
+   * OK
+   */
+  200: ReleaseInfoDetailsDto;
+};
+
+export type GetReleaseInfoByNameResponse = GetReleaseInfoByNameResponses[keyof GetReleaseInfoByNameResponses];
 
 export type SetPrPinnedByNumberData = {
   body?: never;
@@ -1475,60 +1525,6 @@ export type GetRepositoryByIdResponses = {
 };
 
 export type GetRepositoryByIdResponse = GetRepositoryByIdResponses[keyof GetRepositoryByIdResponses];
-
-export type DeleteReleaseCandidateByNameData = {
-  body?: never;
-  path: {
-    name: string;
-  };
-  query?: never;
-  url: '/api/release-info/{name}';
-};
-
-export type DeleteReleaseCandidateByNameErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type DeleteReleaseCandidateByNameError = DeleteReleaseCandidateByNameErrors[keyof DeleteReleaseCandidateByNameErrors];
-
-export type DeleteReleaseCandidateByNameResponses = {
-  /**
-   * OK
-   */
-  200: ReleaseInfoListDto;
-};
-
-export type DeleteReleaseCandidateByNameResponse = DeleteReleaseCandidateByNameResponses[keyof DeleteReleaseCandidateByNameResponses];
-
-export type GetReleaseInfoByNameData = {
-  body?: never;
-  path: {
-    name: string;
-  };
-  query?: never;
-  url: '/api/release-info/{name}';
-};
-
-export type GetReleaseInfoByNameErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type GetReleaseInfoByNameError = GetReleaseInfoByNameErrors[keyof GetReleaseInfoByNameErrors];
-
-export type GetReleaseInfoByNameResponses = {
-  /**
-   * OK
-   */
-  200: ReleaseInfoDetailsDto;
-};
-
-export type GetReleaseInfoByNameResponse = GetReleaseInfoByNameResponses[keyof GetReleaseInfoByNameResponses];
 
 export type GetCommitsSinceLastReleaseCandidateData = {
   body?: never;

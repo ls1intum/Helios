@@ -48,19 +48,25 @@ import type {
   CreateWorkflowGroupData,
   CreateWorkflowGroupResponse,
   CreateWorkflowGroupError,
+  DeleteReleaseCandidateByNameData,
+  DeleteReleaseCandidateByNameResponse,
+  DeleteReleaseCandidateByNameError,
   GetAllReleaseInfosData,
   GetAllReleaseInfosResponse,
   GetAllReleaseInfosError,
   CreateReleaseCandidateData,
   CreateReleaseCandidateResponse,
   CreateReleaseCandidateError,
+  PublishReleaseDraftData,
+  PublishReleaseDraftError,
   GenerateReleaseNotesData,
   GenerateReleaseNotesResponse,
   GenerateReleaseNotesError,
-  PublishReleaseDraftData,
-  PublishReleaseDraftError,
   EvaluateData,
   EvaluateError,
+  GetReleaseInfoByNameData,
+  GetReleaseInfoByNameResponse,
+  GetReleaseInfoByNameError,
   SetPrPinnedByNumberData,
   SetPrPinnedByNumberError,
   SyncEnvironmentsData,
@@ -110,12 +116,6 @@ import type {
   GetRepositoryByIdData,
   GetRepositoryByIdResponse,
   GetRepositoryByIdError,
-  DeleteReleaseCandidateByNameData,
-  DeleteReleaseCandidateByNameResponse,
-  DeleteReleaseCandidateByNameError,
-  GetReleaseInfoByNameData,
-  GetReleaseInfoByNameResponse,
-  GetReleaseInfoByNameError,
   GetCommitsSinceLastReleaseCandidateData,
   GetCommitsSinceLastReleaseCandidateResponse,
   GetCommitsSinceLastReleaseCandidateError,
@@ -252,7 +252,7 @@ export const updateWorkflowGroups = <ThrowOnError extends boolean = false>(optio
 
 export const updateReleaseName = <ThrowOnError extends boolean = false>(options: Options<UpdateReleaseNameData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).put<unknown, UpdateReleaseNameError, ThrowOnError>({
-    url: '/api/release-info/{name}/update-name',
+    url: '/api/release-info/update-name',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -263,7 +263,7 @@ export const updateReleaseName = <ThrowOnError extends boolean = false>(options:
 
 export const updateReleaseNotes = <ThrowOnError extends boolean = false>(options: Options<UpdateReleaseNotesData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).put<unknown, UpdateReleaseNotesError, ThrowOnError>({
-    url: '/api/release-info/{name}/release-notes',
+    url: '/api/release-info/release-notes',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -347,6 +347,17 @@ export const createWorkflowGroup = <ThrowOnError extends boolean = false>(option
   });
 };
 
+export const deleteReleaseCandidateByName = <ThrowOnError extends boolean = false>(options: Options<DeleteReleaseCandidateByNameData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).delete<DeleteReleaseCandidateByNameResponse, DeleteReleaseCandidateByNameError, ThrowOnError>({
+    url: '/api/release-info',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
 export const getAllReleaseInfos = <ThrowOnError extends boolean = false>(options?: Options<GetAllReleaseInfosData, ThrowOnError>) => {
   return (options?.client ?? _heyApiClient).get<GetAllReleaseInfosResponse, GetAllReleaseInfosError, ThrowOnError>({
     url: '/api/release-info',
@@ -365,24 +376,47 @@ export const createReleaseCandidate = <ThrowOnError extends boolean = false>(opt
   });
 };
 
-export const generateReleaseNotes = <ThrowOnError extends boolean = false>(options: Options<GenerateReleaseNotesData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).post<GenerateReleaseNotesResponse, GenerateReleaseNotesError, ThrowOnError>({
-    url: '/api/release-info/{tagName}/generate-release-notes',
+export const publishReleaseDraft = <ThrowOnError extends boolean = false>(options: Options<PublishReleaseDraftData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).post<unknown, PublishReleaseDraftError, ThrowOnError>({
+    url: '/api/release-info/publish',
     ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
   });
 };
 
-export const publishReleaseDraft = <ThrowOnError extends boolean = false>(options: Options<PublishReleaseDraftData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).post<unknown, PublishReleaseDraftError, ThrowOnError>({
-    url: '/api/release-info/{name}/publish',
+export const generateReleaseNotes = <ThrowOnError extends boolean = false>(options: Options<GenerateReleaseNotesData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).post<GenerateReleaseNotesResponse, GenerateReleaseNotesError, ThrowOnError>({
+    url: '/api/release-info/generate-release-notes',
     ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
   });
 };
 
 export const evaluate = <ThrowOnError extends boolean = false>(options: Options<EvaluateData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).post<unknown, EvaluateError, ThrowOnError>({
-    url: '/api/release-info/{name}/evaluate/{isWorking}',
+    url: '/api/release-info/evaluate',
     ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const getReleaseInfoByName = <ThrowOnError extends boolean = false>(options: Options<GetReleaseInfoByNameData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).post<GetReleaseInfoByNameResponse, GetReleaseInfoByNameError, ThrowOnError>({
+    url: '/api/release-info/details',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
   });
 };
 
@@ -511,20 +545,6 @@ export const getAllRepositories = <ThrowOnError extends boolean = false>(options
 export const getRepositoryById = <ThrowOnError extends boolean = false>(options: Options<GetRepositoryByIdData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetRepositoryByIdResponse, GetRepositoryByIdError, ThrowOnError>({
     url: '/api/repository/{id}',
-    ...options,
-  });
-};
-
-export const deleteReleaseCandidateByName = <ThrowOnError extends boolean = false>(options: Options<DeleteReleaseCandidateByNameData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).delete<DeleteReleaseCandidateByNameResponse, DeleteReleaseCandidateByNameError, ThrowOnError>({
-    url: '/api/release-info/{name}',
-    ...options,
-  });
-};
-
-export const getReleaseInfoByName = <ThrowOnError extends boolean = false>(options: Options<GetReleaseInfoByNameData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).get<GetReleaseInfoByNameResponse, GetReleaseInfoByNameError, ThrowOnError>({
-    url: '/api/release-info/{name}',
     ...options,
   });
 };

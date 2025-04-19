@@ -73,7 +73,7 @@ export class ReleaseCandidateDetailsComponent implements OnInit {
 
   name = input.required<string>();
   releaseCandidateQuery = injectQuery(() => ({
-    ...getReleaseInfoByNameOptions({ path: { name: this.name() } }),
+    ...getReleaseInfoByNameOptions({ body: { name: this.name() } }),
     onSuccess: () => {
       this.releaseNotesForm.get('releaseNotes')?.setValue(this.releaseNotes());
     },
@@ -121,7 +121,7 @@ export class ReleaseCandidateDetailsComponent implements OnInit {
     onSuccess: () => {
       this.messageService.add({ severity: 'success', summary: 'Release Name', detail: 'Release name updated successfully' });
       this.isEditingName.set(false);
-      this.queryClient.invalidateQueries({ queryKey: getReleaseInfoByNameQueryKey({ path: { name: this.name() } }) });
+      this.queryClient.invalidateQueries({ queryKey: getReleaseInfoByNameQueryKey({ body: { name: this.name() } }) });
       // Update the URL to match the new name
       const newName = this.releaseNameForm.get('releaseName')?.value || '';
       this.router.navigate(['..', newName], { relativeTo: this.route });
@@ -135,7 +135,7 @@ export class ReleaseCandidateDetailsComponent implements OnInit {
     ...evaluateMutation(),
     onSuccess: () => {
       this.messageService.add({ severity: 'success', summary: 'Release Candidate Evaluation', detail: 'Your evaluation has been saved successfully' });
-      this.queryClient.invalidateQueries({ queryKey: getReleaseInfoByNameQueryKey({ path: { name: this.name() } }) });
+      this.queryClient.invalidateQueries({ queryKey: getReleaseInfoByNameQueryKey({ body: { name: this.name() } }) });
     },
   }));
 
@@ -143,7 +143,7 @@ export class ReleaseCandidateDetailsComponent implements OnInit {
     ...publishReleaseDraftMutation(),
     onSuccess: () => {
       this.messageService.add({ severity: 'success', summary: 'Release Draft Published', detail: 'Release draft has been published to GitHub successfully' });
-      this.queryClient.invalidateQueries({ queryKey: getReleaseInfoByNameQueryKey({ path: { name: this.name() } }) });
+      this.queryClient.invalidateQueries({ queryKey: getReleaseInfoByNameQueryKey({ body: { name: this.name() } }) });
       // Once published, editing should be disabled
       this.isEditingReleaseNotes.set(false);
     },
@@ -175,7 +175,7 @@ export class ReleaseCandidateDetailsComponent implements OnInit {
     onSuccess: () => {
       this.messageService.add({ severity: 'success', summary: 'Release Notes', detail: 'Release notes saved successfully' });
       this.isEditingReleaseNotes.set(false);
-      this.queryClient.invalidateQueries({ queryKey: getReleaseInfoByNameQueryKey({ path: { name: this.name() } }) });
+      this.queryClient.invalidateQueries({ queryKey: getReleaseInfoByNameQueryKey({ body: { name: this.name() } }) });
     },
     onError: error => {
       this.messageService.add({ severity: 'error', summary: 'Release Notes Update Failed', detail: error.message });
@@ -188,7 +188,7 @@ export class ReleaseCandidateDetailsComponent implements OnInit {
   }
 
   evaluateReleaseCandidate = (isWorking: boolean) => {
-    this.evaluateReleaseCandidateMutation.mutate({ path: { name: this.name(), isWorking } });
+    this.evaluateReleaseCandidateMutation.mutate({ body: { name: this.name(), isWorking } });
   };
 
   deleteReleaseCandidate = (rc: ReleaseInfoDetailsDto) => {
@@ -196,7 +196,7 @@ export class ReleaseCandidateDetailsComponent implements OnInit {
       header: 'Delete Release Candidate',
       message: `Are you sure you want to delete release candidate ${rc.name}? This cannot be undone.`,
       accept: () => {
-        this.deleteReleaseCandidateMutation.mutate({ path: { name: rc.name } });
+        this.deleteReleaseCandidateMutation.mutate({ body: { name: rc.name } });
       },
     });
   };
@@ -215,7 +215,7 @@ export class ReleaseCandidateDetailsComponent implements OnInit {
       header: 'Publish Release Candidate',
       message: `Are you sure you want to publish release candidate ${rc.name} as a draft to GitHub? This can only be undone in GitHub itself.`,
       accept: () => {
-        this.publishReleaseDraftMutation.mutate({ path: { name: rc.name } });
+        this.publishReleaseDraftMutation.mutate({ body: { name: rc.name } });
       },
     });
   }
@@ -231,7 +231,7 @@ export class ReleaseCandidateDetailsComponent implements OnInit {
     if (rc?.release) return; // Don't allow generation if already published
 
     this.generateReleaseNotesMutation.mutate({
-      path: { tagName: this.name() },
+      body: { name: this.name() },
     });
   }
 
@@ -250,8 +250,7 @@ export class ReleaseCandidateDetailsComponent implements OnInit {
     const markdownContent = this.releaseNotesForm.get('releaseNotes')?.value || '';
 
     this.updateReleaseNotesMutation.mutate({
-      path: { name: this.name() },
-      body: { body: markdownContent },
+      body: { name: this.name(), notes: markdownContent },
     });
   }
 
@@ -280,8 +279,7 @@ export class ReleaseCandidateDetailsComponent implements OnInit {
     }
 
     this.updateReleaseNameMutation.mutate({
-      path: { name: this.name() },
-      body: { newName: newName },
+      body: { oldName: this.name(), newName: newName },
     });
   }
 
