@@ -1,3 +1,3 @@
 package de.tum.cit.aet.helios.releaseinfo;
 
-public record ReleaseCandidateNameUpdateDto(String newName) {}
+public record ReleaseCandidateNameUpdateDto(String oldName, String newName) {}
