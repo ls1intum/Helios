@@ -200,6 +200,12 @@
                                   >
                                   </p-tag>
                                 }
+                                @if (
+                                  (testCase.combinedFailureRate && testCase.combinedFailureRate > 0.5) ||
+                                  (testCase.defaultBranchFailureRate && testCase.defaultBranchFailureRate > 0.5)
+                                ) {
+                                  <p-tag severity="danger" value="Broken" styleClass="mt-2 text-xs" pTooltip="This test has failure rate over 50% and might be broken" />
+                                }
                               }
                             </div>
                           </div>
