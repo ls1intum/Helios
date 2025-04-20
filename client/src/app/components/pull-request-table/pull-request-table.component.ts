@@ -25,8 +25,8 @@ import { PullRequestStatusIconComponent } from '@app/components/pull-request-sta
 import { MessageService } from 'primeng/api';
 
 const FILTER_OPTIONS = [
-  { name: 'All pull requests', filter: (prs: PullRequestBaseInfoDto[]) => prs },
   { name: 'Open pull requests', filter: (prs: PullRequestBaseInfoDto[]) => prs.filter(pr => pr.state === 'OPEN') },
+  { name: 'All pull requests', filter: (prs: PullRequestBaseInfoDto[]) => prs },
   { name: 'Your pull requests', filter: (prs: PullRequestBaseInfoDto[], username: string) => prs.filter(pr => pr.author?.login.toLowerCase() === username.toLowerCase()) },
   {
     name: 'Everything assigned to you',
