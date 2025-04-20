@@ -30,7 +30,7 @@ interface LogLevel {
 }
 
 const LOG_LEVELS: LogLevel[] = [
-  { value: 0, name: 'OFF', label: 'OFF', color: 'text-gray-900', includes: ['OFF'] },
+  { value: 0, name: 'OFF', label: 'OFF', color: '', includes: ['OFF'] },
   { value: 1, name: 'FATAL', label: 'FATAL+', color: 'text-red-800', includes: ['FATAL', 'OFF'] },
   { value: 2, name: 'ERROR', label: 'ERROR+', color: 'text-red-600', includes: ['ERROR', 'FATAL', 'OFF'] },
   { value: 3, name: 'WARN', label: 'WARN+', color: 'text-amber-600', includes: ['WARN', 'ERROR', 'FATAL', 'OFF'] },
@@ -76,11 +76,11 @@ export class PipelineTestResultsComponent {
   selectedTestCase = signal<(TestCaseDto & { suiteSystemOut: string | undefined }) | null>(null);
 
   // Log level filtering
-  selectedLogLevelValue = signal<number>(7); // Default to ALL
+  selectedLogLevelValue = signal<number>(2); // Default to ERROR
 
   // Get the current log level object based on the selected value
   selectedLogLevel = computed(() => {
-    return LOG_LEVELS.find(level => level.value === this.selectedLogLevelValue()) || LOG_LEVELS[7];
+    return LOG_LEVELS.find(level => level.value === this.selectedLogLevelValue()) || LOG_LEVELS[2];
   });
 
   // Get the array of log level names that should be included based on the selection
