@@ -72,4 +72,4 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
-            ${{ matrix.path == 'client' && github.ref_name == 'main' && 'BUILD_CONFIG=production' || matrix.path == 'client' && github.ref_name == 'staging' && 'BUILD_CONFIG=staging' || '' }}
+            ${{ matrix.path == 'client' && github.event_name == 'release' && 'BUILD_CONFIG=production DEPLOYED_VERSION=' && github.ref_name && ' DEPLOYED_COMMIT_SHA=' && github.sha || matrix.path == 'client' && github.ref_name == 'staging' && 'BUILD_CONFIG=staging DEPLOYED_VERSION=staging DEPLOYED_COMMIT_SHA=' && github.sha || '' }}

@@ -15,6 +15,7 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { HeliosIconComponent } from '@app/components/helios-icon/helios-icon.component';
 import { ProfileNavSectionComponent } from '@app/components/profile-nav-section/profile-nav-section.component';
 import { TagModule } from 'primeng/tag';
+import { version } from 'environments/version';
 
 @Component({
   selector: 'app-main-layout',
@@ -41,6 +42,8 @@ export class MainLayoutComponent implements OnInit {
   private keycloakService = inject(KeycloakService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+
+  deployed_version = version.deployed_version;
 
   repositoryId = signal<number | undefined>(undefined);
   isDarkModeEnabled = signal(window.matchMedia('(prefers-color-scheme: dark)').matches);

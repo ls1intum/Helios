@@ -13,8 +13,13 @@ RUN yarn install --network-timeout 1000000
 # Copy the entire project to the working directory
 COPY . .
 
-# Set the build configuration based on the environment variable
+# Set the build configuration based on the environment variables
 ARG BUILD_CONFIG=production
+ARG DEPLOYED_VERSION=''
+ARG DEPLOYED_COMMIT_SHA=''
+
+# Set version in environment version file
+RUN echo "export const version = { deployed_version: "$DEPLOYED_VERSION", deployed_commit_sha: "$DEPLOYED_COMMIT_SHA" };" > /app/src/environments/version.ts
 
 # Build the Angular app using the specified configuration
 RUN yarn run build --configuration $BUILD_CONFIG
