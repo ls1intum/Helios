@@ -270,6 +270,17 @@
           <div class="border border-surface-500 p-4 rounded overflow-auto max-h-[400px]">
             <pre class="font-mono text-sm">{{ selectedTestCase()?.stackTrace?.trimStart() }}</pre>
           </div>
+          <div class="flex justify-end mt-2">
+            <button
+              pButton
+              class="p-button-sm p-button-secondary"
+              (click)="downloadLogs(selectedTestCase()?.stackTrace?.trimStart() || '', selectedTestCase()?.name + '_stack_trace.txt')"
+              [disabled]="!selectedTestCase()?.stackTrace"
+            >
+              <i-tabler name="download" class="mr-2"></i-tabler>
+              Download Stack Trace
+            </button>
+          </div>
         </div>
       }
 
