@@ -123,6 +123,27 @@ export class PipelineTestResultsComponent {
     return this.filterLogsByLevel(this.selectedTestCase()?.suiteSystemOut);
   });
 
+  // Function to download logs with current filter applied
+  downloadLogs(logContent: string, fileName: string): void {
+    if (!logContent) return;
+
+    const blob = new Blob([logContent], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+
+    // Create the download link
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+
+    // Trigger the download
+    link.click();
+
+    // Clean up
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
+
   // Helper function for log level styling (colors)
   getLogLevelClass(line: string): string {
     // Use the same regex pattern as in filterLogsByLevel

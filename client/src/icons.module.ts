@@ -73,6 +73,7 @@ import {
   IconFocus,
   IconUsersGroup,
   IconMoon,
+  IconDownload,
 } from 'angular-tabler-icons/icons';
 
 // Select some icons (use an object, not an array)
@@ -148,6 +149,7 @@ const icons = {
   IconPinnedOff,
   IconLockPlus,
   IconUsersGroup,
+  IconDownload,
 };
 
 @NgModule({
