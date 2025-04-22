@@ -30,3 +30,15 @@ status-check:
     # How many status checks should be stored in the database
     # for an environment
     keep-count: 10
+
+cleanup:
+    workflow-run:
+        # runs every day at 01:00 (server time)
+        cron: "0 0 1 * * *"
+        policies:
+            - test-processing-status: PROCESSED
+              keep: 2
+              age-days: 10
+            - test-processing-status: null
+              keep: 2
+              age-days: 5

@@ -4,9 +4,11 @@ import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 @Repository
 public interface WorkflowRunRepository extends JpaRepository<WorkflowRun, Long> {
@@ -38,22 +40,22 @@ public interface WorkflowRunRepository extends JpaRepository<WorkflowRun, Long> 
       nativeQuery = true,
       value =
           """
-          WITH commit_history AS (
-              SELECT
-                  wr.head_sha,
-                  MAX(wr.created_at) AS latest_run
-              FROM workflow_run wr
-              JOIN workflow_run_pull_requests wrpr ON wr.id = wrpr.workflow_run_id
-              WHERE wrpr.pull_requests_id = :prId
-              GROUP BY wr.head_sha
-              ORDER BY latest_run DESC
-          )
-          SELECT head_sha
-          FROM commit_history
-          WHERE head_sha != :head
-          OFFSET :offset
-          LIMIT 1
-          """)
+              WITH commit_history AS (
+                  SELECT
+                      wr.head_sha,
+                      MAX(wr.created_at) AS latest_run
+                  FROM workflow_run wr
+                  JOIN workflow_run_pull_requests wrpr ON wr.id = wrpr.workflow_run_id
+                  WHERE wrpr.pull_requests_id = :prId
+                  GROUP BY wr.head_sha
+                  ORDER BY latest_run DESC
+              )
+              SELECT head_sha
+              FROM commit_history
+              WHERE head_sha != :head
+              OFFSET :offset
+              LIMIT 1
+              """)
   Optional<String> findNthLatestCommitShaBehindHeadByPullRequestId(
       @Param("prId") Long prId, @Param("offset") int offset, @Param("head") String headCommit);
 
@@ -75,27 +77,27 @@ public interface WorkflowRunRepository extends JpaRepository<WorkflowRun, Long> 
       nativeQuery = true,
       value =
           """
-          WITH commit_history AS (
-              SELECT
-                  wr.head_sha,
-                  MAX(wr.created_at) AS latest_run
-              FROM workflow_run wr
-              WHERE wr.head_branch = :headBranch
-              AND wr.repository_id = :repoId
-              AND NOT EXISTS (
-                  SELECT 1
-                  FROM workflow_run_pull_requests wrpr
-                  WHERE wr.id = wrpr.workflow_run_id
+              WITH commit_history AS (
+                  SELECT
+                      wr.head_sha,
+                      MAX(wr.created_at) AS latest_run
+                  FROM workflow_run wr
+                  WHERE wr.head_branch = :headBranch
+                  AND wr.repository_id = :repoId
+                  AND NOT EXISTS (
+                      SELECT 1
+                      FROM workflow_run_pull_requests wrpr
+                      WHERE wr.id = wrpr.workflow_run_id
+                  )
+                  GROUP BY wr.head_sha
+                  ORDER BY latest_run DESC
               )
-              GROUP BY wr.head_sha
-              ORDER BY latest_run DESC
-          )
-          SELECT head_sha
-          FROM commit_history
-          WHERE head_sha != :head
-          OFFSET :offset
-          LIMIT 1
-          """)
+              SELECT head_sha
+              FROM commit_history
+              WHERE head_sha != :head
+              OFFSET :offset
+              LIMIT 1
+              """)
   Optional<String> findNthLatestCommitShaBehindHeadByBranchAndRepoId(
       @Param("headBranch") String headBranch,
       @Param("repoId") Long repoId,
@@ -116,4 +118,49 @@ public interface WorkflowRunRepository extends JpaRepository<WorkflowRun, Long> 
 
   List<WorkflowRun> findByHeadBranchAndHeadShaAndRepositoryRepositoryId(
       String branch, String headSha, Long repositoryId);
+
+  /**
+   * Custom database clean‑up for workflow runs.
+   */
+  @Modifying
+  @Transactional
+  @Query(value = """
+      /* ---------------------------------------------------------------
+       * Delete workflow runs that match the caller‑supplied policy:
+       *
+       *   • For every (repository_id, head_branch) partition,
+       *     keep the newest :keep rows.
+       *   • Of the remainder, delete those whose
+       *     test_processing_status matches :tps
+       *     (or any value if :tps is NULL)
+       *     AND whose created_at is at least :ageDays old.
+       *
+       * All child rows in test_suite → test_case are removed
+       * automatically via ON DELETE CASCADE.
+       * ------------------------------------------------------------- */
+      WITH deletable AS (
+          SELECT id
+          FROM (
+              SELECT id,
+                     repository_id,
+                     head_branch,
+                     created_at,
+                     row_number() OVER (
+                         PARTITION BY repository_id, head_branch
+                         ORDER BY created_at DESC
+                     ) AS rn
+              FROM workflow_run
+              WHERE test_processing_status IS NOT DISTINCT FROM :tps
+          ) ranked
+          WHERE rn > :keep
+            AND created_at < now() - (:ageDays * interval '1 day')
+      )
+      DELETE FROM workflow_run wr
+      USING  deletable d
+      WHERE  wr.id = d.id
+      """, nativeQuery = true)
+  int purgeObsoleteRuns(@Param("keep") int keepPerCombo,
+                        @Param("ageDays") int ageDays,
+                        @Param("tps") String testProcessingStatus);
+
 }
