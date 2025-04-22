@@ -20,9 +20,10 @@ import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { ToggleSwitch } from 'primeng/toggleswitch';
 import { MessageModule } from 'primeng/message';
-import { IconsModule } from 'icons.module';
 import { CardModule } from 'primeng/card';
 import { DividerModule } from 'primeng/divider';
+import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
+import { IconExclamationCircle } from 'angular-tabler-icons/icons';
 
 @Component({
   selector: 'app-environment-edit-form',
@@ -37,8 +38,9 @@ import { DividerModule } from 'primeng/divider';
     MessageModule,
     SelectModule,
     ToggleSwitch,
-    IconsModule,
+    TablerIconComponent,
   ],
+  providers: [provideTablerIcons({ IconExclamationCircle })],
   templateUrl: './environment-edit-form.component.html',
 })
 export class EnvironmentEditFormComponent implements OnInit {

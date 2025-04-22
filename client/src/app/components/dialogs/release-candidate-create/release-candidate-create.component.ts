@@ -8,7 +8,8 @@ import {
   getCommitsSinceLastReleaseCandidateOptions,
 } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { injectMutation, injectQuery, QueryClient } from '@tanstack/angular-query-experimental';
-import { IconsModule } from 'icons.module';
+import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
+import { IconGitBranch, IconGitCommit, IconTag } from 'angular-tabler-icons/icons';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
@@ -19,7 +20,14 @@ import { TooltipModule } from 'primeng/tooltip';
 
 @Component({
   selector: 'app-release-candidate-create',
-  imports: [ButtonModule, DialogModule, IconsModule, FormsModule, SkeletonModule, InputTextModule, TagModule, SlicePipe, TooltipModule],
+  imports: [ButtonModule, DialogModule, TablerIconComponent, FormsModule, SkeletonModule, InputTextModule, TagModule, SlicePipe, TooltipModule],
+  providers: [
+    provideTablerIcons({
+      IconTag,
+      IconGitBranch,
+      IconGitCommit,
+    }),
+  ],
   templateUrl: './release-candidate-create.component.html',
 })
 export class ReleaseCandidateCreateComponent {

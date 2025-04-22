@@ -2,7 +2,6 @@ import { Component, computed, input, signal, viewChild, effect, ViewChild, Eleme
 import { TableModule } from 'primeng/table';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { PanelModule } from 'primeng/panel';
-import { IconsModule } from 'icons.module';
 import { TooltipModule } from 'primeng/tooltip';
 import { SkeletonModule } from 'primeng/skeleton';
 import { PipelineSelector } from '../pipeline.component';
@@ -19,6 +18,20 @@ import { getLatestTestResultsByBranchOptions, getLatestTestResultsByPullRequestI
 import { TestCaseDto, TestSuiteDto, TestTypeResults } from '@app/core/modules/openapi';
 import { DialogModule } from 'primeng/dialog';
 import { SliderModule } from 'primeng/slider';
+import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
+import {
+  IconCheck,
+  IconChevronDown,
+  IconChevronsRight,
+  IconChevronUp,
+  IconCircleCheck,
+  IconClock,
+  IconFilter,
+  IconFilterPlus,
+  IconInfoCircle,
+  IconProgress,
+  IconX,
+} from 'angular-tabler-icons/icons';
 
 // Define log level interface and constants
 interface LogLevel {
@@ -46,7 +59,7 @@ const LOG_LEVELS: LogLevel[] = [
     TableModule,
     ProgressSpinnerModule,
     PanelModule,
-    IconsModule,
+    TablerIconComponent,
     TooltipModule,
     SkeletonModule,
     TagModule,
@@ -60,6 +73,21 @@ const LOG_LEVELS: LogLevel[] = [
     TabViewModule,
     DialogModule,
     SliderModule,
+  ],
+  providers: [
+    provideTablerIcons({
+      IconProgress,
+      IconCheck,
+      IconX,
+      IconChevronsRight,
+      IconClock,
+      IconChevronDown,
+      IconChevronUp,
+      IconCircleCheck,
+      IconFilter,
+      IconFilterPlus,
+      IconInfoCircle,
+    }),
   ],
   templateUrl: './pipeline-test-results.component.html',
 })

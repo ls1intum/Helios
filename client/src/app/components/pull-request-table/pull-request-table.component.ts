@@ -6,7 +6,6 @@ import { TableModule } from 'primeng/table';
 import { AvatarModule } from 'primeng/avatar';
 import { TagModule } from 'primeng/tag';
 import { injectMutation, injectQuery, QueryClient } from '@tanstack/angular-query-experimental';
-import { IconsModule } from 'icons.module';
 import { SkeletonModule } from 'primeng/skeleton';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DateService } from '@app/core/services/date.service';
@@ -23,6 +22,8 @@ import { TableFilterComponent } from '../table-filter/table-filter.component';
 import { WorkflowRunStatusComponent } from '@app/components/workflow-run-status-component/workflow-run-status.component';
 import { PullRequestStatusIconComponent } from '@app/components/pull-request-status-icon/pull-request-status-icon.component';
 import { MessageService } from 'primeng/api';
+import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
+import { IconExternalLink, IconFilterPlus, IconGitPullRequest, IconPinned, IconPinnedOff, IconPoint, IconBrandGithub } from 'angular-tabler-icons/icons';
 
 const FILTER_OPTIONS = [
   { name: 'Open pull requests', filter: (prs: PullRequestBaseInfoDto[]) => prs.filter(pr => pr.state === 'OPEN') },
@@ -47,7 +48,7 @@ const FILTER_OPTIONS = [
     TimeAgoPipe,
     FormsModule,
     SelectModule,
-    IconsModule,
+    TablerIconComponent,
     SkeletonModule,
     AvatarGroupModule,
     TooltipModule,
@@ -58,7 +59,19 @@ const FILTER_OPTIONS = [
     WorkflowRunStatusComponent,
     PullRequestStatusIconComponent,
   ],
-  providers: [SearchTableService, { provide: FILTER_OPTIONS_TOKEN, useValue: FILTER_OPTIONS }],
+  providers: [
+    SearchTableService,
+    { provide: FILTER_OPTIONS_TOKEN, useValue: FILTER_OPTIONS },
+    provideTablerIcons({
+      IconFilterPlus,
+      IconPoint,
+      IconExternalLink,
+      IconPinnedOff,
+      IconPinned,
+      IconGitPullRequest,
+      IconBrandGithub,
+    }),
+  ],
   templateUrl: './pull-request-table.component.html',
 })
 export class PullRequestTableComponent {

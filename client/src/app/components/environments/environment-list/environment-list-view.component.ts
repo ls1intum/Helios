@@ -17,7 +17,6 @@ import {
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 import { PermissionService } from '@app/core/services/permission.service';
 import { injectMutation, injectQuery, QueryClient } from '@tanstack/angular-query-experimental';
-import { IconsModule } from 'icons.module';
 import { AccordionModule } from 'primeng/accordion';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { AvatarModule } from 'primeng/avatar';
@@ -31,6 +30,8 @@ import { ToggleButtonModule } from 'primeng/togglebutton';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { TooltipModule } from 'primeng/tooltip';
 import { EnvironmentAccordionComponent } from '../environment-accordion/environment-accordion.component';
+import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
+import { IconRefresh, IconServerCog } from 'angular-tabler-icons/icons';
 
 @Component({
   selector: 'app-environment-list-view',
@@ -39,7 +40,7 @@ import { EnvironmentAccordionComponent } from '../environment-accordion/environm
     AccordionModule,
     RouterLink,
     TagModule,
-    IconsModule,
+    TablerIconComponent,
     ButtonModule,
     TooltipModule,
     AvatarModule,
@@ -52,7 +53,7 @@ import { EnvironmentAccordionComponent } from '../environment-accordion/environm
     DividerModule,
     EnvironmentAccordionComponent,
   ],
-  providers: [DatePipe],
+  providers: [DatePipe, provideTablerIcons({ IconRefresh, IconServerCog })],
   templateUrl: './environment-list-view.component.html',
 })
 export class EnvironmentListViewComponent implements OnDestroy {

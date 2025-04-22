@@ -1,9 +1,20 @@
 import { Component, inject, input } from '@angular/core';
 import { TagModule } from 'primeng/tag';
-import { IconsModule } from 'icons.module';
 import { TooltipModule } from 'primeng/tooltip';
 import { EnvironmentDeployment } from '@app/core/modules/openapi';
 import { DeploymentTimingService } from '@app/core/services/deployment-timing.service';
+import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
+import {
+  IconCheck,
+  IconClock,
+  IconExclamationCircle,
+  IconExclamationMark,
+  IconGitBranch,
+  IconProgress,
+  IconQuestionMark,
+  IconRepeat,
+  IconTimeDurationOff,
+} from 'angular-tabler-icons/icons';
 
 type BaseDeploymentState = NonNullable<EnvironmentDeployment['state']>;
 type ExtendedDeploymentState = BaseDeploymentState | 'NEVER_DEPLOYED' | 'REPLACED';
@@ -11,7 +22,20 @@ type ExtendedDeploymentState = BaseDeploymentState | 'NEVER_DEPLOYED' | 'REPLACE
 @Component({
   selector: 'app-deployment-state-tag',
   standalone: true,
-  imports: [TagModule, IconsModule, TooltipModule],
+  imports: [TagModule, TablerIconComponent, TooltipModule],
+  providers: [
+    provideTablerIcons({
+      IconCheck,
+      IconClock,
+      IconProgress,
+      IconExclamationCircle,
+      IconExclamationMark,
+      IconTimeDurationOff,
+      IconQuestionMark,
+      IconRepeat,
+      IconGitBranch,
+    }),
+  ],
   templateUrl: './deployment-state-tag.component.html',
 })
 export class DeploymentStateTagComponent {

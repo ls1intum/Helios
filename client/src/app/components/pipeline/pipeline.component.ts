@@ -3,7 +3,6 @@ import { injectQuery } from '@tanstack/angular-query-experimental';
 import { TableModule } from 'primeng/table';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { PanelModule } from 'primeng/panel';
-import { IconsModule } from 'icons.module';
 import { TooltipModule } from 'primeng/tooltip';
 import {
   getLatestWorkflowRunsByBranchAndHeadCommitOptions,
@@ -14,6 +13,8 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { WorkflowRunDto } from '@app/core/modules/openapi';
 import { PipelineTestResultsComponent } from './test-results/pipeline-test-results.component';
 import { DividerModule } from 'primeng/divider';
+import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
+import { IconCircleCheck, IconCircleX, IconExclamationCircle, IconExternalLink, IconInfoCircle, IconProgress, IconProgressHelp } from 'angular-tabler-icons/icons';
 import { ButtonModule } from 'primeng/button';
 
 export type PipelineSelector = { repositoryId: number } & (
@@ -36,7 +37,18 @@ export interface Pipeline {
 
 @Component({
   selector: 'app-pipeline',
-  imports: [TableModule, DividerModule, ButtonModule, ProgressSpinnerModule, PanelModule, IconsModule, TooltipModule, SkeletonModule, PipelineTestResultsComponent],
+  imports: [TableModule, DividerModule, ButtonModule, ProgressSpinnerModule, PanelModule, TablerIconComponent, TooltipModule, SkeletonModule, PipelineTestResultsComponent],
+  providers: [
+    provideTablerIcons({
+      IconInfoCircle,
+      IconCircleCheck,
+      IconCircleX,
+      IconProgressHelp,
+      IconProgress,
+      IconExternalLink,
+      IconExclamationCircle,
+    }),
+  ],
   templateUrl: './pipeline.component.html',
 })
 export class PipelineComponent {
