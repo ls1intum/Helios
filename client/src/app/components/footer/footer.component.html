@@ -1,10 +1,12 @@
-<footer class="flex items-center justify-center h-6px-5 text-xs underline-offset-4">
+<footer class="flex flex-wrap items-center justify-center h-6px-5 text-xs underline-offset-4">
   <div class="flex items-center gap-2">
     <a routerLink="/about" class="hover:underline">About</a>
     <span>|</span>
     <a routerLink="/privacy" class="hover:underline">Privacy</a>
     <span>|</span>
     <a routerLink="/imprint" class="hover:underline">Imprint</a>
+    <span>|</span>
+    <span>{{ deployed_commit_sha }}</span>
     <span>|</span>
   </div>
   <div class="whitespace-nowrap ml-2">

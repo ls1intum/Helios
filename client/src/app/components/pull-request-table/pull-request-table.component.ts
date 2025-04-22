@@ -26,8 +26,8 @@ import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
 import { IconExternalLink, IconFilterPlus, IconGitPullRequest, IconPinned, IconPinnedOff, IconPoint } from 'angular-tabler-icons/icons';
 
 const FILTER_OPTIONS = [
-  { name: 'All pull requests', filter: (prs: PullRequestBaseInfoDto[]) => prs },
   { name: 'Open pull requests', filter: (prs: PullRequestBaseInfoDto[]) => prs.filter(pr => pr.state === 'OPEN') },
+  { name: 'All pull requests', filter: (prs: PullRequestBaseInfoDto[]) => prs },
   { name: 'Your pull requests', filter: (prs: PullRequestBaseInfoDto[], username: string) => prs.filter(pr => pr.author?.login.toLowerCase() === username.toLowerCase()) },
   {
     name: 'Everything assigned to you',
@@ -108,7 +108,6 @@ export class PullRequestTableComponent {
     // Also text color of black is also for better readability
     return {
       'border-color': `#${color}`,
-      color: '#000000',
       'background-color': color === 'ededed' ? `#${color}` : `#${color}75`,
     };
   }

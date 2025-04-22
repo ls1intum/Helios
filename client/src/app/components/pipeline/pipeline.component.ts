@@ -15,6 +15,7 @@ import { PipelineTestResultsComponent } from './test-results/pipeline-test-resul
 import { DividerModule } from 'primeng/divider';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
 import { IconCircleCheck, IconCircleX, IconExclamationCircle, IconExternalLink, IconInfoCircle, IconProgress, IconProgressHelp } from 'angular-tabler-icons/icons';
+import { ButtonModule } from 'primeng/button';
 
 export type PipelineSelector = { repositoryId: number } & (
   | {
@@ -36,7 +37,7 @@ export interface Pipeline {
 
 @Component({
   selector: 'app-pipeline',
-  imports: [TableModule, DividerModule, ProgressSpinnerModule, PanelModule, TablerIconComponent, TooltipModule, SkeletonModule, PipelineTestResultsComponent],
+  imports: [TableModule, DividerModule, ButtonModule, ProgressSpinnerModule, PanelModule, TablerIconComponent, TooltipModule, SkeletonModule, PipelineTestResultsComponent],
   providers: [
     provideTablerIcons({
       IconInfoCircle,
@@ -118,4 +119,8 @@ export class PipelineComponent {
     const pipelineData = this.pipeline();
     return pipelineData.groups.length > 0 && pipelineData.groups.every(group => group.workflows.length === 0);
   });
+
+  openLink(url: string) {
+    window.open(url, '_blank');
+  }
 }

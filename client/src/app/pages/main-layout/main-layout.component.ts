@@ -16,6 +16,7 @@ import { ProfileNavSectionComponent } from '@app/components/profile-nav-section/
 import { TagModule } from 'primeng/tag';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
 import { IconMoon, IconSun } from 'angular-tabler-icons/icons';
+import { version } from 'environments/version';
 
 @Component({
   selector: 'app-main-layout',
@@ -48,6 +49,8 @@ export class MainLayoutComponent implements OnInit {
   private keycloakService = inject(KeycloakService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+
+  deployed_version = version.deployed_version;
 
   repositoryId = signal<number | undefined>(undefined);
   isDarkModeEnabled = signal(window.matchMedia('(prefers-color-scheme: dark)').matches);

@@ -1,19 +1,14 @@
-<div class="flex items-center justify-between mb-3">
-  <input pInputText id="commit-hash" (input)="onSearch($event)" [value]="searchInput()" type="text" placeholder="Search for installed systems" class="w-1/3" />
+<div class="flex gap-2 items-center justify-between mb-3">
+  <input pInputText id="commit-hash" (input)="onSearch($event)" [value]="searchInput()" type="text" placeholder="Search for installed systems" class="w-full md:w-1/3" />
   @if (!hideLinkToList()) {
-    <p-button [routerLink]="'../../../environment'" class="self-end">
-      {{ isAdmin() ? 'Manage Environments' : 'Go to Environments' }}
+    <p-button [routerLink]="'../../../environment'">
+      <i-tabler name="server-cog" class="!size-5" />
+      <span class="hidden md:block">{{ isAdmin() ? 'Manage Environments' : 'Go to Environments' }}</span>
     </p-button>
   } @else {
-    <p-button
-      severity="secondary"
-      label="Sync Environments"
-      (click)="syncEnvironments()"
-      pTooltip="May take ~10 seconds after environment creation on GitHub"
-      tooltipPosition="top"
-      class="mr-2"
-    >
-      <i-tabler name="refresh" size="1.5rem"></i-tabler>
+    <p-button label="" (click)="syncEnvironments()" pTooltip="May take ~10 seconds after environment creation on GitHub" tooltipPosition="top" class="mr-2">
+      <i-tabler name="refresh" class="!size-5"></i-tabler>
+      <span class="hidden md:block">Sync Environments</span>
     </p-button>
   }
 </div>

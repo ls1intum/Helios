@@ -61,6 +61,33 @@ jobs:
             type=ref,event=pr
             type=sha,suffix=-${{ github.ref_name }}
 
+      - name: Set build args
+        id: set-build-args
+        run: |
+          if [[ "${{ matrix.path }}" == "client" ]]; then
+            if [[ "${{ github.event_name }}" == "release" ]]; then
+              echo "build_args<<EOF" >> $GITHUB_OUTPUT
+              echo "BUILD_CONFIG=production" >> $GITHUB_OUTPUT
+              echo "DEPLOYED_VERSION=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+              echo "DEPLOYED_COMMIT_SHA=${{ github.sha }}" >> $GITHUB_OUTPUT
+              echo "EOF" >> $GITHUB_OUTPUT
+            elif [[ "${{ github.ref_name }}" == "staging" ]]; then
+              echo "build_args<<EOF" >> $GITHUB_OUTPUT
+              echo "BUILD_CONFIG=staging" >> $GITHUB_OUTPUT
+              echo "DEPLOYED_VERSION=staging" >> $GITHUB_OUTPUT
+              echo "DEPLOYED_COMMIT_SHA=${{ github.sha }}" >> $GITHUB_OUTPUT
+              echo "EOF" >> $GITHUB_OUTPUT
+            else
+              echo "build_args=" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "build_args=" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Echo build args
+        run: echo ${{ steps.set-build-args.outputs.build_args }}
+
+
       - name: Build and push Docker Image
         uses: docker/build-push-action@v6
         with:
@@ -71,5 +98,4 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          build-args: |
-            ${{ matrix.path == 'client' && github.ref_name == 'main' && 'BUILD_CONFIG=production' || matrix.path == 'client' && github.ref_name == 'staging' && 'BUILD_CONFIG=staging' || '' }}
+          build-args: ${{ steps.set-build-args.outputs.build_args }}

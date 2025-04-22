@@ -4,9 +4,9 @@
     @if (isLoading()) {
       <p-skeleton width="1.5rem" height="1.5rem" shape="circle"></p-skeleton>
     } @else {
-      <i-tabler [name]="workflowStatus().icon" [class]="workflowStatus().color" [pTooltip]="workflowStatus().tooltip"></i-tabler>
+      <i-tabler class="!size-4" [name]="workflowStatus().icon" [class]="workflowStatus().color" [pTooltip]="workflowStatus().tooltip"></i-tabler>
     }
   } @else {
-    <i-tabler name="alert-circle" class="text-red-500 text-xl" pTooltip="Failed to load workflow runs"></i-tabler>
+    <i-tabler name="alert-circle" class="text-red-500 !size-4" pTooltip="Failed to load workflow runs"></i-tabler>
   }
 </div>

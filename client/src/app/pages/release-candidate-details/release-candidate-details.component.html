@@ -1,21 +1,24 @@
 @if (releaseCandidateQuery.data()!; as releaseCandidate) {
-  <div class="my-3 flex items-start justify-between">
+  <div class="my-3 flex items-start justify-between flex-wrap gap-4">
     <div class="flex flex-col items-start">
-      <span class="text-surface-500 text-sm uppercase font-semibold tracking-wider mb-1">
+      <span class="text-muted-color text-sm uppercase font-semibold tracking-wider mb-1">
         Release Candidate
         @if (releaseCandidate.branch) {
           created from branch {{ releaseCandidate.branch.name }}
         }
       </span>
       <div class="flex-col items-center gap-4">
-        <h2 class="text-2xl flex items-center gap-2">
+        <h2 class="text-2xl flex items-center gap-2 flex-wrap">
           {{ releaseCandidate.name }}
+          <p-button text (click)="openReleaseInGitHub()" styleClass="p-1" class="leading-none">
+            <i-tabler name="brand-github" class="!size-4" />
+          </p-button>
           <p-tag class="text-xs">
             <i-tabler name="git-commit" class="!size-4" />
             {{ releaseCandidate.commit.sha | slice: 0 : 7 }}
           </p-tag>
           @if (releaseCandidate.release) {
-            <p-tag value="Published to GitHub" severity="danger" [rounded]="true" class="text-xs whitespace-nowrap" />
+            <p-tag value="Published to GitHub" severity="danger" [rounded]="true" class="hidden md:block text-xs whitespace-nowrap" />
             @if (releaseCandidate.release.isDraft) {
               <p-tag value="Draft" [rounded]="true" severity="warn" class="text-xs whitespace-nowrap" />
             }
@@ -30,11 +33,11 @@
           }
         </h2>
         <div class="flex gap-1 items-center text-sm">
-          <div>created by</div>
+          <div class="mr-1">created by</div>
           @if (releaseCandidate.createdBy?.avatarUrl) {
             <p-avatar class="size-4" shape="circle" [image]="releaseCandidate.createdBy?.avatarUrl" />
           } @else {
-            <i-tabler name="user" class="size-4 text-surface-500 border-2 border-surface-500 rounded-full" />
+            <i-tabler name="user" class="size-4 text-muted-color border-2 border-muted-color rounded-full" />
           }
           {{ releaseCandidate.createdBy?.login || 'Unknown' }}
           <span [pTooltip]="releaseCandidate.createdAt">{{ releaseCandidate.createdAt | timeAgo }}</span>
@@ -64,7 +67,7 @@
         </p-buttongroup>
       }
       @if (releaseCandidate.evaluations.length > 0) {
-        <div class="text-surface-500 text-sm uppercase font-semibold tracking-wider mb-1">Reviews</div>
+        <div class="text-muted-color text-sm uppercase font-semibold tracking-wider mb-1">Reviews</div>
         <div>
           @for (evaluation of releaseCandidate.evaluations; track evaluation.user.id) {
             <div class="relative inline-block pt-2 pr-1">
@@ -80,7 +83,7 @@
           }
         </div>
       } @else {
-        <div class="text-surface-500 text-sm uppercase font-semibold tracking-wider mb-1">No reviews yet</div>
+        <div class="text-muted-color text-sm uppercase font-semibold tracking-wider mb-1">No reviews yet</div>
       }
     </div>
   </div>
@@ -116,9 +119,9 @@
     } @else {
       <!-- Display mode based on release status -->
       @if (releaseNotes()) {
-        <div class="p-3 border rounded-md border-surface-500" [innerHtml]="releaseNotes() | markdown"></div>
+        <div class="p-3 border rounded-md border-muted-color" [innerHtml]="releaseNotes() | markdown"></div>
       } @else {
-        <div class="p-3 border rounded-md border-surface-500">
+        <div class="p-3 border rounded-md border-muted-color">
           No release notes available.
           @if (permissionService.isAtLeastMaintainer() && !releaseCandidate.release) {
             Edit to add release notes or use the "Generate Release Notes" button.

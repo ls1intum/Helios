@@ -7,7 +7,6 @@ import {
   getBranchByRepositoryIdAndNameQueryKey,
   getCommitsSinceLastReleaseCandidateOptions,
 } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
-import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 import { injectMutation, injectQuery, QueryClient } from '@tanstack/angular-query-experimental';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
 import { IconGitBranch, IconGitCommit, IconTag } from 'angular-tabler-icons/icons';
@@ -15,12 +14,13 @@ import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
+import { SkeletonModule } from 'primeng/skeleton';
 import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
 
 @Component({
   selector: 'app-release-candidate-create',
-  imports: [ButtonModule, DialogModule, TablerIconComponent, FormsModule, InputTextModule, TagModule, SlicePipe, TooltipModule],
+  imports: [ButtonModule, DialogModule, TablerIconComponent, FormsModule, SkeletonModule, InputTextModule, TagModule, SlicePipe, TooltipModule],
   providers: [
     provideTablerIcons({
       IconTag,
@@ -32,7 +32,6 @@ import { TooltipModule } from 'primeng/tooltip';
 })
 export class ReleaseCandidateCreateComponent {
   private messageService = inject(MessageService);
-  private keycloakService = inject(KeycloakService);
   private queryClient = inject(QueryClient);
 
   isVisible = model.required<boolean>();

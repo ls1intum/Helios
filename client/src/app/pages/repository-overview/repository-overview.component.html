@@ -14,7 +14,7 @@
     <ng-template #grid let-projects>
       <div class="flex flex-wrap gap-4 mt-4">
         @for (project of projects; track project) {
-          <div class="flex gap-2 flex-col border border-surface-500 rounded-2xl p-5 shadow-md w-[32rem]">
+          <div class="flex gap-2 flex-col border border-muted-color rounded-2xl p-5 shadow-md w-[32rem]">
             <div class="flex justify-between gap-2">
               <div class="flex gap-2 items-center">
                 <p-skeleton shape="circle" styleClass="!size-7" />
@@ -48,13 +48,13 @@
     <ng-template #grid let-projects>
       <div class="flex flex-wrap gap-4 mt-4">
         @for (project of projects; track project.id) {
-          <div class="flex gap-2 flex-col border border-surface-500 rounded-2xl p-5 shadow-md w-[32rem]">
+          <div class="flex gap-2 flex-col border border-muted-color rounded-2xl p-5 shadow-md w-[32rem]">
             <div class="flex justify-between gap-2">
-              <div class="flex gap-2 items-center">
-                <p-button text (click)="openProjectExternal($event, project)" styleClass="p-0" class="leading-none !hover:text-primary-500">
+              <div class="flex gap-1 items-center">
+                <p-button text (click)="openProjectExternal($event, project)" styleClass="p-1" class="leading-none">
                   <i-tabler name="brand-github" class="!size-4" />
                 </p-button>
-                <span class="font-bold hover:underline cursor-pointer text-xl" (click)="navigateToPullRequests(project)">{{ project.name }}</span>
+                <div class="font-bold hover:underline cursor-pointer leading-none text-xl" (click)="navigateToPullRequests(project)">{{ project.name }}</div>
                 @if (project.latestReleaseTagName) {
                   <p-tag rounded class="py-0.5 cursor-pointer hover:underline" (click)="navigateToReleases(project)"
                     ><i-tabler name="tag" class="!size-4" />{{ project.latestReleaseTagName }}</p-tag
