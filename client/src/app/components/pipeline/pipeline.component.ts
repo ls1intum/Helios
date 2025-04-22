@@ -14,6 +14,7 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { WorkflowRunDto } from '@app/core/modules/openapi';
 import { PipelineTestResultsComponent } from './test-results/pipeline-test-results.component';
 import { DividerModule } from 'primeng/divider';
+import { ButtonModule } from 'primeng/button';
 
 export type PipelineSelector = { repositoryId: number } & (
   | {
@@ -35,7 +36,7 @@ export interface Pipeline {
 
 @Component({
   selector: 'app-pipeline',
-  imports: [TableModule, DividerModule, ProgressSpinnerModule, PanelModule, IconsModule, TooltipModule, SkeletonModule, PipelineTestResultsComponent],
+  imports: [TableModule, DividerModule, ButtonModule, ProgressSpinnerModule, PanelModule, IconsModule, TooltipModule, SkeletonModule, PipelineTestResultsComponent],
   templateUrl: './pipeline.component.html',
 })
 export class PipelineComponent {
@@ -106,4 +107,8 @@ export class PipelineComponent {
     const pipelineData = this.pipeline();
     return pipelineData.groups.length > 0 && pipelineData.groups.every(group => group.workflows.length === 0);
   });
+
+  openLink(url: string) {
+    window.open(url, '_blank');
+  }
 }

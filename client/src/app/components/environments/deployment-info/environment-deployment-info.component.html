@@ -1,5 +1,5 @@
 <div class="flex-col items-start mb-2">
-  <span class="text-xs uppercase tracking-tighter font-bold text-surface-500">Latest Commit</span>
+  <span class="text-xs uppercase tracking-tighter font-bold text-muted-color">Latest Commit</span>
   @if (commit(); as commit) {
     <div class="flex gap-4 items-center mb-4 mt-2">
       <span class="font-semibold text-lg">{{ commit.message }}</span>
@@ -10,7 +10,7 @@
         @if (commit.author?.avatarUrl) {
           <p-avatar class="w-6 h-6" shape="circle" [image]="commit.author?.avatarUrl" />
         } @else {
-          <i-tabler name="user" class="w-6 h-6 text-surface-500 border-2 border-surface-500" />
+          <i-tabler name="user" class="w-6 h-6 text-muted-color border-2 border-surface-600 dark:border-surface-400" />
         }
         <span>
           {{ commit.author?.name }} authored <span [pTooltip]="commitDate() || ''">{{ commit.authoredAt || '' | timeAgo }}</span>
