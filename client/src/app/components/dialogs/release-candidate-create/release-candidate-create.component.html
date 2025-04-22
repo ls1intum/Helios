@@ -68,6 +68,19 @@
         </div>
       }
     </div>
+  } @else {
+    <div class="flex flex-col gap-4">
+      <div class="flex gap-1 items-center mb-2">
+        <i-tabler name="tag" class="!size-5" />
+        <input pInputText disabled [(ngModel)]="releaseCandidateName" placeholder="Release Candidate Name" pSize="small" />
+      </div>
+      <div class="flex gap-2">
+        <p-skeleton class="w-1/2" />
+        <p-skeleton class="w-10" />
+      </div>
+
+      <p-skeleton class="w-full" />
+    </div>
   }
   <ng-template #footer>
     <p-button label="Cancel" [text]="true" (click)="onClose()" />
