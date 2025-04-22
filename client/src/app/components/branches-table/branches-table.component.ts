@@ -29,7 +29,7 @@ import { HighlightPipe } from '@app/pipes/highlight.pipe';
 import { MessageService } from 'primeng/api';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
-import { IconExternalLink, IconFilterPlus, IconGitBranch, IconGitCommit, IconPinned, IconPinnedOff, IconShieldHalf } from 'angular-tabler-icons/icons';
+import { IconExternalLink, IconFilterPlus, IconGitBranch, IconGitCommit, IconPinned, IconPinnedOff, IconShieldHalf, IconBrandGithub } from 'angular-tabler-icons/icons';
 
 type BranchInfoWithLink = BranchInfoDto & { link: string; lastCommitLink: string };
 
@@ -98,7 +98,7 @@ const FILTER_OPTIONS = [
   providers: [
     SearchTableService,
     { provide: FILTER_OPTIONS_TOKEN, useValue: FILTER_OPTIONS },
-    provideTablerIcons({ IconFilterPlus, IconPinnedOff, IconPinned, IconShieldHalf, IconExternalLink, IconGitCommit, IconGitBranch }),
+    provideTablerIcons({ IconFilterPlus, IconPinnedOff, IconPinned, IconShieldHalf, IconBrandGithub, IconExternalLink, IconGitCommit, IconGitBranch }),
   ],
   templateUrl: './branches-table.component.html',
 })

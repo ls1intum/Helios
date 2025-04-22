@@ -31,7 +31,7 @@ import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { TooltipModule } from 'primeng/tooltip';
 import { EnvironmentAccordionComponent } from '../environment-accordion/environment-accordion.component';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
-import { IconRefresh } from 'angular-tabler-icons/icons';
+import { IconRefresh, IconServerCog } from 'angular-tabler-icons/icons';
 
 @Component({
   selector: 'app-environment-list-view',
@@ -53,7 +53,7 @@ import { IconRefresh } from 'angular-tabler-icons/icons';
     DividerModule,
     EnvironmentAccordionComponent,
   ],
-  providers: [DatePipe, provideTablerIcons({ IconRefresh })],
+  providers: [DatePipe, provideTablerIcons({ IconRefresh, IconServerCog })],
   templateUrl: './environment-list-view.component.html',
 })
 export class EnvironmentListViewComponent implements OnDestroy {

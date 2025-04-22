@@ -23,7 +23,7 @@ import { WorkflowRunStatusComponent } from '@app/components/workflow-run-status-
 import { PullRequestStatusIconComponent } from '@app/components/pull-request-status-icon/pull-request-status-icon.component';
 import { MessageService } from 'primeng/api';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
-import { IconExternalLink, IconFilterPlus, IconGitPullRequest, IconPinned, IconPinnedOff, IconPoint } from 'angular-tabler-icons/icons';
+import { IconExternalLink, IconFilterPlus, IconGitPullRequest, IconPinned, IconPinnedOff, IconPoint, IconBrandGithub } from 'angular-tabler-icons/icons';
 
 const FILTER_OPTIONS = [
   { name: 'Open pull requests', filter: (prs: PullRequestBaseInfoDto[]) => prs.filter(pr => pr.state === 'OPEN') },
@@ -69,6 +69,7 @@ const FILTER_OPTIONS = [
       IconPinnedOff,
       IconPinned,
       IconGitPullRequest,
+      IconBrandGithub,
     }),
   ],
   templateUrl: './pull-request-table.component.html',
