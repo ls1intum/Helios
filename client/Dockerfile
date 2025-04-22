@@ -19,7 +19,7 @@ ARG DEPLOYED_VERSION=''
 ARG DEPLOYED_COMMIT_SHA=''
 
 # Set version in environment version file
-RUN echo "export const version = { deployed_version: "$DEPLOYED_VERSION", deployed_commit_sha: "$DEPLOYED_COMMIT_SHA" };" > /app/src/environments/version.ts
+RUN echo "export const version = { deployed_version: '$DEPLOYED_VERSION', deployed_commit_sha: '$DEPLOYED_COMMIT_SHA' };" > /app/src/environments/version.ts
 
 # Build the Angular app using the specified configuration
 RUN yarn run build --configuration $BUILD_CONFIG
