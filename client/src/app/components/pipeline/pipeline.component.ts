@@ -14,7 +14,7 @@ import { WorkflowRunDto } from '@app/core/modules/openapi';
 import { PipelineTestResultsComponent } from './test-results/pipeline-test-results.component';
 import { DividerModule } from 'primeng/divider';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
-import { IconCircleCheck, IconCircleX, IconExclamationCircle, IconExternalLink, IconInfoCircle, IconProgress, IconProgressHelp } from 'angular-tabler-icons/icons';
+import { IconCircleCheck, IconCircleX, IconExclamationCircle, IconExternalLink, IconInfoCircle, IconProgress, IconProgressHelp, IconBrandGithub } from 'angular-tabler-icons/icons';
 import { ButtonModule } from 'primeng/button';
 
 export type PipelineSelector = { repositoryId: number } & (
@@ -47,6 +47,7 @@ export interface Pipeline {
       IconProgress,
       IconExternalLink,
       IconExclamationCircle,
+      IconBrandGithub,
     }),
   ],
   templateUrl: './pipeline.component.html',
