@@ -35,14 +35,19 @@ public class WorkflowRunCleanupTask {
 
     for (WorkflowRunCleanupProps.Policy policy : props.getPolicies()) {
 
+      String tps = policy.getTestProcessingStatus();
+      if (tps != null && tps.trim().isEmpty()) {
+        tps = null;
+      }
+
       int deleted = repo.purgeObsoleteRuns(
           policy.getKeep(),
           policy.getAgeDays(),
-          policy.getTestProcessingStatus()
+          tps
       );
 
       log.info("Cleanup policy  tps={}  keep={}  ageDays={}  →  {} rows deleted",
-          policy.getTestProcessingStatus(), policy.getKeep(),
+          tps, policy.getKeep(),
           policy.getAgeDays(), deleted);
 
       totalDeleted += deleted;

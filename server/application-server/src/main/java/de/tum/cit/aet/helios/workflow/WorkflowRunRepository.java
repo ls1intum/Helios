@@ -126,14 +126,12 @@ public interface WorkflowRunRepository extends JpaRepository<WorkflowRun, Long> 
   @Transactional
   @Query(value = """
       /* ---------------------------------------------------------------
-       * Delete workflow runs that match the caller‑supplied policy:
+       * Custom database clean-up for workflow runs.
        *
-       *   • For every (repository_id, head_branch) partition,
+       *   • For every (repository_id, workflow_id, head_branch) combination
        *     keep the newest :keep rows.
        *   • Of the remainder, delete those whose
-       *     test_processing_status matches :tps
-       *     (or any value if :tps is NULL)
-       *     AND whose created_at is at least :ageDays old.
+       *     created_at is at least :ageDays old.
        *
        * All child rows in test_suite → test_case are removed
        * automatically via ON DELETE CASCADE.
@@ -143,10 +141,11 @@ public interface WorkflowRunRepository extends JpaRepository<WorkflowRun, Long> 
           FROM (
               SELECT id,
                      repository_id,
+                     workflow_id,
                      head_branch,
                      created_at,
                      row_number() OVER (
-                         PARTITION BY repository_id, head_branch
+                         PARTITION BY repository_id, workflow_id, head_branch
                          ORDER BY created_at DESC
                      ) AS rn
               FROM workflow_run
