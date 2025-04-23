@@ -1,6 +1,8 @@
 package de.tum.cit.aet.helios.branch;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import de.tum.cit.aet.helios.commit.Commit;
+import de.tum.cit.aet.helios.commit.CommitRepository;
 import de.tum.cit.aet.helios.gitrepo.RepositoryInfoDto;
 import de.tum.cit.aet.helios.user.UserInfoDto;
 import de.tum.cit.aet.helios.userpreference.UserPreference;
@@ -22,7 +24,11 @@ public record BranchInfoDto(
     RepositoryInfoDto repository) {
 
   public static BranchInfoDto fromBranchAndUserPreference(
-      Branch branch, Optional<UserPreference> userPreference) {
+      Branch branch, Optional<UserPreference> userPreference, CommitRepository commitRepository) {
+
+    Optional<Commit> latestCommit = commitRepository.findByShaAndRepository(
+        branch.getCommitSha(), branch.getRepository());
+
     return new BranchInfoDto(
         branch.getName(),
         branch.getCommitSha(),
@@ -31,13 +37,14 @@ public record BranchInfoDto(
         branch.isDefault(),
         branch.isProtection(),
         userPreference.map(up -> up.getFavouriteBranches().contains(branch)).orElseGet(() -> false),
-        branch.getUpdatedAt(),
-        UserInfoDto.fromUser(branch.getUpdatedBy()),
+        latestCommit.map(Commit::getAuthoredAt).orElse(branch.getUpdatedAt()),
+        latestCommit.map(c -> UserInfoDto.fromUser(c.getAuthor()))
+            .orElseGet(() -> UserInfoDto.fromUser(branch.getUpdatedBy())),
         RepositoryInfoDto.fromRepository(branch.getRepository()));
   }
 
   public static BranchInfoDto fromBranch(
-      Branch branch) {
-    return fromBranchAndUserPreference(branch, Optional.empty());
+      Branch branch, CommitRepository commitRepository) {
+    return fromBranchAndUserPreference(branch, Optional.empty(), commitRepository);
   }
 }

@@ -20,9 +20,11 @@ import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import de.tum.cit.aet.helios.gitrepo.github.GitHubRepositorySyncService;
 import de.tum.cit.aet.helios.label.github.GitHubLabelSyncService;
 import de.tum.cit.aet.helios.pullrequest.github.GitHubPullRequestSyncService;
+import de.tum.cit.aet.helios.releaseinfo.release.github.GitHubReleaseSyncService;
 import de.tum.cit.aet.helios.user.User;
 import de.tum.cit.aet.helios.user.UserRepository;
 import de.tum.cit.aet.helios.user.github.GitHubUserSyncService;
+import de.tum.cit.aet.helios.workflow.GitHubWorkflowContext;
 import de.tum.cit.aet.helios.workflow.github.GitHubWorkflowRunSyncService;
 import de.tum.cit.aet.helios.workflow.github.GitHubWorkflowSyncService;
 import java.io.IOException;
@@ -32,13 +34,16 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.jetbrains.annotations.NotNull;
 import org.kohsuke.github.GHCommit;
 import org.kohsuke.github.GHDirection;
+import org.kohsuke.github.GHEvent;
 import org.kohsuke.github.GHIssueState;
 import org.kohsuke.github.GHPullRequestQueryBuilder;
+import org.kohsuke.github.GHRelease;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GHWorkflow;
 import org.kohsuke.github.GHWorkflowRun;
@@ -50,6 +55,7 @@ import org.springframework.stereotype.Service;
 public class GitHubDataSyncOrchestrator {
   private final GitHubRepositorySyncService repositorySyncService;
   private final GitHubPullRequestSyncService pullRequestSyncService;
+  private final GitHubReleaseSyncService releaseSyncService;
   private final GitHubWorkflowRunSyncService workflowRunSyncService;
   private final GitHubWorkflowSyncService workflowSyncService;
   private final GitHubBranchSyncService branchSyncService;
@@ -66,7 +72,6 @@ public class GitHubDataSyncOrchestrator {
   private final GitHubUserSyncService gitHubUserSyncService;
   private final BranchRepository branchRepository;
   private final UserRepository userRepository;
-
 
   /**
    * Syncs a single GitHub repository by its full name (e.g., "owner/repo").
@@ -87,8 +92,7 @@ public class GitHubDataSyncOrchestrator {
   }
 
   /**
-   * Synchronizes labels for a specific GitHub repository with the local
-   * repository.
+   * Synchronizes labels for a specific GitHub repository with the local repository.
    *
    * @param repository the GitHub repository whose labels are to be synchronized
    */
@@ -96,8 +100,8 @@ public class GitHubDataSyncOrchestrator {
     try {
       repository.listLabels().withPageSize(100).forEach(gitHubLabelSyncService::processLabel);
     } catch (IOException e) {
-      log.error("Failed to fetch labels for repository {}: {}", repository.getFullName(),
-          e.getMessage());
+      log.error(
+          "Failed to fetch labels for repository {}: {}", repository.getFullName(), e.getMessage());
     }
   }
 
@@ -106,8 +110,7 @@ public class GitHubDataSyncOrchestrator {
    *
    * @param repository the GitHub repository to sync pull requests from
    */
-  public void syncPullRequestsOfRepository(
-      GHRepository repository) {
+  public void syncPullRequestsOfRepository(GHRepository repository) {
     var iterator =
         repository
             .queryPullRequests()
@@ -120,7 +123,6 @@ public class GitHubDataSyncOrchestrator {
 
     iterator.forEachRemaining(pullRequestSyncService::processPullRequest);
   }
-
 
   /**
    * Synchronizes all environments from a specific GitHub repository.
@@ -149,11 +151,10 @@ public class GitHubDataSyncOrchestrator {
    * Synchronizes deployments for a specific repository.
    *
    * @param ghRepository the GitHub repository to sync deployments from
-   * @param since        an optional timestamp to fetch deployments since
+   * @param since an optional timestamp to fetch deployments since
    */
   public void syncDeploymentsOfRepository(
-      @NotNull GHRepository ghRepository,
-      Optional<OffsetDateTime> since) {
+      @NotNull GHRepository ghRepository, Optional<OffsetDateTime> since) {
     try {
       // Fetch the GitRepository entity
       String fullName = ghRepository.getFullName();
@@ -181,8 +182,8 @@ public class GitHubDataSyncOrchestrator {
    * Synchronizes deployments for a specific environment.
    *
    * @param ghRepository the GitHub repository
-   * @param environment  the environment entity
-   * @param since        an optional timestamp to fetch deployments since
+   * @param environment the environment entity
+   * @param since an optional timestamp to fetch deployments since
    */
   public void syncDeploymentsOfEnvironment(
       @NotNull GHRepository ghRepository,
@@ -241,7 +242,6 @@ public class GitHubDataSyncOrchestrator {
     }
   }
 
-
   /**
    * Synchronizes all workflows from a specific GitHub repository.
    *
@@ -270,7 +270,6 @@ public class GitHubDataSyncOrchestrator {
     }
   }
 
-
   /**
    * Synchronizes all branches from a specific GitHub repository.
    *
@@ -295,7 +294,6 @@ public class GitHubDataSyncOrchestrator {
           e.getMessage());
     }
   }
-
 
   /**
    * Synchronizes all commits from a specific GitHub repository.
@@ -357,15 +355,37 @@ public class GitHubDataSyncOrchestrator {
     return commits;
   }
 
+  /**
+   * Synchronizes all releases from a specific GitHub repository.
+   *
+   * @param repository the GitHub repository to sync releases from
+   */
+  public void syncReleasesOfRepository(GHRepository repository) {
+    try {
+      var iterator = repository.listReleases().withPageSize(100).iterator();
+
+      while (iterator.hasNext()) {
+        var ghReleases = iterator.nextPage();
+        // Only process non-draft releases, because drafts are not unique in GitHub
+        ghReleases.stream()
+            .filter(Predicate.not(GHRelease::isDraft))
+            .forEach((ghRelease) -> releaseSyncService.processRelease(ghRelease, repository));
+      }
+    } catch (IOException e) {
+      log.error(
+          "Failed to fetch releases for repository {}: {}",
+          repository.getFullName(),
+          e.getMessage());
+    }
+  }
 
   /**
    * Synchronizes all workflow runs from a specific GitHub repository.
    *
    * @param repository the GitHub repository to sync workflow runs from
-   * @param since      an optional date to filter workflow runs by their last update
+   * @param since an optional date to filter workflow runs by their last update
    */
-  public void syncRunsOfRepository(
-      GHRepository repository, Optional<OffsetDateTime> since) {
+  public void syncRunsOfRepository(GHRepository repository, Optional<OffsetDateTime> since) {
     var iterator = repository.queryWorkflowRuns().list().withPageSize(100).iterator();
 
     var sinceDate = since.map(date -> Date.from(date.toInstant()));
@@ -397,11 +417,46 @@ public class GitHubDataSyncOrchestrator {
       }
     }
 
-    workflowRuns.forEach(workflowRunSyncService::processRun);
+    workflowRuns.forEach(run -> {
+      try {
 
+        if (run.getEvent().equals(GHEvent.WORKFLOW_RUN)) {
+          log.info("Processing workflow_run event with workflow run id: {}", run.getId());
+          GitHubWorkflowContext context = null;
+          try {
+            context =
+                gitHubService.extractWorkflowContext(repository.getId(), run.getId());
+          } catch (Exception e) {
+            log.error("Error while extracting workflow context: {}", e.getMessage());
+            return;
+          }
+
+          if (context == null) {
+            log.warn("No workflow context found for workflow run: {}", run.getId());
+            return;
+          }
+
+          log.info(
+              "Context found with triggering workflow run id: {}, head branch: {}, head sha: {}",
+              context.runId(), context.headBranch(), context.headSha());
+
+          workflowRunSyncService.processRunWithContext(run, context);
+        } else {
+          workflowRunSyncService.processRun(run);
+        }
+
+      } catch (Exception e) {
+        log.error(
+            "Failed to process workflow run {}: {}",
+            run.getId(),
+            e.getMessage());
+      }
+    });
   }
 
-  /** Sync all existing users in the local repository with their GitHub data. */
+  /**
+   * Sync all existing users in the local repository with their GitHub data.
+   */
   public void syncAllExistingUsers() {
     userRepository.findAll().stream().map(User::getLogin).forEach(this::syncUser);
   }
@@ -420,5 +475,4 @@ public class GitHubDataSyncOrchestrator {
       return null;
     }
   }
-
 }

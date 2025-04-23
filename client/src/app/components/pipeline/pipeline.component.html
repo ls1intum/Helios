@@ -47,22 +47,24 @@
                             <i-tabler name="circle-check" class="text-green-500" pTooltip="Success"></i-tabler>
                           }
                           @case ('FAILURE') {
-                            <i-tabler name="circle-x" class="text-red-500" pTooltip="Failure"></i-tabler>
+                            <i-tabler name="circle-x" class="text-red-700" pTooltip="Failure"></i-tabler>
                           }
                           @default {
-                            <i-tabler name="progress-help" class="text-gray-500" pTooltip="Unknown"></i-tabler>
+                            <i-tabler name="progress-help" class="text-muted-color" pTooltip="Unknown"></i-tabler>
                           }
                         }
                       } @else if (['IN_PROGRESS', 'QUEUED', 'PENDING', 'WAITING', 'REQUESTED'].includes(workflowRun.status)) {
                         <i-tabler name="progress" class="text-yellow-500 animate-spin" pTooltip="In progress"></i-tabler>
                       } @else {
-                        <i-tabler name="progress-help" class="text-gray-500" pTooltip="Unknown"></i-tabler>
+                        <i-tabler name="progress-help" class="text-muted-color" pTooltip="Unknown"></i-tabler>
                       }
                     </div>
                     <!-- Fixed width to ensure consistent alignment -->
-                    <span class="font-medium flex items-center justify-between w-full overflow-hidden">
+                    <span class="font-medium flex gap-1 items-center justify-between w-full overflow-hidden">
                       <span [pTooltip]="workflowRun.name" class="truncate">{{ workflowRun.name }}</span>
-                      <a class="ml-1" [href]="workflowRun.htmlUrl" target="_new"><i-tabler name="external-link" class="w-20 h-20"></i-tabler></a>
+                      <p-button text severity="secondary" (click)="openLink(workflowRun.htmlUrl)" styleClass="p-1" class="leading-none">
+                        <i-tabler name="brand-github" class="!size-4" />
+                      </p-button>
                     </span>
                   </div>
                 }
@@ -71,7 +73,7 @@
 
             <!-- Connection line -->
             @if (!group.isLastWithWorkflows) {
-              <div class="w-10 h-px bg-gray-300 mt-7"></div>
+              <p-divider class="w-10 mt-7"></p-divider>
             }
           </ng-container>
         }

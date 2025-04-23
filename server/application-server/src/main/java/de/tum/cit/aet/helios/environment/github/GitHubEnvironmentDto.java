@@ -2,6 +2,7 @@ package de.tum.cit.aet.helios.environment.github;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.OffsetDateTime;
+import java.util.List;
 import lombok.Getter;
 
 @Getter
@@ -19,4 +20,7 @@ public class GitHubEnvironmentDto {
 
   @JsonProperty("updated_at")
   private OffsetDateTime updatedAt;
+
+  @JsonProperty("protection_rules")
+  private List<GitHubEnvironmentProtectionRuleDto> protectionRules;
 }

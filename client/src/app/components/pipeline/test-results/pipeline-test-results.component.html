@@ -1,9 +1,5 @@
 @if (hasTestSuites() || isProcessing()) {
-  <button
-    [disabled]="!hasTestSuites()"
-    [ngClass]="['flex items-center gap-2 w-full p-2 rounded mb-2 mt-8', hasTestSuites() ? 'hover:bg-gray-100' : '']"
-    (click)="isTestResultsCollapsed = !isTestResultsCollapsed"
-  >
+  <button [disabled]="!hasTestSuites()" severity="secondary" text class="flex items-center gap-2 w-full mb-2 mt-8" (click)="isTestResultsCollapsed = !isTestResultsCollapsed">
     @if (resultsHaveUpdated()) {
       <p-tag [severity]="'info'" [rounded]="true" pTooltip="Since the last commit, the test results changed">Changed</p-tag>
     }
@@ -14,17 +10,17 @@
       <p-tag class="ml-2" severity="warn" [rounded]="true" [pTooltip]="'Test results are being processed'">
         <i-tabler name="progress" class="!size-5 animate-spin"></i-tabler>
 
-        <span class="text-sm text-gray-600">Processing</span>
+        <span class="text-sm text-muted-color">Processing</span>
       </p-tag>
     }
 
     @if (hasTestSuites()) {
       @if (totalStats(); as totalStats) {
-        <div class="flex items-center gap-4 ml-2 text-sm text-gray-600">
+        <div class="flex items-center gap-4 ml-2 text-sm text-muted-color">
           <span class="flex items-center gap-1"><i-tabler name="check" class="text-green-500"></i-tabler> {{ totalStats.passed }} passed</span>
           <span class="flex items-center gap-1"><i-tabler name="x" class="text-red-500"></i-tabler> {{ totalStats.failures }} failed</span>
-          <span class="flex items-center gap-1"><i-tabler name="chevrons-right" class="text-yellow-500"></i-tabler> {{ totalStats.skipped }} skipped</span>
-          <span class="flex items-center gap-1"><i-tabler name="clock" class="text-blue-500"></i-tabler> {{ totalStats.time | date: 'mm:ss' }}</span>
+          <span class="flex items-center gap-1"><i-tabler name="chevrons-right" class="text-orange-500"></i-tabler> {{ totalStats.skipped }} skipped</span>
+          <span class="flex items-center gap-1"><i-tabler name="clock" class="text-sky-500"></i-tabler> {{ totalStats.time | date: 'mm:ss' }}</span>
         </div>
       }
     }
@@ -36,14 +32,14 @@
 
   @if (!isTestResultsCollapsed) {
     <!-- Workflow Tabs -->
-    @if (sortedWorkflows().length > 0) {
+    @if (sortedTestTypes().length > 0) {
       @defer {
-        <p-tabView [activeIndex]="effectiveWorkflowTab()" (activeIndexChange)="onTabChange($event)">
-          @for (workflow of sortedWorkflows(); track workflow.name) {
+        <p-tabView [activeIndex]="effectiveTestTypeTab()" (activeIndexChange)="onTabChange($event)">
+          @for (workflow of sortedTestTypes(); track workflow.testTypeId) {
             <p-tabPanel>
               <ng-template pTemplate="header">
                 <div class="flex items-center gap-2">
-                  @switch (workflowState(workflow)) {
+                  @switch (testTypeState(workflow)) {
                     @case ('SUCCESS') {
                       <i-tabler name="circle-check" class="text-green-500 w-4 h-4"></i-tabler>
                     }
@@ -51,12 +47,12 @@
                       <i-tabler name="circle-x" class="text-red-500 w-4 h-4"></i-tabler>
                     }
                     @case ('SKIPPED') {
-                      <i-tabler name="circle-chevrons-right" class="text-yellow-500 w-4 h-4"></i-tabler>
+                      <i-tabler name="circle-chevrons-right" class="text-orange-500 w-4 h-4"></i-tabler>
                     }
                   }
-                  <span>{{ workflow.name }}</span>
+                  <span>{{ workflow.testTypeName }}</span>
                   @if (workflow.isProcessing) {
-                    <i-tabler name="progress" class="w-4 h-4 animate-spin text-gray-600 ml-1"></i-tabler>
+                    <i-tabler name="progress" class="w-4 h-4 animate-spin text-muted-color ml-1"></i-tabler>
                   }
                 </div>
               </ng-template>
@@ -71,21 +67,21 @@
     }
 
     <!-- Current Workflow Test Details -->
-    @if (activeWorkflow(); as workflow) {
-      <div class="flex items-center gap-2 w-full max-w-sm mb-2 mt-4">
-        <p-button type="button" outlined (onClick)="toggleFilterMenu($event)" size="small">
+    @if (activeTestType(); as workflow) {
+      <div class="flex items-center gap-2 w-full max-w-sm mb-2">
+        <p-button (onClick)="toggleFilterMenu($event)" size="small">
           @if (showOnlyFailed()) {
             <i-tabler name="filter" />
           } @else {
             <i-tabler name="filter-plus" />
           }
         </p-button>
-        <input pInputText [(ngModel)]="searchValue" type="text" pSize="small" placeholder="Search" class="w-full" />
+        <input pInputText [ngModel]="searchValue()" (ngModelChange)="onSearchChange($event)" type="text" pSize="small" placeholder="Search" class="w-full" />
       </div>
 
       <!-- Workflow Stats Summary -->
-      @if (workflowStats(); as stats) {
-        <div class="flex items-center gap-4 mb-3 text-sm text-gray-600 p-2 bg-gray-50 rounded">
+      @if (activeTestTypeStats(); as stats) {
+        <div class="flex items-center gap-4 mb-3 text-sm p-2 rounded border border-muted-color">
           <span class="flex items-center gap-1"><i-tabler name="check" class="text-green-500"></i-tabler> {{ stats.passed }} passed</span>
           <span class="flex items-center gap-1"><i-tabler name="x" class="text-red-500"></i-tabler> {{ stats.failures }} failed</span>
           <span class="flex items-center gap-1"><i-tabler name="chevrons-right" class="text-yellow-500"></i-tabler> {{ stats.skipped }} skipped</span>
@@ -95,35 +91,33 @@
 
       <p-popover #op>
         <div class="flex flex-col gap-4">
-          <div>
-            <ul class="list-none p-0 m-0 flex flex-col gap-1">
-              @if (showOnlyFailed()) {
-                <li class="flex items-center gap-2 p-2 hover:bg-gray-300 cursor-pointer rounded-border" (click)="toggleShowOnlyFailed()">All tests</li>
-                <li class="flex items-center gap-2 p-2 bg-gray-700 text-gray-200 cursor-pointer rounded-border">Only failed tests</li>
-              } @else {
-                <li class="flex items-center gap-2 p-2 bg-gray-700 text-gray-200 cursor-pointer rounded-border">All tests</li>
-                <li class="flex items-center gap-2 p-2 hover:bg-gray-300 cursor-pointer rounded-border" (click)="toggleShowOnlyFailed()">Only failed tests</li>
-              }
-            </ul>
+          <div class="flex flex-col gap-1">
+            @if (showOnlyFailed()) {
+              <p-button severity="secondary" text styleClass="w-full" (click)="toggleShowOnlyFailed()">All tests</p-button>
+              <p-button severity="secondary" styleClass="w-full">Only failed tests</p-button>
+            } @else {
+              <p-button severity="secondary" styleClass="w-full">All tests</p-button>
+              <p-button severity="secondary" text styleClass="w-full" (click)="toggleShowOnlyFailed()">Only failed tests</p-button>
+            }
           </div>
         </div>
       </p-popover>
 
-      @if (filteredTestSuites(); as testSuites) {
+      @if (testSuites(); as testSuites) {
         @if (testSuites.length === 0) {
           <!-- No Results State -->
           <div class="flex flex-col items-center p-4 border rounded-lg">
-            <span class="text-sm text-gray-500">No test results available for {{ workflow.name }}</span>
+            <span class="text-sm text-muted-color">No test results available for {{ workflow.testTypeName }}</span>
           </div>
         } @else {
           <!-- Test Results -->
           <div class="flex flex-col gap-4">
-            @for (suite of testSuites.slice(testSuiteFirst(), testSuiteFirst() + testSuiteRows()); track suite.id) {
+            @for (suite of testSuites; track suite.id) {
               @defer {
                 <p-panel [toggleable]="true" [collapsed]="true" [styleClass]="suiteHasUpdates(suite) ? 'border-blue-400 border-2 relative' : ''">
                   <ng-template pTemplate="header">
                     @if (suiteHasUpdates(suite)) {
-                      <div class="absolute left-[-5px] -top-1 w-2.5 h-2.5 bg-blue-400 rounded-full flex items-center justify-center" pTooltip="Changed"></div>
+                      <div class="absolute left-[-5px] -top-1 w-2.5 h-2.5 bg-sky-500 rounded-full flex items-center justify-center" pTooltip="Changed"></div>
                     }
                     <div class="flex items-center gap-2 overflow-hidden">
                       @switch (overallSuiteState(suite)) {
@@ -134,11 +128,11 @@
                           <i-tabler name="circle-x" class="text-red-500 flex-shrink-0"></i-tabler>
                         }
                         @case ('SKIPPED') {
-                          <i-tabler name="circle-chevrons-right" class="text-yellow-500 flex-shrink-0"></i-tabler>
+                          <i-tabler name="circle-chevrons-right" class="text-orange-500 flex-shrink-0"></i-tabler>
                         }
                       }
                       <span class="font-medium truncate">{{ suite.name }}</span>
-                      <span class="text-sm text-gray-500 ml-2 flex-shrink-0">
+                      <span class="text-sm text-muted-color ml-2 flex-shrink-0">
                         ({{ suite.tests }} tests, {{ suite.failures + suite.errors }} failed, {{ suite.skipped }} skipped)
                       </span>
                     </div>
@@ -158,27 +152,73 @@
                             <i-tabler name="x" class="text-red-500 w-4 h-4 flex-shrink-0"></i-tabler>
                           }
                           @case ('SKIPPED') {
-                            <i-tabler name="chevrons-right" class="text-gray-500 w-4 h-4 flex-shrink-0"></i-tabler>
+                            <i-tabler name="chevrons-right" class="text-muted-color w-4 h-4 flex-shrink-0"></i-tabler>
                           }
                         }
 
-                        <div class="flex flex-col items-start min-w-0">
-                          <div class="flex items-center gap-2">
-                            @if (testCase.previousStatus !== testCase.status && testCase.previousStatus) {
-                              <span class="text-xs text-blue-400 font-medium flex-shrink-0">previously {{ testCase.previousStatus.toLowerCase() }}</span>
+                        <div class="flex flex-1 items-center justify-between min-w-0 gap-2">
+                          <div class="basis-10/12 flex flex-col items-start min-w-0">
+                            <div class="flex items-center gap-2 min-w-0 w-full">
+                              @if (testCase.previousStatus !== testCase.status && testCase.previousStatus) {
+                                <span class="text-xs text-sky-500 font-medium flex-shrink-0">previously {{ testCase.previousStatus.toLowerCase() }}</span>
+                              }
+                              <span class="text-sm truncate overflow-hidden flex-1 min-w-0" [pTooltip]="testCase.name">{{ testCase.name }}</span>
+                            </div>
+                            @if (testCase.message) {
+                              <p-tag [severity]="testCase.status === 'FAILED' ? 'danger' : 'info'" [value]="testCase.message" styleClass="mt-2 text-xs"> </p-tag>
                             }
-                            <span class="text-sm truncate whitespace-nowrap overflow-hidden w-full">{{ testCase.name }} </span>
                           </div>
-                          @if (testCase.message) {
-                            <p-tag [severity]="testCase.status === 'FAILED' ? 'danger' : 'info'" [value]="testCase.message" styleClass="mt-2 text-xs"> </p-tag>
-                          }
+                          <div class="basis-2/12 flex items-center justify-end gap-2">
+                            <div class="flex flex-col gap-1">
+                              @if (testCase.failsInDefaultBranch) {
+                                <p-tag severity="info" value="Fails in default branch" styleClass="mt-2 text-xs" pTooltip="This test is also failing in the default branch">
+                                </p-tag>
+                              }
+                              @if (testCase.status === 'FAILED' || testCase.status === 'ERROR') {
+                                @if (testCase.flakinessScore && testCase.flakinessScore > 0.0) {
+                                  <p-tag severity="warn" styleClass="mt-2 text-xs" pTooltip="Score between 0 and 100, where 0 is not flaky and 100 is highly flaky">
+                                    Flakiness Score: {{ formatFlakinessScore(testCase.flakinessScore) }}
+                                    <span class="mx-1 text-gray-400">|</span>
+                                    <i-tabler (click)="showFlakinessScoreInfo = true" name="info-circle" class="text-xs cursor-pointer hover:text-gray-600" />
+                                  </p-tag>
+                                }
+                                @if (testCase.defaultBranchFailureRate && testCase.defaultBranchFailureRate > 0) {
+                                  <p-tag
+                                    severity="danger"
+                                    value="Default branch Failure rate:{{ formatFailureRate(testCase.defaultBranchFailureRate) }}%"
+                                    styleClass="mt-2 text-xs"
+                                    pTooltip="Failure rate of this test in default branch"
+                                  >
+                                  </p-tag>
+                                }
+                                @if (testCase.combinedFailureRate && testCase.combinedFailureRate > 0) {
+                                  <p-tag
+                                    severity="danger"
+                                    value="All branches Failure rate: {{ formatFailureRate(testCase.combinedFailureRate) }}%"
+                                    styleClass="mt-2 text-xs"
+                                    pTooltip="Failure rate of this test in all branches combined"
+                                  >
+                                  </p-tag>
+                                }
+                              }
+                            </div>
+                          </div>
                         </div>
+
+                        <button
+                          pButton
+                          type="button"
+                          label="Details"
+                          class="p-button-text p-button-sm"
+                          (click)="showTestCaseDetails(testCase, suite)"
+                          [disabled]="!hasTestDetails(testCase, suite)"
+                        ></button>
                       </div>
                     }
                   </div>
                 </p-panel>
               } @loading (minimum 100ms) {
-                <div class="border rounded p-3 bg-gray-50 mt-1 mb-1">
+                <div class="border rounded p-3 mt-1 mb-1">
                   <div class="flex items-center">
                     <p-skeleton width="30px" height="30px" styleClass="mr-2"></p-skeleton>
                     <p-skeleton width="60%" height="1.5rem"></p-skeleton>
@@ -192,7 +232,7 @@
             (onPageChange)="onPageChange($event)"
             [first]="testSuiteFirst()"
             [rows]="testSuiteRows()"
-            [totalRecords]="testSuites.length"
+            [totalRecords]="activeTestTypeStats()?.total || 0"
             [rowsPerPageOptions]="[10, 20, 30]"
           />
         }
@@ -200,13 +240,110 @@
     } @else if (hasTestSuites()) {
       <!-- No active workflow but we have test suites -->
       <div class="flex flex-col items-center p-4 border rounded-lg mt-4">
-        <span class="text-sm text-gray-500">Please select a workflow tab to view test results</span>
+        <span class="text-sm text-muted-color">Please select a workflow tab to view test results</span>
       </div>
     } @else {
       <!-- No test suites at all -->
       <div class="flex flex-col items-center p-4 border rounded-lg mt-4">
-        <span class="text-sm text-gray-500">No test results available</span>
+        <span class="text-sm text-muted-color">No test results available</span>
       </div>
     }
   }
 }
+
+<p-dialog [(visible)]="showTestDetails" [style]="{ width: '50vw' }" [modal]="true">
+  <ng-template pTemplate="header">
+    <div class="font-bold text-xl">Test Details</div>
+  </ng-template>
+
+  @if (selectedTestCase()) {
+    <div class="flex flex-col gap-4">
+      @if (selectedTestCase()?.stackTrace) {
+        <div>
+          <h4 class="font-medium mb-2">Stack Trace</h4>
+          <div class="border border-muted-color p-4 rounded overflow-auto max-h-[400px]">
+            <pre class="font-mono text-sm">{{ selectedTestCase()?.stackTrace?.trimStart() }}</pre>
+          </div>
+        </div>
+      }
+
+      @if (selectedTestCase()?.systemOut || selectedTestCase()?.suiteSystemOut) {
+        <!-- Log Level Filter -->
+        <div class="flex flex-col gap-1 mb-2">
+          <div class="flex justify-between items-center">
+            <span class="text-sm font-medium">Log Level Filter:</span>
+            <span class="text-sm font-medium" [class]="selectedLogLevel().color">
+              {{ selectedLogLevel().label }}
+            </span>
+          </div>
+          <p-slider [ngModel]="getLogLevelValue()" (ngModelChange)="updateLogLevel($event)" [min]="0" [max]="7" [step]="1"> </p-slider>
+          <div class="flex justify-between text-xs text-gray-500">
+            <span>Higher Severity</span>
+            <span>Lower Severity</span>
+          </div>
+        </div>
+      }
+
+      @if (selectedTestCase()?.systemOut) {
+        <div>
+          <h4 class="font-medium mb-2">Test Case Logs</h4>
+          <div class="border border-muted-color p-4 rounded overflow-auto max-h-[400px]">
+            @if (filteredTestCaseLogs()) {
+              @for (line of filteredTestCaseLogs().split('\n'); track $index) {
+                <pre class="font-mono text-sm" [class]="getLogLevelClass(line)">{{ line }}</pre>
+              }
+            }
+          </div>
+        </div>
+      }
+
+      @if (selectedTestCase()?.suiteSystemOut) {
+        <div>
+          <h4 class="font-medium mb-2">Test Suite Logs</h4>
+          <div class="border border-muted-color p-4 rounded overflow-auto max-h-[400px]">
+            @if (filteredTestSuiteLogs()) {
+              @for (line of filteredTestSuiteLogs().split('\n'); track $index) {
+                <pre class="font-mono text-sm" [class]="getLogLevelClass(line)">{{ line }}</pre>
+              }
+            }
+          </div>
+        </div>
+      }
+    </div>
+  }
+</p-dialog>
+
+<!-- Flakiness score calculation info pop-up -->
+<p-dialog [(visible)]="showFlakinessScoreInfo" [style]="{ width: '50vw' }" [modal]="true">
+  <ng-template #header>
+    <div class="font-bold text-xl">Flakiness Score Calculation</div>
+  </ng-template>
+  <div class="flex flex-col gap-4">
+    <p>
+      The <b>flakiness score</b> shows how unpredictable a test is, ranging from <b>0</b> (not flaky) to <b>100</b> (highly flaky). It’s based on failure rates from the default
+      branch and all branches combined.
+    </p>
+    <p>
+      <b>How It Works:</b>
+    </p>
+    <ol>
+      <li>
+        <b>Flakiness per Branch:</b><br />
+        &nbsp;&nbsp;&nbsp;&nbsp;If the failure rate is between 0% and 50%, we calculate:<br />
+        &nbsp;&nbsp;&nbsp;&nbsp;<code>flakiness = (50% - failure rate) / 50%</code><br />
+        &nbsp;&nbsp;&nbsp;&nbsp;If it’s 0% or over 50%, flakiness is 0.
+      </li>
+      <li>
+        <b>Weighted Score:</b><br />
+        &nbsp;&nbsp;&nbsp;&nbsp;Combine the flakiness values with weights (e.g., 70% default branch, 30% all branches) and scale to 0–100.
+      </li>
+    </ol>
+    <p>
+      <b>Quick Example:</b><br />
+      - <b>Failure rates:</b> 5% (default), 10% (all branches)<br />
+      - <b>Flakiness:</b> 0.9 (default), 0.8 (all branches)<br />
+      - <b>Score:</b> (0.9 × 0.7) + (0.8 × 0.3) = 0.87 → <b>87</b>
+    </p>
+    <p>This highlights tests that fail rarely but unexpectedly, helping you spot potential issues fast.</p>
+  </div>
+</p-dialog>

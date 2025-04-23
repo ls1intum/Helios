@@ -20,7 +20,7 @@
             <i [ngClass]="feature.icon + ' text-blue-600 mr-2'"></i>
             <h3 class="font-semibold">{{ feature.title }}</h3>
           </div>
-          <p class="text-sm text-gray-700">{{ feature.description }}</p>
+          <p class="text-sm text-muted-color">{{ feature.description }}</p>
         </div>
       }
     </div>
@@ -48,14 +48,16 @@
         <div class="p-3 border rounded-md text-center w-48">
           <img [ngSrc]="getGithubProfilePictureUrl(advisor.githubId)" alt="{{ advisor.name }}" width="112" height="112" class="w-28 h-28 mx-auto rounded-full mb-2" />
           <p class="font-semibold">{{ advisor.name }}</p>
-          <p class="text-sm text-gray-600">{{ advisor.description }}</p>
+          <p class="text-sm text-muted-color">{{ advisor.description }}</p>
 
-          @if (advisor.website) {
-            <a [href]="advisor.website" target="_blank" class="text-blue-500 inline-block mt-1">Website</a>
-          }
-          @if (advisor.githubHandle) {
-            <a [href]="getGithubProfileUrl(advisor.githubHandle)" target="_blank" class="text-blue-500 inline-block mt-1 ml-2">GitHub</a>
-          }
+          <div class="flex gap-2 justify-center">
+            @if (advisor.website) {
+              <a [href]="advisor.website" target="_blank" class="text-blue-500 hover:underline inline-block mt-1">Website</a>
+            }
+            @if (advisor.githubHandle) {
+              <a [href]="getGithubProfileUrl(advisor.githubHandle)" target="_blank" class="text-blue-500 hover:underline inline-block mt-1">GitHub</a>
+            }
+          </div>
         </div>
       }
     </div>
@@ -71,14 +73,16 @@
           <div class="p-3 border rounded-md text-center w-48">
             <img [ngSrc]="getGithubProfilePictureUrl(contributor.githubId)" alt="{{ contributor.name }}" width="112" height="112" class="w-28 h-28 mx-auto rounded-full mb-2" />
             <p class="font-semibold">{{ contributor.name }}</p>
-            <p class="text-sm text-gray-600">{{ contributor.description }}</p>
+            <p class="text-sm text-muted-color">{{ contributor.description }}</p>
 
-            @if (contributor.website) {
-              <a [href]="contributor.website" class="text-blue-500 inline-block mt-1" target="_blank">Website</a>
-            }
-            @if (contributor.githubHandle) {
-              <a [href]="getGithubProfileUrl(contributor.githubHandle)" class="text-blue-500 inline-block mt-1 ml-2" target="_blank">GitHub</a>
-            }
+            <div class="flex gap-2 justify-center">
+              @if (contributor.website) {
+                <a [href]="contributor.website" class="text-blue-500 inline-block mt-1" target="_blank">Website</a>
+              }
+              @if (contributor.githubHandle) {
+                <a [href]="getGithubProfileUrl(contributor.githubHandle)" class="text-blue-500 hover:underline inline-block mt-1" target="_blank">GitHub</a>
+              }
+            </div>
           </div>
         }
       </div>
@@ -97,12 +101,12 @@
             <app-user-avatar [user]="gitCont" class="rounded-full mb-2"></app-user-avatar>
 
             <!-- Login -->
-            <p class="text-sm text-gray-600">{{ gitCont.login }}</p>
+            <p class="text-sm text-muted-color">{{ gitCont.login }}</p>
 
             <!-- Contributions -->
             <p class="mt-2 text-sm font-medium">
               Contributions:
-              <span class="text-blue-500">{{ gitCont.contributions }}</span>
+              <span class="text-primary-500">{{ gitCont.contributions }}</span>
             </p>
           </div>
         }
@@ -115,11 +119,11 @@
     <div class="flex justify-center">
       <div class="p-2 border rounded-md text-center">
         <p class="font-semibold">Name</p>
-        <p class="text-gray-600">Technical University of Munich</p>
+        <p class="text-muted-color">Technical University of Munich</p>
         <p class="font-semibold mt-2">Administrator</p>
-        <p class="text-gray-600">Prof. Dr. Stephan Krusche</p>
+        <p class="text-muted-color">Prof. Dr. Stephan Krusche</p>
         <p class="font-semibold mt-2">Contact Email</p>
-        <a href="mailto:krusche@tum.de" class="text-blue-500">krusche&#64;tum.de</a>
+        <a href="mailto:krusche@tum.de" class="text-blue-500 hover:underline">krusche&#64;tum.de</a>
       </div>
     </div>
   </div>

@@ -1,5 +1,19 @@
 @if (query.isPending() || query.isError()) {
   <p-table [value]="[1, 2, 3, 4, 5]">
+    <ng-template pTemplate="header">
+      <tr>
+        <th>
+          <div class="flex items-center gap-2">
+            <p-button type="button" outlined disabled size="small">
+              <i-tabler name="filter-plus" />
+            </p-button>
+            <input pInputText type="text" pSize="small" placeholder="Search" class="w-full" disabled />
+          </div>
+        </th>
+        <th class="hidden lg:table-cell">Assignee</th>
+        <th class="hidden lg:table-cell">Reviewers</th>
+      </tr>
+    </ng-template>
     <ng-template pTemplate="body">
       <tr>
         <td>
@@ -16,11 +30,6 @@
         </td>
         <td class="w-[0.1%] hidden lg:table-cell"><p-skeleton shape="circle" styleClass="!size-7" /></td>
         <td class="w-[0.1%] hidden lg:table-cell"><p-skeleton shape="circle" styleClass="!size-7" /></td>
-        <td class="w-[0.1%] hidden lg:table-cell">
-          <p-button text disabled>
-            <i-tabler name="external-link" />
-          </p-button>
-        </td>
       </tr>
     </ng-template>
   </p-table>
@@ -29,32 +38,31 @@
     <ng-template #header>
       <tr>
         <th>
-          <app-table-filter [table]="table" [searchTableService]="searchTableService" />
+          <app-table-filter [input]="table" [searchTableService]="searchTableService" />
         </th>
         <th class="hidden lg:table-cell">Assignee</th>
         <th class="hidden lg:table-cell">Reviewers</th>
-        <th class="hidden lg:table-cell"></th>
       </tr>
     </ng-template>
     <ng-template pTemplate="body" let-pr>
-      <tr [class.bg-gray-100]="pr.isPinned">
-        <td class="p-0">
+      <tr [class]="pr.isPinned ? 'bg-surface-200 dark:bg-surface-800' : ''">
+        <td class="px-0 py-2">
           <div class="flex h-full items-stretch gap-2">
             <div
               class="flex items-center border-r-4 px-2"
-              [class]="pr.isPinned ? 'border-r-primary-700' : 'border-r-primary-300'"
+              [class]="pr.isPinned ? 'border-r-primary-400' : 'border-r-surface-300'"
               (mouseenter)="isHovered.set(pr.id, true)"
               (mouseleave)="isHovered.set(pr.id, false)"
             >
               <div class="align-middle">
                 @if (isHovered.get(pr.id) && keycloak.isLoggedIn()) {
                   @if (pr.isPinned) {
-                    <p-button text (onClick)="setPinned($event, pr, false)" class="bg-transparent h-full">
-                      <i-tabler name="pinned-off" class="!h-5 !w-5 text-primary-700 hover:text-primary-900" />
+                    <p-button text (onClick)="setPinned($event, pr, false)" class="h-full">
+                      <i-tabler name="pinned-off" class="!h-5 !w-5" />
                     </p-button>
                   } @else {
-                    <p-button text (onClick)="setPinned($event, pr, true)" class="bg-transparent h-full">
-                      <i-tabler name="pinned" class="!h-5 !w-5 text-primary-700 hover:text-primary-900" />
+                    <p-button text severity="secondary" (onClick)="setPinned($event, pr, true)" class="h-full">
+                      <i-tabler name="pinned" class="!h-5 !w-5" />
                     </p-button>
                   }
                 }
@@ -62,13 +70,24 @@
             </div>
 
             <div class="flex flex-col gap-2.5">
-              <div class="flex flex-wrap items-center gap-2">
+              <div class="flex flex-nowrap items-center gap-2">
                 <app-pull-request-status-icon [pullRequest]="pr" tooltipPosition="top" />
-                <span class="font-bold cursor-pointer" (click)="openPR(pr)"><span [innerHTML]="pr.title | markdown"></span></span>
+                <span class="font-bold hover:underline cursor-pointer leading-none max-w-sm md:max-w-xl line-clamp-1" (click)="openPR(pr)">
+                  <span [innerHTML]="pr.title | markdown" class="line-clamp-1"></span>
+                </span>
                 <app-workflow-run-status [selector]="{ type: 'pullRequest', pullRequestId: pr.id }"></app-workflow-run-status>
 
+                <p-button text (click)="openPRExternal($event, pr)" styleClass="p-1" class="leading-none -ml-1">
+                  <i-tabler name="brand-github" class="!size-4" />
+                </p-button>
+
                 @for (label of pr.labels; track label.id) {
-                  <p-tag [value]="label.name" [rounded]="true" class="border font-medium text-xs py-0.5 whitespace-nowrap" [style]="getLabelClasses(label.color)" />
+                  <p-tag
+                    [value]="label.name"
+                    [rounded]="true"
+                    class="border font-medium text-xs py-0.5 whitespace-nowrap text-black dark:text-white"
+                    [style]="getLabelClasses(label.color)"
+                  />
                 }
               </div>
               <div class="flex gap-2 items-center text-xs">
@@ -115,16 +134,11 @@
             </div>
           }
         </td>
-        <td class="hidden lg:table-cell">
-          <p-button text (click)="openPRExternal($event, pr)">
-            <i-tabler name="external-link" />
-          </p-button>
-        </td>
       </tr>
     </ng-template>
     <ng-template #emptymessage>
       <tr>
-        <td colspan="4">
+        <td colspan="3">
           <div class="flex flex-col gap-2 p-20 justify-center items-center">
             <i-tabler name="git-pull-request" class="!h-20 !w-20 text-red-500" />
             <span class="font-semibold text-xl">There are no pull requests found matching your filter criteria.</span>

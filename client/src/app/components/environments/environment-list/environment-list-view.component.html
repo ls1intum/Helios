@@ -1,244 +1,47 @@
-<div class="flex items-center justify-between mb-3">
-  <input pInputText id="commit-hash" (input)="onSearch($event)" [value]="searchInput()" type="text" placeholder="Search for installed systems" class="w-1/3" />
+<div class="flex gap-2 items-center justify-between mb-3">
+  <input pInputText id="commit-hash" (input)="onSearch($event)" [value]="searchInput()" type="text" placeholder="Search for installed systems" class="w-full md:w-1/3" />
   @if (!hideLinkToList()) {
-    <p-button [routerLink]="'../../../environment'" class="self-end"
-      >{{
-        isAdmin()
-          ? 'Manage Environments'
-          : 'Go to
-    Environments'
-      }}
+    <p-button [routerLink]="'../../../environment'">
+      <i-tabler name="server-cog" class="!size-5" />
+      <span class="hidden md:block">{{ isAdmin() ? 'Manage Environments' : 'Go to Environments' }}</span>
+    </p-button>
+  } @else {
+    <p-button label="" (click)="syncEnvironments()" pTooltip="May take ~10 seconds after environment creation on GitHub" tooltipPosition="top" class="mr-2">
+      <i-tabler name="refresh" class="!size-5"></i-tabler>
+      <span class="hidden md:block">Sync Environments</span>
     </p-button>
   }
 </div>
 
-<p-accordion [multiple]="true">
-  @if (!environmentQuery.isPending() && filteredEnvironments().length === 0) {
+@if (!environmentQuery.isPending()) {
+  @if (filteredEnvironments().length === 0) {
     @if (searchInput().length === 0) {
       <p>No environments found. Create a new environment to get started.</p>
     } @else {
       <p>No environments found for the search term, try something else.</p>
     }
-  }
-
-  @for (environment of filteredEnvironments(); track environment.id) {
-    <p-accordion-panel [value]="environment.id">
-      <p-accordion-header>
-        <div class="flex gap-2 items-start w-full flex-wrap md:flex-nowrap flex-col md:items-center md:flex-row">
-          <div class="flex flex-col gap-1 flex-wrap">
-            <div class="flex gap-1 items-center mr-3">
-              <span [pTooltip]="'Open Environment'" class="cursor-pointer hover:bg-gray-200 px-2 py-1 rounded" (click)="openExternalLink($event, environment)">
-                {{ environment.name }}
-              </span>
-
-              <app-lock-tag [isLocked]="!!environment.locked"></app-lock-tag>
-
-              @if (environment.latestStatus; as status) {
-                <app-environment-status-tag [status]="status" />
-              }
-
-              @if (environment.type) {
-                <p-tag [value]="formatEnvironmentType(environment.type)" severity="secondary" rounded="true" />
-              }
-            </div>
-            @if (environment.latestDeployment; as deployment) {
-              <div class="flex gap-1 items-center text-sm mt-2 flex-wrap">
-                <app-user-avatar [user]="environment?.latestDeployment?.user" tooltipPosition="top" />
-                @if (environment.latestDeployment.user?.name) {
-                  {{ environment.latestDeployment.user?.name }} deployed
-                }
-                @if (environment.latestDeployment.updatedAt) {
-                  <span [pTooltip]="getDeploymentTime(environment) || ''">{{ environment.latestDeployment.updatedAt || '' | timeAgo }}</span>
-                }
-                <app-deployment-state-tag [state]="deployment.state" [deployment]="deployment" />
-                <!-- Branch or Release Tag -->
-                <p-tag
-                  severity="secondary"
-                  rounded="true"
-                  class="max-w-[250px] flex items-center"
-                  [pTooltip]="isRelease(deployment) ? '' : 'Go to ' + deployment.ref"
-                  tooltipPosition="top"
-                  (click)="$event.stopPropagation()"
-                  [routerLink]="isRelease(deployment) ? null : getBranchLink(environment)"
-                >
-                  @if (isRelease(deployment)) {
-                    <i-tabler name="tag" class="!size-5 flex-shrink-0"></i-tabler>
-                  } @else {
-                    <i-tabler name="git-branch" class="!size-5 flex-shrink-0"></i-tabler>
-                  }
-                  <span class="truncate flex-1">{{ deployment.ref }}</span>
-                </p-tag>
-                @if (deployment.pullRequestNumber) {
-                  <!-- PR Tag -->
-                  <p-tag
-                    severity="secondary"
-                    rounded="true"
-                    class="max-w-[350px] flex items-center"
-                    [pTooltip]="'Go to ' + (deployment.prName || 'Pull Request #' + deployment.pullRequestNumber)"
-                    tooltipPosition="top"
-                    (click)="$event.stopPropagation()"
-                    [routerLink]="getPrLink(environment)"
-                  >
-                    <i-tabler name="git-pull-request" class="!size-5 flex-shrink-0"></i-tabler>
-                    <span class="truncate flex-1">#{{ deployment.pullRequestNumber }}</span>
-                  </p-tag>
-                }
-              </div>
-            }
-          </div>
-
-          <div class="flex-grow"></div>
-
-          <!-- TODO: Refactor button rendering -->
-          <div class="flex gap-2 items-center self-end md:self-center">
-            @if (environment.locked) {
-              <div class="flex gap-1 items-center">
-                <app-user-avatar [user]="environment.lockedBy" [toolTipText]="'Locked By'" tooltipPosition="top" />
-              </div>
-              @if (environment.lockedAt) {
-                <app-lock-time [timeLockWillExpire]="environment.lockWillExpireAt"></app-lock-time>
-              }
-            }
-
-            <div class="flex items-center border border-gray-300 rounded-md overflow-hidden">
-              @if (deployable()) {
-                <p-button
-                  outlined
-                  (click)="deployEnvironment(environment); $event.stopPropagation()"
-                  [disabled]="!canUserDeploy(environment)"
-                  [pTooltip]="getDeployTooltip(environment)"
-                  tooltipPosition="top"
-                >
-                  <div class="flex items-center">
-                    <i-tabler name="cloud-upload" class="w-4 h-4 mr-1.5 flex-shrink-0 text-primary-700" />
-                    <span>Deploy</span>
-                  </div>
-                </p-button>
-                <div class="w-px bg-gray-300 self-stretch"></div>
-              }
-
-              @if (environment.enabled) {
-                <p-buttongroup>
-                  @if (!environment.locked) {
-                    @if (deployable()) {
-                      <p-button
-                        outlined
-                        (click)="lockEnvironment(environment); $event.stopPropagation()"
-                        [disabled]="!canUserDeploy(environment)"
-                        [pTooltip]="getLockTooltip(environment)"
-                        tooltipPosition="top"
-                      >
-                        <div class="flex items-center">
-                          <i-tabler name="lock" class="w-4 h-4 flex-shrink-0 text-red-700" />
-                        </div>
-                      </p-button>
-                    }
-                  } @else {
-                    @if (isLoggedIn() && (environment.lockReservationWillExpireAt !== null || isCurrentUserLocked(environment) || hasUnlockPermissions())) {
-                      <p-button
-                        severity="danger"
-                        class="[&>*]:!rounded-none"
-                        (click)="onUnlockEnvironment($event, environment)"
-                        [disabled]="!canUnlock(environment)"
-                        [pTooltip]="getUnlockToolTip(environment)"
-                        tooltipPosition="top"
-                      >
-                        <div class="flex items-center">
-                          <i-tabler name="lock-open" class="w-4 h-4 flex-shrink-0 text-white" />
-                        </div>
-                      </p-button>
-                      @if (isCurrentUserLocked(environment)) {
-                        <p-button
-                          outlined
-                          (click)="extendLock($event, environment)"
-                          [disabled]="!canUnlock(environment)"
-                          [pTooltip]="'Extend my lock expiration'"
-                          tooltipPosition="top"
-                        >
-                          <i-tabler name="lock-plus" class="w-4 h-4 flex-shrink-0 text-green-700" />
-                        </p-button>
-                      }
-                    }
-                  }
-                </p-buttongroup>
-              }
-            </div>
-            @if (canViewAllEnvironments()) {
-              <!-- Show the disabled tag -->
-              @if (!environment.enabled) {
-                <p-tag value="Disabled" severity="danger" rounded="true" />
-              }
-              <a
-                icon
-                [routerLink]="'/repo/' + environment.repository?.id + '/environment/' + environment.id + '/edit'"
-                class="p-button p-button-secondary p-2"
-                (click)="$event.stopPropagation()"
+  } @else {
+    @for (group of environmentGroups(); track group[0]) {
+      @if (group[1].length > 0) {
+        <div class="mb-4">
+          <h3 class="text-lg font-semibold mb-2">{{ capitalizeFirstLetter(group[0]) }}</h3>
+          <p-accordion [multiple]="true">
+            @for (environment of group[1]; track environment.id) {
+              <app-environment-accordion
+                [environment]="environment"
+                [deployable]="!!deployable()"
+                [canViewAllEnvironments]="!!canViewAllEnvironments()"
+                [timeUntilReservationExpires]="timeUntilReservationExpires().get(environment.id)"
+                (deploy)="deployEnvironment($event)"
+                (unlock)="onUnlockEnvironment($event.event, $event.environment)"
+                (extend)="extendLock($event.event, $event.environment)"
+                (lock)="lockEnvironment($event)"
               >
-                <i-tabler name="pencil" />
-              </a>
+              </app-environment-accordion>
             }
-            <span class="w-2"></span>
-          </div>
+          </p-accordion>
         </div>
-      </p-accordion-header>
-      <p-accordion-content>
-        <div class="flex w-full flex-col gap-4">
-          <!-- Toggle Button -->
-          <div class="flex justify-start gap-2">
-            <p-selectbutton
-              [options]="[
-                { label: 'Details', value: false },
-                { label: 'Deployment', value: true },
-              ]"
-              [(ngModel)]="showLatestDeployment"
-              optionLabel="label"
-              optionValue="value"
-              aria-labelledby="basic"
-            />
-          </div>
-
-          <!-- Conditionally display information based on the toggle -->
-          @if (showLatestDeployment) {
-            <div class="flex w-full">
-              <app-deployment-stepper [deployment]="environment.latestDeployment" class="w-full" />
-            </div>
-          } @else {
-            <div class="flex w-full">
-              <div class="flex flex-col gap-1">
-                @if (environment.latestDeployment; as deployment) {
-                  <app-environment-deployment-info class="max-w-2xl" [deployment]="deployment" [repositoryId]="environment.repository?.id || 0" />
-                }
-              </div>
-              <div class="flex-grow"></div>
-              <div class="flex flex-col gap-1">
-                @if (environment.latestStatus; as status) {
-                  <app-environment-status-info class="max-w-xs mt-2 ml-14" [status]="status" />
-                }
-              </div>
-            </div>
-          }
-
-          <!-- Footer links and tags -->
-          <div class="flex gap-4 items-center justify-between">
-            <div class="flex gap-1 mt-2 items-center">
-              <a
-                icon
-                [routerLink]="'/repo/' + environment.repository?.id + '/environment/' + environment.id + '/history'"
-                class="p-button p-button-text text-gray-500 py-2 flex items-center"
-              >
-                <i-tabler class="mr-1" name="history" />
-                View Activity History
-              </a>
-            </div>
-            <div class="flex flex-grow"></div>
-            <div class="flex gap-2">
-              @for (installedApp of environment.installedApps; track installedApp) {
-                <p-tag class="bg-gray-300 gap-0">{{ installedApp }}</p-tag>
-              }
-            </div>
-          </div>
-        </div>
-      </p-accordion-content>
-    </p-accordion-panel>
+      }
+    }
   }
-</p-accordion>
+}

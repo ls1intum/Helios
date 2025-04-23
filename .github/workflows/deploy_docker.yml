@@ -89,6 +89,7 @@ jobs:
             echo "GITHUB_AUTH_TOKEN=${{ secrets.GH_AUTH_TOKEN }}" >> .env
             echo "RUN_ON_STARTUP_COOLDOWN=${{ vars.RUN_ON_STARTUP_COOLDOWN }}" >> .env
             echo "SENTRY_DSN=${{ vars.SENTRY_DSN }}" >> .env
+            echo "DATA_SYNC_RUN_ON_STARTUP=${{ vars.DATA_SYNC_RUN_ON_STARTUP }}" >> .env
             
             echo "KC_BOOTSTRAP_ADMIN_USERNAME=${{ secrets.KC_BOOTSTRAP_ADMIN_USERNAME }}" >> .env
             echo "KC_BOOTSTRAP_ADMIN_PASSWORD=${{ secrets.KC_BOOTSTRAP_ADMIN_PASSWORD }}" >> .env
@@ -107,6 +108,9 @@ jobs:
             echo "APPLICATION_SERVER_IMAGE_TAG=${{ inputs.application_server_image_tag }}" >> .env
             echo "WEBHOOK_LISTENER_IMAGE_TAG=${{ inputs.webhook_listener_image_tag }}" >> .env
             echo "KEYCLOAK_IMAGE_TAG=${{ inputs.keycloak_image_tag }}" >> .env
+
+            echo "HELIOS_TOKEN_EXCHANGE_CLIENT=${{ secrets.HELIOS_TOKEN_EXCHANGE_CLIENT }}" >> .env
+            echo "HELIOS_TOKEN_EXCHANGE_SECRET=${{ secrets.HELIOS_TOKEN_EXCHANGE_SECRET }}" >> .env 
 
       - name: SSH to VM and Execute Docker-Compose Up
         uses: appleboy/ssh-action@v1.2.2

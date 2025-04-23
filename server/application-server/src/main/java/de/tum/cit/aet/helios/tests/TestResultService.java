@@ -2,140 +2,48 @@ package de.tum.cit.aet.helios.tests;
 
 import de.tum.cit.aet.helios.branch.BranchRepository;
 import de.tum.cit.aet.helios.filters.RepositoryContext;
+import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import de.tum.cit.aet.helios.pullrequest.PullRequestRepository;
 import de.tum.cit.aet.helios.tests.TestCase.TestStatus;
-import de.tum.cit.aet.helios.workflow.Workflow;
+import de.tum.cit.aet.helios.tests.TestResultsDto.CombinedTestCaseStatisticsInfo;
+import de.tum.cit.aet.helios.tests.TestResultsDto.TestCaseDto;
+import de.tum.cit.aet.helios.tests.TestResultsDto.TestCaseStatisticsInfo;
+import de.tum.cit.aet.helios.tests.TestResultsDto.TestTypeResults;
+import de.tum.cit.aet.helios.tests.type.TestType;
 import de.tum.cit.aet.helios.workflow.WorkflowRun;
 import de.tum.cit.aet.helios.workflow.WorkflowRunRepository;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
+@Log4j2
 public class TestResultService {
   private final WorkflowRunRepository workflowRunRepository;
   private final BranchRepository branchRepository;
   private final PullRequestRepository pullRequestRepository;
+  private final TestSuiteRepository testSuiteRepository;
+  private final TestCaseRepository testCaseRepository;
+  private final TestCaseStatisticsRepository testCaseStatisticsRepository;
+  private final TestCaseStatisticsService testCaseStatisticsService;
 
-  private List<TestSuite> getTestSuitesForWorkflowRuns(List<WorkflowRun> runs) {
-    return runs.stream().flatMap(run -> run.getTestSuites().stream()).toList();
-  }
+  public static record TestSearchCriteria(int page, int size, String search, boolean onlyFailed) {}
 
-  /**
-   * Get the latest test results for a branch. This includes both Java and E2E test results.
-   *
-   * @param branchName the branch name
-   * @return the test results
-   */
-  public TestResultsDto getLatestTestResultsForBranch(String branchName) {
-    final Long repositoryId = RepositoryContext.getRepositoryId();
-
-    var branch =
-        branchRepository
-            .findByNameAndRepositoryRepositoryId(branchName, repositoryId)
-            .orElseThrow();
-
-    var latestTestRuns =
-        workflowRunRepository
-            .findByHeadBranchAndHeadShaAndRepositoryIdAndPullRequestsIsNullWithTestSuites(
-                branchName, branch.getCommitSha(), repositoryId);
-
-    var previousCommitSha =
-        workflowRunRepository.findNthLatestCommitShaBehindHeadByBranchAndRepoId(
-            branchName, repositoryId, 0, branch.getCommitSha());
-
-    List<WorkflowRun> previousTestRuns =
-        previousCommitSha.isEmpty()
-            ? List.of()
-            : workflowRunRepository
-                .findByHeadBranchAndHeadShaAndRepositoryIdAndPullRequestsIsNullWithTestSuites(
-                    branchName, previousCommitSha.get(), repositoryId);
-
-    return this.getResultsFromRuns(latestTestRuns, previousTestRuns);
-  }
-
-  /**
-   * Get the latest test results for a pull request. This includes both Java and E2E test results.
-   *
-   * @param pullRequestId the pull request ID
-   * @return the test results
-   */
-  public TestResultsDto getLatestTestResultsForPr(Long pullRequestId) {
-    var pullRequest = pullRequestRepository.findById(pullRequestId).orElseThrow();
-
-    var latestTestRuns =
-        workflowRunRepository.findByPullRequestsIdAndHeadShaWithTestSuites(
-            pullRequestId, pullRequest.getHeadSha());
-
-    var previousCommitSha =
-        workflowRunRepository.findNthLatestCommitShaBehindHeadByPullRequestId(
-            pullRequestId, 0, pullRequest.getHeadSha());
-
-    List<WorkflowRun> previousTestRuns =
-        previousCommitSha.isEmpty()
-            ? List.of()
-            : workflowRunRepository.findByPullRequestsIdAndHeadShaWithTestSuites(
-                pullRequestId, previousCommitSha.get());
-
-    return this.getResultsFromRuns(latestTestRuns, previousTestRuns);
-  }
-
-  private TestResultsDto getResultsFromRuns(
-      List<WorkflowRun> latestWorkflowRuns, List<WorkflowRun> previousWorkflowRuns) {
-
-    var latestTestRuns =
-        latestWorkflowRuns.stream()
-            .filter(run -> run.getWorkflow().getLabel() == Workflow.Label.TEST)
-            .toList();
-
-    var previousTestRuns =
-        previousWorkflowRuns.stream()
-            .filter(run -> run.getWorkflow().getLabel() == Workflow.Label.TEST)
-            .toList();
-
-    var testSuites = getTestSuitesForWorkflowRuns(latestTestRuns);
-    var previousTestCases =
-        getTestSuitesForWorkflowRuns(previousTestRuns).stream()
-            .flatMap(testSuite -> testSuite.getTestCases().stream())
-            .toList();
-
-    boolean isProcessing =
-        latestTestRuns.stream()
-            .anyMatch(
-                run ->
-                    run.getTestProcessingStatus() == WorkflowRun.TestProcessingStatus.PROCESSING);
-
-    Function<TestCase, Optional<TestStatus>> previousStatusProvider =
-        (testCase) -> {
-          return previousTestCases.stream()
-              .filter(
-                  previousTestCase ->
-                      previousTestCase.getName().equals(testCase.getName())
-                          && previousTestCase.getClassName().equals(testCase.getClassName()))
-              .findFirst()
-              .map(TestCase::getStatus);
-        };
-
-    return new TestResultsDto(
-        testSuites.stream()
-            .map(
-                testSuite -> {
-                  // Sort test cases before creating the DTO
-                  List<TestCase> sortedTestCases =
-                      sortTestCases(testSuite.getTestCases(), previousStatusProvider);
-                  testSuite.setTestCases(sortedTestCases);
-                  return TestResultsDto.TestSuiteDto.fromTestSuite(
-                      testSuite, previousStatusProvider);
-                })
-            .toList(),
-        isProcessing);
-  }
+  private record TestRunContext(
+      List<WorkflowRun> latestRuns,
+      List<WorkflowRun> previousRuns,
+      String defaultBranchName,
+      Map<TestType, Long> defaultWorkflowRunByTestType) {}
 
   /**
    * Sort test cases with the following priority: 1. Test cases with updated status 2. Failed or
@@ -145,15 +53,14 @@ public class TestResultService {
    * @param previousStatusProvider function to get previous status
    * @return sorted list of test cases
    */
-  private List<TestCase> sortTestCases(
-      List<TestCase> testCases, Function<TestCase, Optional<TestStatus>> previousStatusProvider) {
+  private List<TestCase> sortTestCases(List<TestCase> testCases) {
 
     return testCases.stream()
         .sorted(
             (a, b) -> {
               // Get previous statuses
-              Optional<TestStatus> prevStatusA = previousStatusProvider.apply(a);
-              Optional<TestStatus> prevStatusB = previousStatusProvider.apply(b);
+              Optional<TestStatus> prevStatusA = Optional.ofNullable(a.getPreviousStatus());
+              Optional<TestStatus> prevStatusB = Optional.ofNullable(b.getPreviousStatus());
 
               // Check for status changes
               boolean statusChangedA =
@@ -182,10 +89,57 @@ public class TestResultService {
                 return 1;
               }
 
-              // 3. Third priority: Alphabetical by name for stable sorting
+              // If both failed, prioritize non-flaky failures and non-default branch failures
+              if (failedA && failedB) {
+                // Check if one is failing in default branch and the other is not
+                boolean failsInDefault = a.isFailsInDefaultBranch();
+                boolean otherFailsInDefault = b.isFailsInDefaultBranch();
+
+                if (!failsInDefault && otherFailsInDefault) {
+                  return -1; // a is more important (user's fault)
+                }
+                if (failsInDefault && !otherFailsInDefault) {
+                  return 1; // b is more important (user's fault)
+                }
+
+                // Check if one is flaky and the other is not
+                boolean flaky = a.getFlakinessScore() > 30.0;
+                boolean otherFlaky = b.getFlakinessScore() > 30.0;
+
+                if (!flaky && otherFlaky) {
+                  return -1; // a is more important (not flaky)
+                }
+                if (flaky && !otherFlaky) {
+                  return 1; // b is more important (not flaky)
+                }
+              }
+
+              // 3. Third priority: Alphabetical sort for stable ordering
               return a.getName().compareTo(b.getName());
             })
         .collect(Collectors.toList());
+  }
+
+  private TestRunContext getDefaultBranchContext(GitRepository repository) {
+    var defaultBranch =
+        branchRepository
+            .findFirstByRepositoryRepositoryIdAndIsDefaultTrue(repository.getRepositoryId())
+            .orElseThrow();
+
+    var defaultRuns =
+        workflowRunRepository.findByHeadBranchAndHeadShaAndRepositoryRepositoryId(
+            defaultBranch.getName(), defaultBranch.getCommitSha(), repository.getRepositoryId());
+
+    Map<TestType, Long> defaultWorkflowRunByTestType = new HashMap<>();
+
+    for (WorkflowRun run : defaultRuns) {
+      for (TestType type : run.getWorkflow().getTestTypes()) {
+        defaultWorkflowRunByTestType.put(type, run.getId());
+      }
+    }
+
+    return new TestRunContext(
+        defaultRuns, List.of(), defaultBranch.getName(), defaultWorkflowRunByTestType);
   }
 
   /**
@@ -195,7 +149,8 @@ public class TestResultService {
    * @param branchName the branch name
    * @return the grouped test results
    */
-  public GroupedTestResultsDto getLatestGroupedTestResultsForBranch(String branchName) {
+  public TestResultsDto getLatestTestResultsForBranch(
+      String branchName, TestSearchCriteria criteria) {
     final Long repositoryId = RepositoryContext.getRepositoryId();
 
     var branch =
@@ -203,23 +158,30 @@ public class TestResultService {
             .findByNameAndRepositoryRepositoryId(branchName, repositoryId)
             .orElseThrow();
 
-    var latestTestRuns =
-        workflowRunRepository
-            .findByHeadBranchAndHeadShaAndRepositoryIdAndPullRequestsIsNullWithTestSuites(
-                branchName, branch.getCommitSha(), repositoryId);
+    var defaultContext = getDefaultBranchContext(branch.getRepository());
+
+    var latestRuns =
+        workflowRunRepository.findByHeadBranchAndHeadShaAndRepositoryRepositoryId(
+            branchName, branch.getCommitSha(), repositoryId);
 
     var previousCommitSha =
         workflowRunRepository.findNthLatestCommitShaBehindHeadByBranchAndRepoId(
             branchName, repositoryId, 0, branch.getCommitSha());
 
-    List<WorkflowRun> previousTestRuns =
+    List<WorkflowRun> previousRuns =
         previousCommitSha.isEmpty()
             ? List.of()
-            : workflowRunRepository
-                .findByHeadBranchAndHeadShaAndRepositoryIdAndPullRequestsIsNullWithTestSuites(
-                    branchName, previousCommitSha.get(), repositoryId);
+            : workflowRunRepository.findByHeadBranchAndHeadShaAndRepositoryRepositoryId(
+                branchName, previousCommitSha.get(), repositoryId);
 
-    return this.getGroupedResultsFromRuns(latestTestRuns, previousTestRuns);
+    var context =
+        new TestRunContext(
+            latestRuns,
+            previousRuns,
+            defaultContext.defaultBranchName(),
+            defaultContext.defaultWorkflowRunByTestType());
+
+    return processTestResults(context, criteria);
   }
 
   /**
@@ -229,115 +191,224 @@ public class TestResultService {
    * @param pullRequestId the pull request ID
    * @return the grouped test results
    */
-  public GroupedTestResultsDto getLatestGroupedTestResultsForPr(Long pullRequestId) {
+  public TestResultsDto getLatestTestResultsForPr(Long pullRequestId, TestSearchCriteria criteria) {
     var pullRequest = pullRequestRepository.findById(pullRequestId).orElseThrow();
+    var defaultContext = getDefaultBranchContext(pullRequest.getRepository());
 
-    var latestTestRuns =
-        workflowRunRepository.findByPullRequestsIdAndHeadShaWithTestSuites(
+    var latestRuns =
+        workflowRunRepository.findByPullRequestsIdAndHeadSha(
             pullRequestId, pullRequest.getHeadSha());
 
     var previousCommitSha =
         workflowRunRepository.findNthLatestCommitShaBehindHeadByPullRequestId(
             pullRequestId, 0, pullRequest.getHeadSha());
 
-    List<WorkflowRun> previousTestRuns =
+    List<WorkflowRun> previousRuns =
         previousCommitSha.isEmpty()
             ? List.of()
-            : workflowRunRepository.findByPullRequestsIdAndHeadShaWithTestSuites(
+            : workflowRunRepository.findByPullRequestsIdAndHeadSha(
                 pullRequestId, previousCommitSha.get());
 
-    return this.getGroupedResultsFromRuns(latestTestRuns, previousTestRuns);
+    var context =
+        new TestRunContext(
+            latestRuns,
+            previousRuns,
+            defaultContext.defaultBranchName(),
+            defaultContext.defaultWorkflowRunByTestType());
+
+    return processTestResults(context, criteria);
   }
 
-  /**
-   * Create a GroupedTestResultsDto from the given workflow runs. Test suites are grouped by
-   * workflow name.
-   *
-   * @param latestWorkflowRuns the latest workflow runs
-   * @param previousWorkflowRuns the previous workflow runs for comparison
-   * @return the grouped test results
-   */
-  private GroupedTestResultsDto getGroupedResultsFromRuns(
-      List<WorkflowRun> latestWorkflowRuns, List<WorkflowRun> previousWorkflowRuns) {
+  private TestResultsDto processTestResults(TestRunContext context, TestSearchCriteria criteria) {
+    Map<TestType, Long> previousWorkflowRunByTestType = new HashMap<>();
 
-    var latestTestRuns =
-        latestWorkflowRuns.stream()
-            .filter(run -> run.getWorkflow().getLabel() == Workflow.Label.TEST)
-            .toList();
+    for (WorkflowRun run : context.previousRuns()) {
+      for (TestType type : run.getWorkflow().getTestTypes()) {
+        previousWorkflowRunByTestType.put(type, run.getId());
+      }
+    }
 
-    var previousTestRuns =
-        previousWorkflowRuns.stream()
-            .filter(run -> run.getWorkflow().getLabel() == Workflow.Label.TEST)
-            .toList();
+    List<TestTypeResults> results = new LinkedList<>();
 
-    var testSuites = getTestSuitesForWorkflowRuns(latestTestRuns);
-    var previousTestCases =
-        getTestSuitesForWorkflowRuns(previousTestRuns).stream()
-            .flatMap(testSuite -> testSuite.getTestCases().stream())
-            .toList();
+    for (WorkflowRun run : context.latestRuns()) {
+      for (TestType type : run.getWorkflow().getTestTypes()) {
+        var testTypeResults =
+            getTestTypeResultsForRun(
+                type,
+                run,
+                previousWorkflowRunByTestType.get(type),
+                PageRequest.of(criteria.page(), criteria.size()),
+                context.defaultBranchName(),
+                context.defaultWorkflowRunByTestType().get(type),
+                criteria.search(),
+                criteria.onlyFailed());
+        results.add(testTypeResults);
+      }
+    }
 
-    boolean isProcessing =
-        latestTestRuns.stream()
-            .anyMatch(
-                run ->
-                    run.getTestProcessingStatus() == WorkflowRun.TestProcessingStatus.PROCESSING);
+    var anyProcessing = results.stream().anyMatch(TestTypeResults::isProcessing);
+    return new TestResultsDto(results, anyProcessing);
+  }
 
-    Function<TestCase, Optional<TestStatus>> previousStatusProvider =
-        (testCase) -> {
-          return previousTestCases.stream()
-              .filter(
-                  previousTestCase ->
-                      previousTestCase.getName().equals(testCase.getName())
-                          && previousTestCase.getClassName().equals(testCase.getClassName()))
-              .findFirst()
-              .map(TestCase::getStatus);
+  private List<TestCase> filterTestCases(
+      List<TestCase> testCases, String search, boolean onlyFailed) {
+    return testCases.stream()
+        .filter(
+            testCase -> {
+              // Filter by failed status if onlyFailed is true
+              if (onlyFailed) {
+                if (testCase.getStatus() != TestStatus.FAILED
+                    && testCase.getStatus() != TestStatus.ERROR) {
+                  return false;
+                }
+              }
+
+              // Filter by search term if search is not null or empty
+              if (search != null && !search.trim().isEmpty()) {
+                String searchLower = search.toLowerCase();
+                return testCase.getName().toLowerCase().contains(searchLower)
+                    || testCase.getClassName().toLowerCase().contains(searchLower);
+              }
+
+              return true;
+            })
+        .collect(Collectors.toList());
+  }
+
+  private TestTypeResults getTestTypeResultsForRun(
+      TestType type,
+      WorkflowRun run,
+      Long prevWorkflowRunId,
+      Pageable pageable,
+      String defaultBranch,
+      Long defaultWorkflowRunId,
+      String search,
+      boolean onlyFailed) {
+
+    log.debug(
+        "Getting test results for type {} in workflow run {} with previous run {}",
+        type.getName(),
+        run.getId(),
+        prevWorkflowRunId);
+    long time = System.currentTimeMillis();
+
+    var suites =
+        testSuiteRepository.findByWorkflowRunIdAndTestTypeId(
+            run.getId(), type.getId(), prevWorkflowRunId, search, onlyFailed, pageable);
+
+    log.debug(
+        "Found {} test suites in {} ms",
+        suites.getTotalElements(),
+        System.currentTimeMillis() - time);
+
+    var summary =
+        testSuiteRepository.findSummaryByWorkflowRunIdAndTestTypeId(
+            run.getId(), type.getId(), prevWorkflowRunId);
+
+    var suiteClassNames = suites.stream().map(TestSuite::getName).distinct().toList();
+
+    var failedTestsInDefault =
+        testCaseRepository.findFailedByTestSuiteWorkflowIdAndClassNamesAndTestTypeId(
+            defaultWorkflowRunId, suiteClassNames, type.getId());
+
+    List<TestCaseStatistics> defaultBranchStats =
+        testCaseStatisticsRepository.findByTestSuiteNameInAndBranchNameAndRepositoryRepositoryId(
+            suiteClassNames, defaultBranch, RepositoryContext.getRepositoryId());
+
+    List<TestCaseStatistics> combinedStats =
+        testCaseStatisticsRepository.findByTestSuiteNameInAndBranchNameAndRepositoryRepositoryId(
+            suiteClassNames, "combined", RepositoryContext.getRepositoryId());
+
+    Function<TestCase, TestResultsDto.TestCaseStatisticsInfo> statisticsProvider =
+        testCase -> {
+          Optional<TestCaseStatistics> stats =
+              defaultBranchStats.stream()
+                  .filter(
+                      s ->
+                          s.getTestName().equals(testCase.getName())
+                              && s.getClassName().equals(testCase.getClassName()))
+                  .findFirst();
+
+          double failureRate = stats.map(TestCaseStatistics::getFailureRate).orElse(0.0);
+
+          boolean failsInDefaultBranch =
+              failedTestsInDefault.stream()
+                  .anyMatch(
+                      failedTest ->
+                          failedTest.getName().equals(testCase.getName())
+                              && failedTest.getClassName().equals(testCase.getClassName()));
+
+          return new TestResultsDto.TestCaseStatisticsInfo(failureRate, failsInDefaultBranch);
         };
 
-    // Convert test suites to DTOs
-    List<TestResultsDto.TestSuiteDto> testSuiteDtos =
-        testSuites.stream()
+    Function<TestCase, TestResultsDto.CombinedTestCaseStatisticsInfo> combinedStatisticsProvider =
+        testCase -> {
+          Optional<TestCaseStatistics> stats =
+              combinedStats.stream()
+                  .filter(
+                      s ->
+                          s.getTestName().equals(testCase.getName())
+                              && s.getClassName().equals(testCase.getClassName()))
+                  .findFirst();
+
+          double combinedFailureRate = stats.map(TestCaseStatistics::getFailureRate).orElse(0.0);
+
+          return new TestResultsDto.CombinedTestCaseStatisticsInfo(combinedFailureRate);
+        };
+
+    var prevStateCandidates =
+        testCaseRepository.findByTestSuiteWorkflowIdAndClassNamesAndTestTypeId(
+            prevWorkflowRunId, suiteClassNames, type.getId());
+
+    for (TestSuite suite : suites) {
+      for (TestCase testCase : suite.getTestCases()) {
+        TestCaseStatisticsInfo statistics = statisticsProvider.apply(testCase);
+        CombinedTestCaseStatisticsInfo combinedStatistics =
+            combinedStatisticsProvider.apply(testCase);
+        testCase.setFlakinessScore(
+            testCaseStatisticsService.calculateFlakinessScore(
+                statistics.failureRate(), combinedStatistics.combinedFailureRate()));
+        testCase.setFailsInDefaultBranch(statistics.failsInDefaultBranch());
+        testCase.setFailureRate(statistics.failureRate());
+        testCase.setCombinedFailureRate(combinedStatistics.combinedFailureRate());
+        testCase.setPreviousStatus(
+            prevStateCandidates.stream()
+                .filter(
+                    prevTestCase ->
+                        prevTestCase.getName().equals(testCase.getName())
+                            && prevTestCase.getClassName().equals(testCase.getClassName()))
+                .findFirst()
+                .map(TestCase::getStatus)
+                .orElse(null));
+      }
+    }
+
+    var suiteDtos =
+        suites.stream()
             .map(
-                testSuite -> {
-                  // Sort test cases before creating the DTO
-                  List<TestCase> sortedTestCases =
-                      sortTestCases(testSuite.getTestCases(), previousStatusProvider);
-                  testSuite.setTestCases(sortedTestCases);
-                  return TestResultsDto.TestSuiteDto.fromTestSuite(
-                      testSuite, previousStatusProvider);
+                suite -> {
+                  var filteredTestCases = filterTestCases(suite.getTestCases(), search, onlyFailed);
+                  var testCases = sortTestCases(filteredTestCases);
+                  var testCaseDtos = testCases.stream().map(TestCaseDto::fromTestCase).toList();
+
+                  return TestResultsDto.TestSuiteDto.fromTestSuite(suite, testCaseDtos);
                 })
             .toList();
 
-    // Group test suites by workflow
-    Map<String, List<TestResultsDto.TestSuiteDto>> groupedByWorkflow =
-        testSuiteDtos.stream()
-            .collect(
-                Collectors.groupingBy(
-                    dto -> dto.workflowName() != null ? dto.workflowName() : "Unknown",
-                    Collectors.toList()));
-
-    // Create the workflow results
-    Map<String, GroupedTestResultsDto.WorkflowTestResults> testResults = new HashMap<>();
-    for (var entry : groupedByWorkflow.entrySet()) {
-      var workflowName = entry.getKey();
-      var suites = entry.getValue();
-
-      // Get the workflow ID from the first suite (all suites in this group have the same workflow)
-      Long workflowId = suites.isEmpty() ? null : suites.get(0).workflowId();
-
-      // Check if any test suite in this workflow is still processing
-      boolean workflowIsProcessing =
-          latestTestRuns.stream()
-              .filter(run -> workflowName.equals(run.getWorkflow().getName()))
-              .anyMatch(
-                  run ->
-                      run.getTestProcessingStatus() == WorkflowRun.TestProcessingStatus.PROCESSING);
-
-      testResults.put(
-          workflowName,
-          new GroupedTestResultsDto.WorkflowTestResults(
-              workflowId, workflowName, suites, workflowIsProcessing));
-    }
-
-    return new GroupedTestResultsDto(testResults, isProcessing);
+    return new TestTypeResults(
+        type.getId(),
+        type.getName(),
+        suiteDtos,
+        run.getTestProcessingStatus() == WorkflowRun.TestProcessingStatus.PROCESSING,
+        new TestResultsDto.TestTypeStats(
+            (int) suites.getTotalElements(),
+            summary.getTests(),
+            summary.getTests()
+                - (summary.getFailures() + summary.getErrors() + summary.getSkipped()),
+            summary.getFailures(),
+            summary.getErrors(),
+            summary.getSkipped(),
+            summary.getTime(),
+            summary.getHasUpdates() ? 1 : 0));
   }
 }

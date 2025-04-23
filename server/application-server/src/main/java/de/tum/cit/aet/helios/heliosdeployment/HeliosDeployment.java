@@ -72,6 +72,9 @@ public class HeliosDeployment {
   @Column(name = "deployment_id", nullable = true)
   private Long deploymentId;
 
+  @Column(name = "workflow_run_id", nullable = true)
+  private Long workflowRunId;
+
   @Column(name = "workflow_run_html_url", nullable = true)
   private String workflowRunHtmlUrl;
 

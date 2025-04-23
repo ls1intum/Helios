@@ -1,11 +1,13 @@
 package de.tum.cit.aet.helios.branch;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import de.tum.cit.aet.helios.auth.AuthService;
+import de.tum.cit.aet.helios.commit.CommitRepository;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
-import de.tum.cit.aet.helios.releasecandidate.ReleaseCandidateRepository;
+import de.tum.cit.aet.helios.releaseinfo.releasecandidate.ReleaseCandidateRepository;
 import de.tum.cit.aet.helios.userpreference.UserPreference;
 import de.tum.cit.aet.helios.userpreference.UserPreferenceRepository;
 import java.util.List;
@@ -24,11 +26,18 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 public class BranchServiceTest {
 
-  @InjectMocks private BranchService branchService;
-  @Mock private BranchRepository branchRepository;
-  @Mock private ReleaseCandidateRepository releaseCandidateRepository;
-  @Mock private UserPreferenceRepository userPreferenceRepository;
-  @Mock private AuthService authService;
+  @InjectMocks
+  private BranchService branchService;
+  @Mock
+  private BranchRepository branchRepository;
+  @Mock
+  private ReleaseCandidateRepository releaseCandidateRepository;
+  @Mock
+  private UserPreferenceRepository userPreferenceRepository;
+  @Mock
+  private CommitRepository commitRepository;
+  @Mock
+  private AuthService authService;
 
   @Test
   public void testPinnedBranchesAreShownFirst() {
@@ -48,6 +57,8 @@ public class BranchServiceTest {
     final UserPreference userPreference = new UserPreference();
     userPreference.setFavouriteBranches(Set.of(b2));
 
+    when(commitRepository.findByShaAndRepository(any(), any())).thenReturn(Optional.empty());
+
     when(branchRepository.findAll()).thenReturn(branches);
     when(authService.isLoggedIn()).thenReturn(true);
     when(authService.getUserFromGithubId()).thenReturn(null);
@@ -56,9 +67,11 @@ public class BranchServiceTest {
     List<BranchInfoDto> allBranches = branchService.getAllBranches();
 
     BranchInfoDto b1Dto =
-        BranchInfoDto.fromBranchAndUserPreference(b1, Optional.of(userPreference));
+        BranchInfoDto.fromBranchAndUserPreference(b1, Optional.of(userPreference),
+            commitRepository);
     BranchInfoDto b2Dto =
-        BranchInfoDto.fromBranchAndUserPreference(b2, Optional.of(userPreference));
+        BranchInfoDto.fromBranchAndUserPreference(b2, Optional.of(userPreference),
+            commitRepository);
 
     assertEquals(2, allBranches.size());
     Assertions.assertIterableEquals(List.of(b2Dto, b1Dto), allBranches);

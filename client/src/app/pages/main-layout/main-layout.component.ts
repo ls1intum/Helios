@@ -1,8 +1,6 @@
-import { NgClass } from '@angular/common';
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
-import { ActivatedRoute, NavigationEnd, Router, RouterOutlet } from '@angular/router';
+import { Component, computed, inject, OnInit, signal, effect } from '@angular/core';
+import { ActivatedRoute, NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
-import { IconsModule } from 'icons.module';
 import { AvatarModule } from 'primeng/avatar';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
@@ -13,23 +11,37 @@ import { FooterComponent } from '@app/components/footer/footer.component';
 import { NavigationBarComponent } from '@app/components/navigation-bar/navigation-bar.component';
 import { filter } from 'rxjs';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { HeliosIconComponent } from '@app/components/helios-icon/helios-icon.component';
+import { ProfileNavSectionComponent } from '@app/components/profile-nav-section/profile-nav-section.component';
+import { TagModule } from 'primeng/tag';
+import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
+import { IconMoon, IconSun } from 'angular-tabler-icons/icons';
+import { version } from 'environments/version';
 
 @Component({
   selector: 'app-main-layout',
-  standalone: true,
   imports: [
     RouterOutlet,
     ToastModule,
-    IconsModule,
+    TablerIconComponent,
     ButtonModule,
     TooltipModule,
     DividerModule,
     AvatarModule,
     CardModule,
-    NgClass,
     FooterComponent,
     NavigationBarComponent,
+    HeliosIconComponent,
+    ProfileNavSectionComponent,
+    TagModule,
+    RouterLink,
     ConfirmDialogModule,
+  ],
+  providers: [
+    provideTablerIcons({
+      IconSun,
+      IconMoon,
+    }),
   ],
   templateUrl: './main-layout.component.html',
 })
@@ -38,9 +50,17 @@ export class MainLayoutComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
 
+  deployed_version = version.deployed_version;
+
   repositoryId = signal<number | undefined>(undefined);
+  isDarkModeEnabled = signal(window.matchMedia('(prefers-color-scheme: dark)').matches);
   isLoggedIn = computed(() => this.keycloakService.isLoggedIn());
-  dynamicHeight = computed(() => (this.isLoggedIn() ? 'h-[calc(100vh-24px)]' : 'h-[calc(100vh-48px)]'));
+
+  constructor() {
+    effect(() => {
+      document.querySelector('html')?.classList.toggle('dark-mode-enabled', this.isDarkModeEnabled());
+    });
+  }
 
   ngOnInit(): void {
     // Initialize on first load (Refresh)
@@ -108,5 +128,9 @@ export class MainLayoutComponent implements OnInit {
 
   login() {
     this.keycloakService.login();
+  }
+
+  toggleDarkMode() {
+    this.isDarkModeEnabled.set(!this.isDarkModeEnabled());
   }
 }

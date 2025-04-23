@@ -1,8 +1,6 @@
 import { Component, computed, effect, inject, input, numberAttribute, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { injectMutation, injectQuery, QueryClient } from '@tanstack/angular-query-experimental';
-
-import { IconsModule } from 'icons.module';
 import { ConfirmationService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
@@ -14,7 +12,7 @@ import { TableModule } from 'primeng/table';
 
 import { LockingThresholdsComponent } from '@app/components/locking-thresholds/locking-thresholds.component';
 import { PageHeadingComponent } from '@app/components/page-heading/page-heading.component';
-import { WorkflowDto, WorkflowGroupDto, WorkflowMembershipDto } from '@app/core/modules/openapi';
+import { TestTypeDto, WorkflowDto, WorkflowGroupDto, WorkflowMembershipDto } from '@app/core/modules/openapi';
 import {
   createWorkflowGroupMutation,
   deleteWorkflowGroupMutation,
@@ -25,6 +23,11 @@ import {
   updateWorkflowLabelMutation,
   updateWorkflowGroupsMutation,
   syncWorkflowsByRepositoryIdMutation,
+  updateTestTypeMutation,
+  createTestTypeMutation,
+  deleteTestTypeMutation,
+  getAllTestTypesQueryKey,
+  getAllTestTypesOptions,
 } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { WorkflowDtoSchema } from '@app/core/modules/openapi/schemas.gen';
 import { MessageService } from 'primeng/api';
@@ -32,6 +35,9 @@ import { SelectModule } from 'primeng/select';
 import { TooltipModule } from 'primeng/tooltip';
 import { TagModule } from 'primeng/tag';
 import { MessageModule } from 'primeng/message';
+import { ButtonGroupModule } from 'primeng/buttongroup';
+import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
+import { IconCircleCheck, IconPencil, IconPlus, IconTrash } from 'angular-tabler-icons/icons';
 
 @Component({
   selector: 'app-project-settings',
@@ -39,6 +45,8 @@ import { MessageModule } from 'primeng/message';
     FormsModule,
     TableModule,
     ButtonModule,
+    ButtonGroupModule,
+    InputTextModule,
     PageHeadingComponent,
     LockingThresholdsComponent,
     PanelModule,
@@ -46,11 +54,19 @@ import { MessageModule } from 'primeng/message';
     TooltipModule,
     SelectModule,
     InputTextModule,
-    IconsModule,
+    TablerIconComponent,
     DragDropModule,
     DividerModule,
     TagModule,
     MessageModule,
+  ],
+  providers: [
+    provideTablerIcons({
+      IconCircleCheck,
+      IconPlus,
+      IconPencil,
+      IconTrash,
+    }),
   ],
   templateUrl: './project-settings.component.html',
 })
@@ -238,11 +254,10 @@ export class ProjectSettingsComponent {
           <p class="text-base font-medium mb-4">
             Are you sure you want to change the workflow label to <strong>${label}</strong>?
           </p>
-          <div class="flex items-start gap-2 p-3 bg-yellow-50 border border-yellow-300 rounded-md">
-            <i class="pi pi-exclamation-triangle text-yellow-500 text-xl"></i>
+          <div class="flex items-start gap-2 p-3 bg-orange-50 dark:bg-orange-300 border border-orange-500 text-orange-500 rounded-md">
             <div>
               <p class="font-semibold">Note:</p>
-              <ul class="list-disc list-inside text-sm text-gray-600">
+              <ul class="list-disc list-inside text-sm">
                 <li><strong>TEST</strong>: This label sets the workflow to be searched for test artifacts.</li>
                 <li><strong>NONE</strong>: No label is set for this workflow.</li>
               </ul>
@@ -387,5 +402,103 @@ export class ProjectSettingsComponent {
     // Reset drag state
     this.dragIndex = null;
     this.updateGroups();
+  }
+
+  showAddTestTypeDialog = false;
+  editingTestType: TestTypeDto | null = null;
+  testTypeForm: Partial<TestTypeDto> = {
+    name: '',
+    artifactName: '',
+    workflowId: undefined,
+  };
+
+  testTypesQuery = injectQuery(() => ({
+    ...getAllTestTypesOptions(),
+    enabled: () => !!this.repositoryId(),
+  }));
+
+  testTypes = computed(() => this.testTypesQuery.data() || []);
+
+  createTestTypeMutation = injectMutation(() => ({
+    ...createTestTypeMutation(),
+    onSuccess: () => {
+      this.queryClient.invalidateQueries({ queryKey: getAllTestTypesQueryKey() });
+      this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Test type created successfully' });
+      this.resetTestTypeDialog();
+    },
+  }));
+
+  updateTestTypeMutation = injectMutation(() => ({
+    ...updateTestTypeMutation(),
+    onSuccess: () => {
+      this.queryClient.invalidateQueries({ queryKey: getAllTestTypesQueryKey() });
+      this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Test type updated successfully' });
+      this.resetTestTypeDialog();
+    },
+  }));
+
+  deleteTestTypeMutation = injectMutation(() => ({
+    ...deleteTestTypeMutation(),
+    onSuccess: () => {
+      this.queryClient.invalidateQueries({ queryKey: getAllTestTypesQueryKey() });
+      this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Test type deleted successfully' });
+    },
+  }));
+
+  editTestType(testType: TestTypeDto) {
+    this.editingTestType = testType;
+    this.testTypeForm = { ...testType };
+    this.showAddTestTypeDialog = true;
+  }
+
+  resetTestTypeDialog() {
+    this.showAddTestTypeDialog = false;
+    this.editingTestType = null;
+    this.testTypeForm = {
+      name: '',
+      artifactName: '',
+      workflowId: undefined,
+    };
+  }
+
+  saveTestType() {
+    if (!this.testTypeForm.name || !this.testTypeForm.artifactName || !this.testTypeForm.workflowId) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Validation Error',
+        detail: 'Please fill in all required fields',
+      });
+      return;
+    }
+
+    if (this.editingTestType) {
+      this.updateTestTypeMutation.mutate({
+        path: { testTypeId: this.editingTestType.id! },
+        body: this.testTypeForm as TestTypeDto,
+      });
+    } else {
+      this.createTestTypeMutation.mutate({
+        body: this.testTypeForm as TestTypeDto,
+      });
+    }
+  }
+
+  updateTestType(testType: TestTypeDto) {
+    this.updateTestTypeMutation.mutate({
+      path: { testTypeId: testType.id! },
+      body: testType,
+    });
+  }
+
+  confirmDeleteTestType(testType: TestTypeDto) {
+    this.confirmationService.confirm({
+      header: 'Delete Test Type',
+      message: `Are you sure you want to delete the test type "${testType.name}"?`,
+      accept: () => {
+        this.deleteTestTypeMutation.mutate({
+          path: { testTypeId: testType.id! },
+        });
+      },
+    });
   }
 }

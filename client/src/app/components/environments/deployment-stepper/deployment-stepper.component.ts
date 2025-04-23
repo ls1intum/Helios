@@ -1,10 +1,12 @@
-import { Component, inject, Input, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { IconsModule } from 'icons.module';
 import { ProgressBarModule } from 'primeng/progressbar';
 import { EnvironmentDeployment } from '@app/core/modules/openapi';
 import { TooltipModule } from 'primeng/tooltip';
 import { DeploymentTimingService } from '@app/core/services/deployment-timing.service';
+import { TagModule } from 'primeng/tag';
+import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
+import { IconCheck, IconClock, IconProgress, IconX } from 'angular-tabler-icons/icons';
 
 interface EstimatedTimes {
   REQUESTED: number;
@@ -14,26 +16,32 @@ interface EstimatedTimes {
 
 @Component({
   selector: 'app-deployment-stepper',
-  imports: [CommonModule, IconsModule, ProgressBarModule, TooltipModule],
+  imports: [CommonModule, TablerIconComponent, TagModule, ProgressBarModule, TooltipModule],
+  providers: [
+    provideTablerIcons({
+      IconClock,
+      IconCheck,
+      IconProgress,
+      IconX,
+    }),
+  ],
   templateUrl: './deployment-stepper.component.html',
 })
 export class DeploymentStepperComponent implements OnInit {
   private _deployment = signal<EnvironmentDeployment | undefined>(undefined);
   private timingService = inject(DeploymentTimingService);
 
-  @Input()
-  set deployment(value: EnvironmentDeployment | undefined) {
-    // Update the deployment signal
-    this._deployment.set(value);
+  readonly deployment = input<EnvironmentDeployment | undefined, EnvironmentDeployment | undefined>(undefined, {
+    transform: (value: EnvironmentDeployment | undefined) => {
+      this._deployment.set(value);
 
-    // Update timing service with new deployment state
-    if (value?.id && value?.state) {
-      this.timingService.updateDeploymentState(value);
-    }
-  }
-  get deployment(): EnvironmentDeployment | undefined {
-    return this._deployment();
-  }
+      if (value?.id && value?.state) {
+        this.timingService.updateDeploymentState(value);
+      }
+
+      return value;
+    },
+  });
 
   steps = this.timingService.steps;
 
@@ -78,6 +86,23 @@ export class DeploymentStepperComponent implements OnInit {
     if (!deployment) return 'unknown';
     return this.timingService.getStepStatus(deployment, index);
   });
+
+  getSeverityFromStepStatus = (index: number) => {
+    switch (this.getStepStatus(index)) {
+      case 'completed':
+        return 'success';
+      case 'active':
+        return 'info';
+      case 'error':
+        return 'danger';
+      case 'upcoming':
+      case 'unknown':
+      case 'inactive':
+        return 'secondary';
+      default:
+        return 'secondary';
+    }
+  };
 
   getProgress = this.timingService.createTimeAwareFunction((index: number): number => {
     const deployment = this._deployment();

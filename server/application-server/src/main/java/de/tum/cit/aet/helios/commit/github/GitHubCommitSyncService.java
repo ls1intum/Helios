@@ -1,5 +1,6 @@
 package de.tum.cit.aet.helios.commit.github;
 
+import de.tum.cit.aet.helios.commit.Commit;
 import de.tum.cit.aet.helios.commit.CommitRepository;
 import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
 import de.tum.cit.aet.helios.user.UserRepository;
@@ -28,11 +29,11 @@ public class GitHubCommitSyncService {
    * Processes a single GitHub commit by updating or creating it in the local repository. Manages
    * associations with repositories.
    *
-   * @param ghCommit     the GitHub commit to process
+   * @param ghCommit the GitHub commit to process
    * @param ghRepository the GitHub repository to which the commit belongs
    */
   @Transactional
-  public void processCommit(GHCommit ghCommit, GHRepository ghRepository) {
+  public Commit processCommit(GHCommit ghCommit, GHRepository ghRepository) {
     // Link with existing repository if not already linked
     var repository = gitRepoRepository.findByNameWithOwner(ghRepository.getFullName());
     var result =
@@ -51,7 +52,7 @@ public class GitHubCommitSyncService {
             .orElseGet(() -> commitConverter.convert(ghCommit));
 
     if (result == null) {
-      return;
+      return null;
     }
 
     if (repository != null) {
@@ -79,6 +80,6 @@ public class GitHubCommitSyncService {
       log.error("Failed to link author for commit {}: {}", ghCommit.getSHA1(), e.getMessage());
     }
 
-    commitRepository.save(result);
+    return commitRepository.save(result);
   }
 }

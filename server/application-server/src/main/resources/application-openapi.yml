@@ -34,6 +34,9 @@ github:
     clientId: ""
     installationId: ""
     privateKeyPath: ""
+    # GitHub Token exchange credentials
+    tokenExchangeClientId: ""
+    tokenExchangeClientSecret: ""
 
 http:
     cache:

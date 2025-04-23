@@ -3,20 +3,28 @@
 import {
   type Options,
   updateWorkflowLabel,
+  deleteTestType,
+  updateTestType,
   getGitRepoSettings,
   updateGitRepoSettings,
   updateWorkflowGroups,
+  updateReleaseNotes,
   getEnvironmentById,
   updateEnvironment,
   unlockEnvironment,
   lockEnvironment,
   extendEnvironmentLock,
   syncWorkflowsByRepositoryId,
+  getAllTestTypes,
+  createTestType,
   createWorkflowGroup,
-  getAllReleaseCandidates,
+  getAllReleaseInfos,
   createReleaseCandidate,
+  generateReleaseNotes,
+  publishReleaseDraft,
   evaluate,
   setPrPinnedByNumber,
+  syncEnvironments,
   deployToEnvironment,
   setBranchPinnedByRepositoryIdAndNameAndUserId,
   healthCheck,
@@ -28,21 +36,19 @@ import {
   getLatestWorkflowRunsByBranchAndHeadCommit,
   getUserPermissions,
   getLatestTestResultsByPullRequestId,
-  getLatestGroupedTestResultsByPullRequestId,
-  getLatestGroupedTestResultsByBranch,
   getLatestTestResultsByBranch,
   getGroupsWithWorkflows,
   getAllRepositories,
   getRepositoryById,
   deleteReleaseCandidateByName,
-  getReleaseCandidateByName,
+  getReleaseInfoByName,
   getCommitsSinceLastReleaseCandidate,
   getAllPullRequests,
   getPullRequestById,
   getPullRequestByRepositoryIdAndNumber,
   getPullRequestByRepositoryId,
-  getPaginatedPullRequests,
   getAllEnvironments,
+  getEnvironmentReviewers,
   getEnvironmentsByUserLocking,
   getEnvironmentsByRepositoryId,
   getLockHistoryByEnvironmentId,
@@ -57,33 +63,67 @@ import {
   getBranchByRepositoryIdAndName,
   deleteWorkflowGroup,
 } from '../sdk.gen';
-import { type MutationOptions, type DefaultError, queryOptions, infiniteQueryOptions, type InfiniteData } from '@tanstack/angular-query-experimental';
+import { type MutationOptions, queryOptions, infiniteQueryOptions, type InfiniteData } from '@tanstack/angular-query-experimental';
 import type {
   UpdateWorkflowLabelData,
+  UpdateWorkflowLabelError,
+  DeleteTestTypeData,
+  DeleteTestTypeError,
+  DeleteTestTypeResponse,
+  UpdateTestTypeData,
+  UpdateTestTypeError,
+  UpdateTestTypeResponse,
   GetGitRepoSettingsData,
   UpdateGitRepoSettingsData,
+  UpdateGitRepoSettingsError,
   UpdateGitRepoSettingsResponse,
   UpdateWorkflowGroupsData,
+  UpdateWorkflowGroupsError,
+  UpdateReleaseNotesData,
+  UpdateReleaseNotesError,
   GetEnvironmentByIdData,
   UpdateEnvironmentData,
+  UpdateEnvironmentError,
   UpdateEnvironmentResponse,
   UnlockEnvironmentData,
+  UnlockEnvironmentError,
   UnlockEnvironmentResponse,
   LockEnvironmentData,
+  LockEnvironmentError,
   LockEnvironmentResponse,
   ExtendEnvironmentLockData,
+  ExtendEnvironmentLockError,
   ExtendEnvironmentLockResponse,
   SyncWorkflowsByRepositoryIdData,
+  SyncWorkflowsByRepositoryIdError,
+  GetAllTestTypesData,
+  CreateTestTypeData,
+  CreateTestTypeError,
+  CreateTestTypeResponse,
   CreateWorkflowGroupData,
+  CreateWorkflowGroupError,
   CreateWorkflowGroupResponse,
-  GetAllReleaseCandidatesData,
+  GetAllReleaseInfosData,
   CreateReleaseCandidateData,
+  CreateReleaseCandidateError,
   CreateReleaseCandidateResponse,
+  GenerateReleaseNotesData,
+  GenerateReleaseNotesError,
+  GenerateReleaseNotesResponse,
+  PublishReleaseDraftData,
+  PublishReleaseDraftError,
   EvaluateData,
+  EvaluateError,
   SetPrPinnedByNumberData,
+  SetPrPinnedByNumberError,
+  SyncEnvironmentsData,
+  SyncEnvironmentsError,
+  SyncEnvironmentsResponse,
   DeployToEnvironmentData,
+  DeployToEnvironmentError,
   DeployToEnvironmentResponse,
   SetBranchPinnedByRepositoryIdAndNameAndUserIdData,
+  SetBranchPinnedByRepositoryIdAndNameAndUserIdError,
   HealthCheckData,
   GetAllWorkflowsData,
   GetWorkflowByIdData,
@@ -93,23 +133,25 @@ import type {
   GetLatestWorkflowRunsByBranchAndHeadCommitData,
   GetUserPermissionsData,
   GetLatestTestResultsByPullRequestIdData,
-  GetLatestGroupedTestResultsByPullRequestIdData,
-  GetLatestGroupedTestResultsByBranchData,
+  GetLatestTestResultsByPullRequestIdError,
+  GetLatestTestResultsByPullRequestIdResponse,
   GetLatestTestResultsByBranchData,
+  GetLatestTestResultsByBranchError,
+  GetLatestTestResultsByBranchResponse,
   GetGroupsWithWorkflowsData,
   GetAllRepositoriesData,
   GetRepositoryByIdData,
   DeleteReleaseCandidateByNameData,
+  DeleteReleaseCandidateByNameError,
   DeleteReleaseCandidateByNameResponse,
-  GetReleaseCandidateByNameData,
+  GetReleaseInfoByNameData,
   GetCommitsSinceLastReleaseCandidateData,
   GetAllPullRequestsData,
   GetPullRequestByIdData,
   GetPullRequestByRepositoryIdAndNumberData,
   GetPullRequestByRepositoryIdData,
-  GetPaginatedPullRequestsData,
-  GetPaginatedPullRequestsResponse,
   GetAllEnvironmentsData,
+  GetEnvironmentReviewersData,
   GetEnvironmentsByUserLockingData,
   GetEnvironmentsByRepositoryIdData,
   GetLockHistoryByEnvironmentIdData,
@@ -123,13 +165,42 @@ import type {
   GetAllBranchesData,
   GetBranchByRepositoryIdAndNameData,
   DeleteWorkflowGroupData,
+  DeleteWorkflowGroupError,
 } from '../types.gen';
 import { client as _heyApiClient } from '../client.gen';
 
 export const updateWorkflowLabelMutation = (options?: Partial<Options<UpdateWorkflowLabelData>>) => {
-  const mutationOptions: MutationOptions<unknown, DefaultError, Options<UpdateWorkflowLabelData>> = {
+  const mutationOptions: MutationOptions<unknown, UpdateWorkflowLabelError, Options<UpdateWorkflowLabelData>> = {
     mutationFn: async localOptions => {
       const { data } = await updateWorkflowLabel({
+        ...options,
+        ...localOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const deleteTestTypeMutation = (options?: Partial<Options<DeleteTestTypeData>>) => {
+  const mutationOptions: MutationOptions<DeleteTestTypeResponse, DeleteTestTypeError, Options<DeleteTestTypeData>> = {
+    mutationFn: async localOptions => {
+      const { data } = await deleteTestType({
+        ...options,
+        ...localOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const updateTestTypeMutation = (options?: Partial<Options<UpdateTestTypeData>>) => {
+  const mutationOptions: MutationOptions<UpdateTestTypeResponse, UpdateTestTypeError, Options<UpdateTestTypeData>> = {
+    mutationFn: async localOptions => {
+      const { data } = await updateTestType({
         ...options,
         ...localOptions,
         throwOnError: true,
@@ -185,7 +256,7 @@ export const getGitRepoSettingsOptions = (options: Options<GetGitRepoSettingsDat
 };
 
 export const updateGitRepoSettingsMutation = (options?: Partial<Options<UpdateGitRepoSettingsData>>) => {
-  const mutationOptions: MutationOptions<UpdateGitRepoSettingsResponse, DefaultError, Options<UpdateGitRepoSettingsData>> = {
+  const mutationOptions: MutationOptions<UpdateGitRepoSettingsResponse, UpdateGitRepoSettingsError, Options<UpdateGitRepoSettingsData>> = {
     mutationFn: async localOptions => {
       const { data } = await updateGitRepoSettings({
         ...options,
@@ -199,9 +270,23 @@ export const updateGitRepoSettingsMutation = (options?: Partial<Options<UpdateGi
 };
 
 export const updateWorkflowGroupsMutation = (options?: Partial<Options<UpdateWorkflowGroupsData>>) => {
-  const mutationOptions: MutationOptions<unknown, DefaultError, Options<UpdateWorkflowGroupsData>> = {
+  const mutationOptions: MutationOptions<unknown, UpdateWorkflowGroupsError, Options<UpdateWorkflowGroupsData>> = {
     mutationFn: async localOptions => {
       const { data } = await updateWorkflowGroups({
+        ...options,
+        ...localOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const updateReleaseNotesMutation = (options?: Partial<Options<UpdateReleaseNotesData>>) => {
+  const mutationOptions: MutationOptions<unknown, UpdateReleaseNotesError, Options<UpdateReleaseNotesData>> = {
+    mutationFn: async localOptions => {
+      const { data } = await updateReleaseNotes({
         ...options,
         ...localOptions,
         throwOnError: true,
@@ -230,7 +315,7 @@ export const getEnvironmentByIdOptions = (options: Options<GetEnvironmentByIdDat
 };
 
 export const updateEnvironmentMutation = (options?: Partial<Options<UpdateEnvironmentData>>) => {
-  const mutationOptions: MutationOptions<UpdateEnvironmentResponse, DefaultError, Options<UpdateEnvironmentData>> = {
+  const mutationOptions: MutationOptions<UpdateEnvironmentResponse, UpdateEnvironmentError, Options<UpdateEnvironmentData>> = {
     mutationFn: async localOptions => {
       const { data } = await updateEnvironment({
         ...options,
@@ -244,7 +329,7 @@ export const updateEnvironmentMutation = (options?: Partial<Options<UpdateEnviro
 };
 
 export const unlockEnvironmentMutation = (options?: Partial<Options<UnlockEnvironmentData>>) => {
-  const mutationOptions: MutationOptions<UnlockEnvironmentResponse, DefaultError, Options<UnlockEnvironmentData>> = {
+  const mutationOptions: MutationOptions<UnlockEnvironmentResponse, UnlockEnvironmentError, Options<UnlockEnvironmentData>> = {
     mutationFn: async localOptions => {
       const { data } = await unlockEnvironment({
         ...options,
@@ -258,7 +343,7 @@ export const unlockEnvironmentMutation = (options?: Partial<Options<UnlockEnviro
 };
 
 export const lockEnvironmentMutation = (options?: Partial<Options<LockEnvironmentData>>) => {
-  const mutationOptions: MutationOptions<LockEnvironmentResponse, DefaultError, Options<LockEnvironmentData>> = {
+  const mutationOptions: MutationOptions<LockEnvironmentResponse, LockEnvironmentError, Options<LockEnvironmentData>> = {
     mutationFn: async localOptions => {
       const { data } = await lockEnvironment({
         ...options,
@@ -272,7 +357,7 @@ export const lockEnvironmentMutation = (options?: Partial<Options<LockEnvironmen
 };
 
 export const extendEnvironmentLockMutation = (options?: Partial<Options<ExtendEnvironmentLockData>>) => {
-  const mutationOptions: MutationOptions<ExtendEnvironmentLockResponse, DefaultError, Options<ExtendEnvironmentLockData>> = {
+  const mutationOptions: MutationOptions<ExtendEnvironmentLockResponse, ExtendEnvironmentLockError, Options<ExtendEnvironmentLockData>> = {
     mutationFn: async localOptions => {
       const { data } = await extendEnvironmentLock({
         ...options,
@@ -303,9 +388,57 @@ export const syncWorkflowsByRepositoryIdOptions = (options: Options<SyncWorkflow
 };
 
 export const syncWorkflowsByRepositoryIdMutation = (options?: Partial<Options<SyncWorkflowsByRepositoryIdData>>) => {
-  const mutationOptions: MutationOptions<unknown, DefaultError, Options<SyncWorkflowsByRepositoryIdData>> = {
+  const mutationOptions: MutationOptions<unknown, SyncWorkflowsByRepositoryIdError, Options<SyncWorkflowsByRepositoryIdData>> = {
     mutationFn: async localOptions => {
       const { data } = await syncWorkflowsByRepositoryId({
+        ...options,
+        ...localOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const getAllTestTypesQueryKey = (options?: Options<GetAllTestTypesData>) => createQueryKey('getAllTestTypes', options);
+
+export const getAllTestTypesOptions = (options?: Options<GetAllTestTypesData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getAllTestTypes({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: getAllTestTypesQueryKey(options),
+  });
+};
+
+export const createTestTypeQueryKey = (options: Options<CreateTestTypeData>) => createQueryKey('createTestType', options);
+
+export const createTestTypeOptions = (options: Options<CreateTestTypeData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await createTestType({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: createTestTypeQueryKey(options),
+  });
+};
+
+export const createTestTypeMutation = (options?: Partial<Options<CreateTestTypeData>>) => {
+  const mutationOptions: MutationOptions<CreateTestTypeResponse, CreateTestTypeError, Options<CreateTestTypeData>> = {
+    mutationFn: async localOptions => {
+      const { data } = await createTestType({
         ...options,
         ...localOptions,
         throwOnError: true,
@@ -334,7 +467,7 @@ export const createWorkflowGroupOptions = (options: Options<CreateWorkflowGroupD
 };
 
 export const createWorkflowGroupMutation = (options?: Partial<Options<CreateWorkflowGroupData>>) => {
-  const mutationOptions: MutationOptions<CreateWorkflowGroupResponse, DefaultError, Options<CreateWorkflowGroupData>> = {
+  const mutationOptions: MutationOptions<CreateWorkflowGroupResponse, CreateWorkflowGroupError, Options<CreateWorkflowGroupData>> = {
     mutationFn: async localOptions => {
       const { data } = await createWorkflowGroup({
         ...options,
@@ -347,12 +480,12 @@ export const createWorkflowGroupMutation = (options?: Partial<Options<CreateWork
   return mutationOptions;
 };
 
-export const getAllReleaseCandidatesQueryKey = (options?: Options<GetAllReleaseCandidatesData>) => createQueryKey('getAllReleaseCandidates', options);
+export const getAllReleaseInfosQueryKey = (options?: Options<GetAllReleaseInfosData>) => createQueryKey('getAllReleaseInfos', options);
 
-export const getAllReleaseCandidatesOptions = (options?: Options<GetAllReleaseCandidatesData>) => {
+export const getAllReleaseInfosOptions = (options?: Options<GetAllReleaseInfosData>) => {
   return queryOptions({
     queryFn: async ({ queryKey, signal }) => {
-      const { data } = await getAllReleaseCandidates({
+      const { data } = await getAllReleaseInfos({
         ...options,
         ...queryKey[0],
         signal,
@@ -360,7 +493,7 @@ export const getAllReleaseCandidatesOptions = (options?: Options<GetAllReleaseCa
       });
       return data;
     },
-    queryKey: getAllReleaseCandidatesQueryKey(options),
+    queryKey: getAllReleaseInfosQueryKey(options),
   });
 };
 
@@ -382,9 +515,71 @@ export const createReleaseCandidateOptions = (options: Options<CreateReleaseCand
 };
 
 export const createReleaseCandidateMutation = (options?: Partial<Options<CreateReleaseCandidateData>>) => {
-  const mutationOptions: MutationOptions<CreateReleaseCandidateResponse, DefaultError, Options<CreateReleaseCandidateData>> = {
+  const mutationOptions: MutationOptions<CreateReleaseCandidateResponse, CreateReleaseCandidateError, Options<CreateReleaseCandidateData>> = {
     mutationFn: async localOptions => {
       const { data } = await createReleaseCandidate({
+        ...options,
+        ...localOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const generateReleaseNotesQueryKey = (options: Options<GenerateReleaseNotesData>) => createQueryKey('generateReleaseNotes', options);
+
+export const generateReleaseNotesOptions = (options: Options<GenerateReleaseNotesData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await generateReleaseNotes({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: generateReleaseNotesQueryKey(options),
+  });
+};
+
+export const generateReleaseNotesMutation = (options?: Partial<Options<GenerateReleaseNotesData>>) => {
+  const mutationOptions: MutationOptions<GenerateReleaseNotesResponse, GenerateReleaseNotesError, Options<GenerateReleaseNotesData>> = {
+    mutationFn: async localOptions => {
+      const { data } = await generateReleaseNotes({
+        ...options,
+        ...localOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const publishReleaseDraftQueryKey = (options: Options<PublishReleaseDraftData>) => createQueryKey('publishReleaseDraft', options);
+
+export const publishReleaseDraftOptions = (options: Options<PublishReleaseDraftData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await publishReleaseDraft({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: publishReleaseDraftQueryKey(options),
+  });
+};
+
+export const publishReleaseDraftMutation = (options?: Partial<Options<PublishReleaseDraftData>>) => {
+  const mutationOptions: MutationOptions<unknown, PublishReleaseDraftError, Options<PublishReleaseDraftData>> = {
+    mutationFn: async localOptions => {
+      const { data } = await publishReleaseDraft({
         ...options,
         ...localOptions,
         throwOnError: true,
@@ -413,7 +608,7 @@ export const evaluateOptions = (options: Options<EvaluateData>) => {
 };
 
 export const evaluateMutation = (options?: Partial<Options<EvaluateData>>) => {
-  const mutationOptions: MutationOptions<unknown, DefaultError, Options<EvaluateData>> = {
+  const mutationOptions: MutationOptions<unknown, EvaluateError, Options<EvaluateData>> = {
     mutationFn: async localOptions => {
       const { data } = await evaluate({
         ...options,
@@ -444,9 +639,40 @@ export const setPrPinnedByNumberOptions = (options: Options<SetPrPinnedByNumberD
 };
 
 export const setPrPinnedByNumberMutation = (options?: Partial<Options<SetPrPinnedByNumberData>>) => {
-  const mutationOptions: MutationOptions<unknown, DefaultError, Options<SetPrPinnedByNumberData>> = {
+  const mutationOptions: MutationOptions<unknown, SetPrPinnedByNumberError, Options<SetPrPinnedByNumberData>> = {
     mutationFn: async localOptions => {
       const { data } = await setPrPinnedByNumber({
+        ...options,
+        ...localOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const syncEnvironmentsQueryKey = (options?: Options<SyncEnvironmentsData>) => createQueryKey('syncEnvironments', options);
+
+export const syncEnvironmentsOptions = (options?: Options<SyncEnvironmentsData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await syncEnvironments({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: syncEnvironmentsQueryKey(options),
+  });
+};
+
+export const syncEnvironmentsMutation = (options?: Partial<Options<SyncEnvironmentsData>>) => {
+  const mutationOptions: MutationOptions<SyncEnvironmentsResponse, SyncEnvironmentsError, Options<SyncEnvironmentsData>> = {
+    mutationFn: async localOptions => {
+      const { data } = await syncEnvironments({
         ...options,
         ...localOptions,
         throwOnError: true,
@@ -475,7 +701,7 @@ export const deployToEnvironmentOptions = (options: Options<DeployToEnvironmentD
 };
 
 export const deployToEnvironmentMutation = (options?: Partial<Options<DeployToEnvironmentData>>) => {
-  const mutationOptions: MutationOptions<DeployToEnvironmentResponse, DefaultError, Options<DeployToEnvironmentData>> = {
+  const mutationOptions: MutationOptions<DeployToEnvironmentResponse, DeployToEnvironmentError, Options<DeployToEnvironmentData>> = {
     mutationFn: async localOptions => {
       const { data } = await deployToEnvironment({
         ...options,
@@ -507,7 +733,7 @@ export const setBranchPinnedByRepositoryIdAndNameAndUserIdOptions = (options: Op
 };
 
 export const setBranchPinnedByRepositoryIdAndNameAndUserIdMutation = (options?: Partial<Options<SetBranchPinnedByRepositoryIdAndNameAndUserIdData>>) => {
-  const mutationOptions: MutationOptions<unknown, DefaultError, Options<SetBranchPinnedByRepositoryIdAndNameAndUserIdData>> = {
+  const mutationOptions: MutationOptions<unknown, SetBranchPinnedByRepositoryIdAndNameAndUserIdError, Options<SetBranchPinnedByRepositoryIdAndNameAndUserIdData>> = {
     mutationFn: async localOptions => {
       const { data } = await setBranchPinnedByRepositoryIdAndNameAndUserId({
         ...options,
@@ -676,40 +902,71 @@ export const getLatestTestResultsByPullRequestIdOptions = (options: Options<GetL
   });
 };
 
-export const getLatestGroupedTestResultsByPullRequestIdQueryKey = (options: Options<GetLatestGroupedTestResultsByPullRequestIdData>) =>
-  createQueryKey('getLatestGroupedTestResultsByPullRequestId', options);
-
-export const getLatestGroupedTestResultsByPullRequestIdOptions = (options: Options<GetLatestGroupedTestResultsByPullRequestIdData>) => {
-  return queryOptions({
-    queryFn: async ({ queryKey, signal }) => {
-      const { data } = await getLatestGroupedTestResultsByPullRequestId({
-        ...options,
-        ...queryKey[0],
-        signal,
-        throwOnError: true,
-      });
-      return data;
-    },
-    queryKey: getLatestGroupedTestResultsByPullRequestIdQueryKey(options),
-  });
+const createInfiniteParams = <K extends Pick<QueryKey<Options>[0], 'body' | 'headers' | 'path' | 'query'>>(queryKey: QueryKey<Options>, page: K) => {
+  const params = queryKey[0];
+  if (page.body) {
+    params.body = {
+      ...(queryKey[0].body as any),
+      ...(page.body as any),
+    };
+  }
+  if (page.headers) {
+    params.headers = {
+      ...queryKey[0].headers,
+      ...page.headers,
+    };
+  }
+  if (page.path) {
+    params.path = {
+      ...(queryKey[0].path as any),
+      ...(page.path as any),
+    };
+  }
+  if (page.query) {
+    params.query = {
+      ...(queryKey[0].query as any),
+      ...(page.query as any),
+    };
+  }
+  return params as unknown as typeof page;
 };
 
-export const getLatestGroupedTestResultsByBranchQueryKey = (options: Options<GetLatestGroupedTestResultsByBranchData>) =>
-  createQueryKey('getLatestGroupedTestResultsByBranch', options);
+export const getLatestTestResultsByPullRequestIdInfiniteQueryKey = (
+  options: Options<GetLatestTestResultsByPullRequestIdData>
+): QueryKey<Options<GetLatestTestResultsByPullRequestIdData>> => createQueryKey('getLatestTestResultsByPullRequestId', options, true);
 
-export const getLatestGroupedTestResultsByBranchOptions = (options: Options<GetLatestGroupedTestResultsByBranchData>) => {
-  return queryOptions({
-    queryFn: async ({ queryKey, signal }) => {
-      const { data } = await getLatestGroupedTestResultsByBranch({
-        ...options,
-        ...queryKey[0],
-        signal,
-        throwOnError: true,
-      });
-      return data;
-    },
-    queryKey: getLatestGroupedTestResultsByBranchQueryKey(options),
-  });
+export const getLatestTestResultsByPullRequestIdInfiniteOptions = (options: Options<GetLatestTestResultsByPullRequestIdData>) => {
+  return infiniteQueryOptions<
+    GetLatestTestResultsByPullRequestIdResponse,
+    GetLatestTestResultsByPullRequestIdError,
+    InfiniteData<GetLatestTestResultsByPullRequestIdResponse>,
+    QueryKey<Options<GetLatestTestResultsByPullRequestIdData>>,
+    number | Pick<QueryKey<Options<GetLatestTestResultsByPullRequestIdData>>[0], 'body' | 'headers' | 'path' | 'query'>
+  >(
+    // @ts-ignore
+    {
+      queryFn: async ({ pageParam, queryKey, signal }) => {
+        // @ts-ignore
+        const page: Pick<QueryKey<Options<GetLatestTestResultsByPullRequestIdData>>[0], 'body' | 'headers' | 'path' | 'query'> =
+          typeof pageParam === 'object'
+            ? pageParam
+            : {
+                query: {
+                  page: pageParam,
+                },
+              };
+        const params = createInfiniteParams(queryKey, page);
+        const { data } = await getLatestTestResultsByPullRequestId({
+          ...options,
+          ...params,
+          signal,
+          throwOnError: true,
+        });
+        return data;
+      },
+      queryKey: getLatestTestResultsByPullRequestIdInfiniteQueryKey(options),
+    }
+  );
 };
 
 export const getLatestTestResultsByBranchQueryKey = (options: Options<GetLatestTestResultsByBranchData>) => createQueryKey('getLatestTestResultsByBranch', options);
@@ -727,6 +984,43 @@ export const getLatestTestResultsByBranchOptions = (options: Options<GetLatestTe
     },
     queryKey: getLatestTestResultsByBranchQueryKey(options),
   });
+};
+
+export const getLatestTestResultsByBranchInfiniteQueryKey = (options: Options<GetLatestTestResultsByBranchData>): QueryKey<Options<GetLatestTestResultsByBranchData>> =>
+  createQueryKey('getLatestTestResultsByBranch', options, true);
+
+export const getLatestTestResultsByBranchInfiniteOptions = (options: Options<GetLatestTestResultsByBranchData>) => {
+  return infiniteQueryOptions<
+    GetLatestTestResultsByBranchResponse,
+    GetLatestTestResultsByBranchError,
+    InfiniteData<GetLatestTestResultsByBranchResponse>,
+    QueryKey<Options<GetLatestTestResultsByBranchData>>,
+    number | Pick<QueryKey<Options<GetLatestTestResultsByBranchData>>[0], 'body' | 'headers' | 'path' | 'query'>
+  >(
+    // @ts-ignore
+    {
+      queryFn: async ({ pageParam, queryKey, signal }) => {
+        // @ts-ignore
+        const page: Pick<QueryKey<Options<GetLatestTestResultsByBranchData>>[0], 'body' | 'headers' | 'path' | 'query'> =
+          typeof pageParam === 'object'
+            ? pageParam
+            : {
+                query: {
+                  page: pageParam,
+                },
+              };
+        const params = createInfiniteParams(queryKey, page);
+        const { data } = await getLatestTestResultsByBranch({
+          ...options,
+          ...params,
+          signal,
+          throwOnError: true,
+        });
+        return data;
+      },
+      queryKey: getLatestTestResultsByBranchInfiniteQueryKey(options),
+    }
+  );
 };
 
 export const getGroupsWithWorkflowsQueryKey = (options: Options<GetGroupsWithWorkflowsData>) => createQueryKey('getGroupsWithWorkflows', options);
@@ -781,7 +1075,7 @@ export const getRepositoryByIdOptions = (options: Options<GetRepositoryByIdData>
 };
 
 export const deleteReleaseCandidateByNameMutation = (options?: Partial<Options<DeleteReleaseCandidateByNameData>>) => {
-  const mutationOptions: MutationOptions<DeleteReleaseCandidateByNameResponse, DefaultError, Options<DeleteReleaseCandidateByNameData>> = {
+  const mutationOptions: MutationOptions<DeleteReleaseCandidateByNameResponse, DeleteReleaseCandidateByNameError, Options<DeleteReleaseCandidateByNameData>> = {
     mutationFn: async localOptions => {
       const { data } = await deleteReleaseCandidateByName({
         ...options,
@@ -794,12 +1088,12 @@ export const deleteReleaseCandidateByNameMutation = (options?: Partial<Options<D
   return mutationOptions;
 };
 
-export const getReleaseCandidateByNameQueryKey = (options: Options<GetReleaseCandidateByNameData>) => createQueryKey('getReleaseCandidateByName', options);
+export const getReleaseInfoByNameQueryKey = (options: Options<GetReleaseInfoByNameData>) => createQueryKey('getReleaseInfoByName', options);
 
-export const getReleaseCandidateByNameOptions = (options: Options<GetReleaseCandidateByNameData>) => {
+export const getReleaseInfoByNameOptions = (options: Options<GetReleaseInfoByNameData>) => {
   return queryOptions({
     queryFn: async ({ queryKey, signal }) => {
-      const { data } = await getReleaseCandidateByName({
+      const { data } = await getReleaseInfoByName({
         ...options,
         ...queryKey[0],
         signal,
@@ -807,7 +1101,7 @@ export const getReleaseCandidateByNameOptions = (options: Options<GetReleaseCand
       });
       return data;
     },
-    queryKey: getReleaseCandidateByNameQueryKey(options),
+    queryKey: getReleaseInfoByNameQueryKey(options),
   });
 };
 
@@ -898,89 +1192,6 @@ export const getPullRequestByRepositoryIdOptions = (options: Options<GetPullRequ
   });
 };
 
-export const getPaginatedPullRequestsQueryKey = (options?: Options<GetPaginatedPullRequestsData>) => createQueryKey('getPaginatedPullRequests', options);
-
-export const getPaginatedPullRequestsOptions = (options?: Options<GetPaginatedPullRequestsData>) => {
-  return queryOptions({
-    queryFn: async ({ queryKey, signal }) => {
-      const { data } = await getPaginatedPullRequests({
-        ...options,
-        ...queryKey[0],
-        signal,
-        throwOnError: true,
-      });
-      return data;
-    },
-    queryKey: getPaginatedPullRequestsQueryKey(options),
-  });
-};
-
-const createInfiniteParams = <K extends Pick<QueryKey<Options>[0], 'body' | 'headers' | 'path' | 'query'>>(queryKey: QueryKey<Options>, page: K) => {
-  const params = queryKey[0];
-  if (page.body) {
-    params.body = {
-      ...(queryKey[0].body as any),
-      ...(page.body as any),
-    };
-  }
-  if (page.headers) {
-    params.headers = {
-      ...queryKey[0].headers,
-      ...page.headers,
-    };
-  }
-  if (page.path) {
-    params.path = {
-      ...(queryKey[0].path as any),
-      ...(page.path as any),
-    };
-  }
-  if (page.query) {
-    params.query = {
-      ...(queryKey[0].query as any),
-      ...(page.query as any),
-    };
-  }
-  return params as unknown as typeof page;
-};
-
-export const getPaginatedPullRequestsInfiniteQueryKey = (options?: Options<GetPaginatedPullRequestsData>): QueryKey<Options<GetPaginatedPullRequestsData>> =>
-  createQueryKey('getPaginatedPullRequests', options, true);
-
-export const getPaginatedPullRequestsInfiniteOptions = (options?: Options<GetPaginatedPullRequestsData>) => {
-  return infiniteQueryOptions<
-    GetPaginatedPullRequestsResponse,
-    DefaultError,
-    InfiniteData<GetPaginatedPullRequestsResponse>,
-    QueryKey<Options<GetPaginatedPullRequestsData>>,
-    number | Pick<QueryKey<Options<GetPaginatedPullRequestsData>>[0], 'body' | 'headers' | 'path' | 'query'>
-  >(
-    // @ts-ignore
-    {
-      queryFn: async ({ pageParam, queryKey, signal }) => {
-        // @ts-ignore
-        const page: Pick<QueryKey<Options<GetPaginatedPullRequestsData>>[0], 'body' | 'headers' | 'path' | 'query'> =
-          typeof pageParam === 'object'
-            ? pageParam
-            : {
-                query: {
-                  page: pageParam,
-                },
-              };
-        const params = createInfiniteParams(queryKey, page);
-        const { data } = await getPaginatedPullRequests({
-          ...options,
-          ...params,
-          signal,
-          throwOnError: true,
-        });
-        return data;
-      },
-      queryKey: getPaginatedPullRequestsInfiniteQueryKey(options),
-    }
-  );
-};
-
 export const getAllEnvironmentsQueryKey = (options?: Options<GetAllEnvironmentsData>) => createQueryKey('getAllEnvironments', options);
 
 export const getAllEnvironmentsOptions = (options?: Options<GetAllEnvironmentsData>) => {
@@ -995,6 +1206,23 @@ export const getAllEnvironmentsOptions = (options?: Options<GetAllEnvironmentsDa
       return data;
     },
     queryKey: getAllEnvironmentsQueryKey(options),
+  });
+};
+
+export const getEnvironmentReviewersQueryKey = (options: Options<GetEnvironmentReviewersData>) => createQueryKey('getEnvironmentReviewers', options);
+
+export const getEnvironmentReviewersOptions = (options: Options<GetEnvironmentReviewersData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getEnvironmentReviewers({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: getEnvironmentReviewersQueryKey(options),
   });
 };
 
@@ -1204,7 +1432,7 @@ export const getBranchByRepositoryIdAndNameOptions = (options: Options<GetBranch
 };
 
 export const deleteWorkflowGroupMutation = (options?: Partial<Options<DeleteWorkflowGroupData>>) => {
-  const mutationOptions: MutationOptions<unknown, DefaultError, Options<DeleteWorkflowGroupData>> = {
+  const mutationOptions: MutationOptions<unknown, DeleteWorkflowGroupError, Options<DeleteWorkflowGroupData>> = {
     mutationFn: async localOptions => {
       const { data } = await deleteWorkflowGroup({
         ...options,

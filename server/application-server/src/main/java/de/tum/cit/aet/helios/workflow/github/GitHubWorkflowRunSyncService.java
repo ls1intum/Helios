@@ -8,6 +8,7 @@ import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
 import de.tum.cit.aet.helios.pullrequest.PullRequest;
 import de.tum.cit.aet.helios.pullrequest.PullRequestRepository;
 import de.tum.cit.aet.helios.util.DateUtil;
+import de.tum.cit.aet.helios.workflow.GitHubWorkflowContext;
 import de.tum.cit.aet.helios.workflow.Workflow;
 import de.tum.cit.aet.helios.workflow.WorkflowRepository;
 import de.tum.cit.aet.helios.workflow.WorkflowRun;
@@ -15,6 +16,7 @@ import de.tum.cit.aet.helios.workflow.WorkflowRunRepository;
 import de.tum.cit.aet.helios.workflow.WorkflowService;
 import jakarta.transaction.Transactional;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -37,6 +39,17 @@ public class GitHubWorkflowRunSyncService {
 
   @Transactional
   public WorkflowRun processRun(GHWorkflowRun ghWorkflowRun) {
+    return process(ghWorkflowRun, null);
+  }
+
+  @Transactional
+  public WorkflowRun processRunWithContext(
+      GHWorkflowRun ghWorkflowRun, GitHubWorkflowContext context) {
+    return process(ghWorkflowRun, context);
+  }
+
+  private WorkflowRun process(GHWorkflowRun ghWorkflowRun,
+                              GitHubWorkflowContext context) {
     var result =
         workflowRunRepository
             .findById(ghWorkflowRun.getId())
@@ -45,9 +58,9 @@ public class GitHubWorkflowRunSyncService {
                   try {
                     if (workflowRun.getUpdatedAt() == null
                         || workflowRun
-                            .getUpdatedAt()
-                            .isBefore(
-                                DateUtil.convertToOffsetDateTime(ghWorkflowRun.getUpdatedAt()))) {
+                        .getUpdatedAt()
+                        .isBefore(
+                            DateUtil.convertToOffsetDateTime(ghWorkflowRun.getUpdatedAt()))) {
                       return workflowRunConverter.update(ghWorkflowRun, workflowRun);
                     }
                     return workflowRun;
@@ -112,6 +125,28 @@ public class GitHubWorkflowRunSyncService {
           e.getMessage());
     }
 
+    // If we have a context, set triggeredWorkflowRunId, headBranch, headSha
+    // And find matching open PR if available.
+    if (context != null) {
+      log.info("Applying GitHubWorkflowContext: runId={}, branch={}, sha={}",
+          context.runId(), context.headBranch(), context.headSha());
+
+      result.setTriggeredWorkflowRunId(context.runId());
+      result.setHeadBranch(context.headBranch());
+      result.setHeadSha(context.headSha());
+
+      // Find a matching open PR
+      if (result.getRepository() != null) {
+        var repositoryId = result.getRepository().getRepositoryId();
+        pullRequestRepository
+            .findOpenPrByBranchNameOrSha(repositoryId, context.headBranch(), context.headSha())
+            .ifPresent(pr -> result.setPullRequests(new HashSet<>(Collections.singletonList(pr))
+
+            ));
+      }
+    }
+
+
     // Process the workflow run for HeliosDeployment
     try {
       processRunForHeliosDeployment(ghWorkflowRun);
@@ -163,8 +198,10 @@ public class GitHubWorkflowRunSyncService {
                     .getUpdatedAt()
                     .toInstant()
                     .isAfter(heliosDeployment.getUpdatedAt().toInstant())
-                    || workflowRun.getUpdatedAt().toInstant()
-                        .equals(heliosDeployment.getUpdatedAt().toInstant())) {
+                    || workflowRun
+                    .getUpdatedAt()
+                    .toInstant()
+                    .equals(heliosDeployment.getUpdatedAt().toInstant())) {
                   heliosDeployment.setUpdatedAt(
                       DateUtil.convertToOffsetDateTime(workflowRun.getUpdatedAt()));
                   HeliosDeployment.Status mappedStatus =
@@ -173,15 +210,16 @@ public class GitHubWorkflowRunSyncService {
 
                   // Update the deployment status
                   heliosDeployment.setStatus(mappedStatus);
-    
+
                   // Update the workflow run html url, so we can show the approval url
                   // to the user before the Github deployment is created
+                  heliosDeployment.setWorkflowRunId(workflowRun.getId());
                   heliosDeployment.setWorkflowRunHtmlUrl(workflowRun.getHtmlUrl().toString());
 
                   log.info(
-                          "Updated HeliosDeployment {} to status {}",
-                          heliosDeployment.getId(),
-                          mappedStatus);
+                      "Updated HeliosDeployment {} to status {}",
+                      heliosDeployment.getId(),
+                      mappedStatus);
                   heliosDeploymentRepository.save(heliosDeployment);
                 }
               } catch (IOException e) {

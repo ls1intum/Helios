@@ -31,6 +31,7 @@ public class BranchControllerTest {
 
   @Autowired private ObjectMapper objectMapper;
 
+  @SuppressWarnings("null")
   private final List<BranchInfoDto> branches =
       List.of(
           new BranchInfoDto(
@@ -43,9 +44,10 @@ public class BranchControllerTest {
               false,
               null,
               null,
-              new RepositoryInfoDto(1L, "repo", "repo", null, "url")),
+              new RepositoryInfoDto(1L, "repo", "repo", null, "url", null, 0, 0, 0, 0, null, null)),
           new BranchInfoDto("branch2", "sha2", 0, 0, false, false, false, null, null, null));
 
+  @SuppressWarnings("null")
   private final BranchDetailsDto branch =
       new BranchDetailsDto(
           "branch1",
@@ -54,10 +56,10 @@ public class BranchControllerTest {
           0,
           false,
           false,
-          "releaseCandidate",
+          List.of("releaseCandidate"),
           null,
           null,
-          new RepositoryInfoDto(1L, "repo", "repo", null, "url"));
+          new RepositoryInfoDto(1L, "repo", "repo", null, "url", null, 0, 0, 0, 0, null, null));
 
   @Test
   void testRejectUnauthenticatedUser() throws Exception {

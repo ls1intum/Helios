@@ -52,6 +52,9 @@ github:
     clientId: ${GITHUB_CLIENT_ID:}
     installationId: ${GITHUB_INSTALLATION_ID:}
     privateKeyPath: ${GITHUB_PRIVATE_KEY_PATH:}
+    # GitHub Token exchange credentials
+    tokenExchangeClientId: ${HELIOS_TOKEN_EXCHANGE_CLIENT:}
+    tokenExchangeClientSecret: ${HELIOS_TOKEN_EXCHANGE_SECRET:}
 
 http:
     cache:

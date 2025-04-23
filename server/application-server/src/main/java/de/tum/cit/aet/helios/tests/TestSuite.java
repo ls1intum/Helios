@@ -1,5 +1,6 @@
 package de.tum.cit.aet.helios.tests;
 
+import de.tum.cit.aet.helios.tests.type.TestType;
 import de.tum.cit.aet.helios.workflow.WorkflowRun;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -11,6 +12,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderBy;
 import jakarta.validation.constraints.Min;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -24,7 +26,7 @@ import lombok.ToString;
 @Getter
 @Setter
 @NoArgsConstructor
-@ToString
+@ToString(exclude = "workflowRun")
 public class TestSuite {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -62,5 +64,13 @@ public class TestSuite {
   private Double time;
 
   @OneToMany(mappedBy = "testSuite", cascade = CascadeType.ALL)
+  @OrderBy("id DESC")
   private List<TestCase> testCases = new ArrayList<>();
+
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "test_type_id")
+  private TestType testType;
+
+  @Column(name = "system_out")
+  private String systemOut;
 }

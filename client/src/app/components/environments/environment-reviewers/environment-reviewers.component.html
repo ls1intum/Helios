@@ -1,0 +1,32 @@
+<div class="flex items-center">
+  @if (hasReviewers()) {
+    <span class="text-sm" [pTooltip]="reviewersTooltip" tooltipPosition="top">
+      <i-tabler name="shield-exclamation" class="w-4 h-4 text-sky-700 dark:text-sky-300 cursor-help" />
+    </span>
+  }
+</div>
+
+<ng-template #reviewersTooltip>
+  <div class="p-1">
+    <div class="font-semibold mb-1">Required Reviewers:</div>
+    <div class="flex flex-col gap-1">
+      @for (reviewer of reviewers(); track reviewer.id) {
+        <div class="flex items-center gap-1.5">
+          @if (isTeam(reviewer)) {
+            <i-tabler name="users-group" class="w-4 h-4 text-sky-300 dark:text-sky-700" />
+            <span class="text-xs">{{ reviewer.name }}</span>
+          } @else {
+            <i-tabler name="user" class="w-4 h-4 text-sky-300 dark:text-sky-700" />
+            <span class="text-xs">{{ reviewer.login }}</span>
+          }
+        </div>
+      }
+    </div>
+    @if (preventSelfReview()) {
+      <div class="mt-1 text-xs text-orange-500 flex items-center gap-1">
+        <i-tabler name="exclamation-mark" class="w-3.5 h-3.5" />
+        <span>No Self-approval</span>
+      </div>
+    }
+  </div>
+</ng-template>

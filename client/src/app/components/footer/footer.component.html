@@ -1,10 +1,21 @@
-<footer class="flex items-center justify-center h-6 bg-gray-100 border-t border-gray-200 text-xs text-gray-500">
+<footer class="flex flex-wrap items-center justify-center h-6px-5 text-xs underline-offset-4">
   <div class="flex items-center gap-2">
-    <a routerLink="/about" class="hover:text-gray-700 hover:underline">About</a>
-    <span class="text-gray-300">|</span>
-    <a routerLink="/privacy" class="hover:text-gray-700 hover:underline">Privacy Policy</a>
-    <span class="text-gray-300">|</span>
-    <a routerLink="/imprint" class="hover:text-gray-700 hover:underline">Imprint</a>
-    <span class="text-gray-300">|</span>
+    <a routerLink="/about" class="hover:underline">About</a>
+    <span>|</span>
+    <a routerLink="/privacy" class="hover:underline">Privacy</a>
+    <span>|</span>
+    <a routerLink="/imprint" class="hover:underline">Imprint</a>
+    <span>|</span>
+    <span>{{ deployed_commit_sha }}</span>
+    <span>|</span>
+  </div>
+  <div class="whitespace-nowrap ml-2">
+    Built with ❤ by
+    <a href="https://github.com/ls1intum" target="_blank" rel="noreferrer" class="font-medium hover:underline">AET Team</a>
+    <span class="hidden md:inline">
+      at
+      <a href="https://www.tum.de/en/" target="_blank" rel="noreferrer" class="font-medium hover:underline">TUM</a>. The source code is available on
+      <a href="https://github.com/ls1intum/helios" target="_blank" rel="noreferrer" class="font-medium hover:underline">GitHub</a>.
+    </span>
   </div>
 </footer>

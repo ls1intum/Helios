@@ -3,6 +3,8 @@ package de.tum.cit.aet.helios.github;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.tum.cit.aet.helios.auth.AuthService;
+import de.tum.cit.aet.helios.auth.github.GitHubAuthBroker;
+import de.tum.cit.aet.helios.auth.github.TokenExchangeResponse;
 import de.tum.cit.aet.helios.deployment.github.GitHubDeploymentDto;
 import de.tum.cit.aet.helios.environment.github.GitHubEnvironmentApiResponse;
 import de.tum.cit.aet.helios.environment.github.GitHubEnvironmentDto;
@@ -10,13 +12,20 @@ import de.tum.cit.aet.helios.filters.RepositoryContext;
 import de.tum.cit.aet.helios.github.permissions.GitHubPermissionsResponse;
 import de.tum.cit.aet.helios.github.permissions.GitHubRepositoryRoleDto;
 import de.tum.cit.aet.helios.github.permissions.RepoPermissionType;
+import de.tum.cit.aet.helios.workflow.GitHubWorkflowContext;
 import jakarta.transaction.Transactional;
+import java.io.BufferedReader;
+import java.io.FilterInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.time.OffsetDateTime;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import okhttp3.MediaType;
@@ -25,10 +34,12 @@ import okhttp3.Request;
 import okhttp3.Request.Builder;
 import okhttp3.RequestBody;
 import okhttp3.Response;
+import okhttp3.ResponseBody;
 import org.kohsuke.github.GHArtifact;
 import org.kohsuke.github.GHCommitState;
 import org.kohsuke.github.GHOrganization;
 import org.kohsuke.github.GHPullRequest;
+import org.kohsuke.github.GHRelease;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GHWorkflow;
 import org.kohsuke.github.PagedIterable;
@@ -47,6 +58,7 @@ public class GitHubService {
   private final ObjectMapper objectMapper;
   private final OkHttpClient okHttpClient;
   private final AuthService authService;
+  private final GitHubAuthBroker gitHubAuthBroker;
   private final GitHubClientManager clientManager;
   private GHOrganization gitHubOrganization;
 
@@ -170,7 +182,11 @@ public class GitHubService {
 
     try (Response response = okHttpClient.newCall(request).execute()) {
       if (!response.isSuccessful()) {
-        throw new IOException("GitHub API call failed with response code: " + response.code());
+        throw new IOException(
+            "GitHub API call failed with response code: "
+                + response.code()
+                + " and body: "
+                + response.body().string());
       }
     } catch (IOException e) {
       log.error("Error occurred while dispatching workflow: {}", e.getMessage());
@@ -312,21 +328,24 @@ public class GitHubService {
    * Creates a successful commit status for a GitHub pull request with a link to the Helios page.
    *
    * <p>This method sets up a commit status with the following characteristics:
+   *
    * <ul>
-   *   <li>State: SUCCESS</li>
-   *   <li>Context: "Helios"</li>
-   *   <li>Target URL: A formatted URL to the Helios page for this specific pull request</li>
-   *   <li>Description: A message indicating what the link leads to</li>
+   *   <li>State: SUCCESS
+   *   <li>Context: "Helios"
+   *   <li>Target URL: A formatted URL to the Helios page for this specific pull request
+   *   <li>Description: A message indicating what the link leads to
    * </ul>
    *
-   * <p>The commit status is created for the HEAD commit of the pull request.
-   * Any IO exceptions during the status creation are logged as errors.
+   * <p>The commit status is created for the HEAD commit of the pull request. Any IO exceptions
+   * during the status creation are logged as errors.
    *
    * @param pullRequest The GitHub pull request object for which to create the commit status
    */
   public void createCommitStatusForPullRequest(GHPullRequest pullRequest) {
-    final String targetUrl = String.format("%s/repo/%d/ci-cd/pr/%d",
-        heliosClientBaseUrl, pullRequest.getRepository().getId(), pullRequest.getNumber());
+    final String targetUrl =
+        String.format(
+            "%s/repo/%d/ci-cd/pr/%d",
+            heliosClientBaseUrl, pullRequest.getRepository().getId(), pullRequest.getNumber());
     final String description = "Click to view the Helios page of this pull request.";
     final String context = "Helios";
     try {
@@ -341,4 +360,377 @@ public class GitHubService {
       log.error("Error occurred while creating commit status: {}", e.getMessage());
     }
   }
+
+  /**
+   * Approves GitHub pending deployments for a workflow run on behalf of user.
+   *
+   * @param repoNameWithOwner the repository name with owner
+   * @param runId the workflow run ID
+   * @param environmentId the IDs of environments to approve
+   * @param githubUserLogin the GitHub user login
+   * @throws IOException if an I/O error occurs during the API call
+   */
+  public void approveDeploymentOnBehalfOfUser(
+      String repoNameWithOwner, long runId, Long environmentId, String githubUserLogin)
+      throws IOException {
+    // Construct the approval payload
+    Map<String, Object> requestPayload =
+        Map.of(
+            "environment_ids", List.of(environmentId),
+            "state", "approved",
+            "comment", "Automatically approved by Helios");
+
+    String jsonPayload = objectMapper.writeValueAsString(requestPayload);
+
+    // Construct the URL
+    String url =
+        String.format(
+            "https://api.github.com/repos/%s/actions/runs/%d/pending_deployments",
+            repoNameWithOwner, runId);
+
+    // Build the request with the GitHub token from Keycloak
+    RequestBody requestBody =
+        RequestBody.create(jsonPayload, MediaType.get("application/json; charset=utf-8"));
+
+    TokenExchangeResponse tokenExchangeResponse =
+        this.gitHubAuthBroker.exchangeToken(githubUserLogin);
+    if (tokenExchangeResponse == null) {
+      log.error("Token exchange response is null");
+      return;
+    }
+    String userGithubToken = tokenExchangeResponse.getAccessToken();
+
+    Request request =
+        new Request.Builder()
+            .url(url)
+            .post(requestBody)
+            .header("Authorization", "Bearer " + userGithubToken)
+            .header("Accept", "application/json")
+            .build();
+
+    // Execute the request
+    try (Response response = okHttpClient.newCall(request).execute()) {
+      if (!response.isSuccessful()) {
+        String errorBody = "No error details";
+        ResponseBody responseBody = response.body();
+        if (responseBody != null) {
+          try {
+            errorBody = responseBody.string();
+          } catch (IOException e) {
+            log.warn("Failed to read error response body", e);
+          }
+        }
+
+        log.error(
+            "GitHub API call failed with response code: {} and body: {}",
+            response.code(),
+            errorBody);
+        throw new IOException("GitHub API call failed with response code: " + response.code());
+      }
+
+      log.info("Successfully approved deployment for run ID: {}", runId);
+    } catch (IOException e) {
+      log.error("Error occurred while approving deployment: {}", e.getMessage());
+      throw e;
+    }
+  }
+
+  /**
+   * Generates release notes for a GitHub repository by comparing changes between versions.
+   *
+   * @param repositoryNameWithOwner The repository name including the owner (e.g., "owner/repo")
+   * @param tagName The tag name for the new release
+   * @param targetCommitish The commitish value that determines where the Git tag is created from
+   * @return The generated release notes as a string
+   * @throws IOException If there's an error communicating with the GitHub API
+   */
+  public String generateReleaseNotes(
+      String repositoryNameWithOwner, String tagName, String targetCommitish) throws IOException {
+
+    // Create the request payload with only non-null fields
+    Map<String, String> requestPayload = new HashMap<>();
+    requestPayload.put("tag_name", tagName);
+
+    if (targetCommitish != null && !targetCommitish.isEmpty()) {
+      requestPayload.put("target_commitish", targetCommitish);
+    }
+
+    String jsonPayload = objectMapper.writeValueAsString(requestPayload);
+    log.info("Request payload: {}", jsonPayload);
+
+    // Build the request
+    Request request =
+        getRequestBuilder()
+            .url(
+                "https://api.github.com/repos/"
+                    + repositoryNameWithOwner
+                    + "/releases/generate-notes")
+            .post(
+                RequestBody.create(MediaType.parse("application/json; charset=utf-8"), jsonPayload))
+            .build();
+
+    // Execute the request
+    try (Response response = okHttpClient.newCall(request).execute()) {
+      ResponseBody responseBody = response.body();
+      if (!response.isSuccessful()) {
+        String errorBody = "No error details";
+        if (responseBody != null) {
+          try {
+            errorBody = responseBody.string();
+          } catch (IOException e) {
+            log.warn("Failed to read error response body", e);
+          }
+        }
+
+        log.error(
+            "GitHub API call failed with response code: {} and body: {}",
+            response.code(),
+            errorBody);
+        throw new IOException("GitHub API call failed with response code: " + response.code());
+      }
+
+      if (responseBody == null) {
+        throw new IOException("Response body is null");
+      }
+
+      // Parse the response
+      Map<String, Object> responseMap = objectMapper.readValue(responseBody.string(), Map.class);
+
+      // Return the generated notes
+      log.debug("Successfully generated release notes using the GitHub API");
+      return (String) responseMap.get("body");
+    }
+  }
+
+  /**
+   * Creates and publishes a GitHub release draft on behalf of a user.
+   *
+   * @param repoNameWithOwner the repository name with owner
+   * @param tagName the tag name for the release
+   * @param commitish the commitish value (branch or commit SHA)
+   * @param name the name of the release (title)
+   * @param body the body text of the release (release notes)
+   * @param draft whether this is a draft release (true) or a published release (false)
+   * @param githubUserLogin the GitHub user login
+   * @return the created GHRelease object
+   * @throws IOException if an I/O error occurs during the API call
+   */
+  public GHRelease createReleaseOnBehalfOfUser(
+      String repoNameWithOwner,
+      String tagName,
+      String commitish,
+      String name,
+      String body,
+      boolean draft,
+      String githubUserLogin)
+      throws IOException {
+
+    // Exchange token for the user
+    TokenExchangeResponse tokenExchangeResponse =
+        this.gitHubAuthBroker.exchangeToken(githubUserLogin);
+    if (tokenExchangeResponse == null) {
+      log.error("Token exchange response is null");
+      throw new IOException("Failed to exchange token for GitHub user: " + githubUserLogin);
+    }
+
+    // Construct the request payload
+    Map<String, Object> requestPayload = new HashMap<>();
+    requestPayload.put("tag_name", tagName);
+
+    if (commitish != null && !commitish.isEmpty()) {
+      requestPayload.put("target_commitish", commitish);
+    }
+
+    if (name != null && !name.isEmpty()) {
+      requestPayload.put("name", name);
+    }
+
+    if (body != null) {
+      requestPayload.put("body", body);
+    }
+
+    requestPayload.put("draft", draft);
+
+    String jsonPayload = objectMapper.writeValueAsString(requestPayload);
+
+    // Construct the URL for creating a release
+    String url = String.format("https://api.github.com/repos/%s/releases", repoNameWithOwner);
+
+    RequestBody requestBody =
+        RequestBody.create(jsonPayload, MediaType.get("application/json; charset=utf-8"));
+
+    String userGithubToken = tokenExchangeResponse.getAccessToken();
+
+    Request request =
+        new Request.Builder()
+            .url(url)
+            .post(requestBody)
+            .header("Authorization", "Bearer " + userGithubToken)
+            .header("Accept", "application/json")
+            .build();
+
+    // Execute the request
+    try (Response response = okHttpClient.newCall(request).execute()) {
+      if (!response.isSuccessful()) {
+        String errorBody = "No error details";
+        ResponseBody responseBody = response.body();
+        if (responseBody != null) {
+          try {
+            errorBody = responseBody.string();
+          } catch (IOException e) {
+            log.warn("Failed to read error response body", e);
+          }
+        }
+
+        log.error(
+            "GitHub API call failed to create release with response code: {} and body: {}",
+            response.code(),
+            errorBody);
+        throw new IOException("GitHub API call failed with response code: " + response.code());
+      }
+
+      ResponseBody responseBody = response.body();
+      if (responseBody == null) {
+        throw new IOException("Response body is null");
+      }
+
+      // Log success
+      log.info("Successfully created release for tag: {}, draft: {}", tagName, draft);
+
+      Long id =
+          Long.valueOf(
+              objectMapper.readValue(responseBody.string(), Map.class).get("id").toString());
+      // Return the created release information by fetching the complete release from GitHub
+      GHRelease release = getRepository(repoNameWithOwner).getRelease(id);
+      return release;
+    }
+  }
+
+  /**
+   * Extracts workflow context from the workflow-context artifact.
+   *
+   * @param repositoryId The ID of the repository
+   * @param runId The ID of the workflow run
+   * @return The extracted GitHubWorkflowContext or null if not found or error occurred
+   */
+  public GitHubWorkflowContext extractWorkflowContext(long repositoryId, long runId) {
+    GHArtifact ghArtifact = null;
+
+    // Fetch artifacts to get the triggering workflow run ID
+    try {
+      PagedIterable<GHArtifact> artifacts =
+          getWorkflowRunArtifacts(repositoryId, runId);
+
+      // First artifact with the configured name
+      for (GHArtifact artifact : artifacts) {
+        if (artifact.getName().equals("workflow-context")) {
+          ghArtifact = artifact;
+          break;
+        }
+      }
+    } catch (Exception e) {
+      log.warn("Failed to fetch artifacts for workflow run: {}", e.getMessage());
+      return null;
+    }
+
+    if (ghArtifact == null) {
+      log.warn("No workflow-context artifact found for E2E Tests workflow_run: {}", runId);
+      return null;
+    }
+
+    log.debug("Found artifact {}", ghArtifact.getName());
+
+    try {
+      // Parse the artifact to extract the triggering workflow information
+      return parseWorkflowContextArtifact(ghArtifact);
+    } catch (Exception e) {
+      log.error("Failed to parse workflow context artifact: {}", e.getMessage());
+      return null;
+    }
+  }
+
+  /**
+   * Parses the workflow context artifact to extract the triggering workflow information.
+   */
+  private GitHubWorkflowContext parseWorkflowContextArtifact(GHArtifact artifact)
+      throws IOException {
+    // Download & Parse the artifact
+    return artifact.download(
+        artifactContent -> {
+          if (artifactContent.available() == 0) {
+            throw new RuntimeException("Empty artifact stream!");
+          }
+
+          Long workflowRunId = null;
+          String headBranch = null;
+          String headSha = null;
+
+          try (ZipInputStream zipInput = new ZipInputStream(artifactContent)) {
+            ZipEntry entry;
+
+            while ((entry = zipInput.getNextEntry()) != null) {
+              if (!entry.isDirectory()
+                  && "workflow-context.txt".equalsIgnoreCase(entry.getName())) {
+
+                var nonClosingStream =
+                    new FilterInputStream(zipInput) {
+                      @Override
+                      public void close() throws IOException {
+                        // Do nothing, so the underlying stream stays open.
+                      }
+                    };
+
+                // Read file content
+                try (BufferedReader reader =
+                         new BufferedReader(new InputStreamReader(nonClosingStream))) {
+                  String line;
+                  while ((line = reader.readLine()) != null) {
+                    // Skip empty lines
+                    if (line.trim().isEmpty()) {
+                      continue;
+                    }
+
+                    // Split each line by equals sign
+                    String[] parts = line.split("=", 2);
+                    if (parts.length == 2) {
+                      String key = parts[0].trim();
+                      String value = parts[1].trim();
+
+                      // Extract values
+                      switch (key) {
+                        case "TRIGGERING_WORKFLOW_RUN_ID" -> workflowRunId = Long.parseLong(value);
+                        case "TRIGGERING_WORKFLOW_HEAD_BRANCH" -> headBranch = value;
+                        case "TRIGGERING_WORKFLOW_HEAD_SHA" -> headSha = value;
+                        default -> log.warn("Unknown key in workflow-context.txt: {}", key);
+                      }
+                    }
+                  }
+                }
+              }
+              zipInput.closeEntry();
+            }
+          }
+
+          // Validate that we found all required values
+          if (workflowRunId == null) {
+            throw new RuntimeException("Could not find TRIGGERING_WORKFLOW_RUN_ID in artifact");
+          }
+          if (headBranch == null) {
+            throw new RuntimeException(
+                "Could not find TRIGGERING_WORKFLOW_HEAD_BRANCH in artifact");
+          }
+          if (headSha == null) {
+            throw new RuntimeException("Could not find TRIGGERING_WORKFLOW_HEAD_SHA in artifact");
+          }
+
+          log.info(
+              "Context extracted: workflowRunId: {}, headBranch: {}, headSha: {}",
+              workflowRunId,
+              headBranch,
+              headSha);
+
+          return new GitHubWorkflowContext(workflowRunId, headBranch, headSha);
+        });
+  }
+
 }

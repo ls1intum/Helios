@@ -1,8 +1,9 @@
 package de.tum.cit.aet.helios.branch;
 
 import de.tum.cit.aet.helios.auth.AuthService;
-import de.tum.cit.aet.helios.releasecandidate.ReleaseCandidate;
-import de.tum.cit.aet.helios.releasecandidate.ReleaseCandidateRepository;
+import de.tum.cit.aet.helios.commit.CommitRepository;
+import de.tum.cit.aet.helios.releaseinfo.releasecandidate.ReleaseCandidate;
+import de.tum.cit.aet.helios.releaseinfo.releasecandidate.ReleaseCandidateRepository;
 import de.tum.cit.aet.helios.userpreference.UserPreference;
 import de.tum.cit.aet.helios.userpreference.UserPreferenceRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -23,6 +24,7 @@ public class BranchService {
   private final ReleaseCandidateRepository releaseCandidateRepository;
   private final UserPreferenceRepository userPreferenceRepository;
   private final AuthService authService;
+  private final CommitRepository commitRepository;
 
   public List<BranchInfoDto> getAllBranches() {
     final Optional<UserPreference> userPreference =
@@ -30,7 +32,8 @@ public class BranchService {
             ? userPreferenceRepository.findByUser(authService.getUserFromGithubId())
             : Optional.empty();
     return branchRepository.findAll().stream()
-        .map((branch) -> BranchInfoDto.fromBranchAndUserPreference(branch, userPreference))
+        .map((branch) -> BranchInfoDto.fromBranchAndUserPreference(branch, userPreference,
+            commitRepository))
         .sorted(
             (pr1, pr2) -> {
               if (pr1.isPinned() && !pr2.isPinned()) {
@@ -38,6 +41,13 @@ public class BranchService {
               } else if (!pr1.isPinned() && pr2.isPinned()) {
                 return 1;
               } else {
+                if (pr1.updatedAt() == null && pr2.updatedAt() == null) {
+                  return 0;
+                } else if (pr1.updatedAt() == null) {
+                  return 1;
+                } else if (pr2.updatedAt() == null) {
+                  return -1;
+                }
                 return pr2.updatedAt().compareTo(pr1.updatedAt());
               }
             })
@@ -58,9 +68,8 @@ public class BranchService {
                     branch,
                     releaseCandidateRepository
                         .findByRepositoryRepositoryIdAndCommitSha(
-                            repositoryId, branch.getCommitSha())
-                        .map(ReleaseCandidate::getName)
-                        .orElseGet(() -> null)));
+                            repositoryId, branch.getCommitSha()).stream()
+                        .map(ReleaseCandidate::getName).toList()));
   }
 
   public void setBranchPinnedByRepositoryIdAndName(Long repoId, String name, Boolean isPinned) {

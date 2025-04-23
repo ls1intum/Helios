@@ -2,7 +2,8 @@ package de.tum.cit.aet.helios.error;
 
 import de.tum.cit.aet.helios.deployment.DeploymentException;
 import de.tum.cit.aet.helios.environment.EnvironmentException;
-import de.tum.cit.aet.helios.releasecandidate.ReleaseCandidateException;
+import de.tum.cit.aet.helios.releaseinfo.releasecandidate.ReleaseCandidateException;
+import de.tum.cit.aet.helios.tests.type.TestTypeNameConflictException;
 import io.sentry.Sentry;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -12,6 +13,7 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @Log4j2
@@ -107,5 +109,17 @@ public class GlobalExceptionHandler {
     error.setTimestamp(Instant.now());
 
     return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
+  }
+
+  @ExceptionHandler(TestTypeNameConflictException.class)
+  @ResponseStatus(HttpStatus.CONFLICT)
+  public ResponseEntity<ApiError> handleTestTypeNameConflict(TestTypeNameConflictException ex) {
+    ApiError error = new ApiError();
+    error.setStatus(HttpStatus.CONFLICT.value());
+    error.setError("Test Type Name Conflict");
+    error.setMessage("Test type name conflict: " + ex.getMessage());
+    error.setTimestamp(Instant.now());
+
+    return new ResponseEntity<>(error, HttpStatus.CONFLICT);
   }
 }

@@ -1,51 +1,73 @@
 @if (releaseCandidateQuery.data()!; as releaseCandidate) {
-  <div class="my-3 flex items-start justify-between">
+  <div class="my-3 flex items-start justify-between flex-wrap gap-4">
     <div class="flex flex-col items-start">
-      <span class="text-gray-500 text-sm uppercase font-semibold tracking-wider mb-1">
+      <span class="text-muted-color text-sm uppercase font-semibold tracking-wider mb-1">
         Release Candidate
         @if (releaseCandidate.branch) {
           created from branch {{ releaseCandidate.branch.name }}
         }
       </span>
       <div class="flex-col items-center gap-4">
-        <h2 class="text-2xl">
+        <h2 class="text-2xl flex items-center gap-2 flex-wrap">
           {{ releaseCandidate.name }}
+          <p-button text (click)="openReleaseInGitHub()" styleClass="p-1" class="leading-none">
+            <i-tabler name="brand-github" class="!size-4" />
+          </p-button>
           <p-tag class="text-xs">
             <i-tabler name="git-commit" class="!size-4" />
             {{ releaseCandidate.commit.sha | slice: 0 : 7 }}
           </p-tag>
-          @if (permissionService.isAtLeastMaintainer()) {
-            <p-button text (onClick)="deleteReleaseCandidate(releaseCandidate)">
-              <i-tabler name="trash" class="!size-5 text-red-500 hover:text-red-700" />
+          @if (releaseCandidate.release) {
+            <p-tag value="Published to GitHub" severity="danger" [rounded]="true" class="hidden md:block text-xs whitespace-nowrap" />
+            @if (releaseCandidate.release.isDraft) {
+              <p-tag value="Draft" [rounded]="true" severity="warn" class="text-xs whitespace-nowrap" />
+            }
+            @if (releaseCandidate.release.isPrerelease) {
+              <p-tag value="Prerelease" [rounded]="true" severity="secondary" class="text-xs whitespace-nowrap" />
+            }
+          }
+          @if (permissionService.isAtLeastMaintainer() && !releaseCandidate.release) {
+            <p-button text severity="danger" (onClick)="deleteReleaseCandidate(releaseCandidate)">
+              <i-tabler name="trash" class="!size-5" />
             </p-button>
           }
         </h2>
         <div class="flex gap-1 items-center text-sm">
-          <div>created by</div>
-          @if (releaseCandidate.createdBy.avatarUrl) {
-            <p-avatar class="size-4" shape="circle" [image]="releaseCandidate.createdBy.avatarUrl" />
+          <div class="mr-1">created by</div>
+          @if (releaseCandidate.createdBy?.avatarUrl) {
+            <p-avatar class="size-4" shape="circle" [image]="releaseCandidate.createdBy?.avatarUrl" />
           } @else {
-            <i-tabler name="user" class="size-4 text-gray-600" />
+            <i-tabler name="user" class="size-4 text-muted-color border-2 border-muted-color rounded-full" />
           }
-          {{ releaseCandidate.createdBy.login }}
+          {{ releaseCandidate.createdBy?.login || 'Unknown' }}
           <span [pTooltip]="releaseCandidate.createdAt">{{ releaseCandidate.createdAt | timeAgo }}</span>
         </div>
       </div>
     </div>
 
-    <div class="flex flex-col items-center">
+    <div class="flex flex-col gap-2 items-center">
       @if (permissionService.isAtLeastMaintainer()) {
-        <p-buttongroup class="mb-5">
+        @if (releaseCandidate.release) {
+          <p-button label="Open on GitHub" (onClick)="openReleaseInGitHub()">
+            <i-tabler name="external-link" class="!size-5" />
+          </p-button>
+        } @else {
+          <p-button label="Publish to GitHub" (onClick)="publishReleaseDraft()">
+            <i-tabler name="cloud-upload" class="!size-5" />
+          </p-button>
+        }
+
+        <p-buttongroup>
           <p-button label="Working" severity="success" [disabled]="hasUserEvaluatedTo(true)" (onClick)="evaluateReleaseCandidate(true)">
-            <i-tabler name="check" class="!size-5 text-white" />
+            <i-tabler name="check" class="!size-5" />
           </p-button>
           <p-button label="Broken" severity="danger" [disabled]="hasUserEvaluatedTo(false)" (onClick)="evaluateReleaseCandidate(false)">
-            <i-tabler name="x" class="!size-5 text-white" />
+            <i-tabler name="x" class="!size-5" />
           </p-button>
         </p-buttongroup>
       }
       @if (releaseCandidate.evaluations.length > 0) {
-        <div class="text-gray-500 text-sm uppercase font-semibold tracking-wider mb-1">Reviews</div>
+        <div class="text-muted-color text-sm uppercase font-semibold tracking-wider mb-1">Reviews</div>
         <div>
           @for (evaluation of releaseCandidate.evaluations; track evaluation.user.id) {
             <div class="relative inline-block pt-2 pr-1">
@@ -61,12 +83,55 @@
           }
         </div>
       } @else {
-        <div class="text-gray-500 text-sm uppercase font-semibold tracking-wider mb-1">No reviews yet</div>
+        <div class="text-muted-color text-sm uppercase font-semibold tracking-wider mb-1">No reviews yet</div>
       }
     </div>
   </div>
 
-  <h3 class="text-xl mb-2">Release Candidate Status on Environments</h3>
+  <!-- Unified Release Notes Section -->
+  <div class="my-6">
+    <div class="flex justify-between items-center mb-3">
+      <h3 class="text-xl">Release Notes</h3>
+      <div class="flex gap-2">
+        @if (permissionService.isAtLeastMaintainer() && !releaseCandidate.release) {
+          <p-button label="Generate Release Notes" (onClick)="generateReleaseNotes()" [loading]="generateReleaseNotesMutation.isPending()">
+            <i-tabler name="plus" />
+          </p-button>
+
+          @if (!isEditingReleaseNotes()) {
+            <p-button label="Edit" (onClick)="editReleaseNotes()">
+              <i-tabler name="pencil" />
+            </p-button>
+          }
+        }
+      </div>
+    </div>
+
+    @if (permissionService.isAtLeastMaintainer() && isEditingReleaseNotes() && !releaseCandidate.release) {
+      <!-- Edit mode - only available if not published to GitHub -->
+      <form [formGroup]="releaseNotesForm" class="w-full">
+        <textarea rows="10" cols="100" pTextarea placeholder="Write release notes in markdown format" [autoResize]="true" formControlName="releaseNotes"></textarea>
+        <div class="flex justify-start gap-2">
+          <p-button label="Save" (onClick)="saveReleaseNotes()" [loading]="updateReleaseNotesMutation.isPending()"></p-button>
+          <p-button label="Cancel" text severity="danger" (onClick)="cancelEditing()"></p-button>
+        </div>
+      </form>
+    } @else {
+      <!-- Display mode based on release status -->
+      @if (releaseNotes()) {
+        <div class="p-3 border rounded-md border-muted-color" [innerHtml]="releaseNotes() | markdown"></div>
+      } @else {
+        <div class="p-3 border rounded-md border-muted-color">
+          No release notes available.
+          @if (permissionService.isAtLeastMaintainer() && !releaseCandidate.release) {
+            Edit to add release notes or use the "Generate Release Notes" button.
+          }
+        </div>
+      }
+    }
+  </div>
+
+  <h3 class="text-xl mb-2 mt-5">Release Candidate Status on Environments</h3>
   <app-release-candidate-deployment-table [releaseCandidate]="releaseCandidate" />
 } @else {
   <div class="flex flex-col items-start gap-2">
