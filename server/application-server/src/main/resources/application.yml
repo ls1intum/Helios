@@ -42,8 +42,8 @@ cleanup:
             # Test Status: FAILED --> keep newest 2 runs, delete older ones only if ≥ 5 days old
             - test-processing-status: FAILED
               keep: 2
-              age-days: 0
+              age-days: 5
             # Test Status: NULL --> keep newest 2 runs, delete older ones only if ≥ 5 days old
             - test-processing-status: null
               keep: 2
-              age-days: 0
+              age-days: 5
