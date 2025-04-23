@@ -47,6 +47,7 @@ import {
   getPullRequestById,
   getPullRequestByRepositoryIdAndNumber,
   getPullRequestByRepositoryId,
+  getPaginatedPullRequests,
   getAllEnvironments,
   getEnvironmentReviewers,
   getEnvironmentsByUserLocking,
@@ -150,6 +151,9 @@ import type {
   GetPullRequestByIdData,
   GetPullRequestByRepositoryIdAndNumberData,
   GetPullRequestByRepositoryIdData,
+  GetPaginatedPullRequestsData,
+  GetPaginatedPullRequestsError,
+  GetPaginatedPullRequestsResponse,
   GetAllEnvironmentsData,
   GetEnvironmentReviewersData,
   GetEnvironmentsByUserLockingData,
@@ -1190,6 +1194,60 @@ export const getPullRequestByRepositoryIdOptions = (options: Options<GetPullRequ
     },
     queryKey: getPullRequestByRepositoryIdQueryKey(options),
   });
+};
+
+export const getPaginatedPullRequestsQueryKey = (options?: Options<GetPaginatedPullRequestsData>) => createQueryKey('getPaginatedPullRequests', options);
+
+export const getPaginatedPullRequestsOptions = (options?: Options<GetPaginatedPullRequestsData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getPaginatedPullRequests({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: getPaginatedPullRequestsQueryKey(options),
+  });
+};
+
+export const getPaginatedPullRequestsInfiniteQueryKey = (options?: Options<GetPaginatedPullRequestsData>): QueryKey<Options<GetPaginatedPullRequestsData>> =>
+  createQueryKey('getPaginatedPullRequests', options, true);
+
+export const getPaginatedPullRequestsInfiniteOptions = (options?: Options<GetPaginatedPullRequestsData>) => {
+  return infiniteQueryOptions<
+    GetPaginatedPullRequestsResponse,
+    GetPaginatedPullRequestsError,
+    InfiniteData<GetPaginatedPullRequestsResponse>,
+    QueryKey<Options<GetPaginatedPullRequestsData>>,
+    number | Pick<QueryKey<Options<GetPaginatedPullRequestsData>>[0], 'body' | 'headers' | 'path' | 'query'>
+  >(
+    // @ts-ignore
+    {
+      queryFn: async ({ pageParam, queryKey, signal }) => {
+        // @ts-ignore
+        const page: Pick<QueryKey<Options<GetPaginatedPullRequestsData>>[0], 'body' | 'headers' | 'path' | 'query'> =
+          typeof pageParam === 'object'
+            ? pageParam
+            : {
+                query: {
+                  page: pageParam,
+                },
+              };
+        const params = createInfiniteParams(queryKey, page);
+        const { data } = await getPaginatedPullRequests({
+          ...options,
+          ...params,
+          signal,
+          throwOnError: true,
+        });
+        return data;
+      },
+      queryKey: getPaginatedPullRequestsInfiniteQueryKey(options),
+    }
+  );
 };
 
 export const getAllEnvironmentsQueryKey = (options?: Options<GetAllEnvironmentsData>) => createQueryKey('getAllEnvironments', options);

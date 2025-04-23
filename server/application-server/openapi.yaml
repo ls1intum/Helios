@@ -1179,6 +1179,69 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/PullRequestInfoDto"
+  /api/pullrequests/paginated:
+    get:
+      tags:
+      - pull-request-controller
+      operationId: getPaginatedPullRequests
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 1
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      - name: sortField
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: sortDirection
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: filterType
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - ALL
+          - OPEN
+          - OPEN_READY_FOR_REVIEW
+          - DRAFT
+          - MERGED
+          - CLOSED
+          - USER_AUTHORED
+          - ASSIGNED_TO_USER
+          - REVIEW_REQUESTED
+      - name: searchTerm
+        in: query
+        required: false
+        schema:
+          type: string
+      responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PageResponsePullRequestBaseInfoDto"
   /api/environments:
     get:
       tags:
@@ -2480,6 +2543,25 @@ components:
       - number
       - state
       - title
+    PageResponsePullRequestBaseInfoDto:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/PullRequestBaseInfoDto"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
     EnvironmentReviewersDto:
       type: object
       properties:
