@@ -31,6 +31,8 @@ import {
   IconInfoCircle,
   IconProgress,
   IconX,
+  IconCircleX,
+  IconCircleChevronsRight,
 } from 'angular-tabler-icons/icons';
 
 // Define log level interface and constants
@@ -87,6 +89,8 @@ const LOG_LEVELS: LogLevel[] = [
       IconFilter,
       IconFilterPlus,
       IconInfoCircle,
+      IconCircleX,
+      IconCircleChevronsRight,
     }),
   ],
   templateUrl: './pipeline-test-results.component.html',
