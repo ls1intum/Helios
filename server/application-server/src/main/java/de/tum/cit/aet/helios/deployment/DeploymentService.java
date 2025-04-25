@@ -184,10 +184,16 @@ public class DeploymentService {
     heliosDeploymentRepository.save(heliosDeployment);
 
     try {
+      // Determine which branch to use for the workflow
+      String workflowBranch = environment.getDeploymentWorkflowBranch();
+      if (workflowBranch == null || workflowBranch.trim().isEmpty()) {
+        workflowBranch = deployRequest.branchName();
+      }
+
       this.gitHubService.dispatchWorkflow(
           environment.getRepository().getNameWithOwner(),
           deploymentWorkflow.getFileNameWithExtension(),
-          deployRequest.branchName(),
+          workflowBranch,
           workflowParams);
 
       this.environmentService.markStatusAsChanged(environment);

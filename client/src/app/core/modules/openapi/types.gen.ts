@@ -70,6 +70,7 @@ export type EnvironmentDto = {
   serverUrl?: string;
   statusCheckType?: 'HTTP_STATUS' | 'ARTEMIS_INFO';
   statusUrl?: string;
+  deploymentWorkflowBranch?: string;
   latestDeployment?: EnvironmentDeployment;
   latestStatus?: EnvironmentStatusDto;
   lockedBy?: UserInfoDto;

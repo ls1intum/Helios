@@ -481,6 +481,7 @@ public class EnvironmentService {
                 environment.setLockReservationExpiresAt(null);
               }
               environment.setEnabled(environmentDto.enabled());
+              environment.setDeploymentWorkflowBranch(environmentDto.deploymentWorkflowBranch());
 
               if (environmentDto.updatedAt() != null) {
                 environment.setUpdatedAt(environmentDto.updatedAt());
