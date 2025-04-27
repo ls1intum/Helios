@@ -2,7 +2,6 @@ package de.tum.cit.aet.helios.pullrequest;
 
 import de.tum.cit.aet.helios.auth.AuthService;
 import de.tum.cit.aet.helios.issue.Issue;
-import de.tum.cit.aet.helios.pagination.PageResponse;
 import de.tum.cit.aet.helios.pullrequest.pagination.PaginatedPullRequestsResponse;
 import de.tum.cit.aet.helios.pullrequest.pagination.PullRequestPageRequest;
 import de.tum.cit.aet.helios.user.User;
@@ -22,7 +21,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -62,7 +60,6 @@ public class PullRequestService {
 
   public PaginatedPullRequestsResponse getPaginatedPullRequests(
       PullRequestPageRequest pageRequest) {
-    log.debug("Starting pagination process");
     log.debug("Input parameters - Filter: {}, Page: {}, Size: {}, Search Term: {}",
         pageRequest.getFilterType(), pageRequest.getPage(), pageRequest.getSize(),
         pageRequest.getSearchTerm());
@@ -70,7 +67,6 @@ public class PullRequestService {
     final String currentUserId = authService.isLoggedIn()
         ? authService.getGithubId()
         : null;
-    log.debug("Current User ID: {}", currentUserId);
 
     Optional<UserPreference> prefOpt =
         currentUserId != null
@@ -110,9 +106,7 @@ public class PullRequestService {
 
     log.debug("Added Non-Pinned Items - Count: {}", pageDtos.size());
 
-
     int totalPages = (int) Math.ceil((double) totalNonPinned / pageRequest.getSize());
-
 
     return new PaginatedPullRequestsResponse(
         pinnedDtos,
@@ -157,71 +151,54 @@ public class PullRequestService {
       switch (pageRequest.getFilterType()) {
         case OPEN:
           predicates.add(cb.equal(root.get("state"), Issue.State.OPEN));
-          log.debug("Added OPEN filter");
           break;
         case OPEN_READY_FOR_REVIEW:
           predicates.add(cb.and(
               cb.equal(root.get("state"), Issue.State.OPEN),
               cb.equal(root.get("isDraft"), false)
           ));
-          log.debug("Added OPEN_READY_FOR_REVIEW filter");
           break;
         case DRAFT:
           predicates.add(cb.and(
               cb.equal(root.get("state"), Issue.State.OPEN),
               cb.equal(root.get("isDraft"), true)
           ));
-          log.debug("Added DRAFT filter");
           break;
         case MERGED:
           predicates.add(cb.and(
               cb.equal(root.get("state"), Issue.State.CLOSED),
               cb.equal(root.get("isMerged"), true)
           ));
-          log.debug("Added MERGED filter");
           break;
         case CLOSED:
           predicates.add(cb.equal(root.get("state"), Issue.State.CLOSED));
-          log.debug("Added CLOSED filter");
           break;
         case USER_AUTHORED:
           if (currentUserId != null) {
             Join<PullRequest, User> authorJoin = root.join("author", JoinType.INNER);
             predicates.add(cb.equal(authorJoin.get("id"), Long.valueOf(currentUserId)));
-            log.debug("Added USER_AUTHORED filter with user ID: {}", currentUserId);
           }
           break;
         case ASSIGNED_TO_USER:
           if (currentUserId != null) {
             Join<PullRequest, User> assigneeJoin = root.join("assignees", JoinType.INNER);
             predicates.add(cb.equal(assigneeJoin.get("id"), Long.valueOf(currentUserId)));
-            log.debug("Added ASSIGNED_TO_USER filter with user ID: {}", currentUserId);
           }
           break;
         case REVIEW_REQUESTED:
           if (currentUserId != null) {
             Join<PullRequest, User> reviewerJoin = root.join("requestedReviewers", JoinType.INNER);
             predicates.add(cb.equal(reviewerJoin.get("id"), Long.valueOf(currentUserId)));
-            log.debug("Added REVIEW_REQUESTED filter with user ID: {}", currentUserId);
           }
           break;
         case ALL:
         default:
           // No additional predicates needed
-          log.debug("Using ALL filter (no restrictions)");
           break;
       }
 
       return cb.and(predicates.toArray(new Predicate[0]));
     };
-  }
-
-  @SuppressWarnings("checkstyle:AbbreviationAsWordInName")
-  private long countNonPinnedMatchingPRs(PullRequestPageRequest pageRequest,
-                                         String currentUserId) {
-    Specification<PullRequest> spec =
-        buildNonPinnedPullRequestSpecification(pageRequest, currentUserId);
-    return pullRequestRepository.count(spec);
   }
 
   public Optional<PullRequestInfoDto> getPullRequestById(Long id) {

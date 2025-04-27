@@ -1,6 +1,5 @@
 package de.tum.cit.aet.helios.pullrequest;
 
-import de.tum.cit.aet.helios.pagination.PageResponse;
 import de.tum.cit.aet.helios.pullrequest.pagination.PaginatedPullRequestsResponse;
 import de.tum.cit.aet.helios.pullrequest.pagination.PullRequestFilterType;
 import de.tum.cit.aet.helios.pullrequest.pagination.PullRequestPageRequest;
