@@ -23,6 +23,7 @@ import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
 import { IconExternalLink, IconFilterPlus, IconGitPullRequest, IconPinned, IconPinnedOff, IconPoint, IconBrandGithub } from 'angular-tabler-icons/icons';
 import { PAGINATED_FILTER_OPTIONS_TOKEN, PaginatedTableService } from '@app/core/services/paginated-table.service';
 import { TableFilterPaginatedComponent } from '@app/components/table-filter-paginated/table-filter-paginated.component';
+import { NgTemplateOutlet } from '@angular/common';
 
 // Define filter options for pull requests
 const PR_FILTER_OPTIONS = [
@@ -56,6 +57,7 @@ const PR_FILTER_OPTIONS = [
     WorkflowRunStatusComponent,
     PullRequestStatusIconComponent,
     TableFilterPaginatedComponent,
+    NgTemplateOutlet,
   ],
   providers: [
     PaginatedTableService,
@@ -103,22 +105,6 @@ export class PullRequestTableComponent {
   });
 
   query = injectQuery(() => this.queryOptions());
-
-  determineRowsPerPage = computed( () => {
-    const rowsPerPage = this.paginationService.size() || 0;
-    const pageSize = this.paginationService.page() || 0;
-
-    const recordsOfThisPage = this.query.data()?.content?.length || 0;
-    const totalPages = this.query.data()?.totalPages || 0;
-
-    const pinnedPrs = recordsOfThisPage - pageSize
-
-    if (pinnedPrs <= 0) {
-      return rowsPerPage;
-    }
-
-    return (pinnedPrs * totalPages) + rowsPerPage;
-  })
 
   setPinnedMutation = injectMutation(() => ({
     ...setPrPinnedByNumberMutation(),

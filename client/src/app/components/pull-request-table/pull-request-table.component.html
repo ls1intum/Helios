@@ -1,11 +1,12 @@
 <p-table
   #table
   [rowHover]="true"
-  [value]="query.data()?.content || []"
+  [value]="query.data()?.page || []"
+  [frozenValue]="query.data()?.pinned || []"
   [lazy]="true"
-  [totalRecords]="query.data()?.totalElements || 0"
+  [totalRecords]="query.data()?.totalNonPinned || 0"
   [paginator]="true"
-  [rows]="determineRowsPerPage()"
+  [rows]="paginationService.size()"
   [first]="(paginationService.page() - 1) * paginationService.size()"
   [rowsPerPageOptions]="[1, 2, 3, 4, 5, 10, 15, 17, 20, 50]"
   [loading]="query.isPending()"
@@ -23,6 +24,13 @@
       <th class="hidden lg:table-cell">Reviewers</th>
     </tr>
   </ng-template>
+  <!-- PINNED -->
+  @if (!(query.isPending() || query.isError())) {
+    <ng-template pTemplate="frozenbody" let-pr>
+      <ng-container [ngTemplateOutlet]="prRow" [ngTemplateOutletContext]="{ $implicit: pr }"> </ng-container>
+    </ng-template>
+  }
+  <!-- NON-PINNED -->
   <ng-template pTemplate="body" let-pr>
     @if (query.isPending() || query.isError()) {
       <tr>
@@ -42,97 +50,100 @@
         <td class="w-[0.1%] hidden lg:table-cell"><p-skeleton shape="circle" styleClass="!size-7" /></td>
       </tr>
     } @else {
-      <tr [class]="pr.isPinned ? 'bg-surface-200 dark:bg-surface-800' : ''">
-        <td class="px-0 py-2">
-          <div class="flex h-full items-stretch gap-2">
-            <div
-              class="flex items-center border-r-4 px-2"
-              [class]="pr.isPinned ? 'border-r-primary-400' : 'border-r-surface-300'"
-              (mouseenter)="isHovered.set(pr.id, true)"
-              (mouseleave)="isHovered.set(pr.id, false)"
-            >
-              <div class="align-middle">
-                @if (isHovered.get(pr.id) && keycloak.isLoggedIn()) {
-                  @if (pr.isPinned) {
-                    <p-button text (onClick)="setPinned($event, pr, false)" class="h-full">
-                      <i-tabler name="pinned-off" class="!h-5 !w-5" />
-                    </p-button>
-                  } @else {
-                    <p-button text severity="secondary" (onClick)="setPinned($event, pr, true)" class="h-full">
-                      <i-tabler name="pinned" class="!h-5 !w-5" />
-                    </p-button>
-                  }
+      <ng-container [ngTemplateOutlet]="prRow" [ngTemplateOutletContext]="{ $implicit: pr }"> </ng-container>
+    }
+  </ng-template>
+  <ng-template #prRow let-pr>
+    <tr [class]="pr.isPinned ? 'bg-surface-200 dark:bg-surface-800' : ''">
+      <td class="px-0 py-2">
+        <div class="flex h-full items-stretch gap-2">
+          <div
+            class="flex items-center border-r-4 px-2"
+            [class]="pr.isPinned ? 'border-r-primary-400' : 'border-r-surface-300'"
+            (mouseenter)="isHovered.set(pr.id, true)"
+            (mouseleave)="isHovered.set(pr.id, false)"
+          >
+            <div class="align-middle">
+              @if (isHovered.get(pr.id) && keycloak.isLoggedIn()) {
+                @if (pr.isPinned) {
+                  <p-button text (onClick)="setPinned($event, pr, false)" class="h-full">
+                    <i-tabler name="pinned-off" class="!h-5 !w-5" />
+                  </p-button>
+                } @else {
+                  <p-button text severity="secondary" (onClick)="setPinned($event, pr, true)" class="h-full">
+                    <i-tabler name="pinned" class="!h-5 !w-5" />
+                  </p-button>
                 }
-              </div>
-            </div>
-
-            <div class="flex flex-col gap-2.5">
-              <div class="flex flex-wrap items-center gap-2">
-                <app-pull-request-status-icon [pullRequest]="pr" tooltipPosition="top" />
-                <span class="font-bold hover:underline cursor-pointer leading-none max-w-sm md:max-w-xl line-clamp-1" (click)="openPR(pr)">
-                  <span [innerHTML]="pr.title | markdown" class="line-clamp-1"></span>
-                </span>
-                <app-workflow-run-status [selector]="{ type: 'pullRequest', pullRequestId: pr.id }"></app-workflow-run-status>
-
-                <p-button text (click)="openPRExternal($event, pr)" styleClass="p-1" class="leading-none -ml-1">
-                  <i-tabler name="brand-github" class="!size-4" />
-                </p-button>
-
-                @for (label of pr.labels; track label.id) {
-                  <p-tag
-                    [value]="label.name"
-                    [rounded]="true"
-                    class="border font-medium text-xs py-0.5 whitespace-nowrap text-black dark:text-white"
-                    [style]="getLabelClasses(label.color)"
-                  />
-                }
-              </div>
-              <div class="flex gap-2 items-center text-xs">
-                <p-avatar [image]="pr.author?.avatarUrl" shape="circle" class="h-5 w-5" [styleClass]="getAvatarBorderClass(pr.author?.login)" />
-                <span>{{ pr.author?.name }} opened #{{ pr.number }} {{ pr.createdAt | timeAgo }}</span>
-                <i-tabler name="point" class="!h-3 !w-3" />
-                <span>updated {{ pr.updatedAt | timeAgo }}</span>
-              </div>
+              }
             </div>
           </div>
-        </td>
 
-        <td class="hidden lg:table-cell">
-          @if (pr.assignees?.length) {
-            <div class="flex align-items-center gap-2">
-              <p-avatarGroup>
-                @for (assignee of pr.assignees; track assignee) {
-                  <p-avatar
-                    [image]="assignee.avatarUrl"
-                    [pTooltip]="keycloak.isCurrentUser(assignee.login) ? 'You' : assignee.name"
-                    shape="circle"
-                    size="normal"
-                    [styleClass]="getAvatarBorderClass(assignee.login)"
-                  ></p-avatar>
-                }
-              </p-avatarGroup>
+          <div class="flex flex-col gap-2.5">
+            <div class="flex flex-wrap items-center gap-2">
+              <app-pull-request-status-icon [pullRequest]="pr" tooltipPosition="top" />
+              <span class="font-bold hover:underline cursor-pointer leading-none max-w-sm md:max-w-xl line-clamp-1" (click)="openPR(pr)">
+                <span [innerHTML]="pr.title | markdown" class="line-clamp-1"></span>
+              </span>
+              <app-workflow-run-status [selector]="{ type: 'pullRequest', pullRequestId: pr.id }"></app-workflow-run-status>
+
+              <p-button text (click)="openPRExternal($event, pr)" styleClass="p-1" class="leading-none -ml-1">
+                <i-tabler name="brand-github" class="!size-4" />
+              </p-button>
+
+              @for (label of pr.labels; track label.id) {
+                <p-tag
+                  [value]="label.name"
+                  [rounded]="true"
+                  class="border font-medium text-xs py-0.5 whitespace-nowrap text-black dark:text-white"
+                  [style]="getLabelClasses(label.color)"
+                />
+              }
             </div>
-          }
-        </td>
-        <td class="hidden lg:table-cell">
-          @if (pr.reviewers?.length) {
-            <div class="flex align-items-center gap-2">
-              <p-avatarGroup>
-                @for (reviewer of pr.reviewers; track reviewer.id) {
-                  <p-avatar
-                    [image]="reviewer.avatarUrl"
-                    [pTooltip]="keycloak.isCurrentUser(reviewer.login) ? 'You' : reviewer.name"
-                    shape="circle"
-                    size="normal"
-                    [styleClass]="getAvatarBorderClass(reviewer.login)"
-                  ></p-avatar>
-                }
-              </p-avatarGroup>
+            <div class="flex gap-2 items-center text-xs">
+              <p-avatar [image]="pr.author?.avatarUrl" shape="circle" class="h-5 w-5" [styleClass]="getAvatarBorderClass(pr.author?.login)" />
+              <span>{{ pr.author?.name }} opened #{{ pr.number }} {{ pr.createdAt | timeAgo }}</span>
+              <i-tabler name="point" class="!h-3 !w-3" />
+              <span>updated {{ pr.updatedAt | timeAgo }}</span>
             </div>
-          }
-        </td>
-      </tr>
-    }
+          </div>
+        </div>
+      </td>
+
+      <td class="hidden lg:table-cell">
+        @if (pr.assignees?.length) {
+          <div class="flex align-items-center gap-2">
+            <p-avatarGroup>
+              @for (assignee of pr.assignees; track assignee) {
+                <p-avatar
+                  [image]="assignee.avatarUrl"
+                  [pTooltip]="keycloak.isCurrentUser(assignee.login) ? 'You' : assignee.name"
+                  shape="circle"
+                  size="normal"
+                  [styleClass]="getAvatarBorderClass(assignee.login)"
+                ></p-avatar>
+              }
+            </p-avatarGroup>
+          </div>
+        }
+      </td>
+      <td class="hidden lg:table-cell">
+        @if (pr.reviewers?.length) {
+          <div class="flex align-items-center gap-2">
+            <p-avatarGroup>
+              @for (reviewer of pr.reviewers; track reviewer.id) {
+                <p-avatar
+                  [image]="reviewer.avatarUrl"
+                  [pTooltip]="keycloak.isCurrentUser(reviewer.login) ? 'You' : reviewer.name"
+                  shape="circle"
+                  size="normal"
+                  [styleClass]="getAvatarBorderClass(reviewer.login)"
+                ></p-avatar>
+              }
+            </p-avatarGroup>
+          </div>
+        }
+      </td>
+    </tr>
   </ng-template>
   <ng-template #emptymessage>
     <tr>
