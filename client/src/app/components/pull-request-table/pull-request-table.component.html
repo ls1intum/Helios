@@ -25,11 +25,11 @@
     </tr>
   </ng-template>
   <!-- PINNED -->
-  @if (!(query.isPending() || query.isError()) && query.data()?.pinned?.length) {
-    <ng-template pTemplate="frozenbody" let-pr>
+  <ng-template pTemplate="frozenbody" let-pr>
+    @if (!(query.isPending() || query.isError()) && query.data()?.pinned?.length) {
       <ng-container [ngTemplateOutlet]="prRow" [ngTemplateOutletContext]="{ $implicit: pr }"> </ng-container>
-    </ng-template>
-  }
+    }
+  </ng-template>
   <!-- NON-PINNED -->
   <ng-template pTemplate="body" let-pr>
     @if (query.isPending() || query.isError()) {
