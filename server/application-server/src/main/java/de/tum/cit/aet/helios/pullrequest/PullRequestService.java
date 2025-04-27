@@ -111,54 +111,29 @@ public class PullRequestService {
     log.debug("Total Elements Breakdown - Pinned: {}, Non-Pinned: {}, Total: {}",
         totalPinnedCount, totalNonPinnedCount, totalElements);
 
+
     // Calculate pagination details
     int pageSize = pageRequest.getSize();
     int currentPage = pageRequest.getPage();
-    int totalPages = (int) Math.ceil((double) totalElements / pageSize);
+    int totalPages = (int) Math.ceil((double) totalNonPinnedCount / pageSize);
     log.debug("Pagination Details - Page Size: {}, Total Pages: {}", pageSize, totalPages);
 
+
+
     // Prepare the final list of PRs for the current page
-
-    // Calculate global start and end indices
-    int globalStartIndex = (currentPage - 1) * pageSize;
-    int globalEndIndex = Math.min(globalStartIndex + pageSize, (int) totalElements);
-    log.debug("Global Indexing - Start Index: {}, End Index: {}", globalStartIndex, globalEndIndex);
-
-    // Handle pinned PRs first
-    int pinnedItemsToAdd = 0;
-    int pinnedStartIndex = 0;
-
-    // Calculate how many pinned items should be on this page
-    if (globalStartIndex < totalPinnedCount) {
-      pinnedStartIndex = globalStartIndex;
-      pinnedItemsToAdd = Math.min(pageSize, pinnedDtos.size() - pinnedStartIndex);
-    }
-
-    log.debug("Pinned Items - To Add: {}, Start Index: {}", pinnedItemsToAdd, pinnedStartIndex);
-
     List<PullRequestBaseInfoDto> pageContent = new ArrayList<>();
 
     // Add pinned PRs if applicable
-    if (pinnedItemsToAdd > 0 && pinnedStartIndex >= 0 && pinnedStartIndex < pinnedDtos.size()) {
-      List<PullRequestBaseInfoDto> pinnedItemsForPage = pinnedDtos.subList(
-          pinnedStartIndex,
-          Math.min(pinnedStartIndex + pinnedItemsToAdd, pinnedDtos.size())
-      );
-      pageContent.addAll(pinnedItemsForPage);
-      log.debug("Added Pinned Items - Count: {}", pinnedItemsToAdd);
+    if (totalPinnedCount > 0) {
+      pageContent.addAll(pinnedDtos);
+      log.debug("Added Pinned Items - Count: {}", totalPinnedCount);
     }
 
-    // Calculate non-pinned page number and offset
-    int nonPinnedPageNumber = globalStartIndex >= totalPinnedCount
-        ? (globalStartIndex - (int) totalPinnedCount) / pageSize
-        : 0;
-
-    log.debug("Non-Pinned Page Number: {}", nonPinnedPageNumber);
 
     // Create pageable for non-pinned PRs
     Pageable pageable = PageRequest.of(
-        nonPinnedPageNumber,
-        20,
+        currentPage - 1,
+        pageSize,
         Sort.by(Sort.Direction.DESC, "updatedAt")
     );
 
@@ -182,7 +157,7 @@ public class PullRequestService {
     response.setContent(pageContent);
     response.setPage(currentPage);
     response.setSize(pageSize);
-    response.setTotalElements(totalElements);
+    response.setTotalElements(totalNonPinnedCount);
     response.setTotalPages(totalPages);
 
     log.debug("Final Page Response Details:");

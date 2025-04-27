@@ -38,6 +38,15 @@ public class PullRequestController {
     pageRequest.setFilterType(filterType != null ? filterType : PullRequestFilterType.ALL);
     pageRequest.setSearchTerm(searchTerm);
 
+    System.out.println("PageRequest: " + pageRequest);
+    System.out.println("PageRequest page: " + pageRequest.getPage());
+    System.out.println("PageRequest size: " + pageRequest.getSize());
+    System.out.println("PageRequest sortField: " + pageRequest.getSortField());
+    System.out.println("PageRequest sortDirection: " + pageRequest.getSortDirection());
+    System.out.println("PageRequest filterType: " + pageRequest.getFilterType());
+    System.out.println("PageRequest searchTerm: " + pageRequest.getSearchTerm());
+
+
     PageResponse<PullRequestBaseInfoDto> response =
         pullRequestService.getPaginatedPullRequests(pageRequest);
     return ResponseEntity.ok(response);
