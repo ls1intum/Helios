@@ -1102,24 +1102,30 @@ export const PullRequestInfoDtoSchema = {
   required: ['additions', 'commentsCount', 'deletions', 'headRefName', 'headRefRepoNameWithOwner', 'headSha', 'htmlUrl', 'id', 'isDraft', 'isMerged', 'number', 'state', 'title'],
 } as const;
 
-export const PageResponsePullRequestBaseInfoDtoSchema = {
+export const PaginatedPullRequestsResponseSchema = {
   type: 'object',
   properties: {
-    content: {
+    pinned: {
       type: 'array',
       items: {
         $ref: '#/components/schemas/PullRequestBaseInfoDto',
       },
     },
     page: {
+      type: 'array',
+      items: {
+        $ref: '#/components/schemas/PullRequestBaseInfoDto',
+      },
+    },
+    pageNumber: {
       type: 'integer',
       format: 'int32',
     },
-    size: {
+    pageSize: {
       type: 'integer',
       format: 'int32',
     },
-    totalElements: {
+    totalNonPinned: {
       type: 'integer',
       format: 'int64',
     },

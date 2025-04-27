@@ -364,11 +364,12 @@ export type PullRequestInfoDto = {
   updatedAt?: string;
 };
 
-export type PageResponsePullRequestBaseInfoDto = {
-  content?: Array<PullRequestBaseInfoDto>;
-  page?: number;
-  size?: number;
-  totalElements?: number;
+export type PaginatedPullRequestsResponse = {
+  pinned?: Array<PullRequestBaseInfoDto>;
+  page?: Array<PullRequestBaseInfoDto>;
+  pageNumber?: number;
+  pageSize?: number;
+  totalNonPinned?: number;
   totalPages?: number;
 };
 
@@ -1669,7 +1670,7 @@ export type GetPaginatedPullRequestsResponses = {
   /**
    * OK
    */
-  200: PageResponsePullRequestBaseInfoDto;
+  200: PaginatedPullRequestsResponse;
 };
 
 export type GetPaginatedPullRequestsResponse = GetPaginatedPullRequestsResponses[keyof GetPaginatedPullRequestsResponses];

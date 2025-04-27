@@ -1,6 +1,7 @@
 package de.tum.cit.aet.helios.pullrequest;
 
 import de.tum.cit.aet.helios.pagination.PageResponse;
+import de.tum.cit.aet.helios.pullrequest.pagination.PaginatedPullRequestsResponse;
 import de.tum.cit.aet.helios.pullrequest.pagination.PullRequestFilterType;
 import de.tum.cit.aet.helios.pullrequest.pagination.PullRequestPageRequest;
 import java.util.List;
@@ -21,7 +22,7 @@ public class PullRequestController {
   private final PullRequestService pullRequestService;
 
   @GetMapping("/paginated")
-  public ResponseEntity<PageResponse<PullRequestBaseInfoDto>> getPaginatedPullRequests(
+  public ResponseEntity<PaginatedPullRequestsResponse> getPaginatedPullRequests(
       @RequestParam(defaultValue = "1") int page,
       @RequestParam(defaultValue = "20") int size,
       @RequestParam(required = false) String sortField,
@@ -47,7 +48,7 @@ public class PullRequestController {
     System.out.println("PageRequest searchTerm: " + pageRequest.getSearchTerm());
 
 
-    PageResponse<PullRequestBaseInfoDto> response =
+    PaginatedPullRequestsResponse response =
         pullRequestService.getPaginatedPullRequests(pageRequest);
     return ResponseEntity.ok(response);
   }

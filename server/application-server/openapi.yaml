@@ -1241,7 +1241,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/PageResponsePullRequestBaseInfoDto"
+                $ref: "#/components/schemas/PaginatedPullRequestsResponse"
   /api/environments:
     get:
       tags:
@@ -2543,20 +2543,24 @@ components:
       - number
       - state
       - title
-    PageResponsePullRequestBaseInfoDto:
+    PaginatedPullRequestsResponse:
       type: object
       properties:
-        content:
+        pinned:
           type: array
           items:
             $ref: "#/components/schemas/PullRequestBaseInfoDto"
         page:
+          type: array
+          items:
+            $ref: "#/components/schemas/PullRequestBaseInfoDto"
+        pageNumber:
           type: integer
           format: int32
-        size:
+        pageSize:
           type: integer
           format: int32
-        totalElements:
+        totalNonPinned:
           type: integer
           format: int64
         totalPages:
