@@ -27,8 +27,8 @@ import { NgTemplateOutlet } from '@angular/common';
 
 // Define filter options for pull requests
 const PR_FILTER_OPTIONS = [
-  { name: 'All pull requests', value: 'ALL' },
   { name: 'Open pull requests', value: 'OPEN' },
+  { name: 'All pull requests', value: 'ALL' },
   { name: 'Open and ready for review', value: 'OPEN_READY_FOR_REVIEW' },
   { name: 'Draft pull requests', value: 'DRAFT' },
   { name: 'Merged pull requests', value: 'MERGED' },

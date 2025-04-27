@@ -25,7 +25,7 @@
     </tr>
   </ng-template>
   <!-- PINNED -->
-  @if (!(query.isPending() || query.isError())) {
+  @if (!(query.isPending() || query.isError()) && query.data()?.pinned?.length) {
     <ng-template pTemplate="frozenbody" let-pr>
       <ng-container [ngTemplateOutlet]="prRow" [ngTemplateOutletContext]="{ $implicit: pr }"> </ng-container>
     </ng-template>
@@ -145,16 +145,19 @@
       </td>
     </tr>
   </ng-template>
-  <ng-template #emptymessage>
-    <tr>
-      <td colspan="3">
-        <div class="flex flex-col gap-2 p-20 justify-center items-center">
-          <i-tabler name="git-pull-request" class="!h-20 !w-20 text-red-500" />
-          <span class="font-semibold text-xl">There are no pull requests found matching your filter criteria.</span>
-          <span>Try clearing the filter or reloading the page.</span>
-          <p-button (click)="clearFilters()">Clear Filter</p-button>
-        </div>
-      </td>
-    </tr>
+  <ng-template pTemplate="emptymessage" let-ignored let-frozen="frozen">
+    <!-- Show empty message only if there are no pinned items -->
+    @if (!frozen) {
+      <tr>
+        <td colspan="3">
+          <div class="flex flex-col gap-2 p-20 justify-center items-center">
+            <i-tabler name="git-pull-request" class="!h-20 !w-20 text-red-500" />
+            <span class="font-semibold text-xl"> There are no pull requests found matching your filter criteria. </span>
+            <span>Try clearing the filter or reloading the page.</span>
+            <p-button (click)="clearFilters()">Clear Filter</p-button>
+          </div>
+        </td>
+      </tr>
+    }
   </ng-template>
 </p-table>
