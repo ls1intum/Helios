@@ -19,7 +19,6 @@ export class CiCdComponent implements OnInit, OnDestroy {
   tabs = signal<{ label: string; id: string }[]>([
     { label: 'Pull Requests', id: 'pr' },
     { label: 'Branches', id: 'branch' },
-    { label: 'Paginated Table', id: 'paginated' },
   ]);
   activeTabId = signal(this.tabs()[0].id);
 
