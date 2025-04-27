@@ -43,11 +43,10 @@ import {
   deleteReleaseCandidateByName,
   getReleaseInfoByName,
   getCommitsSinceLastReleaseCandidate,
-  getAllPullRequests,
+  getPullRequests,
   getPullRequestById,
   getPullRequestByRepositoryIdAndNumber,
   getPullRequestByRepositoryId,
-  getPaginatedPullRequests,
   getAllEnvironments,
   getEnvironmentReviewers,
   getEnvironmentsByUserLocking,
@@ -147,13 +146,12 @@ import type {
   DeleteReleaseCandidateByNameResponse,
   GetReleaseInfoByNameData,
   GetCommitsSinceLastReleaseCandidateData,
-  GetAllPullRequestsData,
+  GetPullRequestsData,
+  GetPullRequestsError,
+  GetPullRequestsResponse,
   GetPullRequestByIdData,
   GetPullRequestByRepositoryIdAndNumberData,
   GetPullRequestByRepositoryIdData,
-  GetPaginatedPullRequestsData,
-  GetPaginatedPullRequestsError,
-  GetPaginatedPullRequestsResponse,
   GetAllEnvironmentsData,
   GetEnvironmentReviewersData,
   GetEnvironmentsByUserLockingData,
@@ -1127,12 +1125,12 @@ export const getCommitsSinceLastReleaseCandidateOptions = (options: Options<GetC
   });
 };
 
-export const getAllPullRequestsQueryKey = (options?: Options<GetAllPullRequestsData>) => createQueryKey('getAllPullRequests', options);
+export const getPullRequestsQueryKey = (options?: Options<GetPullRequestsData>) => createQueryKey('getPullRequests', options);
 
-export const getAllPullRequestsOptions = (options?: Options<GetAllPullRequestsData>) => {
+export const getPullRequestsOptions = (options?: Options<GetPullRequestsData>) => {
   return queryOptions({
     queryFn: async ({ queryKey, signal }) => {
-      const { data } = await getAllPullRequests({
+      const { data } = await getPullRequests({
         ...options,
         ...queryKey[0],
         signal,
@@ -1140,8 +1138,44 @@ export const getAllPullRequestsOptions = (options?: Options<GetAllPullRequestsDa
       });
       return data;
     },
-    queryKey: getAllPullRequestsQueryKey(options),
+    queryKey: getPullRequestsQueryKey(options),
   });
+};
+
+export const getPullRequestsInfiniteQueryKey = (options?: Options<GetPullRequestsData>): QueryKey<Options<GetPullRequestsData>> => createQueryKey('getPullRequests', options, true);
+
+export const getPullRequestsInfiniteOptions = (options?: Options<GetPullRequestsData>) => {
+  return infiniteQueryOptions<
+    GetPullRequestsResponse,
+    GetPullRequestsError,
+    InfiniteData<GetPullRequestsResponse>,
+    QueryKey<Options<GetPullRequestsData>>,
+    number | Pick<QueryKey<Options<GetPullRequestsData>>[0], 'body' | 'headers' | 'path' | 'query'>
+  >(
+    // @ts-ignore
+    {
+      queryFn: async ({ pageParam, queryKey, signal }) => {
+        // @ts-ignore
+        const page: Pick<QueryKey<Options<GetPullRequestsData>>[0], 'body' | 'headers' | 'path' | 'query'> =
+          typeof pageParam === 'object'
+            ? pageParam
+            : {
+                query: {
+                  page: pageParam,
+                },
+              };
+        const params = createInfiniteParams(queryKey, page);
+        const { data } = await getPullRequests({
+          ...options,
+          ...params,
+          signal,
+          throwOnError: true,
+        });
+        return data;
+      },
+      queryKey: getPullRequestsInfiniteQueryKey(options),
+    }
+  );
 };
 
 export const getPullRequestByIdQueryKey = (options: Options<GetPullRequestByIdData>) => createQueryKey('getPullRequestById', options);
@@ -1194,60 +1228,6 @@ export const getPullRequestByRepositoryIdOptions = (options: Options<GetPullRequ
     },
     queryKey: getPullRequestByRepositoryIdQueryKey(options),
   });
-};
-
-export const getPaginatedPullRequestsQueryKey = (options?: Options<GetPaginatedPullRequestsData>) => createQueryKey('getPaginatedPullRequests', options);
-
-export const getPaginatedPullRequestsOptions = (options?: Options<GetPaginatedPullRequestsData>) => {
-  return queryOptions({
-    queryFn: async ({ queryKey, signal }) => {
-      const { data } = await getPaginatedPullRequests({
-        ...options,
-        ...queryKey[0],
-        signal,
-        throwOnError: true,
-      });
-      return data;
-    },
-    queryKey: getPaginatedPullRequestsQueryKey(options),
-  });
-};
-
-export const getPaginatedPullRequestsInfiniteQueryKey = (options?: Options<GetPaginatedPullRequestsData>): QueryKey<Options<GetPaginatedPullRequestsData>> =>
-  createQueryKey('getPaginatedPullRequests', options, true);
-
-export const getPaginatedPullRequestsInfiniteOptions = (options?: Options<GetPaginatedPullRequestsData>) => {
-  return infiniteQueryOptions<
-    GetPaginatedPullRequestsResponse,
-    GetPaginatedPullRequestsError,
-    InfiniteData<GetPaginatedPullRequestsResponse>,
-    QueryKey<Options<GetPaginatedPullRequestsData>>,
-    number | Pick<QueryKey<Options<GetPaginatedPullRequestsData>>[0], 'body' | 'headers' | 'path' | 'query'>
-  >(
-    // @ts-ignore
-    {
-      queryFn: async ({ pageParam, queryKey, signal }) => {
-        // @ts-ignore
-        const page: Pick<QueryKey<Options<GetPaginatedPullRequestsData>>[0], 'body' | 'headers' | 'path' | 'query'> =
-          typeof pageParam === 'object'
-            ? pageParam
-            : {
-                query: {
-                  page: pageParam,
-                },
-              };
-        const params = createInfiniteParams(queryKey, page);
-        const { data } = await getPaginatedPullRequests({
-          ...options,
-          ...params,
-          signal,
-          throwOnError: true,
-        });
-        return data;
-      },
-      queryKey: getPaginatedPullRequestsInfiniteQueryKey(options),
-    }
-  );
 };
 
 export const getAllEnvironmentsQueryKey = (options?: Options<GetAllEnvironmentsData>) => createQueryKey('getAllEnvironments', options);

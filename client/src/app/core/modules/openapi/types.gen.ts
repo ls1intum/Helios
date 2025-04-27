@@ -323,6 +323,15 @@ export type LabelInfoDto = {
   repository?: RepositoryInfoDto;
 };
 
+export type PaginatedPullRequestsResponse = {
+  pinned?: Array<PullRequestBaseInfoDto>;
+  page?: Array<PullRequestBaseInfoDto>;
+  pageNumber?: number;
+  pageSize?: number;
+  totalNonPinned?: number;
+  totalPages?: number;
+};
+
 export type PullRequestBaseInfoDto = {
   id: number;
   number: number;
@@ -362,15 +371,6 @@ export type PullRequestInfoDto = {
   htmlUrl: string;
   createdAt?: string;
   updatedAt?: string;
-};
-
-export type PaginatedPullRequestsResponse = {
-  pinned?: Array<PullRequestBaseInfoDto>;
-  page?: Array<PullRequestBaseInfoDto>;
-  pageNumber?: number;
-  pageSize?: number;
-  totalNonPinned?: number;
-  totalPages?: number;
 };
 
 export type EnvironmentReviewersDto = {
@@ -1536,30 +1536,37 @@ export type GetCommitsSinceLastReleaseCandidateResponses = {
 
 export type GetCommitsSinceLastReleaseCandidateResponse = GetCommitsSinceLastReleaseCandidateResponses[keyof GetCommitsSinceLastReleaseCandidateResponses];
 
-export type GetAllPullRequestsData = {
+export type GetPullRequestsData = {
   body?: never;
   path?: never;
-  query?: never;
+  query?: {
+    page?: number;
+    size?: number;
+    sortField?: string;
+    sortDirection?: string;
+    filterType?: 'ALL' | 'OPEN' | 'OPEN_READY_FOR_REVIEW' | 'DRAFT' | 'MERGED' | 'CLOSED' | 'USER_AUTHORED' | 'ASSIGNED_TO_USER' | 'REVIEW_REQUESTED';
+    searchTerm?: string;
+  };
   url: '/api/pullrequests';
 };
 
-export type GetAllPullRequestsErrors = {
+export type GetPullRequestsErrors = {
   /**
    * Conflict
    */
   409: ApiError;
 };
 
-export type GetAllPullRequestsError = GetAllPullRequestsErrors[keyof GetAllPullRequestsErrors];
+export type GetPullRequestsError = GetPullRequestsErrors[keyof GetPullRequestsErrors];
 
-export type GetAllPullRequestsResponses = {
+export type GetPullRequestsResponses = {
   /**
    * OK
    */
-  200: Array<PullRequestBaseInfoDto>;
+  200: PaginatedPullRequestsResponse;
 };
 
-export type GetAllPullRequestsResponse = GetAllPullRequestsResponses[keyof GetAllPullRequestsResponses];
+export type GetPullRequestsResponse = GetPullRequestsResponses[keyof GetPullRequestsResponses];
 
 export type GetPullRequestByIdData = {
   body?: never;
@@ -1642,38 +1649,6 @@ export type GetPullRequestByRepositoryIdResponses = {
 };
 
 export type GetPullRequestByRepositoryIdResponse = GetPullRequestByRepositoryIdResponses[keyof GetPullRequestByRepositoryIdResponses];
-
-export type GetPaginatedPullRequestsData = {
-  body?: never;
-  path?: never;
-  query?: {
-    page?: number;
-    size?: number;
-    sortField?: string;
-    sortDirection?: string;
-    filterType?: 'ALL' | 'OPEN' | 'OPEN_READY_FOR_REVIEW' | 'DRAFT' | 'MERGED' | 'CLOSED' | 'USER_AUTHORED' | 'ASSIGNED_TO_USER' | 'REVIEW_REQUESTED';
-    searchTerm?: string;
-  };
-  url: '/api/pullrequests/paginated';
-};
-
-export type GetPaginatedPullRequestsErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type GetPaginatedPullRequestsError = GetPaginatedPullRequestsErrors[keyof GetPaginatedPullRequestsErrors];
-
-export type GetPaginatedPullRequestsResponses = {
-  /**
-   * OK
-   */
-  200: PaginatedPullRequestsResponse;
-};
-
-export type GetPaginatedPullRequestsResponse = GetPaginatedPullRequestsResponses[keyof GetPaginatedPullRequestsResponses];
 
 export type GetAllEnvironmentsData = {
   body?: never;

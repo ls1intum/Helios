@@ -21,16 +21,14 @@ public class PullRequestController {
 
   private final PullRequestService pullRequestService;
 
-  @GetMapping("/paginated")
-  public ResponseEntity<PaginatedPullRequestsResponse> getPaginatedPullRequests(
+  @GetMapping
+  public ResponseEntity<PaginatedPullRequestsResponse> getPullRequests(
       @RequestParam(defaultValue = "1") int page,
       @RequestParam(defaultValue = "20") int size,
       @RequestParam(required = false) String sortField,
       @RequestParam(required = false) String sortDirection,
       @RequestParam(required = false) PullRequestFilterType filterType,
       @RequestParam(required = false) String searchTerm) {
-
-    // Create a request object with type-safe parameters
     PullRequestPageRequest pageRequest = new PullRequestPageRequest();
     pageRequest.setPage(page);
     pageRequest.setSize(size);
@@ -39,24 +37,9 @@ public class PullRequestController {
     pageRequest.setFilterType(filterType != null ? filterType : PullRequestFilterType.ALL);
     pageRequest.setSearchTerm(searchTerm);
 
-    System.out.println("PageRequest: " + pageRequest);
-    System.out.println("PageRequest page: " + pageRequest.getPage());
-    System.out.println("PageRequest size: " + pageRequest.getSize());
-    System.out.println("PageRequest sortField: " + pageRequest.getSortField());
-    System.out.println("PageRequest sortDirection: " + pageRequest.getSortDirection());
-    System.out.println("PageRequest filterType: " + pageRequest.getFilterType());
-    System.out.println("PageRequest searchTerm: " + pageRequest.getSearchTerm());
-
-
     PaginatedPullRequestsResponse response =
         pullRequestService.getPaginatedPullRequests(pageRequest);
     return ResponseEntity.ok(response);
-  }
-
-  @GetMapping
-  public ResponseEntity<List<PullRequestBaseInfoDto>> getAllPullRequests() {
-    List<PullRequestBaseInfoDto> pullRequests = pullRequestService.getAllPullRequests();
-    return ResponseEntity.ok(pullRequests);
   }
 
   @GetMapping("/{id}")

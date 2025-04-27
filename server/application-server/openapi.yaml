@@ -1080,7 +1080,52 @@ paths:
     get:
       tags:
       - pull-request-controller
-      operationId: getAllPullRequests
+      operationId: getPullRequests
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 1
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      - name: sortField
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: sortDirection
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: filterType
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - ALL
+          - OPEN
+          - OPEN_READY_FOR_REVIEW
+          - DRAFT
+          - MERGED
+          - CLOSED
+          - USER_AUTHORED
+          - ASSIGNED_TO_USER
+          - REVIEW_REQUESTED
+      - name: searchTerm
+        in: query
+        required: false
+        schema:
+          type: string
       responses:
         "409":
           description: Conflict
@@ -1093,9 +1138,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/PullRequestBaseInfoDto"
+                $ref: "#/components/schemas/PaginatedPullRequestsResponse"
   /api/pullrequests/{id}:
     get:
       tags:
@@ -1179,69 +1222,6 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/PullRequestInfoDto"
-  /api/pullrequests/paginated:
-    get:
-      tags:
-      - pull-request-controller
-      operationId: getPaginatedPullRequests
-      parameters:
-      - name: page
-        in: query
-        required: false
-        schema:
-          type: integer
-          format: int32
-          default: 1
-      - name: size
-        in: query
-        required: false
-        schema:
-          type: integer
-          format: int32
-          default: 20
-      - name: sortField
-        in: query
-        required: false
-        schema:
-          type: string
-      - name: sortDirection
-        in: query
-        required: false
-        schema:
-          type: string
-      - name: filterType
-        in: query
-        required: false
-        schema:
-          type: string
-          enum:
-          - ALL
-          - OPEN
-          - OPEN_READY_FOR_REVIEW
-          - DRAFT
-          - MERGED
-          - CLOSED
-          - USER_AUTHORED
-          - ASSIGNED_TO_USER
-          - REVIEW_REQUESTED
-      - name: searchTerm
-        in: query
-        required: false
-        schema:
-          type: string
-      responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/PaginatedPullRequestsResponse"
   /api/environments:
     get:
       tags:
@@ -2416,6 +2396,29 @@ components:
       - color
       - id
       - name
+    PaginatedPullRequestsResponse:
+      type: object
+      properties:
+        pinned:
+          type: array
+          items:
+            $ref: "#/components/schemas/PullRequestBaseInfoDto"
+        page:
+          type: array
+          items:
+            $ref: "#/components/schemas/PullRequestBaseInfoDto"
+        pageNumber:
+          type: integer
+          format: int32
+        pageSize:
+          type: integer
+          format: int32
+        totalNonPinned:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
     PullRequestBaseInfoDto:
       type: object
       properties:
@@ -2543,29 +2546,6 @@ components:
       - number
       - state
       - title
-    PaginatedPullRequestsResponse:
-      type: object
-      properties:
-        pinned:
-          type: array
-          items:
-            $ref: "#/components/schemas/PullRequestBaseInfoDto"
-        page:
-          type: array
-          items:
-            $ref: "#/components/schemas/PullRequestBaseInfoDto"
-        pageNumber:
-          type: integer
-          format: int32
-        pageSize:
-          type: integer
-          format: int32
-        totalNonPinned:
-          type: integer
-          format: int64
-        totalPages:
-          type: integer
-          format: int32
     EnvironmentReviewersDto:
       type: object
       properties:

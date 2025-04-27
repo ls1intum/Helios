@@ -8,7 +8,7 @@ import { TagModule } from 'primeng/tag';
 import { injectMutation, injectQuery, QueryClient } from '@tanstack/angular-query-experimental';
 import { SkeletonModule } from 'primeng/skeleton';
 import { ActivatedRoute, Router } from '@angular/router';
-import { getPaginatedPullRequestsOptions, getPaginatedPullRequestsQueryKey, setPrPinnedByNumberMutation } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
+import { getPullRequestsOptions, getPullRequestsQueryKey, setPrPinnedByNumberMutation } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { PullRequestInfoDto } from '@app/core/modules/openapi';
 import { ButtonModule } from 'primeng/button';
 import { DividerModule } from 'primeng/divider';
@@ -92,7 +92,7 @@ export class PullRequestTableComponent {
     // Convert the string filterType to the specific union type
     const filterType = paginationState.filterType as 'ALL' | 'OPEN' | 'USER_AUTHORED' | 'ASSIGNED_TO_USER' | 'REVIEW_REQUESTED' | undefined;
 
-    return getPaginatedPullRequestsOptions({
+    return getPullRequestsOptions({
       query: {
         page: paginationState.page,
         size: paginationState.size,
@@ -110,7 +110,7 @@ export class PullRequestTableComponent {
     ...setPrPinnedByNumberMutation(),
     onSuccess: () => {
       this.messageService.add({ severity: 'success', summary: 'Pin Pull Request', detail: 'The pull request was pinned successfully' });
-      this.queryClient.invalidateQueries({ queryKey: getPaginatedPullRequestsQueryKey() });
+      this.queryClient.invalidateQueries({ queryKey: getPullRequestsQueryKey() });
     },
   }));
 
