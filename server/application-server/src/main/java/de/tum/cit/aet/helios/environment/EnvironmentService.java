@@ -481,6 +481,23 @@ public class EnvironmentService {
                 environment.setLockReservationExpiresAt(null);
               }
               environment.setEnabled(environmentDto.enabled());
+
+              if (environmentDto.deploymentWorkflowBranch() != null
+                  && !environmentDto.deploymentWorkflowBranch().isEmpty()) {
+                try {
+                  var ghRepository =
+                      this.gitHubService.getRepository(
+                          environment.getRepository().getNameWithOwner());
+
+                  // This will throw an exception if the branch does not exist
+                  ghRepository.getBranch(environmentDto.deploymentWorkflowBranch());
+                } catch (Exception e) {
+                  throw new EnvironmentException(
+                      "The selected deployment workflow branch does not exist in the GitHub"
+                          + " repository. Please select a valid branch or leave it empty.");
+                }
+              }
+
               environment.setDeploymentWorkflowBranch(environmentDto.deploymentWorkflowBranch());
 
               if (environmentDto.updatedAt() != null) {

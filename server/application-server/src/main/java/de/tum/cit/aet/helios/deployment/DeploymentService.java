@@ -138,7 +138,7 @@ public class DeploymentService {
     heliosDeployment.setEnvironment(environment);
     heliosDeployment.setUser(authService.getUserId());
     heliosDeployment.setStatus(HeliosDeployment.Status.WAITING);
-    heliosDeployment.setBranchName(deployRequest.branchName());
+    heliosDeployment.setBranchName(this.getDeploymentWorkflowBranch(environment, deployRequest));
     heliosDeployment.setSha(deployRequest.commitSha());
     heliosDeployment.setCreator(authService.getUserFromGithubId());
     heliosDeployment.setPullRequest(optionalPullRequest.orElse(null));
@@ -174,6 +174,14 @@ public class DeploymentService {
     return false;
   }
 
+  private String getDeploymentWorkflowBranch(Environment environment, DeployRequest deployRequest) {
+    String workflowBranch = environment.getDeploymentWorkflowBranch();
+    if (workflowBranch == null || workflowBranch.trim().isEmpty()) {
+      workflowBranch = deployRequest.branchName();
+    }
+    return workflowBranch;
+  }
+
   private void dispatchWorkflow(
       Environment environment,
       Workflow deploymentWorkflow,
@@ -184,16 +192,10 @@ public class DeploymentService {
     heliosDeploymentRepository.save(heliosDeployment);
 
     try {
-      // Determine which branch to use for the workflow
-      String workflowBranch = environment.getDeploymentWorkflowBranch();
-      if (workflowBranch == null || workflowBranch.trim().isEmpty()) {
-        workflowBranch = deployRequest.branchName();
-      }
-
       this.gitHubService.dispatchWorkflow(
           environment.getRepository().getNameWithOwner(),
           deploymentWorkflow.getFileNameWithExtension(),
-          workflowBranch,
+          this.getDeploymentWorkflowBranch(environment, deployRequest),
           workflowParams);
 
       this.environmentService.markStatusAsChanged(environment);
