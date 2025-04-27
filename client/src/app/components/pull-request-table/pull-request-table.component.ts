@@ -1,32 +1,28 @@
 import { MarkdownPipe } from '@app/core/modules/markdown/markdown.pipe';
 import { AvatarGroupModule } from 'primeng/avatargroup';
 import { TooltipModule } from 'primeng/tooltip';
-import {Component, computed, effect, inject, ViewChild} from '@angular/core';
-import {Table, TableModule, TablePageEvent} from 'primeng/table';
+import { Component, computed, effect, inject, ViewChild } from '@angular/core';
+import { Table, TableModule, TablePageEvent } from 'primeng/table';
 import { AvatarModule } from 'primeng/avatar';
 import { TagModule } from 'primeng/tag';
 import { injectMutation, injectQuery, QueryClient } from '@tanstack/angular-query-experimental';
 import { SkeletonModule } from 'primeng/skeleton';
 import { ActivatedRoute, Router } from '@angular/router';
-import {
-  getPaginatedPullRequestsOptions, getPaginatedPullRequestsQueryKey,
-  setPrPinnedByNumberMutation
-} from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
-import { PullRequestBaseInfoDto, PullRequestInfoDto } from '@app/core/modules/openapi';
+import { getPaginatedPullRequestsOptions, getPaginatedPullRequestsQueryKey, setPrPinnedByNumberMutation } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
+import { PullRequestInfoDto } from '@app/core/modules/openapi';
 import { ButtonModule } from 'primeng/button';
 import { DividerModule } from 'primeng/divider';
 import { SelectModule } from 'primeng/select';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 import { FormsModule } from '@angular/forms';
 import { TimeAgoPipe } from '@app/pipes/time-ago.pipe';
-import { TableFilterComponent } from '../table-filter/table-filter.component';
 import { WorkflowRunStatusComponent } from '@app/components/workflow-run-status-component/workflow-run-status.component';
 import { PullRequestStatusIconComponent } from '@app/components/pull-request-status-icon/pull-request-status-icon.component';
-import { MessageService } from 'primeng/api';
+import { MessageService, SortMeta } from 'primeng/api';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
 import { IconExternalLink, IconFilterPlus, IconGitPullRequest, IconPinned, IconPinnedOff, IconPoint, IconBrandGithub } from 'angular-tabler-icons/icons';
-import {PAGINATED_FILTER_OPTIONS_TOKEN, PaginatedTableService} from '@app/core/services/paginated-table.service';
-import {TableFilterPaginatedComponent} from '@app/components/table-filter-paginated/table-filter-paginated.component';
+import { PAGINATED_FILTER_OPTIONS_TOKEN, PaginatedTableService } from '@app/core/services/paginated-table.service';
+import { TableFilterPaginatedComponent } from '@app/components/table-filter-paginated/table-filter-paginated.component';
 
 // Define filter options for pull requests
 const PR_FILTER_OPTIONS = [
@@ -85,7 +81,7 @@ export class PullRequestTableComponent {
   router = inject(Router);
   route = inject(ActivatedRoute);
   keycloak = inject(KeycloakService);
-  paginationService = inject(PaginatedTableService<PullRequestBaseInfoDto>);
+  paginationService = inject(PaginatedTableService);
 
   // Create a computed query options that will update when pagination state changes
   queryOptions = computed(() => {
@@ -121,7 +117,7 @@ export class PullRequestTableComponent {
   constructor() {
     // Re-fetch data when pagination state changes
     effect(() => {
-      const _ = this.paginationService.paginationState();
+      this.paginationService.paginationState();
       if (this.query.data()) {
         this.query.refetch();
       }
@@ -129,7 +125,7 @@ export class PullRequestTableComponent {
   }
 
   get typedPaginationService() {
-    return this.paginationService as PaginatedTableService<any>;
+    return this.paginationService as PaginatedTableService;
   }
 
   openPRExternal(event: Event, pr: PullRequestInfoDto): void {
@@ -175,12 +171,12 @@ export class PullRequestTableComponent {
     this.query.refetch();
   }
 
-  onSort(event: any) {
+  onSort(event: SortMeta) {
     this.paginationService.onSort(event);
   }
 
   clearFilters() {
     this.filterComponent.clearSearch();
-    this.paginationService.clearFilters(this.table);
+    this.paginationService.clearFilters();
   }
 }

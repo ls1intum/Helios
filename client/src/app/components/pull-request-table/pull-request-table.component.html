@@ -70,8 +70,8 @@
               <div class="flex flex-wrap items-center gap-2">
                 <app-pull-request-status-icon [pullRequest]="pr" tooltipPosition="top" />
                 <span class="font-bold hover:underline cursor-pointer leading-none max-w-sm md:max-w-xl line-clamp-1" (click)="openPR(pr)">
-                <span [innerHTML]="pr.title | markdown" class="line-clamp-1"></span>
-              </span>
+                  <span [innerHTML]="pr.title | markdown" class="line-clamp-1"></span>
+                </span>
                 <app-workflow-run-status [selector]="{ type: 'pullRequest', pullRequestId: pr.id }"></app-workflow-run-status>
 
                 <p-button text (click)="openPRExternal($event, pr)" styleClass="p-1" class="leading-none -ml-1">

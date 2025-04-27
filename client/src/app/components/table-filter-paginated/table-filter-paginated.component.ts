@@ -20,7 +20,7 @@ import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
   templateUrl: './table-filter-paginated.component.html',
 })
 export class TableFilterPaginatedComponent implements OnInit {
-  paginationService = input.required<PaginatedTableService<any>>();
+  paginationService = input.required<PaginatedTableService>();
   table = input.required<PaginatedTable>();
   op = viewChild.required<Popover>('op');
 

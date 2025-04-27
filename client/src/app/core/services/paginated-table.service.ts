@@ -1,6 +1,7 @@
 import { computed, effect, inject, Injectable, InjectionToken, signal } from '@angular/core';
 import { Table, TablePageEvent } from 'primeng/table';
 import { TreeTable } from 'primeng/treetable';
+import { SortMeta } from 'primeng/api';
 
 export type PaginatedTable = TreeTable | Table;
 
@@ -23,7 +24,7 @@ export interface PaginationState {
 }
 
 @Injectable()
-export class PaginatedTableService<T> {
+export class PaginatedTableService {
   // Inject filter options
   filterOptions = inject<PaginatedFilterOption[]>(PAGINATED_FILTER_OPTIONS_TOKEN);
 
@@ -124,7 +125,7 @@ export class PaginatedTableService<T> {
   }
 
   // Clear all filters
-  clearFilters(table: PaginatedTable): void {
+  clearFilters(): void {
     this.activeFilter.set(this.filterOptions[0]);
     this.searchTerm.set('');
     this.page.set(1);
@@ -144,7 +145,12 @@ export class PaginatedTableService<T> {
     console.log(`Pagination updated: page=${calculatedPage}, size=${event.rows}`);
   }
 
-  onSort(event: any) {
+  onSort(event: SortMeta) {
+    console.log('Sort event received:', event);
+    if (!event) {
+      console.warn('No sort event provided');
+      return;
+    }
     this.sortField.set(event.field);
     this.sortDirection.set(event.order === 1 ? 'asc' : 'desc');
   }
