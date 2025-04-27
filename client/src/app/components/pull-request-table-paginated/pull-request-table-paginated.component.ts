@@ -6,7 +6,6 @@ import { Table, TableModule, TablePageEvent } from 'primeng/table';
 import { AvatarModule } from 'primeng/avatar';
 import { TagModule } from 'primeng/tag';
 import { injectMutation, injectQuery, QueryClient } from '@tanstack/angular-query-experimental';
-import { IconsModule } from 'icons.module';
 import { SkeletonModule } from 'primeng/skeleton';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DateService } from '@app/core/services/date.service';
@@ -23,6 +22,8 @@ import { WorkflowRunStatusComponent } from '@app/components/workflow-run-status-
 import { PullRequestStatusIconComponent } from '@app/components/pull-request-status-icon/pull-request-status-icon.component';
 import { PAGINATED_FILTER_OPTIONS_TOKEN, PaginatedTableService } from '@app/core/services/paginated-table.service';
 import { TableFilterPaginatedComponent } from '@app/components/table-filter-paginated/table-filter-paginated.component';
+import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
+import { IconExternalLink, IconFilterPlus, IconGitPullRequest, IconPinned, IconPinnedOff, IconPoint, IconBrandGithub } from 'angular-tabler-icons/icons';
 
 // Define filter options for pull requests
 const PR_FILTER_OPTIONS = [
@@ -47,7 +48,6 @@ const PR_FILTER_OPTIONS = [
     TimeAgoPipe,
     FormsModule,
     SelectModule,
-    IconsModule,
     SkeletonModule,
     AvatarGroupModule,
     TooltipModule,
@@ -57,8 +57,19 @@ const PR_FILTER_OPTIONS = [
     DividerModule,
     WorkflowRunStatusComponent,
     PullRequestStatusIconComponent,
+    TablerIconComponent,
   ],
-  providers: [PaginatedTableService, { provide: PAGINATED_FILTER_OPTIONS_TOKEN, useValue: PR_FILTER_OPTIONS }],
+  providers: [PaginatedTableService, { provide: PAGINATED_FILTER_OPTIONS_TOKEN, useValue: PR_FILTER_OPTIONS },
+    provideTablerIcons({
+      IconFilterPlus,
+      IconPoint,
+      IconExternalLink,
+      IconPinnedOff,
+      IconPinned,
+      IconGitPullRequest,
+      IconBrandGithub,
+    }),
+  ],
   templateUrl: './pull-request-table-paginated.component.html',
   styles: [
     `
