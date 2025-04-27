@@ -108,10 +108,6 @@ export class PullRequestTableComponent {
 
   setPinnedMutation = injectMutation(() => ({
     ...setPrPinnedByNumberMutation(),
-    onSuccess: () => {
-      this.messageService.add({ severity: 'success', summary: 'Pin Pull Request', detail: 'The pull request was pinned successfully' });
-      this.queryClient.invalidateQueries({ queryKey: getPullRequestsQueryKey() });
-    },
   }));
 
   isHovered = new Map<number, boolean>();
@@ -158,9 +154,25 @@ export class PullRequestTableComponent {
   }
 
   setPinned(event: Event, pr: PullRequestInfoDto, isPinned: boolean): void {
-    this.setPinnedMutation.mutate({ path: { pr: pr.id }, query: { isPinned } });
-    this.isHovered.set(pr.id, false);
     event.stopPropagation();
+
+    this.setPinnedMutation.mutate(
+      {
+        path: { pr: pr.id },
+        query: { isPinned },
+      },
+      {
+        onSuccess: () => {
+          this.isHovered.set(pr.id, false);
+          this.messageService.add({
+            severity: 'success',
+            summary: isPinned ? 'Pin Pull Request' : 'Unpin Pull Request',
+            detail: `The pull request was ${isPinned ? 'pinned' : 'unpinned'} successfully`,
+          });
+          this.queryClient.invalidateQueries({ queryKey: getPullRequestsQueryKey() });
+        },
+      }
+    );
   }
 
   onPage(event: TablePageEvent) {
