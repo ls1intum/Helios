@@ -21,6 +21,9 @@ import { SliderModule } from 'primeng/slider';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
 import {
   IconCheck,
+  IconCircleX,
+  IconCircleChevronsRight,
+  IconDownload,
   IconChevronDown,
   IconChevronsRight,
   IconChevronUp,
@@ -45,7 +48,7 @@ interface LogLevel {
 }
 
 const LOG_LEVELS: LogLevel[] = [
-  { value: 0, name: 'OFF', label: 'OFF', color: 'text-gray-900', includes: ['OFF'] },
+  { value: 0, name: 'OFF', label: 'OFF', color: '', includes: ['OFF'] },
   { value: 1, name: 'FATAL', label: 'FATAL+', color: 'text-red-800', includes: ['FATAL', 'OFF'] },
   { value: 2, name: 'ERROR', label: 'ERROR+', color: 'text-red-600', includes: ['ERROR', 'FATAL', 'OFF'] },
   { value: 3, name: 'WARN', label: 'WARN+', color: 'text-amber-600', includes: ['WARN', 'ERROR', 'FATAL', 'OFF'] },
@@ -80,6 +83,9 @@ const LOG_LEVELS: LogLevel[] = [
     provideTablerIcons({
       IconProgress,
       IconCheck,
+      IconDownload,
+      IconCircleX,
+      IconCircleChevronsRight,
       IconX,
       IconChevronsRight,
       IconClock,
@@ -108,11 +114,11 @@ export class PipelineTestResultsComponent {
   selectedTestCase = signal<(TestCaseDto & { suiteSystemOut: string | undefined }) | null>(null);
 
   // Log level filtering
-  selectedLogLevelValue = signal<number>(7); // Default to ALL
+  selectedLogLevelValue = signal<number>(2); // Default to ERROR
 
   // Get the current log level object based on the selected value
   selectedLogLevel = computed(() => {
-    return LOG_LEVELS.find(level => level.value === this.selectedLogLevelValue()) || LOG_LEVELS[7];
+    return LOG_LEVELS.find(level => level.value === this.selectedLogLevelValue()) || LOG_LEVELS[2];
   });
 
   // Get the array of log level names that should be included based on the selection
@@ -154,6 +160,27 @@ export class PipelineTestResultsComponent {
   filteredTestSuiteLogs = computed(() => {
     return this.filterLogsByLevel(this.selectedTestCase()?.suiteSystemOut);
   });
+
+  // Function to download logs with current filter applied
+  downloadLogs(logContent: string, fileName: string): void {
+    if (!logContent) return;
+
+    const blob = new Blob([logContent], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+
+    // Create the download link
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+
+    // Trigger the download
+    link.click();
+
+    // Clean up
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
 
   // Helper function for log level styling (colors)
   getLogLevelClass(line: string): string {
