@@ -13,7 +13,7 @@ import { PermissionService } from '@app/core/services/permission.service';
 import { MarkdownPipe } from '@app/core/modules/markdown/markdown.pipe';
 import { RouterLink } from '@angular/router';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
-import { IconGitBranch, IconTag } from 'angular-tabler-icons/icons';
+import { IconGitBranch, IconTag, IconTagPlus } from 'angular-tabler-icons/icons';
 
 @Component({
   selector: 'app-branch-details',
@@ -33,6 +33,7 @@ import { IconGitBranch, IconTag } from 'angular-tabler-icons/icons';
     provideTablerIcons({
       IconGitBranch,
       IconTag,
+      IconTagPlus,
     }),
   ],
   templateUrl: './branch-details.component.html',
