@@ -8,7 +8,7 @@
   [paginator]="true"
   [rows]="paginationService.size()"
   [first]="(paginationService.page() - 1) * paginationService.size()"
-  [rowsPerPageOptions]="[1, 2, 3, 4, 5, 10, 15, 17, 20, 50]"
+  [rowsPerPageOptions]="[5, 10, 20, 30, 50]"
   [loading]="query.isPending()"
   (onPage)="onPage($event)"
   (onSort)="onSort($event)"
