@@ -227,6 +227,9 @@ export const EnvironmentDtoSchema = {
     statusUrl: {
       type: 'string',
     },
+    deploymentWorkflowBranch: {
+      type: 'string',
+    },
     latestDeployment: {
       $ref: '#/components/schemas/EnvironmentDeployment',
     },

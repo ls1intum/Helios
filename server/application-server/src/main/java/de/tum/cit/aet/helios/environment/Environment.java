@@ -129,6 +129,9 @@ public class Environment extends RepositoryFilterEntity {
   @Column(name = "lock_reservation_expires_at")
   private OffsetDateTime lockReservationExpiresAt;
 
+  @Column(name = "deployment_workflow_branch")
+  private String deploymentWorkflowBranch;
+
   public Optional<EnvironmentStatus> getLatestStatus() {
     return statusHistory.stream().findFirst();
   }
