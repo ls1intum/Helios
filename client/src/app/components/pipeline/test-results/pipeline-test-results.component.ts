@@ -21,6 +21,9 @@ import { SliderModule } from 'primeng/slider';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
 import {
   IconCheck,
+  IconCircleX,
+  IconCircleChevronsRight,
+  IconDownload,
   IconChevronDown,
   IconChevronsRight,
   IconChevronUp,
@@ -78,6 +81,9 @@ const LOG_LEVELS: LogLevel[] = [
     provideTablerIcons({
       IconProgress,
       IconCheck,
+      IconDownload,
+      IconCircleX,
+      IconCircleChevronsRight,
       IconX,
       IconChevronsRight,
       IconClock,
