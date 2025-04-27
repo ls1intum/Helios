@@ -109,7 +109,8 @@ export class PaginatedTableService {
   // Method to select a filter (similar to your existing code)
   selectFilter(filter: PaginatedFilterOption): void {
     this.activeFilter.set(filter);
-    this.page.set(0); // Reset to first page
+    // Reset to first page
+    this.page.set(1);
   }
 
   // Method to set filter by value (more convenient in some cases)
@@ -121,6 +122,7 @@ export class PaginatedTableService {
   // Helper method to handle search term changes
   setSearchTerm(term: string | undefined): void {
     this.searchTerm.set(term || '');
+    // Reset to first page
     this.page.set(1);
   }
 
@@ -128,6 +130,7 @@ export class PaginatedTableService {
   clearFilters(): void {
     this.activeFilter.set(this.filterOptions[0]);
     this.searchTerm.set('');
+    // Reset to first page
     this.page.set(1);
   }
 
