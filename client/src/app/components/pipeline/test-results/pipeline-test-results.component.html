@@ -200,6 +200,12 @@
                                   >
                                   </p-tag>
                                 }
+                                @if (
+                                  (testCase.combinedFailureRate && testCase.combinedFailureRate > 0.5) ||
+                                  (testCase.defaultBranchFailureRate && testCase.defaultBranchFailureRate > 0.5)
+                                ) {
+                                  <p-tag severity="danger" value="Broken" styleClass="mt-2 text-xs" pTooltip="This test has failure rate over 50% and might be broken" />
+                                }
                               }
                             </div>
                           </div>
@@ -264,6 +270,17 @@
           <div class="border border-muted-color p-4 rounded overflow-auto max-h-[400px]">
             <pre class="font-mono text-sm">{{ selectedTestCase()?.stackTrace?.trimStart() }}</pre>
           </div>
+          <div class="flex justify-end mt-2">
+            <button
+              pButton
+              class="p-button-sm p-button-secondary"
+              (click)="downloadLogs(selectedTestCase()?.stackTrace?.trimStart() || '', selectedTestCase()?.name + '_stack_trace.txt')"
+              [disabled]="!selectedTestCase()?.stackTrace"
+            >
+              <i-tabler name="download" class="mr-2"></i-tabler>
+              Download Stack Trace
+            </button>
+          </div>
         </div>
       }
 
@@ -294,6 +311,17 @@
               }
             }
           </div>
+          <div class="flex justify-end mt-2">
+            <button
+              pButton
+              class="p-button-sm p-button-secondary"
+              (click)="downloadLogs(filteredTestCaseLogs(), selectedTestCase()?.name + '_case_logs.txt')"
+              [disabled]="!filteredTestCaseLogs()"
+            >
+              <i-tabler name="download" class="mr-2"></i-tabler>
+              Download Logs
+            </button>
+          </div>
         </div>
       }
 
@@ -306,6 +334,17 @@
                 <pre class="font-mono text-sm" [class]="getLogLevelClass(line)">{{ line }}</pre>
               }
             }
+          </div>
+          <div class="flex justify-end mt-2">
+            <button
+              pButton
+              class="p-button-sm p-button-secondary"
+              (click)="downloadLogs(filteredTestSuiteLogs(), selectedTestCase()?.name + '_suite_logs.txt')"
+              [disabled]="!filteredTestSuiteLogs()"
+            >
+              <i-tabler name="download" class="mr-2"></i-tabler>
+              Download Logs
+            </button>
           </div>
         </div>
       }
@@ -320,7 +359,7 @@
   </ng-template>
   <div class="flex flex-col gap-4">
     <p>
-      The <b>flakiness score</b> shows how unpredictable a test is, ranging from <b>0</b> (not flaky) to <b>100</b> (highly flaky). It’s based on failure rates from the default
+      The <b>flakiness score</b> shows how unpredictable a test is, ranging from <b>0</b> (not flaky) to <b>100</b> (highly flaky). It's based on failure rates from the default
       branch and all branches combined.
     </p>
     <p>
@@ -331,7 +370,7 @@
         <b>Flakiness per Branch:</b><br />
         &nbsp;&nbsp;&nbsp;&nbsp;If the failure rate is between 0% and 50%, we calculate:<br />
         &nbsp;&nbsp;&nbsp;&nbsp;<code>flakiness = (50% - failure rate) / 50%</code><br />
-        &nbsp;&nbsp;&nbsp;&nbsp;If it’s 0% or over 50%, flakiness is 0.
+        &nbsp;&nbsp;&nbsp;&nbsp;If it's 0% or over 50%, flakiness is 0.
       </li>
       <li>
         <b>Weighted Score:</b><br />
