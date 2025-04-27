@@ -3,7 +3,6 @@ import { TableModule } from 'primeng/table';
 import { AvatarModule } from 'primeng/avatar';
 import { TagModule } from 'primeng/tag';
 import { injectMutation, injectQuery, QueryClient } from '@tanstack/angular-query-experimental';
-import { IconsModule } from 'icons.module';
 import { SkeletonModule } from 'primeng/skeleton';
 import { InputIconModule } from 'primeng/inputicon';
 import { InputTextModule } from 'primeng/inputtext';
@@ -29,6 +28,8 @@ import { WorkflowRunStatusComponent } from '@app/components/workflow-run-status-
 import { HighlightPipe } from '@app/pipes/highlight.pipe';
 import { MessageService } from 'primeng/api';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
+import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
+import { IconExternalLink, IconFilterPlus, IconGitBranch, IconGitCommit, IconPinned, IconPinnedOff, IconShieldHalf, IconBrandGithub } from 'angular-tabler-icons/icons';
 
 type BranchInfoWithLink = BranchInfoDto & { link: string; lastCommitLink: string };
 
@@ -78,7 +79,7 @@ const FILTER_OPTIONS = [
     AvatarModule,
     TagModule,
     DividerModule,
-    IconsModule,
+    TablerIconComponent,
     TooltipModule,
     TimeAgoPipe,
     SkeletonModule,
@@ -94,7 +95,11 @@ const FILTER_OPTIONS = [
     WorkflowRunStatusComponent,
     HighlightPipe,
   ],
-  providers: [SearchTableService, { provide: FILTER_OPTIONS_TOKEN, useValue: FILTER_OPTIONS }],
+  providers: [
+    SearchTableService,
+    { provide: FILTER_OPTIONS_TOKEN, useValue: FILTER_OPTIONS },
+    provideTablerIcons({ IconFilterPlus, IconPinnedOff, IconPinned, IconShieldHalf, IconBrandGithub, IconExternalLink, IconGitCommit, IconGitBranch }),
+  ],
   templateUrl: './branches-table.component.html',
 })
 export class BranchTableComponent {

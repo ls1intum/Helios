@@ -23,13 +23,13 @@ jobs:
           options: -d
           args: sleep 10
       - name: Copy from container to host
-        uses: tj-actions/docker-cp@19c4fe6290ca6b046eeb91fcae1cabc1db517088
+        uses: tj-actions/docker-cp@34baf27dda2eb5558b43ef549898639ed019126d
         with:
           container: ${{ steps.docker-run.outputs.container-id }}
           source: /usr/share/nginx/html
           destination: ./dist
       - name: Create Sentry release for Client
-        uses: getsentry/action-release@3.1.1
+        uses: getsentry/action-release@v3.1.1
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
@@ -46,7 +46,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Create Sentry release for Server
-        uses: getsentry/action-release@3.1.1
+        uses: getsentry/action-release@v3.1.1
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}

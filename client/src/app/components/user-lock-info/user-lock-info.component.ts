@@ -3,12 +3,19 @@ import { RouterLink } from '@angular/router';
 import { getEnvironmentsByUserLockingOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 import { injectQuery } from '@tanstack/angular-query-experimental';
-import { IconsModule } from 'icons.module';
 import { TooltipModule } from 'primeng/tooltip';
 import { DateService } from '@app/core/services/date.service';
+import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
+import { IconGitBranch, IconLock } from 'angular-tabler-icons/icons';
 @Component({
   selector: 'app-user-lock-info',
-  imports: [IconsModule, TooltipModule, RouterLink],
+  imports: [TablerIconComponent, TooltipModule, RouterLink],
+  providers: [
+    provideTablerIcons({
+      IconLock,
+      IconGitBranch,
+    }),
+  ],
   templateUrl: './user-lock-info.component.html',
 })
 export class UserLockInfoComponent implements OnInit, OnDestroy {

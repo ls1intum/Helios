@@ -8,10 +8,11 @@ import { ButtonGroupModule } from 'primeng/buttongroup';
 import { TooltipModule } from 'primeng/tooltip';
 import { TagModule } from 'primeng/tag';
 import { RouterLink } from '@angular/router';
-import { IconsModule } from 'icons.module';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 import { PermissionService } from '@app/core/services/permission.service';
 import { EnvironmentReviewersComponent } from '../environment-reviewers/environment-reviewers.component';
+import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
+import { IconCheck, IconCloudUpload, IconLock, IconLockOpen, IconLockPlus, IconPencil } from 'angular-tabler-icons/icons';
 
 @Component({
   selector: 'app-environment-actions',
@@ -24,8 +25,18 @@ import { EnvironmentReviewersComponent } from '../environment-reviewers/environm
     TooltipModule,
     TagModule,
     RouterLink,
-    IconsModule,
+    TablerIconComponent,
     EnvironmentReviewersComponent,
+  ],
+  providers: [
+    provideTablerIcons({
+      IconCloudUpload,
+      IconLock,
+      IconLockOpen,
+      IconLockPlus,
+      IconCheck,
+      IconPencil,
+    }),
   ],
   templateUrl: './environment-actions.component.html',
 })

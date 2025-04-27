@@ -1,11 +1,12 @@
 import { Component, inject, OnInit, signal, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { IconsModule } from 'icons.module';
 import { ProgressBarModule } from 'primeng/progressbar';
 import { EnvironmentDeployment } from '@app/core/modules/openapi';
 import { TooltipModule } from 'primeng/tooltip';
 import { DeploymentTimingService } from '@app/core/services/deployment-timing.service';
 import { TagModule } from 'primeng/tag';
+import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
+import { IconCheck, IconClock, IconProgress, IconX } from 'angular-tabler-icons/icons';
 
 interface EstimatedTimes {
   REQUESTED: number;
@@ -15,7 +16,15 @@ interface EstimatedTimes {
 
 @Component({
   selector: 'app-deployment-stepper',
-  imports: [CommonModule, IconsModule, TagModule, ProgressBarModule, TooltipModule],
+  imports: [CommonModule, TablerIconComponent, TagModule, ProgressBarModule, TooltipModule],
+  providers: [
+    provideTablerIcons({
+      IconClock,
+      IconCheck,
+      IconProgress,
+      IconX,
+    }),
+  ],
   templateUrl: './deployment-stepper.component.html',
 })
 export class DeploymentStepperComponent implements OnInit {

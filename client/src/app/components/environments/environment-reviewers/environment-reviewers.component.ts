@@ -1,18 +1,27 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, inject, input } from '@angular/core';
 import { injectQuery } from '@tanstack/angular-query-experimental';
-import { IconsModule } from 'icons.module';
 import { TooltipModule } from 'primeng/tooltip';
 import { AvatarModule } from 'primeng/avatar';
 import { TagModule } from 'primeng/tag';
 import { getEnvironmentReviewersOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 import { Reviewer } from '@app/core/modules/openapi';
+import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
+import { IconExclamationMark, IconShieldExclamation, IconUser, IconUsersGroup } from 'angular-tabler-icons/icons';
 
 @Component({
   selector: 'app-environment-reviewers',
   standalone: true,
-  imports: [CommonModule, IconsModule, TooltipModule, AvatarModule, TagModule],
+  imports: [CommonModule, TablerIconComponent, TooltipModule, AvatarModule, TagModule],
+  providers: [
+    provideTablerIcons({
+      IconShieldExclamation,
+      IconUsersGroup,
+      IconUser,
+      IconExclamationMark,
+    }),
+  ],
   templateUrl: './environment-reviewers.component.html',
 })
 export class EnvironmentReviewersComponent {

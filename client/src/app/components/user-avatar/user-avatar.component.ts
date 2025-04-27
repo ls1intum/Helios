@@ -1,14 +1,16 @@
 import { Component, inject, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { IconsModule } from 'icons.module';
 import { UserInfoDto } from '@app/core/modules/openapi';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 import { AvatarModule } from 'primeng/avatar';
 import { Tooltip } from 'primeng/tooltip';
+import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
+import { IconUser } from 'angular-tabler-icons/icons';
 
 @Component({
   selector: 'app-user-avatar',
-  imports: [CommonModule, AvatarModule, IconsModule, Tooltip],
+  imports: [CommonModule, AvatarModule, TablerIconComponent, Tooltip],
+  providers: [provideTablerIcons({ IconUser })],
   templateUrl: './user-avatar.component.html',
 })
 export class UserAvatarComponent {

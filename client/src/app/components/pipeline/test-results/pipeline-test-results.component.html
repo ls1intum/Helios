@@ -10,13 +10,13 @@
       <p-tag class="ml-2" severity="warn" [rounded]="true" [pTooltip]="'Test results are being processed'">
         <i-tabler name="progress" class="!size-5 animate-spin"></i-tabler>
 
-        <span class="text-sm text-surface-500">Processing</span>
+        <span class="text-sm text-muted-color">Processing</span>
       </p-tag>
     }
 
     @if (hasTestSuites()) {
       @if (totalStats(); as totalStats) {
-        <div class="flex items-center gap-4 ml-2 text-sm text-surface-500">
+        <div class="flex items-center gap-4 ml-2 text-sm text-muted-color">
           <span class="flex items-center gap-1"><i-tabler name="check" class="text-green-500"></i-tabler> {{ totalStats.passed }} passed</span>
           <span class="flex items-center gap-1"><i-tabler name="x" class="text-red-500"></i-tabler> {{ totalStats.failures }} failed</span>
           <span class="flex items-center gap-1"><i-tabler name="chevrons-right" class="text-orange-500"></i-tabler> {{ totalStats.skipped }} skipped</span>
@@ -52,7 +52,7 @@
                   }
                   <span>{{ workflow.testTypeName }}</span>
                   @if (workflow.isProcessing) {
-                    <i-tabler name="progress" class="w-4 h-4 animate-spin text-surface-500 ml-1"></i-tabler>
+                    <i-tabler name="progress" class="w-4 h-4 animate-spin text-muted-color ml-1"></i-tabler>
                   }
                 </div>
               </ng-template>
@@ -81,7 +81,7 @@
 
       <!-- Workflow Stats Summary -->
       @if (activeTestTypeStats(); as stats) {
-        <div class="flex items-center gap-4 mb-3 text-sm p-2 rounded border border-surface-500">
+        <div class="flex items-center gap-4 mb-3 text-sm p-2 rounded border border-muted-color">
           <span class="flex items-center gap-1"><i-tabler name="check" class="text-green-500"></i-tabler> {{ stats.passed }} passed</span>
           <span class="flex items-center gap-1"><i-tabler name="x" class="text-red-500"></i-tabler> {{ stats.failures }} failed</span>
           <span class="flex items-center gap-1"><i-tabler name="chevrons-right" class="text-yellow-500"></i-tabler> {{ stats.skipped }} skipped</span>
@@ -107,7 +107,7 @@
         @if (testSuites.length === 0) {
           <!-- No Results State -->
           <div class="flex flex-col items-center p-4 border rounded-lg">
-            <span class="text-sm text-surface-500">No test results available for {{ workflow.testTypeName }}</span>
+            <span class="text-sm text-muted-color">No test results available for {{ workflow.testTypeName }}</span>
           </div>
         } @else {
           <!-- Test Results -->
@@ -132,7 +132,7 @@
                         }
                       }
                       <span class="font-medium truncate">{{ suite.name }}</span>
-                      <span class="text-sm text-surface-500 ml-2 flex-shrink-0">
+                      <span class="text-sm text-muted-color ml-2 flex-shrink-0">
                         ({{ suite.tests }} tests, {{ suite.failures + suite.errors }} failed, {{ suite.skipped }} skipped)
                       </span>
                     </div>
@@ -152,7 +152,7 @@
                             <i-tabler name="x" class="text-red-500 w-4 h-4 flex-shrink-0"></i-tabler>
                           }
                           @case ('SKIPPED') {
-                            <i-tabler name="chevrons-right" class="text-surface-500 w-4 h-4 flex-shrink-0"></i-tabler>
+                            <i-tabler name="chevrons-right" class="text-muted-color w-4 h-4 flex-shrink-0"></i-tabler>
                           }
                         }
 
@@ -246,12 +246,12 @@
     } @else if (hasTestSuites()) {
       <!-- No active workflow but we have test suites -->
       <div class="flex flex-col items-center p-4 border rounded-lg mt-4">
-        <span class="text-sm text-surface-500">Please select a workflow tab to view test results</span>
+        <span class="text-sm text-muted-color">Please select a workflow tab to view test results</span>
       </div>
     } @else {
       <!-- No test suites at all -->
       <div class="flex flex-col items-center p-4 border rounded-lg mt-4">
-        <span class="text-sm text-surface-500">No test results available</span>
+        <span class="text-sm text-muted-color">No test results available</span>
       </div>
     }
   }
@@ -267,7 +267,7 @@
       @if (selectedTestCase()?.stackTrace) {
         <div>
           <h4 class="font-medium mb-2">Stack Trace</h4>
-          <div class="border border-surface-500 p-4 rounded overflow-auto max-h-[400px]">
+          <div class="border border-muted-color p-4 rounded overflow-auto max-h-[400px]">
             <pre class="font-mono text-sm">{{ selectedTestCase()?.stackTrace?.trimStart() }}</pre>
           </div>
           <div class="flex justify-end mt-2">
@@ -304,7 +304,7 @@
       @if (selectedTestCase()?.systemOut) {
         <div>
           <h4 class="font-medium mb-2">Test Case Logs</h4>
-          <div class="border border-surface-500 p-4 rounded overflow-auto max-h-[400px]">
+          <div class="border border-muted-color p-4 rounded overflow-auto max-h-[400px]">
             @if (filteredTestCaseLogs()) {
               @for (line of filteredTestCaseLogs().split('\n'); track $index) {
                 <pre class="font-mono text-sm" [class]="getLogLevelClass(line)">{{ line }}</pre>
@@ -328,7 +328,7 @@
       @if (selectedTestCase()?.suiteSystemOut) {
         <div>
           <h4 class="font-medium mb-2">Test Suite Logs</h4>
-          <div class="border border-surface-500 p-4 rounded overflow-auto max-h-[400px]">
+          <div class="border border-muted-color p-4 rounded overflow-auto max-h-[400px]">
             @if (filteredTestSuiteLogs()) {
               @for (line of filteredTestSuiteLogs().split('\n'); track $index) {
                 <pre class="font-mono text-sm" [class]="getLogLevelClass(line)">{{ line }}</pre>

@@ -1,6 +1,6 @@
 import { Component, computed, input } from '@angular/core';
 import { Skeleton } from 'primeng/skeleton';
-import { TablerIconComponent } from 'angular-tabler-icons';
+import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
 import { Tooltip } from 'primeng/tooltip';
 import { injectQuery } from '@tanstack/angular-query-experimental';
 import {
@@ -8,6 +8,7 @@ import {
   getLatestWorkflowRunsByPullRequestIdAndHeadCommitOptions,
 } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { WorkflowRunDto } from '@app/core/modules/openapi';
+import { IconAlertCircle, IconCheck, IconClock, IconQuestionMark, IconX } from 'angular-tabler-icons/icons';
 
 export type WorkflowRunSelector =
   | {
@@ -29,6 +30,15 @@ type WorkflowRunSummary = {
 @Component({
   selector: 'app-workflow-run-status',
   imports: [Skeleton, TablerIconComponent, Tooltip],
+  providers: [
+    provideTablerIcons({
+      IconClock,
+      IconCheck,
+      IconX,
+      IconQuestionMark,
+      IconAlertCircle,
+    }),
+  ],
   templateUrl: './workflow-run-status.component.html',
 })
 export class WorkflowRunStatusComponent {
@@ -159,7 +169,7 @@ export class WorkflowRunStatusComponent {
     // Default or no runs --> unknown
     return {
       icon: 'question-mark',
-      color: 'text-surface-500',
+      color: 'text-muted-color',
       tooltip: 'No Workflows or Unknown Status',
     };
   });

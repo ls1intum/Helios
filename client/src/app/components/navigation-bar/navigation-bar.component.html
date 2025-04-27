@@ -1,7 +1,7 @@
 <!-- Sidebar Wrapper (Two-column Layout) -->
 @if (repositoryId()) {
   <div
-    class="flex h-full rounded-2xl mr-4 mt-1 bg-primary transition-all duration-300 ease-in-out relative text-white"
+    class="flex h-full mr-4 bg-primary transition-all duration-300 ease-in-out relative text-white"
     [ngClass]="{ 'w-2': !isVisible(), 'w-16': isVisible() && !isExpanded(), 'w-48': isVisible() && isExpanded() }"
   >
     <!-- Left Section: Main Navigation -->
@@ -75,15 +75,15 @@
       </div>
 
       <!-- Right Section: Small Toggle Button -->
-      <div class="absolute -right-3 top-1/2 -translate-y-1/2 z-10">
-        <button class="h-6 w-6 flex items-center justify-center bg-primary-emphasis rounded-md hover:scale-105 transition-all" (click)="toggleSidebarExpansion()">
+      <div class="absolute -right-4 top-1/2 -translate-y-10 z-10">
+        <button class="h-6 w-6 flex items-center justify-center bg-primary-emphasis rounded-md hover:scale-110 transition-all" (click)="toggleSidebarExpansion()">
           <i-tabler [name]="isExpanded() ? 'chevron-left' : 'chevron-right'" class="!size-4"></i-tabler>
         </button>
       </div>
     }
-    <div class="absolute -left-2 top-1/2 -translate-y-1/2 z-10">
-      <button class="h-6 w-6 flex items-center justify-center bg-primary-emphasis rounded-md hover:scale-105 transition-all" (click)="toggleSidebarVisibility()">
-        <i-tabler [name]="isVisible() ? 'chevron-left' : 'chevron-right'" class="!size-4"></i-tabler>
+    <div class="absolute -right-4 top-1/2 -translate-y-20 z-10">
+      <button class="h-6 w-6 flex items-center justify-center bg-primary-emphasis rounded-md hover:scale-110 transition-all" (click)="toggleSidebarVisibility()">
+        <i-tabler [name]="isVisible() ? 'eye-off' : 'eye'" class="!size-4"></i-tabler>
       </button>
     </div>
   </div>

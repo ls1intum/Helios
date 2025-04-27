@@ -10,7 +10,6 @@ import {
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 import { PermissionService } from '@app/core/services/permission.service';
 import { injectMutation, injectQuery, QueryClient } from '@tanstack/angular-query-experimental';
-import { IconsModule } from 'icons.module';
 import { MessageService } from 'primeng/api';
 import { AvatarModule } from 'primeng/avatar';
 import { BadgeModule } from 'primeng/badge';
@@ -21,10 +20,18 @@ import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
 import { DeploymentStateTagComponent } from '../environments/deployment-state-tag/deployment-state-tag.component';
+import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
+import { IconExternalLink, IconServerCog } from 'angular-tabler-icons/icons';
 
 @Component({
   selector: 'app-release-candidate-deployment-table',
-  imports: [TableModule, ButtonModule, IconsModule, SkeletonModule, TagModule, AvatarModule, OverlayBadgeModule, BadgeModule, TooltipModule, DeploymentStateTagComponent],
+  imports: [TableModule, ButtonModule, TablerIconComponent, SkeletonModule, TagModule, AvatarModule, OverlayBadgeModule, BadgeModule, TooltipModule, DeploymentStateTagComponent],
+  providers: [
+    provideTablerIcons({
+      IconExternalLink,
+      IconServerCog,
+    }),
+  ],
   templateUrl: './release-candidate-deployment-table.component.html',
 })
 export class ReleaseCandidateDeploymentTableComponent {
