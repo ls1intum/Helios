@@ -11,7 +11,7 @@ import { PermissionService } from '@app/core/services/permission.service';
 import { injectQuery } from '@tanstack/angular-query-experimental';
 import { getRepositoryByIdOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { ButtonModule } from 'primeng/button';
-import { IconAdjustmentsAlt, IconArrowGuide, IconChevronLeft, IconChevronRight, IconRocket, IconServerCog, IconEyeOff } from 'angular-tabler-icons/icons';
+import { IconAdjustmentsAlt, IconArrowGuide, IconChevronLeft, IconChevronRight, IconRocket, IconServerCog, IconEyeOff, IconEye } from 'angular-tabler-icons/icons';
 
 @Component({
   selector: 'app-navigation-bar',
@@ -25,6 +25,7 @@ import { IconAdjustmentsAlt, IconArrowGuide, IconChevronLeft, IconChevronRight, 
       IconChevronLeft,
       IconChevronRight,
       IconEyeOff,
+      IconEye,
     }),
   ],
   templateUrl: './navigation-bar.component.html',
