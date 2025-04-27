@@ -6,10 +6,12 @@
       <span class="hidden md:block">{{ isAdmin() ? 'Manage Environments' : 'Go to Environments' }}</span>
     </p-button>
   } @else {
-    <p-button label="" (click)="syncEnvironments()" pTooltip="May take ~10 seconds after environment creation on GitHub" tooltipPosition="top" class="mr-2">
-      <i-tabler name="refresh" class="!size-5"></i-tabler>
-      <span class="hidden md:block">Sync Environments</span>
-    </p-button>
+    @if (isAtLeastMaintainer()) {
+      <p-button label="" (click)="syncEnvironments()" pTooltip="May take ~10 seconds after environment creation on GitHub" tooltipPosition="top" class="mr-2">
+        <i-tabler name="refresh" class="!size-5"></i-tabler>
+        <span class="hidden md:block">Sync Environments</span>
+      </p-button>
+    }
   }
 </div>
 
