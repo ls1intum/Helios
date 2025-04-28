@@ -82,9 +82,6 @@ export class ReleaseCandidateDeploymentTableComponent {
 
           this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Deployment started successfully' });
         },
-        onError: () => {
-          this.selectedEnvironmentId.set(undefined);
-        },
       }
     );
   };

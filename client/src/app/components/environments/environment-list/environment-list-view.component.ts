@@ -259,9 +259,6 @@ export class EnvironmentListViewComponent implements OnDestroy {
       this.messageService.add({ severity: 'success', summary: 'Sync Environments', detail: 'The repository environments synced successfully' });
       this.queryClient.invalidateQueries({ queryKey: getAllEnvironmentsQueryKey() });
     },
-    onError: () => {
-      this.messageService.add({ severity: 'error', summary: 'Sync Environments', detail: 'The repository environments could not be synced' });
-    },
   }));
 
   syncEnvironments() {
