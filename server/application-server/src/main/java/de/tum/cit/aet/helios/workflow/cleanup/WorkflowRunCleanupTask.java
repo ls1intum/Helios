@@ -4,6 +4,8 @@ import de.tum.cit.aet.helios.workflow.WorkflowRunRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +24,19 @@ public class WorkflowRunCleanupTask {
 
   private final WorkflowRunRepository repo;
   private final WorkflowRunCleanupProps props;
+
+  /**
+   * This method is called when the application is ready. It logs the current mode of operation
+   * (DRY-RUN or DELETE) based on the configuration.
+   */
+  @EventListener(ApplicationReadyEvent.class)
+  public void init() {
+    if (props.isDryRun()) {
+      log.info("Workflow‑run cleanup is in DRY-RUN mode. No rows will be deleted.");
+    } else {
+      log.info("Workflow‑run cleanup is in DELETE mode.");
+    }
+  }
 
 
   /**
