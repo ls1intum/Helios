@@ -119,6 +119,73 @@ public interface WorkflowRunRepository extends JpaRepository<WorkflowRun, Long> 
   List<WorkflowRun> findByHeadBranchAndHeadShaAndRepositoryRepositoryId(
       String branch, String headSha, Long repositoryId);
 
+
+  /**
+   * IDs of workflow-runs that will **NOT** be deleted by the current policy.
+   *
+   * <p>Same ranking logic, but we select the rows whose ID is *not* in the
+   * `deletable` set.
+   */
+  @Query(value = """
+      WITH ranked AS (
+          SELECT id,
+                 repository_id,
+                 workflow_id,
+                 head_branch,
+                 created_at,
+                 row_number() OVER (
+                     PARTITION BY repository_id, workflow_id, head_branch
+                     ORDER BY created_at DESC
+                 ) AS rn
+          FROM workflow_run
+          WHERE test_processing_status IS NOT DISTINCT FROM :tps
+      ),
+      deletable AS (
+          SELECT id
+          FROM ranked
+          WHERE rn > :keep
+            AND created_at < now() - (:ageDays * interval '1 day')
+      )
+      SELECT id
+      FROM ranked
+      WHERE id NOT IN (SELECT id FROM deletable)
+      """, nativeQuery = true)
+  List<Long> previewSurvivorRunIds(@Param("keep") int keep,
+                                   @Param("ageDays") int ageDays,
+                                   @Param("tps") String tps);
+
+
+  /**
+   * IDs of workflow-runs that will be deleted by the current policy.
+   *
+   * <p>Same ranking logic, but we select the rows whose ID is in the
+   * `deletable` set.
+   */
+  @Query(value = """
+      WITH candidates AS (
+          SELECT id
+          FROM (
+              SELECT id,
+                     repository_id,
+                     workflow_id,
+                     head_branch,
+                     created_at,
+                     row_number() OVER (
+                         PARTITION BY repository_id, workflow_id, head_branch
+                         ORDER BY created_at DESC
+                     ) AS rn
+              FROM workflow_run
+              WHERE test_processing_status IS NOT DISTINCT FROM :tps
+          ) ranked
+          WHERE rn > :keep
+            AND created_at < now() - (:ageDays * interval '1 day')
+      )
+      SELECT id FROM candidates
+      """, nativeQuery = true)
+  List<Long> previewObsoleteRunIds(@Param("keep") int keep,
+                                   @Param("ageDays") int ageDays,
+                                   @Param("tps") String tps);
+
   /**
    * Custom database clean‑up for workflow runs.
    */

@@ -35,6 +35,15 @@ public class WorkflowRunCleanupProps {
   private String cron = "0 0 1 * * *";
 
   /**
+   * If {@code true}, the clean-up job will only log what it would
+   * have done, but not actually delete anything.  This is useful for
+   * testing and debugging.
+   *
+   * <p>Default: {@code true}</p>
+   */
+  private boolean dryRun = true;
+
+  /**
    * Ordered list of retention policies.  The task iterates over them
    * in the declared order and applies each individually.
    *

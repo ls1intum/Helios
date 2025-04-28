@@ -33,6 +33,7 @@ status-check:
 
 cleanup:
     workflow-run:
+        dry-run: ${CLEANUP_WORKFLOW_RUN_DRY_RUN:true}
         # runs every day at 01:00 (server time)
         cron: "0 0 1 * * *"
         policies:

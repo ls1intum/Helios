@@ -1,6 +1,7 @@
 package de.tum.cit.aet.helios.workflow.cleanup;
 
 import de.tum.cit.aet.helios.workflow.WorkflowRunRepository;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -40,15 +41,37 @@ public class WorkflowRunCleanupTask {
         tps = null;
       }
 
-      int deleted = repo.purgeObsoleteRuns(
-          policy.getKeep(),
-          policy.getAgeDays(),
-          tps
-      );
+      int deleted = 0;
 
-      log.info("Cleanup policy  tps={}  keep={}  ageDays={}  →  {} rows deleted",
-          tps, policy.getKeep(),
-          policy.getAgeDays(), deleted);
+      if (props.isDryRun()) {
+        List<Long> ids = repo.previewObsoleteRunIds(
+            policy.getKeep(), policy.getAgeDays(), tps);
+
+        deleted = ids.size();
+
+        log.info(
+            "DRY-RUN: Cleanup policy tps={} keep={} ageDays={}  →  {}# of rows will be deleted",
+            tps, policy.getKeep(), policy.getAgeDays(), ids.size());
+
+        List<Long> idsOfSurvivingRuns = repo.previewSurvivorRunIds(
+            policy.getKeep(), policy.getAgeDays(), tps);
+
+        log.info(
+            "DRY-RUN: Cleanup policy tps={} keep={} ageDays={}  →  {}# of rows will survive: {}",
+            tps, policy.getKeep(), policy.getAgeDays(), idsOfSurvivingRuns.size(),
+            idsOfSurvivingRuns);
+
+      } else {
+        deleted = repo.purgeObsoleteRuns(
+            policy.getKeep(),
+            policy.getAgeDays(),
+            tps
+        );
+
+        log.info("DELETE: Cleanup policy  tps={}  keep={}  ageDays={}  →  {} rows deleted",
+            tps, policy.getKeep(),
+            policy.getAgeDays(), deleted);
+      }
 
       totalDeleted += deleted;
     }
