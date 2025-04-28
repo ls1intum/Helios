@@ -65,14 +65,14 @@ public class WorkflowRunCleanupTask {
         deleted = ids.size();
 
         log.info(
-            "DRY-RUN: Cleanup policy tps={} keep={} ageDays={}  →  {}# of rows will be deleted",
+            "DRY-RUN: Cleanup policy tps={} keep={} ageDays={}  →  {} rows will be deleted",
             tps, policy.getKeep(), policy.getAgeDays(), ids.size());
 
         List<Long> idsOfSurvivingRuns = repo.previewSurvivorRunIds(
             policy.getKeep(), policy.getAgeDays(), tps);
 
         log.info(
-            "DRY-RUN: Cleanup policy tps={} keep={} ageDays={}  →  {}# of rows will survive: {}",
+            "DRY-RUN: Cleanup policy tps={} keep={} ageDays={}  →  {} rows will survive: {}",
             tps, policy.getKeep(), policy.getAgeDays(), idsOfSurvivingRuns.size(),
             idsOfSurvivingRuns);
 
