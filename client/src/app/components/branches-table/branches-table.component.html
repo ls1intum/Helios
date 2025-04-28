@@ -71,8 +71,8 @@
                 <div class="flex flex-nowrap">
                   <p-treeTableToggler [rowNode]="rowNode" />
 
-                  <p-tag class="cursor-pointer truncate max-w-[10rem] whitespace-nowrap hover:underline" (click)="openBranch(branch)">
-                    <div class="inline-flex flex-wrap items-baseline">
+                  <p-tag class="cursor-pointer max-w-[10rem] whitespace-nowrap hover:underline" (click)="openBranch(branch)">
+                    <div class="inline-flex flex-wrap items-baseline truncate">
                       @for (part of branch.name | highlight: searchTableService.searchValue(); track part.text) {
                         @if (part.highlight) {
                           <mark>{{ part.text }}</mark>

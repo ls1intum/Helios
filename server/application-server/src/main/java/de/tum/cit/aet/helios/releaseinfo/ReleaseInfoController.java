@@ -3,12 +3,12 @@ package de.tum.cit.aet.helios.releaseinfo;
 import de.tum.cit.aet.helios.config.security.annotations.EnforceAtLeastMaintainer;
 import de.tum.cit.aet.helios.releaseinfo.releasecandidate.CommitsSinceReleaseCandidateDto;
 import de.tum.cit.aet.helios.releaseinfo.releasecandidate.ReleaseCandidateCreateDto;
+import de.tum.cit.aet.helios.releaseinfo.releasecandidate.ReleaseNameDto;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -27,9 +27,10 @@ public class ReleaseInfoController {
     return ResponseEntity.ok(releaseInfoService.getAllReleaseInfos());
   }
 
-  @GetMapping("/{name}")
-  public ResponseEntity<ReleaseInfoDetailsDto> getReleaseInfoByName(@PathVariable String name) {
-    return ResponseEntity.ok(releaseInfoService.getReleaseInfoByName(name));
+  @PostMapping("/details")
+  public ResponseEntity<ReleaseInfoDetailsDto> getReleaseInfoByName(
+      @RequestBody ReleaseNameDto nameDto) {
+    return ResponseEntity.ok(releaseInfoService.getReleaseInfoByName(nameDto.name()));
   }
 
   @GetMapping("/newcommits")
@@ -46,50 +47,64 @@ public class ReleaseInfoController {
     return ResponseEntity.ok(releaseInfoService.createReleaseCandidate(releaseCandidate));
   }
 
-  @PostMapping("{name}/evaluate/{isWorking}")
-  public ResponseEntity<Void> evaluate(@PathVariable String name, @PathVariable boolean isWorking) {
-    releaseInfoService.evaluateReleaseCandidate(name, isWorking);
+  @PostMapping("/evaluate")
+  public ResponseEntity<Void> evaluate(@RequestBody ReleaseEvaluationDto evaluationDto) {
+    releaseInfoService.evaluateReleaseCandidate(evaluationDto.name(), evaluationDto.isWorking());
     return ResponseEntity.ok().build();
   }
 
   @EnforceAtLeastMaintainer
-  @DeleteMapping("/{name}")
+  @DeleteMapping
   public ResponseEntity<ReleaseInfoListDto> deleteReleaseCandidateByName(
-      @PathVariable String name) {
-    return ResponseEntity.ok(releaseInfoService.deleteReleaseCandidateByName(name));
+      @RequestBody ReleaseNameDto nameDto) {
+    return ResponseEntity.ok(releaseInfoService.deleteReleaseCandidateByName(nameDto.name()));
   }
 
   @EnforceAtLeastMaintainer
-  @PostMapping("/{name}/publish")
-  public ResponseEntity<Void> publishReleaseDraft(@PathVariable String name) {
-    releaseInfoService.publishReleaseDraft(name);
+  @PostMapping("/publish")
+  public ResponseEntity<Void> publishReleaseDraft(@RequestBody ReleaseNameDto nameDto) {
+    releaseInfoService.publishReleaseDraft(nameDto.name());
     return ResponseEntity.ok().build();
   }
 
   /**
    * Endpoint to generate release notes for a given tag.
    *
-   * @param tagName Name of the tag
+   * @param releaseNameDto DTO containing the tag name
    * @return Generated release notes
    */
   @EnforceAtLeastMaintainer
-  @PostMapping("/{tagName}/generate-release-notes")
-  public ResponseEntity<String> generateReleaseNotes(@PathVariable String tagName) {
-    return ResponseEntity.ok(releaseInfoService.generateReleaseNotes(tagName));
+  @PostMapping("/generate-release-notes")
+  public ResponseEntity<String> generateReleaseNotes(@RequestBody ReleaseNameDto releaseNameDto) {
+    return ResponseEntity.ok(releaseInfoService.generateReleaseNotes(releaseNameDto.name()));
   }
 
   /**
    * Endpoint to update the release notes of a release candidate.
    *
-   * @param name Name of the release candidate
-   * @param releaseNotes DTO containing the updated release notes
+   * @param updateReleaseNotesDto DTO containing the name and updated release notes
    * @return Updated release info details
    */
   @EnforceAtLeastMaintainer
-  @PutMapping("/{name}/release-notes")
+  @PutMapping("/release-notes")
   public ResponseEntity<Void> updateReleaseNotes(
-      @PathVariable String name, @RequestBody ReleaseNotesDto releaseNotes) {
-    releaseInfoService.updateReleaseNotes(name, releaseNotes.body());
+      @RequestBody UpdateReleaseNotesDto updateReleaseNotesDto) {
+    releaseInfoService.updateReleaseNotes(
+        updateReleaseNotesDto.name(), updateReleaseNotesDto.notes());
+    return ResponseEntity.ok().build();
+  }
+
+  /**
+   * Endpoint to update the name of a release candidate.
+   *
+   * @param updateNameDto DTO containing the old name and the new name
+   * @return Updated release info details
+   */
+  @EnforceAtLeastMaintainer
+  @PutMapping("/update-name")
+  public ResponseEntity<Void> updateReleaseName(
+      @RequestBody ReleaseCandidateNameUpdateDto updateNameDto) {
+    releaseInfoService.updateReleaseName(updateNameDto.oldName(), updateNameDto.newName());
     return ResponseEntity.ok().build();
   }
 }
