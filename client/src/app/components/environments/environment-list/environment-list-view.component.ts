@@ -73,7 +73,7 @@ export class EnvironmentListViewComponent implements OnDestroy {
 
   isLoggedIn = computed(() => this.keycloakService.isLoggedIn());
   isAdmin = computed(() => this.permissionService.isAdmin());
-  hasUnlockPermissions = computed(() => this.permissionService.isAtLeastMaintainer());
+  isAtLeastMaintainer = computed(() => this.permissionService.isAtLeastMaintainer());
   hasDeployPermissions = computed(() => this.permissionService.hasWritePermission());
   hasEditEnvironmentPermissions = computed(() => this.permissionService.isAdmin());
 

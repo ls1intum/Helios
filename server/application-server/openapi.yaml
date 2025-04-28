@@ -1726,6 +1726,8 @@ components:
           - ARTEMIS_INFO
         statusUrl:
           type: string
+        deploymentWorkflowBranch:
+          type: string
         latestDeployment:
           $ref: "#/components/schemas/EnvironmentDeployment"
         latestStatus:

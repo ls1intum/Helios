@@ -51,6 +51,12 @@
               </div>
 
               <div class="flex flex-col gap-2">
+                <label for="deployment-workflow-branch">Deployment Workflow Branch</label>
+                <span class="text-sm text-muted-color"> Optional. If set, workflows will be triggered from this branch instead of the branch being deployed. </span>
+                <input pInputText id="deployment-workflow-branch" type="text" formControlName="deploymentWorkflowBranch" placeholder="Leave empty to use deployment branch" />
+              </div>
+
+              <div class="flex flex-col gap-2">
                 <label for="server-url">Server URL</label>
                 <input pInputText id="server-url" type="text" formControlName="serverUrl" />
               </div>
