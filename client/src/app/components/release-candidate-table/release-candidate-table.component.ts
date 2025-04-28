@@ -11,7 +11,7 @@ import { ReleaseInfoListDto } from '@app/core/modules/openapi';
 import { Router, RouterLink } from '@angular/router';
 import { SlicePipe } from '@angular/common';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
-import { IconGitBranch, IconGitCommit, IconPlus, IconTag } from 'angular-tabler-icons/icons';
+import { IconBrandGithub, IconGitBranch, IconGitCommit, IconPlus, IconTag } from 'angular-tabler-icons/icons';
 
 const FILTER_OPTIONS: { name: string; filter: (prs: ReleaseInfoListDto[]) => ReleaseInfoListDto[] }[] = [];
 
@@ -26,6 +26,7 @@ const FILTER_OPTIONS: { name: string; filter: (prs: ReleaseInfoListDto[]) => Rel
       IconGitCommit,
       IconGitBranch,
       IconTag,
+      IconBrandGithub,
     }),
   ],
   templateUrl: './release-candidate-table.component.html',

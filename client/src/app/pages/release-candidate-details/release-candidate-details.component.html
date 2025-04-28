@@ -23,6 +23,10 @@
               <p-button text severity="secondary" (click)="editName()" size="small">
                 <i-tabler name="pencil" class="!size-5" />
               </p-button>
+            } @else {
+              <p-button text (click)="openReleaseInGitHub()" styleClass="p-1" class="leading-none">
+                <i-tabler name="brand-github" class="!size-4" />
+              </p-button>
             }
           }
           <p-tag class="text-xs">

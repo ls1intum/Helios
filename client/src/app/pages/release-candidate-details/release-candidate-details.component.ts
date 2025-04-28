@@ -28,7 +28,7 @@ import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { TextareaModule } from 'primeng/textarea';
 import { SlicePipe } from '@angular/common';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
-import { IconCheck, IconCloudUpload, IconExternalLink, IconGitCommit, IconPencil, IconPlus, IconTrash, IconUser, IconX } from 'angular-tabler-icons/icons';
+import { IconBrandGithub, IconCheck, IconCloudUpload, IconExternalLink, IconGitCommit, IconPencil, IconPlus, IconTrash, IconUser, IconX } from 'angular-tabler-icons/icons';
 
 @Component({
   selector: 'app-release-candidate-details',
@@ -58,6 +58,7 @@ import { IconCheck, IconCloudUpload, IconExternalLink, IconGitCommit, IconPencil
       IconX,
       IconPlus,
       IconPencil,
+      IconBrandGithub,
     }),
   ],
   templateUrl: './release-candidate-details.component.html',
