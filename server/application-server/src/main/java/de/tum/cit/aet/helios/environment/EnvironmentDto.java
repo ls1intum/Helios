@@ -31,6 +31,7 @@ public record EnvironmentDto(
     String serverUrl,
     StatusCheckType statusCheckType,
     String statusUrl,
+    String deploymentWorkflowBranch,
     EnvironmentDeployment latestDeployment,
     EnvironmentStatusDto latestStatus,
     UserInfoDto lockedBy,
@@ -92,7 +93,8 @@ public record EnvironmentDto(
           releaseCandidateRepository
               .findByRepositoryRepositoryIdAndCommitSha(union.getRepository().id(), union.getSha())
               .stream()
-              .map(ReleaseCandidate::getName).toList(),
+              .map(ReleaseCandidate::getName)
+              .toList(),
           union.getPullRequestName(),
           UserInfoDto.fromUser(union.getCreator()),
           union.getPullRequestNumber(),
@@ -132,6 +134,7 @@ public record EnvironmentDto(
         environment.getServerUrl(),
         environment.getStatusCheckType(),
         environment.getStatusUrl(),
+        environment.getDeploymentWorkflowBranch(),
         envDeployment,
         latestStatus.map(EnvironmentStatusDto::fromEnvironmentStatus).orElse(null),
         UserInfoDto.fromUser(environment.getLockedBy()),

@@ -30,3 +30,21 @@ status-check:
     # How many status checks should be stored in the database
     # for an environment
     keep-count: 10
+
+cleanup:
+    workflow-run:
+        dry-run: ${CLEANUP_WORKFLOW_RUN_DRY_RUN:true}
+        # runs every day at 01:00 (server time)
+        cron: "0 0 1 * * *"
+        policies:
+            # Test Status: PROCESSED --> keep newest 2 runs, delete every other one regardless of age
+            - test-processing-status: PROCESSED
+              keep: 2
+            # Test Status: FAILED --> keep newest 2 runs, delete older ones only if ≥ 5 days old
+            - test-processing-status: FAILED
+              keep: 2
+              age-days: 5
+            # Test Status: NULL --> keep newest 2 runs, delete older ones only if ≥ 5 days old
+            - test-processing-status: null
+              keep: 2
+              age-days: 5

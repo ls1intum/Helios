@@ -7,7 +7,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface ReleaseCandidateEvaluationRepository
-    extends JpaRepository<ReleaseCandidateEvaluation, ReleaseCandidateEvaluationId> {
+    extends JpaRepository<ReleaseCandidateEvaluation, Long> {
   List<ReleaseCandidateEvaluation> findByReleaseCandidate(ReleaseCandidate releaseCandidate);
 
   Optional<ReleaseCandidateEvaluation> findByReleaseCandidateAndEvaluatedById(

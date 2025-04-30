@@ -8,6 +8,7 @@ import {
   getGitRepoSettings,
   updateGitRepoSettings,
   updateWorkflowGroups,
+  updateReleaseName,
   updateReleaseNotes,
   getEnvironmentById,
   updateEnvironment,
@@ -18,11 +19,13 @@ import {
   getAllTestTypes,
   createTestType,
   createWorkflowGroup,
+  deleteReleaseCandidateByName,
   getAllReleaseInfos,
   createReleaseCandidate,
-  generateReleaseNotes,
   publishReleaseDraft,
+  generateReleaseNotes,
   evaluate,
+  getReleaseInfoByName,
   setPrPinnedByNumber,
   syncEnvironments,
   deployToEnvironment,
@@ -40,8 +43,6 @@ import {
   getGroupsWithWorkflows,
   getAllRepositories,
   getRepositoryById,
-  deleteReleaseCandidateByName,
-  getReleaseInfoByName,
   getCommitsSinceLastReleaseCandidate,
   getAllPullRequests,
   getPullRequestById,
@@ -79,6 +80,8 @@ import type {
   UpdateGitRepoSettingsResponse,
   UpdateWorkflowGroupsData,
   UpdateWorkflowGroupsError,
+  UpdateReleaseNameData,
+  UpdateReleaseNameError,
   UpdateReleaseNotesData,
   UpdateReleaseNotesError,
   GetEnvironmentByIdData,
@@ -103,17 +106,23 @@ import type {
   CreateWorkflowGroupData,
   CreateWorkflowGroupError,
   CreateWorkflowGroupResponse,
+  DeleteReleaseCandidateByNameData,
+  DeleteReleaseCandidateByNameError,
+  DeleteReleaseCandidateByNameResponse,
   GetAllReleaseInfosData,
   CreateReleaseCandidateData,
   CreateReleaseCandidateError,
   CreateReleaseCandidateResponse,
+  PublishReleaseDraftData,
+  PublishReleaseDraftError,
   GenerateReleaseNotesData,
   GenerateReleaseNotesError,
   GenerateReleaseNotesResponse,
-  PublishReleaseDraftData,
-  PublishReleaseDraftError,
   EvaluateData,
   EvaluateError,
+  GetReleaseInfoByNameData,
+  GetReleaseInfoByNameError,
+  GetReleaseInfoByNameResponse,
   SetPrPinnedByNumberData,
   SetPrPinnedByNumberError,
   SyncEnvironmentsData,
@@ -141,10 +150,6 @@ import type {
   GetGroupsWithWorkflowsData,
   GetAllRepositoriesData,
   GetRepositoryByIdData,
-  DeleteReleaseCandidateByNameData,
-  DeleteReleaseCandidateByNameError,
-  DeleteReleaseCandidateByNameResponse,
-  GetReleaseInfoByNameData,
   GetCommitsSinceLastReleaseCandidateData,
   GetAllPullRequestsData,
   GetPullRequestByIdData,
@@ -273,6 +278,20 @@ export const updateWorkflowGroupsMutation = (options?: Partial<Options<UpdateWor
   const mutationOptions: MutationOptions<unknown, UpdateWorkflowGroupsError, Options<UpdateWorkflowGroupsData>> = {
     mutationFn: async localOptions => {
       const { data } = await updateWorkflowGroups({
+        ...options,
+        ...localOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const updateReleaseNameMutation = (options?: Partial<Options<UpdateReleaseNameData>>) => {
+  const mutationOptions: MutationOptions<unknown, UpdateReleaseNameError, Options<UpdateReleaseNameData>> = {
+    mutationFn: async localOptions => {
+      const { data } = await updateReleaseName({
         ...options,
         ...localOptions,
         throwOnError: true,
@@ -480,6 +499,20 @@ export const createWorkflowGroupMutation = (options?: Partial<Options<CreateWork
   return mutationOptions;
 };
 
+export const deleteReleaseCandidateByNameMutation = (options?: Partial<Options<DeleteReleaseCandidateByNameData>>) => {
+  const mutationOptions: MutationOptions<DeleteReleaseCandidateByNameResponse, DeleteReleaseCandidateByNameError, Options<DeleteReleaseCandidateByNameData>> = {
+    mutationFn: async localOptions => {
+      const { data } = await deleteReleaseCandidateByName({
+        ...options,
+        ...localOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
 export const getAllReleaseInfosQueryKey = (options?: Options<GetAllReleaseInfosData>) => createQueryKey('getAllReleaseInfos', options);
 
 export const getAllReleaseInfosOptions = (options?: Options<GetAllReleaseInfosData>) => {
@@ -528,37 +561,6 @@ export const createReleaseCandidateMutation = (options?: Partial<Options<CreateR
   return mutationOptions;
 };
 
-export const generateReleaseNotesQueryKey = (options: Options<GenerateReleaseNotesData>) => createQueryKey('generateReleaseNotes', options);
-
-export const generateReleaseNotesOptions = (options: Options<GenerateReleaseNotesData>) => {
-  return queryOptions({
-    queryFn: async ({ queryKey, signal }) => {
-      const { data } = await generateReleaseNotes({
-        ...options,
-        ...queryKey[0],
-        signal,
-        throwOnError: true,
-      });
-      return data;
-    },
-    queryKey: generateReleaseNotesQueryKey(options),
-  });
-};
-
-export const generateReleaseNotesMutation = (options?: Partial<Options<GenerateReleaseNotesData>>) => {
-  const mutationOptions: MutationOptions<GenerateReleaseNotesResponse, GenerateReleaseNotesError, Options<GenerateReleaseNotesData>> = {
-    mutationFn: async localOptions => {
-      const { data } = await generateReleaseNotes({
-        ...options,
-        ...localOptions,
-        throwOnError: true,
-      });
-      return data;
-    },
-  };
-  return mutationOptions;
-};
-
 export const publishReleaseDraftQueryKey = (options: Options<PublishReleaseDraftData>) => createQueryKey('publishReleaseDraft', options);
 
 export const publishReleaseDraftOptions = (options: Options<PublishReleaseDraftData>) => {
@@ -590,6 +592,37 @@ export const publishReleaseDraftMutation = (options?: Partial<Options<PublishRel
   return mutationOptions;
 };
 
+export const generateReleaseNotesQueryKey = (options: Options<GenerateReleaseNotesData>) => createQueryKey('generateReleaseNotes', options);
+
+export const generateReleaseNotesOptions = (options: Options<GenerateReleaseNotesData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await generateReleaseNotes({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: generateReleaseNotesQueryKey(options),
+  });
+};
+
+export const generateReleaseNotesMutation = (options?: Partial<Options<GenerateReleaseNotesData>>) => {
+  const mutationOptions: MutationOptions<GenerateReleaseNotesResponse, GenerateReleaseNotesError, Options<GenerateReleaseNotesData>> = {
+    mutationFn: async localOptions => {
+      const { data } = await generateReleaseNotes({
+        ...options,
+        ...localOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
 export const evaluateQueryKey = (options: Options<EvaluateData>) => createQueryKey('evaluate', options);
 
 export const evaluateOptions = (options: Options<EvaluateData>) => {
@@ -611,6 +644,37 @@ export const evaluateMutation = (options?: Partial<Options<EvaluateData>>) => {
   const mutationOptions: MutationOptions<unknown, EvaluateError, Options<EvaluateData>> = {
     mutationFn: async localOptions => {
       const { data } = await evaluate({
+        ...options,
+        ...localOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const getReleaseInfoByNameQueryKey = (options: Options<GetReleaseInfoByNameData>) => createQueryKey('getReleaseInfoByName', options);
+
+export const getReleaseInfoByNameOptions = (options: Options<GetReleaseInfoByNameData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getReleaseInfoByName({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: getReleaseInfoByNameQueryKey(options),
+  });
+};
+
+export const getReleaseInfoByNameMutation = (options?: Partial<Options<GetReleaseInfoByNameData>>) => {
+  const mutationOptions: MutationOptions<GetReleaseInfoByNameResponse, GetReleaseInfoByNameError, Options<GetReleaseInfoByNameData>> = {
+    mutationFn: async localOptions => {
+      const { data } = await getReleaseInfoByName({
         ...options,
         ...localOptions,
         throwOnError: true,
@@ -1071,37 +1135,6 @@ export const getRepositoryByIdOptions = (options: Options<GetRepositoryByIdData>
       return data;
     },
     queryKey: getRepositoryByIdQueryKey(options),
-  });
-};
-
-export const deleteReleaseCandidateByNameMutation = (options?: Partial<Options<DeleteReleaseCandidateByNameData>>) => {
-  const mutationOptions: MutationOptions<DeleteReleaseCandidateByNameResponse, DeleteReleaseCandidateByNameError, Options<DeleteReleaseCandidateByNameData>> = {
-    mutationFn: async localOptions => {
-      const { data } = await deleteReleaseCandidateByName({
-        ...options,
-        ...localOptions,
-        throwOnError: true,
-      });
-      return data;
-    },
-  };
-  return mutationOptions;
-};
-
-export const getReleaseInfoByNameQueryKey = (options: Options<GetReleaseInfoByNameData>) => createQueryKey('getReleaseInfoByName', options);
-
-export const getReleaseInfoByNameOptions = (options: Options<GetReleaseInfoByNameData>) => {
-  return queryOptions({
-    queryFn: async ({ queryKey, signal }) => {
-      const { data } = await getReleaseInfoByName({
-        ...options,
-        ...queryKey[0],
-        signal,
-        throwOnError: true,
-      });
-      return data;
-    },
-    queryKey: getReleaseInfoByNameQueryKey(options),
   });
 };
 

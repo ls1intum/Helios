@@ -9,10 +9,26 @@
       </span>
       <div class="flex-col items-center gap-4">
         <h2 class="text-2xl flex items-center gap-2 flex-wrap">
-          {{ releaseCandidate.name }}
-          <p-button text (click)="openReleaseInGitHub()" styleClass="p-1" class="leading-none">
-            <i-tabler name="brand-github" class="!size-4" />
-          </p-button>
+          @if (isEditingName()) {
+            <form [formGroup]="releaseNameForm" class="flex items-center gap-2">
+              <input pInputText formControlName="releaseName" class="p-1 border rounded w-48" />
+              <p-button text severity="success" size="small" (onClick)="saveName()" [loading]="updateReleaseNameMutation.isPending()"> <i-tabler name="check" /></p-button>
+              <p-button text severity="secondary" size="small" (onClick)="cancelEditingName()">
+                <i-tabler name="x" />
+              </p-button>
+            </form>
+          } @else {
+            {{ releaseCandidate.name }}
+            @if (permissionService.isAtLeastMaintainer() && !releaseCandidate.release) {
+              <p-button text severity="secondary" (click)="editName()" size="small">
+                <i-tabler name="pencil" class="!size-5" />
+              </p-button>
+            } @else {
+              <p-button text (click)="openReleaseInGitHub()" styleClass="p-1" class="leading-none">
+                <i-tabler name="brand-github" class="!size-4" />
+              </p-button>
+            }
+          }
           <p-tag class="text-xs">
             <i-tabler name="git-commit" class="!size-4" />
             {{ releaseCandidate.commit.sha | slice: 0 : 7 }}

@@ -108,10 +108,25 @@ export const WorkflowMembershipDtoSchema = {
   required: ['orderIndex', 'workflowId'],
 } as const;
 
-export const ReleaseNotesDtoSchema = {
+export const ReleaseCandidateNameUpdateDtoSchema = {
   type: 'object',
   properties: {
-    body: {
+    oldName: {
+      type: 'string',
+    },
+    newName: {
+      type: 'string',
+    },
+  },
+} as const;
+
+export const UpdateReleaseNotesDtoSchema = {
+  type: 'object',
+  properties: {
+    name: {
+      type: 'string',
+    },
+    notes: {
       type: 'string',
     },
   },
@@ -228,6 +243,9 @@ export const EnvironmentDtoSchema = {
       enum: ['HTTP_STATUS', 'ARTEMIS_INFO'],
     },
     statusUrl: {
+      type: 'string',
+    },
+    deploymentWorkflowBranch: {
       type: 'string',
     },
     latestDeployment: {
@@ -457,6 +475,182 @@ export const ReleaseInfoListDtoSchema = {
       type: 'boolean',
     },
   },
+} as const;
+
+export const ReleaseNameDtoSchema = {
+  type: 'object',
+  properties: {
+    name: {
+      type: 'string',
+    },
+  },
+} as const;
+
+export const ReleaseEvaluationDtoSchema = {
+  type: 'object',
+  properties: {
+    name: {
+      type: 'string',
+    },
+    isWorking: {
+      type: 'boolean',
+    },
+  },
+} as const;
+
+export const BranchInfoDtoSchema = {
+  type: 'object',
+  properties: {
+    name: {
+      type: 'string',
+    },
+    commitSha: {
+      type: 'string',
+    },
+    aheadBy: {
+      type: 'integer',
+      format: 'int32',
+    },
+    behindBy: {
+      type: 'integer',
+      format: 'int32',
+    },
+    isDefault: {
+      type: 'boolean',
+    },
+    isProtected: {
+      type: 'boolean',
+    },
+    isPinned: {
+      type: 'boolean',
+    },
+    updatedAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+    updatedBy: {
+      $ref: '#/components/schemas/UserInfoDto',
+    },
+    repository: {
+      $ref: '#/components/schemas/RepositoryInfoDto',
+    },
+  },
+  required: ['commitSha', 'name'],
+} as const;
+
+export const CommitInfoDtoSchema = {
+  type: 'object',
+  properties: {
+    sha: {
+      type: 'string',
+    },
+    author: {
+      $ref: '#/components/schemas/UserInfoDto',
+    },
+    message: {
+      type: 'string',
+    },
+    authoredAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+    repository: {
+      $ref: '#/components/schemas/RepositoryInfoDto',
+    },
+  },
+  required: ['sha'],
+} as const;
+
+export const ReleaseCandidateDeploymentDtoSchema = {
+  type: 'object',
+  properties: {
+    id: {
+      type: 'integer',
+      format: 'int64',
+    },
+    type: {
+      type: 'string',
+      enum: ['GITHUB', 'HELIOS'],
+    },
+    environmentId: {
+      type: 'integer',
+      format: 'int64',
+    },
+  },
+  required: ['environmentId', 'id', 'type'],
+} as const;
+
+export const ReleaseCandidateEvaluationDtoSchema = {
+  type: 'object',
+  properties: {
+    user: {
+      $ref: '#/components/schemas/UserInfoDto',
+    },
+    isWorking: {
+      type: 'boolean',
+    },
+  },
+  required: ['user'],
+} as const;
+
+export const ReleaseDtoSchema = {
+  type: 'object',
+  properties: {
+    isDraft: {
+      type: 'boolean',
+    },
+    isPrerelease: {
+      type: 'boolean',
+    },
+    body: {
+      type: 'string',
+    },
+    githubUrl: {
+      type: 'string',
+    },
+  },
+  required: ['body', 'githubUrl', 'isDraft', 'isPrerelease'],
+} as const;
+
+export const ReleaseInfoDetailsDtoSchema = {
+  type: 'object',
+  properties: {
+    name: {
+      type: 'string',
+    },
+    commit: {
+      $ref: '#/components/schemas/CommitInfoDto',
+    },
+    branch: {
+      $ref: '#/components/schemas/BranchInfoDto',
+    },
+    deployments: {
+      type: 'array',
+      items: {
+        $ref: '#/components/schemas/ReleaseCandidateDeploymentDto',
+      },
+    },
+    evaluations: {
+      type: 'array',
+      items: {
+        $ref: '#/components/schemas/ReleaseCandidateEvaluationDto',
+      },
+    },
+    release: {
+      $ref: '#/components/schemas/ReleaseDto',
+    },
+    createdBy: {
+      $ref: '#/components/schemas/UserInfoDto',
+    },
+    createdAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+    body: {
+      type: 'string',
+    },
+  },
+  required: ['commit', 'createdAt', 'deployments', 'evaluations', 'name'],
 } as const;
 
 export const DeployRequestSchema = {
@@ -727,161 +921,6 @@ export const TestTypeStatsSchema = {
     },
   },
   required: ['errors', 'failures', 'passed', 'skipped', 'totalSuites', 'totalTests', 'totalTime', 'totalUpdates'],
-} as const;
-
-export const BranchInfoDtoSchema = {
-  type: 'object',
-  properties: {
-    name: {
-      type: 'string',
-    },
-    commitSha: {
-      type: 'string',
-    },
-    aheadBy: {
-      type: 'integer',
-      format: 'int32',
-    },
-    behindBy: {
-      type: 'integer',
-      format: 'int32',
-    },
-    isDefault: {
-      type: 'boolean',
-    },
-    isProtected: {
-      type: 'boolean',
-    },
-    isPinned: {
-      type: 'boolean',
-    },
-    updatedAt: {
-      type: 'string',
-      format: 'date-time',
-    },
-    updatedBy: {
-      $ref: '#/components/schemas/UserInfoDto',
-    },
-    repository: {
-      $ref: '#/components/schemas/RepositoryInfoDto',
-    },
-  },
-  required: ['commitSha', 'name'],
-} as const;
-
-export const CommitInfoDtoSchema = {
-  type: 'object',
-  properties: {
-    sha: {
-      type: 'string',
-    },
-    author: {
-      $ref: '#/components/schemas/UserInfoDto',
-    },
-    message: {
-      type: 'string',
-    },
-    authoredAt: {
-      type: 'string',
-      format: 'date-time',
-    },
-    repository: {
-      $ref: '#/components/schemas/RepositoryInfoDto',
-    },
-  },
-  required: ['sha'],
-} as const;
-
-export const ReleaseCandidateDeploymentDtoSchema = {
-  type: 'object',
-  properties: {
-    id: {
-      type: 'integer',
-      format: 'int64',
-    },
-    type: {
-      type: 'string',
-      enum: ['GITHUB', 'HELIOS'],
-    },
-    environmentId: {
-      type: 'integer',
-      format: 'int64',
-    },
-  },
-  required: ['environmentId', 'id', 'type'],
-} as const;
-
-export const ReleaseCandidateEvaluationDtoSchema = {
-  type: 'object',
-  properties: {
-    user: {
-      $ref: '#/components/schemas/UserInfoDto',
-    },
-    isWorking: {
-      type: 'boolean',
-    },
-  },
-  required: ['user'],
-} as const;
-
-export const ReleaseDtoSchema = {
-  type: 'object',
-  properties: {
-    isDraft: {
-      type: 'boolean',
-    },
-    isPrerelease: {
-      type: 'boolean',
-    },
-    body: {
-      type: 'string',
-    },
-    githubUrl: {
-      type: 'string',
-    },
-  },
-  required: ['body', 'githubUrl', 'isDraft', 'isPrerelease'],
-} as const;
-
-export const ReleaseInfoDetailsDtoSchema = {
-  type: 'object',
-  properties: {
-    name: {
-      type: 'string',
-    },
-    commit: {
-      $ref: '#/components/schemas/CommitInfoDto',
-    },
-    branch: {
-      $ref: '#/components/schemas/BranchInfoDto',
-    },
-    deployments: {
-      type: 'array',
-      items: {
-        $ref: '#/components/schemas/ReleaseCandidateDeploymentDto',
-      },
-    },
-    evaluations: {
-      type: 'array',
-      items: {
-        $ref: '#/components/schemas/ReleaseCandidateEvaluationDto',
-      },
-    },
-    release: {
-      $ref: '#/components/schemas/ReleaseDto',
-    },
-    createdBy: {
-      $ref: '#/components/schemas/UserInfoDto',
-    },
-    createdAt: {
-      type: 'string',
-      format: 'date-time',
-    },
-    body: {
-      type: 'string',
-    },
-  },
-  required: ['commit', 'createdAt', 'deployments', 'evaluations', 'name'],
 } as const;
 
 export const CommitsSinceReleaseCandidateDtoSchema = {

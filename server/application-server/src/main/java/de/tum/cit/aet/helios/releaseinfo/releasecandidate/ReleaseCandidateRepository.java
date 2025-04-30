@@ -7,8 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface ReleaseCandidateRepository
-    extends JpaRepository<ReleaseCandidate, ReleaseCandidateId> {
+public interface ReleaseCandidateRepository extends JpaRepository<ReleaseCandidate, Long> {
   List<ReleaseCandidate> findAllByOrderByCreatedAtDesc();
 
   List<ReleaseCandidate> findByRepository(GitRepository repository);
