@@ -1,7 +1,7 @@
 package de.tum.cit.aet.helios.user;
 
 import de.tum.cit.aet.helios.auth.AuthService;
-import de.tum.cit.aet.helios.userpreference.UserPreferenceRepository;
+import de.tum.cit.aet.helios.notification.NotificationPreferenceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.StringUtils;
@@ -15,8 +15,8 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserService {
 
   private final UserRepository userRepository;
-  private final UserPreferenceRepository userPreferenceRepository;
   private final AuthService authService;
+  private final NotificationPreferenceService notificationPreferenceService;
 
   /**
    * Handles user-related setup on their first login to Helios.
@@ -41,9 +41,34 @@ public class UserService {
       }
 
       userRepository.save(loggedInUser);
+
+      // Initialize notification preferences for the user
+      notificationPreferenceService.initializeDefaultsForUser(loggedInUser);
     } catch (Exception e) {
       log.warn("Failed to set user as logged in", e);
     }
+  }
+
+  /**
+   * Retrieves the current user's settings (email and global notifications toggle).
+   */
+  public UserSettingsDto getCurrentUserSettings() {
+    User user = authService.getUserFromGithubId();
+    return new UserSettingsDto(user.getNotificationEmail(), user.isNotificationsEnabled());
+  }
+
+  /**
+   * Updates the user's email and/or global notifications toggle.
+   */
+  public void updateUserSettings(UserSettingsDto dto) {
+    User user = authService.getUserFromGithubId();
+    if (StringUtils.isNotBlank(dto.notificationEmail())) {
+      user.setNotificationEmail(dto.notificationEmail());
+    }
+    if (dto.notificationsEnabled() != null) {
+      user.setNotificationsEnabled(dto.notificationsEnabled());
+    }
+    userRepository.save(user);
   }
 
 }
