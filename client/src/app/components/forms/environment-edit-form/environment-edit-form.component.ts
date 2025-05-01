@@ -1,6 +1,6 @@
 import { Component, computed, inject, input, OnInit } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
-import { AbstractControl, FormBuilder, FormGroup, ReactiveFormsModule, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, FormGroup, ReactiveFormsModule, ValidationErrors, ValidatorFn } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
   getAllEnabledEnvironmentsQueryKey,
@@ -12,18 +12,18 @@ import {
   updateEnvironmentMutation,
 } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { injectMutation, injectQuery, QueryClient } from '@tanstack/angular-query-experimental';
+import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
+import { IconExclamationCircle } from 'angular-tabler-icons/icons';
 import { MessageService } from 'primeng/api';
 import { AutoCompleteModule } from 'primeng/autocomplete';
 import { ButtonModule } from 'primeng/button';
-import { InputSwitchModule } from 'primeng/inputswitch';
-import { InputTextModule } from 'primeng/inputtext';
-import { SelectModule } from 'primeng/select';
-import { ToggleSwitch } from 'primeng/toggleswitch';
-import { MessageModule } from 'primeng/message';
 import { CardModule } from 'primeng/card';
 import { DividerModule } from 'primeng/divider';
-import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
-import { IconExclamationCircle } from 'angular-tabler-icons/icons';
+import { InputSwitchModule } from 'primeng/inputswitch';
+import { InputTextModule } from 'primeng/inputtext';
+import { MessageModule } from 'primeng/message';
+import { SelectModule } from 'primeng/select';
+import { ToggleSwitch } from 'primeng/toggleswitch';
 
 @Component({
   selector: 'app-environment-edit-form',
