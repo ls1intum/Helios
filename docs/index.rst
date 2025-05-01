@@ -1,14 +1,16 @@
 .. _artemis:
 
 ======================================================
-Helios 🌞: Enhanced UI for GitHub Actions
+Helios: Enhanced UI for GitHub Actions
 ======================================================
 
 The personification of the sun, symbolizing light, clarity, and visibility that this app brings to CI/CD processes and test reliability
 
-.. figure:: ./images/fantasy-sun-god.jpg
-  :height: 250px
-  :alt: Helios the Sun God
+.. raw:: html
+
+   <a href="/_static/images/helios-icon-1280x640.png" target="_blank">
+     <img src="/_static/images/helios-icon-1280x640.png" alt="Helios the Sun God" style="height: 250px;" />
+   </a>
 
 Introduction
 ------------
@@ -32,6 +34,7 @@ The Artemis open-source project relies on GitHub Actions for its CI/CD workflows
   development/local/openapi
   development/local/webhook
   development/local/migrations
+  development/local/keycloak_token_exchange
   development/local/testing
 
 .. toctree::
