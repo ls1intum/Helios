@@ -29,7 +29,12 @@ public class UserService {
         return;
       }
 
+      // Set the user's loggedIn as true
       loggedInUser.setHasLoggedIn(true);
+      // Set notificationsEnabled to true
+      loggedInUser.setNotificationsEnabled(true);
+
+      // Set the notification email to the user's email
       if (loggedInUser.getNotificationEmail() == null
           && StringUtils.isNotBlank(loggedInUser.getEmail())) {
         loggedInUser.setNotificationEmail(loggedInUser.getEmail());
