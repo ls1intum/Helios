@@ -1,1 +1,35 @@
-<p>user-settings works!</p>
+<div class="max-w-3xl mx-auto px-4 mt-8">
+  <p-card class="border border-surface-200 rounded-lg">
+    <form [formGroup]="settingsForm" class="flex flex-col gap-6">
+      <h2 class="text-2xl font-semibold border-b pb-2">User Settings</h2>
+
+      <!-- Email Input Section -->
+      <div class="flex flex-col gap-2">
+        <label for="email">Email</label>
+
+        @if (userSettingsQuery.isPending()) {
+          <p-skeleton height="2.5rem" class="rounded" />
+        } @else {
+          <input pInputText id="email" formControlName="email" type="email" placeholder="Enter your email" />
+          @if (settingsForm.get('email')?.invalid && settingsForm.get('email')?.touched) {
+            <small class="text-red-500">Valid email required.</small>
+          }
+        }
+      </div>
+
+      <div class="flex justify-end">
+        @if (userSettingsQuery.isPending()) {
+          <p-skeleton height="2.5rem" width="8rem" class="rounded" />
+        } @else {
+          <p-button type="button" label="Save Email" (onClick)="saveEmail()" [disabled]="settingsForm.get('email')?.invalid || updateUserSettings.isPending()" />
+        }
+      </div>
+
+      <!-- Toggle Notifications Section -->
+      <div class="flex items-center gap-3 border-t pt-4">
+        <p-toggleswitch formControlName="globalNotificationsEnabled" />
+        <label for="globalNotificationsEnabled">Enable global notifications</label>
+      </div>
+    </form>
+  </p-card>
+</div>
