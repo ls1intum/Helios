@@ -1,3 +1,4 @@
 rootProject.name = 'Helios'
 
 include 'application-server'
+include 'notification'

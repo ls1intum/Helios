@@ -1,9 +1,11 @@
 plugins {
 	id 'java'
 	id 'war'
-	id 'org.springframework.boot' version '3.4.4'
-	id 'io.spring.dependency-management' version '1.1.7'
 }
+
+apply plugin: 'org.springframework.boot'
+apply plugin: 'io.spring.dependency-management'
+apply plugin: 'io.freefair.lombok'
 
 group = 'de.tum.cit.aet'
 version = '0.0.1-SNAPSHOT'
@@ -18,16 +20,60 @@ repositories {
 	mavenCentral()
 }
 
+configurations {
+	// Configuration that tracks the agents added to the JVM at run-time
+	runtimeAgent1
+	runtimeAgent2
+}
+
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-mail'
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.6'
-    implementation 'org.openapitools:jackson-databind-nullable:0.2.6'
+	implementation 'org.openapitools:jackson-databind-nullable:0.2.6'
 	implementation 'io.nats:jnats:2.21.1'
+	implementation 'com.fasterxml.jackson.core:jackson-databind'
 	providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	runtimeAgent1 "org.springframework:spring-instrument:6.2.6"
+	runtimeAgent2 "org.aspectj:aspectjweaver:1.9.24"
 }
 
-tasks.named('test') {
+bootRun {
+	systemProperty "spring.profiles.active", "dev"
+}
+
+task bootRunDev() {
+	group = "application"
+	description = "Runs the Spring Boot application with the dev profile"
+	
+	doLast {
+		bootRun.systemProperty "spring.profiles.active", "dev"
+		bootRun.jvmArgs = [
+			"-javaagent:${configurations.runtimeAgent1.asPath}", 
+			"-javaagent:${configurations.runtimeAgent2.asPath}"
+		]
+		bootRun.execute()
+	}
+}
+
+tasks.named("test") {
+	group = "application"
+	description = "Runs the Spring Boot application with the test profile"
+	// Set the active profile to 'test'
+	systemProperty "spring.profiles.active", "test"
+	finalizedBy "jacocoTestReport"
+}
+
+jacocoTestReport {
+	dependsOn test // tests are required to run before generating the report
+	reports {
+		xml.required = true
+		csv.required = false
+	}
+}
+
+test {
 	useJUnitPlatform()
 }
