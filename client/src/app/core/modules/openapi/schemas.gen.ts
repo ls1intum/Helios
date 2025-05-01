@@ -443,6 +443,31 @@ export const WorkflowDtoSchema = {
   required: ['id', 'label', 'name', 'path', 'state'],
 } as const;
 
+export const UserSettingsDtoSchema = {
+  type: 'object',
+  properties: {
+    notificationEmail: {
+      type: 'string',
+    },
+    notificationsEnabled: {
+      type: 'boolean',
+    },
+  },
+} as const;
+
+export const NotificationPreferenceDtoSchema = {
+  type: 'object',
+  properties: {
+    type: {
+      type: 'string',
+      enum: ['DEPLOYMENT_FAILED'],
+    },
+    enabled: {
+      type: 'boolean',
+    },
+  },
+} as const;
+
 export const ReleaseCandidateCreateDtoSchema = {
   type: 'object',
   properties: {
