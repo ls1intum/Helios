@@ -1,14 +1,16 @@
 .. _artemis:
 
 ======================================================
-Helios 🌞: Enhanced UI for GitHub Actions
+Helios: Enhanced UI for GitHub Actions
 ======================================================
 
 The personification of the sun, symbolizing light, clarity, and visibility that this app brings to CI/CD processes and test reliability
 
-.. figure:: ./images/fantasy-sun-god.jpg
-  :height: 250px
-  :alt: Helios the Sun God
+.. raw:: html
+
+   <a href="_images/helios-icon-1280x640.png" target="_blank">
+     <img src="_images/helios-icon-1280x640.png" alt="Helios the Sun God" style="height: 250px;" />
+   </a>
 
 Introduction
 ------------
