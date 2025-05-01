@@ -35,7 +35,7 @@ jobs:
         with:
           path: docs/_build/dirhtml/
   deploy:
-#    if: github.ref == 'refs/heads/staging'
+    if: github.ref == 'refs/heads/staging'
     environment:
       name: github-pages
       url: "https://ls1intum.github.io/Helios/"
