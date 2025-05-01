@@ -33,15 +33,15 @@ Setup Steps
 #. Set the client as confidential (public clients are not allowed for token exchange)
     .. raw:: html
 
-       <a href="/_static/images/token_exchange/confidential-client.png" target="_blank">
-         <img src="/_static/images/token_exchange/confidential-client.png" alt="Repository selection screen" style="height: 512px;" />
+       <a href="../../../_static/images/token_exchange/confidential-client.png" target="_blank">
+         <img src="../../../_static/images/token_exchange/confidential-client.png" alt="Repository selection screen" style="height: 512px;" />
        </a>
 
 #. Generate and save the client secret (this client ID and secret will be used to access users' GitHub tokens)
     .. raw:: html
 
-       <a href="/_static/images/token_exchange/client-credentials.png" target="_blank">
-         <img src="/_static/images/token_exchange/client-credentials.png" alt="Repository selection screen" style="height: 512px;" />
+       <a href="../../../_static/images/token_exchange/client-credentials.png" target="_blank">
+         <img src="../../../_static/images/token_exchange/client-credentials.png" alt="Repository selection screen" style="height: 512px;" />
        </a>
 
 
