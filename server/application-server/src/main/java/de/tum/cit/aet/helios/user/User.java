@@ -42,6 +42,18 @@ public class User extends BaseGitServiceEntity {
 
   private String email;
 
+  // Email for notifications, can be set/updated by the user
+  private String notificationEmail;
+
+  // Whether to receive notifications
+  @Column(nullable = false)
+  private boolean notificationsEnabled = true;
+
+  // True if the user has logged into Helios
+  @Column(nullable = false)
+  private boolean hasLoggedIn = false;
+
+
   @NonNull private String htmlUrl;
 
   @NonNull
