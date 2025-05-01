@@ -126,7 +126,7 @@ export class EnvironmentEditFormComponent implements OnInit {
 
     this.environmentForm = this.formBuilder.group(
       {
-        name: [environment?.name || '', Validators.required],
+        displayName: [environment?.displayName || ''],
         type: [this.environment()?.type || 'TEST'],
         deploymentWorkflow: [environment?.deploymentWorkflow || null],
         installedApps: [environment?.installedApps || []],

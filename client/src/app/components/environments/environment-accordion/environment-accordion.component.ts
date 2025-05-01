@@ -18,7 +18,7 @@ import { EnvironmentStatusTagComponent } from '../environment-status-tag/environ
 import { signal } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
-import { IconGitPullRequest, IconHistory, IconTag } from 'angular-tabler-icons/icons';
+import { IconExternalLink, IconGitPullRequest, IconHistory, IconTag } from 'angular-tabler-icons/icons';
 
 @Component({
   selector: 'app-environment-accordion',
@@ -46,6 +46,7 @@ import { IconGitPullRequest, IconHistory, IconTag } from 'angular-tabler-icons/i
       IconTag,
       IconGitPullRequest,
       IconHistory,
+      IconExternalLink,
     }),
   ],
   templateUrl: './environment-accordion.component.html',
