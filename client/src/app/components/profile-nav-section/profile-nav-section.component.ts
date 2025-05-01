@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import {Component, inject, input, ViewChild} from '@angular/core';
+import { Component, inject, input, ViewChild } from '@angular/core';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
@@ -9,11 +9,11 @@ import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
 import { DividerModule } from 'primeng/divider';
 import { AvatarModule } from 'primeng/avatar';
-import {Popover, PopoverModule} from 'primeng/popover';
+import { Popover, PopoverModule } from 'primeng/popover';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
 import { IconLogin, IconLogout, IconSettings } from 'angular-tabler-icons/icons';
-import {NavigationEnd, Router, RouterLink} from '@angular/router';
-import {filter} from 'rxjs';
+import { NavigationEnd, Router, RouterLink } from '@angular/router';
+import { filter } from 'rxjs';
 
 @Component({
   selector: 'app-profile-nav-section',
@@ -48,11 +48,9 @@ export class ProfileNavSectionComponent {
   isExpanded = input.required<boolean>();
 
   constructor(private router: Router) {
-    this.router.events
-      .pipe(filter(event => event instanceof NavigationEnd))
-      .subscribe(() => {
-        this.profileMenu?.hide?.();
-      });
+    this.router.events.pipe(filter(event => event instanceof NavigationEnd)).subscribe(() => {
+      this.profileMenu?.hide?.();
+    });
   }
 
   isLoggedIn() {
