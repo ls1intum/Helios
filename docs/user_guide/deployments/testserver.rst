@@ -37,7 +37,7 @@ Deployment Workflow
 
 2. Authentication
 ~~~~~~~~~~~~~~~~~~
-Log in with your GitHub account.
+- Log in with your GitHub account.
 
 .. raw:: html
 
@@ -55,7 +55,7 @@ Log in with your GitHub account.
 
 3. Pull Request Selection
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
-Choose the pull request or branch you want to deploy.
+- Choose the pull request or branch you want to deploy.
 
 .. raw:: html
 
@@ -91,7 +91,7 @@ Choose the pull request or branch you want to deploy.
 
 4. Deployment Initiation
 ~~~~~~~~~~~~~~~~~~~~~~~~~
-Click the deploy button to start the deployment process.
+- Click the deploy button to start the deployment process.
 
 .. raw:: html
 
@@ -101,7 +101,8 @@ Click the deploy button to start the deployment process.
    
 
 
-The deployment enters a pending state. This is the initial phase that begins immediately after the workflow is triggered.
+- The deployment enters a pending state. This is the initial phase that begins immediately after the workflow is triggered.
+
 During this phase, the workflow may:
 
 - Check whether a successful build for the selected branch or commit already exists.
@@ -117,12 +118,20 @@ Depending on the repository setup and GitHub's action runners, this phase may ta
    </a>
 
 
-The deployment moves to the in-progress state during active deployment.
+- The deployment moves to the in-progress state during active deployment.
 
 .. raw:: html
 
    <a href="/_static/images/user_guide/deployment-in-progress.png" target="_blank">
      <img src="/_static/images/user_guide/deployment-in-progress.png" alt="Deployment progress status" style="height: 512px;" />
+   </a>
+
+- Once deployment is complete, the workflow should display a green check mark indicating success, and the server's status should also appear as healthy.
+
+.. raw:: html
+
+   <a href="/_static/images/user_guide/deployment-success.png" target="_blank">
+     <img src="/_static/images/user_guide/deployment-success.png" alt="Successful deployment with green check" style="height: 512px;" />
    </a>
 
 5. Unlock the environment once you finish testing.
