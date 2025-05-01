@@ -27,6 +27,10 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/imprint/imprint.component').then(m => m.ImprintComponent),
       },
       {
+        path: 'settings',
+        loadComponent: () => import('./pages/user-settings/user-settings.component').then(m => m.UserSettingsComponent),
+      },
+      {
         path: 'repo/:repositoryId',
         children: [
           { path: '', loadComponent: () => import('./pages/ci-cd/ci-cd.component').then(m => m.CiCdComponent) },
