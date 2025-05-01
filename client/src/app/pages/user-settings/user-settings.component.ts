@@ -59,7 +59,15 @@ export class UserSettingsComponent implements OnInit {
       this.messageService.add({
         severity: 'success',
         summary: 'Success',
-        detail: 'User settings updated successfully',
+        detail: 'User settings updated successfully.',
+      });
+      this.queryClient.invalidateQueries({ queryKey: getUserSettingsQueryKey() });
+    },
+    onError: () => {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Failed to update user settings!',
       });
       this.queryClient.invalidateQueries({ queryKey: getUserSettingsQueryKey() });
     },
