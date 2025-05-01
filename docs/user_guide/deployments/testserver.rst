@@ -30,7 +30,7 @@ Deployment Workflow
 
 .. raw:: html
 
-   <a href="/_static/images/user_guide/select-repo.png" target="_blank">
+   <a href="../../_static/images/user_guide/select-repo.png" target="_blank">
      <img src="/_static/images/user_guide/select-repo.png" alt="Repository selection screen" style="height: 512px;" />
    </a>
    

@@ -87,4 +87,3 @@ html_style = 'css/style.css'
 html_static_path = ['_static']
 
 html_favicon = '_static/favicon.png'
-html_baseurl = 'https://ls1intum.github.io/Helios/'
