@@ -19,11 +19,10 @@ public class UserService {
   private final AuthService authService;
 
   /**
-   * Sets the user as logged in. This method should be called when the user logs in to the system.
-   * It updates the user's hasLoggedIn status and sets the notification email if it is not already
-   * set. These actions are performed only once.
+   * Handles user-related setup on their first login to Helios.
+   * Sets hasLoggedIn = true and initializes notification email if applicable.
    */
-  public void setUserLoggedIn() {
+  public void handleFirstLogin() {
     try {
       User loggedInUser = authService.isLoggedIn() ? authService.getUserFromGithubId() : null;
       if (loggedInUser == null || loggedInUser.isHasLoggedIn()) {
@@ -35,6 +34,7 @@ public class UserService {
           && StringUtils.isNotBlank(loggedInUser.getEmail())) {
         loggedInUser.setNotificationEmail(loggedInUser.getEmail());
       }
+
       userRepository.save(loggedInUser);
     } catch (Exception e) {
       log.warn("Failed to set user as logged in", e);

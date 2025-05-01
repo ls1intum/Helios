@@ -20,7 +20,7 @@ public class UserPermissionsController {
   @GetMapping()
   public ResponseEntity<GitHubRepositoryRoleDto> getUserPermissions() throws IOException {
     // Set the user's loggedIn as true
-    userService.setUserLoggedIn();
+    userService.handleFirstLogin();
 
     GitHubRepositoryRoleDto permissions = gitHubService.getRepositoryRole();
     return ResponseEntity.ok(permissions);
