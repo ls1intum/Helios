@@ -68,9 +68,8 @@ public class NatsNotificationPublisherService {
 
   public void publishNotification(String subject, byte[] message)
       throws IOException, InterruptedException {
-    NatsMessage msg =
-        NatsMessage.builder().subject("notification." + subject).data(message).build();
+    NatsMessage msg = NatsMessage.builder().subject(subject).data(message).build();
     natsConnection.publish(msg);
-    log.info("Published message to subject '{}'", "notification." + subject);
+    log.info("Published message to subject '{}'", subject);
   }
 }

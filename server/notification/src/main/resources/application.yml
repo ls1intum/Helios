@@ -1,34 +1,36 @@
 spring:
-    application:
-        name: NotificationService
-    config:
-        import: optional:file:.env[.properties]
-    datasource:
-        driver-class-name: org.postgresql.Driver
-        url: ${DATASOURCE_URL}
-        username: ${DATASOURCE_USERNAME}
-        password: ${DATASOURCE_PASSWORD}
-    jpa:
-        database: POSTGRESQL
-        show-sql: false
-        hibernate:
-            ddl-auto: create-drop
+  application:
+    name: NotificationService
+  config:
+    import: optional:file:.env[.properties]
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: ${DATASOURCE_URL}
+    username: ${DATASOURCE_USERNAME}
+    password: ${DATASOURCE_PASSWORD}
+  jpa:
+    database: POSTGRESQL
+    show-sql: false
+    hibernate:
+      ddl-auto: create-drop
 
 springdoc:
-    default-produces-media-type: application/json
+  default-produces-media-type: application/json
 
 server:
-    port: 8082
+  port: 8082
 
 nats:
-    enabled: true
-    timeframe: ${MONITORING_TIMEFRAME:7}
-    durableConsumerName: ""
-    server: ${NATS_SERVER}
-    auth:
-        token: ${NATS_AUTH_TOKEN}
+  enabled: true
+  timeframe: ${MONITORING_TIMEFRAME:7}
+  durableConsumerName: ${NATS_DURABLE_CONSUMER_NAME:notification-consumer}
+  consumerInactiveThresholdMinutes: ${NATS_CONSUMER_INACTIVE_THRESHOLD_MINUTES:5}
+  consumerAckWaitSeconds: ${NATS_CONSUMER_ACK_WAIT_SECONDS:30}
+  server: ${NATS_SERVER:nats://localhost:4222}
+  auth:
+    token: ${NATS_AUTH_TOKEN:}
 
 logging:
-    level:
-        root: INFO
-        org.kohsuke.github.GitHubClient: DEBUG
+  level:
+    root: INFO
+    org.kohsuke.github.GitHubClient: DEBUG
