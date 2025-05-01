@@ -8,8 +8,8 @@ The personification of the sun, symbolizing light, clarity, and visibility that 
 
 .. raw:: html
 
-   <a href="_images/helios-icon-1280x640.png" target="_blank">
-     <img src="_images/helios-icon-1280x640.png" alt="Helios the Sun God" style="height: 250px;" />
+   <a href="/_static/images/helios-icon-1280x640.png" target="_blank">
+     <img src="/_static/images/helios-icon-1280x640.png" alt="Helios the Sun God" style="height: 250px;" />
    </a>
 
 Introduction

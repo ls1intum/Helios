@@ -20,63 +20,79 @@ Deployment Workflow
 ~~~~~~~~~~~~~~~~~~~~~~~~
 Select the repository you want to deploy from the main dashboard.
 
-.. figure:: ../../images/user_guide/1-select-repo.png
-   :height: 512px
-   :alt: Repository selection screen
+.. raw:: html
+
+   <a href="/_static/images/user_guide/1-select-repo.png" target="_blank">
+     <img src="/_static/images/user_guide/1-select-repo.png" alt="Repository selection screen" style="height: 512px;" />
+   </a>
    
 
 2. Authentication
 ~~~~~~~~~~~~~~~~~~
 Log in with your GitHub credentials.
 
-.. figure:: ../../images/user_guide/2-login.png
-   :height: 512px
-   :alt: Login with GitHub
+.. raw:: html
+
+   <a href="/_static/images/user_guide/2-login.png" target="_blank">
+     <img src="/_static/images/user_guide/2-login.png" alt="Login with GitHub" style="height: 512px;" />
+   </a>
    
    
-.. figure:: ../../images/user_guide/3-login-gh.png
-   :height: 512px
-   :alt: GitHub authentication
+.. raw:: html
+
+   <a href="/_static/images/user_guide/3-login-gh.png" target="_blank">
+     <img src="/_static/images/user_guide/3-login-gh.png" alt="GitHub authentication" style="height: 512px;" />
+   </a>
    
 
 3. Pull Request Selection
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 Choose the pull request or branch you want to deploy.
 
-.. figure:: ../../images/user_guide/4-open-pr.png
-   :height: 512px
-   :alt: Pull request details screen
+.. raw:: html
+
+   <a href="/_static/images/user_guide/4-open-pr.png" target="_blank">
+     <img src="/_static/images/user_guide/4-open-pr.png" alt="Pull request details screen" style="height: 512px;" />
+   </a>
    
 
 4. Deployment Initiation
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 Click the deploy button to start the deployment process.
 
-.. figure:: ../../images/user_guide/5-deploy.png
-   :height: 512px
-   :alt: Deploy button and options
+.. raw:: html
+
+   <a href="/_static/images/user_guide/5-deploy.png" target="_blank">
+     <img src="/_static/images/user_guide/5-deploy.png" alt="Deploy button and options" style="height: 512px;" />
+   </a>
    
 
 
 The deployment enters a pending state while resources are being allocated.
 
-.. figure:: ../../images/user_guide/6-deployment-pending.png
-   :height: 512px
-   :alt: Deployment pending status
+.. raw:: html
+
+   <a href="/_static/images/user_guide/6-deployment-pending.png" target="_blank">
+     <img src="/_static/images/user_guide/6-deployment-pending.png" alt="Deployment pending status" style="height: 512px;" />
+   </a>
 
 
 The deployment moves to the in-progress state during active deployment.
 
-.. figure:: ../../images/user_guide/7-deployment-in-progress.png
-   :height: 512px
-   :alt: Deployment progress status
+.. raw:: html
+
+   <a href="/_static/images/user_guide/7-deployment-in-progress.png" target="_blank">
+     <img src="/_static/images/user_guide/7-deployment-in-progress.png" alt="Deployment progress status" style="height: 512px;" />
+   </a>
 
 5. Unlock the test environment once you finish testing.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. figure:: ../../images/user_guide/8-unlock.png
-   :height: 512px
-   :alt: Unlock test environment
+.. raw:: html
+
+   <a href="/_static/images/user_guide/8-unlock.png" target="_blank">
+     <img src="/_static/images/user_guide/8-unlock.png" alt="Unlock test environment" style="height: 512px;" />
+   </a>
 
 
 Troubleshooting
@@ -91,9 +107,11 @@ If Helios deployment fails, you can use the GitHub workflow as a fallback:
 Access the workflow at:
    https://github.com/ls1intum/Artemis/actions/workflows/testserver-deployment.yml
 
-.. figure:: ../../images/user_guide/github-deployment.png
-   :height: 512px
-   :alt: GitHub deployment workflow
+.. raw:: html
+
+   <a href="/_static/images/user_guide/github-deployment.png" target="_blank">
+     <img src="/_static/images/user_guide/github-deployment.png" alt="GitHub deployment workflow" style="height: 512px;" />
+   </a>
 
 Required Inputs
 *****************
