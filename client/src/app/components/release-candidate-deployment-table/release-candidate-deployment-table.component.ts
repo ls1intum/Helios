@@ -78,12 +78,9 @@ export class ReleaseCandidateDeploymentTableComponent {
       {
         onSuccess: () => {
           this.queryClient.invalidateQueries({ queryKey: getAllEnabledEnvironmentsQueryKey() });
-          this.queryClient.invalidateQueries({ queryKey: getReleaseInfoByNameQueryKey({ path: { name: this.releaseCandidate().name } }) });
+          this.queryClient.invalidateQueries({ queryKey: getReleaseInfoByNameQueryKey({ body: { name: this.releaseCandidate().name } }) });
 
           this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Deployment started successfully' });
-        },
-        onError: () => {
-          this.selectedEnvironmentId.set(undefined);
         },
       }
     );

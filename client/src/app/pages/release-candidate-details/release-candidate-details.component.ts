@@ -7,6 +7,7 @@ import {
   publishReleaseDraftMutation,
   updateReleaseNotesMutation,
   generateReleaseNotesMutation,
+  updateReleaseNameMutation,
 } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { injectMutation, injectQuery, QueryClient } from '@tanstack/angular-query-experimental';
 import { ButtonModule } from 'primeng/button';
@@ -27,7 +28,7 @@ import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { TextareaModule } from 'primeng/textarea';
 import { SlicePipe } from '@angular/common';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
-import { IconCheck, IconCloudUpload, IconExternalLink, IconGitCommit, IconPencil, IconPlus, IconTrash, IconUser, IconX } from 'angular-tabler-icons/icons';
+import { IconBrandGithub, IconCheck, IconCloudUpload, IconExternalLink, IconGitCommit, IconPencil, IconPlus, IconTrash, IconUser, IconX } from 'angular-tabler-icons/icons';
 
 @Component({
   selector: 'app-release-candidate-details',
@@ -57,6 +58,7 @@ import { IconCheck, IconCloudUpload, IconExternalLink, IconGitCommit, IconPencil
       IconX,
       IconPlus,
       IconPencil,
+      IconBrandGithub,
     }),
   ],
   templateUrl: './release-candidate-details.component.html',
@@ -72,11 +74,17 @@ export class ReleaseCandidateDetailsComponent implements OnInit {
 
   name = input.required<string>();
   releaseCandidateQuery = injectQuery(() => ({
-    ...getReleaseInfoByNameOptions({ path: { name: this.name() } }),
+    ...getReleaseInfoByNameOptions({ body: { name: this.name() } }),
     onSuccess: () => {
       this.releaseNotesForm.get('releaseNotes')?.setValue(this.releaseNotes());
     },
   }));
+
+  releaseNameForm = new FormGroup({
+    releaseName: new FormControl(''),
+  });
+
+  isEditingName = signal(false);
 
   releaseNotesForm = new FormGroup({
     releaseNotes: new FormControl(''),
@@ -109,11 +117,26 @@ export class ReleaseCandidateDetailsComponent implements OnInit {
     return !releaseCandidate?.release && this.permissionService.isAtLeastMaintainer();
   });
 
+  updateReleaseNameMutation = injectMutation(() => ({
+    ...updateReleaseNameMutation(),
+    onSuccess: () => {
+      this.messageService.add({ severity: 'success', summary: 'Release Name', detail: 'Release name updated successfully' });
+      this.isEditingName.set(false);
+      this.queryClient.invalidateQueries({ queryKey: getReleaseInfoByNameQueryKey({ body: { name: this.name() } }) });
+      // Update the URL to match the new name
+      const newName = this.releaseNameForm.get('releaseName')?.value || '';
+      this.router.navigate(['..', newName], { relativeTo: this.route });
+    },
+    onError: error => {
+      this.messageService.add({ severity: 'error', summary: 'Release Name Update Failed', detail: error.message });
+    },
+  }));
+
   evaluateReleaseCandidateMutation = injectMutation(() => ({
     ...evaluateMutation(),
     onSuccess: () => {
       this.messageService.add({ severity: 'success', summary: 'Release Candidate Evaluation', detail: 'Your evaluation has been saved successfully' });
-      this.queryClient.invalidateQueries({ queryKey: getReleaseInfoByNameQueryKey({ path: { name: this.name() } }) });
+      this.queryClient.invalidateQueries({ queryKey: getReleaseInfoByNameQueryKey({ body: { name: this.name() } }) });
     },
   }));
 
@@ -121,7 +144,7 @@ export class ReleaseCandidateDetailsComponent implements OnInit {
     ...publishReleaseDraftMutation(),
     onSuccess: () => {
       this.messageService.add({ severity: 'success', summary: 'Release Draft Published', detail: 'Release draft has been published to GitHub successfully' });
-      this.queryClient.invalidateQueries({ queryKey: getReleaseInfoByNameQueryKey({ path: { name: this.name() } }) });
+      this.queryClient.invalidateQueries({ queryKey: getReleaseInfoByNameQueryKey({ body: { name: this.name() } }) });
       // Once published, editing should be disabled
       this.isEditingReleaseNotes.set(false);
     },
@@ -153,7 +176,7 @@ export class ReleaseCandidateDetailsComponent implements OnInit {
     onSuccess: () => {
       this.messageService.add({ severity: 'success', summary: 'Release Notes', detail: 'Release notes saved successfully' });
       this.isEditingReleaseNotes.set(false);
-      this.queryClient.invalidateQueries({ queryKey: getReleaseInfoByNameQueryKey({ path: { name: this.name() } }) });
+      this.queryClient.invalidateQueries({ queryKey: getReleaseInfoByNameQueryKey({ body: { name: this.name() } }) });
     },
     onError: error => {
       this.messageService.add({ severity: 'error', summary: 'Release Notes Update Failed', detail: error.message });
@@ -166,7 +189,7 @@ export class ReleaseCandidateDetailsComponent implements OnInit {
   }
 
   evaluateReleaseCandidate = (isWorking: boolean) => {
-    this.evaluateReleaseCandidateMutation.mutate({ path: { name: this.name(), isWorking } });
+    this.evaluateReleaseCandidateMutation.mutate({ body: { name: this.name(), isWorking } });
   };
 
   deleteReleaseCandidate = (rc: ReleaseInfoDetailsDto) => {
@@ -174,7 +197,7 @@ export class ReleaseCandidateDetailsComponent implements OnInit {
       header: 'Delete Release Candidate',
       message: `Are you sure you want to delete release candidate ${rc.name}? This cannot be undone.`,
       accept: () => {
-        this.deleteReleaseCandidateMutation.mutate({ path: { name: rc.name } });
+        this.deleteReleaseCandidateMutation.mutate({ body: { name: rc.name } });
       },
     });
   };
@@ -193,7 +216,7 @@ export class ReleaseCandidateDetailsComponent implements OnInit {
       header: 'Publish Release Candidate',
       message: `Are you sure you want to publish release candidate ${rc.name} as a draft to GitHub? This can only be undone in GitHub itself.`,
       accept: () => {
-        this.publishReleaseDraftMutation.mutate({ path: { name: rc.name } });
+        this.publishReleaseDraftMutation.mutate({ body: { name: rc.name } });
       },
     });
   }
@@ -209,7 +232,7 @@ export class ReleaseCandidateDetailsComponent implements OnInit {
     if (rc?.release) return; // Don't allow generation if already published
 
     this.generateReleaseNotesMutation.mutate({
-      path: { tagName: this.name() },
+      body: { name: this.name() },
     });
   }
 
@@ -228,8 +251,7 @@ export class ReleaseCandidateDetailsComponent implements OnInit {
     const markdownContent = this.releaseNotesForm.get('releaseNotes')?.value || '';
 
     this.updateReleaseNotesMutation.mutate({
-      path: { name: this.name() },
-      body: { body: markdownContent },
+      body: { name: this.name(), notes: markdownContent },
     });
   }
 
@@ -237,5 +259,32 @@ export class ReleaseCandidateDetailsComponent implements OnInit {
     // Reset to original value from the computed property
     this.releaseNotesForm.get('releaseNotes')?.setValue(this.releaseNotes());
     this.isEditingReleaseNotes.set(false);
+  }
+
+  editName() {
+    const rc = this.releaseCandidateQuery.data();
+    if (rc?.release) return; // Don't allow editing if already published
+
+    this.releaseNameForm.get('releaseName')?.setValue(rc?.name || '');
+    this.isEditingName.set(true);
+  }
+
+  saveName() {
+    const rc = this.releaseCandidateQuery.data();
+    if (rc?.release) return; // Don't allow saving if already published
+
+    const newName = this.releaseNameForm.get('releaseName')?.value || '';
+    if (!newName.trim()) {
+      this.messageService.add({ severity: 'error', summary: 'Invalid Name', detail: 'Release name cannot be empty' });
+      return;
+    }
+
+    this.updateReleaseNameMutation.mutate({
+      body: { oldName: this.name(), newName: newName },
+    });
+  }
+
+  cancelEditingName() {
+    this.isEditingName.set(false);
   }
 }
