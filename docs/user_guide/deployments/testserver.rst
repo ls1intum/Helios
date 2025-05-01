@@ -30,8 +30,8 @@ Deployment Workflow
 
 .. raw:: html
 
-   <a href="/_static/images/user_guide/select-repo.png" target="_blank">
-     <img src="/_static/images/user_guide/select-repo.png" alt="Repository selection screen" style="height: 512px;" />
+   <a href="../../../_static/images/user_guide/select-repo.png" target="_blank">
+     <img src="../../../_static/images/user_guide/select-repo.png" alt="Repository selection screen" style="height: 512px;" />
    </a>
    
 
@@ -41,15 +41,15 @@ Deployment Workflow
 
 .. raw:: html
 
-   <a href="/_static/images/user_guide/login.png" target="_blank">
-     <img src="/_static/images/user_guide/login.png" alt="Login with GitHub" style="height: 512px;" />
+   <a href="../../../_static/images/user_guide/login.png" target="_blank">
+     <img src="../../../_static/images/user_guide/login.png" alt="Login with GitHub" style="height: 512px;" />
    </a>
    
    
 .. raw:: html
 
-   <a href="/_static/images/user_guide/login-gh.png" target="_blank">
-     <img src="/_static/images/user_guide/login-gh.png" alt="GitHub authentication" style="height: 512px;" />
+   <a href="../../../_static/images/user_guide/login-gh.png" target="_blank">
+     <img src="../../../_static/images/user_guide/login-gh.png" alt="GitHub authentication" style="height: 512px;" />
    </a>
    
 
@@ -59,14 +59,14 @@ Deployment Workflow
 
 .. raw:: html
 
-   <a href="/_static/images/user_guide/select-pr.png" target="_blank">
-     <img src="/_static/images/user_guide/select-pr.png" alt="Pull request table screen" style="height: 512px;" />
+   <a href="../../../_static/images/user_guide/select-pr.png" target="_blank">
+     <img src="../../../_static/images/user_guide/select-pr.png" alt="Pull request table screen" style="height: 512px;" />
    </a>
 
 .. raw:: html
 
-   <a href="/_static/images/user_guide/open-pr.png" target="_blank">
-     <img src="/_static/images/user_guide/open-pr.png" alt="Pull request details screen" style="height: 512px;" />
+   <a href="../../../_static/images/user_guide/open-pr.png" target="_blank">
+     <img src="../../../_static/images/user_guide/open-pr.png" alt="Pull request details screen" style="height: 512px;" />
    </a>
    
 .. raw:: html
@@ -83,8 +83,8 @@ Deployment Workflow
        </a>
        repository, deployments for PRs and default branches rely on the <strong>build workflow</strong> completing successfully before the deployment workflow begins. For other branches deployed directly to test servers, the build is triggered <em>during</em> deployment. Therefore, deployments of non-default branches (not part of a PR to the default branch) may take more time.
      </p>
-     <a href="/_static/images/user_guide/build-workflow-status.png" target="_blank">
-       <img src="/_static/images/user_guide/build-workflow-status.png" alt="GitHub build workflow status example" style="height: 512px;" />
+     <a href="../../../_static/images/user_guide/build-workflow-status.png" target="_blank">
+       <img src="../../../_static/images/user_guide/build-workflow-status.png" alt="GitHub build workflow status example" style="height: 512px;" />
      </a>
    </div>
 
@@ -95,8 +95,8 @@ Deployment Workflow
 
 .. raw:: html
 
-   <a href="/_static/images/user_guide/deploy.png" target="_blank">
-     <img src="/_static/images/user_guide/deploy.png" alt="Deploy button and options" style="height: 512px;" />
+   <a href="../../../_static/images/user_guide/deploy.png" target="_blank">
+     <img src="../../../_static/images/user_guide/deploy.png" alt="Deploy button and options" style="height: 512px;" />
    </a>
    
 
@@ -113,8 +113,8 @@ Depending on the repository setup and GitHub's action runners, this phase may ta
 
 .. raw:: html
 
-   <a href="/_static/images/user_guide/deployment-pending.png" target="_blank">
-     <img src="/_static/images/user_guide/deployment-pending.png" alt="Deployment pending status" style="height: 512px;" />
+   <a href="../../../_static/images/user_guide/deployment-pending.png" target="_blank">
+     <img src="../../../_static/images/user_guide/deployment-pending.png" alt="Deployment pending status" style="height: 512px;" />
    </a>
 
 
@@ -122,16 +122,16 @@ Depending on the repository setup and GitHub's action runners, this phase may ta
 
 .. raw:: html
 
-   <a href="/_static/images/user_guide/deployment-in-progress.png" target="_blank">
-     <img src="/_static/images/user_guide/deployment-in-progress.png" alt="Deployment progress status" style="height: 512px;" />
+   <a href="../../../_static/images/user_guide/deployment-in-progress.png" target="_blank">
+     <img src="../../../_static/images/user_guide/deployment-in-progress.png" alt="Deployment progress status" style="height: 512px;" />
    </a>
 
 - Once deployment is complete, the workflow should display a green check mark indicating success, and the server's status should also appear as healthy.
 
 .. raw:: html
 
-   <a href="/_static/images/user_guide/deployment-success.png" target="_blank">
-     <img src="/_static/images/user_guide/deployment-success.png" alt="Successful deployment with green check" style="height: 512px;" />
+   <a href="../../../_static/images/user_guide/deployment-success.png" target="_blank">
+     <img src="../../../_static/images/user_guide/deployment-success.png" alt="Successful deployment with green check" style="height: 512px;" />
    </a>
 
 5. Unlock the environment once you finish testing.
@@ -139,8 +139,8 @@ Depending on the repository setup and GitHub's action runners, this phase may ta
 
 .. raw:: html
 
-   <a href="/_static/images/user_guide/unlock.png" target="_blank">
-     <img src="/_static/images/user_guide/unlock.png" alt="Unlock test environment" style="height: 512px;" />
+   <a href="../../../_static/images/user_guide/unlock.png" target="_blank">
+     <img src="../../../_static/images/user_guide/unlock.png" alt="Unlock test environment" style="height: 512px;" />
    </a>
 
 
@@ -175,8 +175,8 @@ Manual Deployment Fallback
 
 .. raw:: html
 
-   <a href="/_static/images/user_guide/github-deployment.png" target="_blank">
-     <img src="/_static/images/user_guide/github-deployment.png" alt="GitHub deployment workflow" style="height: 512px;" />
+   <a href="../../../_static/images/user_guide/github-deployment.png" target="_blank">
+     <img src="../../../_static/images/user_guide/github-deployment.png" alt="GitHub deployment workflow" style="height: 512px;" />
    </a>
 
 Required Inputs
