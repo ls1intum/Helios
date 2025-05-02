@@ -5,7 +5,7 @@ import io.nats.client.Connection;
 import io.nats.client.Nats;
 import io.nats.client.Options;
 import java.time.Duration;
-import lombok.extern.slf4j.Slf4j;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -14,7 +14,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.core.env.Environment;
 
 @Configuration
-@Slf4j
+@Log4j2
 public class NatsConfig {
 
   @Value("${nats.enabled}")

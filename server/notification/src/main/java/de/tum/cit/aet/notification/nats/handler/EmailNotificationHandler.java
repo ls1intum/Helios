@@ -1,0 +1,60 @@
+package de.tum.cit.aet.notification.nats.handler;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import de.tum.cit.aet.notification.nats.NatsMessageHandler;
+import de.tum.cit.aet.notification.service.EmailService;
+import java.util.Map;
+import lombok.extern.log4j.Log4j2;
+import org.springframework.stereotype.Component;
+
+/**
+ * Handler for email notifications received via NATS. Processes messages with the subject
+ * "notification.message.email".
+ */
+@Component
+@Log4j2
+public class EmailNotificationHandler extends NatsMessageHandler<Map<String, Object>> {
+
+  private final EmailService emailService;
+  private final ObjectMapper objectMapper;
+
+  public EmailNotificationHandler(EmailService emailService) {
+    this.emailService = emailService;
+    this.objectMapper = new ObjectMapper();
+  }
+
+  @Override
+  public String getSubjectPattern() {
+    return "notification.message.email";
+  }
+
+  @Override
+  protected Map<String, Object> parsePayload(byte[] data) throws Exception {
+    return objectMapper.readValue(data, Map.class);
+  }
+
+  @Override
+  protected void handleMessage(Map<String, Object> payload) {
+    log.info("Processing email notification message");
+
+    // Extract required fields
+    String recipient = (String) payload.get("to");
+    String subject = (String) payload.get("subject");
+    String body = (String) payload.get("body");
+
+    // Validate required fields
+    if (recipient == null || subject == null || body == null) {
+      log.error("Missing required fields in email notification message: {}", payload);
+      return;
+    }
+
+    // Send the email
+    boolean success = emailService.sendEmail(recipient, subject, body);
+
+    if (success) {
+      log.info("Successfully processed email notification to: {}", recipient);
+    } else {
+      log.warn("Failed to process email notification to: {}", recipient);
+    }
+  }
+}

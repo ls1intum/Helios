@@ -2,9 +2,9 @@ package de.tum.cit.aet.notification.nats;
 
 import io.nats.client.Message;
 import io.nats.client.MessageHandler;
-import lombok.extern.slf4j.Slf4j;
+import lombok.extern.log4j.Log4j2;
 
-@Slf4j
+@Log4j2
 public abstract class NatsMessageHandler<T> implements MessageHandler {
   protected abstract T parsePayload(byte[] data) throws Exception;
 

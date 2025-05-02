@@ -3,16 +3,15 @@ spring:
     name: NotificationService
   config:
     import: optional:file:.env[.properties]
-  datasource:
-    driver-class-name: org.postgresql.Driver
-    url: ${DATASOURCE_URL}
-    username: ${DATASOURCE_USERNAME}
-    password: ${DATASOURCE_PASSWORD}
-  jpa:
-    database: POSTGRESQL
-    show-sql: false
-    hibernate:
-      ddl-auto: create-drop
+  mail:
+    host: ${MAIL_HOST:192.168.1.1}
+    port: ${MAIL_PORT:25}
+    properties:
+      mail:
+        smtp:
+          auth: false
+          starttls:
+            enable: false
 
 springdoc:
   default-produces-media-type: application/json
@@ -29,6 +28,12 @@ nats:
   server: ${NATS_SERVER:nats://localhost:4222}
   auth:
     token: ${NATS_AUTH_TOKEN:}
+
+notification:
+  email:
+    enabled: ${EMAIL_ENABLED:true}
+    dev-mode: ${EMAIL_DEV_MODE:true}
+    from: ${EMAIL_FROM:helios@aet.cit.tum.de}
 
 logging:
   level:

@@ -8,13 +8,13 @@ import io.nats.client.Message;
 import io.nats.client.Subscription;
 import io.nats.client.impl.ErrorListenerConsoleImpl;
 import io.nats.client.support.Status;
-import lombok.extern.slf4j.Slf4j;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 /** Custom error listener for NATS connection. */
-@Slf4j
+@Log4j2
 @Component
 public class NatsErrorListener extends ErrorListenerConsoleImpl {
 
