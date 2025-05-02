@@ -3,6 +3,7 @@ package de.tum.cit.aet.notification.nats.handler;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.tum.cit.aet.notification.nats.NatsMessageHandler;
 import de.tum.cit.aet.notification.service.EmailService;
+import java.util.HashMap;
 import java.util.Map;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Component;
@@ -37,6 +38,58 @@ public class EmailNotificationHandler extends NatsMessageHandler<Map<String, Obj
   protected void handleMessage(Map<String, Object> payload) {
     log.info("Processing email notification message");
 
+    // Check if the message is using the template format
+    if (payload.containsKey("template")) {
+      processTemplatedEmail(payload);
+    } else {
+      // Fallback to direct email format
+      processDirectEmail(payload);
+    }
+  }
+
+  /**
+   * Process an email using the template-based approach.
+   *
+   * @param payload the message payload
+   */
+  private void processTemplatedEmail(Map<String, Object> payload) {
+    // Extract required fields
+    String recipient = (String) payload.get("to");
+    String templateName = (String) payload.get("template");
+    String subject = (String) payload.get("subject");
+
+    // Extract template parameters, defaulting to empty map if not present
+    @SuppressWarnings("unchecked")
+    Map<String, Object> parameters =
+        payload.containsKey("parameters")
+            ? (Map<String, Object>) payload.get("parameters")
+            : new HashMap<>();
+
+    // Validate required fields
+    if (recipient == null || templateName == null || subject == null) {
+      log.error("Missing required fields in templated email notification: {}", payload);
+      return;
+    }
+
+    // Send the email using template
+    boolean success = emailService.sendTemplatedEmail(recipient, templateName, parameters, subject);
+
+    if (success) {
+      log.info(
+          "Successfully processed templated email notification to: {} using template: {}",
+          recipient,
+          templateName);
+    } else {
+      log.warn("Failed to process templated email notification to: {}", recipient);
+    }
+  }
+
+  /**
+   * Process an email using the direct content approach (legacy format).
+   *
+   * @param payload the message payload
+   */
+  private void processDirectEmail(Map<String, Object> payload) {
     // Extract required fields
     String recipient = (String) payload.get("to");
     String subject = (String) payload.get("subject");
@@ -44,17 +97,17 @@ public class EmailNotificationHandler extends NatsMessageHandler<Map<String, Obj
 
     // Validate required fields
     if (recipient == null || subject == null || body == null) {
-      log.error("Missing required fields in email notification message: {}", payload);
+      log.error("Missing required fields in direct email notification: {}", payload);
       return;
     }
 
-    // Send the email
+    // Send the email directly
     boolean success = emailService.sendEmail(recipient, subject, body);
 
     if (success) {
-      log.info("Successfully processed email notification to: {}", recipient);
+      log.info("Successfully processed direct email notification to: {}", recipient);
     } else {
-      log.warn("Failed to process email notification to: {}", recipient);
+      log.warn("Failed to process direct email notification to: {}", recipient);
     }
   }
 }

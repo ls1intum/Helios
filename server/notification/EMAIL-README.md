@@ -76,3 +76,18 @@ This endpoint returns a list of emails that would have been sent in development 
 
 - **Development**: Emails are logged to the console and stored in memory, accessible via the `/api/test/email/history` endpoint.
 - **Production**: Emails are actually sent via the configured SMTP server (Postfix in the VM). 
+
+
+## Testing locally
+for mac users you can use mailhog which logs the e-mail content only to see that it works
+```
+brew install mailhog
+mailhog
+```
+
+set folowing parameters
+```
+MAIL_HOST=localhost
+MAIL_PORT=1025
+EMAIL_DEV_MODE=false
+```

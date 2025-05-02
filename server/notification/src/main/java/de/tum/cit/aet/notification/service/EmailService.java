@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service;
 public class EmailService {
 
   private final JavaMailSender mailSender;
+  private final EmailTemplateService templateService;
 
   @Value("${notification.email.enabled}")
   private boolean emailEnabled;
@@ -39,8 +40,37 @@ public class EmailService {
   private static final int MAX_STORED_EMAILS = 50;
 
   @Autowired
-  public EmailService(JavaMailSender mailSender) {
+  public EmailService(JavaMailSender mailSender, EmailTemplateService templateService) {
     this.mailSender = mailSender;
+    this.templateService = templateService;
+  }
+
+  /**
+   * Sends an email using a template.
+   *
+   * @param to recipient email address
+   * @param templateName name of the template to use (without .html extension)
+   * @param parameters parameters to substitute in the template
+   * @param subject email subject
+   * @return true if the email was sent successfully
+   */
+  public boolean sendTemplatedEmail(
+      String to, String templateName, Map<String, Object> parameters, String subject) {
+    if (!emailEnabled) {
+      log.info("Email sending is disabled. Skipping templated email to: {}", to);
+      return false;
+    }
+
+    try {
+      // Process the template with parameters
+      String body = templateService.processTemplate(templateName, parameters);
+
+      // Send the email with the processed body
+      return sendEmail(to, subject, body);
+    } catch (Exception e) {
+      log.error("Failed to process template or send email to: {}", to, e);
+      return false;
+    }
   }
 
   /**

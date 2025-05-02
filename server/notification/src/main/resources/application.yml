@@ -4,8 +4,8 @@ spring:
   config:
     import: optional:file:.env[.properties]
   mail:
-    host: ${MAIL_HOST:192.168.1.1}
-    port: ${MAIL_PORT:25}
+    host: ${MAIL_HOST:localhost}
+    port: ${MAIL_PORT:1025}
     properties:
       mail:
         smtp:
