@@ -30,6 +30,18 @@
         <p-toggleswitch formControlName="globalNotificationsEnabled" />
         <label for="globalNotificationsEnabled">Enable global notifications</label>
       </div>
+
+      @for (pref of notificationPreferences(); track pref.type) {
+        <div class="flex items-center gap-3">
+          <p-toggleswitch
+            [ngModel]="pref.enabled"
+            [ngModelOptions]="{ standalone: true }"
+            (ngModelChange)="onToggleNotificationPreference(pref.type, $event)"
+          />
+          <label>{{ notificationLabels[pref.type || ''] }}</label>
+        </div>
+      }
+
     </form>
   </p-card>
 </div>

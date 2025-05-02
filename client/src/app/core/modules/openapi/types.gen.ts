@@ -147,8 +147,12 @@ export type UserSettingsDto = {
 };
 
 export type NotificationPreferenceDto = {
-  type?: 'DEPLOYMENT_FAILED';
+  type?: 'DEPLOYMENT_FAILED' | 'LOCK_EXPIRED' | 'LOCK_UNLOCKED';
   enabled?: boolean;
+};
+
+export type NotificationPreferencesWrapper = {
+  preferences?: Array<NotificationPreferenceDto>;
 };
 
 export type ReleaseCandidateCreateDto = {
@@ -902,7 +906,7 @@ export type GetNotificationPreferencesResponses = {
 export type GetNotificationPreferencesResponse = GetNotificationPreferencesResponses[keyof GetNotificationPreferencesResponses];
 
 export type UpdateNotificationPreferencesData = {
-  body: Array<NotificationPreferenceDto>;
+  body: NotificationPreferencesWrapper;
   path?: never;
   query?: never;
   url: '/api/user/notification-preferences';

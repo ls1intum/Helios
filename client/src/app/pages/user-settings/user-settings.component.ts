@@ -2,7 +2,12 @@ import { Component, computed, inject, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { injectMutation, injectQuery, QueryClient } from '@tanstack/angular-query-experimental';
 import { MessageService } from 'primeng/api';
-import { getUserSettingsOptions, getUserSettingsQueryKey, updateUserSettingsMutation } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
+import {
+  getNotificationPreferencesOptions, getNotificationPreferencesQueryKey,
+  getUserSettingsOptions,
+  getUserSettingsQueryKey, updateNotificationPreferencesMutation,
+  updateUserSettingsMutation
+} from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { Card } from 'primeng/card';
 import { Button } from 'primeng/button';
 import { InputText } from 'primeng/inputtext';
@@ -14,12 +19,17 @@ import { toObservable } from '@angular/core/rxjs-interop';
   selector: 'app-user-settings',
   imports: [Card, Button, ReactiveFormsModule, InputText, FormsModule, Skeleton, ToggleSwitch],
   templateUrl: './user-settings.component.html',
-  styles: ``,
 })
 export class UserSettingsComponent implements OnInit {
   private fb = inject(FormBuilder);
   private messageService = inject(MessageService);
   private queryClient = inject(QueryClient);
+
+  readonly notificationLabels: Record<string, string> = {
+    DEPLOYMENT_FAILED: 'Deployment failed',
+    LOCK_EXPIRED: 'Lock expired',
+    LOCK_UNLOCKED: 'Lock unlocked',
+  };
 
   constructor() {
     toObservable(this.userSettings).subscribe();
@@ -36,10 +46,21 @@ export class UserSettingsComponent implements OnInit {
     globalNotificationsEnabled: [false],
   });
 
+  // Notification email and global notifications enabled
   userSettingsQuery = injectQuery(() => ({
     ...getUserSettingsOptions(),
     enabled: true,
   }));
+
+  // Individual notification preferences
+  notificationPreferencesQuery = injectQuery(() => {
+    const isUserReady = this.userSettingsQuery.isSuccess();
+    return {
+      ...getNotificationPreferencesOptions(),
+      enabled: isUserReady,
+    };
+  });
+
 
   userSettings = computed(() => {
     const userSettings = this.userSettingsQuery.data();
@@ -51,6 +72,10 @@ export class UserSettingsComponent implements OnInit {
       { emitEvent: false }
     );
     return userSettings;
+  });
+
+  notificationPreferences = computed(() => {
+    return this.notificationPreferencesQuery.data() ?? [];
   });
 
   updateUserSettings = injectMutation(() => ({
@@ -73,22 +98,46 @@ export class UserSettingsComponent implements OnInit {
     },
   }));
 
+  updateNotificationPreferences = injectMutation(() => ({
+    ...updateNotificationPreferencesMutation(),
+    onSuccess: () => {
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Success',
+        detail: 'Notification preferences updated.',
+      });
+      this.queryClient.invalidateQueries({ queryKey: getNotificationPreferencesQueryKey() });
+    },
+    onError: () => {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Failed to update preferences!',
+      });
+      this.queryClient.invalidateQueries({ queryKey: getNotificationPreferencesQueryKey() });
+    },
+  }));
+
   saveEmail(): void {
     const emailControl = this.settingsForm.get('email');
-    console.log('Email control:', emailControl);
     if (emailControl === null) return;
     if (emailControl?.invalid) return;
 
-    console.log('Email update triggered:', emailControl.value);
     this.updateUserSettings.mutate({
       body: { notificationEmail: emailControl.value },
     });
   }
 
   onNotificationToggle(enabled: boolean): void {
-    console.log('Notification toggle changed:', enabled);
     this.updateUserSettings.mutate({
       body: { notificationsEnabled: enabled },
     });
+  }
+
+  onToggleNotificationPreference(type: string | undefined, newValue: boolean): void {
+    const updatedPreferences = this.notificationPreferences().map((pref) =>
+      pref.type === type ? { ...pref, enabled: newValue } : pref
+    );
+    this.updateNotificationPreferences.mutate({ body: { preferences: updatedPreferences } });
   }
 }

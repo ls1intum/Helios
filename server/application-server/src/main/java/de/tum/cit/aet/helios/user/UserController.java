@@ -2,6 +2,7 @@ package de.tum.cit.aet.helios.user;
 
 import de.tum.cit.aet.helios.notification.NotificationPreferenceDto;
 import de.tum.cit.aet.helios.notification.NotificationPreferenceService;
+import de.tum.cit.aet.helios.notification.NotificationPreferencesWrapper;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,9 @@ public class UserController {
    */
   @GetMapping("/settings")
   public ResponseEntity<UserSettingsDto> getUserSettings() {
+    // Set the user's loggedIn as true
+    userService.handleFirstLogin();
+
     return ResponseEntity.ok(userService.getCurrentUserSettings());
   }
 
@@ -51,8 +55,8 @@ public class UserController {
    */
   @PostMapping("/notification-preferences")
   public ResponseEntity<Void> updateNotificationPreferences(
-      @Valid @RequestBody List<NotificationPreferenceDto> preferences) {
-    notificationPreferenceService.updatePreferencesForCurrentUser(preferences);
+      @Valid @RequestBody NotificationPreferencesWrapper preferences) {
+    notificationPreferenceService.updatePreferencesForCurrentUser(preferences.preferences());
     return ResponseEntity.noContent().build();
   }
 }

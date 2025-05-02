@@ -460,10 +460,22 @@ export const NotificationPreferenceDtoSchema = {
   properties: {
     type: {
       type: 'string',
-      enum: ['DEPLOYMENT_FAILED'],
+      enum: ['DEPLOYMENT_FAILED', 'LOCK_EXPIRED', 'LOCK_UNLOCKED'],
     },
     enabled: {
       type: 'boolean',
+    },
+  },
+} as const;
+
+export const NotificationPreferencesWrapperSchema = {
+  type: 'object',
+  properties: {
+    preferences: {
+      type: 'array',
+      items: {
+        $ref: '#/components/schemas/NotificationPreferenceDto',
+      },
     },
   },
 } as const;
