@@ -18,6 +18,11 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
+/**
+ * Represents a user's notification preference for different types of notifications.
+ * Each user can have multiple notification preferences, each associated with a specific type of
+ * notification.
+ */
 @Entity
 @Table(name = "notification_preference", schema = "public", uniqueConstraints = {
     @UniqueConstraint(columnNames = {"user_id", "type"})
@@ -44,10 +49,20 @@ public class NotificationPreference {
   @Column(nullable = false)
   private boolean enabled;
 
+  /**
+   * Enum representing the different types of notifications.
+   */
   public enum Type {
     DEPLOYMENT_FAILED,
   }
 
+  /**
+   * Constructor for creating a new NotificationPreference.
+   *
+   * @param user the user associated with this notification preference
+   * @param type the type of notification
+   * @param enabled whether the notification is enabled or not
+   */
   public NotificationPreference(User user, Type type, boolean enabled) {
     this.user = user;
     this.type = type;
