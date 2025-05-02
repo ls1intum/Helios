@@ -5,7 +5,7 @@
 
       <!-- Email Input Section -->
       <div class="flex flex-col gap-2">
-        <label for="email">Email</label>
+        <label for="email">Notification email</label>
 
         @if (userSettingsQuery.isPending()) {
           <p-skeleton height="2.5rem" class="rounded" />
@@ -25,23 +25,27 @@
         }
       </div>
 
-      <!-- Toggle Notifications Section -->
+      <!-- Global toggle -->
       <div class="flex items-center gap-3 border-t pt-4">
         <p-toggleswitch formControlName="globalNotificationsEnabled" />
-        <label for="globalNotificationsEnabled">Enable global notifications</label>
+        <label for="globalNotificationsEnabled">Enable notifications</label>
       </div>
 
-      @for (pref of notificationPreferences(); track pref.type) {
-        <div class="flex items-center gap-3">
-          <p-toggleswitch
-            [ngModel]="pref.enabled"
-            [ngModelOptions]="{ standalone: true }"
-            (ngModelChange)="onToggleNotificationPreference(pref.type, $event)"
-          />
-          <label>{{ notificationLabels[pref.type || ''] }}</label>
-        </div>
-      }
-
+      <!-- Grouped individual toggles -->
+      <div class="mt-4 p-4 border rounded-lg bg-surface-50">
+        <h3 class="text-lg font-medium mb-2">Notification Types</h3>
+        @for (pref of notificationPreferences(); track pref.type) {
+          <div class="flex items-center gap-3 py-1" [class.opacity-50]="individualTogglesDisabled()" [class.cursor-not-allowed]="individualTogglesDisabled()">
+            <p-toggleswitch
+              [ngModel]="pref.enabled"
+              [ngModelOptions]="{ standalone: true }"
+              (ngModelChange)="onToggleNotificationPreference(pref.type, $event)"
+              [disabled]="individualTogglesDisabled()"
+            />
+            <label class="text-sm">{{ notificationLabels[pref.type || ''] }}</label>
+          </div>
+        }
+      </div>
     </form>
   </p-card>
 </div>

@@ -1,12 +1,14 @@
 import { Component, computed, inject, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { injectMutation, injectQuery, QueryClient } from '@tanstack/angular-query-experimental';
 import { MessageService } from 'primeng/api';
 import {
-  getNotificationPreferencesOptions, getNotificationPreferencesQueryKey,
+  getNotificationPreferencesOptions,
+  getNotificationPreferencesQueryKey,
   getUserSettingsOptions,
-  getUserSettingsQueryKey, updateNotificationPreferencesMutation,
-  updateUserSettingsMutation
+  getUserSettingsQueryKey,
+  updateNotificationPreferencesMutation,
+  updateUserSettingsMutation,
 } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { Card } from 'primeng/card';
 import { Button } from 'primeng/button';
@@ -42,7 +44,7 @@ export class UserSettingsComponent implements OnInit {
   }
 
   settingsForm: FormGroup = this.fb.group({
-    email: [''],
+    email: ['', [Validators.required, Validators.email]],
     globalNotificationsEnabled: [false],
   });
 
@@ -61,7 +63,6 @@ export class UserSettingsComponent implements OnInit {
     };
   });
 
-
   userSettings = computed(() => {
     const userSettings = this.userSettingsQuery.data();
     this.settingsForm.patchValue(
@@ -73,6 +74,8 @@ export class UserSettingsComponent implements OnInit {
     );
     return userSettings;
   });
+
+  individualTogglesDisabled = computed(() => !this.userSettings()?.notificationsEnabled);
 
   notificationPreferences = computed(() => {
     return this.notificationPreferencesQuery.data() ?? [];
@@ -135,9 +138,7 @@ export class UserSettingsComponent implements OnInit {
   }
 
   onToggleNotificationPreference(type: string | undefined, newValue: boolean): void {
-    const updatedPreferences = this.notificationPreferences().map((pref) =>
-      pref.type === type ? { ...pref, enabled: newValue } : pref
-    );
+    const updatedPreferences = this.notificationPreferences().map(pref => (pref.type === type ? { ...pref, enabled: newValue } : pref));
     this.updateNotificationPreferences.mutate({ body: { preferences: updatedPreferences } });
   }
 }
