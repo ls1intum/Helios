@@ -26,11 +26,45 @@ CREATE TABLE public.notification_preference
 ALTER TABLE public.notification_preference
     ADD CONSTRAINT chk_notification_type
         CHECK (type IN (
-            'DEPLOYMENT_FAILED'
+                'DEPLOYMENT_FAILED',
+                'LOCK_EXPIRED',
+                'LOCK_UNLOCKED'
             ));
 
+
+-- DEPLOYMENT_FAILED
 INSERT INTO public.notification_preference (user_id, type, enabled)
 SELECT id, 'DEPLOYMENT_FAILED', TRUE
 FROM public."user"
-WHERE has_logged_in = TRUE;
+WHERE has_logged_in = TRUE
+  AND NOT EXISTS (
+    SELECT 1
+    FROM public.notification_preference np
+    WHERE np.user_id = "user".id
+      AND np.type = 'DEPLOYMENT_FAILED'
+);
 
+
+-- LOCK_EXPIRED
+INSERT INTO public.notification_preference (user_id, type, enabled)
+SELECT id, 'LOCK_EXPIRED', TRUE
+FROM public."user"
+WHERE has_logged_in = TRUE
+  AND NOT EXISTS (
+    SELECT 1
+    FROM public.notification_preference np
+    WHERE np.user_id = "user".id
+      AND np.type = 'LOCK_EXPIRED'
+);
+
+-- LOCK_UNLOCKED
+INSERT INTO public.notification_preference (user_id, type, enabled)
+SELECT id, 'LOCK_UNLOCKED', TRUE
+FROM public."user"
+WHERE has_logged_in = TRUE
+  AND NOT EXISTS (
+    SELECT 1
+    FROM public.notification_preference np
+    WHERE np.user_id = "user".id
+      AND np.type = 'LOCK_UNLOCKED'
+);

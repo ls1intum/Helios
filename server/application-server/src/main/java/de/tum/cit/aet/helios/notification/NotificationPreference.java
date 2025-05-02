@@ -54,6 +54,8 @@ public class NotificationPreference {
    */
   public enum Type {
     DEPLOYMENT_FAILED,
+    LOCK_EXPIRED,
+    LOCK_UNLOCKED,
   }
 
   /**
