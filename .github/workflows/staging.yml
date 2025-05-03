@@ -37,5 +37,6 @@ jobs:
       environment: staging
       client_image_tag: "staging"
       application_server_image_tag: "staging"
+      notification_server_image_tag: "staging"
       webhook_listener_image_tag: "staging"
       keycloak_image_tag: "staging"

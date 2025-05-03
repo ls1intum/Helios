@@ -12,6 +12,9 @@ on:
       application_server_image_tag:
         default: "latest"
         type: string
+      notification_server_image_tag:
+        default: "latest"
+        type: string
       webhook_listener_image_tag:
         default: "latest"
         type: string
@@ -106,11 +109,17 @@ jobs:
 
             echo "CLIENT_IMAGE_TAG=${{ inputs.client_image_tag }}" >> .env
             echo "APPLICATION_SERVER_IMAGE_TAG=${{ inputs.application_server_image_tag }}" >> .env
+            echo "NOTIFICATION_SERVER_IMAGE_TAG=${{ inputs.notification_server_image_tag }}" >> .env
             echo "WEBHOOK_LISTENER_IMAGE_TAG=${{ inputs.webhook_listener_image_tag }}" >> .env
             echo "KEYCLOAK_IMAGE_TAG=${{ inputs.keycloak_image_tag }}" >> .env
 
             echo "HELIOS_TOKEN_EXCHANGE_CLIENT=${{ secrets.HELIOS_TOKEN_EXCHANGE_CLIENT }}" >> .env
             echo "HELIOS_TOKEN_EXCHANGE_SECRET=${{ secrets.HELIOS_TOKEN_EXCHANGE_SECRET }}" >> .env 
+            
+            echo "MAIL_HOST=${{ vars.MAIL_HOST }}" >> .env
+            echo "MAIL_PORT=${{ vars.MAIL_PORT }}" >> .env
+            echo "EMAIL_ENABLED=${{ vars.EMAIL_ENABLED }}" >> .env
+            echo "EMAIL_FROM=${{ vars.EMAIL_FROM }}" >> .env
 
       - name: SSH to VM and Execute Docker-Compose Up
         uses: appleboy/ssh-action@v1.2.2

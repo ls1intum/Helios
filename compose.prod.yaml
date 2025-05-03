@@ -136,6 +136,24 @@ services:
     networks:
       - helios-network
 
+  notification:
+    image: "ghcr.io/ls1intum/helios/notification:${NOTIFICATION_SERVER_IMAGE_TAG}"
+    environment:
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
+      - NATS_SERVER=${NATS_SERVER}
+      - NATS_AUTH_TOKEN=${NATS_AUTH_TOKEN}
+      - NATS_DURABLE_CONSUMER_NAME=notification-consumer
+      - NATS_CONSUMER_INACTIVE_THRESHOLD_MINUTES=${NATS_CONSUMER_INACTIVE_THRESHOLD_MINUTES}
+      - NATS_CONSUMER_ACK_WAIT_SECONDS=${NATS_CONSUMER_ACK_WAIT_SECONDS}
+      - MAIL_HOST=${MAIL_HOST}
+      - MAIL_PORT=${MAIL_PORT}
+      - EMAIL_ENABLED=${EMAIL_ENABLED}
+      - EMAIL_FROM=${EMAIL_FROM}
+    depends_on:
+      - nats-server
+    networks:
+      - helios-network
+
   keycloak:
     image: ghcr.io/ls1intum/helios/keycloak:${KEYCLOAK_IMAGE_TAG}
     container_name: keycloak
