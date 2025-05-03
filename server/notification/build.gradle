@@ -1,33 +1,118 @@
+import org.springframework.boot.gradle.tasks.run.BootRun
+
 plugins {
+	id 'org.springframework.boot'
+	id 'io.spring.dependency-management'
+	id 'io.freefair.lombok'
 	id 'java'
-	id 'war'
-	id 'org.springframework.boot' version '3.4.4'
-	id 'io.spring.dependency-management' version '1.1.7'
+	id 'jacoco'
 }
 
 group = 'de.tum.cit.aet'
 version = '0.0.1-SNAPSHOT'
 
-java {
-	toolchain {
-		languageVersion = JavaLanguageVersion.of(21)
-	}
-}
-
-repositories {
-	mavenCentral()
+configurations {
+	// Configuration that tracks the agents added to the JVM at run-time
+	runtimeAgent1
+	runtimeAgent2
 }
 
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-mail'
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.6'
-    implementation 'org.openapitools:jackson-databind-nullable:0.2.6'
+	implementation 'org.openapitools:jackson-databind-nullable:0.2.6'
 	implementation 'io.nats:jnats:2.21.1'
-	providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat'
+	implementation 'com.fasterxml.jackson.core:jackson-databind'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	runtimeAgent1 "org.springframework:spring-instrument:6.2.6"
+	runtimeAgent2 "org.aspectj:aspectjweaver:1.9.24"
+}
+
+// Custom bootRun task to force the user to specify an active profile
+tasks.named("bootRun") {
+	doFirst {
+		def activeProfile = System.getProperty("spring.profiles.active")
+				?: project.findProperty("spring.profiles.active")
+				?: System.getenv("SPRING_PROFILES_ACTIVE")
+		if (!activeProfile) {
+			throw new GradleException("""
+    Error: 'spring.profiles.active' is not set.
+    
+    Please specify an active profile using one of the following methods:
+    
+    - Use a predefined task like 'bootRunDev'.
+    - Set the 'SPRING_PROFILES_ACTIVE' environment variable.                
+    - Use the '-Dspring.profiles.active=<profile>' JVM argument.
+    
+    Available profiles: dev, openapi (Don't use this profile directly).
+    
+    Examples:
+    
+    1. Using predefined task:
+       ./gradlew bootRunDev
+    
+    2. Setting environment variable:
+       export SPRING_PROFILES_ACTIVE=dev
+       ./gradlew bootRun
+    
+    3. Passing JVM argument:
+       ./gradlew -Dspring.profiles.active=dev bootRun
+    
+    4. Using project property:
+       ./gradlew bootRun -Pspring.profiles.active=dev
+                """
+			)
+		} else {
+			println "Running with profile: ${activeProfile}"
+			systemProperty "spring.profiles.active", activeProfile
+		}
+	}
+}
+
+tasks.register("bootRunDev", BootRun) {
+	group = "application"
+	description = "Runs the Spring Boot application with the dev profile"
+
+	jvmArgs = [
+			"-javaagent:${configurations.runtimeAgent1.asPath}",
+			"-javaagent:${configurations.runtimeAgent2.asPath}"
+	]
+	systemProperty "spring.profiles.active", "dev"
+	classpath = sourceSets.main.runtimeClasspath
+	mainClass.set("de.tum.cit.aet.notification.NotificationApplication") // Adjust this!
+}
+
+tasks.named("test") {
+	group = "application"
+	description = "Runs the Spring Boot application with the test profile"
+	// Set the active profile to 'test'
+	systemProperty "spring.profiles.active", "test"
+	finalizedBy "jacocoTestReport"
+}
+
+jacocoTestReport {
+	dependsOn test // tests are required to run before generating the report
+	reports {
+		xml.required = true
+		csv.required = false
+	}
 }
 
 tasks.named('test') {
 	useJUnitPlatform()
+}
+
+// Load environment variables from the .env file
+// into the project properties so that they can be used
+def envFile = file('.env')
+if (envFile.exists()) {
+	envFile.readLines().each { line ->
+		def (key, value) = line.tokenize('=')
+		if (key && value) {
+			// Replace the double quotes around the value with an empty string
+			project.ext.set(key, value.trim().replaceAll('^"(.*)"$', '$1'))
+		}
+	}
 }

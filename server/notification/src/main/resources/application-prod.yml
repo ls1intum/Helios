@@ -1,0 +1,19 @@
+spring:
+  mail:
+    host: ${MAIL_HOST:192.168.1.1}
+    port: ${MAIL_PORT:25}
+
+nats:
+  enabled: true
+  timeframe: ${MONITORING_TIMEFRAME:7}
+  durableConsumerName: ${NATS_DURABLE_CONSUMER_NAME:notification-consumer}
+  consumerInactiveThresholdMinutes: ${NATS_CONSUMER_INACTIVE_THRESHOLD_MINUTES:5}
+  consumerAckWaitSeconds: ${NATS_CONSUMER_ACK_WAIT_SECONDS:30}
+  server: ${NATS_SERVER:nats://nats-server:4222}
+  auth:
+    token: ${NATS_AUTH_TOKEN:}
+
+notification:
+  email:
+    enabled: ${EMAIL_ENABLED:true}
+    from: ${EMAIL_FROM:helios@aet.cit.tum.de}
