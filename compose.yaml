@@ -155,7 +155,7 @@ services:
       - EMAIL_ENABLED=true
       - EMAIL_FROM=helios-local@aet.cit.tum.de
     ports:
-      - "8085:8080"
+      - "8082:8082"
     networks:
       - helios-network
 
