@@ -11,9 +11,9 @@ nats:
   consumerAckWaitSeconds: ${NATS_CONSUMER_ACK_WAIT_SECONDS:30}
   server: ${NATS_SERVER:nats://localhost:4222}
   auth:
-    token: ${NATS_AUTH_TOKEN:}
+    token: ${NATS_AUTH_TOKEN:5760e8ae09adfb2756f9f8cd5cb2caa704cd3f549eaa9298be843ceb165185d815b81f90c680fa7f626b7cd63abf6ac9}
 
 notification:
   email:
     enabled: ${EMAIL_ENABLED:true}
-    from: ${EMAIL_FROM:helios@aet.cit.tum.de}
+    from: ${EMAIL_FROM:helios-dev@aet.cit.tum.de}
