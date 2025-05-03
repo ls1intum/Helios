@@ -1715,6 +1715,8 @@ components:
           format: int64
         name:
           type: string
+        displayName:
+          type: string
         locked:
           type: boolean
         url:

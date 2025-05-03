@@ -44,7 +44,7 @@
       <tr>
         <td>
           <span class="flex items-center gap-2">
-            {{ environment.name }}
+            {{ environment.displayName || environment.name }}
             @if (environment.serverUrl) {
               <p-button text severity="secondary" (click)="openEnvironment($event, environment)" styleClass="p-1" class="leading-none">
                 <i-tabler name="brand-github" class="!size-4" />
