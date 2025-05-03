@@ -446,6 +446,43 @@ export const WorkflowDtoSchema = {
   required: ['id', 'label', 'name', 'path', 'state'],
 } as const;
 
+export const UserSettingsDtoSchema = {
+  type: 'object',
+  properties: {
+    notificationEmail: {
+      type: 'string',
+    },
+    notificationsEnabled: {
+      type: 'boolean',
+    },
+  },
+} as const;
+
+export const NotificationPreferenceDtoSchema = {
+  type: 'object',
+  properties: {
+    type: {
+      type: 'string',
+      enum: ['DEPLOYMENT_FAILED', 'LOCK_EXPIRED', 'LOCK_UNLOCKED'],
+    },
+    enabled: {
+      type: 'boolean',
+    },
+  },
+} as const;
+
+export const NotificationPreferencesWrapperSchema = {
+  type: 'object',
+  properties: {
+    preferences: {
+      type: 'array',
+      items: {
+        $ref: '#/components/schemas/NotificationPreferenceDto',
+      },
+    },
+  },
+} as const;
+
 export const ReleaseCandidateCreateDtoSchema = {
   type: 'object',
   properties: {

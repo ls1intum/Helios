@@ -39,9 +39,16 @@ import type {
   ExtendEnvironmentLockError,
   SyncWorkflowsByRepositoryIdData,
   SyncWorkflowsByRepositoryIdError,
-  SendTestNotificationData,
-  SendTestNotificationResponse,
-  SendTestNotificationError,
+  GetUserSettingsData,
+  GetUserSettingsResponse,
+  GetUserSettingsError,
+  UpdateUserSettingsData,
+  UpdateUserSettingsError,
+  GetNotificationPreferencesData,
+  GetNotificationPreferencesResponse,
+  GetNotificationPreferencesError,
+  UpdateNotificationPreferencesData,
+  UpdateNotificationPreferencesError,
   GetAllTestTypesData,
   GetAllTestTypesResponse,
   GetAllTestTypesError,
@@ -321,9 +328,34 @@ export const syncWorkflowsByRepositoryId = <ThrowOnError extends boolean = false
   });
 };
 
-export const sendTestNotification = <ThrowOnError extends boolean = false>(options: Options<SendTestNotificationData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).post<SendTestNotificationResponse, SendTestNotificationError, ThrowOnError>({
-    url: '/api/test/nats/send',
+export const getUserSettings = <ThrowOnError extends boolean = false>(options?: Options<GetUserSettingsData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetUserSettingsResponse, GetUserSettingsError, ThrowOnError>({
+    url: '/api/user/settings',
+    ...options,
+  });
+};
+
+export const updateUserSettings = <ThrowOnError extends boolean = false>(options: Options<UpdateUserSettingsData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).post<unknown, UpdateUserSettingsError, ThrowOnError>({
+    url: '/api/user/settings',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const getNotificationPreferences = <ThrowOnError extends boolean = false>(options?: Options<GetNotificationPreferencesData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetNotificationPreferencesResponse, GetNotificationPreferencesError, ThrowOnError>({
+    url: '/api/user/notification-preferences',
+    ...options,
+  });
+};
+
+export const updateNotificationPreferences = <ThrowOnError extends boolean = false>(options: Options<UpdateNotificationPreferencesData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).post<unknown, UpdateNotificationPreferencesError, ThrowOnError>({
+    url: '/api/user/notification-preferences',
     ...options,
     headers: {
       'Content-Type': 'application/json',

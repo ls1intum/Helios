@@ -16,7 +16,10 @@ import {
   lockEnvironment,
   extendEnvironmentLock,
   syncWorkflowsByRepositoryId,
-  sendTestNotification,
+  getUserSettings,
+  updateUserSettings,
+  getNotificationPreferences,
+  updateNotificationPreferences,
   getAllTestTypes,
   createTestType,
   createWorkflowGroup,
@@ -100,9 +103,12 @@ import type {
   ExtendEnvironmentLockResponse,
   SyncWorkflowsByRepositoryIdData,
   SyncWorkflowsByRepositoryIdError,
-  SendTestNotificationData,
-  SendTestNotificationError,
-  SendTestNotificationResponse,
+  GetUserSettingsData,
+  UpdateUserSettingsData,
+  UpdateUserSettingsError,
+  GetNotificationPreferencesData,
+  UpdateNotificationPreferencesData,
+  UpdateNotificationPreferencesError,
   GetAllTestTypesData,
   CreateTestTypeData,
   CreateTestTypeError,
@@ -424,12 +430,12 @@ export const syncWorkflowsByRepositoryIdMutation = (options?: Partial<Options<Sy
   return mutationOptions;
 };
 
-export const sendTestNotificationQueryKey = (options: Options<SendTestNotificationData>) => createQueryKey('sendTestNotification', options);
+export const getUserSettingsQueryKey = (options?: Options<GetUserSettingsData>) => createQueryKey('getUserSettings', options);
 
-export const sendTestNotificationOptions = (options: Options<SendTestNotificationData>) => {
+export const getUserSettingsOptions = (options?: Options<GetUserSettingsData>) => {
   return queryOptions({
     queryFn: async ({ queryKey, signal }) => {
-      const { data } = await sendTestNotification({
+      const { data } = await getUserSettings({
         ...options,
         ...queryKey[0],
         signal,
@@ -437,14 +443,79 @@ export const sendTestNotificationOptions = (options: Options<SendTestNotificatio
       });
       return data;
     },
-    queryKey: sendTestNotificationQueryKey(options),
+    queryKey: getUserSettingsQueryKey(options),
   });
 };
 
-export const sendTestNotificationMutation = (options?: Partial<Options<SendTestNotificationData>>) => {
-  const mutationOptions: MutationOptions<SendTestNotificationResponse, SendTestNotificationError, Options<SendTestNotificationData>> = {
+export const updateUserSettingsQueryKey = (options: Options<UpdateUserSettingsData>) => createQueryKey('updateUserSettings', options);
+
+export const updateUserSettingsOptions = (options: Options<UpdateUserSettingsData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await updateUserSettings({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: updateUserSettingsQueryKey(options),
+  });
+};
+
+export const updateUserSettingsMutation = (options?: Partial<Options<UpdateUserSettingsData>>) => {
+  const mutationOptions: MutationOptions<unknown, UpdateUserSettingsError, Options<UpdateUserSettingsData>> = {
     mutationFn: async localOptions => {
-      const { data } = await sendTestNotification({
+      const { data } = await updateUserSettings({
+        ...options,
+        ...localOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const getNotificationPreferencesQueryKey = (options?: Options<GetNotificationPreferencesData>) => createQueryKey('getNotificationPreferences', options);
+
+export const getNotificationPreferencesOptions = (options?: Options<GetNotificationPreferencesData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getNotificationPreferences({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: getNotificationPreferencesQueryKey(options),
+  });
+};
+
+export const updateNotificationPreferencesQueryKey = (options: Options<UpdateNotificationPreferencesData>) => createQueryKey('updateNotificationPreferences', options);
+
+export const updateNotificationPreferencesOptions = (options: Options<UpdateNotificationPreferencesData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await updateNotificationPreferences({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: updateNotificationPreferencesQueryKey(options),
+  });
+};
+
+export const updateNotificationPreferencesMutation = (options?: Partial<Options<UpdateNotificationPreferencesData>>) => {
+  const mutationOptions: MutationOptions<unknown, UpdateNotificationPreferencesError, Options<UpdateNotificationPreferencesData>> = {
+    mutationFn: async localOptions => {
+      const { data } = await updateNotificationPreferences({
         ...options,
         ...localOptions,
         throwOnError: true,

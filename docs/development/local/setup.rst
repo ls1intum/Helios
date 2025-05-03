@@ -121,7 +121,7 @@ When Helios starts, it will look for all the **GitHub App** variables above:
 - ``DATA_SYNC_RUN_ON_STARTUP``: Whether to run the data sync on startup (default: `true`)
 - ``RUN_ON_STARTUP_COOLDOWN``: When server starts, it first checks the latest run of sync, if it is less than this value in minutes, it will not run the sync again
 - ``OAUTH_ISSUER_URL``: URL to Keycloak realm
-
+- ``NOTIFICATIONS_ENABLED``: (Optional, default: `true`) Whether to enable notifications to users
 
 Creating a GitHub App
 ^^^^^^^^^^^^^^^^^^^^^

@@ -142,6 +142,20 @@ export type WorkflowDto = {
   updatedAt?: string;
 };
 
+export type UserSettingsDto = {
+  notificationEmail?: string;
+  notificationsEnabled?: boolean;
+};
+
+export type NotificationPreferenceDto = {
+  type?: 'DEPLOYMENT_FAILED' | 'LOCK_EXPIRED' | 'LOCK_UNLOCKED';
+  enabled?: boolean;
+};
+
+export type NotificationPreferencesWrapper = {
+  preferences?: Array<NotificationPreferenceDto>;
+};
+
 export type ReleaseCandidateCreateDto = {
   name: string;
   commitSha: string;
@@ -819,40 +833,101 @@ export type SyncWorkflowsByRepositoryIdResponses = {
   200: unknown;
 };
 
-export type SendTestNotificationData = {
-  body?: {
-    [key: string]: {
-      [key: string]: unknown;
-    };
-  };
+export type GetUserSettingsData = {
+  body?: never;
   path?: never;
-  query: {
-    subject: string;
-  };
-  url: '/api/test/nats/send';
+  query?: never;
+  url: '/api/user/settings';
 };
 
-export type SendTestNotificationErrors = {
+export type GetUserSettingsErrors = {
   /**
    * Conflict
    */
   409: ApiError;
 };
 
-export type SendTestNotificationError = SendTestNotificationErrors[keyof SendTestNotificationErrors];
+export type GetUserSettingsError = GetUserSettingsErrors[keyof GetUserSettingsErrors];
 
-export type SendTestNotificationResponses = {
+export type GetUserSettingsResponses = {
   /**
    * OK
    */
-  200: {
-    [key: string]: {
-      [key: string]: unknown;
-    };
-  };
+  200: UserSettingsDto;
 };
 
-export type SendTestNotificationResponse = SendTestNotificationResponses[keyof SendTestNotificationResponses];
+export type GetUserSettingsResponse = GetUserSettingsResponses[keyof GetUserSettingsResponses];
+
+export type UpdateUserSettingsData = {
+  body: UserSettingsDto;
+  path?: never;
+  query?: never;
+  url: '/api/user/settings';
+};
+
+export type UpdateUserSettingsErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type UpdateUserSettingsError = UpdateUserSettingsErrors[keyof UpdateUserSettingsErrors];
+
+export type UpdateUserSettingsResponses = {
+  /**
+   * OK
+   */
+  200: unknown;
+};
+
+export type GetNotificationPreferencesData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/api/user/notification-preferences';
+};
+
+export type GetNotificationPreferencesErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type GetNotificationPreferencesError = GetNotificationPreferencesErrors[keyof GetNotificationPreferencesErrors];
+
+export type GetNotificationPreferencesResponses = {
+  /**
+   * OK
+   */
+  200: Array<NotificationPreferenceDto>;
+};
+
+export type GetNotificationPreferencesResponse = GetNotificationPreferencesResponses[keyof GetNotificationPreferencesResponses];
+
+export type UpdateNotificationPreferencesData = {
+  body: NotificationPreferencesWrapper;
+  path?: never;
+  query?: never;
+  url: '/api/user/notification-preferences';
+};
+
+export type UpdateNotificationPreferencesErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type UpdateNotificationPreferencesError = UpdateNotificationPreferencesErrors[keyof UpdateNotificationPreferencesErrors];
+
+export type UpdateNotificationPreferencesResponses = {
+  /**
+   * OK
+   */
+  200: unknown;
+};
 
 export type GetAllTestTypesData = {
   body?: never;
