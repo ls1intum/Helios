@@ -14,7 +14,11 @@ import { InputTextModule } from 'primeng/inputtext';
 import { FormsModule } from '@angular/forms';
 import { injectQuery } from '@tanstack/angular-query-experimental';
 import { TabViewModule } from 'primeng/tabview';
-import { getLatestTestResultsByBranchOptions, getLatestTestResultsByPullRequestIdOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
+import {
+  getGitRepoSettingsOptions,
+  getLatestTestResultsByBranchOptions,
+  getLatestTestResultsByPullRequestIdOptions,
+} from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { TestCaseDto, TestSuiteDto, TestTypeResults } from '@app/core/modules/openapi';
 import { DialogModule } from 'primeng/dialog';
 import { SliderModule } from 'primeng/slider';
@@ -112,6 +116,9 @@ export class PipelineTestResultsComponent {
   // Log level filtering
   selectedLogLevelValue = signal<number>(2); // Default to ERROR
 
+  // Package name highlight
+  packageName = signal<string>('');
+
   // Get the current log level object based on the selected value
   selectedLogLevel = computed(() => {
     return LOG_LEVELS.find(level => level.value === this.selectedLogLevelValue()) || LOG_LEVELS[2];
@@ -156,6 +163,26 @@ export class PipelineTestResultsComponent {
   filteredTestSuiteLogs = computed(() => {
     return this.filterLogsByLevel(this.selectedTestCase()?.suiteSystemOut);
   });
+
+  // Repository ID for fetching package name
+  repositoryId = computed(() => {
+    const selector = this.selector();
+    if (!selector) return null;
+
+    return 'repositoryId' in selector ? selector.repositoryId : null;
+  });
+
+  // Git Repo Settings query for package name
+  gitRepoSettingsQuery = injectQuery(() => ({
+    ...getGitRepoSettingsOptions({ path: { repositoryId: this.repositoryId()! } }),
+    enabled: () => !!this.repositoryId(),
+  }));
+
+  // Check if a line contains the package name
+  lineContainsPackageName(line: string): boolean {
+    const pkg = this.packageName();
+    return !!pkg && line.includes(pkg);
+  }
 
   // Function to download logs with current filter applied
   downloadLogs(logContent: string, fileName: string): void {
@@ -332,6 +359,16 @@ export class PipelineTestResultsComponent {
         this.activeTestTypeTab.set(testTypes.length - 1);
       }
     });
+
+    effect(
+      () => {
+        const gitRepoSettings = this.gitRepoSettingsQuery.data();
+        if (gitRepoSettings) {
+          this.packageName.set(gitRepoSettings.packageName || '');
+        }
+      },
+      { allowSignalWrites: true }
+    );
   }
 
   // Get the currently active workflow based on tab selection

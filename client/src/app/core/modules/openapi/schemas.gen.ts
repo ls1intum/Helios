@@ -63,6 +63,9 @@ export const GitRepoSettingsDtoSchema = {
       type: 'integer',
       format: 'int64',
     },
+    packageName: {
+      type: 'string',
+    },
   },
 } as const;
 

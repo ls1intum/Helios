@@ -16,6 +16,7 @@ import { TestTypeDto, WorkflowDto, WorkflowGroupDto, WorkflowMembershipDto } fro
 import {
   createWorkflowGroupMutation,
   deleteWorkflowGroupMutation,
+  getGitRepoSettingsOptions,
   getGroupsWithWorkflowsOptions,
   getGroupsWithWorkflowsQueryKey,
   getWorkflowsByRepositoryIdOptions,
@@ -28,6 +29,7 @@ import {
   deleteTestTypeMutation,
   getAllTestTypesQueryKey,
   getAllTestTypesOptions,
+  updateGitRepoSettingsMutation,
 } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { WorkflowDtoSchema } from '@app/core/modules/openapi/schemas.gen';
 import { MessageService } from 'primeng/api';
@@ -79,8 +81,12 @@ export class ProjectSettingsComponent {
   repositoryId = input.required({ transform: numberAttribute });
 
   workflowGroups = signal<WorkflowGroupDto[]>([]);
-  isPending = computed(() => this.fetchWorkflowsQuery.isPending() || this.groupsQuery.isPending());
-  isError = computed(() => this.fetchWorkflowsQuery.isError() || this.groupsQuery.isError());
+  isPending = computed(() => this.fetchWorkflowsQuery.isPending() || this.groupsQuery.isPending() || this.gitRepoSettingsQuery.isPending());
+  isError = computed(() => this.fetchWorkflowsQuery.isError() || this.groupsQuery.isError() || this.gitRepoSettingsQuery.isError());
+
+  // Package name signals
+  packageName = signal<string>('');
+
   // For creating a new group
   showAddGroupDialog = false;
   newGroupName = '';
@@ -114,6 +120,16 @@ export class ProjectSettingsComponent {
       // Set the signal
       this.workflowGroupsMap.set(newMap);
     });
+
+    effect(
+      () => {
+        const gitRepoSettings = this.gitRepoSettingsQuery.data();
+        if (gitRepoSettings) {
+          this.packageName.set(gitRepoSettings.packageName || '');
+        }
+      },
+      { allowSignalWrites: true }
+    );
   }
 
   // Computed property to show 'Grouped Workflows' in the UI
@@ -174,6 +190,27 @@ export class ProjectSettingsComponent {
     // (Optional) If you also want "Ungrouped" logic, handle it here
     return record;
   });
+
+  // Git Repo Settings query for package name
+  gitRepoSettingsQuery = injectQuery(() => ({
+    ...getGitRepoSettingsOptions({ path: { repositoryId: this.repositoryId() } }),
+    enabled: () => !!this.repositoryId(),
+  }));
+
+  updatePackageName() {
+    this.updateGitRepoSettingsMutation.mutate({
+      path: { repositoryId: this.repositoryId() },
+      body: { packageName: this.packageName() },
+    });
+  }
+
+  updateGitRepoSettingsMutation = injectMutation(() => ({
+    ...updateGitRepoSettingsMutation(),
+    onSuccess: () => {
+      this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Package name updated successfully' });
+      this.queryClient.invalidateQueries({ queryKey: ['getGitRepoSettings', { path: { repositoryId: this.repositoryId() } }] });
+    },
+  }));
 
   fetchWorkflowsQuery = injectQuery(() => ({
     ...getWorkflowsByRepositoryIdOptions({ path: { repositoryId: this.repositoryId() } }),
@@ -281,8 +318,6 @@ export class ProjectSettingsComponent {
     // Add the "Ungrouped" option
     return [{ label: 'Ungrouped', value: 'Ungrouped' }, ...groups];
   }
-
-  // Delete a group if it's empty
   deleteGroup(group: { groupName: string; workflows: WorkflowDto[] }) {
     // Find the actual WorkflowGroupDTO by name (or store ID in your record)
     const foundGroup = this.workflowGroups().find(g => g.name === group.groupName);
