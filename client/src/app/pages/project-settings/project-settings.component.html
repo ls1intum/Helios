@@ -20,6 +20,29 @@
       <p-divider class="w-full mt-4" />
     </div>
 
+    <!-- Package Name Settings -->
+    <div class="max-w-4xl mb-6">
+      <h3 class="text-xl mb-2">Package Name</h3>
+      <div class="p-2">
+        <div class="mb-4">
+          <div class="flex items-center">
+            <div class="mr-6 flex-grow">
+              <label class="font-semibold" for="packageName">Application Package Name</label>
+              <p class="text-sm text-muted-color">This package name will be used to filter logs from test results.</p>
+            </div>
+            <div class="flex gap-2 items-center">
+              <input pInputText id="packageName" type="text" [ngModel]="packageName()" (ngModelChange)="packageName.set($event)" placeholder="com.example.app" class="w-80" />
+              <p-button label="Update" (click)="updatePackageName()"></p-button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex justify-center">
+      <p-divider class="w-full mt-4" />
+    </div>
+
     <!-- Grouped Workflows Panels -->
     <div class="flex justify-between items-center mb-2">
       <h3 class="text-xl">Grouped Workflows</h3>

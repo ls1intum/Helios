@@ -268,7 +268,13 @@
         <div>
           <h4 class="font-medium mb-2">Stack Trace</h4>
           <div class="border border-muted-color p-4 rounded overflow-auto max-h-[400px]">
-            <pre class="font-mono text-sm">{{ selectedTestCase()?.stackTrace?.trimStart() }}</pre>
+            @for (line of (selectedTestCase()?.stackTrace?.trimStart() || '').split('\n'); track $index) {
+              <pre
+                class="font-mono text-sm whitespace-pre block min-w-fit"
+                [ngClass]="lineContainsPackageName(line) ? 'bg-yellow-100 dark:bg-yellow-900/30 font-medium py-0.5 px-1' : ''"
+                >{{ line }}</pre
+              >
+            }
           </div>
           <div class="flex justify-end mt-2">
             <button
@@ -307,7 +313,12 @@
           <div class="border border-muted-color p-4 rounded overflow-auto max-h-[400px]">
             @if (filteredTestCaseLogs()) {
               @for (line of filteredTestCaseLogs().split('\n'); track $index) {
-                <pre class="font-mono text-sm" [class]="getLogLevelClass(line)">{{ line }}</pre>
+                <pre
+                  class="font-mono text-sm whitespace-pre block min-w-fit"
+                  [class]="getLogLevelClass(line)"
+                  [ngClass]="lineContainsPackageName(line) ? 'bg-yellow-100 dark:bg-yellow-900/30 font-medium py-0.5 px-1' : ''"
+                  >{{ line }}</pre
+                >
               }
             }
           </div>
@@ -331,7 +342,12 @@
           <div class="border border-muted-color p-4 rounded overflow-auto max-h-[400px]">
             @if (filteredTestSuiteLogs()) {
               @for (line of filteredTestSuiteLogs().split('\n'); track $index) {
-                <pre class="font-mono text-sm" [class]="getLogLevelClass(line)">{{ line }}</pre>
+                <pre
+                  class="font-mono text-sm whitespace-pre block min-w-fit"
+                  [class]="getLogLevelClass(line)"
+                  [ngClass]="lineContainsPackageName(line) ? 'bg-yellow-100 dark:bg-yellow-900/30 font-medium py-0.5 px-1' : ''"
+                  >{{ line }}</pre
+                >
               }
             }
           </div>

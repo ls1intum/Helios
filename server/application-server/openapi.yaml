@@ -1604,6 +1604,8 @@ components:
         lockReservationThreshold:
           type: integer
           format: int64
+        packageName:
+          type: string
     WorkflowGroupDto:
       type: object
       properties:
