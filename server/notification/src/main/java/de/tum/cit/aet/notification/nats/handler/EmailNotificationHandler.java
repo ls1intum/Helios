@@ -38,6 +38,16 @@ public class EmailNotificationHandler extends NatsMessageHandler<Map<String, Obj
   protected void handleMessage(Map<String, Object> payload) {
     log.info("Processing email notification message");
 
+    // check if payload contains timestamp
+    if (payload.containsKey("timestamp")) {
+      log.info("Timestamp: {}", payload.get("timestamp"));
+      // check if timestamp is older than 10 minutes
+      if (System.currentTimeMillis() - (Long) payload.get("timestamp") > 10 * 60 * 1000) {
+        log.info("Skipping email notification because timestamp is older than 10 minutes");
+        return;
+      }
+    }
+
     // Check if the message is using the template format
     if (payload.containsKey("template")) {
       processTemplatedEmail(payload);

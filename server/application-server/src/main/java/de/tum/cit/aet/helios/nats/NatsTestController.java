@@ -55,6 +55,11 @@ public class NatsTestController {
       String fullSubject =
           subject.startsWith("notification.message.") ? subject : "notification.message." + subject;
 
+      // payload does not contain timestamp, add it
+      if (!payload.containsKey("timestamp")) {
+        payload.put("timestamp", System.currentTimeMillis());
+      }
+
       // Convert map to JSON string bytes
       byte[] jsonData =
           new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsBytes(payload);
