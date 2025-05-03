@@ -3,6 +3,7 @@ import { ProfileNavSectionComponent } from './profile-nav-section.component';
 import { provideExperimentalZonelessChangeDetection } from '@angular/core';
 import { vi } from 'vitest';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
+import { RouterTestingModule } from '@angular/router/testing';
 
 describe('ProfileNavSectionComponent', () => {
   let component: ProfileNavSectionComponent;
@@ -19,7 +20,7 @@ describe('ProfileNavSectionComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ProfileNavSectionComponent],
+      imports: [ProfileNavSectionComponent, RouterTestingModule],
       providers: [provideExperimentalZonelessChangeDetection(), KeycloakService],
     }).compileComponents();
 

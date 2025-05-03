@@ -48,3 +48,6 @@ cleanup:
             - test-processing-status: null
               keep: 2
               age-days: 5
+
+notification:
+    enabled: ${NOTIFICATIONS_ENABLED:true}

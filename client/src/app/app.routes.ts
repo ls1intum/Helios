@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { RepositoryFilterGuard } from './core/middlewares/repository-filter.guard';
 import { adminGuard } from './core/routeGuards/admin.guard';
 import { maintainerGuard } from './core/routeGuards/maintainer.guard';
+import { loggedInGuard } from '@app/core/routeGuards/auth.guard';
 
 export const routes: Routes = [
   {
@@ -25,6 +26,11 @@ export const routes: Routes = [
       {
         path: 'imprint',
         loadComponent: () => import('./pages/imprint/imprint.component').then(m => m.ImprintComponent),
+      },
+      {
+        path: 'settings',
+        canActivate: [loggedInGuard],
+        loadComponent: () => import('./pages/user-settings/user-settings.component').then(m => m.UserSettingsComponent),
       },
       {
         path: 'repo/:repositoryId',

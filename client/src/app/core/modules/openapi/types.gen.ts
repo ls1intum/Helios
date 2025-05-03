@@ -142,6 +142,20 @@ export type WorkflowDto = {
   updatedAt?: string;
 };
 
+export type UserSettingsDto = {
+  notificationEmail?: string;
+  notificationsEnabled?: boolean;
+};
+
+export type NotificationPreferenceDto = {
+  type?: 'DEPLOYMENT_FAILED' | 'LOCK_EXPIRED' | 'LOCK_UNLOCKED';
+  enabled?: boolean;
+};
+
+export type NotificationPreferencesWrapper = {
+  preferences?: Array<NotificationPreferenceDto>;
+};
+
 export type ReleaseCandidateCreateDto = {
   name: string;
   commitSha: string;
@@ -813,6 +827,102 @@ export type SyncWorkflowsByRepositoryIdErrors = {
 export type SyncWorkflowsByRepositoryIdError = SyncWorkflowsByRepositoryIdErrors[keyof SyncWorkflowsByRepositoryIdErrors];
 
 export type SyncWorkflowsByRepositoryIdResponses = {
+  /**
+   * OK
+   */
+  200: unknown;
+};
+
+export type GetUserSettingsData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/api/user/settings';
+};
+
+export type GetUserSettingsErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type GetUserSettingsError = GetUserSettingsErrors[keyof GetUserSettingsErrors];
+
+export type GetUserSettingsResponses = {
+  /**
+   * OK
+   */
+  200: UserSettingsDto;
+};
+
+export type GetUserSettingsResponse = GetUserSettingsResponses[keyof GetUserSettingsResponses];
+
+export type UpdateUserSettingsData = {
+  body: UserSettingsDto;
+  path?: never;
+  query?: never;
+  url: '/api/user/settings';
+};
+
+export type UpdateUserSettingsErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type UpdateUserSettingsError = UpdateUserSettingsErrors[keyof UpdateUserSettingsErrors];
+
+export type UpdateUserSettingsResponses = {
+  /**
+   * OK
+   */
+  200: unknown;
+};
+
+export type GetNotificationPreferencesData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/api/user/notification-preferences';
+};
+
+export type GetNotificationPreferencesErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type GetNotificationPreferencesError = GetNotificationPreferencesErrors[keyof GetNotificationPreferencesErrors];
+
+export type GetNotificationPreferencesResponses = {
+  /**
+   * OK
+   */
+  200: Array<NotificationPreferenceDto>;
+};
+
+export type GetNotificationPreferencesResponse = GetNotificationPreferencesResponses[keyof GetNotificationPreferencesResponses];
+
+export type UpdateNotificationPreferencesData = {
+  body: NotificationPreferencesWrapper;
+  path?: never;
+  query?: never;
+  url: '/api/user/notification-preferences';
+};
+
+export type UpdateNotificationPreferencesErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type UpdateNotificationPreferencesError = UpdateNotificationPreferencesErrors[keyof UpdateNotificationPreferencesErrors];
+
+export type UpdateNotificationPreferencesResponses = {
   /**
    * OK
    */

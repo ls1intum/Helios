@@ -1,0 +1,63 @@
+<div class="max-w-3xl mx-auto px-4 mt-8">
+  <p-card class="rounded-lg">
+    <form [formGroup]="settingsForm" class="flex flex-col gap-6">
+      <h2 class="text-2xl font-semibold border-b pb-2">User Settings</h2>
+
+      <!-- Email Input Section -->
+      <div class="flex flex-col gap-2">
+        <label for="email">Notification email</label>
+
+        @if (userSettingsQuery.isPending()) {
+          <p-skeleton height="2.5rem" class="rounded" />
+        } @else {
+          <input pInputText id="email" formControlName="email" type="email" placeholder="Enter your email" />
+          @if (settingsForm.get('email')?.invalid && settingsForm.get('email')?.touched) {
+            <small class="text-red-500">Valid email required.</small>
+          }
+        }
+      </div>
+
+      <div class="flex justify-end">
+        @if (userSettingsQuery.isPending()) {
+          <p-skeleton height="2.5rem" width="8rem" class="rounded" />
+        } @else {
+          <p-button type="button" label="Save Email" (onClick)="saveEmail()" [disabled]="settingsForm.get('email')?.invalid || updateUserSettings.isPending()" />
+        }
+      </div>
+
+      <!-- Global toggle -->
+      <div class="flex items-center gap-3 border-t pt-4">
+        @if (userSettingsQuery.isPending()) {
+          <p-skeleton height="2rem" width="3rem" borderRadius="2xl" />
+          <p-skeleton height="1rem" width="10rem" />
+        } @else {
+          <p-toggleswitch formControlName="globalNotificationsEnabled" />
+          <label for="globalNotificationsEnabled">Enable notifications</label>
+        }
+      </div>
+
+      <!-- Grouped individual toggles -->
+      <div class="mt-4 p-4 border rounded-lg bg-surface-50">
+        <h3 class="text-lg font-medium mb-2">Notification Types</h3>
+        @if (notificationPreferencesQuery.isPending()) {
+          <div class="flex items-center gap-3 py-1">
+            <p-skeleton height="2rem" width="3rem" borderRadius="2xl" />
+            <p-skeleton height="1rem" width="10rem" />
+          </div>
+        } @else {
+          @for (pref of notificationPreferences(); track pref.type) {
+            <div class="flex items-center gap-3 py-1" [class.opacity-50]="individualTogglesDisabled()" [class.cursor-not-allowed]="individualTogglesDisabled()">
+              <p-toggleswitch
+                [ngModel]="pref.enabled"
+                [ngModelOptions]="{ standalone: true }"
+                (ngModelChange)="onToggleNotificationPreference(pref.type, $event)"
+                [disabled]="individualTogglesDisabled()"
+              />
+              <label class="text-sm">{{ notificationLabels[pref.type || ''] }}</label>
+            </div>
+          }
+        }
+      </div>
+    </form>
+  </p-card>
+</div>
