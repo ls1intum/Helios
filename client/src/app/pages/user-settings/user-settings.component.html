@@ -27,23 +27,35 @@
 
       <!-- Global toggle -->
       <div class="flex items-center gap-3 border-t pt-4">
-        <p-toggleswitch formControlName="globalNotificationsEnabled" />
-        <label for="globalNotificationsEnabled">Enable notifications</label>
+        @if (userSettingsQuery.isPending()) {
+          <p-skeleton height="2rem" width="3rem" borderRadius="2xl" />
+          <p-skeleton height="1rem" width="10rem" />
+        } @else {
+          <p-toggleswitch formControlName="globalNotificationsEnabled" />
+          <label for="globalNotificationsEnabled">Enable notifications</label>
+        }
       </div>
 
       <!-- Grouped individual toggles -->
       <div class="mt-4 p-4 border rounded-lg bg-surface-50">
         <h3 class="text-lg font-medium mb-2">Notification Types</h3>
-        @for (pref of notificationPreferences(); track pref.type) {
-          <div class="flex items-center gap-3 py-1" [class.opacity-50]="individualTogglesDisabled()" [class.cursor-not-allowed]="individualTogglesDisabled()">
-            <p-toggleswitch
-              [ngModel]="pref.enabled"
-              [ngModelOptions]="{ standalone: true }"
-              (ngModelChange)="onToggleNotificationPreference(pref.type, $event)"
-              [disabled]="individualTogglesDisabled()"
-            />
-            <label class="text-sm">{{ notificationLabels[pref.type || ''] }}</label>
+        @if (notificationPreferencesQuery.isPending()) {
+          <div class="flex items-center gap-3 py-1">
+            <p-skeleton height="2rem" width="3rem" borderRadius="2xl" />
+            <p-skeleton height="1rem" width="10rem" />
           </div>
+        } @else {
+          @for (pref of notificationPreferences(); track pref.type) {
+            <div class="flex items-center gap-3 py-1" [class.opacity-50]="individualTogglesDisabled()" [class.cursor-not-allowed]="individualTogglesDisabled()">
+              <p-toggleswitch
+                [ngModel]="pref.enabled"
+                [ngModelOptions]="{ standalone: true }"
+                (ngModelChange)="onToggleNotificationPreference(pref.type, $event)"
+                [disabled]="individualTogglesDisabled()"
+              />
+              <label class="text-sm">{{ notificationLabels[pref.type || ''] }}</label>
+            </div>
+          }
         }
       </div>
     </form>
