@@ -19,6 +19,7 @@ export type GitRepoSettingsDto = {
   id?: number;
   lockExpirationThreshold?: number;
   lockReservationThreshold?: number;
+  packageName?: string;
 };
 
 export type WorkflowGroupDto = {
