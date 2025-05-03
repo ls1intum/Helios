@@ -39,6 +39,9 @@ import type {
   ExtendEnvironmentLockError,
   SyncWorkflowsByRepositoryIdData,
   SyncWorkflowsByRepositoryIdError,
+  SendTestNotificationData,
+  SendTestNotificationResponse,
+  SendTestNotificationError,
   GetAllTestTypesData,
   GetAllTestTypesResponse,
   GetAllTestTypesError,
@@ -315,6 +318,17 @@ export const syncWorkflowsByRepositoryId = <ThrowOnError extends boolean = false
   return (options.client ?? _heyApiClient).post<unknown, SyncWorkflowsByRepositoryIdError, ThrowOnError>({
     url: '/api/workflows/repository/{repositoryId}/sync',
     ...options,
+  });
+};
+
+export const sendTestNotification = <ThrowOnError extends boolean = false>(options: Options<SendTestNotificationData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).post<SendTestNotificationResponse, SendTestNotificationError, ThrowOnError>({
+    url: '/api/test/nats/send',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
   });
 };
 

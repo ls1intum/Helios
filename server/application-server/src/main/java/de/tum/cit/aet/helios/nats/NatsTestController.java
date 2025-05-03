@@ -1,6 +1,5 @@
-package de.tum.cit.aet.helios.controller;
+package de.tum.cit.aet.helios.nats;
 
-import de.tum.cit.aet.helios.nats.NatsNotificationPublisherService;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.extern.log4j.Log4j2;
