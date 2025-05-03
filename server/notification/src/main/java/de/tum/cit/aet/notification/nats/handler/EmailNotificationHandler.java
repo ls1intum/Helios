@@ -48,7 +48,7 @@ public class EmailNotificationHandler extends NatsMessageHandler<Map<String, Obj
       log.info("Timestamp: {}", payload.get("timestamp"));
       // check if timestamp is older than 3 minutes
       if (System.currentTimeMillis() - (Long) payload.get("timestamp") > 3 * 60 * 1000) {
-        log.info("Skipping email notification because timestamp is older than 5 minutes");
+        log.info("Skipping email notification because timestamp is older than 3 minutes");
         return;
       }
     }
