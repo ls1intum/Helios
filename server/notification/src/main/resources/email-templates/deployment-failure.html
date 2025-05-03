@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deployment Failed - Helios</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background-color: #dc3545;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 5px 5px 0 0;
+        }
+
+        .content {
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-top: none;
+            border-radius: 0 0 5px 5px;
+        }
+
+        .deployment-details {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+
+        .deployment-details p {
+            margin: 5px 0;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 12px;
+            color: #777;
+        }
+
+        .button {
+            display: inline-block;
+            background-color: #4a86e8;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+
+        .alert-icon {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .env-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            font-size: 12px;
+            font-weight: bold;
+            border-radius: 3px;
+            margin-left: 5px;
+            vertical-align: middle;
+        }
+
+        .env-dev {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .env-staging {
+            background-color: #ffc107;
+            color: #333;
+        }
+
+        .env-prod {
+            background-color: #17a2b8;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <div class="alert-icon">⚠️</div>
+        <h1>Deployment Failed</h1>
+    </div>
+    <div class="content">
+        <p>Hello <strong>${username}</strong>,</p>
+
+        <p>We detected that a deployment has failed in your Helios environment.</p>
+
+        <div class="deployment-details">
+            <p><strong>Source:</strong> ${sourceBranch}</p>
+            <p><strong>Environment:</strong> ${environment}
+                <span class="env-badge env-${environment.toLowerCase()}">${environment.toUpperCase()}</span>
+            </p>
+            <p><strong>Pull Request:</strong> ${pullRequest}</p>
+            <p><strong>Timestamp:</strong> ${timestamp}</p>
+        </div>
+
+        <p>Please check the deployment logs and status for more details about what went wrong.</p>
+
+        <a href="${heliosBaseUrl}/deployments/${deploymentId}" class="button">View Deployment Details</a>
+
+        <p>You can also check the overall system status at <a href="${heliosBaseUrl}/status">Helios Status
+                Dashboard</a>.</p>
+
+        <p>Helios Team</p>
+    </div>
+    <div class="footer">
+        <p>&copy; ${currentYear} Helios - Technical University of Munich</p>
+        <p><small>Environment: <a href="${heliosBaseUrl}">${heliosBaseUrl}</a></small></p>
+    </div>
+</body>
+
+</html>

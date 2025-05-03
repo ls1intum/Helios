@@ -11,6 +11,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
@@ -28,6 +29,9 @@ public class EmailTemplateService {
     this.resourceLoader = resourceLoader;
   }
 
+  @Value("${helios.client_url}")
+  private String heliosClientUrl;
+
   /**
    * Process the specified email template with the provided parameters.
    *
@@ -43,6 +47,10 @@ public class EmailTemplateService {
     // Add standard parameters if not provided
     if (!parameters.containsKey("currentYear")) {
       parameters.put("currentYear", Year.now().getValue());
+    }
+    // Add environment-specific parameters
+    if (!parameters.containsKey("heliosBaseUrl")) {
+      parameters.put("heliosBaseUrl", heliosClientUrl);
     }
 
     // Process the template by replacing placeholders

@@ -154,6 +154,7 @@ services:
       - MAIL_PORT=1025
       - EMAIL_ENABLED=true
       - EMAIL_FROM=helios-local@aet.cit.tum.de
+      - HELIOS_CLIENT=${HELIOS_CLIENT}
     ports:
       - "8082:8082"
     networks:
@@ -163,11 +164,10 @@ services:
     image: mailhog/mailhog
     container_name: mailhog
     ports:
-      - "1025:1025"   # SMTP interface
-      - "8025:8025"   # Web UI
+      - "1025:1025" # SMTP interface
+      - "8025:8025" # Web UI
     networks:
       - helios-network
-
 
 volumes:
   db-data:

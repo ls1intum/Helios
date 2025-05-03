@@ -17,3 +17,6 @@ notification:
   email:
     enabled: ${EMAIL_ENABLED:true}
     from: ${EMAIL_FROM:helios-staging@aet.cit.tum.de}
+
+helios:
+  client_url: ${HELIOS_CLIENT:https://helios-staging.aet.cit.tum.de}
