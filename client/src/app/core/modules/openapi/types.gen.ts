@@ -66,6 +66,7 @@ export type EnvironmentDto = {
   repository?: RepositoryInfoDto;
   id: number;
   name: string;
+  displayName?: string;
   locked?: boolean;
   url?: string;
   htmlUrl?: string;

@@ -509,6 +509,9 @@ public class EnvironmentService {
               if (environmentDto.description() != null) {
                 environment.setDescription(environmentDto.description());
               }
+              if (environmentDto.displayName() != null) {
+                environment.setDisplayName(environmentDto.displayName());
+              }
               if (environmentDto.serverUrl() != null) {
                 environment.setServerUrl(environmentDto.serverUrl());
               }

@@ -206,6 +206,9 @@ export const EnvironmentDtoSchema = {
     name: {
       type: 'string',
     },
+    displayName: {
+      type: 'string',
+    },
     locked: {
       type: 'boolean',
     },

@@ -31,13 +31,18 @@ Setup Steps
 #. Navigate to the target realm (Helios)
 #. Go to Clients and create a new client (e.g., helios-token-exchange)
 #. Set the client as confidential (public clients are not allowed for token exchange)
-    .. figure:: ../../images/token_exchange/confidential-client.png
-       :height: 512px
-       :alt: Repository selection screen
+    .. raw:: html
+
+       <a href="../../../_static/images/token_exchange/confidential-client.png" target="_blank">
+         <img src="../../../_static/images/token_exchange/confidential-client.png" alt="Repository selection screen" style="height: 512px;" />
+       </a>
+
 #. Generate and save the client secret (this client ID and secret will be used to access users' GitHub tokens)
-    .. figure:: ../../images/token_exchange/client-credentials.png
-       :height: 512px
-       :alt: Repository selection screen
+    .. raw:: html
+
+       <a href="../../../_static/images/token_exchange/client-credentials.png" target="_blank">
+         <img src="../../../_static/images/token_exchange/client-credentials.png" alt="Repository selection screen" style="height: 512px;" />
+       </a>
 
 
 2. Configure User Impersonation Permission

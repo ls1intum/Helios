@@ -43,6 +43,9 @@ public class Environment extends RepositoryFilterEntity {
   @Column(nullable = false)
   private String name;
 
+  @Column(name = "display_name")
+  private String displayName;
+
   private String url;
 
   @Column(name = "html_url")
