@@ -49,9 +49,6 @@ import type {
   GetNotificationPreferencesError,
   UpdateNotificationPreferencesData,
   UpdateNotificationPreferencesError,
-  SendTestNotificationData,
-  SendTestNotificationResponse,
-  SendTestNotificationError,
   GetAllTestTypesData,
   GetAllTestTypesResponse,
   GetAllTestTypesError,
@@ -359,17 +356,6 @@ export const getNotificationPreferences = <ThrowOnError extends boolean = false>
 export const updateNotificationPreferences = <ThrowOnError extends boolean = false>(options: Options<UpdateNotificationPreferencesData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).post<unknown, UpdateNotificationPreferencesError, ThrowOnError>({
     url: '/api/user/notification-preferences',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
-  });
-};
-
-export const sendTestNotification = <ThrowOnError extends boolean = false>(options: Options<SendTestNotificationData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).post<SendTestNotificationResponse, SendTestNotificationError, ThrowOnError>({
-    url: '/api/test/nats/send',
     ...options,
     headers: {
       'Content-Type': 'application/json',

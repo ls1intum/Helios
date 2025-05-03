@@ -929,41 +929,6 @@ export type UpdateNotificationPreferencesResponses = {
   200: unknown;
 };
 
-export type SendTestNotificationData = {
-  body?: {
-    [key: string]: {
-      [key: string]: unknown;
-    };
-  };
-  path?: never;
-  query: {
-    subject: string;
-  };
-  url: '/api/test/nats/send';
-};
-
-export type SendTestNotificationErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type SendTestNotificationError = SendTestNotificationErrors[keyof SendTestNotificationErrors];
-
-export type SendTestNotificationResponses = {
-  /**
-   * OK
-   */
-  200: {
-    [key: string]: {
-      [key: string]: unknown;
-    };
-  };
-};
-
-export type SendTestNotificationResponse = SendTestNotificationResponses[keyof SendTestNotificationResponses];
-
 export type GetAllTestTypesData = {
   body?: never;
   path?: never;
