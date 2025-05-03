@@ -36,7 +36,9 @@ public class EmailTemplateService {
    * @return processed HTML content
    */
   public String processTemplate(String templateName, Map<String, Object> parameters) {
+    log.info("Processing email template: {}", templateName);
     String templateContent = getTemplateContent(templateName);
+    log.info("Template content loaded for: {}", templateName);
 
     // Add standard parameters if not provided
     if (!parameters.containsKey("currentYear")) {
@@ -94,14 +96,18 @@ public class EmailTemplateService {
    * @return processed content
    */
   private String replacePlaceholders(String template, Map<String, Object> parameters) {
+    log.info("Replacing placeholders in template");
     StringBuffer result = new StringBuffer();
     Matcher matcher = PLACEHOLDER_PATTERN.matcher(template);
 
     while (matcher.find()) {
+      log.info("Found placeholder: {}", matcher.group(0));
       String placeholder = matcher.group(1);
       Object value = parameters.getOrDefault(placeholder, "");
       matcher.appendReplacement(result, value.toString().replace("$", "\\$"));
     }
+
+    log.info("Appending remaining content");
 
     matcher.appendTail(result);
     return result.toString();

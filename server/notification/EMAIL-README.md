@@ -9,7 +9,6 @@ Email settings are configured through the following environment variables:
 - `MAIL_HOST`: SMTP server hostname (default: 192.168.1.1)
 - `MAIL_PORT`: SMTP server port (default: 25)
 - `EMAIL_ENABLED`: Enable/disable email sending (default: true)
-- `EMAIL_DEV_MODE`: Enable development mode which logs emails instead of sending them (default: false)
 - `EMAIL_FROM`: Default sender email address (default: helios@aet.cit.tum.de)
 
 In the production environment, the notification server is configured to use the VM's Postfix server at 192.168.1.1:25.

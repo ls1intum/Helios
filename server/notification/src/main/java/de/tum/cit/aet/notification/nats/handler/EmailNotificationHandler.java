@@ -19,6 +19,11 @@ public class EmailNotificationHandler extends NatsMessageHandler<Map<String, Obj
   private final EmailService emailService;
   private final ObjectMapper objectMapper;
 
+  /**
+   * Constructor for EmailNotificationHandler.
+   *
+   * @param emailService the email service to use for sending emails
+   */
   public EmailNotificationHandler(EmailService emailService) {
     this.emailService = emailService;
     this.objectMapper = new ObjectMapper();
@@ -36,7 +41,7 @@ public class EmailNotificationHandler extends NatsMessageHandler<Map<String, Obj
 
   @Override
   protected void handleMessage(Map<String, Object> payload) {
-    log.info("Processing email notification message");
+    log.info("Processing email notification message with payload: {}", payload);
 
     // check if payload contains timestamp
     if (payload.containsKey("timestamp")) {
@@ -63,6 +68,7 @@ public class EmailNotificationHandler extends NatsMessageHandler<Map<String, Obj
    * @param payload the message payload
    */
   private void processTemplatedEmail(Map<String, Object> payload) {
+    log.info("Processing templated email notification message.");
     // Extract required fields
     String recipient = (String) payload.get("to");
     String templateName = (String) payload.get("template");
@@ -81,9 +87,14 @@ public class EmailNotificationHandler extends NatsMessageHandler<Map<String, Obj
       return;
     }
 
+    log.info(
+        "Sending templated email notification to: {} using template: {} with subject: {}",
+        recipient,
+        templateName,
+        subject);
+
     // Send the email using template
     boolean success = emailService.sendTemplatedEmail(recipient, templateName, parameters, subject);
-
     if (success) {
       log.info(
           "Successfully processed templated email notification to: {} using template: {}",

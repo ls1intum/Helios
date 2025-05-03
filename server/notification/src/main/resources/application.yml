@@ -32,7 +32,6 @@ nats:
 notification:
   email:
     enabled: ${EMAIL_ENABLED:true}
-    dev-mode: ${EMAIL_DEV_MODE:true}
     from: ${EMAIL_FROM:helios@aet.cit.tum.de}
 
 logging:
