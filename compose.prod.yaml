@@ -153,6 +153,8 @@ services:
       - nats-server
     networks:
       - helios-network
+    extra_hosts:
+      - "postfix.host:172.30.0.1"
 
   keycloak:
     image: ghcr.io/ls1intum/helios/keycloak:${KEYCLOAK_IMAGE_TAG}
@@ -182,7 +184,9 @@ volumes:
 
 
 networks:
-  # Create network manually in advance: docker network create helios-network
   helios-network:
-    name: helios-network
-    external: true
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.30.0.0/16
+          gateway: 172.30.0.1
