@@ -111,3 +111,11 @@ MAIL_HOST=localhost
 MAIL_PORT=1025
 EMAIL_ENABLED=true
 ```
+
+
+### Run Notification Service
+
+```shell
+docker build -f ./Dockerfile -t notification-image .. && docker run --rm --network=helios-network -p 8082:8082 -e SPRING_PROFILES_ACTIVE=prod notification-image
+
+```
