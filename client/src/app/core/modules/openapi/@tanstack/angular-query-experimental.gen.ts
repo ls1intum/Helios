@@ -20,6 +20,7 @@ import {
   updateUserSettings,
   getNotificationPreferences,
   updateNotificationPreferences,
+  sendTestNotification,
   getAllTestTypes,
   createTestType,
   createWorkflowGroup,
@@ -109,6 +110,9 @@ import type {
   GetNotificationPreferencesData,
   UpdateNotificationPreferencesData,
   UpdateNotificationPreferencesError,
+  SendTestNotificationData,
+  SendTestNotificationError,
+  SendTestNotificationResponse,
   GetAllTestTypesData,
   CreateTestTypeData,
   CreateTestTypeError,
@@ -516,6 +520,37 @@ export const updateNotificationPreferencesMutation = (options?: Partial<Options<
   const mutationOptions: MutationOptions<unknown, UpdateNotificationPreferencesError, Options<UpdateNotificationPreferencesData>> = {
     mutationFn: async localOptions => {
       const { data } = await updateNotificationPreferences({
+        ...options,
+        ...localOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const sendTestNotificationQueryKey = (options: Options<SendTestNotificationData>) => createQueryKey('sendTestNotification', options);
+
+export const sendTestNotificationOptions = (options: Options<SendTestNotificationData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await sendTestNotification({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: sendTestNotificationQueryKey(options),
+  });
+};
+
+export const sendTestNotificationMutation = (options?: Partial<Options<SendTestNotificationData>>) => {
+  const mutationOptions: MutationOptions<SendTestNotificationResponse, SendTestNotificationError, Options<SendTestNotificationData>> = {
+    mutationFn: async localOptions => {
+      const { data } = await sendTestNotification({
         ...options,
         ...localOptions,
         throwOnError: true,
