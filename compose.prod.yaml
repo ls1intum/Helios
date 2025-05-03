@@ -185,6 +185,7 @@ volumes:
 
 networks:
   helios-network:
+    name: helios-network
     driver: bridge
     ipam:
       config:
