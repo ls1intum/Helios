@@ -1,21 +1,17 @@
 <!DOCTYPE html>
-
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Deployment Failed - Helios</title>
+    <title>Lock Released by Admin - Helios</title>
     <!-- 
     Expected parameters:
     {
       "username": "test user",
-      "sourceBranch": "feat/c",
-      "pullRequest": "4",
       "environment": "test-server-1",
       "repositoryId": "894434738",
-      "githubWorkflowUrl": "https://github.com/ege-test-org/galiia-repo/actions/runs/14157186792",
-      "repositoryName": "ege-test-org/galiia-repo"
+      "repositoryName": "ege-test-org/galiia-repo",
     }
     -->
     <style>
@@ -29,7 +25,7 @@
         }
 
         .header {
-            background-color: #dc3545;
+            background-color: #5bc0de;
             color: white;
             padding: 20px;
             text-align: center;
@@ -43,14 +39,14 @@
             border-radius: 0 0 5px 5px;
         }
 
-        .deployment-details {
+        .lock-details {
             background-color: #f8f9fa;
             padding: 15px;
             border-radius: 5px;
             margin: 15px 0;
         }
 
-        .deployment-details p {
+        .lock-details p {
             margin: 5px 0;
         }
 
@@ -71,17 +67,7 @@
             margin-top: 20px;
         }
 
-        .github-button {
-            display: inline-block;
-            background-color: #24292e;
-            color: white;
-            padding: 10px 20px;
-            text-decoration: none;
-            border-radius: 5px;
-            margin-top: 10px;
-        }
-
-        .alert-icon {
+        .info-icon {
             font-size: 24px;
             margin-bottom: 10px;
         }
@@ -119,33 +105,31 @@
 
 <body>
     <div class="header">
-        <span class="alert-icon">⚠️</span>
-        <h1>Deployment Failed</h1>
+        <span class="info-icon">ℹ️</span>
+        <h1>Environment Lock Released</h1>
     </div>
     <div class="content">
         <p>Hello <strong>${username}</strong>,</p>
 
-        <p>Your deployment has failed.</p>
+        <p>Your lock on a Helios environment has been released by an administrator.</p>
 
-        <div class="deployment-details">
+        <div class="lock-details">
             <p><strong>Repository:</strong> <a
                     href="${heliosBaseUrl}/repo/${repositoryId}/ci-cd/pr">${repositoryName}</a></p>
-            <p><strong>Source:</strong> <a
-                    href="${heliosBaseUrl}/repo/${repositoryId}/ci-cd/branch/${sourceBranchUrl}">${sourceBranch}</a></p>
             <p><strong>Environment:</strong> <a
                     href="${heliosBaseUrl}/repo/${repositoryId}/environment/list">${environment}</a>
             </p>
-            <p><strong>Pull Request:</strong> <a
-                    href="${heliosBaseUrl}/repo/${repositoryId}/ci-cd/pr/${pullRequest}">${pullRequest}</a></p>
-
         </div>
 
-        <p>Please check the deployment logs and status for more details about what went wrong.</p>
+        <p>The environment is now available for other team members to use. This may have been done to allow others to
+            access the environment.</p>
 
         <div class="buttons-container">
-            <a href="${githubWorkflowUrl}" class="github-button">View GitHub Workflow</a>
+            <a href="${heliosBaseUrl}/repo/${repositoryId}/ci-cd/pr" class="button">Open Helios</a>
         </div>
 
+
+        <p>Helios Team</p>
     </div>
     <div class="footer">
         <p>&copy; ${currentYear} Helios - Technical University of Munich</p>
