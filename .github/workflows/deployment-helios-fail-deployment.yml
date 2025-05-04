@@ -1,0 +1,46 @@
+name: Deploy to Test-Server with Helios - fails during deployment
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch_name:
+        description: "Which branch to deploy"
+        required: true
+        type: string
+      commit_sha:
+        description: 'Commit SHA to deploy'
+        required: false
+      environment_name:
+        description: "Which environment to deploy (environment defined in GitHub)"
+        required: true
+        type: string
+      triggered_by:
+        description: "Username that triggered deployment (not required, shown if triggered via GitHub UI, logged if triggered via GitHub app)"
+        required: false
+        type: string
+
+concurrency: ${{ github.event.inputs.environment_name }}
+
+env:
+  CI: true
+
+jobs:
+  log-inputs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Log Inputs
+        run: |
+          echo "Branch: ${{ github.event.inputs.branch_name }}"
+          echo "Environment: ${{ github.event.inputs.environment_name }}"
+          echo "Triggered by?: ${{ github.event.inputs.triggered_by }}"
+
+  deploy:
+    needs: [ log-inputs ]
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ github.event.inputs.environment_name }}
+    steps:
+      - name: Echo
+        run: |
+          echo "Deploying to ${{ github.event.inputs.environment_name }}"
+          exit 1

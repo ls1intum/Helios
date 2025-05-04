@@ -18,6 +18,10 @@ jobs:
             image: ghcr.io/ls1intum/helios/application-server
             context: ./server
             path: server
+          - dockerfile: ./server/notification/Dockerfile
+            image: ghcr.io/ls1intum/helios/notification
+            context: ./server
+            path: server
           - dockerfile: ./server/webhook-listener/Dockerfile
             image: ghcr.io/ls1intum/helios/webhook-listener
             context: ./server/webhook-listener

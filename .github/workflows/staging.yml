@@ -7,14 +7,16 @@ on:
       - '.codacy.yaml'
       - '.env.example'
       - '.gitignore'
-      - 'compose.prod.yaml'
       - 'compose.yaml'
       - 'helios-example-realm.json'
       - 'LICENSE'
-      - 'nginx.conf'
       - 'openapitools.json'
       - 'README.md'
       - '.github/**'
+      - '!.github/workflows/staging.yml'
+      - '!.github/workflows/prod.yml'
+      - '!.github/workflows/build_docker.yml'
+      - '!.github/workflows/deploy_docker.yml'
       - '.vscode/**'
       - 'docs/**'
 
@@ -37,5 +39,6 @@ jobs:
       environment: staging
       client_image_tag: "staging"
       application_server_image_tag: "staging"
+      notification_server_image_tag: "staging"
       webhook_listener_image_tag: "staging"
       keycloak_image_tag: "staging"

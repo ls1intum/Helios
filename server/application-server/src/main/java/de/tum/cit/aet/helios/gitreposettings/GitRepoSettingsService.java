@@ -61,6 +61,9 @@ public class GitRepoSettingsService {
     if (gitRepoSettingsDto.lockReservationThreshold() != null) {
       gitRepoSettings.setLockReservationThreshold(gitRepoSettingsDto.lockReservationThreshold());
     }
+    if (gitRepoSettingsDto.packageName() != null) {
+      gitRepoSettings.setPackageName(gitRepoSettingsDto.packageName());
+    }
     gitRepoRepository.save(gitRepoSettings);
 
     // Get all locked Environments and set getLockWillExpireAt and set LockReservationExpiresAt

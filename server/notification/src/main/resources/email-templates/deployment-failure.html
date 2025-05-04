@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deployment Failed - Helios</title>
+    <!-- 
+    Expected parameters:
+    {
+      "username": "test user",
+      "sourceBranch": "feat/c",
+      "pullRequest": "4",
+      "environment": "test-server-1",
+      "repositoryId": "894434738",
+      "githubWorkflowUrl": "https://github.com/ege-test-org/galiia-repo/actions/runs/14157186792",
+      "repositoryName": "ege-test-org/galiia-repo"
+    }
+    -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background-color: #dc3545;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 5px 5px 0 0;
+        }
+
+        .content {
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-top: none;
+            border-radius: 0 0 5px 5px;
+        }
+
+        .deployment-details {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+
+        .deployment-details p {
+            margin: 5px 0;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 12px;
+            color: #777;
+        }
+
+        .button {
+            display: inline-block;
+            background-color: #4a86e8;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+
+        .github-button {
+            display: inline-block;
+            background-color: #24292e;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+
+        .alert-icon {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .env-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            font-size: 12px;
+            font-weight: bold;
+            border-radius: 3px;
+            margin-left: 5px;
+            vertical-align: middle;
+        }
+
+        .env-dev {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .env-staging {
+            background-color: #ffc107;
+            color: #333;
+        }
+
+        .env-prod {
+            background-color: #17a2b8;
+            color: white;
+        }
+
+        .buttons-container {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <span class="alert-icon">⚠️</span>
+        <h1>Deployment Failed</h1>
+    </div>
+    <div class="content">
+        <p>Hello <strong>${username}</strong>,</p>
+
+        <p>Your deployment has failed.</p>
+
+        <div class="deployment-details">
+            <p><strong>Repository:</strong> <a
+                    href="${heliosBaseUrl}/repo/${repositoryId}/ci-cd/pr">${repositoryName}</a></p>
+            <p><strong>Source:</strong> <a
+                    href="${heliosBaseUrl}/repo/${repositoryId}/ci-cd/branch/${sourceBranchUrl}">${sourceBranch}</a></p>
+            <p><strong>Environment:</strong> <a
+                    href="${heliosBaseUrl}/repo/${repositoryId}/environment/list">${environment}</a>
+            </p>
+            <p><strong>Pull Request:</strong> <a
+                    href="${heliosBaseUrl}/repo/${repositoryId}/ci-cd/pr/${pullRequest}">${pullRequest}</a></p>
+
+        </div>
+
+        <p>Please check the deployment logs and status for more details about what went wrong.</p>
+
+        <div class="buttons-container">
+            <a href="${githubWorkflowUrl}" class="github-button">View GitHub Workflow</a>
+        </div>
+
+    </div>
+    <div class="footer">
+        <p>&copy; ${currentYear} Helios - Technical University of Munich</p>
+        <p><small><a href="${heliosBaseUrl}">${heliosBaseUrl}</a></small></p>
+    </div>
+</body>
+
+</html>

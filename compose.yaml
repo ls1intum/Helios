@@ -129,6 +129,45 @@ services:
     networks:
       - helios-network
 
+  notification:
+    image: eclipse-temurin:21
+    container_name: notification
+    volumes:
+      - ./server/notification:/app/notification
+      - ./server/settings.gradle:/app/settings.gradle:ro
+      - ./server/build.gradle:/app/build.gradle:ro
+      - ./server/gradle:/app/gradle:ro
+      - ./server/gradlew:/app/gradlew:ro
+      - ./server/gradlew.bat:/app/gradlew.bat:ro
+    working_dir: /app
+    command: ./gradlew :notification:bootRunDev
+    depends_on:
+      - mailhog
+      - nats-server
+    environment:
+      - NATS_SERVER=${NATS_SERVER}
+      - NATS_AUTH_TOKEN=${NATS_AUTH_TOKEN}
+      - NATS_DURABLE_CONSUMER_NAME=notification-consumer
+      - NATS_CONSUMER_INACTIVE_THRESHOLD_MINUTES=5
+      - NATS_CONSUMER_ACK_WAIT_SECONDS=30
+      - MAIL_HOST=mailhog
+      - MAIL_PORT=1025
+      - EMAIL_ENABLED=true
+      - EMAIL_FROM=helios-local@aet.cit.tum.de
+    ports:
+      - "8082:8082"
+    networks:
+      - helios-network
+
+  mailhog:
+    image: mailhog/mailhog
+    container_name: mailhog
+    ports:
+      - "1025:1025" # SMTP interface
+      - "8025:8025" # Web UI
+    networks:
+      - helios-network
+
 volumes:
   db-data:
   nats-data:

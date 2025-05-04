@@ -20,6 +20,8 @@ import de.tum.cit.aet.helios.gitreposettings.GitRepoSettingsDto;
 import de.tum.cit.aet.helios.gitreposettings.GitRepoSettingsService;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
+import de.tum.cit.aet.helios.nats.NatsNotificationPublisherService;
+import de.tum.cit.aet.helios.notification.email.LockReleasedPayload;
 import de.tum.cit.aet.helios.releaseinfo.releasecandidate.ReleaseCandidateRepository;
 import de.tum.cit.aet.helios.user.User;
 import de.tum.cit.aet.helios.workflow.Workflow;
@@ -54,7 +56,8 @@ public class EnvironmentService {
   private final HeliosDeploymentRepository heliosDeploymentRepository;
   private final ReleaseCandidateRepository releaseCandidateRepository;
   private final DeploymentRepository deploymentRepository;
-  @Lazy private final GitRepoSettingsService gitRepoSettingsService;
+  @Lazy
+  private final GitRepoSettingsService gitRepoSettingsService;
   private final EnvironmentScheduler environmentScheduler;
   private final WorkflowRepository workflowRepository;
   private final ProtectionRuleRepository protectionRuleRepository;
@@ -62,6 +65,7 @@ public class EnvironmentService {
   private final GitHubEnvironmentSyncService environmentSyncService;
   private final GitRepoRepository gitRepoRepository;
   private final GitHubService gitHubService;
+  private final NatsNotificationPublisherService notificationPublisherService;
 
   public Optional<EnvironmentDto> getEnvironmentById(Long id) {
     return environmentRepository.findById(id).map(EnvironmentDto::fromEnvironment);
@@ -233,10 +237,10 @@ public class EnvironmentService {
         environment.getLockExpirationThreshold() != null
             ? environment.getLockExpirationThreshold()
             : gitRepoSettingsService
-                .getOrCreateGitRepoSettingsByRepositoryId(
-                    environment.getRepository().getRepositoryId())
-                .map(GitRepoSettingsDto::lockExpirationThreshold)
-                .orElse(-1L);
+            .getOrCreateGitRepoSettingsByRepositoryId(
+                environment.getRepository().getRepositoryId())
+            .map(GitRepoSettingsDto::lockExpirationThreshold)
+            .orElse(-1L);
 
     return lockExpirationThreshold != -1 ? baseTime.plusMinutes(lockExpirationThreshold) : null;
   }
@@ -255,10 +259,10 @@ public class EnvironmentService {
         environment.getLockReservationThreshold() != null
             ? environment.getLockReservationThreshold()
             : gitRepoSettingsService
-                .getOrCreateGitRepoSettingsByRepositoryId(
-                    environment.getRepository().getRepositoryId())
-                .map(GitRepoSettingsDto::lockReservationThreshold)
-                .orElse(-1L);
+            .getOrCreateGitRepoSettingsByRepositoryId(
+                environment.getRepository().getRepositoryId())
+            .map(GitRepoSettingsDto::lockReservationThreshold)
+            .orElse(-1L);
 
     return lockReservationThreshold != -1 ? baseTime.plusMinutes(lockReservationThreshold) : null;
   }
@@ -407,10 +411,10 @@ public class EnvironmentService {
         environment.getLockReservationThreshold() != null
             ? environment.getLockReservationThreshold()
             : gitRepoSettingsService
-                .getOrCreateGitRepoSettingsByRepositoryId(
-                    environment.getRepository().getRepositoryId())
-                .map(GitRepoSettingsDto::lockReservationThreshold)
-                .orElse(-1L);
+            .getOrCreateGitRepoSettingsByRepositoryId(
+                environment.getRepository().getRepositoryId())
+            .map(GitRepoSettingsDto::lockReservationThreshold)
+            .orElse(-1L);
 
     OffsetDateTime now = OffsetDateTime.now();
     OffsetDateTime lockedAt = environment.getLockedAt();
@@ -430,6 +434,26 @@ public class EnvironmentService {
     // 20 minutes timeout for redeployment
     if (!canUnlock(environment, 20)) {
       throw new DeploymentException("Deployment is still in progress, please wait.");
+    }
+
+
+    // Publish email notification for lock unlocked
+    // Publish only if the unlocker is different from the locker
+    if (environment.getLockedBy() != null
+        && !environment.getLockedBy().getId().equals(currentUser.getId())) {
+      notificationPublisherService.send(
+          environment.getLockedBy(),
+          new LockReleasedPayload(
+              environment.getLockedBy().getLogin(),
+              currentUser.getLogin(),
+              environment.getName(),
+              environment.getRepository().getRepositoryId().toString(),
+              environment.getRepository().getNameWithOwner()
+          )
+      );
+    } else {
+      log.info(
+          "No email notification sent for lock release, as the locker and unlocker are the same.");
     }
 
     environment.setLocked(false);
@@ -508,6 +532,9 @@ public class EnvironmentService {
               }
               if (environmentDto.description() != null) {
                 environment.setDescription(environmentDto.description());
+              }
+              if (environmentDto.displayName() != null) {
+                environment.setDisplayName(environmentDto.displayName());
               }
               if (environmentDto.serverUrl() != null) {
                 environment.setServerUrl(environmentDto.serverUrl());
@@ -623,13 +650,13 @@ public class EnvironmentService {
                 // Parse the stored JSON string as a list of ReviewerContainer objects
                 List<GitHubEnvironmentProtectionRuleDto.ReviewerContainer>
                     githubReviewerContainers =
-                        objectMapper.readValue(
-                            rule.getReviewers(),
-                            objectMapper
-                                .getTypeFactory()
-                                .constructCollectionType(
-                                    List.class,
-                                    GitHubEnvironmentProtectionRuleDto.ReviewerContainer.class));
+                    objectMapper.readValue(
+                        rule.getReviewers(),
+                        objectMapper
+                            .getTypeFactory()
+                            .constructCollectionType(
+                                List.class,
+                                GitHubEnvironmentProtectionRuleDto.ReviewerContainer.class));
 
                 // Map to the simplified DTO structure
                 List<EnvironmentReviewersDto.Reviewer> reviewers =
@@ -661,7 +688,9 @@ public class EnvironmentService {
             });
   }
 
-  /** Synchronizes the environments of the current repository with the GitHub repository. */
+  /**
+   * Synchronizes the environments of the current repository with the GitHub repository.
+   */
   public void syncRepositoryEnvironments() throws IOException {
     Long repoId = RepositoryContext.getRepositoryId();
     GitRepository repo = gitRepoRepository.findById(repoId).orElseThrow();

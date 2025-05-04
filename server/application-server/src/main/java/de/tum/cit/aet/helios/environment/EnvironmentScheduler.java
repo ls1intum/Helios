@@ -2,6 +2,8 @@ package de.tum.cit.aet.helios.environment;
 
 import de.tum.cit.aet.helios.gitreposettings.GitRepoSettingsDto;
 import de.tum.cit.aet.helios.gitreposettings.GitRepoSettingsService;
+import de.tum.cit.aet.helios.nats.NatsNotificationPublisherService;
+import de.tum.cit.aet.helios.notification.email.LockExpiredPayload;
 import de.tum.cit.aet.helios.user.UserRepository;
 import de.tum.cit.aet.helios.user.github.GitHubUserConverter;
 import java.time.OffsetDateTime;
@@ -22,6 +24,7 @@ public class EnvironmentScheduler {
   private final GitHubUserConverter userConverter;
   private final UserRepository userRepository;
   private final org.springframework.core.env.Environment springEnvironment;
+  private final NatsNotificationPublisherService notificationPublisherService;
 
   // Every minute
   @Scheduled(fixedRate = 60000)
@@ -62,6 +65,17 @@ public class EnvironmentScheduler {
         long lockedDurationSeconds =
             OffsetDateTime.now().toEpochSecond() - lockedAt.toEpochSecond();
         if (lockedDurationSeconds >= lockExpirationThresholdSeconds) {
+
+          // Publish email notification for lock expiration
+          notificationPublisherService.send(
+              environment.getLockedBy(),
+              new LockExpiredPayload(
+                  environment.getLockedBy().getLogin(),
+                  environment.getName(),
+                  environment.getRepository().getRepositoryId().toString(),
+                  environment.getRepository().getNameWithOwner()
+              ));
+
           environment.setLocked(false);
           environment.setLockedBy(null);
           environment.setLockedAt(null);

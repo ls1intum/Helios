@@ -369,6 +369,82 @@ paths:
                 $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
+  /api/user/settings:
+    get:
+      tags:
+      - user-controller
+      operationId: getUserSettings
+      responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserSettingsDto"
+    post:
+      tags:
+      - user-controller
+      operationId: updateUserSettings
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserSettingsDto"
+        required: true
+      responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "200":
+          description: OK
+  /api/user/notification-preferences:
+    get:
+      tags:
+      - user-controller
+      operationId: getNotificationPreferences
+      responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/NotificationPreferenceDto"
+    post:
+      tags:
+      - user-controller
+      operationId: updateNotificationPreferences
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NotificationPreferencesWrapper"
+        required: true
+      responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "200":
+          description: OK
   /api/test-types:
     get:
       tags:
@@ -1647,6 +1723,8 @@ components:
         lockReservationThreshold:
           type: integer
           format: int64
+        packageName:
+          type: string
     WorkflowGroupDto:
       type: object
       properties:
@@ -1757,6 +1835,8 @@ components:
           type: integer
           format: int64
         name:
+          type: string
+        displayName:
           type: string
         locked:
           type: boolean
@@ -1957,6 +2037,31 @@ components:
       - name
       - path
       - state
+    UserSettingsDto:
+      type: object
+      properties:
+        notificationEmail:
+          type: string
+        notificationsEnabled:
+          type: boolean
+    NotificationPreferenceDto:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+          - DEPLOYMENT_FAILED
+          - LOCK_EXPIRED
+          - LOCK_UNLOCKED
+        enabled:
+          type: boolean
+    NotificationPreferencesWrapper:
+      type: object
+      properties:
+        preferences:
+          type: array
+          items:
+            $ref: "#/components/schemas/NotificationPreferenceDto"
     ReleaseCandidateCreateDto:
       type: object
       properties:
