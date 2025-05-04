@@ -1,10 +1,23 @@
 <!DOCTYPE html>
+
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Deployment Failed - Helios</title>
+    <!-- 
+    Expected parameters:
+    {
+      "username": "test user",
+      "sourceBranch": "feat/c",
+      "pullRequest": "4",
+      "environment": "test-server-1",
+      "repositoryId": "894434738",
+      "githubWorkflowUrl": "https://github.com/ege-test-org/galiia-repo/actions/runs/14157186792",
+      "repositoryName": "ege-test-org/galiia-repo"
+    }
+    -->
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -58,6 +71,16 @@
             margin-top: 20px;
         }
 
+        .github-button {
+            display: inline-block;
+            background-color: #24292e;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+
         .alert-icon {
             font-size: 24px;
             margin-bottom: 10px;
@@ -87,12 +110,16 @@
             background-color: #17a2b8;
             color: white;
         }
+
+        .buttons-container {
+            margin-top: 20px;
+        }
     </style>
 </head>
 
 <body>
     <div class="header">
-        <div class="alert-icon">⚠️</div>
+        <span class="alert-icon">⚠️</span>
         <h1>Deployment Failed</h1>
     </div>
     <div class="content">
@@ -101,26 +128,28 @@
         <p>We detected that a deployment has failed in your Helios environment.</p>
 
         <div class="deployment-details">
-            <p><strong>Source:</strong> ${sourceBranch}</p>
-            <p><strong>Environment:</strong> ${environment}
-                <span class="env-badge env-${environment.toLowerCase()}">${environment.toUpperCase()}</span>
+            <p><strong>Repository:</strong> <a
+                    href="${heliosBaseUrl}/repo/${repositoryId}/ci-cd/pr">${repositoryName}</a></p>
+            <p><strong>Source:</strong> <a
+                    href="${heliosBaseUrl}/repo/${repositoryId}/ci-cd/branch/${sourceBranchUrl}">${sourceBranch}</a></p>
+            <p><strong>Environment:</strong> <a
+                    href="${heliosBaseUrl}/repo/${repositoryId}/environment/list">${environment}</a>
             </p>
-            <p><strong>Pull Request:</strong> ${pullRequest}</p>
-            <p><strong>Timestamp:</strong> ${timestamp}</p>
+            <p><strong>Pull Request:</strong> <a
+                    href="${heliosBaseUrl}/repo/${repositoryId}/ci-cd/pr/${pullRequest}">${pullRequest}</a></p>
+
         </div>
 
         <p>Please check the deployment logs and status for more details about what went wrong.</p>
 
-        <a href="${heliosBaseUrl}/deployments/${deploymentId}" class="button">View Deployment Details</a>
+        <div class="buttons-container">
+            <a href="${githubWorkflowUrl}" class="github-button">View GitHub Workflow</a>
+        </div>
 
-        <p>You can also check the overall system status at <a href="${heliosBaseUrl}/status">Helios Status
-                Dashboard</a>.</p>
-
-        <p>Helios Team</p>
     </div>
     <div class="footer">
         <p>&copy; ${currentYear} Helios - Technical University of Munich</p>
-        <p><small>Environment: <a href="${heliosBaseUrl}">${heliosBaseUrl}</a></small></p>
+        <p><small><a href="${heliosBaseUrl}">${heliosBaseUrl}</a></small></p>
     </div>
 </body>
 
