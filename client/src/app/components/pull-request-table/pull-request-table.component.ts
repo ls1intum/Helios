@@ -1,42 +1,41 @@
 import { MarkdownPipe } from '@app/core/modules/markdown/markdown.pipe';
 import { AvatarGroupModule } from 'primeng/avatargroup';
 import { TooltipModule } from 'primeng/tooltip';
-import { Component, computed, inject } from '@angular/core';
-import { TableModule } from 'primeng/table';
+import { Component, computed, effect, inject, ViewChild } from '@angular/core';
+import { Table, TableModule, TablePageEvent } from 'primeng/table';
 import { AvatarModule } from 'primeng/avatar';
 import { TagModule } from 'primeng/tag';
 import { injectMutation, injectQuery, QueryClient } from '@tanstack/angular-query-experimental';
 import { SkeletonModule } from 'primeng/skeleton';
 import { ActivatedRoute, Router } from '@angular/router';
-import { DateService } from '@app/core/services/date.service';
-import { getAllPullRequestsOptions, getAllPullRequestsQueryKey, setPrPinnedByNumberMutation } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
-import { PullRequestBaseInfoDto, PullRequestInfoDto } from '@app/core/modules/openapi';
+import { getPullRequestsOptions, getPullRequestsQueryKey, setPrPinnedByNumberMutation } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
+import { PullRequestInfoDto } from '@app/core/modules/openapi';
 import { ButtonModule } from 'primeng/button';
 import { DividerModule } from 'primeng/divider';
 import { SelectModule } from 'primeng/select';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 import { FormsModule } from '@angular/forms';
 import { TimeAgoPipe } from '@app/pipes/time-ago.pipe';
-import { FILTER_OPTIONS_TOKEN, SearchTableService } from '@app/core/services/search-table.service';
-import { TableFilterComponent } from '../table-filter/table-filter.component';
 import { WorkflowRunStatusComponent } from '@app/components/workflow-run-status-component/workflow-run-status.component';
 import { PullRequestStatusIconComponent } from '@app/components/pull-request-status-icon/pull-request-status-icon.component';
-import { MessageService } from 'primeng/api';
+import { MessageService, SortMeta } from 'primeng/api';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
 import { IconExternalLink, IconFilterPlus, IconGitPullRequest, IconPinned, IconPinnedOff, IconPoint, IconBrandGithub } from 'angular-tabler-icons/icons';
+import { PAGINATED_FILTER_OPTIONS_TOKEN, PaginatedTableService } from '@app/core/services/paginated-table.service';
+import { TableFilterPaginatedComponent } from '@app/components/table-filter-paginated/table-filter-paginated.component';
+import { NgTemplateOutlet } from '@angular/common';
 
-const FILTER_OPTIONS = [
-  { name: 'Open pull requests', filter: (prs: PullRequestBaseInfoDto[]) => prs.filter(pr => pr.state === 'OPEN') },
-  { name: 'All pull requests', filter: (prs: PullRequestBaseInfoDto[]) => prs },
-  { name: 'Your pull requests', filter: (prs: PullRequestBaseInfoDto[], username: string) => prs.filter(pr => pr.author?.login.toLowerCase() === username.toLowerCase()) },
-  {
-    name: 'Everything assigned to you',
-    filter: (prs: PullRequestBaseInfoDto[], username: string) => prs.filter(pr => pr.assignees?.some(assignee => assignee.login.toLowerCase() === username.toLowerCase())),
-  },
-  {
-    name: 'Everything that requests a review by you',
-    filter: (prs: PullRequestBaseInfoDto[], username: string) => prs.filter(pr => pr.reviewers?.some(reviewer => reviewer.login.toLowerCase() === username.toLowerCase())),
-  },
+// Define filter options for pull requests
+const PR_FILTER_OPTIONS = [
+  { name: 'Open pull requests', value: 'OPEN' },
+  { name: 'All pull requests', value: 'ALL' },
+  { name: 'Open and ready for review', value: 'OPEN_READY_FOR_REVIEW' },
+  { name: 'Draft pull requests', value: 'DRAFT' },
+  { name: 'Merged pull requests', value: 'MERGED' },
+  { name: 'Closed pull requests', value: 'CLOSED' },
+  { name: 'Your pull requests', value: 'USER_AUTHORED' },
+  { name: 'Everything assigned to you', value: 'ASSIGNED_TO_USER' },
+  { name: 'Everything that requests a review by you', value: 'REVIEW_REQUESTED' },
 ];
 
 @Component({
@@ -54,14 +53,15 @@ const FILTER_OPTIONS = [
     TooltipModule,
     MarkdownPipe,
     ButtonModule,
-    TableFilterComponent,
     DividerModule,
     WorkflowRunStatusComponent,
     PullRequestStatusIconComponent,
+    TableFilterPaginatedComponent,
+    NgTemplateOutlet,
   ],
   providers: [
-    SearchTableService,
-    { provide: FILTER_OPTIONS_TOKEN, useValue: FILTER_OPTIONS },
+    PaginatedTableService,
+    { provide: PAGINATED_FILTER_OPTIONS_TOKEN, useValue: PR_FILTER_OPTIONS },
     provideTablerIcons({
       IconFilterPlus,
       IconPoint,
@@ -75,26 +75,66 @@ const FILTER_OPTIONS = [
   templateUrl: './pull-request-table.component.html',
 })
 export class PullRequestTableComponent {
-  dateService = inject(DateService);
-  searchTableService = inject(SearchTableService<PullRequestBaseInfoDto>);
+  @ViewChild('table') table!: Table;
+  @ViewChild(TableFilterPaginatedComponent) filterComponent!: TableFilterPaginatedComponent;
+
   messageService = inject(MessageService);
   queryClient = inject(QueryClient);
   router = inject(Router);
   route = inject(ActivatedRoute);
   keycloak = inject(KeycloakService);
+  paginationService = inject(PaginatedTableService);
 
-  query = injectQuery(() => getAllPullRequestsOptions());
+  // Create a computed query options that will update when pagination state changes
+  queryOptions = computed(() => {
+    const paginationState = this.paginationService.paginationState();
+
+    // Convert the string filterType to the specific union type
+    const filterType = paginationState.filterType as
+      | 'OPEN'
+      | 'ALL'
+      | 'OPEN_READY_FOR_REVIEW'
+      | 'DRAFT'
+      | 'MERGED'
+      | 'CLOSED'
+      | 'USER_AUTHORED'
+      | 'ASSIGNED_TO_USER'
+      | 'REVIEW_REQUESTED'
+      | undefined;
+
+    return getPullRequestsOptions({
+      query: {
+        page: paginationState.page,
+        size: paginationState.size,
+        sortField: paginationState.sortField,
+        sortDirection: paginationState.sortDirection,
+        filterType: filterType,
+        searchTerm: paginationState.searchTerm,
+      },
+    });
+  });
+
+  query = injectQuery(() => this.queryOptions());
+
   setPinnedMutation = injectMutation(() => ({
     ...setPrPinnedByNumberMutation(),
-    onSuccess: () => {
-      this.messageService.add({ severity: 'success', summary: 'Pin Pull Request', detail: 'The pull request was pinned successfully' });
-      this.queryClient.invalidateQueries({ queryKey: getAllPullRequestsQueryKey() });
-    },
   }));
 
   isHovered = new Map<number, boolean>();
 
-  filteredPrs = computed(() => this.searchTableService.activeFilter().filter(this.query.data() || [], this.keycloak.decodedToken()?.preferred_username));
+  constructor() {
+    // Re-fetch data when pagination state changes
+    effect(() => {
+      this.paginationService.paginationState();
+      if (this.query.data()) {
+        this.query.refetch();
+      }
+    });
+  }
+
+  get typedPaginationService() {
+    return this.paginationService as PaginatedTableService;
+  }
 
   openPRExternal(event: Event, pr: PullRequestInfoDto): void {
     window.open(pr.htmlUrl, '_blank');
@@ -124,8 +164,43 @@ export class PullRequestTableComponent {
   }
 
   setPinned(event: Event, pr: PullRequestInfoDto, isPinned: boolean): void {
-    this.setPinnedMutation.mutate({ path: { pr: pr.id }, query: { isPinned } });
-    this.isHovered.set(pr.id, false);
     event.stopPropagation();
+
+    this.setPinnedMutation.mutate(
+      {
+        path: { pr: pr.id },
+        query: { isPinned },
+      },
+      {
+        onSuccess: () => {
+          this.isHovered.set(pr.id, false);
+          this.messageService.add({
+            severity: 'success',
+            summary: isPinned ? 'Pin Pull Request' : 'Unpin Pull Request',
+            detail: `The pull request was ${isPinned ? 'pinned' : 'unpinned'} successfully`,
+          });
+          this.queryClient.invalidateQueries({ queryKey: getPullRequestsQueryKey() });
+        },
+      }
+    );
+  }
+
+  onPage(event: TablePageEvent) {
+    console.log('Page event received:', event);
+
+    // Update the pagination state
+    this.paginationService.onPage(event);
+
+    // Force a refetch with the updated pagination parameters
+    this.query.refetch();
+  }
+
+  onSort(event: SortMeta) {
+    this.paginationService.onSort(event);
+  }
+
+  clearFilters() {
+    this.filterComponent.clearSearch();
+    this.paginationService.clearFilters();
   }
 }

@@ -1,0 +1,32 @@
+<div class="flex items-center gap-2 w-full">
+  @if (paginationService().filterOptions.length > 0) {
+    <p-button type="button" outlined (onClick)="toggle($event)" size="small">
+      @if (paginationService().hasActiveFilter()) {
+        <i-tabler name="filter" />
+      } @else {
+        <i-tabler name="filter-plus" />
+      }
+    </p-button>
+  }
+  <input pInputText [(ngModel)]="localSearchTerm" (input)="onInput($event)" type="text" pSize="small" placeholder="Search" class="w-full" />
+</div>
+
+<p-popover #op>
+  <div class="flex flex-col gap-4">
+    <div>
+      <ul class="list-none p-0 m-0 flex flex-col gap-1">
+        @for (filter of paginationService().filterOptions; track filter.name) {
+          @if (filter.value === paginationService().filterType()) {
+            <li class="flex items-center gap-2 p-2 bg-gray-700 text-gray-200 cursor-pointer rounded-border">
+              {{ filter.name }}
+            </li>
+          } @else {
+            <li class="flex items-center gap-2 p-2 hover:bg-gray-300 cursor-pointer rounded-border" (click)="paginationService().setFilterType(filter.value); toggle($event)">
+              {{ filter.name }}
+            </li>
+          }
+        }
+      </ul>
+    </div>
+  </div>
+</p-popover>
