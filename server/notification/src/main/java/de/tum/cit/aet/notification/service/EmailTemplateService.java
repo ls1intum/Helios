@@ -3,6 +3,7 @@ package de.tum.cit.aet.notification.service;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.Year;
 import java.util.HashMap;
@@ -11,6 +12,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
@@ -28,6 +30,9 @@ public class EmailTemplateService {
     this.resourceLoader = resourceLoader;
   }
 
+  @Value("${helios.client_url}")
+  private String heliosClientUrl;
+
   /**
    * Process the specified email template with the provided parameters.
    *
@@ -44,9 +49,36 @@ public class EmailTemplateService {
     if (!parameters.containsKey("currentYear")) {
       parameters.put("currentYear", Year.now().getValue());
     }
+    // Add environment-specific parameters
+    if (!parameters.containsKey("heliosBaseUrl")) {
+      parameters.put("heliosBaseUrl", heliosClientUrl);
+    }
+
+    // Create URL-encoded versions of branch and PR parameters
+    addUrlEncodedParameters(parameters);
 
     // Process the template by replacing placeholders
     return replacePlaceholders(templateContent, parameters);
+  }
+
+  /**
+   * Add URL-encoded versions of parameters that need to be used in URLs.
+   *
+   * @param parameters the original parameters map
+   */
+  private void addUrlEncodedParameters(Map<String, Object> parameters) {
+    // Handle sourceBranch encoding
+    if (parameters.containsKey("sourceBranch")) {
+      String sourceBranch = parameters.get("sourceBranch").toString();
+      try {
+        String encodedBranch = URLEncoder.encode(sourceBranch);
+        parameters.put("sourceBranchUrl", encodedBranch);
+        log.info("Added URL-encoded sourceBranch: {}", encodedBranch);
+      } catch (Exception e) {
+        log.error("Failed to URL encode sourceBranch", e);
+        parameters.put("sourceBranchUrl", sourceBranch); // Fallback to original
+      }
+    }
   }
 
   /**
@@ -101,13 +133,13 @@ public class EmailTemplateService {
     Matcher matcher = PLACEHOLDER_PATTERN.matcher(template);
 
     while (matcher.find()) {
-      log.info("Found placeholder: {}", matcher.group(0));
+      log.debug("Found placeholder: {}", matcher.group(0));
       String placeholder = matcher.group(1);
       Object value = parameters.getOrDefault(placeholder, "");
       matcher.appendReplacement(result, value.toString().replace("$", "\\$"));
     }
 
-    log.info("Appending remaining content");
+    log.debug("Appending remaining content");
 
     matcher.appendTail(result);
     return result.toString();

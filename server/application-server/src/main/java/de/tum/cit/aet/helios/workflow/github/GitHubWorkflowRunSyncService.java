@@ -5,9 +5,12 @@ import static de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment.mapWorkflo
 import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
+import de.tum.cit.aet.helios.nats.NatsNotificationPublisherService;
+import de.tum.cit.aet.helios.notification.email.DeploymentFailurePayload;
 import de.tum.cit.aet.helios.pullrequest.PullRequest;
 import de.tum.cit.aet.helios.pullrequest.PullRequestRepository;
 import de.tum.cit.aet.helios.util.DateUtil;
+import de.tum.cit.aet.helios.util.DeploymentFailureNotificationDecider;
 import de.tum.cit.aet.helios.workflow.GitHubWorkflowContext;
 import de.tum.cit.aet.helios.workflow.Workflow;
 import de.tum.cit.aet.helios.workflow.WorkflowRepository;
@@ -36,6 +39,8 @@ public class GitHubWorkflowRunSyncService {
   private final WorkflowRepository workflowRepository;
   private final WorkflowService workflowService;
   private final HeliosDeploymentRepository heliosDeploymentRepository;
+  private final DeploymentFailureNotificationDecider deploymentFailureNotificationDecider;
+  private final NatsNotificationPublisherService notificationPublisherService;
 
   @Transactional
   public WorkflowRun processRun(GHWorkflowRun ghWorkflowRun) {
@@ -208,6 +213,26 @@ public class GitHubWorkflowRunSyncService {
                       mapWorkflowRunStatus(workflowRun.getStatus(), workflowRun.getConclusion());
                   log.debug("Mapped status {} to {}", workflowRun.getStatus(), mappedStatus);
 
+                  if (mappedStatus == HeliosDeployment.Status.FAILED
+                      && heliosDeployment.getStatus() != HeliosDeployment.Status.FAILED
+                      && deploymentFailureNotificationDecider.shouldNotify(workflowRun,
+                      heliosDeployment.getCreator())) {
+                    log.info("Sending failure notification in WorkflowRunSyncService to {}",
+                        heliosDeployment.getCreator().getNotificationEmail());
+                    notificationPublisherService.send(
+                        heliosDeployment.getCreator().getNotificationEmail(),
+                        new DeploymentFailurePayload(
+                            heliosDeployment.getCreator().getLogin(),
+                            heliosDeployment.getBranchName(),
+                            String.valueOf(heliosDeployment.getPullRequest().getNumber()),
+                            heliosDeployment.getEnvironment().getName(),
+                            workflowRun.getHtmlUrl().toString(),
+                            heliosDeployment.getEnvironment().getRepository().getRepositoryId()
+                                .toString(),
+                            heliosDeployment.getEnvironment().getRepository().getNameWithOwner()
+                        )
+                    );
+                  }
                   // Update the deployment status
                   heliosDeployment.setStatus(mappedStatus);
 
