@@ -17,8 +17,8 @@ public record DeploymentFailurePayload(
     String sourceBranch,
     String pullRequest,
     String environment,
-    String repositoryId,
     String githubWorkflowUrl,
+    String repositoryId,
     String repositoryName
 ) implements EmailNotificationPayload {
 
