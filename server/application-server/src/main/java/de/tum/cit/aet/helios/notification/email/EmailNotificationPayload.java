@@ -8,8 +8,16 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
  */
 public interface EmailNotificationPayload {
 
-  /** The FreeMarker/Thymeleaf template in *kebab‑case*, e.g. {@code deployment-failure}. */
+  /**
+   * The FreeMarker/Thymeleaf template in *kebab‑case*, e.g. {@code deployment-failure}.
+   */
   @JsonIgnore
   String template();
+
+  /**
+   * Mail subject line.
+   */
+  @JsonIgnore
+  String subject();
 }
 
