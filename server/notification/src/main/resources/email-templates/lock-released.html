@@ -4,11 +4,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lock Released by Admin - Helios</title>
+    <title>Lock Released - Helios</title>
     <!-- 
     Expected parameters:
     {
       "username": "test user",
+      "lockReleaseUser": "admin user",
       "environment": "test-server-1",
       "repositoryId": "894434738",
       "repositoryName": "ege-test-org/galiia-repo",
@@ -111,7 +112,7 @@
     <div class="content">
         <p>Hello <strong>${username}</strong>,</p>
 
-        <p>Your lock on a Helios environment has been released by an administrator.</p>
+        <p>Your lock on a Helios environment has been released by ${lockReleaseUser}.</p>
 
         <div class="lock-details">
             <p><strong>Repository:</strong> <a
