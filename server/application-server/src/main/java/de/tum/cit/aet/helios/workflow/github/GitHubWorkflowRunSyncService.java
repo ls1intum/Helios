@@ -220,7 +220,7 @@ public class GitHubWorkflowRunSyncService {
                     log.info("Sending failure notification in WorkflowRunSyncService to {}",
                         heliosDeployment.getCreator().getNotificationEmail());
                     notificationPublisherService.send(
-                        heliosDeployment.getCreator().getNotificationEmail(),
+                        heliosDeployment.getCreator(),
                         new DeploymentFailurePayload(
                             heliosDeployment.getCreator().getLogin(),
                             heliosDeployment.getBranchName(),

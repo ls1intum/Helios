@@ -4,6 +4,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.tum.cit.aet.helios.notification.NotificationConfig;
 import de.tum.cit.aet.helios.notification.email.EmailNotificationPayload;
+import de.tum.cit.aet.helios.user.User;
+import de.tum.cit.aet.helios.util.NotificationEligibilityService;
 import io.nats.client.Connection;
 import io.nats.client.Nats;
 import io.nats.client.Options;
@@ -39,6 +41,8 @@ public class NatsNotificationPublisherService {
   private final ObjectMapper objectMapper;
 
   private final NotificationConfig notificationConfig;
+
+  private final NotificationEligibilityService notificationEligibilityService;
 
   private static final String SUBJECT = "notification.message.email";
 
@@ -84,12 +88,21 @@ public class NatsNotificationPublisherService {
   /**
    * Sends an e‑mail notification.
    *
-   * @param to e‑mail address of the recipient
+   * @param user user to send the notification to
    * @param dto concrete payload record
    */
-  public void send(String to, EmailNotificationPayload dto) {
-    log.info("Sending e‑mail notification to '{}'", to);
+  public void send(User user, EmailNotificationPayload dto) {
+    log.info("Sending e‑mail notification to user '{}' to email '{}'", user.getLogin(),
+        user.getNotificationEmail());
     try {
+      // eligibility gate
+      if (!notificationEligibilityService.canNotify(user, dto.type())) {
+        log.debug("Suppressed {} mail to {}", dto.type(), user.getLogin());
+        return;
+      }
+
+      final String to = user.getNotificationEmail();
+
       if (!notificationConfig.isEnabled()) {
         log.info("Notification is disabled. Skipping notification.");
         return;

@@ -1,6 +1,7 @@
 package de.tum.cit.aet.helios.notification.email;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import de.tum.cit.aet.helios.notification.NotificationPreference;
 
 /**
  * Marker for every outbound e‑mail notification payload.
@@ -19,5 +20,8 @@ public interface EmailNotificationPayload {
    */
   @JsonIgnore
   String subject();
+
+  /** Which preference row controls this mail. */
+  @JsonIgnore NotificationPreference.Type type();
 }
 

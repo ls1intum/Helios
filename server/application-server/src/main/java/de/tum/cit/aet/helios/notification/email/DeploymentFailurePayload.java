@@ -1,5 +1,7 @@
 package de.tum.cit.aet.helios.notification.email;
 
+import de.tum.cit.aet.helios.notification.NotificationPreference;
+
 /**
  * Payload for the {@code deployment-failure} e‑mail notification.
  * This payload is used to inform users about a failed deployment.
@@ -30,5 +32,10 @@ public record DeploymentFailurePayload(
   @Override
   public String subject() {
     return "🚨 Deployment failed – %s (%s)".formatted(repositoryName, environment);
+  }
+
+  @Override
+  public NotificationPreference.Type type() {
+    return NotificationPreference.Type.DEPLOYMENT_FAILED;
   }
 }
