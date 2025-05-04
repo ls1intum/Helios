@@ -68,7 +68,7 @@ public class EnvironmentScheduler {
 
           // Publish email notification for lock expiration
           notificationPublisherService.send(
-              environment.getLockedBy().getNotificationEmail(),
+              environment.getLockedBy(),
               new LockExpiredPayload(
                   environment.getLockedBy().getLogin(),
                   environment.getName(),

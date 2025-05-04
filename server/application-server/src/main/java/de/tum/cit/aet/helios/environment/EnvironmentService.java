@@ -442,7 +442,7 @@ public class EnvironmentService {
     if (environment.getLockedBy() != null
         && !environment.getLockedBy().getId().equals(currentUser.getId())) {
       notificationPublisherService.send(
-          currentUser.getNotificationEmail(),
+          environment.getLockedBy(),
           new LockReleasedPayload(
               environment.getLockedBy().getLogin(),
               currentUser.getLogin(),

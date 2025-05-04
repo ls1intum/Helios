@@ -1,5 +1,7 @@
 package de.tum.cit.aet.helios.notification.email;
 
+import de.tum.cit.aet.helios.notification.NotificationPreference;
+
 /**
  * Payload for the {@code lock-released} e‑mail notification.
  * This payload is used to inform users about a released lock.
@@ -26,5 +28,10 @@ public record LockReleasedPayload(
   @Override
   public String subject() {
     return "🔓 Lock released by %s – %s".formatted(lockReleaseUser, environment);
+  }
+
+  @Override
+  public NotificationPreference.Type type() {
+    return NotificationPreference.Type.LOCK_UNLOCKED;
   }
 }

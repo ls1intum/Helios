@@ -1,5 +1,7 @@
 package de.tum.cit.aet.helios.notification.email;
 
+import de.tum.cit.aet.helios.notification.NotificationPreference;
+
 /**
  * Payload for the {@code lock-expired} e‑mail notification.
  * This payload is used to inform users about an expired lock.
@@ -24,5 +26,10 @@ public record LockExpiredPayload(
   @Override
   public String subject() {
     return "🔒 Lock expired – %s".formatted(environment);
+  }
+
+  @Override
+  public NotificationPreference.Type type() {
+    return NotificationPreference.Type.LOCK_EXPIRED;
   }
 }
