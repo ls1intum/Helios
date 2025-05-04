@@ -215,7 +215,8 @@ public class GitHubWorkflowRunSyncService {
 
                   if (mappedStatus == HeliosDeployment.Status.FAILED
                       && heliosDeployment.getStatus() != HeliosDeployment.Status.FAILED
-                      && deploymentFailureNotificationDecider.shouldNotify(workflowRun)) {
+                      && deploymentFailureNotificationDecider.shouldNotify(workflowRun,
+                      heliosDeployment.getCreator())) {
                     log.info("Sending failure notification in WorkflowRunSyncService to {}",
                         heliosDeployment.getCreator().getNotificationEmail());
                     notificationPublisherService.send(
