@@ -154,7 +154,6 @@ services:
       - MAIL_PORT=1025
       - EMAIL_ENABLED=true
       - EMAIL_FROM=helios-local@aet.cit.tum.de
-      - HELIOS_CLIENT=${HELIOS_CLIENT}
     ports:
       - "8082:8082"
     networks:
