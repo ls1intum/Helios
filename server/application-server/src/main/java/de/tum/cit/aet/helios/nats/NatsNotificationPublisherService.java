@@ -2,6 +2,7 @@ package de.tum.cit.aet.helios.nats;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import de.tum.cit.aet.helios.notification.NotificationConfig;
 import de.tum.cit.aet.helios.notification.email.EmailNotificationPayload;
 import io.nats.client.Connection;
 import io.nats.client.Nats;
@@ -36,6 +37,8 @@ public class NatsNotificationPublisherService {
   private String natsAuthToken;
 
   private final ObjectMapper objectMapper;
+
+  private final NotificationConfig notificationConfig;
 
   private static final String SUBJECT = "notification.message.email";
 
@@ -87,17 +90,24 @@ public class NatsNotificationPublisherService {
   public void send(String to, EmailNotificationPayload dto) {
     log.info("Sending e‑mail notification to '{}'", to);
     try {
+      if (!notificationConfig.isEnabled()) {
+        log.info("Notification is disabled. Skipping notification.");
+        return;
+      }
+      if (!isNatsEnabled) {
+        log.info("NATS is disabled. Skipping notification.");
+        return;
+      }
+      if (natsConnection == null) {
+        log.error("NATS connection is not established. Cannot publish notification!");
+        return;
+      }
+
       if (!StringUtils.isNotBlank(to)) {
         log.info(
             "Recipient e‑mail address is missing. "
                 + "Cannot publish notification! Email type: {}",
             dto.template());
-        return;
-      }
-
-
-      if (natsConnection == null) {
-        log.error("NATS connection is not established. Cannot publish notification!");
         return;
       }
 
