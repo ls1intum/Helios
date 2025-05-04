@@ -30,12 +30,21 @@ public class NotificationEligibilityService {
 
     /* global switch & address */
     if (!user.isNotificationsEnabled() || user.getNotificationEmail() == null) {
+      log.info(
+          "User {} is not eligible for notifications. Notifications enabled: {}, Email: {}",
+          user.getLogin(),
+          user.isNotificationsEnabled(),
+          user.getNotificationEmail());
       return false;
     }
 
     /* staging allow‑list */
     if (springEnv.acceptsProfiles(Profiles.of("staging"))
         && !STAGING_ALLOWLIST.contains(user.getLogin().toLowerCase())) {
+      log.info(
+          "User {} is not eligible for notifications in staging. Staging allow-list: {}",
+          user.getLogin(),
+          STAGING_ALLOWLIST);
       return false;
     }
 

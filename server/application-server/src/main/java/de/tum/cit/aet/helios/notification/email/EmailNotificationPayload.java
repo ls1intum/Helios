@@ -21,7 +21,10 @@ public interface EmailNotificationPayload {
   @JsonIgnore
   String subject();
 
-  /** Which preference row controls this mail. */
-  @JsonIgnore NotificationPreference.Type type();
+  /**
+   * Which preference row controls this mail.
+   */
+  @JsonIgnore
+  NotificationPreference.Type type();
 }
 
