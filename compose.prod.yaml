@@ -149,7 +149,6 @@ services:
       - MAIL_PORT=${MAIL_PORT}
       - EMAIL_ENABLED=${EMAIL_ENABLED}
       - EMAIL_FROM=${EMAIL_FROM}
-      - HELIOS_CLIENT=${HELIOS_CLIENT}
     depends_on:
       - nats-server
     networks:
