@@ -26,7 +26,6 @@ public class GitRepoSettingsController {
   private final GitRepoSettingsService gitRepoSettingsService;
 
   @GetMapping("/settings")
-  @EnforceAtLeastMaintainer
   public ResponseEntity<GitRepoSettingsDto> getGitRepoSettings(@PathVariable Long repositoryId) {
     GitRepoSettingsDto gitRepoSettingsDto =
         gitRepoSettingsService.getOrCreateGitRepoSettingsByRepositoryId(repositoryId).orElseThrow();
