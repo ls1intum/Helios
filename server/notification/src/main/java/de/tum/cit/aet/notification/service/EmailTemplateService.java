@@ -79,19 +79,6 @@ public class EmailTemplateService {
         parameters.put("sourceBranchUrl", sourceBranch); // Fallback to original
       }
     }
-
-    // Handle pullRequest encoding
-    if (parameters.containsKey("pullRequest")) {
-      String pullRequest = parameters.get("pullRequest").toString();
-      try {
-        String encodedPR = URLEncoder.encode(pullRequest);
-        parameters.put("pullRequestUrl", encodedPR);
-        log.info("Added URL-encoded pullRequest: {}", encodedPR);
-      } catch (Exception e) {
-        log.error("Failed to URL encode pullRequest", e);
-        parameters.put("pullRequestUrl", pullRequest); // Fallback to original
-      }
-    }
   }
 
   /**
