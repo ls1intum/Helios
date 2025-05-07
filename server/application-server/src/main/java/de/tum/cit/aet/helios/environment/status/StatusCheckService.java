@@ -85,13 +85,16 @@ public class StatusCheckService {
   }
 
   @Transactional
-  public void processPush(GitRepoSettings repo, PushStatusPayload p) {
+  public void processPush(GitRepoSettings repoSettings, PushStatusPayload p) {
+
+    Long repoId = repoSettings.getRepository().getRepositoryId();
 
     /* Find the Environment */
-    Environment environment = environmentRepository.findByRepoAndName(repo, p.environment())
-        .orElseThrow(() -> new EntityNotFoundException(
-            "Environment '%s' not found in repo %d"
-                .formatted(p.environment(), repo.getId())));
+    Environment environment =
+        environmentRepository.findByRepoIdAndName(repoId, p.environment())
+            .orElseThrow(() -> new EntityNotFoundException(
+                "Environment '%s' not found in repo %d"
+                    .formatted(p.environment(), repoId)));
 
     /* Persist an EnvironmentStatus row */
     EnvironmentStatus s = new EnvironmentStatus();
@@ -100,7 +103,7 @@ public class StatusCheckService {
     s.setHttpStatusCode(200);
     s.setCheckType(StatusCheckType.PUSH_UPDATE);
     s.setCheckTimestamp(p.timestamp());
-    s.setMetadata(new HashMap<>(p.details()));
+    s.setMetadata(new HashMap<>(p.details() != null ? p.details() : Map.of()));
 
     statusRepository.save(s);
 
@@ -146,7 +149,7 @@ public class StatusCheckService {
       // Did the status change? If so, update the statusChangedAt field
       if (
           !latestStatus.isPresent()
-          || latestStatus.get().getHttpStatusCode() != result.httpStatusCode()
+              || latestStatus.get().getHttpStatusCode() != result.httpStatusCode()
       ) {
         environmentService.markStatusAsChanged(environment);
       }

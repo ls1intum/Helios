@@ -15,8 +15,8 @@ public interface EnvironmentRepository extends JpaRepository<Environment, Long> 
   List<Environment> findByRepository(GitRepository repository);
 
   @Query("SELECT e FROM Environment e "
-      + "WHERE e.repository = :repo AND e.name = :name")
-  Optional<Environment> findByRepoAndName(GitRepoSettings repo, String name);
+      + "WHERE e.repository.repositoryId = :repositoryId AND e.name = :name")
+  Optional<Environment> findByRepoIdAndName(Long repositoryId, String name);
 
   Environment findByNameAndRepository(String environmentName, GitRepository repository);
 

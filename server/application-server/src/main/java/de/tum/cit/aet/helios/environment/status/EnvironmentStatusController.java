@@ -4,6 +4,7 @@ import de.tum.cit.aet.helios.gitreposettings.GitRepoSettings;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/environments/status")
 @RequiredArgsConstructor
+@Validated
 public class EnvironmentStatusController {
   private final StatusCheckService statusCheckService;
 
