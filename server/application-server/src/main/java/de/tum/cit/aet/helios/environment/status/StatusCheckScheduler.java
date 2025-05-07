@@ -43,7 +43,10 @@ public class StatusCheckScheduler {
     // 1. Let's get all environments with a status check type configured
     // and pre-load the latest status for each environment (if it exists)
     List<Environment> environments = environmentRepository
-        .findByStatusCheckTypeIsNotNullWithLatestStatus();
+        .findByStatusCheckTypeIsNotNullWithLatestStatus()
+        // filter out environments with status check type PUSH_UPDATE
+        .stream().filter(env -> !StatusCheckType.PUSH_UPDATE.equals(env.getStatusCheckType()))
+        .toList();
 
     // 2. Now let's determine if the environments are stable, meaning that we would
     // check them less frequently.
@@ -93,7 +96,7 @@ public class StatusCheckScheduler {
 
     log.debug(
         "Found {} environments with status check type configured. "
-        + "{} stable (checking {} now), {} recent",
+            + "{} stable (checking {} now), {} recent",
         environments.size(),
         stableEnvironments.size(),
         stableEnvironmentsToCheck.size(),
