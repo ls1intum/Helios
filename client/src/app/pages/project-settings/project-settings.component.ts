@@ -11,13 +11,7 @@ import { PanelModule } from 'primeng/panel';
 import { TableModule } from 'primeng/table';
 import { LockingThresholdsComponent } from '@app/components/locking-thresholds/locking-thresholds.component';
 import { PageHeadingComponent } from '@app/components/page-heading/page-heading.component';
-import {
-  RotateSecretResponses,
-  TestTypeDto,
-  WorkflowDto,
-  WorkflowGroupDto,
-  WorkflowMembershipDto
-} from '@app/core/modules/openapi';
+import { RotateSecretResponses, TestTypeDto, WorkflowDto, WorkflowGroupDto, WorkflowMembershipDto } from '@app/core/modules/openapi';
 import {
   createWorkflowGroupMutation,
   deleteWorkflowGroupMutation,
@@ -34,7 +28,8 @@ import {
   deleteTestTypeMutation,
   getAllTestTypesQueryKey,
   getAllTestTypesOptions,
-  updateGitRepoSettingsMutation, rotateSecretMutation,
+  updateGitRepoSettingsMutation,
+  rotateSecretMutation,
 } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { WorkflowDtoSchema } from '@app/core/modules/openapi/schemas.gen';
 import { MessageService } from 'primeng/api';
@@ -566,7 +561,8 @@ export class ProjectSettingsComponent {
 
   copySecret() {
     if (!this.secret()) return;
-    navigator.clipboard.writeText(this.secret()!)
+    navigator.clipboard
+      .writeText(this.secret()!)
       .then(() => {
         this.messageService.add({ severity: 'info', summary: 'Copied', detail: 'Secret copied to clipboard' });
       })

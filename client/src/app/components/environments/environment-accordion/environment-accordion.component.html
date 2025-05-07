@@ -106,7 +106,7 @@
           <!-- Direct use of deployment stepper -->
           <app-deployment-stepper [deployment]="environment().latestDeployment" class="w-full" />
         } @else {
-          <app-environment-details [environment]="environment()"></app-environment-details>
+          <app-environment-details [environment]="environment()" class="w-full" />
         }
       </div>
 
