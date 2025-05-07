@@ -301,6 +301,9 @@ export const EnvironmentStatusDtoSchema = {
     success: {
       type: 'boolean',
     },
+    state: {
+      type: 'string',
+    },
     httpStatusCode: {
       type: 'integer',
       format: 'int32',
@@ -698,9 +701,11 @@ export const PushStatusPayloadSchema = {
   properties: {
     environment: {
       type: 'string',
+      minLength: 1,
     },
     state: {
       type: 'string',
+      minLength: 1,
     },
     timestamp: {
       type: 'string',
@@ -713,6 +718,7 @@ export const PushStatusPayloadSchema = {
       },
     },
   },
+  required: ['timestamp'],
 } as const;
 
 export const DeployRequestSchema = {

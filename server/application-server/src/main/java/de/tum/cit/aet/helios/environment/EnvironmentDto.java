@@ -47,6 +47,7 @@ public record EnvironmentDto(
   public static record EnvironmentStatusDto(
       @NonNull Long id,
       @NonNull Boolean success,
+      String state,
       @NonNull Integer httpStatusCode,
       @NonNull Instant checkedAt,
       @NonNull StatusCheckType checkType,
@@ -55,6 +56,7 @@ public record EnvironmentDto(
       return new EnvironmentStatusDto(
           environment.getId(),
           environment.isSuccess(),
+          environment.getState(),
           environment.getHttpStatusCode(),
           environment.getCheckTimestamp(),
           environment.getCheckType(),

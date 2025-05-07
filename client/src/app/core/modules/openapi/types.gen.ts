@@ -94,6 +94,7 @@ export type EnvironmentDto = {
 export type EnvironmentStatusDto = {
   id: number;
   success: boolean;
+  state?: string;
   httpStatusCode: number;
   checkedAt: string;
   checkType: 'HTTP_STATUS' | 'ARTEMIS_INFO' | 'PUSH_UPDATE';
@@ -232,7 +233,7 @@ export type ReleaseInfoDetailsDto = {
 export type PushStatusPayload = {
   environment?: string;
   state?: string;
-  timestamp?: string;
+  timestamp: string;
   details?: {
     [key: string]: {
       [key: string]: unknown;

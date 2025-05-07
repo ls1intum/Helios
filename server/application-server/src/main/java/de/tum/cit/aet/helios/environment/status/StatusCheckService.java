@@ -101,6 +101,7 @@ public class StatusCheckService {
     s.setEnvironment(environment);
     s.setSuccess(true);
     s.setHttpStatusCode(200);
+    s.setState(p.state());
     s.setCheckType(StatusCheckType.PUSH_UPDATE);
     s.setCheckTimestamp(p.timestamp());
     s.setMetadata(new HashMap<>(p.details() != null ? p.details() : Map.of()));

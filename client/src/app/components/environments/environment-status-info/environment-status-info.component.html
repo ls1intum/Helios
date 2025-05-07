@@ -1,26 +1,54 @@
 <div class="flex flex-col">
-  <span class="text-xs uppercase tracking-tighter font-bold text-muted-color mb-2">Latest status check</span>
+  @if (status().checkType === 'PUSH_UPDATE') {
+    <span class="text-xs uppercase tracking-tighter font-bold text-muted-color mb-2">Latest status update</span>
 
-  <div class="flex items-center justify-between gap-1">
-    <span class="text-sm font-medium text-surface-700 dark:text-surface-300">Last Checked:</span>
-    <span class="text-sm text-muted-color">
-      {{ timeSinceChecked() }}
-    </span>
-  </div>
-  <div class="flex items-center justify-between mt-1 gap-1">
-    <span class="text-sm font-medium text-surface-700 dark:text-surface-300">Status Code:</span>
-    <span class="text-sm text-muted-color">
-      {{ status().httpStatusCode || 'N/A' }}
-    </span>
-  </div>
+    <div class="flex items-center justify-between mt-1 gap-1">
+      <span class="text-sm font-medium text-surface-700 dark:text-surface-300">State:</span>
+      <span class="text-sm text-muted-color">
+        {{ status().state || 'N/A' }}
+      </span>
+    </div>
 
-  @if (status().checkType === 'ARTEMIS_INFO') {
-    <span class="text-xs uppercase tracking-tighter text-muted-color mt-3">Artemis Build</span>
-    @for (item of artemisBuildInfo(); track item.label) {
+    <div class="flex items-center justify-between gap-1">
+      <span class="text-sm font-medium text-surface-700 dark:text-surface-300">Last Updated:</span>
+      <span class="text-sm text-muted-color">
+        {{ timeSinceChecked() }}
+      </span>
+    </div>
+
+    @if (Object.keys(flattenedMetadata()).length > 0) {
+      <span class="text-xs uppercase tracking-tighter text-muted-color mt-3">Additional metadata</span>
+    }
+    @for (item of flattenedMetadata() | keyvalue; track item.key) {
       <div class="flex items-center justify-between mt-1 gap-1">
-        <span class="text-sm font-medium text-surface-700 dark:text-surface-300">{{ item.label }}:</span>
-        <span class="text-sm text-muted-color">{{ item.value || '-/-' }}</span>
+        <span class="text-sm font-medium text-surface-700 dark:text-surface-300">{{ item.key }}:</span>
+        <span class="text-sm text-muted-color">{{ item.value }}</span>
       </div>
+    }
+  } @else {
+    <span class="text-xs uppercase tracking-tighter font-bold text-muted-color mb-2">Latest status check</span>
+    <div class="flex items-center justify-between gap-1">
+      <span class="text-sm font-medium text-surface-700 dark:text-surface-300">Last Checked:</span>
+      <span class="text-sm text-muted-color">
+        {{ timeSinceChecked() }}
+      </span>
+    </div>
+
+    <div class="flex items-center justify-between mt-1 gap-1">
+      <span class="text-sm font-medium text-surface-700 dark:text-surface-300">Status Code:</span>
+      <span class="text-sm text-muted-color">
+        {{ status().httpStatusCode || 'N/A' }}
+      </span>
+    </div>
+
+    @if (status().checkType === 'ARTEMIS_INFO') {
+      <span class="text-xs uppercase tracking-tighter text-muted-color mt-3">Artemis Build</span>
+      @for (item of artemisBuildInfo(); track item.label) {
+        <div class="flex items-center justify-between mt-1 gap-1">
+          <span class="text-sm font-medium text-surface-700 dark:text-surface-300">{{ item.label }}:</span>
+          <span class="text-sm text-muted-color">{{ item.value || '-/-' }}</span>
+        </div>
+      }
     }
   }
 </div>
