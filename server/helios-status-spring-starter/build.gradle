@@ -1,0 +1,83 @@
+plugins {
+    // produces a plain JAR
+    id 'java-library'
+    // pulls the Spring BOM
+    id 'io.spring.dependency-management'
+    // local + GitHub Packages publishing
+    id 'maven-publish'
+}
+group = 'de.tum.cit.aet.helios'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    toolchain { languageVersion = JavaLanguageVersion.of(21) }
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.boot:spring-boot-dependencies:3.4.4"
+    }
+}
+
+repositories { mavenCentral() }
+
+/* ---------- DEPENDENCIES ---------- */
+/* Everything you actually need at runtime */
+dependencies {
+    /* Light‑weight Spring core & autoconfig */
+    // gives @ConfigurationProperties, events, etc.
+    api 'org.springframework.boot:spring-boot-autoconfigure'
+    api 'org.springframework:spring-context'
+
+    /* WebClient for the HTTP push (only 3 small extra jars) */
+    implementation 'org.springframework:spring-webflux'
+
+    /* OPTIONAL hooks – compileOnly so consumers provide their own version
+       (avoids pulling Flyway/Liquibase into every service that doesn't use it) */
+    compileOnly 'org.flywaydb:flyway-core'
+    compileOnly 'org.liquibase:liquibase-core'
+
+    /* Metadata for `application.yml` autocompletion – annotation‑processor only */
+    compileOnly         'org.springframework.boot:spring-boot-configuration-processor'
+    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+
+    /* Lombok if you use it internally */
+    compileOnly         'org.projectlombok:lombok:1.18.30'
+    annotationProcessor 'org.projectlombok:lombok:1.18.30'
+
+    // just the annotations, no runtime engine → keeps the JAR tiny
+    compileOnly 'jakarta.validation:jakarta.validation-api:3.1.1'
+
+
+    compileOnly 'org.slf4j:slf4j-api:2.0.17'
+
+    /* Tests */
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
+/* ---------- PUBLISHING ---------- */
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+    }
+    repositories {
+        /* local workstation test */
+        mavenLocal()
+
+        /* GitHub Packages */
+        maven {
+            name = "github"
+            url  = uri("https://maven.pkg.github.com/ls1intum/Helios")
+            credentials {
+                username = findProperty("gpr.user") ?: System.getenv("GITHUB_ACTOR")
+                password = findProperty("gpr.key")  ?: System.getenv("GITHUB_TOKEN")
+            }
+        }
+    }
+}
+
+test {
+    useJUnitPlatform()
+}
