@@ -1,7 +1,9 @@
 package de.tum.cit.aet.helios.environment;
 
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
+import de.tum.cit.aet.helios.gitreposettings.GitRepoSettings;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -11,6 +13,10 @@ public interface EnvironmentRepository extends JpaRepository<Environment, Long> 
   List<Environment> findAllByOrderByNameAsc();
 
   List<Environment> findByRepository(GitRepository repository);
+
+  @Query("SELECT e FROM Environment e "
+      + "WHERE e.repository = :repo AND e.name = :name")
+  Optional<Environment> findByRepoAndName(GitRepoSettings repo, String name);
 
   Environment findByNameAndRepository(String environmentName, GitRepository repository);
 

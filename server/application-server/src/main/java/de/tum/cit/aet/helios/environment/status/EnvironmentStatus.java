@@ -34,6 +34,9 @@ public class EnvironmentStatus {
   @Column(nullable = false)
   private boolean success;
 
+  // null for HTTP_STATUS / ARTEMIS_INFO
+  private String state;
+
   @Column(name = "http_status_code", nullable = false)
   private Integer httpStatusCode;
 

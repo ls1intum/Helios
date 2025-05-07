@@ -2,6 +2,7 @@ package de.tum.cit.aet.helios.config;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
+import de.tum.cit.aet.helios.filters.RepoSecretFilter;
 import de.tum.cit.aet.helios.filters.RepositoryInterceptor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -18,6 +19,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -31,6 +33,7 @@ public class SecurityConfig {
 
   private final Environment environment;
   private final GitHubJwtAuthenticationConverter gitHubJwtAuthenticationConverter;
+  private final RepoSecretFilter repoSecretFilter;
 
   @Bean
   public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -38,8 +41,12 @@ public class SecurityConfig {
         .csrf(AbstractHttpConfigurer::disable) // Disable CSRF
         .authorizeHttpRequests(
             auth -> {
-              auth.requestMatchers(HttpMethod.GET, "/api/**")
-                  .permitAll()
+              auth
+                  /* public GET endpoints */
+                  .requestMatchers(HttpMethod.GET, "/api/**").permitAll()
+                  /* shared‑secret filter handles these requests */
+                  .requestMatchers(HttpMethod.POST, "/api/environments/status/**").permitAll()
+                  /* other public endpoints (e.g. Swagger) */
                   .requestMatchers(
                       "/auth/**",
                       "/bus/v3/api-docs/**",
@@ -54,11 +61,14 @@ public class SecurityConfig {
                       "/swagger-ui/**",
                       "/webjars/**",
                       "/status/health",
-                      "/swagger-ui.html")
-                  .permitAll()
-                  .anyRequest()
-                  .authenticated();
+                      "/swagger-ui.html").permitAll()
+                  /* Everything else needs Keycloak authentication */
+                  .anyRequest().authenticated();
             })
+        /* Custom filter for shared secrets */
+        .addFilterBefore(repoSecretFilter, UsernamePasswordAuthenticationFilter.class)
+
+        /* Keycloak authentication */
         .oauth2ResourceServer(
             auth ->
                 auth.jwt(
@@ -79,7 +89,8 @@ public class SecurityConfig {
   public WebMvcConfigurer corsConfigurer() {
 
     return new WebMvcConfigurer() {
-      @Autowired private RepositoryInterceptor requestInterceptor;
+      @Autowired
+      private RepositoryInterceptor requestInterceptor;
 
       @Override
       public void addInterceptors(@NonNull InterceptorRegistry registry) {

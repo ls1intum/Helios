@@ -2,6 +2,7 @@ package de.tum.cit.aet.helios.gitreposettings;
 
 import de.tum.cit.aet.helios.filters.RepositoryFilterEntity;
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -41,4 +42,7 @@ public class GitRepoSettings extends RepositoryFilterEntity {
   // The package name of the application. This will be used to get the relevant logs from the test
   // results.
   private String packageName;
+
+  @Column(name = "secret_hash")
+  private String secretHash;
 }

@@ -76,7 +76,7 @@ export type EnvironmentDto = {
   installedApps?: Array<string>;
   description?: string;
   serverUrl?: string;
-  statusCheckType?: 'HTTP_STATUS' | 'ARTEMIS_INFO';
+  statusCheckType?: 'HTTP_STATUS' | 'ARTEMIS_INFO' | 'PUSH_UPDATE';
   statusUrl?: string;
   deploymentWorkflowBranch?: string;
   latestDeployment?: EnvironmentDeployment;
@@ -96,7 +96,7 @@ export type EnvironmentStatusDto = {
   success: boolean;
   httpStatusCode: number;
   checkedAt: string;
-  checkType: 'HTTP_STATUS' | 'ARTEMIS_INFO';
+  checkType: 'HTTP_STATUS' | 'ARTEMIS_INFO' | 'PUSH_UPDATE';
   metadata?: {
     [key: string]: {
       [key: string]: unknown;
@@ -227,6 +227,17 @@ export type ReleaseInfoDetailsDto = {
   createdBy?: UserInfoDto;
   createdAt: string;
   body?: string;
+};
+
+export type PushStatusPayload = {
+  environment?: string;
+  state?: string;
+  timestamp?: string;
+  details?: {
+    [key: string]: {
+      [key: string]: unknown;
+    };
+  };
 };
 
 export type DeployRequest = {
@@ -979,6 +990,33 @@ export type CreateTestTypeResponses = {
 
 export type CreateTestTypeResponse = CreateTestTypeResponses[keyof CreateTestTypeResponses];
 
+export type RotateSecretData = {
+  body?: never;
+  path: {
+    repositoryId: number;
+  };
+  query?: never;
+  url: '/api/settings/{repositoryId}/secret';
+};
+
+export type RotateSecretErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type RotateSecretError = RotateSecretErrors[keyof RotateSecretErrors];
+
+export type RotateSecretResponses = {
+  /**
+   * OK
+   */
+  200: string;
+};
+
+export type RotateSecretResponse = RotateSecretResponses[keyof RotateSecretResponses];
+
 export type CreateWorkflowGroupData = {
   body: WorkflowGroupDto;
   path: {
@@ -1230,6 +1268,29 @@ export type SyncEnvironmentsResponses = {
 };
 
 export type SyncEnvironmentsResponse = SyncEnvironmentsResponses[keyof SyncEnvironmentsResponses];
+
+export type UpdateData = {
+  body: PushStatusPayload;
+  path?: never;
+  query?: never;
+  url: '/api/environments/status';
+};
+
+export type UpdateErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type UpdateError = UpdateErrors[keyof UpdateErrors];
+
+export type UpdateResponses = {
+  /**
+   * OK
+   */
+  200: unknown;
+};
 
 export type DeployToEnvironmentData = {
   body: DeployRequest;

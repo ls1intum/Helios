@@ -67,10 +67,21 @@ export class EnvironmentEditFormComponent implements OnInit {
   }
 
   statusCheckTypes = [
-    { label: 'Disabled', value: null },
-    { label: 'HTTP Status', value: 'HTTP_STATUS' },
-    { label: 'Artemis Info', value: 'ARTEMIS_INFO' },
+    { label: 'Disabled', value: null, requiresUrl: false, info: null },
+    { label: 'HTTP Status', value: 'HTTP_STATUS', requiresUrl: true, info: 'Sends a request to a URL expecting a 200 OK response.' },
+    { label: 'Artemis Info', value: 'ARTEMIS_INFO', requiresUrl: true, info: 'Uses the Actuator /management/info endpoint to check health.' },
+    { label: 'Push Update', value: 'PUSH_UPDATE', requiresUrl: false, info: 'This mode relies on external push signals. No polling is done.' },
   ];
+
+  showStatusUrlField(value: string | null): boolean {
+    const typeObj = this.statusCheckTypes.find(t => t.value === value);
+    return !!typeObj?.requiresUrl;
+  }
+
+  getStatusCheckInfoText(value: string | null): string | null {
+    const typeObj = this.statusCheckTypes.find(t => t.value === value);
+    return typeObj?.info || null;
+  }
 
   environmentId = input<number>(0); // This is the environment id
   environmentForm!: FormGroup;

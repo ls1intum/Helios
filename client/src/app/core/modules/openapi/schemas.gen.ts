@@ -243,7 +243,7 @@ export const EnvironmentDtoSchema = {
     },
     statusCheckType: {
       type: 'string',
-      enum: ['HTTP_STATUS', 'ARTEMIS_INFO'],
+      enum: ['HTTP_STATUS', 'ARTEMIS_INFO', 'PUSH_UPDATE'],
     },
     statusUrl: {
       type: 'string',
@@ -311,7 +311,7 @@ export const EnvironmentStatusDtoSchema = {
     },
     checkType: {
       type: 'string',
-      enum: ['HTTP_STATUS', 'ARTEMIS_INFO'],
+      enum: ['HTTP_STATUS', 'ARTEMIS_INFO', 'PUSH_UPDATE'],
     },
     metadata: {
       type: 'object',
@@ -691,6 +691,28 @@ export const ReleaseInfoDetailsDtoSchema = {
     },
   },
   required: ['commit', 'createdAt', 'deployments', 'evaluations', 'name'],
+} as const;
+
+export const PushStatusPayloadSchema = {
+  type: 'object',
+  properties: {
+    environment: {
+      type: 'string',
+    },
+    state: {
+      type: 'string',
+    },
+    timestamp: {
+      type: 'string',
+      format: 'date-time',
+    },
+    details: {
+      type: 'object',
+      additionalProperties: {
+        type: 'object',
+      },
+    },
+  },
 } as const;
 
 export const DeployRequestSchema = {

@@ -1,8 +1,12 @@
 package de.tum.cit.aet.helios.environment.status;
 
 import de.tum.cit.aet.helios.environment.Environment;
+import de.tum.cit.aet.helios.environment.EnvironmentRepository;
 import de.tum.cit.aet.helios.environment.EnvironmentService;
+import de.tum.cit.aet.helios.gitreposettings.GitRepoSettings;
+import jakarta.persistence.EntityNotFoundException;
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -12,6 +16,7 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
 @Service
@@ -23,6 +28,7 @@ public class StatusCheckService {
   private final EnvironmentStatusRepository statusRepository;
   private final TransactionTemplate transactionTemplate;
   private final EnvironmentStatusConfig config;
+  private final EnvironmentRepository environmentRepository;
 
   /**
    * The number of status entries to keep for each environment
@@ -34,7 +40,7 @@ public class StatusCheckService {
   /**
    * Performs a status check on the given environment asynchronously as the status
    * check may take a while to complete.
-   * 
+   *
    * <p>The type of status check to be performed is determined by the environment's
    * configuration.
    * Saves the result of the status check after completion.
@@ -76,6 +82,38 @@ public class StatusCheckService {
       handleThrowable(environment, ex);
       return null;
     });
+  }
+
+  @Transactional
+  public void processPush(GitRepoSettings repo, PushStatusPayload p) {
+
+    /* Find the Environment */
+    Environment environment = environmentRepository.findByRepoAndName(repo, p.environment())
+        .orElseThrow(() -> new EntityNotFoundException(
+            "Environment '%s' not found in repo %d"
+                .formatted(p.environment(), repo.getId())));
+
+    /* Persist an EnvironmentStatus row */
+    EnvironmentStatus s = new EnvironmentStatus();
+    s.setEnvironment(environment);
+    s.setSuccess(true);
+    s.setHttpStatusCode(200);
+    s.setCheckType(StatusCheckType.PUSH_UPDATE);
+    s.setCheckTimestamp(p.timestamp());
+    s.setMetadata(new HashMap<>(p.details()));
+
+    statusRepository.save(s);
+
+    /* Trim history */
+    statusRepository.deleteAllButLatestByEnvironmentId(environment.getId(), keepCount);
+
+    /* If state changed, bump statusChangedAt */
+    Optional<EnvironmentStatus> latestStatus = environment.getLatestStatus();
+
+    if (latestStatus.isEmpty()
+        || latestStatus.get().getHttpStatusCode() != 200) {
+      environmentService.markStatusAsChanged(environment);
+    }
   }
 
   private void handleThrowable(Environment env, Throwable ex) {
