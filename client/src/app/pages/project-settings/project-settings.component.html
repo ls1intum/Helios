@@ -43,6 +43,48 @@
       <p-divider class="w-full mt-4" />
     </div>
 
+    <!-- Shared Secret -->
+    <div class="max-w-4xl mb-6">
+      <h3 class="text-xl mb-2">Shared Secret</h3>
+      <p class="text-sm text-muted-color mb-4">
+        This secret authorizes status‑update requests from your environment to Helios, letting Helios know whether the environment is up, down, or in any other state. It is displayed <strong>only once</strong>; copy it immediately into your CI/CD secret store or set it as the environment variable.
+        <br />
+        If the environment uses push‑based status updates, go to the Environment list → Edit page and choose Push in the Status update field.
+        <br />
+        You can regenerate the secret at any time, but the previous value becomes invalid the moment you do.
+      </p>
+
+      <!-- Secret Display -->
+      <div class="flex gap-2 items-center">
+        <input
+          pInputText
+          [type]="secret() ? 'text' : 'password'"
+          class="w-96"
+          [value]="secretDisplay()"
+          readonly
+          [pTooltip]="secret() ? 'Click to copy' : 'Generate to view'"
+          tooltipPosition="bottom"
+          (click)="copySecret()"
+        />
+        <p-button
+          label="Regenerate"
+          icon="pi pi-refresh"
+          class="p-button-sm"
+          (click)="regenerateSecret()"
+          [loading]="rotateSecret.isPending()"
+        ></p-button>
+      </div>
+
+      @if (secret()) {
+        <small>Secrets can <span class="font-semibold">never</span> be retrieved here again, keep them safe.</small>
+      }
+
+    </div>
+
+    <div class="flex justify-center">
+      <p-divider class="w-full mt-4" />
+    </div>
+
     <!-- Grouped Workflows Panels -->
     <div class="flex justify-between items-center mb-2">
       <h3 class="text-xl">Grouped Workflows</h3>

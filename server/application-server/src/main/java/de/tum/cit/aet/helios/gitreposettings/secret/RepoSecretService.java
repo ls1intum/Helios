@@ -17,7 +17,7 @@ public class RepoSecretService {
   private static final SecureRandom RNG = new SecureRandom();
   // 256‑bit suffix
   private static final int RAW_BYTES = 32;
-  private final GitRepoSettingsRepository repo;
+  private final GitRepoSettingsRepository gitRepoSettingsRepository;
 
   /**
    * Argon2id encoder – allocate once, reuse.
@@ -35,7 +35,7 @@ public class RepoSecretService {
   @Transactional
   public String rotate(long repoId) {
 
-    GitRepoSettings gitRepoSettings = repo.findById(repoId)
+    GitRepoSettings gitRepoSettings = gitRepoSettingsRepository.findByRepositoryRepositoryId(repoId)
         .orElseThrow(() -> new EntityNotFoundException("Repo " + repoId + " not found!"));
 
     /* 256‑bit random suffix */
@@ -52,7 +52,7 @@ public class RepoSecretService {
 
     /* 4) Persist the hash (overwriting any previous value) */
     gitRepoSettings.setSecretHash(hash);
-    repo.save(gitRepoSettings);
+    gitRepoSettingsRepository.save(gitRepoSettings);
 
     return token;
   }

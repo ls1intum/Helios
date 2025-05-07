@@ -9,10 +9,15 @@ import { DragDropModule } from 'primeng/dragdrop';
 import { InputTextModule } from 'primeng/inputtext';
 import { PanelModule } from 'primeng/panel';
 import { TableModule } from 'primeng/table';
-
 import { LockingThresholdsComponent } from '@app/components/locking-thresholds/locking-thresholds.component';
 import { PageHeadingComponent } from '@app/components/page-heading/page-heading.component';
-import { TestTypeDto, WorkflowDto, WorkflowGroupDto, WorkflowMembershipDto } from '@app/core/modules/openapi';
+import {
+  RotateSecretResponses,
+  TestTypeDto,
+  WorkflowDto,
+  WorkflowGroupDto,
+  WorkflowMembershipDto
+} from '@app/core/modules/openapi';
 import {
   createWorkflowGroupMutation,
   deleteWorkflowGroupMutation,
@@ -29,7 +34,7 @@ import {
   deleteTestTypeMutation,
   getAllTestTypesQueryKey,
   getAllTestTypesOptions,
-  updateGitRepoSettingsMutation,
+  updateGitRepoSettingsMutation, rotateSecretMutation,
 } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { WorkflowDtoSchema } from '@app/core/modules/openapi/schemas.gen';
 import { MessageService } from 'primeng/api';
@@ -86,6 +91,10 @@ export class ProjectSettingsComponent {
 
   // Package name signals
   packageName = signal<string>('');
+
+  // --- Shared‑secret state
+  secret = signal<string | null>(null);
+  secretDisplay = computed(() => (this.secret() ? this.secret() : '************'));
 
   // For creating a new group
   showAddGroupDialog = false;
@@ -535,5 +544,35 @@ export class ProjectSettingsComponent {
         });
       },
     });
+  }
+
+  // --- mutation
+  rotateSecret = injectMutation(() => ({
+    ...rotateSecretMutation({ path: { repositoryId: this.repositoryId() } }),
+    onSuccess: (data: RotateSecretResponses[200]) => {
+      this.secret.set(data);
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Secret regenerated',
+        detail: 'Copy the token now.',
+      });
+    },
+  }));
+
+  regenerateSecret() {
+    this.secret.set(null);
+    this.rotateSecret.mutate({ path: { repositoryId: this.repositoryId() } });
+  }
+
+  copySecret() {
+    if (!this.secret()) return;
+    navigator.clipboard.writeText(this.secret()!)
+      .then(() => {
+        this.messageService.add({ severity: 'info', summary: 'Copied', detail: 'Secret copied to clipboard' });
+      })
+      .catch(err => {
+        this.messageService.add({ severity: 'warn', summary: 'Copy failed', detail: 'Could not access clipboard' });
+        console.error(err);
+      });
   }
 }
