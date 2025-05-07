@@ -7,7 +7,7 @@ import java.util.Map;
 
 public record PushStatusPayload(
     @NotBlank String environment,
-    @NotBlank String state,
+    @NotNull LifecycleState state,
     @NotNull Instant timestamp,
     Map<String, Object> details) {
 }

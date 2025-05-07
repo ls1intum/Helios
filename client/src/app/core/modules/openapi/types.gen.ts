@@ -94,7 +94,7 @@ export type EnvironmentDto = {
 export type EnvironmentStatusDto = {
   id: number;
   success: boolean;
-  state?: string;
+  state?: 'STARTING_UP' | 'MIGRATING_DB' | 'MIGRATION_FAILED' | 'MIGRATION_FINISHED' | 'RUNNING' | 'DEGRADED' | 'SHUTTING_DOWN' | 'STOPPED' | 'FAILED';
   httpStatusCode: number;
   checkedAt: string;
   checkType: 'HTTP_STATUS' | 'ARTEMIS_INFO' | 'PUSH_UPDATE';
@@ -232,7 +232,7 @@ export type ReleaseInfoDetailsDto = {
 
 export type PushStatusPayload = {
   environment?: string;
-  state?: string;
+  state: 'STARTING_UP' | 'MIGRATING_DB' | 'MIGRATION_FAILED' | 'MIGRATION_FINISHED' | 'RUNNING' | 'DEGRADED' | 'SHUTTING_DOWN' | 'STOPPED' | 'FAILED';
   timestamp: string;
   details?: {
     [key: string]: {

@@ -3,6 +3,7 @@ package de.tum.cit.aet.helios.environment;
 import de.tum.cit.aet.helios.deployment.LatestDeploymentUnion;
 import de.tum.cit.aet.helios.deployment.LatestDeploymentUnion.DeploymentType;
 import de.tum.cit.aet.helios.environment.status.EnvironmentStatus;
+import de.tum.cit.aet.helios.environment.status.LifecycleState;
 import de.tum.cit.aet.helios.environment.status.StatusCheckType;
 import de.tum.cit.aet.helios.gitrepo.RepositoryInfoDto;
 import de.tum.cit.aet.helios.releaseinfo.releasecandidate.ReleaseCandidate;
@@ -47,7 +48,7 @@ public record EnvironmentDto(
   public static record EnvironmentStatusDto(
       @NonNull Long id,
       @NonNull Boolean success,
-      String state,
+      LifecycleState state,
       @NonNull Integer httpStatusCode,
       @NonNull Instant checkedAt,
       @NonNull StatusCheckType checkType,
