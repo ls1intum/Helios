@@ -30,6 +30,11 @@
                 {{ environment().latestDeployment?.updatedAt || '' | timeAgo }}
               </span>
             }
+            @if (environment().latestDeployment?.workflowRunHtmlUrl && environment().latestDeployment?.workflowRunHtmlUrl !== '') {
+              <p-button text (click)="openLink(environment().latestDeployment?.workflowRunHtmlUrl)" styleClass="p-1" class="leading-none">
+                <i-tabler name="brand-github" class="!size-4" />
+              </p-button>
+            }
             <app-deployment-state-tag [state]="deployment.state" [deployment]="deployment" />
 
             <!-- Branch or Release Tag -->
