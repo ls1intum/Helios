@@ -7,7 +7,8 @@ plugins {
 
 allprojects {
     group = 'de.tum.cit.aet'
-    version = '0.0.1-SNAPSHOT'
+    // if -Pversion=… is present Gradle exposes it as a project property
+    version = findProperty("version") ?: "0.0.1-SNAPSHOT"
 
     repositories {
         mavenCentral()

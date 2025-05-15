@@ -7,7 +7,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 @Component
-class HeartbeatScheduler {
+public class HeartbeatScheduler {
 
   private final HeliosClient helios;
   private final HeliosStatusProperties props;
@@ -22,7 +22,7 @@ class HeartbeatScheduler {
    * Only sends if {@code props.enabled()} is true.
    */
   @Scheduled(fixedDelayString =
-      "#{@heliosStatusProperties.heartbeatInterval.toMillis()}")
+      "#{@'de.tum.cit.aet.helios.HeliosStatusProperties'.heartbeatInterval.toMillis()}")
   void sendHeartbeat() {
     if (props.enabled()) {
       helios.push(LifecycleState.RUNNING).subscribe();

@@ -7,7 +7,6 @@ plugins {
     id 'maven-publish'
 }
 group = 'de.tum.cit.aet.helios'
-version = '0.0.1-SNAPSHOT'
 
 java {
     toolchain { languageVersion = JavaLanguageVersion.of(21) }
@@ -29,25 +28,28 @@ dependencies {
     api 'org.springframework.boot:spring-boot-autoconfigure'
     api 'org.springframework:spring-context'
 
-    /* WebClient for the HTTP push (only 3 small extra jars) */
+    /* processor that writes the imports file */
+    annotationProcessor 'org.springframework.boot:spring-boot-autoconfigure-processor'
+    /* same for test compilation */
+    testAnnotationProcessor 'org.springframework.boot:spring-boot-autoconfigure-processor'
+
+    /* WebClient for the HTTP push */
     implementation 'org.springframework:spring-webflux'
 
-    /* OPTIONAL hooks – compileOnly so consumers provide their own version
-       (avoids pulling Flyway/Liquibase into every service that doesn't use it) */
+    /* compileOnly so consumers provide their own version */
     compileOnly 'org.flywaydb:flyway-core'
     compileOnly 'org.liquibase:liquibase-core'
 
     /* Metadata for `application.yml` autocompletion – annotation‑processor only */
-    compileOnly         'org.springframework.boot:spring-boot-configuration-processor'
+    compileOnly 'org.springframework.boot:spring-boot-configuration-processor'
     annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
 
     /* Lombok if you use it internally */
-    compileOnly         'org.projectlombok:lombok:1.18.30'
+    compileOnly 'org.projectlombok:lombok:1.18.30'
     annotationProcessor 'org.projectlombok:lombok:1.18.30'
 
     // just the annotations, no runtime engine → keeps the JAR tiny
-    compileOnly 'jakarta.validation:jakarta.validation-api:3.1.1'
-
+    compileOnly 'org.hibernate.validator:hibernate-validator'
 
     compileOnly 'org.slf4j:slf4j-api:2.0.17'
 
@@ -60,6 +62,12 @@ publishing {
     publications {
         mavenJava(MavenPublication) {
             from components.java
+
+            versionMapping {
+                allVariants {
+                    fromResolutionResult()
+                }
+            }
         }
     }
     repositories {
@@ -69,10 +77,10 @@ publishing {
         /* GitHub Packages */
         maven {
             name = "github"
-            url  = uri("https://maven.pkg.github.com/ls1intum/Helios")
+            url = uri("https://maven.pkg.github.com/ls1intum/Helios")
             credentials {
                 username = findProperty("gpr.user") ?: System.getenv("GITHUB_ACTOR")
-                password = findProperty("gpr.key")  ?: System.getenv("GITHUB_TOKEN")
+                password = findProperty("gpr.key") ?: System.getenv("GITHUB_TOKEN")
             }
         }
     }

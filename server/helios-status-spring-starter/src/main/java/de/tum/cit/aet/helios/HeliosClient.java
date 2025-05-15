@@ -12,7 +12,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
- * Sends lifecycle events from the Spring Boot service to every Helios endpoint
+ * Sends lifecycle events from the Spring Boot service to every Helios endpoint
  * configured in {@link HeliosStatusProperties}.
  *
  * <p>Each call is <em>fire‑and‑forget</em>; you get a {@code Mono<Void>} in case
@@ -23,15 +23,15 @@ public class HeliosClient {
   private static final Logger log = LoggerFactory.getLogger(HeliosClient.class);
 
   private final List<WebClient> targets;
-  private final String          environment;
+  private final String environment;
 
   public HeliosClient(HeliosStatusProperties cfg) {
-    this.environment = cfg.environment();
+    this.environment = cfg.environmentName();
 
-    this.targets = cfg.urls().stream()
-        .map(uri -> WebClient.builder()
-            .baseUrl(uri.toString())
-            .defaultHeader("Authorization", "Secret " + cfg.secretKey())
+    this.targets = cfg.endpoints().stream()
+        .map(ep -> WebClient.builder()
+            .baseUrl(ep.url().toString())
+            .defaultHeader("Authorization", "Secret " + ep.secretKey())
             .build())
         .toList();
   }

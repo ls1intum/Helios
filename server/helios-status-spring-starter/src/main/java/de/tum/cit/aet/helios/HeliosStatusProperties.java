@@ -15,9 +15,8 @@ import org.springframework.validation.annotation.Validated;
 @Validated
 public record HeliosStatusProperties(
     boolean enabled,                       // default false
-    @NotEmpty List<URI> urls,                // required if enabled
-    @NotBlank String secretKey,              // required if enabled
-    @NotBlank String environment,           // required if enabled
+    @NotBlank String environmentName,    // app name
+    @NotEmpty List<HeliosEndpoint> endpoints,     // url + secretKey
     @DurationUnit(ChronoUnit.SECONDS)
     @Positive Duration heartbeatInterval     // default 30 s
 ) {

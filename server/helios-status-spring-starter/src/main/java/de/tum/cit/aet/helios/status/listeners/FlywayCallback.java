@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @ConditionalOnClass(name = "org.flywaydb.core.Flyway")
-class FlywayCallback implements Callback {
+public class FlywayCallback implements Callback {
 
   private final HeliosClient helios;
 
