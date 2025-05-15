@@ -235,6 +235,10 @@ export type DeployRequest = {
   commitSha: string;
 };
 
+export type CancelDeploymentRequest = {
+  workflowRunId: number;
+};
+
 export type WorkflowRunDto = {
   id: number;
   name: string;
@@ -1255,6 +1259,31 @@ export type DeployToEnvironmentResponses = {
 };
 
 export type DeployToEnvironmentResponse = DeployToEnvironmentResponses[keyof DeployToEnvironmentResponses];
+
+export type CancelDeploymentData = {
+  body: CancelDeploymentRequest;
+  path?: never;
+  query?: never;
+  url: '/api/deployments/cancel';
+};
+
+export type CancelDeploymentErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type CancelDeploymentError = CancelDeploymentErrors[keyof CancelDeploymentErrors];
+
+export type CancelDeploymentResponses = {
+  /**
+   * OK
+   */
+  200: string;
+};
+
+export type CancelDeploymentResponse = CancelDeploymentResponses[keyof CancelDeploymentResponses];
 
 export type SetBranchPinnedByRepositoryIdAndNameAndUserIdData = {
   body?: never;

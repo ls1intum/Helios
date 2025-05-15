@@ -741,6 +741,30 @@ paths:
             application/json:
               schema:
                 type: string
+  /api/deployments/cancel:
+    post:
+      tags:
+      - deployment-controller
+      operationId: cancelDeployment
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CancelDeploymentRequest"
+        required: true
+      responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: string
   /api/branches/repository/{repoId}/pin:
     post:
       tags:
@@ -2189,6 +2213,14 @@ components:
       - branchName
       - commitSha
       - environmentId
+    CancelDeploymentRequest:
+      type: object
+      properties:
+        workflowRunId:
+          type: integer
+          format: int64
+      required:
+      - workflowRunId
     WorkflowRunDto:
       type: object
       properties:
