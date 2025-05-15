@@ -50,38 +50,38 @@ public class StatusCheckService {
   @Async("statusCheckTaskExecutor")
   public CompletableFuture<Void> performStatusCheck(Environment environment) {
     return CompletableFuture.runAsync(() -> {
-      final StatusCheckType checkType = environment.getStatusCheckType();
+          final StatusCheckType checkType = environment.getStatusCheckType();
 
-      log.debug("Starting status check for environment {} (ID: {}) with type {}",
-          environment.getName(), environment.getId(), checkType);
+          log.debug("Starting status check for environment {} (ID: {}) with type {}",
+              environment.getName(), environment.getId(), checkType);
 
-      if (checkType == null) {
-        log.warn("Skipping environment {} - no check type configured", environment.getId());
-        return;
-      }
+          if (checkType == null) {
+            log.warn("Skipping environment {} - no check type configured", environment.getId());
+            return;
+          }
 
-      final StatusCheckStrategy strategy = checkStrategies.get(checkType);
+          final StatusCheckStrategy strategy = checkStrategies.get(checkType);
 
-      if (strategy == null) {
-        log.error("No strategy found for check type {} in environment {}",
-            checkType, environment.getId());
-        return;
-      }
+          if (strategy == null) {
+            log.error("No strategy found for check type {} in environment {}",
+                checkType, environment.getId());
+            return;
+          }
 
-      final StatusCheckResult result = strategy.check(environment);
-      log.debug("Check completed for environment {} - success: {}, code: {}",
-          environment.getId(), result.success(), result.httpStatusCode());
+          final StatusCheckResult result = strategy.check(environment);
+          log.debug("Check completed for environment {} - success: {}, code: {}",
+              environment.getId(), result.success(), result.httpStatusCode());
 
-      saveStatusResult(environment, result);
+          saveStatusResult(environment, result);
 
-      // Add a timeout to the check so no matter what check we use
-      // we make sure that we don't wait for too long
-    })
-    .orTimeout(this.config.getCheckInterval().getSeconds(), TimeUnit.SECONDS)
-    .exceptionally(ex -> {
-      handleThrowable(environment, ex);
-      return null;
-    });
+          // Add a timeout to the check so no matter what check we use
+          // we make sure that we don't wait for too long
+        })
+        .orTimeout(this.config.getCheckInterval().getSeconds(), TimeUnit.SECONDS)
+        .exceptionally(ex -> {
+          handleThrowable(environment, ex);
+          return null;
+        });
   }
 
   @Transactional
@@ -95,6 +95,13 @@ public class StatusCheckService {
             .orElseThrow(() -> new EntityNotFoundException(
                 "Environment '%s' not found in repo %d"
                     .formatted(p.environment(), repoId)));
+
+    // Check status check type
+    if (!StatusCheckType.PUSH_UPDATE.equals(environment.getStatusCheckType())) {
+      log.debug("Environment {} is not configured for push updates. Ignoring.",
+          environment.getId());
+      return;
+    }
 
     /* Persist an EnvironmentStatus row */
     EnvironmentStatus s = new EnvironmentStatus();
