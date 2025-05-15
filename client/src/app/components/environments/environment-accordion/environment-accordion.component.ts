@@ -18,7 +18,7 @@ import { EnvironmentStatusTagComponent } from '../environment-status-tag/environ
 import { signal } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
-import { IconExternalLink, IconGitPullRequest, IconHistory, IconTag } from 'angular-tabler-icons/icons';
+import { IconExternalLink, IconGitPullRequest, IconHistory, IconTag, IconBrandGithub } from 'angular-tabler-icons/icons';
 
 @Component({
   selector: 'app-environment-accordion',
@@ -47,6 +47,7 @@ import { IconExternalLink, IconGitPullRequest, IconHistory, IconTag } from 'angu
       IconGitPullRequest,
       IconHistory,
       IconExternalLink,
+      IconBrandGithub,
     }),
   ],
   templateUrl: './environment-accordion.component.html',
@@ -117,5 +118,11 @@ export class EnvironmentAccordionComponent {
 
   getBranchLink() {
     return ['/repo', this.environment().repository?.id, 'ci-cd', 'branch', this.environment().latestDeployment?.ref];
+  }
+
+  openLink(url: string | undefined) {
+    if (url) {
+      window.open(url, '_blank');
+    }
   }
 }
