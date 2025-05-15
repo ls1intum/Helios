@@ -12,14 +12,23 @@
 
   <div class="flex items-center overflow-hidden">
     <p-buttongroup>
-      <!-- Deploy Button -->
+      <!-- Deploy/Cancel Button -->
       @if (deployable()) {
-        <p-button (click)="onDeploy($event)" [disabled]="!canUserDeploy()" [pTooltip]="getDeployTooltip()" tooltipPosition="top">
-          <div class="flex items-center">
-            <i-tabler name="cloud-upload" class="w-4 h-4 mr-1.5 flex-shrink-0" />
-            <span>Deploy</span>
-          </div>
-        </p-button>
+        @if (isDeploymentInProgress()) {
+          <p-button severity="danger" (click)="onCancel($event)" [disabled]="!canCancelDeployment()" pTooltip="Cancel ongoing deployment" tooltipPosition="top">
+            <div class="flex items-center">
+              <i-tabler name="x" class="w-4 h-4 mr-1.5 flex-shrink-0" />
+              <span>Cancel</span>
+            </div>
+          </p-button>
+        } @else {
+          <p-button (click)="onDeploy($event)" [disabled]="!canUserDeploy()" [pTooltip]="getDeployTooltip()" tooltipPosition="top">
+            <div class="flex items-center">
+              <i-tabler name="cloud-upload" class="w-4 h-4 mr-1.5 flex-shrink-0" />
+              <span>Deploy</span>
+            </div>
+          </p-button>
+        }
       }
 
       <!-- Lock/Unlock Controls -->

@@ -44,6 +44,7 @@
                 (unlock)="onUnlockEnvironment($event.event, $event.environment)"
                 (extend)="extendLock($event.event, $event.environment)"
                 (lock)="lockEnvironment($event)"
+                (cancel)="cancelDeployment($event)"
               >
               </app-environment-accordion>
             }

@@ -12,7 +12,7 @@ import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 import { PermissionService } from '@app/core/services/permission.service';
 import { EnvironmentReviewersComponent } from '../environment-reviewers/environment-reviewers.component';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
-import { IconCheck, IconCloudUpload, IconLock, IconLockOpen, IconLockPlus, IconPencil } from 'angular-tabler-icons/icons';
+import { IconCheck, IconCloudUpload, IconLock, IconLockOpen, IconLockPlus, IconPencil, IconX } from 'angular-tabler-icons/icons';
 
 @Component({
   selector: 'app-environment-actions',
@@ -36,6 +36,7 @@ import { IconCheck, IconCloudUpload, IconLock, IconLockOpen, IconLockPlus, IconP
       IconLockPlus,
       IconCheck,
       IconPencil,
+      IconX,
     }),
   ],
   templateUrl: './environment-actions.component.html',
@@ -52,6 +53,7 @@ export class EnvironmentActionsComponent {
   readonly unlock = output<Event>();
   readonly extend = output<Event>();
   readonly lock = output<Event>();
+  readonly cancelDeployment = output<Event>();
 
   // Inject required services
   private keycloakService = inject(KeycloakService);
@@ -123,6 +125,15 @@ export class EnvironmentActionsComponent {
     }
   });
 
+  readonly isDeploymentInProgress = computed(() => {
+    const deployment = this.environment().latestDeployment;
+    return deployment && (deployment.state === 'IN_PROGRESS' || deployment.state === 'PENDING' || deployment.state === 'QUEUED' || deployment.state === 'REQUESTED');
+  });
+
+  readonly canCancelDeployment = computed(() => {
+    return this.isDeploymentInProgress() && this.canUserDeploy();
+  });
+
   openExternalLink(event: MouseEvent, link?: string): void {
     event.stopPropagation();
     if (link) {
@@ -151,5 +162,10 @@ export class EnvironmentActionsComponent {
 
   onLock(event: Event) {
     this.lock.emit(event);
+  }
+
+  onCancel(event: Event) {
+    console.log('action cancel clicked');
+    this.cancelDeployment.emit(event);
   }
 }
