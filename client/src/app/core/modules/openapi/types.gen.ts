@@ -10,8 +10,8 @@ export type ApiError = {
 
 export type TestTypeDto = {
   id?: number;
-  name?: string;
-  artifactName?: string;
+  name: string;
+  artifactName: string;
   workflowId: number;
 };
 
@@ -97,11 +97,7 @@ export type EnvironmentStatusDto = {
   httpStatusCode: number;
   checkedAt: string;
   checkType: 'HTTP_STATUS' | 'ARTEMIS_INFO';
-  metadata?: {
-    [key: string]: {
-      [key: string]: unknown;
-    };
-  };
+  metadata?: {};
 };
 
 export type RepositoryInfoDto = {
