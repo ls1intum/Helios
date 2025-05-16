@@ -37,11 +37,11 @@ public class HeliosClient {
 
   private static final MediaType JSON = MediaType.get("application/json");
 
-  // Custom thread pool: 1 thread, 5 task queue, named thread, drops on overflow
+  // Custom thread pool: 1 thread, 10 task queue, named thread, drops on overflow
   private static final ExecutorService executor = new ThreadPoolExecutor(
       1, 1,
       0L, TimeUnit.MILLISECONDS,
-      new LinkedBlockingQueue<>(5),
+      new LinkedBlockingQueue<>(10),
       r -> {
         Thread t = new Thread(r);
         t.setName("Helios-OkHttp");
