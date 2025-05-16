@@ -14,7 +14,7 @@ public class HeartbeatScheduler implements SchedulingConfigurer {
   private final HeliosClient helios;
   private final HeliosStatusProperties props;
 
-  HeartbeatScheduler(HeliosClient helios, HeliosStatusProperties props) {
+  public HeartbeatScheduler(HeliosClient helios, HeliosStatusProperties props) {
     this.helios = helios;
     this.props = props;
   }

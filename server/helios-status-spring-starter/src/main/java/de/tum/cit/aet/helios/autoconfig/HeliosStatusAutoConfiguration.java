@@ -5,16 +5,34 @@ import de.tum.cit.aet.helios.HeliosStatusProperties;
 import de.tum.cit.aet.helios.status.listeners.BootLifecycleListener;
 import de.tum.cit.aet.helios.status.listeners.HeartbeatScheduler;
 import jakarta.annotation.PostConstruct;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Import;
 
 @AutoConfiguration
 @EnableConfigurationProperties(HeliosStatusProperties.class)
-@Import({BootLifecycleListener.class, HeartbeatScheduler.class})
 public class HeliosStatusAutoConfiguration {
+
+  private static final Logger log = LoggerFactory.getLogger(HeliosStatusAutoConfiguration.class);
+
+  private final HeliosStatusProperties props;
+
+  public HeliosStatusAutoConfiguration(HeliosStatusProperties props) {
+    this.props = props;
+  }
+
+  @PostConstruct
+  public void logStatus() {
+    if (props.enabled()) {
+      log.info("✅ Helios status push is enabled – lifecycle monitoring will start.");
+    } else {
+      log.info("ℹ️ Helios status push is disabled – no lifecycle updates will be sent.");
+    }
+  }
+
   @Bean
   ApplicationRunner validateHeliosCfg(HeliosStatusProperties p) {
     return args -> {
@@ -34,8 +52,13 @@ public class HeliosStatusAutoConfiguration {
     return new HeliosClient(props);
   }
 
-  @PostConstruct
-  public void debug() {
-    System.out.println("✅ HeliosStatusAutoConfiguration was loaded");
+  @Bean
+  public BootLifecycleListener bootLifecycleListener(HeliosClient helios) {
+    return props.enabled() ? new BootLifecycleListener(helios) : null;
+  }
+
+  @Bean
+  public HeartbeatScheduler heartbeatScheduler(HeliosClient helios) {
+    return props.enabled() ? new HeartbeatScheduler(helios, props) : null;
   }
 }

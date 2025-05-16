@@ -14,7 +14,7 @@ public class BootLifecycleListener {
 
   private final HeliosClient helios;
 
-  BootLifecycleListener(HeliosClient helios) {
+  public BootLifecycleListener(HeliosClient helios) {
     this.helios = helios;
   }
 
