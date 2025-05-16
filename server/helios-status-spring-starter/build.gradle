@@ -38,10 +38,6 @@ dependencies {
     // for JSON serialization
     implementation 'com.fasterxml.jackson.core:jackson-databind'
 
-    /* compileOnly so consumers provide their own version */
-    compileOnly 'org.flywaydb:flyway-core'
-    compileOnly 'org.liquibase:liquibase-core'
-
     /* Metadata for `application.yml` autocompletion – annotation‑processor only */
     compileOnly 'org.springframework.boot:spring-boot-configuration-processor'
     annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
@@ -54,6 +50,10 @@ dependencies {
     compileOnly 'org.hibernate.validator:hibernate-validator'
 
     compileOnly 'org.slf4j:slf4j-api:2.0.17'
+
+    implementation 'jakarta.annotation:jakarta.annotation-api:2.1.1'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+
 
     /* Tests */
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
@@ -87,6 +87,18 @@ publishing {
         }
     }
 }
+//
+//// helios-status-spring-starter/build.gradle
+//// Put AutoConfiguration.imports into *both* output folders
+//tasks.named('processResources') {
+//    // keep first copy if Gradle copies twice
+//    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+//
+//    // copy spring descriptor into classes dir used by :app:bootRun
+//    from('src/main/resources/META-INF/spring') {
+//        into "${buildDir}/classes/java/main/META-INF/spring"
+//    }
+//}
 
 test {
     useJUnitPlatform()

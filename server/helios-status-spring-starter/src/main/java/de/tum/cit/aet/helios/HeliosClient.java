@@ -1,13 +1,20 @@
 package de.tum.cit.aet.helios;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import de.tum.cit.aet.helios.status.LifecycleState;
 import de.tum.cit.aet.helios.status.PushStatusPayload;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import okhttp3.Call;
 import okhttp3.Callback;
+import okhttp3.Dispatcher;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -29,8 +36,28 @@ public class HeliosClient {
   private static final Logger log = LoggerFactory.getLogger(HeliosClient.class);
 
   private static final MediaType JSON = MediaType.get("application/json");
-  private static final OkHttpClient client = new OkHttpClient();
-  private static final ObjectMapper mapper = new ObjectMapper();
+
+  // Custom thread pool: 1 thread, 5 task queue, named thread, drops on overflow
+  private static final ExecutorService executor = new ThreadPoolExecutor(
+      1, 1,
+      0L, TimeUnit.MILLISECONDS,
+      new LinkedBlockingQueue<>(5),
+      r -> {
+        Thread t = new Thread(r);
+        t.setName("Helios-OkHttp");
+        t.setDaemon(true);
+        return t;
+      },
+      (r, ex) -> log.warn("❌ Helios push queue is full. Dropping status update.")
+  );
+
+  private static final OkHttpClient client = new OkHttpClient.Builder()
+      .dispatcher(new Dispatcher(executor))
+      .build();
+
+  private static final ObjectMapper mapper = new ObjectMapper()
+      .registerModule(new JavaTimeModule())
+      .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
   private final List<HeliosEndpoint> endpoints;
   private final String environment;

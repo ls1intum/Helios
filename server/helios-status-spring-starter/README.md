@@ -6,9 +6,9 @@
 # from the server/ directory
 # choose any version you like
 export VERSION=0.1.0-SNAPSHOT           
-./gradlew :helios-status-spring-starter:publishToMavenLocal --no-daemon
+./gradlew :helios-status-spring-starter:clean :helios-status-spring-starter:publishToMavenLocal --no-daemon
 # or use -Pversion=0.1.0-SNAPSHOT
-../gradlew :helios-status-spring-starter:publishToMavenLocal -Pversion=0.1.0-SNAPSHOT --no-daemon
+../gradlew :helios-status-spring-starter:clean :helios-status-spring-starter:publishToMavenLocal -Pversion=0.1.0-SNAPSHOT --no-daemon
 ```
 
 Artifacts land in:
@@ -25,9 +25,9 @@ dependencies {
 }
 ```
 
-Reload the dependencies.
+Run the application:
 ```bash
-./gradlew --refresh-dependencies
+./gradlew --refresh-dependencies bootRun --no-daemon
 ```
 
 ### 2. Manual publish to GitHub Packages from your local
@@ -38,7 +38,7 @@ Reload the dependencies.
 export VERSION=0.1.0
 export GITHUB_TOKEN=<PAT with write:packages>
 # ➋ run the publish task
-./gradlew :helios-status-spring-starter:publish --no-daemon
+./gradlew :helios-status-spring-starter:clean :helios-status-spring-starter:publish --no-daemon
 ```
 
 ### 3. Publish via GitHub Actions (workflow dispatch)
