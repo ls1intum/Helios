@@ -1,3 +1,17 @@
+## 🚀 What is a Spring Boot Starter?
+
+A **Spring Boot starter** is a pre-configured library that makes it easy to integrate specific functionality into a Spring Boot application.
+
+This library, **helios-status-spring-starter**, is a lightweight starter that adds automatic lifecycle status reporting to your app (e.g. `RUNNING`, `FAILED`, `SHUTTING_DOWN`) via HTTP push.
+
+It:
+- Automatically registers beans via `@AutoConfiguration`
+- Supports `application.yml` configuration
+- Requires no manual wiring
+- Does **nothing** unless `helios.status.enabled=true` is set
+
+To use it, please read the [**PACKAGE_README**](./PACKAGE_README.md) of the main project.
+
 ## 📦 Publishing the starter
 
 This section explains how to publish the `helios-status-spring-starter` library for testing and production use.
