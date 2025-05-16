@@ -3,6 +3,13 @@ package de.tum.cit.aet.helios.status;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
+/**
+ * Lifecycle markers that a Spring-Boot service can expose.
+ *
+ * <p>The enum comes with a strict text deserializer – any unknown value
+ * throws an {@link IllegalArgumentException} – and preserves its exact
+ * constant name when serialised to JSON.</p>
+ */
 public enum LifecycleState {
 
   STARTING_UP,
@@ -15,6 +22,9 @@ public enum LifecycleState {
   STOPPED,
   FAILED;
 
+  /**
+   * Case-insensitive mapping from payload string → enum constant.
+   */
   @JsonCreator
   public static LifecycleState fromJson(String raw) {
     return switch (raw.toLowerCase()) {
@@ -33,7 +43,9 @@ public enum LifecycleState {
     };
   }
 
-  // Keep enum constant names when Spring/Jackson serialises to JSON
+  /**
+   * Preserve enum constant names in outbound JSON.
+   */
   @JsonValue
   public String toJson() {
     return name();

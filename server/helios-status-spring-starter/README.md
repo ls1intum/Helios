@@ -1,57 +1,67 @@
 ## 📦 Publishing the starter
 
-### 1. Local test publish (Maven local)
+This section explains how to publish the `helios-status-spring-starter` library for testing and production use.
+
+### 1. Publish Locally for Testing (Maven Local)
+
+Use this when testing the library in another local project.
 
 ```bash
 # from the server/ directory
+
+# Option 1: Using environment variable
 # choose any version you like
-export VERSION=0.1.0-SNAPSHOT           
+export VERSION=0.1.1           
 ./gradlew :helios-status-spring-starter:clean :helios-status-spring-starter:publishToMavenLocal --no-daemon
-# or use -Pversion=0.1.0-SNAPSHOT
-../gradlew :helios-status-spring-starter:clean :helios-status-spring-starter:publishToMavenLocal -Pversion=0.1.0-SNAPSHOT --no-daemon
+
+# Option 2: Using CLI parameter
+./gradlew :helios-status-spring-starter:clean :helios-status-spring-starter:publishToMavenLocal -Pversion=0.1.1 --no-daemon
 ```
 
-Artifacts land in:
-```bash
-# ~/.m2/repository/de/tum/cit/aet/helios/helios-status-spring-starter/0.1.0-SNAPSHOT/
+Artifacts are published to:
+```
+~/.m2/repository/de/tum/cit/aet/helios/helios-status-spring-starter/0.1.1/
 ```
 
-Add the dependency in another project:
+In your test app’s `build.gradle`:
 ```
 repositories { mavenLocal() }
 
 dependencies {
-    implementation "de.tum.cit.aet.helios:helios-status-spring-starter:0.1.0-SNAPSHOT"
+    implementation "de.tum.cit.aet.helios:helios-status-spring-starter:0.1.1"
 }
 ```
 
-Run the application:
+To pick up the latest build:
 ```bash
 ./gradlew --refresh-dependencies bootRun --no-daemon
 ```
 
-### 2. Manual publish to GitHub Packages from your local
+### 2. Publish to GitHub Packages (Manual)
 
 ```bash
-# from the server/ directory
-# ➊ set version and GitHub credentials
-export VERSION=0.1.0
-export GITHUB_TOKEN=<PAT with write:packages>
-# ➋ run the publish task
+# Inside the server/ directory
+export VERSION=0.1.1
+export GITHUB_TOKEN=<your-personal-access-token> # write:packages
+
 ./gradlew :helios-status-spring-starter:clean :helios-status-spring-starter:publish --no-daemon
 ```
 
-### 3. Publish via GitHub Actions (workflow dispatch)
+### 3. Publish via GitHub Actions (Workflow Dispatch)
 
-- In the Actions tab, choose “Publish Helios starter” → Run workflow, type the desired version (e.g. 1.0.0), click Run.
+- Go to the **Actions** tab in GitHub.
+- Select the **Publish Helios starter** workflow.
+- Click **Run workflow**, enter a version like **0.1.1**, and click **Run**.
+
 
 ### 4. Version precedence rules
 
 | Priority     | How to set                     | Example                |
 |--------------|--------------------------------|------------------------|
-| 1  (highest) | `-Pversion` CLI flag           | `-Pversion=0.1.0`      |
-| 2            | Environment variable `VERSION` | `export VERSION=0.1.0` |
+| 1  (highest) | `-Pversion` CLI flag           | `-Pversion=0.1.1`      |
+| 2            | Environment variable `VERSION` | `export VERSION=0.1.1` |
 | 3            | Default in `settings.gradle`   | `0.0.1-SNAPSHOT`       |
 
-Each sub-module picks up the same version automatically.
+All subprojects automatically inherit the selected version.
+
 

@@ -12,6 +12,13 @@ import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 
+/**
+ * Spring-Boot autoconfiguration that wires Helios lifecycle monitoring into
+ * any application that sets {@code helios.status.enabled=true}.
+ *
+ * <p>Beans are instantiated only when the feature flag is turned on; otherwise
+ * nothing is registered and the library stays idle.
+ */
 @AutoConfiguration
 @EnableConfigurationProperties(HeliosStatusProperties.class)
 public class HeliosStatusAutoConfiguration {
@@ -24,15 +31,22 @@ public class HeliosStatusAutoConfiguration {
     this.props = props;
   }
 
+  /**
+   * Log a single line at startup so operators can see whether monitoring runs.
+   */
   @PostConstruct
   public void logStatus() {
     if (props.enabled()) {
-      log.info("✅ Helios status push is enabled – lifecycle monitoring will start.");
+      log.info("Helios status push is enabled – lifecycle monitoring will start.");
     } else {
-      log.info("ℹ️ Helios status push is disabled – no lifecycle updates will be sent.");
+      log.info("Helios status push is disabled – no lifecycle updates will be sent.");
     }
   }
 
+  /**
+   * Validates the Helios configuration once the application context is built,
+   * failing fast if mandatory information is missing.
+   */
   @Bean
   ApplicationRunner validateHeliosCfg(HeliosStatusProperties p) {
     return args -> {
@@ -47,16 +61,25 @@ public class HeliosStatusAutoConfiguration {
     };
   }
 
+  /**
+   * Http client wrapper that all listeners will share.
+   */
   @Bean
   HeliosClient heliosClient(HeliosStatusProperties props) {
     return new HeliosClient(props);
   }
 
+  /**
+   * Publishes lifecycle events for {@code ApplicationStarted/Ready/Failed}.
+   */
   @Bean
   public BootLifecycleListener bootLifecycleListener(HeliosClient helios) {
     return props.enabled() ? new BootLifecycleListener(helios) : null;
   }
 
+  /**
+   * Schedules the periodic heartbeat while the app is alive.
+   */
   @Bean
   public HeartbeatScheduler heartbeatScheduler(HeliosClient helios) {
     return props.enabled() ? new HeartbeatScheduler(helios, props) : null;

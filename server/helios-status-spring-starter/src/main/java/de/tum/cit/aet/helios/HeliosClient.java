@@ -1,8 +1,6 @@
 package de.tum.cit.aet.helios;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import de.tum.cit.aet.helios.status.LifecycleState;
 import de.tum.cit.aet.helios.status.PushStatusPayload;
 import java.io.IOException;
@@ -25,11 +23,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Sends lifecycle events from the Spring Boot service to every Helios endpoint
- * configured in {@link HeliosStatusProperties}.
+ * Thin wrapper around OkHttp that asynchronously POSTs a JSON payload to
+ * <em>every</em> configured Helios endpoint.
  *
- * <p>Each call is <em>fire‑and‑forget</em>; you get a {@code Mono<Void>} in case
- * you want to hook in reactive error handling or wait for completion.</p>
+ * <p>Concurrency model:</p>
+ * <ul>
+ *   <li>Single daemon thread (won’t block JVM shutdown).</li>
+ *   <li>Bounded queue – if the service spams updates faster than the
+ *       network can deliver, the oldest messages are dropped with a WARN.</li>
+ *   <li>Caller never blocks; failures are only logged.</li>
+ * </ul>
  */
 public class HeliosClient {
 
@@ -37,7 +40,7 @@ public class HeliosClient {
 
   private static final MediaType JSON = MediaType.get("application/json");
 
-  // Custom thread pool: 1 thread, 10 task queue, named thread, drops on overflow
+  /* -------- okhttp dispatcher ------------------------------------------------ */
   private static final ExecutorService executor = new ThreadPoolExecutor(
       1, 1,
       0L, TimeUnit.MILLISECONDS,
@@ -48,16 +51,16 @@ public class HeliosClient {
         t.setDaemon(true);
         return t;
       },
-      (r, ex) -> log.warn("❌ Helios push queue is full. Dropping status update.")
+      (r, ex) -> log.warn("Helios push queue is full. Dropping status update.")
   );
 
   private static final OkHttpClient client = new OkHttpClient.Builder()
       .dispatcher(new Dispatcher(executor))
       .build();
 
-  private static final ObjectMapper mapper = new ObjectMapper()
-      .registerModule(new JavaTimeModule())
-      .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+  private static final ObjectMapper mapper = new ObjectMapper();
+
+  /* --------------------------------------------------------------------------- */
 
   private final List<HeliosEndpoint> endpoints;
   private final String environment;
@@ -72,14 +75,14 @@ public class HeliosClient {
   /* ------------------------------------------------------------------ */
 
   /**
-   * Push a lifecycle change without extra details.
+   * Push a lifecycle state without extra detail data.
    */
   public void push(LifecycleState state) {
     push(state, Map.of());
   }
 
   /**
-   * Push a lifecycle change with an optional details map (may be empty).
+   * Push a lifecycle state and optional details.
    */
   public void push(LifecycleState state, Map<String, Object> details) {
     PushStatusPayload payload = PushStatusPayload.of(environment, state, details);
@@ -90,6 +93,9 @@ public class HeliosClient {
   /*  Internal helpers                                                  */
   /* ------------------------------------------------------------------ */
 
+  /**
+   * Fire-and-forget POST to every configured target.
+   */
   private void sendToAllTargets(PushStatusPayload payload) {
     for (HeliosEndpoint ep : endpoints) {
       try {
@@ -103,13 +109,22 @@ public class HeliosClient {
         client.newCall(request).enqueue(new Callback() {
           @Override
           public void onFailure(@NotNull Call call, @NotNull IOException e) {
-            log.warn("Helios push failed to {}: {}", ep.url(), e.getMessage());
+            log.warn("Helios push failed to {}, Error: {}, Payload: {}", ep.url(), e.getMessage(),
+                payload);
           }
 
           @Override
           public void onResponse(@NotNull Call call, @NotNull Response response) {
-            log.debug("Helios push {} -> {} [{}]", payload.state().toString(), ep.url(),
-                response.code());
+            int code = response.code();
+            boolean isSuccess = code >= 200 && code < 300;
+
+            if (isSuccess) {
+              log.debug("Helios push {} -> {} [{}]", payload.state(), ep.url(), code);
+            } else {
+              log.warn("Helios push to {} responded with error [{}]: {}, Payload: {}",
+                  ep.url(), code, response.message(), payload);
+            }
+
             response.close();
           }
         });
