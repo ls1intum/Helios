@@ -11,7 +11,7 @@
     <packaging>jar</packaging>
     <name>Helios Status Spring Starter</name>
     <description>Helios starter for Spring Boot apps – push-based lifecycle status reporting.</description>
-    <url>https://github.com/codecentric/spring-boot-admin/</url>
+    <url>https://github.com/ls1intum/Helios/tree/staging/server/helios-status-spring-starter</url>
     <properties>
         <!-- will be filled with the content of the PACKAGE_README.md file -->
         <readme.content></readme.content>
