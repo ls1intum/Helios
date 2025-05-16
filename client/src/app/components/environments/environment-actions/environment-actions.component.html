@@ -15,7 +15,14 @@
       <!-- Deploy/Cancel Button -->
       @if (deployable()) {
         @if (isDeploymentInProgress()) {
-          <p-button severity="danger" (click)="onCancel($event)" [disabled]="!canCancelDeployment()" pTooltip="Cancel ongoing deployment" tooltipPosition="top">
+          <p-button
+            class="border-r-2"
+            severity="danger"
+            (click)="onCancel($event)"
+            [disabled]="!canCancelDeployment()"
+            [pTooltip]="getCancelDeploymentToolTip()"
+            tooltipPosition="top"
+          >
             <div class="flex items-center">
               <i-tabler name="x" class="w-4 h-4 mr-1.5 flex-shrink-0" />
               <span>Cancel</span>

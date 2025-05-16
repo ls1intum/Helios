@@ -131,7 +131,7 @@ export class EnvironmentActionsComponent {
   });
 
   readonly canCancelDeployment = computed(() => {
-    return this.isDeploymentInProgress() && this.canUserDeploy();
+    return this.isDeploymentInProgress() && this.canUserDeploy() && this.environment().latestDeployment?.workflowRunHtmlUrl;
   });
 
   openExternalLink(event: MouseEvent, link?: string): void {
@@ -167,5 +167,12 @@ export class EnvironmentActionsComponent {
   onCancel(event: Event) {
     console.log('action cancel clicked');
     this.cancelDeployment.emit(event);
+  }
+
+  getCancelDeploymentToolTip() {
+    if (!this.canCancelDeployment()) {
+      return 'Cancelling deployment is not possible.';
+    }
+    return 'This will cancel the ongoing deployment.';
   }
 }

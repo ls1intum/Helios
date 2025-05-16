@@ -62,7 +62,7 @@ export class EnvironmentAccordionComponent {
   readonly unlock = output<{ event: Event; environment: EnvironmentDto }>();
   readonly extend = output<{ event: Event; environment: EnvironmentDto }>();
   readonly lock = output<EnvironmentDto>();
-  readonly cancel = output<EnvironmentDto>();
+  readonly cancelDeployment = output<EnvironmentDto>();
 
   showLatestDeployment = signal<boolean>(true);
 
@@ -89,7 +89,7 @@ export class EnvironmentAccordionComponent {
   onCancel(event: Event) {
     console.log('accordion onCancel clicked');
     event.stopPropagation();
-    this.cancel.emit(this.environment());
+    this.cancelDeployment.emit(this.environment());
   }
 
   formatEnvironmentType(type: string): string {
