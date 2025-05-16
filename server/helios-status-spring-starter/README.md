@@ -16,6 +16,40 @@ To use it, please read the [**PACKAGE_README**](./PACKAGE_README.md) of the main
 
 This section explains how to publish the `helios-status-spring-starter` library for testing and production use.
 
+
+> A **snapshot** version in Maven is one that has not been released.
+> 
+> The idea is that before a `1.0` release (or any other release) is done, there exists a `1.0-SNAPSHOT`. That version is what might become `1.0`. It's basically "`1.0` under development". This might be close to a real `1.0` release, or pretty far (right after the `0.9` release, for example).
+> 
+> The difference between a “real” version and a snapshot version is that snapshots might get updates. That means that downloading `1.0-SNAPSHOT` today might give a different file than downloading it yesterday or tomorrow.
+> 
+> Usually, snapshot dependencies should only exist during development and no released version (i.e. no non-snapshot) should have a dependency on a snapshot version.
+> 
+> Reference: [stackoverflow - What exactly is a Maven Snapshot and why do we need it?](https://stackoverflow.com/a/5901460)
+
+
+- ⚠️ Once a version is published, it is **immutable** (Maven Central). You **can not** overwrite or delete it.
+- Only the version numbers end with `-SNAPSHOT` can be overwritten.
+- `-SNAPSHOT` versions are cleaned up automatically after a period of time (currently 90 days).
+- After releasing -SNAPSHOT version, access them in https://central.sonatype.com/service/rest/repository/browse/maven-snapshots/
+- To consume -SNAPSHOT versions
+```
+repositories {
+  maven {
+    name = 'Central Portal Snapshots'
+    url = 'https://central.sonatype.com/repository/maven-snapshots/'
+
+    // Only search this repository for the specific dependency
+    content {
+      includeModule("<the snapshot's groupId>", "<the snapshot's artifactId>")
+    }
+  }
+  mavenCentral()
+}
+```
+- After deployment to staging, finalize deployment from https://central.sonatype.com/publishing/deployments
+
+
 ### 1. Publish Locally for Testing (Maven Local)
 
 Use this when testing the library in another local project.
@@ -26,10 +60,10 @@ Use this when testing the library in another local project.
 # Option 1: Using environment variable
 # choose any version you like
 export VERSION=0.1.1           
-./gradlew :helios-status-spring-starter:clean :helios-status-spring-starter:publishToMavenLocal --no-daemon
+./gradlew :helios-status-spring-starter:clean :helios-status-spring-starter:publishToMavenLocal --no-daemon --warn --stacktrace
 
 # Option 2: Using CLI parameter
-./gradlew :helios-status-spring-starter:clean :helios-status-spring-starter:publishToMavenLocal -Pversion=0.1.1 --no-daemon
+./gradlew :helios-status-spring-starter:clean :helios-status-spring-starter:publishToMavenLocal -Pversion=0.1.1 --no-daemon --warn --stacktrace
 ```
 
 Artifacts are published to:
@@ -58,7 +92,7 @@ To pick up the latest build:
 export VERSION=0.1.1
 export GITHUB_TOKEN=<your-personal-access-token> # write:packages
 
-./gradlew :helios-status-spring-starter:clean :helios-status-spring-starter:publish --no-daemon
+./gradlew :helios-status-spring-starter:clean :helios-status-spring-starter:publish --no-daemon --warn --stacktrace
 ```
 
 ### 3. Publish via GitHub Actions (Workflow Dispatch)

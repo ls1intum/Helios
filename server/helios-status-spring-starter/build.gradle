@@ -1,3 +1,5 @@
+// Refer: https://docs.gradle.org/current/userguide/publishing_maven.html#publishing_maven:complete_example
+
 plugins {
     // Produces a plain JAR
     id 'java-library'
@@ -5,14 +7,22 @@ plugins {
     // Enables Spring-managed dependency versions (uses Spring's BOM)
     id 'io.spring.dependency-management'
 
-    // Enables publishing to Maven repositories (local or GitHub Packages)
+    // Enables publishing to Maven repositories (local, GitHub Packages, OSSRH)
     id 'maven-publish'
+
+    // Enables signing of artifacts (e.g., for OSSRH)
+    id "signing"
+
+    id 'org.jreleaser' version '1.18.0'
 }
 group = 'de.tum.cit.aet.helios'
 
-// Use Java 21 as the compilation and runtime language level
 java {
+    // Use Java 21 as the compilation and runtime language level
     toolchain { languageVersion = JavaLanguageVersion.of(21) }
+
+    withJavadocJar()
+    withSourcesJar()
 }
 
 dependencyManagement {
@@ -71,27 +81,86 @@ publishing {
     publications {
         create("mavenJava", MavenPublication) {
             from components.java
+
             artifactId = "helios-status-spring-starter"
+
             versionMapping {
                 allVariants {
                     fromResolutionResult()
                 }
             }
+
+            pom {
+                // groupId = "de.tum.cit.aet.helios"
+                groupId = "io.github.egekocabas"
+                artifactId = "helios-status-spring-starter"
+                name = groupId + ":" + artifactId
+                description = "Helios starter for Spring Boot apps – push-based lifecycle status reporting."
+                url = "https://github.com/ls1intum/Helios/tree/staging/server/helios-status-spring-starter"
+
+                licenses {
+                    license {
+                        name = "MIT License"
+                        url = "https://opensource.org/license/mit"
+                        comments = "See https://github.com/ls1intum/Helios/blob/staging/LICENSE"
+                    }
+                }
+
+                scm {
+                    connection = "scm:git:git://github.com/ls1intum/Helios.git"
+                    developerConnection = "scm:git:ssh://github.com/ls1intum/Helios.git"
+                    url = "https://github.com/ls1intum/Helios"
+                }
+
+                developers {
+                    developer {
+                        id = "egekocabas"
+                        name = "Ege Kocabas"
+                        email = "kocabas.ege@tum.de"
+                        organization = "Technical University of Munich - School of Computation, Information and Technology"
+                        organizationUrl = "https://github.com/ls1intum"
+                    }
+                }
+            }
         }
     }
-    repositories {
-        // For local development testing
-        mavenLocal()
 
+    repositories {
         // GitHub Packages (requires GITHUB_TOKEN with write:packages)
         maven {
             name = "github"
             url = uri("https://maven.pkg.github.com/ls1intum/Helios")
             credentials {
                 username = "x-oauth-basic"
-                password = System.getenv("GITHUB_TOKEN")
+                password = project.findProperty("githubToken") ?: System.getenv("GITHUB_TOKEN")
             }
         }
+
+        maven {
+            // Refer Migration from s01 OSSRH to staging: https://central.sonatype.org/publish/publish-portal-ossrh-staging-api/#configuration
+            def releaseRepo = "https://ossrh-staging-api.central.sonatype.com/service/local/staging/deploy/maven2/"
+            // Refer: https://central.sonatype.org/publish/publish-portal-snapshots/#publishing-with-the-central-publishing-maven-plugin
+            def snapshotRepo = "https://central.sonatype.com/repository/maven-snapshots/"
+
+            name = "ossrh-staging-api"
+            url = version.endsWith('SNAPSHOT') ? snapshotRepo : releaseRepo
+
+            // Refer: https://central.sonatype.org/publish/generate-portal-token/
+            credentials {
+                username = project.findProperty("ossrhUsername") ?: System.getenv("OSSRH_USERNAME")
+                password = project.findProperty("ossrhPassword") ?: System.getenv("OSSRH_PASSWORD")
+            }
+        }
+    }
+}
+
+signing {
+    sign publishing.publications.mavenJava
+}
+
+javadoc {
+    if(JavaVersion.current().isJava9Compatible()) {
+        options.addBooleanOption('html5', true)
     }
 }
 

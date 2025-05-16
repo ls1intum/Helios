@@ -10,7 +10,7 @@ on:
 jobs:
   publish:
     runs-on: ubuntu-latest
-    environment: publish-package
+    environment: publish-maven
 
     permissions:
       contents: read
@@ -29,5 +29,7 @@ jobs:
         working-directory: server
         env:
           VERSION: ${{ github.event.inputs.version }}
+          OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+          OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: ./gradlew :helios-status-spring-starter:publish
