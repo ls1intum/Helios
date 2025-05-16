@@ -1667,6 +1667,8 @@ components:
           type: integer
           format: int64
       required:
+      - artifactName
+      - name
       - workflowId
     GitRepoSettingsDto:
       type: object
@@ -1879,8 +1881,7 @@ components:
           - ARTEMIS_INFO
         metadata:
           type: object
-          additionalProperties:
-            type: object
+          additionalProperties: {}
       required:
       - checkType
       - checkedAt
