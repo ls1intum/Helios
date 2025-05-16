@@ -31,7 +31,6 @@ dependencies {
 # from the server/ directory
 # ➊ set version and GitHub credentials
 export VERSION=0.1.0
-export GITHUB_ACTOR=<your-github-user>
 export GITHUB_TOKEN=<PAT with write:packages>
 # ➋ run the publish task
 ./gradlew :helios-status-spring-starter:publish --no-daemon

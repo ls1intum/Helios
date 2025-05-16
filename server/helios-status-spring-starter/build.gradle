@@ -79,7 +79,7 @@ publishing {
             name = "github"
             url = uri("https://maven.pkg.github.com/ls1intum/Helios")
             credentials {
-                username = System.getenv("GITHUB_ACTOR")
+                username = "x-oauth-basic"
                 password = System.getenv("GITHUB_TOKEN")
             }
         }
