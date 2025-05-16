@@ -85,5 +85,5 @@ helios:
 ```java
 @Autowired HeliosClient helios;
 
-helios.push(LifecycleState.DEGRADED).subscribe();
+helios.push(LifecycleState.DEGRADED);
 ```

@@ -25,7 +25,7 @@ public class HeartbeatScheduler {
       "#{@'de.tum.cit.aet.helios.HeliosStatusProperties'.heartbeatInterval.toMillis()}")
   void sendHeartbeat() {
     if (props.enabled()) {
-      helios.push(LifecycleState.RUNNING).subscribe();
+      helios.push(LifecycleState.RUNNING);
     }
   }
 }

@@ -46,7 +46,7 @@ public class FlywayCallback implements Callback {
 
     // fire‑and‑forget; if you need blocking behaviour, replace subscribe() with block().
     if (state != null) {
-      helios.push(state).subscribe();
+      helios.push(state);
     }
   }
 

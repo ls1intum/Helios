@@ -25,6 +25,11 @@ dependencies {
 }
 ```
 
+Reload the dependencies.
+```bash
+./gradlew --refresh-dependencies
+```
+
 ### 2. Manual publish to GitHub Packages from your local
 
 ```bash

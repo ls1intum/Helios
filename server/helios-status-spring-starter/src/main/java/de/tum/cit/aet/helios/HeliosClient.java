@@ -1,15 +1,21 @@
 package de.tum.cit.aet.helios;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import de.tum.cit.aet.helios.status.LifecycleState;
 import de.tum.cit.aet.helios.status.PushStatusPayload;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.MediaType;
-import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 /**
  * Sends lifecycle events from the Spring Boot service to every Helios endpoint
@@ -22,18 +28,16 @@ public class HeliosClient {
 
   private static final Logger log = LoggerFactory.getLogger(HeliosClient.class);
 
-  private final List<WebClient> targets;
+  private static final MediaType JSON = MediaType.get("application/json");
+  private static final OkHttpClient client = new OkHttpClient();
+  private static final ObjectMapper mapper = new ObjectMapper();
+
+  private final List<HeliosEndpoint> endpoints;
   private final String environment;
 
   public HeliosClient(HeliosStatusProperties cfg) {
     this.environment = cfg.environmentName();
-
-    this.targets = cfg.endpoints().stream()
-        .map(ep -> WebClient.builder()
-            .baseUrl(ep.url().toString())
-            .defaultHeader("Authorization", "Secret " + ep.secretKey())
-            .build())
-        .toList();
+    this.endpoints = cfg.endpoints();
   }
 
   /* ------------------------------------------------------------------ */
@@ -43,31 +47,49 @@ public class HeliosClient {
   /**
    * Push a lifecycle change without extra details.
    */
-  public Mono<Void> push(LifecycleState state) {
-    return push(state, Map.of());
+  public void push(LifecycleState state) {
+    push(state, Map.of());
   }
 
   /**
    * Push a lifecycle change with an optional details map (may be empty).
    */
-  public Mono<Void> push(LifecycleState state, Map<String, Object> details) {
-    var payload = PushStatusPayload.of(environment, state, details);
-    return sendToAllTargets(payload);
+  public void push(LifecycleState state, Map<String, Object> details) {
+    PushStatusPayload payload = PushStatusPayload.of(environment, state, details);
+    sendToAllTargets(payload);
   }
 
   /* ------------------------------------------------------------------ */
   /*  Internal helpers                                                  */
   /* ------------------------------------------------------------------ */
 
-  private Mono<Void> sendToAllTargets(PushStatusPayload payload) {
-    return Flux.fromIterable(targets)
-        .flatMap(client -> client.post()
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(payload)
-            .retrieve()
-            .toBodilessEntity()
-            .doOnSuccess(r -> log.debug("Sent {} to {}", payload.state(), client))
-            .doOnError(e -> log.warn("Helios push failed for {}: {}", client, e.getMessage())))
-        .then();                 // completes when all requests finish (or fail)
+  private void sendToAllTargets(PushStatusPayload payload) {
+    for (HeliosEndpoint ep : endpoints) {
+      try {
+        String json = mapper.writeValueAsString(payload);
+        Request request = new Request.Builder()
+            .url(ep.url().toString())
+            .header("Authorization", "Secret " + ep.secretKey())
+            .post(RequestBody.create(json, JSON))
+            .build();
+
+        client.newCall(request).enqueue(new Callback() {
+          @Override
+          public void onFailure(@NotNull Call call, @NotNull IOException e) {
+            log.warn("Helios push failed to {}: {}", ep.url(), e.getMessage());
+          }
+
+          @Override
+          public void onResponse(@NotNull Call call, @NotNull Response response) {
+            log.debug("Helios push {} -> {} [{}]", payload.state().toString(), ep.url(),
+                response.code());
+            response.close();
+          }
+        });
+
+      } catch (Exception e) {
+        log.error("Failed to serialize Helios payload: {}", e.getMessage());
+      }
+    }
   }
 }

@@ -33,8 +33,10 @@ dependencies {
     /* same for test compilation */
     testAnnotationProcessor 'org.springframework.boot:spring-boot-autoconfigure-processor'
 
-    /* WebClient for the HTTP push */
-    implementation 'org.springframework:spring-webflux'
+    /* For the HTTP push */
+    implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+    // for JSON serialization
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
 
     /* compileOnly so consumers provide their own version */
     compileOnly 'org.flywaydb:flyway-core'

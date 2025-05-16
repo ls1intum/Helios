@@ -20,21 +20,21 @@ public class BootLifecycleListener {
 
   @EventListener
   void onStarted(ApplicationStartedEvent e) {
-    helios.push(LifecycleState.STARTING_UP).subscribe();
+    helios.push(LifecycleState.STARTING_UP);
   }
 
   @EventListener
   void onReady(ApplicationReadyEvent e) {
-    helios.push(LifecycleState.RUNNING).subscribe();
+    helios.push(LifecycleState.RUNNING);
   }
 
   @EventListener
   void onFailed(ApplicationFailedEvent e) {
-    helios.push(LifecycleState.FAILED).subscribe();
+    helios.push(LifecycleState.FAILED);
   }
 
   @EventListener
   void onShutdown(ContextClosedEvent e) {
-    helios.push(LifecycleState.SHUTTING_DOWN).subscribe();
+    helios.push(LifecycleState.SHUTTING_DOWN);
   }
 }
