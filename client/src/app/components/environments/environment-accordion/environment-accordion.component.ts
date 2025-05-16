@@ -87,7 +87,6 @@ export class EnvironmentAccordionComponent {
   }
 
   onCancel(event: Event) {
-    console.log('accordion onCancel clicked');
     event.stopPropagation();
     this.cancelDeployment.emit(this.environment());
   }

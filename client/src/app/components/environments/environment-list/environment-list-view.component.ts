@@ -309,7 +309,6 @@ export class EnvironmentListViewComponent implements OnDestroy {
       const matches = workflowRunUrl.match(/\/runs\/(\d+)$/);
       if (matches && matches[1]) {
         workflowRunId = parseInt(matches[1], 10);
-        console.log('Extracted workflowRunId:', workflowRunId);
       }
     }
 

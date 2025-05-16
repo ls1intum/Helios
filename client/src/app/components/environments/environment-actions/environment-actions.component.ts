@@ -165,7 +165,6 @@ export class EnvironmentActionsComponent {
   }
 
   onCancel(event: Event) {
-    console.log('action cancel clicked');
     this.cancelDeployment.emit(event);
   }
 
