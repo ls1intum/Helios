@@ -38,3 +38,6 @@ out/
 .sdkmanrc
 
 .DS_STORE
+
+### jreleaser secret files ###
+jreleaser.env.properties
