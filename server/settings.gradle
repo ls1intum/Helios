@@ -2,7 +2,6 @@ rootProject.name = 'Helios'
 
 include 'application-server'
 include 'notification'
-include 'helios-status-spring-starter'
 
 /* ------------------------------------------------------------------ */
 /*  Global version resolution                                         */
