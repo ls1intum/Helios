@@ -12,9 +12,9 @@
       <p-skeleton styleClass="w-full !h-5" />
     </ng-template>
     <ng-template #grid let-projects>
-      <div class="flex flex-wrap gap-4 mt-4">
+      <div class="grid auto-rows-auto gap-4 mt-4 max-w-[1600px] mx-auto" style="grid-template-columns: repeat(auto-fit, minmax(350px, 1fr))">
         @for (project of projects; track project) {
-          <div class="flex gap-2 flex-col border border-muted-color rounded-2xl p-5 shadow-md w-[32rem]">
+          <div class="flex gap-2 flex-col border border-muted-color rounded-2xl p-5 shadow-md min-w-[350px]">
             <div class="flex justify-between gap-2">
               <div class="flex gap-2 items-center">
                 <p-skeleton shape="circle" styleClass="!size-7" />
@@ -46,9 +46,9 @@
       <div class="mb-3"></div>
     </ng-template>
     <ng-template #grid let-projects>
-      <div class="flex flex-wrap gap-4 mt-4">
+      <div class="grid auto-rows-auto gap-4 mt-4 max-w-[1600px] mx-auto" style="grid-template-columns: repeat(auto-fit, minmax(350px, 1fr))">
         @for (project of projects; track project.id) {
-          <div class="flex gap-2 flex-col border border-muted-color rounded-2xl p-5 shadow-md w-[32rem]">
+          <div class="flex gap-2 flex-col border border-muted-color rounded-2xl p-5 shadow-md min-w-[350px]">
             <div class="flex justify-between gap-2">
               <div class="flex gap-1 items-center">
                 <p-button text (click)="openProjectExternal($event, project)" styleClass="p-1" class="leading-none">
