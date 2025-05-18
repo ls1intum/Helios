@@ -132,9 +132,9 @@ import type {
   GetCommitsSinceLastReleaseCandidateData,
   GetCommitsSinceLastReleaseCandidateResponse,
   GetCommitsSinceLastReleaseCandidateError,
-  GetAllPullRequestsData,
-  GetAllPullRequestsResponse,
-  GetAllPullRequestsError,
+  GetPullRequestsData,
+  GetPullRequestsResponse,
+  GetPullRequestsError,
   GetPullRequestByIdData,
   GetPullRequestByIdResponse,
   GetPullRequestByIdError,
@@ -616,8 +616,8 @@ export const getCommitsSinceLastReleaseCandidate = <ThrowOnError extends boolean
   });
 };
 
-export const getAllPullRequests = <ThrowOnError extends boolean = false>(options?: Options<GetAllPullRequestsData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetAllPullRequestsResponse, GetAllPullRequestsError, ThrowOnError>({
+export const getPullRequests = <ThrowOnError extends boolean = false>(options?: Options<GetPullRequestsData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetPullRequestsResponse, GetPullRequestsError, ThrowOnError>({
     url: '/api/pullrequests',
     ...options,
   });

@@ -1,5 +1,8 @@
 package de.tum.cit.aet.helios.pullrequest;
 
+import de.tum.cit.aet.helios.pullrequest.pagination.PaginatedPullRequestsResponse;
+import de.tum.cit.aet.helios.pullrequest.pagination.PullRequestFilterType;
+import de.tum.cit.aet.helios.pullrequest.pagination.PullRequestPageRequest;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -18,9 +21,24 @@ public class PullRequestController {
   private final PullRequestService pullRequestService;
 
   @GetMapping
-  public ResponseEntity<List<PullRequestBaseInfoDto>> getAllPullRequests() {
-    List<PullRequestBaseInfoDto> pullRequests = pullRequestService.getAllPullRequests();
-    return ResponseEntity.ok(pullRequests);
+  public ResponseEntity<PaginatedPullRequestsResponse> getPullRequests(
+      @RequestParam(defaultValue = "1") int page,
+      @RequestParam(defaultValue = "20") int size,
+      @RequestParam(required = false) String sortField,
+      @RequestParam(required = false) String sortDirection,
+      @RequestParam(required = false) PullRequestFilterType filterType,
+      @RequestParam(required = false) String searchTerm) {
+    PullRequestPageRequest pageRequest = new PullRequestPageRequest();
+    pageRequest.setPage(page);
+    pageRequest.setSize(size);
+    pageRequest.setSortField(sortField);
+    pageRequest.setSortDirection(sortDirection);
+    pageRequest.setFilterType(filterType != null ? filterType : PullRequestFilterType.OPEN);
+    pageRequest.setSearchTerm(searchTerm);
+
+    PaginatedPullRequestsResponse response =
+        pullRequestService.getPaginatedPullRequests(pageRequest);
+    return ResponseEntity.ok(response);
   }
 
   @GetMapping("/{id}")

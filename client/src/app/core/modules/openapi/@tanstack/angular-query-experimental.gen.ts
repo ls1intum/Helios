@@ -49,7 +49,7 @@ import {
   getAllRepositories,
   getRepositoryById,
   getCommitsSinceLastReleaseCandidate,
-  getAllPullRequests,
+  getPullRequests,
   getPullRequestById,
   getPullRequestByRepositoryIdAndNumber,
   getPullRequestByRepositoryId,
@@ -165,7 +165,9 @@ import type {
   GetAllRepositoriesData,
   GetRepositoryByIdData,
   GetCommitsSinceLastReleaseCandidateData,
-  GetAllPullRequestsData,
+  GetPullRequestsData,
+  GetPullRequestsError,
+  GetPullRequestsResponse,
   GetPullRequestByIdData,
   GetPullRequestByRepositoryIdAndNumberData,
   GetPullRequestByRepositoryIdData,
@@ -1297,12 +1299,12 @@ export const getCommitsSinceLastReleaseCandidateOptions = (options: Options<GetC
   });
 };
 
-export const getAllPullRequestsQueryKey = (options?: Options<GetAllPullRequestsData>) => createQueryKey('getAllPullRequests', options);
+export const getPullRequestsQueryKey = (options?: Options<GetPullRequestsData>) => createQueryKey('getPullRequests', options);
 
-export const getAllPullRequestsOptions = (options?: Options<GetAllPullRequestsData>) => {
+export const getPullRequestsOptions = (options?: Options<GetPullRequestsData>) => {
   return queryOptions({
     queryFn: async ({ queryKey, signal }) => {
-      const { data } = await getAllPullRequests({
+      const { data } = await getPullRequests({
         ...options,
         ...queryKey[0],
         signal,
@@ -1310,8 +1312,44 @@ export const getAllPullRequestsOptions = (options?: Options<GetAllPullRequestsDa
       });
       return data;
     },
-    queryKey: getAllPullRequestsQueryKey(options),
+    queryKey: getPullRequestsQueryKey(options),
   });
+};
+
+export const getPullRequestsInfiniteQueryKey = (options?: Options<GetPullRequestsData>): QueryKey<Options<GetPullRequestsData>> => createQueryKey('getPullRequests', options, true);
+
+export const getPullRequestsInfiniteOptions = (options?: Options<GetPullRequestsData>) => {
+  return infiniteQueryOptions<
+    GetPullRequestsResponse,
+    GetPullRequestsError,
+    InfiniteData<GetPullRequestsResponse>,
+    QueryKey<Options<GetPullRequestsData>>,
+    number | Pick<QueryKey<Options<GetPullRequestsData>>[0], 'body' | 'headers' | 'path' | 'query'>
+  >(
+    // @ts-ignore
+    {
+      queryFn: async ({ pageParam, queryKey, signal }) => {
+        // @ts-ignore
+        const page: Pick<QueryKey<Options<GetPullRequestsData>>[0], 'body' | 'headers' | 'path' | 'query'> =
+          typeof pageParam === 'object'
+            ? pageParam
+            : {
+                query: {
+                  page: pageParam,
+                },
+              };
+        const params = createInfiniteParams(queryKey, page);
+        const { data } = await getPullRequests({
+          ...options,
+          ...params,
+          signal,
+          throwOnError: true,
+        });
+        return data;
+      },
+      queryKey: getPullRequestsInfiniteQueryKey(options),
+    }
+  );
 };
 
 export const getPullRequestByIdQueryKey = (options: Options<GetPullRequestByIdData>) => createQueryKey('getPullRequestById', options);
