@@ -92,6 +92,10 @@ export default {
           colorScheme: {
             checkedBackground: '{emerald.500}',
             checkedHoverBackground: '{emerald.500}',
+            dark: {
+              checkedBackground: '{emerald.700}',
+              checkedHoverBackground: '{emerald.700}',
+            },
           },
         },
         button: {
