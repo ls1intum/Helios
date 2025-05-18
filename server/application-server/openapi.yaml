@@ -488,6 +488,31 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/TestTypeDto"
+  /api/settings/{repositoryId}/secret:
+    post:
+      tags:
+      - git-repo-settings-controller
+      operationId: rotateSecret
+      parameters:
+      - name: repositoryId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: string
   /api/settings/{repositoryId}/groups/create:
     post:
       tags:
@@ -717,6 +742,26 @@ paths:
             application/json:
               schema:
                 type: object
+  /api/environments/status:
+    post:
+      tags:
+      - environment-status-controller
+      operationId: update
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PushStatusPayload"
+        required: true
+      responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "200":
+          description: OK
   /api/deployments/deploy:
     post:
       tags:
@@ -1891,6 +1936,7 @@ components:
           enum:
           - HTTP_STATUS
           - ARTEMIS_INFO
+          - PUSH_UPDATE
         statusUrl:
           type: string
         deploymentWorkflowBranch:
@@ -1935,6 +1981,18 @@ components:
           format: int64
         success:
           type: boolean
+        state:
+          type: string
+          enum:
+          - STARTING_UP
+          - MIGRATING_DB
+          - MIGRATION_FAILED
+          - MIGRATION_FINISHED
+          - RUNNING
+          - DEGRADED
+          - SHUTTING_DOWN
+          - STOPPED
+          - FAILED
         httpStatusCode:
           type: integer
           format: int32
@@ -1946,6 +2004,7 @@ components:
           enum:
           - HTTP_STATUS
           - ARTEMIS_INFO
+          - PUSH_UPDATE
         metadata:
           type: object
           additionalProperties: {}
@@ -2243,6 +2302,34 @@ components:
       - deployments
       - evaluations
       - name
+    PushStatusPayload:
+      type: object
+      properties:
+        environment:
+          type: string
+          minLength: 1
+        state:
+          type: string
+          enum:
+          - STARTING_UP
+          - MIGRATING_DB
+          - MIGRATION_FAILED
+          - MIGRATION_FINISHED
+          - RUNNING
+          - DEGRADED
+          - SHUTTING_DOWN
+          - STOPPED
+          - FAILED
+        timestamp:
+          type: string
+          format: date-time
+        details:
+          type: object
+          additionalProperties: {}
+      required:
+      - environment
+      - state
+      - timestamp
     DeployRequest:
       type: object
       properties:

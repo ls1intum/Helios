@@ -1,0 +1,13 @@
+<configuration>
+    <!-- Pull in Spring Boot’s complete default setup -->
+    <include resource="org/springframework/boot/logging/logback/base.xml"/>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+    <include resource="org/springframework/boot/logging/logback/console-appender.xml"/>
+
+    <!-- Set default Helios package log level as ERROR -->
+    <logger name="de.tum.cit.aet.helios" level="ERROR"/>
+
+    <!-- Set HeliosStatusAutoConfiguration log level as INFO -->
+    <!-- Logs at application startup to indicate whether Helios status is enabled. -->
+    <logger name="de.tum.cit.aet.helios.autoconfig.HeliosStatusAutoConfiguration" level="INFO"/>
+</configuration>

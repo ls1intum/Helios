@@ -1,6 +1,7 @@
 package de.tum.cit.aet.helios.gitreposettings;
 
 import de.tum.cit.aet.helios.config.security.annotations.EnforceAtLeastMaintainer;
+import de.tum.cit.aet.helios.gitreposettings.secret.RepoSecretService;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Optional;
@@ -24,6 +25,7 @@ public class GitRepoSettingsController {
 
   private final WorkflowGroupService workflowGroupService;
   private final GitRepoSettingsService gitRepoSettingsService;
+  private final RepoSecretService secrets;
 
   @GetMapping("/settings")
   public ResponseEntity<GitRepoSettingsDto> getGitRepoSettings(@PathVariable Long repositoryId) {
@@ -72,5 +74,12 @@ public class GitRepoSettingsController {
       @PathVariable Long repositoryId, @PathVariable Long groupId) {
     workflowGroupService.deleteWorkflowGroup(groupId, repositoryId);
     return ResponseEntity.noContent().build();
+  }
+
+  @EnforceAtLeastMaintainer
+  @PostMapping("/secret")
+  public ResponseEntity<String> rotateSecret(@PathVariable Long repositoryId) {
+    String token = secrets.rotate(repositoryId);
+    return ResponseEntity.ok(token);
   }
 }

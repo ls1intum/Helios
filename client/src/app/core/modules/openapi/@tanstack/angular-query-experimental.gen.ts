@@ -22,6 +22,7 @@ import {
   updateNotificationPreferences,
   getAllTestTypes,
   createTestType,
+  rotateSecret,
   createWorkflowGroup,
   deleteReleaseCandidateByName,
   getAllReleaseInfos,
@@ -32,6 +33,7 @@ import {
   getReleaseInfoByName,
   setPrPinnedByNumber,
   syncEnvironments,
+  update,
   deployToEnvironment,
   cancelDeployment,
   setBranchPinnedByRepositoryIdAndNameAndUserId,
@@ -114,6 +116,9 @@ import type {
   CreateTestTypeData,
   CreateTestTypeError,
   CreateTestTypeResponse,
+  RotateSecretData,
+  RotateSecretError,
+  RotateSecretResponse,
   CreateWorkflowGroupData,
   CreateWorkflowGroupError,
   CreateWorkflowGroupResponse,
@@ -139,6 +144,8 @@ import type {
   SyncEnvironmentsData,
   SyncEnvironmentsError,
   SyncEnvironmentsResponse,
+  UpdateData,
+  UpdateError,
   DeployToEnvironmentData,
   DeployToEnvironmentError,
   DeployToEnvironmentResponse,
@@ -580,6 +587,37 @@ export const createTestTypeMutation = (options?: Partial<Options<CreateTestTypeD
   return mutationOptions;
 };
 
+export const rotateSecretQueryKey = (options: Options<RotateSecretData>) => createQueryKey('rotateSecret', options);
+
+export const rotateSecretOptions = (options: Options<RotateSecretData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await rotateSecret({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: rotateSecretQueryKey(options),
+  });
+};
+
+export const rotateSecretMutation = (options?: Partial<Options<RotateSecretData>>) => {
+  const mutationOptions: MutationOptions<RotateSecretResponse, RotateSecretError, Options<RotateSecretData>> = {
+    mutationFn: async localOptions => {
+      const { data } = await rotateSecret({
+        ...options,
+        ...localOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
 export const createWorkflowGroupQueryKey = (options: Options<CreateWorkflowGroupData>) => createQueryKey('createWorkflowGroup', options);
 
 export const createWorkflowGroupOptions = (options: Options<CreateWorkflowGroupData>) => {
@@ -849,6 +887,37 @@ export const syncEnvironmentsMutation = (options?: Partial<Options<SyncEnvironme
   const mutationOptions: MutationOptions<SyncEnvironmentsResponse, SyncEnvironmentsError, Options<SyncEnvironmentsData>> = {
     mutationFn: async localOptions => {
       const { data } = await syncEnvironments({
+        ...options,
+        ...localOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const updateQueryKey = (options: Options<UpdateData>) => createQueryKey('update', options);
+
+export const updateOptions = (options: Options<UpdateData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await update({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: updateQueryKey(options),
+  });
+};
+
+export const updateMutation = (options?: Partial<Options<UpdateData>>) => {
+  const mutationOptions: MutationOptions<unknown, UpdateError, Options<UpdateData>> = {
+    mutationFn: async localOptions => {
+      const { data } = await update({
         ...options,
         ...localOptions,
         throwOnError: true,

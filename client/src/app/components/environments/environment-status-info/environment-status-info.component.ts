@@ -2,13 +2,19 @@ import { Component, computed, inject, input, OnDestroy, OnInit, signal } from '@
 import { EnvironmentStatusDto } from '@app/core/modules/openapi';
 import { DateService } from '@app/core/services/date.service';
 import { TimeAgoPipe } from '@app/pipes/time-ago.pipe';
+import { KeyValuePipe } from '@angular/common';
+
+type FlatMetadata = Record<string, string>;
 
 @Component({
   selector: 'app-environment-status-info',
   providers: [TimeAgoPipe],
   templateUrl: './environment-status-info.component.html',
+  imports: [KeyValuePipe],
 })
 export class EnvironmentStatusInfoComponent implements OnInit, OnDestroy {
+  protected readonly Object = Object;
+
   timeAgoPipe = inject(TimeAgoPipe);
 
   status = input.required<EnvironmentStatusDto>();
@@ -64,6 +70,36 @@ export class EnvironmentStatusInfoComponent implements OnInit, OnDestroy {
       },
     ];
   });
+
+  flattenedMetadata = computed<FlatMetadata>(() => {
+    const meta = this.status().metadata;
+    if (!meta) {
+      return {};
+    }
+
+    const result: FlatMetadata = {};
+
+    for (const [outerKey, outerVal] of Object.entries(meta)) {
+      result[outerKey] = this.stringify(outerVal);
+    }
+
+    return result;
+  });
+
+  /** turn any primitive or JSON‑able value into a string */
+  stringify(value: unknown): string {
+    switch (typeof value) {
+      case 'string':
+        return value;
+      case 'number':
+      case 'boolean':
+      case 'bigint':
+        return String(value);
+      default:
+        // fallback for objects / arrays / null / undefined
+        return JSON.stringify(value);
+    }
+  }
 
   ngOnInit() {
     // Update timeNow every second

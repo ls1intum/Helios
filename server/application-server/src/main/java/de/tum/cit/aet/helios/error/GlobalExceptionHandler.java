@@ -9,9 +9,12 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.time.Instant;
+import java.util.stream.Collectors;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -19,6 +22,55 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @Log4j2
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+  // -- 400 BAD REQUEST : validation & deserialization -----------------
+  @ExceptionHandler({
+      MethodArgumentNotValidException.class,
+      BindException.class
+  })
+  public ResponseEntity<ApiError> handleValidationErrors(
+      Exception ex, HttpServletRequest request) {
+
+    // Collect field‑level messages if present
+    String message;
+    if (ex instanceof MethodArgumentNotValidException manve) {
+      message = manve.getBindingResult().getFieldErrors().stream()
+          .map(fe -> "%s %s".formatted(fe.getField(), fe.getDefaultMessage()))
+          .collect(Collectors.joining("; "));
+    } else if (ex instanceof BindException be) {
+      message = be.getFieldErrors().stream()
+          .map(fe -> "%s %s".formatted(fe.getField(), fe.getDefaultMessage()))
+          .collect(Collectors.joining("; "));
+    } else {
+      message = ex.getMessage();
+    }
+
+    ApiError error = new ApiError();
+    error.setStatus(HttpStatus.BAD_REQUEST.value());
+    error.setError(HttpStatus.BAD_REQUEST.getReasonPhrase());
+    error.setMessage("Validation failed: " + message);
+    error.setPath(request.getRequestURI());
+    error.setTimestamp(java.time.Instant.now());
+
+    return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+  }
+
+  /**
+   * Empty body / bad JSON (e.g. missing closing brace)
+   */
+  @ExceptionHandler(org.springframework.http.converter.HttpMessageNotReadableException.class)
+  public ResponseEntity<ApiError> handleUnreadableBody(
+      Exception ex, HttpServletRequest request) {
+
+    ApiError error = new ApiError();
+    error.setStatus(HttpStatus.BAD_REQUEST.value());
+    error.setError(HttpStatus.BAD_REQUEST.getReasonPhrase());
+    error.setMessage("Request body is missing or malformed");
+    error.setPath(request.getRequestURI());
+    error.setTimestamp(java.time.Instant.now());
+
+    return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+  }
 
   // -- 404 NOT FOUND -----------------------------------
   @ExceptionHandler(EntityNotFoundException.class)

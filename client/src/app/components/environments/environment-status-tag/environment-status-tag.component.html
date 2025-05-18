@@ -1,16 +1,33 @@
 @if (status(); as status) {
-  <!-- Info State -->
-  <!-- Success State -->
-  @if (status.success) {
-    <p-tag severity="success" [rounded]="true">
-      <i-tabler name="check" class="!h-4 !w-4 mr-0.5"></i-tabler>
-      Server Status
+  @if (status.checkType === 'PUSH_UPDATE') {
+    <p-tag [rounded]="true" [severity]="lifecycleView().severity" class="inline-flex items-center gap-x-1">
+      <!-- lifecycle icon -->
+      @if (lifecycleView().icon !== undefined) {
+        <i-tabler [name]="lifecycleView().icon || 'info'" class="!h-4 !w-4" [class.animate-spin]="lifecycleView().spin" />
+      }
+
+      <!-- human label -->
+      {{ lifecycleView().label }}
+
+      <!-- stale red warning icon with tooltip -->
+      @if (isStale()) {
+        <i-tabler name="alert-triangle" class="!h-4 !w-4" style="color: #ff0700" pTooltip="Latest update was {{ status.checkedAt | timeAgo }} – Server might be down"></i-tabler>
+      }
     </p-tag>
   } @else {
-    <!-- Error State -->
-    <p-tag severity="danger" [rounded]="true">
-      <i-tabler name="exclamation-circle" class="!h-4 !w-4 mr-0.5"></i-tabler>
-      Server Status
-    </p-tag>
+    <!-- Info State -->
+    <!-- Success State -->
+    @if (status.success) {
+      <p-tag severity="success" [rounded]="true">
+        <i-tabler name="activity" class="!h-4 !w-4 mr-0.5"></i-tabler>
+        Running
+      </p-tag>
+    } @else {
+      <!-- Error State -->
+      <p-tag severity="danger" [rounded]="true">
+        <i-tabler name="exclamation-circle" class="!h-4 !w-4 mr-0.5"></i-tabler>
+        Down
+      </p-tag>
+    }
   }
 }

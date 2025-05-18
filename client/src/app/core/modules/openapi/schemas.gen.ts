@@ -243,7 +243,7 @@ export const EnvironmentDtoSchema = {
     },
     statusCheckType: {
       type: 'string',
-      enum: ['HTTP_STATUS', 'ARTEMIS_INFO'],
+      enum: ['HTTP_STATUS', 'ARTEMIS_INFO', 'PUSH_UPDATE'],
     },
     statusUrl: {
       type: 'string',
@@ -301,6 +301,10 @@ export const EnvironmentStatusDtoSchema = {
     success: {
       type: 'boolean',
     },
+    state: {
+      type: 'string',
+      enum: ['STARTING_UP', 'MIGRATING_DB', 'MIGRATION_FAILED', 'MIGRATION_FINISHED', 'RUNNING', 'DEGRADED', 'SHUTTING_DOWN', 'STOPPED', 'FAILED'],
+    },
     httpStatusCode: {
       type: 'integer',
       format: 'int32',
@@ -311,7 +315,7 @@ export const EnvironmentStatusDtoSchema = {
     },
     checkType: {
       type: 'string',
-      enum: ['HTTP_STATUS', 'ARTEMIS_INFO'],
+      enum: ['HTTP_STATUS', 'ARTEMIS_INFO', 'PUSH_UPDATE'],
     },
     metadata: {
       type: 'object',
@@ -689,6 +693,29 @@ export const ReleaseInfoDetailsDtoSchema = {
     },
   },
   required: ['commit', 'createdAt', 'deployments', 'evaluations', 'name'],
+} as const;
+
+export const PushStatusPayloadSchema = {
+  type: 'object',
+  properties: {
+    environment: {
+      type: 'string',
+      minLength: 1,
+    },
+    state: {
+      type: 'string',
+      enum: ['STARTING_UP', 'MIGRATING_DB', 'MIGRATION_FAILED', 'MIGRATION_FINISHED', 'RUNNING', 'DEGRADED', 'SHUTTING_DOWN', 'STOPPED', 'FAILED'],
+    },
+    timestamp: {
+      type: 'string',
+      format: 'date-time',
+    },
+    details: {
+      type: 'object',
+      additionalProperties: {},
+    },
+  },
+  required: ['environment', 'state', 'timestamp'],
 } as const;
 
 export const DeployRequestSchema = {

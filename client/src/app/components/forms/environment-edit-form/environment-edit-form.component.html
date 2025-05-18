@@ -87,9 +87,15 @@
                 <label for="status-check-type">Status Check</label>
                 <span class="text-sm text-muted-color"> When enabled, the status check will run periodically to check the health of the environment. </span>
                 <p-select id="status-check-type" class="mt-2" [options]="statusCheckTypes" formControlName="statusCheckType"></p-select>
+                @if (getStatusCheckInfoText(environmentForm.get('statusCheckType')?.value) !== null) {
+                  <span class="text-sm text-muted-color italic mt-1 flex items-center gap-2">
+                    <i-tabler name="info-circle" class="text-primary" />
+                    {{ getStatusCheckInfoText(environmentForm.get('statusCheckType')?.value) }}
+                  </span>
+                }
               </div>
 
-              @if (environmentForm.get('statusCheckType')?.value !== null) {
+              @if (showStatusUrlField(environmentForm.get('statusCheckType')?.value)) {
                 <div class="flex flex-col gap-2">
                   <label for="status-check-url">Status URL</label>
                   <span class="text-sm text-muted-color">

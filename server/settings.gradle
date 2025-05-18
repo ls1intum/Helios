@@ -2,3 +2,18 @@ rootProject.name = 'Helios'
 
 include 'application-server'
 include 'notification'
+
+/* ------------------------------------------------------------------ */
+/*  Global version resolution                                         */
+/* ------------------------------------------------------------------ */
+def cliVer = gradle.startParameter.projectProperties['version']   // -Pversion=…
+def envVer = System.getenv('VERSION')                             // export VERSION=…
+def resolvedVer = cliVer ?: envVer ?: '0.0.1-SNAPSHOT'
+
+/* make the value available to every project */
+gradle.rootProject {
+    version = resolvedVer
+    group = 'de.tum.cit.aet'
+}
+
+gradle.allprojects { it.version = resolvedVer }

@@ -55,6 +55,9 @@ import type {
   CreateTestTypeData,
   CreateTestTypeResponse,
   CreateTestTypeError,
+  RotateSecretData,
+  RotateSecretResponse,
+  RotateSecretError,
   CreateWorkflowGroupData,
   CreateWorkflowGroupResponse,
   CreateWorkflowGroupError,
@@ -82,6 +85,8 @@ import type {
   SyncEnvironmentsData,
   SyncEnvironmentsResponse,
   SyncEnvironmentsError,
+  UpdateData,
+  UpdateError,
   DeployToEnvironmentData,
   DeployToEnvironmentResponse,
   DeployToEnvironmentError,
@@ -385,6 +390,13 @@ export const createTestType = <ThrowOnError extends boolean = false>(options: Op
   });
 };
 
+export const rotateSecret = <ThrowOnError extends boolean = false>(options: Options<RotateSecretData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).post<RotateSecretResponse, RotateSecretError, ThrowOnError>({
+    url: '/api/settings/{repositoryId}/secret',
+    ...options,
+  });
+};
+
 export const createWorkflowGroup = <ThrowOnError extends boolean = false>(options: Options<CreateWorkflowGroupData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).post<CreateWorkflowGroupResponse, CreateWorkflowGroupError, ThrowOnError>({
     url: '/api/settings/{repositoryId}/groups/create',
@@ -480,6 +492,17 @@ export const syncEnvironments = <ThrowOnError extends boolean = false>(options?:
   return (options?.client ?? _heyApiClient).post<SyncEnvironmentsResponse, SyncEnvironmentsError, ThrowOnError>({
     url: '/api/environments/sync',
     ...options,
+  });
+};
+
+export const update = <ThrowOnError extends boolean = false>(options: Options<UpdateData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).post<unknown, UpdateError, ThrowOnError>({
+    url: '/api/environments/status',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
   });
 };
 

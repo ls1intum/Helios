@@ -34,6 +34,10 @@ public class EnvironmentStatus {
   @Column(nullable = false)
   private boolean success;
 
+  // null for HTTP_STATUS / ARTEMIS_INFO
+  @Enumerated(EnumType.STRING)
+  private LifecycleState state;
+
   @Column(name = "http_status_code", nullable = false)
   private Integer httpStatusCode;
 
