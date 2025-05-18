@@ -45,7 +45,7 @@ export const TestTypeDtoSchema = {
       format: 'int64',
     },
   },
-  required: ['workflowId'],
+  required: ['artifactName', 'name', 'workflowId'],
 } as const;
 
 export const GitRepoSettingsDtoSchema = {
@@ -319,9 +319,7 @@ export const EnvironmentStatusDtoSchema = {
     },
     metadata: {
       type: 'object',
-      additionalProperties: {
-        type: 'object',
-      },
+      additionalProperties: {},
     },
   },
   required: ['checkType', 'checkedAt', 'httpStatusCode', 'id', 'success'],
