@@ -239,6 +239,10 @@ export type DeployRequest = {
   commitSha: string;
 };
 
+export type CancelDeploymentRequest = {
+  workflowRunId: number;
+};
+
 export type WorkflowRunDto = {
   id: number;
   name: string;
@@ -357,6 +361,15 @@ export type LabelInfoDto = {
    * The repository associated with this label
    */
   repository?: RepositoryInfoDto;
+};
+
+export type PaginatedPullRequestsResponse = {
+  pinned?: Array<PullRequestBaseInfoDto>;
+  page?: Array<PullRequestBaseInfoDto>;
+  pageNumber?: number;
+  pageSize?: number;
+  totalNonPinned?: number;
+  totalPages?: number;
 };
 
 export type PullRequestBaseInfoDto = {
@@ -1310,6 +1323,31 @@ export type DeployToEnvironmentResponses = {
 
 export type DeployToEnvironmentResponse = DeployToEnvironmentResponses[keyof DeployToEnvironmentResponses];
 
+export type CancelDeploymentData = {
+  body: CancelDeploymentRequest;
+  path?: never;
+  query?: never;
+  url: '/api/deployments/cancel';
+};
+
+export type CancelDeploymentErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type CancelDeploymentError = CancelDeploymentErrors[keyof CancelDeploymentErrors];
+
+export type CancelDeploymentResponses = {
+  /**
+   * OK
+   */
+  200: string;
+};
+
+export type CancelDeploymentResponse = CancelDeploymentResponses[keyof CancelDeploymentResponses];
+
 export type SetBranchPinnedByRepositoryIdAndNameAndUserIdData = {
   body?: never;
   path: {
@@ -1719,30 +1757,37 @@ export type GetCommitsSinceLastReleaseCandidateResponses = {
 
 export type GetCommitsSinceLastReleaseCandidateResponse = GetCommitsSinceLastReleaseCandidateResponses[keyof GetCommitsSinceLastReleaseCandidateResponses];
 
-export type GetAllPullRequestsData = {
+export type GetPullRequestsData = {
   body?: never;
   path?: never;
-  query?: never;
+  query?: {
+    page?: number;
+    size?: number;
+    sortField?: string;
+    sortDirection?: string;
+    filterType?: 'ALL' | 'OPEN' | 'OPEN_READY_FOR_REVIEW' | 'DRAFT' | 'MERGED' | 'CLOSED' | 'USER_AUTHORED' | 'ASSIGNED_TO_USER' | 'REVIEW_REQUESTED';
+    searchTerm?: string;
+  };
   url: '/api/pullrequests';
 };
 
-export type GetAllPullRequestsErrors = {
+export type GetPullRequestsErrors = {
   /**
    * Conflict
    */
   409: ApiError;
 };
 
-export type GetAllPullRequestsError = GetAllPullRequestsErrors[keyof GetAllPullRequestsErrors];
+export type GetPullRequestsError = GetPullRequestsErrors[keyof GetPullRequestsErrors];
 
-export type GetAllPullRequestsResponses = {
+export type GetPullRequestsResponses = {
   /**
    * OK
    */
-  200: Array<PullRequestBaseInfoDto>;
+  200: PaginatedPullRequestsResponse;
 };
 
-export type GetAllPullRequestsResponse = GetAllPullRequestsResponses[keyof GetAllPullRequestsResponses];
+export type GetPullRequestsResponse = GetPullRequestsResponses[keyof GetPullRequestsResponses];
 
 export type GetPullRequestByIdData = {
   body?: never;

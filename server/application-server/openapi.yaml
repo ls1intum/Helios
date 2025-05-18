@@ -786,6 +786,30 @@ paths:
             application/json:
               schema:
                 type: string
+  /api/deployments/cancel:
+    post:
+      tags:
+      - deployment-controller
+      operationId: cancelDeployment
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CancelDeploymentRequest"
+        required: true
+      responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: string
   /api/branches/repository/{repoId}/pin:
     post:
       tags:
@@ -1210,7 +1234,52 @@ paths:
     get:
       tags:
       - pull-request-controller
-      operationId: getAllPullRequests
+      operationId: getPullRequests
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 1
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      - name: sortField
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: sortDirection
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: filterType
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - ALL
+          - OPEN
+          - OPEN_READY_FOR_REVIEW
+          - DRAFT
+          - MERGED
+          - CLOSED
+          - USER_AUTHORED
+          - ASSIGNED_TO_USER
+          - REVIEW_REQUESTED
+      - name: searchTerm
+        in: query
+        required: false
+        schema:
+          type: string
       responses:
         "409":
           description: Conflict
@@ -1223,9 +1292,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/PullRequestBaseInfoDto"
+                $ref: "#/components/schemas/PaginatedPullRequestsResponse"
   /api/pullrequests/{id}:
     get:
       tags:
@@ -2277,6 +2344,14 @@ components:
       - branchName
       - commitSha
       - environmentId
+    CancelDeploymentRequest:
+      type: object
+      properties:
+        workflowRunId:
+          type: integer
+          format: int64
+      required:
+      - workflowRunId
     WorkflowRunDto:
       type: object
       properties:
@@ -2578,6 +2653,29 @@ components:
       - color
       - id
       - name
+    PaginatedPullRequestsResponse:
+      type: object
+      properties:
+        pinned:
+          type: array
+          items:
+            $ref: "#/components/schemas/PullRequestBaseInfoDto"
+        page:
+          type: array
+          items:
+            $ref: "#/components/schemas/PullRequestBaseInfoDto"
+        pageNumber:
+          type: integer
+          format: int32
+        pageSize:
+          type: integer
+          format: int32
+        totalNonPinned:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
     PullRequestBaseInfoDto:
       type: object
       properties:

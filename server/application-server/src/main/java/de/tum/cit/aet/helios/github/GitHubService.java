@@ -733,4 +733,43 @@ public class GitHubService {
         });
   }
 
+  /**
+   * Cancels a GitHub workflow run.
+   *
+   * @param repoNameWithOwner Repository in format "owner/repo"
+   * @param runId Workflow run ID to cancel
+   * @throws IOException if an I/O error occurs during the API call
+   */
+  public void cancelWorkflowRun(String repoNameWithOwner, long runId) throws IOException {
+    String url =
+        String.format(
+            "https://api.github.com/repos/%s/actions/runs/%d/cancel", repoNameWithOwner, runId);
+
+    Request request =
+        getRequestBuilder()
+            .url(url)
+            .post(RequestBody.create("", MediaType.get("application/json")))
+            .build();
+
+    try (Response response = okHttpClient.newCall(request).execute()) {
+      if (!response.isSuccessful()) {
+        String errorBody = "No error details";
+        ResponseBody responseBody = response.body();
+        if (responseBody != null) {
+          try {
+            errorBody = responseBody.string();
+          } catch (IOException e) {
+            log.warn("Failed to read error response body", e);
+          }
+        }
+
+        log.error(
+            "GitHub API call failed to cancel workflow run with response code: {} and body: {}",
+            response.code(),
+            errorBody);
+        throw new IOException("GitHub API call failed with response code: " + response.code());
+      }
+      log.info("Successfully sent cancellation request for workflow run ID: {}", runId);
+    }
+  }
 }

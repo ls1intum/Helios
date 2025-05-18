@@ -13,6 +13,7 @@ import {
   lockEnvironmentMutation,
   syncEnvironmentsMutation,
   unlockEnvironmentMutation,
+  cancelDeploymentMutation,
 } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 import { PermissionService } from '@app/core/services/permission.service';
@@ -92,6 +93,25 @@ export class EnvironmentListViewComponent implements OnDestroy {
       this.queryClient.invalidateQueries({ queryKey: getAllEnabledEnvironmentsQueryKey() });
       this.queryClient.invalidateQueries({ queryKey: getEnvironmentsByUserLockingQueryKey() });
       this.messageService.add({ severity: 'success', summary: 'Extend Lock', detail: 'Lock was extended successfully' });
+    },
+  }));
+
+  cancelDeploymentMutation = injectMutation(() => ({
+    ...cancelDeploymentMutation(),
+    onSuccess: () => {
+      this.queryClient.invalidateQueries({ queryKey: this.queryKey() });
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Canceled',
+        detail: 'Deployment cancellation request sent successfully',
+      });
+    },
+    onError: error => {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: `Failed to cancel deployment: ${error.message || 'Unknown error'}`,
+      });
     },
   }));
 
@@ -267,5 +287,50 @@ export class EnvironmentListViewComponent implements OnDestroy {
 
   capitalizeFirstLetter(str: string): string {
     return str.charAt(0).toUpperCase() + str.toLowerCase().slice(1);
+  }
+
+  cancelDeployment(environment: EnvironmentDto) {
+    // Exit early if there's no deployment
+    if (!environment.latestDeployment) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'No deployment found to cancel',
+      });
+      return;
+    }
+
+    // Extract workflowRunId from the URL if available
+    let workflowRunId: number | undefined;
+    const workflowRunUrl = environment.latestDeployment.workflowRunHtmlUrl;
+
+    if (workflowRunUrl) {
+      // URL format: https://github.com/org-name/repo-name/actions/runs/12345678
+      const matches = workflowRunUrl.match(/\/runs\/(\d+)$/);
+      if (matches && matches[1]) {
+        workflowRunId = parseInt(matches[1], 10);
+      }
+    }
+
+    // If we couldn't extract workflowRunId, show an error
+    if (!workflowRunId) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Could not determine the workflow run ID from the deployment information',
+      });
+      return;
+    }
+
+    this.confirmationService.confirm({
+      header: 'Cancel Deployment',
+      message: `Are you sure you want to cancel the ongoing deployment to ${environment.name}?`,
+      accept: () => {
+        const payload = {
+          workflowRunId: workflowRunId,
+        };
+        this.cancelDeploymentMutation.mutate({ body: payload });
+      },
+    });
   }
 }

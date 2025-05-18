@@ -62,6 +62,7 @@ export class EnvironmentAccordionComponent {
   readonly unlock = output<{ event: Event; environment: EnvironmentDto }>();
   readonly extend = output<{ event: Event; environment: EnvironmentDto }>();
   readonly lock = output<EnvironmentDto>();
+  readonly cancelDeployment = output<EnvironmentDto>();
 
   showLatestDeployment = signal<boolean>(true);
 
@@ -83,6 +84,11 @@ export class EnvironmentAccordionComponent {
   onLock(event: Event) {
     event.stopPropagation();
     this.lock.emit(this.environment());
+  }
+
+  onCancel(event: Event) {
+    event.stopPropagation();
+    this.cancelDeployment.emit(this.environment());
   }
 
   getDeploymentTime(environment: EnvironmentDto) {

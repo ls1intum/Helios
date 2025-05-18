@@ -735,6 +735,17 @@ export const DeployRequestSchema = {
   required: ['branchName', 'commitSha', 'environmentId'],
 } as const;
 
+export const CancelDeploymentRequestSchema = {
+  type: 'object',
+  properties: {
+    workflowRunId: {
+      type: 'integer',
+      format: 'int64',
+    },
+  },
+  required: ['workflowRunId'],
+} as const;
+
 export const WorkflowRunDtoSchema = {
   type: 'object',
   properties: {
@@ -1058,6 +1069,40 @@ export const LabelInfoDtoSchema = {
     },
   },
   required: ['color', 'id', 'name'],
+} as const;
+
+export const PaginatedPullRequestsResponseSchema = {
+  type: 'object',
+  properties: {
+    pinned: {
+      type: 'array',
+      items: {
+        $ref: '#/components/schemas/PullRequestBaseInfoDto',
+      },
+    },
+    page: {
+      type: 'array',
+      items: {
+        $ref: '#/components/schemas/PullRequestBaseInfoDto',
+      },
+    },
+    pageNumber: {
+      type: 'integer',
+      format: 'int32',
+    },
+    pageSize: {
+      type: 'integer',
+      format: 'int32',
+    },
+    totalNonPinned: {
+      type: 'integer',
+      format: 'int64',
+    },
+    totalPages: {
+      type: 'integer',
+      format: 'int32',
+    },
+  },
 } as const;
 
 export const PullRequestBaseInfoDtoSchema = {

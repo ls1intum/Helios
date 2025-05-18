@@ -27,7 +27,13 @@
               </span>
             }
             @if (environment().latestDeployment?.workflowRunHtmlUrl && environment().latestDeployment?.workflowRunHtmlUrl !== '') {
-              <p-button text (click)="openLink(environment().latestDeployment?.workflowRunHtmlUrl)" styleClass="p-1" class="leading-none">
+              <p-button
+                text
+                (click)="openLink(environment().latestDeployment?.workflowRunHtmlUrl)"
+                styleClass="p-1"
+                class="leading-none"
+                [pTooltip]="'View Workflow Run in GitHub'"
+              >
                 <i-tabler name="brand-github" class="!size-4" />
               </p-button>
             }
@@ -80,6 +86,7 @@
         (unlock)="onUnlock($event)"
         (extend)="onExtend($event)"
         (lock)="onLock($event)"
+        (cancelDeployment)="onCancel($event)"
       >
       </app-environment-actions>
     </div>
