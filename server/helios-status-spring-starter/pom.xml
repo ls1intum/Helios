@@ -6,7 +6,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>io.github.egekocabas</groupId>
-    <artifactId>helios-status-spring-starter</artifactId>
+    <artifactId>de.tum.cit.aet.helios</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>Helios Status Spring Starter</name>
