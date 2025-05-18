@@ -13,8 +13,6 @@
     <description>Helios starter for Spring Boot apps – push-based lifecycle status reporting.</description>
     <url>https://github.com/ls1intum/Helios/tree/staging/server/helios-status-spring-starter</url>
     <properties>
-        <!-- will be filled with the content of the PACKAGE_README.md file -->
-        <readme.content></readme.content>
         <maven.version>3.9.9</maven.version>
         <java.version>21</java.version>
         <maven.compiler.source>${java.version}</maven.compiler.source>
@@ -234,21 +232,6 @@
                             <publishingServerId>central</publishingServerId>
                         </configuration>
                     </plugin>
-
-                                <plugin>
-                                    <groupId>org.sonatype.central</groupId>
-                                    <artifactId>central-publishing-maven-plugin</artifactId>
-                                    <version>${central-publishing-maven-plugin.version}</version>
-                                    <extensions>true</extensions>
-                                    <configuration>
-                                        <!-- must match your <server><id> in settings.xml -->
-                                        <publishingServerId>central</publishingServerId>
-                                        <!-- optional: auto‐publish so you don’t have to click in the UI -->
-                                        <!-- <autoPublish>true</autoPublish> -->
-                                        <!-- for SNAPSHOTs only (otherwise releases go to the Portal releases repo) -->
-                                        <!-- <centralSnapshotsUrl>https://central.sonatype.com/repository/maven-snapshots/</centralSnapshotsUrl> -->
-                                    </configuration>
-                                </plugin>
                 </plugins>
             </build>
         </profile>
@@ -314,14 +297,14 @@
     </dependencies>
 
     <distributionManagement>
-        <!-- for release (non-SNAPSHOT) deployments -->
+        <!-- for release (non-SNAPSHOT) deployments (GitHub Packages) -->
         <repository>
             <id>github</id>
             <name>GitHub Packages</name>
             <url>https://maven.pkg.github.com/ls1intum/Helios</url>
         </repository>
 
-        <!-- for SNAPSHOT deployments deploy to GitHub Packages -->
+        <!-- for SNAPSHOT deployments (GitHub Packages) -->
         <snapshotRepository>
             <id>github</id>
             <name>GitHub Packages Snapshot</name>
