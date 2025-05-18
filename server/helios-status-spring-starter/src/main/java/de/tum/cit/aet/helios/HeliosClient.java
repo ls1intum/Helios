@@ -99,6 +99,15 @@ public class HeliosClient {
   private void sendToAllTargets(PushStatusPayload payload) {
     for (HeliosEndpoint ep : endpoints) {
       try {
+        // Validate the url and secretKey is not null or empty
+        if (ep.url() == null
+            || ep.secretKey() == null
+            || ep.url().toString().isEmpty()
+            || ep.secretKey().isEmpty()) {
+          log.warn("Helios endpoint url or secretKey is null or empty. Skipping push.");
+          continue;
+        }
+
         String json = mapper.writeValueAsString(payload);
         Request request = new Request.Builder()
             .url(ep.url().toString())
