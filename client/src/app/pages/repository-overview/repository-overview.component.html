@@ -141,7 +141,10 @@
         <!-- Add this section for the action button -->
         @if (step.actionButton) {
           <div class="flex justify-center mt-5">
-            <p-button [label]="step.actionButton.label" [icon]="'pi ' + step.actionButton.icon" styleClass="p-button-raised" (onClick)="openExternalLink(step.actionButton.url)">
+            <p-button [label]="step.actionButton.label" styleClass="p-button-raised" (onClick)="openExternalLink(step.actionButton.url)">
+              @if (step.actionButton.icon) {
+                <i-tabler [name]="step.actionButton.icon" class="!size-4" />
+              }
             </p-button>
           </div>
         }

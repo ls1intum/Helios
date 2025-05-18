@@ -67,7 +67,7 @@ jobs:
     ],
     actionButton: {
       label: 'Install Helios App',
-      icon: 'pi-github',
+      icon: 'brand-github',
       url: 'https://github.com/apps/helios-aet',
     },
   },
