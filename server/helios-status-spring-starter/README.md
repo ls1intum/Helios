@@ -8,7 +8,12 @@ It:
 - Automatically registers beans via `@AutoConfiguration`
 - Supports `application.yml` configuration
 - Requires no manual wiring
-- Does **nothing** unless `helios.status.enabled=true` is set
+- Does **nothing** unless you enable it with
+```yaml
+helios:
+  status:
+    enabled: true
+```
 
 To use it, please read the [**PACKAGE_README**](./PACKAGE_README.md) of the main project.
 
@@ -16,6 +21,11 @@ To use it, please read the [**PACKAGE_README**](./PACKAGE_README.md) of the main
 
 This section explains how to publish the `helios-status-spring-starter` library for testing and production use.
 
+Starting with this release the project uses Maven (`pom.xml`) instead of Gradle, for better plugin support when publishing to Maven Central. The standard deploy command is:
+
+```
+mvn -B deploy -Pcentral-deploy -DskipTests=true
+```
 
 > A **snapshot** version in Maven is one that has not been released.
 > 
@@ -55,20 +65,13 @@ repositories {
 Use this when testing the library in another local project.
 
 ```bash
-# from the server/ directory
-
-# Option 1: Using environment variable
-# choose any version you like
-export VERSION=0.1.1           
-./gradlew :helios-status-spring-starter:clean :helios-status-spring-starter:publishToMavenLocal --no-daemon --warn --stacktrace
-
-# Option 2: Using CLI parameter
-./gradlew :helios-status-spring-starter:clean :helios-status-spring-starter:publishToMavenLocal -Pversion=0.1.1 --no-daemon --warn --stacktrace
+# From the project root:
+mvn clean install -DskipTests=true
 ```
 
 Artifacts are published to:
 ```
-~/.m2/repository/de/tum/cit/aet/helios/helios-status-spring-starter/0.1.1/
+~/.m2/repository/de/tum/cit/aet/helios/helios-status-spring-starter/
 ```
 
 In your test app’s `build.gradle`:
@@ -76,7 +79,7 @@ In your test app’s `build.gradle`:
 repositories { mavenLocal() }
 
 dependencies {
-    implementation "de.tum.cit.aet.helios:helios-status-spring-starter:0.1.1"
+    implementation "de.tum.cit.aet.helios:helios-status-spring-starter:<VERSION>"
 }
 ```
 
@@ -87,12 +90,14 @@ To pick up the latest build:
 
 ### 2. Publish to GitHub Packages (Manual)
 
-```bash
-# Inside the server/ directory
-export VERSION=0.1.1
-export GITHUB_TOKEN=<your-personal-access-token> # write:packages
+For manual GitHub Package publishing:
 
-./gradlew :helios-status-spring-starter:clean :helios-status-spring-starter:publish --no-daemon --warn --stacktrace
+1. Ensure your `~/.m2/settings.xml` contains a server entry for GitHub (see below).
+2. Generate a GitHub PAT with at least the `write:packages` scope.
+3. Run:
+
+```bash
+mvn clean deploy -DskipTests=true
 ```
 
 ### 3. Publish via GitHub Actions (Workflow Dispatch)
@@ -101,15 +106,60 @@ export GITHUB_TOKEN=<your-personal-access-token> # write:packages
 - Select the **Publish Helios starter** workflow.
 - Click **Run workflow**, enter a version like **0.1.1**, and click **Run**.
 
-
-### 4. Version precedence rules
-
-| Priority     | How to set                     | Example                |
-|--------------|--------------------------------|------------------------|
-| 1  (highest) | `-Pversion` CLI flag           | `-Pversion=0.1.1`      |
-| 2            | Environment variable `VERSION` | `export VERSION=0.1.1` |
-| 3            | Default in `settings.gradle`   | `0.0.1-SNAPSHOT`       |
-
-All subprojects automatically inherit the selected version.
+> This workflow uses the same `mvn deploy -Pcentral-deploy` command under the hood, but is triggered from GitHub and picks up GITHUB_TOKEN automatically.
 
 
+### 4. Publish to Maven Central
+
+To push to Maven Central you must:
+
+- Use the `central-deploy` profile:
+```
+mvn -B deploy -Pcentral-deploy -DskipTests=true
+```
+- Have your `~/.m2/settings.xml` configured like this:
+```
+<settings>
+  <profiles>
+    <profile>
+      <id>ossrh</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <properties>
+        <gpg.executable>gpg</gpg.executable>
+        <gpg.passphrase>${PASSPHRASE}</gpg.passphrase>
+      </properties>
+    </profile>
+  </profiles>
+  <servers>
+    <server>
+      <id>github</id>
+      <username>${GITHUB_ACTOR}</username>
+      <password>${GITHUB_TOKEN}</password>
+    </server>
+    <server>
+      <id>central</id>
+      <username>${CENTRAL_USERNAME}</username>
+      <password>${CENTRAL_PASSWORD}</password>
+    </server>
+  </servers>
+</settings>
+```
+
+- Set the following environment variables:
+  - `GITHUB_ACTOR` - GitHub username
+  - `GITHUB_TOKEN` - GitHub PAT with `write:packages` scope
+  - `CENTRAL_USERNAME` - Sonatype username (follow the guide [Sonatype - Generate portal token](https://central.sonatype.org/publish/generate-portal-token/))
+  - `CENTRAL_PASSWORD` - Sonatype password (follow the guide [Sonatype - Generate portal token](https://central.sonatype.org/publish/generate-portal-token/))
+  - `PASSPHRASE` - GPG passphrase
+  - `gpg` - is the cli tool that is installed on your system. It is used to sign the artifacts before uploading them to the repository.
+
+
+For signing artifacts, you need to have a GPG key pair. You can follow this guide to create one: [Sonatype - GPG](https://central.sonatype.org/publish/requirements/gpg/).
+
+
+> **Manual Signing & Validation**
+> Each Central release requires a validator to sign the package. We provide a GitHub Actions template, but you still must trigger deployments manually (or via the dispatch workflow) so a human can review/sign.
+
+If you run into any issues—or if you’re not yet added to the namespace—please reach out to @egekocabas (or @krusche) for assistance.
