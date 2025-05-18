@@ -1,7 +1,5 @@
 package de.tum.cit.aet.helios;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -28,8 +26,8 @@ import org.springframework.validation.annotation.Validated;
 public record HeliosStatusProperties(
     // default false
     boolean enabled,
-    @NotBlank String environmentName,
-    @NotEmpty List<HeliosEndpoint> endpoints,
+    String environmentName,
+    List<HeliosEndpoint> endpoints,
     // default 30s
     @DurationUnit(ChronoUnit.SECONDS)
     Duration heartbeatInterval
