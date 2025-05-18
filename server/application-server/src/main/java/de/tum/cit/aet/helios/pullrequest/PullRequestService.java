@@ -1,6 +1,7 @@
 package de.tum.cit.aet.helios.pullrequest;
 
 import de.tum.cit.aet.helios.auth.AuthService;
+import de.tum.cit.aet.helios.filters.RepositoryContext;
 import de.tum.cit.aet.helios.issue.Issue;
 import de.tum.cit.aet.helios.pullrequest.pagination.PaginatedPullRequestsResponse;
 import de.tum.cit.aet.helios.pullrequest.pagination.PullRequestPageRequest;
@@ -60,49 +61,54 @@ public class PullRequestService {
 
   public PaginatedPullRequestsResponse getPaginatedPullRequests(
       PullRequestPageRequest pageRequest) {
-    log.debug("Input parameters - Filter: {}, Page: {}, Size: {}, Search Term: {}",
-        pageRequest.getFilterType(), pageRequest.getPage(), pageRequest.getSize(),
+    log.debug(
+        "Input parameters - Filter: {}, Page: {}, Size: {}, Search Term: {}",
+        pageRequest.getFilterType(),
+        pageRequest.getPage(),
+        pageRequest.getSize(),
         pageRequest.getSearchTerm());
 
-    final String currentUserId = authService.isLoggedIn()
-        ? authService.getGithubId()
-        : null;
+    final String currentUserId = authService.isLoggedIn() ? authService.getGithubId() : null;
 
     Optional<UserPreference> prefOpt =
         currentUserId != null
             ? userPreferenceRepository.findByUser(authService.getUserFromGithubId())
             : Optional.empty();
 
+    Long repositoryId = RepositoryContext.getRepositoryId();
+
     /* ---------- pinned ---------- */
-    List<PullRequestBaseInfoDto> pinnedDtos = prefOpt
-        .map(UserPreference::getFavouritePullRequests)
-        .orElseGet(HashSet::new)
-        .stream()
-        .sorted(Comparator.comparing(PullRequest::getUpdatedAt).reversed())
-        .map(pr -> PullRequestBaseInfoDto.fromPullRequestAndUserPreference(pr, prefOpt))
-        .toList();
+    List<PullRequestBaseInfoDto> pinnedDtos =
+        prefOpt.map(UserPreference::getFavouritePullRequests).orElseGet(HashSet::new).stream()
+            .filter(
+                pr -> {
+                  return pr.getRepository().getRepositoryId().equals(repositoryId);
+                })
+            .sorted(Comparator.comparing(PullRequest::getUpdatedAt).reversed())
+            .map(pr -> PullRequestBaseInfoDto.fromPullRequestAndUserPreference(pr, prefOpt))
+            .toList();
 
     /* ---------- non-pinned ---------- */
     Specification<PullRequest> nonPinnedSpec =
         buildNonPinnedPullRequestSpecification(pageRequest, currentUserId);
 
     long totalNonPinned = pullRequestRepository.count(nonPinnedSpec);
-    log.debug("Total Elements Breakdown - Pinned: {}, Non-Pinned: {}",
-        pinnedDtos.size(), totalNonPinned);
+    log.debug(
+        "Total Elements Breakdown - Pinned: {}, Non-Pinned: {}", pinnedDtos.size(), totalNonPinned);
 
     // Create pageable for non-pinned PRs
-    Pageable pageable = PageRequest.of(
-        pageRequest.getPage() - 1,
-        pageRequest.getSize(),
-        Sort.by(Sort.Direction.DESC, "updatedAt")
-    );
+    Pageable pageable =
+        PageRequest.of(
+            pageRequest.getPage() - 1,
+            pageRequest.getSize(),
+            Sort.by(Sort.Direction.DESC, "updatedAt"));
 
     // Fetch non-pinned PRs
-    List<PullRequestBaseInfoDto> pageDtos = pullRequestRepository
-        .findAll(nonPinnedSpec, pageable)
-        .map(pr -> PullRequestBaseInfoDto.fromPullRequestAndUserPreference(pr, prefOpt))
-        .getContent();
-
+    List<PullRequestBaseInfoDto> pageDtos =
+        pullRequestRepository
+            .findAll(nonPinnedSpec, pageable)
+            .map(pr -> PullRequestBaseInfoDto.fromPullRequestAndUserPreference(pr, prefOpt))
+            .getContent();
 
     log.debug("Added Non-Pinned Items - Count: {}", pageDtos.size());
 
@@ -118,8 +124,7 @@ public class PullRequestService {
   }
 
   private Specification<PullRequest> buildNonPinnedPullRequestSpecification(
-      PullRequestPageRequest pageRequest,
-      String currentUserId) {
+      PullRequestPageRequest pageRequest, String currentUserId) {
     return (root, query, cb) -> {
       List<Predicate> predicates = new ArrayList<>();
 
@@ -131,7 +136,8 @@ public class PullRequestService {
         Join<UserPreference, User> userJoin = userPrefRoot.join("user");
         Join<UserPreference, PullRequest> prJoin = userPrefRoot.join("favouritePullRequests");
 
-        pinnedSubquery.select(prJoin.get("id"))
+        pinnedSubquery
+            .select(prJoin.get("id"))
             .where(cb.equal(userJoin.get("id"), Long.valueOf(currentUserId)));
 
         // For non-pinned, require that they are NOT in the favourites
@@ -141,10 +147,10 @@ public class PullRequestService {
       // Add search term predicate if provided
       if (pageRequest.getSearchTerm() != null && !pageRequest.getSearchTerm().trim().isEmpty()) {
         String searchTerm = "%" + pageRequest.getSearchTerm().toLowerCase() + "%";
-        predicates.add(cb.or(
-            cb.like(cb.lower(root.get("title")), searchTerm),
-            cb.like(cb.toString(root.get("number")), searchTerm)
-        ));
+        predicates.add(
+            cb.or(
+                cb.like(cb.lower(root.get("title")), searchTerm),
+                cb.like(cb.toString(root.get("number")), searchTerm)));
       }
 
       // Add filter type predicate
@@ -153,22 +159,22 @@ public class PullRequestService {
           predicates.add(cb.equal(root.get("state"), Issue.State.OPEN));
           break;
         case OPEN_READY_FOR_REVIEW:
-          predicates.add(cb.and(
-              cb.equal(root.get("state"), Issue.State.OPEN),
-              cb.equal(root.get("isDraft"), false)
-          ));
+          predicates.add(
+              cb.and(
+                  cb.equal(root.get("state"), Issue.State.OPEN),
+                  cb.equal(root.get("isDraft"), false)));
           break;
         case DRAFT:
-          predicates.add(cb.and(
-              cb.equal(root.get("state"), Issue.State.OPEN),
-              cb.equal(root.get("isDraft"), true)
-          ));
+          predicates.add(
+              cb.and(
+                  cb.equal(root.get("state"), Issue.State.OPEN),
+                  cb.equal(root.get("isDraft"), true)));
           break;
         case MERGED:
-          predicates.add(cb.and(
-              cb.equal(root.get("state"), Issue.State.CLOSED),
-              cb.equal(root.get("isMerged"), true)
-          ));
+          predicates.add(
+              cb.and(
+                  cb.equal(root.get("state"), Issue.State.CLOSED),
+                  cb.equal(root.get("isMerged"), true)));
           break;
         case CLOSED:
           predicates.add(cb.equal(root.get("state"), Issue.State.CLOSED));

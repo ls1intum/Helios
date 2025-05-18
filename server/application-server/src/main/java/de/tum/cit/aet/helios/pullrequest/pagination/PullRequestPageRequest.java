@@ -10,6 +10,6 @@ public class PullRequestPageRequest {
   private int size = 20;
   private String sortField;
   private String sortDirection;
-  private PullRequestFilterType filterType = PullRequestFilterType.ALL;
+  private PullRequestFilterType filterType = PullRequestFilterType.OPEN;
   private String searchTerm;
 }

@@ -13,13 +13,13 @@ public enum PullRequestFilterType {
 
   public static PullRequestFilterType fromString(String value) {
     if (value == null) {
-      return ALL;
+      return OPEN;
     }
 
     try {
       return PullRequestFilterType.valueOf(value);
     } catch (IllegalArgumentException e) {
-      return ALL;
+      return OPEN;
     }
   }
 }

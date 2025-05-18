@@ -33,7 +33,7 @@ public class PullRequestController {
     pageRequest.setSize(size);
     pageRequest.setSortField(sortField);
     pageRequest.setSortDirection(sortDirection);
-    pageRequest.setFilterType(filterType != null ? filterType : PullRequestFilterType.ALL);
+    pageRequest.setFilterType(filterType != null ? filterType : PullRequestFilterType.OPEN);
     pageRequest.setSearchTerm(searchTerm);
 
     PaginatedPullRequestsResponse response =
