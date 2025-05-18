@@ -73,24 +73,22 @@ jobs:
   },
   {
     title: 'Configure Project Settings in Helios',
-    description: 'Set up your repository in the Helios dashboard with proper workflow labels and deployment settings.',
+    description: 'Set up your repository in the Helios project settings.',
     icon: 'settings',
     image: 'assets/project-settings.png',
     instructions: [
-      'Access Helios dashboard at https://helios.aet.cit.tum.de',
       'Find your repository and navigate to project settings',
-      'Configure your test workflow with label TEST',
       'Adjust lock reservation/expiration times if needed',
       'Create workflow groups for logical organization',
+      'Configure your test workflow with label TEST and select artifact name for test analysis',
     ],
   },
   {
     title: 'Configure Environments in Helios',
-    description: 'Set up your repository in the Helios dashboard with proper workflow labels and environment settings.',
+    description: 'Configure and enable environment you want to be able to deploy to.',
     icon: 'server',
     image: 'assets/edit-environments.png',
     instructions: [
-      'Access Helios dashboard at https://helios.aet.cit.tum.de',
       'In your repository navigate to environments',
       'Edit the environment',
       'Select deployment workflow to enable environment',
