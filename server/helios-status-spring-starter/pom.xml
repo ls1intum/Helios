@@ -5,8 +5,8 @@
                              https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>io.github.egekocabas</groupId>
-    <artifactId>de.tum.cit.aet.helios</artifactId>
+    <groupId>de.tum.cit.aet.helios</groupId>
+    <artifactId>helios-status-spring-starter</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>Helios Status Spring Starter</name>
