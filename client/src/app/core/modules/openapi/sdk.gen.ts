@@ -85,6 +85,9 @@ import type {
   DeployToEnvironmentData,
   DeployToEnvironmentResponse,
   DeployToEnvironmentError,
+  CancelDeploymentData,
+  CancelDeploymentResponse,
+  CancelDeploymentError,
   SetBranchPinnedByRepositoryIdAndNameAndUserIdData,
   SetBranchPinnedByRepositoryIdAndNameAndUserIdError,
   HealthCheckData,
@@ -483,6 +486,17 @@ export const syncEnvironments = <ThrowOnError extends boolean = false>(options?:
 export const deployToEnvironment = <ThrowOnError extends boolean = false>(options: Options<DeployToEnvironmentData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).post<DeployToEnvironmentResponse, DeployToEnvironmentError, ThrowOnError>({
     url: '/api/deployments/deploy',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const cancelDeployment = <ThrowOnError extends boolean = false>(options: Options<CancelDeploymentData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).post<CancelDeploymentResponse, CancelDeploymentError, ThrowOnError>({
+    url: '/api/deployments/cancel',
     ...options,
     headers: {
       'Content-Type': 'application/json',

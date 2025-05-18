@@ -63,4 +63,18 @@ public class DeploymentController {
         deploymentService.getActivityHistoryByEnvironmentId(environmentId);
     return ResponseEntity.ok(activityHistory);
   }
+
+  /**
+   * Cancels an ongoing deployment.
+   *
+   * @param cancelRequest The request containing the workflow run ID to cancel
+   * @return ResponseEntity with a success message
+   */
+  @EnforceAtLeastWritePermission
+  @PostMapping("/cancel")
+  public ResponseEntity<String> cancelDeployment(
+      @Valid @RequestBody CancelDeploymentRequest cancelRequest) {
+    String result = deploymentService.cancelDeployment(cancelRequest);
+    return ResponseEntity.ok(result);
+  }
 }

@@ -8,6 +8,8 @@ import de.tum.cit.aet.helios.environment.EnvironmentRepository;
 import de.tum.cit.aet.helios.environment.EnvironmentService;
 import de.tum.cit.aet.helios.filters.RepositoryContext;
 import de.tum.cit.aet.helios.github.GitHubService;
+import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
+import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
 import de.tum.cit.aet.helios.pullrequest.PullRequest;
@@ -42,6 +44,7 @@ public class DeploymentService {
   private final EnvironmentLockHistoryRepository lockHistoryRepository;
   private final EnvironmentRepository environmentRepository;
   private final PullRequestRepository pullRequestRepository;
+  private final GitRepoRepository gitRepoRepository;
 
   public Optional<DeploymentDto> getDeploymentById(Long id) {
     return deploymentRepository.findById(id).map(DeploymentDto::fromDeployment);
@@ -332,5 +335,36 @@ public class DeploymentService {
         });
 
     return combined;
+  }
+
+  /**
+   * Cancels an ongoing deployment by stopping its associated GitHub workflow run.
+   *
+   * @param cancelRequest The request containing the workflow run ID to cancel
+   * @return Basic success message
+   * @throws DeploymentException if the deployment cannot be canceled
+   */
+  @Transactional
+  public String cancelDeployment(CancelDeploymentRequest cancelRequest) {
+    Long workflowRunId = cancelRequest.workflowRunId();
+
+    try {
+      // We need to find a GitHub repository where we have permission to make API calls
+      // Use the current repository context if available
+      Long repositoryId = RepositoryContext.getRepositoryId();
+      GitRepository repository =
+          gitRepoRepository
+              .findById(repositoryId)
+              .orElseThrow(() -> new DeploymentException("Repository not found in context"));
+
+      String repoNameWithOwner = repository.getNameWithOwner();
+
+      // Call GitHub to cancel the workflow
+      gitHubService.cancelWorkflowRun(repoNameWithOwner, workflowRunId);
+
+      return "Workflow cancellation request sent successfully";
+    } catch (IOException e) {
+      throw new DeploymentException("Failed to cancel workflow run: " + e.getMessage(), e);
+    }
   }
 }

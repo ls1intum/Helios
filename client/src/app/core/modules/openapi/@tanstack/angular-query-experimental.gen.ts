@@ -33,6 +33,7 @@ import {
   setPrPinnedByNumber,
   syncEnvironments,
   deployToEnvironment,
+  cancelDeployment,
   setBranchPinnedByRepositoryIdAndNameAndUserId,
   healthCheck,
   getAllWorkflows,
@@ -141,6 +142,9 @@ import type {
   DeployToEnvironmentData,
   DeployToEnvironmentError,
   DeployToEnvironmentResponse,
+  CancelDeploymentData,
+  CancelDeploymentError,
+  CancelDeploymentResponse,
   SetBranchPinnedByRepositoryIdAndNameAndUserIdData,
   SetBranchPinnedByRepositoryIdAndNameAndUserIdError,
   HealthCheckData,
@@ -876,6 +880,37 @@ export const deployToEnvironmentMutation = (options?: Partial<Options<DeployToEn
   const mutationOptions: MutationOptions<DeployToEnvironmentResponse, DeployToEnvironmentError, Options<DeployToEnvironmentData>> = {
     mutationFn: async localOptions => {
       const { data } = await deployToEnvironment({
+        ...options,
+        ...localOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const cancelDeploymentQueryKey = (options: Options<CancelDeploymentData>) => createQueryKey('cancelDeployment', options);
+
+export const cancelDeploymentOptions = (options: Options<CancelDeploymentData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await cancelDeployment({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: cancelDeploymentQueryKey(options),
+  });
+};
+
+export const cancelDeploymentMutation = (options?: Partial<Options<CancelDeploymentData>>) => {
+  const mutationOptions: MutationOptions<CancelDeploymentResponse, CancelDeploymentError, Options<CancelDeploymentData>> = {
+    mutationFn: async localOptions => {
+      const { data } = await cancelDeployment({
         ...options,
         ...localOptions,
         throwOnError: true,
