@@ -134,7 +134,7 @@ public class HeliosDeployment {
     } else if (workflowStatus == GHWorkflowRun.Status.COMPLETED) {
       return switch (workflowConclusion) {
         case SUCCESS -> Status.DEPLOYMENT_SUCCESS;
-        case FAILURE, STARTUP_FAILURE, TIMED_OUT -> Status.FAILED;
+        case FAILURE, STARTUP_FAILURE, TIMED_OUT, CANCELLED -> Status.FAILED;
         default -> Status.UNKNOWN;
       };
     } else {
