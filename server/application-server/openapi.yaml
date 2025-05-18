@@ -2258,9 +2258,9 @@ components:
           format: date-time
         details:
           type: object
-          additionalProperties:
-            type: object
+          additionalProperties: {}
       required:
+      - environment
       - state
       - timestamp
     DeployRequest:

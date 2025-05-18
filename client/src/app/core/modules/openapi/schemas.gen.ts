@@ -712,12 +712,10 @@ export const PushStatusPayloadSchema = {
     },
     details: {
       type: 'object',
-      additionalProperties: {
-        type: 'object',
-      },
+      additionalProperties: {},
     },
   },
-  required: ['state', 'timestamp'],
+  required: ['environment', 'state', 'timestamp'],
 } as const;
 
 export const DeployRequestSchema = {
