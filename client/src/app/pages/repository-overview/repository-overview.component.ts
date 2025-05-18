@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { PageHeadingComponent } from '@app/components/page-heading/page-heading.component';
 import { RepositoryInfoDto } from '@app/core/modules/openapi';
@@ -23,7 +23,22 @@ import { UserAvatarComponent } from '@app/components/user-avatar/user-avatar.com
 import { TimeAgoPipe } from '@app/pipes/time-ago.pipe';
 import { SearchDataViewService } from '@app/core/services/search-dataview.service';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
-import { IconBrandGithub, IconExclamationCircle, IconGitBranch, IconGitPullRequest, IconStar, IconTag } from 'angular-tabler-icons/icons';
+import {
+  IconBrandGithub,
+  IconCode,
+  IconExclamationCircle,
+  IconGitBranch,
+  IconGitPullRequest,
+  IconPlus,
+  IconServer,
+  IconSettings,
+  IconStar,
+  IconSun,
+  IconTag,
+} from 'angular-tabler-icons/icons';
+import { DialogModule } from 'primeng/dialog';
+import { CarouselModule, CarouselPageEvent } from 'primeng/carousel';
+import { connectionSteps } from './connection-steps';
 
 const FILTER_OPTIONS = [{ name: 'All repositories', filter: (repos: RepositoryInfoDto[]) => repos }];
 
@@ -47,6 +62,8 @@ const FILTER_OPTIONS = [{ name: 'All repositories', filter: (repos: RepositoryIn
     TimeAgoPipe,
     TableModule,
     TableFilterComponent,
+    DialogModule,
+    CarouselModule,
   ],
   providers: [
     SearchTableService,
@@ -58,6 +75,11 @@ const FILTER_OPTIONS = [{ name: 'All repositories', filter: (repos: RepositoryIn
       IconGitBranch,
       IconGitPullRequest,
       IconExclamationCircle,
+      IconPlus,
+      IconSettings,
+      IconCode,
+      IconServer,
+      IconSun,
     }),
   ],
   templateUrl: './repository-overview.component.html',
@@ -67,7 +89,42 @@ export class RepositoryOverviewComponent {
   keycloakService = inject(KeycloakService);
   searchDataViewService = inject(SearchDataViewService);
 
+  connectionSteps = connectionSteps;
+  addRepositoryDialogVisible = signal(false);
+  currentStep = signal(0);
+
   query = injectQuery(() => getAllRepositoriesOptions());
+
+  showAddRepositoryDialog() {
+    this.currentStep.set(0);
+    this.addRepositoryDialogVisible.set(true);
+  }
+
+  nextStep() {
+    if (this.currentStep() < connectionSteps.length - 1) {
+      this.currentStep.set(this.currentStep() + 1);
+    }
+  }
+
+  previousStep() {
+    if (this.currentStep() > 0) {
+      this.currentStep.set(this.currentStep() - 1);
+    }
+  }
+
+  finishSetup() {
+    // Here you would typically implement the final action
+    // For now, just close the dialog
+    this.addRepositoryDialogVisible.set(false);
+  }
+
+  onPageChange(event: CarouselPageEvent) {
+    console.log('Page changed:', event.page);
+    this.currentStep.set(event.page || 0);
+  }
+  openExternalLink(url: string): void {
+    window.open(url, '_blank');
+  }
 
   navigateToReleases(repository: RepositoryInfoDto) {
     this.router.navigate(['repo', repository.id.toString(), 'release']);
