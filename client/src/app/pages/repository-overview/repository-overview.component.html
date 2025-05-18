@@ -2,6 +2,9 @@
   <div subheading></div>
   <div class="flex justify-between items-center w-full" heading>
     <div>Connected Repositories</div>
+    <p-button label="Add Repository" (onClick)="showAddRepositoryDialog()">
+      <i-tabler name="plus" class="!size-4" />
+    </p-button>
   </div>
   <span description> In the repository list you can find all of the repositories that were added to Helios. </span>
 </app-page-heading>
@@ -101,3 +104,72 @@
     </ng-template>
   </p-dataview>
 }
+<p-dialog header="Connect a Repository" [(visible)]="addRepositoryDialogVisible" [style]="{ width: '750px' }" [modal]="true" [dismissableMask]="true">
+  <p-carousel [value]="connectionSteps" [numVisible]="1" [numScroll]="1" [circular]="false" [page]="currentStep()" (onPage)="onPageChange($event)" [showNavigators]="false">
+    <ng-template let-step #item>
+      <div class="p-5">
+        <div class="flex flex-col items-center mb-4">
+          <div class="text-5xl text-primary mb-2">
+            <i-tabler [name]="step.icon" class="!size-8" />
+          </div>
+          <h2 class="text-2xl font-bold text-center">{{ step.title }}</h2>
+          <p class="text-center text-gray-600 mt-2">{{ step.description }}</p>
+        </div>
+
+        <div class="mt-4">
+          <h3 class="text-lg font-semibold mb-2">Steps:</h3>
+          <ul class="list-disc pl-6 mb-4">
+            @for (instruction of step.instructions; track instruction) {
+              <li class="mb-1">{{ instruction }}</li>
+            }
+          </ul>
+        </div>
+
+        @if (step.codeExample) {
+          <div class="mt-4 bg-gray-100 dark:bg-gray-800 p-3 rounded-lg overflow-auto max-h-[300px]">
+            <pre class="text-sm font-mono"><code>{{ step.codeExample }}</code></pre>
+          </div>
+        }
+
+        @if (step.image) {
+          <div class="flex justify-center mt-4">
+            <img [src]="step.image" [alt]="step.title" class="max-w-lg h-auto rounded-lg shadow-sm" />
+          </div>
+        }
+
+        <!-- Add this section for the action button -->
+        @if (step.actionButton) {
+          <div class="flex justify-center mt-5">
+            <p-button [label]="step.actionButton.label" [icon]="'pi ' + step.actionButton.icon" styleClass="p-button-raised" (onClick)="openExternalLink(step.actionButton.url)">
+            </p-button>
+          </div>
+        }
+      </div>
+    </ng-template>
+  </p-carousel>
+
+  <div class="flex justify-center mt-4">
+    @for (step of connectionSteps; track $index; let i = $index) {
+      <span class="inline-block mx-1 cursor-pointer" (click)="currentStep.set(i)">
+        <i class="pi pi-circle-fill text-sm"></i>
+      </span>
+    }
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-between w-full">
+      <p-button label="Cancel" styleClass="p-button-text" (onClick)="addRepositoryDialogVisible.set(false)"></p-button>
+      <div>
+        @if (currentStep() > 0) {
+          <p-button label="Previous" styleClass="p-button-outlined mr-2" (onClick)="previousStep()"></p-button>
+        }
+        @if (currentStep() < connectionSteps.length - 1) {
+          <p-button label="Next" iconPos="right" (onClick)="nextStep()"></p-button>
+        }
+        @if (currentStep() === connectionSteps.length - 1) {
+          <p-button label="Finish" (onClick)="finishSetup()"></p-button>
+        }
+      </div>
+    </div>
+  </ng-template>
+</p-dialog>
