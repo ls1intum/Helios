@@ -2,7 +2,6 @@ package de.tum.cit.aet.helios;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.Positive;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -33,7 +32,7 @@ public record HeliosStatusProperties(
     @NotEmpty List<HeliosEndpoint> endpoints,
     // default 30s
     @DurationUnit(ChronoUnit.SECONDS)
-    @Positive Duration heartbeatInterval
+    Duration heartbeatInterval
 ) {
   /**
    * Supply defaults when properties missing.
@@ -41,6 +40,9 @@ public record HeliosStatusProperties(
   public HeliosStatusProperties {
     if (heartbeatInterval == null) {
       heartbeatInterval = Duration.ofSeconds(30);
+    }
+    if (!heartbeatInterval.isPositive()) {
+      throw new IllegalArgumentException("helios.status.heartbeat-interval must be positive");
     }
   }
 }

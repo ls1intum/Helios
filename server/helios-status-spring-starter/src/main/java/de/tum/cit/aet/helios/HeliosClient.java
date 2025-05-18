@@ -6,6 +6,7 @@ import de.tum.cit.aet.helios.status.PushStatusPayload;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -21,6 +22,7 @@ import okhttp3.Response;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.StringUtils;
 
 /**
  * Thin wrapper around OkHttp that asynchronously POSTs a JSON payload to
@@ -97,14 +99,22 @@ public class HeliosClient {
    * Fire-and-forget POST to every configured target.
    */
   private void sendToAllTargets(PushStatusPayload payload) {
-    for (HeliosEndpoint ep : endpoints) {
+    for (int i = 0; i < endpoints.size(); i++) {
+      final int idx = i;
       try {
-        // Validate the url and secretKey is not null or empty
-        if (ep.url() == null
-            || ep.secretKey() == null
-            || ep.url().toString().isEmpty()
-            || ep.secretKey().isEmpty()) {
-          log.warn("Helios endpoint url or secretKey is null or empty. Skipping push.");
+        HeliosEndpoint ep = endpoints.get(i);
+
+        // Validate the url and secretKey
+        String url = Objects.toString(ep.url(), "");
+        String secret = Objects.toString(ep.secretKey(), "");
+
+        if (!StringUtils.hasText(url) || !StringUtils.hasText(secret)) {
+          log.warn(
+              "Helios endpoint #{} is missing URL or secret (url='{}', secretPresent={}). "
+                  + "Skipping.",
+              i,
+              url,
+              StringUtils.hasText(secret));
           continue;
         }
 
@@ -118,8 +128,8 @@ public class HeliosClient {
         client.newCall(request).enqueue(new Callback() {
           @Override
           public void onFailure(@NotNull Call call, @NotNull IOException e) {
-            log.warn("Helios push failed to {}, Error: {}, Payload: {}", ep.url(), e.getMessage(),
-                payload);
+            log.warn("Helios push #{} to '{}' failed: {}. Payload={}",
+                idx, url, e.getMessage(), payload, e);
           }
 
           @Override
@@ -128,10 +138,10 @@ public class HeliosClient {
             boolean isSuccess = code >= 200 && code < 300;
 
             if (isSuccess) {
-              log.debug("Helios push {} -> {} [{}]", payload.state(), ep.url(), code);
+              log.debug("Helios push #{} '{}' [{}] – OK", idx, url, code);
             } else {
-              log.warn("Helios push to {} responded with error [{}]: {}, Payload: {}",
-                  ep.url(), code, response.message(), payload);
+              log.warn("Helios push #{} '{}' responded [{} {}]. Payload={}",
+                  idx, url, code, response.message(), payload);
             }
 
             response.close();
