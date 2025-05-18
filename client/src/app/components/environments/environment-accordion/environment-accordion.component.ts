@@ -85,10 +85,6 @@ export class EnvironmentAccordionComponent {
     this.lock.emit(this.environment());
   }
 
-  formatEnvironmentType(type: string): string {
-    return type.charAt(0).toUpperCase() + type.slice(1).toLowerCase();
-  }
-
   getDeploymentTime(environment: EnvironmentDto) {
     const date = environment.latestDeployment?.updatedAt;
     return date ? this.datePipe.transform(date, 'd MMMM y, h:mm a') : null;
