@@ -13,11 +13,10 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 
 /**
- * Spring-Boot autoconfiguration that wires Helios lifecycle monitoring into
- * any application that sets {@code helios.status.enabled=true}.
+ * Autoconfiguration class that wires Helios lifecycle monitoring into Spring Boot apps.
  *
- * <p>Beans are instantiated only when the feature flag is turned on; otherwise
- * nothing is registered and the library stays idle.
+ * <p>Enabled by setting {@code helios.status.enabled=true}. Registers beans for the
+ * lifecycle event listener, heartbeat scheduler, and core Helios client.</p>
  */
 @AutoConfiguration
 @EnableConfigurationProperties(HeliosStatusProperties.class)
@@ -32,7 +31,7 @@ public class HeliosStatusAutoConfiguration {
   }
 
   /**
-   * Log a single line at startup so operators can see whether monitoring runs.
+   * Logs whether Helios lifecycle monitoring is enabled after context initialization.
    */
   @PostConstruct
   public void logStatus() {
@@ -44,8 +43,7 @@ public class HeliosStatusAutoConfiguration {
   }
 
   /**
-   * Validates the Helios configuration once the application context is built,
-   * failing fast if mandatory information is missing.
+   * Fails fast if Helios monitoring is enabled but required fields are missing.
    */
   @Bean
   ApplicationRunner validateHeliosCfg(HeliosStatusProperties p) {
@@ -62,7 +60,7 @@ public class HeliosStatusAutoConfiguration {
   }
 
   /**
-   * Http client wrapper that all listeners will share.
+   * Initializes and provides the shared Helios HTTP client bean.
    */
   @Bean
   HeliosClient heliosClient(HeliosStatusProperties props) {
@@ -70,7 +68,7 @@ public class HeliosStatusAutoConfiguration {
   }
 
   /**
-   * Publishes lifecycle events for {@code ApplicationStarted/Ready/Failed}.
+   * Publishes Spring Boot application lifecycle events to Helios.
    */
   @Bean
   public BootLifecycleListener bootLifecycleListener(HeliosClient helios) {
@@ -78,7 +76,7 @@ public class HeliosStatusAutoConfiguration {
   }
 
   /**
-   * Schedules the periodic heartbeat while the app is alive.
+   * Schedules and sends regular heartbeats while the application is alive.
    */
   @Bean
   public HeartbeatScheduler heartbeatScheduler(HeliosClient helios) {

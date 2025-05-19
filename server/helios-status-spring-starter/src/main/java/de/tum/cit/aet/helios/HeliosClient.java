@@ -67,6 +67,19 @@ public class HeliosClient {
   private final List<HeliosEndpoint> endpoints;
   private final String environment;
 
+  /**
+   * Constructs a new {@code HeliosClient} using the provided configuration.
+   *
+   * <p>Initializes the list of Helios endpoints and the environment name
+   * from the configuration properties.
+   * The client uses a shared static OkHttp instance configured
+   * with a bounded, single-threaded executor
+   * to ensure lightweight, non-blocking delivery.</p>
+   *
+   * @param cfg the Helios configuration properties
+   *     containing environment name and target endpoints;
+   *     must not be null.
+   */
   public HeliosClient(HeliosStatusProperties cfg) {
     this.environment = cfg.environmentName();
     this.endpoints = cfg.endpoints();
@@ -77,16 +90,41 @@ public class HeliosClient {
   /* ------------------------------------------------------------------ */
 
   /**
-   * Push a lifecycle state without extra detail data.
+   * Pushes a lifecycle state update to all configured Helios endpoints
+   * without any additional details.
+   *
+   * <p>This is a convenience method that delegates to
+   * {@link #pushStatusUpdate(LifecycleState, Map)} with an empty details map.</p>
+   *
+   * <p>All updates are dispatched asynchronously using a single-threaded
+   * executor with a bounded queue.
+   * If the queue is full, the oldest updates are dropped and a warning is logged.</p>
+   *
+   * @param state the lifecycle state to push
+   *     (e.g., STARTING_UP, RUNNING, STOPPING); must not be null.
+   * @see #pushStatusUpdate(LifecycleState, Map)
    */
-  public void push(LifecycleState state) {
-    push(state, Map.of());
+  public void pushStatusUpdate(LifecycleState state) {
+    pushStatusUpdate(state, Map.of());
   }
 
   /**
-   * Push a lifecycle state and optional details.
+   * Pushes a lifecycle state update with additional optional details
+   * to all configured Helios endpoints.
+   *
+   * <p>The payload is serialized as JSON and POSTed asynchronously
+   * to each endpoint using their configured
+   * URL and secret key. If the queue is full or if any endpoint is misconfigured,
+   * a warning is logged.
+   * This method never blocks and always fails silently (with logging).</p>
+   *
+   * @param state the lifecycle state to push (e.g., STARTING, HEALTHY, STOPPING);
+   *     must not be null.
+   * @param details a map of additional detail data
+   *     (optional metadata such as version, region, etc.);
+   *     must not be null (use {@link java.util.Collections#emptyMap()} if not needed).
    */
-  public void push(LifecycleState state, Map<String, Object> details) {
+  public void pushStatusUpdate(LifecycleState state, Map<String, Object> details) {
     PushStatusPayload payload = PushStatusPayload.of(environment, state, details);
     sendToAllTargets(payload);
   }
@@ -96,7 +134,28 @@ public class HeliosClient {
   /* ------------------------------------------------------------------ */
 
   /**
-   * Fire-and-forget POST to every configured target.
+   * Sends a given status payload to all configured Helios endpoints
+   * via asynchronous HTTP POST requests.
+   *
+   * <p>This is a fire-and-forget method: all requests are dispatched
+   * asynchronously using OkHttp’s dispatcher
+   * backed by a single daemon thread and a bounded queue.
+   * If the queue fills up, oldest entries are dropped.</p>
+   *
+   * <p>The following checks are performed before attempting delivery:
+   * <ul>
+   *   <li>The endpoint list must not be empty</li>
+   *   <li>The payload must not be null</li>
+   *   <li>The environment field in the payload must be non-blank</li>
+   *   <li>Each endpoint must have a valid URL and a non-empty secret key</li>
+   * </ul>
+   * </p>
+   *
+   * <p>If a request fails or the endpoint responds with a non-2xx status,
+   * a warning is logged. No retries are attempted.</p>
+   *
+   * @param payload the fully constructed payload to push;
+   *     must not be null and must contain a valid environment field.
    */
   private void sendToAllTargets(PushStatusPayload payload) {
     if (endpoints.isEmpty()) {

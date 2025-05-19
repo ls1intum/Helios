@@ -10,50 +10,54 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 /**
- * Listens to key Spring-Boot lifecycle events and immediately forwards them
- * to every Helios endpoint.
+ * Observes key Spring Boot application lifecycle events and pushes corresponding
+ * status updates to all configured Helios endpoints.
  *
- * <p>The listener is registered as a <em>regular</em> Spring bean so it is
- * picked up in both servlet and native-image contexts.</p>
+ * <p>Triggered on application startup, readiness, failure, and shutdown.</p>
  */
 @Component
 public class BootLifecycleListener {
 
   private final HeliosClient helios;
 
+  /**
+   * Constructs the listener with the given Helios client.
+   *
+   * @param helios the client used to push lifecycle updates
+   */
   public BootLifecycleListener(HeliosClient helios) {
     this.helios = helios;
   }
 
   /**
-   * ApplicationContext refreshed and {@code @PostConstruct} beans invoked.
+   * Invoked when the application starts (context refreshed, PostConstruct run).
    */
   @EventListener
   void onStarted(ApplicationStartedEvent e) {
-    helios.push(LifecycleState.STARTING_UP);
+    helios.pushStatusUpdate(LifecycleState.STARTING_UP);
   }
 
   /**
-   * Spring Boot failed during startup.
+   * Invoked when the application fails to start.
    */
   @EventListener
   void onFailed(ApplicationFailedEvent e) {
-    helios.push(LifecycleState.FAILED);
+    helios.pushStatusUpdate(LifecycleState.FAILED);
   }
 
   /**
-   * All CommandLineRunners finished → app is ready for traffic.
+   * Invoked when the app is fully initialized and ready to serve traffic.
    */
   @EventListener
   void onReady(ApplicationReadyEvent e) {
-    helios.push(LifecycleState.RUNNING);
+    helios.pushStatusUpdate(LifecycleState.RUNNING);
   }
 
   /**
-   * Context closed gracefully (e.g. SIGTERM / Ctrl-C).
+   * Invoked on graceful shutdown (e.g., SIGTERM).
    */
   @EventListener
   void onShutdown(ContextClosedEvent e) {
-    helios.push(LifecycleState.SHUTTING_DOWN);
+    helios.pushStatusUpdate(LifecycleState.SHUTTING_DOWN);
   }
 }

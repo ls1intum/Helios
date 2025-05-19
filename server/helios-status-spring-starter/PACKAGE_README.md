@@ -106,5 +106,12 @@ logging:
 ```java
 @Autowired HeliosClient helios;
 
-helios.push(LifecycleState.DEGRADED, Map.of("cause", "downstream‑api"));
+// Push a status update
+helios.pushStatusUpdate(LifecycleState.DB_MIGRATION_STARTED);
+
+// Push status update with additional data
+helios.pushStatusUpdate(LifecycleState.DB_MIGRATION_FINISHED, new HashMap<>() {{
+    put("migrationId", "123456");
+  }}
+);
 ```
