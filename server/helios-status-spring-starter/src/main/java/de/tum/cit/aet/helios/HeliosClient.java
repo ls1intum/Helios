@@ -64,6 +64,7 @@ public class HeliosClient {
 
   /* --------------------------------------------------------------------------- */
 
+  private final HeliosStatusProperties cfg;
   private final List<HeliosEndpoint> endpoints;
   private final String environment;
 
@@ -81,6 +82,7 @@ public class HeliosClient {
    *     must not be null.
    */
   public HeliosClient(HeliosStatusProperties cfg) {
+    this.cfg = cfg;
     this.environment = cfg.environmentName();
     this.endpoints = cfg.endpoints();
   }
@@ -158,11 +160,19 @@ public class HeliosClient {
    *     must not be null and must contain a valid environment field.
    */
   private void sendToAllTargets(PushStatusPayload payload) {
+    // Check if push is enabled
+    if (!cfg.enabled()) {
+      log.debug("Helios push is disabled. Skipping push.");
+      return;
+    }
+
+    // Check if endpoints are configured
     if (endpoints.isEmpty()) {
       log.warn("No Helios endpoints configured. Skipping push.");
       return;
     }
 
+    // Check if payload is valid
     if (payload == null) {
       log.warn("Helios payload is null. Skipping push.");
       return;

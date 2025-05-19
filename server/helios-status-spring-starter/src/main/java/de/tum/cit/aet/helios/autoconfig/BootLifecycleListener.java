@@ -1,4 +1,4 @@
-package de.tum.cit.aet.helios.status.listeners;
+package de.tum.cit.aet.helios.autoconfig;
 
 import de.tum.cit.aet.helios.HeliosClient;
 import de.tum.cit.aet.helios.status.LifecycleState;
@@ -16,7 +16,7 @@ import org.springframework.stereotype.Component;
  * <p>Triggered on application startup, readiness, failure, and shutdown.</p>
  */
 @Component
-public class BootLifecycleListener {
+class BootLifecycleListener {
 
   private final HeliosClient helios;
 
@@ -25,7 +25,7 @@ public class BootLifecycleListener {
    *
    * @param helios the client used to push lifecycle updates
    */
-  public BootLifecycleListener(HeliosClient helios) {
+  BootLifecycleListener(HeliosClient helios) {
     this.helios = helios;
   }
 

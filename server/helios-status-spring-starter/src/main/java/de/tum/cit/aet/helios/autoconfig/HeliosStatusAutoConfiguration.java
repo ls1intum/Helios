@@ -2,8 +2,6 @@ package de.tum.cit.aet.helios.autoconfig;
 
 import de.tum.cit.aet.helios.HeliosClient;
 import de.tum.cit.aet.helios.HeliosStatusProperties;
-import de.tum.cit.aet.helios.status.listeners.BootLifecycleListener;
-import de.tum.cit.aet.helios.status.listeners.HeartbeatScheduler;
 import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,7 +39,12 @@ public class HeliosStatusAutoConfiguration {
   @PostConstruct
   public void logStatus() {
     if (props.enabled()) {
-      log.info("Helios status push is enabled – lifecycle monitoring will start.");
+      int endpointCount = props.endpoints() != null ? props.endpoints().size() : 0;
+      String env = props.environmentName() != null ? props.environmentName() : "(none)";
+      log.info(
+          "Helios status push is enabled – monitoring will start "
+              + "for environment name '{}', pushing to {} endpoint(s).",
+          env, endpointCount);
     } else {
       log.info("Helios status push is disabled – no lifecycle updates will be sent.");
     }
@@ -76,7 +79,7 @@ public class HeliosStatusAutoConfiguration {
    * Publishes Spring Boot application lifecycle events to Helios.
    */
   @Bean
-  public BootLifecycleListener bootLifecycleListener(HeliosClient helios) {
+  BootLifecycleListener bootLifecycleListener(HeliosClient helios) {
     return props.enabled() ? new BootLifecycleListener(helios) : null;
   }
 
@@ -84,7 +87,7 @@ public class HeliosStatusAutoConfiguration {
    * Schedules and sends regular heartbeats while the application is alive.
    */
   @Bean
-  public HeartbeatScheduler heartbeatScheduler(HeliosClient helios) {
+  HeartbeatScheduler heartbeatScheduler(HeliosClient helios) {
     return props.enabled() ? new HeartbeatScheduler(helios, props) : null;
   }
 }

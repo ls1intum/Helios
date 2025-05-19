@@ -14,7 +14,7 @@ import java.net.URI;
  * @param url absolute URI of the Helios ingestion endpoint; must not be null
  * @param secretKey shared secret for HTTP token authentication; must not be blank
  */
-public record HeliosEndpoint(
+record HeliosEndpoint(
     @NotNull URI url,
     @NotBlank String secretKey) {
 }

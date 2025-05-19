@@ -1,9 +1,8 @@
-package de.tum.cit.aet.helios.status.listeners;
+package de.tum.cit.aet.helios.autoconfig;
 
 import de.tum.cit.aet.helios.HeliosClient;
 import de.tum.cit.aet.helios.HeliosStatusProperties;
 import de.tum.cit.aet.helios.status.LifecycleState;
-import java.util.HashMap;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.annotation.SchedulingConfigurer;
 import org.springframework.scheduling.config.ScheduledTaskRegistrar;
@@ -18,7 +17,7 @@ import org.springframework.stereotype.Component;
  * integrates directly via {@link SchedulingConfigurer}.</p>
  */
 @Component
-public class HeartbeatScheduler implements SchedulingConfigurer {
+class HeartbeatScheduler implements SchedulingConfigurer {
 
   private final HeliosClient helios;
   private final HeliosStatusProperties props;
@@ -29,7 +28,7 @@ public class HeartbeatScheduler implements SchedulingConfigurer {
    * @param helios the shared Helios client instance
    * @param props the Helios status properties
    */
-  public HeartbeatScheduler(HeliosClient helios, HeliosStatusProperties props) {
+  HeartbeatScheduler(HeliosClient helios, HeliosStatusProperties props) {
     this.helios = helios;
     this.props = props;
   }
