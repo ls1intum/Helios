@@ -1,4 +1,4 @@
-package de.tum.cit.aet.helios.status.listeners;
+package de.tum.cit.aet.helios.autoconfig;
 
 import de.tum.cit.aet.helios.HeliosClient;
 import de.tum.cit.aet.helios.HeliosStatusProperties;
@@ -9,19 +9,26 @@ import org.springframework.scheduling.config.ScheduledTaskRegistrar;
 import org.springframework.stereotype.Component;
 
 /**
- * Configures a programmatic fixed-delay task that sends a <em>heartbeat</em>
- * every {@code helios.status.heartbeat-interval} seconds.
+ * Configures and registers a periodic heartbeat task that pushes the {@code RUNNING}
+ * state at fixed intervals to Helios.
  *
- * <p>The implementation sticks to {@link SchedulingConfigurer} so we do not
- * accidentally create a second TaskScheduler bean.</p>
+ * <p>This scheduler is activated only if {@code helios.status.enabled=true}. It avoids
+ * defining a new {@link TaskScheduler} bean and
+ * integrates directly via {@link SchedulingConfigurer}.</p>
  */
 @Component
-public class HeartbeatScheduler implements SchedulingConfigurer {
+class HeartbeatScheduler implements SchedulingConfigurer {
 
   private final HeliosClient helios;
   private final HeliosStatusProperties props;
 
-  public HeartbeatScheduler(HeliosClient helios, HeliosStatusProperties props) {
+  /**
+   * Constructs the heartbeat scheduler with a shared Helios client and configuration.
+   *
+   * @param helios the shared Helios client instance
+   * @param props the Helios status properties
+   */
+  HeartbeatScheduler(HeliosClient helios, HeliosStatusProperties props) {
     this.helios = helios;
     this.props = props;
   }
@@ -30,7 +37,7 @@ public class HeartbeatScheduler implements SchedulingConfigurer {
   public void configureTasks(ScheduledTaskRegistrar taskRegistrar) {
     TaskScheduler scheduler = taskRegistrar.getScheduler();
     if (scheduler != null && props.enabled()) {
-      Runnable heartbeatTask = () -> helios.push(LifecycleState.RUNNING);
+      Runnable heartbeatTask = () -> helios.pushStatusUpdate(LifecycleState.RUNNING);
       scheduler.scheduleWithFixedDelay(heartbeatTask, props.heartbeatInterval());
     }
   }

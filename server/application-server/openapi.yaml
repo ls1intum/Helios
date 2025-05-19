@@ -1985,9 +1985,9 @@ components:
           type: string
           enum:
           - STARTING_UP
-          - MIGRATING_DB
-          - MIGRATION_FAILED
-          - MIGRATION_FINISHED
+          - DB_MIGRATION_STARTED
+          - DB_MIGRATION_FAILED
+          - DB_MIGRATION_FINISHED
           - RUNNING
           - DEGRADED
           - SHUTTING_DOWN
@@ -2312,9 +2312,9 @@ components:
           type: string
           enum:
           - STARTING_UP
-          - MIGRATING_DB
-          - MIGRATION_FAILED
-          - MIGRATION_FINISHED
+          - DB_MIGRATION_STARTED
+          - DB_MIGRATION_FAILED
+          - DB_MIGRATION_FINISHED
           - RUNNING
           - DEGRADED
           - SHUTTING_DOWN

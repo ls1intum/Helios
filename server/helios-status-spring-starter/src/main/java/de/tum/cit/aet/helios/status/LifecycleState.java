@@ -4,18 +4,18 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 /**
- * Lifecycle markers that a Spring-Boot service can expose.
+ * Enum of all possible lifecycle states that a monitored Spring Boot service
+ * can report to Helios.
  *
- * <p>The enum comes with a strict text deserializer – any unknown value
- * throws an {@link IllegalArgumentException} – and preserves its exact
- * constant name when serialised to JSON.</p>
+ * <p>This enum is serialized/deserialized as lowercase, kebab-case values.
+ * Unknown inputs will throw an {@link IllegalArgumentException}.</p>
  */
 public enum LifecycleState {
 
   STARTING_UP,
-  MIGRATING_DB,
-  MIGRATION_FAILED,
-  MIGRATION_FINISHED,
+  DB_MIGRATION_STARTED,
+  DB_MIGRATION_FAILED,
+  DB_MIGRATION_FINISHED,
   RUNNING,
   DEGRADED,
   SHUTTING_DOWN,
@@ -23,16 +23,20 @@ public enum LifecycleState {
   FAILED;
 
   /**
-   * Case-insensitive mapping from payload string → enum constant.
+   * Maps a raw string from JSON to the corresponding enum constant.
+   *
+   * @param raw lowercase or kebab-case lifecycle state from incoming payload
+   * @return corresponding {@code LifecycleState}
+   * @throws IllegalArgumentException if the input does not map to any known state
    */
   @JsonCreator
   public static LifecycleState fromJson(String raw) {
     return switch (raw.toLowerCase()) {
       case "starting_up" -> STARTING_UP;
-      case "migrating_db",
-           "running_migration" -> MIGRATING_DB;
-      case "migration_failed" -> MIGRATION_FAILED;
-      case "migration_finished" -> MIGRATION_FINISHED;
+      case "db_migration_started",
+           "running_migration" -> DB_MIGRATION_STARTED;
+      case "db_migration_failed" -> DB_MIGRATION_FAILED;
+      case "db_migration_finished" -> DB_MIGRATION_FINISHED;
       case "running" -> RUNNING;
       case "degraded" -> DEGRADED;
       case "shutting_down" -> SHUTTING_DOWN;
@@ -44,7 +48,9 @@ public enum LifecycleState {
   }
 
   /**
-   * Preserve enum constant names in outbound JSON.
+   * Serializes the enum to its name in JSON format.
+   *
+   * @return the string representation of the enum
    */
   @JsonValue
   public String toJson() {

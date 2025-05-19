@@ -20,7 +20,16 @@ import { TimeAgoPipe } from '@app/pipes/time-ago.pipe';
 import { Tooltip } from 'primeng/tooltip';
 
 // union that matches the Java enum
-export type LifecycleState = 'STARTING_UP' | 'MIGRATING_DB' | 'MIGRATION_FAILED' | 'MIGRATION_FINISHED' | 'RUNNING' | 'DEGRADED' | 'SHUTTING_DOWN' | 'STOPPED' | 'FAILED';
+export type LifecycleState =
+  | 'STARTING_UP'
+  | 'DB_MIGRATION_STARTED'
+  | 'DB_MIGRATION_FAILED'
+  | 'DB_MIGRATION_FINISHED'
+  | 'RUNNING'
+  | 'DEGRADED'
+  | 'SHUTTING_DOWN'
+  | 'STOPPED'
+  | 'FAILED';
 
 // EnvironmentStatusDto plus lifecycleState
 export type EnvironmentStatusEx = EnvironmentStatusDto & {
@@ -88,7 +97,7 @@ export class EnvironmentStatusTagComponent implements OnInit, OnDestroy {
           spin: true,
         };
 
-      case 'MIGRATING_DB':
+      case 'DB_MIGRATION_STARTED':
         return {
           severity: 'info',
           icon: 'database-cog',
@@ -96,7 +105,7 @@ export class EnvironmentStatusTagComponent implements OnInit, OnDestroy {
           spin: false,
         };
 
-      case 'MIGRATION_FAILED':
+      case 'DB_MIGRATION_FAILED':
         return {
           severity: 'danger',
           icon: 'database-x',
@@ -104,7 +113,7 @@ export class EnvironmentStatusTagComponent implements OnInit, OnDestroy {
           spin: false,
         };
 
-      case 'MIGRATION_FINISHED':
+      case 'DB_MIGRATION_FINISHED':
         return {
           severity: 'success',
           icon: 'database',

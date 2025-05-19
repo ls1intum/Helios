@@ -8,9 +8,16 @@ import org.springframework.boot.convert.DurationUnit;
 import org.springframework.validation.annotation.Validated;
 
 /**
- * Binds {@code helios.status.*} configuration from YAML / properties files.
+ * Configuration holder for Helios status reporting.
+ *
+ * <p>This class binds properties prefixed with {@code helios.status} from Spring configuration
+ * sources such as YAML or application.properties. It is used to configure the status push
+ * behavior, including whether it is enabled, which environment is being reported, what the
+ * heartbeat interval is, and which endpoints to push to.</p>
  *
  * <pre>
+ * Example configuration:
+ *
  * helios:
  *   status:
  *     enabled: true
@@ -18,8 +25,13 @@ import org.springframework.validation.annotation.Validated;
  *     heartbeat-interval: 30s
  *     endpoints:
  *       - url: https://helios.aet.cit.tum.de/api/environments/status
- *         secret-key: verySecret
+ *         secret-key: my-secret
  * </pre>
+ *
+ * @param enabled whether status push is enabled
+ * @param environmentName GitHub Actions environment name
+ * @param endpoints list of configured Helios endpoints
+ * @param heartbeatInterval interval for periodic heartbeat pings (default: 30s)
  */
 @ConfigurationProperties(prefix = "helios.status")
 @Validated
@@ -33,7 +45,10 @@ public record HeliosStatusProperties(
     Duration heartbeatInterval
 ) {
   /**
-   * Supply defaults when properties missing.
+   * Validates and defaults the heartbeat interval.
+   *
+   * <p>Defaults to 30 seconds if not specified. Throws an exception if the configured
+   * value is not positive.</p>
    */
   public HeliosStatusProperties {
     if (heartbeatInterval == null) {

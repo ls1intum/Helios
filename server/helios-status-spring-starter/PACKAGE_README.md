@@ -102,9 +102,16 @@ logging:
 - All HTTP calls are non‑blocking and use a bounded single‑thread pool.
 - DB migration related status updates will be implemented in the future.
 
-### Manual status updates (optional / not recommended)
+### Manual status updates (optional)
 ```java
 @Autowired HeliosClient helios;
 
-helios.push(LifecycleState.DEGRADED, Map.of("cause", "downstream‑api"));
+// Push a status update
+helios.pushStatusUpdate(LifecycleState.DB_MIGRATION_STARTED);
+
+// Push status update with additional data
+helios.pushStatusUpdate(LifecycleState.DB_MIGRATION_FINISHED, new HashMap<>() {{
+    put("migrationId", "123456");
+  }}
+);
 ```
