@@ -36,11 +36,9 @@ public class TestSuite {
   @JoinColumn(name = "workflow_run_id")
   private WorkflowRun workflowRun;
 
-  @Min(0)
   @Column(nullable = false)
   private String name;
 
-  @Min(0)
   @Column(nullable = false)
   private LocalDateTime timestamp;
 
