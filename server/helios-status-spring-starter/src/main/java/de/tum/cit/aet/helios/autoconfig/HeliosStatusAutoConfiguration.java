@@ -26,6 +26,11 @@ public class HeliosStatusAutoConfiguration {
 
   private final HeliosStatusProperties props;
 
+  /**
+   * Constructs the configuration with the given Helios status properties.
+   *
+   * @param props the Helios status properties
+   */
   public HeliosStatusAutoConfiguration(HeliosStatusProperties props) {
     this.props = props;
   }
