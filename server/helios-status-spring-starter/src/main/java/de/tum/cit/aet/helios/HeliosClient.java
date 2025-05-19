@@ -99,6 +99,21 @@ public class HeliosClient {
    * Fire-and-forget POST to every configured target.
    */
   private void sendToAllTargets(PushStatusPayload payload) {
+    if (endpoints.isEmpty()) {
+      log.warn("No Helios endpoints configured. Skipping push.");
+      return;
+    }
+
+    if (payload == null) {
+      log.warn("Helios payload is null. Skipping push.");
+      return;
+    }
+
+    if (payload.environment() == null || payload.environment().isBlank()) {
+      log.warn("Helios payload is missing environment. Skipping push.");
+      return;
+    }
+
     for (int i = 0; i < endpoints.size(); i++) {
       final int idx = i;
       try {
