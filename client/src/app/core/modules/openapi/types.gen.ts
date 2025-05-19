@@ -94,7 +94,7 @@ export type EnvironmentDto = {
 export type EnvironmentStatusDto = {
   id: number;
   success: boolean;
-  state?: 'STARTING_UP' | 'MIGRATING_DB' | 'MIGRATION_FAILED' | 'MIGRATION_FINISHED' | 'RUNNING' | 'DEGRADED' | 'SHUTTING_DOWN' | 'STOPPED' | 'FAILED';
+  state?: 'STARTING_UP' | 'DB_MIGRATION_STARTED' | 'DB_MIGRATION_FAILED' | 'DB_MIGRATION_FINISHED' | 'RUNNING' | 'DEGRADED' | 'SHUTTING_DOWN' | 'STOPPED' | 'FAILED';
   httpStatusCode: number;
   checkedAt: string;
   checkType: 'HTTP_STATUS' | 'ARTEMIS_INFO' | 'PUSH_UPDATE';
@@ -228,7 +228,7 @@ export type ReleaseInfoDetailsDto = {
 
 export type PushStatusPayload = {
   environment: string;
-  state: 'STARTING_UP' | 'MIGRATING_DB' | 'MIGRATION_FAILED' | 'MIGRATION_FINISHED' | 'RUNNING' | 'DEGRADED' | 'SHUTTING_DOWN' | 'STOPPED' | 'FAILED';
+  state: 'STARTING_UP' | 'DB_MIGRATION_STARTED' | 'DB_MIGRATION_FAILED' | 'DB_MIGRATION_FINISHED' | 'RUNNING' | 'DEGRADED' | 'SHUTTING_DOWN' | 'STOPPED' | 'FAILED';
   timestamp: string;
   details?: {};
 };

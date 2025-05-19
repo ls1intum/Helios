@@ -6,9 +6,9 @@ import com.fasterxml.jackson.annotation.JsonValue;
 public enum LifecycleState {
 
   STARTING_UP,
-  MIGRATING_DB,
-  MIGRATION_FAILED,
-  MIGRATION_FINISHED,
+  DB_MIGRATION_STARTED,
+  DB_MIGRATION_FAILED,
+  DB_MIGRATION_FINISHED,
   RUNNING,
   DEGRADED,
   SHUTTING_DOWN,
@@ -19,10 +19,10 @@ public enum LifecycleState {
   public static LifecycleState fromJson(String raw) {
     return switch (raw.toLowerCase()) {
       case "starting_up" -> STARTING_UP;
-      case "migrating_db",
-           "running_migration" -> MIGRATING_DB;
-      case "migration_failed" -> MIGRATION_FAILED;
-      case "migration_finished" -> MIGRATION_FINISHED;
+      case "db_migration_started",
+           "running_migration" -> DB_MIGRATION_STARTED;
+      case "db_migration_failed" -> DB_MIGRATION_FAILED;
+      case "db_migration_finished" -> DB_MIGRATION_FINISHED;
       case "running" -> RUNNING;
       case "degraded" -> DEGRADED;
       case "shutting_down" -> SHUTTING_DOWN;

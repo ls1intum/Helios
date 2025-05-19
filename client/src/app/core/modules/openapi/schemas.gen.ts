@@ -303,7 +303,7 @@ export const EnvironmentStatusDtoSchema = {
     },
     state: {
       type: 'string',
-      enum: ['STARTING_UP', 'MIGRATING_DB', 'MIGRATION_FAILED', 'MIGRATION_FINISHED', 'RUNNING', 'DEGRADED', 'SHUTTING_DOWN', 'STOPPED', 'FAILED'],
+      enum: ['STARTING_UP', 'DB_MIGRATION_STARTED', 'DB_MIGRATION_FAILED', 'DB_MIGRATION_FINISHED', 'RUNNING', 'DEGRADED', 'SHUTTING_DOWN', 'STOPPED', 'FAILED'],
     },
     httpStatusCode: {
       type: 'integer',
@@ -704,7 +704,7 @@ export const PushStatusPayloadSchema = {
     },
     state: {
       type: 'string',
-      enum: ['STARTING_UP', 'MIGRATING_DB', 'MIGRATION_FAILED', 'MIGRATION_FINISHED', 'RUNNING', 'DEGRADED', 'SHUTTING_DOWN', 'STOPPED', 'FAILED'],
+      enum: ['STARTING_UP', 'DB_MIGRATION_STARTED', 'DB_MIGRATION_FAILED', 'DB_MIGRATION_FINISHED', 'RUNNING', 'DEGRADED', 'SHUTTING_DOWN', 'STOPPED', 'FAILED'],
     },
     timestamp: {
       type: 'string',

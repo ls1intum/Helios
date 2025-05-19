@@ -102,7 +102,7 @@ logging:
 - All HTTP calls are non‑blocking and use a bounded single‑thread pool.
 - DB migration related status updates will be implemented in the future.
 
-### Manual status updates (optional / not recommended)
+### Manual status updates (optional)
 ```java
 @Autowired HeliosClient helios;
 
