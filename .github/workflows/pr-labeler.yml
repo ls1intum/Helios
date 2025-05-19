@@ -7,8 +7,7 @@ jobs:
     name: "Apply labels"
     runs-on: ubuntu-latest
     permissions:
-      contents: write
-      issues: write
+      contents: read
       pull-requests: write
     steps:
       - name: "Checkout repository"
