@@ -22,6 +22,7 @@ import okhttp3.Response;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.DisposableBean;
 import org.springframework.util.StringUtils;
 
 /**
@@ -36,7 +37,7 @@ import org.springframework.util.StringUtils;
  *   <li>Caller never blocks; failures are only logged.</li>
  * </ul>
  */
-public class HeliosClient {
+public class HeliosClient implements DisposableBean {
 
   private static final Logger log = LoggerFactory.getLogger(HeliosClient.class);
 
@@ -127,8 +128,33 @@ public class HeliosClient {
    *     must not be null (use {@link java.util.Collections#emptyMap()} if not needed).
    */
   public void pushStatusUpdate(LifecycleState state, Map<String, Object> details) {
-    PushStatusPayload payload = PushStatusPayload.of(environment, state, details);
-    sendToAllTargets(payload);
+    // Check if push is enabled
+    if (!cfg.enabled()) {
+      log.debug("Helios push is disabled. Skipping push.");
+      return;
+    }
+
+    // Check if endpoints are configured
+    if (endpoints.isEmpty()) {
+      log.warn("No Helios endpoints configured. Skipping push.");
+      return;
+    }
+
+    if (environment == null || environment.isBlank()) {
+      log.warn("Helios payload is missing environment. Skipping push.");
+      return;
+    }
+
+    PushStatusPayload p = PushStatusPayload.of(environment, state, details);
+
+    // DB_MIGRATION_FAILED, FAILED, SHUTTING_DOWN are "must deliver" states
+    if (state == LifecycleState.DB_MIGRATION_FAILED
+        || state == LifecycleState.FAILED
+        || state == LifecycleState.SHUTTING_DOWN) {
+      pushStatusUpdateSync(p);
+    } else {
+      pushStatusUpdateAsync(p);
+    }
   }
 
   /* ------------------------------------------------------------------ */
@@ -159,27 +185,10 @@ public class HeliosClient {
    * @param payload the fully constructed payload to push;
    *     must not be null and must contain a valid environment field.
    */
-  private void sendToAllTargets(PushStatusPayload payload) {
-    // Check if push is enabled
-    if (!cfg.enabled()) {
-      log.debug("Helios push is disabled. Skipping push.");
-      return;
-    }
-
-    // Check if endpoints are configured
-    if (endpoints.isEmpty()) {
-      log.warn("No Helios endpoints configured. Skipping push.");
-      return;
-    }
-
+  private void pushStatusUpdateAsync(PushStatusPayload payload) {
     // Check if payload is valid
     if (payload == null) {
       log.warn("Helios payload is null. Skipping push.");
-      return;
-    }
-
-    if (payload.environment() == null || payload.environment().isBlank()) {
-      log.warn("Helios payload is missing environment. Skipping push.");
       return;
     }
 
@@ -236,5 +245,70 @@ public class HeliosClient {
         log.error("Failed to serialize Helios payload: {}", e.getMessage());
       }
     }
+  }
+
+  private void pushStatusUpdateSync(PushStatusPayload payload) {
+    // send every target *synchronously*
+    for (HeliosEndpoint ep : endpoints) {
+      try {
+        if (!StringUtils.hasText(String.valueOf(ep.url()))
+            || !StringUtils.hasText(ep.secretKey())) {
+          log.warn("Helios endpoint '{}' missing URL/secret – skipping", ep.url());
+          continue;
+        }
+        Request req = new Request.Builder()
+            .url(ep.url().toString())
+            .header("Authorization", "Secret " + ep.secretKey())
+            .post(RequestBody.create(mapper.writeValueAsBytes(payload), JSON))
+            .build();
+        try (Response resp = client.newCall(req).execute()) {
+          if (resp.isSuccessful()) {
+            log.info("Helios sync push to '{}' [{}] – OK",
+                ep.url(), resp.code());
+          } else {
+            log.warn("Helios sync push to '{}' [{} {}] FAILED",
+                ep.url(), resp.code(), resp.message());
+          }
+        } catch (Exception ioe) {
+          log.warn("Helios sync push to '{}' failed: {}", ep.url(), ioe.getMessage());
+        }
+      } catch (Exception e) {
+        log.error("Failed to serialize Helios payload: {}", e.getMessage());
+      }
+    }
+  }
+
+  /**
+   * Flush the queue and wait a bounded time.  Safe to call twice.
+   */
+  private static void flush() {
+    Dispatcher dispatcher = client.dispatcher();
+    dispatcher.executorService().shutdown();           // idempotent
+    try {
+      dispatcher.executorService().awaitTermination(5, TimeUnit.SECONDS);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+    }
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* DisposableBean                                                     */
+  /* ------------------------------------------------------------------ */
+  @Override
+  public void destroy() {
+    log.info("HeliosClient destroy(): flushing pending pushes");
+    flush();
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* JVM shutdown-hook                                                  */
+  /* ------------------------------------------------------------------ */
+  static {
+    Runtime.getRuntime().addShutdownHook(
+        new Thread(() -> {
+          LoggerFactory.getLogger(HeliosClient.class)
+              .info("Helios shutdown-hook: flushing pending pushes");
+          flush();
+        }, "Helios-ShutdownHook"));
   }
 }
