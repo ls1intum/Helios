@@ -34,6 +34,7 @@ import { EnvironmentAccordionComponent } from '../environment-accordion/environm
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
 import { IconRefresh, IconServerCog } from 'angular-tabler-icons/icons';
 import { DeployConfirmationComponent } from '@app/components/dialogs/deploy-confirmation/deploy-confirmation.component';
+import { LockConfirmationComponent } from '@app/components/dialogs/lock-confirmation/lock-confirmation.component';
 
 @Component({
   selector: 'app-environment-list-view',
@@ -55,6 +56,7 @@ import { DeployConfirmationComponent } from '@app/components/dialogs/deploy-conf
     DividerModule,
     EnvironmentAccordionComponent,
     DeployConfirmationComponent,
+    LockConfirmationComponent,
   ],
   providers: [DatePipe, provideTablerIcons({ IconRefresh, IconServerCog })],
   templateUrl: './environment-list-view.component.html',
@@ -69,6 +71,7 @@ export class EnvironmentListViewComponent implements OnDestroy {
   private messageService = inject(MessageService);
 
   deployDialogVisible = signal(false);
+  lockDialogVisible = signal(false);
   selectedEnv = signal<EnvironmentDto | undefined>(undefined);
 
   showLatestDeployment: boolean = true;
@@ -165,13 +168,15 @@ export class EnvironmentListViewComponent implements OnDestroy {
   }));
 
   lockEnvironment(environment: EnvironmentDto) {
-    this.confirmationService.confirm({
-      header: 'Lock Environment',
-      message: `Are you sure you want to lock ${environment.name}?`,
-      accept: () => {
-        this.lockEnvironmentMutation.mutate({ path: { id: environment.id } });
-      },
-    });
+    this.selectedEnv.set(environment);
+    this.lockDialogVisible.set(true);
+  }
+
+  onLockEnvironmentConfirmed(yes: boolean) {
+    if (yes && this.selectedEnv()) {
+      this.lockEnvironmentMutation.mutate({ path: { id: this.selectedEnv()!.id } });
+      this.selectedEnv.set(undefined);
+    }
   }
 
   extendLock(event: Event, environment: EnvironmentDto) {
