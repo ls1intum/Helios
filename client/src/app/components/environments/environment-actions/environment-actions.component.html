@@ -1,4 +1,4 @@
-<div class="flex gap-2 items-center self-end md:self-center">
+<div class="flex gap-2 items-center overflow-hidden flex-wrap">
   @if (environment().locked) {
     <div class="flex gap-1 items-center">
       <app-user-avatar [user]="environment().lockedBy" [toolTipText]="'Locked By'" tooltipPosition="top" />
@@ -94,5 +94,4 @@
       <i-tabler name="pencil" />
     </a>
   }
-  <span class="w-2"></span>
 </div>
