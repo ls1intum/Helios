@@ -28,7 +28,7 @@ import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { TextareaModule } from 'primeng/textarea';
 import { SlicePipe } from '@angular/common';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
-import { IconBrandGithub, IconCheck, IconCloudUpload, IconExternalLink, IconGitCommit, IconPencil, IconPlus, IconTrash, IconUser, IconX } from 'angular-tabler-icons/icons';
+import { IconBrandGithub, IconCheck, IconUpload, IconExternalLink, IconGitCommit, IconPencil, IconPlus, IconTrash, IconUser, IconX } from 'angular-tabler-icons/icons';
 import { PublishDraftReleaseConfirmationComponent } from '@app/components/dialogs/publish-draft-release-confirmation/publish-draft-release-confirmation.component';
 
 @Component({
@@ -55,7 +55,7 @@ import { PublishDraftReleaseConfirmationComponent } from '@app/components/dialog
       IconTrash,
       IconUser,
       IconExternalLink,
-      IconCloudUpload,
+      IconUpload,
       IconCheck,
       IconX,
       IconPlus,

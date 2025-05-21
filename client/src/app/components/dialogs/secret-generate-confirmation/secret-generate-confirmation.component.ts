@@ -1,11 +1,18 @@
 import { Component, model, output } from '@angular/core';
-import { TablerIconComponent } from 'angular-tabler-icons';
+import {provideTablerIcons, TablerIconComponent} from 'angular-tabler-icons';
 import { Dialog } from 'primeng/dialog';
 import { Button } from 'primeng/button';
+import {IconKey, IconAlertTriangle} from 'angular-tabler-icons/icons';
 
 @Component({
   selector: 'app-secret-generate-confirmation',
   imports: [TablerIconComponent, Dialog, Button],
+  providers: [
+    provideTablerIcons({
+      IconKey,
+      IconAlertTriangle,
+    }),
+  ],
   templateUrl: './secret-generate-confirmation.component.html',
 })
 export class SecretGenerateConfirmationComponent {

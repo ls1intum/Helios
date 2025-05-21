@@ -8,7 +8,7 @@ import { NgClass } from '@angular/common';
 import { PrimeTemplate } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
-import { IconAlertTriangle, IconInfoCircle, IconServer } from 'angular-tabler-icons/icons';
+import { IconAlertTriangle, IconInfoCircle, IconServer, IconCloudUpload } from 'angular-tabler-icons/icons';
 import { InputText } from 'primeng/inputtext';
 
 @Component({
@@ -19,6 +19,7 @@ import { InputText } from 'primeng/inputtext';
       IconAlertTriangle,
       IconInfoCircle,
       IconServer,
+      IconCloudUpload,
     }),
   ],
   templateUrl: './deploy-confirmation.component.html',

@@ -1,4 +1,11 @@
-<p-dialog [(visible)]="visible" [modal]="true" [style]="{ width: '26rem' }" draggable="false" header="{{ 'Deploy to ' + environment().name }}" (onHide)="onCancel()">
+<p-dialog [(visible)]="visible" [modal]="true" [style]="{ width: '26rem' }" draggable="false" (onHide)="onCancel()">
+  <ng-template #header>
+    <div class="font-bold text-xl flex items-center gap-2">
+      <i-tabler name="cloud-upload" class="!size-5 flex-shrink-0" />
+      {{ 'Deploy to ' + environment().name }}
+    </div>
+  </ng-template>
+
   <!-- Loading State -->
   @if (query.isPending()) {
     <ng-container>
