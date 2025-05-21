@@ -231,7 +231,19 @@ export class EnvironmentListViewComponent implements OnDestroy {
     }
 
     return environments.filter(environment => {
-      return environment.name.toLowerCase().includes(search.toLowerCase());
+      // Search in environment name
+      const nameMatch = environment.name.toLowerCase().includes(search.toLowerCase());
+
+      // Search in environment display name
+      const displayNameMatch = environment.displayName?.toLowerCase().includes(search.toLowerCase());
+
+      // Search in installed apps
+      const appsMatch = environment.installedApps?.some(app =>
+        app.toLowerCase().includes(search.toLowerCase())
+      ) || false;
+
+      // Return true if either name or any installed app matches
+      return nameMatch || appsMatch || displayNameMatch;
     });
   });
 
