@@ -1,0 +1,21 @@
+<p-dialog [(visible)]="isVisible" [modal]="true" [style]="{ width: '26rem' }" draggable="false" (onHide)="onCancel()">
+  <ng-template #header>
+    <div class="font-bold text-xl flex items-center gap-2">
+      <i-tabler name="upload" class="!size-5 text-blue-600" />
+      Publish Release Candidate
+    </div>
+  </ng-template>
+
+  <div class="text-sm p-4 space-y-3">
+    <p>
+      Are you sure you want to publish release candidate <b>{{ releaseName() }}</b> as a <b>draft</b> to GitHub? This action can only be undone directly in GitHub.
+    </p>
+  </div>
+
+  <ng-template #footer>
+    <div class="flex justify-between w-full">
+      <p-button label="Cancel" [text]="true" (click)="onCancel()" />
+      <p-button label="Publish" severity="primary" (click)="onPublish()" />
+    </div>
+  </ng-template>
+</p-dialog>
