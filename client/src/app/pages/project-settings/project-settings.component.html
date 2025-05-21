@@ -67,11 +67,15 @@
           tooltipPosition="bottom"
           (click)="copySecret()"
         />
-        <p-button label="Regenerate" icon="pi pi-refresh" class="p-button-sm" (click)="regenerateSecret()" [loading]="rotateSecret.isPending()"></p-button>
+        <p-button label="Regenerate" icon="pi pi-refresh" class="p-button-sm" (click)="generateSecret()" [loading]="rotateSecret.isPending()"></p-button>
       </div>
 
       @if (secret()) {
         <small>Secrets can <span class="font-semibold">never</span> be retrieved here again, keep them safe.</small>
+      }
+
+      @if (secretReGenerateDialogVisible()) {
+        <app-secret-generate-confirmation [(isVisible)]="secretReGenerateDialogVisible" (confirmed)="onGenerateSecretConfirmed($event)" />
       }
     </div>
 
