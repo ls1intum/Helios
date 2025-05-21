@@ -34,7 +34,6 @@ import { EnvironmentAccordionComponent } from '../environment-accordion/environm
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
 import { IconRefresh, IconServerCog } from 'angular-tabler-icons/icons';
 import { DeployConfirmationComponent } from '@app/components/dialogs/deploy-confirmation/deploy-confirmation.component';
-import { DialogService } from 'primeng/dynamicdialog';
 
 @Component({
   selector: 'app-environment-list-view',
@@ -57,7 +56,7 @@ import { DialogService } from 'primeng/dynamicdialog';
     EnvironmentAccordionComponent,
     DeployConfirmationComponent,
   ],
-  providers: [DatePipe, provideTablerIcons({ IconRefresh, IconServerCog }), DialogService],
+  providers: [DatePipe, provideTablerIcons({ IconRefresh, IconServerCog })],
   templateUrl: './environment-list-view.component.html',
 })
 export class EnvironmentListViewComponent implements OnDestroy {
