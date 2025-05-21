@@ -52,5 +52,8 @@
         </div>
       }
     }
+    @if (deployDialogVisible()) {
+      <app-deploy-confirmation [(isVisible)]="deployDialogVisible" [environment]="selectedEnv()!" (confirmed)="onDeployDialogConfirmed($event)"></app-deploy-confirmation>
+    }
   }
 }

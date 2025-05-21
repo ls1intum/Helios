@@ -33,6 +33,8 @@ import { TooltipModule } from 'primeng/tooltip';
 import { EnvironmentAccordionComponent } from '../environment-accordion/environment-accordion.component';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
 import { IconRefresh, IconServerCog } from 'angular-tabler-icons/icons';
+import { DeployConfirmationComponent } from '@app/components/dialogs/deploy-confirmation/deploy-confirmation.component';
+import { DialogService } from 'primeng/dynamicdialog';
 
 @Component({
   selector: 'app-environment-list-view',
@@ -53,8 +55,9 @@ import { IconRefresh, IconServerCog } from 'angular-tabler-icons/icons';
     ToggleSwitchModule,
     DividerModule,
     EnvironmentAccordionComponent,
+    DeployConfirmationComponent,
   ],
-  providers: [DatePipe, provideTablerIcons({ IconRefresh, IconServerCog })],
+  providers: [DatePipe, provideTablerIcons({ IconRefresh, IconServerCog }), DialogService],
   templateUrl: './environment-list-view.component.html',
 })
 export class EnvironmentListViewComponent implements OnDestroy {
@@ -65,6 +68,9 @@ export class EnvironmentListViewComponent implements OnDestroy {
   private currentTime = signal(Date.now());
   private intervalId: number | undefined;
   private messageService = inject(MessageService);
+
+  deployDialogVisible = signal(false);
+  selectedEnv = signal<EnvironmentDto | undefined>(undefined);
 
   showLatestDeployment: boolean = true;
 
@@ -207,13 +213,14 @@ export class EnvironmentListViewComponent implements OnDestroy {
   }
 
   deployEnvironment(environment: EnvironmentDto) {
-    this.confirmationService.confirm({
-      header: 'Deployment',
-      message: `Are you sure you want to deploy to ${environment.name}?`,
-      accept: () => {
-        this.deploy.emit(environment);
-      },
-    });
+    this.selectedEnv.set(environment);
+    this.deployDialogVisible.set(true);
+  }
+
+  onDeployDialogConfirmed(yes: boolean) {
+    if (yes && this.selectedEnv()) {
+      this.deploy.emit(this.selectedEnv()!);
+    }
   }
 
   onSearch(event: Event) {
@@ -276,7 +283,11 @@ export class EnvironmentListViewComponent implements OnDestroy {
   syncEnvMutation = injectMutation(() => ({
     ...syncEnvironmentsMutation(),
     onSuccess: () => {
-      this.messageService.add({ severity: 'success', summary: 'Sync Environments', detail: 'The repository environments synced successfully' });
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Sync Environments',
+        detail: 'The repository environments synced successfully',
+      });
       this.queryClient.invalidateQueries({ queryKey: getAllEnvironmentsQueryKey() });
     },
   }));
