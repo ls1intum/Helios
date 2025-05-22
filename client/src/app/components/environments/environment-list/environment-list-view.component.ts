@@ -36,6 +36,9 @@ import { EnvironmentAccordionComponent } from '../environment-accordion/environm
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
 import { IconRefresh, IconServerCog, IconFilter, IconFilterPlus } from 'angular-tabler-icons/icons';
 
+// Define an enum for environment types
+export type EnvironmentTypeFilter = 'ALL' | 'TEST' | 'STAGING' | 'PRODUCTION';
+
 @Component({
   selector: 'app-environment-list-view',
   imports: [
@@ -127,6 +130,7 @@ export class EnvironmentListViewComponent implements OnDestroy {
 
   searchInput = signal<string>('');
   showAvailableOnly = signal<boolean>(false);
+  selectedEnvironmentType = signal<EnvironmentTypeFilter>('ALL');
   filterPopover = viewChild<Popover>('filterPopover');
   timeUntilReservationExpires = computed(() => {
     const environments = this.environmentQuery.data();
@@ -236,6 +240,7 @@ export class EnvironmentListViewComponent implements OnDestroy {
 
     const search = this.searchInput();
     const availableOnly = this.showAvailableOnly();
+    const environmentType = this.selectedEnvironmentType();
 
     if (!environments) {
       return [];
@@ -244,6 +249,11 @@ export class EnvironmentListViewComponent implements OnDestroy {
     return environments.filter(environment => {
       // Filter by availability if enabled
       if (availableOnly && environment.locked) {
+        return false;
+      }
+
+      // Filter by environment type if not ALL
+      if (environmentType !== 'ALL' && environment.type?.toUpperCase() !== environmentType) {
         return false;
       }
 
@@ -366,6 +376,11 @@ export class EnvironmentListViewComponent implements OnDestroy {
 
   onFilterSelect(filterType: boolean) {
     this.showAvailableOnly.set(filterType);
+    this.filterPopover()?.hide();
+  }
+
+  onEnvironmentTypeSelect(type: EnvironmentTypeFilter) {
+    this.selectedEnvironmentType.set(type);
     this.filterPopover()?.hide();
   }
 }
