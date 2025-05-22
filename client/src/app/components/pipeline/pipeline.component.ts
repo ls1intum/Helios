@@ -11,7 +11,6 @@ import {
 } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { SkeletonModule } from 'primeng/skeleton';
 import { WorkflowRunDto } from '@app/core/modules/openapi';
-import { PipelineTestResultsComponent } from './test-results/pipeline-test-results.component';
 import { DividerModule } from 'primeng/divider';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
 import { IconCircleCheck, IconCircleX, IconExclamationCircle, IconExternalLink, IconInfoCircle, IconProgress, IconProgressHelp, IconBrandGithub } from 'angular-tabler-icons/icons';
@@ -37,7 +36,7 @@ export interface Pipeline {
 
 @Component({
   selector: 'app-pipeline',
-  imports: [TableModule, DividerModule, ButtonModule, ProgressSpinnerModule, PanelModule, TablerIconComponent, TooltipModule, SkeletonModule, PipelineTestResultsComponent],
+  imports: [TableModule, DividerModule, ButtonModule, ProgressSpinnerModule, PanelModule, TablerIconComponent, TooltipModule, SkeletonModule],
   providers: [
     provideTablerIcons({
       IconInfoCircle,

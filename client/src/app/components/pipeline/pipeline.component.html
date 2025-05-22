@@ -1,4 +1,11 @@
-<h3 class="text-xl mb-2">Pipeline</h3>
+<!-- Divider -->
+<div class="flex justify-center">
+  <p-divider class="w-full mt-4" />
+</div>
+
+<div class="mb-4">
+  <h3 class="text-xl mb-2">Pipeline</h3>
+</div>
 
 @if (branchQuery.isPending() && pullRequestQuery.isPending()) {
   <div class="flex items-start mt-2 gap-4">
@@ -85,7 +92,5 @@
         </div>
       }
     </div>
-
-    <app-pipeline-test-results [selector]="selector()" />
   }
 }

@@ -39,6 +39,7 @@ import {
   IconProgress,
   IconX,
 } from 'angular-tabler-icons/icons';
+import { Divider } from 'primeng/divider';
 
 // Define log level interface and constants
 interface LogLevel {
@@ -80,6 +81,7 @@ const LOG_LEVELS: LogLevel[] = [
     TabViewModule,
     DialogModule,
     SliderModule,
+    Divider,
   ],
   providers: [
     provideTablerIcons({

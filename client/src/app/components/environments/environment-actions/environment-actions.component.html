@@ -41,13 +41,11 @@
       <!-- Lock/Unlock Controls -->
       @if (environment().enabled && environment().type === 'TEST') {
         @if (!environment().locked) {
-          @if (deployable()) {
-            <p-button (click)="onLock($event)" [disabled]="!canUserDeploy()" [pTooltip]="getLockTooltip()" tooltipPosition="top">
-              <div class="flex items-center">
-                <i-tabler name="lock" class="w-4 h-4 flex-shrink-0 text-red-700" />
-              </div>
-            </p-button>
-          }
+          <p-button (click)="onLock($event)" [disabled]="!canUserDeploy()" [pTooltip]="getLockTooltip()" tooltipPosition="top">
+            <div class="flex items-center">
+              <i-tabler name="lock" class="w-4 h-4 flex-shrink-0 text-red-700" />
+            </div>
+          </p-button>
         } @else {
           @if (canUnlockShow()) {
             <p-button severity="danger" class="[&>*]:!rounded-none" (click)="onUnlock($event)" [disabled]="!canUnlock()" [pTooltip]="getUnlockToolTip()" tooltipPosition="top">
