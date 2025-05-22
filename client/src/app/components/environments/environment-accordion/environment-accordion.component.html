@@ -1,4 +1,4 @@
-<p-accordion-panel [value]="environment().id">
+<p-accordion-panel [value]="environment().id" [ngClass]="{ 'border-2 border-blue-500 rounded-lg': isLockedByCurrentUser() }">
   <p-accordion-header>
     <div class="flex gap-2 items-start w-full flex-wrap md:flex-nowrap flex-col md:items-center md:flex-row">
       <div class="flex flex-col gap-1 flex-wrap">
@@ -8,7 +8,11 @@
             <i-tabler name="external-link" class="!size-4 flex-shrink-0"></i-tabler>
           </p-button>
 
-          <app-lock-tag [isLocked]="!!environment().locked"></app-lock-tag>
+          @if (isLockedByCurrentUser()) {
+            <p-tag severity="info" value="Locked by you" rounded="true" />
+          } @else {
+            <app-lock-tag [isLocked]="!!environment().locked"></app-lock-tag>
+          }
 
           @if (environment().latestStatus; as status) {
             <app-environment-status-tag [status]="status" />
@@ -76,7 +80,7 @@
 
       <div class="flex-grow"></div>
 
-      <div class="flex flex-col gap-2 items-end">
+      <div class="flex flex-col gap-4 items-end">
         <!-- Environment Actions Component -->
         <app-environment-actions
           [environment]="environment()"

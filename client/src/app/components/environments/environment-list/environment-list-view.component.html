@@ -80,6 +80,7 @@
                 [deployable]="!!deployable()"
                 [canViewAllEnvironments]="!!canViewAllEnvironments()"
                 [timeUntilReservationExpires]="timeUntilReservationExpires().get(environment.id)"
+                [isLockedByCurrentUser]="isCurrentUserLocked(environment)"
                 (deploy)="deployEnvironment($event)"
                 (unlock)="onUnlockEnvironment($event.event, $event.environment)"
                 (extend)="extendLock($event.event, $event.environment)"

@@ -247,6 +247,11 @@ export class EnvironmentListViewComponent implements OnDestroy {
     }
 
     return environments.filter(environment => {
+      // Always include environments locked by the current user
+      if (this.isCurrentUserLocked(environment)) {
+        return true;
+      }
+
       // Filter by availability if enabled
       if (availableOnly && environment.locked) {
         return false;
