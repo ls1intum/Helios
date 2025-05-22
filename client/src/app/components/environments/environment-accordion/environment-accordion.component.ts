@@ -57,6 +57,7 @@ export class EnvironmentAccordionComponent {
   readonly deployable = input<boolean>(false);
   readonly canViewAllEnvironments = input<boolean>(false);
   readonly timeUntilReservationExpires = input<number | undefined>(undefined);
+  readonly isLockedByCurrentUser = input<boolean>(false);
 
   readonly deploy = output<EnvironmentDto>();
   readonly unlock = output<{ event: Event; environment: EnvironmentDto }>();
