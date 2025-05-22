@@ -17,7 +17,7 @@
       </div>
     </ng-container>
   } @else {
-    <div>
+    <div class="pt-2">
       <!-- Environment banner -->
       <div
         class="p-4 rounded flex items-start space-x-3"
@@ -67,7 +67,7 @@
               {{ reviewersLine() }}
             </span>
           </p>
-          <p class="text-gray-700 text-xs italic">
+          <p class="text-gray-700 dark:text-gray-300 text-xs italic">
             Helios will attempt to auto-approve this deployment. If you or your team aren’t in the required reviewers list, the pipeline pauses just before the deploy step and
             waits for one of the reviewers to approve.
           </p>
