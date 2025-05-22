@@ -1,5 +1,20 @@
 <div class="flex gap-2 items-center justify-between mb-3">
-  <input pInputText id="commit-hash" (input)="onSearch($event)" [value]="searchInput()" type="text" placeholder="Search environments or installed apps" class="w-full md:w-1/3" />
+  <div class="flex items-center gap-2 w-full md:w-2/3">
+    <p-button (onClick)="toggleFilterPopover($event)">
+      @if (showAvailableOnly()) {
+        <i-tabler name="filter" />
+      } @else {
+        <i-tabler name="filter-plus" />
+      }
+    </p-button>
+    <input pInputText id="commit-hash" (input)="onSearch($event)" [value]="searchInput()" type="text" placeholder="Search environments or installed apps" class="w-full" />
+    <p-popover #filterPopover>
+      <div class="flex flex-col gap-1 p-2">
+        <p-button severity="secondary" [text]="showAvailableOnly()" styleClass="w-full justify-start" (click)="onFilterSelect(false)"> All Environments </p-button>
+        <p-button severity="secondary" [text]="!showAvailableOnly()" styleClass="w-full justify-start" (click)="onFilterSelect(true)"> Available Only </p-button>
+      </div>
+    </p-popover>
+  </div>
   @if (!hideLinkToList()) {
     <p-button [routerLink]="'../../../environment'">
       <i-tabler name="server-cog" class="!size-5" />
@@ -23,10 +38,12 @@
 
 @if (!environmentQuery.isPending()) {
   @if (filteredEnvironments().length === 0) {
-    @if (searchInput().length === 0) {
+    @if (searchInput().length === 0 && !showAvailableOnly()) {
       <p>No environments found. Create a new environment to get started.</p>
+    } @else if (showAvailableOnly() && searchInput().length === 0) {
+      <p>No available (unlocked) environments found.</p>
     } @else {
-      <p>No environments found for the search term, try something else.</p>
+      <p>No environments found for the search criteria, try something else or adjust filters.</p>
     }
   } @else {
     @for (group of environmentGroups(); track group[0]) {

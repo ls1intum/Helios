@@ -1,5 +1,5 @@
 import { CommonModule, DatePipe } from '@angular/common';
-import { Component, computed, inject, input, OnDestroy, output, signal } from '@angular/core';
+import { Component, computed, inject, input, OnDestroy, output, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { EnvironmentDto } from '@app/core/modules/openapi';
@@ -23,8 +23,10 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { AvatarModule } from 'primeng/avatar';
 import { ButtonModule } from 'primeng/button';
 import { ButtonGroupModule } from 'primeng/buttongroup';
+import { CheckboxModule } from 'primeng/checkbox';
 import { DividerModule } from 'primeng/divider';
 import { InputTextModule } from 'primeng/inputtext';
+import { PopoverModule, Popover } from 'primeng/popover';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { TagModule } from 'primeng/tag';
 import { ToggleButtonModule } from 'primeng/togglebutton';
@@ -32,7 +34,7 @@ import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { TooltipModule } from 'primeng/tooltip';
 import { EnvironmentAccordionComponent } from '../environment-accordion/environment-accordion.component';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
-import { IconRefresh, IconServerCog } from 'angular-tabler-icons/icons';
+import { IconRefresh, IconServerCog, IconFilter, IconFilterPlus } from 'angular-tabler-icons/icons';
 
 @Component({
   selector: 'app-environment-list-view',
@@ -53,8 +55,10 @@ import { IconRefresh, IconServerCog } from 'angular-tabler-icons/icons';
     ToggleSwitchModule,
     DividerModule,
     EnvironmentAccordionComponent,
+    CheckboxModule,
+    PopoverModule,
   ],
-  providers: [DatePipe, provideTablerIcons({ IconRefresh, IconServerCog })],
+  providers: [DatePipe, provideTablerIcons({ IconRefresh, IconServerCog, IconFilter, IconFilterPlus })],
   templateUrl: './environment-list-view.component.html',
 })
 export class EnvironmentListViewComponent implements OnDestroy {
@@ -122,6 +126,8 @@ export class EnvironmentListViewComponent implements OnDestroy {
   deploy = output<EnvironmentDto>();
 
   searchInput = signal<string>('');
+  showAvailableOnly = signal<boolean>(false);
+  filterPopover = viewChild<Popover>('filterPopover');
   timeUntilReservationExpires = computed(() => {
     const environments = this.environmentQuery.data();
     const now = this.currentTime();
@@ -221,16 +227,26 @@ export class EnvironmentListViewComponent implements OnDestroy {
     this.searchInput.set(input.value);
   }
 
+  toggleAvailableOnly() {
+    this.showAvailableOnly.update(value => !value);
+  }
+
   filteredEnvironments = computed(() => {
     let environments = this.environmentQuery.data();
 
     const search = this.searchInput();
+    const availableOnly = this.showAvailableOnly();
 
     if (!environments) {
       return [];
     }
 
     return environments.filter(environment => {
+      // Filter by availability if enabled
+      if (availableOnly && environment.locked) {
+        return false;
+      }
+
       // Search in environment name
       const nameMatch = environment.name.toLowerCase().includes(search.toLowerCase());
 
@@ -238,9 +254,7 @@ export class EnvironmentListViewComponent implements OnDestroy {
       const displayNameMatch = environment.displayName?.toLowerCase().includes(search.toLowerCase());
 
       // Search in installed apps
-      const appsMatch = environment.installedApps?.some(app =>
-        app.toLowerCase().includes(search.toLowerCase())
-      ) || false;
+      const appsMatch = environment.installedApps?.some(app => app.toLowerCase().includes(search.toLowerCase())) || false;
 
       // Return true if either name or any installed app matches
       return nameMatch || appsMatch || displayNameMatch;
@@ -344,5 +358,14 @@ export class EnvironmentListViewComponent implements OnDestroy {
         this.cancelDeploymentMutation.mutate({ body: payload });
       },
     });
+  }
+
+  toggleFilterPopover(event: Event) {
+    this.filterPopover()?.toggle(event);
+  }
+
+  onFilterSelect(filterType: boolean) {
+    this.showAvailableOnly.set(filterType);
+    this.filterPopover()?.hide();
   }
 }
