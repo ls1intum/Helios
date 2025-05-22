@@ -52,7 +52,7 @@
         <br />
         If the environment uses push‑based status updates, go to the Environment list → Edit page and choose Push in the Status update field.
         <br />
-        You can regenerate the secret at any time, but the previous secret becomes invalid the moment you regenerate.
+        You can re-generate the secret at any time, but the previous secret becomes invalid the moment you re-generated.
       </p>
 
       <!-- Secret Display -->
@@ -67,7 +67,7 @@
           tooltipPosition="bottom"
           (click)="copySecret()"
         />
-        <p-button label="Regenerate" icon="pi pi-refresh" class="p-button-sm" (click)="generateSecret()" [loading]="rotateSecret.isPending()"></p-button>
+        <p-button label="Generate" icon="pi pi-refresh" class="p-button-sm" (click)="generateSecret()" [loading]="rotateSecret.isPending()"></p-button>
       </div>
 
       @if (secret()) {

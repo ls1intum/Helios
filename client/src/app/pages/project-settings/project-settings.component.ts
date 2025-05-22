@@ -551,8 +551,8 @@ export class ProjectSettingsComponent {
       this.secret.set(data);
       this.messageService.add({
         severity: 'success',
-        summary: 'Secret regenerated',
-        detail: 'Copy the token now.',
+        summary: 'Secret generated.',
+        detail: 'Copy the token now!',
       });
     },
   }));
