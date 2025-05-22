@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, viewChild } from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
 import { MarkdownPipe } from '@app/core/modules/markdown/markdown.pipe';
 import { PipelineComponent, PipelineSelector } from '@app/components/pipeline/pipeline.component';
 import { TagModule } from 'primeng/tag';
@@ -39,8 +39,6 @@ import { PipelineTestResultsComponent } from '@app/components/pipeline/test-resu
 })
 export class PullRequestDetailsComponent {
   private keycloakService = inject(KeycloakService);
-  private testResultsRef = viewChild<PipelineTestResultsComponent>('pipelineTestResultsComponent');
-  testResultsRendered = computed(() => this.testResultsRef());
 
   repositoryId = input.required<number>();
   pullRequestNumber = input.required<number>();

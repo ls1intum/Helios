@@ -45,7 +45,7 @@
 
 <div class="flex flex-col gap-6">
   <app-pipeline [selector]="pipelineSelector()" />
-  <app-pipeline-test-results #pipelineTestResultsComponent [selector]="pipelineSelector()" />
+  <app-pipeline-test-results [selector]="pipelineSelector()" />
   @if (query.data(); as pr) {
     @if (pr.headRefRepoNameWithOwner === pr.repository?.nameWithOwner) {
       <app-deployment-selection [sourceRef]="pr.headRefName" [commitSha]="pr.headSha" />
