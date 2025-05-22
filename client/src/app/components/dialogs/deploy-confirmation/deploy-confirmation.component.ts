@@ -32,6 +32,7 @@ export class DeployConfirmationComponent {
   isVisible = model.required<boolean>();
   /** The environment to deploy */
   environment = input.required<EnvironmentDto>();
+  environmentName = computed(() => (this.environment().displayName?.trim() ? this.environment().displayName : (this.environment().name ?? '')));
 
   /** Emits true if Deploy clicked, false if Cancel */
   confirmed = output<boolean>();

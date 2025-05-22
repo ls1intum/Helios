@@ -1,4 +1,4 @@
-import { Component, input, model, output } from '@angular/core';
+import { Component, computed, input, model, output } from '@angular/core';
 import { EnvironmentDto } from '@app/core/modules/openapi';
 import { Button } from 'primeng/button';
 import { Dialog } from 'primeng/dialog';
@@ -20,6 +20,7 @@ export class LockConfirmationComponent {
   isVisible = model.required<boolean>();
   /** The environment to deploy */
   environment = input.required<EnvironmentDto>();
+  environmentName = computed(() => (this.environment().displayName?.trim() ? this.environment().displayName : (this.environment().name ?? '')));
 
   /** Emits true if lock clicked, false if Cancel */
   confirmed = output<boolean>();

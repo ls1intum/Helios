@@ -2,7 +2,7 @@
   <ng-template #header>
     <div class="font-bold text-xl flex items-center gap-2">
       <i-tabler name="cloud-upload" class="!size-5 flex-shrink-0" />
-      {{ 'Deploy to ' + environment().name }}
+      {{ 'Deploy to ' + environmentName() }}
     </div>
   </ng-template>
 
@@ -39,19 +39,19 @@
         <div class="space-y-1 text-sm">
           @if (environment().type === 'PRODUCTION') {
             <p>
-              You are about to deploy to production <span class="font-semibold italic">{{ environment().name }}</span
+              You are about to deploy to production <span class="font-semibold italic">{{ environmentName() }}</span
               >.
             </p>
             <br />
             <p>Double‑check everything before you continue.</p>
           } @else if (environment().type === 'STAGING') {
             <p>
-              You are about to deploy to staging <span class="font-semibold italic">{{ environment().name }}</span
+              You are about to deploy to staging <span class="font-semibold italic">{{ environmentName() }}</span
               >.
             </p>
           } @else {
             <p>
-              You are about to deploy to test server <span class="font-semibold italic">{{ environment().name }}</span
+              You are about to deploy to test server <span class="font-semibold italic">{{ environmentName() }}</span
               >.
             </p>
           }
