@@ -1,5 +1,39 @@
 <div class="flex gap-2 items-center justify-between mb-3">
-  <input pInputText id="commit-hash" (input)="onSearch($event)" [value]="searchInput()" type="text" placeholder="Search for installed systems" class="w-full md:w-1/3" />
+  <div class="flex items-center gap-2 w-full md:w-2/3">
+    <p-button (onClick)="toggleFilterPopover($event)">
+      @if (showAvailableOnly() || selectedEnvironmentType() !== 'ALL') {
+        <i-tabler name="filter" />
+      } @else {
+        <i-tabler name="filter-plus" />
+      }
+    </p-button>
+    <input pInputText id="commit-hash" (input)="onSearch($event)" [value]="searchInput()" type="text" placeholder="Search environments or installed apps" class="w-full" />
+    <p-popover #filterPopover>
+      <div class="p-3 w-64">
+        <!-- Availability Filter -->
+        <h5 class="font-semibold text-sm mb-2">Availability</h5>
+        <div class="flex flex-col gap-1 mb-3">
+          <p-button severity="secondary" [text]="showAvailableOnly()" styleClass="w-full justify-start" (click)="onFilterSelect(false)"> All Environments </p-button>
+          <p-button severity="secondary" [text]="!showAvailableOnly()" styleClass="w-full justify-start" (click)="onFilterSelect(true)"> Available Only </p-button>
+        </div>
+
+        <!-- Environment Type Filter -->
+        <h5 class="font-semibold text-sm mb-2">Environment Type</h5>
+        <div class="flex flex-col gap-1">
+          <p-button severity="secondary" [text]="selectedEnvironmentType() !== 'ALL'" styleClass="w-full justify-start" (click)="onEnvironmentTypeSelect('ALL')">
+            All Types
+          </p-button>
+          <p-button severity="secondary" [text]="selectedEnvironmentType() !== 'TEST'" styleClass="w-full justify-start" (click)="onEnvironmentTypeSelect('TEST')"> Test </p-button>
+          <p-button severity="secondary" [text]="selectedEnvironmentType() !== 'STAGING'" styleClass="w-full justify-start" (click)="onEnvironmentTypeSelect('STAGING')">
+            Staging
+          </p-button>
+          <p-button severity="secondary" [text]="selectedEnvironmentType() !== 'PRODUCTION'" styleClass="w-full justify-start" (click)="onEnvironmentTypeSelect('PRODUCTION')">
+            Production
+          </p-button>
+        </div>
+      </div>
+    </p-popover>
+  </div>
   @if (!hideLinkToList()) {
     <p-button [routerLink]="'../../../environment'">
       <i-tabler name="server-cog" class="!size-5" />
@@ -23,10 +57,16 @@
 
 @if (!environmentQuery.isPending()) {
   @if (filteredEnvironments().length === 0) {
-    @if (searchInput().length === 0) {
+    @if (searchInput().length === 0 && !showAvailableOnly() && selectedEnvironmentType() === 'ALL') {
       <p>No environments found. Create a new environment to get started.</p>
+    } @else if (showAvailableOnly() && searchInput().length === 0 && selectedEnvironmentType() === 'ALL') {
+      <p>No available (unlocked) environments found.</p>
+    } @else if (selectedEnvironmentType() !== 'ALL' && searchInput().length === 0 && !showAvailableOnly()) {
+      <p>No {{ selectedEnvironmentType().toLowerCase() }} environments found.</p>
+    } @else if (selectedEnvironmentType() !== 'ALL' && showAvailableOnly() && searchInput().length === 0) {
+      <p>No available {{ selectedEnvironmentType().toLowerCase() }} environments found.</p>
     } @else {
-      <p>No environments found for the search term, try something else.</p>
+      <p>No environments found for the search criteria, try something else or adjust filters.</p>
     }
   } @else {
     <div class="mt-6">
@@ -53,6 +93,7 @@
                   [deployable]="!!deployable()"
                   [canViewAllEnvironments]="!!canViewAllEnvironments()"
                   [timeUntilReservationExpires]="timeUntilReservationExpires().get(environment.id)"
+                  [isLockedByCurrentUser]="isCurrentUserLocked(environment)"
                   (deploy)="deployEnvironment($event)"
                   (unlock)="onUnlockEnvironment($event.event, $event.environment)"
                   (extend)="extendLock($event.event, $event.environment)"
