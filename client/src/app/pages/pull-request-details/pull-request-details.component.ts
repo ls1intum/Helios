@@ -1,4 +1,4 @@
-import { Component, computed, inject, input } from '@angular/core';
+import { Component, computed, inject, input, viewChild } from '@angular/core';
 import { MarkdownPipe } from '@app/core/modules/markdown/markdown.pipe';
 import { PipelineComponent, PipelineSelector } from '@app/components/pipeline/pipeline.component';
 import { TagModule } from 'primeng/tag';
@@ -13,6 +13,7 @@ import { UserAvatarComponent } from '@app/components/user-avatar/user-avatar.com
 import { PullRequestStatusIconComponent } from '@app/components/pull-request-status-icon/pull-request-status-icon.component';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
 import { IconGitBranch } from 'angular-tabler-icons/icons';
+import { PipelineTestResultsComponent } from '@app/components/pipeline/test-results/pipeline-test-results.component';
 
 @Component({
   selector: 'app-branch-details',
@@ -27,6 +28,7 @@ import { IconGitBranch } from 'angular-tabler-icons/icons';
     SkeletonModule,
     UserAvatarComponent,
     PullRequestStatusIconComponent,
+    PipelineTestResultsComponent,
   ],
   providers: [
     provideTablerIcons({
@@ -37,6 +39,8 @@ import { IconGitBranch } from 'angular-tabler-icons/icons';
 })
 export class PullRequestDetailsComponent {
   private keycloakService = inject(KeycloakService);
+  private testResultsRef = viewChild<PipelineTestResultsComponent>('pipelineTestResultsComponent');
+  testResultsRendered = computed(() => this.testResultsRef());
 
   repositoryId = input.required<number>();
   pullRequestNumber = input.required<number>();
