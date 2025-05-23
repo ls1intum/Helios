@@ -2,6 +2,7 @@ import { computed, effect, inject, Injectable, InjectionToken, signal } from '@a
 import { Table, TablePageEvent } from 'primeng/table';
 import { TreeTable } from 'primeng/treetable';
 import { SortMeta } from 'primeng/api';
+import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 
 export type PaginatedTable = TreeTable | Table;
 
@@ -25,6 +26,9 @@ export interface PaginationState {
 
 @Injectable()
 export class PaginatedTableService {
+  private keycloakService = inject(KeycloakService);
+  isLoggedIn = computed(() => this.keycloakService.isLoggedIn());
+
   // Inject filter options
   filterOptions = inject<PaginatedFilterOption[]>(PAGINATED_FILTER_OPTIONS_TOKEN);
 
@@ -89,8 +93,13 @@ export class PaginatedTableService {
       if (typeof storedState.filterType === 'string') {
         const matchedFilter = this.filterOptions.find(opt => opt.value === storedState.filterType);
         if (matchedFilter) {
-          console.log('Setting active filter:', matchedFilter);
-          this.activeFilter.set(matchedFilter);
+          console.log('Found matching filter:', matchedFilter);
+          if (!this.isLoggedIn() && ['USER_AUTHORED', 'ASSIGNED_TO_USER', 'REVIEW_REQUESTED'].includes(matchedFilter.value)) {
+            console.log('User is not logged in and user filter detected, fallback to the first filter.');
+          } else {
+            console.log('Setting active filter:', matchedFilter);
+            this.activeFilter.set(matchedFilter);
+          }
         }
       }
     } catch (error) {
