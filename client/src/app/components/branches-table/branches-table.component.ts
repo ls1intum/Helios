@@ -31,7 +31,7 @@ import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
 import { IconExternalLink, IconFilterPlus, IconGitBranch, IconGitCommit, IconPinned, IconPinnedOff, IconShieldHalf, IconBrandGithub } from 'angular-tabler-icons/icons';
 
-type BranchInfoWithLink = BranchInfoDto & { link: string; lastCommitLink: string };
+export type BranchInfoWithLink = BranchInfoDto & { link: string; lastCommitLink: string };
 
 export function createBranchFilterOptions(keycloakService: KeycloakService): FilterOption<BranchInfoWithLink>[] {
   const isLoggedIn = keycloakService.isLoggedIn();
