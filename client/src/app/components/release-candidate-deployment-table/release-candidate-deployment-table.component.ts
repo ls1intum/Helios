@@ -22,10 +22,23 @@ import { TooltipModule } from 'primeng/tooltip';
 import { DeploymentStateTagComponent } from '../environments/deployment-state-tag/deployment-state-tag.component';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
 import { IconExternalLink, IconServerCog } from 'angular-tabler-icons/icons';
+import { DeployConfirmationComponent } from '@app/components/dialogs/deploy-confirmation/deploy-confirmation.component';
 
 @Component({
   selector: 'app-release-candidate-deployment-table',
-  imports: [TableModule, ButtonModule, TablerIconComponent, SkeletonModule, TagModule, AvatarModule, OverlayBadgeModule, BadgeModule, TooltipModule, DeploymentStateTagComponent],
+  imports: [
+    TableModule,
+    ButtonModule,
+    TablerIconComponent,
+    SkeletonModule,
+    TagModule,
+    AvatarModule,
+    OverlayBadgeModule,
+    BadgeModule,
+    TooltipModule,
+    DeploymentStateTagComponent,
+    DeployConfirmationComponent,
+  ],
   providers: [
     provideTablerIcons({
       IconExternalLink,
@@ -37,6 +50,8 @@ import { IconExternalLink, IconServerCog } from 'angular-tabler-icons/icons';
 export class ReleaseCandidateDeploymentTableComponent {
   releaseCandidate = input.required<ReleaseInfoDetailsDto>();
   queryClient = inject(QueryClient);
+  selectedEnvironment = signal<EnvironmentDto | undefined>(undefined);
+  deployDialogVisible = signal(false);
   selectedEnvironmentId = signal<number | undefined>(undefined);
   messageService = inject(MessageService);
   keycloakService = inject(KeycloakService);
@@ -65,26 +80,35 @@ export class ReleaseCandidateDeploymentTableComponent {
   }));
 
   deployReleaseCandidate = (environment: EnvironmentDto) => {
-    this.selectedEnvironmentId.set(environment.id);
-
-    this.deployToEnvironment.mutate(
-      {
-        body: {
-          environmentId: environment.id,
-          branchName: this.releaseCandidate().branch?.name || this.releaseCandidate().name,
-          commitSha: this.releaseCandidate().commit.sha,
-        },
-      },
-      {
-        onSuccess: () => {
-          this.queryClient.invalidateQueries({ queryKey: getAllEnabledEnvironmentsQueryKey() });
-          this.queryClient.invalidateQueries({ queryKey: getReleaseInfoByNameQueryKey({ body: { name: this.releaseCandidate().name } }) });
-
-          this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Deployment started successfully' });
-        },
-      }
-    );
+    this.selectedEnvironment.set(environment);
+    this.deployDialogVisible.set(true);
   };
+
+  onDeployReleaseCandidateConfirmed(yes: boolean) {
+    if (yes && this.selectedEnvironment()) {
+      this.selectedEnvironmentId.set(this.selectedEnvironment()!.id);
+
+      this.deployToEnvironment.mutate(
+        {
+          body: {
+            environmentId: this.selectedEnvironment()!.id,
+            branchName: this.releaseCandidate().branch?.name || this.releaseCandidate().name,
+            commitSha: this.releaseCandidate().commit.sha,
+          },
+        },
+        {
+          onSuccess: () => {
+            this.queryClient.invalidateQueries({ queryKey: getAllEnabledEnvironmentsQueryKey() });
+            this.queryClient.invalidateQueries({ queryKey: getReleaseInfoByNameQueryKey({ body: { name: this.releaseCandidate().name } }) });
+
+            this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Deployment started successfully' });
+          },
+        }
+      );
+
+      this.selectedEnvironment.set(undefined);
+    }
+  }
 
   deploymentStatus = (environment: EnvironmentDto) => {
     let deployments = this.releaseCandidate().deployments.filter(deployment => deployment.environmentId === environment.id);
