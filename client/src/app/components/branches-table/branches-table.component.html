@@ -54,7 +54,7 @@
                 (mouseleave)="isHovered.set(branch.name, false)"
               >
                 <div class="align-middle">
-                  @if (!rowNode.node.children && isHovered.get(branch.name) && keycloakService.isLoggedIn()) {
+                  @if (!rowNode.node.children && isHovered.get(branch.name) && isLoggedIn()) {
                     @if (branch.isPinned) {
                       <p-button text (onClick)="setPinned($event, branch, false)" class="h-full">
                         <i-tabler name="pinned-off" class="!size-5" />
