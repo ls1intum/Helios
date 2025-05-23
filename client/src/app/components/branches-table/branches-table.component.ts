@@ -80,7 +80,7 @@ export function createBranchFilterOptions(keycloakService: KeycloakService): Fil
   if (isLoggedIn && githubPreferredUsername) {
     options.splice(1, 0, {
       name: 'Your Branches',
-      filter: (branches: BranchInfoWithLink[]) => branches.filter(branch => branch.updatedBy?.login === githubPreferredUsername),
+      filter: (branches: BranchInfoWithLink[]) => branches.filter(branch => branch.updatedBy?.login?.toLowerCase() === githubPreferredUsername.toLowerCase()),
     });
   }
 
