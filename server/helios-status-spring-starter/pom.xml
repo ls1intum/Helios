@@ -24,7 +24,7 @@
 
         <!-- dependencies -->
         <okhttp.version>4.12.0</okhttp.version>
-        <lombok.version>1.18.34</lombok.version>
+        <lombok.version>1.18.38</lombok.version>
         <slf4j-api.version>2.0.17</slf4j-api.version>
 
         <!-- plugins -->
@@ -33,8 +33,8 @@
         <maven-javadoc-plugin.version>3.11.2</maven-javadoc-plugin.version>
         <central-publishing-maven-plugin.version>0.7.0</central-publishing-maven-plugin.version>
         <maven-checkstyle-plugin.version>3.6.0</maven-checkstyle-plugin.version>
-        <checkstyle.version>10.23.1</checkstyle.version>
-        <spring-javaformat-checkstyle.version>0.0.43</spring-javaformat-checkstyle.version>
+        <checkstyle.version>10.24.0</checkstyle.version>
+        <spring-javaformat-checkstyle.version>0.0.45</spring-javaformat-checkstyle.version>
         <maven-gpg-plugin.version>3.2.7</maven-gpg-plugin.version>
     </properties>
 
