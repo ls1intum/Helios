@@ -1,28 +1,28 @@
 <div class="flex flex-col gap-3 items-center">
   @if (isLoggedIn()) {
-    <p-button class="flex gap-3 items-center cursor-pointer" (click)="profileMenu.toggle($event)">
-      <p-avatar class="w-7 h-7 flex-shrink-0" shape="circle" size="normal" [image]="getProfilePictureUrl()" />
-      <span class="hidden md:block text-lg truncate overflow-hidden whitespace-nowrap max-w-[130px]">{{ fullName() }}</span>
+    <p-button class="flex gap-3 items-center cursor-pointer" (click)="profileMenu.toggle($event)" size="small">
+      <p-avatar class="size-5 flex-shrink-0" shape="circle" size="normal" [image]="getProfilePictureUrl()" />
+      <span class="hidden md:block text-md runcate overflow-hidden whitespace-nowrap max-w-[130px]">{{ fullName() }}</span>
     </p-button>
   } @else {
-    <p-button (click)="login()" class="rounded-xl flex items-center justify-center gap-2 w-full">
-      <i-tabler name="login" class="!size-7 !stroke-1"></i-tabler>
+    <p-button (click)="login()" class="rounded-xl flex items-center justify-center gap-2 w-full" size="small">
+      <i-tabler name="login" class="!size-5 !stroke-1"></i-tabler>
       <span class="hidden md:block">Sign In</span>
     </p-button>
   }
 </div>
 
 <p-popover #profileMenu>
-  <div class="flex flex-col items-start gap-2 p-2 min-w-[10rem]">
+  <div class="flex flex-col items-start gap-2">
     <!-- Settings Button -->
-    <p-button [routerLink]="'/settings'" severity="secondary" text>
-      <i-tabler name="settings" class="!size-6 !stroke-1"></i-tabler>
+    <p-button [routerLink]="'/settings'" severity="secondary" text size="small">
+      <i-tabler name="settings" class="!size-5 !stroke-1"></i-tabler>
       <span>Settings</span>
     </p-button>
 
     <!-- Sign Out Button -->
-    <p-button (click)="logout()" severity="secondary" text>
-      <i-tabler name="logout" class="!size-6 !stroke-1 !text-red-500 !hover:text-red-700"></i-tabler>
+    <p-button (click)="logout()" severity="secondary" text size="small">
+      <i-tabler name="logout" class="!size-5 !stroke-1 !text-red-500 !hover:text-red-700"></i-tabler>
       <span>Sign Out</span>
     </p-button>
   </div>
