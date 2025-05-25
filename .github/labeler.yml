@@ -14,10 +14,6 @@ webhook-listener:
   - changed-files:
       - any-glob-to-any-file: server/webhook-listener/**
 
-helios-status-spring-starter:
-  - changed-files:
-      - any-glob-to-any-file: server/helios-status-spring-starter/**
-
 client:
   - changed-files:
       - any-glob-to-any-file: client/**
