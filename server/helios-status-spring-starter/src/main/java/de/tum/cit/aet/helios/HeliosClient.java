@@ -59,6 +59,10 @@ public class HeliosClient implements DisposableBean {
 
   private static final OkHttpClient client = new OkHttpClient.Builder()
       .dispatcher(new Dispatcher(executor))
+      .connectTimeout(5, TimeUnit.SECONDS)    // fail fast if you can’t connect in 5s
+      .writeTimeout(5, TimeUnit.SECONDS)      // max 5s to send request body
+      .readTimeout(5, TimeUnit.SECONDS)       // max 5s to read response
+      .callTimeout(10, TimeUnit.SECONDS)      // max 20s for the entire call
       .build();
 
   private static final ObjectMapper mapper = new ObjectMapper();
@@ -91,6 +95,105 @@ public class HeliosClient implements DisposableBean {
   /* ------------------------------------------------------------------ */
   /*  Public API                                                        */
   /* ------------------------------------------------------------------ */
+
+  /**
+   * Pushes a lifecycle state update indicating that the application is starting up.
+   *
+   * <p>This is a convenience method that delegates to
+   * {@link #pushStatusUpdate(LifecycleState)} with the
+   * state set to {@link LifecycleState#STARTING_UP}.</p>
+   */
+  public void pushStartingUp() {
+    pushStatusUpdate(LifecycleState.STARTING_UP);
+  }
+
+  /**
+   * Pushes a lifecycle state update indicating that the application is healthy.
+   *
+   * <p>This is a convenience method that delegates to
+   * {@link #pushStatusUpdate(LifecycleState)} with the
+   * state set to {@link LifecycleState#RUNNING}.</p>
+   */
+  public void pushRunning() {
+    pushStatusUpdate(LifecycleState.RUNNING);
+  }
+
+  /**
+   * Pushes a lifecycle state update indicating that the application is stopping.
+   *
+   * <p>This is a convenience method that delegates to
+   * {@link #pushStatusUpdate(LifecycleState)} with the
+   * state set to {@link LifecycleState#SHUTTING_DOWN}.</p>
+   */
+  public void pushShuttingDown() {
+    pushStatusUpdate(LifecycleState.SHUTTING_DOWN);
+  }
+
+  /**
+   * Pushes a lifecycle state update indicating that the application has failed.
+   *
+   * <p>This is a convenience method that delegates to
+   * {@link #pushStatusUpdate(LifecycleState)} with the
+   * state set to {@link LifecycleState#FAILED}.</p>
+   */
+  public void pushFailed() {
+    pushStatusUpdate(LifecycleState.FAILED);
+  }
+
+  /**
+   * Pushes a lifecycle state update indicating that a database migration has started.
+   *
+   * <p>This is a convenience method that delegates to
+   * {@link #pushStatusUpdate(LifecycleState)} with the
+   * state set to {@link LifecycleState#DB_MIGRATION_STARTED}.</p>
+   */
+  public void pushDbMigrationStarted() {
+    pushStatusUpdate(LifecycleState.DB_MIGRATION_STARTED);
+  }
+
+  /**
+   * Pushes a lifecycle state update indicating that a database migration has finished successfully.
+   *
+   * <p>This is a convenience method that delegates to
+   * {@link #pushStatusUpdate(LifecycleState)} with the
+   * state set to {@link LifecycleState#DB_MIGRATION_FINISHED}.</p>
+   */
+  public void pushDbMigrationFinished() {
+    pushStatusUpdate(LifecycleState.DB_MIGRATION_FINISHED);
+  }
+
+  /**
+   * Pushes a lifecycle state update indicating that a database migration has failed.
+   *
+   * <p>This is a convenience method that delegates to
+   * {@link #pushStatusUpdate(LifecycleState)} with the
+   * state set to {@link LifecycleState#DB_MIGRATION_FAILED}.</p>
+   */
+  public void pushDbMigrationFailed() {
+    pushStatusUpdate(LifecycleState.DB_MIGRATION_FAILED);
+  }
+
+  /**
+   * Pushes a lifecycle state update indicating that the application is degraded.
+   *
+   * <p>This is a convenience method that delegates to
+   * {@link #pushStatusUpdate(LifecycleState)} with the
+   * state set to {@link LifecycleState#DEGRADED}.</p>
+   */
+  public void pushDegraded() {
+    pushStatusUpdate(LifecycleState.DEGRADED);
+  }
+
+  /**
+   * Pushes a lifecycle state update indicating that the application has stopped.
+   *
+   * <p>This is a convenience method that delegates to
+   * {@link #pushStatusUpdate(LifecycleState)} with the
+   * state set to {@link LifecycleState#STOPPED}.</p>
+   */
+  public void pushStopped() {
+    pushStatusUpdate(LifecycleState.STOPPED);
+  }
 
   /**
    * Pushes a lifecycle state update to all configured Helios endpoints
@@ -296,7 +399,7 @@ public class HeliosClient implements DisposableBean {
   /* ------------------------------------------------------------------ */
   @Override
   public void destroy() {
-    log.info("HeliosClient destroy(): flushing pending pushes");
+    log.info("Destroying HeliosClient, flushing pending pushes.");
     flush();
   }
 

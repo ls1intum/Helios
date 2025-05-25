@@ -7,7 +7,7 @@
 
     <groupId>io.github.egekocabas</groupId>
     <artifactId>helios-status-spring-starter</artifactId>
-    <version>0.0.3</version>
+    <version>0.0.4</version>
     <packaging>jar</packaging>
     <name>Helios Status Spring Starter</name>
     <description>Helios starter for Spring Boot apps – push-based lifecycle status reporting.</description>
