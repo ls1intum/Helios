@@ -173,6 +173,7 @@ export type ReleaseNameDto = {
 export type ReleaseEvaluationDto = {
   name?: string;
   isWorking?: boolean;
+  comment?: string;
 };
 
 export type BranchInfoDto = {
@@ -205,6 +206,7 @@ export type ReleaseCandidateDeploymentDto = {
 export type ReleaseCandidateEvaluationDto = {
   user: UserInfoDto;
   isWorking?: boolean;
+  comment?: string;
 };
 
 export type ReleaseDto = {

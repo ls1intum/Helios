@@ -537,6 +537,9 @@ export const ReleaseEvaluationDtoSchema = {
     isWorking: {
       type: 'boolean',
     },
+    comment: {
+      type: 'string',
+    },
   },
 } as const;
 
@@ -630,6 +633,9 @@ export const ReleaseCandidateEvaluationDtoSchema = {
     },
     isWorking: {
       type: 'boolean',
+    },
+    comment: {
+      type: 'string',
     },
   },
   required: ['user'],
