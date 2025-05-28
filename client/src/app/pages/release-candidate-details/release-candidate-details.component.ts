@@ -29,7 +29,19 @@ import { TextareaModule } from 'primeng/textarea';
 import { InputTextModule } from 'primeng/inputtext';
 import { SlicePipe } from '@angular/common';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
-import { IconBrandGithub, IconCheck, IconCloudUpload, IconExternalLink, IconGitCommit, IconPencil, IconPlus, IconTrash, IconUser, IconX } from 'angular-tabler-icons/icons';
+import {
+  IconBrandGithub,
+  IconCheck,
+  IconCloudUpload,
+  IconExternalLink,
+  IconGitCommit,
+  IconMessageCircle,
+  IconPencil,
+  IconPlus,
+  IconTrash,
+  IconUser,
+  IconX,
+} from 'angular-tabler-icons/icons';
 import { DialogService } from 'primeng/dynamicdialog';
 import {
   ReleaseEvaluationDialogComponent,
@@ -67,6 +79,7 @@ import {
       IconPlus,
       IconPencil,
       IconBrandGithub,
+      IconMessageCircle,
     }),
     DialogService,
   ],
