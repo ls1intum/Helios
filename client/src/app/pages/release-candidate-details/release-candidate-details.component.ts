@@ -47,7 +47,7 @@ import {
   ReleaseEvaluationDialogComponent,
   ReleaseEvaluationDialogData,
   ReleaseEvaluationDialogResult,
-} from '@app/components/release-evaluation-dialog/release-evaluation-dialog.component';
+} from '@app/components/dialogs/release-evaluation-dialog/release-evaluation-dialog.component';
 
 @Component({
   selector: 'app-release-candidate-details',

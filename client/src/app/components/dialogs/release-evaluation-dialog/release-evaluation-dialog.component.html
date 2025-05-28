@@ -9,9 +9,21 @@
 
   <form [formGroup]="evaluationForm" class="space-y-4">
     <div>
-      <label for="comment" class="block text-sm font-medium mb-2"> Comment <span class="text-muted-color">(optional, max 500 characters)</span> </label>
-      <textarea id="comment" pTextarea formControlName="comment" placeholder="Add your comments about this release candidate..." rows="4" class="w-full" maxlength="500"></textarea>
-      <div class="text-right text-sm text-muted-color mt-1">{{ evaluationForm.get('comment')?.value?.length || 0 }}/500</div>
+      <label for="comment" class="block text-sm font-medium mb-2">
+        Comment <span class="text-muted-color">(optional, max 500 characters)</span>
+      </label>
+      <textarea
+        id="comment"
+        pTextarea
+        formControlName="comment"
+        placeholder="Add your comments about this release candidate..."
+        rows="4"
+        class="w-full"
+        maxlength="500"
+      ></textarea>
+      <div class="text-right text-sm text-muted-color mt-1">
+        {{ evaluationForm.get('comment')?.value?.length || 0 }}/500
+      </div>
     </div>
   </form>
 
