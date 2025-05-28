@@ -1,34 +1,38 @@
+<div class="flex items-center gap-3 mb-4 pb-3">
+  <i-tabler name="clipboard-check" class="!size-6 text-primary" />
+  <h2 class="text-xl font-semibold">Evaluate Release Candidate</h2>
+</div>
 <div class="p-6">
-  <p class="text-muted-color mb-4">
-    You are marking release candidate "{{ data.releaseName }}" as
-    <span [class]="data.isWorking ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'">
-      <i [class]="data.isWorking ? 'pi pi-check mr-1' : 'pi pi-times mr-1'"></i>
-      {{ data.isWorking ? 'Working' : 'Broken' }}
-    </span>
-  </p>
+  <!-- Header with Icon -->
 
-  <form [formGroup]="evaluationForm" class="space-y-4">
-    <div>
-      <label for="comment" class="block text-sm font-medium mb-2">
-        Comment <span class="text-muted-color">(optional, max 500 characters)</span>
-      </label>
-      <textarea
-        id="comment"
-        pTextarea
-        formControlName="comment"
-        placeholder="Add your comments about this release candidate..."
-        rows="4"
-        class="w-full"
-        maxlength="500"
-      ></textarea>
-      <div class="text-right text-sm text-muted-color mt-1">
-        {{ evaluationForm.get('comment')?.value?.length || 0 }}/500
+  <div class="flex flex-col gap-4">
+    <p class="text-muted-color">
+      You are marking release candidate "{{ data.releaseName }}" as
+      <span [class]="data.isWorking ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'">
+        <i [class]="data.isWorking ? 'pi pi-check mr-1' : 'pi pi-times mr-1'"></i>
+        {{ data.isWorking ? 'Working' : 'Broken' }}
+      </span>
+    </p>
+
+    <form [formGroup]="evaluationForm" class="space-y-4">
+      <div>
+        <label for="comment" class="block text-sm font-medium mb-2"> Comment <span class="text-muted-color">(optional, max 500 characters)</span> </label>
+        <textarea
+          id="comment"
+          pTextarea
+          formControlName="comment"
+          placeholder="Add your comments about this release candidate..."
+          rows="4"
+          class="w-full"
+          maxlength="500"
+        ></textarea>
+        <div class="text-right text-sm text-muted-color mt-1">{{ evaluationForm.get('comment')?.value?.length || 0 }}/500</div>
       </div>
-    </div>
-  </form>
+    </form>
 
-  <div class="flex justify-end gap-2 mt-6">
-    <p-button label="Cancel" severity="secondary" text (onClick)="cancel()" />
-    <p-button label="Submit Evaluation" (onClick)="submit()" />
+    <div class="flex justify-between w-full mt-4">
+      <p-button label="Cancel" severity="secondary" [text]="true" (onClick)="cancel()" />
+      <p-button label="Submit Evaluation" severity="primary" (onClick)="submit()" />
+    </div>
   </div>
 </div>

@@ -1,9 +1,10 @@
 import { Component, inject } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
-import { DialogModule } from 'primeng/dialog';
 import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { TextareaModule } from 'primeng/textarea';
+import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
+import { IconClipboardCheck, IconX } from 'angular-tabler-icons/icons';
 
 export interface ReleaseEvaluationDialogData {
   releaseName: string;
@@ -17,7 +18,13 @@ export interface ReleaseEvaluationDialogResult {
 
 @Component({
   selector: 'app-release-evaluation-dialog',
-  imports: [DialogModule, ReactiveFormsModule, TextareaModule, ButtonModule],
+  imports: [ReactiveFormsModule, TextareaModule, ButtonModule, TablerIconComponent],
+  providers: [
+    provideTablerIcons({
+      IconClipboardCheck,
+      IconX,
+    }),
+  ],
   templateUrl: './release-evaluation-dialog.component.html',
 })
 export class ReleaseEvaluationDialogComponent {

@@ -218,7 +218,6 @@ export class ReleaseCandidateDetailsComponent implements OnInit {
     };
 
     const ref = this.dialogService.open(ReleaseEvaluationDialogComponent, {
-      header: 'Evaluate Release Candidate',
       width: '500px',
       data: dialogData,
     });
