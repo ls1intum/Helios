@@ -38,4 +38,7 @@ public class ReleaseCandidateEvaluation {
   @JoinColumn(name = "evaluated_by_id", nullable = false)
   @ToString.Exclude
   private User evaluatedBy;
+
+  @Column(columnDefinition = "TEXT")
+  private String comment;
 }

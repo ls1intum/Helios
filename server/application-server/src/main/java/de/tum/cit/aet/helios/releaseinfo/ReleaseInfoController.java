@@ -49,7 +49,8 @@ public class ReleaseInfoController {
 
   @PostMapping("/evaluate")
   public ResponseEntity<Void> evaluate(@RequestBody ReleaseEvaluationDto evaluationDto) {
-    releaseInfoService.evaluateReleaseCandidate(evaluationDto.name(), evaluationDto.isWorking());
+    releaseInfoService.evaluateReleaseCandidate(
+        evaluationDto.name(), evaluationDto.isWorking(), evaluationDto.comment());
     return ResponseEntity.ok().build();
   }
 

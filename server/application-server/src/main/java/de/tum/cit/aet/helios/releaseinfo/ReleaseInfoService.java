@@ -239,7 +239,7 @@ public class ReleaseInfoService {
         releaseCandidateRepository.save(newReleaseCandidate));
   }
 
-  public void evaluateReleaseCandidate(String name, boolean isWorking) {
+  public void evaluateReleaseCandidate(String name, boolean isWorking, String comment) {
     final Long repositoryId = RepositoryContext.getRepositoryId();
 
     final ReleaseCandidate releaseCandidate =
@@ -265,6 +265,7 @@ public class ReleaseInfoService {
                 });
 
     evaluation.setWorking(isWorking);
+    evaluation.setComment(comment);
     releaseCandidateEvaluationRepository.save(evaluation);
   }
 
