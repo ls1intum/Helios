@@ -21,22 +21,31 @@ import { PullRequestStatusIconComponent } from '@app/components/pull-request-sta
 import { MessageService, SortMeta } from 'primeng/api';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
 import { IconExternalLink, IconFilterPlus, IconGitPullRequest, IconPinned, IconPinnedOff, IconPoint, IconBrandGithub } from 'angular-tabler-icons/icons';
-import { PAGINATED_FILTER_OPTIONS_TOKEN, PaginatedTableService } from '@app/core/services/paginated-table.service';
+import { PAGINATED_FILTER_OPTIONS_TOKEN, PaginatedFilterOption, PaginatedTableService } from '@app/core/services/paginated-table.service';
 import { TableFilterPaginatedComponent } from '@app/components/table-filter-paginated/table-filter-paginated.component';
 import { NgTemplateOutlet } from '@angular/common';
 
 // Define filter options for pull requests
-const PR_FILTER_OPTIONS = [
-  { name: 'Open pull requests', value: 'OPEN' },
-  { name: 'All pull requests', value: 'ALL' },
-  { name: 'Open and ready for review', value: 'OPEN_READY_FOR_REVIEW' },
-  { name: 'Draft pull requests', value: 'DRAFT' },
-  { name: 'Merged pull requests', value: 'MERGED' },
-  { name: 'Closed pull requests', value: 'CLOSED' },
-  { name: 'Your pull requests', value: 'USER_AUTHORED' },
-  { name: 'Everything assigned to you', value: 'ASSIGNED_TO_USER' },
-  { name: 'Everything that requests a review by you', value: 'REVIEW_REQUESTED' },
-];
+export function createPullRequestFilterOptions(keycloakService: KeycloakService): PaginatedFilterOption[] {
+  const isLoggedIn = keycloakService.isLoggedIn();
+
+  const baseOptions: PaginatedFilterOption[] = [
+    { name: 'Open pull requests', value: 'OPEN' },
+    { name: 'All pull requests', value: 'ALL' },
+    { name: 'Open and ready for review', value: 'OPEN_READY_FOR_REVIEW' },
+    { name: 'Draft pull requests', value: 'DRAFT' },
+    { name: 'Merged pull requests', value: 'MERGED' },
+    { name: 'Closed pull requests', value: 'CLOSED' },
+  ];
+
+  const userOptions: PaginatedFilterOption[] = [
+    { name: 'Your pull requests', value: 'USER_AUTHORED' },
+    { name: 'Everything assigned to you', value: 'ASSIGNED_TO_USER' },
+    { name: 'Everything that requests a review by you', value: 'REVIEW_REQUESTED' },
+  ];
+
+  return isLoggedIn ? [...baseOptions, ...userOptions] : baseOptions;
+}
 
 @Component({
   selector: 'app-pull-request-table',
@@ -61,7 +70,7 @@ const PR_FILTER_OPTIONS = [
   ],
   providers: [
     PaginatedTableService,
-    { provide: PAGINATED_FILTER_OPTIONS_TOKEN, useValue: PR_FILTER_OPTIONS },
+    { provide: PAGINATED_FILTER_OPTIONS_TOKEN, useFactory: createPullRequestFilterOptions, deps: [KeycloakService] },
     provideTablerIcons({
       IconFilterPlus,
       IconPoint,
