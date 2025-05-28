@@ -22,13 +22,20 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 import { PermissionService } from '@app/core/services/permission.service';
 import { ActivatedRoute, Router } from '@angular/router';
-import { ReleaseInfoDetailsDto } from '@app/core/modules/openapi';
+import { ReleaseEvaluationDto, ReleaseInfoDetailsDto } from '@app/core/modules/openapi';
 import { MarkdownPipe } from '@app/core/modules/markdown/markdown.pipe';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { TextareaModule } from 'primeng/textarea';
+import { InputTextModule } from 'primeng/inputtext';
 import { SlicePipe } from '@angular/common';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
 import { IconBrandGithub, IconCheck, IconCloudUpload, IconExternalLink, IconGitCommit, IconPencil, IconPlus, IconTrash, IconUser, IconX } from 'angular-tabler-icons/icons';
+import { DialogService } from 'primeng/dynamicdialog';
+import {
+  ReleaseEvaluationDialogComponent,
+  ReleaseEvaluationDialogData,
+  ReleaseEvaluationDialogResult,
+} from '@app/components/release-evaluation-dialog/release-evaluation-dialog.component';
 
 @Component({
   selector: 'app-release-candidate-details',
@@ -46,6 +53,7 @@ import { IconBrandGithub, IconCheck, IconCloudUpload, IconExternalLink, IconGitC
     TagModule,
     ReactiveFormsModule,
     TextareaModule,
+    InputTextModule,
   ],
   providers: [
     provideTablerIcons({
@@ -60,6 +68,7 @@ import { IconBrandGithub, IconCheck, IconCloudUpload, IconExternalLink, IconGitC
       IconPencil,
       IconBrandGithub,
     }),
+    DialogService,
   ],
   templateUrl: './release-candidate-details.component.html',
 })
@@ -71,6 +80,7 @@ export class ReleaseCandidateDetailsComponent implements OnInit {
   private queryClient = inject(QueryClient);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
+  private dialogService = inject(DialogService);
 
   name = input.required<string>();
   releaseCandidateQuery = injectQuery(() => ({
@@ -189,7 +199,28 @@ export class ReleaseCandidateDetailsComponent implements OnInit {
   }
 
   evaluateReleaseCandidate = (isWorking: boolean) => {
-    this.evaluateReleaseCandidateMutation.mutate({ body: { name: this.name(), isWorking } });
+    const dialogData: ReleaseEvaluationDialogData = {
+      releaseName: this.name(),
+      isWorking: isWorking,
+    };
+
+    const ref = this.dialogService.open(ReleaseEvaluationDialogComponent, {
+      header: 'Evaluate Release Candidate',
+      width: '500px',
+      data: dialogData,
+    });
+
+    ref.onClose.subscribe((result: ReleaseEvaluationDialogResult) => {
+      if (result) {
+        this.evaluateReleaseCandidateMutation.mutate({
+          body: {
+            name: this.name(),
+            isWorking: result.isWorking,
+            comment: result.comment,
+          },
+        });
+      }
+    });
   };
 
   deleteReleaseCandidate = (rc: ReleaseInfoDetailsDto) => {
@@ -286,5 +317,15 @@ export class ReleaseCandidateDetailsComponent implements OnInit {
 
   cancelEditingName() {
     this.isEditingName.set(false);
+  }
+
+  getEvaluationTooltip(evaluation: ReleaseEvaluationDto): string {
+    const status = evaluation.isWorking ? 'Marked as working' : 'Marked as broken';
+
+    if (!evaluation.comment || evaluation.comment.trim() === '') {
+      return status;
+    }
+
+    return `${status}\n\nComment: ${evaluation.comment}`;
   }
 }
