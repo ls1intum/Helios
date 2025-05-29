@@ -41,7 +41,8 @@ import org.springframework.util.StringUtils;
  * <ul>
  *   <li>Supports one or more remote Helios endpoints with per-endpoint secret keys</li>
  *   <li>Non-blocking, fire-and-forget delivery model using OkHttp with a single daemon thread</li>
- *   <li>Bounded queue (size 10) to prevent overload – oldest messages are dropped with a warning</li>
+ *   <li>Bounded queue (size 10) to prevent overload – oldest
+ *   messages are dropped with a warning</li>
  *   <li>Synchronous delivery for critical events like shutdown or failure</li>
  *   <li>Logs failures without interrupting caller code</li>
  *   <li>Flushes pending updates on Spring shutdown or JVM exit via a shutdown hook</li>
