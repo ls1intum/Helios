@@ -1,0 +1,22 @@
+<p-dialog [(visible)]="isVisible" [modal]="true" [style]="{ width: '26rem' }" draggable="false" (onHide)="onCancel()">
+  <ng-template #header>
+    <div class="font-bold text-xl flex items-center gap-2">
+      <i-tabler name="lock" class="!size-5 flex-shrink-0" />
+      Lock Environment
+    </div>
+  </ng-template>
+
+  <div class="text-sm p-4 space-y-3">
+    <p>
+      Are you sure you want to lock <b>{{ environmentName() }}</b
+      >?
+    </p>
+  </div>
+
+  <ng-template #footer>
+    <div class="flex justify-between w-full">
+      <p-button label="Cancel" [text]="true" (click)="onCancel()" />
+      <p-button label="Lock" severity="primary" (click)="onLock()" />
+    </div>
+  </ng-template>
+</p-dialog>

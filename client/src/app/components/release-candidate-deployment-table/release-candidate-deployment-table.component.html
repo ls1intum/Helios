@@ -75,6 +75,14 @@
           }
         </td>
       </tr>
+
+      @if (deployDialogVisible()) {
+        <app-deploy-confirmation
+          [(isVisible)]="deployDialogVisible"
+          [environment]="this.selectedEnvironment()!"
+          (confirmed)="onDeployReleaseCandidateConfirmed($event)"
+        ></app-deploy-confirmation>
+      }
     </ng-template>
     <ng-template #emptymessage>
       <tr>
