@@ -40,6 +40,7 @@ import { MessageModule } from 'primeng/message';
 import { ButtonGroupModule } from 'primeng/buttongroup';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
 import { IconCircleCheck, IconPencil, IconPlus, IconTrash } from 'angular-tabler-icons/icons';
+import { SecretGenerateConfirmationComponent } from '@app/components/dialogs/secret-generate-confirmation/secret-generate-confirmation.component';
 
 @Component({
   selector: 'app-project-settings',
@@ -61,6 +62,7 @@ import { IconCircleCheck, IconPencil, IconPlus, IconTrash } from 'angular-tabler
     DividerModule,
     TagModule,
     MessageModule,
+    SecretGenerateConfirmationComponent,
   ],
   providers: [
     provideTablerIcons({
@@ -90,6 +92,7 @@ export class ProjectSettingsComponent {
   // --- Shared‑secret state
   secret = signal<string | null>(null);
   secretDisplay = computed(() => (this.secret() ? this.secret() : '************'));
+  secretReGenerateDialogVisible = signal(false);
 
   // For creating a new group
   showAddGroupDialog = false;
@@ -548,15 +551,21 @@ export class ProjectSettingsComponent {
       this.secret.set(data);
       this.messageService.add({
         severity: 'success',
-        summary: 'Secret regenerated',
-        detail: 'Copy the token now.',
+        summary: 'Secret generated.',
+        detail: 'Copy the token now!',
       });
     },
   }));
 
-  regenerateSecret() {
-    this.secret.set(null);
-    this.rotateSecret.mutate({ path: { repositoryId: this.repositoryId() } });
+  generateSecret() {
+    this.secretReGenerateDialogVisible.set(true);
+  }
+
+  onGenerateSecretConfirmed(yes: boolean) {
+    if (yes) {
+      this.secret.set(null);
+      this.rotateSecret.mutate({ path: { repositoryId: this.repositoryId() } });
+    }
   }
 
   copySecret() {

@@ -72,12 +72,12 @@ jobs:
     },
   },
   {
-    title: 'Configure Project Settings in Helios',
-    description: 'Set up your repository in the Helios project settings.',
+    title: 'Configure Repository Settings in Helios',
+    description: 'Set up your repository in the Helios repository settings.',
     icon: 'settings',
     image: 'assets/project-settings.png',
     instructions: [
-      'Find your repository and navigate to project settings',
+      'Find your repository and navigate to repository settings',
       'Adjust lock reservation/expiration times if needed',
       'Create workflow groups for logical organization',
       'Configure your test workflow with label TEST and select artifact name for test analysis',

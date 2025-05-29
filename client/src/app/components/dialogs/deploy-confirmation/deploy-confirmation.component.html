@@ -1,0 +1,111 @@
+<p-dialog [(visible)]="visible" [modal]="true" [style]="{ width: '26rem' }" draggable="false" (onHide)="onCancel()">
+  <ng-template #header>
+    <div class="font-bold text-xl flex items-center gap-2">
+      <i-tabler name="cloud-upload" class="!size-5 flex-shrink-0" />
+      Deploy
+    </div>
+  </ng-template>
+
+  <!-- Loading State -->
+  @if (query.isPending()) {
+    <ng-container>
+      <div class="p-4 space-y-3">
+        <p-skeleton width="60%" height="1.5rem"></p-skeleton>
+        <p-skeleton width="100%" height="1rem"></p-skeleton>
+        <p-skeleton width="100%" height="1rem"></p-skeleton>
+        <p-skeleton width="30%" height="2rem"></p-skeleton>
+      </div>
+    </ng-container>
+  } @else {
+    <div class="pt-2">
+      <!-- Environment banner -->
+      <div
+        class="p-4 rounded flex items-start space-x-3"
+        [ngClass]="{
+          'bg-red-50 text-red-800 ring-1 ring-red-300': environment().type === 'PRODUCTION',
+          'bg-amber-50 text-amber-800 ring-1 ring-amber-300': environment().type === 'STAGING',
+        }"
+        role="alert"
+      >
+        <!-- Tabler icon -->
+        @if (environment().type === 'PRODUCTION') {
+          <i-tabler name="alert-triangle" class="!size-6 shrink-0 text-red-600" />
+        } @else if (environment().type === 'STAGING') {
+          <i-tabler name="info-circle" class="!size-6 shrink-0 text-amber-600" />
+        } @else {
+          <i-tabler name="server" class="!size-5 shrink-0 text-slate-600" />
+        }
+
+        <div class="space-y-1 text-sm">
+          @if (environment().type === 'PRODUCTION') {
+            <p>
+              You are about to deploy to production <span class="font-semibold italic">{{ environmentName() }}</span
+              >.
+            </p>
+            <br />
+            <p>Double‑check everything before you continue.</p>
+          } @else if (environment().type === 'STAGING') {
+            <p>
+              You are about to deploy to staging <span class="font-semibold italic">{{ environmentName() }}</span
+              >.
+            </p>
+          } @else {
+            <p>
+              You are about to deploy to test server <span class="font-semibold italic">{{ environmentName() }}</span
+              >.
+            </p>
+          }
+        </div>
+      </div>
+
+      <!-- Reviewers -->
+      @if (hasReviewers()) {
+        <div class="mt-4 text-sm space-y-2">
+          <p>
+            <strong>Required reviewers ({{ reviewers().length }}):</strong>
+            <span>
+              {{ reviewersLine() }}
+            </span>
+          </p>
+          <p class="text-gray-700 dark:text-gray-300 text-xs italic">
+            Helios will attempt to auto-approve this deployment. If you or your team aren’t in the required reviewers list, the pipeline pauses just before the deploy step and
+            waits for one of the reviewers to approve.
+          </p>
+        </div>
+        <br />
+      }
+
+      <!-- Repository confirmation -->
+      @if (environment().repository?.nameWithOwner) {
+        <div class="mt-4 text-sm space-y-1">
+          <p>
+            To confirm, type <code class="font-semibold">{{ environment().repository?.nameWithOwner }}</code> below
+          </p>
+          <input
+            pInputText
+            class="w-full border p-2 rounded"
+            type="text"
+            (input)="onRepoInput($event)"
+            placeholder="{{ environment().repository?.nameWithOwner }}"
+            autocomplete="off"
+          />
+        </div>
+      }
+    </div>
+  }
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-between w-full">
+      <button pButton type="button" label="Cancel" class="p-button-text" (click)="onCancel()"></button>
+
+      <button
+        pButton
+        type="button"
+        label="Deploy"
+        class="ml-2"
+        [disabled]="query.isPending() || (environment().repository?.nameWithOwner && repoConfirm !== environment().repository?.nameWithOwner)"
+        (click)="onDeploy()"
+      ></button>
+    </div>
+  </ng-template>
+</p-dialog>
