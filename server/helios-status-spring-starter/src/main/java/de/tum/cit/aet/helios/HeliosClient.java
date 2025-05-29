@@ -26,16 +26,49 @@ import org.springframework.beans.factory.DisposableBean;
 import org.springframework.util.StringUtils;
 
 /**
- * Thin wrapper around OkHttp that asynchronously POSTs a JSON payload to
- * <em>every</em> configured Helios endpoint.
+ * The {@code HeliosClient} is a Spring-managed component that provides asynchronous
+ * and synchronous delivery of lifecycle status updates to configured Helios endpoints.
+ * It is part of the Helios status reporting plugin and is automatically initialized
+ * at application startup.
  *
- * <p>Concurrency model:</p>
+ * <p>Helios integrates with the Spring Boot lifecycle and automatically emits status
+ * events (e.g., {@code STARTING_UP}, {@code RUNNING}, {@code SHUTTING_DOWN}) based on
+ * application context changes. In addition, this client can be {@code @Autowired}
+ * into any Spring component and used manually to push custom lifecycle events or metadata
+ * to the Helios backend.</p>
+ *
+ * <p><strong>Core Capabilities:</strong></p>
  * <ul>
- *   <li>Single daemon thread (won’t block JVM shutdown).</li>
- *   <li>Bounded queue – if the service spams updates faster than the
- *       network can deliver, the oldest messages are dropped with a WARN.</li>
- *   <li>Caller never blocks; failures are only logged.</li>
+ *   <li>Supports one or more remote Helios endpoints with per-endpoint secret keys</li>
+ *   <li>Non-blocking, fire-and-forget delivery model using OkHttp with a single daemon thread</li>
+ *   <li>Bounded queue (size 10) to prevent overload – oldest messages are dropped with a warning</li>
+ *   <li>Synchronous delivery for critical events like shutdown or failure</li>
+ *   <li>Logs failures without interrupting caller code</li>
+ *   <li>Flushes pending updates on Spring shutdown or JVM exit via a shutdown hook</li>
  * </ul>
+ *
+ * <p><strong>Configuration:</strong></p>
+ * <ul>
+ *   <li>Enabled via {@link HeliosStatusProperties}</li>
+ *   <li>Requires a non-empty list of endpoints and a defined environment name</li>
+ * </ul>
+ *
+ * <p><strong>Manual Usage Example:</strong></p>
+ * <pre>{@code
+ * @Autowired
+ * private HeliosClient heliosClient;
+ *
+ * public void onCustomHealthCheck() {
+ *     heliosClient.pushStatusUpdate(LifecycleState.DEGRADED, Map.of("latency", 750));
+ * }
+ * }</pre>
+ *
+ * <p>This class is safe to use in production code paths and does not throw
+ * exceptions on delivery failure. All networking is handled internally with proper logging.</p>
+ *
+ * @see LifecycleState
+ * @see PushStatusPayload
+ * @see HeliosStatusProperties
  */
 public class HeliosClient implements DisposableBean {
 
