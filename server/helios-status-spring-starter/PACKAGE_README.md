@@ -1,6 +1,6 @@
 # Helios Status Spring Boot Starter
 
-[![Maven Central](https://img.shields.io/maven-central/v/de.tum.cit.aet/helios-status-spring-boot-starter.svg)](https://search.maven.org/artifact/de.tum.cit.aet/helios-status-spring-boot-starter) [![Javadocs](https://javadoc.io/badge2/de.tum.cit.aet/helios-status-spring-boot-starter/javadoc.svg)](https://javadoc.io/doc/de.tum.cit.aet/helios-status-spring-boot-starter) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/ls1intum/Helios/blob/staging/LICENSE)
+[![Maven Central](https://img.shields.io/maven-central/v/de.tum.cit.aet/helios-status-spring-starter.svg)](https://search.maven.org/artifact/de.tum.cit.aet/helios-status-spring-starter) [![Javadocs](https://javadoc.io/badge2/de.tum.cit.aet/helios-status-spring-starter/javadoc.svg)](https://javadoc.io/doc/de.tum.cit.aet/helios-status-spring-starter) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/ls1intum/Helios/blob/staging/LICENSE)
 
 A plug‑and‑play **Spring Boot 3** starter that transparently reports your service’s **lifecycle** and **heartbeat**
 events to a Helios instance.
@@ -43,7 +43,7 @@ Official GA releases are published to Maven Central; snapshots (`-SNAPSHOT`) are
 
 ```gradle
 dependencies {
-    implementation "de.tum.cit.aet:helios-status-spring-boot-starter:<LATEST_VERSION>"
+    implementation "de.tum.cit.aet:helios-status-spring-starter:<LATEST_VERSION>"
 }
 ```
 
@@ -57,7 +57,7 @@ dependencies {
 <dependencies>
     <dependency>
         <groupId>de.tum.cit.aet</groupId>
-        <artifactId>helios-status-spring-boot-starter</artifactId>
+        <artifactId>helios-status-spring-starter</artifactId>
         <version>LATEST_VERSION</version>
     </dependency>
 </dependencies>
