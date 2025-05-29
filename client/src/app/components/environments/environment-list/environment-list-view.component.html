@@ -106,6 +106,12 @@
           </div>
         }
       }
+
+      @if (deployDialogVisible()) {
+        <app-deploy-confirmation [(isVisible)]="deployDialogVisible" [environment]="selectedEnv()!" (confirmed)="onDeployDialogConfirmed($event)"></app-deploy-confirmation>
+      } @else if (lockDialogVisible()) {
+        <app-lock-confirmation [(isVisible)]="lockDialogVisible" [environment]="selectedEnv()!" (confirmed)="onLockEnvironmentConfirmed($event)"></app-lock-confirmation>
+      }
     </div>
   }
 }

@@ -10,4 +10,5 @@ import { ButtonModule } from 'primeng/button';
 })
 export class FooterComponent {
   deployed_commit_sha = version.deployed_commit_sha;
+  deployed_version = version.deployed_version;
 }
