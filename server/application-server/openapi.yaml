@@ -2184,6 +2184,8 @@ components:
           type: boolean
         comment:
           type: string
+          maxLength: 500
+          minLength: 0
     BranchInfoDto:
       type: object
       properties:

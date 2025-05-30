@@ -539,6 +539,8 @@ export const ReleaseEvaluationDtoSchema = {
     },
     comment: {
       type: 'string',
+      maxLength: 500,
+      minLength: 0,
     },
   },
 } as const;
