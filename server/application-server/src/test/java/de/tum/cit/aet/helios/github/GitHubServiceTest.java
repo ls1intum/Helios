@@ -1022,7 +1022,9 @@ class GitHubServiceTest {
     InputStream inputStream = new ByteArrayInputStream(baos.toByteArray());
 
     // Mock the download method
-    when(mockArtifact.download(any(InputStreamFunction.class)))
+    @SuppressWarnings("unchecked")
+    InputStreamFunction<GitHubWorkflowContext> matcher = any(InputStreamFunction.class);
+    when(mockArtifact.download(matcher))
         .thenAnswer(
             invocation -> {
               InputStreamFunction<GitHubWorkflowContext> function = invocation.getArgument(0);
@@ -1082,7 +1084,9 @@ class GitHubServiceTest {
     when(mockPagedIterator.hasNext()).thenReturn(true, false);
     when(mockPagedIterator.next()).thenReturn(mockArtifact);
     when(mockArtifact.getName()).thenReturn("workflow-context");
-    when(mockArtifact.download(any(InputStreamFunction.class)))
+    @SuppressWarnings("unchecked")
+    InputStreamFunction<GitHubWorkflowContext> matcher = any(InputStreamFunction.class);
+    when(mockArtifact.download(matcher))
         .thenThrow(new IOException("Download failed"));
 
     GitHubWorkflowContext context = gitHubService.extractWorkflowContext(repositoryId, runId);
