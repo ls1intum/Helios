@@ -494,6 +494,7 @@ public class GitHubService {
       }
 
       // Parse the response
+      @SuppressWarnings("unchecked")
       Map<String, Object> responseMap = objectMapper.readValue(responseBody.string(), Map.class);
 
       // Return the generated notes

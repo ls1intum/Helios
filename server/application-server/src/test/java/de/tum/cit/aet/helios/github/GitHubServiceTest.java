@@ -10,6 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.RETURNS_DEFAULTS;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
@@ -185,6 +186,7 @@ class GitHubServiceTest {
     long workflowRunId = 456L;
     GHRepository mockRepository = mock(GHRepository.class);
     GHWorkflowRun mockWorkflowRun = mock(GHWorkflowRun.class);
+    @SuppressWarnings("unchecked")
     PagedIterable<GHArtifact> mockArtifacts = mock(PagedIterable.class);
 
     when(githubFacade.getRepositoryById(repoId)).thenReturn(mockRepository);
@@ -204,6 +206,7 @@ class GitHubServiceTest {
   void getWorkflows() throws IOException {
     String repoNameWithOwners = "owner/repo";
     GHRepository mockRepository = mock(GHRepository.class);
+    @SuppressWarnings("unchecked")
     PagedIterable<GHWorkflow> mockPagedWorkflows = mock(PagedIterable.class);
     List<GHWorkflow> expectedWorkflows = List.of(mock(GHWorkflow.class));
 
@@ -577,12 +580,20 @@ class GitHubServiceTest {
   @Test
   void createCommitStatusForPullRequestSuccess() throws IOException {
     GHPullRequest mockPullRequest = mock(GHPullRequest.class);
-    GHRepository mockRepository = mock(GHRepository.class);
+    GHRepository mockRepository = new GHRepository() {
+      @Override
+      public long getId() {
+        return 123L;
+      }
+
+      @Override
+      public String getFullName() {
+        return "owner/repo";
+      }
+    };
     GHCommitPointer mockHead = mock(GHCommitPointer.class);
 
     when(mockPullRequest.getRepository()).thenReturn(mockRepository);
-    when(mockRepository.getId()).thenReturn(123L);
-    when(mockRepository.getFullName()).thenReturn("owner/repo");
     when(mockPullRequest.getNumber()).thenReturn(1);
     when(mockPullRequest.getHead()).thenReturn(mockHead); // GHCommitPointer
     when(mockHead.getSha()).thenReturn("test-sha");
@@ -602,12 +613,20 @@ class GitHubServiceTest {
   @Test
   void createCommitStatusForPullRequestIoException() throws IOException {
     GHPullRequest mockPullRequest = mock(GHPullRequest.class);
-    GHRepository mockRepository = mock(GHRepository.class);
+    GHRepository mockRepository = new GHRepository() {
+      @Override
+      public long getId() {
+        return 123L;
+      }
+
+      @Override
+      public String getFullName() {
+        return "owner/repo";
+      }
+    };
     GHCommitPointer mockHead = mock(GHCommitPointer.class);
 
     when(mockPullRequest.getRepository()).thenReturn(mockRepository);
-    when(mockRepository.getId()).thenReturn(123L);
-    when(mockRepository.getFullName()).thenReturn("owner/repo");
     when(mockPullRequest.getNumber()).thenReturn(1);
     when(mockPullRequest.getHead()).thenReturn(mockHead);
     when(mockHead.getSha()).thenReturn("test-sha");
@@ -1003,7 +1022,9 @@ class GitHubServiceTest {
     InputStream inputStream = new ByteArrayInputStream(baos.toByteArray());
 
     // Mock the download method
-    when(mockArtifact.download(any(InputStreamFunction.class)))
+    @SuppressWarnings("unchecked")
+    InputStreamFunction<GitHubWorkflowContext> matcher = any(InputStreamFunction.class);
+    when(mockArtifact.download(matcher))
         .thenAnswer(
             invocation -> {
               InputStreamFunction<GitHubWorkflowContext> function = invocation.getArgument(0);
@@ -1063,7 +1084,9 @@ class GitHubServiceTest {
     when(mockPagedIterator.hasNext()).thenReturn(true, false);
     when(mockPagedIterator.next()).thenReturn(mockArtifact);
     when(mockArtifact.getName()).thenReturn("workflow-context");
-    when(mockArtifact.download(any(InputStreamFunction.class)))
+    @SuppressWarnings("unchecked")
+    InputStreamFunction<GitHubWorkflowContext> matcher = any(InputStreamFunction.class);
+    when(mockArtifact.download(matcher))
         .thenThrow(new IOException("Download failed"));
 
     GitHubWorkflowContext context = gitHubService.extractWorkflowContext(repositoryId, runId);
