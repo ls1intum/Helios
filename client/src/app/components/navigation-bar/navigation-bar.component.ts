@@ -67,7 +67,7 @@ export class NavigationBarComponent {
               path: ['repo', this.repositoryId(), 'release'],
             },
             {
-              label: 'Project Settings',
+              label: 'Repository Settings',
               icon: 'adjustments-alt',
               path: ['repo', this.repositoryId(), 'settings'],
               showAtBottom: true,

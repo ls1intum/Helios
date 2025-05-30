@@ -69,7 +69,7 @@
           </p-button>
         } @else {
           <p-button label="Publish to GitHub" (onClick)="publishReleaseDraft()">
-            <i-tabler name="cloud-upload" class="!size-5" />
+            <i-tabler name="upload" class="!size-5" />
           </p-button>
         }
 
@@ -159,4 +159,8 @@
     <p-skeleton width="8rem" height="1rem" />
     <p-skeleton width="10rem" height="2rem" />
   </div>
+}
+
+@if (publishDialogVisible()) {
+  <app-publish-draft-release-confirmation [(isVisible)]="publishDialogVisible" [releaseName]="releaseName()!" (confirmed)="onPublishReleaseDraftConfirmed($event)" />
 }

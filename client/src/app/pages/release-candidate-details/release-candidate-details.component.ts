@@ -32,7 +32,7 @@ import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
 import {
   IconBrandGithub,
   IconCheck,
-  IconCloudUpload,
+  IconUpload,
   IconExternalLink,
   IconGitCommit,
   IconMessageCircle,
@@ -48,6 +48,7 @@ import {
   ReleaseEvaluationDialogData,
   ReleaseEvaluationDialogResult,
 } from '@app/components/dialogs/release-evaluation-dialog/release-evaluation-dialog.component';
+import { PublishDraftReleaseConfirmationComponent } from '@app/components/dialogs/publish-draft-release-confirmation/publish-draft-release-confirmation.component';
 
 @Component({
   selector: 'app-release-candidate-details',
@@ -65,6 +66,7 @@ import {
     TagModule,
     ReactiveFormsModule,
     TextareaModule,
+    PublishDraftReleaseConfirmationComponent,
     InputTextModule,
   ],
   providers: [
@@ -73,7 +75,7 @@ import {
       IconTrash,
       IconUser,
       IconExternalLink,
-      IconCloudUpload,
+      IconUpload,
       IconCheck,
       IconX,
       IconPlus,
@@ -112,6 +114,10 @@ export class ReleaseCandidateDetailsComponent implements OnInit {
   releaseNotesForm = new FormGroup({
     releaseNotes: new FormControl(''),
   });
+
+  // Publish to GitHub
+  publishDialogVisible = signal(false);
+  releaseName = signal<string | undefined>(undefined);
 
   // Computed property that handles the priorities as required
   releaseNotes = computed(() => {
@@ -255,13 +261,17 @@ export class ReleaseCandidateDetailsComponent implements OnInit {
   publishReleaseDraft() {
     const rc = this.releaseCandidateQuery.data();
     if (!rc) return;
-    this.confirmationService.confirm({
-      header: 'Publish Release Candidate',
-      message: `Are you sure you want to publish release candidate ${rc.name} as a draft to GitHub? This can only be undone in GitHub itself.`,
-      accept: () => {
-        this.publishReleaseDraftMutation.mutate({ body: { name: rc.name } });
-      },
-    });
+    this.releaseName.set(rc.name);
+    this.publishDialogVisible.set(true);
+  }
+
+  onPublishReleaseDraftConfirmed(yes: boolean) {
+    if (yes && this.releaseName()) {
+      const rc = this.releaseCandidateQuery.data();
+      if (!rc) return;
+      this.publishReleaseDraftMutation.mutate({ body: { name: rc.name } });
+      this.releaseName.set(undefined);
+    }
   }
 
   openReleaseInGitHub() {
