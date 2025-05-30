@@ -27,7 +27,7 @@ import { MarkdownPipe } from '@app/core/modules/markdown/markdown.pipe';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { TextareaModule } from 'primeng/textarea';
 import { InputTextModule } from 'primeng/inputtext';
-import { SlicePipe } from '@angular/common';
+import { NgClass, SlicePipe } from '@angular/common';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
 import {
   IconBrandGithub,
@@ -68,6 +68,7 @@ import { PublishDraftReleaseConfirmationComponent } from '@app/components/dialog
     TextareaModule,
     PublishDraftReleaseConfirmationComponent,
     InputTextModule,
+    NgClass,
   ],
   providers: [
     provideTablerIcons({

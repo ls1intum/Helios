@@ -74,10 +74,24 @@
         }
 
         <p-buttongroup>
-          <p-button label="Working" severity="success" [disabled]="hasUserEvaluatedTo(true)" (onClick)="evaluateReleaseCandidate(true)">
+          <p-button
+            label="Working"
+            severity="success"
+            (onClick)="evaluateReleaseCandidate(true)"
+            [ngClass]="{
+              'opacity-50': hasUserEvaluatedTo(true),
+            }"
+          >
             <i-tabler name="check" class="!size-5" />
           </p-button>
-          <p-button label="Broken" severity="danger" [disabled]="hasUserEvaluatedTo(false)" (onClick)="evaluateReleaseCandidate(false)">
+          <p-button
+            label="Broken"
+            severity="danger"
+            (onClick)="evaluateReleaseCandidate(false)"
+            [ngClass]="{
+              'opacity-50': hasUserEvaluatedTo(false),
+            }"
+          >
             <i-tabler name="x" class="!size-5" />
           </p-button>
         </p-buttongroup>
