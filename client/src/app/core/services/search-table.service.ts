@@ -4,7 +4,7 @@ import { TreeTable } from 'primeng/treetable';
 import { UserProfile } from './keycloak/user-profile';
 
 export type SearchTable = TreeTable | Table;
-type FilterOption<T> = { name: string; filter: (prs: T[], userProfile?: UserProfile) => T[] };
+export type FilterOption<T> = { name: string; filter: (prs: T[], userProfile?: UserProfile) => T[] };
 
 export const FILTER_OPTIONS_TOKEN = new InjectionToken('filterOptions');
 
