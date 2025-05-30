@@ -9,6 +9,7 @@ import { IconClipboardCheck, IconX } from 'angular-tabler-icons/icons';
 export interface ReleaseEvaluationDialogData {
   releaseName: string;
   isWorking: boolean;
+  comment?: string;
 }
 
 export interface ReleaseEvaluationDialogResult {
@@ -34,7 +35,7 @@ export class ReleaseEvaluationDialogComponent {
   data: ReleaseEvaluationDialogData = this.config.data;
 
   evaluationForm = new FormGroup({
-    comment: new FormControl('', [Validators.maxLength(500)]),
+    comment: new FormControl(this.data.comment ?? '', [Validators.maxLength(500)]),
   });
 
   submit() {

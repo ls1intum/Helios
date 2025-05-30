@@ -219,9 +219,22 @@ export class ReleaseCandidateDetailsComponent implements OnInit {
   }
 
   evaluateReleaseCandidate = (isWorking: boolean) => {
+    const release = this.releaseCandidateQuery.data();
+    if (!release) {
+      return;
+    }
+
+    // Find the current user’s previous evaluation (if any)
+    const me = this.keycloakService.getPreferredUsername()?.toLowerCase();
+    const userEvaluation = release.evaluations.find(e => e.user.login.toLowerCase() === me);
+
+    // Reuse the comment only when the state is the same
+    const comment = userEvaluation && userEvaluation.isWorking === isWorking ? (userEvaluation.comment ?? '') : '';
+
     const dialogData: ReleaseEvaluationDialogData = {
       releaseName: this.name(),
       isWorking: isWorking,
+      comment: comment,
     };
 
     const ref = this.dialogService.open(ReleaseEvaluationDialogComponent, {
