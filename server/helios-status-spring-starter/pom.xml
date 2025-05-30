@@ -5,9 +5,9 @@
                              https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>io.github.egekocabas</groupId>
+    <groupId>de.tum.cit.aet</groupId>
     <artifactId>helios-status-spring-starter</artifactId>
-    <version>0.0.4</version>
+    <version>1.0.0</version>
     <packaging>jar</packaging>
     <name>Helios Status Spring Starter</name>
     <description>Helios starter for Spring Boot apps – push-based lifecycle status reporting.</description>
@@ -235,7 +235,7 @@
                             <autoPublish>true</autoPublish>
                             <centralBaseUrl>https://central.sonatype.com</centralBaseUrl>
                             <centralSnapshotsUrl>https://central.sonatype.com/repository/maven-snapshots/</centralSnapshotsUrl>
-                            <deploymentName>Deployment</deploymentName>
+                            <deploymentName>Helios Status Starter Deployment</deploymentName>
                             <publishingServerId>central</publishingServerId>
                         </configuration>
                     </plugin>
