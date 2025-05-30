@@ -10,6 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.RETURNS_DEFAULTS;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
@@ -577,12 +578,20 @@ class GitHubServiceTest {
   @Test
   void createCommitStatusForPullRequestSuccess() throws IOException {
     GHPullRequest mockPullRequest = mock(GHPullRequest.class);
-    GHRepository mockRepository = mock(GHRepository.class);
+    GHRepository mockRepository = new GHRepository() {
+      @Override
+      public long getId() {
+        return 123L;
+      }
+
+      @Override
+      public String getFullName() {
+        return "owner/repo";
+      }
+    };
     GHCommitPointer mockHead = mock(GHCommitPointer.class);
 
     when(mockPullRequest.getRepository()).thenReturn(mockRepository);
-    when(mockRepository.getId()).thenReturn(123L);
-    when(mockRepository.getFullName()).thenReturn("owner/repo");
     when(mockPullRequest.getNumber()).thenReturn(1);
     when(mockPullRequest.getHead()).thenReturn(mockHead); // GHCommitPointer
     when(mockHead.getSha()).thenReturn("test-sha");
@@ -602,12 +611,20 @@ class GitHubServiceTest {
   @Test
   void createCommitStatusForPullRequestIoException() throws IOException {
     GHPullRequest mockPullRequest = mock(GHPullRequest.class);
-    GHRepository mockRepository = mock(GHRepository.class);
+    GHRepository mockRepository = new GHRepository() {
+      @Override
+      public long getId() {
+        return 123L;
+      }
+
+      @Override
+      public String getFullName() {
+        return "owner/repo";
+      }
+    };
     GHCommitPointer mockHead = mock(GHCommitPointer.class);
 
     when(mockPullRequest.getRepository()).thenReturn(mockRepository);
-    when(mockRepository.getId()).thenReturn(123L);
-    when(mockRepository.getFullName()).thenReturn("owner/repo");
     when(mockPullRequest.getNumber()).thenReturn(1);
     when(mockPullRequest.getHead()).thenReturn(mockHead);
     when(mockHead.getSha()).thenReturn("test-sha");
