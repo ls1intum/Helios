@@ -186,6 +186,7 @@ class GitHubServiceTest {
     long workflowRunId = 456L;
     GHRepository mockRepository = mock(GHRepository.class);
     GHWorkflowRun mockWorkflowRun = mock(GHWorkflowRun.class);
+    @SuppressWarnings("unchecked")
     PagedIterable<GHArtifact> mockArtifacts = mock(PagedIterable.class);
 
     when(githubFacade.getRepositoryById(repoId)).thenReturn(mockRepository);
@@ -205,6 +206,7 @@ class GitHubServiceTest {
   void getWorkflows() throws IOException {
     String repoNameWithOwners = "owner/repo";
     GHRepository mockRepository = mock(GHRepository.class);
+    @SuppressWarnings("unchecked")
     PagedIterable<GHWorkflow> mockPagedWorkflows = mock(PagedIterable.class);
     List<GHWorkflow> expectedWorkflows = List.of(mock(GHWorkflow.class));
 
