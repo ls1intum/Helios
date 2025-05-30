@@ -11,6 +11,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -38,4 +39,8 @@ public class ReleaseCandidateEvaluation {
   @JoinColumn(name = "evaluated_by_id", nullable = false)
   @ToString.Exclude
   private User evaluatedBy;
+
+  @Column(length = 500)
+  @Size(max = 500, message = "Comment cannot exceed 500 characters")
+  private String comment;
 }
