@@ -182,36 +182,7 @@ public class GitHubService {
 
     try (Response response = okHttpClient.newCall(request).execute()) {
       if (!response.isSuccessful()) {
-        String responseBodyString = "";
-        if (response.body() != null) {
-          try {
-            responseBodyString = response.body().string();
-          } catch (IOException e) {
-            log.warn("Failed to read response body: {}", e.getMessage());
-          }
-        }
-
-        // Try to parse the JSON error response if we have a body
-        if (!responseBodyString.isEmpty()) {
-          try {
-            Map<String, Object> errorResponse =
-                objectMapper.readValue(responseBodyString, Map.class);
-            String githubMessage = (String) errorResponse.get("message");
-
-            if (githubMessage != null) {
-              throw new IOException("GitHub API error: " + githubMessage);
-            }
-          } catch (JsonProcessingException e) {
-            // JSON parsing failed, log but continue to fallback
-            log.warn("Failed to parse GitHub error response: {}", e.getMessage());
-          }
-        }
-
-        // Fallback for empty or unparseable responses
-        throw new IOException(
-            "GitHub API call failed with response code: "
-                + response.code()
-                + (!responseBodyString.isEmpty() ? " and body: " + responseBodyString : ""));
+        handleErrorResponse(response, "workflow dispatch");
       }
     }
   }
@@ -595,21 +566,7 @@ public class GitHubService {
     // Execute the request
     try (Response response = okHttpClient.newCall(request).execute()) {
       if (!response.isSuccessful()) {
-        String errorBody = "No error details";
-        ResponseBody responseBody = response.body();
-        if (responseBody != null) {
-          try {
-            errorBody = responseBody.string();
-          } catch (IOException e) {
-            log.warn("Failed to read error response body", e);
-          }
-        }
-
-        log.error(
-            "GitHub API call failed to create release with response code: {} and body: {}",
-            response.code(),
-            errorBody);
-        throw new IOException("GitHub API call failed with response code: " + response.code());
+        handleErrorResponse(response, "create release");
       }
 
       ResponseBody responseBody = response.body();
@@ -791,5 +748,47 @@ public class GitHubService {
       }
       log.info("Successfully sent cancellation request for workflow run ID: {}", runId);
     }
+  }
+
+  /**
+   * Helper method to extract error messages from GitHub API error responses.
+   *
+   * @param response The HTTP response from GitHub API
+   * @param context A context description for the error message
+   * @return Never returns normally, always throws an IOException with appropriate error message
+   * @throws IOException with the extracted error message
+   */
+  private void handleErrorResponse(Response response, String context) throws IOException {
+    String responseBodyString = "";
+    if (response.body() != null) {
+      try {
+        responseBodyString = response.body().string();
+      } catch (IOException e) {
+        log.warn("Failed to read response body: {}", e.getMessage());
+      }
+    }
+
+    // Try to parse the JSON error response if we have a body
+    if (!responseBodyString.isEmpty()) {
+      try {
+        Map<String, Object> errorResponse = objectMapper.readValue(responseBodyString, Map.class);
+        String githubMessage = (String) errorResponse.get("message");
+
+        if (githubMessage != null) {
+          throw new IOException("GitHub API error: " + githubMessage);
+        }
+      } catch (JsonProcessingException e) {
+        // JSON parsing failed, log but continue to fallback
+        log.warn("Failed to parse GitHub error response: {}", e.getMessage());
+      }
+    }
+
+    // Fallback for empty or unparseable responses
+    throw new IOException(
+        "GitHub API "
+            + context
+            + " failed with response code: "
+            + response.code()
+            + (!responseBodyString.isEmpty() ? " and body: " + responseBodyString : ""));
   }
 }
