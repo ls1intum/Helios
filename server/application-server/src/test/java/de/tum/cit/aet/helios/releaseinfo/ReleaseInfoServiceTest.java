@@ -47,21 +47,35 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class ReleaseInfoServiceTest {
 
-  @Mock private GitHubService gitHubService;
-  @Mock private GitRepoRepository gitRepoRepository;
-  @Mock private ReleaseCandidateRepository releaseCandidateRepository;
-  @Mock private ReleaseRepository releaseRepository;
-  @Mock private CommitRepository commitRepository;
-  @Mock private DeploymentRepository deploymentRepository;
-  @Mock private BranchRepository branchRepository;
-  @Mock private UserRepository userRepository;
-  @Mock private ReleaseCandidateEvaluationRepository releaseCandidateEvaluationRepository;
-  @Mock private AuthService authService;
-  @Mock private HeliosDeploymentRepository heliosDeploymentRepository;
-  @Mock private GitHubDataSyncOrchestrator gitHubDataSyncOrchestrator;
-  @Mock private GitHubReleaseSyncService gitHubReleaseSyncService;
+  @Mock
+  private GitHubService gitHubService;
+  @Mock
+  private GitRepoRepository gitRepoRepository;
+  @Mock
+  private ReleaseCandidateRepository releaseCandidateRepository;
+  @Mock
+  private ReleaseRepository releaseRepository;
+  @Mock
+  private CommitRepository commitRepository;
+  @Mock
+  private DeploymentRepository deploymentRepository;
+  @Mock
+  private BranchRepository branchRepository;
+  @Mock
+  private UserRepository userRepository;
+  @Mock
+  private ReleaseCandidateEvaluationRepository releaseCandidateEvaluationRepository;
+  @Mock
+  private AuthService authService;
+  @Mock
+  private HeliosDeploymentRepository heliosDeploymentRepository;
+  @Mock
+  private GitHubDataSyncOrchestrator gitHubDataSyncOrchestrator;
+  @Mock
+  private GitHubReleaseSyncService gitHubReleaseSyncService;
 
-  @InjectMocks private ReleaseInfoService service;
+  @InjectMocks
+  private ReleaseInfoService service;
 
   private final Long REPO_ID = 1L;
 
@@ -236,7 +250,7 @@ class ReleaseInfoServiceTest {
     when(ghCommit.getHtmlUrl()).thenReturn(new java.net.URL("http://example.com/c/sha"));
 
     // Stub getCommits() to return an array
-    when(compare.getCommits()).thenReturn(new GHCompare.Commit[] { ghCommit });
+    when(compare.getCommits()).thenReturn(new GHCompare.Commit[] {ghCommit});
     when(compare.getHtmlUrl()).thenReturn(new java.net.URL("http://example.com/compare"));
 
     // Act
@@ -259,7 +273,8 @@ class ReleaseInfoServiceTest {
   @SuppressWarnings("unchecked")
   private List<LatestDeploymentUnion> invokeGetCandidateDeployments() throws Exception {
     Method m =
-        ReleaseInfoService.class.getDeclaredMethod("getCandidateDeployments", ReleaseCandidate.class);
+        ReleaseInfoService.class.getDeclaredMethod("getCandidateDeployments",
+            ReleaseCandidate.class);
     m.setAccessible(true);
     return (List<LatestDeploymentUnion>) m.invoke(service, candidate);
   }
@@ -565,7 +580,6 @@ class ReleaseInfoServiceTest {
   }
 
 
-
   @Test
   void getReleaseInfoByName_notFound_throwsException() {
     when(releaseCandidateRepository.findByRepositoryRepositoryIdAndName(REPO_ID, "no-such"))
@@ -808,7 +822,8 @@ class ReleaseInfoServiceTest {
   }
 
   @Test
-  void publishReleaseDraft_createReleaseThrows_throwsReleaseCandidateException() throws IOException {
+  void publishReleaseDraft_createReleaseThrows_throwsReleaseCandidateException()
+      throws IOException {
     // Arrange
     String tagName = "v-error";
     GitRepository repo = new GitRepository();
