@@ -63,8 +63,12 @@ export class WorkflowJobsStatusComponent {
     return ['IN_PROGRESS', 'WAITING', 'REQUESTED', 'PENDING', 'QUEUED'].includes(this.latestDeployment()?.state || '') && this.latestDeployment()?.workflowRunHtmlUrl;
   });
 
-  deploymentSuccessfullyCompleted = computed(() => {
+  deploymentSuccessful = computed(() => {
     return ['SUCCESS'].includes(this.latestDeployment()?.state || '') && this.latestDeployment()?.workflowRunHtmlUrl;
+  });
+
+  deploymentUnsuccessful = computed(() => {
+    return ['ERROR', 'FAILURE'].includes(this.latestDeployment()?.state || '') && this.latestDeployment()?.workflowRunHtmlUrl;
   });
 
   // Track if any jobs failed
@@ -80,7 +84,7 @@ export class WorkflowJobsStatusComponent {
       }
     });
     effect(() => {
-      if (!this.deploymentInProgress() && !this.extraRefetchStarted()) {
+      if (this.deploymentUnsuccessful() && !this.extraRefetchStarted()) {
         // Deployment just completed, start extra fetches
         console.debug('Deployment completed, starting extra refetches');
         this.extraRefetchStarted.set(true);

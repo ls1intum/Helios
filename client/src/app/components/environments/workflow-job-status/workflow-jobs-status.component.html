@@ -1,5 +1,5 @@
 <div class="workflow-jobs-status w-full mb-4">
-  @if (jobs().length > 0 && !deploymentSuccessfullyCompleted()) {
+  @if (jobs().length > 0 && !deploymentSuccessful()) {
     <div class="flex justify-between items-center mb-3">
       <h3 class="text-lg font-medium">Job Status</h3>
     </div>
