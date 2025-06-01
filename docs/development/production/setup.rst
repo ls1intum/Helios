@@ -2,6 +2,9 @@
 Production Setup Guide
 ========================
 
+.. contents:: Content of this document
+    :local:
+    :depth: 2
 
 We maintain two servers: one for production and one for staging:
 
