@@ -2,6 +2,7 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { Component, computed, effect, inject, input, signal } from '@angular/core';
 import { EnvironmentDeployment, WorkflowJobDto } from '@app/core/modules/openapi';
 import { getWorkflowJobStatusOptions, getWorkflowJobStatusQueryKey } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
+import { PermissionService } from '@app/core/services/permission.service';
 import { injectQuery } from '@tanstack/angular-query-experimental';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
 import { IconBrandGithub, IconCircleCheck, IconCircleMinus, IconCircleX, IconClock, IconProgress } from 'angular-tabler-icons/icons';
@@ -15,6 +16,7 @@ import { Button } from 'primeng/button';
   templateUrl: './workflow-jobs-status.component.html',
 })
 export class WorkflowJobsStatusComponent {
+  permissions = inject(PermissionService);
   latestDeployment = input.required<EnvironmentDeployment | undefined>();
 
   workflowRunId = input.required<number>();
@@ -26,12 +28,16 @@ export class WorkflowJobsStatusComponent {
 
   // Control when to poll for job status - during active deployment or limited extra fetches
   shouldPoll = computed(() => {
-    // Always poll if the deployment is in progress
+    if (!this.permissions.hasWritePermission()) {
+      return false;
+    }
+
     if (!!this.workflowRunId() && !!this.deploymentInProgress()) {
+      // Always poll if the deployment is in progress
       return true;
     }
 
-    // Poll for additional fetches after completion if we haven't hit the limit
+    // Poll for additional fetches after failure to display job status
     if (this.extraRefetchStarted() && !this.extraRefetchCompleted()) {
       return true;
     }
