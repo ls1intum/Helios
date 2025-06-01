@@ -66,6 +66,16 @@
               </div>
             }
 
+            <!-- Waiting for Runner Message -->
+            @if (job.status === 'waiting') {
+              <div class="waiting-for-runner text-sm mb-2">
+                <span class="text-yellow-600 flex items-center">
+                  <i-tabler name="clock" class="mr-1"></i-tabler>
+                  Waiting for approval...
+                </span>
+              </div>
+            }
+
             @if (job.steps?.length) {
               <div class="job-steps pl-4 border-l-2 border-gray-200 mt-3">
                 @for (step of job.steps; track step.number) {
