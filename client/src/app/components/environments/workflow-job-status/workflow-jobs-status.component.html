@@ -101,5 +101,14 @@
         </div>
       }
     </div>
+
+    @if (deploymentUnsuccessful() && !!latestDeployment()?.workflowRunHtmlUrl) {
+      <div class="flex-col w-full justify-items-center">
+        <div class="text-red-600 text-sm mb-2">Some jobs failed. Please check the details below.</div>
+        <p-button label="Open in GitHub" (click)="openLink(latestDeployment()?.workflowRunHtmlUrl)">
+          <i-tabler name="brand-github" class="!size-4" />
+        </p-button>
+      </div>
+    }
   }
 </div>

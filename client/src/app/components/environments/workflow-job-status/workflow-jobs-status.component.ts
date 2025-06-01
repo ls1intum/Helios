@@ -4,13 +4,14 @@ import { EnvironmentDeployment, WorkflowJobDto } from '@app/core/modules/openapi
 import { getWorkflowJobStatusOptions, getWorkflowJobStatusQueryKey } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { injectQuery } from '@tanstack/angular-query-experimental';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
-import { IconCircleCheck, IconCircleMinus, IconCircleX, IconClock, IconProgress } from 'angular-tabler-icons/icons';
+import { IconBrandGithub, IconCircleCheck, IconCircleMinus, IconCircleX, IconClock, IconProgress } from 'angular-tabler-icons/icons';
+import { Button } from 'primeng/button';
 
 @Component({
   selector: 'app-workflow-jobs-status',
   standalone: true,
-  imports: [CommonModule, TablerIconComponent],
-  providers: [DatePipe, provideTablerIcons({ IconClock, IconProgress, IconCircleMinus, IconCircleCheck, IconCircleX })],
+  imports: [CommonModule, TablerIconComponent, Button],
+  providers: [DatePipe, provideTablerIcons({ IconClock, IconProgress, IconCircleMinus, IconCircleCheck, IconCircleX, IconBrandGithub })],
   templateUrl: './workflow-jobs-status.component.html',
 })
 export class WorkflowJobsStatusComponent {
@@ -165,6 +166,12 @@ export class WorkflowJobsStatusComponent {
       const hours = Math.floor(seconds / 3600);
       const minutes = Math.floor((seconds % 3600) / 60);
       return `${hours}h ${minutes}m`;
+    }
+  }
+
+  openLink(url: string | undefined) {
+    if (url) {
+      window.open(url, '_blank');
     }
   }
 }
