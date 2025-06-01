@@ -15,13 +15,15 @@
         >
           <div class="job-header flex justify-between items-center mb-2">
             <div class="flex items-center gap-2">
-              <i-tabler [name]="getStatusIcon(job.status, job.conclusion)" [ngClass]="getStatusClass(job.status, job.conclusion)" class="!size-5"></i-tabler>
+              <i-tabler [name]="getStatusIcon(job.status, job.conclusion)" [ngClass]="getIconColorClass(job.status, job.conclusion)" class="!size-5"></i-tabler>
               <span class="font-semibold">{{ job.name }}</span>
               <span class="status-badge px-2 py-1 rounded-full text-xs font-medium" [ngClass]="getStatusClass(job.status, job.conclusion)">
                 {{ getStatusText(job.status, job.conclusion) }}
               </span>
               @if (!!job.htmlUrl) {
-                <button text class="ml-2 text-xs text-blue-600 hover:underline" (click)="openLink(job.htmlUrl)">View Logs</button>
+                <p-button [link]="true" label="View Logs on Github" size="small" (click)="openLink(job.htmlUrl)">
+                  <i-tabler name="external-link" class="!size-4"></i-tabler>
+                </p-button>
               }
             </div>
             <div class="text-sm text-gray-500 flex items-center gap-2">
@@ -108,7 +110,7 @@
     @if (deploymentUnsuccessful() && !!latestDeployment()?.workflowRunHtmlUrl) {
       <div class="flex-col w-full justify-items-center">
         <div class="text-red-600 text-sm mb-2">Some jobs failed. Please check the details below.</div>
-        <p-button label="Open in GitHub" (click)="openLink(latestDeployment()?.workflowRunHtmlUrl)">
+        <p-button label="Open Workflow Run on GitHub" (click)="openLink(latestDeployment()?.workflowRunHtmlUrl)">
           <i-tabler name="brand-github" class="!size-4" />
         </p-button>
       </div>

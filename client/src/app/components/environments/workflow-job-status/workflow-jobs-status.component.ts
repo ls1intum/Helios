@@ -5,14 +5,14 @@ import { getWorkflowJobStatusOptions, getWorkflowJobStatusQueryKey } from '@app/
 import { PermissionService } from '@app/core/services/permission.service';
 import { injectQuery } from '@tanstack/angular-query-experimental';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
-import { IconBrandGithub, IconCircleCheck, IconCircleMinus, IconCircleX, IconClock, IconProgress } from 'angular-tabler-icons/icons';
+import { IconBrandGithub, IconCircleCheck, IconCircleMinus, IconCircleX, IconClock, IconExternalLink, IconProgress } from 'angular-tabler-icons/icons';
 import { Button } from 'primeng/button';
 
 @Component({
   selector: 'app-workflow-jobs-status',
   standalone: true,
   imports: [CommonModule, TablerIconComponent, Button],
-  providers: [DatePipe, provideTablerIcons({ IconClock, IconProgress, IconCircleMinus, IconCircleCheck, IconCircleX, IconBrandGithub })],
+  providers: [DatePipe, provideTablerIcons({ IconClock, IconProgress, IconCircleMinus, IconCircleCheck, IconCircleX, IconBrandGithub, IconExternalLink })],
   templateUrl: './workflow-jobs-status.component.html',
 })
 export class WorkflowJobsStatusComponent {
@@ -44,6 +44,7 @@ export class WorkflowJobsStatusComponent {
 
     return false;
   });
+
   workflowJobsQuery = injectQuery(() => ({
     ...getWorkflowJobStatusOptions({ path: { runId: this.workflowRunId() } }),
     queryKey: getWorkflowJobStatusQueryKey({ path: { runId: this.workflowRunId() } }),
@@ -106,13 +107,13 @@ export class WorkflowJobsStatusComponent {
   }
   // Get CSS class for job status
   getStatusClass(status: string | null | undefined, conclusion: string | null | undefined): string {
-    if (conclusion === 'success') return 'text-green-600 bg-green-50 dark:text-green-400 dark:bg-green-900/30';
-    if (conclusion === 'failure') return 'text-red-600 bg-red-50 dark:text-red-400 dark:bg-red-900/30';
-    if (conclusion === 'skipped') return 'text-gray-600 bg-gray-50 dark:text-gray-400 dark:bg-gray-800';
+    if (conclusion === 'success') return 'text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-900/30';
+    if (conclusion === 'failure') return 'text-red-600 bg-red-100 dark:text-red-400 dark:bg-red-900/30';
+    if (conclusion === 'skipped') return 'text-gray-600 bg-gray-100 dark:text-gray-400 dark:bg-gray-900';
     if (conclusion === 'cancelled') return 'text-orange-600 bg-orange-50 dark:text-orange-400 dark:bg-orange-900/30';
 
     if (status === 'in_progress') return 'text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-900/30';
-    if (status === 'queued' || status === 'waiting') return 'text-gray-600 bg-gray-100 dark:text-gray-400 dark:bg-gray-800';
+    if (status === 'queued' || status === 'waiting') return 'text-gray-600 bg-gray-100 dark:text-gray-400 dark:bg-gray-900';
 
     return 'text-gray-600 dark:text-gray-400';
   }
@@ -139,6 +140,18 @@ export class WorkflowJobsStatusComponent {
     if (status === 'queued' || status === 'waiting') return 'clock';
 
     return 'help';
+  }
+
+  getIconColorClass(status: string | null | undefined, conclusion: string | null | undefined): string {
+    if (conclusion === 'success') return 'text-green-600 dark:text-green-400';
+    if (conclusion === 'failure') return 'text-red-600 dark:text-red-400';
+    if (conclusion === 'skipped') return 'text-gray-600 dark:text-gray-400';
+    if (conclusion === 'cancelled') return 'text-orange-600 dark:text-orange-400';
+
+    if (status === 'in_progress') return 'text-blue-600 dark:text-blue-400 animate-spin';
+    if (status === 'queued' || status === 'waiting') return 'text-gray-600 dark:text-gray-400';
+
+    return 'text-gray-600 dark:text-gray-400';
   }
 
   // Get status text for display
