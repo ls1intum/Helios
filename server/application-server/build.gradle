@@ -120,6 +120,26 @@ tasks.register("bootRunDev", BootRun) {
     mainClass.set("de.tum.cit.aet.helios.HeliosApplication")
 }
 
+tasks.register("bootRunStaging", BootRun) {
+    jvmArgs = ["-javaagent:${configurations.runtimeAgent1.asPath}", "-javaagent:${configurations.runtimeAgent2.asPath}"]
+    group = "application"
+    description = "Runs the Spring Boot application with the staging profile"
+    // Set the active profile to 'staging'
+    systemProperty "spring.profiles.active", "staging"
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass.set("de.tum.cit.aet.helios.HeliosApplication")
+}
+
+tasks.register("bootRunProd", BootRun) {
+    jvmArgs = ["-javaagent:${configurations.runtimeAgent1.asPath}", "-javaagent:${configurations.runtimeAgent2.asPath}"]
+    group = "application"
+    description = "Runs the Spring Boot application with the prod profile"
+    // Set the active profile to 'prod'
+    systemProperty "spring.profiles.active", "prod"
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass.set("de.tum.cit.aet.helios.HeliosApplication")
+}
+
 tasks.named("test") {
     group = "application"
     description = "Runs the Spring Boot application with the test profile"

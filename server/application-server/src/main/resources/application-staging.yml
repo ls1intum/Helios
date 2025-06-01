@@ -33,6 +33,10 @@ helios:
               secretKey: ${HELIOS_STAGING_SECRET_KEY:}
     clientBaseUrl: "https://helios-staging.aet.cit.tum.de"
 
+logging:
+    level:
+        de.tum.cit.aet.helios: DEBUG
+
 nats:
     enabled: true
     timeframe: ${MONITORING_TIMEFRAME:7}
