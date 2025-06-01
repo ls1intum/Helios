@@ -125,24 +125,26 @@ Additional Containers
           --net helios-network \
           nginx:latest
 
-  - **SSL/TLS Certificates**
-    Certificates are generated manually using Certbot. For example::
+  - **SSL/TLS Certificates**:
+  .. warning::
+    Do not forget to renew the certificates for both production and staging environments every 90 days!
+  Certificates are generated manually using Certbot. For example::
 
-        sudo certbot certonly --standalone -d helios.aet.cit.tum.de
+      sudo certbot certonly --standalone -d helios.aet.cit.tum.de
 
-    This creates certificate files under ``/etc/letsencrypt``. After generating the certificates, update the nginx configuration file at ``/etc/nginx/conf/nginx.conf`` to reference the new certificate and key files. Typical SSL snippet in ``nginx.conf``::
+  This creates certificate files under ``/etc/letsencrypt``. After generating the certificates, update the nginx configuration file at ``/etc/nginx/conf/nginx.conf`` to reference the new certificate and key files. Typical SSL snippet in ``nginx.conf``::
 
-        server {
-            listen 443 ssl;
-            server_name helios.aet.cit.tum.de;
+      server {
+          listen 443 ssl;
+          server_name helios.aet.cit.tum.de;
 
-            ssl_certificate     /etc/letsencrypt/live/helios.aet.cit.tum.de/fullchain.pem;
-            ssl_certificate_key /etc/letsencrypt/live/helios.aet.cit.tum.de/privkey.pem;
+          ssl_certificate     /etc/letsencrypt/live/helios.aet.cit.tum.de/fullchain.pem;
+          ssl_certificate_key /etc/letsencrypt/live/helios.aet.cit.tum.de/privkey.pem;
 
-            # ... other configuration ...
-        }
+          # ... other configuration ...
+      }
 
-    Note that a reference version of the nginx configuration lives in the repository’s root as ``nginx.conf``—however, to see the live, up-to-date configuration in use, refer to the file at ``/etc/nginx/conf/nginx.conf``.
+  Note that a reference version of the nginx configuration lives in the repository’s root as ``nginx.conf``—however, to see the live, up-to-date configuration in use, refer to the file at ``/etc/nginx/conf/nginx.conf``.
 
   - **Important**: After each deployment (``docker-compose up``), the deployment script runs::
 
