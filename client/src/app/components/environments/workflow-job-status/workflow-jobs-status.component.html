@@ -70,7 +70,7 @@
               <div class="job-steps pl-4 border-l-2 border-gray-200 mt-3">
                 @for (step of job.steps; track step.number) {
                   <div class="step py-1 flex items-center gap-2">
-                    <span class="status-indicator size-2 rounded-full" [ngClass]="getStatusClass(step.status, step.conclusion)"></span>
+                    <span class="status-indicator size-2 rounded-full" [ngClass]="getStatusIndicatorClass(step.status, step.conclusion)"></span>
                     <span class="step-name text-sm flex-grow">{{ step.name }}</span>
 
                     <div class="flex items-center gap-2">

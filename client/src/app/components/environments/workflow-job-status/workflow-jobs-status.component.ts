@@ -84,6 +84,18 @@ export class WorkflowJobsStatusComponent {
     return 'text-gray-600 dark:text-gray-400';
   }
 
+  getStatusIndicatorClass(status: string | null | undefined, conclusion: string | null | undefined): string {
+    if (conclusion === 'success') return 'bg-green-500 dark:bg-green-400';
+    if (conclusion === 'failure') return 'bg-red-500 dark:bg-red-400';
+    if (conclusion === 'skipped') return 'bg-gray-400 dark:bg-gray-500';
+    if (conclusion === 'cancelled') return 'bg-orange-500 dark:bg-orange-400';
+
+    if (status === 'in_progress') return 'bg-blue-500 dark:bg-blue-400';
+    if (status === 'queued' || status === 'waiting') return 'bg-gray-300 dark:bg-gray-600';
+
+    return 'bg-gray-300 dark:bg-gray-600';
+  }
+
   // Get icon for job status
   getStatusIcon(status: string | null | undefined, conclusion: string | null | undefined): string {
     if (conclusion === 'success') return 'circle-check';
