@@ -86,4 +86,5 @@ html_style = 'css/style.css'
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
 
+# Icon by Sorasak Pinwiset on freeicons.io
 html_favicon = '_static/favicon.png'

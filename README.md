@@ -1,4 +1,5 @@
 <p align="center">
+  <!-- Icon by Sorasak Pinwiset on freeicons.io -->
   <img src="docs/_static/images/helios-icon-1280x640.png" alt="Helios Icon" width="256" />
 </p>
 
@@ -54,3 +55,11 @@ Full documentation is available at [ls1intum.github.io/Helios](https://ls1intum.
 - **Repository Setup & Detailed Overview:** For instructions on setting up Helios locally, refer to our docs: 🔗 [ls1intum.github.io/Helios](https://ls1intum.github.io/Helios/)
 
 - **License:** Helios is released under the [MIT License](https://github.com/ls1intum/Helios/blob/staging/LICENSE). Feel free to fork, modify, and contribute back!  
+
+---
+
+## Credits & Attribution
+
+- [Helios icon](https://freeicons.io/greek-mythology-icon-set-2/helios-mythology-greek-god-sun-sol-icon-520979) made by [Sorasak Pinwiset](https://freeicons.io/profile/9025) on [freeicons.io](https://freeicons.io/).
+
+- Tunnel support provided by [ngrok](https://ngrok.com/).
