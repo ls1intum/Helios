@@ -1,6 +1,5 @@
 package de.tum.cit.aet.helios.releaseinfo;
 
-
 import static org.junit.Assert.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -66,35 +65,21 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class ReleaseInfoServiceTest {
 
-  @Mock
-  private GitHubService gitHubService;
-  @Mock
-  private GitRepoRepository gitRepoRepository;
-  @Mock
-  private ReleaseCandidateRepository releaseCandidateRepository;
-  @Mock
-  private ReleaseRepository releaseRepository;
-  @Mock
-  private CommitRepository commitRepository;
-  @Mock
-  private DeploymentRepository deploymentRepository;
-  @Mock
-  private BranchRepository branchRepository;
-  @Mock
-  private UserRepository userRepository;
-  @Mock
-  private ReleaseCandidateEvaluationRepository releaseCandidateEvaluationRepository;
-  @Mock
-  private AuthService authService;
-  @Mock
-  private HeliosDeploymentRepository heliosDeploymentRepository;
-  @Mock
-  private GitHubDataSyncOrchestrator gitHubDataSyncOrchestrator;
-  @Mock
-  private GitHubReleaseSyncService gitHubReleaseSyncService;
+  @Mock private GitHubService gitHubService;
+  @Mock private GitRepoRepository gitRepoRepository;
+  @Mock private ReleaseCandidateRepository releaseCandidateRepository;
+  @Mock private ReleaseRepository releaseRepository;
+  @Mock private CommitRepository commitRepository;
+  @Mock private DeploymentRepository deploymentRepository;
+  @Mock private BranchRepository branchRepository;
+  @Mock private UserRepository userRepository;
+  @Mock private ReleaseCandidateEvaluationRepository releaseCandidateEvaluationRepository;
+  @Mock private AuthService authService;
+  @Mock private HeliosDeploymentRepository heliosDeploymentRepository;
+  @Mock private GitHubDataSyncOrchestrator gitHubDataSyncOrchestrator;
+  @Mock private GitHubReleaseSyncService gitHubReleaseSyncService;
 
-  @InjectMocks
-  private ReleaseInfoService service;
+  @InjectMocks private ReleaseInfoService service;
 
   private final Long repoId = 1L;
 
@@ -283,12 +268,11 @@ class ReleaseInfoServiceTest {
     assertTrue(dto.compareUrl().contains("compare"));
   }
 
-
   @SuppressWarnings("unchecked")
   private List<LatestDeploymentUnion> invokeGetCandidateDeployments() throws Exception {
     Method m =
-        ReleaseInfoService.class.getDeclaredMethod("getCandidateDeployments",
-            ReleaseCandidate.class);
+        ReleaseInfoService.class.getDeclaredMethod(
+            "getCandidateDeployments", ReleaseCandidate.class);
     m.setAccessible(true);
     return (List<LatestDeploymentUnion>) m.invoke(service, candidate);
   }
@@ -459,7 +443,6 @@ class ReleaseInfoServiceTest {
     assertTrue(sawEnvBbReal, "Expected a real Deployment union for envB");
   }
 
-
   @Test
   void getAllReleaseInfos_returnsMappedList() {
     ReleaseCandidate rc1 = new ReleaseCandidate();
@@ -476,8 +459,7 @@ class ReleaseInfoServiceTest {
     commit2.setSha("dummySha2");
     rc2.setCommit(commit2);
 
-    when(releaseCandidateRepository.findAllByOrderByCreatedAtDesc())
-        .thenReturn(List.of(rc2, rc1));
+    when(releaseCandidateRepository.findAllByOrderByCreatedAtDesc()).thenReturn(List.of(rc2, rc1));
 
     // Act
     List<ReleaseInfoListDto> result = service.getAllReleaseInfos();
@@ -586,7 +568,6 @@ class ReleaseInfoServiceTest {
     assertEquals("Release body", details.body());
   }
 
-
   @Test
   void getReleaseInfoByName_notFound_throwsException() {
     when(releaseCandidateRepository.findByRepositoryRepositoryIdAndName(repoId, "no-such"))
@@ -594,8 +575,7 @@ class ReleaseInfoServiceTest {
 
     ReleaseCandidateException ex =
         assertThrows(
-            ReleaseCandidateException.class,
-            () -> service.getReleaseInfoByName("no-such"));
+            ReleaseCandidateException.class, () -> service.getReleaseInfoByName("no-such"));
     assertTrue(ex.getMessage().contains("ReleaseCandidate not found"));
   }
 
@@ -634,8 +614,7 @@ class ReleaseInfoServiceTest {
     saved.setCreatedAt(OffsetDateTime.now());
     when(releaseCandidateRepository.save(any(ReleaseCandidate.class))).thenReturn(saved);
 
-    ReleaseCandidateCreateDto dto =
-        new ReleaseCandidateCreateDto(rcName, commitSha, branchName);
+    ReleaseCandidateCreateDto dto = new ReleaseCandidateCreateDto(rcName, commitSha, branchName);
 
     // Act
     ReleaseInfoListDto result = service.createReleaseCandidate(dto);
@@ -652,13 +631,11 @@ class ReleaseInfoServiceTest {
     when(releaseCandidateRepository.existsByRepositoryRepositoryIdAndName(repoId, rcName))
         .thenReturn(true);
 
-    ReleaseCandidateCreateDto dto =
-        new ReleaseCandidateCreateDto(rcName, "sha", "main");
+    ReleaseCandidateCreateDto dto = new ReleaseCandidateCreateDto(rcName, "sha", "main");
 
     // Act & Assert
     ReleaseCandidateException ex =
-        assertThrows(
-            ReleaseCandidateException.class, () -> service.createReleaseCandidate(dto));
+        assertThrows(ReleaseCandidateException.class, () -> service.createReleaseCandidate(dto));
     assertTrue(ex.getMessage().contains("already exists"));
   }
 
@@ -679,7 +656,6 @@ class ReleaseInfoServiceTest {
     assertTrue(ex.getMessage().contains("User not found"));
   }
 
-
   @Test
   void evaluateReleaseCandidate_newEvaluation_savesWorkingAndComment() {
     String rcName = "rc-2.0";
@@ -692,9 +668,7 @@ class ReleaseInfoServiceTest {
     user.setId(42L);
     when(authService.getUserFromGithubId()).thenReturn(user);
 
-    when(
-        releaseCandidateEvaluationRepository.findByReleaseCandidateAndEvaluatedById(
-            rc, 42L))
+    when(releaseCandidateEvaluationRepository.findByReleaseCandidateAndEvaluatedById(rc, 42L))
         .thenReturn(Optional.empty());
 
     ArgumentCaptor<ReleaseCandidateEvaluation> captor =
@@ -730,9 +704,7 @@ class ReleaseInfoServiceTest {
     ReleaseCandidateEvaluation existing = new ReleaseCandidateEvaluation();
     existing.setReleaseCandidate(rc);
     existing.setEvaluatedBy(user);
-    when(
-        releaseCandidateEvaluationRepository.findByReleaseCandidateAndEvaluatedById(
-            rc, 99L))
+    when(releaseCandidateEvaluationRepository.findByReleaseCandidateAndEvaluatedById(rc, 99L))
         .thenReturn(Optional.of(existing));
 
     boolean isWorking = false;
@@ -769,8 +741,7 @@ class ReleaseInfoServiceTest {
     // Assert
     assertNotNull(dto);
     assertEquals(rcName, dto.name());
-    verify(releaseCandidateRepository)
-        .deleteByRepositoryRepositoryIdAndName(repoId, rcName);
+    verify(releaseCandidateRepository).deleteByRepositoryRepositoryIdAndName(repoId, rcName);
   }
 
   @Test
@@ -803,14 +774,12 @@ class ReleaseInfoServiceTest {
     when(authService.getPreferredUsername()).thenReturn("testuser");
     // Spy to stub generateReleaseNotes
     ReleaseInfoService spyService = Mockito.spy(service);
-    doReturn("generated-notes")
-        .when(spyService).generateReleaseNotes(tagName);
+    doReturn("generated-notes").when(spyService).generateReleaseNotes(tagName);
     // Stub GH interactions
     GHRepository mockGhRepo = mock(GHRepository.class);
     when(gitHubService.getRepository("owner/repo")).thenReturn(mockGhRepo);
     GHRelease ghRelease = mock(GHRelease.class);
-    when(
-        gitHubService.createReleaseOnBehalfOfUser(
+    when(gitHubService.createReleaseOnBehalfOfUser(
             "owner/repo", tagName, "shaValue", tagName, "generated-notes", true, "testuser"))
         .thenReturn(ghRelease);
     // Act
@@ -839,17 +808,15 @@ class ReleaseInfoServiceTest {
     when(authService.getPreferredUsername()).thenReturn("testuser");
     // Spy to stub generateReleaseNotes
     ReleaseInfoService spyService = Mockito.spy(service);
-    doReturn("generated-notes")
-        .when(spyService).generateReleaseNotes(tagName);
+    doReturn("generated-notes").when(spyService).generateReleaseNotes(tagName);
     // Stub GH interactions to throw
     when(gitHubService.createReleaseOnBehalfOfUser(
-        "owner/repo", tagName, "shaValue", tagName, "generated-notes", true, "testuser"))
+            "owner/repo", tagName, "shaValue", tagName, "generated-notes", true, "testuser"))
         .thenThrow(new IOException("GH create error"));
     // Act & Assert
     ReleaseCandidateException ex =
         assertThrows(
-            ReleaseCandidateException.class,
-            () -> spyService.publishReleaseDraft(tagName));
+            ReleaseCandidateException.class, () -> spyService.publishReleaseDraft(tagName));
     assertTrue(ex.getMessage().contains("Release candidate could not be pushed to GitHub."));
   }
 
@@ -878,8 +845,7 @@ class ReleaseInfoServiceTest {
     when(gitHubService.getRepository("owner/repo")).thenReturn(mockGhRepo);
 
     GHRelease ghRelease = mock(GHRelease.class);
-    when(
-        gitHubService.createReleaseOnBehalfOfUser(
+    when(gitHubService.createReleaseOnBehalfOfUser(
             "owner/repo", tagName, "shaValue", tagName, "Custom release notes", true, "testuser"))
         .thenReturn(ghRelease);
 
@@ -897,9 +863,7 @@ class ReleaseInfoServiceTest {
         .thenReturn(Optional.empty());
 
     // Act & Assert: the code will now throw ReleaseCandidateException from the candidate lookup
-    assertThrows(
-        ReleaseCandidateException.class,
-        () -> service.publishReleaseDraft("nope"));
+    assertThrows(ReleaseCandidateException.class, () -> service.publishReleaseDraft("nope"));
   }
 
   @Test
@@ -955,8 +919,7 @@ class ReleaseInfoServiceTest {
 
     // Act & Assert
     ReleaseCandidateException ex =
-        assertThrows(
-            ReleaseCandidateException.class, () -> service.generateReleaseNotes(tagName));
+        assertThrows(ReleaseCandidateException.class, () -> service.generateReleaseNotes(tagName));
     assertTrue(ex.getMessage().contains("Failed to generate release notes"));
   }
 
@@ -986,8 +949,7 @@ class ReleaseInfoServiceTest {
 
     ReleaseCandidateException ex =
         assertThrows(
-            ReleaseCandidateException.class,
-            () -> service.updateReleaseNotes("nope", "body"));
+            ReleaseCandidateException.class, () -> service.updateReleaseNotes("nope", "body"));
     assertTrue(ex.getMessage().contains("Release candidate not found"));
   }
 
@@ -997,13 +959,9 @@ class ReleaseInfoServiceTest {
     String updated = "newName";
     ReleaseCandidate rc = new ReleaseCandidate();
     rc.setName(current);
-    when(
-        releaseCandidateRepository.findByRepositoryRepositoryIdAndName(
-            repoId, current))
+    when(releaseCandidateRepository.findByRepositoryRepositoryIdAndName(repoId, current))
         .thenReturn(Optional.of(rc));
-    when(
-        releaseCandidateRepository.existsByRepositoryRepositoryIdAndName(
-            repoId, updated))
+    when(releaseCandidateRepository.existsByRepositoryRepositoryIdAndName(repoId, updated))
         .thenReturn(false);
 
     // Act
@@ -1026,16 +984,13 @@ class ReleaseInfoServiceTest {
   void updateReleaseName_newNameExists_throwsException() {
     String current = "rcA";
     String updated = "rcB";
-    when(
-        releaseCandidateRepository.existsByRepositoryRepositoryIdAndName(
-            repoId, updated))
+    when(releaseCandidateRepository.existsByRepositoryRepositoryIdAndName(repoId, updated))
         .thenReturn(true);
 
     // Act & Assert
     ReleaseCandidateException ex =
         assertThrows(
-            ReleaseCandidateException.class,
-            () -> service.updateReleaseName(current, updated));
+            ReleaseCandidateException.class, () -> service.updateReleaseName(current, updated));
     assertTrue(ex.getMessage().contains("already exists"));
   }
 
@@ -1047,17 +1002,14 @@ class ReleaseInfoServiceTest {
     Release rel = new Release();
     rc.setRelease(rel); // indicates already published
 
-    when(
-        releaseCandidateRepository.findByRepositoryRepositoryIdAndName(
-            repoId, current))
+    when(releaseCandidateRepository.findByRepositoryRepositoryIdAndName(repoId, current))
         .thenReturn(Optional.of(rc));
 
     String updated = "rcD";
     // Act & Assert
     ReleaseCandidateException ex =
         assertThrows(
-            ReleaseCandidateException.class,
-            () -> service.updateReleaseName(current, updated));
+            ReleaseCandidateException.class, () -> service.updateReleaseName(current, updated));
     assertTrue(ex.getMessage().contains("Cannot update name"));
   }
 }
