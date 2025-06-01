@@ -5,9 +5,9 @@
                              https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>io.github.egekocabas</groupId>
+    <groupId>de.tum.cit.aet</groupId>
     <artifactId>helios-status-spring-starter</artifactId>
-    <version>0.0.4</version>
+    <version>1.0.0</version>
     <packaging>jar</packaging>
     <name>Helios Status Spring Starter</name>
     <description>Helios starter for Spring Boot apps – push-based lifecycle status reporting.</description>
@@ -20,7 +20,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-        <spring.boot.version>3.4.5</spring.boot.version>
+        <spring.boot.version>3.5.0</spring.boot.version>
 
         <!-- dependencies -->
         <okhttp.version>4.12.0</okhttp.version>
@@ -33,7 +33,7 @@
         <maven-javadoc-plugin.version>3.11.2</maven-javadoc-plugin.version>
         <central-publishing-maven-plugin.version>0.7.0</central-publishing-maven-plugin.version>
         <maven-checkstyle-plugin.version>3.6.0</maven-checkstyle-plugin.version>
-        <checkstyle.version>10.24.0</checkstyle.version>
+        <checkstyle.version>10.25.0</checkstyle.version>
         <spring-javaformat-checkstyle.version>0.0.45</spring-javaformat-checkstyle.version>
         <maven-gpg-plugin.version>3.2.7</maven-gpg-plugin.version>
     </properties>
@@ -235,7 +235,7 @@
                             <autoPublish>true</autoPublish>
                             <centralBaseUrl>https://central.sonatype.com</centralBaseUrl>
                             <centralSnapshotsUrl>https://central.sonatype.com/repository/maven-snapshots/</centralSnapshotsUrl>
-                            <deploymentName>Deployment</deploymentName>
+                            <deploymentName>Helios Status Starter Deployment</deploymentName>
                             <publishingServerId>central</publishingServerId>
                         </configuration>
                     </plugin>

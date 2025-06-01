@@ -24,23 +24,21 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class GlobalExceptionHandler {
 
   // -- 400 BAD REQUEST : validation & deserialization -----------------
-  @ExceptionHandler({
-      MethodArgumentNotValidException.class,
-      BindException.class
-  })
-  public ResponseEntity<ApiError> handleValidationErrors(
-      Exception ex, HttpServletRequest request) {
+  @ExceptionHandler({MethodArgumentNotValidException.class, BindException.class})
+  public ResponseEntity<ApiError> handleValidationErrors(Exception ex, HttpServletRequest request) {
 
     // Collect field‑level messages if present
     String message;
     if (ex instanceof MethodArgumentNotValidException manve) {
-      message = manve.getBindingResult().getFieldErrors().stream()
-          .map(fe -> "%s %s".formatted(fe.getField(), fe.getDefaultMessage()))
-          .collect(Collectors.joining("; "));
+      message =
+          manve.getBindingResult().getFieldErrors().stream()
+              .map(fe -> "%s %s".formatted(fe.getField(), fe.getDefaultMessage()))
+              .collect(Collectors.joining("; "));
     } else if (ex instanceof BindException be) {
-      message = be.getFieldErrors().stream()
-          .map(fe -> "%s %s".formatted(fe.getField(), fe.getDefaultMessage()))
-          .collect(Collectors.joining("; "));
+      message =
+          be.getFieldErrors().stream()
+              .map(fe -> "%s %s".formatted(fe.getField(), fe.getDefaultMessage()))
+              .collect(Collectors.joining("; "));
     } else {
       message = ex.getMessage();
     }
@@ -55,12 +53,9 @@ public class GlobalExceptionHandler {
     return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
   }
 
-  /**
-   * Empty body / bad JSON (e.g. missing closing brace)
-   */
+  /** Empty body / bad JSON (e.g. missing closing brace) */
   @ExceptionHandler(org.springframework.http.converter.HttpMessageNotReadableException.class)
-  public ResponseEntity<ApiError> handleUnreadableBody(
-      Exception ex, HttpServletRequest request) {
+  public ResponseEntity<ApiError> handleUnreadableBody(Exception ex, HttpServletRequest request) {
 
     ApiError error = new ApiError();
     error.setStatus(HttpStatus.BAD_REQUEST.value());
@@ -142,11 +137,25 @@ public class GlobalExceptionHandler {
     ApiError error = new ApiError();
     error.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
     error.setError("Deployment Error");
-    error.setMessage("Deployment failed: " + ex.getMessage());
+
+    // Check if this is a GitHub API error
+    String message = ex.getMessage();
+    if (message != null && message.contains("GitHub API error:")) {
+      error.setMessage(message);
+
+      // For validation errors, use BAD_REQUEST status
+      if (message.contains("Required input") || message.contains("Validation failed")) {
+        error.setStatus(HttpStatus.BAD_REQUEST.value());
+        error.setError("GitHub Validation Error");
+      }
+    } else {
+      error.setMessage("Deployment failed: " + message);
+    }
+
     error.setPath(request.getRequestURI());
     error.setTimestamp(Instant.now());
 
-    return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
+    return new ResponseEntity<>(error, HttpStatus.valueOf(error.getStatus()));
   }
 
   @ExceptionHandler(ReleaseCandidateException.class)

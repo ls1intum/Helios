@@ -143,7 +143,7 @@ Below are typical steps and recommended settings:
     - **Homepage URL**: Can be your local dev URL or your production URL. (Optional)
     - **Enable Device Flow**: (Optional, depending on your needs.)
     - **Enable Webhooks**: Enable
-        - **Webhook URL**: e.g. `https://<your-domain>/github` or `https://<ngrok-url>/github` (if ngrok is running and forwarding to port 4201 for local development).
+        - **Webhook URL**: e.g. `https://<your-domain>/github` or `https://<ngrok-url>/github` (See the details about how to setup ngrok: `Setting Up ngrok Locally <webhook.html#setting-up-ngrok-locally>`_).
         - **Webhook Secret**: Must match your `WEBHOOK_SECRET` in `server/application-server/.env`
 
 3. **Set Permissions**

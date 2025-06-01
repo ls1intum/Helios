@@ -13,6 +13,7 @@ import { UserAvatarComponent } from '@app/components/user-avatar/user-avatar.com
 import { PullRequestStatusIconComponent } from '@app/components/pull-request-status-icon/pull-request-status-icon.component';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
 import { IconGitBranch } from 'angular-tabler-icons/icons';
+import { PipelineTestResultsComponent } from '@app/components/pipeline/test-results/pipeline-test-results.component';
 
 @Component({
   selector: 'app-branch-details',
@@ -27,6 +28,7 @@ import { IconGitBranch } from 'angular-tabler-icons/icons';
     SkeletonModule,
     UserAvatarComponent,
     PullRequestStatusIconComponent,
+    PipelineTestResultsComponent,
   ],
   providers: [
     provideTablerIcons({

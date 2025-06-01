@@ -69,29 +69,49 @@
       <p>No environments found for the search criteria, try something else or adjust filters.</p>
     }
   } @else {
-    @for (group of environmentGroups(); track group[0]) {
-      @if (group[1].length > 0) {
-        <div class="mb-4">
-          <h3 class="text-lg font-semibold mb-2">{{ capitalizeFirstLetter(group[0]) }}</h3>
-          <p-accordion [multiple]="true">
-            @for (environment of group[1]; track environment.id) {
-              <app-environment-accordion
-                [environment]="environment"
-                [deployable]="!!deployable()"
-                [canViewAllEnvironments]="!!canViewAllEnvironments()"
-                [timeUntilReservationExpires]="timeUntilReservationExpires().get(environment.id)"
-                [isLockedByCurrentUser]="isCurrentUserLocked(environment)"
-                (deploy)="deployEnvironment($event)"
-                (unlock)="onUnlockEnvironment($event.event, $event.environment)"
-                (extend)="extendLock($event.event, $event.environment)"
-                (lock)="lockEnvironment($event)"
-                (cancelDeployment)="cancelDeployment($event)"
-              >
-              </app-environment-accordion>
-            }
-          </p-accordion>
-        </div>
+    <div class="mt-6">
+      @for (group of environmentGroups(); track group[0]) {
+        @if (group[1].length > 0) {
+          <div class="mb-2 mt-2">
+            <div style="width: 100%" class="font-bold mx-auto">
+              <p-divider align="center">
+                <h4 class="m-0">{{ capitalizeFirstLetter(group[0]) }}</h4>
+              </p-divider>
+            </div>
+
+            <p-accordion [multiple]="true">
+              @for (environment of group[1]; track environment.id; let isLast = $last; let isFirst = $first) {
+                @if (!isFirst) {
+                  <!-- Divider -->
+                  <div class="flex justify-center">
+                    <p-divider class="w-full" />
+                  </div>
+                }
+
+                <app-environment-accordion
+                  [environment]="environment"
+                  [deployable]="!!deployable()"
+                  [canViewAllEnvironments]="!!canViewAllEnvironments()"
+                  [timeUntilReservationExpires]="timeUntilReservationExpires().get(environment.id)"
+                  [isLockedByCurrentUser]="isCurrentUserLocked(environment)"
+                  (deploy)="deployEnvironment($event)"
+                  (unlock)="onUnlockEnvironment($event.event, $event.environment)"
+                  (extend)="extendLock($event.event, $event.environment)"
+                  (lock)="lockEnvironment($event)"
+                  (cancelDeployment)="cancelDeployment($event)"
+                >
+                </app-environment-accordion>
+              }
+            </p-accordion>
+          </div>
+        }
       }
-    }
+
+      @if (deployDialogVisible()) {
+        <app-deploy-confirmation [(isVisible)]="deployDialogVisible" [environment]="selectedEnv()!" (confirmed)="onDeployDialogConfirmed($event)"></app-deploy-confirmation>
+      } @else if (lockDialogVisible()) {
+        <app-lock-confirmation [(isVisible)]="lockDialogVisible" [environment]="selectedEnv()!" (confirmed)="onLockEnvironmentConfirmed($event)"></app-lock-confirmation>
+      }
+    </div>
   }
 }

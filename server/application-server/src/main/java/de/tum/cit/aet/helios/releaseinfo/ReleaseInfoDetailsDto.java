@@ -22,11 +22,14 @@ public record ReleaseInfoDetailsDto(
     @NonNull OffsetDateTime createdAt,
     String body) {
 
-  public record ReleaseCandidateEvaluationDto(@NonNull UserInfoDto user, boolean isWorking) {
+  public record ReleaseCandidateEvaluationDto(
+      @NonNull UserInfoDto user, boolean isWorking, String comment) {
     public static ReleaseCandidateEvaluationDto fromEvaluation(
         @NonNull ReleaseCandidateEvaluation evaluation) {
       return new ReleaseCandidateEvaluationDto(
-          UserInfoDto.fromUser(evaluation.getEvaluatedBy()), evaluation.isWorking());
+          UserInfoDto.fromUser(evaluation.getEvaluatedBy()),
+          evaluation.isWorking(),
+          evaluation.getComment());
     }
   }
 

@@ -22,7 +22,7 @@ import { DividerModule } from 'primeng/divider';
 import { TooltipModule } from 'primeng/tooltip';
 import { FormsModule } from '@angular/forms';
 import { TimeAgoPipe } from '@app/pipes/time-ago.pipe';
-import { FILTER_OPTIONS_TOKEN, SearchTableService } from '@app/core/services/search-table.service';
+import { FILTER_OPTIONS_TOKEN, FilterOption, SearchTableService } from '@app/core/services/search-table.service';
 import { TableFilterComponent } from '../table-filter/table-filter.component';
 import { WorkflowRunStatusComponent } from '@app/components/workflow-run-status-component/workflow-run-status.component';
 import { HighlightPipe } from '@app/pipes/highlight.pipe';
@@ -31,46 +31,61 @@ import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
 import { IconExternalLink, IconFilterPlus, IconGitBranch, IconGitCommit, IconPinned, IconPinnedOff, IconShieldHalf, IconBrandGithub } from 'angular-tabler-icons/icons';
 
-type BranchInfoWithLink = BranchInfoDto & { link: string; lastCommitLink: string };
+export type BranchInfoWithLink = BranchInfoDto & { link: string; lastCommitLink: string };
 
-const FILTER_OPTIONS = [
-  { name: 'All Branches', filter: (branches: BranchInfoWithLink[]) => branches },
-  { name: 'Default Branch', filter: (branches: BranchInfoWithLink[]) => branches.filter(branch => branch.isDefault) },
-  { name: 'Protected Branches', filter: (branches: BranchInfoWithLink[]) => branches.filter(branch => branch.isProtected) },
-  {
-    name: 'Active Branches',
-    filter: (branches: BranchInfoWithLink[]) =>
-      branches.filter(branch => {
-        const date = new Date(branch.updatedAt || '');
-        const staleThreshold = new Date();
-        staleThreshold.setDate(staleThreshold.getDate() - 30);
+export function createBranchFilterOptions(keycloakService: KeycloakService): FilterOption<BranchInfoWithLink>[] {
+  const isLoggedIn = keycloakService.isLoggedIn();
+  const githubPreferredUsername = isLoggedIn ? keycloakService.getPreferredUsername() : '';
 
-        return date >= staleThreshold;
-      }),
-  },
-  {
-    name: 'Last 7 Day',
-    filter: (branches: BranchInfoWithLink[]) =>
-      branches.filter(branch => {
-        const date = new Date(branch.updatedAt || '');
-        const staleThreshold = new Date();
-        staleThreshold.setDate(staleThreshold.getDate() - 7);
+  const options: FilterOption<BranchInfoWithLink>[] = [
+    { name: 'All Branches', filter: (branches: BranchInfoWithLink[]) => branches },
+    { name: 'Default Branch', filter: (branches: BranchInfoWithLink[]) => branches.filter(branch => branch.isDefault) },
+    { name: 'Protected Branches', filter: (branches: BranchInfoWithLink[]) => branches.filter(branch => branch.isProtected) },
+    {
+      name: 'Active Branches',
+      filter: (branches: BranchInfoWithLink[]) =>
+        branches.filter(branch => {
+          const date = new Date(branch.updatedAt || '');
+          const staleThreshold = new Date();
+          staleThreshold.setDate(staleThreshold.getDate() - 30);
 
-        return date >= staleThreshold;
-      }),
-  },
-  {
-    name: 'Stale Branches',
-    filter: (branches: BranchInfoWithLink[]) =>
-      branches.filter(branch => {
-        const date = new Date(branch.updatedAt || '');
-        const staleThreshold = new Date();
-        staleThreshold.setDate(staleThreshold.getDate() - 30);
+          return date >= staleThreshold;
+        }),
+    },
+    {
+      name: 'Last 7 Day',
+      filter: (branches: BranchInfoWithLink[]) =>
+        branches.filter(branch => {
+          const date = new Date(branch.updatedAt || '');
+          const staleThreshold = new Date();
+          staleThreshold.setDate(staleThreshold.getDate() - 7);
 
-        return date < staleThreshold;
-      }),
-  },
-];
+          return date >= staleThreshold;
+        }),
+    },
+    {
+      name: 'Stale Branches',
+      filter: (branches: BranchInfoWithLink[]) =>
+        branches.filter(branch => {
+          const date = new Date(branch.updatedAt || '');
+          const staleThreshold = new Date();
+          staleThreshold.setDate(staleThreshold.getDate() - 30);
+
+          return date < staleThreshold;
+        }),
+    },
+  ];
+
+  // Add the "Your Branches" filter option only if the user is logged in
+  if (isLoggedIn && githubPreferredUsername) {
+    options.splice(1, 0, {
+      name: 'Your Branches',
+      filter: (branches: BranchInfoWithLink[]) => branches.filter(branch => branch.updatedBy?.login?.toLowerCase() === githubPreferredUsername.toLowerCase()),
+    });
+  }
+
+  return options;
+}
 
 @Component({
   selector: 'app-branches-table',
@@ -97,7 +112,7 @@ const FILTER_OPTIONS = [
   ],
   providers: [
     SearchTableService,
-    { provide: FILTER_OPTIONS_TOKEN, useValue: FILTER_OPTIONS },
+    { provide: FILTER_OPTIONS_TOKEN, useFactory: createBranchFilterOptions, deps: [KeycloakService] },
     provideTablerIcons({ IconFilterPlus, IconPinnedOff, IconPinned, IconShieldHalf, IconBrandGithub, IconExternalLink, IconGitCommit, IconGitBranch }),
   ],
   templateUrl: './branches-table.component.html',
@@ -108,7 +123,8 @@ export class BranchTableComponent {
   messageService = inject(MessageService);
   queryClient = inject(QueryClient);
   searchTableService = inject(SearchTableService<BranchInfoWithLink>);
-  keycloakService = inject(KeycloakService);
+  private keycloakService = inject(KeycloakService);
+  readonly isLoggedIn = computed(() => this.keycloakService.isLoggedIn());
 
   treeTable = viewChild<TreeTable>('table');
 

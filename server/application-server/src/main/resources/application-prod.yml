@@ -23,7 +23,19 @@ spring:
                     issuer-uri: ${OAUTH_ISSUER_URL}
 
 helios:
+    status:
+        enabled: true
+        environment-name: ${HELIOS_ENVIRONMENT_NAME}
+        endpoints:
+            - url: https://helios.aet.cit.tum.de/api/environments/status
+              secretKey: ${HELIOS_PROD_SECRET_KEY:}
+            - url: https://helios-staging.aet.cit.tum.de/api/environments/status
+              secretKey: ${HELIOS_STAGING_SECRET_KEY:}
     clientBaseUrl: "https://helios.aet.cit.tum.de"
+
+logging:
+    level:
+        de.tum.cit.aet.helios: DEBUG
 
 nats:
     enabled: true

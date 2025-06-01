@@ -52,6 +52,8 @@ dependencies {
     implementation 'org.flywaydb:flyway-database-postgresql:11.8.2'
     implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
     implementation 'io.sentry:sentry-spring-boot-starter-jakarta:8.9.0'
+    // Helios push-based status updates
+    implementation "de.tum.cit.aet:helios-status-spring-starter:1.0.0"
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
     runtimeOnly 'org.postgresql:postgresql'
@@ -114,6 +116,26 @@ tasks.register("bootRunDev", BootRun) {
     description = "Runs the Spring Boot application with the dev profile"
     // Set the active profile to 'dev'
     systemProperty "spring.profiles.active", "dev"
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass.set("de.tum.cit.aet.helios.HeliosApplication")
+}
+
+tasks.register("bootRunStaging", BootRun) {
+    jvmArgs = ["-javaagent:${configurations.runtimeAgent1.asPath}", "-javaagent:${configurations.runtimeAgent2.asPath}"]
+    group = "application"
+    description = "Runs the Spring Boot application with the staging profile"
+    // Set the active profile to 'staging'
+    systemProperty "spring.profiles.active", "staging"
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass.set("de.tum.cit.aet.helios.HeliosApplication")
+}
+
+tasks.register("bootRunProd", BootRun) {
+    jvmArgs = ["-javaagent:${configurations.runtimeAgent1.asPath}", "-javaagent:${configurations.runtimeAgent2.asPath}"]
+    group = "application"
+    description = "Runs the Spring Boot application with the prod profile"
+    // Set the active profile to 'prod'
+    systemProperty "spring.profiles.active", "prod"
     classpath = sourceSets.main.runtimeClasspath
     mainClass.set("de.tum.cit.aet.helios.HeliosApplication")
 }
