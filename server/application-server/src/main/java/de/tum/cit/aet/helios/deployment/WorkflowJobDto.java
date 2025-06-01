@@ -22,5 +22,7 @@ public class WorkflowJobDto {
   private String runnerGroupName;
   private List<String> labels;
 
+  private String htmlUrl;
+
   private List<WorkflowStepDto> steps;
 }

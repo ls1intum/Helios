@@ -2959,6 +2959,8 @@ components:
           type: array
           items:
             type: string
+        htmlUrl:
+          type: string
         steps:
           type: array
           items:

@@ -465,6 +465,7 @@ export type WorkflowJobDto = {
   runnerGroupId?: number;
   runnerGroupName?: string;
   labels?: Array<string>;
+  htmlUrl?: string;
   steps?: Array<WorkflowStepDto>;
 };
 

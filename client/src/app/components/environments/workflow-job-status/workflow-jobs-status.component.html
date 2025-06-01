@@ -20,6 +20,9 @@
               <span class="status-badge px-2 py-1 rounded-full text-xs font-medium" [ngClass]="getStatusClass(job.status, job.conclusion)">
                 {{ getStatusText(job.status, job.conclusion) }}
               </span>
+              @if (!!job.htmlUrl) {
+                <button text class="ml-2 text-xs text-blue-600 hover:underline" (click)="openLink(job.htmlUrl)">View Logs</button>
+              }
             </div>
             <div class="text-sm text-gray-500 flex items-center gap-2">
               @if (job.startedAt) {

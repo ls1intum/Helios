@@ -1421,6 +1421,9 @@ export const WorkflowJobDtoSchema = {
         type: 'string',
       },
     },
+    htmlUrl: {
+      type: 'string',
+    },
     steps: {
       type: 'array',
       items: {
