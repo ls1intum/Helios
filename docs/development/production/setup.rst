@@ -25,6 +25,15 @@ Deployment Strategy
    When a release is created in GitHub’s “Releases” section, a build starts for production.
    - After building the new version, the workflow pauses and waits for approval from a Helios team member before proceeding with deployment.
 
+Before deploying to production, you need to merge the ``staging`` branch into the ``main`` (production) branch: 
+
+.. code-block:: console
+
+   git checkout main
+   git merge --ff-only staging
+   git push origin main
+
+
 Deployment Directory
 --------------------
 
