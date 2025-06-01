@@ -777,7 +777,7 @@ public class GitHubService {
         if (githubMessage != null) {
           throw new IOException("GitHub API error: " + githubMessage);
         }
-      } catch (JsonProcessingException e) {
+      } catch (Exception e) {
         // JSON parsing failed, log but continue to fallback
         log.warn("Failed to parse GitHub error response: {}", e.getMessage());
       }
