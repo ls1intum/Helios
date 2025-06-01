@@ -182,15 +182,8 @@ public class GitHubService {
 
     try (Response response = okHttpClient.newCall(request).execute()) {
       if (!response.isSuccessful()) {
-        throw new IOException(
-            "GitHub API call failed with response code: "
-                + response.code()
-                + " and body: "
-                + response.body().string());
+        handleErrorResponse(response, "workflow dispatch");
       }
-    } catch (IOException e) {
-      log.error("Error occurred while dispatching workflow: {}", e.getMessage());
-      throw e;
     }
   }
 
@@ -573,21 +566,7 @@ public class GitHubService {
     // Execute the request
     try (Response response = okHttpClient.newCall(request).execute()) {
       if (!response.isSuccessful()) {
-        String errorBody = "No error details";
-        ResponseBody responseBody = response.body();
-        if (responseBody != null) {
-          try {
-            errorBody = responseBody.string();
-          } catch (IOException e) {
-            log.warn("Failed to read error response body", e);
-          }
-        }
-
-        log.error(
-            "GitHub API call failed to create release with response code: {} and body: {}",
-            response.code(),
-            errorBody);
-        throw new IOException("GitHub API call failed with response code: " + response.code());
+        handleErrorResponse(response, "create release");
       }
 
       ResponseBody responseBody = response.body();
@@ -619,8 +598,7 @@ public class GitHubService {
 
     // Fetch artifacts to get the triggering workflow run ID
     try {
-      PagedIterable<GHArtifact> artifacts =
-          getWorkflowRunArtifacts(repositoryId, runId);
+      PagedIterable<GHArtifact> artifacts = getWorkflowRunArtifacts(repositoryId, runId);
 
       // First artifact with the configured name
       for (GHArtifact artifact : artifacts) {
@@ -650,9 +628,7 @@ public class GitHubService {
     }
   }
 
-  /**
-   * Parses the workflow context artifact to extract the triggering workflow information.
-   */
+  /** Parses the workflow context artifact to extract the triggering workflow information. */
   private GitHubWorkflowContext parseWorkflowContextArtifact(GHArtifact artifact)
       throws IOException {
     // Download & Parse the artifact
@@ -683,7 +659,7 @@ public class GitHubService {
 
                 // Read file content
                 try (BufferedReader reader =
-                         new BufferedReader(new InputStreamReader(nonClosingStream))) {
+                    new BufferedReader(new InputStreamReader(nonClosingStream))) {
                   String line;
                   while ((line = reader.readLine()) != null) {
                     // Skip empty lines
@@ -772,5 +748,47 @@ public class GitHubService {
       }
       log.info("Successfully sent cancellation request for workflow run ID: {}", runId);
     }
+  }
+
+  /**
+   * Helper method to extract error messages from GitHub API error responses.
+   *
+   * @param response The HTTP response from GitHub API
+   * @param context A context description for the error message
+   * @return Never returns normally, always throws an IOException with appropriate error message
+   * @throws IOException with the extracted error message
+   */
+  private void handleErrorResponse(Response response, String context) throws IOException {
+    String responseBodyString = "";
+    if (response.body() != null) {
+      try {
+        responseBodyString = response.body().string();
+      } catch (IOException e) {
+        log.warn("Failed to read response body: {}", e.getMessage());
+      }
+    }
+
+    // Try to parse the JSON error response if we have a body
+    if (!responseBodyString.isEmpty()) {
+      try {
+        Map<String, Object> errorResponse = objectMapper.readValue(responseBodyString, Map.class);
+        String githubMessage = (String) errorResponse.get("message");
+
+        if (githubMessage != null) {
+          throw new IOException("GitHub API error: " + githubMessage);
+        }
+      } catch (Exception e) {
+        // JSON parsing failed, log but continue to fallback
+        log.warn("Failed to parse GitHub error response: {}", e.getMessage());
+      }
+    }
+
+    // Fallback for empty or unparseable responses
+    throw new IOException(
+        "GitHub API "
+            + context
+            + " failed with response code: "
+            + response.code()
+            + (!responseBodyString.isEmpty() ? " and body: " + responseBodyString : ""));
   }
 }
