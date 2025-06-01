@@ -1371,6 +1371,108 @@ export const DeploymentDtoSchema = {
   required: ['environment', 'id', 'ref', 'sha', 'statusesUrl', 'task', 'url'],
 } as const;
 
+export const WorkflowJobDtoSchema = {
+  type: 'object',
+  properties: {
+    id: {
+      type: 'integer',
+      format: 'int64',
+    },
+    name: {
+      type: 'string',
+    },
+    status: {
+      type: 'string',
+    },
+    conclusion: {
+      type: 'string',
+    },
+    startedAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+    completedAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+    workflowName: {
+      type: 'string',
+    },
+    headBranch: {
+      type: 'string',
+    },
+    runnerId: {
+      type: 'integer',
+      format: 'int64',
+    },
+    runnerName: {
+      type: 'string',
+    },
+    runnerGroupId: {
+      type: 'integer',
+      format: 'int64',
+    },
+    runnerGroupName: {
+      type: 'string',
+    },
+    labels: {
+      type: 'array',
+      items: {
+        type: 'string',
+      },
+    },
+    steps: {
+      type: 'array',
+      items: {
+        $ref: '#/components/schemas/WorkflowStepDto',
+      },
+    },
+  },
+} as const;
+
+export const WorkflowJobsResponseSchema = {
+  type: 'object',
+  properties: {
+    totalCount: {
+      type: 'integer',
+      format: 'int32',
+    },
+    jobs: {
+      type: 'array',
+      items: {
+        $ref: '#/components/schemas/WorkflowJobDto',
+      },
+    },
+  },
+} as const;
+
+export const WorkflowStepDtoSchema = {
+  type: 'object',
+  properties: {
+    name: {
+      type: 'string',
+    },
+    number: {
+      type: 'integer',
+      format: 'int32',
+    },
+    status: {
+      type: 'string',
+    },
+    conclusion: {
+      type: 'string',
+    },
+    startedAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+    completedAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+  },
+} as const;
+
 export const ActivityHistoryDtoSchema = {
   type: 'object',
   properties: {

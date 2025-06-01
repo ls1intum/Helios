@@ -173,6 +173,9 @@ import type {
   GetDeploymentByIdData,
   GetDeploymentByIdResponse,
   GetDeploymentByIdError,
+  GetWorkflowJobStatusData,
+  GetWorkflowJobStatusResponse,
+  GetWorkflowJobStatusError,
   GetDeploymentsByEnvironmentIdData,
   GetDeploymentsByEnvironmentIdResponse,
   GetDeploymentsByEnvironmentIdError,
@@ -719,6 +722,13 @@ export const getAllDeployments = <ThrowOnError extends boolean = false>(options?
 export const getDeploymentById = <ThrowOnError extends boolean = false>(options: Options<GetDeploymentByIdData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetDeploymentByIdResponse, GetDeploymentByIdError, ThrowOnError>({
     url: '/api/deployments/{id}',
+    ...options,
+  });
+};
+
+export const getWorkflowJobStatus = <ThrowOnError extends boolean = false>(options: Options<GetWorkflowJobStatusData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<GetWorkflowJobStatusResponse, GetWorkflowJobStatusError, ThrowOnError>({
+    url: '/api/deployments/workflowJobStatus/{runId}',
     ...options,
   });
 };
