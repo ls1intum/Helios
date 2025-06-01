@@ -2,8 +2,8 @@
   <div class="px-6 py-1.5 flex items-center justify-between bg-primary">
     <div class="flex items-center gap-6">
       <div class="flex items-center gap-2 cursor-pointer" styleClass="p-0" routerLink="/">
-        <div class="size-12">
-          <app-helios-icon size="2.5rem" class="rounded-xl w-8 cursor-pointer" />
+        <div class="size-9">
+          <app-helios-icon size="2rem" class="rounded-xl w-8 cursor-pointer" />
         </div>
         <div class="text-white text-2xl font-semibold">Helios</div>
       </div>
@@ -13,18 +13,18 @@
       }
     </div>
     <div class="flex items-center gap-1">
-      <p-button (click)="toggleDarkMode()">
+      <p-button (click)="toggleDarkMode()" size="small">
         @if (isDarkModeEnabled()) {
-          <i-tabler name="sun" />
+          <i-tabler name="sun" class="!size-4" />
         } @else {
-          <i-tabler name="moon" />
+          <i-tabler name="moon" class="!size-4" />
         }
       </p-button>
 
       <app-profile-nav-section [isExpanded]="true" />
     </div>
   </div>
-  <div class="flex flex-grow h-[calc(100vh-3.75rem)]">
+  <div class="flex flex-grow h-[calc(100vh-3rem)]">
     <!-- Fixed Navigation Bar -->
     <div class="h-full sticky top-3 flex">
       <app-navigation-bar [repositoryId]="repositoryId()"></app-navigation-bar>
