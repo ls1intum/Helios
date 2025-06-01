@@ -27,7 +27,7 @@ export class WorkflowJobsStatusComponent {
     ...getWorkflowJobStatusOptions({ path: { runId: this.workflowRunId() } }),
     queryKey: getWorkflowJobStatusQueryKey({ path: { runId: this.workflowRunId() } }),
     enabled: this.shouldPoll(),
-    refetchInterval: 2000,
+    refetchInterval: 5000,
     staleTime: 0,
   }));
 
