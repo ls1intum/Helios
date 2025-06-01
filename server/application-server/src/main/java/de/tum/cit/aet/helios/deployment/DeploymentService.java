@@ -205,7 +205,9 @@ public class DeploymentService {
     } catch (IOException e) {
       heliosDeployment.setStatus(HeliosDeployment.Status.IO_ERROR);
       heliosDeploymentRepository.save(heliosDeployment);
-      throw new DeploymentException("Failed to dispatch workflow due to IOException", e);
+
+      // Pass through the detailed GitHub error message
+      throw new DeploymentException(e.getMessage(), e);
     }
   }
 
