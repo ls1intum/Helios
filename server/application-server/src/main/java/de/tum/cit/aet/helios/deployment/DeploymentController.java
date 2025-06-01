@@ -77,4 +77,11 @@ public class DeploymentController {
     String result = deploymentService.cancelDeployment(cancelRequest);
     return ResponseEntity.ok(result);
   }
+
+  @EnforceAtLeastWritePermission
+  @GetMapping("/workflowJobStatus/{runId}")
+  public ResponseEntity<WorkflowJobsResponse> getWorkflowJobStatus(@PathVariable Long runId) {
+    WorkflowJobsResponse jobStatusResponse = deploymentService.getWorkflowJobStatus(runId);
+    return ResponseEntity.ok(jobStatusResponse);
+  }
 }

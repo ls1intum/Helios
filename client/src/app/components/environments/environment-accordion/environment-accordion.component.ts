@@ -1,4 +1,4 @@
-import { Component, inject, input, output } from '@angular/core';
+import { Component, computed, inject, input, output } from '@angular/core';
 import { EnvironmentDeployment, EnvironmentDto } from '@app/core/modules/openapi';
 import { DeploymentStepperComponent } from '../deployment-stepper/deployment-stepper.component';
 import { EnvironmentActionsComponent } from '../environment-actions/environment-actions.component';
@@ -19,6 +19,7 @@ import { signal } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
 import { IconExternalLink, IconGitPullRequest, IconHistory, IconTag, IconBrandGithub } from 'angular-tabler-icons/icons';
+import { WorkflowJobsStatusComponent } from '../workflow-job-status/workflow-jobs-status.component';
 
 @Component({
   selector: 'app-environment-accordion',
@@ -40,6 +41,7 @@ import { IconExternalLink, IconGitPullRequest, IconHistory, IconTag, IconBrandGi
     FormsModule,
     RouterLink,
     EnvironmentStatusTagComponent,
+    WorkflowJobsStatusComponent,
   ],
   providers: [
     provideTablerIcons({
@@ -128,4 +130,15 @@ export class EnvironmentAccordionComponent {
       window.open(url, '_blank');
     }
   }
+
+  workflowRunId = computed(() => {
+    const deployment = this.environment()?.latestDeployment;
+    if (!deployment?.workflowRunHtmlUrl) return undefined;
+
+    const matches = deployment.workflowRunHtmlUrl.match(/\/runs\/(\d+)$/);
+    if (matches && matches[1]) {
+      return parseInt(matches[1], 10);
+    }
+    return undefined;
+  });
 }

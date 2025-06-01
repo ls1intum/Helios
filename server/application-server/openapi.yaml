@@ -1558,6 +1558,31 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DeploymentDto"
+  /api/deployments/workflowJobStatus/{runId}:
+    get:
+      tags:
+      - deployment-controller
+      operationId: getWorkflowJobStatus
+      parameters:
+      - name: runId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkflowJobsResponse"
   /api/deployments/environment/{environmentId}:
     get:
       tags:
@@ -2898,6 +2923,76 @@ components:
       - statusesUrl
       - task
       - url
+    WorkflowJobDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        status:
+          type: string
+        conclusion:
+          type: string
+        startedAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+        workflowName:
+          type: string
+        headBranch:
+          type: string
+        runnerId:
+          type: integer
+          format: int64
+        runnerName:
+          type: string
+        runnerGroupId:
+          type: integer
+          format: int64
+        runnerGroupName:
+          type: string
+        labels:
+          type: array
+          items:
+            type: string
+        htmlUrl:
+          type: string
+        steps:
+          type: array
+          items:
+            $ref: "#/components/schemas/WorkflowStepDto"
+    WorkflowJobsResponse:
+      type: object
+      properties:
+        totalCount:
+          type: integer
+          format: int32
+        jobs:
+          type: array
+          items:
+            $ref: "#/components/schemas/WorkflowJobDto"
+    WorkflowStepDto:
+      type: object
+      properties:
+        name:
+          type: string
+        number:
+          type: integer
+          format: int32
+        status:
+          type: string
+        conclusion:
+          type: string
+        startedAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
     ActivityHistoryDto:
       type: object
       properties:

@@ -1,5 +1,9 @@
 package de.tum.cit.aet.helios.deployment;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import de.tum.cit.aet.helios.auth.AuthService;
 import de.tum.cit.aet.helios.environment.Environment;
 import de.tum.cit.aet.helios.environment.EnvironmentLockHistory;
@@ -367,6 +371,50 @@ public class DeploymentService {
       return "Workflow cancellation request sent successfully";
     } catch (IOException e) {
       throw new DeploymentException("Failed to cancel workflow run: " + e.getMessage(), e);
+    }
+  }
+
+  /**
+   * Retrieves detailed job status information for a GitHub workflow run.
+   *
+   * @param workflowRunId Workflow run ID to get job status for
+   * @return List of workflow jobs with their steps
+   * @throws DeploymentException if there's an error fetching the workflow job status
+   */
+  public WorkflowJobsResponse getWorkflowJobStatus(Long workflowRunId) {
+    try {
+      // Get repository ID from context
+      Long repositoryId = RepositoryContext.getRepositoryId();
+
+      // Get repository details
+      GitRepository repository =
+          gitRepoRepository
+              .findById(repositoryId)
+              .orElseThrow(() -> new NoSuchElementException("Repository not found"));
+
+      String repoNameWithOwner = repository.getNameWithOwner();
+
+      // Call GitHub service to get raw JSON response
+      String rawJsonResponse = gitHubService.getWorkflowJobStatus(repoNameWithOwner, workflowRunId);
+
+      // Parse JSON response to GitHub API structure
+      ObjectMapper objectMapper = new ObjectMapper();
+      objectMapper.setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
+      objectMapper.registerModule(new JavaTimeModule());
+      objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
+      try {
+        return objectMapper.readValue(rawJsonResponse, WorkflowJobsResponse.class);
+      } catch (Exception e) {
+        log.error("Failed to parse GitHub API response: {}", e.getMessage());
+        throw new DeploymentException("Failed to parse GitHub API response: " + e.getMessage(), e);
+      }
+    } catch (IOException e) {
+      log.error("Failed to fetch workflow job status: {}", e.getMessage());
+      throw new DeploymentException("Failed to fetch workflow job status: " + e.getMessage(), e);
+    } catch (NoSuchElementException e) {
+      log.error("Repository not found: {}", e.getMessage());
+      throw new DeploymentException("Repository not found: " + e.getMessage(), e);
     }
   }
 }

@@ -63,6 +63,7 @@ import {
   getAllEnabledEnvironments,
   getAllDeployments,
   getDeploymentById,
+  getWorkflowJobStatus,
   getDeploymentsByEnvironmentId,
   getLatestDeploymentByEnvironmentId,
   getActivityHistoryByEnvironmentId,
@@ -186,6 +187,7 @@ import type {
   GetAllEnabledEnvironmentsData,
   GetAllDeploymentsData,
   GetDeploymentByIdData,
+  GetWorkflowJobStatusData,
   GetDeploymentsByEnvironmentIdData,
   GetLatestDeploymentByEnvironmentIdData,
   GetActivityHistoryByEnvironmentIdData,
@@ -1606,6 +1608,23 @@ export const getDeploymentByIdOptions = (options: Options<GetDeploymentByIdData>
       return data;
     },
     queryKey: getDeploymentByIdQueryKey(options),
+  });
+};
+
+export const getWorkflowJobStatusQueryKey = (options: Options<GetWorkflowJobStatusData>) => createQueryKey('getWorkflowJobStatus', options);
+
+export const getWorkflowJobStatusOptions = (options: Options<GetWorkflowJobStatusData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getWorkflowJobStatus({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: getWorkflowJobStatusQueryKey(options),
   });
 };
 

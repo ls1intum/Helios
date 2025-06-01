@@ -451,6 +451,38 @@ export type DeploymentDto = {
   updatedAt?: string;
 };
 
+export type WorkflowJobDto = {
+  id?: number;
+  name?: string;
+  status?: string;
+  conclusion?: string;
+  startedAt?: string;
+  completedAt?: string;
+  workflowName?: string;
+  headBranch?: string;
+  runnerId?: number;
+  runnerName?: string;
+  runnerGroupId?: number;
+  runnerGroupName?: string;
+  labels?: Array<string>;
+  htmlUrl?: string;
+  steps?: Array<WorkflowStepDto>;
+};
+
+export type WorkflowJobsResponse = {
+  totalCount?: number;
+  jobs?: Array<WorkflowJobDto>;
+};
+
+export type WorkflowStepDto = {
+  name?: string;
+  number?: number;
+  status?: string;
+  conclusion?: string;
+  startedAt?: string;
+  completedAt?: string;
+};
+
 export type ActivityHistoryDto = {
   type?: string;
   id?: number;
@@ -2080,6 +2112,33 @@ export type GetDeploymentByIdResponses = {
 };
 
 export type GetDeploymentByIdResponse = GetDeploymentByIdResponses[keyof GetDeploymentByIdResponses];
+
+export type GetWorkflowJobStatusData = {
+  body?: never;
+  path: {
+    runId: number;
+  };
+  query?: never;
+  url: '/api/deployments/workflowJobStatus/{runId}';
+};
+
+export type GetWorkflowJobStatusErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type GetWorkflowJobStatusError = GetWorkflowJobStatusErrors[keyof GetWorkflowJobStatusErrors];
+
+export type GetWorkflowJobStatusResponses = {
+  /**
+   * OK
+   */
+  200: WorkflowJobsResponse;
+};
+
+export type GetWorkflowJobStatusResponse = GetWorkflowJobStatusResponses[keyof GetWorkflowJobStatusResponses];
 
 export type GetDeploymentsByEnvironmentIdData = {
   body?: never;
