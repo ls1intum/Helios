@@ -1,5 +1,5 @@
 import { CommonModule, DatePipe } from '@angular/common';
-import { Component, computed, effect, inject, input } from '@angular/core';
+import { Component, computed, effect, inject, input, signal } from '@angular/core';
 import { EnvironmentDeployment, WorkflowJobDto } from '@app/core/modules/openapi';
 import { getWorkflowJobStatusOptions, getWorkflowJobStatusQueryKey } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { injectQuery } from '@tanstack/angular-query-experimental';
@@ -20,14 +20,28 @@ export class WorkflowJobsStatusComponent {
 
   private datePipe = inject(DatePipe);
 
-  // Control when to poll for job status
-  shouldPoll = computed(() => (!!this.workflowRunId() && !!this.deploymentInProgress()) || false);
+  private extraRefetchStarted = signal(false);
+  private extraRefetchCompleted = signal(false);
 
+  // Control when to poll for job status - during active deployment or limited extra fetches
+  shouldPoll = computed(() => {
+    // Always poll if the deployment is in progress
+    if (!!this.workflowRunId() && !!this.deploymentInProgress()) {
+      return true;
+    }
+
+    // Poll for additional fetches after completion if we haven't hit the limit
+    if (this.extraRefetchStarted() && !this.extraRefetchCompleted()) {
+      return true;
+    }
+
+    return false;
+  });
   workflowJobsQuery = injectQuery(() => ({
     ...getWorkflowJobStatusOptions({ path: { runId: this.workflowRunId() } }),
     queryKey: getWorkflowJobStatusQueryKey({ path: { runId: this.workflowRunId() } }),
     enabled: this.shouldPoll(),
-    refetchInterval: 5000,
+    refetchInterval: this.extraRefetchStarted() ? 10000 : 5000, // Slower interval for extra fetches
     staleTime: 0,
   }));
 
@@ -49,7 +63,7 @@ export class WorkflowJobsStatusComponent {
     return ['IN_PROGRESS', 'WAITING', 'REQUESTED', 'PENDING', 'QUEUED'].includes(this.latestDeployment()?.state || '') && this.latestDeployment()?.workflowRunHtmlUrl;
   });
 
-  deploymentCompleted = computed(() => {
+  deploymentSuccessfullyCompleted = computed(() => {
     return ['SUCCESS'].includes(this.latestDeployment()?.state || '') && this.latestDeployment()?.workflowRunHtmlUrl;
   });
 
@@ -66,8 +80,16 @@ export class WorkflowJobsStatusComponent {
       }
     });
     effect(() => {
-      if (['SUCCESS', 'FAILURE', 'ERROR'].includes(this.latestDeployment()?.state || '')) {
-        this.workflowJobsQuery.refetch();
+      if (!this.deploymentInProgress() && !this.extraRefetchStarted()) {
+        // Deployment just completed, start extra fetches
+        console.debug('Deployment completed, starting extra refetches');
+        this.extraRefetchStarted.set(true);
+
+        // Schedule the end of extra refetches
+        setTimeout(() => {
+          console.debug('Extra refetches completed');
+          this.extraRefetchCompleted.set(true);
+        }, 60 * 1000); // Stop after 1 minute
       }
     });
   }
