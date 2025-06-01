@@ -2,6 +2,7 @@ package de.tum.cit.aet.helios.deployment;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import de.tum.cit.aet.helios.auth.AuthService;
 import de.tum.cit.aet.helios.environment.Environment;
@@ -396,6 +397,7 @@ public class DeploymentService {
 
       // Parse JSON response to GitHub API structure
       ObjectMapper objectMapper = new ObjectMapper();
+      objectMapper.setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
       objectMapper.registerModule(new JavaTimeModule());
       objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
