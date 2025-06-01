@@ -1,8 +1,20 @@
 package de.tum.cit.aet.helios.releaseinfo;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+
+import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Answers.RETURNS_DEEP_STUBS;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import de.tum.cit.aet.helios.auth.AuthService;
 import de.tum.cit.aet.helios.branch.Branch;
@@ -16,8 +28,8 @@ import de.tum.cit.aet.helios.environment.Environment;
 import de.tum.cit.aet.helios.filters.RepositoryContext;
 import de.tum.cit.aet.helios.github.GitHubService;
 import de.tum.cit.aet.helios.github.sync.GitHubDataSyncOrchestrator;
-import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
+import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
 import de.tum.cit.aet.helios.releaseinfo.release.Release;
@@ -35,13 +47,17 @@ import de.tum.cit.aet.helios.user.UserRepository;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.time.OffsetDateTime;
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.kohsuke.github.GHCompare;
 import org.kohsuke.github.GHRelease;
 import org.kohsuke.github.GHRepository;
-import org.mockito.*;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
@@ -77,7 +93,7 @@ class ReleaseInfoServiceTest {
   @InjectMocks
   private ReleaseInfoService service;
 
-  private final Long REPO_ID = 1L;
+  private final Long repoId = 1L;
 
   private ReleaseCandidate candidate;
   private GitRepository repo;
@@ -88,11 +104,11 @@ class ReleaseInfoServiceTest {
   @BeforeEach
   void setUp() {
     // Ensure RepositoryContext is set to the test repository ID
-    RepositoryContext.setRepositoryId(REPO_ID.toString());
+    RepositoryContext.setRepositoryId(repoId.toString());
 
     // Construct a ReleaseCandidate with a GitRepository and Commit
     repo = new GitRepository();
-    repo.setRepositoryId(REPO_ID);
+    repo.setRepositoryId(repoId);
     commit = new Commit();
     commit.setSha("commit-sha");
     candidate = new ReleaseCandidate();
@@ -113,8 +129,7 @@ class ReleaseInfoServiceTest {
 
   @Test
   void getCommitsFromBranchSinceLastReleaseCandidate_repositoryNotFound_throwsException() {
-    // Arrange: gitRepoRepository.findById(...) returns empty
-    when(gitRepoRepository.findById(REPO_ID)).thenReturn(Optional.empty());
+    when(gitRepoRepository.findById(repoId)).thenReturn(Optional.empty());
 
     // Act & Assert
     ReleaseCandidateException ex =
@@ -127,18 +142,17 @@ class ReleaseInfoServiceTest {
   @Test
   void getCommitsFromBranchSinceLastReleaseCandidate_branchNotFound_throwsException()
       throws IOException {
-    // Arrange: repository exists, but branch lookup fails
     GitRepository repo = new GitRepository();
-    repo.setRepositoryId(REPO_ID);
+    repo.setRepositoryId(repoId);
     repo.setNameWithOwner("owner/repo");
-    when(gitRepoRepository.findById(REPO_ID)).thenReturn(Optional.of(repo));
+    when(gitRepoRepository.findById(repoId)).thenReturn(Optional.of(repo));
 
     // Simulate GitHubService returning a non-null GHRepository
     GHRepository ghRepo = mock(GHRepository.class);
     when(gitHubService.getRepository("owner/repo")).thenReturn(ghRepo);
 
     // Branch lookup returns empty
-    when(branchRepository.findByRepositoryRepositoryIdAndName(REPO_ID, "missing"))
+    when(branchRepository.findByRepositoryRepositoryIdAndName(repoId, "missing"))
         .thenReturn(Optional.empty());
 
     // Act & Assert
@@ -151,18 +165,17 @@ class ReleaseInfoServiceTest {
 
   @Test
   void getCommitsFromBranchSinceLastReleaseCandidate_noLastRc_returnsEmptyDto() throws IOException {
-    // Arrange: repo and branch exist, but no ReleaseCandidate in repo
     GitRepository repo = new GitRepository();
-    repo.setRepositoryId(REPO_ID);
+    repo.setRepositoryId(repoId);
     repo.setNameWithOwner("owner/repo");
-    when(gitRepoRepository.findById(REPO_ID)).thenReturn(Optional.of(repo));
+    when(gitRepoRepository.findById(repoId)).thenReturn(Optional.of(repo));
 
     GHRepository ghRepo = mock(GHRepository.class);
     when(gitHubService.getRepository("owner/repo")).thenReturn(ghRepo);
 
     Branch branch = new Branch();
     branch.setCommitSha("branch-sha");
-    when(branchRepository.findByRepositoryRepositoryIdAndName(REPO_ID, "main"))
+    when(branchRepository.findByRepositoryRepositoryIdAndName(repoId, "main"))
         .thenReturn(Optional.of(branch));
 
     when(releaseCandidateRepository.findByRepository(repo)).thenReturn(List.of());
@@ -179,20 +192,19 @@ class ReleaseInfoServiceTest {
   }
 
   @Test
-  void getCommitsFromBranchSinceLastReleaseCandidate_compareThrowsIOException_throwsException()
+  void getCommitsFromBranchSinceLastReleaseCandidate_compareThrowsIoException_throwsException()
       throws IOException {
-    // Arrange: repo, branch, and one ReleaseCandidate exist
     GitRepository repo = new GitRepository();
-    repo.setRepositoryId(REPO_ID);
+    repo.setRepositoryId(repoId);
     repo.setNameWithOwner("owner/repo");
-    when(gitRepoRepository.findById(REPO_ID)).thenReturn(Optional.of(repo));
+    when(gitRepoRepository.findById(repoId)).thenReturn(Optional.of(repo));
 
     GHRepository ghRepo = mock(GHRepository.class);
     when(gitHubService.getRepository("owner/repo")).thenReturn(ghRepo);
 
     Branch branch = new Branch();
     branch.setCommitSha("branch-sha");
-    when(branchRepository.findByRepositoryRepositoryIdAndName(REPO_ID, "main"))
+    when(branchRepository.findByRepositoryRepositoryIdAndName(repoId, "main"))
         .thenReturn(Optional.of(branch));
 
     Commit lastRcCommit = new Commit();
@@ -215,18 +227,17 @@ class ReleaseInfoServiceTest {
   @Test
   void getCommitsFromBranchSinceLastReleaseCandidate_successfulCompare_returnsDto()
       throws IOException {
-    // Arrange: repo, branch, and one ReleaseCandidate exist
     GitRepository repo = new GitRepository();
-    repo.setRepositoryId(REPO_ID);
+    repo.setRepositoryId(repoId);
     repo.setNameWithOwner("owner/repo");
-    when(gitRepoRepository.findById(REPO_ID)).thenReturn(Optional.of(repo));
+    when(gitRepoRepository.findById(repoId)).thenReturn(Optional.of(repo));
 
     GHRepository ghRepo = mock(GHRepository.class);
     when(gitHubService.getRepository("owner/repo")).thenReturn(ghRepo);
 
     Branch branch = new Branch();
     branch.setCommitSha("branch-sha");
-    when(branchRepository.findByRepositoryRepositoryIdAndName(REPO_ID, "main"))
+    when(branchRepository.findByRepositoryRepositoryIdAndName(repoId, "main"))
         .thenReturn(Optional.of(branch));
 
     Commit lastRcCommit = new Commit();
@@ -261,7 +272,7 @@ class ReleaseInfoServiceTest {
     assertEquals(5, dto.aheadBy());
     assertEquals(2, dto.behindBy());
     assertEquals(1, dto.commits().size());
-    var info = dto.commits().get(0);
+    var info = dto.commits().getFirst();
     assertEquals("branch-sha", info.sha());
     assertEquals("commit-msg", info.message());
     assertEquals("committer", info.authorName());
@@ -281,15 +292,14 @@ class ReleaseInfoServiceTest {
 
   @Test
   void onlyHelios_returnsHeliosUnions() throws Exception {
-    // Arrange: a single HeliosDeployment in environment A
     HeliosDeployment hd = new HeliosDeployment();
     hd.setId(10L);
     hd.setSha("commit-sha");
     hd.setEnvironment(envA);
     hd.setCreatedAt(OffsetDateTime.parse("2023-01-01T10:00:00Z"));
-    when(heliosDeploymentRepository.findByRepositoryIdAndSha(REPO_ID, "commit-sha"))
+    when(heliosDeploymentRepository.findByRepositoryIdAndSha(repoId, "commit-sha"))
         .thenReturn(List.of(hd));
-    when(deploymentRepository.findByRepositoryRepositoryIdAndSha(REPO_ID, "commit-sha"))
+    when(deploymentRepository.findByRepositoryRepositoryIdAndSha(repoId, "commit-sha"))
         .thenReturn(List.of());
 
     // Act
@@ -307,15 +317,14 @@ class ReleaseInfoServiceTest {
 
   @Test
   void onlyReal_returnsRealUnions() throws Exception {
-    // Arrange: a single Deployment in environment B
     Deployment dep = new Deployment();
     dep.setId(20L);
     dep.setSha("commit-sha");
     dep.setEnvironment(envB);
     dep.setCreatedAt(OffsetDateTime.parse("2023-02-01T12:00:00Z"));
-    when(heliosDeploymentRepository.findByRepositoryIdAndSha(REPO_ID, "commit-sha"))
+    when(heliosDeploymentRepository.findByRepositoryIdAndSha(repoId, "commit-sha"))
         .thenReturn(List.of());
-    when(deploymentRepository.findByRepositoryRepositoryIdAndSha(REPO_ID, "commit-sha"))
+    when(deploymentRepository.findByRepositoryRepositoryIdAndSha(repoId, "commit-sha"))
         .thenReturn(List.of(dep));
 
     // Act
@@ -333,7 +342,6 @@ class ReleaseInfoServiceTest {
 
   @Test
   void realOverridesHelios_whenRealIsNewer() throws Exception {
-    // Arrange:
     // Helios in envA at 2023-01-01
     HeliosDeployment hd = new HeliosDeployment();
     hd.setId(10L);
@@ -348,9 +356,9 @@ class ReleaseInfoServiceTest {
     depNewer.setEnvironment(envA);
     depNewer.setCreatedAt(OffsetDateTime.parse("2023-01-02T10:00:00Z"));
 
-    when(heliosDeploymentRepository.findByRepositoryIdAndSha(REPO_ID, "commit-sha"))
+    when(heliosDeploymentRepository.findByRepositoryIdAndSha(repoId, "commit-sha"))
         .thenReturn(List.of(hd));
-    when(deploymentRepository.findByRepositoryRepositoryIdAndSha(REPO_ID, "commit-sha"))
+    when(deploymentRepository.findByRepositoryRepositoryIdAndSha(repoId, "commit-sha"))
         .thenReturn(List.of(depNewer));
 
     // Act
@@ -367,7 +375,6 @@ class ReleaseInfoServiceTest {
 
   @Test
   void heliosStays_whenRealIsOlder() throws Exception {
-    // Arrange:
     // Helios in envA at 2023-01-02
     HeliosDeployment hd = new HeliosDeployment();
     hd.setId(10L);
@@ -382,9 +389,9 @@ class ReleaseInfoServiceTest {
     depOlder.setEnvironment(envA);
     depOlder.setCreatedAt(OffsetDateTime.parse("2023-01-01T10:00:00Z"));
 
-    when(heliosDeploymentRepository.findByRepositoryIdAndSha(REPO_ID, "commit-sha"))
+    when(heliosDeploymentRepository.findByRepositoryIdAndSha(repoId, "commit-sha"))
         .thenReturn(List.of(hd));
-    when(deploymentRepository.findByRepositoryRepositoryIdAndSha(REPO_ID, "commit-sha"))
+    when(deploymentRepository.findByRepositoryRepositoryIdAndSha(repoId, "commit-sha"))
         .thenReturn(List.of(depOlder));
 
     // Act
@@ -401,7 +408,6 @@ class ReleaseInfoServiceTest {
 
   @Test
   void mergesMultipleEnvironments_correctly() throws Exception {
-    // Arrange:
     // Helios in envA and envB
     HeliosDeployment hdA = new HeliosDeployment();
     hdA.setId(10L);
@@ -422,9 +428,9 @@ class ReleaseInfoServiceTest {
     depB.setEnvironment(envB);
     depB.setCreatedAt(OffsetDateTime.parse("2023-01-02T09:00:00Z"));
 
-    when(heliosDeploymentRepository.findByRepositoryIdAndSha(REPO_ID, "commit-sha"))
+    when(heliosDeploymentRepository.findByRepositoryIdAndSha(repoId, "commit-sha"))
         .thenReturn(List.of(hdA, hdB));
-    when(deploymentRepository.findByRepositoryRepositoryIdAndSha(REPO_ID, "commit-sha"))
+    when(deploymentRepository.findByRepositoryRepositoryIdAndSha(repoId, "commit-sha"))
         .thenReturn(List.of(depB));
 
     // Act
@@ -432,28 +438,27 @@ class ReleaseInfoServiceTest {
 
     // Assert: envA should come from Helios, envB from real (because real is newer)
     assertEquals(2, result.size());
-    boolean sawEnvAHelios = false;
-    boolean sawEnvBReal = false;
+    boolean sawEnvAaHelios = false;
+    boolean sawEnvBbReal = false;
     for (LatestDeploymentUnion union : result) {
       if (union.getEnvironment().getId().equals(envA.getId())) {
         assertTrue(union.isHeliosDeployment());
         assertEquals(hdA.getId(), union.getId());
-        sawEnvAHelios = true;
+        sawEnvAaHelios = true;
       }
       if (union.getEnvironment().getId().equals(envB.getId())) {
         assertTrue(union.isRealDeployment());
         assertEquals(depB.getId(), union.getId());
-        sawEnvBReal = true;
+        sawEnvBbReal = true;
       }
     }
-    assertTrue(sawEnvAHelios, "Expected a HeliosDeployment union for envA");
-    assertTrue(sawEnvBReal, "Expected a real Deployment union for envB");
+    assertTrue(sawEnvAaHelios, "Expected a HeliosDeployment union for envA");
+    assertTrue(sawEnvBbReal, "Expected a real Deployment union for envB");
   }
 
 
   @Test
   void getAllReleaseInfos_returnsMappedList() {
-    // Arrange: create two dummy ReleaseCandidates with non‐null Commit
     ReleaseCandidate rc1 = new ReleaseCandidate();
     rc1.setName("rc1");
     rc1.setCreatedAt(OffsetDateTime.now().minusDays(1));
@@ -483,12 +488,10 @@ class ReleaseInfoServiceTest {
 
   @Test
   void getReleaseInfoByName_successfulMapping_returnsDetailsDto() {
-    // Arrange
-    String candidateName = "release-1.0";
 
     // --- GitRepository (for both candidate and commit/branch) ---
     GitRepository repo = new GitRepository();
-    repo.setRepositoryId(REPO_ID);
+    repo.setRepositoryId(repoId);
 
     // --- Commit ---
     Commit commit = new Commit();
@@ -523,6 +526,7 @@ class ReleaseInfoServiceTest {
     eval.setComment("Looks good");
 
     // --- Candidate ---
+    String candidateName = "release-1.0";
     ReleaseCandidate rc = new ReleaseCandidate();
     rc.setName(candidateName);
     rc.setCommit(commit);
@@ -535,20 +539,20 @@ class ReleaseInfoServiceTest {
     rc.setRepository(repo); // attach the same GitRepository to the candidate
 
     // Stub repository lookup
-    when(releaseCandidateRepository.findByRepositoryRepositoryIdAndName(REPO_ID, candidateName))
+    when(releaseCandidateRepository.findByRepositoryRepositoryIdAndName(repoId, candidateName))
         .thenReturn(Optional.of(rc));
 
     // Stub "no deployments" for that repo/sha
-    when(heliosDeploymentRepository.findByRepositoryIdAndSha(REPO_ID, "abc123"))
+    when(heliosDeploymentRepository.findByRepositoryIdAndSha(repoId, "abc123"))
         .thenReturn(List.of());
-    when(deploymentRepository.findByRepositoryRepositoryIdAndSha(REPO_ID, "abc123"))
+    when(deploymentRepository.findByRepositoryRepositoryIdAndSha(repoId, "abc123"))
         .thenReturn(List.of());
 
     // Act
     ReleaseInfoDetailsDto details = service.getReleaseInfoByName(candidateName);
 
     // Assert
-    assertNotNull(details);
+    Assertions.assertNotNull(details);
     assertEquals(candidateName, details.name());
 
     // CommitInfoDto
@@ -567,7 +571,7 @@ class ReleaseInfoServiceTest {
     assertEquals("Looks good", evalDto.comment());
 
     // ReleaseDto fields
-    assertNotNull(details.release());
+    Assertions.assertNotNull(details.release());
     assertEquals("Release notes", details.release().body());
     assertEquals("http://github.com/release/1.0", details.release().githubUrl());
 
@@ -582,7 +586,7 @@ class ReleaseInfoServiceTest {
 
   @Test
   void getReleaseInfoByName_notFound_throwsException() {
-    when(releaseCandidateRepository.findByRepositoryRepositoryIdAndName(REPO_ID, "no-such"))
+    when(releaseCandidateRepository.findByRepositoryRepositoryIdAndName(repoId, "no-such"))
         .thenReturn(Optional.empty());
 
     ReleaseCandidateException ex =
@@ -594,26 +598,23 @@ class ReleaseInfoServiceTest {
 
   @Test
   void createReleaseCandidate_successfulCreation_returnsDto() {
-    // Arrange
-    String rcName = "rc-1.0";
     String commitSha = "abc123";
-    String branchName = "main";
-    String login = "testuser";
-
     Commit commit = new Commit();
     commit.setSha(commitSha);
-    when(commitRepository.findByShaAndRepositoryRepositoryId(commitSha, REPO_ID))
+    when(commitRepository.findByShaAndRepositoryRepositoryId(commitSha, repoId))
         .thenReturn(Optional.of(commit));
 
+    String branchName = "main";
     Branch branch = new Branch();
     branch.setName(branchName);
-    when(branchRepository.findByNameAndRepositoryRepositoryId(branchName, REPO_ID))
+    when(branchRepository.findByNameAndRepositoryRepositoryId(branchName, repoId))
         .thenReturn(Optional.of(branch));
 
     GitRepository repo = new GitRepository();
-    repo.setRepositoryId(REPO_ID);
-    when(gitRepoRepository.findById(REPO_ID)).thenReturn(Optional.of(repo));
+    repo.setRepositoryId(repoId);
+    when(gitRepoRepository.findById(repoId)).thenReturn(Optional.of(repo));
 
+    String login = "testuser";
     User user = new User();
     user.setLogin(login);
     when(userRepository.findByLoginIgnoreCase(login)).thenReturn(Optional.of(user));
@@ -621,6 +622,7 @@ class ReleaseInfoServiceTest {
     when(authService.getPreferredUsername()).thenReturn(login);
 
     ReleaseCandidate saved = new ReleaseCandidate();
+    String rcName = "rc-1.0";
     saved.setName(rcName);
     saved.setCommit(commit);
     saved.setBranch(branch);
@@ -636,16 +638,15 @@ class ReleaseInfoServiceTest {
     ReleaseInfoListDto result = service.createReleaseCandidate(dto);
 
     // Assert
-    assertNotNull(result);
+    Assertions.assertNotNull(result);
     assertEquals(rcName, result.name());
     verify(releaseCandidateRepository).save(any(ReleaseCandidate.class));
   }
 
   @Test
   void createReleaseCandidate_nameExists_throwsException() {
-    // Arrange
     String rcName = "rc-1.0";
-    when(releaseCandidateRepository.existsByRepositoryRepositoryIdAndName(REPO_ID, rcName))
+    when(releaseCandidateRepository.existsByRepositoryRepositoryIdAndName(repoId, rcName))
         .thenReturn(true);
 
     ReleaseCandidateCreateDto dto =
@@ -660,11 +661,10 @@ class ReleaseInfoServiceTest {
 
   @Test
   void evaluateReleaseCandidate_userNull_throwsException() {
-    // Arrange
     String rcName = "rc-2.0";
     ReleaseCandidate rc = new ReleaseCandidate();
     rc.setName(rcName);
-    when(releaseCandidateRepository.findByRepositoryRepositoryIdAndName(REPO_ID, rcName))
+    when(releaseCandidateRepository.findByRepositoryRepositoryIdAndName(repoId, rcName))
         .thenReturn(Optional.of(rc));
     when(authService.getUserFromGithubId()).thenReturn(null);
 
@@ -679,14 +679,10 @@ class ReleaseInfoServiceTest {
 
   @Test
   void evaluateReleaseCandidate_newEvaluation_savesWorkingAndComment() {
-    // Arrange
     String rcName = "rc-2.0";
-    boolean isWorking = true;
-    String comment = "Good to go";
-
     ReleaseCandidate rc = new ReleaseCandidate();
     rc.setName(rcName);
-    when(releaseCandidateRepository.findByRepositoryRepositoryIdAndName(REPO_ID, rcName))
+    when(releaseCandidateRepository.findByRepositoryRepositoryIdAndName(repoId, rcName))
         .thenReturn(Optional.of(rc));
 
     User user = new User();
@@ -700,6 +696,9 @@ class ReleaseInfoServiceTest {
 
     ArgumentCaptor<ReleaseCandidateEvaluation> captor =
         ArgumentCaptor.forClass(ReleaseCandidateEvaluation.class);
+
+    boolean isWorking = true;
+    String comment = "Good to go";
 
     // Act
     service.evaluateReleaseCandidate(rcName, isWorking, comment);
@@ -715,14 +714,10 @@ class ReleaseInfoServiceTest {
 
   @Test
   void evaluateReleaseCandidate_existingEvaluation_updatesFields() {
-    // Arrange
     String rcName = "rc-2.0";
-    boolean isWorking = false;
-    String comment = "Not working";
-
     ReleaseCandidate rc = new ReleaseCandidate();
     rc.setName(rcName);
-    when(releaseCandidateRepository.findByRepositoryRepositoryIdAndName(REPO_ID, rcName))
+    when(releaseCandidateRepository.findByRepositoryRepositoryIdAndName(repoId, rcName))
         .thenReturn(Optional.of(rc));
 
     User user = new User();
@@ -737,6 +732,8 @@ class ReleaseInfoServiceTest {
             rc, 99L))
         .thenReturn(Optional.of(existing));
 
+    boolean isWorking = false;
+    String comment = "Not working";
     // Act
     service.evaluateReleaseCandidate(rcName, isWorking, comment);
 
@@ -748,7 +745,6 @@ class ReleaseInfoServiceTest {
 
   @Test
   void deleteReleaseCandidateByName_existing_deletesAndReturnsDto() {
-    // Arrange
     String rcName = "rc-delete";
     ReleaseCandidate rc = new ReleaseCandidate();
     rc.setName(rcName);
@@ -761,7 +757,7 @@ class ReleaseInfoServiceTest {
     rc.setCreatedBy(creator);
     rc.setRepository(new GitRepository());
 
-    when(releaseCandidateRepository.findByRepositoryRepositoryIdAndName(REPO_ID, rcName))
+    when(releaseCandidateRepository.findByRepositoryRepositoryIdAndName(repoId, rcName))
         .thenReturn(Optional.of(rc));
 
     // Act
@@ -771,12 +767,12 @@ class ReleaseInfoServiceTest {
     assertNotNull(dto);
     assertEquals(rcName, dto.name());
     verify(releaseCandidateRepository)
-        .deleteByRepositoryRepositoryIdAndName(REPO_ID, rcName);
+        .deleteByRepositoryRepositoryIdAndName(repoId, rcName);
   }
 
   @Test
   void deleteReleaseCandidateByName_notFound_throwsException() {
-    when(releaseCandidateRepository.findByRepositoryRepositoryIdAndName(REPO_ID, "nope"))
+    when(releaseCandidateRepository.findByRepositoryRepositoryIdAndName(repoId, "nope"))
         .thenReturn(Optional.empty());
 
     ReleaseCandidateException ex =
@@ -787,10 +783,9 @@ class ReleaseInfoServiceTest {
 
   @Test
   void publishReleaseDraft_noBody_usesGenerateReleaseNotes_andProcesses() throws Exception {
-    // Arrange
     String tagName = "v-empty";
     GitRepository repo = new GitRepository();
-    repo.setRepositoryId(REPO_ID);
+    repo.setRepositoryId(repoId);
     repo.setNameWithOwner("owner/repo");
     ReleaseCandidate rc = new ReleaseCandidate();
     rc.setName(tagName);
@@ -799,8 +794,8 @@ class ReleaseInfoServiceTest {
     commit.setSha("shaValue");
     rc.setCommit(commit);
     rc.setBody(null);
-    when(gitRepoRepository.findById(REPO_ID)).thenReturn(Optional.of(repo));
-    when(releaseCandidateRepository.findByRepositoryRepositoryIdAndName(REPO_ID, tagName))
+    when(gitRepoRepository.findById(repoId)).thenReturn(Optional.of(repo));
+    when(releaseCandidateRepository.findByRepositoryRepositoryIdAndName(repoId, tagName))
         .thenReturn(Optional.of(rc));
     when(authService.getPreferredUsername()).thenReturn("testuser");
     // Spy to stub generateReleaseNotes
@@ -824,10 +819,9 @@ class ReleaseInfoServiceTest {
   @Test
   void publishReleaseDraft_createReleaseThrows_throwsReleaseCandidateException()
       throws IOException {
-    // Arrange
     String tagName = "v-error";
     GitRepository repo = new GitRepository();
-    repo.setRepositoryId(REPO_ID);
+    repo.setRepositoryId(repoId);
     repo.setNameWithOwner("owner/repo");
     ReleaseCandidate rc = new ReleaseCandidate();
     rc.setName(tagName);
@@ -836,8 +830,8 @@ class ReleaseInfoServiceTest {
     commit.setSha("shaValue");
     rc.setCommit(commit);
     rc.setBody(null);
-    when(gitRepoRepository.findById(REPO_ID)).thenReturn(Optional.of(repo));
-    when(releaseCandidateRepository.findByRepositoryRepositoryIdAndName(REPO_ID, tagName))
+    when(gitRepoRepository.findById(repoId)).thenReturn(Optional.of(repo));
+    when(releaseCandidateRepository.findByRepositoryRepositoryIdAndName(repoId, tagName))
         .thenReturn(Optional.of(rc));
     when(authService.getPreferredUsername()).thenReturn("testuser");
     // Spy to stub generateReleaseNotes
@@ -858,10 +852,9 @@ class ReleaseInfoServiceTest {
 
   @Test
   void publishReleaseDraft_withBody_callsGitHubAndProcess() throws IOException {
-    // Arrange
     String tagName = "v-released";
     GitRepository repo = new GitRepository();
-    repo.setRepositoryId(REPO_ID);
+    repo.setRepositoryId(repoId);
     repo.setNameWithOwner("owner/repo");
 
     ReleaseCandidate rc = new ReleaseCandidate();
@@ -872,8 +865,8 @@ class ReleaseInfoServiceTest {
     rc.setCommit(commit);
     rc.setBody("Custom release notes");
 
-    when(gitRepoRepository.findById(REPO_ID)).thenReturn(Optional.of(repo));
-    when(releaseCandidateRepository.findByRepositoryRepositoryIdAndName(REPO_ID, tagName))
+    when(gitRepoRepository.findById(repoId)).thenReturn(Optional.of(repo));
+    when(releaseCandidateRepository.findByRepositoryRepositoryIdAndName(repoId, tagName))
         .thenReturn(Optional.of(rc));
     when(authService.getPreferredUsername()).thenReturn("testuser");
 
@@ -896,9 +889,8 @@ class ReleaseInfoServiceTest {
 
   @Test
   void publishReleaseDraft_noCandidate_throwsReleaseCandidateException() {
-    // Arrange: ensure findById returns a valid repository so we'll hit the candidate lookup
-    when(gitRepoRepository.findById(REPO_ID)).thenReturn(Optional.of(new GitRepository()));
-    when(releaseCandidateRepository.findByRepositoryRepositoryIdAndName(REPO_ID, "nope"))
+    when(gitRepoRepository.findById(repoId)).thenReturn(Optional.of(new GitRepository()));
+    when(releaseCandidateRepository.findByRepositoryRepositoryIdAndName(repoId, "nope"))
         .thenReturn(Optional.empty());
 
     // Act & Assert: the code will now throw ReleaseCandidateException from the candidate lookup
@@ -909,21 +901,20 @@ class ReleaseInfoServiceTest {
 
   @Test
   void generateReleaseNotes_publishesNewNotes() throws IOException {
-    // Arrange
-    String tagName = "v2.0";
     GitRepository repo = new GitRepository();
-    repo.setRepositoryId(REPO_ID);
+    repo.setRepositoryId(repoId);
     repo.setNameWithOwner("owner/repo");
 
-    when(gitRepoRepository.findById(REPO_ID)).thenReturn(Optional.of(repo));
-    when(releaseRepository.findByTagNameAndRepositoryRepositoryId(tagName, REPO_ID))
+    String tagName = "v2.0";
+    when(gitRepoRepository.findById(repoId)).thenReturn(Optional.of(repo));
+    when(releaseRepository.findByTagNameAndRepositoryRepositoryId(tagName, repoId))
         .thenReturn(Optional.empty());
 
     ReleaseCandidate rc = new ReleaseCandidate();
     Commit c = new Commit();
     c.setSha("shaRC");
     rc.setCommit(c);
-    when(releaseCandidateRepository.findByRepositoryRepositoryIdAndName(REPO_ID, tagName))
+    when(releaseCandidateRepository.findByRepositoryRepositoryIdAndName(repoId, tagName))
         .thenReturn(Optional.of(rc));
 
     when(gitHubService.generateReleaseNotes("owner/repo", tagName, "shaRC"))
@@ -938,14 +929,13 @@ class ReleaseInfoServiceTest {
 
   @Test
   void generateReleaseNotes_apiFails_throwsException() throws IOException {
-    // Arrange
-    String tagName = "v2.1";
     GitRepository repo = new GitRepository();
-    repo.setRepositoryId(REPO_ID);
+    repo.setRepositoryId(repoId);
     repo.setNameWithOwner("owner/repo");
 
-    when(gitRepoRepository.findById(REPO_ID)).thenReturn(Optional.of(repo));
-    when(releaseRepository.findByTagNameAndRepositoryRepositoryId(tagName, REPO_ID))
+    String tagName = "v2.1";
+    when(gitRepoRepository.findById(repoId)).thenReturn(Optional.of(repo));
+    when(releaseRepository.findByTagNameAndRepositoryRepositoryId(tagName, repoId))
         .thenReturn(Optional.empty());
 
     // Provide a ReleaseCandidate whose getCommit() is non‐null
@@ -953,14 +943,14 @@ class ReleaseInfoServiceTest {
     Commit c = new Commit();
     c.setSha("shaRC");
     rc.setCommit(c);
-    when(releaseCandidateRepository.findByRepositoryRepositoryIdAndName(REPO_ID, tagName))
+    when(releaseCandidateRepository.findByRepositoryRepositoryIdAndName(repoId, tagName))
         .thenReturn(Optional.of(rc));
 
     // Make the GH call throw IOException
     when(gitHubService.generateReleaseNotes("owner/repo", tagName, "shaRC"))
         .thenThrow(new IOException("GitHub error"));
 
-    // Act & Assert: now generateReleaseNotes(...) will catch IOException and rethrow ReleaseCandidateException
+    // Act & Assert
     ReleaseCandidateException ex =
         assertThrows(
             ReleaseCandidateException.class, () -> service.generateReleaseNotes(tagName));
@@ -969,13 +959,13 @@ class ReleaseInfoServiceTest {
 
   @Test
   void updateReleaseNotes_successfulUpdate() {
-    // Arrange
+
     String tagName = "update-rc";
     String newBody = "Updated notes";
 
     ReleaseCandidate rc = new ReleaseCandidate();
     rc.setName(tagName);
-    when(releaseCandidateRepository.findByRepositoryRepositoryIdAndName(REPO_ID, tagName))
+    when(releaseCandidateRepository.findByRepositoryRepositoryIdAndName(repoId, tagName))
         .thenReturn(Optional.of(rc));
 
     // Act
@@ -988,7 +978,7 @@ class ReleaseInfoServiceTest {
 
   @Test
   void updateReleaseNotes_notFound_throwsException() {
-    when(releaseCandidateRepository.findByRepositoryRepositoryIdAndName(REPO_ID, "nope"))
+    when(releaseCandidateRepository.findByRepositoryRepositoryIdAndName(repoId, "nope"))
         .thenReturn(Optional.empty());
 
     ReleaseCandidateException ex =
@@ -1000,18 +990,17 @@ class ReleaseInfoServiceTest {
 
   @Test
   void updateReleaseName_successfulRename() {
-    // Arrange
     String current = "oldName";
     String updated = "newName";
     ReleaseCandidate rc = new ReleaseCandidate();
     rc.setName(current);
     when(
         releaseCandidateRepository.findByRepositoryRepositoryIdAndName(
-            REPO_ID, current))
+            repoId, current))
         .thenReturn(Optional.of(rc));
     when(
         releaseCandidateRepository.existsByRepositoryRepositoryIdAndName(
-            REPO_ID, updated))
+            repoId, updated))
         .thenReturn(false);
 
     // Act
@@ -1024,7 +1013,7 @@ class ReleaseInfoServiceTest {
 
   @Test
   void updateReleaseName_sameName_noChange() {
-    // Arrange
+
     service.updateReleaseName("same", "same");
     // No exception; repository should not be called
     verify(releaseCandidateRepository, never()).save(any());
@@ -1032,12 +1021,11 @@ class ReleaseInfoServiceTest {
 
   @Test
   void updateReleaseName_newNameExists_throwsException() {
-    // Arrange
     String current = "rcA";
     String updated = "rcB";
     when(
         releaseCandidateRepository.existsByRepositoryRepositoryIdAndName(
-            REPO_ID, updated))
+            repoId, updated))
         .thenReturn(true);
 
     // Act & Assert
@@ -1050,9 +1038,7 @@ class ReleaseInfoServiceTest {
 
   @Test
   void updateReleaseName_alreadyPublished_throwsException() {
-    // Arrange
     String current = "rcC";
-    String updated = "rcD";
     ReleaseCandidate rc = new ReleaseCandidate();
     rc.setName(current);
     Release rel = new Release();
@@ -1060,9 +1046,10 @@ class ReleaseInfoServiceTest {
 
     when(
         releaseCandidateRepository.findByRepositoryRepositoryIdAndName(
-            REPO_ID, current))
+            repoId, current))
         .thenReturn(Optional.of(rc));
 
+    String updated = "rcD";
     // Act & Assert
     ReleaseCandidateException ex =
         assertThrows(
