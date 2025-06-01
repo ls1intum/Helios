@@ -52,6 +52,8 @@ dependencies {
     implementation 'org.flywaydb:flyway-database-postgresql:11.8.2'
     implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
     implementation 'io.sentry:sentry-spring-boot-starter-jakarta:8.9.0'
+    // Helios push-based status updates
+    implementation "de.tum.cit.aet:helios-status-spring-starter:1.0.0"
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
     runtimeOnly 'org.postgresql:postgresql'
