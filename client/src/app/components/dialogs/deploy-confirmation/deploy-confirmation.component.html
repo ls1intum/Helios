@@ -75,8 +75,8 @@
         <br />
       }
 
-      <!-- Repository confirmation -->
-      @if (environment().repository?.nameWithOwner) {
+      <!-- ONLY show 'Repository confirmation' block if type !== 'TEST' -->
+      @if (environment().type !== 'TEST' && environment().repository?.nameWithOwner) {
         <div class="mt-4 text-sm space-y-1">
           <p>
             To confirm, type <code class="font-semibold">{{ environment().repository?.nameWithOwner }}</code> below
@@ -103,7 +103,7 @@
         type="button"
         label="Deploy"
         class="ml-2"
-        [disabled]="query.isPending() || (environment().repository?.nameWithOwner && repoConfirm !== environment().repository?.nameWithOwner)"
+        [disabled]="query.isPending() || (environment().type !== 'TEST' && environment().repository?.nameWithOwner && repoConfirm !== environment().repository?.nameWithOwner)"
         (click)="onDeploy()"
       ></button>
     </div>
