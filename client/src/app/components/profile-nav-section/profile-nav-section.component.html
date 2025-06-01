@@ -2,7 +2,7 @@
   @if (isLoggedIn()) {
     <p-button class="flex gap-3 items-center cursor-pointer" (click)="profileMenu.toggle($event)" size="small">
       <p-avatar class="size-5 flex-shrink-0" shape="circle" size="normal" [image]="getProfilePictureUrl()" />
-      <span class="hidden md:block text-md runcate overflow-hidden whitespace-nowrap max-w-[130px]">{{ fullName() }}</span>
+      <span class="hidden md:block text-md truncate overflow-hidden whitespace-nowrap max-w-[130px]">{{ fullName() }}</span>
     </p-button>
   } @else {
     <p-button (click)="login()" class="rounded-xl flex items-center justify-center gap-2 w-full" size="small">

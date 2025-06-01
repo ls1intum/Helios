@@ -43,15 +43,15 @@
     </ng-template>
   </p-dataview>
 } @else {
-  <p-dataview #dataView [value]="query.data()" layout="grid" [paginator]="true" [rows]="6" filterBy="name">
+  <p-dataview #dataView [value]="query.data()?.slice(0, 6)" layout="grid" [paginator]="true" [rows]="6" filterBy="name">
     <ng-template #header>
       <app-table-filter [input]="dataView" [searchTableService]="searchDataViewService" />
       <div class="mb-3"></div>
     </ng-template>
     <ng-template #grid let-projects>
-      <div class="grid auto-rows-auto gap-4 mt-4 max-w-[1600px] mx-auto" style="grid-template-columns: repeat(auto-fit, minmax(400px, 1fr))">
+      <div class="my-4 mx-auto gap-4 flex flex-wrap items-stretch justify-center">
         @for (project of projects; track project.id) {
-          <div class="flex gap-2 flex-col border border-muted-color rounded-2xl p-5 shadow-md min-w-[400px]">
+          <div class="flex gap-2 flex-col border border-muted-color rounded-2xl p-5 shadow-md w-full md:w-[34rem]">
             <div class="flex justify-between gap-2">
               <div class="flex gap-1 items-center min-w-0">
                 <p-button text (click)="openProjectExternal($event, project)" styleClass="p-1" class="leading-none">
