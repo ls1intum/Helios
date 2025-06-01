@@ -1,14 +1,17 @@
 <div class="workflow-jobs-status w-full mb-4">
   @if (jobs().length > 0 && deploymentInProgress()) {
     <div class="flex justify-between items-center mb-3">
-      <h3 class="text-lg font-medium">Deployment Progress</h3>
+      <h3 class="text-lg font-medium">Job Status</h3>
     </div>
 
     <div class="grid">
       @for (job of jobs(); track job.id) {
         <div
-          class="workflow-job mb-4 border border-gray-200 rounded-lg p-3 bg-gray-50"
-          [ngClass]="{ 'border-green-300 bg-green-50': job.conclusion === 'success', 'border-red-300 bg-red-50': job.conclusion === 'failure' }"
+          class="workflow-job mb-4 border border-gray-200 dark:border-gray-700 rounded-lg p-3 bg-gray-50 dark:bg-gray-800"
+          [ngClass]="{
+            'border-green-300 bg-green-50 dark:border-green-800 dark:bg-green-900/30': job.conclusion === 'success',
+            'border-red-300 bg-red-50 dark:border-red-800 dark:bg-red-900/30': job.conclusion === 'failure',
+          }"
         >
           <div class="job-header flex justify-between items-center mb-2">
             <div class="flex items-center gap-2">

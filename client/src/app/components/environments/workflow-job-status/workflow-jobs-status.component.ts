@@ -73,15 +73,15 @@ export class WorkflowJobsStatusComponent {
   }
   // Get CSS class for job status
   getStatusClass(status: string | null | undefined, conclusion: string | null | undefined): string {
-    if (conclusion === 'success') return 'text-green-600 bg-green-50';
-    if (conclusion === 'failure') return 'text-red-600 bg-red-50';
-    if (conclusion === 'skipped') return 'text-gray-600 bg-gray-50';
-    if (conclusion === 'cancelled') return 'text-orange-600 bg-orange-50';
+    if (conclusion === 'success') return 'text-green-600 bg-green-50 dark:text-green-400 dark:bg-green-900/30';
+    if (conclusion === 'failure') return 'text-red-600 bg-red-50 dark:text-red-400 dark:bg-red-900/30';
+    if (conclusion === 'skipped') return 'text-gray-600 bg-gray-50 dark:text-gray-400 dark:bg-gray-800';
+    if (conclusion === 'cancelled') return 'text-orange-600 bg-orange-50 dark:text-orange-400 dark:bg-orange-900/30';
 
-    if (status === 'in_progress') return 'text-blue-600 bg-blue-50';
-    if (status === 'queued' || status === 'waiting') return 'text-gray-600 bg-gray-100';
+    if (status === 'in_progress') return 'text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-900/30';
+    if (status === 'queued' || status === 'waiting') return 'text-gray-600 bg-gray-100 dark:text-gray-400 dark:bg-gray-800';
 
-    return 'text-gray-600';
+    return 'text-gray-600 dark:text-gray-400';
   }
 
   // Get icon for job status
