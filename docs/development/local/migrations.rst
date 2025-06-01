@@ -32,7 +32,7 @@ Branching Strategy
 2. Use the next available version number (increment from the last existing version)
 3. Rebase if conflicts occur
 4. Test migrations locally before merging (just start application-server to apply migrations)
-5. Merge to main
+5. Merge to staging (and then to main when creating a release)
 
 .. warning::
 
