@@ -21,7 +21,7 @@ export class WorkflowJobsStatusComponent {
   private datePipe = inject(DatePipe);
 
   // Control when to poll for job status
-  shouldPoll = computed(() => (!!this.workflowRunId() && !this.deploymentCompleted()) || false);
+  shouldPoll = computed(() => (!!this.workflowRunId() && !!this.deploymentInProgress()) || false);
 
   workflowJobsQuery = injectQuery(() => ({
     ...getWorkflowJobStatusOptions({ path: { runId: this.workflowRunId() } }),
