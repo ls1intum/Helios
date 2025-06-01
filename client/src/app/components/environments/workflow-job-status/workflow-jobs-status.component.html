@@ -1,21 +1,7 @@
 <div class="workflow-jobs-status w-full mb-4">
-  @if (jobs().length > 0) {
+  @if (jobs().length > 0 && deploymentInProgress()) {
     <div class="flex justify-between items-center mb-3">
       <h3 class="text-lg font-medium">Deployment Progress</h3>
-
-      <div class="text-sm">
-        @if (allJobsCompleted()) {
-          <span class="text-green-600 flex items-center">
-            <i-tabler name="circle-check" class="mr-1"></i-tabler>
-            Workflow complete
-          </span>
-        } @else if (hasFailedJobs()) {
-          <span class="text-red-600 flex items-center">
-            <i-tabler name="circle-x" class="mr-1"></i-tabler>
-            Some jobs failed
-          </span>
-        }
-      </div>
     </div>
 
     <div class="grid">
@@ -42,7 +28,7 @@
                     {{ getDuration(job.startedAt, job.completedAt) }}
                   </span>
                 } @else {
-                  <span class="px-2 py-0.5 bg-blue-50 text-blue-600 rounded-full"> Running: {{ getDuration(job.startedAt, undefined) }} </span>
+                  <span class="px-2 py-0.5 bg-blue-50 text-blue-600 rounded-full"> Running </span>
                 }
               }
             </div>
