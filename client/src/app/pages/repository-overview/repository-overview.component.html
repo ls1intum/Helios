@@ -2,8 +2,8 @@
   <div subheading></div>
   <div class="flex justify-between items-center w-full" heading>
     <div>Connected Repositories</div>
-    <p-button label="Add Repository" (onClick)="showAddRepositoryDialog()">
-      <i-tabler name="plus" class="!size-4" />
+    <p-button label="How to Add Repository" (onClick)="showAddRepositoryDialog()">
+      <i-tabler name="question-mark" class="!size-4" />
     </p-button>
   </div>
   <span description> In the repository list you can find all of the repositories that were added to Helios. </span>
@@ -49,15 +49,15 @@
       <div class="mb-3"></div>
     </ng-template>
     <ng-template #grid let-projects>
-      <div class="grid auto-rows-auto gap-4 mt-4 max-w-[1600px] mx-auto" style="grid-template-columns: repeat(auto-fit, minmax(350px, 1fr))">
+      <div class="grid auto-rows-auto gap-4 mt-4 max-w-[1600px] mx-auto" style="grid-template-columns: repeat(auto-fit, minmax(400px, 1fr))">
         @for (project of projects; track project.id) {
-          <div class="flex gap-2 flex-col border border-muted-color rounded-2xl p-5 shadow-md min-w-[350px]">
+          <div class="flex gap-2 flex-col border border-muted-color rounded-2xl p-5 shadow-md min-w-[400px]">
             <div class="flex justify-between gap-2">
-              <div class="flex gap-1 items-center">
+              <div class="flex gap-1 items-center min-w-0">
                 <p-button text (click)="openProjectExternal($event, project)" styleClass="p-1" class="leading-none">
                   <i-tabler name="brand-github" class="!size-4" />
                 </p-button>
-                <div class="font-bold hover:underline cursor-pointer leading-none text-xl" (click)="navigateToPullRequests(project)">{{ project.name }}</div>
+                <div class="font-bold hover:underline cursor-pointer leading-none text-xl truncate" (click)="navigateToPullRequests(project)">{{ project.name }}</div>
                 @if (project.latestReleaseTagName) {
                   <p-tag rounded class="py-0.5 cursor-pointer hover:underline" (click)="navigateToReleases(project)"
                     ><i-tabler name="tag" class="!size-4" />{{ project.latestReleaseTagName }}</p-tag

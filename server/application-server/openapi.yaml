@@ -2182,6 +2182,10 @@ components:
           type: string
         isWorking:
           type: boolean
+        comment:
+          type: string
+          maxLength: 500
+          minLength: 0
     BranchInfoDto:
       type: object
       properties:
@@ -2252,6 +2256,8 @@ components:
           $ref: "#/components/schemas/UserInfoDto"
         isWorking:
           type: boolean
+        comment:
+          type: string
       required:
       - user
     ReleaseDto:
