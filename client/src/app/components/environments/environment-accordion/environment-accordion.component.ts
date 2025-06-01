@@ -131,11 +131,6 @@ export class EnvironmentAccordionComponent {
     }
   }
 
-  deploymentInProgress = computed(() => {
-    const deployment = this.environment()?.latestDeployment;
-    return ['IN_PROGRESS', 'WAITING', 'REQUESTED', 'PENDING', 'QUEUED'].includes(deployment?.state || '') && deployment?.workflowRunHtmlUrl;
-  });
-
   workflowRunId = computed(() => {
     const deployment = this.environment()?.latestDeployment;
     if (!deployment?.workflowRunHtmlUrl) return undefined;

@@ -1,23 +1,23 @@
 <div class="workflow-jobs-status w-full mb-4">
-  <div class="flex justify-between items-center mb-3">
-    <h3 class="text-lg font-medium">Deployment Progress</h3>
-
-    <div class="text-sm">
-      @if (allJobsCompleted()) {
-        <span class="text-green-600 flex items-center">
-          <i-tabler name="circle-check" class="mr-1"></i-tabler>
-          Workflow complete
-        </span>
-      } @else if (hasFailedJobs()) {
-        <span class="text-red-600 flex items-center">
-          <i-tabler name="circle-x" class="mr-1"></i-tabler>
-          Some jobs failed
-        </span>
-      }
-    </div>
-  </div>
-
   @if (jobs().length > 0) {
+    <div class="flex justify-between items-center mb-3">
+      <h3 class="text-lg font-medium">Deployment Progress</h3>
+
+      <div class="text-sm">
+        @if (allJobsCompleted()) {
+          <span class="text-green-600 flex items-center">
+            <i-tabler name="circle-check" class="mr-1"></i-tabler>
+            Workflow complete
+          </span>
+        } @else if (hasFailedJobs()) {
+          <span class="text-red-600 flex items-center">
+            <i-tabler name="circle-x" class="mr-1"></i-tabler>
+            Some jobs failed
+          </span>
+        }
+      </div>
+    </div>
+
     <div class="grid">
       @for (job of jobs(); track job.id) {
         <div
@@ -48,63 +48,59 @@
             </div>
           </div>
 
-          <!-- Runner Information -->
-          <div class="runner-info text-sm mb-2 flex flex-wrap items-center gap-2" *ngIf="job.runnerId">
-            <span class="text-gray-600">Runner:</span>
-            <span class="font-medium">{{ job.runnerName || 'Unknown' }}</span>
+          @if (job.status !== 'completed') {
+            <!-- Runner Information -->
+            @if (job.runnerId) {
+              <div class="runner-info text-sm mb-2 flex flex-wrap items-center gap-2">
+                <span class="text-gray-600">Runner:</span>
+                <span class="font-medium">{{ job.runnerName || 'Unknown' }}</span>
 
-            @if (job.runnerGroupName) {
-              <span class="text-gray-600">Group:</span>
-              <span class="font-medium">{{ job.runnerGroupName }}</span>
-            }
-
-            @if (job.labels && job.labels.length > 0) {
-              <div class="runner-labels flex flex-wrap gap-1 ml-2">
-                @for (label of job.labels; track label) {
-                  <span class="px-2 py-0.5 rounded-full text-xs bg-gray-100 text-gray-700">
-                    {{ label }}
-                  </span>
+                @if (job.labels && job.labels.length > 0) {
+                  <div class="runner-labels flex flex-wrap gap-1 ml-2">
+                    @for (label of job.labels; track label) {
+                      <span class="px-2 py-0.5 rounded-full text-xs bg-gray-100 text-gray-700">
+                        {{ label }}
+                      </span>
+                    }
+                  </div>
                 }
               </div>
             }
-          </div>
 
-          <!-- Waiting for Runner Message -->
-          <div class="waiting-for-runner text-sm mb-2" *ngIf="job.status === 'queued' && !job.runnerId">
-            <span class="text-yellow-600 flex items-center">
-              <i-tabler name="hourglass" class="mr-1"></i-tabler>
-              Waiting for available runner...
-            </span>
-          </div>
+            <!-- Waiting for Runner Message -->
+            @if (job.status === 'queued' && !job.runnerId) {
+              <div class="waiting-for-runner text-sm mb-2">
+                <span class="text-yellow-600 flex items-center">
+                  <i-tabler name="clock" class="mr-1"></i-tabler>
+                  Waiting for available runner...
+                </span>
+              </div>
+            }
 
-          @if (job.steps?.length) {
-            <div class="job-steps pl-4 border-l-2 border-gray-200 mt-3">
-              @for (step of job.steps; track step.number) {
-                <div class="step py-1 flex items-center gap-2">
-                  <span class="status-indicator size-2 rounded-full" [ngClass]="getStatusClass(step.status, step.conclusion)"></span>
-                  <span class="step-name text-sm flex-grow">{{ step.name }}</span>
+            @if (job.steps?.length) {
+              <div class="job-steps pl-4 border-l-2 border-gray-200 mt-3">
+                @for (step of job.steps; track step.number) {
+                  <div class="step py-1 flex items-center gap-2">
+                    <span class="status-indicator size-2 rounded-full" [ngClass]="getStatusClass(step.status, step.conclusion)"></span>
+                    <span class="step-name text-sm flex-grow">{{ step.name }}</span>
 
-                  <div class="flex items-center gap-2">
-                    @if (step.startedAt && step.completedAt) {
-                      <span class="text-xs text-gray-500">
-                        {{ getDuration(step.startedAt, step.completedAt) }}
+                    <div class="flex items-center gap-2">
+                      @if (step.startedAt && step.completedAt) {
+                        <span class="text-xs text-gray-500">
+                          {{ getDuration(step.startedAt, step.completedAt) }}
+                        </span>
+                      }
+                      <span class="status-badge px-2 py-0.5 rounded-full text-xs" [ngClass]="getStatusClass(step.status, step.conclusion)">
+                        {{ getStatusText(step.status, step.conclusion) }}
                       </span>
-                    }
-                    <span class="status-badge px-2 py-0.5 rounded-full text-xs" [ngClass]="getStatusClass(step.status, step.conclusion)">
-                      {{ getStatusText(step.status, step.conclusion) }}
-                    </span>
+                    </div>
                   </div>
-                </div>
-              }
-            </div>
+                }
+              </div>
+            }
           }
         </div>
       }
-    </div>
-  } @else {
-    <div class="text-center py-4 text-gray-500">
-      <i-tabler name="hourglass" class="mb-2 size-6 mx-auto text-gray-400"></i-tabler>
-      <p>No job information available yet...</p>
     </div>
   }
 </div>

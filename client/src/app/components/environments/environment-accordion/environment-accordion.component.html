@@ -127,8 +127,8 @@
           <div class="flex-grow">
             <app-deployment-stepper [deployment]="environment().latestDeployment" class="w-full" />
 
-            @if (deploymentInProgress() && workflowRunId()) {
-              <app-workflow-jobs-status [workflowRunId]="workflowRunId()!" />
+            @if (workflowRunId()) {
+              <app-workflow-jobs-status [workflowRunId]="workflowRunId()!" [latestDeployment]="environment().latestDeployment" />
             }
           </div>
         } @else {

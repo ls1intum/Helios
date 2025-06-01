@@ -1,27 +1,27 @@
-// workflow-jobs-status.component.ts
 import { CommonModule, DatePipe } from '@angular/common';
-import { Component, computed, effect, inject, input, OnInit } from '@angular/core';
-import { WorkflowJobDto } from '@app/core/modules/openapi';
+import { Component, computed, effect, inject, input } from '@angular/core';
+import { EnvironmentDeployment, WorkflowJobDto } from '@app/core/modules/openapi';
 import { getWorkflowJobStatusOptions, getWorkflowJobStatusQueryKey } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { injectQuery } from '@tanstack/angular-query-experimental';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
-import { IconCircleCheck, IconCircleDashed, IconCircleX, IconHourglass } from 'angular-tabler-icons/icons';
+import { IconCircleCheck, IconCircleMinus, IconCircleX, IconClock, IconProgress } from 'angular-tabler-icons/icons';
 
 @Component({
   selector: 'app-workflow-jobs-status',
   standalone: true,
   imports: [CommonModule, TablerIconComponent],
-  providers: [DatePipe, provideTablerIcons({ IconCircleCheck, IconCircleDashed, IconCircleX, IconHourglass })],
+  providers: [DatePipe, provideTablerIcons({ IconClock, IconProgress, IconCircleMinus, IconCircleCheck, IconCircleX })],
   templateUrl: './workflow-jobs-status.component.html',
 })
-export class WorkflowJobsStatusComponent implements OnInit {
-  // Inputs
+export class WorkflowJobsStatusComponent {
+  latestDeployment = input.required<EnvironmentDeployment | undefined>();
+
   workflowRunId = input.required<number>();
 
   private datePipe = inject(DatePipe);
 
   // Control when to poll for job status
-  shouldPoll = computed(() => !!this.workflowRunId());
+  shouldPoll = computed(() => (!!this.workflowRunId() && !this.deploymentCompleted()) || false);
 
   workflowJobsQuery = injectQuery(() => ({
     ...getWorkflowJobStatusOptions({ path: { runId: this.workflowRunId() } }),
@@ -45,20 +45,32 @@ export class WorkflowJobsStatusComponent implements OnInit {
     return jobs.every(job => job.status === 'completed');
   });
 
+  deploymentInProgress = computed(() => {
+    return ['IN_PROGRESS', 'WAITING', 'REQUESTED', 'PENDING', 'QUEUED'].includes(this.latestDeployment()?.state || '') && this.latestDeployment()?.workflowRunHtmlUrl;
+  });
+
+  deploymentCompleted = computed(() => {
+    return ['SUCCESS'].includes(this.latestDeployment()?.state || '') && this.latestDeployment()?.workflowRunHtmlUrl;
+  });
+
   // Track if any jobs failed
   hasFailedJobs = computed(() => {
     return this.jobs().some(job => job.conclusion === 'failure');
   });
 
-  ngOnInit() {
+  constructor() {
     // Watch for changes to inputs and refresh when needed
     effect(() => {
       if (this.shouldPoll()) {
         this.workflowJobsQuery.refetch();
       }
     });
+    effect(() => {
+      if (['SUCCESS', 'FAILURE', 'ERROR'].includes(this.latestDeployment()?.state || '')) {
+        this.workflowJobsQuery.refetch();
+      }
+    });
   }
-
   // Get CSS class for job status
   getStatusClass(status: string | null | undefined, conclusion: string | null | undefined): string {
     if (conclusion === 'success') return 'text-green-600 bg-green-50';
@@ -76,10 +88,10 @@ export class WorkflowJobsStatusComponent implements OnInit {
   getStatusIcon(status: string | null | undefined, conclusion: string | null | undefined): string {
     if (conclusion === 'success') return 'circle-check';
     if (conclusion === 'failure') return 'circle-x';
-    if (conclusion === 'skipped' || conclusion === 'cancelled') return 'circle-dashed';
+    if (conclusion === 'skipped' || conclusion === 'cancelled') return 'circle-minus';
 
-    if (status === 'in_progress') return 'clock';
-    if (status === 'queued' || status === 'waiting') return 'hourglass';
+    if (status === 'in_progress') return 'progress';
+    if (status === 'queued' || status === 'waiting') return 'clock';
 
     return 'help';
   }
