@@ -619,8 +619,7 @@ public class GitHubService {
 
     // Fetch artifacts to get the triggering workflow run ID
     try {
-      PagedIterable<GHArtifact> artifacts =
-          getWorkflowRunArtifacts(repositoryId, runId);
+      PagedIterable<GHArtifact> artifacts = getWorkflowRunArtifacts(repositoryId, runId);
 
       // First artifact with the configured name
       for (GHArtifact artifact : artifacts) {
@@ -650,9 +649,7 @@ public class GitHubService {
     }
   }
 
-  /**
-   * Parses the workflow context artifact to extract the triggering workflow information.
-   */
+  /** Parses the workflow context artifact to extract the triggering workflow information. */
   private GitHubWorkflowContext parseWorkflowContextArtifact(GHArtifact artifact)
       throws IOException {
     // Download & Parse the artifact
@@ -683,7 +680,7 @@ public class GitHubService {
 
                 // Read file content
                 try (BufferedReader reader =
-                         new BufferedReader(new InputStreamReader(nonClosingStream))) {
+                    new BufferedReader(new InputStreamReader(nonClosingStream))) {
                   String line;
                   while ((line = reader.readLine()) != null) {
                     // Skip empty lines
@@ -732,6 +729,52 @@ public class GitHubService {
 
           return new GitHubWorkflowContext(workflowRunId, headBranch, headSha);
         });
+  }
+
+  /**
+   * Retrieves detailed job status information for a GitHub workflow run. Returns the raw JSON
+   * response to be passed directly to the frontend.
+   *
+   * @param repoNameWithOwner Repository in format "owner/repo"
+   * @param runId Workflow run ID to get jobs for
+   * @return Raw JSON response from GitHub API containing job status information
+   * @throws IOException if an I/O error occurs during the API call
+   */
+  public String getWorkflowJobStatus(String repoNameWithOwner, long runId) throws IOException {
+    String url =
+        String.format(
+            "https://api.github.com/repos/%s/actions/runs/%d/jobs", repoNameWithOwner, runId);
+
+    Request request = getRequestBuilder().url(url).get().build();
+
+    try (Response response = okHttpClient.newCall(request).execute()) {
+      if (!response.isSuccessful()) {
+        String errorBody = "No error details";
+        ResponseBody responseBody = response.body();
+        if (responseBody != null) {
+          try {
+            errorBody = responseBody.string();
+          } catch (IOException e) {
+            log.warn("Failed to read error response body", e);
+          }
+        }
+
+        log.error(
+            "GitHub API call failed to fetch workflow jobs with response code: {} and body: {}",
+            response.code(),
+            errorBody);
+        throw new IOException("GitHub API call failed with response code: " + response.code());
+      }
+
+      ResponseBody responseBody = response.body();
+      if (responseBody == null) {
+        throw new IOException("Response body is null");
+      }
+
+      String result = responseBody.string();
+      log.debug("Successfully fetched job status for workflow run ID: {}", runId);
+      return result;
+    }
   }
 
   /**
