@@ -44,7 +44,7 @@
           <div class="flex gap-4">
             <p-tag [value]="releaseCandidate.name" [rounded]="true" class="cursor-pointer text-xs whitespace-nowrap" [routerLink]="'../' + releaseCandidate.name" />
             @if (releaseCandidate.isPublished) {
-              <p-tag [rounded]="true" severity="danger" class="text-xs gap-0">
+              <p-tag [rounded]="true" severity="contrast" class="text-xs gap-0">
                 <i-tabler name="brand-github" class="!size-4" />
                 <span class="hidden md:block">Published to GitHub</span>
               </p-tag>
