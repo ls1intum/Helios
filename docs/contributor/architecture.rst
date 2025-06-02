@@ -12,8 +12,8 @@ High-Level Design
 
 .. raw:: html
 
-   <a href="../../../_static/images/architecture/Helios-HighLevelDesign.png" target="_blank">
-     <img src="../../../_static/images/architecture/Helios-HighLevelDesign.png" alt="Helios high level design" style="height: 512px;" />
+   <a href="../../_static/images/architecture/Helios-HighLevelDesign.png" target="_blank">
+     <img src="../../_static/images/architecture/Helios-HighLevelDesign.png" alt="Helios high level design" style="height: 512px;" />
    </a>
 
 Communication paths and protocols:

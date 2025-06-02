@@ -23,32 +23,27 @@ The Artemis open-source project relies on GitHub Actions for its CI/CD workflows
   :maxdepth: 3
 
   user_guide/deployments/testserver
+  user_guide/ls1intum
 
 .. toctree::
   :caption: Contributor Guide
   :includehidden:
   :maxdepth: 3
 
-  development/local/setup
-  development/local/start_app
-  development/local/openapi
-  development/local/webhook
-  development/local/migrations
-  development/local/keycloak_token_exchange
-  development/local/testing
+  contributor/architecture
+  contributor/tech_stack
+  contributor/setup
+  contributor/start_app
+  contributor/openapi
+  contributor/webhook
+  contributor/migrations
+  contributor/keycloak_token_exchange
+  contributor/testing
 
 .. toctree::
-  :caption: Production
+  :caption: Admin Guide
   :includehidden:
   :maxdepth: 3
 
-  development/production/ls1intum
-  development/production/setup
-
-.. toctree::
-  :caption: System
-  :includehidden:
-  :maxdepth: 3
-
-  system/architecture
-  system/tech_stack
+  admin/setup
+  admin/troubleshooting
