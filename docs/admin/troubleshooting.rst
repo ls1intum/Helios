@@ -9,7 +9,7 @@ Troubleshooting Helios
 
 
 Updating SSL/TLS Certificates
---------------
+-------------------------------
 
 .. note::
 
@@ -70,7 +70,7 @@ After certificates are in place and the config is correct, reload the Nginx cont
     This command restarts the Nginx container, applying the new SSL/TLS certificates.
 
 NATS Webhook Data Cleanup
---------------
+-------------------------------
 
 Helios uses NATS to buffer incoming webhook events. These messages are stored persistently in a Docker volume named ``helios_nats-data``. Over time, old webhook data may accumulate and can be safely removed if it is no longer needed.
 
@@ -113,7 +113,7 @@ Helios uses NATS to buffer incoming webhook events. These messages are stored pe
       docker compose -f compose.prod.yaml --env-file=.env up --pull=always -d
 
 If Helios Stops Processing Webhook Events
---------------
+-------------------------------------------
 
 In some cases, the Helios ``application-server`` may stop handling incoming GitHub webhook events. This is often caused by the NATS consumer being deleted due to inactivity. Below is a brief overview of the issue, initial diagnostic steps, and remediation.
 
@@ -198,7 +198,7 @@ For more details, refer to the issue and PR that introduced durable consumer sup
 - PR: https://github.com/ls1intum/Helios/pull/349
 
 Disaster Recovery
---------------
+-------------------
 
 In the event that the Helios database volume is accidentally removed, there is no direct backup available. To recover:
 
@@ -242,7 +242,7 @@ In the event that the Helios database volume is accidentally removed, there is n
    This prevents redundant full syncs on subsequent restarts.
 
 Deployment User
---------------
+-----------------
 
 Helios deployments on GitHub Actions are performed by a dedicated user account named ``github_deployment``. This user was created following the instructions in the `ls1intum` GitHub organization’s repository (see ``https://github.com/ls1intum/.github/``). GitHub Actions uses ``github_deployment`` to push updated images and configuration into the Helios environment, so ensure that:
 
@@ -254,7 +254,7 @@ Helios deployments on GitHub Actions are performed by a dedicated user account n
 
 
 Useful Environment Variables
---------------
+-------------------------------
 Helios relies on a set of environment variables defined in the ``.env`` file (located in ``/opt/helios``) to configure certain runtime behaviors and image tags. Common variables include:
 
 .. code-block:: console
@@ -290,7 +290,7 @@ Helios relies on a set of environment variables defined in the ``.env`` file (lo
 - **NATS_CONSUMER_ACK_WAIT_SECONDS**: Specifies the time (in seconds) that NATS waits for a message acknowledgment before resending it. Default is 60 seconds.
 
 Useful Server Commands
---------------
+-------------------------
 
 - **Running the Helios**
 
