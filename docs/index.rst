@@ -23,6 +23,7 @@ The Artemis open-source project relies on GitHub Actions for its CI/CD workflows
   :maxdepth: 3
 
   user_guide/deployments/testserver
+  user_guide/ls1intum
 
 .. toctree::
   :caption: Contributor Guide
@@ -42,7 +43,6 @@ The Artemis open-source project relies on GitHub Actions for its CI/CD workflows
   :includehidden:
   :maxdepth: 3
 
-  development/production/ls1intum
   development/production/setup
 
 .. toctree::
