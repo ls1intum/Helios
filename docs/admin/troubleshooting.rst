@@ -241,6 +241,28 @@ In the event that the Helios database volume is accidentally removed, there is n
 
    This prevents redundant full syncs on subsequent restarts.
 
+Connecting to the Database via SSH Tunnel
+--------------------------------------------
+
+To connect to the PostgreSQL database running inside the Helios host from your local machine, you can establish an SSH tunnel. First, ensure that your SSH config defines a host alias (e.g., "helios") pointing to the server. Then run:
+
+.. code-block:: console
+
+    ssh -N -L 5433:localhost:5432 helios
+
+- ``-N``: Do not execute a remote command—just forward ports.
+- ``-L 5433:localhost:5432``: Forward local port ``5433`` to remote port ``5432`` on the Helios host.
+- ``helios``: SSH host alias (or replace with ``username@hostname`` if no alias is defined).
+
+Once the tunnel is established, connect locally to port ``5433`` as if you were connecting directly to the database:
+
+.. code-block:: console
+
+    psql -h localhost -p 5433 -U <db_user> -d <db_name>
+
+Replace ``<db_user>`` and ``<db_name>`` with the appropriate PostgreSQL username and database name. You can view the actual credentials (``username``, ``password``, ``database name``) in the ``.env`` file under ``/opt/helios``.
+
+
 Deployment User
 -----------------
 
