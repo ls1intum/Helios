@@ -34,7 +34,7 @@ class NotificationPreferenceServiceTest {
   }
 
   @Test
-  void initializeDefaultsForUser_ShouldCreatePreferencesForAllTypes() {
+  void initializeDefaultsForUserShouldCreatePreferencesForAllTypes() {
     // Arrange
     when(repository.findByUserAndType(any(), any())).thenReturn(Optional.empty());
 
@@ -46,7 +46,7 @@ class NotificationPreferenceServiceTest {
   }
 
   @Test
-  void initializeDefaultsForUser_ShouldNotCreateExistingPreferences() {
+  void initializeDefaultsForUserShouldNotCreateExistingPreferences() {
     // Arrange
     NotificationPreference existingPref =
         new NotificationPreference(testUser, NotificationPreference.Type.DEPLOYMENT_FAILED, true);
@@ -65,7 +65,7 @@ class NotificationPreferenceServiceTest {
   }
 
   @Test
-  void getCurrentUserPreferences_ShouldReturnAllPreferences() {
+  void getCurrentUserPreferencesShouldReturnAllPreferences() {
     // Arrange
     when(authService.getUserFromGithubId()).thenReturn(testUser);
     List<NotificationPreference> preferences =
@@ -92,7 +92,7 @@ class NotificationPreferenceServiceTest {
   }
 
   @Test
-  void updatePreferencesForCurrentUser_ShouldUpdateExistingPreferences() {
+  void updatePreferencesForCurrentUserShouldUpdateExistingPreferences() {
     // Arrange
     when(authService.getUserFromGithubId()).thenReturn(testUser);
     NotificationPreference existingPref =
@@ -117,7 +117,7 @@ class NotificationPreferenceServiceTest {
   }
 
   @Test
-  void updatePreferencesForCurrentUser_ShouldCreateNewPreferencesIfNotExist() {
+  void updatePreferencesForCurrentUserShouldCreateNewPreferencesIfNotExist() {
     // Arrange
     when(authService.getUserFromGithubId()).thenReturn(testUser);
     when(repository.findByUserAndType(any(), any())).thenReturn(Optional.empty());
