@@ -1,5 +1,5 @@
 =====================
-Token Exchange Setup
+Keycloak
 =====================
 
 This document describes how to set up token exchange functionality in Keycloak 26.1.3, which allows a client to obtain identity provider tokens of users.
@@ -48,7 +48,7 @@ Setup Steps
 2. Configure User Impersonation Permission
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Follow the steps listed under "Direct Naked Impersonation" in the Keycloak documentation. 
+Follow the steps listed under "Direct Naked Impersonation" in the Keycloak documentation.
 https://www.keycloak.org/securing-apps/token-exchange#_direct_naked_impersonation
 
 The section below duplicates the steps in the documentation in case the link is broken or changes.

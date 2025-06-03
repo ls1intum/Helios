@@ -282,5 +282,14 @@ Explanation
 
 By structuring your workflow like this, you can ensure that deployments can be triggered directly from the GitHub UI, providing flexibility and control over deployments.
 
+Keycloak Setup
+----------------
+
+Repository should contain ``helios-example-realm.json`` file for local development. If the file is not present or you want to set up a fresh Keycloak realm, you can follow the below page to set up Keycloak:
+
+.. toctree::
+   :maxdepth: 1
+
+   keycloak.rst
 
 Now you can continue running the application by following the steps in the `Starting the Application Guide <start_app.html>`_.
