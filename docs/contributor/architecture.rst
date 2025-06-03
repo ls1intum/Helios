@@ -58,7 +58,7 @@ The *Notification Server* handles everything that leaves the system for human co
 
 The *Client* is the user interface, delivered as a web application that speaks only to the Application Server’s API. All user interaction such as deployments, promoting release candidates, inspecting logs go to the *Application Server*.
 
-*Keycloak* provides identity and access management. Users authenticate with Keycloak, receive signed `JWT`s, and present those tokens to the Application Server. The server’s Auth services validate the token, derive effective roles, and enforce fine-grained permissions.
+*Keycloak* provides identity and access management. Users authenticate with Keycloak, receive signed JWTs, and present those tokens to the Application Server. The server’s Auth services validate the token, derive effective roles, and enforce fine-grained permissions.
 
 Finally, *NATS Server* supplies light-weight, at-least-once messaging. Both the *Webhook Listener* and the *Application Server* publish events; both the *Application Server* and *Notification Server* consume them. Because messages flow through a broker rather than direct HTTP calls, the subsystems can be deployed, restarted, or horizontally scaled without tight coupling or cascading failures.
 

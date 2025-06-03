@@ -126,8 +126,10 @@ Additional Containers
           nginx:latest
 
   - **SSL/TLS Certificates**:
+
   .. warning::
     Do not forget to renew the certificates for both production and staging environments every 90 days!
+
   Certificates are generated manually using Certbot. For example::
 
       sudo certbot certonly --standalone -d helios.aet.cit.tum.de
