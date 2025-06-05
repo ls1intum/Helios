@@ -5,14 +5,37 @@ import { getWorkflowJobStatusOptions, getWorkflowJobStatusQueryKey } from '@app/
 import { PermissionService } from '@app/core/services/permission.service';
 import { injectQuery } from '@tanstack/angular-query-experimental';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
-import { IconBrandGithub, IconCircleCheck, IconCircleMinus, IconCircleX, IconClock, IconExternalLink, IconProgress } from 'angular-tabler-icons/icons';
+import {
+  IconBrandGithub,
+  IconCircleCheck,
+  IconCircleMinus,
+  IconCircleX,
+  IconClock,
+  IconExternalLink,
+  IconProgress,
+  IconChevronDown,
+  IconChevronRight,
+} from 'angular-tabler-icons/icons';
 import { Button } from 'primeng/button';
 
 @Component({
   selector: 'app-workflow-jobs-status',
   standalone: true,
   imports: [CommonModule, TablerIconComponent, Button],
-  providers: [DatePipe, provideTablerIcons({ IconClock, IconProgress, IconCircleMinus, IconCircleCheck, IconCircleX, IconBrandGithub, IconExternalLink })],
+  providers: [
+    DatePipe,
+    provideTablerIcons({
+      IconClock,
+      IconProgress,
+      IconCircleMinus,
+      IconCircleCheck,
+      IconCircleX,
+      IconBrandGithub,
+      IconExternalLink,
+      IconChevronDown,
+      IconChevronRight,
+    }),
+  ],
   templateUrl: './workflow-jobs-status.component.html',
 })
 export class WorkflowJobsStatusComponent {
@@ -25,6 +48,19 @@ export class WorkflowJobsStatusComponent {
 
   private extraRefetchStarted = signal(false);
   private extraRefetchCompleted = signal(false);
+
+  expandedJobs = signal<Record<string, boolean>>({});
+
+  toggleJobExpansion(jobId: number) {
+    this.expandedJobs.update(state => ({
+      ...state,
+      [jobId]: !state[jobId],
+    }));
+  }
+
+  isJobExpanded(jobId: number): boolean {
+    return !!this.expandedJobs()[jobId];
+  }
 
   // Control when to poll for job status - during active deployment or limited extra fetches
   shouldPoll = computed(() => {
