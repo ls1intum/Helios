@@ -1,153 +1,249 @@
 =====================
-Keycloak
+Keycloak Setup
 =====================
 
-This document describes how to set up token exchange functionality in Keycloak 26.1.3, which allows a client to obtain identity provider tokens of users.
+This guide shows how to run Keycloak locally (via Docker Compose), create a new realm from scratch (or skip straight to configuration if you already have one), configure GitHub as an identity provider, create application and clients, and finally export your realm to JSON for reuse.
 
 Prerequisites
 -------------
 
-* Keycloak server with admin access
-* A confidential client (public clients are not allowed for token exchange)
-* Admin permissions to configure client permissions and policies
-* Token exchange feature enabled (currently in preview)
+* A GitHub account with permission to create a GitHub OAuth App.
+* Docker and Docker Compose installed locally.
 
-Feature Enablement
+Environment Variables
 --------------------
-
-At the moment of development, token exchange is only available as a feature preview. To enable the feature, start Keycloak with the following feature flags:
 
 .. code-block:: bash
 
-   --features=token-exchange,admin-fine-grained-authz
+   # PostgreSQL
+   POSTGRES_DB=helios
+   POSTGRES_USER=helios
+   POSTGRES_PASSWORD=helios
+
+   # Keycloak Admin Account
+   KEYCLOAK_ADMIN=admin
+   KEYCLOAK_ADMIN_PASSWORD=admin
+   KC_HOSTNAME=localhost
+
+
+Docker Compose Configuration
+----------------------------
+
+.. code-block:: yaml
+
+   version: '3.9'
+
+   services:
+     postgres:
+       image: 'postgres:16'
+       environment:
+         - POSTGRES_DB=${POSTGRES_DB}
+         - POSTGRES_USER=${POSTGRES_USER}
+         - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+       ports:
+         - '5432:5432'
+       volumes:
+         - db-data:/var/lib/postgresql/data
+       command: >
+         bash -c "
+         set -m
+         docker-entrypoint.sh postgres &
+         until pg_isready -h localhost -p 5432 --timeout=0; do
+            echo 'Waiting for Postgres to be ready...';
+            sleep 1;
+         done;
+         psql -v ON_ERROR_STOP=1 -U ${POSTGRES_USER} -tc \"SELECT 1 FROM pg_database WHERE datname = 'keycloak'\" \
+            | grep -q 1 || psql -U ${POSTGRES_USER} -c \"CREATE DATABASE keycloak;\"
+         fg %1
+         "
+       networks:
+         - helios-network
+
+     keycloak:
+       image: quay.io/keycloak/keycloak:26.1.3
+       container_name: keycloak
+       environment:
+         KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}
+         KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+         KC_DB: postgres
+         KC_DB_URL_HOST: postgres
+         KC_DB_USERNAME: ${POSTGRES_USER}
+         KC_DB_PASSWORD: ${POSTGRES_PASSWORD}
+         KC_HOSTNAME: ${KC_HOSTNAME}
+       ports:
+         - '8081:8081'
+       depends_on:
+         - postgres
+       # If you have an existing realm JSON, mount it here; otherwise skip the volume and import flags
+       # volumes:
+       #   - ./helios-example-realm.json:/opt/keycloak/data/import/helios-example-realm.json:ro
+       command: start-dev --http-port=8081 --features="token-exchange,admin-fine-grained-authz"
+       networks:
+         - helios-network
+
+   volumes:
+     db-data:
+
+   networks:
+     helios-network:
+       name: helios-network
 
 Setup Steps
 -----------
 
-1. Create Token Exchange Client
+1. Start Docker Compose
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-#. Log in to the Keycloak Admin Console
-#. Navigate to the target realm (Helios)
-#. Go to Clients and create a new client (e.g., helios-token-exchange)
-#. Set the client as confidential (public clients are not allowed for token exchange)
-    .. raw:: html
-
-       <a href="../../_static/images/token_exchange/confidential-client.png" target="_blank">
-         <img src="../../_static/images/token_exchange/confidential-client.png" alt="Repository selection screen" style="height: 512px;" />
-       </a>
-
-#. Generate and save the client secret (this client ID and secret will be used to access users' GitHub tokens)
-    .. raw:: html
-
-       <a href="../../_static/images/token_exchange/client-credentials.png" target="_blank">
-         <img src="../../_static/images/token_exchange/client-credentials.png" alt="Repository selection screen" style="height: 512px;" />
-       </a>
-
-
-2. Configure User Impersonation Permission
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Follow the steps listed under "Direct Naked Impersonation" in the Keycloak documentation.
-https://www.keycloak.org/securing-apps/token-exchange#_direct_naked_impersonation
-
-The section below duplicates the steps in the documentation in case the link is broken or changes.
-
-#. Go to the Users tab
-#. In the Permissions tab, click on the "impersonate" link
-#. In the permission setup page:
-   * Click on "Client details" in the breadcrumbs
-   * Define a policy for this permission
-#. Go to the Policies tab and create a client policy:
-   * Enter the client ID that will perform the token exchange
-   * Save the policy
-#. Return to the users' "impersonation" permission
-#. Add the client policy you just defined
-
-3. Configure Identity Provider Token Exchange
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-#. Go to Identity Providers
-#. Select the external identity provider (e.g., GitHub)
-#. Enable 'Store tokens' option in the Settings tab
-#. Go to the Permissions tab
-#. Enable Permissions
-#. Click on the "impersonate" link
-#. Select the policy created earlier for the helios-token-exchange client
-
-4. Making Token Exchange Requests
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-To make a token exchange request, use the following endpoint:
+From the directory containing docker-compose.yml and .env, run:
 
 .. code-block:: bash
 
-   curl -X POST \
-       -d "client_id=<your-client-id>" \
-       -d "client_secret=<your-client-secret>" \
-       --data-urlencode "grant_type=urn:ietf:params:oauth:grant-type:token-exchange" \
-       -d "requested_subject=<target-username>" \
-       --data-urlencode "requested_token_type=urn:ietf:params:oauth:token-type:access_token" \
-       -d "requested_issuer=<identity-provider>" \
-       http://localhost:8081/realms/<your-realm>/protocol/openid-connect/token
+   docker compose up --build
 
-Parameters:
-* ``client_id``: The ID of your token exchange client
-* ``client_secret``: The client's secret
-* ``grant_type``: Must be "urn:ietf:params:oauth:grant-type:token-exchange"
-* ``requested_subject``: The username or user ID to impersonate
-* ``requested_token_type``: The type of token to request (e.g., access_token)
-* ``requested_issuer``: The identity provider (e.g., github)
+#. PostgreSQL will initialize and create the keycloak database.
+#. Keycloak (in dev mode) will start on port 8081.
+#. Wait until logs show:
 
-Example Response
------------------
+.. code-block:: bash
 
-A successful response will include an access token:
+   Started Keycloak in development mode (boot time: X seconds)
 
-.. code-block:: json
+2. Open the Keycloak Admin Console
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-   {
-      "access_token": "<provider-specific-token>",
-      "expires_in": 0,
-      "refresh_expires_in": 0,
-      "not-before-policy": 0,
-      "issued_token_type": "urn:ietf:params:oauth:token-type:access_token",
-      "account-link-url": "<account-link-url>"
-   }
+#. Access the Keycloak Admin Console at http://localhost:8081/admin
+#. Log in with the admin credentials you set in .env
+#. Create a new realm from: Manage Realms -> Create Realm
 
-NOTE:
---------------
+.. warning::
 
-GitHub access tokens are valid for 8 hours. Identity provider tokens are not refreshed automatically in Keycloak.
-In order to make sure you always have a valid token, limit the session to 8 hours.
+   If you already have a realm, you can skip from here and continue from step 7.
 
-Security Considerations
------------------------
+.. raw:: html
 
-1. Only use confidential clients for token exchange
-2. Keep client credentials secure and never expose them
-3. Limit the number of clients that have token exchange permissions
-4. Regularly audit which clients have token exchange permissions
-5. Monitor token exchange usage for suspicious patterns
+   <a href="../../../_static/images/keycloak/create-realm.png" target="_blank">
+     <img src="../../../_static/images/keycloak/create-realm.png" alt="Create Realm" style="height: 512px;" />
+   </a>  
 
-Error Handling
---------------
 
-Common error responses:
+3. Connecting Keycloak to GitHub App
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-* 403 Forbidden: Client lacks required permissions
-* 400 Bad Request: Invalid parameters or unsupported grant type
-* 401 Unauthorized: Invalid client credentials
+Go back to the Github App created in prevous section (Setup Guide)
+
+#. Add a callback URL: http://localhost:4200/realms/helios/broker/github/endpoint
+#. Note down your Client ID and Client Secret
+
+
+4. Add GitHub as an Identity Provider in Keycloak
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+1. Go to Identity Providers
+2. Choose GitHub
+3. Add Display Name: GitHub
+4. Add the Client ID and Client Secret you noted down in the previous step
+
+.. raw:: html
+
+   <a href="../../../_static/images/keycloak/add-github-idp.png" target="_blank">
+     <img src="../../../_static/images/keycloak/add-github-idp.png" alt="Add GitHub as an Identity Provider" style="height: 512px;" />
+   </a>
+
+5. Scopes: read:user workflow
+6. Enable Store Tokens (so Keycloak retains the GitHub access token).
+7. Click Save
+8. Add a Protocol Mapper:
+
+.. raw:: html
+
+   <a href="../../../_static/images/keycloak/add-github-idp-mapper.png" target="_blank">
+     <img src="../../../_static/images/keycloak/add-github-idp-mapper.png" alt="Add GitHub as an Identity Provider" style="height: 512px;" />
+   </a>
+
+
+
+5. Creating the Client
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+#. Go to Clients -> Create Client
+#. Add Client ID: helios-example
+#. Add Root URL: http://localhost:4200
+#. Add Valid Redirect URIs: http://localhost:4200/*
+#. Add Valid Post Logout Redirect URIs: http://localhost:4200/*
+#. Add Web Origins: *
+#. Add Admin URL: http://localhost:4200
+
+
+6. Adding Mappers to the Client
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+#. Go to the Clients -> previously created client (helios-example)
+#. Go to the Client Scopes
+#. Select the relevant scope
+#. Add Mapper -> By configuration -> User Attribute
+#. Add following: 
+
+.. raw:: html
+
+   <a href="../../../_static/images/keycloak/add-mapper.png" target="_blank">
+     <img src="../../../_static/images/keycloak/add-mapper.png" alt="Add Mapper" style="height: 512px;" />
+   </a>
+
+
+7. Exporting the realm
+~~~~~~~~~~~~~~~~~~~~~~
+
+1. Go to Realm Settings -> Actions -> Partial Export:
+
+.. raw:: html
+
+   <a href="../../../_static/images/keycloak/export-realm.png" target="_blank">
+     <img src="../../../_static/images/keycloak/export-realm.png" alt="Export Realm" style="height: 512px;" />
+   </a>
+
+2. Click Export
+
+Now you can use the exported realm.json file to import it into your Keycloak instance.
+Uncomment the volume in the docker-compose.yml file and mount the realm.json file to the container.
+
+
+
+Custom Keycloak Image (Helios Theme)
+------------------------------------
+
+We build Keycloak from our own Dockerfile under ``keycloakify/``, which runs keycloakify to compile a React‐based “Helios” login theme and places it into ``/opt/keycloak/providers/``. In ``docker-compose.yml``, the keycloak service is defined with ``build: context: ./keycloakify``, and we set ``KC_THEME=helios-login`` so that Keycloak serves our branded “Helios” login page instead of the default.
+
+
 
 Troubleshooting
 ---------------
 
 If you encounter issues:
 
-1. Verify client permissions are properly configured
-2. Ensure the client is confidential (not public)
-3. Check that the target user exists and is active
-4. Verify all required parameters are provided
-5. Check Keycloak server logs for detailed error messages
+**1. Postgres not ready**:
 
-For additional information, refer to the `Keycloak documentation <https://www.keycloak.org/securing-apps/token-exchange>`_.
+- Compose's ``pg_isready`` loop retries indefinitely. Check logs:
+
+.. code-block:: bash
+
+   docker-compose logs -f postgres
+
+**2. Admin login fails**:
+
+- Ensure KEYCLOAK_ADMIN / KEYCLOAK_ADMIN_PASSWORD match both .env and your login attempt.
+- To reset, delete the Keycloak volume and restart.
+
+**3. GitHub “Redirect URI mismatch”**:
+
+- In Github App settings, verify the callback URL matches the one in Keycloak.
+- In Keycloak’s Identity Providers → GitHub → Settings, confirm Client ID and Client Secret.
+
+**4. Realm import errors**:   
+
+- Check that the mounted JSON is valid and readable under /opt/keycloak/data/import/.
+- View errors in Keycloak logs.
+
+
+
+
+For additional information, refer to the `Keycloak documentation <https://www.keycloak.org/documentation>`_.

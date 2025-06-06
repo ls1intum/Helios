@@ -129,7 +129,7 @@ Below are typical steps and recommended settings:
 
 
 
-1. **Go to GitHub “Developer settings”**
+1. **Go to GitHub "Developer settings"**
 
 - If you want the app under an organization, go to:
      ``https://github.com/organizations/<ORG-NAME>/settings/apps``,
@@ -285,11 +285,13 @@ By structuring your workflow like this, you can ensure that deployments can be t
 Keycloak Setup
 ----------------
 
-Repository should contain ``helios-example-realm.json`` file for local development. If the file is not present or you want to set up a fresh Keycloak realm, you can follow the below page to set up Keycloak:
+Repository should contain ``helios-example-realm.json`` file for local development. If the file is not present or you want to set up a fresh Keycloak realm, you can follow the below pages to set up Keycloak:
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
+   :caption: Keycloak Configuration
 
-   keycloak.rst
+   keycloak
+   keycloak_token_exchange
 
 Now you can continue running the application by following the steps in the `Starting the Application Guide <start_app.html>`_.
