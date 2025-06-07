@@ -17,9 +17,9 @@
 
 # -- Project information -----------------------------------------------------
 
-project = 'Helios'
-copyright = '2025, Technical University of Munich, Applied Software Engineering'
-author = 'Technical University of Munich, Applied Software Engineering'
+project = "Helios"
+copyright = "2025, Technical University of Munich, Applied Software Engineering"
+author = "Technical University of Munich, Applied Software Engineering"
 
 
 # -- General configuration ---------------------------------------------------
@@ -31,47 +31,44 @@ master_doc = "index"
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = [
-    "sphinx_rtd_theme",
-    "sphinxcontrib.bibtex"
-]
+extensions = ["sphinx_rtd_theme", "sphinxcontrib.bibtex"]
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', 'venv', '.venv']
+exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", "venv", ".venv"]
 
 linkcheck_ignore = [
-    r'http(s)?://.*localhost(:\d+)?/?',
-    r'https://artemis.cs.hm.edu/',  # DNS entry no longer exists
-    r'https://bamboo.ase.in.tum.de/build/admin/edit/.*',
-    r'https://hermes.artemis.cit.tum.de/',  # expired certificate
+    r"http(s)?://.*localhost(:\d+)?/?",
+    r"https://artemis.cs.hm.edu/",  # DNS entry no longer exists
+    r"https://bamboo.ase.in.tum.de/build/admin/edit/.*",
+    r"https://hermes.artemis.cit.tum.de/",  # expired certificate
     # IEEE server returns code 418 when checking links
-    r'https://doi.org/10.1109/CSEET58097.2023.00020',
-    r'https://doi.org/10.1109/CSEET58097.2023.00021',
-    r'https://doi.org/10.1109/CSEET58097.2023.00031',
-    r'https://doi.org/10.1109/CSEET58097.2023.00037',
-    r'https://doi.org/10.1109/ITHET50392.2021.9759809',
+    r"https://doi.org/10.1109/CSEET58097.2023.00020",
+    r"https://doi.org/10.1109/CSEET58097.2023.00021",
+    r"https://doi.org/10.1109/CSEET58097.2023.00031",
+    r"https://doi.org/10.1109/CSEET58097.2023.00037",
+    r"https://doi.org/10.1109/ITHET50392.2021.9759809",
 ]
 # do not check anchors on websites that need JavaScript to load the content
 # the anchor points to
 linkcheck_anchors_ignore_for_url = [
     r"https://angular.io/guide/.*",
     r"https://github.com/.*",
-    r"https://k3d.io/.*"
+    r"https://k3d.io/.*",
 ]
 
 # -- Publications ------------------------------------------------------------
-bibtex_bibfiles = ['research/publications.bib']
-bibtex_default_style = 'unsrtalpha'
-bibtex_reference_style = 'label'
+bibtex_bibfiles = []
+bibtex_default_style = "unsrtalpha"
+bibtex_reference_style = "label"
 
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'sphinx_rtd_theme'
+html_theme = "sphinx_rtd_theme"
 html_context = {
     "display_github": True,
     "github_user": "ls1intum",
@@ -79,12 +76,12 @@ html_context = {
     "github_version": "staging",
     "conf_py_path": "/docs/",
 }
-html_style = 'css/style.css'
+html_style = "css/style.css"
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+html_static_path = ["_static"]
 
 # Icon by Sorasak Pinwiset on freeicons.io
-html_favicon = '_static/favicon.png'
+html_favicon = "_static/favicon.png"

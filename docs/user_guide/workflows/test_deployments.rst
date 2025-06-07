@@ -11,67 +11,20 @@ Prerequisites
 - GitHub account with access to the repository
   (should have at least **WRITE** permissions)
 - Available GitHub environments
-  (configured in the repository’s **Settings > Environments** section)
+  (configured in the repository's **Settings > Environments** section)
 
-Deployment Workflow
---------------------
+Deployment Workflow to Test Environments
+----------------------------------------
 
+1. Pull Request or Branch Selection
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-1. Repository Selection
-~~~~~~~~~~~~~~~~~~~~~~~~
-.. raw:: html
-
-   <p>
-     Select the repository you want to deploy from the
-     <a href="https://helios.aet.cit.tum.de" target="_blank" rel="noopener noreferrer">
-       Helios home page
-     </a>.
-   </p>
+For more information on how to select a pull request or branch, refer to the
+`Pull Request and Branch Selection Guide <pr_branch_selection.html>`_.
 
 .. raw:: html
 
-   <a href="../../../_static/images/user_guide/select-repo.png" target="_blank">
-     <img src="../../../_static/images/user_guide/select-repo.png" alt="Repository selection screen" style="height: 512px;" />
-   </a>
-   
-
-2. Authentication
-~~~~~~~~~~~~~~~~~~
-- Log in with your GitHub account.
-
-.. raw:: html
-
-   <a href="../../../_static/images/user_guide/login.png" target="_blank">
-     <img src="../../../_static/images/user_guide/login.png" alt="Login with GitHub" style="height: 512px;" />
-   </a>
-   
-   
-.. raw:: html
-
-   <a href="../../../_static/images/user_guide/login-gh.png" target="_blank">
-     <img src="../../../_static/images/user_guide/login-gh.png" alt="GitHub authentication" style="height: 512px;" />
-   </a>
-   
-
-3. Pull Request Selection
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-- Choose the pull request or branch you want to deploy.
-
-.. raw:: html
-
-   <a href="../../../_static/images/user_guide/select-pr.png" target="_blank">
-     <img src="../../../_static/images/user_guide/select-pr.png" alt="Pull request table screen" style="height: 512px;" />
-   </a>
-
-.. raw:: html
-
-   <a href="../../../_static/images/user_guide/open-pr.png" target="_blank">
-     <img src="../../../_static/images/user_guide/open-pr.png" alt="Pull request details screen" style="height: 512px;" />
-   </a>
-   
-.. raw:: html
-
-   <div class="admonition note">
+   <div class="admonition note"> 
      <p class="admonition-title">Note</p>
      <p>
        If your repository has a build workflow that must complete before deployment can start, please wait for it to finish.
@@ -89,7 +42,24 @@ Deployment Workflow
    </div>
 
 
-4. Deployment Initiation
+2. Authentication
+~~~~~~~~~~~~~~~~~~
+- Log in with your GitHub account.
+
+.. raw:: html
+
+   <a href="../../../_static/images/user_guide/login.png" target="_blank">
+     <img src="../../../_static/images/user_guide/login.png" alt="Login with GitHub" style="height: 512px;" />
+   </a>
+   
+   
+.. raw:: html
+
+   <a href="../../../_static/images/user_guide/login-gh.png" target="_blank">
+     <img src="../../../_static/images/user_guide/login-gh.png" alt="GitHub authentication" style="height: 512px;" />
+   </a>
+
+3. Deployment Initiation
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 - Click the deploy button to start the deployment process.
 
@@ -134,7 +104,7 @@ Depending on the repository setup and GitHub's action runners, this phase may ta
      <img src="../../../_static/images/user_guide/deployment-success.png" alt="Successful deployment with green check" style="height: 512px;" />
    </a>
 
-5. Unlock the environment once you finish testing.
+4. Unlock the environment once you finish testing.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. raw:: html

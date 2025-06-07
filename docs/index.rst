@@ -15,15 +15,19 @@ The personification of the sun, symbolizing light, clarity, and visibility that 
 Introduction
 ------------
 
-The Artemis open-source project relies on GitHub Actions for its CI/CD workflows but faces challenges such as complex workflows, lack of user-friendly deployment management, and limited test analytics. This project aims to enhance the CI/CD capabilities of Artemis by developing a centralized web application that integrates with GitHub Actions. The proposed solution will provide a streamlined platform for managing deployments, environment tracking, and test analytics, accessible through an intuitive interface.
+The Artemis open-source project as well as other projects at the AET chair rely on GitHub Actions for its CI/CD workflows but faces challenges such as complex workflows, lack of user-friendly deployment management, and limited test analytics. This project aims to enhance the CI/CD capabilities of Artemis by developing a centralized web application that integrates with GitHub Actions. The proposed solution will provide a streamlined platform for managing deployments, environment tracking, and test analytics, accessible through an intuitive interface.
 
 .. toctree::
   :caption: User Guide
   :includehidden:
   :maxdepth: 3
 
-  user_guide/deployments/testserver
   user_guide/ls1intum
+  user_guide/workflows/pr_branch_selection
+  user_guide/workflows/releasing
+  user_guide/workflows/test_deployments
+  user_guide/workflows/production_deployments
+  user_guide/workflows/testing_analytics
 
 .. toctree::
   :caption: Contributor Guide
