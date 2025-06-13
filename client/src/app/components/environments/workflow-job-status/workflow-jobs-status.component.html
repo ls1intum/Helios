@@ -13,18 +13,14 @@
             'border-red-300 bg-red-50 dark:border-red-800 dark:bg-red-900/30': job.conclusion === 'failure',
           }"
         >
-          <div class="job-header flex justify-between items-center mb-2">
+          <div class="job-header flex justify-between items-center mb-2 cursor-pointer" (click)="toggleJobExpansion(job.id!)">
             <div class="flex items-center gap-2">
+              <i-tabler [name]="isJobExpanded(job.id!) ? 'chevron-down' : 'chevron-right'" class="!size-5 text-gray-500"></i-tabler>
               <i-tabler [name]="getStatusIcon(job.status, job.conclusion)" [ngClass]="getIconColorClass(job.status, job.conclusion)" class="!size-5"></i-tabler>
               <span class="font-semibold">{{ job.name }}</span>
               <span class="status-badge px-2 py-1 rounded-full text-xs font-medium" [ngClass]="getStatusClass(job.status, job.conclusion)">
                 {{ getStatusText(job.status, job.conclusion) }}
               </span>
-              @if (!!job.htmlUrl) {
-                <p-button [link]="true" label="View Logs on Github" size="small" (click)="openLink(job.htmlUrl)">
-                  <i-tabler name="external-link" class="!size-4"></i-tabler>
-                </p-button>
-              }
             </div>
             <div class="text-sm text-gray-500 flex items-center gap-2">
               @if (job.startedAt) {
@@ -39,69 +35,83 @@
                   <span class="px-2 py-0.5 bg-blue-50 text-blue-600 rounded-full"> Running </span>
                 }
               }
+              @if (!!job.htmlUrl) {
+                <p-button [link]="true" label="View Logs on Github" size="small" (click)="$event.stopPropagation(); openLink(job.htmlUrl)">
+                  <i-tabler name="external-link" class="!size-4"></i-tabler>
+                </p-button>
+              }
             </div>
           </div>
 
-          @if (job.status !== 'completed') {
-            <!-- Runner Information -->
-            @if (job.runnerId) {
-              <div class="runner-info text-sm mb-2 flex flex-wrap items-center gap-2">
-                <span class="text-gray-600">Runner:</span>
-                <span class="font-medium">{{ job.runnerName || 'Unknown' }}</span>
+          @if (isJobExpanded(job.id!)) {
+            <div class="job-details mt-3">
+              <!-- Runner Information -->
+              @if (job.runnerId) {
+                <div class="runner-info text-sm mb-2 flex flex-wrap items-center gap-2">
+                  <span class="text-gray-600">Runner:</span>
+                  <span class="font-medium">{{ job.runnerName || 'Unknown' }}</span>
 
-                @if (job.labels && job.labels.length > 0) {
-                  <div class="runner-labels flex flex-wrap gap-1 ml-2">
-                    @for (label of job.labels; track label) {
-                      <span class="px-2 py-0.5 rounded-full text-xs bg-gray-100 text-gray-700">
-                        {{ label }}
-                      </span>
-                    }
-                  </div>
-                }
-              </div>
-            }
-
-            <!-- Waiting for Runner Message -->
-            @if (job.status === 'queued' && !job.runnerId) {
-              <div class="waiting-for-runner text-sm mb-2">
-                <span class="text-yellow-600 flex items-center">
-                  <i-tabler name="clock" class="mr-1"></i-tabler>
-                  Waiting for available runner...
-                </span>
-              </div>
-            }
-
-            <!-- Waiting for Runner Message -->
-            @if (job.status === 'waiting') {
-              <div class="waiting-for-runner text-sm mb-2">
-                <span class="text-yellow-600 flex items-center">
-                  <i-tabler name="clock" class="mr-1"></i-tabler>
-                  Waiting for approval...
-                </span>
-              </div>
-            }
-
-            @if (job.steps?.length) {
-              <div class="job-steps pl-4 border-l-2 border-gray-200 mt-3">
-                @for (step of job.steps; track step.number) {
-                  <div class="step py-1 flex items-center gap-2">
-                    <span class="status-indicator size-2 rounded-full" [ngClass]="getStatusIndicatorClass(step.status, step.conclusion)"></span>
-                    <span class="step-name text-sm flex-grow">{{ step.name }}</span>
-
-                    <div class="flex items-center gap-2">
-                      @if (step.startedAt && step.completedAt) {
-                        <span class="text-xs text-gray-500">
-                          {{ getDuration(step.startedAt, step.completedAt) }}
+                  @if (job.labels && job.labels.length > 0) {
+                    <div class="runner-labels flex flex-wrap gap-1 ml-2">
+                      @for (label of job.labels; track label) {
+                        <span class="px-2 py-0.5 rounded-full text-xs bg-gray-100 text-gray-700">
+                          {{ label }}
                         </span>
                       }
-                      <span class="status-badge px-2 py-0.5 rounded-full text-xs" [ngClass]="getStatusClass(step.status, step.conclusion)">
-                        {{ getStatusText(step.status, step.conclusion) }}
-                      </span>
                     </div>
-                  </div>
-                }
-              </div>
-            }
+                  }
+                </div>
+              }
+
+              <!-- Waiting for Runner Message -->
+              @if (job.status === 'queued' && !job.runnerId) {
+                <div class="waiting-for-runner text-sm mb-2">
+                  <span class="text-yellow-600 flex items-center">
+                    <i-tabler name="clock" class="mr-1"></i-tabler>
+                    Waiting for available runner...
+                  </span>
+                </div>
+              }
+
+              <!-- Waiting for Review Message -->
+              @if (job.status === 'waiting') {
+                <div class="waiting-for-runner text-sm mb-2">
+                  <span class="text-yellow-600 flex items-center">
+                    <i-tabler name="clock" class="mr-1"></i-tabler>
+                    Waiting for approval...
+                  </span>
+                </div>
+              }
+
+              <!-- Skipped Message -->
+              @if (job.conclusion === 'skipped') {
+                <div class="waiting-for-runner text-sm mb-2 ml-2">
+                  <span class="text-gray-600 dark:text-gray-400 flex items-center"> This job was skipped. </span>
+                </div>
+              }
+
+              @if (job.steps?.length) {
+                <div class="job-steps pl-4 border-l-2 border-gray-200 mt-3">
+                  @for (step of job.steps; track step.number) {
+                    <div class="step py-1 flex items-center gap-2">
+                      <span class="status-indicator size-2 rounded-full" [ngClass]="getStatusIndicatorClass(step.status, step.conclusion)"></span>
+                      <span class="step-name text-sm flex-grow">{{ step.name }}</span>
+
+                      <div class="flex items-center gap-2">
+                        @if (step.startedAt && step.completedAt) {
+                          <span class="text-xs text-gray-500">
+                            {{ getDuration(step.startedAt, step.completedAt) }}
+                          </span>
+                        }
+                        <span class="status-badge px-2 py-0.5 rounded-full text-xs" [ngClass]="getStatusClass(step.status, step.conclusion)">
+                          {{ getStatusText(step.status, step.conclusion) }}
+                        </span>
+                      </div>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
           }
         </div>
       }
