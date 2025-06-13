@@ -4,7 +4,6 @@
       <tr>
         <th class="w-[30%]">Name</th>
         <th class="w-[40%]">Status</th>
-        <th class="w-[15%]">Deploy</th>
         <th class="w-[15%]">Actions</th>
       </tr>
     </ng-template>
@@ -26,7 +25,6 @@
       <tr>
         <th class="w-[30%]">Name</th>
         <th class="w-[40%]">Status</th>
-        <th class="w-[15%]">Deploy</th>
         <th class="w-[15%]">Actions</th>
       </tr>
     </ng-template>
@@ -59,19 +57,23 @@
         </td>
         <td>
           @if (userCanDeploy()) {
-            <p-button (onClick)="deployReleaseCandidate(environment)" [loading]="deployToEnvironment.isPending() && selectedEnvironmentId() === environment.id"> Deploy </p-button>
-          }
-        </td>
-        <td>
-          @if (userCanDeploy() && environment.latestDeployment?.state === 'WAITING') {
-            <p-button styleClass="p-button-success" (onClick)="openWorkflowUrl(environment.latestDeployment.workflowRunHtmlUrl)">
-              <ng-template pTemplate="content">
-                <div class="flex items-center gap-2">
-                  <span>Approve</span>
-                  <i-tabler name="external-link" class="!size-4" />
-                </div>
-              </ng-template>
-            </p-button>
+            @if (environment.latestDeployment?.state === 'WAITING') {
+              <p-button
+                (onClick)="openWorkflowUrl(environment.latestDeployment.workflowRunHtmlUrl)"
+                [loading]="deployToEnvironment.isPending() && selectedEnvironmentId() === environment.id"
+              >
+                <ng-template pTemplate="content">
+                  <div class="flex items-center gap-2">
+                    <span>Approve</span>
+                    <i-tabler name="external-link" class="!size-4" />
+                  </div>
+                </ng-template>
+              </p-button>
+            } @else {
+              <p-button (onClick)="deployReleaseCandidate(environment)" [loading]="deployToEnvironment.isPending() && selectedEnvironmentId() === environment.id">
+                Deploy
+              </p-button>
+            }
           }
         </td>
       </tr>

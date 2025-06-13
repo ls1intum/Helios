@@ -34,7 +34,7 @@
             {{ releaseCandidate.commit.sha | slice: 0 : 7 }}
           </p-tag>
           @if (releaseCandidate.release) {
-            <p-tag value="Published to GitHub" severity="danger" [rounded]="true" class="hidden md:block text-xs whitespace-nowrap" />
+            <p-tag value="Published to GitHub" severity="contrast" [rounded]="true" class="hidden md:block text-xs whitespace-nowrap" />
             @if (releaseCandidate.release.isDraft) {
               <p-tag value="Draft" [rounded]="true" severity="warn" class="text-xs whitespace-nowrap" />
             }
