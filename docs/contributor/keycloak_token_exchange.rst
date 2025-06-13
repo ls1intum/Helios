@@ -1,6 +1,6 @@
-=====================
+=========================
 Keycloak Token Exchange
-=====================
+=========================
 
 This document describes how to set up token exchange functionality in Keycloak 26.1.3, which allows a client to obtain identity provider tokens of users.
 

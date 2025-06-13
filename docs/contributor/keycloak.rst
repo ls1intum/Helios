@@ -11,7 +11,7 @@ Prerequisites
 * Docker and Docker Compose installed locally.
 
 Environment Variables
---------------------
+-------------------------
 
 .. code-block:: bash
 
