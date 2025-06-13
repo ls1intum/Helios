@@ -7,7 +7,7 @@ This guide shows how to run Keycloak locally (via Docker Compose), create a new 
 Prerequisites
 -------------
 
-* A GitHub account with permission to create a GitHub OAuth App.
+* A GitHub account with permission to create a GitHub OAuth App (or a GitHub App).
 * Docker and Docker Compose installed locally.
 
 Environment Variables
@@ -111,9 +111,9 @@ From the directory containing docker-compose.yml and .env, run:
 2. Open the Keycloak Admin Console
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-#. Access the Keycloak Admin Console at http://localhost:8081/admin
-#. Log in with the admin credentials you set in .env
-#. Create a new realm from: Manage Realms -> Create Realm
+#. Access the Keycloak Admin Console at ``http://localhost:8081/admin``
+#. Log in with the admin credentials you set in ``.env``
+#. Create a new realm from: ``Manage Realms`` -> ``Create Realm``
 
 .. warning::
 
@@ -121,8 +121,8 @@ From the directory containing docker-compose.yml and .env, run:
 
 .. raw:: html
 
-   <a href="../../../_static/images/keycloak/create-realm.png" target="_blank">
-     <img src="../../../_static/images/keycloak/create-realm.png" alt="Create Realm" style="height: 512px;" />
+   <a href="../../_static/images/keycloak/create-realm.png" target="_blank">
+     <img src="../../_static/images/keycloak/create-realm.png" alt="Create Realm" style="height: 512px;" />
    </a>  
 
 
@@ -131,33 +131,39 @@ From the directory containing docker-compose.yml and .env, run:
 
 Go back to the Github App created in prevous section (Setup Guide)
 
-#. Add a callback URL: http://localhost:4200/realms/helios/broker/github/endpoint
-#. Note down your Client ID and Client Secret
+- Add a callback URL:
+
+  - Local development: ``http://localhost:4200/realms/helios-test/broker/github/endpoint``
+  - Production: ``https://yourdomain.com/realms/helios-test/broker/github/endpoint`` (replace with your actual domain, such as ``helios.aet.cit.tum.de``)
+
+- Go to you GitHub App that we created in `Creating a GitHub App <setup.html#creating-a-github-app>`_ and create and note down the **Client ID** and **Client Secret**.
 
 
 4. Add GitHub as an Identity Provider in Keycloak
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-1. Go to Identity Providers
-2. Choose GitHub
-3. Add Display Name: GitHub
-4. Add the Client ID and Client Secret you noted down in the previous step
+1. Go to ``Identity Providers``
+2. Choose ``GitHub``
+3. Add Display Name: ``GitHub``
+4. Add the **Client ID** and **Client Secret** you noted down in the previous step.
 
 .. raw:: html
 
-   <a href="../../../_static/images/keycloak/add-github-idp.png" target="_blank">
-     <img src="../../../_static/images/keycloak/add-github-idp.png" alt="Add GitHub as an Identity Provider" style="height: 512px;" />
+   <a href="../../_static/images/keycloak/add-github-idp.png" target="_blank">
+     <img src="../../_static/images/keycloak/add-github-idp.png" alt="Add GitHub as an Identity Provider" style="height: 512px;" />
    </a>
 
-5. Scopes: read:user workflow
-6. Enable Store Tokens (so Keycloak retains the GitHub access token).
-7. Click Save
+5. Scopes: ``read:user`` workflow
+6. Enable **Store Tokens** (so Keycloak retains the GitHub access token).
+7. Click ``Save``
 8. Add a Protocol Mapper:
+
+  - With this mapper, the generated Keycloak JWT will include the GitHub user ID as a user attribute, which can be used to link Keycloak users with their GitHub accounts in our ``application-server``.
 
 .. raw:: html
 
-   <a href="../../../_static/images/keycloak/add-github-idp-mapper.png" target="_blank">
-     <img src="../../../_static/images/keycloak/add-github-idp-mapper.png" alt="Add GitHub as an Identity Provider" style="height: 512px;" />
+   <a href="../../_static/images/keycloak/add-github-idp-mapper.png" target="_blank">
+     <img src="../../_static/images/keycloak/add-github-idp-mapper.png" alt="Add GitHub as an Identity Provider" style="height: 512px;" />
    </a>
 
 
@@ -165,53 +171,53 @@ Go back to the Github App created in prevous section (Setup Guide)
 5. Creating the Client
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-#. Go to Clients -> Create Client
-#. Add Client ID: helios-example
-#. Add Root URL: http://localhost:4200
-#. Add Valid Redirect URIs: http://localhost:4200/*
-#. Add Valid Post Logout Redirect URIs: http://localhost:4200/*
-#. Add Web Origins: *
-#. Add Admin URL: http://localhost:4200
+#. Go to ``Clients`` -> ``Create Client``
+#. Add Client ID: ``helios-example``
+#. Add Root URL: ``http://localhost:4200`` (or your domain)
+#. Add Valid Redirect URIs: ``http://localhost:4200/*`` (or your domain)
+#. Add Valid Post Logout Redirect URIs: ``http://localhost:4200/*`` (or your domain)
+#. Add Web Origins: ``*``
+#. Add Admin URL: ``http://localhost:4200`` (or your domain)
 
 
 6. Adding Mappers to the Client
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-#. Go to the Clients -> previously created client (helios-example)
-#. Go to the Client Scopes
+#. Go to the ``Clients`` -> previously created client (``helios-example``)
+#. Go to the ``Client Scopes``
 #. Select the relevant scope
-#. Add Mapper -> By configuration -> User Attribute
+#. Add Mapper -> By configuration -> ``User Attribute``
 #. Add following: 
 
 .. raw:: html
 
-   <a href="../../../_static/images/keycloak/add-mapper.png" target="_blank">
-     <img src="../../../_static/images/keycloak/add-mapper.png" alt="Add Mapper" style="height: 512px;" />
+   <a href="../../_static/images/keycloak/add-mapper.png" target="_blank">
+     <img src="../../_static/images/keycloak/add-mapper.png" alt="Add Mapper" style="height: 512px;" />
    </a>
 
 
 7. Exporting the realm
 ~~~~~~~~~~~~~~~~~~~~~~
 
-1. Go to Realm Settings -> Actions -> Partial Export:
+1. Go to ``Realm Settings`` -> ``Actions`` -> ``Partial Export``:
 
 .. raw:: html
 
-   <a href="../../../_static/images/keycloak/export-realm.png" target="_blank">
-     <img src="../../../_static/images/keycloak/export-realm.png" alt="Export Realm" style="height: 512px;" />
+   <a href="../../_static/images/keycloak/export-realm.png" target="_blank">
+     <img src="../../_static/images/keycloak/export-realm.png" alt="Export Realm" style="height: 512px;" />
    </a>
 
-2. Click Export
+2. Click ``Export``
 
-Now you can use the exported realm.json file to import it into your Keycloak instance.
-Uncomment the volume in the docker-compose.yml file and mount the realm.json file to the container.
+Now you can use the exported ``realm.json`` file to import it into your Keycloak instance.
+Uncomment the volume in the ``docker-compose.yml`` file and mount the ``realm.json`` file to the container.
 
 
 
 Custom Keycloak Image (Helios Theme)
 ------------------------------------
 
-We build Keycloak from our own Dockerfile under ``keycloakify/``, which runs keycloakify to compile a React‐based “Helios” login theme and places it into ``/opt/keycloak/providers/``. In ``docker-compose.yml``, the keycloak service is defined with ``build: context: ./keycloakify``, and we set ``KC_THEME=helios-login`` so that Keycloak serves our branded “Helios” login page instead of the default.
+We build Keycloak from our own ``Dockerfile`` under ``keycloakify/`` directory in our monorepo, which runs keycloakify to compile a React‐based custom “Helios” login theme and places it into ``/opt/keycloak/providers/``. In ``docker-compose.yml``, the keycloak service is defined with ``build: context: ./keycloakify``, and we set ``KC_THEME=helios-login`` so that Keycloak serves our branded “Helios” login page instead of the default.
 
 
 
@@ -230,17 +236,17 @@ If you encounter issues:
 
 **2. Admin login fails**:
 
-- Ensure KEYCLOAK_ADMIN / KEYCLOAK_ADMIN_PASSWORD match both .env and your login attempt.
+- Ensure ``KEYCLOAK_ADMIN`` / ``KEYCLOAK_ADMIN_PASSWORD`` match both ``.env`` and your login attempt.
 - To reset, delete the Keycloak volume and restart.
 
 **3. GitHub “Redirect URI mismatch”**:
 
 - In Github App settings, verify the callback URL matches the one in Keycloak.
-- In Keycloak’s Identity Providers → GitHub → Settings, confirm Client ID and Client Secret.
+- In Keycloak’s ``Identity Providers`` → ``GitHub`` → ``Settings``, confirm **Client ID** and **Client Secret**.
 
 **4. Realm import errors**:   
 
-- Check that the mounted JSON is valid and readable under /opt/keycloak/data/import/.
+- Check that the mounted JSON is valid and readable under ``/opt/keycloak/data/import/``.
 - View errors in Keycloak logs.
 
 
