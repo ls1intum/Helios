@@ -11,7 +11,7 @@ Events will be published to NATS with the subject:
 
 
 Setting Up ngrok Locally
----------------
+--------------------------
 
 To expose a local webhook listener to GitHub, you can use ngrok. Follow these steps:
 
@@ -31,7 +31,7 @@ To expose a local webhook listener to GitHub, you can use ngrok. Follow these st
    - Copy the Authtoken string. You’ll add this to your local ``ngrok.yml`` configuration.
 
 3. **Configure ngrok**
-   By default, ngrok looks for a config file at::
+   By default, ngrok looks for a config file at:
 
  - macOS: ``~/Library/Application Support/ngrok/ngrok.yml``
  - Windows: ``C:\Users\<YourUsername>\.ngrok2\ngrok.yml``

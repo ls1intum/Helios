@@ -37,7 +37,6 @@ The Artemis open-source project relies on GitHub Actions for its CI/CD workflows
   contributor/openapi
   contributor/webhook
   contributor/migrations
-  contributor/keycloak_token_exchange
   contributor/testing
 
 .. toctree::
