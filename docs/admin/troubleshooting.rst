@@ -8,6 +8,29 @@ Troubleshooting Helios
     :depth: 2
 
 
+How to Re-Deploy Helios from GitHub Actions
+--------------------------------------------
+
+To trigger a re-deployment of Helios without accessing the server manually, follow these steps using GitHub Actions:
+
+- Open the Helios GitHub Repository
+- Go to the Actions Tab
+- Select the Deployment Workflow
+
+  - Choose one of the deployment workflows:
+
+    - Build and Deploy to Prod
+    - Build and Deploy to Staging
+
+- Locate the "Deploy" step within the job summary.
+- Rerun the "Deploy" job
+
+  - It will bring down the current services with ``docker compose down``.
+  - A new ``.env`` file is generated dynamically using GitHub Environment secrets and variables (e.g., ``POSTGRES_PASSWORD``, ``NATS_URL``, etc.).
+  - The services are brought back up using ``docker compose up -d``.
+  - Finally, ``docker restart nginx`` is executed to reload routing and pick up any changes (e.g., environment updates or renewed TLS certificates).
+
+
 Updating SSL/TLS Certificates
 -------------------------------
 
@@ -22,52 +45,21 @@ Updating SSL/TLS Certificates
       --restart unless-stopped \
       -p 80:80 -p 443:443 \
       -v /etc/nginx/conf/nginx.conf:/etc/nginx/nginx.conf:ro \
-      -v /etc/nginx/certs:/etc/nginx/certs:ro \
+      -v /var/lib/rbg-cert:/var/lib/rbg-cert:ro \
       --net helios-network \
       nginx:latest
 
   Once Nginx is running on the ``helios-network``, it will proxy traffic to the Helios services defined in Docker Compose.
 
-When your Let’s Encrypt certificates approach expiration (every 90 days), follow these steps to renew and apply them.
+We are using SSL/TLS certificates are provided by the TUM IT department and are valid for 1 year. These certificates are automatically renewed by ITG and exposed via symlinks under ``/var/lib/rbg-cert/live/``. Nginx is configured to use these paths directly in both staging and production environments. For more details and the relevant ``nginx.conf`` certificate paths, refer to the `Production Setup Guide -> Additional Containers -> nginx <setup.html#additional-containers>`_.
 
-1. **Renew Certificates**
+.. warning::
 
-   Use Certbot in standalone mode to obtain or renew certificates for your Helios domain. Replace <your-domain> with your actual hostname (e.g., `helios.aet.cit.tum.de`):
+  The only required action is to **restart** the ``nginx`` container **once a year** when the certificates are renewed:
 
-   .. code-block:: console
+  .. code-block:: console
 
-      sudo certbot certonly --standalone -d <your-domain>
-
-
-  This will generate or renew the certificate files under:
-  `/etc/letsencrypt/live/<your-domain>/fullchain.pem`
-  `/etc/letsencrypt/live/<your-domain>/privkey.pem`
-
-2. **Verify Nginx Configuration**
-
-Ensure your Nginx configuration references the correct certificate paths. Open the live Nginx config (not the repository copy) at `/etc/nginx/conf/nginx.conf` and confirm lines similar to:
-
-    .. code-block:: nginx
-
-        server {
-            listen 443 ssl;
-            server_name <your-domain>;
-
-            ssl_certificate     /etc/letsencrypt/live/<your-domain>/fullchain.pem;
-            ssl_certificate_key /etc/letsencrypt/live/<your-domain>/privkey.pem;
-
-            # …other configuration…
-        }
-
-3. **Reload or Restart Nginx Container**
-
-After certificates are in place and the config is correct, reload the Nginx container so it picks up the new files:
-
-    .. code-block:: console
-
-        docker restart nginx
-
-    This command restarts the Nginx container, applying the new SSL/TLS certificates.
+      docker restart nginx
 
 NATS Webhook Data Cleanup
 -------------------------------

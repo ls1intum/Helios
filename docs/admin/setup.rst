@@ -121,38 +121,47 @@ Additional Containers
           --restart unless-stopped \
           -p 80:80 -p 443:443 \
           -v /etc/nginx/conf/nginx.conf:/etc/nginx/nginx.conf:ro \
-          -v /etc/nginx/certs:/etc/nginx/certs:ro \
+          -v /var/lib/rbg-cert:/var/lib/rbg-cert:ro \
           --net helios-network \
           nginx:latest
 
+  The nginx configuration files for each environment are in the repository root as: ``nginx.prod.conf`` and ``nginx.staging.conf``. There is no automation to copy these files to the server; you must manually copy the appropriate file to ``/etc/nginx/conf/nginx.conf`` on the server.
+
+
   - **SSL/TLS Certificates**:
 
-  .. warning::
-    Do not forget to renew the certificates for both production and staging environments every 90 days!
+    We are using SSL certificates provided by TUM, which are officially issued and valid for 1 year.
 
-  Certificates are generated manually using Certbot. For example::
+    The certificate files are symlinked to auto-generated paths within ``/var/lib/rbg-cert``, and nginx is configured to use them directly. Because these are symlinks, ``nginx`` only needs to be restarted once a year—when the certificates are renewed—to pick up the updated files.
 
-      sudo certbot certonly --standalone -d helios.aet.cit.tum.de
+    **Production**
 
-  This creates certificate files under ``/etc/letsencrypt``. After generating the certificates, update the nginx configuration file at ``/etc/nginx/conf/nginx.conf`` to reference the new certificate and key files. Typical SSL snippet in ``nginx.conf``::
+    .. code-block:: nginx
 
-      server {
-          listen 443 ssl;
-          server_name helios.aet.cit.tum.de;
+      ssl_certificate     /var/lib/rbg-cert/live/host:f:asevm84.cit.tum.de.fullchain.pem;
+      ssl_certificate_key /var/lib/rbg-cert/live/host:f:asevm84.cit.tum.de.privkey.pem;
 
-          ssl_certificate     /etc/letsencrypt/live/helios.aet.cit.tum.de/fullchain.pem;
-          ssl_certificate_key /etc/letsencrypt/live/helios.aet.cit.tum.de/privkey.pem;
+    **Staging**
 
-          # ... other configuration ...
-      }
+    .. code-block:: nginx
 
-  Note that a reference version of the nginx configuration lives in the repository’s root as ``nginx.conf``—however, to see the live, up-to-date configuration in use, refer to the file at ``/etc/nginx/conf/nginx.conf``.
+      ssl_certificate     /var/lib/rbg-cert/live/host:f:asevm90.cit.tum.de.fullchain.pem;
+      ssl_certificate_key /var/lib/rbg-cert/live/host:f:asevm90.cit.tum.de.privkey.pem;
 
-  - **Important**: After each deployment (``docker-compose up``), the deployment script runs::
+    After each deployment from GitHub, the deployment script runs
+
+    .. code-block:: console
 
         docker restart nginx
 
     This ensures that nginx’s internal routing rules and certificate references are reloaded and point to the newly created container IPs.
+
+  .. warning::
+    The renewal process of certificates is handled by the TUM ITG team. Every year, we need to restart the nginx container to apply the new certificates.
+
+    .. code-block:: console
+
+      docker restart nginx
 
 
 Helios Network
