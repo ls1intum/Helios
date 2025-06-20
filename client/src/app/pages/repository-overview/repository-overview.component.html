@@ -43,7 +43,7 @@
     </ng-template>
   </p-dataview>
 } @else {
-  <p-dataview #dataView [value]="query.data()?.slice(0, 6)" layout="grid" [paginator]="true" [rows]="6" filterBy="name">
+  <p-dataview #dataView [value]="query.data()" layout="grid" [paginator]="true" [rows]="6" filterBy="name">
     <ng-template #header>
       <app-table-filter [input]="dataView" [searchTableService]="searchDataViewService" />
       <div class="mb-3"></div>
@@ -92,15 +92,11 @@
       </div>
     </ng-template>
     <ng-template #emptymessage>
-      <tr>
-        <td colspan="2">
-          <div class="flex flex-col gap-2 p-20 justify-center items-center">
-            <i-tabler name="exclamation-circle" class="!size-20 text-primary" />
-            <span class="font-semibold text-xl">There are currently no repositories connected to Helios.</span>
-            <span>Please install the Helios GitHub App to connect your repositories.</span>
-          </div>
-        </td>
-      </tr>
+      <div class="flex flex-col gap-2 p-20 justify-center items-center">
+        <i-tabler name="exclamation-circle" class="!size-20 text-primary" />
+        <span class="font-semibold text-xl">There are currently no repositories connected to Helios.</span>
+        <span>Please install the Helios GitHub App to connect your repositories.</span>
+      </div>
     </ng-template>
   </p-dataview>
 }
