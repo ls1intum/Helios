@@ -5,13 +5,14 @@
 
 # Helios 🌞
 
+[![Helios latest](https://img.shields.io/github/v/tag/ls1intum/Helios?label=Helios%20latest&sort=semver&filter=v*)](https://github.com/ls1intum/Helios/releases/latest)
+[![helios-status-spring-starter latest](https://img.shields.io/maven-central/v/de.tum.cit.aet/helios-status-spring-starter.svg?label=helios-status-spring-starter%20latest)](https://central.sonatype.com/artifact/de.tum.cit.aet/helios-status-spring-starter)
 [![Build and Deploy to Prod](https://github.com/ls1intum/Helios/actions/workflows/prod.yml/badge.svg?branch=main)](https://github.com/ls1intum/Helios/actions/workflows/prod.yml)
 [![Deploy to Staging](https://github.com/ls1intum/Helios/actions/workflows/staging.yml/badge.svg?branch=staging)](https://github.com/ls1intum/Helios/actions/workflows/staging.yml)
 [![Tests](https://github.com/ls1intum/Helios/actions/workflows/test.yml/badge.svg?branch=staging)](https://github.com/ls1intum/Helios/actions/workflows/test.yml)
 [![Documentation](https://github.com/ls1intum/Helios/actions/workflows/docs.yml/badge.svg?branch=staging)](https://github.com/ls1intum/Helios/actions/workflows/docs.yml)
 [![Codacy Code Quality Badge](https://app.codacy.com/project/badge/Grade/c9a08eed385c43808b0e317505f5272d)](https://app.codacy.com/gh/ls1intum/Helios/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 [![Codacy Coverage Badge](https://app.codacy.com/project/badge/Coverage/c9a08eed385c43808b0e317505f5272d)](https://app.codacy.com/gh/ls1intum/Helios/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_coverage)
-[![Latest version)](https://img.shields.io/github/v/tag/ls1intum/Helios?label=%20Latest%20version&sort=semver)](https://github.com/ls1intum/Helios/releases/latest)
 [![License](https://img.shields.io/github/license/ls1intum/Helios)](https://github.com/ls1intum/Helios/blob/staging/LICENSE)
 
 
