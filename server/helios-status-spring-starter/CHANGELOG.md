@@ -6,8 +6,9 @@ The format follows **[Keep a Changelog 1.1.0]** and the project adheres to **[Se
   For each pull-request touching the starter, update the *Unreleased* section.
   When cutting an official release:
     1. Move changes from *Unreleased* to a new, dated version heading.
-    2. Bump the version in pom.xml and commit both files together.
-    3. Tag the commit:  git tag -a helios-starter-vX.Y.Z -m "Helios starter X.Y.Z"
+    2. Use ISO 8601 date format — YYYY-MM-DD — for every released section header.
+    3. Bump the version in pom.xml and commit both files together.
+    4. After PR is merged, tag the commit:  git tag -a helios-starter-vX.Y.Z -m "Helios starter X.Y.Z"
 -->
 
 ## [Unreleased]
@@ -28,7 +29,7 @@ The format follows **[Keep a Changelog 1.1.0]** and the project adheres to **[Se
 
 ---
 
-## [1.1.0] – 2025-07-07
+## [1.1.0] – 2025-07-08
 ### Added
 - **Dependency:** `org.springframework:spring-web` (pulled in transitively by many apps, but now
   declared explicitly so the starter compiles standalone).
@@ -53,9 +54,9 @@ The format follows **[Keep a Changelog 1.1.0]** and the project adheres to **[Se
 
 ---
 
-## [1.0.0] – 2024-12-04
+## [1.0.0] – 2025-05-30
 ### Added
-- First public release extracted from the Helios monorepo.  
+- First public release.  
   Features:
     - Auto-configuration (`@AutoConfiguration`) + YAML support.
     - OkHttp-based async / sync status pushes.
