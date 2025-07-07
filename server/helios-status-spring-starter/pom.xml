@@ -7,7 +7,7 @@
 
     <groupId>de.tum.cit.aet</groupId>
     <artifactId>helios-status-spring-starter</artifactId>
-    <version>1.0.0</version>
+    <version>1.1.0</version>
     <packaging>jar</packaging>
     <name>Helios Status Spring Starter</name>
     <description>Helios starter for Spring Boot apps – push-based lifecycle status reporting.</description>
@@ -23,7 +23,6 @@
         <spring.boot.version>3.5.0</spring.boot.version>
 
         <!-- dependencies -->
-        <okhttp.version>4.12.0</okhttp.version>
         <lombok.version>1.18.38</lombok.version>
         <slf4j-api.version>2.0.17</slf4j-api.version>
 
@@ -256,15 +255,13 @@
             <artifactId>spring-context</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.squareup.okhttp3</groupId>
-            <artifactId>okhttp</artifactId>
-            <version>${okhttp.version}</version>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-web</artifactId>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
         </dependency>
-
         <!-- compileOnly → provided -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

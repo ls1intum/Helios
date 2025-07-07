@@ -1,29 +1,23 @@
 package de.tum.cit.aet.helios;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import de.tum.cit.aet.helios.status.LifecycleState;
 import de.tum.cit.aet.helios.status.PushStatusPayload;
-import java.io.IOException;
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.Dispatcher;
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.util.StringUtils;
+import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientException;
 
 /**
  * The {@code HeliosClient} is a Spring-managed component that provides asynchronous
@@ -40,10 +34,13 @@ import org.springframework.util.StringUtils;
  * <p><strong>Core Capabilities:</strong></p>
  * <ul>
  *   <li>Supports one or more remote Helios endpoints with per-endpoint secret keys</li>
- *   <li>Non-blocking, fire-and-forget delivery model using OkHttp with a single daemon thread</li>
+ *   <li>Non-blocking, fire-and-forget delivery via a <em>single daemon thread</em>
+ *       backed by a bounded queue (capacity&nbsp;10; oldest entry dropped on overflow)</li>
  *   <li>Bounded queue (size 10) to prevent overload – oldest
  *   messages are dropped with a warning</li>
  *   <li>Synchronous delivery for critical events like shutdown or failure</li>
+ *   <li>Automatic JSON serialisation and error mapping through Spring’s
+ *       {@link org.springframework.web.client.RestClient RestClient}</li>
  *   <li>Logs failures without interrupting caller code</li>
  *   <li>Flushes pending updates on Spring shutdown or JVM exit via a shutdown hook</li>
  * </ul>
@@ -75,31 +72,21 @@ public class HeliosClient implements DisposableBean {
 
   private static final Logger log = LoggerFactory.getLogger(HeliosClient.class);
 
-  private static final MediaType JSON = MediaType.get("application/json");
-
-  /* -------- okhttp dispatcher ------------------------------------------------ */
+  /* -------- executor ------------------------------------------------ */
   private static final ExecutorService executor = new ThreadPoolExecutor(
       1, 1,
       0L, TimeUnit.MILLISECONDS,
       new LinkedBlockingQueue<>(10),
       r -> {
         Thread t = new Thread(r);
-        t.setName("Helios-OkHttp");
+        t.setName("Helios-Rest-Executor");
         t.setDaemon(true);
         return t;
       },
       (r, ex) -> log.warn("Helios push queue is full. Dropping status update.")
   );
 
-  private static final OkHttpClient client = new OkHttpClient.Builder()
-      .dispatcher(new Dispatcher(executor))
-      .connectTimeout(5, TimeUnit.SECONDS)    // fail fast if you can’t connect in 5s
-      .writeTimeout(5, TimeUnit.SECONDS)      // max 5s to send request body
-      .readTimeout(5, TimeUnit.SECONDS)       // max 5s to read response
-      .callTimeout(10, TimeUnit.SECONDS)      // max 20s for the entire call
-      .build();
-
-  private static final ObjectMapper mapper = new ObjectMapper();
+  private final RestClient rest;
 
   /* --------------------------------------------------------------------------- */
 
@@ -110,20 +97,27 @@ public class HeliosClient implements DisposableBean {
   /**
    * Constructs a new {@code HeliosClient} using the provided configuration.
    *
-   * <p>Initializes the list of Helios endpoints and the environment name
-   * from the configuration properties.
-   * The client uses a shared static OkHttp instance configured
-   * with a bounded, single-threaded executor
-   * to ensure lightweight, non-blocking delivery.</p>
+   * <p>The constructor builds a thread-safe {@link RestClient} from the
+   * injected {@code RestClient.Builder}, applying 5 s connect and read time-outs,
+   * and stores it for reuse.  It also initialises a <em>single-thread</em>
+   * executor (queue size 10) that is shared by all asynchronous pushes.</p>
    *
    * @param cfg the Helios configuration properties
    *     containing environment name and target endpoints;
    *     must not be null.
    */
-  public HeliosClient(HeliosStatusProperties cfg) {
+  public HeliosClient(HeliosStatusProperties cfg, RestClient.Builder builder) {
     this.cfg = cfg;
     this.environment = cfg.environmentName();
     this.endpoints = cfg.endpoints();
+
+    SimpleClientHttpRequestFactory rf = new SimpleClientHttpRequestFactory();
+    rf.setConnectTimeout(Duration.ofSeconds(5));
+    rf.setReadTimeout(Duration.ofSeconds(5));
+
+    this.rest = builder
+        .requestFactory(rf)
+        .build();
   }
 
   /* ------------------------------------------------------------------ */
@@ -302,10 +296,10 @@ public class HeliosClient implements DisposableBean {
    * Sends a given status payload to all configured Helios endpoints
    * via asynchronous HTTP POST requests.
    *
-   * <p>This is a fire-and-forget method: all requests are dispatched
-   * asynchronously using OkHttp’s dispatcher
-   * backed by a single daemon thread and a bounded queue.
-   * If the queue fills up, oldest entries are dropped.</p>
+   * <p>Each request is submitted to the single-thread executor, making the
+   * method <em>non-blocking</em> for the caller.  The executor’s bounded queue
+   * (capacity 10) prevents unbounded memory growth; when full, the oldest
+   * queued task is discarded and a warning is logged.</p>
    *
    * <p>The following checks are performed before attempting delivery:
    * <ul>
@@ -334,50 +328,38 @@ public class HeliosClient implements DisposableBean {
       try {
         HeliosEndpoint ep = endpoints.get(i);
 
-        // Validate the url and secretKey
-        String url = Objects.toString(ep.url(), "");
-        String secret = Objects.toString(ep.secretKey(), "");
+        final String url = Objects.toString(ep.url(), "");
+        final String secret = Objects.toString(ep.secretKey(), "");
 
+        // Validate the url and secretKey
         if (!StringUtils.hasText(url) || !StringUtils.hasText(secret)) {
           log.warn(
               "Helios endpoint #{} is missing URL or secret (url='{}', secretPresent={}). "
                   + "Skipping.",
-              i,
+              idx,
               url,
               StringUtils.hasText(secret));
           continue;
         }
 
-        String json = mapper.writeValueAsString(payload);
-        Request request = new Request.Builder()
-            .url(ep.url().toString())
-            .header("Authorization", "Secret " + ep.secretKey())
-            .post(RequestBody.create(json, JSON))
-            .build();
-
-        client.newCall(request).enqueue(new Callback() {
-          @Override
-          public void onFailure(@NotNull Call call, @NotNull IOException e) {
-            log.warn("Helios push #{} to '{}' failed: {}. Payload={}",
-                idx, url, e.getMessage(), payload, e);
+        CompletableFuture.runAsync(() -> {
+          try {
+            rest.post()
+                .uri(ep.url())
+                .header("Authorization", "Secret " + ep.secretKey())
+                .body(payload)
+                .retrieve()
+                .toBodilessEntity();
+            log.debug("Helios push #{} '{}' – OK", idx, ep.url());
+          } catch (Exception ex) {
+            log.warn("Helios push #{} '{}' failed: {}", idx, ep.url(), ex.getMessage());
           }
-
-          @Override
-          public void onResponse(@NotNull Call call, @NotNull Response response) {
-            int code = response.code();
-            boolean isSuccess = code >= 200 && code < 300;
-
-            if (isSuccess) {
-              log.debug("Helios push #{} '{}' [{}] – OK", idx, url, code);
-            } else {
-              log.warn("Helios push #{} '{}' responded [{} {}]. Payload={}",
-                  idx, url, code, response.message(), payload);
-            }
-
-            response.close();
-          }
-        });
-
+        }, executor)
+            .orTimeout(10, TimeUnit.SECONDS)
+            .exceptionally(ex -> {
+              log.warn("Helios push #{} timed out after 10 s → {}", idx, ep.url());
+              return null;
+            });
       } catch (Exception e) {
         log.error("Failed to serialize Helios payload: {}", e.getMessage());
       }
@@ -393,24 +375,18 @@ public class HeliosClient implements DisposableBean {
           log.warn("Helios endpoint '{}' missing URL/secret – skipping", ep.url());
           continue;
         }
-        Request req = new Request.Builder()
-            .url(ep.url().toString())
+
+        rest.post()
+            .uri(ep.url())
             .header("Authorization", "Secret " + ep.secretKey())
-            .post(RequestBody.create(mapper.writeValueAsBytes(payload), JSON))
-            .build();
-        try (Response resp = client.newCall(req).execute()) {
-          if (resp.isSuccessful()) {
-            log.info("Helios sync push to '{}' [{}] – OK",
-                ep.url(), resp.code());
-          } else {
-            log.warn("Helios sync push to '{}' [{} {}] FAILED",
-                ep.url(), resp.code(), resp.message());
-          }
-        } catch (Exception ioe) {
-          log.warn("Helios sync push to '{}' failed: {}", ep.url(), ioe.getMessage());
-        }
+            .body(payload)
+            .retrieve()
+            .toBodilessEntity();
+        log.info("Helios sync push to '{}' – OK", ep.url());
+      } catch (RestClientException ex) {
+        log.warn("Helios sync push to '{}' FAILED: {}", ep.url(), ex.getMessage());
       } catch (Exception e) {
-        log.error("Failed to serialize Helios payload: {}", e.getMessage());
+        log.error("Failed to process Helios request: {}", e.getMessage());
       }
     }
   }
@@ -419,10 +395,9 @@ public class HeliosClient implements DisposableBean {
    * Flush the queue and wait a bounded time.  Safe to call twice.
    */
   private static void flush() {
-    Dispatcher dispatcher = client.dispatcher();
-    dispatcher.executorService().shutdown();           // idempotent
+    executor.shutdown();
     try {
-      dispatcher.executorService().awaitTermination(5, TimeUnit.SECONDS);
+      executor.awaitTermination(5, TimeUnit.SECONDS);
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
     }

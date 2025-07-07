@@ -9,6 +9,7 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
+import org.springframework.web.client.RestClient;
 
 /**
  * Autoconfiguration class that wires Helios lifecycle monitoring into Spring Boot apps.
@@ -71,8 +72,8 @@ public class HeliosStatusAutoConfiguration {
    * Initializes and provides the shared Helios HTTP client bean.
    */
   @Bean
-  HeliosClient heliosClient(HeliosStatusProperties props) {
-    return new HeliosClient(props);
+  HeliosClient heliosClient(HeliosStatusProperties props, RestClient.Builder builder) {
+    return new HeliosClient(props, builder);
   }
 
   /**
