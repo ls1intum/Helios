@@ -162,4 +162,33 @@ For signing artifacts, you need to have a GPG key pair. You can follow this guid
 > **Manual Signing & Validation**
 > Each Central release requires a validator to sign the package. We provide a GitHub Actions template, but you still must trigger deployments manually (or via the dispatch workflow) so a human can review/sign.
 
-If you run into any issues—or if you’re not yet added to the namespace—please reach out to @egekocabas (or @krusche) for assistance.
+### 🔖 Tagging policy & `CHANGELOG.md`
+
+* **Every public release is tagged** `helios-starter-v<MAJOR.MINOR.PATCH>`  
+  (e.g. `helios-starter-v1.1.0`).
+* Copy and populate the **Unreleased** block in `CHANGELOG.md` to a new dated section.
+* Tags can be pushed **only** by members of the *Helios Maintainers* team; the
+  repository has a tag-protection rule to enforce this.
+* Always tag the merge commit that bumps `pom.xml` and `CHANGELOG.md`.
+
+<details>
+<summary>✏️ How to create the tag after the PR is merged & the deploy has run</summary>
+
+```bash
+# 1 – Switch to the merge commit
+git checkout <SHA>
+git pull
+
+# 2 – Confirm you are on the correct commit
+git log -1 # should show the version-bump commit
+
+# 3 – Create an *annotated* tag with a clear message
+git tag -a helios-starter-v1.1.0 \
+         -m "Helios starter 1.1.0 – RestClient replaces OkHttp"
+
+# 4 – Push just the tag
+git push origin helios-starter-v1.1.0
+```
+</details>
+
+If you run into any issues—or if you’re not yet added to the namespace—please reach out to [@egekocabas](https://github.com/egekocabas) (or [@krusche](https://github.com/krusche)) for assistance.
