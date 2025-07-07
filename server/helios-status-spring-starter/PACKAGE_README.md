@@ -118,9 +118,6 @@ By default, Helios uses SLF4J with these log levels baked into our starter’s `
 
 <!-- INFO so that on application startup you’ll see whether Helios push-updates are enabled or disabled -->
 <logger name="de.tum.cit.aet.helios.autoconfig.HeliosStatusAutoConfiguration" level="INFO"/>
-
-<!-- Silence OkHttp TaskRunner debug spam (our HTTP client’s internal scheduler) -->
-<logger name="okhttp3.internal.concurrent.TaskRunner" level="WARN"/>
 ```
 
 If you supply your own `logback-spring.xml` (or `logback.xml`), your settings simply override these.
@@ -132,17 +129,7 @@ logging:
   level:
     de.tum.cit.aet.helios: DEBUG # overrides the ERROR default
     de.tum.cit.aet.helios.autoconfig.HeliosStatusAutoConfiguration: INFO
-    okhttp3.internal.concurrent.TaskRunner: WARN # silence OkHttp debug spam
 ```
-
-> **Why suppress TaskRunner?**
-> 
-> Our client uses OkHttp’s single-threaded **TaskRunner** to schedule background connection-pool maintenance and async status pushes. At **DEBUG** you’ll see a flood of lines like:
-> ```
-> DEBUG … okhttp3.internal.concurrent.TaskRunner : Q10000 scheduled after   0 µs: OkHttp ConnectionPool
-> DEBUG … okhttp3.internal.concurrent.TaskRunner : Q10000 starting              : OkHttp ConnectionPool
-> ```
-> Set it to **WARN** and only real warnings or errors surface.
 
 
 ### What events are sent?
