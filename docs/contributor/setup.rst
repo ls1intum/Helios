@@ -22,7 +22,7 @@ Before you can start Helios, you need to install and configure some dependencies
    ``docker --version`` in your terminal.
 
 3. `Ngrok <https://ngrok.com/download>`__:
-   (optional when not using webhook) We use Ngrok to expose the webhook listener to the internet. You can check if you installed Ngrok correctly by running
+   We use Ngrok to expose the webhook listener to the internet. You can check if you installed Ngrok correctly by running
    ``ngrok --version`` in your terminal.
 
 IDE Setup
@@ -46,88 +46,95 @@ Clone the Helios repository to your local machine:
    git clone git@github.com:ls1intum/Helios.git     # Clone with git
    git clone https://github.com/ls1intum/Helios.git # Alternatively clone with https
 
-Application Configuration
--------------------------
+.. note::
 
-For running the docker containers or the application server with the necessary configuration, you need to set up the environment variables.
-The environment variables are stored in the `.env` file in the root directory of the project as well as in the application-server directory. 
-You can find `.env.example` files with example data in the respective directories. Copy the `.env.example` file and rename it to `.env`. 
-You can then change/set the environment variables in the `.env` file to your needs.
+   Before running Helios, you need to set up ngrok and a GitHub App to receive events from GitHub.
+   First step is to set up ngrok, which will expose your local webhook listener to the internet.
+   Then, you need to create a GitHub App that Helios will use to authenticate and receive events from GitHub.
 
-Following environment variables have to be set:
+Setting Up ngrok Locally
+--------------------------
 
+Helios listens for events from GitHub repositories and publishes them to a NATS server.
+This is essential for real-time event processing and integration with GitHub.
+Events will be published to NATS with the subject:
+``github.<owner>.<repo>.<event_type>``
 
-Webhook Listener Configuration
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-`(root .env file)`
+1. **Install ngrok**
+   You have two options:
 
-- ``NATS_URL``: NATS server URL
-- ``NATS_AUTH_TOKEN``: Authorization token for NATS server. This token is used to authenticate different services with the NATS server. You can generate any token you want.
-- ``WEBHOOK_SECRET``: HMAC secret for verifying GitHub webhooks. This should be equal to the webhook secret you set in GitHub.
+   - Via npm::
 
-Postgres Configuration
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-`(root .env file)`
+         npm install -g ngrok
 
-- ``POSTGRES_DB``: Database name
-- ``POSTGRES_USER``: Database user
-- ``POSTGRES_PASSWORD``: Database password
+   - Download the binary directly from https://ngrok.com/downloads/
+     and follow the platform-specific instructions.
 
-Be sure that the database information here matches those in the application server configuration.
+2. **Create an ngrok Account & Obtain Your Authtoken**
+   - Go to https://ngrok.com/ and sign up (or log in).
+   - From the navigation bar, select “Getting Started → Your Authtoken.”
+   - Copy the Authtoken string. You’ll add this to your local ``ngrok.yml`` configuration.
 
-Application Server Configuration
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-`(server/application-server/.env)`
+3. **Reserve a Persistent Domain**
+   By default, free ngrok tunnels use a random subdomain each time you start them. To avoid updating your GitHub webhook URL on every restart, reserve one persistent domain:
 
-You can configure **Helios** to work with **either** a Personal Access Token
-(``GITHUB_AUTH_TOKEN``) **or** a GitHub App. Full functionality is only available
-if you configure a GitHub App.
+   - In the ngrok dashboard, navigate to **Universal Gateway → Domains**.
+   - Click **New Domain** and follow the prompts to acquire a free persistent domain (e.g., ``<YOUR_PERSISTENT_DOMAIN>.ngrok-free.app``).
+   - Note down the domain name you choose, as you will need it later.
 
-**If using a GitHub Personal Access Token**:
+4. **Configure ngrok**
+   By default, ngrok looks for a config file at:
 
-- ``GITHUB_AUTH_TOKEN``: Your personal access token (PAT).
+ - macOS: ``~/Library/Application Support/ngrok/ngrok.yml``
+ - Windows: ``C:\Users\<YourUsername>\.ngrok2\ngrok.yml``
 
-**If using a GitHub App** (recommended for full functionality):
+   Your ``ngrok.yml`` should include at least::
 
-- ``GITHUB_APP_NAME``: Name of your GitHub App. After creation, you can confirm the "actual" URL-safe name in the GitHub UI or from the App URL in your browser. For example, if the GitHub UI shows "Helios (AET)" but the URL is ``https://github.com/organizations/ls1intum/settings/apps/helios-aet``, then ``GITHUB_APP_NAME=helios-aet``.
-- ``GITHUB_APP_ID``: Numeric ID of your GitHub App (from GitHub App settings).
-- ``GITHUB_CLIENT_ID``: Client ID (from GitHub App settings).
-- ``GITHUB_PRIVATE_KEY_PATH``: **Absolute** or **relative** path to the **PKCS#8**-formatted private key file associated with your GitHub App. (See note below on converting from PKCS#1 to PKCS#8.)
-- ``ORGANIZATION_NAME``: Name of the GitHub organization/user **only if** you do **not** know the installation ID and want Helios to **auto-detect** it at runtime. Helios will retrieve the GitHub App installations for the given organization/user name and pick the correct installation.
-- ``GITHUB_INSTALLATION_ID``: Installation ID for your GitHub App. If you already know the ID (from the "Install App" screen), you can specify it here. In that case, ``ORGANIZATION_NAME`` is not used.
+       version: 3
 
-**Important**:
-When Helios starts, it will look for all the **GitHub App** variables above:
+       agent:
+         authtoken: <YOUR_AUTHTOKEN>
 
-- If **all** GitHub App variables (``GITHUB_APP_NAME``, ``GITHUB_APP_ID``,
-  ``GITHUB_CLIENT_ID``, etc.) are present, Helios authenticates using the GitHub
-  App credentials (full functionality).
-- If they are **not** present, but ``GITHUB_AUTH_TOKEN`` exists, Helios falls back
-  to using the **PAT**.
+       endpoints:
+         - name: webhook
+           url: <YOUR_PERSISTENT_DOMAIN>.ngrok-free.app
+           upstream:
+             url: 4201
 
----
+   - ``authtoken``: Paste the token you copied from ngrok’s dashboard.
+   - ``name``: A label for this tunnel (e.g., ``webhook`` this name will be later used to run the ngrok).
+   - ``url``: Your persistent domain (explained above).
+   - ``upstream.url``: The local port where your webhook listener is running (for local development it is ``4201``).
 
-**Other Required Variables** (`server/application-server/.env`):
+5. **Verify Your Configuration**
+   Run the following command::
 
-- ``DATASOURCE_URL``: URL to the database
-- ``DATASOURCE_USERNAME``: Database username
-- ``DATASOURCE_PASSWORD``: Database password
-- ``NATS_SERVER``: NATS server URL
-- ``NATS_AUTH_TOKEN``: Authorization token for NATS server. This token is used to authenticate different services with the NATS server.
-- ``NATS_DURABLE_CONSUMER_NAME``: Name of the durable consumer for NATS server. With durable consumers, NATS remembers where it left off when the last event was acknowledged.
-- ``NATS_CONSUMER_INACTIVE_THRESHOLD_MINUTES``: (Optional, default: 30) Specifies the time (in minutes) after which an inactive consumer is removed.
-- ``NATS_CONSUMER_ACK_WAIT_SECONDS``: (Optional, default: 60) Specifies the time (in seconds) that NATS waits for a message acknowledgment before resending the message.
-- ``REPOSITORY_NAME``: Name of the repository that should be synced (e.g. `ls1intum/Helios`)
-- ``DATA_SYNC_RUN_ON_STARTUP``: Whether to run the data sync on startup (default: `true`)
-- ``RUN_ON_STARTUP_COOLDOWN``: When server starts, it first checks the latest run of sync, if it is less than this value in minutes, it will not run the sync again
-- ``OAUTH_ISSUER_URL``: URL to Keycloak realm
-- ``NOTIFICATIONS_ENABLED``: (Optional, default: `true`) Whether to enable notifications to users
+       ngrok config check
+
+   If everything is set up correctly, you should see something like::
+
+       Valid configuration file at /Users/you/Library/Application Support/ngrok/ngrok.yml
+
+6. **Run ngrok**
+   With your configuration in place, start ngrok::
+
+       ngrok start webhook
+
+   This reads the ``webhook`` entry in ``ngrok.yml``, creates a tunnel, and prints the public URL. Point your GitHub webhook to::
+
+       https://<YOUR_PERSISTENT_DOMAIN>.ngrok-free.app
+
+Now, whenever GitHub sends an event to that URL, ngrok forwards it to your local service on port 4201. The listener picks it up and publishes it to NATS under the subject ``github.<owner>.<repo>.<event_type>``.
+
 
 Creating a GitHub App
-^^^^^^^^^^^^^^^^^^^^^
-Below are typical steps and recommended settings:
+-------------------------
 
-
+Helios can be configured to use either a Personal Access Token (PAT) or a GitHub App for authentication and authorization with GitHub.
+Using a GitHub App is recommended for full functionality.
+We recommend you to fist create an organization on GitHub and then create a GitHub App under that organization.
+This allows you to separate your testing environment.
+Below are the steps to create a GitHub App:
 
 1. **Go to GitHub "Developer settings"**
 
@@ -143,8 +150,8 @@ Below are typical steps and recommended settings:
     - **Homepage URL**: Can be your local dev URL or your production URL. (Optional)
     - **Enable Device Flow**: (Optional, depending on your needs.)
     - **Enable Webhooks**: Enable
-        - **Webhook URL**: e.g. `https://<your-domain>/github` or `https://<ngrok-url>/github` (See the details about how to setup ngrok: `Setting Up ngrok Locally <webhook.html#setting-up-ngrok-locally>`_).
-        - **Webhook Secret**: Must match your `WEBHOOK_SECRET` in `server/application-server/.env`
+        - **Webhook URL**: e.g. ``https://<your-domain>/github`` or ``https://<ngrok-url>/github`` (See the details about how to setup ngrok: `Setting Up ngrok Locally <setup.html#setting-up-ngrok-locally>`_).
+        - **Webhook Secret**: Must match your `WEBHOOK_SECRET` in root `.env` file. Please generate a secure secret and store it for later use.
 
 3. **Set Permissions**
    *(Minimal permissions for Helios.)*
@@ -184,22 +191,18 @@ Below are typical steps and recommended settings:
     ``openssl pkcs8 -topk8 -nocrypt -in original_key.pem -out converted_key_pkcs8.pem``
 
    - Save this `converted_key_pkcs8.pem` in a secure location. Then set
-     ``GITHUB_PRIVATE_KEY_PATH=/path/to/converted_key_pkcs8.pem`` in your `server/application-server/.env`.
+     ``GITHUB_PRIVATE_KEY_PATH=/path/to/converted_key_pkcs8.pem`` in your ``server/application-server/.env``. For local development, please save it under ``server/application-server/`` folder and you can use a relative path like ``./converted_key_pkcs8.pem`` later on when we set the environment variables in the next steps.
 
 5. **Install the GitHub App**
 
    - In your newly created App settings, click **Install App**.
    - Select the repositories you want Helios to manage, or "All repositories" if
      appropriate.
-   - After installation, you will see an **Installation ID** (e.g. `12345678`) in the URL.
-      - If you do **not** know the Installation ID, you can provide ``ORGANIZATION_NAME=<org-name>`` in your `server/application-server/.env`, and Helios will look up the correct installation ID at runtime.
-      - Otherwise, set ``GITHUB_INSTALLATION_ID=12345678`` to skip the dynamic look-up.
 
-6. **Collect and Set App Variables**
+6. **Save information for later use in environment variables**
 
    - **App ID** (numeric, e.g. `987654`)
    - **Client ID** (e.g. `Iv1.XXXXXX...`)
-   - **Installation ID** (if known)
    - **App Name** (actual slug, as seen in the browser URL, e.g. `my-helios`)
    - **Private Key Path** (the PKCS#8 `.pem` file you just generated)
 
@@ -281,6 +284,84 @@ Explanation
 - **Helios as the Actor**: The ``workflow_dispatch`` event in **GitHub** can be triggered via the GitHub UI or API by anyone who has ``WRITE`` permissions to the repository in GitHub. This means that even if Helios is unresponsive, you can manually trigger deployments using the GitHub UI.
 
 By structuring your workflow like this, you can ensure that deployments can be triggered directly from the GitHub UI, providing flexibility and control over deployments.
+
+Application Configuration
+-------------------------
+
+For running the docker containers or the application server with the necessary configuration, you need to set up the environment variables.
+The environment variables are stored in the ``.env`` file in the root directory of the project as well as in the **application-server** directory.
+You can find ``.env.example`` files with example data in the respective directories. Copy the ``.env.example`` files and rename them to ``.env``.
+You can then change/set the environment variables in the ``.env`` files to your needs.
+
+Below you can find the required environment variables. For the default values, refer to the
+``.env.example`` files in the respective directories:
+
+- Root: `.env.example (root)`_
+- Application Server: `.env.example (application-server)`_
+
+.. _`.env.example (root)`: https://github.com/ls1intum/Helios/blob/staging/.env.example
+.. _`.env.example (application-server)`: https://github.com/ls1intum/Helios/blob/staging/server/application-server/.env.example
+
+
+
+root ``.env`` file
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- ``POSTGRES_DB``: Database name (Used by ``postgres`` container)
+- ``POSTGRES_USER``: Database user (Used by ``postgres`` and ``keycloak`` container)
+- ``POSTGRES_PASSWORD``: Database password (Used by ``postgres`` and ``keycloak`` container)
+- ``NATS_SERVER``: NATS server URL (Used by ``notification`` container)
+- ``NATS_AUTH_TOKEN``: This token is used to authenticate different services with the NATS server. You can generate any token you want. (Used by ``nats-server``, ``webhook-listener`` and ``notification`` container)
+- ``WEBHOOK_SECRET``: HMAC secret for verifying GitHub webhooks. This should be equal to the webhook secret you set in GitHub App.
+- ``KC_HOSTNAME``: Hostname of Keycloak (Used by ``keycloak`` container)
+- ``KEYCLOAK_ADMIN``: Keycloak admin username. This is used to create the initial admin user in Keycloak. (Used by ``keycloak`` container)
+- ``KEYCLOAK_ADMIN_PASSWORD``: Keycloak admin password. This is used to create the initial admin user in Keycloak. (Used by ``keycloak`` container)
+
+``server/application-server/.env`` file
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- ``SPRING_PROFILES_ACTIVE``: Active Spring profile. For local development, you can set this to `dev`
+- ``DATASOURCE_URL``: URL to the database. This should be in the format ``jdbc:postgresql://<db-host>/<db-name>``
+- ``DATASOURCE_USERNAME``: Database username. This should match the ``POSTGRES_USER`` used in the root ``.env`` file.
+- ``DATASOURCE_PASSWORD``: Database password. This should match the ``POSTGRES_PASSWORD`` used in the root ``.env`` file.
+- ``NATS_AUTH_TOKEN``: Authorization token for NATS server. This should match the ``NATS_AUTH_TOKEN`` used in the root ``.env`` file.
+- ``NATS_DURABLE_CONSUMER_NAME``: Name of the durable consumer for NATS server. With durable consumers, NATS remembers where it left off when the last event was acknowledged. On startup, if a durable consumer with this name already exists, it will be used. Otherwise, a new one will be created.
+- ``NATS_CONSUMER_INACTIVE_THRESHOLD_MINUTES``: Durable consumer specific settings
+- ``NATS_CONSUMER_ACK_WAIT_SECONDS``: Durable consumer specific settings
+- ``REPOSITORY_NAME``: Set only if you want to sync a specific repository. This should be in the format ``owner/repo`` (e.g. ``ls1intum/Helios,ls1intum/Artemis``). Regardless of this value, Helios will sync all repositories that the GitHub App has installed to. If GitHub App credentials are not used and only a Personal Access Token (PAT) is used, only this repository will be synced.
+- ``DATA_SYNC_RUN_ON_STARTUP``: Whether to run the data sync on startup.
+- ``RUN_ON_STARTUP_COOLDOWN``: When server starts, it first checks the latest run of sync, if it is less than this value in minutes, it will not run the sync again.
+- ``OAUTH_ISSUER_URL``: URL to Keycloak realm in the format ``http://<keycloak-host>:<keycloak-port>/realms/<realm-name>``
+- ``HELIOS_TOKEN_EXCHANGE_CLIENT``: Client ID for the token exchange client in Keycloak. This is used to exchange the access token for a user token. With this Helios is able to get the logged in user's GitHub token and use it to perform actions on behalf of the user.
+- ``HELIOS_TOKEN_EXCHANGE_SECRET``: Client secret for the token exchange client in Keycloak. This is used to exchange the access token for a user token. With this Helios is able to get the logged in user's GitHub token and use it to perform actions on behalf of the user.
+- ``NOTIFICATIONS_ENABLED``: (Optional, default: `true`) Whether to enable notifications to users
+
+You can configure **Helios** to work with **either** a Personal Access Token
+(``GITHUB_AUTH_TOKEN``) **or** a GitHub App. Full functionality is only available
+if you configure a GitHub App.
+
+**If using a GitHub Personal Access Token**:
+
+- ``GITHUB_AUTH_TOKEN``: Your personal access token (PAT).
+
+**If using a GitHub App** (recommended for full functionality):
+
+- ``GITHUB_APP_NAME``: Name of your GitHub App. After creation, you can confirm the "actual" URL-safe name in the GitHub UI or from the App URL in your browser. For example, if the GitHub UI shows "Helios (AET)" but the URL is ``https://github.com/organizations/ls1intum/settings/apps/helios-aet``, then ``GITHUB_APP_NAME=helios-aet``.
+- ``GITHUB_APP_ID``: Numeric ID of your GitHub App (from GitHub App settings).
+- ``GITHUB_CLIENT_ID``: Client ID (from GitHub App settings).
+- ``GITHUB_PRIVATE_KEY_PATH``: **Absolute** or **relative** path to the **PKCS#8**-formatted private key file associated with your GitHub App. (See note below on converting from PKCS#1 to PKCS#8.)
+- ``ORGANIZATION_NAME``: Name of the GitHub organization/user **only if** you do **not** know the installation ID and want Helios to **auto-detect** it at runtime. Helios will retrieve the GitHub App installations for the given organization/user name and pick the correct installation.
+- ``GITHUB_INSTALLATION_ID``: Installation ID for your GitHub App. If you already know the ID (from the "Install App" screen), you can specify it here. In that case, ``ORGANIZATION_NAME`` is not used.
+
+**Important**:
+When Helios starts, it will look for all the **GitHub App** variables above:
+
+- If **all** GitHub App variables (``GITHUB_APP_NAME``, ``GITHUB_APP_ID``,
+  ``GITHUB_CLIENT_ID``, etc.) are present, Helios authenticates using the GitHub
+  App credentials (full functionality).
+- If they are **not** present, but ``GITHUB_AUTH_TOKEN`` exists, Helios falls back
+  to using the **PAT**.
+
 
 Keycloak Setup
 ----------------
