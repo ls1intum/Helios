@@ -1,5 +1,5 @@
 ========================
-Production Setup Guide
+Production VM Guide
 ========================
 
 .. contents:: Content of this document
@@ -10,6 +10,8 @@ We maintain two servers: one for production and one for staging:
 
 - Production server: ``https://helios.aet.cit.tum.de/``
 - Staging server:    ``https://helios-staging.aet.cit.tum.de/``
+
+Only required package is **Docker**. The production server runs the latest stable version of Helios (``main`` branch), while the staging server runs the latest development version (``staging`` branch).
 
 Both environments use the same Compose file:
 
