@@ -23,18 +23,18 @@ Before you can start Helios, you need to install and configure some dependencies
 
 3. `Ngrok <https://ngrok.com/download>`__:
    We use Ngrok to expose the webhook listener to the internet. You can check if you installed Ngrok correctly by running
-   ``ngrok --version`` in your terminal.
+   ``ngrok --version`` in your terminal. In the coming sections, we will guide you through the setup of Ngrok.
 
 IDE Setup
 ---------
 
 The first step is to set up an Integrated Development Environment (IDE) for development.
 
-We recommend the lightweight `Visual Studio Code <https://code.visualstudio.com/>`__ (VS Code) editor.
+- We recommend the lightweight `Visual Studio Code <https://code.visualstudio.com/>`__ (VS Code) editor.
 
-Alternatively, you can use `IntelliJ IDEA <https://www.jetbrains.com/idea/download/>`__ (or other IDE's).
+- Alternatively, you can use `IntelliJ IDEA <https://www.jetbrains.com/idea/download/>`__ (or other IDE's).
 
-In case you use **VS Code**, install the recommended extensions when opening the project for the first time. Alternatively you can find them in ``.vscode/extension.json`` and install them manually via the extension manager in the menu on the left.
+In case you use **VS Code**, install the recommended extensions when opening the project for the first time. If the recommended extension download doesn't pop up then you can find them in ``.vscode/extension.json`` and install them manually via the extension manager in the menu on the left.
 
 Clone the Repository
 --------------------
@@ -60,8 +60,7 @@ This is essential for real-time event processing and integration with GitHub.
 Events will be published to NATS with the subject:
 ``github.<owner>.<repo>.<event_type>``
 
-1. **Install ngrok**
-   You have two options:
+1. **Install ngrok**: You have two options to install ngrok:
 
    - Via npm::
 
@@ -70,23 +69,23 @@ Events will be published to NATS with the subject:
    - Download the binary directly from https://ngrok.com/downloads/
      and follow the platform-specific instructions.
 
-2. **Create an ngrok Account & Obtain Your Authtoken**
-   - Go to https://ngrok.com/ and sign up (or log in).
+2. **Create an ngrok Account**
+   - Go to https://ngrok.com/ and sign up.
    - From the navigation bar, select “Getting Started → Your Authtoken.”
-   - Copy the Authtoken string. You’ll add this to your local ``ngrok.yml`` configuration.
 
 3. **Reserve a Persistent Domain**
    By default, free ngrok tunnels use a random subdomain each time you start them. To avoid updating your GitHub webhook URL on every restart, reserve one persistent domain:
 
    - In the ngrok dashboard, navigate to **Universal Gateway → Domains**.
    - Click **New Domain** and follow the prompts to acquire a free persistent domain (e.g., ``<YOUR_PERSISTENT_DOMAIN>.ngrok-free.app``).
-   - Note down the domain name you choose, as you will need it later.
 
 4. **Configure ngrok**
    By default, ngrok looks for a config file at:
 
  - macOS: ``~/Library/Application Support/ngrok/ngrok.yml``
  - Windows: ``C:\Users\<YourUsername>\.ngrok2\ngrok.yml``
+
+  If the file does not exist, create it first.
 
    Your ``ngrok.yml`` should include at least::
 
@@ -101,10 +100,10 @@ Events will be published to NATS with the subject:
            upstream:
              url: 4201
 
-   - ``authtoken``: Paste the token you copied from ngrok’s dashboard.
-   - ``name``: A label for this tunnel (e.g., ``webhook`` this name will be later used to run the ngrok).
-   - ``url``: Your persistent domain (explained above).
-   - ``upstream.url``: The local port where your webhook listener is running (for local development it is ``4201``).
+   - ``authtoken``: Paste the token following ngrok's website **Getting Started → Your Authtoken**.
+   - ``name``: A label for this tunnel (Keep this as ``webhook``. This name will be later used to run the ngrok).
+   - ``url``: Paste your persistent domain following ngrok's website **Universal Gateway → Domains**.
+   - ``upstream.url``: The local port where your webhook listener is running (For local development keep it as ``4201``).
 
 5. **Verify Your Configuration**
    Run the following command::
@@ -124,6 +123,15 @@ Events will be published to NATS with the subject:
 
        https://<YOUR_PERSISTENT_DOMAIN>.ngrok-free.app
 
+
+  Terminal should look like this::
+
+.. raw:: html
+
+   <a href="../../_static/images/setup/ngrok-webhook.png" target="_blank">
+     <img src="../../_static/images/setup/ngrok-webhook.png" alt="Ngrok terminal running" style="height: 256px;" />
+   </a>
+
 Now, whenever GitHub sends an event to that URL, ngrok forwards it to your local service on port 4201. The listener picks it up and publishes it to NATS under the subject ``github.<owner>.<repo>.<event_type>``.
 
 
@@ -132,26 +140,27 @@ Creating a GitHub App
 
 Helios can be configured to use either a Personal Access Token (PAT) or a GitHub App for authentication and authorization with GitHub.
 Using a GitHub App is recommended for full functionality.
-We recommend you to fist create an organization on GitHub and then create a GitHub App under that organization.
+**We recommend you to fist create an organization on GitHub and then create a GitHub App under that organization.**
 This allows you to separate your testing environment.
 Below are the steps to create a GitHub App:
 
 1. **Go to GitHub "Developer settings"**
 
-- If you want the app under an organization, go to:
+- If you want the app under an organization: **go to your organization's settings --> Developer settings --> GitHub Apps**
      ``https://github.com/organizations/<ORG-NAME>/settings/apps``,
      then click **New GitHub App**.
 
-    - If you want it under your personal account, go to: ``https://github.com/settings/apps``, then click **New GitHub App**.
+- Alternatively, if you want it under your personal account, go to: ``https://github.com/settings/apps``, then click **New GitHub App**.
 
 2. **Provide Basic App Details**
 
-    - **App name**: e.g. `my-helios` (`GITHUB_APP_NAME`).
-    - **Homepage URL**: Can be your local dev URL or your production URL. (Optional)
-    - **Enable Device Flow**: (Optional, depending on your needs.)
-    - **Enable Webhooks**: Enable
-        - **Webhook URL**: e.g. ``https://<your-domain>/github`` or ``https://<ngrok-url>/github`` (See the details about how to setup ngrok: `Setting Up ngrok Locally <setup.html#setting-up-ngrok-locally>`_).
-        - **Webhook Secret**: Must match your `WEBHOOK_SECRET` in root `.env` file. Please generate a secure secret and store it for later use.
+    - **App name**: e.g. ``my-helios``
+    - **Homepage URL**: Can be your local dev URL or your production URL. (e.g. ``http://localhost:4200``)
+    - **Enable Device Flow**: Enable
+    - **Webhooks**:
+        - **Active**: Enable
+        - **Webhook URL**: e.g. ``https://<ngrok-url>/github`` or ``https://<your-domain>/github``
+        - **Webhook Secret**: This is a secret key used to verify the authenticity of incoming webhooks. You can set it to any random string, e.g. ``my-webhook-secret``. Make sure to remember this secret, as you will need to set it in the environment variables later on.
 
 3. **Set Permissions**
    *(Minimal permissions for Helios.)*
@@ -182,16 +191,23 @@ Below are the steps to create a GitHub App:
         - Workflow job
         - Workflow run
 
+4. Click **Create GitHub App** to finalize the creation of your app.
+
+   - After creating the app, you will be redirected to the app's settings page.
+
 4. **Generate the Private Key**
 
-   - After creating the app, generate a **private key** (`.pem` file). By default,
+   - After creating the app, scroll down to the **Private keys** section.
+     Click **Generate a private key**. This will download a `.pem` file.
+     By default,
      GitHub provides a **PKCS#1**-formatted key.
    - Convert the `.pem` from PKCS#1 to **PKCS#8** (required by Helios):
 
-    ``openssl pkcs8 -topk8 -nocrypt -in original_key.pem -out converted_key_pkcs8.pem``
+    ``openssl pkcs8 -topk8 -nocrypt -in <DOWNLOADED_FILE_NAME>.pem -out converted_key_pkcs8.pem``
 
-   - Save this `converted_key_pkcs8.pem` in a secure location. Then set
-     ``GITHUB_PRIVATE_KEY_PATH=/path/to/converted_key_pkcs8.pem`` in your ``server/application-server/.env``. For local development, please save it under ``server/application-server/`` folder and you can use a relative path like ``./converted_key_pkcs8.pem`` later on when we set the environment variables in the next steps.
+      - Do not forget to replace ``<DOWNLOADED_FILE_NAME>`` with the actual name of the downloaded file.
+
+   - For local development, please save the converted file under ``server/application-server/`` folder.
 
 5. **Install the GitHub App**
 
@@ -199,97 +215,11 @@ Below are the steps to create a GitHub App:
    - Select the repositories you want Helios to manage, or "All repositories" if
      appropriate.
 
-6. **Save information for later use in environment variables**
-
-   - **App ID** (numeric, e.g. `987654`)
-   - **Client ID** (e.g. `Iv1.XXXXXX...`)
-   - **App Name** (actual slug, as seen in the browser URL, e.g. `my-helios`)
-   - **Private Key Path** (the PKCS#8 `.pem` file you just generated)
-
-.. note::
-   For simple local testing, you **can skip** creating a GitHub App and just set
-   a `GITHUB_AUTH_TOKEN`.
-
-
-Example Deployment Workflow
----------------------------
-To enable Helios to trigger deployments, your repository must have a corresponding GitHub Actions workflow that Helios can dispatch. Below is an example workflow file (`deploy-with-helios.yml`), which uses the ``workflow_dispatch`` event with specific input parameters.
-
-.. code-block:: yaml
-
-   name: Deploy with Helios
-
-  on:
-    workflow_dispatch:
-      inputs:
-        # The inputs below must match exactly to work with Helios
-        branch_name:
-          description: "Which branch to deploy"
-          required: true
-          type: string
-        environment_name:
-          description: "Which environment to deploy (e.g. environment defined in GitHub)"
-          required: true
-          type: string
-        triggered_by:
-          description: "Username that triggered deployment (not required, shown if triggered via GitHub UI, logged if triggered via GitHub app)"
-          required: false
-          type: string
-
-  # Suggestion: Ensures only one workflow runs at a time for a given environment name
-  concurrency: ${{ github.event.inputs.environment_name }}
-
-  jobs:
-    build:
-      runs-on: ubuntu-latest
-        steps:
-          - name: Checkout
-            uses: actions/checkout@v4
-            with:
-              ref: ${{ github.event.inputs.branch_name }}
-          - name: (Optional) Build or Prepare
-            run:
-              |
-              echo "Run build steps or check for existing build here..."
-
-    deploy:
-      needs: [ build ]
-      runs-on: ubuntu-latest
-      # The "environment" keyword must be set at the job level. It should be set in the deploy job (most likely the last job in the workflow).
-      environment: ${{ github.event.inputs.environment_name }}
-      steps:
-        - name: Checkout
-          uses: actions/checkout@v4
-          with:
-            ref: ${{ github.event.inputs.branch_name }}
-
-        # Add your deployment steps here
-
-Explanation
-~~~~~~~~~~~~~~~~~~~~~~
-- **Multiple Jobs**: This example defines two jobs:
-
-  1. ``build`` - for building/checking your application or preparing assets.
-  2. ``deploy`` - for actually deploying to the GitHub environment.
-
-- **Environment at the Job Level**:
-  In GitHub Actions, you can only specify the ``environment`` keyword at the job level. This ensures that GitHub knows which environment the job is targeting.
-
-- **Trigger Source**: Helios will trigger this workflow by sending a ``workflow_dispatch`` event, supplying the relevant metadata (``branch_name``, ``environment_name``, ``triggered_by``).
-
-- **Concurrency**: Setting
-  ``concurrency: ${{ github.event.inputs.environment_name }}``
-  ensures only one deployment can run at a time for a given environment.
-
-- **Helios as the Actor**: The ``workflow_dispatch`` event in **GitHub** can be triggered via the GitHub UI or API by anyone who has ``WRITE`` permissions to the repository in GitHub. This means that even if Helios is unresponsive, you can manually trigger deployments using the GitHub UI.
-
-By structuring your workflow like this, you can ensure that deployments can be triggered directly from the GitHub UI, providing flexibility and control over deployments.
-
 Application Configuration
 -------------------------
 
 For running the docker containers or the application server with the necessary configuration, you need to set up the environment variables.
-The environment variables are stored in the ``.env`` file in the root directory of the project as well as in the **application-server** directory.
+The environment variables are stored in the ``.env`` file in the root directory of the project as well as in the **server/application-server** directory.
 You can find ``.env.example`` files with example data in the respective directories. Copy the ``.env.example`` files and rename them to ``.env``.
 You can then change/set the environment variables in the ``.env`` files to your needs.
 
@@ -342,15 +272,33 @@ if you configure a GitHub App.
 
 **If using a GitHub Personal Access Token**:
 
+Just set the following environment variable and for the GitHub App related variables leave them empty:
+
 - ``GITHUB_AUTH_TOKEN``: Your personal access token (PAT).
 
 **If using a GitHub App** (recommended for full functionality):
 
+Leave the ``GITHUB_AUTH_TOKEN`` variable empty and set the following environment variables:
+
 - ``GITHUB_APP_NAME``: Name of your GitHub App. After creation, you can confirm the "actual" URL-safe name in the GitHub UI or from the App URL in your browser. For example, if the GitHub UI shows "Helios (AET)" but the URL is ``https://github.com/organizations/ls1intum/settings/apps/helios-aet``, then ``GITHUB_APP_NAME=helios-aet``.
+
+.. raw:: html
+
+   <a href="../../_static/images/setup/app-name.png" target="_blank">
+     <img src="../../_static/images/setup/app-name.png" alt="URL safe GitHub app name" style="height: 200px;" />
+   </a>
+
 - ``GITHUB_APP_ID``: Numeric ID of your GitHub App (from GitHub App settings).
 - ``GITHUB_CLIENT_ID``: Client ID (from GitHub App settings).
-- ``GITHUB_PRIVATE_KEY_PATH``: **Absolute** or **relative** path to the **PKCS#8**-formatted private key file associated with your GitHub App. (See note below on converting from PKCS#1 to PKCS#8.)
-- ``ORGANIZATION_NAME``: Name of the GitHub organization/user **only if** you do **not** know the installation ID and want Helios to **auto-detect** it at runtime. Helios will retrieve the GitHub App installations for the given organization/user name and pick the correct installation.
+- ``GITHUB_PRIVATE_KEY_PATH``: **Absolute** or **relative** path to the **PKCS#8**-formatted private key file associated with your GitHub App.
+- ``ORGANIZATION_NAME``: URL-safe name of the GitHub organization **only if** you do **not** know the installation ID and want Helios to **auto-detect** it at runtime. Helios will retrieve the GitHub App installations for the given organization/user name and pick the correct installation. We advise you to use fill the ``ORGANIZATION_NAME`` and leave the ``GITHUB_INSTALLATION_ID`` empty, so Helios can automatically detect the installation ID.
+
+.. raw:: html
+
+   <a href="../../_static/images/setup/organization-name.png" target="_blank">
+     <img src="../../_static/images/setup/organization-name.png" alt="URL safe organization name" style="height: 200px;" />
+   </a>
+
 - ``GITHUB_INSTALLATION_ID``: Installation ID for your GitHub App. If you already know the ID (from the "Install App" screen), you can specify it here. In that case, ``ORGANIZATION_NAME`` is not used.
 
 **Important**:
@@ -366,7 +314,10 @@ When Helios starts, it will look for all the **GitHub App** variables above:
 Keycloak Setup
 ----------------
 
-Repository should contain ``helios-example-realm.json`` file for local development. If the file is not present or you want to set up a fresh Keycloak realm, you can follow the below pages to set up Keycloak:
+Repository should contain ``helios-example-realm.json`` file for local development. If the file is present, then you can continue running the application by following the steps in the `Starting the Application Guide <start_app.html>`_.
+
+
+If the file is not present or you want to set up a fresh Keycloak realm, you can follow the below pages to set up Keycloak:
 
 .. toctree::
    :maxdepth: 2
@@ -375,4 +326,3 @@ Repository should contain ``helios-example-realm.json`` file for local developme
    keycloak
    keycloak_token_exchange
 
-Now you can continue running the application by following the steps in the `Starting the Application Guide <start_app.html>`_.
