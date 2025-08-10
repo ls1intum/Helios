@@ -314,7 +314,7 @@ When Helios starts, it will look for all the **GitHub App** variables above:
 Keycloak Setup
 ----------------
 
-Repository should contain ``helios-example-realm.json`` file for local development. If the file is present, then you can continue running the application by following the steps in the `Starting the Application Guide <../contributor/start_app.html>`_.
+Repository should contain ``helios-example-realm.json`` file for local development. If the file is present, then you can continue running the application by following the steps in the `Starting the Application Guide <start_app>`_.
 
 
 If the file is not present or you want to set up a fresh Keycloak realm, you can follow the below pages to set up Keycloak:
