@@ -35,7 +35,6 @@ The Artemis open-source project relies on GitHub Actions for its CI/CD workflows
   contributor/setup
   contributor/start_app
   contributor/openapi
-  contributor/webhook
   contributor/migrations
   contributor/testing
 
@@ -45,4 +44,5 @@ The Artemis open-source project relies on GitHub Actions for its CI/CD workflows
   :maxdepth: 3
 
   admin/setup
+  admin/monitoring
   admin/troubleshooting

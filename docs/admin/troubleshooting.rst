@@ -51,7 +51,7 @@ Updating SSL/TLS Certificates
 
   Once Nginx is running on the ``helios-network``, it will proxy traffic to the Helios services defined in Docker Compose.
 
-We are using SSL/TLS certificates are provided by the TUM IT department and are valid for 1 year. These certificates are automatically renewed by ITG and exposed via symlinks under ``/var/lib/rbg-cert/live/``. Nginx is configured to use these paths directly in both staging and production environments. For more details and the relevant ``nginx.conf`` certificate paths, refer to the `Production Setup Guide -> Additional Containers -> nginx <setup.html#additional-containers>`_.
+We are using SSL/TLS certificates are provided by the TUM IT department and are valid for 1 year. These certificates are automatically renewed by ITG and exposed via symlinks under ``/var/lib/rbg-cert/live/``. Nginx is configured to use these paths directly in both staging and production environments. For more details and the relevant ``nginx.conf`` certificate paths, refer to the `Production Setup Guide -> Additional Containers -> nginx <../setup#additional-containers>`_.
 
 .. warning::
 
