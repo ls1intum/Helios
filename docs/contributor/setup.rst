@@ -3,7 +3,7 @@ Setup Guide
 ====================
 
 This guide focuses on setting up the Helios application on your local machine. The following sections will walk you through the necessary steps to install the required dependencies and run the application.
-The production setup is covered in the `Production Setup Guide <../admin/setup.html>`_.
+The production setup is covered in the `Production Setup Guide <../../admin/setup>`_.
 
 
 Prerequisites
