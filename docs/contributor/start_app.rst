@@ -2,7 +2,7 @@
 Starting the Application
 ========================
 
-Please be sure, that you set up the project correctly. If you haven't done this yet, please follow the `Setup Guide <setup.html>`_.
+Please be sure, that you set up the project correctly. If you haven't done this yet, please follow the `Setup Guide <../contributor/setup.html>`_.
 
 Running Docker
 --------------
