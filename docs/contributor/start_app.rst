@@ -2,7 +2,7 @@
 Starting the Application
 ========================
 
-Please be sure, that you set up the project correctly. If you haven't done this yet, please follow the `Setup Guide <../contributor/setup.html>`_.
+Please be sure, that you set up the project correctly. If you haven't done this yet, please follow the `Setup Guide <../setup>`_.
 
 Running Docker
 --------------
@@ -25,7 +25,7 @@ Running ngrok
 --------------
 To expose the webhook listener port to the internet, you have to start ngrok by running the command ``ngrok start webhook`` in a separate terminal.
 
-If you haven't followed the setup guide and ``ngrok.yml`` is not configured yet, you can run ``ngrok http 4201`` to expose the webhook listener port. This will create a random public URL. Be careful, since this URL will change every time you start ngrok. Please configure ngrok following `Setting Up ngrok Locally <setup.html#setting-up-ngrok-locally>`_.
+If you haven't followed the setup guide and ``ngrok.yml`` is not configured yet, you can run ``ngrok http 4201`` to expose the webhook listener port. This will create a random public URL. Be careful, since this URL will change every time you start ngrok. Please configure ngrok following `Setting Up ngrok Locally <../setup#setting-up-ngrok-locally>`_.
 
 .. note::
   The server will start and you can access the application (client) at `http://localhost:4200 <http://localhost:4200>`_.
