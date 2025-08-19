@@ -34,7 +34,7 @@
         <maven-checkstyle-plugin.version>3.6.0</maven-checkstyle-plugin.version>
         <checkstyle.version>10.25.0</checkstyle.version>
         <spring-javaformat-checkstyle.version>0.0.46</spring-javaformat-checkstyle.version>
-        <maven-gpg-plugin.version>3.2.7</maven-gpg-plugin.version>
+        <maven-gpg-plugin.version>3.2.8</maven-gpg-plugin.version>
     </properties>
 
     <organization>
