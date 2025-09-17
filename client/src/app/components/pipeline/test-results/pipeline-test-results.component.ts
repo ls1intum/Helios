@@ -13,7 +13,7 @@ import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { FormsModule } from '@angular/forms';
 import { injectQuery } from '@tanstack/angular-query-experimental';
-import { TabViewModule } from 'primeng/tabview';
+import { TabsModule } from 'primeng/tabs';
 import {
   getGitRepoSettingsOptions,
   getLatestTestResultsByBranchOptions,
@@ -78,7 +78,7 @@ const LOG_LEVELS: LogLevel[] = [
     ButtonModule,
     InputTextModule,
     FormsModule,
-    TabViewModule,
+    TabsModule,
     DialogModule,
     SliderModule,
     Divider,
@@ -395,10 +395,15 @@ export class PipelineTestResultsComponent {
     return activeTestType.testSuites;
   });
 
-  onTabChange(event: number) {
+  onTabChange(event: number | string) {
+    const index = typeof event === 'string' ? Number(event) : event;
+    if (Number.isNaN(index)) {
+      return;
+    }
+
     // Only update if the index is valid
-    if (event >= 0 && event < this.sortedTestTypes().length) {
-      this.activeTestTypeTab.set(event);
+    if (index >= 0 && index < this.sortedTestTypes().length) {
+      this.activeTestTypeTab.set(index);
       // Reset pagination when changing tabs
       this.testSuiteFirst.set(0);
     }

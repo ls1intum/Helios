@@ -5,7 +5,6 @@ import {
   getAllEnabledEnvironmentsOptions,
   getAllEnabledEnvironmentsQueryKey,
   getEnvironmentByIdQueryKey,
-  getReleaseInfoByNameQueryKey,
 } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 import { PermissionService } from '@app/core/services/permission.service';
@@ -23,6 +22,8 @@ import { DeploymentStateTagComponent } from '../environments/deployment-state-ta
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
 import { IconExternalLink, IconServerCog } from 'angular-tabler-icons/icons';
 import { DeployConfirmationComponent } from '@app/components/dialogs/deploy-confirmation/deploy-confirmation.component';
+
+const releaseInfoByNameQueryKey = (name: string) => ['getReleaseInfoByName', name] as const;
 
 @Component({
   selector: 'app-release-candidate-deployment-table',
@@ -99,7 +100,7 @@ export class ReleaseCandidateDeploymentTableComponent {
         {
           onSuccess: () => {
             this.queryClient.invalidateQueries({ queryKey: getAllEnabledEnvironmentsQueryKey() });
-            this.queryClient.invalidateQueries({ queryKey: getReleaseInfoByNameQueryKey({ body: { name: this.releaseCandidate().name } }) });
+            this.queryClient.invalidateQueries({ queryKey: releaseInfoByNameQueryKey(this.releaseCandidate().name) });
 
             this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Deployment started successfully' });
           },

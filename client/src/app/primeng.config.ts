@@ -33,7 +33,6 @@ export default {
               800: '{neutral.800}',
               900: '{neutral.900}',
               950: '{neutral.950}',
-              text: '{neutral.600}',
             },
             primary: {
               color: '{primary.900}',
@@ -90,11 +89,17 @@ export default {
       components: {
         toggleswitch: {
           colorScheme: {
-            checkedBackground: '{emerald.500}',
-            checkedHoverBackground: '{emerald.500}',
+            light: {
+              root: {
+                checkedBackground: '{emerald.500}',
+                checkedHoverBackground: '{emerald.500}',
+              },
+            },
             dark: {
-              checkedBackground: '{emerald.700}',
-              checkedHoverBackground: '{emerald.700}',
+              root: {
+                checkedBackground: '{emerald.700}',
+                checkedHoverBackground: '{emerald.700}',
+              },
             },
           },
         },

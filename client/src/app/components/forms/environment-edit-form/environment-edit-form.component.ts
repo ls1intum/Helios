@@ -19,7 +19,6 @@ import { AutoCompleteModule } from 'primeng/autocomplete';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { DividerModule } from 'primeng/divider';
-import { InputSwitchModule } from 'primeng/inputswitch';
 import { InputTextModule } from 'primeng/inputtext';
 import { MessageModule } from 'primeng/message';
 import { SelectModule } from 'primeng/select';
@@ -27,19 +26,7 @@ import { ToggleSwitch } from 'primeng/toggleswitch';
 
 @Component({
   selector: 'app-environment-edit-form',
-  imports: [
-    AutoCompleteModule,
-    ReactiveFormsModule,
-    InputTextModule,
-    CardModule,
-    DividerModule,
-    InputSwitchModule,
-    ButtonModule,
-    MessageModule,
-    SelectModule,
-    ToggleSwitch,
-    TablerIconComponent,
-  ],
+  imports: [AutoCompleteModule, ReactiveFormsModule, InputTextModule, CardModule, DividerModule, ButtonModule, MessageModule, SelectModule, ToggleSwitch, TablerIconComponent],
   providers: [provideTablerIcons({ IconExclamationCircle })],
   templateUrl: './environment-edit-form.component.html',
 })
@@ -48,10 +35,11 @@ export class EnvironmentEditFormComponent implements OnInit {
   private queryClient = inject(QueryClient);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
+  private messageService = inject(MessageService);
 
   repositoryId = input.required<number>();
 
-  constructor(private messageService: MessageService) {
+  constructor() {
     // This subscription is needed, because the form is initialized before the data is fetched.
     // As soon as the data is fetched, the form is updated with the fetched data.
     //

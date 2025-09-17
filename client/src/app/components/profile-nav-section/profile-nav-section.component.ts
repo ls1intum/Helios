@@ -44,10 +44,11 @@ export class ProfileNavSectionComponent {
   @ViewChild('profileMenu') profileMenu?: Popover;
 
   private keycloakService = inject(KeycloakService);
+  private router = inject(Router);
 
   isExpanded = input.required<boolean>();
 
-  constructor(private router: Router) {
+  constructor() {
     this.router.events.pipe(filter(event => event instanceof NavigationEnd)).subscribe(() => {
       this.profileMenu?.hide?.();
     });

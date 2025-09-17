@@ -5,10 +5,10 @@
   <span description> Here you can get insights about the status of your CI/CD pipelines and deployments. You can also trigger new deployments to test servers. </span>
 </app-page-heading>
 
-<p-tabs [(value)]="activeTabId">
+<p-tabs [value]="activeTabId()" (valueChange)="onTabValueChange($event)">
   <p-tablist>
     @for (tab of tabs(); track tab.id) {
-      <p-tab [value]="tab.id" [routerLink]="tab.id" [class]="tab.id === activeTabId() ? 'font-bold' : ''">
+      <p-tab [value]="tab.id" [routerLink]="tab.id" [ngClass]="{ 'font-bold': tab.id === activeTabId() }">
         {{ tab.label }}
       </p-tab>
     }

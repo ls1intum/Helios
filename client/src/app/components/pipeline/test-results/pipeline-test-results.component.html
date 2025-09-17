@@ -41,10 +41,10 @@
     <!-- Workflow Tabs -->
     @if (sortedTestTypes().length > 0) {
       @defer {
-        <p-tabView [activeIndex]="effectiveTestTypeTab()" (activeIndexChange)="onTabChange($event)">
-          @for (workflow of sortedTestTypes(); track workflow.testTypeId) {
-            <p-tabPanel>
-              <ng-template pTemplate="header">
+        <p-tabs [value]="effectiveTestTypeTab()" (valueChange)="onTabChange($event)">
+          <p-tablist>
+            @for (workflow of sortedTestTypes(); track workflow.testTypeId; let idx = $index) {
+              <p-tab [value]="idx">
                 <div class="flex items-center gap-2">
                   @switch (testTypeState(workflow)) {
                     @case ('SUCCESS') {
@@ -62,10 +62,15 @@
                     <i-tabler name="progress" class="w-4 h-4 animate-spin text-muted-color ml-1"></i-tabler>
                   }
                 </div>
-              </ng-template>
-            </p-tabPanel>
-          }
-        </p-tabView>
+              </p-tab>
+            }
+          </p-tablist>
+          <p-tabpanels>
+            @for (workflow of sortedTestTypes(); track workflow.testTypeId; let idx = $index) {
+              <p-tabpanel [value]="idx"></p-tabpanel>
+            }
+          </p-tabpanels>
+        </p-tabs>
       } @loading {
         <div class="p-3 flex justify-center">
           <p-progressSpinner [style]="{ width: '30px', height: '30px' }" styleClass="custom-spinner" strokeWidth="4"></p-progressSpinner>
