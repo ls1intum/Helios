@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { PipelineComponent } from './pipeline.component';
-import { provideExperimentalZonelessChangeDetection } from '@angular/core';
+import { provideZonelessChangeDetection } from '@angular/core';
 import { provideQueryClient, QueryClient } from '@tanstack/angular-query-experimental';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 
@@ -12,7 +12,7 @@ describe('PipelineComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [PipelineComponent],
-      providers: [provideExperimentalZonelessChangeDetection(), provideQueryClient(new QueryClient()), provideNoopAnimations()],
+      providers: [provideZonelessChangeDetection(), provideQueryClient(new QueryClient()), provideNoopAnimations()],
     }).compileComponents();
 
     fixture = TestBed.createComponent(PipelineComponent);

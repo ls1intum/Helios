@@ -1,4 +1,4 @@
-import { NgModule, provideExperimentalZonelessChangeDetection } from '@angular/core';
+import { NgModule, provideZonelessChangeDetection } from '@angular/core';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { KeycloakService } from './core/services/keycloak/keycloak.service';
@@ -9,7 +9,7 @@ import { DatePipe } from '@angular/common';
 
 @NgModule({
   providers: [
-    provideExperimentalZonelessChangeDetection(),
+    provideZonelessChangeDetection(),
     provideNoopAnimations(),
     MessageService,
     ConfirmationService,

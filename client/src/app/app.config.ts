@@ -1,4 +1,4 @@
-import { provideAppInitializer, ApplicationConfig, inject, provideExperimentalZonelessChangeDetection, ErrorHandler } from '@angular/core';
+import { provideAppInitializer, ApplicationConfig, inject, provideZonelessChangeDetection, ErrorHandler } from '@angular/core';
 import { provideRouter, Router, withComponentInputBinding, withRouterConfig } from '@angular/router';
 import { provideQueryClient, provideTanStackQuery, QueryClient, withDevtools } from '@tanstack/angular-query-experimental';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
@@ -29,7 +29,7 @@ export const appConfig: ApplicationConfig = {
   providers: [
     DatePipe,
     providePrimeNG(primeNGConfig),
-    provideExperimentalZonelessChangeDetection(),
+    provideZonelessChangeDetection(),
     provideRouter(routes, withComponentInputBinding(), withRouterConfig({ paramsInheritanceStrategy: 'always' })),
     provideAnimationsAsync(),
     provideTanStackQuery(new QueryClient(), withDevtools()),
