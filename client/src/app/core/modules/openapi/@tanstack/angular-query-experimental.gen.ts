@@ -197,14 +197,16 @@ import type {
   DeleteWorkflowGroupData,
   DeleteWorkflowGroupError,
 } from '../types.gen';
-import { client as _heyApiClient } from '../client.gen';
+import { client } from '../client.gen';
 
-export const updateWorkflowLabelMutation = (options?: Partial<Options<UpdateWorkflowLabelData>>) => {
+export const updateWorkflowLabelMutation = (
+  options?: Partial<Options<UpdateWorkflowLabelData>>
+): MutationOptions<unknown, UpdateWorkflowLabelError, Options<UpdateWorkflowLabelData>> => {
   const mutationOptions: MutationOptions<unknown, UpdateWorkflowLabelError, Options<UpdateWorkflowLabelData>> = {
-    mutationFn: async localOptions => {
+    mutationFn: async fnOptions => {
       const { data } = await updateWorkflowLabel({
         ...options,
-        ...localOptions,
+        ...fnOptions,
         throwOnError: true,
       });
       return data;
@@ -213,12 +215,14 @@ export const updateWorkflowLabelMutation = (options?: Partial<Options<UpdateWork
   return mutationOptions;
 };
 
-export const deleteTestTypeMutation = (options?: Partial<Options<DeleteTestTypeData>>) => {
+export const deleteTestTypeMutation = (
+  options?: Partial<Options<DeleteTestTypeData>>
+): MutationOptions<DeleteTestTypeResponse, DeleteTestTypeError, Options<DeleteTestTypeData>> => {
   const mutationOptions: MutationOptions<DeleteTestTypeResponse, DeleteTestTypeError, Options<DeleteTestTypeData>> = {
-    mutationFn: async localOptions => {
+    mutationFn: async fnOptions => {
       const { data } = await deleteTestType({
         ...options,
-        ...localOptions,
+        ...fnOptions,
         throwOnError: true,
       });
       return data;
@@ -227,12 +231,14 @@ export const deleteTestTypeMutation = (options?: Partial<Options<DeleteTestTypeD
   return mutationOptions;
 };
 
-export const updateTestTypeMutation = (options?: Partial<Options<UpdateTestTypeData>>) => {
+export const updateTestTypeMutation = (
+  options?: Partial<Options<UpdateTestTypeData>>
+): MutationOptions<UpdateTestTypeResponse, UpdateTestTypeError, Options<UpdateTestTypeData>> => {
   const mutationOptions: MutationOptions<UpdateTestTypeResponse, UpdateTestTypeError, Options<UpdateTestTypeData>> = {
-    mutationFn: async localOptions => {
+    mutationFn: async fnOptions => {
       const { data } = await updateTestType({
         ...options,
-        ...localOptions,
+        ...fnOptions,
         throwOnError: true,
       });
       return data;
@@ -245,13 +251,17 @@ export type QueryKey<TOptions extends Options> = [
   Pick<TOptions, 'baseUrl' | 'body' | 'headers' | 'path' | 'query'> & {
     _id: string;
     _infinite?: boolean;
+    tags?: ReadonlyArray<string>;
   },
 ];
 
-const createQueryKey = <TOptions extends Options>(id: string, options?: TOptions, infinite?: boolean): [QueryKey<TOptions>[0]] => {
-  const params: QueryKey<TOptions>[0] = { _id: id, baseUrl: (options?.client ?? _heyApiClient).getConfig().baseUrl } as QueryKey<TOptions>[0];
+const createQueryKey = <TOptions extends Options>(id: string, options?: TOptions, infinite?: boolean, tags?: ReadonlyArray<string>): [QueryKey<TOptions>[0]] => {
+  const params: QueryKey<TOptions>[0] = { _id: id, baseUrl: options?.baseUrl || (options?.client ?? client).getConfig().baseUrl } as QueryKey<TOptions>[0];
   if (infinite) {
     params._infinite = infinite;
+  }
+  if (tags) {
+    params.tags = tags;
   }
   if (options?.body) {
     params.body = options.body;
@@ -285,12 +295,14 @@ export const getGitRepoSettingsOptions = (options: Options<GetGitRepoSettingsDat
   });
 };
 
-export const updateGitRepoSettingsMutation = (options?: Partial<Options<UpdateGitRepoSettingsData>>) => {
+export const updateGitRepoSettingsMutation = (
+  options?: Partial<Options<UpdateGitRepoSettingsData>>
+): MutationOptions<UpdateGitRepoSettingsResponse, UpdateGitRepoSettingsError, Options<UpdateGitRepoSettingsData>> => {
   const mutationOptions: MutationOptions<UpdateGitRepoSettingsResponse, UpdateGitRepoSettingsError, Options<UpdateGitRepoSettingsData>> = {
-    mutationFn: async localOptions => {
+    mutationFn: async fnOptions => {
       const { data } = await updateGitRepoSettings({
         ...options,
-        ...localOptions,
+        ...fnOptions,
         throwOnError: true,
       });
       return data;
@@ -299,12 +311,14 @@ export const updateGitRepoSettingsMutation = (options?: Partial<Options<UpdateGi
   return mutationOptions;
 };
 
-export const updateWorkflowGroupsMutation = (options?: Partial<Options<UpdateWorkflowGroupsData>>) => {
+export const updateWorkflowGroupsMutation = (
+  options?: Partial<Options<UpdateWorkflowGroupsData>>
+): MutationOptions<unknown, UpdateWorkflowGroupsError, Options<UpdateWorkflowGroupsData>> => {
   const mutationOptions: MutationOptions<unknown, UpdateWorkflowGroupsError, Options<UpdateWorkflowGroupsData>> = {
-    mutationFn: async localOptions => {
+    mutationFn: async fnOptions => {
       const { data } = await updateWorkflowGroups({
         ...options,
-        ...localOptions,
+        ...fnOptions,
         throwOnError: true,
       });
       return data;
@@ -313,12 +327,12 @@ export const updateWorkflowGroupsMutation = (options?: Partial<Options<UpdateWor
   return mutationOptions;
 };
 
-export const updateReleaseNameMutation = (options?: Partial<Options<UpdateReleaseNameData>>) => {
+export const updateReleaseNameMutation = (options?: Partial<Options<UpdateReleaseNameData>>): MutationOptions<unknown, UpdateReleaseNameError, Options<UpdateReleaseNameData>> => {
   const mutationOptions: MutationOptions<unknown, UpdateReleaseNameError, Options<UpdateReleaseNameData>> = {
-    mutationFn: async localOptions => {
+    mutationFn: async fnOptions => {
       const { data } = await updateReleaseName({
         ...options,
-        ...localOptions,
+        ...fnOptions,
         throwOnError: true,
       });
       return data;
@@ -327,12 +341,14 @@ export const updateReleaseNameMutation = (options?: Partial<Options<UpdateReleas
   return mutationOptions;
 };
 
-export const updateReleaseNotesMutation = (options?: Partial<Options<UpdateReleaseNotesData>>) => {
+export const updateReleaseNotesMutation = (
+  options?: Partial<Options<UpdateReleaseNotesData>>
+): MutationOptions<unknown, UpdateReleaseNotesError, Options<UpdateReleaseNotesData>> => {
   const mutationOptions: MutationOptions<unknown, UpdateReleaseNotesError, Options<UpdateReleaseNotesData>> = {
-    mutationFn: async localOptions => {
+    mutationFn: async fnOptions => {
       const { data } = await updateReleaseNotes({
         ...options,
-        ...localOptions,
+        ...fnOptions,
         throwOnError: true,
       });
       return data;
@@ -358,12 +374,14 @@ export const getEnvironmentByIdOptions = (options: Options<GetEnvironmentByIdDat
   });
 };
 
-export const updateEnvironmentMutation = (options?: Partial<Options<UpdateEnvironmentData>>) => {
+export const updateEnvironmentMutation = (
+  options?: Partial<Options<UpdateEnvironmentData>>
+): MutationOptions<UpdateEnvironmentResponse, UpdateEnvironmentError, Options<UpdateEnvironmentData>> => {
   const mutationOptions: MutationOptions<UpdateEnvironmentResponse, UpdateEnvironmentError, Options<UpdateEnvironmentData>> = {
-    mutationFn: async localOptions => {
+    mutationFn: async fnOptions => {
       const { data } = await updateEnvironment({
         ...options,
-        ...localOptions,
+        ...fnOptions,
         throwOnError: true,
       });
       return data;
@@ -372,12 +390,14 @@ export const updateEnvironmentMutation = (options?: Partial<Options<UpdateEnviro
   return mutationOptions;
 };
 
-export const unlockEnvironmentMutation = (options?: Partial<Options<UnlockEnvironmentData>>) => {
+export const unlockEnvironmentMutation = (
+  options?: Partial<Options<UnlockEnvironmentData>>
+): MutationOptions<UnlockEnvironmentResponse, UnlockEnvironmentError, Options<UnlockEnvironmentData>> => {
   const mutationOptions: MutationOptions<UnlockEnvironmentResponse, UnlockEnvironmentError, Options<UnlockEnvironmentData>> = {
-    mutationFn: async localOptions => {
+    mutationFn: async fnOptions => {
       const { data } = await unlockEnvironment({
         ...options,
-        ...localOptions,
+        ...fnOptions,
         throwOnError: true,
       });
       return data;
@@ -386,12 +406,14 @@ export const unlockEnvironmentMutation = (options?: Partial<Options<UnlockEnviro
   return mutationOptions;
 };
 
-export const lockEnvironmentMutation = (options?: Partial<Options<LockEnvironmentData>>) => {
+export const lockEnvironmentMutation = (
+  options?: Partial<Options<LockEnvironmentData>>
+): MutationOptions<LockEnvironmentResponse, LockEnvironmentError, Options<LockEnvironmentData>> => {
   const mutationOptions: MutationOptions<LockEnvironmentResponse, LockEnvironmentError, Options<LockEnvironmentData>> = {
-    mutationFn: async localOptions => {
+    mutationFn: async fnOptions => {
       const { data } = await lockEnvironment({
         ...options,
-        ...localOptions,
+        ...fnOptions,
         throwOnError: true,
       });
       return data;
@@ -400,12 +422,14 @@ export const lockEnvironmentMutation = (options?: Partial<Options<LockEnvironmen
   return mutationOptions;
 };
 
-export const extendEnvironmentLockMutation = (options?: Partial<Options<ExtendEnvironmentLockData>>) => {
+export const extendEnvironmentLockMutation = (
+  options?: Partial<Options<ExtendEnvironmentLockData>>
+): MutationOptions<ExtendEnvironmentLockResponse, ExtendEnvironmentLockError, Options<ExtendEnvironmentLockData>> => {
   const mutationOptions: MutationOptions<ExtendEnvironmentLockResponse, ExtendEnvironmentLockError, Options<ExtendEnvironmentLockData>> = {
-    mutationFn: async localOptions => {
+    mutationFn: async fnOptions => {
       const { data } = await extendEnvironmentLock({
         ...options,
-        ...localOptions,
+        ...fnOptions,
         throwOnError: true,
       });
       return data;
@@ -414,29 +438,14 @@ export const extendEnvironmentLockMutation = (options?: Partial<Options<ExtendEn
   return mutationOptions;
 };
 
-export const syncWorkflowsByRepositoryIdQueryKey = (options: Options<SyncWorkflowsByRepositoryIdData>) => createQueryKey('syncWorkflowsByRepositoryId', options);
-
-export const syncWorkflowsByRepositoryIdOptions = (options: Options<SyncWorkflowsByRepositoryIdData>) => {
-  return queryOptions({
-    queryFn: async ({ queryKey, signal }) => {
-      const { data } = await syncWorkflowsByRepositoryId({
-        ...options,
-        ...queryKey[0],
-        signal,
-        throwOnError: true,
-      });
-      return data;
-    },
-    queryKey: syncWorkflowsByRepositoryIdQueryKey(options),
-  });
-};
-
-export const syncWorkflowsByRepositoryIdMutation = (options?: Partial<Options<SyncWorkflowsByRepositoryIdData>>) => {
+export const syncWorkflowsByRepositoryIdMutation = (
+  options?: Partial<Options<SyncWorkflowsByRepositoryIdData>>
+): MutationOptions<unknown, SyncWorkflowsByRepositoryIdError, Options<SyncWorkflowsByRepositoryIdData>> => {
   const mutationOptions: MutationOptions<unknown, SyncWorkflowsByRepositoryIdError, Options<SyncWorkflowsByRepositoryIdData>> = {
-    mutationFn: async localOptions => {
+    mutationFn: async fnOptions => {
       const { data } = await syncWorkflowsByRepositoryId({
         ...options,
-        ...localOptions,
+        ...fnOptions,
         throwOnError: true,
       });
       return data;
@@ -462,29 +471,14 @@ export const getUserSettingsOptions = (options?: Options<GetUserSettingsData>) =
   });
 };
 
-export const updateUserSettingsQueryKey = (options: Options<UpdateUserSettingsData>) => createQueryKey('updateUserSettings', options);
-
-export const updateUserSettingsOptions = (options: Options<UpdateUserSettingsData>) => {
-  return queryOptions({
-    queryFn: async ({ queryKey, signal }) => {
-      const { data } = await updateUserSettings({
-        ...options,
-        ...queryKey[0],
-        signal,
-        throwOnError: true,
-      });
-      return data;
-    },
-    queryKey: updateUserSettingsQueryKey(options),
-  });
-};
-
-export const updateUserSettingsMutation = (options?: Partial<Options<UpdateUserSettingsData>>) => {
+export const updateUserSettingsMutation = (
+  options?: Partial<Options<UpdateUserSettingsData>>
+): MutationOptions<unknown, UpdateUserSettingsError, Options<UpdateUserSettingsData>> => {
   const mutationOptions: MutationOptions<unknown, UpdateUserSettingsError, Options<UpdateUserSettingsData>> = {
-    mutationFn: async localOptions => {
+    mutationFn: async fnOptions => {
       const { data } = await updateUserSettings({
         ...options,
-        ...localOptions,
+        ...fnOptions,
         throwOnError: true,
       });
       return data;
@@ -510,29 +504,14 @@ export const getNotificationPreferencesOptions = (options?: Options<GetNotificat
   });
 };
 
-export const updateNotificationPreferencesQueryKey = (options: Options<UpdateNotificationPreferencesData>) => createQueryKey('updateNotificationPreferences', options);
-
-export const updateNotificationPreferencesOptions = (options: Options<UpdateNotificationPreferencesData>) => {
-  return queryOptions({
-    queryFn: async ({ queryKey, signal }) => {
-      const { data } = await updateNotificationPreferences({
-        ...options,
-        ...queryKey[0],
-        signal,
-        throwOnError: true,
-      });
-      return data;
-    },
-    queryKey: updateNotificationPreferencesQueryKey(options),
-  });
-};
-
-export const updateNotificationPreferencesMutation = (options?: Partial<Options<UpdateNotificationPreferencesData>>) => {
+export const updateNotificationPreferencesMutation = (
+  options?: Partial<Options<UpdateNotificationPreferencesData>>
+): MutationOptions<unknown, UpdateNotificationPreferencesError, Options<UpdateNotificationPreferencesData>> => {
   const mutationOptions: MutationOptions<unknown, UpdateNotificationPreferencesError, Options<UpdateNotificationPreferencesData>> = {
-    mutationFn: async localOptions => {
+    mutationFn: async fnOptions => {
       const { data } = await updateNotificationPreferences({
         ...options,
-        ...localOptions,
+        ...fnOptions,
         throwOnError: true,
       });
       return data;
@@ -558,29 +537,14 @@ export const getAllTestTypesOptions = (options?: Options<GetAllTestTypesData>) =
   });
 };
 
-export const createTestTypeQueryKey = (options: Options<CreateTestTypeData>) => createQueryKey('createTestType', options);
-
-export const createTestTypeOptions = (options: Options<CreateTestTypeData>) => {
-  return queryOptions({
-    queryFn: async ({ queryKey, signal }) => {
-      const { data } = await createTestType({
-        ...options,
-        ...queryKey[0],
-        signal,
-        throwOnError: true,
-      });
-      return data;
-    },
-    queryKey: createTestTypeQueryKey(options),
-  });
-};
-
-export const createTestTypeMutation = (options?: Partial<Options<CreateTestTypeData>>) => {
+export const createTestTypeMutation = (
+  options?: Partial<Options<CreateTestTypeData>>
+): MutationOptions<CreateTestTypeResponse, CreateTestTypeError, Options<CreateTestTypeData>> => {
   const mutationOptions: MutationOptions<CreateTestTypeResponse, CreateTestTypeError, Options<CreateTestTypeData>> = {
-    mutationFn: async localOptions => {
+    mutationFn: async fnOptions => {
       const { data } = await createTestType({
         ...options,
-        ...localOptions,
+        ...fnOptions,
         throwOnError: true,
       });
       return data;
@@ -589,29 +553,12 @@ export const createTestTypeMutation = (options?: Partial<Options<CreateTestTypeD
   return mutationOptions;
 };
 
-export const rotateSecretQueryKey = (options: Options<RotateSecretData>) => createQueryKey('rotateSecret', options);
-
-export const rotateSecretOptions = (options: Options<RotateSecretData>) => {
-  return queryOptions({
-    queryFn: async ({ queryKey, signal }) => {
-      const { data } = await rotateSecret({
-        ...options,
-        ...queryKey[0],
-        signal,
-        throwOnError: true,
-      });
-      return data;
-    },
-    queryKey: rotateSecretQueryKey(options),
-  });
-};
-
-export const rotateSecretMutation = (options?: Partial<Options<RotateSecretData>>) => {
+export const rotateSecretMutation = (options?: Partial<Options<RotateSecretData>>): MutationOptions<RotateSecretResponse, RotateSecretError, Options<RotateSecretData>> => {
   const mutationOptions: MutationOptions<RotateSecretResponse, RotateSecretError, Options<RotateSecretData>> = {
-    mutationFn: async localOptions => {
+    mutationFn: async fnOptions => {
       const { data } = await rotateSecret({
         ...options,
-        ...localOptions,
+        ...fnOptions,
         throwOnError: true,
       });
       return data;
@@ -620,29 +567,14 @@ export const rotateSecretMutation = (options?: Partial<Options<RotateSecretData>
   return mutationOptions;
 };
 
-export const createWorkflowGroupQueryKey = (options: Options<CreateWorkflowGroupData>) => createQueryKey('createWorkflowGroup', options);
-
-export const createWorkflowGroupOptions = (options: Options<CreateWorkflowGroupData>) => {
-  return queryOptions({
-    queryFn: async ({ queryKey, signal }) => {
-      const { data } = await createWorkflowGroup({
-        ...options,
-        ...queryKey[0],
-        signal,
-        throwOnError: true,
-      });
-      return data;
-    },
-    queryKey: createWorkflowGroupQueryKey(options),
-  });
-};
-
-export const createWorkflowGroupMutation = (options?: Partial<Options<CreateWorkflowGroupData>>) => {
+export const createWorkflowGroupMutation = (
+  options?: Partial<Options<CreateWorkflowGroupData>>
+): MutationOptions<CreateWorkflowGroupResponse, CreateWorkflowGroupError, Options<CreateWorkflowGroupData>> => {
   const mutationOptions: MutationOptions<CreateWorkflowGroupResponse, CreateWorkflowGroupError, Options<CreateWorkflowGroupData>> = {
-    mutationFn: async localOptions => {
+    mutationFn: async fnOptions => {
       const { data } = await createWorkflowGroup({
         ...options,
-        ...localOptions,
+        ...fnOptions,
         throwOnError: true,
       });
       return data;
@@ -651,12 +583,14 @@ export const createWorkflowGroupMutation = (options?: Partial<Options<CreateWork
   return mutationOptions;
 };
 
-export const deleteReleaseCandidateByNameMutation = (options?: Partial<Options<DeleteReleaseCandidateByNameData>>) => {
+export const deleteReleaseCandidateByNameMutation = (
+  options?: Partial<Options<DeleteReleaseCandidateByNameData>>
+): MutationOptions<DeleteReleaseCandidateByNameResponse, DeleteReleaseCandidateByNameError, Options<DeleteReleaseCandidateByNameData>> => {
   const mutationOptions: MutationOptions<DeleteReleaseCandidateByNameResponse, DeleteReleaseCandidateByNameError, Options<DeleteReleaseCandidateByNameData>> = {
-    mutationFn: async localOptions => {
+    mutationFn: async fnOptions => {
       const { data } = await deleteReleaseCandidateByName({
         ...options,
-        ...localOptions,
+        ...fnOptions,
         throwOnError: true,
       });
       return data;
@@ -682,29 +616,14 @@ export const getAllReleaseInfosOptions = (options?: Options<GetAllReleaseInfosDa
   });
 };
 
-export const createReleaseCandidateQueryKey = (options: Options<CreateReleaseCandidateData>) => createQueryKey('createReleaseCandidate', options);
-
-export const createReleaseCandidateOptions = (options: Options<CreateReleaseCandidateData>) => {
-  return queryOptions({
-    queryFn: async ({ queryKey, signal }) => {
-      const { data } = await createReleaseCandidate({
-        ...options,
-        ...queryKey[0],
-        signal,
-        throwOnError: true,
-      });
-      return data;
-    },
-    queryKey: createReleaseCandidateQueryKey(options),
-  });
-};
-
-export const createReleaseCandidateMutation = (options?: Partial<Options<CreateReleaseCandidateData>>) => {
+export const createReleaseCandidateMutation = (
+  options?: Partial<Options<CreateReleaseCandidateData>>
+): MutationOptions<CreateReleaseCandidateResponse, CreateReleaseCandidateError, Options<CreateReleaseCandidateData>> => {
   const mutationOptions: MutationOptions<CreateReleaseCandidateResponse, CreateReleaseCandidateError, Options<CreateReleaseCandidateData>> = {
-    mutationFn: async localOptions => {
+    mutationFn: async fnOptions => {
       const { data } = await createReleaseCandidate({
         ...options,
-        ...localOptions,
+        ...fnOptions,
         throwOnError: true,
       });
       return data;
@@ -713,29 +632,14 @@ export const createReleaseCandidateMutation = (options?: Partial<Options<CreateR
   return mutationOptions;
 };
 
-export const publishReleaseDraftQueryKey = (options: Options<PublishReleaseDraftData>) => createQueryKey('publishReleaseDraft', options);
-
-export const publishReleaseDraftOptions = (options: Options<PublishReleaseDraftData>) => {
-  return queryOptions({
-    queryFn: async ({ queryKey, signal }) => {
-      const { data } = await publishReleaseDraft({
-        ...options,
-        ...queryKey[0],
-        signal,
-        throwOnError: true,
-      });
-      return data;
-    },
-    queryKey: publishReleaseDraftQueryKey(options),
-  });
-};
-
-export const publishReleaseDraftMutation = (options?: Partial<Options<PublishReleaseDraftData>>) => {
+export const publishReleaseDraftMutation = (
+  options?: Partial<Options<PublishReleaseDraftData>>
+): MutationOptions<unknown, PublishReleaseDraftError, Options<PublishReleaseDraftData>> => {
   const mutationOptions: MutationOptions<unknown, PublishReleaseDraftError, Options<PublishReleaseDraftData>> = {
-    mutationFn: async localOptions => {
+    mutationFn: async fnOptions => {
       const { data } = await publishReleaseDraft({
         ...options,
-        ...localOptions,
+        ...fnOptions,
         throwOnError: true,
       });
       return data;
@@ -744,29 +648,14 @@ export const publishReleaseDraftMutation = (options?: Partial<Options<PublishRel
   return mutationOptions;
 };
 
-export const generateReleaseNotesQueryKey = (options: Options<GenerateReleaseNotesData>) => createQueryKey('generateReleaseNotes', options);
-
-export const generateReleaseNotesOptions = (options: Options<GenerateReleaseNotesData>) => {
-  return queryOptions({
-    queryFn: async ({ queryKey, signal }) => {
-      const { data } = await generateReleaseNotes({
-        ...options,
-        ...queryKey[0],
-        signal,
-        throwOnError: true,
-      });
-      return data;
-    },
-    queryKey: generateReleaseNotesQueryKey(options),
-  });
-};
-
-export const generateReleaseNotesMutation = (options?: Partial<Options<GenerateReleaseNotesData>>) => {
+export const generateReleaseNotesMutation = (
+  options?: Partial<Options<GenerateReleaseNotesData>>
+): MutationOptions<GenerateReleaseNotesResponse, GenerateReleaseNotesError, Options<GenerateReleaseNotesData>> => {
   const mutationOptions: MutationOptions<GenerateReleaseNotesResponse, GenerateReleaseNotesError, Options<GenerateReleaseNotesData>> = {
-    mutationFn: async localOptions => {
+    mutationFn: async fnOptions => {
       const { data } = await generateReleaseNotes({
         ...options,
-        ...localOptions,
+        ...fnOptions,
         throwOnError: true,
       });
       return data;
@@ -775,29 +664,12 @@ export const generateReleaseNotesMutation = (options?: Partial<Options<GenerateR
   return mutationOptions;
 };
 
-export const evaluateQueryKey = (options: Options<EvaluateData>) => createQueryKey('evaluate', options);
-
-export const evaluateOptions = (options: Options<EvaluateData>) => {
-  return queryOptions({
-    queryFn: async ({ queryKey, signal }) => {
-      const { data } = await evaluate({
-        ...options,
-        ...queryKey[0],
-        signal,
-        throwOnError: true,
-      });
-      return data;
-    },
-    queryKey: evaluateQueryKey(options),
-  });
-};
-
-export const evaluateMutation = (options?: Partial<Options<EvaluateData>>) => {
+export const evaluateMutation = (options?: Partial<Options<EvaluateData>>): MutationOptions<unknown, EvaluateError, Options<EvaluateData>> => {
   const mutationOptions: MutationOptions<unknown, EvaluateError, Options<EvaluateData>> = {
-    mutationFn: async localOptions => {
+    mutationFn: async fnOptions => {
       const { data } = await evaluate({
         ...options,
-        ...localOptions,
+        ...fnOptions,
         throwOnError: true,
       });
       return data;
@@ -806,29 +678,14 @@ export const evaluateMutation = (options?: Partial<Options<EvaluateData>>) => {
   return mutationOptions;
 };
 
-export const getReleaseInfoByNameQueryKey = (options: Options<GetReleaseInfoByNameData>) => createQueryKey('getReleaseInfoByName', options);
-
-export const getReleaseInfoByNameOptions = (options: Options<GetReleaseInfoByNameData>) => {
-  return queryOptions({
-    queryFn: async ({ queryKey, signal }) => {
-      const { data } = await getReleaseInfoByName({
-        ...options,
-        ...queryKey[0],
-        signal,
-        throwOnError: true,
-      });
-      return data;
-    },
-    queryKey: getReleaseInfoByNameQueryKey(options),
-  });
-};
-
-export const getReleaseInfoByNameMutation = (options?: Partial<Options<GetReleaseInfoByNameData>>) => {
+export const getReleaseInfoByNameMutation = (
+  options?: Partial<Options<GetReleaseInfoByNameData>>
+): MutationOptions<GetReleaseInfoByNameResponse, GetReleaseInfoByNameError, Options<GetReleaseInfoByNameData>> => {
   const mutationOptions: MutationOptions<GetReleaseInfoByNameResponse, GetReleaseInfoByNameError, Options<GetReleaseInfoByNameData>> = {
-    mutationFn: async localOptions => {
+    mutationFn: async fnOptions => {
       const { data } = await getReleaseInfoByName({
         ...options,
-        ...localOptions,
+        ...fnOptions,
         throwOnError: true,
       });
       return data;
@@ -837,29 +694,14 @@ export const getReleaseInfoByNameMutation = (options?: Partial<Options<GetReleas
   return mutationOptions;
 };
 
-export const setPrPinnedByNumberQueryKey = (options: Options<SetPrPinnedByNumberData>) => createQueryKey('setPrPinnedByNumber', options);
-
-export const setPrPinnedByNumberOptions = (options: Options<SetPrPinnedByNumberData>) => {
-  return queryOptions({
-    queryFn: async ({ queryKey, signal }) => {
-      const { data } = await setPrPinnedByNumber({
-        ...options,
-        ...queryKey[0],
-        signal,
-        throwOnError: true,
-      });
-      return data;
-    },
-    queryKey: setPrPinnedByNumberQueryKey(options),
-  });
-};
-
-export const setPrPinnedByNumberMutation = (options?: Partial<Options<SetPrPinnedByNumberData>>) => {
+export const setPrPinnedByNumberMutation = (
+  options?: Partial<Options<SetPrPinnedByNumberData>>
+): MutationOptions<unknown, SetPrPinnedByNumberError, Options<SetPrPinnedByNumberData>> => {
   const mutationOptions: MutationOptions<unknown, SetPrPinnedByNumberError, Options<SetPrPinnedByNumberData>> = {
-    mutationFn: async localOptions => {
+    mutationFn: async fnOptions => {
       const { data } = await setPrPinnedByNumber({
         ...options,
-        ...localOptions,
+        ...fnOptions,
         throwOnError: true,
       });
       return data;
@@ -868,29 +710,14 @@ export const setPrPinnedByNumberMutation = (options?: Partial<Options<SetPrPinne
   return mutationOptions;
 };
 
-export const syncEnvironmentsQueryKey = (options?: Options<SyncEnvironmentsData>) => createQueryKey('syncEnvironments', options);
-
-export const syncEnvironmentsOptions = (options?: Options<SyncEnvironmentsData>) => {
-  return queryOptions({
-    queryFn: async ({ queryKey, signal }) => {
-      const { data } = await syncEnvironments({
-        ...options,
-        ...queryKey[0],
-        signal,
-        throwOnError: true,
-      });
-      return data;
-    },
-    queryKey: syncEnvironmentsQueryKey(options),
-  });
-};
-
-export const syncEnvironmentsMutation = (options?: Partial<Options<SyncEnvironmentsData>>) => {
+export const syncEnvironmentsMutation = (
+  options?: Partial<Options<SyncEnvironmentsData>>
+): MutationOptions<SyncEnvironmentsResponse, SyncEnvironmentsError, Options<SyncEnvironmentsData>> => {
   const mutationOptions: MutationOptions<SyncEnvironmentsResponse, SyncEnvironmentsError, Options<SyncEnvironmentsData>> = {
-    mutationFn: async localOptions => {
+    mutationFn: async fnOptions => {
       const { data } = await syncEnvironments({
         ...options,
-        ...localOptions,
+        ...fnOptions,
         throwOnError: true,
       });
       return data;
@@ -899,29 +726,12 @@ export const syncEnvironmentsMutation = (options?: Partial<Options<SyncEnvironme
   return mutationOptions;
 };
 
-export const updateQueryKey = (options: Options<UpdateData>) => createQueryKey('update', options);
-
-export const updateOptions = (options: Options<UpdateData>) => {
-  return queryOptions({
-    queryFn: async ({ queryKey, signal }) => {
-      const { data } = await update({
-        ...options,
-        ...queryKey[0],
-        signal,
-        throwOnError: true,
-      });
-      return data;
-    },
-    queryKey: updateQueryKey(options),
-  });
-};
-
-export const updateMutation = (options?: Partial<Options<UpdateData>>) => {
+export const updateMutation = (options?: Partial<Options<UpdateData>>): MutationOptions<unknown, UpdateError, Options<UpdateData>> => {
   const mutationOptions: MutationOptions<unknown, UpdateError, Options<UpdateData>> = {
-    mutationFn: async localOptions => {
+    mutationFn: async fnOptions => {
       const { data } = await update({
         ...options,
-        ...localOptions,
+        ...fnOptions,
         throwOnError: true,
       });
       return data;
@@ -930,29 +740,14 @@ export const updateMutation = (options?: Partial<Options<UpdateData>>) => {
   return mutationOptions;
 };
 
-export const deployToEnvironmentQueryKey = (options: Options<DeployToEnvironmentData>) => createQueryKey('deployToEnvironment', options);
-
-export const deployToEnvironmentOptions = (options: Options<DeployToEnvironmentData>) => {
-  return queryOptions({
-    queryFn: async ({ queryKey, signal }) => {
-      const { data } = await deployToEnvironment({
-        ...options,
-        ...queryKey[0],
-        signal,
-        throwOnError: true,
-      });
-      return data;
-    },
-    queryKey: deployToEnvironmentQueryKey(options),
-  });
-};
-
-export const deployToEnvironmentMutation = (options?: Partial<Options<DeployToEnvironmentData>>) => {
+export const deployToEnvironmentMutation = (
+  options?: Partial<Options<DeployToEnvironmentData>>
+): MutationOptions<DeployToEnvironmentResponse, DeployToEnvironmentError, Options<DeployToEnvironmentData>> => {
   const mutationOptions: MutationOptions<DeployToEnvironmentResponse, DeployToEnvironmentError, Options<DeployToEnvironmentData>> = {
-    mutationFn: async localOptions => {
+    mutationFn: async fnOptions => {
       const { data } = await deployToEnvironment({
         ...options,
-        ...localOptions,
+        ...fnOptions,
         throwOnError: true,
       });
       return data;
@@ -961,29 +756,14 @@ export const deployToEnvironmentMutation = (options?: Partial<Options<DeployToEn
   return mutationOptions;
 };
 
-export const cancelDeploymentQueryKey = (options: Options<CancelDeploymentData>) => createQueryKey('cancelDeployment', options);
-
-export const cancelDeploymentOptions = (options: Options<CancelDeploymentData>) => {
-  return queryOptions({
-    queryFn: async ({ queryKey, signal }) => {
-      const { data } = await cancelDeployment({
-        ...options,
-        ...queryKey[0],
-        signal,
-        throwOnError: true,
-      });
-      return data;
-    },
-    queryKey: cancelDeploymentQueryKey(options),
-  });
-};
-
-export const cancelDeploymentMutation = (options?: Partial<Options<CancelDeploymentData>>) => {
+export const cancelDeploymentMutation = (
+  options?: Partial<Options<CancelDeploymentData>>
+): MutationOptions<CancelDeploymentResponse, CancelDeploymentError, Options<CancelDeploymentData>> => {
   const mutationOptions: MutationOptions<CancelDeploymentResponse, CancelDeploymentError, Options<CancelDeploymentData>> = {
-    mutationFn: async localOptions => {
+    mutationFn: async fnOptions => {
       const { data } = await cancelDeployment({
         ...options,
-        ...localOptions,
+        ...fnOptions,
         throwOnError: true,
       });
       return data;
@@ -992,30 +772,14 @@ export const cancelDeploymentMutation = (options?: Partial<Options<CancelDeploym
   return mutationOptions;
 };
 
-export const setBranchPinnedByRepositoryIdAndNameAndUserIdQueryKey = (options: Options<SetBranchPinnedByRepositoryIdAndNameAndUserIdData>) =>
-  createQueryKey('setBranchPinnedByRepositoryIdAndNameAndUserId', options);
-
-export const setBranchPinnedByRepositoryIdAndNameAndUserIdOptions = (options: Options<SetBranchPinnedByRepositoryIdAndNameAndUserIdData>) => {
-  return queryOptions({
-    queryFn: async ({ queryKey, signal }) => {
-      const { data } = await setBranchPinnedByRepositoryIdAndNameAndUserId({
-        ...options,
-        ...queryKey[0],
-        signal,
-        throwOnError: true,
-      });
-      return data;
-    },
-    queryKey: setBranchPinnedByRepositoryIdAndNameAndUserIdQueryKey(options),
-  });
-};
-
-export const setBranchPinnedByRepositoryIdAndNameAndUserIdMutation = (options?: Partial<Options<SetBranchPinnedByRepositoryIdAndNameAndUserIdData>>) => {
+export const setBranchPinnedByRepositoryIdAndNameAndUserIdMutation = (
+  options?: Partial<Options<SetBranchPinnedByRepositoryIdAndNameAndUserIdData>>
+): MutationOptions<unknown, SetBranchPinnedByRepositoryIdAndNameAndUserIdError, Options<SetBranchPinnedByRepositoryIdAndNameAndUserIdData>> => {
   const mutationOptions: MutationOptions<unknown, SetBranchPinnedByRepositoryIdAndNameAndUserIdError, Options<SetBranchPinnedByRepositoryIdAndNameAndUserIdData>> = {
-    mutationFn: async localOptions => {
+    mutationFn: async fnOptions => {
       const { data } = await setBranchPinnedByRepositoryIdAndNameAndUserId({
         ...options,
-        ...localOptions,
+        ...fnOptions,
         throwOnError: true,
       });
       return data;
@@ -1181,7 +945,9 @@ export const getLatestTestResultsByPullRequestIdOptions = (options: Options<GetL
 };
 
 const createInfiniteParams = <K extends Pick<QueryKey<Options>[0], 'body' | 'headers' | 'path' | 'query'>>(queryKey: QueryKey<Options>, page: K) => {
-  const params = queryKey[0];
+  const params = {
+    ...queryKey[0],
+  };
   if (page.body) {
     params.body = {
       ...(queryKey[0].body as any),
@@ -1731,12 +1497,14 @@ export const getBranchByRepositoryIdAndNameOptions = (options: Options<GetBranch
   });
 };
 
-export const deleteWorkflowGroupMutation = (options?: Partial<Options<DeleteWorkflowGroupData>>) => {
+export const deleteWorkflowGroupMutation = (
+  options?: Partial<Options<DeleteWorkflowGroupData>>
+): MutationOptions<unknown, DeleteWorkflowGroupError, Options<DeleteWorkflowGroupData>> => {
   const mutationOptions: MutationOptions<unknown, DeleteWorkflowGroupError, Options<DeleteWorkflowGroupData>> = {
-    mutationFn: async localOptions => {
+    mutationFn: async fnOptions => {
       const { data } = await deleteWorkflowGroup({
         ...options,
-        ...localOptions,
+        ...fnOptions,
         throwOnError: true,
       });
       return data;
