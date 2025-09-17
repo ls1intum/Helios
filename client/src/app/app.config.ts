@@ -1,6 +1,6 @@
 import { provideAppInitializer, ApplicationConfig, inject, provideZonelessChangeDetection, ErrorHandler } from '@angular/core';
 import { provideRouter, Router, withComponentInputBinding, withRouterConfig } from '@angular/router';
-import { provideQueryClient, provideTanStackQuery, QueryClient, withDevtools } from '@tanstack/angular-query-experimental';
+import { provideQueryClient, provideTanStackQuery, QueryClient } from '@tanstack/angular-query-experimental';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { providePrimeNG } from 'primeng/config';
 import primeNGConfig from './primeng.config';
@@ -32,7 +32,7 @@ export const appConfig: ApplicationConfig = {
     provideZonelessChangeDetection(),
     provideRouter(routes, withComponentInputBinding(), withRouterConfig({ paramsInheritanceStrategy: 'always' })),
     provideAnimationsAsync(),
-    provideTanStackQuery(new QueryClient(), withDevtools()),
+    provideTanStackQuery(new QueryClient()),
     RepositoryFilterGuard,
     MessageService,
     ConfirmationService,
