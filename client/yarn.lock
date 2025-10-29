@@ -2311,10 +2311,10 @@
   resolved "https://registry.yarnpkg.com/@polka/url/-/url-1.0.0-next.29.tgz#5a40109a1ab5f84d6fd8fc928b19f367cbe7e7b1"
   integrity sha512-wwQAWhWSuHaag8c4q/KN/vCoeOJYshAIvMQwD4GpSb3OiZklFfvAgmj0VCBBImRpuF/aFgIRzllXlVX93Jevww==
 
-"@primeng/themes@19.1.6-lts":
-  version "19.1.6-lts"
-  resolved "https://registry.yarnpkg.com/@primeng/themes/-/themes-19.1.6-lts.tgz#7509847449053fe550fcce2a88d5e54695b124f9"
-  integrity sha512-SJAFdr+Uo2dRU+Me+BheFvyKkeJz83azOCfDPHOVQg3KZQq2rL0dw5jZ4WLwo0zX5RwhqC0+ij9CYT/bmQ1JXQ==
+"@primeng/themes@19.1.4":
+  version "19.1.4"
+  resolved "https://registry.yarnpkg.com/@primeng/themes/-/themes-19.1.4.tgz#756d6b5edcc5aadd5c2347311016d3d8493f2b72"
+  integrity sha512-Hze5bBTjsLzZXb20qsm9apsFuzpZzXiU+Ulj/7R+2fwMmcQk0XpkQS7V88fsFw6xsTD7+R+hgqr7Rzy0Gf+4dw==
   dependencies:
     "@primeuix/styled" "^0.3.2"
 
@@ -7365,10 +7365,10 @@ primeicons@7.0.0:
   resolved "https://registry.yarnpkg.com/primeicons/-/primeicons-7.0.0.tgz#6b25c3fdcb29bb745a3035bdc1ed5902f4a419cf"
   integrity sha512-jK3Et9UzwzTsd6tzl2RmwrVY/b8raJ3QZLzoDACj+oTJ0oX7L9Hy+XnVwgo4QVKlKpnP/Ur13SXV/pVh4LzaDw==
 
-primeng@19.1.6-lts:
-  version "19.1.6-lts"
-  resolved "https://registry.yarnpkg.com/primeng/-/primeng-19.1.6-lts.tgz#4ca4e46a381548ddbf59e39ef4add1a0599a746e"
-  integrity sha512-5gZP6dgSD305ulDIpEWSm0Rm5+IBCbJlvwnzFOCYQAPzqqD6Lp/q8GJ/cTStre5XxUgk9/g+Z4qPtmJexQuoCw==
+primeng@19.1.4:
+  version "19.1.4"
+  resolved "https://registry.yarnpkg.com/primeng/-/primeng-19.1.4.tgz#17cc602e947d930aafcd3626b3cc1188e0080f53"
+  integrity sha512-l5l8SHTxopxxyyXZx1BvbQ11P7ndLv2Qp8H5k2/+OCi65jTZn4xmtrBDGDs7k2K5UMHSqAnGjBgtpbckyqQETg==
   dependencies:
     "@primeuix/styled" "^0.3.2"
     "@primeuix/utils" "^0.3.2"

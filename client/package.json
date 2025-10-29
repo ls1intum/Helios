@@ -20,7 +20,7 @@
     "@angular/platform-browser-dynamic": "19.2.15",
     "@angular/router": "19.2.15",
     "@hey-api/client-fetch": "0.13.1",
-    "@primeng/themes": "19.1.6-lts",
+    "@primeng/themes": "19.1.4",
     "@sentry/angular": "9.46.0",
     "@sentry/cli": "2.57.0",
     "@tanstack/angular-query-experimental": "5.90.7",
@@ -30,7 +30,7 @@
     "keycloak-js": "26.2.1",
     "marked": "15.0.12",
     "primeicons": "7.0.0",
-    "primeng": "19.1.6-lts",
+    "primeng": "19.1.4",
     "rxjs": "7.8.2",
     "tslib": "2.8.1"
   },
