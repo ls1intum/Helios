@@ -25,7 +25,7 @@ RUN echo "export const version = { deployed_version: '$DEPLOYED_VERSION', deploy
 RUN yarn run build --configuration $BUILD_CONFIG
 
 # Stage 2: Serve Angular app using Nginx
-FROM nginx:1.27.4-alpine
+FROM nginx:1.29.3-alpine
 
 # Remove the default Nginx configuration file
 RUN rm /etc/nginx/conf.d/default.conf
