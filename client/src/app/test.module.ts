@@ -1,4 +1,4 @@
-import { NgModule, provideExperimentalZonelessChangeDetection } from '@angular/core';
+import { NgModule, provideZonelessChangeDetection } from '@angular/core';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { KeycloakService } from './core/services/keycloak/keycloak.service';
@@ -9,11 +9,22 @@ import { DatePipe } from '@angular/common';
 
 @NgModule({
   providers: [
-    provideExperimentalZonelessChangeDetection(),
+    provideZonelessChangeDetection(),
     provideNoopAnimations(),
     MessageService,
     ConfirmationService,
-    KeycloakService,
+    {
+      provide: KeycloakService,
+      useValue: {
+        keycloak: { token: 'token' },
+        isLoggedIn: () => false,
+        getUserGithubProfilePictureUrl: () => undefined,
+        getUserGithubProfileUrl: () => undefined,
+        logout: () => undefined,
+        login: () => undefined,
+        profile: { firstName: '', lastName: '' },
+      },
+    },
     { provide: Router, useValue: { navigate: () => {} } },
     { provide: ActivatedRoute, useValue: { parent: '', snapshot: { firstChild: undefined } } },
     RouterLink,

@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { BranchTableComponent } from './branches-table.component';
-import { provideExperimentalZonelessChangeDetection } from '@angular/core';
+import { provideZonelessChangeDetection } from '@angular/core';
 import { provideQueryClient, QueryClient } from '@tanstack/angular-query-experimental';
 
 import { describe } from 'vitest';
@@ -13,7 +13,7 @@ describe.skip('BranchTableComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [BranchTableComponent],
-      providers: [provideExperimentalZonelessChangeDetection(), provideQueryClient(new QueryClient())],
+      providers: [provideZonelessChangeDetection(), provideQueryClient(new QueryClient())],
     }).compileComponents();
 
     fixture = TestBed.createComponent(BranchTableComponent);

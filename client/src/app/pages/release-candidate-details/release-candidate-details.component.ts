@@ -248,6 +248,10 @@ export class ReleaseCandidateDetailsComponent implements OnInit {
       data: dialogData,
     });
 
+    if (!ref) {
+      return;
+    }
+
     ref.onClose.subscribe((result: ReleaseEvaluationDialogResult) => {
       if (result) {
         this.evaluateReleaseCandidateMutation.mutate({

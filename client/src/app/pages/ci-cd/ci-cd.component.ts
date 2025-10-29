@@ -1,12 +1,11 @@
 import { Component, signal, inject, OnInit, input, numberAttribute, OnDestroy } from '@angular/core';
 import { ActivatedRoute, NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
 import { PageHeadingComponent } from '@app/components/page-heading/page-heading.component';
-import { TabMenuModule } from 'primeng/tabmenu';
 import { TabsModule } from 'primeng/tabs';
 import { filter, Subscription } from 'rxjs';
 @Component({
   selector: 'app-ci-cd',
-  imports: [RouterLink, RouterOutlet, TabMenuModule, TabsModule, PageHeadingComponent],
+  imports: [RouterLink, RouterOutlet, TabsModule, PageHeadingComponent],
   templateUrl: './ci-cd.component.html',
 })
 export class CiCdComponent implements OnInit, OnDestroy {

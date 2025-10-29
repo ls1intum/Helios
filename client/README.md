@@ -5,8 +5,8 @@ This project was generated using [Angular CLI](https://github.com/angular/angula
 
 ## Requirements
 Since this app is implemented using a release candidate version of Angular CLI please make sure that you have following versions
-* Node: 22.11.0
-* Angular CLI: 19.0.0-rc.1
+* Node: 22.x
+* Angular CLI: 20.x
 
 
 ### Install node

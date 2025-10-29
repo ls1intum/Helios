@@ -1,12 +1,13 @@
 // / <reference types="vitest" />
 import { defineConfig } from 'vite';
 import { coverageConfigDefaults } from 'vitest/config';
+import tailwindcss from '@tailwindcss/vite'
 
 import angular from '@analogjs/vite-plugin-angular';
 import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig(({ mode }) => ({
-  plugins: [angular(), tsconfigPaths()],
+  plugins: [angular(), tsconfigPaths(), tailwindcss()],
   test: {
     pool: 'forks',
     globals: true,
