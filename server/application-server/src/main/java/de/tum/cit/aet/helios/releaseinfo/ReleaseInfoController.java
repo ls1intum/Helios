@@ -27,6 +27,7 @@ public class ReleaseInfoController {
     return ResponseEntity.ok(releaseInfoService.getAllReleaseInfos());
   }
 
+  // Must be POST because the name is encoded in the body and a GET cannot have a body
   @PostMapping("/details")
   public ResponseEntity<ReleaseInfoDetailsDto> getReleaseInfoByName(
       @RequestBody ReleaseNameDto nameDto) {

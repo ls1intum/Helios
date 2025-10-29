@@ -2,8 +2,6 @@ import { Component, computed, inject, input, OnInit, signal } from '@angular/cor
 import {
   deleteReleaseCandidateByNameMutation,
   evaluateMutation,
-  getReleaseInfoByNameOptions,
-  getReleaseInfoByNameQueryKey,
   publishReleaseDraftMutation,
   updateReleaseNotesMutation,
   generateReleaseNotesMutation,
@@ -22,7 +20,7 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 import { PermissionService } from '@app/core/services/permission.service';
 import { ActivatedRoute, Router } from '@angular/router';
-import { ReleaseEvaluationDto, ReleaseInfoDetailsDto } from '@app/core/modules/openapi';
+import { getReleaseInfoByName, ReleaseEvaluationDto, ReleaseInfoDetailsDto } from '@app/core/modules/openapi';
 import { MarkdownPipe } from '@app/core/modules/markdown/markdown.pipe';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { TextareaModule } from 'primeng/textarea';
@@ -99,8 +97,16 @@ export class ReleaseCandidateDetailsComponent implements OnInit {
   private dialogService = inject(DialogService);
 
   name = input.required<string>();
-  releaseCandidateQuery = injectQuery(() => ({
-    ...getReleaseInfoByNameOptions({ body: { name: this.name() } }),
+  releaseCandidateQuery = injectQuery<ReleaseInfoDetailsDto>(() => ({
+    queryKey: [getReleaseInfoByName, this.name()],
+    queryFn: async ({ signal }) => {
+      const { data } = await getReleaseInfoByName({
+        body: { name: this.name() },
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
     onSuccess: () => {
       this.releaseNotesForm.get('releaseNotes')?.setValue(this.releaseNotes());
     },
@@ -152,7 +158,7 @@ export class ReleaseCandidateDetailsComponent implements OnInit {
     onSuccess: () => {
       this.messageService.add({ severity: 'success', summary: 'Release Name', detail: 'Release name updated successfully' });
       this.isEditingName.set(false);
-      this.queryClient.invalidateQueries({ queryKey: getReleaseInfoByNameQueryKey({ body: { name: this.name() } }) });
+      this.queryClient.invalidateQueries({ queryKey: [getReleaseInfoByName, this.name()] });
       // Update the URL to match the new name
       const newName = this.releaseNameForm.get('releaseName')?.value || '';
       this.router.navigate(['..', newName], { relativeTo: this.route });
@@ -166,7 +172,7 @@ export class ReleaseCandidateDetailsComponent implements OnInit {
     ...evaluateMutation(),
     onSuccess: () => {
       this.messageService.add({ severity: 'success', summary: 'Release Candidate Evaluation', detail: 'Your evaluation has been saved successfully' });
-      this.queryClient.invalidateQueries({ queryKey: getReleaseInfoByNameQueryKey({ body: { name: this.name() } }) });
+      this.queryClient.invalidateQueries({ queryKey: [getReleaseInfoByName, this.name()] });
     },
   }));
 
@@ -174,7 +180,7 @@ export class ReleaseCandidateDetailsComponent implements OnInit {
     ...publishReleaseDraftMutation(),
     onSuccess: () => {
       this.messageService.add({ severity: 'success', summary: 'Release Draft Published', detail: 'Release draft has been published to GitHub successfully' });
-      this.queryClient.invalidateQueries({ queryKey: getReleaseInfoByNameQueryKey({ body: { name: this.name() } }) });
+      this.queryClient.invalidateQueries({ queryKey: [getReleaseInfoByName, this.name()] });
       // Once published, editing should be disabled
       this.isEditingReleaseNotes.set(false);
     },
@@ -206,7 +212,7 @@ export class ReleaseCandidateDetailsComponent implements OnInit {
     onSuccess: () => {
       this.messageService.add({ severity: 'success', summary: 'Release Notes', detail: 'Release notes saved successfully' });
       this.isEditingReleaseNotes.set(false);
-      this.queryClient.invalidateQueries({ queryKey: getReleaseInfoByNameQueryKey({ body: { name: this.name() } }) });
+      this.queryClient.invalidateQueries({ queryKey: [getReleaseInfoByName, this.name()] });
     },
     onError: error => {
       this.messageService.add({ severity: 'error', summary: 'Release Notes Update Failed', detail: error.message });

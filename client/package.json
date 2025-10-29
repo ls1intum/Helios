@@ -4,8 +4,8 @@
   "scripts": {
     "dev": "ng serve --watch --host 0.0.0.0 --configuration development",
     "build": "ng build",
-    "test:unit": "vitest --ui --reporter=html",
-    "test:unit:ci": "vitest run --coverage",
+    "test:unit": "node --require ./scripts/lru-cache-compat.js ./node_modules/vitest/vitest.mjs --ui --reporter=html",
+    "test:unit:ci": "node --require ./scripts/lru-cache-compat.js ./node_modules/vitest/vitest.mjs run --coverage",
     "lint": "eslint --max-warnings 0 --fix .",
     "generate:openapi": "openapi-ts"
   },

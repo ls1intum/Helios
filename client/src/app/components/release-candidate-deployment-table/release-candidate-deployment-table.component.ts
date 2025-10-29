@@ -1,11 +1,10 @@
 import { Component, computed, inject, input, signal } from '@angular/core';
-import { EnvironmentDto, ReleaseInfoDetailsDto } from '@app/core/modules/openapi';
+import { EnvironmentDto, getReleaseInfoByName, ReleaseInfoDetailsDto } from '@app/core/modules/openapi';
 import {
   deployToEnvironmentMutation,
   getAllEnabledEnvironmentsOptions,
   getAllEnabledEnvironmentsQueryKey,
   getEnvironmentByIdQueryKey,
-  getReleaseInfoByNameQueryKey,
 } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 import { PermissionService } from '@app/core/services/permission.service';
@@ -99,7 +98,7 @@ export class ReleaseCandidateDeploymentTableComponent {
         {
           onSuccess: () => {
             this.queryClient.invalidateQueries({ queryKey: getAllEnabledEnvironmentsQueryKey() });
-            this.queryClient.invalidateQueries({ queryKey: getReleaseInfoByNameQueryKey({ body: { name: this.releaseCandidate().name } }) });
+            this.queryClient.invalidateQueries({ queryKey: [getReleaseInfoByName, this.releaseCandidate().name] });
 
             this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Deployment started successfully' });
           },
