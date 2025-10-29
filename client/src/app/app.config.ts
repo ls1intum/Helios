@@ -1,6 +1,7 @@
 import { provideAppInitializer, ApplicationConfig, inject, provideExperimentalZonelessChangeDetection, ErrorHandler } from '@angular/core';
 import { provideRouter, Router, withComponentInputBinding, withRouterConfig } from '@angular/router';
-import { provideQueryClient, provideTanStackQuery, QueryClient, withDevtools } from '@tanstack/angular-query-experimental';
+import { provideQueryClient, provideTanStackQuery, QueryClient } from '@tanstack/angular-query-experimental';
+import { withDevtools } from '@tanstack/angular-query-experimental/devtools';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { providePrimeNG } from 'primeng/config';
 import primeNGConfig from './primeng.config';
