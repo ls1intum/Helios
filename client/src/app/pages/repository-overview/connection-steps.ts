@@ -49,7 +49,7 @@ jobs:
     environment: \${{ github.event.inputs.environment_name }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: \${{ github.event.inputs.branch_name }}
       # Add your deployment steps here`,

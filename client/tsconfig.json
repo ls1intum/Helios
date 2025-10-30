@@ -17,12 +17,9 @@
     "emitDecoratorMetadata": true,
     "moduleResolution": "bundler",
     "importHelpers": true,
-    "target": "ES2022",
-    "module": "ES2022",
-    "lib": [
-      "ES2022",
-      "dom"
-    ],
+    "target": "es2024",
+    "module": "es2022",
+    "lib": ["es2024", "dom"],
     "baseUrl": "src",
     "paths": {
       "@app/*": [

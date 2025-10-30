@@ -22,7 +22,7 @@ jobs:
       CHANGE_DETECTED: ${{ steps.check_changes.outputs.CHANGE_DETECTED }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
@@ -47,7 +47,7 @@ jobs:
 
       - name: Set up Java
         if: steps.check_changes.outputs.CHANGE_DETECTED == 'true'
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: "temurin"
           java-version: "21"
@@ -103,20 +103,20 @@ jobs:
     steps:
       - name: Checkout code
         if: env.CHANGE_DETECTED == 'true'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Java
         if: env.CHANGE_DETECTED == 'true'
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: "temurin"
           java-version: "21"
 
       - name: Set up Node.js
         if: env.CHANGE_DETECTED == 'true'
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
-          node-version: "22"
+          node-version: "24"
 
       - name: Enable Corepack
         if: env.CHANGE_DETECTED == 'true'

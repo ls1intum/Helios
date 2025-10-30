@@ -5,7 +5,7 @@ jobs:
     name: Linting Server (Java)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: dbelyaev/action-checkstyle@master
         with:
           github_token: ${{ secrets.github_token }}
@@ -17,7 +17,7 @@ jobs:
     name: Linting Client (Angular)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Install modules
         working-directory: ./client
         run: yarn
@@ -28,7 +28,7 @@ jobs:
     name: Linting Keycloakify
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Install modules
         working-directory: ./keycloakify
         run: yarn

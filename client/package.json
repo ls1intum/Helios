@@ -10,6 +10,15 @@
     "generate:openapi": "openapi-ts"
   },
   "private": true,
+  "license": "MIT",
+  "author": {
+    "name": "Stephan Krusche",
+    "email": "krusche@tum.de",
+    "url": "https://aet.cit.tum.de/krusche"
+  },
+  "cacheDirectories": [
+    "node_modules"
+  ],
   "dependencies": {
     "@angular/animations": "20.3.9",
     "@angular/common": "20.3.9",
