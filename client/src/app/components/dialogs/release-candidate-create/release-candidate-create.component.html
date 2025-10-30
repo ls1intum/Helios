@@ -5,17 +5,17 @@
   @if (newCommitListQuery.data(); as commitListData) {
     <div class="flex flex-col gap-4">
       <div class="flex gap-1 items-center mb-2">
-        <i-tabler name="tag" class="!size-5" />
+        <i-tabler name="tag" class="size-5!" />
         <input pInputText [(ngModel)]="releaseCandidateName" placeholder="Release Candidate Name" pSize="small" />
       </div>
       <div class="flex gap-2">
         <p-tag class="text-xs">
-          <i-tabler name="git-branch" class="!size-4" />
+          <i-tabler name="git-branch" class="size-4!" />
           {{ branchName() }}
         </p-tag>
         @if (headCommit()) {
           <p-tag class="text-xs">
-            <i-tabler name="git-commit" class="!size-4" />
+            <i-tabler name="git-commit" class="size-4!" />
             {{ headCommit().sha | slice: 0 : 7 }}
           </p-tag>
         } @else {
@@ -71,7 +71,7 @@
   } @else {
     <div class="flex flex-col gap-4">
       <div class="flex gap-1 items-center mb-2">
-        <i-tabler name="tag" class="!size-5" />
+        <i-tabler name="tag" class="size-5!" />
         <input pInputText disabled [(ngModel)]="releaseCandidateName" placeholder="Release Candidate Name" pSize="small" />
       </div>
       <div class="flex gap-2">

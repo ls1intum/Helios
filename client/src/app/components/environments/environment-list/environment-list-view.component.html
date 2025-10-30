@@ -36,7 +36,7 @@
   </div>
   @if (!hideLinkToList()) {
     <p-button [routerLink]="'../../../environment'">
-      <i-tabler name="server-cog" class="!size-5" />
+      <i-tabler name="server-cog" class="size-5!" />
       <span class="hidden md:block">{{ isAdmin() ? 'Manage Environments' : 'Go to Environments' }}</span>
     </p-button>
   } @else {

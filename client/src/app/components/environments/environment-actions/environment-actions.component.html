@@ -24,14 +24,14 @@
             tooltipPosition="top"
           >
             <div class="flex items-center">
-              <i-tabler name="x" class="w-4 h-4 mr-1.5 flex-shrink-0" />
+              <i-tabler name="x" class="w-4 h-4 mr-1.5 shrink-0" />
               <span>Cancel</span>
             </div>
           </p-button>
         } @else {
           <p-button (click)="onDeploy($event)" [disabled]="!canUserDeploy()" [pTooltip]="getDeployTooltip()" tooltipPosition="top">
             <div class="flex items-center">
-              <i-tabler name="cloud-upload" class="w-4 h-4 mr-1.5 flex-shrink-0" />
+              <i-tabler name="cloud-upload" class="w-4 h-4 mr-1.5 shrink-0" />
               <span>Deploy</span>
             </div>
           </p-button>
@@ -43,19 +43,19 @@
         @if (!environment().locked) {
           <p-button (click)="onLock($event)" [disabled]="!canUserDeploy()" [pTooltip]="getLockTooltip()" tooltipPosition="top">
             <div class="flex items-center">
-              <i-tabler name="lock" class="w-4 h-4 flex-shrink-0 text-red-700" />
+              <i-tabler name="lock" class="w-4 h-4 shrink-0 text-red-700" />
             </div>
           </p-button>
         } @else {
           @if (canUnlockShow()) {
-            <p-button severity="danger" class="[&>*]:!rounded-none" (click)="onUnlock($event)" [disabled]="!canUnlock()" [pTooltip]="getUnlockToolTip()" tooltipPosition="top">
+            <p-button severity="danger" class="*:rounded-none!" (click)="onUnlock($event)" [disabled]="!canUnlock()" [pTooltip]="getUnlockToolTip()" tooltipPosition="top">
               <div class="flex items-center">
-                <i-tabler name="lock-open" class="w-4 h-4 flex-shrink-0" />
+                <i-tabler name="lock-open" class="w-4 h-4 shrink-0" />
               </div>
             </p-button>
             @if (isCurrentUserLocked()) {
               <p-button severity="success" (click)="onExtend($event)" [disabled]="!canUnlock()" [pTooltip]="'Extend my lock expiration'" tooltipPosition="top">
-                <i-tabler name="lock-plus" class="w-4 h-4 flex-shrink-0" />
+                <i-tabler name="lock-plus" class="w-4 h-4 shrink-0" />
               </p-button>
             }
           }
@@ -71,7 +71,7 @@
           tooltipPosition="top"
         >
           <div class="flex items-center">
-            <i-tabler name="check" class="w-4 h-4 flex-shrink-0" />
+            <i-tabler name="check" class="w-4 h-4 shrink-0" />
           </div>
         </p-button>
       }

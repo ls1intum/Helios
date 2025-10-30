@@ -5,7 +5,7 @@
         <div class="flex gap-1 items-center mr-3">
           <p-button severity="secondary" text (click)="openExternalLink($event, environment().serverUrl)">
             <span pTooltip="Open Environment" tooltipPosition="bottom">{{ environment().displayName || environment().name }}</span>
-            <i-tabler name="external-link" class="!size-4 flex-shrink-0"></i-tabler>
+            <i-tabler name="external-link" class="size-4! shrink-0"></i-tabler>
           </p-button>
 
           @if (isLockedByCurrentUser()) {
@@ -38,7 +38,7 @@
                 class="leading-none"
                 [pTooltip]="'View Workflow Run in GitHub'"
               >
-                <i-tabler name="brand-github" class="!size-4" />
+                <i-tabler name="brand-github" class="size-4!" />
               </p-button>
             }
             <app-deployment-state-tag [state]="deployment.state" [deployment]="deployment" />
@@ -54,7 +54,7 @@
               [routerLink]="isRelease(deployment) ? null : getBranchLink()"
             >
               @if (isRelease(deployment)) {
-                <i-tabler name="tag" class="!size-5 flex-shrink-0"></i-tabler>
+                <i-tabler name="tag" class="size-5! shrink-0"></i-tabler>
               }
               <span class="truncate flex-1">{{ deployment.ref }}</span>
             </p-tag>
@@ -70,7 +70,7 @@
                 (click)="$event.stopPropagation()"
                 [routerLink]="getPrLink()"
               >
-                <i-tabler name="git-pull-request" class="!size-5 flex-shrink-0"></i-tabler>
+                <i-tabler name="git-pull-request" class="size-5! shrink-0"></i-tabler>
                 <span class="truncate flex-1">#{{ deployment.pullRequestNumber }}</span>
               </p-tag>
             }
@@ -78,7 +78,7 @@
         }
       </div>
 
-      <div class="flex-grow"></div>
+      <div class="grow"></div>
 
       <div class="flex flex-col gap-4 items-end">
         <!-- Environment Actions Component -->
@@ -124,7 +124,7 @@
       <div class="flex w-full">
         @if (showLatestDeployment()) {
           <!-- Direct use of deployment stepper -->
-          <div class="flex-grow">
+          <div class="grow">
             <app-deployment-stepper [deployment]="environment().latestDeployment" class="w-full" />
 
             @if (workflowRunId()) {

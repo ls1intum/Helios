@@ -45,7 +45,7 @@
             <p-tag [value]="releaseCandidate.name" [rounded]="true" class="cursor-pointer text-xs whitespace-nowrap" [routerLink]="'../' + releaseCandidate.name" />
             @if (releaseCandidate.isPublished) {
               <p-tag [rounded]="true" severity="contrast" class="text-xs gap-0">
-                <i-tabler name="brand-github" class="!size-4" />
+                <i-tabler name="brand-github" class="size-4!" />
                 <span class="hidden md:block">Published to GitHub</span>
               </p-tag>
             }
@@ -53,14 +53,14 @@
         </td>
         <td>
           <p-tag class="text-xs">
-            <i-tabler name="git-commit" class="!size-4" />
+            <i-tabler name="git-commit" class="size-4!" />
             {{ releaseCandidate.commitSha | slice: 0 : 6 }}
           </p-tag>
         </td>
         <td>
           @if (releaseCandidate.branchName) {
             <p-tag class="text-xs">
-              <i-tabler name="git-branch" class="!size-4" />
+              <i-tabler name="git-branch" class="size-4!" />
               {{ releaseCandidate.branchName }}
             </p-tag>
           }
@@ -71,7 +71,7 @@
       <tr>
         <td colspan="4">
           <div class="flex flex-col gap-2 p-20 justify-center items-center">
-            <i-tabler name="tag" class="!h-20 !w-20 text-red-500" />
+            <i-tabler name="tag" class="h-20! w-20! text-red-500" />
             <span class="font-semibold text-xl">There were no release candidates found matching your filter criteria.</span>
             <span>Try clearing the filter, creating release candidates or reloading the page.</span>
             <p-button (click)="searchTableService.clearFilter(table)">Clear Filter</p-button>

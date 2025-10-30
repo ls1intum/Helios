@@ -15,23 +15,23 @@
     <div class="flex items-center gap-1">
       <p-button (click)="toggleDarkMode()" size="small">
         @if (isDarkModeEnabled()) {
-          <i-tabler name="sun" class="!size-4" />
+          <i-tabler name="sun" class="size-4!" />
         } @else {
-          <i-tabler name="moon" class="!size-4" />
+          <i-tabler name="moon" class="size-4!" />
         }
       </p-button>
 
       <app-profile-nav-section [isExpanded]="true" />
     </div>
   </div>
-  <div class="flex flex-grow h-[calc(100vh-3rem)]">
+  <div class="flex grow h-[calc(100vh-3rem)]">
     <!-- Fixed Navigation Bar -->
     <div class="h-full sticky top-3 flex">
       <app-navigation-bar [repositoryId]="repositoryId()"></app-navigation-bar>
     </div>
 
     <!-- Scrollable Content Area -->
-    <div class="flex-grow overflow-hidden h-full">
+    <div class="grow overflow-hidden h-full">
       <div class="flex flex-col justify-between overflow-auto h-full mx-auto">
         <div class="p-4">
           <router-outlet />

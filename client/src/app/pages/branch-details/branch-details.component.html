@@ -2,12 +2,12 @@
   @if (query.data(); as branch) {
     <div class="flex flex-col items-start gap-2">
       <div class="mb-1 flex gap-2 items-center flex-wrap">
-        <i-tabler name="git-branch" class="text-muted-color !size-5" />
+        <i-tabler name="git-branch" class="text-muted-color size-5!" />
         <h2 class="text-2xl">{{ branch.name }}</h2>
         <div class="flex flex-wrap gap-1">
           @for (releaseCandidateName of branch.releaseCandidateNames; track releaseCandidateName) {
             <p-tag class="text-xs cursor-pointer hover:underline" [routerLink]="['/repo', repositoryId(), 'release', releaseCandidateName]">
-              <i-tabler name="tag" class="!size-4" />
+              <i-tabler name="tag" class="size-4!" />
               {{ releaseCandidateName }}
             </p-tag>
           }
@@ -19,7 +19,7 @@
       <div class="block md:hidden">
         @if (isAtLeastMaintainer()) {
           <p-button label="Create Release" (onClick)="isCreateDialogVisible.set(true)">
-            <i-tabler name="tag-plus" class="!size-4" />
+            <i-tabler name="tag-plus" class="size-4!" />
           </p-button>
         }
       </div>
@@ -27,7 +27,7 @@
     <div class="hidden md:block">
       @if (isAtLeastMaintainer()) {
         <p-button label="Create Release" (onClick)="isCreateDialogVisible.set(true)">
-          <i-tabler name="tag-plus" class="!size-4" />
+          <i-tabler name="tag-plus" class="size-4!" />
         </p-button>
       }
     </div>

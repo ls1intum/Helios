@@ -88,7 +88,7 @@ export class DeploymentStateTagComponent {
 
   iconClass = this.timingService.timeAwareComputed(() => {
     const spinStates: ExtendedDeploymentState[] = ['REQUESTED', 'PENDING', 'IN_PROGRESS', 'QUEUED'];
-    return `!size-5 ${spinStates.includes(this.internalState()) ? 'animate-spin' : ''}`;
+    return `size-5! ${spinStates.includes(this.internalState()) ? 'animate-spin' : ''}`;
   });
 
   value = this.timingService.timeAwareComputed(() => {

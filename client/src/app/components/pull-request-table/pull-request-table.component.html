@@ -36,18 +36,18 @@
       <tr>
         <td>
           <div class="flex items-center gap-2">
-            <p-skeleton shape="circle" styleClass="!size-7" />
+            <p-skeleton shape="circle" styleClass="size-7!" />
             <p-skeleton class="w-96" />
           </div>
           <div class="flex items-center gap-2 ml-1 mt-0.5">
-            <p-skeleton shape="circle" styleClass="!size-5" />
-            <p-skeleton class="!w-52" />
-            <i-tabler name="point" class="!h-3 !w-3" />
-            <p-skeleton styleClass="!w-28" />
+            <p-skeleton shape="circle" styleClass="size-5!" />
+            <p-skeleton class="w-52!" />
+            <i-tabler name="point" class="h-3! w-3!" />
+            <p-skeleton styleClass="w-28!" />
           </div>
         </td>
-        <td class="w-[0.1%] hidden lg:table-cell"><p-skeleton shape="circle" styleClass="!size-7" /></td>
-        <td class="w-[0.1%] hidden lg:table-cell"><p-skeleton shape="circle" styleClass="!size-7" /></td>
+        <td class="w-[0.1%] hidden lg:table-cell"><p-skeleton shape="circle" styleClass="size-7!" /></td>
+        <td class="w-[0.1%] hidden lg:table-cell"><p-skeleton shape="circle" styleClass="size-7!" /></td>
       </tr>
     } @else {
       <ng-container [ngTemplateOutlet]="prRow" [ngTemplateOutletContext]="{ $implicit: pr }"> </ng-container>
@@ -67,11 +67,11 @@
               @if (isHovered.get(pr.id) && keycloak.isLoggedIn()) {
                 @if (pr.isPinned) {
                   <p-button text (onClick)="setPinned($event, pr, false)" class="h-full">
-                    <i-tabler name="pinned-off" class="!h-5 !w-5" />
+                    <i-tabler name="pinned-off" class="h-5! w-5!" />
                   </p-button>
                 } @else {
                   <p-button text severity="secondary" (onClick)="setPinned($event, pr, true)" class="h-full">
-                    <i-tabler name="pinned" class="!h-5 !w-5" />
+                    <i-tabler name="pinned" class="h-5! w-5!" />
                   </p-button>
                 }
               }
@@ -87,7 +87,7 @@
               <app-workflow-run-status [selector]="{ type: 'pullRequest', pullRequestId: pr.id }"></app-workflow-run-status>
 
               <p-button text (click)="openPRExternal($event, pr)" styleClass="p-1" class="leading-none -ml-1">
-                <i-tabler name="brand-github" class="!size-4" />
+                <i-tabler name="brand-github" class="size-4!" />
               </p-button>
 
               @for (label of pr.labels; track label.id) {
@@ -102,7 +102,7 @@
             <div class="flex gap-2 items-center text-xs">
               <p-avatar [image]="pr.author?.avatarUrl" shape="circle" class="h-5 w-5" [styleClass]="getAvatarBorderClass(pr.author?.login)" />
               <span>{{ pr.author?.name }} opened #{{ pr.number }} {{ pr.createdAt | timeAgo }}</span>
-              <i-tabler name="point" class="!h-3 !w-3" />
+              <i-tabler name="point" class="h-3! w-3!" />
               <span>updated {{ pr.updatedAt | timeAgo }}</span>
             </div>
           </div>
@@ -151,7 +151,7 @@
       <tr>
         <td colspan="3">
           <div class="flex flex-col gap-2 p-20 justify-center items-center">
-            <i-tabler name="git-pull-request" class="!h-20 !w-20 text-red-500" />
+            <i-tabler name="git-pull-request" class="h-20! w-20! text-red-500" />
             <span class="font-semibold text-xl"> There are no pull requests found matching your filter criteria. </span>
             <span>Try clearing the filter or reloading the page.</span>
             <p-button (click)="clearFilters()">Clear Filter</p-button>

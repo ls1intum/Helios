@@ -1,7 +1,7 @@
 <p-dialog [(visible)]="visible" [modal]="true" [style]="{ width: '26rem' }" draggable="false" (onHide)="onCancel()">
   <ng-template #header>
     <div class="font-bold text-xl flex items-center gap-2">
-      <i-tabler name="cloud-upload" class="!size-5 flex-shrink-0" />
+      <i-tabler name="cloud-upload" class="size-5! shrink-0" />
       Deploy
     </div>
   </ng-template>
@@ -20,7 +20,7 @@
     <div class="pt-2">
       <!-- Environment banner -->
       <div
-        class="p-4 rounded flex items-start space-x-3"
+        class="p-4 rounded-sm flex items-start space-x-3"
         [ngClass]="{
           'bg-red-50 text-red-800 ring-1 ring-red-300': environment().type === 'PRODUCTION',
           'bg-amber-50 text-amber-800 ring-1 ring-amber-300': environment().type === 'STAGING',
@@ -29,11 +29,11 @@
       >
         <!-- Tabler icon -->
         @if (environment().type === 'PRODUCTION') {
-          <i-tabler name="alert-triangle" class="!size-6 shrink-0 text-red-600" />
+          <i-tabler name="alert-triangle" class="size-6! shrink-0 text-red-600" />
         } @else if (environment().type === 'STAGING') {
-          <i-tabler name="info-circle" class="!size-6 shrink-0 text-amber-600" />
+          <i-tabler name="info-circle" class="size-6! shrink-0 text-amber-600" />
         } @else {
-          <i-tabler name="server" class="!size-5 shrink-0 text-slate-600" />
+          <i-tabler name="server" class="size-5! shrink-0 text-slate-600" />
         }
 
         <div class="space-y-1 text-sm">
@@ -83,7 +83,7 @@
           </p>
           <input
             pInputText
-            class="w-full border p-2 rounded"
+            class="w-full border p-2 rounded-sm"
             type="text"
             (input)="onRepoInput($event)"
             placeholder="{{ environment().repository?.nameWithOwner }}"

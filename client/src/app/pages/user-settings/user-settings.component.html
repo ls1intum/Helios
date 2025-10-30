@@ -8,7 +8,7 @@
         <label for="email">Notification email</label>
 
         @if (userSettingsQuery.isPending()) {
-          <p-skeleton height="2.5rem" class="rounded" />
+          <p-skeleton height="2.5rem" class="rounded-sm" />
         } @else {
           <input pInputText id="email" formControlName="email" type="email" placeholder="Enter your email" />
           @if (settingsForm.get('email')?.invalid && settingsForm.get('email')?.touched) {
@@ -19,7 +19,7 @@
 
       <div class="flex justify-end">
         @if (userSettingsQuery.isPending()) {
-          <p-skeleton height="2.5rem" width="8rem" class="rounded" />
+          <p-skeleton height="2.5rem" width="8rem" class="rounded-sm" />
         } @else {
           <p-button type="button" label="Save Email" (onClick)="saveEmail()" [disabled]="settingsForm.get('email')?.invalid || updateUserSettings.isPending()" />
         }

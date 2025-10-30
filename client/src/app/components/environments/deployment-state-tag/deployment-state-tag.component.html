@@ -11,7 +11,7 @@
   @if (showLatestDeployment() && latestDeployment()) {
     <span>now at</span>
     <p-tag class="text-xs">
-      <i-tabler name="git-branch" class="!size-4" />
+      <i-tabler name="git-branch" class="size-4!" />
       {{ latestDeployment()?.releaseCandidateName ?? latestDeployment()?.ref }}
     </p-tag>
   }

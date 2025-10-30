@@ -57,11 +57,11 @@
                   @if (!rowNode.node.children && isHovered.get(branch.name) && isLoggedIn()) {
                     @if (branch.isPinned) {
                       <p-button text (onClick)="setPinned($event, branch, false)" class="h-full">
-                        <i-tabler name="pinned-off" class="!size-5" />
+                        <i-tabler name="pinned-off" class="size-5!" />
                       </p-button>
                     } @else {
                       <p-button text severity="secondary" (onClick)="setPinned($event, branch, true)" class="h-full">
-                        <i-tabler name="pinned" class="!size-5" />
+                        <i-tabler name="pinned" class="size-5!" />
                       </p-button>
                     }
                   }
@@ -71,7 +71,7 @@
                 <div class="flex flex-nowrap">
                   <p-treeTableToggler [rowNode]="rowNode" />
 
-                  <p-tag class="cursor-pointer max-w-[10rem] whitespace-nowrap hover:underline" (click)="openBranch(branch)">
+                  <p-tag class="cursor-pointer max-w-40 whitespace-nowrap hover:underline" (click)="openBranch(branch)">
                     <div class="inline-flex flex-wrap items-baseline truncate">
                       @for (part of branch.name | highlight: searchTableService.searchValue(); track part.text) {
                         @if (part.highlight) {
@@ -84,11 +84,11 @@
                   </p-tag>
                 </div>
                 @if (branch.isProtected) {
-                  <i-tabler name="shield-half" class="!size-4" pTooltip="Protected Branch" />
+                  <i-tabler name="shield-half" class="size-4!" pTooltip="Protected Branch" />
                 }
                 @if (!rowNode.node.children) {
                   <p-button text (click)="openLink($event, branch.link)" styleClass="p-1" class="leading-none">
-                    <i-tabler name="brand-github" class="!size-4" />
+                    <i-tabler name="brand-github" class="size-4!" />
                   </p-button>
                   <app-workflow-run-status [selector]="{ type: 'branch', branchName: branch.name }"></app-workflow-run-status>
                 }
@@ -134,11 +134,11 @@
           @if (branch.commitSha) {
             <div class="flex items-center gap-1">
               <p-tag>
-                <i-tabler name="git-commit" class="!size-4"></i-tabler>
+                <i-tabler name="git-commit" class="size-4!"></i-tabler>
                 <span>{{ branch.commitSha.slice(0, 7) }}</span>
               </p-tag>
               <p-button text (click)="openLink($event, branch.link)" styleClass="p-1" class="leading-none">
-                <i-tabler name="brand-github" class="!size-4" />
+                <i-tabler name="brand-github" class="size-4!" />
               </p-button>
             </div>
           }
@@ -150,7 +150,7 @@
       <tr>
         <td colspan="4">
           <div class="flex flex-col gap-2 p-20 justify-center items-center">
-            <i-tabler name="git-branch" class="!h-20 !w-20 text-red-500" />
+            <i-tabler name="git-branch" class="h-20! w-20! text-red-500" />
             <span class="font-semibold text-xl">There are no branches found matching your filter criteria.</span>
             <span>Try clearing the filter or reloading the page.</span>
             <p-button (click)="searchTableService.clearFilter(table)">Clear Filter</p-button>

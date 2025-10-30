@@ -3,7 +3,7 @@
   @if (commit(); as commit) {
     <div class="flex gap-4 items-center mb-4 mt-2">
       <span class="font-semibold text-lg">{{ commit.message }}</span>
-      <div class="flex-grow"></div>
+      <div class="grow"></div>
     </div>
     <div class="flex gap-2 items-center text-sm">
       <div class="flex gap-1 items-center">
@@ -16,12 +16,12 @@
           {{ commit.author?.name }} authored <span [pTooltip]="commitDate() || ''">{{ commit.authoredAt || '' | timeAgo }}</span>
         </span>
       </div>
-      <i-tabler name="point" class="!w-3 !h-3" />
+      <i-tabler name="point" class="w-3! h-3!" />
       <div class="flex items-center">
         <!-- <i-tabler name="git-commit" class="text-surface-600" /> -->
         <span [pTooltip]="deployment().sha">{{ deployment().sha | slice: 0 : 8 }}</span>
       </div>
-      <div class="flex flex-grow"></div>
+      <div class="flex grow"></div>
     </div>
   } @else {
     <div class="font-semibold text-lg">Commit Information Could Not Be Loaded</div>

@@ -35,7 +35,7 @@
       <!-- If so, display a message saying that no workflow runs have been found -->
       @if (allGroupsHaveNoWorkflowRuns()) {
         <div class="flex flex-col justify-center items-center p-4">
-          <i-tabler name="info-circle" class="!size-20 text-primary" />
+          <i-tabler name="info-circle" class="size-20! text-primary" />
           <div class="font-semibold text-lg">No workflow runs found.</div>
           <div class="text-sm">Workflow groups exist, but no runs have been executed yet.</div>
         </div>
@@ -70,7 +70,7 @@
                     <span class="font-medium flex gap-1 items-center justify-between w-full overflow-hidden">
                       <span [pTooltip]="workflowRun.name" class="truncate">{{ workflowRun.name }}</span>
                       <p-button text severity="secondary" (click)="openLink(workflowRun.htmlUrl)" styleClass="p-1" class="leading-none">
-                        <i-tabler name="brand-github" class="!size-4" />
+                        <i-tabler name="brand-github" class="size-4!" />
                       </p-button>
                     </span>
                   </div>
@@ -86,7 +86,7 @@
         }
       } @empty {
         <div class="flex flex-col justify-center items-center p-4">
-          <i-tabler name="exclamation-circle" class="!size-20 text-primary" />
+          <i-tabler name="exclamation-circle" class="size-20! text-primary" />
           <div class="font-semibold text-lg">There are no pipeline groups yet.</div>
           <div class="text-sm">Create one in the repository settings.</div>
         </div>

@@ -39,7 +39,7 @@
           <span>{{ getTotalRemainingTime() }}</span>
         </p-tag>
       }
-      <div class="flex-grow"></div>
+      <div class="grow"></div>
     </div>
   </div>
 
@@ -52,13 +52,13 @@
           <p-tag [severity]="getSeverityFromStepStatus(i)" styleClass="size-8 transition-colors rounded-full duration-300 p-0 gap-0">
             @switch (getStepStatus(i)) {
               @case ('completed') {
-                <i-tabler name="check" class="!size-5" />
+                <i-tabler name="check" class="size-5!" />
               }
               @case ('active') {
-                <i-tabler name="progress" class="!size-5 animate-spin" />
+                <i-tabler name="progress" class="size-5! animate-spin" />
               }
               @case ('error') {
-                <i-tabler name="x" class="!size-5" />
+                <i-tabler name="x" class="size-5!" />
               }
               @case ('upcoming') {}
             }

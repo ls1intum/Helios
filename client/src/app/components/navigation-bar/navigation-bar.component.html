@@ -34,9 +34,9 @@
                 [class]="isExpanded() ? 'justify-start' : 'justify-center'"
                 [routerLink]="item.path"
                 [pTooltip]="!isExpanded() ? item.label : undefined"
-                routerLinkActive="!bg-primary-emphasis"
+                routerLinkActive="bg-primary-emphasis!"
               >
-                <i-tabler [name]="item.icon" class="!size-6 !stroke-1"></i-tabler>
+                <i-tabler [name]="item.icon" class="size-6! stroke-1!"></i-tabler>
                 @if (isExpanded()) {
                   <div class="whitespace-nowrap text-xs">{{ item.label }}</div>
                 }
@@ -45,7 +45,7 @@
           }
         </div>
 
-        <span class="flex-grow"></span>
+        <span class="grow"></span>
 
         <!-- Lock Info -->
         <app-user-lock-info />
@@ -61,10 +61,10 @@
                 class="p-button rounded-xl p-2 flex gap-2 items-center transition-all w-full"
                 [class]="isExpanded() ? 'justify-start' : 'justify-center'"
                 [routerLink]="item.path"
-                routerLinkActive="!bg-primary-emphasis"
+                routerLinkActive="bg-primary-emphasis!"
                 [pTooltip]="!isExpanded() ? item.label : undefined"
               >
-                <i-tabler [name]="item.icon" class="!size-6 !stroke-1"></i-tabler>
+                <i-tabler [name]="item.icon" class="size-6! stroke-1!"></i-tabler>
                 @if (isExpanded()) {
                   <span class="whitespace-nowrap text-xs">{{ item.label }}</span>
                 }
@@ -77,13 +77,13 @@
       <!-- Right Section: Small Toggle Button -->
       <div class="absolute -right-4 top-1/2 -translate-y-10 z-10">
         <button class="h-6 w-6 flex items-center justify-center bg-primary-emphasis rounded-md hover:scale-110 transition-all" (click)="toggleSidebarExpansion()">
-          <i-tabler [name]="isExpanded() ? 'chevron-left' : 'chevron-right'" class="!size-4"></i-tabler>
+          <i-tabler [name]="isExpanded() ? 'chevron-left' : 'chevron-right'" class="size-4!"></i-tabler>
         </button>
       </div>
     }
     <div class="absolute -right-4 top-1/2 -translate-y-20 z-10">
       <button class="h-6 w-6 flex items-center justify-center bg-primary-emphasis rounded-md hover:scale-110 transition-all" (click)="toggleSidebarVisibility()">
-        <i-tabler [name]="isVisible() ? 'eye-off' : 'eye'" class="!size-4"></i-tabler>
+        <i-tabler [name]="isVisible() ? 'eye-off' : 'eye'" class="size-4!"></i-tabler>
       </button>
     </div>
   </div>

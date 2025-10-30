@@ -15,7 +15,7 @@
 
     @if (isProcessing()) {
       <p-tag class="ml-2" severity="warn" [rounded]="true" [pTooltip]="'Test results are being processed'">
-        <i-tabler name="progress" class="!size-5 animate-spin"></i-tabler>
+        <i-tabler name="progress" class="size-5! animate-spin"></i-tabler>
 
         <span class="text-sm text-muted-color">Processing</span>
       </p-tag>
@@ -93,7 +93,7 @@
 
       <!-- Workflow Stats Summary -->
       @if (activeTestTypeStats(); as stats) {
-        <div class="flex items-center gap-4 mb-3 text-sm p-2 rounded border border-muted-color">
+        <div class="flex items-center gap-4 mb-3 text-sm p-2 rounded-sm border border-muted-color">
           <span class="flex items-center gap-1"><i-tabler name="check" class="text-green-500"></i-tabler> {{ stats.passed }} passed</span>
           <span class="flex items-center gap-1"><i-tabler name="x" class="text-red-500"></i-tabler> {{ stats.failures }} failed</span>
           <span class="flex items-center gap-1"><i-tabler name="chevrons-right" class="text-yellow-500"></i-tabler> {{ stats.skipped }} skipped</span>
@@ -134,17 +134,17 @@
                     <div class="flex items-center gap-2 overflow-hidden">
                       @switch (overallSuiteState(suite)) {
                         @case ('SUCCESS') {
-                          <i-tabler name="circle-check" class="text-green-500 flex-shrink-0"></i-tabler>
+                          <i-tabler name="circle-check" class="text-green-500 shrink-0"></i-tabler>
                         }
                         @case ('FAILURE') {
-                          <i-tabler name="circle-x" class="text-red-500 flex-shrink-0"></i-tabler>
+                          <i-tabler name="circle-x" class="text-red-500 shrink-0"></i-tabler>
                         }
                         @case ('SKIPPED') {
-                          <i-tabler name="circle-chevrons-right" class="text-orange-500 flex-shrink-0"></i-tabler>
+                          <i-tabler name="circle-chevrons-right" class="text-orange-500 shrink-0"></i-tabler>
                         }
                       }
                       <span class="font-medium truncate">{{ suite.name }}</span>
-                      <span class="text-sm text-muted-color ml-2 flex-shrink-0">
+                      <span class="text-sm text-muted-color ml-2 shrink-0">
                         ({{ suite.tests }} tests, {{ suite.failures + suite.errors }} failed, {{ suite.skipped }} skipped)
                       </span>
                     </div>
@@ -152,19 +152,19 @@
 
                   <div class="flex flex-col gap-2">
                     @for (testCase of suite.testCases; track testCase.id) {
-                      <div class="flex items-center gap-2 p-2 border rounded">
+                      <div class="flex items-center gap-2 p-2 border rounded-sm">
                         @switch (testCase.status) {
                           @case ('PASSED') {
-                            <i-tabler name="check" class="text-green-500 w-4 h-4 flex-shrink-0"></i-tabler>
+                            <i-tabler name="check" class="text-green-500 w-4 h-4 shrink-0"></i-tabler>
                           }
                           @case ('FAILED') {
-                            <i-tabler name="x" class="text-red-500 w-4 h-4 flex-shrink-0"></i-tabler>
+                            <i-tabler name="x" class="text-red-500 w-4 h-4 shrink-0"></i-tabler>
                           }
                           @case ('ERROR') {
-                            <i-tabler name="x" class="text-red-500 w-4 h-4 flex-shrink-0"></i-tabler>
+                            <i-tabler name="x" class="text-red-500 w-4 h-4 shrink-0"></i-tabler>
                           }
                           @case ('SKIPPED') {
-                            <i-tabler name="chevrons-right" class="text-muted-color w-4 h-4 flex-shrink-0"></i-tabler>
+                            <i-tabler name="chevrons-right" class="text-muted-color w-4 h-4 shrink-0"></i-tabler>
                           }
                         }
 
@@ -172,7 +172,7 @@
                           <div class="basis-10/12 flex flex-col items-start min-w-0">
                             <div class="flex items-center gap-2 min-w-0 w-full">
                               @if (testCase.previousStatus !== testCase.status && testCase.previousStatus) {
-                                <span class="text-xs text-sky-500 font-medium flex-shrink-0">previously {{ testCase.previousStatus.toLowerCase() }}</span>
+                                <span class="text-xs text-sky-500 font-medium shrink-0">previously {{ testCase.previousStatus.toLowerCase() }}</span>
                               }
                               <span class="text-sm truncate overflow-hidden flex-1 min-w-0" [pTooltip]="testCase.name">{{ testCase.name }}</span>
                             </div>
@@ -236,7 +236,7 @@
                   </div>
                 </p-panel>
               } @loading (minimum 100ms) {
-                <div class="border rounded p-3 mt-1 mb-1">
+                <div class="border rounded-sm p-3 mt-1 mb-1">
                   <div class="flex items-center">
                     <p-skeleton width="30px" height="30px" styleClass="mr-2"></p-skeleton>
                     <p-skeleton width="60%" height="1.5rem"></p-skeleton>
@@ -279,7 +279,7 @@
       @if (selectedTestCase()?.stackTrace) {
         <div>
           <h4 class="font-medium mb-2">Stack Trace</h4>
-          <div class="border border-muted-color p-4 rounded overflow-auto max-h-[400px]">
+          <div class="border border-muted-color p-4 rounded-sm overflow-auto max-h-[400px]">
             @for (line of (selectedTestCase()?.stackTrace?.trimStart() || '').split('\n'); track $index) {
               <pre
                 class="font-mono text-sm whitespace-pre block min-w-fit"
@@ -322,7 +322,7 @@
       @if (selectedTestCase()?.systemOut) {
         <div>
           <h4 class="font-medium mb-2">Test Case Logs</h4>
-          <div class="border border-muted-color p-4 rounded overflow-auto max-h-[400px]">
+          <div class="border border-muted-color p-4 rounded-sm overflow-auto max-h-[400px]">
             @if (filteredTestCaseLogs()) {
               @for (line of filteredTestCaseLogs().split('\n'); track $index) {
                 <pre
@@ -351,7 +351,7 @@
       @if (selectedTestCase()?.suiteSystemOut) {
         <div>
           <h4 class="font-medium mb-2">Test Suite Logs</h4>
-          <div class="border border-muted-color p-4 rounded overflow-auto max-h-[400px]">
+          <div class="border border-muted-color p-4 rounded-sm overflow-auto max-h-[400px]">
             @if (filteredTestSuiteLogs()) {
               @for (line of filteredTestSuiteLogs().split('\n'); track $index) {
                 <pre
