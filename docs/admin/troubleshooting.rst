@@ -145,7 +145,7 @@ Initial Diagnostic Steps
 
     .. code-block:: console
 
-          INFO:	  Published message to github.ls1intum.Artemis.workflow_run: PubAck(stream='github', seq=433413, domain=None, duplicate=None)
+          INFO:	  Published message to github.ls1intum.Helios.workflow_run: PubAck(stream='github', seq=433413, domain=None, duplicate=None)
 
 
   - **application-server Logs**: Verify whether those same events appear in ``application-server`` logs. If the listener shows events but the ``application-server`` does not, that indicates a NATS delivery issue.

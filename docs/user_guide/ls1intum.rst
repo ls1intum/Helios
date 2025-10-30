@@ -60,7 +60,7 @@ Create a GitHub Actions workflow (example ``deploy-with-helios.yml``) for deploy
       runs-on: ubuntu-latest
         steps:
           - name: Checkout
-            uses: actions/checkout@v4
+            uses: actions/checkout@v5
             with:
               ref: ${{ github.event.inputs.branch_name }}
           - name: (Optional) Build or Prepare
@@ -75,7 +75,7 @@ Create a GitHub Actions workflow (example ``deploy-with-helios.yml``) for deploy
       environment: ${{ github.event.inputs.environment_name }}
       steps:
         - name: Checkout
-          uses: actions/checkout@v4
+          uses: actions/checkout@v5
           with:
             ref: ${{ github.event.inputs.branch_name }}
 

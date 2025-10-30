@@ -1,4 +1,4 @@
-.. _artemis:
+.. _helios:
 
 ======================================================
 Helios: Enhanced UI for GitHub Actions

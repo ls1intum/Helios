@@ -258,7 +258,7 @@ root ``.env`` file
 - ``NATS_DURABLE_CONSUMER_NAME``: Name of the durable consumer for NATS server. With durable consumers, NATS remembers where it left off when the last event was acknowledged. On startup, if a durable consumer with this name already exists, it will be used. Otherwise, a new one will be created.
 - ``NATS_CONSUMER_INACTIVE_THRESHOLD_MINUTES``: Durable consumer specific settings
 - ``NATS_CONSUMER_ACK_WAIT_SECONDS``: Durable consumer specific settings
-- ``REPOSITORY_NAME``: Set only if you want to sync a specific repository. This should be in the format ``owner/repo`` (e.g. ``ls1intum/Helios,ls1intum/Artemis``). Regardless of this value, Helios will sync all repositories that the GitHub App has installed to. If GitHub App credentials are not used and only a Personal Access Token (PAT) is used, only this repository will be synced.
+- ``REPOSITORY_NAME``: Set only if you want to sync a specific repository. This should be in the format ``owner/repo`` (e.g. ``ls1intum/Helios``). Regardless of this value, Helios will sync all repositories that the GitHub App has installed to. If GitHub App credentials are not used and only a Personal Access Token (PAT) is used, only this repository will be synced.
 - ``DATA_SYNC_RUN_ON_STARTUP``: Whether to run the data sync on startup.
 - ``RUN_ON_STARTUP_COOLDOWN``: When server starts, it first checks the latest run of sync, if it is less than this value in minutes, it will not run the sync again.
 - ``OAUTH_ISSUER_URL``: URL to Keycloak realm in the format ``http://<keycloak-host>:<keycloak-port>/realms/<realm-name>``
