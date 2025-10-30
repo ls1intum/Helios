@@ -1,3 +1,5 @@
+@import 'tailwindcss';
+
 @layer tailwind-base, primeng, tailwind-utilities;
 
 @plugin 'tailwindcss-primeui';
@@ -22,14 +24,8 @@
   }
 }
 
-@layer tailwind-base {
-  @import 'tailwindcss';
-}
-
 @layer tailwind-utilities {
 }
 
 @layer base {
-
 }
-
