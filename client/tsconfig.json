@@ -19,7 +19,11 @@
     "importHelpers": true,
     "target": "es2024",
     "module": "es2022",
-    "lib": ["es2024", "dom"],
+    "lib": [
+      "es2024",
+      "dom",
+      "dom.iterable"
+    ],
     "baseUrl": "src",
     "paths": {
       "@app/*": [
