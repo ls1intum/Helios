@@ -1,4 +1,4 @@
-import { Component, computed, inject, viewChild } from '@angular/core';
+import { Component, computed, inject, signal, viewChild } from '@angular/core';
 import { TableModule } from 'primeng/table';
 import { AvatarModule } from 'primeng/avatar';
 import { TagModule } from 'primeng/tag';
@@ -29,7 +29,19 @@ import { HighlightPipe } from '@app/pipes/highlight.pipe';
 import { MessageService } from 'primeng/api';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
-import { IconExternalLink, IconFilterPlus, IconGitBranch, IconGitCommit, IconPinned, IconPinnedOff, IconShieldHalf, IconBrandGithub } from 'angular-tabler-icons/icons';
+import {
+  IconExternalLink,
+  IconFilterPlus,
+  IconGitBranch,
+  IconGitCommit,
+  IconPinned,
+  IconPinnedOff,
+  IconShieldHalf,
+  IconBrandGithub,
+  IconChevronUp,
+  IconChevronDown,
+} from 'angular-tabler-icons/icons';
+import { Select } from 'primeng/select';
 
 export type BranchInfoWithLink = BranchInfoDto & { link: string; lastCommitLink: string };
 
@@ -109,11 +121,23 @@ export function createBranchFilterOptions(keycloakService: KeycloakService): Fil
     FormsModule,
     WorkflowRunStatusComponent,
     HighlightPipe,
+    Select,
   ],
   providers: [
     SearchTableService,
     { provide: FILTER_OPTIONS_TOKEN, useFactory: createBranchFilterOptions, deps: [KeycloakService] },
-    provideTablerIcons({ IconFilterPlus, IconPinnedOff, IconPinned, IconShieldHalf, IconBrandGithub, IconExternalLink, IconGitCommit, IconGitBranch }),
+    provideTablerIcons({
+      IconFilterPlus,
+      IconPinnedOff,
+      IconPinned,
+      IconShieldHalf,
+      IconBrandGithub,
+      IconExternalLink,
+      IconGitCommit,
+      IconGitBranch,
+      IconChevronUp,
+      IconChevronDown,
+    }),
   ],
   templateUrl: './branches-table.component.html',
 })
@@ -128,7 +152,28 @@ export class BranchTableComponent {
 
   treeTable = viewChild<TreeTable>('table');
 
-  query = injectQuery(() => getAllBranchesOptions());
+  sortField = signal<string | undefined>('updatedAt');
+  sortDirection = signal<'asc' | 'desc'>('desc');
+
+  queryOptions = computed(() =>
+    getAllBranchesOptions({
+      query: {
+        sortField: this.sortField(),
+        sortDirection: this.sortDirection(),
+      },
+    })
+  );
+  query = injectQuery(() => this.queryOptions());
+
+  onSortFieldChange(newValue: string | undefined): void {
+    this.sortField.set(newValue);
+  }
+  toggleSortDirection(): void {
+    this.sortDirection.update(direction => (direction === 'asc' ? 'desc' : 'asc'));
+  }
+  sortDirectionIcon(): string {
+    return this.sortDirection() === 'asc' ? 'chevron-up' : 'chevron-down';
+  }
   setPinnedMutation = injectMutation(() => ({
     ...setBranchPinnedByRepositoryIdAndNameAndUserIdMutation(),
     onSuccess: () => {

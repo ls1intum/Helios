@@ -7,6 +7,8 @@ import de.tum.cit.aet.helios.releaseinfo.releasecandidate.ReleaseCandidateReposi
 import de.tum.cit.aet.helios.userpreference.UserPreference;
 import de.tum.cit.aet.helios.userpreference.UserPreferenceRepository;
 import jakarta.persistence.EntityNotFoundException;
+
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -26,32 +28,27 @@ public class BranchService {
   private final AuthService authService;
   private final CommitRepository commitRepository;
 
-  public List<BranchInfoDto> getAllBranches() {
-    final Optional<UserPreference> userPreference =
-        authService.isLoggedIn()
-            ? userPreferenceRepository.findByUser(authService.getUserFromGithubId())
-            : Optional.empty();
-    return branchRepository.findAll().stream()
-        .map((branch) -> BranchInfoDto.fromBranchAndUserPreference(branch, userPreference,
-            commitRepository))
-        .sorted(
-            (pr1, pr2) -> {
-              if (pr1.isPinned() && !pr2.isPinned()) {
-                return -1;
-              } else if (!pr1.isPinned() && pr2.isPinned()) {
-                return 1;
-              } else {
-                if (pr1.updatedAt() == null && pr2.updatedAt() == null) {
-                  return 0;
-                } else if (pr1.updatedAt() == null) {
-                  return 1;
-                } else if (pr2.updatedAt() == null) {
-                  return -1;
-                }
-                return pr2.updatedAt().compareTo(pr1.updatedAt());
-              }
-            })
-        .collect(Collectors.toList());
+  public List<BranchInfoDto> getAllBranches(String sortField, String sortDirection) {
+      final Optional<UserPreference> userPreference = authService.isLoggedIn()
+              ? userPreferenceRepository.findByUser(authService.getUserFromGithubId())
+              : Optional.empty();
+      Comparator<BranchInfoDto> comparator = buildBranchInfoDtoComparator(sortField, sortDirection);
+      return branchRepository.findAll().stream()
+              .map((branch) -> BranchInfoDto.fromBranchAndUserPreference(branch, userPreference, commitRepository))
+              .sorted(comparator)
+              .collect(Collectors.toList());
+  }
+
+  private Comparator<BranchInfoDto> buildBranchInfoDtoComparator(String sortField, String sortDirection) {
+      Comparator<BranchInfoDto> baseComparator = Comparator.comparing(BranchInfoDto::updatedAt, Comparator.nullsLast(Comparator.naturalOrder()));
+      if ("name".equals(sortField)) {
+          baseComparator = Comparator.comparing(BranchInfoDto::name);
+      }
+      if ("desc".equalsIgnoreCase(sortDirection)) {
+          baseComparator = baseComparator.reversed();
+      }
+      return Comparator.comparing(BranchInfoDto::isPinned).reversed()
+              .thenComparing(baseComparator);
   }
 
   @Transactional
