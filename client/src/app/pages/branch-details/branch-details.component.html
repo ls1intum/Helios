@@ -14,7 +14,11 @@
         </div>
       </div>
       <div class="flex items-center gap-2">
-        <h2 class="text-2xl" [innerHTML]="commit()?.message | markdown"></h2>
+        <h2 class="text-xl">Last commit:</h2>
+        <h3 [innerHTML]="commit()?.message | markdown"></h3>
+        @if (commit()?.sha) {
+          <h3 class="font-mono">({{ commit()!.sha.substring(0, 7) }})</h3>
+        }
       </div>
       <div class="block md:hidden">
         @if (isAtLeastMaintainer()) {
@@ -41,6 +45,7 @@
 
 <div class="flex flex-col gap-6">
   <app-pipeline [selector]="pipelineSelector()" />
+  <app-pipeline-test-results [selector]="pipelineSelector()" />
   @if (query.data(); as branch) {
     <app-deployment-selection [sourceRef]="branch.name" [commitSha]="branch.commitSha" />
   }
