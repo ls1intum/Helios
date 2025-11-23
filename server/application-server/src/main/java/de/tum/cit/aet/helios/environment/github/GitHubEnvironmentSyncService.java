@@ -5,6 +5,9 @@ import de.tum.cit.aet.helios.environment.EnvironmentRepository;
 import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import jakarta.transaction.Transactional;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.jetbrains.annotations.NotNull;
@@ -49,5 +52,48 @@ public class GitHubEnvironmentSyncService {
 
     // Update protection rules
     environmentConverter.updateProtectionRules(gitHubEnvironmentDto, environment);
+  }
+
+  /**
+   * Removes environments from the local database that no longer exist in GitHub.
+   *
+   * <p>This method compares the environments currently in GitHub with those stored locally for a
+   * given repository. Any local environments that are not present in the GitHub list will be
+   * deleted.
+   *
+   * @param gitHubEnvironments the list of environments currently in GitHub
+   * @param repositoryId the ID of the repository to clean up environments for
+   */
+  @Transactional
+  public void removeDeletedEnvironments(
+      @NotNull List<GitHubEnvironmentDto> gitHubEnvironments, @NotNull Long repositoryId) {
+    Set<Long> githubEnvironmentIds =
+        gitHubEnvironments.stream().map(GitHubEnvironmentDto::getId).collect(Collectors.toSet());
+
+    List<Environment> localEnvironments =
+        environmentRepository.findByRepositoryRepositoryIdOrderByCreatedAtDesc(repositoryId);
+
+    List<Environment> environmentsToDelete =
+        localEnvironments.stream()
+            .filter(env -> !githubEnvironmentIds.contains(env.getId()))
+            .toList();
+
+    for (Environment environment : environmentsToDelete) {
+      log.info(
+          "Deleting environment '{}' (ID: {}) as it no longer exists in GitHub repository (ID:"
+              + " {}).",
+          environment.getName(),
+          environment.getId(),
+          repositoryId);
+
+      environmentRepository.delete(environment);
+    }
+
+    if (!environmentsToDelete.isEmpty()) {
+      log.info(
+          "Removed {} environment(s) from repository (ID: {}) that no longer exist in GitHub.",
+          environmentsToDelete.size(),
+          repositoryId);
+    }
   }
 }
