@@ -125,6 +125,7 @@ jobs:
             echo "HELIOS_ENVIRONMENT_NAME=${{ vars.HELIOS_ENVIRONMENT_NAME }}" >> .env
             echo "HELIOS_PROD_SECRET_KEY=${{ secrets.HELIOS_PROD_SECRET_KEY }}" >> .env
             echo "HELIOS_STAGING_SECRET_KEY=${{ secrets.HELIOS_STAGING_SECRET_KEY }}" >> .env
+            echo "HELIOS_DEVELOPERS_GITHUB_USERNAMES=${{ vars.HELIOS_DEVELOPERS_GITHUB_USERNAMES }}" >> .env
             
 
       - name: SSH to VM and Execute Docker-Compose Up

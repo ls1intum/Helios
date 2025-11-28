@@ -29,6 +29,7 @@ helios:
             - url: http://localhost:8080/api/environments/status
               secretKey: ${HELIOS_LOCAL_SECRET_KEY:}
     clientBaseUrl: "http://localhost:4200"
+    developers: ${HELIOS_DEVELOPERS_GITHUB_USERNAMES:}
 
 logging:
     level:
