@@ -14,6 +14,7 @@ import { MarkdownPipe } from '@app/core/modules/markdown/markdown.pipe';
 import { RouterLink } from '@angular/router';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
 import { IconGitBranch, IconTag, IconTagPlus } from 'angular-tabler-icons/icons';
+import { PipelineTestResultsComponent } from '@app/components/pipeline/test-results/pipeline-test-results.component';
 
 @Component({
   selector: 'app-branch-details',
@@ -28,6 +29,7 @@ import { IconGitBranch, IconTag, IconTagPlus } from 'angular-tabler-icons/icons'
     SkeletonModule,
     ReleaseCandidateCreateComponent,
     MarkdownPipe,
+    PipelineTestResultsComponent,
   ],
   providers: [
     provideTablerIcons({
