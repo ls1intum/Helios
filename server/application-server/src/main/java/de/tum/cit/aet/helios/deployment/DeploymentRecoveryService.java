@@ -83,7 +83,7 @@ public class DeploymentRecoveryService {
       log.warn(
           "Marking Helios deployment {} as FAILED, stuck in IN_PROGRESS state since {}",
           deployment.getId(),
-          deployment.getUpdatedAt());
+          deployment.getStatusUpdatedAt());
 
       deployment.setStatus(HeliosDeployment.Status.FAILED);
       heliosDeploymentRepository.save(deployment);
