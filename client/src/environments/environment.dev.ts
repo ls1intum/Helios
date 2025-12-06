@@ -12,4 +12,5 @@ export const environment = {
     skipLoginPage: true,
   },
   clientUrl: 'http://localhost:4200',
+  heliosDevelopers: ['meryemefe', 'mertilginoglu', 'gbanu', 'thielpa', 'egekocabas', 'turkerkoc', 'stefannemeth', 'bensofficial'],
 };

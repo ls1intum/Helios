@@ -32,6 +32,7 @@ helios:
             - url: https://helios-staging.aet.cit.tum.de/api/environments/status
               secretKey: ${HELIOS_STAGING_SECRET_KEY:}
     clientBaseUrl: "https://helios.aet.cit.tum.de"
+    developers: ${HELIOS_DEVELOPERS_GITHUB_USERNAMES:}
 
 logging:
     level:
