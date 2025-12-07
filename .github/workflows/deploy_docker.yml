@@ -58,6 +58,7 @@ jobs:
           proxy_port: ${{ vars.DEPLOYMENT_GATEWAY_PORT }}
           source: "./compose.prod.yaml"
           target: ${{ vars.WORKING_DIR }}
+          overwrite: true
 
       - name: SSH to VM and create .env file
         uses: appleboy/ssh-action@v1.2.2
