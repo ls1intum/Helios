@@ -12,4 +12,5 @@ export const environment = {
     skipLoginPage: true,
   },
   clientUrl: '',
+  heliosDevelopers: [],
 };

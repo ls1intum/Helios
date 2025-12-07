@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -31,4 +32,17 @@ public interface HeliosDeploymentRepository extends JpaRepository<HeliosDeployme
   List<HeliosDeployment> findByRepositoryIdAndSha(Long repositoryId, String sha);
 
   Optional<HeliosDeployment> findByDeploymentId(Long deploymentId);
+
+
+  /**
+   * Finds deployments that are stuck in IN_PROGRESS state for more than the specified duration.
+   *
+   * @param threshold Time threshold; deployments with statusUpdatedAt before this time
+   * @return List of deployments stuck in IN_PROGRESS state beyond the time threshold
+   */
+  @Query(
+      "SELECT hd FROM HeliosDeployment hd "
+          + "WHERE hd.status = 'IN_PROGRESS' "
+          + "AND (hd.statusUpdatedAt < :threshold)")
+  List<HeliosDeployment> findStuckDeployments(@Param("threshold") OffsetDateTime threshold);
 }

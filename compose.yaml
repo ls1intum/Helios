@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: 'postgres:16'
+    image: postgres:17.6-alpine
     environment:
       - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
@@ -69,7 +69,7 @@ services:
       - helios-network
 
   nats-server:
-    image: nats:2.10.26-alpine
+    image: nats:2.12.1-alpine
     ports:
       - "4222:4222"
       - "8222:8222"
