@@ -51,3 +51,7 @@ cleanup:
 
 notification:
     enabled: ${NOTIFICATIONS_ENABLED:true}
+
+recovery:
+    stuck-deployments:
+        cron: "0 0 * * * *"
