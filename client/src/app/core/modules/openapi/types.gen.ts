@@ -2260,7 +2260,10 @@ export type GetCommitByRepositoryIdAndNameResponse = GetCommitByRepositoryIdAndN
 export type GetAllBranchesData = {
   body?: never;
   path?: never;
-  query?: never;
+  query?: {
+    sortField?: string;
+    sortDirection?: string;
+  };
   url: '/api/branches';
 };
 

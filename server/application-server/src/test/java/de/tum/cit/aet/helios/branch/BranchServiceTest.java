@@ -64,7 +64,7 @@ public class BranchServiceTest {
     when(authService.getUserFromGithubId()).thenReturn(null);
     when(userPreferenceRepository.findByUser(null)).thenReturn(Optional.of(userPreference));
 
-    List<BranchInfoDto> allBranches = branchService.getAllBranches();
+    List<BranchInfoDto> allBranches = branchService.getAllBranches("updatedAt", "desc");
 
     BranchInfoDto b1Dto =
         BranchInfoDto.fromBranchAndUserPreference(b1, Optional.of(userPreference),

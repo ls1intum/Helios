@@ -25,7 +25,21 @@
     </ng-template>
   </p-table>
 } @else {
-  <div class="flex gap-2 justify-end m-2">
+  <div class="flex flex-wrap gap-2 justify-end m-2 items-center">
+    <label class="text-base font-semibold text-surface-600 dark:text-surface-200">Sort branches</label>
+    <p-select
+      [(ngModel)]="sortField"
+      (ngModelChange)="onSortFieldChange($event)"
+      [options]="[
+        { label: 'Name', value: 'name' },
+        { label: 'Updated At', value: 'updatedAt' },
+      ]"
+      placeholder="Sort Field"
+      class="w-44"
+    ></p-select>
+    <p-button type="button" text (click)="toggleSortDirection()" [pTooltip]="sortDirection() === 'asc' ? 'Ascending' : 'Descending'" tooltipPosition="top">
+      <i-tabler [name]="sortDirectionIcon()" class="!size-5" />
+    </p-button>
     <p-button (click)="expandAll()" label="Expand All" />
     <p-button (click)="collapseAll()" label="Collapse All" />
   </div>

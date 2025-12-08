@@ -1697,6 +1697,19 @@ paths:
       tags:
       - branch-controller
       operationId: getAllBranches
+      parameters:
+      - name: sortField
+        in: query
+        required: false
+        schema:
+          type: string
+          default: updatedAt
+      - name: sortDirection
+        in: query
+        required: false
+        schema:
+          type: string
+          default: desc
       responses:
         "409":
           description: Conflict
