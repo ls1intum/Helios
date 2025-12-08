@@ -23,7 +23,7 @@
         <spring.boot.version>3.5.7</spring.boot.version>
 
         <!-- dependencies -->
-        <lombok.version>1.18.38</lombok.version>
+        <lombok.version>1.18.42</lombok.version>
         <slf4j-api.version>2.0.17</slf4j-api.version>
 
         <!-- plugins -->
