@@ -106,6 +106,8 @@ const LOG_LEVELS: LogLevel[] = [
 export class PipelineTestResultsComponent {
   selector = input<PipelineSelector | null>();
 
+  readonly logLevels = LOG_LEVELS;
+
   testSuiteRows = signal(10);
   testSuiteFirst = signal(0);
   activeTestTypeTab = signal(0);
@@ -131,6 +133,8 @@ export class PipelineTestResultsComponent {
     const level = this.selectedLogLevel();
     return level.includes;
   });
+
+  isLogFilterActive = computed(() => this.selectedLogLevelValue() !== LOG_LEVELS.length - 1);
 
   // Function to filter logs by level
   filterLogsByLevel(text: string | undefined): string {
@@ -309,8 +313,11 @@ export class PipelineTestResultsComponent {
     this.op().toggle(event);
   }
 
-  toggleShowOnlyFailed() {
-    this.showOnlyFailed.set(!this.showOnlyFailed());
+  setShowOnlyFailed(value: boolean) {
+    if (this.showOnlyFailed() === value) {
+      return;
+    }
+    this.showOnlyFailed.set(value);
     this.testSuiteFirst.set(0);
   }
 
