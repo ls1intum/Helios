@@ -56,8 +56,7 @@ public class EnvironmentService {
   private final HeliosDeploymentRepository heliosDeploymentRepository;
   private final ReleaseCandidateRepository releaseCandidateRepository;
   private final DeploymentRepository deploymentRepository;
-  @Lazy
-  private final GitRepoSettingsService gitRepoSettingsService;
+  @Lazy private final GitRepoSettingsService gitRepoSettingsService;
   private final EnvironmentScheduler environmentScheduler;
   private final WorkflowRepository workflowRepository;
   private final ProtectionRuleRepository protectionRuleRepository;
@@ -706,12 +705,14 @@ public class EnvironmentService {
       throw new EntityNotFoundException("GitHub repository not found for repository ID: " + repoId);
     }
     try {
-      List<GitHubEnvironmentDto> gitHubEnvironmentDtoS =
+      List<GitHubEnvironmentDto> gitHubEnvironmentDtos =
           gitHubService.getEnvironments(ghRepository);
 
-      for (GitHubEnvironmentDto gitHubEnvironmentDto : gitHubEnvironmentDtoS) {
+      for (GitHubEnvironmentDto gitHubEnvironmentDto : gitHubEnvironmentDtos) {
         environmentSyncService.processEnvironment(gitHubEnvironmentDto, ghRepository);
       }
+
+      environmentSyncService.removeDeletedEnvironments(gitHubEnvironmentDtos, repoId);
 
     } catch (IOException e) {
       log.error(
