@@ -50,7 +50,7 @@ services:
     # If you have an existing realm JSON, mount it here; otherwise skip the volume and import flags
     volumes:
       - ./helios-example-realm.json:/opt/keycloak/data/import/dev-realm-export.json
-    command: start-dev --import-realm --http-port=8081 --features="token-exchange,admin-fine-grained-authz"
+    command: start-dev --import-realm --http-port=8081 --features="token-exchange,admin-fine-grained-authz:v1"
     networks:
       - helios-network
 
