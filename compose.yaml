@@ -36,6 +36,9 @@ services:
       context: keycloakify
     container_name: keycloak
     environment:
+      KC_LOG_LEVEL: "INFO,org.keycloak:DEBUG,org.keycloak.services:TRACE,org.keycloak.protocol.oidc:DEBUG,org.keycloak.events:DEBUG"
+      KC_FEATURES: "log-mdc"
+      KC_LOG_MDC_ENABLED: "true"
       KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
       KC_DB: postgres
