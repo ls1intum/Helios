@@ -165,6 +165,9 @@ services:
     image: ghcr.io/ls1intum/helios/keycloak:${KEYCLOAK_IMAGE_TAG}
     container_name: keycloak
     environment:
+      KC_LOG_LEVEL: "INFO,org.keycloak:DEBUG,org.keycloak.services:TRACE,org.keycloak.protocol.oidc:DEBUG,org.keycloak.events:DEBUG"
+      KC_FEATURES: "log-mdc"
+      KC_LOG_MDC_ENABLED: "true"
       KC_BOOTSTRAP_ADMIN_USERNAME: ${KC_BOOTSTRAP_ADMIN_USERNAME}
       KC_BOOTSTRAP_ADMIN_PASSWORD: ${KC_BOOTSTRAP_ADMIN_PASSWORD}
       KC_DB: postgres
