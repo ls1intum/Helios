@@ -1,7 +1,7 @@
 import { Component, input, OnInit, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
-import { IconFilter, IconFilterPlus } from 'angular-tabler-icons/icons';
+import { IconFilter, IconFilterPlus, IconX } from 'angular-tabler-icons/icons';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { Popover, PopoverModule } from 'primeng/popover';
@@ -15,6 +15,7 @@ import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
     provideTablerIcons({
       IconFilter,
       IconFilterPlus,
+      IconX,
     }),
   ],
   templateUrl: './table-filter-paginated.component.html',
@@ -46,6 +47,7 @@ export class TableFilterPaginatedComponent implements OnInit {
 
   clearSearch(): void {
     this.localSearchTerm = '';
+    this.searchTermSubject.next('');
   }
 
   onInput(event: Event) {
