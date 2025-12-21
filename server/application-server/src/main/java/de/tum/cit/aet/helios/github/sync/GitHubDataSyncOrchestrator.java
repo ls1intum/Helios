@@ -24,6 +24,7 @@ import de.tum.cit.aet.helios.releaseinfo.release.github.GitHubReleaseSyncService
 import de.tum.cit.aet.helios.user.User;
 import de.tum.cit.aet.helios.user.UserRepository;
 import de.tum.cit.aet.helios.user.github.GitHubUserSyncService;
+import de.tum.cit.aet.helios.util.DateUtil;
 import de.tum.cit.aet.helios.workflow.GitHubWorkflowContext;
 import de.tum.cit.aet.helios.workflow.github.GitHubWorkflowRunSyncService;
 import de.tum.cit.aet.helios.workflow.github.GitHubWorkflowSyncService;
@@ -111,17 +112,45 @@ public class GitHubDataSyncOrchestrator {
    * @param repository the GitHub repository to sync pull requests from
    */
   public void syncPullRequestsOfRepository(GHRepository repository) {
+    syncPullRequestsOfRepository(repository, Optional.empty());
+  }
+
+  /**
+   * Synchronizes pull requests from a specific GitHub repository, optionally constrained by an
+   * update cutoff time.
+   *
+   * @param repository the GitHub repository to sync pull requests from
+   * @param updatedSince optional cutoff; when present, stops once PRs are older than this time
+   */
+  public void syncPullRequestsOfRepository(
+      GHRepository repository, Optional<OffsetDateTime> updatedSince) {
     var iterator =
         repository
             .queryPullRequests()
-            .state(GHIssueState.OPEN)
+            .state(GHIssueState.ALL)
             .sort(GHPullRequestQueryBuilder.Sort.UPDATED)
             .direction(GHDirection.DESC)
             .list()
             .withPageSize(100)
             .iterator();
 
-    iterator.forEachRemaining(pullRequestSyncService::processPullRequest);
+    while (iterator.hasNext()) {
+      var pullRequest = iterator.next();
+      if (updatedSince.isPresent()) {
+        try {
+          var updatedAt = DateUtil.convertToOffsetDateTime(pullRequest.getUpdatedAt());
+          if (updatedAt != null && updatedAt.isBefore(updatedSince.get())) {
+            break;
+          }
+        } catch (IOException e) {
+          log.warn(
+              "Failed to read updatedAt for pull request {}: {}",
+              pullRequest.getId(),
+              e.getMessage());
+        }
+      }
+      pullRequestSyncService.processPullRequest(pullRequest);
+    }
   }
 
   /**
