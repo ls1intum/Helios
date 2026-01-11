@@ -41,6 +41,8 @@ public class GitHubDataSyncService {
 
   public void syncRepositoryData(String repositoryNameWithOwner) {
     var cutoffDate = OffsetDateTime.now().minusDays(timeframe);
+    // Keep a broader PR window to recover from missed webhook events.
+    var pullRequestCutoffDate = cutoffDate;
 
     // Get last sync time
     var lastSync =
@@ -116,8 +118,10 @@ public class GitHubDataSyncService {
       logSeparator();
       var step3Start = Instant.now();
       log.info(
-          "Repository: {} --> [Step 3/10] Syncing Open Pull Requests...", repositoryNameWithOwner);
-      dataSyncOrchestrator.syncPullRequestsOfRepository(ghRepository);
+          "Repository: {} --> [Step 3/10] Syncing Pull Requests (Open + Closed)...",
+          repositoryNameWithOwner);
+      dataSyncOrchestrator.syncPullRequestsOfRepository(
+          ghRepository, Optional.of(pullRequestCutoffDate));
       var step3Duration = Duration.between(step3Start, Instant.now()).toMillis();
       log.info(
           "Repository: {} --> [Step 3/10] Completed Pull Request Sync. (Took: {} ms)",
