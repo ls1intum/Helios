@@ -102,15 +102,15 @@
       }
 
       <p-popover #op>
-        <div class="flex flex-col gap-4">
-          <div class="flex flex-col gap-1">
-            @if (showOnlyFailed()) {
-              <p-button severity="secondary" text styleClass="w-full" (click)="toggleShowOnlyFailed()">All tests</p-button>
-              <p-button severity="secondary" styleClass="w-full">Only failed tests</p-button>
-            } @else {
-              <p-button severity="secondary" styleClass="w-full">All tests</p-button>
-              <p-button severity="secondary" text styleClass="w-full" (click)="toggleShowOnlyFailed()">Only failed tests</p-button>
-            }
+        <div class="flex flex-col gap-3">
+          <span class="text-xs uppercase tracking-wide text-muted-color">Result filter</span>
+          <div class="flex gap-2">
+            <p-button size="small" [severity]="!showOnlyFailed() ? 'primary' : 'secondary'" [outlined]="showOnlyFailed()" styleClass="w-full" (click)="setShowOnlyFailed(false)">
+              All tests
+            </p-button>
+            <p-button size="small" [severity]="showOnlyFailed() ? 'primary' : 'secondary'" [outlined]="!showOnlyFailed()" styleClass="w-full" (click)="setShowOnlyFailed(true)">
+              Only failed tests
+            </p-button>
           </div>
         </div>
       </p-popover>
@@ -304,17 +304,25 @@
 
       @if (selectedTestCase()?.systemOut || selectedTestCase()?.suiteSystemOut) {
         <!-- Log Level Filter -->
-        <div class="flex flex-col gap-1 mb-2">
+        <div class="flex flex-col gap-3 mb-3 border border-muted-color rounded-md p-3 bg-surface-100">
           <div class="flex justify-between items-center">
-            <span class="text-sm font-medium">Log Level Filter:</span>
-            <span class="text-sm font-medium" [class]="selectedLogLevel().color">
+            <div class="flex flex-col">
+              <span class="text-sm font-medium">Log Level Filter</span>
+            </div>
+            <span class="text-sm font-semibold" [class]="selectedLogLevel().color">
               {{ selectedLogLevel().label }}
             </span>
           </div>
-          <p-slider [ngModel]="getLogLevelValue()" (ngModelChange)="updateLogLevel($event)" [min]="0" [max]="7" [step]="1"> </p-slider>
-          <div class="flex justify-between text-xs text-gray-500">
-            <span>Higher Severity</span>
-            <span>Lower Severity</span>
+          <div class="flex flex-wrap gap-2">
+            @for (level of logLevels; track level.value) {
+              <p-button
+                size="small"
+                [label]="level.label"
+                [outlined]="getLogLevelValue() !== level.value"
+                [severity]="getLogLevelValue() === level.value ? 'primary' : 'secondary'"
+                (onClick)="updateLogLevel(level.value)"
+              ></p-button>
+            }
           </div>
         </div>
       }
@@ -334,16 +342,38 @@
               }
             }
           </div>
-          <div class="flex justify-end mt-2">
-            <button
-              pButton
-              class="p-button-sm p-button-secondary"
-              (click)="downloadLogs(filteredTestCaseLogs(), selectedTestCase()?.name + '_case_logs.txt')"
-              [disabled]="!filteredTestCaseLogs()"
-            >
-              <i-tabler name="download" class="mr-2"></i-tabler>
-              Download Logs
-            </button>
+          <div class="flex flex-col gap-2 mt-2">
+            <div class="flex flex-wrap items-center gap-2 text-xs text-muted-color">
+              <p-tag
+                [class]="selectedLogLevel().color"
+                severity="secondary"
+                [value]="isLogFilterActive() ? 'Filter applied: ' + selectedLogLevel().label : 'Filter disabled'"
+              ></p-tag>
+            </div>
+            <div class="flex flex-wrap justify-end gap-2">
+              <button
+                pButton
+                type="button"
+                class="p-button-sm p-button-outlined"
+                (click)="downloadLogs(selectedTestCase()?.systemOut || '', selectedTestCase()?.name + '_case_logs.txt')"
+                [disabled]="!selectedTestCase()?.systemOut"
+              >
+                <i-tabler name="download" class="mr-2"></i-tabler>
+                Download All Logs
+              </button>
+              @if (isLogFilterActive()) {
+                <button
+                  pButton
+                  type="button"
+                  class="p-button-sm p-button-secondary"
+                  (click)="downloadLogs(filteredTestCaseLogs(), selectedTestCase()?.name + '_case_logs_filtered.txt')"
+                  [disabled]="!filteredTestCaseLogs()"
+                >
+                  <i-tabler name="download" class="mr-2"></i-tabler>
+                  Download Filtered Logs
+                </button>
+              }
+            </div>
           </div>
         </div>
       }
@@ -363,16 +393,38 @@
               }
             }
           </div>
-          <div class="flex justify-end mt-2">
-            <button
-              pButton
-              class="p-button-sm p-button-secondary"
-              (click)="downloadLogs(filteredTestSuiteLogs(), selectedTestCase()?.name + '_suite_logs.txt')"
-              [disabled]="!filteredTestSuiteLogs()"
-            >
-              <i-tabler name="download" class="mr-2"></i-tabler>
-              Download Logs
-            </button>
+          <div class="flex flex-col gap-2 mt-2">
+            <div class="flex flex-wrap items-center gap-2 text-xs text-muted-color">
+              <p-tag
+                [class]="selectedLogLevel().color"
+                severity="secondary"
+                [value]="isLogFilterActive() ? 'Filter applied: ' + selectedLogLevel().label : 'Filter disabled'"
+              ></p-tag>
+            </div>
+            <div class="flex flex-wrap justify-end gap-2">
+              <button
+                pButton
+                type="button"
+                class="p-button-sm p-button-outlined"
+                (click)="downloadLogs(selectedTestCase()?.suiteSystemOut || '', selectedTestCase()?.name + '_suite_logs.txt')"
+                [disabled]="!selectedTestCase()?.suiteSystemOut"
+              >
+                <i-tabler name="download" class="mr-2"></i-tabler>
+                Download All Logs
+              </button>
+              @if (isLogFilterActive()) {
+                <button
+                  pButton
+                  type="button"
+                  class="p-button-sm p-button-secondary"
+                  (click)="downloadLogs(filteredTestSuiteLogs(), selectedTestCase()?.name + '_suite_logs_filtered.txt')"
+                  [disabled]="!filteredTestSuiteLogs()"
+                >
+                  <i-tabler name="download" class="mr-2"></i-tabler>
+                  Download Filtered Logs
+                </button>
+              }
+            </div>
           </div>
         </div>
       }
