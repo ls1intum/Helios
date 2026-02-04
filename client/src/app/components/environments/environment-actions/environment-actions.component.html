@@ -29,7 +29,7 @@
             </div>
           </p-button>
         } @else {
-          <p-button (click)="onDeploy($event)" [disabled]="!canUserDeploy()" [pTooltip]="getDeployTooltip()" tooltipPosition="top">
+          <p-button class="border-r-2" (click)="onDeploy($event)" [disabled]="!canUserDeploy()" [pTooltip]="getDeployTooltip()" tooltipPosition="top">
             <div class="flex items-center">
               <i-tabler name="cloud-upload" class="w-4 h-4 mr-1.5 flex-shrink-0" />
               <span>Deploy</span>
