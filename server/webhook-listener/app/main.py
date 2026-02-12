@@ -8,8 +8,8 @@ from app.config import settings
 from app.nats_client import nats_client
 
 RETENTION_DAYS = 28
-NANOS_PER_SECOND = 1_000_000_000
-RETENTION_MAX_AGE_NANOS = RETENTION_DAYS * 24 * 60 * 60 * NANOS_PER_SECOND
+SECONDS_PER_DAY = 24 * 60 * 60
+RETENTION_MAX_AGE_SECONDS = RETENTION_DAYS * SECONDS_PER_DAY
 
 
 @asynccontextmanager
@@ -18,12 +18,12 @@ async def lifespan(app: FastAPI):
     await nats_client.js.add_stream(
         name="github",
         subjects=["github.>"],
-        config=StreamConfig(storage="file", max_age=RETENTION_MAX_AGE_NANOS),
+        config=StreamConfig(storage="file", max_age=RETENTION_MAX_AGE_SECONDS),
     )
     await nats_client.js.add_stream(
         name="notification",
         subjects=["notification.>"],
-        config=StreamConfig(storage="file", max_age=RETENTION_MAX_AGE_NANOS),
+        config=StreamConfig(storage="file", max_age=RETENTION_MAX_AGE_SECONDS),
     )
     yield
     await nats_client.close()
