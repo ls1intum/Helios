@@ -15,6 +15,8 @@ import org.springframework.stereotype.Component;
 public class GitHubWorkflowRunConverter
     extends BaseGitServiceEntityConverter<GHWorkflowRun, WorkflowRun> {
 
+  private static final int MAX_NAME_AND_TITLE_LENGTH = 255;
+
   @Override
   public WorkflowRun convert(@NonNull GHWorkflowRun source) {
     return update(source, new WorkflowRun());
@@ -23,8 +25,11 @@ public class GitHubWorkflowRunConverter
   @Override
   public WorkflowRun update(@NonNull GHWorkflowRun source, @NonNull WorkflowRun workflowRun) {
     convertBaseFields(source, workflowRun);
-    workflowRun.setName(source.getName());
-    workflowRun.setDisplayTitle(source.getDisplayTitle());
+    workflowRun.setName(
+        truncate(source.getName(), MAX_NAME_AND_TITLE_LENGTH, "name", source.getId()));
+    workflowRun.setDisplayTitle(
+        truncate(workflowRun.getDisplayTitle(), MAX_NAME_AND_TITLE_LENGTH, "displayTitle",
+            source.getId()));
     workflowRun.setRunNumber(source.getRunNumber());
     workflowRun.setRunAttempt(source.getRunAttempt());
     try {
@@ -59,6 +64,21 @@ public class GitHubWorkflowRunConverter
         Optional.ofNullable(source.getConclusion()).map(this::convertConclusion));
 
     return workflowRun;
+  }
+
+  private static String truncate(String value, int maxLength, String fieldName, long sourceId) {
+    if (value == null || value.length() <= maxLength) {
+      return value;
+    }
+    String truncatedValue = value.substring(0, maxLength);
+    log.warn(
+        "Truncated workflow run field '{}' from {} to {} characters for source {}: '{}'",
+        fieldName,
+        value.length(),
+        maxLength,
+        sourceId,
+        truncatedValue);
+    return truncatedValue;
   }
 
   private WorkflowRun.Status convertStatus(GHWorkflowRun.Status status) {

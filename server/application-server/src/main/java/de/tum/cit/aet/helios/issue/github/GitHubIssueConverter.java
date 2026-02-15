@@ -3,13 +3,17 @@ package de.tum.cit.aet.helios.issue.github;
 import de.tum.cit.aet.helios.github.BaseGitServiceEntityConverter;
 import de.tum.cit.aet.helios.issue.Issue;
 import de.tum.cit.aet.helios.util.DateUtil;
+import lombok.extern.log4j.Log4j2;
 import org.kohsuke.github.GHIssue;
 import org.kohsuke.github.GHIssueState;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 
+@Log4j2
 @Component
 public class GitHubIssueConverter extends BaseGitServiceEntityConverter<GHIssue, Issue> {
+
+  private static final int MAX_TITLE_LENGTH = 255;
 
   @Override
   public Issue convert(@NonNull GHIssue source) {
@@ -21,7 +25,7 @@ public class GitHubIssueConverter extends BaseGitServiceEntityConverter<GHIssue,
     convertBaseFields(source, issue);
     issue.setNumber(source.getNumber());
     issue.setState(convertState(source.getState()));
-    issue.setTitle(source.getTitle());
+    issue.setTitle(truncate(source.getTitle(), MAX_TITLE_LENGTH, "title", source.getId()));
     issue.setBody(source.getBody());
     issue.setHtmlUrl(source.getHtmlUrl().toString());
     issue.setLocked(source.isLocked());
@@ -39,5 +43,20 @@ public class GitHubIssueConverter extends BaseGitServiceEntityConverter<GHIssue,
       default:
         return Issue.State.CLOSED;
     }
+  }
+
+  private static String truncate(String value, int maxLength, String fieldName, long sourceId) {
+    if (value == null || value.length() <= maxLength) {
+      return value;
+    }
+    String truncatedValue = value.substring(0, maxLength);
+    log.warn(
+        "Truncated issue field '{}' from {} to {} characters for source {}: '{}'",
+        fieldName,
+        value.length(),
+        maxLength,
+        sourceId,
+        truncatedValue);
+    return truncatedValue;
   }
 }
