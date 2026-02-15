@@ -141,7 +141,7 @@
         <!-- Add this section for the action button -->
         @if (step.actionButton) {
           <div class="flex justify-center mt-5">
-            <p-button [label]="step.actionButton.label" styleClass="p-button-raised" (onClick)="openExternalLink(step.actionButton.url)">
+            <p-button [label]="step.actionButton.label" styleClass="p-button-raised" [tabindex]="-1" (onClick)="openExternalLink(step.actionButton.url)">
               @if (step.actionButton.icon) {
                 <i-tabler [name]="step.actionButton.icon" class="!size-4" />
               }
@@ -160,7 +160,7 @@
     }
   </div>
   <div class="flex justify-center">
-    <p-button label="Open full documentation" [link]="true" (onClick)="openExternalLink('https://ls1intum.github.io/Helios/development/production/ls1intum/')" />
+    <p-button label="Open full documentation" [link]="true" (onClick)="openExternalLink('https://ls1intum.github.io/Helios/user_guide/ls1intum/')" />
   </div>
   <ng-template pTemplate="footer">
     <div class="flex justify-between w-full">
