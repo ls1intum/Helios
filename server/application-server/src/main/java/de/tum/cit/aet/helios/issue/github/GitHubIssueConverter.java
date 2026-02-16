@@ -50,7 +50,7 @@ public class GitHubIssueConverter extends BaseGitServiceEntityConverter<GHIssue,
       return value;
     }
     String truncatedValue = value.substring(0, maxLength);
-    log.warn(
+    log.info(
         "Truncated issue field '{}' from {} to {} characters for source {}: '{}'",
         fieldName,
         value.length(),
