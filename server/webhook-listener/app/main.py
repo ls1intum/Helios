@@ -4,15 +4,37 @@ from contextlib import asynccontextmanager
 from fastapi import Body, FastAPI, HTTPException, Header, Request, status
 from pydantic import BaseModel
 from nats.js.api import StreamConfig
+from nats.js.errors import BadRequestError
 from app.config import settings
+from app.logger import logger
 from app.nats_client import nats_client
+
+RETENTION_DAYS = 28
+SECONDS_PER_DAY = 24 * 60 * 60
+RETENTION_MAX_AGE_SECONDS = RETENTION_DAYS * SECONDS_PER_DAY
+
+
+async def ensure_stream(name: str, subjects: list[str]) -> None:
+    stream_config = StreamConfig(
+        name=name,
+        subjects=subjects,
+        storage="file",
+        max_age=RETENTION_MAX_AGE_SECONDS,
+    )
+    try:
+        await nats_client.js.add_stream(config=stream_config)
+    except BadRequestError as error:
+        if getattr(error, "err_code", None) != 10058:
+            raise
+        await nats_client.js.update_stream(config=stream_config)
+        logger.info(f"Updated existing stream configuration for '{name}'")
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await nats_client.connect()
-    await nats_client.js.add_stream(name="github", subjects=["github.>"], config=StreamConfig(storage="file"))
-    await nats_client.js.add_stream(name="notification", subjects=["notification.>"], config=StreamConfig(storage="file"))
+    await ensure_stream(name="github", subjects=["github.>"])
+    await ensure_stream(name="notification", subjects=["notification.>"])
     yield
     await nats_client.close()
 
