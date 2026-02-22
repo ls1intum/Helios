@@ -12,6 +12,9 @@ import org.springframework.stereotype.Repository;
 public interface DeploymentRepository extends JpaRepository<Deployment, Long> {
   List<Deployment> findByEnvironmentIdOrderByCreatedAtDesc(Long environmentId);
 
+  @SuppressWarnings("checkstyle:MethodName")
+  List<Deployment> findByPullRequest_IdOrderByCreatedAtDesc(Long pullRequestId);
+
   List<Deployment> findByRepositoryRepositoryIdAndSha(Long repositoryId, String sha);
 
   Optional<Deployment> findFirstByEnvironmentIdOrderByCreatedAtDesc(Long environmentId);

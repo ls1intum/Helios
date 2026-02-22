@@ -1583,6 +1583,33 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/WorkflowJobsResponse"
+  /api/deployments/pr/{pullRequestId}/activity-history:
+    get:
+      tags:
+      - deployment-controller
+      operationId: getActivityHistoryByPullRequestId
+      parameters:
+      - name: pullRequestId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActivityHistoryDto"
   /api/deployments/environment/{environmentId}:
     get:
       tags:
@@ -3003,6 +3030,8 @@ components:
           format: int64
         repository:
           $ref: "#/components/schemas/RepositoryInfoDto"
+        environmentName:
+          type: string
         state:
           type: string
           enum:
