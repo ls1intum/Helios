@@ -16,6 +16,7 @@ import {
   extendEnvironmentLock,
   generateReleaseNotes,
   getActivityHistoryByEnvironmentId,
+  getActivityHistoryByPullRequestId,
   getAllBranches,
   getAllDeployments,
   getAllEnabledEnvironments,
@@ -108,6 +109,7 @@ import type {
   GenerateReleaseNotesError,
   GenerateReleaseNotesResponse,
   GetActivityHistoryByEnvironmentIdData,
+  GetActivityHistoryByPullRequestIdData,
   GetAllBranchesData,
   GetAllDeploymentsData,
   GetAllEnabledEnvironmentsData,
@@ -1392,6 +1394,23 @@ export const getWorkflowJobStatusOptions = (options: Options<GetWorkflowJobStatu
       return data;
     },
     queryKey: getWorkflowJobStatusQueryKey(options),
+  });
+};
+
+export const getActivityHistoryByPullRequestIdQueryKey = (options: Options<GetActivityHistoryByPullRequestIdData>) => createQueryKey('getActivityHistoryByPullRequestId', options);
+
+export const getActivityHistoryByPullRequestIdOptions = (options: Options<GetActivityHistoryByPullRequestIdData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getActivityHistoryByPullRequestId({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: getActivityHistoryByPullRequestIdQueryKey(options),
   });
 };
 

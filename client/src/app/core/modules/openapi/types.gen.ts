@@ -495,6 +495,7 @@ export type ActivityHistoryDto = {
   type?: string;
   id?: number;
   repository?: RepositoryInfoDto;
+  environmentName?: string;
   state?: 'PENDING' | 'WAITING' | 'SUCCESS' | 'ERROR' | 'FAILURE' | 'IN_PROGRESS' | 'QUEUED' | 'INACTIVE' | 'UNKNOWN';
   sha?: string;
   ref?: string;
@@ -2147,6 +2148,33 @@ export type GetWorkflowJobStatusResponses = {
 };
 
 export type GetWorkflowJobStatusResponse = GetWorkflowJobStatusResponses[keyof GetWorkflowJobStatusResponses];
+
+export type GetActivityHistoryByPullRequestIdData = {
+  body?: never;
+  path: {
+    pullRequestId: number;
+  };
+  query?: never;
+  url: '/api/deployments/pr/{pullRequestId}/activity-history';
+};
+
+export type GetActivityHistoryByPullRequestIdErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type GetActivityHistoryByPullRequestIdError = GetActivityHistoryByPullRequestIdErrors[keyof GetActivityHistoryByPullRequestIdErrors];
+
+export type GetActivityHistoryByPullRequestIdResponses = {
+  /**
+   * OK
+   */
+  200: Array<ActivityHistoryDto>;
+};
+
+export type GetActivityHistoryByPullRequestIdResponse = GetActivityHistoryByPullRequestIdResponses[keyof GetActivityHistoryByPullRequestIdResponses];
 
 export type GetDeploymentsByEnvironmentIdData = {
   body?: never;

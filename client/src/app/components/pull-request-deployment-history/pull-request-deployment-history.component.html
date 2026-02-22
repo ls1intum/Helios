@@ -1,0 +1,78 @@
+<div class="mb-4">
+  <h3 class="text-xl mb-1">Deployment History</h3>
+</div>
+<div class="flex flex-col gap-2">
+  <style>
+    tr.lock-event td {
+      border-bottom: 1px solid black;
+    }
+  </style>
+
+  @if (activityHistoryQuery.isPending() || activityHistoryQuery.isError()) {
+    <p-table [value]="[1, 2, 3, 4, 5]" [paginator]="true" [rows]="20" class="p-datatable-lg">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Environment</th>
+          <th>User</th>
+          <th>Commit</th>
+          <th>Status</th>
+          <th>Timestamp</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body">
+        <tr>
+          <td><p-skeleton width="8rem"></p-skeleton></td>
+          <td><p-skeleton width="10rem"></p-skeleton></td>
+          <td><p-skeleton width="5rem"></p-skeleton></td>
+          <td><p-skeleton width="6rem"></p-skeleton></td>
+          <td><p-skeleton width="10rem"></p-skeleton></td>
+        </tr>
+      </ng-template>
+    </p-table>
+  } @else {
+    <p-table [value]="activityHistory() || []" [paginator]="true" [rows]="20" class="p-datatable-sm">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Environment</th>
+          <th>User</th>
+          <th>Commit</th>
+          <th>Status</th>
+          <th>Timestamp</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-combinedHistory>
+        <tr>
+          <td>
+            <span>{{ combinedHistory.environmentName }}</span>
+          </td>
+          <td>
+            <div class="flex align-items-center gap-2">
+              <app-user-avatar [user]="combinedHistory.user" />
+              <span>{{ combinedHistory.user?.name ?? combinedHistory.user?.login ?? '—' }}</span>
+            </div>
+          </td>
+          <td>
+            <span>{{ combinedHistory.sha.slice(0, 7) }}</span>
+          </td>
+          <td>
+            <span>{{ combinedHistory.state }}</span>
+          </td>
+          <td>
+            <span>{{ dateService.formatDate(combinedHistory.timestamp, 'd MMMM y, h:mm a') }}</span>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="5">
+            <div class="flex flex-col gap-2 p-20 justify-center items-center">
+              <i-tabler name="cloud-upload" class="!h-20 !w-20 text-red-500" />
+              <span class="font-semibold text-xl">No deployment history for this pull request.</span>
+              <span>Deployments will appear here once you deploy from this PR.</span>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  }
+</div>

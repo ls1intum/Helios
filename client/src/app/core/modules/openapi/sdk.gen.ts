@@ -39,6 +39,9 @@ import type {
   GetActivityHistoryByEnvironmentIdData,
   GetActivityHistoryByEnvironmentIdErrors,
   GetActivityHistoryByEnvironmentIdResponses,
+  GetActivityHistoryByPullRequestIdData,
+  GetActivityHistoryByPullRequestIdErrors,
+  GetActivityHistoryByPullRequestIdResponses,
   GetAllBranchesData,
   GetAllBranchesErrors,
   GetAllBranchesResponses,
@@ -742,6 +745,13 @@ export const getDeploymentById = <ThrowOnError extends boolean = false>(options:
 export const getWorkflowJobStatus = <ThrowOnError extends boolean = false>(options: Options<GetWorkflowJobStatusData, ThrowOnError>) => {
   return (options.client ?? client).get<GetWorkflowJobStatusResponses, GetWorkflowJobStatusErrors, ThrowOnError>({
     url: '/api/deployments/workflowJobStatus/{runId}',
+    ...options,
+  });
+};
+
+export const getActivityHistoryByPullRequestId = <ThrowOnError extends boolean = false>(options: Options<GetActivityHistoryByPullRequestIdData, ThrowOnError>) => {
+  return (options.client ?? client).get<GetActivityHistoryByPullRequestIdResponses, GetActivityHistoryByPullRequestIdErrors, ThrowOnError>({
+    url: '/api/deployments/pr/{pullRequestId}/activity-history',
     ...options,
   });
 };

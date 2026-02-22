@@ -1489,6 +1489,9 @@ export const ActivityHistoryDtoSchema = {
     repository: {
       $ref: '#/components/schemas/RepositoryInfoDto',
     },
+    environmentName: {
+      type: 'string',
+    },
     state: {
       type: 'string',
       enum: ['PENDING', 'WAITING', 'SUCCESS', 'ERROR', 'FAILURE', 'IN_PROGRESS', 'QUEUED', 'INACTIVE', 'UNKNOWN'],
