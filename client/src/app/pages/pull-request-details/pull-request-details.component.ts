@@ -16,6 +16,7 @@ import { IconGitBranch } from 'angular-tabler-icons/icons';
 import { PipelineTestResultsComponent } from '@app/components/pipeline/test-results/pipeline-test-results.component';
 import { PullRequestDeploymentHistoryComponent } from '@app/components/pull-request-deployment-history/pull-request-deployment-history.component';
 import { Tab, TabList, TabPanel, TabPanels, Tabs } from 'primeng/tabs';
+import { Divider } from 'primeng/divider';
 
 @Component({
   selector: 'app-branch-details',
@@ -37,6 +38,7 @@ import { Tab, TabList, TabPanel, TabPanels, Tabs } from 'primeng/tabs';
     Tab,
     TabPanels,
     TabPanel,
+    Divider,
   ],
   providers: [
     provideTablerIcons({
