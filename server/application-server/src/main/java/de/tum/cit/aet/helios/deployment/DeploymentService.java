@@ -363,6 +363,41 @@ public class DeploymentService {
   }
 
   /**
+   * Retrieves deployment activity history for a specific branch in a repository.
+   *
+   * <p>Combines completed deployments (from GitHub webhook, matched by ref) with Helios
+   * deployments that are not yet linked to a Deployment record, sorted by timestamp descending.
+   *
+   * @param repositoryId The ID of the repository
+   * @param branchName The name of the branch (e.g. "main", "feature/foo")
+   * @return Combined list of {@link ActivityHistoryDto} for the branch, sorted by timestamp
+   *     descending
+   */
+  public List<ActivityHistoryDto> getActivityHistoryByRepositoryIdAndBranchName(
+      Long repositoryId, String branchName) {
+    List<ActivityHistoryDto> combined = new ArrayList<>();
+
+    List<ActivityHistoryDto> deploymentDtos =
+        deploymentRepository
+            .findByRepositoryRepositoryIdAndRefOrderByCreatedAtDesc(repositoryId, branchName)
+            .stream()
+            .map(ActivityHistoryDto::fromDeployment)
+            .toList();
+    combined.addAll(deploymentDtos);
+
+    List<ActivityHistoryDto> heliosDeploymentDtos =
+        heliosDeploymentRepository
+            .findByRepositoryIdAndBranchNameAndDeploymentIdIsNullOrderByCreatedAtDesc(
+                repositoryId, branchName)
+            .stream()
+            .map(ActivityHistoryDto::fromHeliosDeployment)
+            .toList();
+    combined.addAll(heliosDeploymentDtos);
+
+    return ActivityHistoryDto.sortActivityHistoryDtosByTimestampDesc(combined);
+  }
+
+  /**
    * Cancels an ongoing deployment by stopping its associated GitHub workflow run.
    *
    * @param cancelRequest The request containing the workflow run ID to cancel

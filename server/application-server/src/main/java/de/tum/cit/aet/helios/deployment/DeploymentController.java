@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RequiredArgsConstructor
@@ -69,6 +70,14 @@ public class DeploymentController {
       @PathVariable Long pullRequestId) {
     List<ActivityHistoryDto> activityHistory =
         deploymentService.getActivityHistoryByPullRequestId(pullRequestId);
+    return ResponseEntity.ok(activityHistory);
+  }
+
+  @GetMapping("/repository/{repositoryId}/branch/activity-history")
+  public ResponseEntity<List<ActivityHistoryDto>> getActivityHistoryByRepositoryIdAndBranchName(
+      @PathVariable Long repositoryId, @RequestParam String branch) {
+    List<ActivityHistoryDto> activityHistory =
+        deploymentService.getActivityHistoryByRepositoryIdAndBranchName(repositoryId, branch);
     return ResponseEntity.ok(activityHistory);
   }
 

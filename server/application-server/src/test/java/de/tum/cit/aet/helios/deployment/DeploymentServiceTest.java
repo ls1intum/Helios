@@ -317,6 +317,37 @@ public class DeploymentServiceTest {
   }
 
   @Test
+  public void testGetActivityHistoryByRepositoryIdAndBranchName() {
+    final OffsetDateTime now = OffsetDateTime.now();
+    final Long repositoryId = 1L;
+    final String branchName = "main";
+
+    // Set relevant dates to check correct order later on
+    heliosDeployment.setCreatedAt(now.minusMinutes(1));
+    heliosDeployment.setEnvironment(environment);
+    heliosDeployment.setBranchName(branchName);
+    deployment.setCreatedAt(now.minusMinutes(2));
+    deployment.setRef(branchName);
+
+    when(deploymentRepository
+        .findByRepositoryRepositoryIdAndRefOrderByCreatedAtDesc(repositoryId, branchName))
+        .thenReturn(List.of(deployment));
+    when(heliosDeploymentRepository
+        .findByRepositoryIdAndBranchNameAndDeploymentIdIsNullOrderByCreatedAtDesc(
+            repositoryId, branchName))
+        .thenReturn(List.of(heliosDeployment));
+
+    List<ActivityHistoryDto> result =
+        deploymentService.getActivityHistoryByRepositoryIdAndBranchName(repositoryId, branchName);
+
+    ActivityHistoryDto heliosDto = ActivityHistoryDto.fromHeliosDeployment(heliosDeployment);
+    ActivityHistoryDto deploymentDto = ActivityHistoryDto.fromDeployment(deployment);
+
+    assertEquals(2, result.size());
+    Assertions.assertIterableEquals(List.of(heliosDto, deploymentDto), result);
+  }
+
+  @Test
   public void testCanRedeployWithNoLatestDeployment()
       throws NoSuchMethodException,
           IllegalAccessException,

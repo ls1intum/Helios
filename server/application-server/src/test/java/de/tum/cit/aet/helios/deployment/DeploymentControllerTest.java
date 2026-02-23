@@ -169,6 +169,26 @@ public class DeploymentControllerTest {
   }
 
   @Test
+  void testGetActivityHistoryByRepositoryIdAndBranchName() throws Exception {
+    List<ActivityHistoryDto> history = List.of(sampleActivity);
+    when(deploymentService.getActivityHistoryByRepositoryIdAndBranchName(1L, "main"))
+        .thenReturn(history);
+
+    String response =
+        mockMvc
+            .perform(
+                get("/api/deployments/repository/{repositoryId}/branch/activity-history", 1L)
+                    .param("branch", "main")
+                    .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(MockMvcResultMatchers.status().isOk())
+            .andReturn()
+            .getResponse()
+            .getContentAsString();
+
+    assertEquals(objectMapper.writeValueAsString(history), response);
+  }
+
+  @Test
   void testGetWorkflowJobStatus() throws Exception {
     WorkflowJobsResponse response = new WorkflowJobsResponse();
     response.setTotalCount(0);
