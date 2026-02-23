@@ -1,24 +1,11 @@
 import { Injectable } from '@angular/core';
-import Keycloak, { KeycloakTokenParsed } from 'keycloak-js';
+import Keycloak from 'keycloak-js';
 import { UserProfile } from './user-profile';
 import { environment } from 'environments/environment';
 @Injectable({
   providedIn: 'root',
 })
 export class KeycloakService {
-  private get tokenClaims(): KeycloakTokenParsed | null {
-    return this.keycloak.tokenParsed ?? null;
-  }
-
-  private getTokenClaim(claim: string): unknown {
-    return this.tokenClaims?.[claim];
-  }
-
-  private getStringTokenClaim(claim: string): string | undefined {
-    const value = this.getTokenClaim(claim);
-    return typeof value === 'string' ? value : undefined;
-  }
-
   private _keycloak: Keycloak | undefined;
 
   get keycloak() {
@@ -62,15 +49,17 @@ export class KeycloakService {
   }
 
   getUserId() {
-    return this.getStringTokenClaim('sub');
+    const sub = this.keycloak.tokenParsed?.sub;
+    return typeof sub === 'string' ? sub : undefined;
   }
 
   getPreferredUsername(): string | undefined {
-    return this.getStringTokenClaim('preferred_username');
+    const preferredUsername = this.keycloak.tokenParsed?.['preferred_username'];
+    return typeof preferredUsername === 'string' ? preferredUsername : undefined;
   }
 
   getUserGithubId(): string | number | undefined {
-    const githubId = this.getTokenClaim('github_id');
+    const githubId = this.keycloak.tokenParsed?.['github_id'];
     return typeof githubId === 'string' || typeof githubId === 'number' ? githubId : undefined;
   }
 
