@@ -66,6 +66,11 @@ public class GitHubUserSyncService {
             .map(
                 user -> {
                   try {
+                    if (userConverter.isCopilotActorLogin(ghUser.getLogin())
+                        || userConverter.isCopilotActorLogin(user.getLogin())) {
+                      return userConverter.update(ghUser, user);
+                    }
+
                     if (user.getUpdatedAt() == null
                         || (ghUser.getUpdatedAt() != null
                         && user.getUpdatedAt()
