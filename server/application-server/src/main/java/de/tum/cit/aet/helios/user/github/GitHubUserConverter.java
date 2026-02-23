@@ -5,6 +5,7 @@ import de.tum.cit.aet.helios.user.User;
 import de.tum.cit.aet.helios.user.User.Type;
 import java.io.IOException;
 import java.time.OffsetDateTime;
+import java.util.Locale;
 import lombok.extern.log4j.Log4j2;
 import org.kohsuke.github.GHUser;
 import org.springframework.lang.NonNull;
@@ -48,6 +49,10 @@ public class GitHubUserConverter extends BaseGitServiceEntityConverter<GHUser, U
 
   @Override
   public User update(@NonNull GHUser source, @NonNull User user) {
+    if (isCopilotActorLogin(source.getLogin())) {
+      return updateFromCopilotActor(source, user);
+    }
+
     convertBaseFields(source, user);
     user.setLogin(source.getLogin());
     user.setAvatarUrl(source.getAvatarUrl());
@@ -109,6 +114,39 @@ public class GitHubUserConverter extends BaseGitServiceEntityConverter<GHUser, U
           e.getMessage());
     }
     return user;
+  }
+
+  private User updateFromCopilotActor(@NonNull GHUser source, @NonNull User user) {
+    var now = OffsetDateTime.now();
+
+    user.setId(source.getId());
+    user.setCreatedAt(user.getCreatedAt() != null ? user.getCreatedAt() : now);
+    user.setUpdatedAt(now);
+    user.setLogin(source.getLogin());
+    user.setAvatarUrl(source.getAvatarUrl());
+    user.setDescription("Copilot bot actor from GitHub metadata.");
+    user.setName("GitHub Copilot");
+    user.setCompany(null);
+    user.setBlog(null);
+    user.setLocation(null);
+    user.setEmail(null);
+    user.setHtmlUrl("https://github.com/apps/copilot");
+    user.setType(Type.BOT);
+    user.setFollowers(0);
+    user.setFollowing(0);
+
+    log.warn(
+        "Resolved Copilot actor '{}' without fetching /users endpoint.",
+        source.getLogin());
+    return user;
+  }
+
+  public boolean isCopilotActorLogin(String login) {
+    if (login == null) {
+      return false;
+    }
+
+    return "copilot".equals(login.toLowerCase(Locale.ROOT));
   }
 
   private User.Type convertUserType(String type) {
