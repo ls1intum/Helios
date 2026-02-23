@@ -17,6 +17,7 @@ import {
   generateReleaseNotes,
   getActivityHistoryByEnvironmentId,
   getActivityHistoryByPullRequestId,
+  getActivityHistoryByRepositoryIdAndBranchName,
   getAllBranches,
   getAllDeployments,
   getAllEnabledEnvironments,
@@ -110,6 +111,7 @@ import type {
   GenerateReleaseNotesResponse,
   GetActivityHistoryByEnvironmentIdData,
   GetActivityHistoryByPullRequestIdData,
+  GetActivityHistoryByRepositoryIdAndBranchNameData,
   GetAllBranchesData,
   GetAllDeploymentsData,
   GetAllEnabledEnvironmentsData,
@@ -1394,6 +1396,24 @@ export const getWorkflowJobStatusOptions = (options: Options<GetWorkflowJobStatu
       return data;
     },
     queryKey: getWorkflowJobStatusQueryKey(options),
+  });
+};
+
+export const getActivityHistoryByRepositoryIdAndBranchNameQueryKey = (options: Options<GetActivityHistoryByRepositoryIdAndBranchNameData>) =>
+  createQueryKey('getActivityHistoryByRepositoryIdAndBranchName', options);
+
+export const getActivityHistoryByRepositoryIdAndBranchNameOptions = (options: Options<GetActivityHistoryByRepositoryIdAndBranchNameData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getActivityHistoryByRepositoryIdAndBranchName({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: getActivityHistoryByRepositoryIdAndBranchNameQueryKey(options),
   });
 };
 
