@@ -2149,6 +2149,36 @@ export type GetWorkflowJobStatusResponses = {
 
 export type GetWorkflowJobStatusResponse = GetWorkflowJobStatusResponses[keyof GetWorkflowJobStatusResponses];
 
+export type GetActivityHistoryByRepositoryIdAndBranchNameData = {
+  body?: never;
+  path: {
+    repositoryId: number;
+  };
+  query: {
+    branch: string;
+  };
+  url: '/api/deployments/repository/{repositoryId}/branch/activity-history';
+};
+
+export type GetActivityHistoryByRepositoryIdAndBranchNameErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type GetActivityHistoryByRepositoryIdAndBranchNameError = GetActivityHistoryByRepositoryIdAndBranchNameErrors[keyof GetActivityHistoryByRepositoryIdAndBranchNameErrors];
+
+export type GetActivityHistoryByRepositoryIdAndBranchNameResponses = {
+  /**
+   * OK
+   */
+  200: Array<ActivityHistoryDto>;
+};
+
+export type GetActivityHistoryByRepositoryIdAndBranchNameResponse =
+  GetActivityHistoryByRepositoryIdAndBranchNameResponses[keyof GetActivityHistoryByRepositoryIdAndBranchNameResponses];
+
 export type GetActivityHistoryByPullRequestIdData = {
   body?: never;
   path: {

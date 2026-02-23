@@ -50,7 +50,20 @@
     <div class="flex justify-center">
       <p-divider class="w-full mt-4" />
     </div>
-    <app-deployment-selection [sourceRef]="branch.name" [commitSha]="branch.commitSha" />
+    <p-tabs [value]="deploymentTab()" (valueChange)="onDeploymentTabChange($event)">
+      <p-tablist>
+        <p-tab value="deploy">Deploy</p-tab>
+        <p-tab value="history">Deployment History</p-tab>
+      </p-tablist>
+      <p-tabpanels>
+        <p-tabpanel value="deploy">
+          <app-deployment-selection [sourceRef]="branch.name" [commitSha]="branch.commitSha" />
+        </p-tabpanel>
+        <p-tabpanel value="history">
+          <app-deployment-history [selector]="{ repositoryId: repositoryId(), branchName: branch.name }" />
+        </p-tabpanel>
+      </p-tabpanels>
+    </p-tabs>
   }
 </div>
 

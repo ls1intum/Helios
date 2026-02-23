@@ -16,6 +16,8 @@ import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
 import { IconGitBranch, IconTag, IconTagPlus } from 'angular-tabler-icons/icons';
 import { PipelineTestResultsComponent } from '@app/components/pipeline/test-results/pipeline-test-results.component';
 import { Divider } from 'primeng/divider';
+import { DeploymentHistoryComponent } from '@app/components/deployment-history/deployment-history.component';
+import { Tab, TabList, TabPanel, TabPanels, Tabs } from 'primeng/tabs';
 
 @Component({
   selector: 'app-branch-details',
@@ -32,6 +34,12 @@ import { Divider } from 'primeng/divider';
     MarkdownPipe,
     PipelineTestResultsComponent,
     Divider,
+    DeploymentHistoryComponent,
+    Tab,
+    TabList,
+    TabPanel,
+    TabPanels,
+    Tabs,
   ],
   providers: [
     provideTablerIcons({
@@ -47,6 +55,13 @@ export class BranchDetailsComponent {
 
   repositoryId = input.required<number>();
   branchName = input.required<string>();
+  deploymentTab = signal<'deploy' | 'history'>('deploy');
+
+  onDeploymentTabChange(value: string | number | undefined): void {
+    if (value === 'deploy' || value === 'history') {
+      this.deploymentTab.set(value);
+    }
+  }
 
   isCreateDialogVisible = signal(false);
 

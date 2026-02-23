@@ -14,7 +14,7 @@ import { PullRequestStatusIconComponent } from '@app/components/pull-request-sta
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
 import { IconGitBranch } from 'angular-tabler-icons/icons';
 import { PipelineTestResultsComponent } from '@app/components/pipeline/test-results/pipeline-test-results.component';
-import { PullRequestDeploymentHistoryComponent } from '@app/components/pull-request-deployment-history/pull-request-deployment-history.component';
+import { DeploymentHistoryComponent } from '@app/components/deployment-history/deployment-history.component';
 import { Tab, TabList, TabPanel, TabPanels, Tabs } from 'primeng/tabs';
 import { Divider } from 'primeng/divider';
 
@@ -32,7 +32,7 @@ import { Divider } from 'primeng/divider';
     UserAvatarComponent,
     PullRequestStatusIconComponent,
     PipelineTestResultsComponent,
-    PullRequestDeploymentHistoryComponent,
+    DeploymentHistoryComponent,
     Tabs,
     TabList,
     Tab,
