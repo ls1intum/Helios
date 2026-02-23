@@ -17,6 +17,9 @@ public interface DeploymentRepository extends JpaRepository<Deployment, Long> {
 
   List<Deployment> findByRepositoryRepositoryIdAndSha(Long repositoryId, String sha);
 
+  List<Deployment> findByRepositoryRepositoryIdAndRefOrderByCreatedAtDesc(
+      Long repositoryId, String ref);
+
   Optional<Deployment> findFirstByEnvironmentIdOrderByCreatedAtDesc(Long environmentId);
 
   /**
