@@ -63,27 +63,7 @@ public class GitHubUserSyncService {
     var result =
         userRepository
             .findById(ghUser.getId())
-            .map(
-                user -> {
-                  try {
-                    if (userConverter.isCopilotActorLogin(ghUser.getLogin())
-                        || userConverter.isCopilotActorLogin(user.getLogin())) {
-                      return userConverter.update(ghUser, user);
-                    }
-
-                    if (user.getUpdatedAt() == null
-                        || (ghUser.getUpdatedAt() != null
-                        && user.getUpdatedAt()
-                        .isBefore(
-                            DateUtil.convertToOffsetDateTime(ghUser.getUpdatedAt())))) {
-                      return userConverter.update(ghUser, user);
-                    }
-                    return user;
-                  } catch (IOException e) {
-                    log.error("Failed to update repository {}: {}", ghUser.getId(), e.getMessage());
-                    return null;
-                  }
-                })
+            .map(user -> updateExistingUser(ghUser, user))
             .orElseGet(() -> userConverter.convert(ghUser));
 
     if (result == null) {
@@ -91,5 +71,36 @@ public class GitHubUserSyncService {
     }
 
     return userRepository.save(result);
+  }
+
+  private User updateExistingUser(GHUser ghUser, User user) {
+    try {
+      if (shouldForceCopilotUpdate(ghUser, user)) {
+        return userConverter.update(ghUser, user);
+      }
+
+      if (shouldUpdateByTimestamp(ghUser, user)) {
+        return userConverter.update(ghUser, user);
+      }
+      return user;
+    } catch (IOException e) {
+      log.error("Failed to update repository {}: {}", ghUser.getId(), e.getMessage());
+      return null;
+    }
+  }
+
+  private boolean shouldForceCopilotUpdate(GHUser ghUser, User user) {
+    return userConverter.isCopilotActorLogin(ghUser.getLogin())
+        || userConverter.isCopilotActorLogin(user.getLogin());
+  }
+
+  private boolean shouldUpdateByTimestamp(GHUser ghUser, User user) throws IOException {
+    if (user.getUpdatedAt() == null) {
+      return true;
+    }
+
+    var githubUpdatedAt = ghUser.getUpdatedAt();
+    return githubUpdatedAt != null
+        && user.getUpdatedAt().isBefore(DateUtil.convertToOffsetDateTime(githubUpdatedAt));
   }
 }

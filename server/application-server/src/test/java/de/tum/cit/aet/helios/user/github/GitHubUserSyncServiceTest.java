@@ -10,7 +10,6 @@ import static org.mockito.Mockito.when;
 import de.tum.cit.aet.helios.user.User;
 import de.tum.cit.aet.helios.user.User.Type;
 import de.tum.cit.aet.helios.user.UserRepository;
-import java.lang.reflect.Field;
 import java.time.OffsetDateTime;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -18,6 +17,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.kohsuke.github.GHUser;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
 class GitHubUserSyncServiceTest {
@@ -84,29 +84,14 @@ class GitHubUserSyncServiceTest {
       throws Exception {
     GHUser user = new GHUser();
 
-    setField(user, "id", id);
-    setField(user, "login", login);
-    setField(user, "avatar_url", avatarUrl);
+    ReflectionTestUtils.setField(user, "id", id);
+    ReflectionTestUtils.setField(user, "login", login);
+    ReflectionTestUtils.setField(user, "avatar_url", avatarUrl);
     // Mark as populated to avoid any API fetch in GHPerson.populate().
-    setField(user, "createdAt", "2026-01-10T00:00:00Z");
+    ReflectionTestUtils.setField(user, "createdAt", "2026-01-10T00:00:00Z");
     // This value triggers parsing failure if GHUser.getUpdatedAt() is evaluated.
-    setField(user, "updatedAt", "not-a-valid-date");
+    ReflectionTestUtils.setField(user, "updatedAt", "not-a-valid-date");
 
     return user;
-  }
-
-  private static void setField(Object target, String fieldName, Object value) throws Exception {
-    Class<?> current = target.getClass();
-    while (current != null) {
-      try {
-        Field field = current.getDeclaredField(fieldName);
-        field.setAccessible(true);
-        field.set(target, value);
-        return;
-      } catch (NoSuchFieldException ignored) {
-        current = current.getSuperclass();
-      }
-    }
-    throw new IllegalArgumentException("Field not found: " + fieldName);
   }
 }
