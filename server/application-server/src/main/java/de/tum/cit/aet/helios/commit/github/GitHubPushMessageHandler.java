@@ -35,6 +35,14 @@ public class GitHubPushMessageHandler extends GitHubMessageHandler<GHEventPayloa
 
   @Override
   protected void handleInstalledRepositoryEvent(GHEventPayload.Push eventPayload) {
+    if (eventPayload.isDeleted()) {
+      log.debug(
+          "Ignoring push event for repository: {}, ref: {} (handled by delete event)",
+          eventPayload.getRepository().getFullName(),
+          eventPayload.getRef());
+      return;
+    }
+
     String sha = eventPayload.getHeadCommit().getSha();
     String ref = eventPayload.getRef();
 
