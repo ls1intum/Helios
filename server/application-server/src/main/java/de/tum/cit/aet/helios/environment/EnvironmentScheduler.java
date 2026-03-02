@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -28,6 +29,7 @@ public class EnvironmentScheduler {
 
   // Every minute
   @Scheduled(fixedRate = 60000)
+  @Transactional
   public void unlockExpiredEnvironments() {
     if (springEnvironment.matchesProfiles("openapi")) {
       log.info("OpenAPI profile detected. Skipping Status Check Scheduler.");
