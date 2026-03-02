@@ -6,12 +6,14 @@ import de.tum.cit.aet.helios.gitrepo.RepositoryInfoDto;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
 import de.tum.cit.aet.helios.user.UserInfoDto;
 import java.time.OffsetDateTime;
+import java.util.List;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public record ActivityHistoryDto(
     String type,
     Long id,
     RepositoryInfoDto repository,
+    String environmentName,
     Deployment.State state,
     String sha,
     String ref,
@@ -26,6 +28,7 @@ public record ActivityHistoryDto(
         "DEPLOYMENT",
         heliosDeployment.getId(),
         RepositoryInfoDto.fromRepository(heliosDeployment.getEnvironment().getRepository()),
+        heliosDeployment.getEnvironment().getName(),
         HeliosDeployment.mapHeliosStatusToDeploymentState(heliosDeployment.getStatus()),
         heliosDeployment.getSha(),
         heliosDeployment.getBranchName(),
@@ -41,6 +44,7 @@ public record ActivityHistoryDto(
         "DEPLOYMENT",
         deployment.getId(),
         RepositoryInfoDto.fromRepository(deployment.getRepository()),
+        deployment.getEnvironment().getName(),
         deployment.getState(),
         deployment.getSha(),
         deployment.getRef(),
@@ -57,6 +61,7 @@ public record ActivityHistoryDto(
         type,
         environmentLockHistory.getId(),
         null,
+        environmentLockHistory.getEnvironment().getName(),
         null,
         null,
         null,
@@ -69,5 +74,26 @@ public record ActivityHistoryDto(
             : environmentLockHistory.getLockedAt(),
         null,
         null);
+  }
+
+  public static List<ActivityHistoryDto> sortActivityHistoryDtosByTimestampDesc(
+      List<ActivityHistoryDto> activityHistoryDtos) {
+    activityHistoryDtos.sort(
+        (a, b) -> {
+          OffsetDateTime timeA = a.timestamp();
+          OffsetDateTime timeB = b.timestamp();
+          if (timeA == null && timeB == null) {
+            return 0;
+          }
+          if (timeA == null) {
+            return 1;
+          }
+          if (timeB == null) {
+            return -1;
+          }
+          return timeB.compareTo(timeA);
+        });
+
+    return activityHistoryDtos;
   }
 }

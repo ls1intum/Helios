@@ -64,6 +64,14 @@ public class DeploymentController {
     return ResponseEntity.ok(activityHistory);
   }
 
+  @GetMapping("/pr/{pullRequestId}/activity-history")
+  public ResponseEntity<List<ActivityHistoryDto>> getActivityHistoryByPullRequestId(
+      @PathVariable Long pullRequestId) {
+    List<ActivityHistoryDto> activityHistory =
+        deploymentService.getActivityHistoryByPullRequestId(pullRequestId);
+    return ResponseEntity.ok(activityHistory);
+  }
+
   /**
    * Cancels an ongoing deployment.
    *

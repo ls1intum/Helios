@@ -10,12 +10,11 @@ import { injectMutation, QueryClient } from '@tanstack/angular-query-experimenta
 import { MessageService } from 'primeng/api';
 import { EnvironmentListViewComponent } from '../environments/environment-list/environment-list-view.component';
 import { celebrateDeployment } from '@app/core/services/particle.service';
-import { Divider } from 'primeng/divider';
 
 @Component({
   selector: 'app-deployment-selection',
   templateUrl: './deployment-selection.component.html',
-  imports: [EnvironmentListViewComponent, Divider],
+  imports: [EnvironmentListViewComponent],
 })
 export class DeploymentSelectionComponent {
   private messageService = inject(MessageService);

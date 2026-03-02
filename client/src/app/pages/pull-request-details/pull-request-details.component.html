@@ -48,7 +48,23 @@
   <app-pipeline-test-results [selector]="pipelineSelector()" />
   @if (query.data(); as pr) {
     @if (pr.headRefRepoNameWithOwner === pr.repository?.nameWithOwner) {
-      <app-deployment-selection [sourceRef]="pr.headRefName" [commitSha]="pr.headSha" />
+      <div class="flex justify-center">
+        <p-divider class="w-full mt-4" />
+      </div>
+      <p-tabs [value]="deploymentTab()" (valueChange)="onDeploymentTabChange($event)">
+        <p-tablist>
+          <p-tab value="deploy">Deploy</p-tab>
+          <p-tab value="history">Deployment History</p-tab>
+        </p-tablist>
+        <p-tabpanels>
+          <p-tabpanel value="deploy">
+            <app-deployment-selection [sourceRef]="pr.headRefName" [commitSha]="pr.headSha" />
+          </p-tabpanel>
+          <p-tabpanel value="history">
+            <app-pull-request-activity-history [pullRequestId]="pr.id" />
+          </p-tabpanel>
+        </p-tabpanels>
+      </p-tabs>
     }
   }
 </div>

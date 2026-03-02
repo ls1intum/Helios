@@ -22,6 +22,10 @@ public interface HeliosDeploymentRepository extends JpaRepository<HeliosDeployme
 
   List<HeliosDeployment> findByEnvironmentAndDeploymentIdIsNull(Environment environment);
 
+  @SuppressWarnings("checkstyle:MethodName")
+  List<HeliosDeployment> findByPullRequest_IdAndDeploymentIdIsNullOrderByCreatedAtDesc(
+      Long pullRequestId);
+
   @Query(
       "SELECT hd FROM HeliosDeployment hd "
           + "JOIN hd.environment e "

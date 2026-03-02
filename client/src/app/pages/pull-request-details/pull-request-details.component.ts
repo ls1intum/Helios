@@ -1,4 +1,4 @@
-import { Component, computed, inject, input } from '@angular/core';
+import { Component, computed, inject, input, signal } from '@angular/core';
 import { MarkdownPipe } from '@app/core/modules/markdown/markdown.pipe';
 import { PipelineComponent, PipelineSelector } from '@app/components/pipeline/pipeline.component';
 import { TagModule } from 'primeng/tag';
@@ -14,6 +14,9 @@ import { PullRequestStatusIconComponent } from '@app/components/pull-request-sta
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
 import { IconGitBranch } from 'angular-tabler-icons/icons';
 import { PipelineTestResultsComponent } from '@app/components/pipeline/test-results/pipeline-test-results.component';
+import { PullRequestDeploymentHistoryComponent } from '@app/components/pull-request-deployment-history/pull-request-deployment-history.component';
+import { Tab, TabList, TabPanel, TabPanels, Tabs } from 'primeng/tabs';
+import { Divider } from 'primeng/divider';
 
 @Component({
   selector: 'app-branch-details',
@@ -29,6 +32,13 @@ import { PipelineTestResultsComponent } from '@app/components/pipeline/test-resu
     UserAvatarComponent,
     PullRequestStatusIconComponent,
     PipelineTestResultsComponent,
+    PullRequestDeploymentHistoryComponent,
+    Tabs,
+    TabList,
+    Tab,
+    TabPanels,
+    TabPanel,
+    Divider,
   ],
   providers: [
     provideTablerIcons({
@@ -42,7 +52,13 @@ export class PullRequestDetailsComponent {
 
   repositoryId = input.required<number>();
   pullRequestNumber = input.required<number>();
+  deploymentTab = signal<'deploy' | 'history'>('deploy');
 
+  onDeploymentTabChange(value: string | number | undefined): void {
+    if (value === 'deploy' || value === 'history') {
+      this.deploymentTab.set(value);
+    }
+  }
   query = injectQuery(() => ({
     ...getPullRequestByRepositoryIdAndNumberOptions({ path: { repoId: this.repositoryId(), number: this.pullRequestNumber() } }),
     refetchInterval: 30000,
