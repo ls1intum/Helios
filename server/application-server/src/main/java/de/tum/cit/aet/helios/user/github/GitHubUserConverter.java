@@ -79,7 +79,7 @@ public class GitHubUserConverter extends BaseGitServiceEntityConverter<GHUser, U
 
     user.setId(source.getId());
     user.setCreatedAt(user.getCreatedAt() != null ? user.getCreatedAt() : now);
-    user.setUpdatedAt(now);
+    user.setUpdatedAt(null);
     user.setLogin(source.getLogin());
     user.setAvatarUrl(source.getAvatarUrl());
     user.setDescription("Copilot bot actor from GitHub metadata.");
@@ -88,7 +88,7 @@ public class GitHubUserConverter extends BaseGitServiceEntityConverter<GHUser, U
     user.setBlog(null);
     user.setLocation(null);
     user.setEmail(null);
-    user.setHtmlUrl("https://github.com/apps/copilot");
+    user.setHtmlUrl(source.getHtmlUrl().toString());
     user.setType(Type.BOT);
     user.setFollowers(0);
     user.setFollowing(0);

@@ -1,16 +1,25 @@
 package de.tum.cit.aet.helios.user.github;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import de.tum.cit.aet.helios.user.User;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.kohsuke.github.GHUser;
+import org.springframework.test.util.ReflectionTestUtils;
 
 class GitHubUserConverterTest {
 
-  private final GitHubUserConverter converter = new GitHubUserConverter();
+  private GitHubUserConverter converter;
+
+  @BeforeEach
+  void setUp() {
+    converter = new GitHubUserConverter();
+  }
 
   @Test
   void shouldIdentifyCopilotLoginCaseInsensitively() {
@@ -55,5 +64,23 @@ class GitHubUserConverterTest {
     assertEquals("https://helios.aet.cit.tum.de/not-found", user.getHtmlUrl());
     assertNotNull(user.getCreatedAt());
     assertNotNull(user.getUpdatedAt());
+  }
+
+  @Test
+  void shouldLeaveUpdatedAtUnsetForCopilotActor() {
+    GHUser ghUser = new GHUser();
+    ReflectionTestUtils.setField(ghUser, "id", 198982749L);
+    ReflectionTestUtils.setField(ghUser, "login", "Copilot");
+    ReflectionTestUtils.setField(
+        ghUser, "avatar_url", "https://avatars.githubusercontent.com/u/198982749?v=4");
+    ReflectionTestUtils.setField(ghUser, "html_url", "https://github.com/Copilot");
+
+    User user = converter.update(ghUser, new User());
+
+    assertEquals(198982749L, user.getId());
+    assertEquals("Copilot", user.getLogin());
+    assertEquals(User.Type.BOT, user.getType());
+    assertNull(user.getUpdatedAt());
+    assertNotNull(user.getCreatedAt());
   }
 }
