@@ -5,6 +5,7 @@ import de.tum.cit.aet.helios.user.User;
 import de.tum.cit.aet.helios.user.User.Type;
 import java.io.IOException;
 import java.time.OffsetDateTime;
+import java.util.Locale;
 import lombok.extern.log4j.Log4j2;
 import org.kohsuke.github.GHUser;
 import org.springframework.lang.NonNull;
@@ -48,67 +49,81 @@ public class GitHubUserConverter extends BaseGitServiceEntityConverter<GHUser, U
 
   @Override
   public User update(@NonNull GHUser source, @NonNull User user) {
+    if (isCopilotActorLogin(source.getLogin())) {
+      return updateFromCopilotActor(source, user);
+    }
+
     convertBaseFields(source, user);
     user.setLogin(source.getLogin());
     user.setAvatarUrl(source.getAvatarUrl());
     user.setDescription(source.getBio());
     user.setHtmlUrl(source.getHtmlUrl().toString());
-    try {
-      user.setName(source.getName() != null ? source.getName() : source.getLogin());
-    } catch (IOException e) {
-      log.error(
-          "Failed to convert user name field for source {}: {}", source.getId(), e.getMessage());
-      user.setName(source.getLogin());
-    }
-    try {
-      user.setCompany(source.getCompany());
-    } catch (IOException e) {
-      log.error(
-          "Failed to convert user company field for source {}: {}", source.getId(), e.getMessage());
-    }
-    try {
-      user.setBlog(source.getBlog());
-    } catch (IOException e) {
-      log.error(
-          "Failed to convert user blog field for source {}: {}", source.getId(), e.getMessage());
-    }
-    try {
-      user.setLocation(source.getLocation());
-    } catch (IOException e) {
-      log.error(
-          "Failed to convert user location field for source {}: {}",
-          source.getId(),
-          e.getMessage());
-    }
-    try {
-      user.setEmail(source.getEmail());
-    } catch (IOException e) {
-      log.error(
-          "Failed to convert user email field for source {}: {}", source.getId(), e.getMessage());
-    }
-    try {
-      user.setType(convertUserType(source.getType()));
-    } catch (IOException e) {
-      log.error(
-          "Failed to convert user type field for source {}: {}", source.getId(), e.getMessage());
-    }
-    try {
-      user.setFollowers(source.getFollowersCount());
-    } catch (IOException e) {
-      log.error(
-          "Failed to convert user followers field for source {}: {}",
-          source.getId(),
-          e.getMessage());
-    }
-    try {
-      user.setFollowing(source.getFollowingCount());
-    } catch (IOException e) {
-      log.error(
-          "Failed to convert user following field for source {}: {}",
-          source.getId(),
-          e.getMessage());
-    }
+    user.setName(
+        readUserField(
+            source,
+            "name",
+            () -> source.getName() != null ? source.getName() : source.getLogin(),
+            source.getLogin()));
+    user.setCompany(readUserField(source, "company", source::getCompany, null));
+    user.setBlog(readUserField(source, "blog", source::getBlog, null));
+    user.setLocation(readUserField(source, "location", source::getLocation, null));
+    user.setEmail(readUserField(source, "email", source::getEmail, null));
+    user.setType(readUserField(source, "type", () -> convertUserType(source.getType()), Type.USER));
+    user.setFollowers(readUserField(source, "followers", source::getFollowersCount, 0));
+    user.setFollowing(readUserField(source, "following", source::getFollowingCount, 0));
     return user;
+  }
+
+  private User updateFromCopilotActor(@NonNull GHUser source, @NonNull User user) {
+    var now = OffsetDateTime.now();
+
+    user.setId(source.getId());
+    user.setCreatedAt(user.getCreatedAt() != null ? user.getCreatedAt() : now);
+    user.setUpdatedAt(null);
+    user.setLogin(source.getLogin());
+    user.setAvatarUrl(source.getAvatarUrl());
+    user.setDescription("Copilot bot actor from GitHub metadata.");
+    user.setName("GitHub Copilot");
+    user.setCompany(null);
+    user.setBlog(null);
+    user.setLocation(null);
+    user.setEmail(null);
+    user.setHtmlUrl(source.getHtmlUrl().toString());
+    user.setType(Type.BOT);
+    user.setFollowers(0);
+    user.setFollowing(0);
+
+    log.warn(
+        "Resolved Copilot actor '{}' without fetching /users endpoint.",
+        source.getLogin());
+    return user;
+  }
+
+  public boolean isCopilotActorLogin(String login) {
+    if (login == null) {
+      return false;
+    }
+
+    return "copilot".equals(login.toLowerCase(Locale.ROOT));
+  }
+
+  private <T> T readUserField(
+      @NonNull GHUser source, String fieldName, IoFieldReader<T> reader, T fallback) {
+    try {
+      return reader.read();
+    } catch (IOException e) {
+      log.error(
+          "Failed to convert user {} field for source {}: {}",
+          fieldName,
+          source.getId(),
+          e.getMessage());
+      return fallback;
+    }
+  }
+
+  @FunctionalInterface
+  private interface IoFieldReader<T> {
+    T read() throws IOException;
   }
 
   private User.Type convertUserType(String type) {
