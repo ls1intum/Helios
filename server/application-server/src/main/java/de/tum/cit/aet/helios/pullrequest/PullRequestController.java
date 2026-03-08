@@ -1,8 +1,10 @@
 package de.tum.cit.aet.helios.pullrequest;
 
+import de.tum.cit.aet.helios.config.security.annotations.EnforceAdmin;
 import de.tum.cit.aet.helios.pullrequest.pagination.PaginatedPullRequestsResponse;
 import de.tum.cit.aet.helios.pullrequest.pagination.PullRequestFilterType;
 import de.tum.cit.aet.helios.pullrequest.pagination.PullRequestPageRequest;
+import java.io.IOException;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class PullRequestController {
 
   private final PullRequestService pullRequestService;
+  private final PullRequestStateReconciliationService pullRequestStateReconciliationService;
 
   @GetMapping
   public ResponseEntity<PaginatedPullRequestsResponse> getPullRequests(
@@ -71,5 +74,14 @@ public class PullRequestController {
       @PathVariable Long pr, @RequestParam(name = "isPinned") Boolean isPinned) {
     pullRequestService.setPrPinnedByNumberAndUserId(pr, isPinned);
     return ResponseEntity.ok().build();
+  }
+
+  @EnforceAdmin
+  @PostMapping("/repository/{repositoryId}/reconcile-state")
+  public ResponseEntity<PullRequestStateReconciliationResultDto> reconcilePullRequestState(
+      @PathVariable Long repositoryId,
+      @RequestParam(name = "dryRun", defaultValue = "false") boolean dryRun) throws IOException {
+    return ResponseEntity.ok(
+        pullRequestStateReconciliationService.reconcilePullRequestState(repositoryId, dryRun));
   }
 }
