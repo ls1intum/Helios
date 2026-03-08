@@ -35,6 +35,7 @@ import {
   getEnvironmentReviewers,
   getEnvironmentsByRepositoryId,
   getEnvironmentsByUserLocking,
+  getFlakinessScores,
   getGitRepoSettings,
   getGroupsWithWorkflows,
   getLatestDeploymentByEnvironmentId,
@@ -129,6 +130,9 @@ import type {
   GetEnvironmentReviewersData,
   GetEnvironmentsByRepositoryIdData,
   GetEnvironmentsByUserLockingData,
+  GetFlakinessScoresData,
+  GetFlakinessScoresError,
+  GetFlakinessScoresResponse,
   GetGitRepoSettingsData,
   GetGroupsWithWorkflowsData,
   GetLatestDeploymentByEnvironmentIdData,
@@ -515,6 +519,22 @@ export const updateNotificationPreferencesMutation = (
   const mutationOptions: MutationOptions<unknown, UpdateNotificationPreferencesError, Options<UpdateNotificationPreferencesData>> = {
     mutationFn: async fnOptions => {
       const { data } = await updateNotificationPreferences({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const getFlakinessScoresMutation = (
+  options?: Partial<Options<GetFlakinessScoresData>>
+): MutationOptions<GetFlakinessScoresResponse, GetFlakinessScoresError, Options<GetFlakinessScoresData>> => {
+  const mutationOptions: MutationOptions<GetFlakinessScoresResponse, GetFlakinessScoresError, Options<GetFlakinessScoresData>> = {
+    mutationFn: async fnOptions => {
+      const { data } = await getFlakinessScores({
         ...options,
         ...fnOptions,
         throwOnError: true,
