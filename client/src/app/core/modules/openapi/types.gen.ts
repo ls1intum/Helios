@@ -252,6 +252,20 @@ export type ReleaseInfoDetailsDto = {
   body?: string;
 };
 
+export type PullRequestStateReconciliationResultDto = {
+  dryRun?: boolean;
+  repositoryId?: number;
+  repositoryNameWithOwner?: string;
+  scannedCount?: number;
+  updatedCount?: number;
+  updatedPullRequestIds?: Array<number>;
+  updatedPullRequestNumbers?: Array<number>;
+  unchangedCount?: number;
+  missingCount?: number;
+  errorCount?: number;
+  errors?: Array<string>;
+};
+
 export type PushStatusPayload = {
   environment: string;
   state: 'STARTING_UP' | 'DB_MIGRATION_STARTED' | 'DB_MIGRATION_FAILED' | 'DB_MIGRATION_FINISHED' | 'RUNNING' | 'DEGRADED' | 'SHUTTING_DOWN' | 'STOPPED' | 'FAILED';
@@ -1333,6 +1347,35 @@ export type SetPrPinnedByNumberResponses = {
    */
   200: unknown;
 };
+
+export type ReconcilePullRequestStateData = {
+  body?: never;
+  path: {
+    repositoryId: number;
+  };
+  query?: {
+    dryRun?: boolean;
+  };
+  url: '/api/pullrequests/repository/{repositoryId}/reconcile-state';
+};
+
+export type ReconcilePullRequestStateErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type ReconcilePullRequestStateError = ReconcilePullRequestStateErrors[keyof ReconcilePullRequestStateErrors];
+
+export type ReconcilePullRequestStateResponses = {
+  /**
+   * OK
+   */
+  200: PullRequestStateReconciliationResultDto;
+};
+
+export type ReconcilePullRequestStateResponse = ReconcilePullRequestStateResponses[keyof ReconcilePullRequestStateResponses];
 
 export type SyncEnvironmentsData = {
   body?: never;

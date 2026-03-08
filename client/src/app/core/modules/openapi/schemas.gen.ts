@@ -760,6 +760,62 @@ export const ReleaseInfoDetailsDtoSchema = {
   required: ['commit', 'createdAt', 'deployments', 'evaluations', 'name'],
 } as const;
 
+export const PullRequestStateReconciliationResultDtoSchema = {
+  type: 'object',
+  properties: {
+    dryRun: {
+      type: 'boolean',
+    },
+    repositoryId: {
+      type: 'integer',
+      format: 'int64',
+    },
+    repositoryNameWithOwner: {
+      type: 'string',
+    },
+    scannedCount: {
+      type: 'integer',
+      format: 'int32',
+    },
+    updatedCount: {
+      type: 'integer',
+      format: 'int32',
+    },
+    updatedPullRequestIds: {
+      type: 'array',
+      items: {
+        type: 'integer',
+        format: 'int64',
+      },
+    },
+    updatedPullRequestNumbers: {
+      type: 'array',
+      items: {
+        type: 'integer',
+        format: 'int32',
+      },
+    },
+    unchangedCount: {
+      type: 'integer',
+      format: 'int32',
+    },
+    missingCount: {
+      type: 'integer',
+      format: 'int32',
+    },
+    errorCount: {
+      type: 'integer',
+      format: 'int32',
+    },
+    errors: {
+      type: 'array',
+      items: {
+        type: 'string',
+      },
+    },
+  },
+} as const;
+
 export const PushStatusPayloadSchema = {
   type: 'object',
   properties: {
