@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.ArgumentMatchers.anyDouble;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -155,14 +154,17 @@ class TestResultServiceTest {
             anyList(), anyString(), anyLong()))
         .thenReturn(Collections.emptyList());
     lenient()
-        .when(testCaseStatisticsService.calculateFlakinessScore(anyDouble(), anyDouble()))
-        .thenReturn(0.0);
+        .when(testCaseStatisticsService.computeFlakinessInfo(
+            anyString(), anyString(), anyList(), anyList()
+        ))
+        .thenReturn(new TestCaseStatisticsService.FlakinessInfo(0.0, 0.0, 0.0));
 
     TestResultsDto result =
         testResultService.getLatestTestResultsForBranch("featureBranch", criteria);
 
     // Verify the problematic call
-    verify(testCaseStatisticsService).calculateFlakinessScore(0.0, 0.0);
+    verify(testCaseStatisticsService).computeFlakinessInfo(
+        anyString(), anyString(), anyList(), anyList());
 
     assertNotNull(result);
     assertFalse(result.testResults().isEmpty());
@@ -210,13 +212,15 @@ class TestResultServiceTest {
             anyList(), anyString(), anyLong()))
         .thenReturn(Collections.emptyList());
     lenient()
-        .when(testCaseStatisticsService.calculateFlakinessScore(anyDouble(), anyDouble()))
-        .thenReturn(0.0);
+        .when(testCaseStatisticsService.computeFlakinessInfo(
+            anyString(), anyString(), anyList(), anyList()))
+        .thenReturn(new TestCaseStatisticsService.FlakinessInfo(0.0, 0.0, 0.0));
 
     TestResultsDto result = testResultService.getLatestTestResultsForPr(1L, criteria);
 
     // Verify the problematic call
-    verify(testCaseStatisticsService).calculateFlakinessScore(0.0, 0.0);
+    verify(testCaseStatisticsService).computeFlakinessInfo(
+        anyString(), anyString(), anyList(), anyList());
 
     assertNotNull(result);
     assertFalse(result.testResults().isEmpty());

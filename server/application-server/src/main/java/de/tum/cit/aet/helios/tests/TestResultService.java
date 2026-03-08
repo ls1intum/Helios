@@ -5,9 +5,7 @@ import de.tum.cit.aet.helios.filters.RepositoryContext;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import de.tum.cit.aet.helios.pullrequest.PullRequestRepository;
 import de.tum.cit.aet.helios.tests.TestCase.TestStatus;
-import de.tum.cit.aet.helios.tests.TestResultsDto.CombinedTestCaseStatisticsInfo;
 import de.tum.cit.aet.helios.tests.TestResultsDto.TestCaseDto;
-import de.tum.cit.aet.helios.tests.TestResultsDto.TestCaseStatisticsInfo;
 import de.tum.cit.aet.helios.tests.TestResultsDto.TestTypeResults;
 import de.tum.cit.aet.helios.tests.type.TestType;
 import de.tum.cit.aet.helios.workflow.WorkflowRun;
@@ -17,7 +15,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -319,58 +316,27 @@ public class TestResultService {
         testCaseStatisticsRepository.findByTestSuiteNameInAndBranchNameAndRepositoryRepositoryId(
             suiteClassNames, "combined", RepositoryContext.getRepositoryId());
 
-    Function<TestCase, TestResultsDto.TestCaseStatisticsInfo> statisticsProvider =
-        testCase -> {
-          Optional<TestCaseStatistics> stats =
-              defaultBranchStats.stream()
-                  .filter(
-                      s ->
-                          s.getTestName().equals(testCase.getName())
-                              && s.getClassName().equals(testCase.getClassName()))
-                  .findFirst();
-
-          double failureRate = stats.map(TestCaseStatistics::getFailureRate).orElse(0.0);
-
-          boolean failsInDefaultBranch =
-              failedTestsInDefault.stream()
-                  .anyMatch(
-                      failedTest ->
-                          failedTest.getName().equals(testCase.getName())
-                              && failedTest.getClassName().equals(testCase.getClassName()));
-
-          return new TestResultsDto.TestCaseStatisticsInfo(failureRate, failsInDefaultBranch);
-        };
-
-    Function<TestCase, TestResultsDto.CombinedTestCaseStatisticsInfo> combinedStatisticsProvider =
-        testCase -> {
-          Optional<TestCaseStatistics> stats =
-              combinedStats.stream()
-                  .filter(
-                      s ->
-                          s.getTestName().equals(testCase.getName())
-                              && s.getClassName().equals(testCase.getClassName()))
-                  .findFirst();
-
-          double combinedFailureRate = stats.map(TestCaseStatistics::getFailureRate).orElse(0.0);
-
-          return new TestResultsDto.CombinedTestCaseStatisticsInfo(combinedFailureRate);
-        };
-
     var prevStateCandidates =
         testCaseRepository.findByTestSuiteWorkflowIdAndClassNamesAndTestTypeId(
             prevWorkflowRunId, suiteClassNames, type.getId());
 
     for (TestSuite suite : suites) {
       for (TestCase testCase : suite.getTestCases()) {
-        TestCaseStatisticsInfo statistics = statisticsProvider.apply(testCase);
-        CombinedTestCaseStatisticsInfo combinedStatistics =
-            combinedStatisticsProvider.apply(testCase);
-        testCase.setFlakinessScore(
-            testCaseStatisticsService.calculateFlakinessScore(
-                statistics.failureRate(), combinedStatistics.combinedFailureRate()));
-        testCase.setFailsInDefaultBranch(statistics.failsInDefaultBranch());
-        testCase.setFailureRate(statistics.failureRate());
-        testCase.setCombinedFailureRate(combinedStatistics.combinedFailureRate());
+        var flakinessInfo =
+            testCaseStatisticsService.computeFlakinessInfo(
+                testCase.getName(), testCase.getClassName(), defaultBranchStats, combinedStats);
+        testCase.setFlakinessScore(flakinessInfo.flakinessScore());
+        testCase.setFailureRate(flakinessInfo.defaultBranchFailureRate());
+        testCase.setCombinedFailureRate(flakinessInfo.combinedFailureRate());
+
+        boolean failsInDefaultBranch =
+            failedTestsInDefault.stream()
+                .anyMatch(
+                    failedTest ->
+                        failedTest.getName().equals(testCase.getName())
+                            && failedTest.getClassName().equals(testCase.getClassName()));
+        testCase.setFailsInDefaultBranch(failsInDefaultBranch);
+
         testCase.setPreviousStatus(
             prevStateCandidates.stream()
                 .filter(
