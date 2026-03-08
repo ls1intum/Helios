@@ -2,6 +2,8 @@ package de.tum.cit.aet.helios.workflow.github;
 
 import static de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment.mapWorkflowRunStatus;
 
+import de.tum.cit.aet.helios.github.GitHubClientManager;
+import de.tum.cit.aet.helios.github.GitHubFacade;
 import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
@@ -26,6 +28,8 @@ import java.util.Optional;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.kohsuke.github.GHPullRequest;
+import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GHWorkflowRun;
 import org.springframework.stereotype.Service;
 
@@ -42,6 +46,8 @@ public class GitHubWorkflowRunSyncService {
   private final HeliosDeploymentRepository heliosDeploymentRepository;
   private final DeploymentFailureNotificationDecider deploymentFailureNotificationDecider;
   private final NatsNotificationPublisherService notificationPublisherService;
+  private final GitHubFacade github;
+  private final GitHubClientManager clientManager;
 
   @Transactional
   public WorkflowRun processRun(GHWorkflowRun ghWorkflowRun) {
@@ -112,8 +118,7 @@ public class GitHubWorkflowRunSyncService {
     try {
       Set<PullRequest> pullRequests = new HashSet<>();
 
-      ghWorkflowRun
-          .getPullRequests()
+      loadPullRequests(ghWorkflowRun)
           .forEach(
               pullRequest -> {
                 var pr = pullRequestRepository.findById(pullRequest.getId());
@@ -166,6 +171,34 @@ public class GitHubWorkflowRunSyncService {
     workflowRunRepository.save(result);
 
     return result;
+  }
+
+  private List<GHPullRequest> loadPullRequests(GHWorkflowRun ghWorkflowRun) throws IOException {
+    try {
+      return ghWorkflowRun.getPullRequests();
+    } catch (IOException e) {
+      if (!isBadCredentials(e)) {
+        throw e;
+      }
+
+      log.warn(
+          "Bad credentials while loading pull requests for workflow run {}. "
+              + "Refreshing client and retrying once.",
+          ghWorkflowRun.getId());
+
+      clientManager.forceRefreshClient();
+
+      GHRepository freshRepository =
+          github.getRepository(ghWorkflowRun.getRepository().getFullName());
+      GHWorkflowRun freshRun = freshRepository.getWorkflowRun(ghWorkflowRun.getId());
+      return freshRun.getPullRequests();
+    }
+  }
+
+  private boolean isBadCredentials(IOException e) {
+    String message = e.getMessage();
+    return message != null
+        && (message.contains("Bad credentials") || message.contains("\"status\": \"401\""));
   }
 
   private void processRunForHeliosDeployment(GHWorkflowRun workflowRun) throws IOException {
