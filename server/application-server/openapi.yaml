@@ -445,6 +445,32 @@ paths:
                 $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
+  /api/tests/flakiness-scores:
+    post:
+      tags:
+      - test-result-controller
+      operationId: getFlakinessScores
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TestFlakinessScoreRequest"
+        required: true
+      responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TestFlakinessScoreDto"
   /api/test-types:
     get:
       tags:
@@ -2230,6 +2256,47 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/NotificationPreferenceDto"
+    TestCaseIdentifier:
+      type: object
+      properties:
+        testName:
+          type: string
+          minLength: 1
+        className:
+          type: string
+          minLength: 1
+      required:
+      - className
+      - testName
+    TestFlakinessScoreRequest:
+      type: object
+      properties:
+        testCases:
+          type: array
+          items:
+            $ref: "#/components/schemas/TestCaseIdentifier"
+          minItems: 1
+      required:
+      - testCases
+    TestFlakinessScoreDto:
+      type: object
+      properties:
+        testName:
+          type: string
+        className:
+          type: string
+        flakinessScore:
+          type: number
+          format: double
+        defaultBranchFailureRate:
+          type: number
+          format: double
+        combinedFailureRate:
+          type: number
+          format: double
+      required:
+      - className
+      - testName
     ReleaseCandidateCreateDto:
       type: object
       properties:

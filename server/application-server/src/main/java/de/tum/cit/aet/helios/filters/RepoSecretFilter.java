@@ -30,7 +30,9 @@ public class RepoSecretFilter extends OncePerRequestFilter {
   @Override
   protected boolean shouldNotFilter(HttpServletRequest request) {
     // avoid parsing unrelated paths
-    return !request.getRequestURI().startsWith("/api/environments/status");
+    String uri = request.getRequestURI();
+    return !uri.startsWith("/api/environments/status")
+        && !uri.equals("/api/tests/flakiness-scores");
   }
 
   @Override
