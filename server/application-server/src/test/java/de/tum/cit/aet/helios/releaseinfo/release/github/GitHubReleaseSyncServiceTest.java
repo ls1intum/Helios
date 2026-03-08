@@ -45,7 +45,6 @@ class GitHubReleaseSyncServiceTest {
   @Mock private CommitRepository commitRepository;
   @Mock private GitHubService gitHubService;
 
-  @Mock private GHRelease ghRelease;
   @Mock private GHRepository ghRepository;
   @Mock private GHRepository currentRepository;
   @Mock private GHRef ref;
@@ -53,6 +52,7 @@ class GitHubReleaseSyncServiceTest {
 
   @InjectMocks private GitHubReleaseSyncService service;
 
+  private GHRelease ghRelease;
   private GitRepository repository;
   private Release release;
 
@@ -65,8 +65,19 @@ class GitHubReleaseSyncServiceTest {
     release = new Release();
     release.setId(1L);
 
-    when(ghRelease.getId()).thenReturn(1L);
-    when(ghRelease.getTagName()).thenReturn("v1.0.0");
+    ghRelease =
+        new GHRelease() {
+          @Override
+          public long getId() {
+            return 1L;
+          }
+
+          @Override
+          public String getTagName() {
+            return "v1.0.0";
+          }
+        };
+
     when(ghRepository.getFullName()).thenReturn("owner/repo");
 
     when(gitRepoRepository.findByNameWithOwner("owner/repo")).thenReturn(repository);
