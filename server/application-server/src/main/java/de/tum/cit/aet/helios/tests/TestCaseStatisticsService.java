@@ -174,7 +174,6 @@ public class TestCaseStatisticsService {
   /**
    * Computes flakiness information for a single test case from pre-fetched statistics lists.
    * This is the shared core logic.
-   *
    * Each caller pre-fetches the two stat lists (default branch + combined),
    * then delegates the per-test-case score computation here.
    *
