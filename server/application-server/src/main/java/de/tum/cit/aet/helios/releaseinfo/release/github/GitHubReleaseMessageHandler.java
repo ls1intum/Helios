@@ -4,6 +4,8 @@ import de.tum.cit.aet.helios.github.GitHubMessageHandler;
 import de.tum.cit.aet.helios.gitrepo.github.GitHubRepositorySyncService;
 import de.tum.cit.aet.helios.releaseinfo.release.ReleaseRepository;
 import de.tum.cit.aet.helios.releaseinfo.releasecandidate.ReleaseCandidateRepository;
+import de.tum.cit.aet.helios.user.User;
+import de.tum.cit.aet.helios.user.github.GitHubUserSyncService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.kohsuke.github.GHEvent;
@@ -20,6 +22,7 @@ public class GitHubReleaseMessageHandler extends GitHubMessageHandler<GHEventPay
   private final GitHubRepositorySyncService repositorySyncService;
   private final ReleaseRepository releaseRepository;
   private final ReleaseCandidateRepository releaseCandidateRepository;
+  private final GitHubUserSyncService gitHubUserSyncService;
 
   @Override
   protected void handleInstalledRepositoryEvent(GHEventPayload.Release eventPayload) {
@@ -34,8 +37,13 @@ public class GitHubReleaseMessageHandler extends GitHubMessageHandler<GHEventPay
       if (eventPayload.getRelease().isDraft()) {
         return;
       }
+      User creator =
+          eventPayload.getAction().equals("created") && eventPayload.getSender() != null
+              ? gitHubUserSyncService.processUser(eventPayload.getSender())
+              : null;
       repositorySyncService.processRepository(eventPayload.getRepository());
-      releaseSyncService.processRelease(eventPayload.getRelease(), eventPayload.getRepository());
+      releaseSyncService.processRelease(
+          eventPayload.getRelease(), eventPayload.getRepository(), creator);
     } else if (eventPayload.getAction().equals("deleted")) {
       releaseCandidateRepository
           .findByRepositoryRepositoryIdAndReleaseId(
