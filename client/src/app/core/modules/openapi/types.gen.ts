@@ -356,6 +356,31 @@ export type TestTypeStats = {
   totalUpdates: number;
 };
 
+export type FlakyTestDto = {
+  testName: string;
+  className: string;
+  testSuiteName: string;
+  flakinessScore?: number;
+  defaultBranchFailureRate?: number;
+  combinedFailureRate?: number;
+  totalRuns?: number;
+  failedRuns?: number;
+  lastUpdated: string;
+};
+
+export type FlakyTestOverviewDto = {
+  summary: FlakyTestSummary;
+  flakyTests: Array<FlakyTestDto>;
+};
+
+export type FlakyTestSummary = {
+  totalTrackedTests?: number;
+  flakyTestCount?: number;
+  highFlakinessCount?: number;
+  mediumFlakinessCount?: number;
+  lowFlakinessCount?: number;
+};
+
 export type CommitsSinceReleaseCandidateDto = {
   aheadBy: number;
   behindBy: number;
@@ -1704,6 +1729,31 @@ export type GetLatestTestResultsByPullRequestIdResponses = {
 };
 
 export type GetLatestTestResultsByPullRequestIdResponse = GetLatestTestResultsByPullRequestIdResponses[keyof GetLatestTestResultsByPullRequestIdResponses];
+
+export type GetFlakyTestsOverviewData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/api/tests/flaky';
+};
+
+export type GetFlakyTestsOverviewErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type GetFlakyTestsOverviewError = GetFlakyTestsOverviewErrors[keyof GetFlakyTestsOverviewErrors];
+
+export type GetFlakyTestsOverviewResponses = {
+  /**
+   * OK
+   */
+  200: FlakyTestOverviewDto;
+};
+
+export type GetFlakyTestsOverviewResponse = GetFlakyTestsOverviewResponses[keyof GetFlakyTestsOverviewResponses];
 
 export type GetLatestTestResultsByBranchData = {
   body?: never;

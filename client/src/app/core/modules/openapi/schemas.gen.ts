@@ -1061,6 +1061,88 @@ export const TestTypeStatsSchema = {
   required: ['errors', 'failures', 'passed', 'skipped', 'totalSuites', 'totalTests', 'totalTime', 'totalUpdates'],
 } as const;
 
+export const FlakyTestDtoSchema = {
+  type: 'object',
+  properties: {
+    testName: {
+      type: 'string',
+    },
+    className: {
+      type: 'string',
+    },
+    testSuiteName: {
+      type: 'string',
+    },
+    flakinessScore: {
+      type: 'number',
+      format: 'double',
+    },
+    defaultBranchFailureRate: {
+      type: 'number',
+      format: 'double',
+    },
+    combinedFailureRate: {
+      type: 'number',
+      format: 'double',
+    },
+    totalRuns: {
+      type: 'integer',
+      format: 'int32',
+    },
+    failedRuns: {
+      type: 'integer',
+      format: 'int32',
+    },
+    lastUpdated: {
+      type: 'string',
+      format: 'date-time',
+    },
+  },
+  required: ['className', 'lastUpdated', 'testName', 'testSuiteName'],
+} as const;
+
+export const FlakyTestOverviewDtoSchema = {
+  type: 'object',
+  properties: {
+    summary: {
+      $ref: '#/components/schemas/FlakyTestSummary',
+    },
+    flakyTests: {
+      type: 'array',
+      items: {
+        $ref: '#/components/schemas/FlakyTestDto',
+      },
+    },
+  },
+  required: ['flakyTests', 'summary'],
+} as const;
+
+export const FlakyTestSummarySchema = {
+  type: 'object',
+  properties: {
+    totalTrackedTests: {
+      type: 'integer',
+      format: 'int32',
+    },
+    flakyTestCount: {
+      type: 'integer',
+      format: 'int32',
+    },
+    highFlakinessCount: {
+      type: 'integer',
+      format: 'int32',
+    },
+    mediumFlakinessCount: {
+      type: 'integer',
+      format: 'int32',
+    },
+    lowFlakinessCount: {
+      type: 'integer',
+      format: 'int32',
+    },
+  },
+} as const;
+
 export const CommitsSinceReleaseCandidateDtoSchema = {
   type: 'object',
   properties: {
