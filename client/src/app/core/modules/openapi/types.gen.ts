@@ -296,9 +296,9 @@ export type PaginatedWorkflowRunsResponse = {
 
 export type WorkflowRunDto = {
   id: number;
-  name: string;
+  name?: string;
   displayTitle: string;
-  status:
+  status?:
     | 'QUEUED'
     | 'IN_PROGRESS'
     | 'COMPLETED'
@@ -314,16 +314,38 @@ export type WorkflowRunDto = {
     | 'WAITING'
     | 'PENDING'
     | 'UNKNOWN';
-  workflowId: number;
+  workflowId?: number;
   conclusion?: 'ACTION_REQUIRED' | 'CANCELLED' | 'FAILURE' | 'NEUTRAL' | 'SUCCESS' | 'SKIPPED' | 'STALE' | 'TIMED_OUT' | 'STARTUP_FAILURE' | 'UNKNOWN';
   htmlUrl: string;
-  label: 'NONE' | 'TEST';
+  label?: 'NONE' | 'TEST';
   testProcessingStatus?: 'PROCESSING' | 'PROCESSED' | 'FAILED';
   headBranch?: string;
   headSha?: string;
   runStartedAt?: string;
   createdAt: string;
   updatedAt: string;
+};
+
+export type WorkflowRunLogFileDto = {
+  path: string;
+  displayName: string;
+  content: string;
+};
+
+export type WorkflowRunLogGroupDto = {
+  name: string;
+  files: Array<WorkflowRunLogFileDto>;
+};
+
+export type WorkflowRunLogsResponse = {
+  workflowRunId: number;
+  workflowName: string;
+  displayTitle: string;
+  htmlUrl: string;
+  cacheHit: boolean;
+  downloadedAt: string;
+  totalFileCount: number;
+  groups: Array<WorkflowRunLogGroupDto>;
 };
 
 export type GitHubRepositoryRoleDto = {
@@ -1863,6 +1885,33 @@ export type GetLatestWorkflowRunsByBranchAndHeadCommitResponses = {
 };
 
 export type GetLatestWorkflowRunsByBranchAndHeadCommitResponse = GetLatestWorkflowRunsByBranchAndHeadCommitResponses[keyof GetLatestWorkflowRunsByBranchAndHeadCommitResponses];
+
+export type GetWorkflowRunLogsData = {
+  body?: never;
+  path: {
+    workflowRunId: number;
+  };
+  query?: never;
+  url: '/api/workflows/runs/{workflowRunId}/logs';
+};
+
+export type GetWorkflowRunLogsErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type GetWorkflowRunLogsError = GetWorkflowRunLogsErrors[keyof GetWorkflowRunLogsErrors];
+
+export type GetWorkflowRunLogsResponses = {
+  /**
+   * OK
+   */
+  200: WorkflowRunLogsResponse;
+};
+
+export type GetWorkflowRunLogsResponse = GetWorkflowRunLogsResponses[keyof GetWorkflowRunLogsResponses];
 
 export type GetUserPermissionsData = {
   body?: never;

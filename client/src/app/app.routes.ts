@@ -115,6 +115,10 @@ export const routes: Routes = [
             ],
           },
           {
+            path: 'workflow-runs/:workflowRunId/logs',
+            loadComponent: () => import('./pages/workflow-run-logs/workflow-run-logs.component').then(m => m.WorkflowRunLogsComponent),
+          },
+          {
             path: 'settings',
             loadComponent: () => import('./pages/project-settings/project-settings.component').then(m => m.ProjectSettingsComponent),
             canActivate: [maintainerGuard],

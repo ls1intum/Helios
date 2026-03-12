@@ -171,6 +171,9 @@ import type {
   GetWorkflowRunsData,
   GetWorkflowRunsErrors,
   GetWorkflowRunsResponses,
+  GetWorkflowRunLogsData,
+  GetWorkflowRunLogsErrors,
+  GetWorkflowRunLogsResponses,
   GetWorkflowsByRepositoryIdData,
   GetWorkflowsByRepositoryIdErrors,
   GetWorkflowsByRepositoryIdResponses,
@@ -688,6 +691,13 @@ export const getLatestWorkflowRunsByBranchAndHeadCommit = <ThrowOnError extends 
 ) => {
   return (options.client ?? client).get<GetLatestWorkflowRunsByBranchAndHeadCommitResponses, GetLatestWorkflowRunsByBranchAndHeadCommitErrors, ThrowOnError>({
     url: '/api/workflows/branch',
+    ...options,
+  });
+};
+
+export const getWorkflowRunLogs = <ThrowOnError extends boolean = false>(options: Options<GetWorkflowRunLogsData, ThrowOnError>) => {
+  return (options.client ?? client).get<GetWorkflowRunLogsResponses, GetWorkflowRunLogsErrors, ThrowOnError>({
+    url: '/api/workflows/runs/{workflowRunId}/logs',
     ...options,
   });
 };

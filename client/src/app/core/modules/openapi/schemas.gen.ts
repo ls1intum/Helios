@@ -972,6 +972,75 @@ export const WorkflowRunDtoSchema = {
   required: ['createdAt', 'displayTitle', 'htmlUrl', 'id', 'label', 'name', 'status', 'updatedAt', 'workflowId'],
 } as const;
 
+export const WorkflowRunLogFileDtoSchema = {
+  type: 'object',
+  properties: {
+    path: {
+      type: 'string',
+    },
+    displayName: {
+      type: 'string',
+    },
+    content: {
+      type: 'string',
+    },
+  },
+  required: ['content', 'displayName', 'path'],
+} as const;
+
+export const WorkflowRunLogGroupDtoSchema = {
+  type: 'object',
+  properties: {
+    name: {
+      type: 'string',
+    },
+    files: {
+      type: 'array',
+      items: {
+        $ref: '#/components/schemas/WorkflowRunLogFileDto',
+      },
+    },
+  },
+  required: ['files', 'name'],
+} as const;
+
+export const WorkflowRunLogsResponseSchema = {
+  type: 'object',
+  properties: {
+    workflowRunId: {
+      type: 'integer',
+      format: 'int64',
+    },
+    workflowName: {
+      type: 'string',
+    },
+    displayTitle: {
+      type: 'string',
+    },
+    htmlUrl: {
+      type: 'string',
+    },
+    cacheHit: {
+      type: 'boolean',
+    },
+    downloadedAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+    totalFileCount: {
+      type: 'integer',
+      format: 'int32',
+    },
+    groups: {
+      type: 'array',
+      items: {
+        $ref: '#/components/schemas/WorkflowRunLogGroupDto',
+      },
+    },
+  },
+  required: ['cacheHit', 'displayTitle', 'downloadedAt', 'groups', 'htmlUrl', 'totalFileCount', 'workflowName', 'workflowRunId', 'label', 'name', 'status', 'workflowId'],
+} as const;
+
 export const GitHubRepositoryRoleDtoSchema = {
   type: 'object',
   properties: {

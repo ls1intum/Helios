@@ -60,6 +60,7 @@ import {
   getWorkflowJobStatus,
   getWorkflowRunById,
   getWorkflowRuns,
+  getWorkflowRunLogs,
   getWorkflowsByRepositoryId,
   getWorkflowsByState,
   healthCheck,
@@ -180,6 +181,7 @@ import type {
   GetWorkflowRunsData,
   GetWorkflowRunsError,
   GetWorkflowRunsResponse,
+  GetWorkflowRunLogsData,
   GetWorkflowsByRepositoryIdData,
   GetWorkflowsByStateData,
   HealthCheckData,
@@ -1117,6 +1119,23 @@ export const getLatestWorkflowRunsByBranchAndHeadCommitOptions = (options: Optio
       return data;
     },
     queryKey: getLatestWorkflowRunsByBranchAndHeadCommitQueryKey(options),
+  });
+};
+
+export const getWorkflowRunLogsQueryKey = (options: Options<GetWorkflowRunLogsData>) => createQueryKey('getWorkflowRunLogs', options);
+
+export const getWorkflowRunLogsOptions = (options: Options<GetWorkflowRunLogsData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getWorkflowRunLogs({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: getWorkflowRunLogsQueryKey(options),
   });
 };
 
