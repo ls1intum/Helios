@@ -824,6 +824,51 @@ public class GitHubService {
   }
 
   /**
+   * Downloads the GitHub Actions log archive for a workflow run.
+   *
+   * @param repoNameWithOwner Repository in format "owner/repo"
+   * @param runId Workflow run ID to fetch logs for
+   * @return ZIP archive bytes returned by GitHub
+   * @throws IOException if the API call fails or the response body is empty
+   */
+  public byte[] downloadWorkflowRunLogs(String repoNameWithOwner, long runId) throws IOException {
+    String url =
+        String.format(
+            "https://api.github.com/repos/%s/actions/runs/%d/logs", repoNameWithOwner, runId);
+
+    Request request = getRequestBuilder().url(url).get().build();
+
+    try (Response response = okHttpClient.newCall(request).execute()) {
+      if (!response.isSuccessful()) {
+        String errorBody = "No error details";
+        ResponseBody responseBody = response.body();
+        if (responseBody != null) {
+          try {
+            errorBody = responseBody.string();
+          } catch (IOException e) {
+            log.warn("Failed to read workflow log error response body", e);
+          }
+        }
+
+        log.error(
+            "GitHub API call failed to fetch workflow run logs with response code: {} and body: {}",
+            response.code(),
+            errorBody);
+        throw new IOException("GitHub API call failed with response code: " + response.code());
+      }
+
+      ResponseBody responseBody = response.body();
+      if (responseBody == null) {
+        throw new IOException("Response body is null");
+      }
+
+      byte[] result = responseBody.bytes();
+      log.debug("Successfully fetched workflow logs for workflow run ID: {}", runId);
+      return result;
+    }
+  }
+
+  /**
    * Cancels a GitHub workflow run.
    *
    * @param repoNameWithOwner Repository in format "owner/repo"

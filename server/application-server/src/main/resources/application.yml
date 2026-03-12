@@ -55,3 +55,7 @@ notification:
 recovery:
     stuck-deployments:
         cron: "0 0 * * * *"
+
+helios:
+    logs:
+        base-path: ${HELIOS_LOGS_BASE_PATH:/tmp/helios-workflow-logs}

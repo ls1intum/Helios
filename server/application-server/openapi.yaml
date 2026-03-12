@@ -1223,6 +1223,31 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/WorkflowRunDto"
+  /api/workflows/runs/{workflowRunId}/logs:
+    get:
+      tags:
+      - workflow-run-controller
+      operationId: getWorkflowRunLogs
+      parameters:
+      - name: workflowRunId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkflowRunLogsResponse"
   /api/user-permissions:
     get:
       tags:
@@ -2945,6 +2970,64 @@ components:
       - displayTitle
       - htmlUrl
       - id
+    WorkflowRunLogFileDto:
+      type: object
+      properties:
+        path:
+          type: string
+        displayName:
+          type: string
+        content:
+          type: string
+      required:
+      - content
+      - displayName
+      - path
+    WorkflowRunLogGroupDto:
+      type: object
+      properties:
+        name:
+          type: string
+        files:
+          type: array
+          items:
+            $ref: "#/components/schemas/WorkflowRunLogFileDto"
+      required:
+      - files
+      - name
+    WorkflowRunLogsResponse:
+      type: object
+      properties:
+        workflowRunId:
+          type: integer
+          format: int64
+        workflowName:
+          type: string
+        displayTitle:
+          type: string
+        htmlUrl:
+          type: string
+        cacheHit:
+          type: boolean
+        downloadedAt:
+          type: string
+          format: date-time
+        totalFileCount:
+          type: integer
+          format: int32
+        groups:
+          type: array
+          items:
+            $ref: "#/components/schemas/WorkflowRunLogGroupDto"
+      required:
+      - cacheHit
+      - displayTitle
+      - downloadedAt
+      - groups
+      - htmlUrl
+      - totalFileCount
+      - workflowName
+      - workflowRunId
       - label
       - name
       - status

@@ -4,6 +4,9 @@ import de.tum.cit.aet.helios.config.security.annotations.EnforceAtLeastWritePerm
 import de.tum.cit.aet.helios.workflow.pagination.PaginatedWorkflowRunsResponse;
 import de.tum.cit.aet.helios.workflow.pagination.WorkflowRunFilterType;
 import de.tum.cit.aet.helios.workflow.pagination.WorkflowRunPageRequest;
+import de.tum.cit.aet.helios.workflow.logs.WorkflowRunLogReaderService;
+import de.tum.cit.aet.helios.workflow.logs.WorkflowRunLogsResponse;
+import java.io.IOException;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class WorkflowRunController {
 
   private final WorkflowRunService workflowRunService;
+  private final WorkflowRunLogReaderService workflowRunLogReaderService;
 
   @GetMapping("/runs")
   public ResponseEntity<PaginatedWorkflowRunsResponse> getWorkflowRuns(
@@ -80,5 +84,9 @@ public class WorkflowRunController {
   public ResponseEntity<Void> reRunFailedJobs(@PathVariable Long runId) {
     workflowRunService.reRunFailedJobs(runId);
     return ResponseEntity.ok().build();
+  @GetMapping("/runs/{workflowRunId}/logs")
+  public ResponseEntity<WorkflowRunLogsResponse> getWorkflowRunLogs(
+      @PathVariable Long workflowRunId) throws IOException {
+    return ResponseEntity.ok(workflowRunLogReaderService.getLogs(workflowRunId));
   }
 }
