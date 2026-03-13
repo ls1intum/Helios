@@ -270,6 +270,14 @@ export type CancelDeploymentRequest = {
   workflowRunId: number;
 };
 
+export type PaginatedWorkflowRunsResponse = {
+  runs?: Array<WorkflowRunDto>;
+  page?: number;
+  size?: number;
+  totalElements?: number;
+  totalPages?: number;
+};
+
 export type WorkflowRunDto = {
   id: number;
   name: string;
@@ -295,6 +303,11 @@ export type WorkflowRunDto = {
   htmlUrl: string;
   label: 'NONE' | 'TEST';
   testProcessingStatus?: 'PROCESSING' | 'PROCESSED' | 'FAILED';
+  headBranch?: string;
+  headSha?: string;
+  runStartedAt?: string;
+  createdAt: string;
+  updatedAt: string;
 };
 
 export type GitHubRepositoryRoleDto = {
@@ -1564,6 +1577,38 @@ export type GetWorkflowsByStateResponses = {
 };
 
 export type GetWorkflowsByStateResponse = GetWorkflowsByStateResponses[keyof GetWorkflowsByStateResponses];
+
+export type GetWorkflowRunsData = {
+  body?: never;
+  path?: never;
+  query?: {
+    page?: number;
+    size?: number;
+    sortField?: string;
+    sortDirection?: string;
+    filterType?: 'ALL' | 'NOT_STARTED' | 'IN_PROGRESS' | 'CANCELLED' | 'SUCCESS' | 'FAILURE' | 'ACTION_REQUIRED';
+    searchTerm?: string;
+  };
+  url: '/api/workflows/runs';
+};
+
+export type GetWorkflowRunsErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type GetWorkflowRunsError = GetWorkflowRunsErrors[keyof GetWorkflowRunsErrors];
+
+export type GetWorkflowRunsResponses = {
+  /**
+   * OK
+   */
+  200: PaginatedWorkflowRunsResponse;
+};
+
+export type GetWorkflowRunsResponse = GetWorkflowRunsResponses[keyof GetWorkflowRunsResponses];
 
 export type GetWorkflowsByRepositoryIdData = {
   body?: never;
