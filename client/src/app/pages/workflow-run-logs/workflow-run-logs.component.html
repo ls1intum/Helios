@@ -3,8 +3,16 @@
     <div class="min-w-0">
       <div>Workflow Logs</div>
       @if (logs(); as response) {
-        <div class="mt-2 text-base font-normal text-muted-color">
-          {{ response.displayTitle || response.workflowName }}
+        <div class="mt-2 flex flex-wrap items-center gap-2 text-base font-normal text-muted-color">
+          <p-tag [severity]="workflowOutcome().tagSeverity" [rounded]="true">
+            <span class="inline-flex items-center gap-1.5">
+              <i-tabler [name]="workflowOutcome().icon" class="!size-4" [class]="workflowOutcome().iconColorClass" />
+              {{ workflowOutcome().label }}
+            </span>
+          </p-tag>
+          <span class="min-w-0 flex-1 truncate">
+            {{ response.displayTitle || response.workflowName }}
+          </span>
         </div>
       } @else {
         <div class="mt-2 text-base font-normal text-muted-color">Workflow run #{{ workflowRunId() }}</div>
@@ -24,15 +32,13 @@
     </div>
   </div>
 
-  <span description>
-    Helios downloads and prepares the workflow run logs on demand for this page. While the request is in flight, the page stays in a loading state.
-  </span>
+  <span description> Helios downloads and prepares the workflow run logs on demand for this page. While the request is in flight, the page stays in a loading state. </span>
 </app-page-heading>
 
 <div class="px-4 pb-6">
   @if (logsQuery.isPending()) {
     <div class="grid gap-4 lg:grid-cols-[20rem_minmax(0,1fr)]">
-      <div class="rounded-xl border border-surface-200 bg-surface-0 p-4 shadow-sm dark:border-surface-700 dark:bg-surface-900">
+      <p-card class="border border-surface-200 shadow-sm dark:border-surface-700">
         <div class="mb-4 flex items-center gap-2">
           <i-tabler name="folder" class="!size-5 text-primary" />
           <span class="font-semibold">Preparing log groups</span>
@@ -44,9 +50,9 @@
           <p-skeleton height="2.5rem" />
           <p-skeleton height="2.5rem" />
         </div>
-      </div>
+      </p-card>
 
-      <div class="rounded-xl border border-surface-200 bg-surface-0 p-4 shadow-sm dark:border-surface-700 dark:bg-surface-900">
+      <p-card class="border border-surface-200 shadow-sm dark:border-surface-700">
         <div class="mb-4 flex items-center justify-between">
           <p-skeleton width="14rem" height="1.25rem" />
           <p-skeleton width="7rem" height="1rem" />
@@ -62,16 +68,16 @@
           <p-skeleton height="1rem" />
           <p-skeleton height="1rem" />
         </div>
-      </div>
+      </p-card>
     </div>
   } @else if (logsQuery.isError()) {
-    <div class="flex min-h-[26rem] items-center justify-center rounded-xl border border-red-200 bg-red-50 p-8 text-center dark:border-red-900/60 dark:bg-red-950/30">
-      <div class="max-w-xl">
+    <p-card class="border border-red-200 bg-red-50/60 shadow-sm dark:border-red-900/60 dark:bg-red-950/20">
+      <div class="mx-auto flex min-h-[26rem] max-w-xl flex-col items-center justify-center text-center">
         <i-tabler name="server-off" class="mb-4 !size-12 text-red-500" />
-        <h3 class="mb-2 text-xl font-semibold">Workflow logs could not be loaded</h3>
-        <p class="mb-6 text-sm text-muted-color">
-          The backend did not finish downloading or processing this workflow run. Retry the same request from this page.
-        </p>
+        <h3 class="mb-4 text-xl font-semibold">Workflow logs could not be loaded</h3>
+        <p-message severity="error" class="mb-6 block text-left">
+          Helios only opens workflow logs after the workflow run has completed. If this run just finished, retry the same request in a moment.
+        </p-message>
         <div class="flex flex-wrap justify-center gap-2">
           <p-button label="Retry" (onClick)="retry()">
             <i-tabler name="refresh" class="!size-4" />
@@ -84,94 +90,151 @@
           }
         </div>
       </div>
-    </div>
+    </p-card>
   } @else if (!hasLogs()) {
-    <div class="flex min-h-[26rem] items-center justify-center rounded-xl border border-surface-200 bg-surface-0 p-8 text-center shadow-sm dark:border-surface-700 dark:bg-surface-900">
-      <div class="max-w-xl">
+    <p-card class="border border-surface-200 shadow-sm dark:border-surface-700">
+      <div class="mx-auto flex min-h-[26rem] max-w-xl flex-col items-center justify-center text-center">
         <i-tabler name="file-text" class="mb-4 !size-12 text-muted-color" />
-        <h3 class="mb-2 text-xl font-semibold">No workflow logs were returned</h3>
-        <p class="mb-6 text-sm text-muted-color">
+        <h3 class="mb-4 text-xl font-semibold">No workflow logs were returned</h3>
+        <p-message severity="info" class="mb-6 block text-left">
           Helios completed the request but there are no processed log files available to display yet.
-        </p>
+        </p-message>
         <p-button label="Retry" (onClick)="retry()">
           <i-tabler name="refresh" class="!size-4" />
         </p-button>
       </div>
-    </div>
+    </p-card>
   } @else {
-    <div class="mb-4 flex flex-wrap gap-2 text-sm text-muted-color">
-      <span class="rounded-full bg-surface-100 px-3 py-1 dark:bg-surface-800">
-        {{ logs()?.cacheHit ? 'Loaded from cache' : 'Downloaded fresh logs' }}
-      </span>
-      <span class="rounded-full bg-surface-100 px-3 py-1 dark:bg-surface-800"> {{ logs()?.totalFileCount }} files </span>
-      @if (logs()?.downloadedAt) {
-        <span class="rounded-full bg-surface-100 px-3 py-1 dark:bg-surface-800"> Downloaded {{ logs()?.downloadedAt | date: 'd MMM y, HH:mm:ss' }} </span>
-      }
-    </div>
-
-    <div class="grid gap-4 lg:grid-cols-[22rem_minmax(0,1fr)]">
-      <aside class="rounded-xl border border-surface-200 bg-surface-0 p-4 shadow-sm dark:border-surface-700 dark:bg-surface-900">
-        <div class="mb-4 flex items-center gap-2">
-          <i-tabler name="folder" class="!size-5 text-primary" />
-          <span class="font-semibold">Log Files</span>
-        </div>
-
-        <div class="space-y-4">
-          @for (group of groups(); track group.name) {
-            <section>
-              <div class="mb-2 flex items-center justify-between">
-                <h3 class="font-medium">{{ group.name }}</h3>
-                <span class="text-xs text-muted-color">{{ group.files.length }} files</span>
-              </div>
-
-              <div class="space-y-1">
-                @for (file of group.files; track file.path) {
-                  <button
-                    class="flex w-full items-center justify-between rounded-lg border px-3 py-2 text-left transition"
-                    [class.border-primary]="activeFilePath() === file.path"
-                    [class.bg-primary-50]="activeFilePath() === file.path"
-                    [class.text-primary-900]="activeFilePath() === file.path"
-                    [class.dark:bg-primary-950/30]="activeFilePath() === file.path"
-                    [class.border-surface-200]="activeFilePath() !== file.path"
-                    [class.bg-surface-0]="activeFilePath() !== file.path"
-                    [class.dark:border-surface-700]="activeFilePath() !== file.path"
-                    [class.dark:bg-surface-900]="activeFilePath() !== file.path"
-                    (click)="selectFile(file.path)"
-                  >
-                    <span class="truncate pr-3 text-sm">{{ file.displayName }}</span>
-                    <i-tabler name="file-text" class="!size-4 shrink-0 text-muted-color" />
-                  </button>
-                }
-              </div>
-            </section>
+    <p-toolbar class="mb-4 rounded-xl border border-surface-200 shadow-sm dark:border-surface-700">
+      <ng-template #start>
+        <div class="flex flex-wrap gap-2 text-sm text-muted-color">
+          <p-tag severity="secondary" [rounded]="true">
+            {{ logs()?.cacheHit ? 'Loaded from cache' : 'Downloaded fresh logs' }}
+          </p-tag>
+          <p-tag severity="secondary" [rounded]="true">
+            {{ logs()?.totalFileCount }} files
+          </p-tag>
+          @if (logs()?.downloadedAt) {
+            <p-tag severity="secondary" [rounded]="true">
+              Downloaded {{ logs()?.downloadedAt | date: 'd MMM y, HH:mm:ss' }}
+            </p-tag>
           }
         </div>
-      </aside>
+      </ng-template>
 
-      <section class="min-w-0 rounded-xl border border-surface-200 bg-surface-0 p-4 shadow-sm dark:border-surface-700 dark:bg-surface-900">
-        @if (selectedFile(); as selectedFile) {
-          <div class="mb-4 flex flex-wrap items-center justify-between gap-2 border-b border-surface-200 pb-4 dark:border-surface-700">
-            <div class="min-w-0">
-              <div class="text-sm uppercase tracking-wide text-muted-color">{{ selectedFile.groupName }}</div>
-              <h3 class="truncate text-xl font-semibold">{{ selectedFile.file.displayName }}</h3>
-              <div class="truncate text-sm text-muted-color">{{ selectedFile.file.path }}</div>
+      <ng-template #end>
+        <p-button label="Refresh Logs" severity="secondary" [outlined]="true" size="small" (onClick)="refreshLogs()">
+          <i-tabler name="refresh" class="!size-4" />
+        </p-button>
+      </ng-template>
+    </p-toolbar>
+
+    <div class="grid gap-4 lg:grid-cols-[22rem_minmax(0,1fr)]">
+      <p-panel styleClass="border border-surface-200 shadow-sm dark:border-surface-700">
+        <ng-template pTemplate="header">
+          <div class="flex w-full items-center justify-between gap-3">
+            <div class="flex items-center gap-2">
+              <i-tabler name="folder" class="!size-5 text-primary" />
+              <span class="font-semibold">Log Files</span>
             </div>
+            <p-tag severity="secondary" [rounded]="true" [value]="groupViews().length + ' groups'" />
           </div>
+        </ng-template>
 
-          <div class="max-h-[70vh] overflow-auto rounded-lg bg-slate-950 font-mono text-sm leading-6 text-slate-50">
-            @for (line of selectedFileLines(); track line.number) {
-              <div class="grid grid-cols-[4rem_minmax(0,1fr)] gap-4 px-4">
-                <span class="select-none border-r border-slate-800 py-0.5 pr-4 text-right text-slate-500">
-                  {{ line.number }}
-                </span>
-                <span class="whitespace-pre-wrap break-words py-0.5">
-                  {{ line.content || ' ' }}
-                </span>
-              </div>
+        <p-accordion [multiple]="true" [value]="expandedGroupNames()" (valueChange)="onExpandedGroupsChange($event)">
+          @for (groupView of groupViews(); track groupView.group.name) {
+            <p-accordion-panel [value]="groupView.group.name">
+              <p-accordion-header>
+                <div class="flex w-full items-start gap-3 pr-2">
+                  <span
+                    class="inline-flex size-8 shrink-0 items-center justify-center rounded-md"
+                    [class]="getSidebarIconContainerClass(groupView.job)"
+                    [attr.aria-label]="getSidebarOutcome(groupView.job).label"
+                    [title]="getSidebarOutcome(groupView.job).label"
+                  >
+                    <i-tabler [name]="getSidebarOutcome(groupView.job).icon" class="!size-4"></i-tabler>
+                  </span>
+
+                  <div class="min-w-0 flex-1">
+                    <div class="truncate font-medium">{{ groupView.group.name }}</div>
+                    @if (groupView.job?.name && groupView.job?.name !== groupView.group.name) {
+                      <div class="truncate text-xs text-muted-color">{{ groupView.job?.name }}</div>
+                    }
+                  </div>
+
+                  <p-tag severity="secondary" [rounded]="true" [value]="groupView.group.files.length + ' files'" />
+                </div>
+              </p-accordion-header>
+
+              <p-accordion-content>
+                <div class="space-y-2">
+                  @for (file of groupView.group.files; track file.path) {
+                    <button
+                      class="flex w-full items-center gap-3 rounded-lg border px-3 py-2 text-left transition"
+                      [ngClass]="
+                        activeFilePath() === file.path
+                          ? 'border-primary bg-primary-50 text-primary-900 dark:bg-primary-950/30'
+                          : 'border-surface-200 bg-surface-0 dark:border-surface-700 dark:bg-surface-900'
+                      "
+                      type="button"
+                      (click)="selectFile(file.path)"
+                    >
+                      <span
+                        class="inline-flex size-6 shrink-0 items-center justify-center rounded-md"
+                        [class]="getSidebarIconContainerClass(groupView.job)"
+                        [attr.aria-label]="getSidebarOutcome(groupView.job).label"
+                        [title]="getSidebarOutcome(groupView.job).label"
+                      >
+                        <i-tabler [name]="getSidebarOutcome(groupView.job).icon" class="!size-4"></i-tabler>
+                      </span>
+                      <span class="min-w-0 truncate text-sm">{{ file.displayName }}</span>
+                    </button>
+                  }
+                </div>
+              </p-accordion-content>
+            </p-accordion-panel>
+          }
+        </p-accordion>
+      </p-panel>
+
+      <p-panel styleClass="min-w-0 border border-surface-200 shadow-sm dark:border-surface-700">
+        <ng-template pTemplate="header">
+          <div class="flex w-full items-center justify-between gap-3">
+            <div class="flex items-center gap-2">
+              <i-tabler name="file-text" class="!size-5 text-primary" />
+              <span class="font-semibold">Selected Log</span>
+            </div>
+            @if (selectedFile(); as selectedFile) {
+              <p-tag severity="secondary" [rounded]="true" [value]="selectedFileLines().length + ' lines'" />
             }
           </div>
+        </ng-template>
+
+        @if (selectedFile(); as selectedFile) {
+          <div class="min-w-0">
+            <div class="text-sm uppercase tracking-wide text-muted-color">{{ selectedFile.groupName }}</div>
+            <h3 class="mt-1 min-w-0 truncate text-xl font-semibold">{{ selectedFile.file.displayName }}</h3>
+            <div class="truncate text-sm text-muted-color">{{ selectedFile.file.path }}</div>
+          </div>
+
+          <p-divider class="my-4" />
+
+          <p-scrollPanel styleClass="max-h-[70vh] rounded-lg bg-slate-950">
+            <div class="font-mono text-sm leading-6 text-slate-50">
+              @for (line of selectedFileLines(); track line.number) {
+                <div class="grid grid-cols-[4rem_minmax(0,1fr)] gap-4 px-4">
+                  <span class="select-none border-r border-slate-800 py-0.5 pr-4 text-right text-slate-500">
+                    {{ line.number }}
+                  </span>
+                  <span class="whitespace-pre-wrap break-words py-0.5">
+                    {{ line.content || ' ' }}
+                  </span>
+                </div>
+              }
+            </div>
+          </p-scrollPanel>
         }
-      </section>
+      </p-panel>
     </div>
   }
 </div>
