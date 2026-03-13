@@ -286,6 +286,71 @@ export type CancelDeploymentRequest = {
   workflowRunId: number;
 };
 
+export type WorkflowRunLogFileDto = {
+  /**
+   * The relative path of the log file inside the workflow log archive
+   */
+  path: string;
+  /**
+   * A display name for the log file
+   */
+  displayName: string;
+  /**
+   * The processed text content of the log file
+   */
+  content: string;
+};
+
+export type WorkflowRunLogGroupDto = {
+  /**
+   * The name of the log group, usually derived from the top-level archive directory
+   */
+  name: string;
+  /**
+   * The log files belonging to this group
+   */
+  files: Array<WorkflowRunLogFileDto>;
+};
+
+export type WorkflowRunLogsResponse = {
+  /**
+   * The workflow run identifier
+   */
+  workflowRunId: number;
+  /**
+   * The workflow run name
+   */
+  workflowName: string;
+  /**
+   * The workflow run display title
+   */
+  displayTitle?: string;
+  /**
+   * The workflow run conclusion when available
+   */
+  conclusion?: 'ACTION_REQUIRED' | 'CANCELLED' | 'FAILURE' | 'NEUTRAL' | 'SUCCESS' | 'SKIPPED' | 'STALE' | 'TIMED_OUT' | 'STARTUP_FAILURE' | 'UNKNOWN';
+  /**
+   * The HTML URL of the workflow run on GitHub
+   */
+  htmlUrl?: string;
+  /**
+   * Whether the workflow logs were already cached before this request
+   */
+  cacheHit?: boolean;
+  /**
+   * When the workflow logs were downloaded and stored
+   */
+  downloadedAt: string;
+  /**
+   * The number of extracted log files
+   */
+  totalFileCount?: number;
+  /**
+   * The processed log groups
+   */
+  groups: Array<WorkflowRunLogGroupDto>;
+};
+
 export type PaginatedWorkflowRunsResponse = {
   runs?: Array<WorkflowRunDto>;
   page?: number;
@@ -296,9 +361,9 @@ export type PaginatedWorkflowRunsResponse = {
 
 export type WorkflowRunDto = {
   id: number;
-  name?: string;
+  name: string;
   displayTitle: string;
-  status?:
+  status:
     | 'QUEUED'
     | 'IN_PROGRESS'
     | 'COMPLETED'
@@ -314,38 +379,16 @@ export type WorkflowRunDto = {
     | 'WAITING'
     | 'PENDING'
     | 'UNKNOWN';
-  workflowId?: number;
+  workflowId: number;
   conclusion?: 'ACTION_REQUIRED' | 'CANCELLED' | 'FAILURE' | 'NEUTRAL' | 'SUCCESS' | 'SKIPPED' | 'STALE' | 'TIMED_OUT' | 'STARTUP_FAILURE' | 'UNKNOWN';
   htmlUrl: string;
-  label?: 'NONE' | 'TEST';
+  label: 'NONE' | 'TEST';
   testProcessingStatus?: 'PROCESSING' | 'PROCESSED' | 'FAILED';
   headBranch?: string;
   headSha?: string;
   runStartedAt?: string;
   createdAt: string;
   updatedAt: string;
-};
-
-export type WorkflowRunLogFileDto = {
-  path: string;
-  displayName: string;
-  content: string;
-};
-
-export type WorkflowRunLogGroupDto = {
-  name: string;
-  files: Array<WorkflowRunLogFileDto>;
-};
-
-export type WorkflowRunLogsResponse = {
-  workflowRunId: number;
-  workflowName: string;
-  displayTitle: string;
-  htmlUrl: string;
-  cacheHit: boolean;
-  downloadedAt: string;
-  totalFileCount: number;
-  groups: Array<WorkflowRunLogGroupDto>;
 };
 
 export type GitHubRepositoryRoleDto = {
@@ -1744,6 +1787,33 @@ export type GetWorkflowsByStateResponses = {
 
 export type GetWorkflowsByStateResponse = GetWorkflowsByStateResponses[keyof GetWorkflowsByStateResponses];
 
+export type GetWorkflowRunLogsData = {
+  body?: never;
+  path: {
+    workflowRunId: number;
+  };
+  query?: never;
+  url: '/api/workflows/runs/{workflowRunId}/logs';
+};
+
+export type GetWorkflowRunLogsErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type GetWorkflowRunLogsError = GetWorkflowRunLogsErrors[keyof GetWorkflowRunLogsErrors];
+
+export type GetWorkflowRunLogsResponses = {
+  /**
+   * OK
+   */
+  200: WorkflowRunLogsResponse;
+};
+
+export type GetWorkflowRunLogsResponse = GetWorkflowRunLogsResponses[keyof GetWorkflowRunLogsResponses];
+
 export type GetWorkflowRunsData = {
   body?: never;
   path?: never;
@@ -1885,33 +1955,6 @@ export type GetLatestWorkflowRunsByBranchAndHeadCommitResponses = {
 };
 
 export type GetLatestWorkflowRunsByBranchAndHeadCommitResponse = GetLatestWorkflowRunsByBranchAndHeadCommitResponses[keyof GetLatestWorkflowRunsByBranchAndHeadCommitResponses];
-
-export type GetWorkflowRunLogsData = {
-  body?: never;
-  path: {
-    workflowRunId: number;
-  };
-  query?: never;
-  url: '/api/workflows/runs/{workflowRunId}/logs';
-};
-
-export type GetWorkflowRunLogsErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type GetWorkflowRunLogsError = GetWorkflowRunLogsErrors[keyof GetWorkflowRunLogsErrors];
-
-export type GetWorkflowRunLogsResponses = {
-  /**
-   * OK
-   */
-  200: WorkflowRunLogsResponse;
-};
-
-export type GetWorkflowRunLogsResponse = GetWorkflowRunLogsResponses[keyof GetWorkflowRunLogsResponses];
 
 export type GetUserPermissionsData = {
   body?: never;

@@ -896,6 +896,92 @@ export const PaginatedWorkflowRunsResponseSchema = {
       format: 'int32',
     },
   },
+export const WorkflowRunLogFileDtoSchema = {
+  type: 'object',
+  properties: {
+    path: {
+      type: 'string',
+      description: 'The relative path of the log file inside the workflow log archive',
+    },
+    displayName: {
+      type: 'string',
+      description: 'A display name for the log file',
+    },
+    content: {
+      type: 'string',
+      description: 'The processed text content of the log file',
+    },
+  },
+  required: ['content', 'displayName', 'path'],
+} as const;
+
+export const WorkflowRunLogGroupDtoSchema = {
+  type: 'object',
+  properties: {
+    name: {
+      type: 'string',
+      description: 'The name of the log group, usually derived from the top-level archive directory',
+    },
+    files: {
+      type: 'array',
+      description: 'The log files belonging to this group',
+      items: {
+        $ref: '#/components/schemas/WorkflowRunLogFileDto',
+      },
+    },
+  },
+  required: ['files', 'name'],
+} as const;
+
+export const WorkflowRunLogsResponseSchema = {
+  type: 'object',
+  properties: {
+    workflowRunId: {
+      type: 'integer',
+      format: 'int64',
+      description: 'The workflow run identifier',
+    },
+    workflowName: {
+      type: 'string',
+      description: 'The workflow run name',
+      example: 'deploy',
+    },
+    displayTitle: {
+      type: 'string',
+      description: 'The workflow run display title',
+    },
+    conclusion: {
+      type: 'string',
+      description: 'The workflow run conclusion when available',
+      enum: ['ACTION_REQUIRED', 'CANCELLED', 'FAILURE', 'NEUTRAL', 'SUCCESS', 'SKIPPED', 'STALE', 'TIMED_OUT', 'STARTUP_FAILURE', 'UNKNOWN'],
+    },
+    htmlUrl: {
+      type: 'string',
+      description: 'The HTML URL of the workflow run on GitHub',
+    },
+    cacheHit: {
+      type: 'boolean',
+      description: 'Whether the workflow logs were already cached before this request',
+    },
+    downloadedAt: {
+      type: 'string',
+      format: 'date-time',
+      description: 'When the workflow logs were downloaded and stored',
+    },
+    totalFileCount: {
+      type: 'integer',
+      format: 'int32',
+      description: 'The number of extracted log files',
+    },
+    groups: {
+      type: 'array',
+      description: 'The processed log groups',
+      items: {
+        $ref: '#/components/schemas/WorkflowRunLogGroupDto',
+      },
+    },
+  },
+  required: ['downloadedAt', 'groups', 'workflowName', 'workflowRunId'],
 } as const;
 
 export const WorkflowRunDtoSchema = {
@@ -1039,6 +1125,7 @@ export const WorkflowRunLogsResponseSchema = {
     },
   },
   required: ['cacheHit', 'displayTitle', 'downloadedAt', 'groups', 'htmlUrl', 'totalFileCount', 'workflowName', 'workflowRunId', 'label', 'name', 'status', 'workflowId'],
+  required: ['displayTitle', 'htmlUrl', 'id', 'label', 'name', 'status', 'workflowId'],
 } as const;
 
 export const GitHubRepositoryRoleDtoSchema = {

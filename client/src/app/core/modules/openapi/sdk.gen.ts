@@ -695,13 +695,6 @@ export const getLatestWorkflowRunsByBranchAndHeadCommit = <ThrowOnError extends 
   });
 };
 
-export const getWorkflowRunLogs = <ThrowOnError extends boolean = false>(options: Options<GetWorkflowRunLogsData, ThrowOnError>) => {
-  return (options.client ?? client).get<GetWorkflowRunLogsResponses, GetWorkflowRunLogsErrors, ThrowOnError>({
-    url: '/api/workflows/runs/{workflowRunId}/logs',
-    ...options,
-  });
-};
-
 export const getUserPermissions = <ThrowOnError extends boolean = false>(options?: Options<GetUserPermissionsData, ThrowOnError>) => {
   return (options?.client ?? client).get<GetUserPermissionsResponses, GetUserPermissionsErrors, ThrowOnError>({
     url: '/api/user-permissions',

@@ -968,6 +968,23 @@ export const getWorkflowsByStateOptions = (options: Options<GetWorkflowsByStateD
   });
 };
 
+export const getWorkflowRunLogsQueryKey = (options: Options<GetWorkflowRunLogsData>) => createQueryKey('getWorkflowRunLogs', options);
+
+export const getWorkflowRunLogsOptions = (options: Options<GetWorkflowRunLogsData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getWorkflowRunLogs({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: getWorkflowRunLogsQueryKey(options),
+  });
+};
+
 export const getWorkflowRunsQueryKey = (options?: Options<GetWorkflowRunsData>) => createQueryKey('getWorkflowRuns', options);
 
 export const getWorkflowRunsOptions = (options?: Options<GetWorkflowRunsData>) => {
@@ -1119,23 +1136,6 @@ export const getLatestWorkflowRunsByBranchAndHeadCommitOptions = (options: Optio
       return data;
     },
     queryKey: getLatestWorkflowRunsByBranchAndHeadCommitQueryKey(options),
-  });
-};
-
-export const getWorkflowRunLogsQueryKey = (options: Options<GetWorkflowRunLogsData>) => createQueryKey('getWorkflowRunLogs', options);
-
-export const getWorkflowRunLogsOptions = (options: Options<GetWorkflowRunLogsData>) => {
-  return queryOptions({
-    queryFn: async ({ queryKey, signal }) => {
-      const { data } = await getWorkflowRunLogs({
-        ...options,
-        ...queryKey[0],
-        signal,
-        throwOnError: true,
-      });
-      return data;
-    },
-    queryKey: getWorkflowRunLogsQueryKey(options),
   });
 };
 
