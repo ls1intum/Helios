@@ -84,9 +84,12 @@ public class WorkflowRunController {
   public ResponseEntity<Void> reRunFailedJobs(@PathVariable Long runId) {
     workflowRunService.reRunFailedJobs(runId);
     return ResponseEntity.ok().build();
+  }
+
   @GetMapping("/runs/{workflowRunId}/logs")
   public ResponseEntity<WorkflowRunLogsResponse> getWorkflowRunLogs(
-      @PathVariable Long workflowRunId) throws IOException {
+      @PathVariable Long workflowRunId)
+      throws IOException {
     return ResponseEntity.ok(workflowRunLogReaderService.getLogs(workflowRunId));
   }
 }

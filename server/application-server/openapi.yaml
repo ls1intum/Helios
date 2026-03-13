@@ -1105,6 +1105,18 @@ paths:
         required: false
         schema:
           type: string
+  /api/workflows/runs/{workflowRunId}/logs:
+    get:
+      tags:
+      - workflow-run-controller
+      operationId: getWorkflowRunLogs
+      parameters:
+      - name: workflowRunId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
       responses:
         "409":
           description: Conflict
@@ -1223,31 +1235,6 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/WorkflowRunDto"
-  /api/workflows/runs/{workflowRunId}/logs:
-    get:
-      tags:
-      - workflow-run-controller
-      operationId: getWorkflowRunLogs
-      parameters:
-      - name: workflowRunId
-        in: path
-        required: true
-        schema:
-          type: integer
-          format: int64
-      responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/WorkflowRunLogsResponse"
   /api/user-permissions:
     get:
       tags:
@@ -2895,6 +2882,89 @@ components:
         totalPages:
           type: integer
           format: int32
+    WorkflowRunLogFileDto:
+      type: object
+      properties:
+        path:
+          type: string
+          description: The relative path of the log file inside the workflow log archive
+        displayName:
+          type: string
+          description: A display name for the log file
+        content:
+          type: string
+          description: The processed text content of the log file
+      required:
+      - content
+      - displayName
+      - path
+    WorkflowRunLogGroupDto:
+      type: object
+      properties:
+        name:
+          type: string
+          description: "The name of the log group, usually derived from the top-level\
+            \ archive directory"
+        files:
+          type: array
+          description: The log files belonging to this group
+          items:
+            $ref: "#/components/schemas/WorkflowRunLogFileDto"
+      required:
+      - files
+      - name
+    WorkflowRunLogsResponse:
+      type: object
+      properties:
+        workflowRunId:
+          type: integer
+          format: int64
+          description: The workflow run identifier
+        workflowName:
+          type: string
+          description: The workflow run name
+          example: deploy
+        displayTitle:
+          type: string
+          description: The workflow run display title
+        conclusion:
+          type: string
+          description: The workflow run conclusion when available
+          enum:
+          - ACTION_REQUIRED
+          - CANCELLED
+          - FAILURE
+          - NEUTRAL
+          - SUCCESS
+          - SKIPPED
+          - STALE
+          - TIMED_OUT
+          - STARTUP_FAILURE
+          - UNKNOWN
+        htmlUrl:
+          type: string
+          description: The HTML URL of the workflow run on GitHub
+        cacheHit:
+          type: boolean
+          description: Whether the workflow logs were already cached before this request
+        downloadedAt:
+          type: string
+          format: date-time
+          description: When the workflow logs were downloaded and stored
+        totalFileCount:
+          type: integer
+          format: int32
+          description: The number of extracted log files
+        groups:
+          type: array
+          description: The processed log groups
+          items:
+            $ref: "#/components/schemas/WorkflowRunLogGroupDto"
+      required:
+      - downloadedAt
+      - groups
+      - workflowName
+      - workflowRunId
     WorkflowRunDto:
       type: object
       properties:
@@ -2970,64 +3040,6 @@ components:
       - displayTitle
       - htmlUrl
       - id
-    WorkflowRunLogFileDto:
-      type: object
-      properties:
-        path:
-          type: string
-        displayName:
-          type: string
-        content:
-          type: string
-      required:
-      - content
-      - displayName
-      - path
-    WorkflowRunLogGroupDto:
-      type: object
-      properties:
-        name:
-          type: string
-        files:
-          type: array
-          items:
-            $ref: "#/components/schemas/WorkflowRunLogFileDto"
-      required:
-      - files
-      - name
-    WorkflowRunLogsResponse:
-      type: object
-      properties:
-        workflowRunId:
-          type: integer
-          format: int64
-        workflowName:
-          type: string
-        displayTitle:
-          type: string
-        htmlUrl:
-          type: string
-        cacheHit:
-          type: boolean
-        downloadedAt:
-          type: string
-          format: date-time
-        totalFileCount:
-          type: integer
-          format: int32
-        groups:
-          type: array
-          items:
-            $ref: "#/components/schemas/WorkflowRunLogGroupDto"
-      required:
-      - cacheHit
-      - displayTitle
-      - downloadedAt
-      - groups
-      - htmlUrl
-      - totalFileCount
-      - workflowName
-      - workflowRunId
       - label
       - name
       - status

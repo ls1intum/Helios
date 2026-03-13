@@ -3,9 +3,7 @@ package de.tum.cit.aet.helios.workflow.github;
 import de.tum.cit.aet.helios.github.GitHubMessageHandler;
 import de.tum.cit.aet.helios.github.GitHubService;
 import de.tum.cit.aet.helios.gitrepo.github.GitHubRepositorySyncService;
-import de.tum.cit.aet.helios.tests.TestResultProcessor;
 import de.tum.cit.aet.helios.workflow.GitHubWorkflowContext;
-import de.tum.cit.aet.helios.workflow.WorkflowRun;
 import java.time.Instant;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -22,7 +20,6 @@ public class GitHubWorkflowRunMessageHandler
     extends GitHubMessageHandler<GHEventPayload.WorkflowRun> {
   private final GitHubRepositorySyncService repositorySyncService;
   private final GitHubWorkflowRunSyncService workflowSyncService;
-  private final TestResultProcessor testResultProcessor;
   private final GitHubService gitHubService;
   @Qualifier("workflowRunTaskScheduler")
   private final TaskScheduler taskScheduler;
@@ -82,8 +79,7 @@ public class GitHubWorkflowRunMessageHandler
       return;
     }
 
-    var run = workflowSyncService.processRun(githubRun);
-    processTestResult(run);
+    workflowSyncService.processRun(githubRun);
   }
 
   private void handleWorkflowRunEvent(GHEventPayload.WorkflowRun eventPayload) {
@@ -114,19 +110,6 @@ public class GitHubWorkflowRunMessageHandler
     log.info("Context found with triggering workflow run id: {}, head branch: {}, head sha: {}",
         context.runId(), context.headBranch(), context.headSha());
 
-    var run = workflowSyncService.processRunWithContext(githubRun, context);
-    processTestResult(run);
-  }
-
-
-  /**
-   * Processes the test result for the given workflow run.
-   *
-   * @param run The workflow run to process
-   */
-  private void processTestResult(WorkflowRun run) {
-    if (run != null && testResultProcessor.shouldProcess(run)) {
-      testResultProcessor.processRun(run);
-    }
+    workflowSyncService.processRunWithContext(githubRun, context);
   }
 }

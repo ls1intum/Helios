@@ -1,5 +1,6 @@
 package de.tum.cit.aet.helios.workflow.logs;
 
+import de.tum.cit.aet.helios.workflow.WorkflowRun.Conclusion;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -14,6 +15,9 @@ public record WorkflowRunLogsResponse(
 
     @Schema(description = "The workflow run display title")
     String displayTitle,
+
+    @Schema(description = "The workflow run conclusion when available")
+    Conclusion conclusion,
 
     @Schema(description = "The HTML URL of the workflow run on GitHub")
     String htmlUrl,
