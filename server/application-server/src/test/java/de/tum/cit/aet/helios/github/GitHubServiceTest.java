@@ -1,5 +1,6 @@
 package de.tum.cit.aet.helios.github;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -236,6 +237,98 @@ class GitHubServiceTest {
 
     assertEquals(mockWorkflow, workflow);
     verify(mockRepository).getWorkflow(workflowId);
+  }
+
+  @Test
+  void downloadWorkflowRunLogsSuccess() throws IOException {
+    when(clientManager.getCurrentToken()).thenReturn("test-token");
+
+    byte[] zipBytes = new byte[] {1, 2, 3, 4};
+    Response mockResponse =
+        new Response.Builder()
+            .request(new Request.Builder().url("http://dummyurl").build())
+            .protocol(Protocol.HTTP_1_1)
+            .code(200)
+            .message("OK")
+            .body(ResponseBody.create(zipBytes, MediaType.parse("application/zip")))
+            .build();
+    Call mockCall = mock(Call.class);
+    when(okHttpClient.newCall(any(Request.class))).thenReturn(mockCall);
+    when(mockCall.execute()).thenReturn(mockResponse);
+
+    byte[] result = gitHubService.downloadWorkflowRunLogs("owner/repo", 42L);
+
+    assertArrayEquals(zipBytes, result);
+    verify(okHttpClient).newCall(any(Request.class));
+  }
+
+  @Test
+  void downloadWorkflowRunLogsFailure() throws IOException {
+    when(clientManager.getCurrentToken()).thenReturn("test-token");
+
+    Response mockResponse =
+        new Response.Builder()
+            .request(new Request.Builder().url("http://dummyurl").build())
+            .protocol(Protocol.HTTP_1_1)
+            .code(404)
+            .message("Not Found")
+            .body(ResponseBody.create("missing", MediaType.parse("application/json")))
+            .build();
+    Call mockCall = mock(Call.class);
+    when(okHttpClient.newCall(any(Request.class))).thenReturn(mockCall);
+    when(mockCall.execute()).thenReturn(mockResponse);
+
+    IOException exception =
+        assertThrows(
+            IOException.class, () -> gitHubService.downloadWorkflowRunLogs("owner/repo", 42L));
+
+    assertTrue(exception.getMessage().contains("GitHub API call failed with response code: 404"));
+  }
+
+  @Test
+  void downloadWorkflowJobLogsSuccess() throws IOException {
+    when(clientManager.getCurrentToken()).thenReturn("test-token");
+
+    byte[] logBytes = "job log".getBytes();
+    Response mockResponse =
+        new Response.Builder()
+            .request(new Request.Builder().url("http://dummyurl").build())
+            .protocol(Protocol.HTTP_1_1)
+            .code(200)
+            .message("OK")
+            .body(ResponseBody.create(logBytes, MediaType.parse("text/plain")))
+            .build();
+    Call mockCall = mock(Call.class);
+    when(okHttpClient.newCall(any(Request.class))).thenReturn(mockCall);
+    when(mockCall.execute()).thenReturn(mockResponse);
+
+    byte[] result = gitHubService.downloadWorkflowJobLogs("owner/repo", 55L);
+
+    assertArrayEquals(logBytes, result);
+    verify(okHttpClient).newCall(any(Request.class));
+  }
+
+  @Test
+  void downloadWorkflowJobLogsFailure() throws IOException {
+    when(clientManager.getCurrentToken()).thenReturn("test-token");
+
+    Response mockResponse =
+        new Response.Builder()
+            .request(new Request.Builder().url("http://dummyurl").build())
+            .protocol(Protocol.HTTP_1_1)
+            .code(410)
+            .message("Gone")
+            .body(ResponseBody.create("missing", MediaType.parse("application/json")))
+            .build();
+    Call mockCall = mock(Call.class);
+    when(okHttpClient.newCall(any(Request.class))).thenReturn(mockCall);
+    when(mockCall.execute()).thenReturn(mockResponse);
+
+    IOException exception =
+        assertThrows(
+            IOException.class, () -> gitHubService.downloadWorkflowJobLogs("owner/repo", 55L));
+
+    assertTrue(exception.getMessage().contains("GitHub API call failed with response code: 410"));
   }
 
   @Test

@@ -1,27 +1,21 @@
 package de.tum.cit.aet.helios.workflow;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import de.tum.cit.aet.helios.workflow.WorkflowRun.Conclusion;
-import de.tum.cit.aet.helios.workflow.WorkflowRun.Status;
-import de.tum.cit.aet.helios.workflow.pagination.PaginatedWorkflowRunsResponse;
-import de.tum.cit.aet.helios.workflow.pagination.WorkflowRunFilterType;
-import de.tum.cit.aet.helios.workflow.pagination.WorkflowRunPageRequest;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import de.tum.cit.aet.helios.workflow.logs.WorkflowRunLogFileDto;
+import de.tum.cit.aet.helios.workflow.logs.WorkflowRunLogGroupDto;
+import de.tum.cit.aet.helios.workflow.logs.WorkflowRunLogReaderService;
+import de.tum.cit.aet.helios.workflow.logs.WorkflowRunLogsResponse;
 import java.time.OffsetDateTime;
 import java.util.List;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -36,6 +30,8 @@ class WorkflowRunControllerTest {
 
   @MockitoBean
   private WorkflowRunService workflowRunService;
+
+  @MockitoBean private WorkflowRunLogReaderService workflowRunLogReaderService;
 
   private PaginatedWorkflowRunsResponse sampleResponse;
 
@@ -149,5 +145,42 @@ class WorkflowRunControllerTest {
         .andExpect(jsonPath("$.runs.length()").value(0))
         .andExpect(jsonPath("$.totalElements").value(0))
         .andExpect(jsonPath("$.totalPages").value(0));
+  @Autowired private MockMvc mockMvc;
+
+  @Autowired private ObjectMapper objectMapper;
+
+  @MockitoBean private WorkflowRunService workflowRunService;
+
+  
+
+  @Test
+  void getWorkflowRunLogsReturnsProcessedLogs() throws Exception {
+    WorkflowRunLogsResponse response =
+        new WorkflowRunLogsResponse(
+            42L,
+            "deploy",
+            "Deploy preview",
+            WorkflowRun.Conclusion.SUCCESS,
+            "https://github.com/owner/repo/actions/runs/42",
+            false,
+            OffsetDateTime.parse("2026-03-12T10:15:30Z"),
+            1,
+            List.of(
+                new WorkflowRunLogGroupDto(
+                    "build",
+                    List.of(
+                        new WorkflowRunLogFileDto(
+                            "build/1_build.txt", "1_build.txt", "first log line")))));
+    when(workflowRunLogReaderService.getLogs(42L)).thenReturn(response);
+
+    String actualResponse =
+        mockMvc
+            .perform(get("/api/workflows/runs/{workflowRunId}/logs", 42L))
+            .andExpect(status().isOk())
+            .andReturn()
+            .getResponse()
+            .getContentAsString();
+
+    assertEquals(objectMapper.writeValueAsString(response), actualResponse);
   }
 }
