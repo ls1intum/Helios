@@ -55,6 +55,7 @@ import {
   getUserSettings,
   getWorkflowById,
   getWorkflowJobStatus,
+  getWorkflowRuns,
   getWorkflowsByRepositoryId,
   getWorkflowsByState,
   healthCheck,
@@ -160,6 +161,9 @@ import type {
   GetUserSettingsData,
   GetWorkflowByIdData,
   GetWorkflowJobStatusData,
+  GetWorkflowRunsData,
+  GetWorkflowRunsError,
+  GetWorkflowRunsResponse,
   GetWorkflowsByRepositoryIdData,
   GetWorkflowsByStateData,
   HealthCheckData,
@@ -881,6 +885,90 @@ export const getWorkflowsByStateOptions = (options: Options<GetWorkflowsByStateD
   });
 };
 
+export const getWorkflowRunsQueryKey = (options?: Options<GetWorkflowRunsData>) => createQueryKey('getWorkflowRuns', options);
+
+export const getWorkflowRunsOptions = (options?: Options<GetWorkflowRunsData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getWorkflowRuns({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: getWorkflowRunsQueryKey(options),
+  });
+};
+
+const createInfiniteParams = <K extends Pick<QueryKey<Options>[0], 'body' | 'headers' | 'path' | 'query'>>(queryKey: QueryKey<Options>, page: K) => {
+  const params = {
+    ...queryKey[0],
+  };
+  if (page.body) {
+    params.body = {
+      ...(queryKey[0].body as any),
+      ...(page.body as any),
+    };
+  }
+  if (page.headers) {
+    params.headers = {
+      ...queryKey[0].headers,
+      ...page.headers,
+    };
+  }
+  if (page.path) {
+    params.path = {
+      ...(queryKey[0].path as any),
+      ...(page.path as any),
+    };
+  }
+  if (page.query) {
+    params.query = {
+      ...(queryKey[0].query as any),
+      ...(page.query as any),
+    };
+  }
+  return params as unknown as typeof page;
+};
+
+export const getWorkflowRunsInfiniteQueryKey = (options?: Options<GetWorkflowRunsData>): QueryKey<Options<GetWorkflowRunsData>> => createQueryKey('getWorkflowRuns', options, true);
+
+export const getWorkflowRunsInfiniteOptions = (options?: Options<GetWorkflowRunsData>) => {
+  return infiniteQueryOptions<
+    GetWorkflowRunsResponse,
+    GetWorkflowRunsError,
+    InfiniteData<GetWorkflowRunsResponse>,
+    QueryKey<Options<GetWorkflowRunsData>>,
+    number | Pick<QueryKey<Options<GetWorkflowRunsData>>[0], 'body' | 'headers' | 'path' | 'query'>
+  >(
+    // @ts-ignore
+    {
+      queryFn: async ({ pageParam, queryKey, signal }) => {
+        // @ts-ignore
+        const page: Pick<QueryKey<Options<GetWorkflowRunsData>>[0], 'body' | 'headers' | 'path' | 'query'> =
+          typeof pageParam === 'object'
+            ? pageParam
+            : {
+                query: {
+                  page: pageParam,
+                },
+              };
+        const params = createInfiniteParams(queryKey, page);
+        const { data } = await getWorkflowRuns({
+          ...options,
+          ...params,
+          signal,
+          throwOnError: true,
+        });
+        return data;
+      },
+      queryKey: getWorkflowRunsInfiniteQueryKey(options),
+    }
+  );
+};
+
 export const getWorkflowsByRepositoryIdQueryKey = (options: Options<GetWorkflowsByRepositoryIdData>) => createQueryKey('getWorkflowsByRepositoryId', options);
 
 export const getWorkflowsByRepositoryIdOptions = (options: Options<GetWorkflowsByRepositoryIdData>) => {
@@ -967,37 +1055,6 @@ export const getLatestTestResultsByPullRequestIdOptions = (options: Options<GetL
     },
     queryKey: getLatestTestResultsByPullRequestIdQueryKey(options),
   });
-};
-
-const createInfiniteParams = <K extends Pick<QueryKey<Options>[0], 'body' | 'headers' | 'path' | 'query'>>(queryKey: QueryKey<Options>, page: K) => {
-  const params = {
-    ...queryKey[0],
-  };
-  if (page.body) {
-    params.body = {
-      ...(queryKey[0].body as any),
-      ...(page.body as any),
-    };
-  }
-  if (page.headers) {
-    params.headers = {
-      ...queryKey[0].headers,
-      ...page.headers,
-    };
-  }
-  if (page.path) {
-    params.path = {
-      ...(queryKey[0].path as any),
-      ...(page.path as any),
-    };
-  }
-  if (page.query) {
-    params.query = {
-      ...(queryKey[0].query as any),
-      ...(page.query as any),
-    };
-  }
-  return params as unknown as typeof page;
 };
 
 export const getLatestTestResultsByPullRequestIdInfiniteQueryKey = (

@@ -963,6 +963,67 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/WorkflowDto"
+  /api/workflows/runs:
+    get:
+      tags:
+      - workflow-run-controller
+      operationId: getWorkflowRuns
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 1
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      - name: sortField
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: sortDirection
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: filterType
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - ALL
+          - NOT_STARTED
+          - IN_PROGRESS
+          - CANCELLED
+          - SUCCESS
+          - FAILURE
+          - ACTION_REQUIRED
+      - name: searchTerm
+        in: query
+        required: false
+        schema:
+          type: string
+      responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedWorkflowRunsResponse"
   /api/workflows/repository/{repositoryId}:
     get:
       tags:
@@ -2511,6 +2572,25 @@ components:
           format: int64
       required:
       - workflowRunId
+    PaginatedWorkflowRunsResponse:
+      type: object
+      properties:
+        runs:
+          type: array
+          items:
+            $ref: "#/components/schemas/WorkflowRunDto"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
     WorkflowRunDto:
       type: object
       properties:
@@ -2568,13 +2648,28 @@ components:
           - PROCESSING
           - PROCESSED
           - FAILED
+        headBranch:
+          type: string
+        headSha:
+          type: string
+        runStartedAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
       required:
+      - createdAt
       - displayTitle
       - htmlUrl
       - id
       - label
       - name
       - status
+      - updatedAt
       - workflowId
     GitHubRepositoryRoleDto:
       type: object
