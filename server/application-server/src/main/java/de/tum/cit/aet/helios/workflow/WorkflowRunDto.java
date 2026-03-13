@@ -2,7 +2,9 @@ package de.tum.cit.aet.helios.workflow;
 
 import de.tum.cit.aet.helios.workflow.WorkflowRun.Conclusion;
 import de.tum.cit.aet.helios.workflow.WorkflowRun.Status;
+import java.time.OffsetDateTime;
 import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 
 public record WorkflowRunDto(
     @NonNull Long id,
@@ -13,7 +15,12 @@ public record WorkflowRunDto(
     Conclusion conclusion,
     @NonNull String htmlUrl,
     @NonNull Workflow.Label label,
-    WorkflowRun.TestProcessingStatus testProcessingStatus) {
+    @Nullable WorkflowRun.TestProcessingStatus testProcessingStatus,
+    @Nullable String headBranch,
+    @Nullable String headSha,
+    @Nullable OffsetDateTime runStartedAt,
+    @NonNull OffsetDateTime createdAt,
+    @NonNull OffsetDateTime updatedAt) {
   public static WorkflowRunDto fromWorkflowRun(WorkflowRun run) {
     return new WorkflowRunDto(
         run.getId(),
@@ -24,6 +31,11 @@ public record WorkflowRunDto(
         run.getConclusion().orElse(null),
         run.getHtmlUrl(),
         run.getWorkflow().getLabel(),
-        run.getTestProcessingStatus());
+        run.getTestProcessingStatus(),
+        run.getHeadBranch(),
+        run.getHeadSha(),
+        run.getRunStartedAt(),
+        run.getCreatedAt(),
+        run.getUpdatedAt());
   }
 }

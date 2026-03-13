@@ -156,6 +156,9 @@ import type {
   GetWorkflowJobStatusData,
   GetWorkflowJobStatusErrors,
   GetWorkflowJobStatusResponses,
+  GetWorkflowRunsData,
+  GetWorkflowRunsErrors,
+  GetWorkflowRunsResponses,
   GetWorkflowsByRepositoryIdData,
   GetWorkflowsByRepositoryIdErrors,
   GetWorkflowsByRepositoryIdResponses,
@@ -597,6 +600,13 @@ export const getWorkflowById = <ThrowOnError extends boolean = false>(options: O
 export const getWorkflowsByState = <ThrowOnError extends boolean = false>(options: Options<GetWorkflowsByStateData, ThrowOnError>) => {
   return (options.client ?? client).get<GetWorkflowsByStateResponses, GetWorkflowsByStateErrors, ThrowOnError>({
     url: '/api/workflows/state/{state}',
+    ...options,
+  });
+};
+
+export const getWorkflowRuns = <ThrowOnError extends boolean = false>(options?: Options<GetWorkflowRunsData, ThrowOnError>) => {
+  return (options?.client ?? client).get<GetWorkflowRunsResponses, GetWorkflowRunsErrors, ThrowOnError>({
+    url: '/api/workflows/runs',
     ...options,
   });
 };

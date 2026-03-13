@@ -1,5 +1,8 @@
 package de.tum.cit.aet.helios.workflow;
 
+import de.tum.cit.aet.helios.workflow.pagination.PaginatedWorkflowRunsResponse;
+import de.tum.cit.aet.helios.workflow.pagination.WorkflowRunFilterType;
+import de.tum.cit.aet.helios.workflow.pagination.WorkflowRunPageRequest;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +18,25 @@ import org.springframework.web.bind.annotation.RestController;
 public class WorkflowRunController {
 
   private final WorkflowRunService workflowRunService;
+
+  @GetMapping("/runs")
+  public ResponseEntity<PaginatedWorkflowRunsResponse> getWorkflowRuns(
+      @RequestParam(defaultValue = "1") int page,
+      @RequestParam(defaultValue = "20") int size,
+      @RequestParam(required = false) String sortField,
+      @RequestParam(required = false) String sortDirection,
+      @RequestParam(required = false) WorkflowRunFilterType filterType,
+      @RequestParam(required = false) String searchTerm) {
+    WorkflowRunPageRequest pageRequest = WorkflowRunPageRequest.builder()
+        .page(page)
+        .size(size)
+        .sortField(sortField)
+        .sortDirection(sortDirection)
+        .filterType(filterType != null ? filterType : WorkflowRunFilterType.ALL)
+        .searchTerm(searchTerm)
+        .build();
+    return ResponseEntity.ok(workflowRunService.getPaginatedWorkflowRuns(pageRequest));
+  }
 
   @GetMapping("/pr/{pullRequestId}")
   public ResponseEntity<List<WorkflowRunDto>> getLatestWorkflowRunsByPullRequestIdAndHeadCommit(

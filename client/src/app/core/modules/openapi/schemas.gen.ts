@@ -811,6 +811,34 @@ export const CancelDeploymentRequestSchema = {
   required: ['workflowRunId'],
 } as const;
 
+export const PaginatedWorkflowRunsResponseSchema = {
+  type: 'object',
+  properties: {
+    runs: {
+      type: 'array',
+      items: {
+        $ref: '#/components/schemas/WorkflowRunDto',
+      },
+    },
+    page: {
+      type: 'integer',
+      format: 'int32',
+    },
+    size: {
+      type: 'integer',
+      format: 'int32',
+    },
+    totalElements: {
+      type: 'integer',
+      format: 'int64',
+    },
+    totalPages: {
+      type: 'integer',
+      format: 'int32',
+    },
+  },
+} as const;
+
 export const WorkflowRunDtoSchema = {
   type: 'object',
   properties: {
@@ -863,8 +891,26 @@ export const WorkflowRunDtoSchema = {
       type: 'string',
       enum: ['PROCESSING', 'PROCESSED', 'FAILED'],
     },
+    headBranch: {
+      type: 'string',
+    },
+    headSha: {
+      type: 'string',
+    },
+    runStartedAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+    createdAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+    updatedAt: {
+      type: 'string',
+      format: 'date-time',
+    },
   },
-  required: ['displayTitle', 'htmlUrl', 'id', 'label', 'name', 'status', 'workflowId'],
+  required: ['createdAt', 'displayTitle', 'htmlUrl', 'id', 'label', 'name', 'status', 'updatedAt', 'workflowId'],
 } as const;
 
 export const GitHubRepositoryRoleDtoSchema = {
