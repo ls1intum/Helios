@@ -117,6 +117,11 @@ public class GitHubWorkflowRunMessageHandler
     processTestResult(run);
   }
 
+  /**
+   * Processes the test result for the given workflow run.
+   *
+   * @param run The workflow run to process
+   */
   private void processTestResult(WorkflowRun run) {
     if (run != null && testResultProcessor.shouldProcess(run)) {
       testResultProcessor.processRun(run);

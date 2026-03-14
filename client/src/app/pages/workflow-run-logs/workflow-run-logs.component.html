@@ -32,7 +32,9 @@
     </div>
   </div>
 
-  <span description> Helios downloads and prepares the workflow run logs on demand the first time this page is opened. While the request is in flight, the page stays in a loading state. </span>
+  <span description>
+    Helios downloads and prepares the workflow run logs on demand the first time this page is opened. While the request is in flight, the page stays in a loading state.
+  </span>
 </app-page-heading>
 
 <div class="px-4 pb-6">
@@ -96,9 +98,7 @@
       <div class="mx-auto flex min-h-[26rem] max-w-xl flex-col items-center justify-center text-center">
         <i-tabler name="file-text" class="mb-4 !size-12 text-muted-color" />
         <h3 class="mb-4 text-xl font-semibold">No workflow logs were returned</h3>
-        <p-message severity="info" class="mb-6 block text-left">
-          Helios completed the request but there are no processed log files available to display yet.
-        </p-message>
+        <p-message severity="info" class="mb-6 block text-left"> Helios completed the request but there are no processed log files available to display yet. </p-message>
         <p-button label="Retry" (click)="retry()">
           <i-tabler name="refresh" class="!size-4" />
         </p-button>
@@ -111,13 +111,9 @@
           <p-tag severity="secondary" [rounded]="true">
             {{ logs()?.cacheHit ? 'Loaded from cache' : 'Downloaded fresh logs' }}
           </p-tag>
-          <p-tag severity="secondary" [rounded]="true">
-            {{ logs()?.totalFileCount }} files
-          </p-tag>
+          <p-tag severity="secondary" [rounded]="true"> {{ logs()?.totalFileCount }} files </p-tag>
           @if (logs()?.downloadedAt) {
-            <p-tag severity="secondary" [rounded]="true">
-              Downloaded {{ logs()?.downloadedAt | date: 'd MMM y, HH:mm:ss' }}
-            </p-tag>
+            <p-tag severity="secondary" [rounded]="true"> Downloaded {{ logs()?.downloadedAt | date: 'd MMM y, HH:mm:ss' }} </p-tag>
           }
         </div>
       </ng-template>
@@ -127,11 +123,11 @@
           <i-tabler name="refresh" class="!size-4" />
         </p-button>
       </ng-template>
-
     </p-toolbar>
 
     <p-message severity="warn" class="mb-4 block text-left">
-      In the first hour after a workflow run completes, GitHub can still provide logs separated by step. After that, step-level separation is no longer available here. Check the GitHub workflow page if you need more detail.
+      In the first hour after a workflow run completes, GitHub can still provide logs separated by step. After that, step-level separation is no longer available here. Check the
+      GitHub workflow page if you need more detail.
     </p-message>
 
     <div class="grid gap-4 lg:grid-cols-[22rem_minmax(0,1fr)]">
@@ -153,11 +149,11 @@
                 <div class="flex w-full items-start gap-3 pr-2">
                   <span
                     class="inline-flex size-8 shrink-0 items-center justify-center rounded-md"
-                    [class]="getSidebarIconContainerClass(groupView.job)"
-                    [attr.aria-label]="getSidebarOutcome(groupView.job).label"
-                    [title]="getSidebarOutcome(groupView.job).label"
+                    [class]="groupView.iconContainerClass"
+                    [attr.aria-label]="groupView.outcome.label"
+                    [title]="groupView.outcome.label"
                   >
-                    <i-tabler [name]="getSidebarOutcome(groupView.job).icon" class="!size-4"></i-tabler>
+                    <i-tabler [name]="groupView.outcome.icon" class="!size-4"></i-tabler>
                   </span>
 
                   <div class="min-w-0 flex-1">
@@ -186,11 +182,11 @@
                     >
                       <span
                         class="inline-flex size-6 shrink-0 items-center justify-center rounded-md"
-                        [class]="getSidebarIconContainerClass(groupView.job)"
-                        [attr.aria-label]="getSidebarOutcome(groupView.job).label"
-                        [title]="getSidebarOutcome(groupView.job).label"
+                        [class]="groupView.iconContainerClass"
+                        [attr.aria-label]="groupView.outcome.label"
+                        [title]="groupView.outcome.label"
                       >
-                        <i-tabler [name]="getSidebarOutcome(groupView.job).icon" class="!size-4"></i-tabler>
+                        <i-tabler [name]="groupView.outcome.icon" class="!size-4"></i-tabler>
                       </span>
                       <span class="min-w-0 truncate text-sm">{{ file.displayName }}</span>
                     </button>
@@ -209,32 +205,32 @@
               <i-tabler name="file-text" class="!size-5 text-primary" />
               <span class="font-semibold">Selected Log</span>
             </div>
-            @if (selectedFile(); as selectedFile) {
+            @if (selectedFileView(); as selectedFileView) {
               <p-tag
                 severity="secondary"
                 [rounded]="true"
                 [value]="
-                  visibleSelectedFileRows().length === selectedFileTotalRowCount()
-                    ? selectedFileTotalRowCount() + ' lines'
-                    : visibleSelectedFileRows().length + ' / ' + selectedFileTotalRowCount() + ' lines'
+                  selectedFileView.rows.length === selectedFileView.totalRowCount
+                    ? selectedFileView.totalRowCount + ' lines'
+                    : selectedFileView.rows.length + ' / ' + selectedFileView.totalRowCount + ' lines'
                 "
               />
             }
           </div>
         </ng-template>
 
-        @if (selectedFile(); as selectedFile) {
+        @if (selectedFileView(); as selectedFileView) {
           <div class="min-w-0">
-            <div class="text-sm uppercase tracking-wide text-muted-color">{{ selectedFile.groupName }}</div>
-            <h3 class="mt-1 min-w-0 truncate text-xl font-semibold">{{ selectedFile.file.displayName }}</h3>
-            <div class="truncate text-sm text-muted-color">{{ selectedFile.file.path }}</div>
-            @if (selectedFileLineStats().errorCount > 0 || selectedFileLineStats().warningCount > 0) {
+            <div class="text-sm uppercase tracking-wide text-muted-color">{{ selectedFileView.selectedFile.groupName }}</div>
+            <h3 class="mt-1 min-w-0 truncate text-xl font-semibold">{{ selectedFileView.selectedFile.file.displayName }}</h3>
+            <div class="truncate text-sm text-muted-color">{{ selectedFileView.selectedFile.file.path }}</div>
+            @if (selectedFileView.lineStats.errorCount > 0 || selectedFileView.lineStats.warningCount > 0) {
               <div class="mt-3 flex flex-wrap gap-2">
-                @if (selectedFileLineStats().errorCount > 0) {
-                  <p-tag severity="danger" [rounded]="true" [value]="selectedFileLineStats().errorCount + ' error lines'" />
+                @if (selectedFileView.lineStats.errorCount > 0) {
+                  <p-tag severity="danger" [rounded]="true" [value]="selectedFileView.lineStats.errorCount + ' error lines'" />
                 }
-                @if (selectedFileLineStats().warningCount > 0) {
-                  <p-tag severity="warn" [rounded]="true" [value]="selectedFileLineStats().warningCount + ' warning lines'" />
+                @if (selectedFileView.lineStats.warningCount > 0) {
+                  <p-tag severity="warn" [rounded]="true" [value]="selectedFileView.lineStats.warningCount + ' warning lines'" />
                 }
               </div>
             }
@@ -243,7 +239,9 @@
           <p-divider class="my-4" />
 
           <div class="max-h-[70vh] overflow-auto rounded-lg border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950">
-            <div class="sticky top-0 z-10 flex flex-wrap gap-2 border-b border-slate-200 bg-white/95 px-4 py-3 text-xs text-slate-600 backdrop-blur dark:border-slate-800 dark:bg-slate-950/95 dark:text-slate-300">
+            <div
+              class="sticky top-0 z-10 flex flex-wrap gap-2 border-b border-slate-200 bg-white/95 px-4 py-3 text-xs text-slate-600 backdrop-blur dark:border-slate-800 dark:bg-slate-950/95 dark:text-slate-300"
+            >
               @for (filterOption of lineFilterOptions; track filterOption.tone) {
                 <button
                   type="button"
@@ -257,10 +255,10 @@
               }
             </div>
             <div class="font-mono text-sm leading-6 text-slate-900 dark:text-slate-50">
-              @if (visibleSelectedFileRows().length === 0) {
+              @if (selectedFileView.rows.length === 0) {
                 <div class="px-4 py-6 text-sm text-slate-500 dark:text-slate-400">No log lines match the selected filters.</div>
               }
-              @for (row of visibleSelectedFileRows(); track row.type === 'group' ? row.id : row.line.number) {
+              @for (row of selectedFileView.rows; track row.type === 'group' ? row.id : row.line.number) {
                 @if (row.type === 'group') {
                   <button
                     type="button"
@@ -271,10 +269,7 @@
                     <span class="select-none border-r border-slate-200 py-0.5 pr-4 text-right text-slate-500 dark:border-slate-800 dark:text-slate-500">
                       {{ row.line.number }}
                     </span>
-                    <span
-                      class="inline-flex min-w-0 items-start gap-2 py-0.5 text-violet-950 dark:text-violet-50"
-                      [style.padding-left.rem]="row.level * 1.25"
-                    >
+                    <span class="inline-flex min-w-0 items-start gap-2 py-0.5 text-violet-950 dark:text-violet-50" [style.padding-left.rem]="row.level * 1.25">
                       <i-tabler [name]="isLogGroupExpanded(row.id) ? 'chevron-down' : 'chevron-right'" class="mt-0.5 !size-4 shrink-0" />
                       <span class="min-w-0 whitespace-pre-wrap break-words font-semibold">
                         {{ row.title || ' ' }}
@@ -288,7 +283,7 @@
                       'bg-rose-50 border-l-rose-500 dark:bg-rose-950/25': row.line.tone === 'error',
                       'bg-amber-50 border-l-amber-500 dark:bg-amber-950/25': row.line.tone === 'warning',
                       'bg-blue-50 border-l-blue-500 dark:bg-blue-950/20': row.line.tone === 'command',
-                      'bg-white dark:bg-slate-900/60': row.line.tone === 'default'
+                      'bg-white dark:bg-slate-900/60': row.line.tone === 'default',
                     }"
                   >
                     <span class="select-none border-r border-slate-200 py-0.5 pr-4 text-right text-slate-500 dark:border-slate-800 dark:text-slate-500">
@@ -301,7 +296,7 @@
                         'text-rose-900 dark:text-rose-100': row.line.tone === 'error',
                         'text-amber-900 dark:text-amber-100': row.line.tone === 'warning',
                         'text-blue-900 dark:text-blue-50': row.line.tone === 'command',
-                        'text-slate-900 dark:text-slate-50': row.line.tone === 'default'
+                        'text-slate-900 dark:text-slate-50': row.line.tone === 'default',
                       }"
                     >
                       {{ getRenderedLineContent(row.line) || ' ' }}

@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { importProvidersFrom } from '@angular/core';
 import { TestModule } from '@app/test.module';
 import { WorkflowRunLogsComponent } from './workflow-run-logs.component';
+import { getAutoExpandedLogGroupIds } from './workflow-run-logs.utils';
 
 describe('Integration Test Workflow Run Logs Page', () => {
   let component: WorkflowRunLogsComponent;
@@ -93,5 +94,17 @@ describe('Integration Test Workflow Run Logs Page', () => {
     expect(component.isLogGroupExpanded('group-12')).toBe(true);
     component.toggleLogGroup('group-12');
     expect(component.isLogGroupExpanded('group-12')).toBe(false);
+  });
+
+  it('should auto-expand log groups that contain error lines', () => {
+    const autoExpandedGroups = getAutoExpandedLogGroupIds(
+      ['[group]Build', 'setup', '[group]Compile', '[error]Process completed with exit code 1', '[endgroup]', '[endgroup]'].join('\n'),
+      'error'
+    );
+
+    expect(autoExpandedGroups).toEqual({
+      'group-1': true,
+      'group-3': true,
+    });
   });
 });
