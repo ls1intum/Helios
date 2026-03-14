@@ -57,7 +57,7 @@
       </p-tablist>
       <p-tabpanels>
         <p-tabpanel value="deploy">
-          <app-deployment-selection [sourceRef]="branch.name" [commitSha]="branch.commitSha" />
+          <app-deployment-selection [branchName]="branch.name" [commitSha]="branch.commitSha" />
         </p-tabpanel>
         <p-tabpanel value="history">
           <app-deployment-history [selector]="{ repositoryId: repositoryId(), branchName: branch.name }" />

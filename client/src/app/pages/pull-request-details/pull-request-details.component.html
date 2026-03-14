@@ -58,7 +58,7 @@
         </p-tablist>
         <p-tabpanels>
           <p-tabpanel value="deploy">
-            <app-deployment-selection [sourceRef]="pr.headRefName" [commitSha]="pr.headSha" />
+            <app-deployment-selection [branchName]="pr.headRefName" [commitSha]="pr.headSha" />
           </p-tabpanel>
           <p-tabpanel value="history">
             <app-deployment-history [selector]="{ pullRequestId: pr.id }" />

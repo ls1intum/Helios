@@ -91,10 +91,10 @@ describe('ReleaseCandidateDeploymentTableComponent', () => {
     const dialog = fixture.debugElement.query(By.directive(DeployConfirmationComponent)).componentInstance as DeployConfirmationComponent;
 
     expect(component.deployDialogVisible()).toBe(true);
-    expect(dialog.sourceRef()).toBe('release/1.2.3');
+    expect(dialog.sourceRef()).toEqual({ ref: 'release/1.2.3', type: 'branch' });
   });
 
-  it('falls back to the release candidate name when no branch is present', async () => {
+  it('falls back to the release candidate name as a tag when no branch is present', async () => {
     fixture.componentRef.setInput('releaseCandidate', {
       ...releaseCandidate,
       branch: undefined,
@@ -107,6 +107,6 @@ describe('ReleaseCandidateDeploymentTableComponent', () => {
 
     const dialog = fixture.debugElement.query(By.directive(DeployConfirmationComponent)).componentInstance as DeployConfirmationComponent;
 
-    expect(dialog.sourceRef()).toBe('rc-1');
+    expect(dialog.sourceRef()).toEqual({ ref: 'rc-1', type: 'tag' });
   });
 });
