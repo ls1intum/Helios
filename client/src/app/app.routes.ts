@@ -80,8 +80,12 @@ export const routes: Routes = [
             children: [
               {
                 path: '',
-                redirectTo: 'pr',
+                redirectTo: 'runs',
                 pathMatch: 'full',
+              },
+              {
+                path: 'runs',
+                loadComponent: () => import('@app/pages/workflow-run-list/workflow-run-list.component').then(m => m.WorkflowRunListComponent),
               },
               {
                 path: 'pr',
