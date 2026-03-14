@@ -14,7 +14,7 @@ import { PAGINATED_FILTER_OPTIONS_TOKEN, PaginatedFilterOption, PaginatedTableSe
 import { TableFilterPaginatedComponent } from '@app/components/table-filter-paginated/table-filter-paginated.component';
 import { MessageService, SortMeta } from 'primeng/api';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
-import { IconAlertTriangle, IconBrandGithub, IconCircleCheck, IconCircleX, IconClockHour4, IconFilterPlus, IconGitPullRequest, IconProgress } from 'angular-tabler-icons/icons';
+import { IconAlertTriangle, IconBrandGithub, IconCircleCheck, IconCircleX, IconClockHour4, IconFilterPlus, IconPlayerPlay, IconProgress } from 'angular-tabler-icons/icons';
 
 export function createWorkflowRunsFilterOptions(): PaginatedFilterOption[] {
   return [
@@ -38,13 +38,13 @@ export function createWorkflowRunsFilterOptions(): PaginatedFilterOption[] {
     { provide: PAGINATED_FILTER_OPTIONS_TOKEN, useFactory: createWorkflowRunsFilterOptions },
     provideTablerIcons({
       IconFilterPlus,
-      IconGitPullRequest,
       IconCircleCheck,
       IconCircleX,
       IconProgress,
       IconClockHour4,
       IconAlertTriangle,
       IconBrandGithub,
+      IconPlayerPlay
     }),
   ],
   templateUrl: './workflow-runs-table.component.html',
@@ -74,15 +74,6 @@ export class WorkflowRunsTableComponent {
 
   query = injectQuery(() => this.queryOptions());
 
-  constructor() {
-    effect(() => {
-      this.paginationService.paginationState();
-      if (this.query.data()) {
-        this.query.refetch();
-      }
-    });
-  }
-
   get typedPaginationService() {
     return this.paginationService as PaginatedTableService;
   }
@@ -101,7 +92,6 @@ export class WorkflowRunsTableComponent {
 
   onPage(event: TablePageEvent) {
     this.paginationService.onPage(event);
-    this.query.refetch();
   }
 
   onSort(event: SortMeta) {
