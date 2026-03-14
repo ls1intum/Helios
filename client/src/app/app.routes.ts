@@ -80,7 +80,7 @@ export const routes: Routes = [
             children: [
               {
                 path: '',
-                redirectTo: 'runs',
+                redirectTo: 'pr',
                 pathMatch: 'full',
               },
               {
