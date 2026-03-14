@@ -1,4 +1,4 @@
-package de.tum.cit.aet.helios.workflow.logs;
+package de.tum.cit.aet.helios.workflow.logs.storage;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -51,16 +51,22 @@ class WorkflowRunLogStorageServiceTest {
   private WorkflowRunLogStorageService workflowRunLogStorageService;
   private MockedStatic<RepositoryContext> repositoryContextMockedStatic;
   private OffsetDateTime fixedNow;
+  private WorkflowRunLogArchiveExtractor workflowRunLogArchiveExtractor;
 
   @BeforeEach
   void setUp() {
     ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
     fixedNow = OffsetDateTime.parse("2026-03-13T12:00:00Z");
+    workflowRunLogArchiveExtractor = new WorkflowRunLogArchiveExtractor();
 
     WorkflowRunLogStorageProperties properties = new WorkflowRunLogStorageProperties(tempDir);
     workflowRunLogStorageService =
         new WorkflowRunLogStorageService(
-            workflowRunRepository, gitHubService, properties, objectMapper) {
+            workflowRunRepository,
+            gitHubService,
+            properties,
+            objectMapper,
+            workflowRunLogArchiveExtractor) {
           @Override
           protected OffsetDateTime currentTime() {
             return fixedNow;
@@ -154,7 +160,64 @@ class WorkflowRunLogStorageServiceTest {
 
     assertFalse(first.cacheHit());
     assertTrue(second.cacheHit());
+    assertEquals(1L, first.manifest().runAttempt());
+    assertEquals(1L, second.manifest().runAttempt());
     verify(gitHubService, times(1)).downloadWorkflowRunLogs("owner/repo", 7L);
+  }
+
+  @Test
+  void cacheLogsRefreshesExistingCacheWhenWorkflowRunAttemptChanges() throws Exception {
+    WorkflowRun workflowRun = createWorkflowRun(7L, 99L, "owner/repo", fixedNow.minusMinutes(30));
+    when(workflowRunRepository.findById(Long.valueOf(7L))).thenReturn(Optional.of(workflowRun));
+    repositoryContextMockedStatic.when(RepositoryContext::getRepositoryId).thenReturn(99L);
+    when(gitHubService.downloadWorkflowRunLogs("owner/repo", 7L))
+        .thenReturn(createZipArchive(Map.of("job-1.txt", "first attempt log")))
+        .thenReturn(createZipArchive(Map.of("job-1.txt", "second attempt log")));
+
+    WorkflowRunLogCacheResult first = workflowRunLogStorageService.ensureLogsCached(7L);
+
+    workflowRun.setRunAttempt(2L);
+    workflowRun.setUpdatedAt(fixedNow.plusMinutes(1));
+
+    WorkflowRunLogCacheResult second = workflowRunLogStorageService.ensureLogsCached(7L);
+
+    assertFalse(first.cacheHit());
+    assertFalse(second.cacheHit());
+    assertEquals(1L, first.manifest().runAttempt());
+    assertEquals(2L, second.manifest().runAttempt());
+    assertEquals(
+        "second attempt log", Files.readString(second.runDirectory().resolve("job-1.txt")));
+    verify(gitHubService, times(2)).downloadWorkflowRunLogs("owner/repo", 7L);
+  }
+
+  @Test
+  void cacheLogsRefreshesExistingCacheWhenManifestPredatesRunAttemptTracking() throws Exception {
+    WorkflowRun workflowRun = createWorkflowRun(7L, 99L, "owner/repo", fixedNow.minusMinutes(30));
+    when(workflowRunRepository.findById(Long.valueOf(7L))).thenReturn(Optional.of(workflowRun));
+    repositoryContextMockedStatic.when(RepositoryContext::getRepositoryId).thenReturn(99L);
+    when(gitHubService.downloadWorkflowRunLogs("owner/repo", 7L))
+        .thenReturn(createZipArchive(Map.of("job-1.txt", "fresh log")));
+
+    Path runDirectory = tempDir.resolve("repositories/99/workflow-runs/7");
+    Files.createDirectories(runDirectory);
+    Files.writeString(runDirectory.resolve("job-1.txt"), "stale log");
+    Files.writeString(
+        runDirectory.resolve(WorkflowRunLogManifest.FILE_NAME),
+        """
+            {
+              "workflowRunId": 7,
+              "repositoryId": 99,
+              "downloadedAt": "2026-03-13T11:55:00Z",
+              "fileCount": 1
+            }
+            """);
+
+    WorkflowRunLogCacheResult response = workflowRunLogStorageService.ensureLogsCached(7L);
+
+    assertFalse(response.cacheHit());
+    assertEquals(1L, response.manifest().runAttempt());
+    assertEquals("fresh log", Files.readString(response.runDirectory().resolve("job-1.txt")));
+    verify(gitHubService).downloadWorkflowRunLogs("owner/repo", 7L);
   }
 
   @Test
@@ -217,6 +280,7 @@ class WorkflowRunLogStorageServiceTest {
     WorkflowRun workflowRun = new WorkflowRun();
     workflowRun.setId(workflowRunId);
     workflowRun.setRepository(repository);
+    workflowRun.setRunAttempt(1L);
     workflowRun.setStatus(WorkflowRun.Status.COMPLETED);
     workflowRun.setUpdatedAt(updatedAt);
     return workflowRun;

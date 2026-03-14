@@ -1,4 +1,4 @@
-package de.tum.cit.aet.helios.workflow.logs;
+package de.tum.cit.aet.helios.workflow.logs.storage;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.tum.cit.aet.helios.filters.RepositoryContext;
@@ -6,18 +6,16 @@ import de.tum.cit.aet.helios.github.GitHubService;
 import de.tum.cit.aet.helios.workflow.WorkflowRun;
 import de.tum.cit.aet.helios.workflow.WorkflowRunRepository;
 import jakarta.persistence.EntityNotFoundException;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.time.OffsetDateTime;
 import java.util.Comparator;
 import java.util.Optional;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
@@ -28,12 +26,11 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class WorkflowRunLogStorageService {
 
-  private static final String MANIFEST_FILE_NAME = "_manifest.json";
-
   private final WorkflowRunRepository workflowRunRepository;
   private final GitHubService gitHubService;
   private final WorkflowRunLogStorageProperties properties;
   private final ObjectMapper objectMapper;
+  private final WorkflowRunLogArchiveExtractor archiveExtractor;
 
   @Transactional
   public WorkflowRunLogCacheResult ensureLogsCached(Long workflowRunId) throws IOException {
@@ -41,10 +38,23 @@ public class WorkflowRunLogStorageService {
   }
 
   private WorkflowRunLogCacheResult cacheLogs(WorkflowRun workflowRun) throws IOException {
+    Long repositoryId = requireRepositoryId(workflowRun);
     Path runDirectory = getRunDirectory(workflowRun);
     Optional<WorkflowRunLogManifest> existingManifest = readManifest(runDirectory);
     if (existingManifest.isPresent()) {
-      return new WorkflowRunLogCacheResult(workflowRun, runDirectory, existingManifest.get(), true);
+      WorkflowRunLogManifest manifest = existingManifest.get();
+      if (isCurrentCache(manifest, workflowRun)) {
+        return new WorkflowRunLogCacheResult(workflowRun, runDirectory, manifest, true);
+      }
+
+      log.info(
+          "Refreshing stale workflow log cache repo={} run={} cachedRunAttempt={} "
+              + "currentRunAttempt={}",
+          repositoryId,
+          workflowRun.getId(),
+          manifest.runAttempt(),
+          workflowRun.getRunAttempt());
+      deleteRecursively(runDirectory);
     }
 
     Files.createDirectories(runDirectory.getParent());
@@ -60,18 +70,24 @@ public class WorkflowRunLogStorageService {
 
       WorkflowRunLogManifest manifest =
           new WorkflowRunLogManifest(
-              workflowRun.getId(), requireRepositoryId(workflowRun), currentTime(), fileCount);
+              workflowRun.getId(),
+              repositoryId,
+              currentTime(),
+              fileCount,
+              workflowRun.getRunAttempt());
       writeManifest(tempDirectory, manifest);
       promoteTempDirectory(tempDirectory, runDirectory);
       WorkflowRunLogManifest finalManifest = readManifest(runDirectory).orElse(manifest);
       return new WorkflowRunLogCacheResult(workflowRun, runDirectory, finalManifest, false);
-    } catch (IOException e) {
-      deleteRecursively(tempDirectory);
-      throw e;
-    } catch (RuntimeException e) {
-      deleteRecursively(tempDirectory);
+    } catch (IOException | RuntimeException e) {
+      deleteRecursivelyAndSuppressFailure(tempDirectory, e);
       throw e;
     }
+  }
+
+  private boolean isCurrentCache(WorkflowRunLogManifest manifest, WorkflowRun workflowRun) {
+    return manifest.runAttempt() != null
+        && manifest.runAttempt().equals(workflowRun.getRunAttempt());
   }
 
   private WorkflowRun loadAccessibleCompletedRun(Long workflowRunId) {
@@ -116,7 +132,7 @@ public class WorkflowRunLogStorageService {
     byte[] archive =
         gitHubService.downloadWorkflowRunLogs(
             workflowRun.getRepository().getNameWithOwner(), workflowRun.getId());
-    return extractArchive(archive, tempDirectory);
+    return archiveExtractor.extractArchive(archive, tempDirectory);
   }
 
   private Path getRunDirectory(WorkflowRun workflowRun) {
@@ -128,8 +144,8 @@ public class WorkflowRunLogStorageService {
         .resolve(workflowRun.getId().toString());
   }
 
-  private Optional<WorkflowRunLogManifest> readManifest(Path runDirectory) throws IOException {
-    Path manifestPath = runDirectory.resolve(MANIFEST_FILE_NAME);
+  Optional<WorkflowRunLogManifest> readManifest(Path runDirectory) throws IOException {
+    Path manifestPath = runDirectory.resolve(WorkflowRunLogManifest.FILE_NAME);
     if (!Files.isRegularFile(manifestPath)) {
       return Optional.empty();
     }
@@ -139,43 +155,14 @@ public class WorkflowRunLogStorageService {
   }
 
   private void writeManifest(Path directory, WorkflowRunLogManifest manifest) throws IOException {
-    Path manifestPath = directory.resolve(MANIFEST_FILE_NAME);
+    Path manifestPath = directory.resolve(WorkflowRunLogManifest.FILE_NAME);
     objectMapper.writeValue(manifestPath.toFile(), manifest);
-  }
-
-  private int extractArchive(byte[] archive, Path tempDirectory) throws IOException {
-    int fileCount = 0;
-
-    try (ZipInputStream zipInput = new ZipInputStream(new ByteArrayInputStream(archive))) {
-      ZipEntry entry;
-      while ((entry = zipInput.getNextEntry()) != null) {
-        Path targetPath = resolveZipEntry(tempDirectory, entry);
-        if (entry.isDirectory()) {
-          Files.createDirectories(targetPath);
-        } else {
-          Files.createDirectories(targetPath.getParent());
-          Files.copy(zipInput, targetPath, StandardCopyOption.REPLACE_EXISTING);
-          fileCount++;
-        }
-        zipInput.closeEntry();
-      }
-    }
-
-    return fileCount;
-  }
-
-  private Path resolveZipEntry(Path tempDirectory, ZipEntry entry) throws IOException {
-    Path resolvedPath = tempDirectory.resolve(entry.getName()).normalize();
-    if (!resolvedPath.startsWith(tempDirectory)) {
-      throw new IOException("Refusing to extract unsafe log entry: " + entry.getName());
-    }
-    return resolvedPath;
   }
 
   private void promoteTempDirectory(Path tempDirectory, Path runDirectory) throws IOException {
     Optional<WorkflowRunLogManifest> concurrentManifest = readManifest(runDirectory);
     if (concurrentManifest.isPresent()) {
-      deleteRecursively(tempDirectory);
+      deleteRecursivelyBestEffort(tempDirectory);
       return;
     }
 
@@ -186,27 +173,55 @@ public class WorkflowRunLogStorageService {
     try {
       Files.move(tempDirectory, runDirectory, StandardCopyOption.ATOMIC_MOVE);
     } catch (FileAlreadyExistsException e) {
-      deleteRecursively(tempDirectory);
+      deleteRecursivelyBestEffort(tempDirectory);
     } catch (IOException e) {
-      Files.move(tempDirectory, runDirectory);
+      try {
+        Files.move(tempDirectory, runDirectory);
+      } catch (IOException e2) {
+        deleteRecursivelyAndSuppressFailure(tempDirectory, e2);
+        throw e2;
+      }
     }
   }
 
-  private void deleteRecursively(Path path) throws IOException {
-    if (!Files.exists(path)) {
+  void deleteRecursively(Path path) throws IOException {
+    IOException deleteFailure = null;
+    try (var walk = Files.walk(path)) {
+      for (Path currentPath : walk.sorted(Comparator.reverseOrder()).toList()) {
+        try {
+          Files.deleteIfExists(currentPath);
+        } catch (IOException e) {
+          log.warn("Failed to delete workflow log path {}", currentPath, e);
+          if (deleteFailure == null) {
+            deleteFailure = new IOException("Failed to delete workflow log path " + currentPath);
+          }
+          deleteFailure.addSuppressed(e);
+        }
+      }
+    } catch (NoSuchFileException ignored) {
+      // path does not exist, nothing to delete
       return;
     }
 
-    try (var walk = Files.walk(path)) {
-      walk.sorted(Comparator.reverseOrder()).forEach(this::deleteQuietly);
+    if (deleteFailure != null) {
+      throw deleteFailure;
     }
   }
 
-  private void deleteQuietly(Path path) {
+  private void deleteRecursivelyBestEffort(Path path) {
     try {
-      Files.deleteIfExists(path);
+      deleteRecursively(path);
     } catch (IOException e) {
-      log.warn("Failed to delete temporary workflow log path {}", path, e);
+      log.warn("Failed to clean up workflow log path {}", path, e);
+    }
+  }
+
+  private void deleteRecursivelyAndSuppressFailure(Path path, Throwable originalFailure) {
+    try {
+      deleteRecursively(path);
+    } catch (IOException cleanupFailure) {
+      originalFailure.addSuppressed(cleanupFailure);
+      log.warn("Failed to clean up workflow log path {}", path, cleanupFailure);
     }
   }
 }

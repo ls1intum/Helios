@@ -1,26 +1,122 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { importProvidersFrom } from '@angular/core';
+import { getWorkflowRunLogsQueryKey } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
+import type { WorkflowRunLogsResponse } from '@app/core/modules/openapi/types.gen';
 import { TestModule } from '@app/test.module';
+import { QueryClient } from '@tanstack/angular-query-experimental';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { WorkflowRunLogsComponent } from './workflow-run-logs.component';
 import { getAutoExpandedLogGroupIds } from './workflow-run-logs.utils';
 
 describe('Integration Test Workflow Run Logs Page', () => {
   let component: WorkflowRunLogsComponent;
   let fixture: ComponentFixture<WorkflowRunLogsComponent>;
+  let queryClient: QueryClient;
+
+  const workflowRunId = 42;
+  const repositoryId = 1;
+
+  function createLogsResponse(overrides: Partial<WorkflowRunLogsResponse> = {}): WorkflowRunLogsResponse {
+    return {
+      workflowRunId,
+      workflowName: 'deploy',
+      displayTitle: 'Deploy preview',
+      conclusion: 'FAILURE',
+      htmlUrl: 'https://github.com/example/repo/actions/runs/42',
+      cacheHit: true,
+      downloadedAt: '2026-03-14T10:00:00Z',
+      totalFileCount: 3,
+      groups: [
+        {
+          name: 'build',
+          jobName: 'build',
+          jobStatus: 'completed',
+          jobConclusion: 'success',
+          steps: [
+            {
+              number: 1,
+              name: 'Checkout',
+              status: 'completed',
+              conclusion: 'success',
+              startedAt: '2026-03-14T10:00:00Z',
+              completedAt: '2026-03-14T10:00:30Z',
+            },
+            {
+              number: 2,
+              name: 'Test',
+              status: 'completed',
+              conclusion: 'failure',
+              startedAt: '2026-03-14T10:00:30Z',
+              completedAt: '2026-03-14T10:02:00Z',
+            },
+          ],
+          files: [
+            {
+              path: 'build/1_build.txt',
+              displayName: 'build',
+              stepNumber: 1,
+              stepName: 'Checkout',
+              stepStatus: 'completed',
+              stepConclusion: 'success',
+              stepStartedAt: '2026-03-14T10:00:00Z',
+              stepCompletedAt: '2026-03-14T10:00:30Z',
+              content: '[group]Build\n[error]Process completed with exit code 1\n[endgroup]',
+            },
+            {
+              path: 'build/2_test.txt',
+              displayName: 'test',
+              stepNumber: 2,
+              stepName: 'Test',
+              stepStatus: 'completed',
+              stepConclusion: 'failure',
+              stepStartedAt: '2026-03-14T10:00:30Z',
+              stepCompletedAt: '2026-03-14T10:02:00Z',
+              content: '[error]Tests failed',
+            },
+          ],
+        },
+        {
+          name: 'deploy',
+          steps: [],
+          files: [
+            {
+              path: 'deploy/system.txt',
+              displayName: 'system',
+              content: 'Post job cleanup.',
+            },
+          ],
+        },
+      ],
+      ...overrides,
+    };
+  }
+
+  async function createComponent({
+    logs = createLogsResponse(),
+  }: {
+    logs?: WorkflowRunLogsResponse;
+  } = {}) {
+    queryClient.setQueryData(getWorkflowRunLogsQueryKey({ path: { workflowRunId } }), logs);
+
+    fixture = TestBed.createComponent(WorkflowRunLogsComponent);
+    component = fixture.componentInstance;
+
+    fixture.componentRef.setInput('repositoryId', repositoryId);
+    fixture.componentRef.setInput('workflowRunId', workflowRunId);
+
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+  }
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [WorkflowRunLogsComponent],
       providers: [importProvidersFrom(TestModule)],
     }).compileComponents();
-
-    fixture = TestBed.createComponent(WorkflowRunLogsComponent);
-    component = fixture.componentInstance;
-
-    fixture.componentRef.setInput('repositoryId', 1);
-    fixture.componentRef.setInput('workflowRunId', 42);
-
-    await fixture.whenStable();
+    queryClient = TestBed.inject(QueryClient);
+    queryClient.clear();
+    await createComponent();
   });
 
   it('should create', () => {
@@ -106,5 +202,53 @@ describe('Integration Test Workflow Run Logs Page', () => {
       'group-1': true,
       'group-3': true,
     });
+  });
+
+  it('should keep an exactly matched successful group green even when the workflow failed', () => {
+    expect(component.groupViews()[0].group.jobName).toBe('build');
+    expect(component.groupViews()[0].outcome).toMatchObject({
+      icon: 'circle-check',
+      label: 'Success',
+    });
+    expect(component.groupViews()[1].group.jobName).toBeUndefined();
+    expect(component.groupViews()[1].outcome).toMatchObject({
+      icon: 'question-mark',
+      label: 'Unknown',
+    });
+  });
+
+  it('should expose the selected file step metadata without rendering the step panel', () => {
+    expect(component.selectedStep()?.name).toBe('Checkout');
+    expect(fixture.nativeElement.textContent).toContain('GitHub step: Checkout');
+    expect(fixture.nativeElement.textContent).not.toContain('GitHub Steps');
+  });
+
+  it('should derive file status from the matched GitHub step number', () => {
+    expect(component.groupedFiles()[0].file.stepNumber).toBe(1);
+    expect(component.groupedFiles()[0].outcome).toMatchObject({
+      icon: 'circle-check',
+      label: 'Success',
+    });
+    expect(component.groupedFiles()[1].file.stepNumber).toBe(2);
+    expect(component.groupedFiles()[1].outcome).toMatchObject({
+      icon: 'circle-x',
+      label: 'Failure',
+    });
+    expect(component.groupedFiles()[2].file.stepNumber).toBeUndefined();
+  });
+
+  it('should show step duration badges in the left panel for mapped files', () => {
+    expect(fixture.nativeElement.textContent).toContain('30s');
+    expect(fixture.nativeElement.textContent).toContain('1m 30s');
+  });
+
+  it('should not show inferred step metadata for an unmatched group', async () => {
+    component.selectFile('deploy/system.txt');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(component.selectedStep()).toBeNull();
+    expect(fixture.nativeElement.textContent).not.toContain('GitHub step:');
   });
 });

@@ -58,4 +58,9 @@ recovery:
 
 helios:
     logs:
-        base-path: ${HELIOS_LOGS_BASE_PATH:/tmp/helios-workflow-logs}
+        base-path: ${HELIOS_LOGS_BASE_PATH:/var/cache/helios/workflow-logs}
+        cleanup:
+            dry-run: ${CLEANUP_WORKFLOW_LOG_DRY_RUN:false}
+            # runs every day at 02:00 (server time)
+            cron: "0 0 2 * * *"
+            max-age: 1d

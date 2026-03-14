@@ -1,14 +1,15 @@
 package de.tum.cit.aet.helios.workflow;
 
 import de.tum.cit.aet.helios.config.security.annotations.EnforceAtLeastWritePermission;
+import de.tum.cit.aet.helios.workflow.logs.WorkflowRunLogReaderService;
+import de.tum.cit.aet.helios.workflow.logs.WorkflowRunLogsResponse;
 import de.tum.cit.aet.helios.workflow.pagination.PaginatedWorkflowRunsResponse;
 import de.tum.cit.aet.helios.workflow.pagination.WorkflowRunFilterType;
 import de.tum.cit.aet.helios.workflow.pagination.WorkflowRunPageRequest;
-import de.tum.cit.aet.helios.workflow.logs.WorkflowRunLogReaderService;
-import de.tum.cit.aet.helios.workflow.logs.WorkflowRunLogsResponse;
 import java.io.IOException;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 @RequiredArgsConstructor
 @RestController
@@ -88,8 +90,12 @@ public class WorkflowRunController {
 
   @GetMapping("/runs/{workflowRunId}/logs")
   public ResponseEntity<WorkflowRunLogsResponse> getWorkflowRunLogs(
-      @PathVariable Long workflowRunId)
-      throws IOException {
-    return ResponseEntity.ok(workflowRunLogReaderService.getLogs(workflowRunId));
+      @PathVariable Long workflowRunId) {
+    try {
+      return ResponseEntity.ok(workflowRunLogReaderService.getLogs(workflowRunId));
+    } catch (IOException e) {
+      throw new ResponseStatusException(
+          HttpStatus.INTERNAL_SERVER_ERROR, "Failed to load workflow logs", e);
+    }
   }
 }

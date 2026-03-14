@@ -1,13 +1,8 @@
 import { CommonModule, Location } from '@angular/common';
 import { Component, computed, effect, inject, input, numberAttribute, signal } from '@angular/core';
 import { PageHeadingComponent } from '@app/components/page-heading/page-heading.component';
-import {
-  getWorkflowJobStatusOptions,
-  getWorkflowJobStatusQueryKey,
-  getWorkflowRunLogsOptions,
-  getWorkflowRunLogsQueryKey,
-} from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
-import { QueryClient, injectQuery } from '@tanstack/angular-query-experimental';
+import { getWorkflowRunLogsOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
+import { injectQuery } from '@tanstack/angular-query-experimental';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
 import {
   IconArrowLeft,
@@ -35,6 +30,7 @@ import { Toolbar } from 'primeng/toolbar';
 import {
   ALL_LOG_LINE_TONES,
   LOG_LINE_FILTER_OPTIONS,
+  buildFileViews,
   buildGroupViews,
   getAutoExpandedLogGroupIds,
   buildSelectedFileView,
@@ -71,7 +67,6 @@ export class WorkflowRunLogsComponent {
   workflowRunId = input.required({ transform: numberAttribute });
 
   private location = inject(Location);
-  private queryClient = inject(QueryClient);
   private hasInitializedExpandedGroups = false;
 
   expandedGroupNames = signal<string[]>([]);
@@ -85,29 +80,19 @@ export class WorkflowRunLogsComponent {
 
   logsQuery = injectQuery(() => ({
     ...getWorkflowRunLogsOptions({ path: { workflowRunId: this.workflowRunId() } }),
-    queryKey: getWorkflowRunLogsQueryKey({ path: { workflowRunId: this.workflowRunId() } }),
     staleTime: Number.POSITIVE_INFINITY,
     retry: false,
   }));
 
-  jobsQuery = injectQuery(() => ({
-    ...getWorkflowJobStatusOptions({ path: { runId: this.workflowRunId() } }),
-    queryKey: getWorkflowJobStatusQueryKey({ path: { runId: this.workflowRunId() } }),
-    staleTime: Number.POSITIVE_INFINITY,
-    retry: false,
-  }));
-
-  logs = computed(() => this.logsQuery.data());
-  workflowOutcome = computed(() => getWorkflowRunOutcome(this.logs()?.conclusion));
-  groupViews = computed(() => buildGroupViews(this.logs()?.groups ?? [], this.jobsQuery.data()?.jobs ?? [], this.workflowOutcome()));
-
-  groupedFiles = computed(() =>
-    this.groupViews().flatMap(groupView =>
-      groupView.group.files.map(file => ({
-        groupName: groupView.group.name,
-        file,
-      }))
-    )
+  workflowOutcome = computed(() => getWorkflowRunOutcome(this.logsQuery.data()?.conclusion));
+  groupViews = computed(() => buildGroupViews(this.logsQuery.data()?.groups ?? []));
+  groupedFiles = computed(() => buildFileViews(this.groupViews()));
+  groupedFilesByGroup = computed(() =>
+    this.groupedFiles().reduce<Record<string, ReturnType<typeof this.groupedFiles>>>((groupedFilesByGroup, fileView) => {
+      const groupName = fileView.groupView.group.name;
+      groupedFilesByGroup[groupName] = [...(groupedFilesByGroup[groupName] ?? []), fileView];
+      return groupedFilesByGroup;
+    }, {})
   );
 
   selectedFile = computed(() => {
@@ -121,16 +106,17 @@ export class WorkflowRunLogsComponent {
 
   hasLogs = computed(() => this.groupedFiles().length > 0);
   activeFilePath = computed(() => this.selectedFile()?.file.path ?? null);
+  selectedStep = computed(() => {
+    const selectedFile = this.selectedFile();
+    if (!selectedFile) {
+      return null;
+    }
+
+    return selectedFile.groupView.group.steps.find(step => step.number === selectedFile.file.stepNumber && step.name === selectedFile.file.stepName) ?? null;
+  });
   selectedFileView = computed(() => buildSelectedFileView(this.selectedFile(), new Set(this.enabledLineTones()), this.expandedLogGroupIds()));
 
   constructor() {
-    effect(() => {
-      const selectedFile = this.selectedFile();
-      if (selectedFile && this.selectedFilePath() !== selectedFile.file.path) {
-        this.selectedFilePath.set(selectedFile.file.path);
-      }
-    });
-
     effect(() => {
       const firstGroupName = this.groupViews()[0]?.group.name;
       if (firstGroupName && !this.hasInitializedExpandedGroups) {
@@ -165,21 +151,17 @@ export class WorkflowRunLogsComponent {
       return;
     }
 
-    this.expandedGroupNames.update(groupNames => (groupNames.includes(selectedEntry.groupName) ? groupNames : [...groupNames, selectedEntry.groupName]));
+    this.expandedGroupNames.update(groupNames => (groupNames.includes(selectedEntry.groupView.group.name) ? groupNames : [...groupNames, selectedEntry.groupView.group.name]));
   }
 
   onExpandedGroupsChange(value: string | string[] | number | number[] | null | undefined) {
-    if (Array.isArray(value)) {
-      this.expandedGroupNames.set(value.map(groupName => String(groupName)));
-      return;
-    }
-
-    if (value === null || value === undefined) {
+    if (value == null) {
       this.expandedGroupNames.set([]);
       return;
     }
 
-    this.expandedGroupNames.set([String(value)]);
+    const values = Array.isArray(value) ? value : [value];
+    this.expandedGroupNames.set(values.map(v => String(v)));
   }
 
   retry() {
@@ -207,16 +189,8 @@ export class WorkflowRunLogsComponent {
     return this.expandedLogGroupIds()[groupId] ?? false;
   }
 
-  async refreshLogs() {
-    const workflowRunId = this.workflowRunId();
-    const refreshedLogs = await this.queryClient.fetchQuery(
-      getWorkflowRunLogsOptions({
-        path: { workflowRunId },
-      })
-    );
-
-    this.queryClient.setQueryData(getWorkflowRunLogsQueryKey({ path: { workflowRunId } }), refreshedLogs);
-    await this.jobsQuery.refetch();
+  refreshLogs() {
+    this.logsQuery.refetch();
   }
 
   goBack() {
@@ -224,7 +198,7 @@ export class WorkflowRunLogsComponent {
   }
 
   openExternalLogs() {
-    const htmlUrl = this.logs()?.htmlUrl;
+    const htmlUrl = this.logsQuery.data()?.htmlUrl;
     if (htmlUrl) {
       window.open(htmlUrl, '_blank');
     }
@@ -232,5 +206,22 @@ export class WorkflowRunLogsComponent {
 
   getLineToneFilterClass(tone: WorkflowRunLogLineTone): string {
     return getLineToneFilterClass(tone, this.isLineToneEnabled(tone));
+  }
+
+  getFileViewsForGroup(groupName: string) {
+    return this.groupedFilesByGroup()[groupName] ?? [];
+  }
+
+  getStepDuration(startTime: string | undefined, endTime: string | undefined): string {
+    if (!startTime || !endTime) {
+      return '';
+    }
+
+    const seconds = Math.max(0, Math.floor((new Date(endTime).getTime() - new Date(startTime).getTime()) / 1000));
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+
+    if (minutes === 0) return `${seconds}s`;
+    return remainingSeconds === 0 ? `${minutes}m` : `${minutes}m ${remainingSeconds}s`;
   }
 }

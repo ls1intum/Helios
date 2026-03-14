@@ -1,9 +1,9 @@
-package de.tum.cit.aet.helios.workflow.logs;
+package de.tum.cit.aet.helios.workflow.logs.storage;
 
 import de.tum.cit.aet.helios.workflow.WorkflowRun;
 import java.nio.file.Path;
 
-record WorkflowRunLogCacheResult(
+public record WorkflowRunLogCacheResult(
     WorkflowRun workflowRun,
     Path runDirectory,
     WorkflowRunLogManifest manifest,

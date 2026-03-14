@@ -1,4 +1,4 @@
-package de.tum.cit.aet.helios.workflow.logs;
+package de.tum.cit.aet.helios.workflow.logs.storage;
 
 import java.nio.file.Path;
 import org.springframework.boot.context.properties.ConfigurationProperties;

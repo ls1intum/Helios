@@ -5,8 +5,15 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import de.tum.cit.aet.helios.deployment.DeploymentService;
+import de.tum.cit.aet.helios.deployment.WorkflowJobDto;
+import de.tum.cit.aet.helios.deployment.WorkflowJobsResponse;
+import de.tum.cit.aet.helios.deployment.WorkflowStepDto;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import de.tum.cit.aet.helios.workflow.WorkflowRun;
+import de.tum.cit.aet.helios.workflow.logs.storage.WorkflowRunLogCacheResult;
+import de.tum.cit.aet.helios.workflow.logs.storage.WorkflowRunLogManifest;
+import de.tum.cit.aet.helios.workflow.logs.storage.WorkflowRunLogStorageService;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.OffsetDateTime;
@@ -21,6 +28,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class WorkflowRunLogReaderServiceTest {
 
   @Mock private WorkflowRunLogStorageService workflowRunLogStorageService;
+  @Mock private DeploymentService deploymentService;
+  private final WorkflowRunLogFileResolver workflowRunLogFileResolver =
+      new WorkflowRunLogFileResolver();
 
   @TempDir Path tempDir;
 
@@ -36,9 +46,11 @@ class WorkflowRunLogReaderServiceTest {
 
     when(workflowRunLogStorageService.ensureLogsCached(7L))
         .thenReturn(new WorkflowRunLogCacheResult(workflowRun, runDirectory, manifest, false));
+    when(deploymentService.getWorkflowJobStatus(7L)).thenReturn(new WorkflowJobsResponse());
 
     WorkflowRunLogReaderService service =
-        new WorkflowRunLogReaderService(workflowRunLogStorageService);
+        new WorkflowRunLogReaderService(
+            workflowRunLogStorageService, deploymentService, workflowRunLogFileResolver);
 
     WorkflowRunLogsResponse response = service.getLogs(7L);
 
@@ -86,9 +98,11 @@ class WorkflowRunLogReaderServiceTest {
 
     when(workflowRunLogStorageService.ensureLogsCached(7L))
         .thenReturn(new WorkflowRunLogCacheResult(workflowRun, runDirectory, manifest, false));
+    when(deploymentService.getWorkflowJobStatus(7L)).thenReturn(new WorkflowJobsResponse());
 
     WorkflowRunLogReaderService service =
-        new WorkflowRunLogReaderService(workflowRunLogStorageService);
+        new WorkflowRunLogReaderService(
+            workflowRunLogStorageService, deploymentService, workflowRunLogFileResolver);
 
     WorkflowRunLogsResponse response = service.getLogs(7L);
 
@@ -97,14 +111,18 @@ class WorkflowRunLogReaderServiceTest {
     WorkflowRunLogGroupDto deployGroup = response.groups().get(0);
     assertEquals("deploy", deployGroup.name());
     assertEquals(
-        List.of("0_deploy.txt", "deploy/system.txt"),
+        List.of("deploy/system.txt", "0_deploy.txt"),
         deployGroup.files().stream().map(WorkflowRunLogFileDto::path).toList());
+    assertEquals("Full job log", deployGroup.files().get(1).displayName());
+    assertEquals(null, deployGroup.files().get(1).stepNumber());
 
     WorkflowRunLogGroupDto testGroup = response.groups().get(1);
     assertEquals("test", testGroup.name());
     assertEquals(
-        List.of("1_test.txt", "test/system.txt"),
+        List.of("test/system.txt", "1_test.txt"),
         testGroup.files().stream().map(WorkflowRunLogFileDto::path).toList());
+    assertEquals("Full job log", testGroup.files().get(1).displayName());
+    assertEquals(null, testGroup.files().get(1).stepNumber());
   }
 
   @Test
@@ -126,9 +144,11 @@ class WorkflowRunLogReaderServiceTest {
 
     when(workflowRunLogStorageService.ensureLogsCached(7L))
         .thenReturn(new WorkflowRunLogCacheResult(workflowRun, runDirectory, manifest, false));
+    when(deploymentService.getWorkflowJobStatus(7L)).thenReturn(new WorkflowJobsResponse());
 
     WorkflowRunLogReaderService service =
-        new WorkflowRunLogReaderService(workflowRunLogStorageService);
+        new WorkflowRunLogReaderService(
+            workflowRunLogStorageService, deploymentService, workflowRunLogFileResolver);
 
     WorkflowRunLogsResponse response = service.getLogs(7L);
 
@@ -144,30 +164,83 @@ class WorkflowRunLogReaderServiceTest {
   }
 
   @Test
-  void getLogsOrdersFilesByNumericPrefixAndHidesPrefixInDisplayName() throws Exception {
+  void getLogsOrdersStepFilesBeforeAuxiliaryFilesAndFullJobLogLast() throws Exception {
     Path runDirectory = tempDir.resolve("repositories/99/workflow-runs/7");
     Files.createDirectories(runDirectory.resolve("deploy"));
     Files.writeString(runDirectory.resolve("deploy/10_cleanup.txt"), "cleanup log");
     Files.writeString(runDirectory.resolve("deploy/2_checks.txt"), "checks log");
     Files.writeString(runDirectory.resolve("deploy/system.txt"), "system log");
+    Files.writeString(runDirectory.resolve("deploy/deploy.txt"), "full deploy log");
     WorkflowRunLogManifest manifest =
-        new WorkflowRunLogManifest(7L, 99L, OffsetDateTime.parse("2026-03-12T10:15:30Z"), 3);
+        new WorkflowRunLogManifest(7L, 99L, OffsetDateTime.parse("2026-03-12T10:15:30Z"), 4);
     WorkflowRun workflowRun = createWorkflowRun(7L, "deploy", "Deploy preview");
 
     when(workflowRunLogStorageService.ensureLogsCached(7L))
         .thenReturn(new WorkflowRunLogCacheResult(workflowRun, runDirectory, manifest, false));
+    when(deploymentService.getWorkflowJobStatus(7L)).thenReturn(new WorkflowJobsResponse());
 
     WorkflowRunLogsResponse response =
-        new WorkflowRunLogReaderService(workflowRunLogStorageService).getLogs(7L);
+        new WorkflowRunLogReaderService(
+                workflowRunLogStorageService, deploymentService, workflowRunLogFileResolver)
+            .getLogs(7L);
 
     assertEquals(
-        List.of("deploy/2_checks.txt", "deploy/10_cleanup.txt", "deploy/system.txt"),
+        List.of(
+            "deploy/2_checks.txt",
+            "deploy/10_cleanup.txt",
+            "deploy/system.txt",
+            "deploy/deploy.txt"),
         response.groups().getFirst().files().stream().map(WorkflowRunLogFileDto::path).toList());
     assertEquals(
-        List.of("checks", "cleanup", "system"),
+        List.of("checks", "cleanup", "system", "Full job log"),
         response.groups().getFirst().files().stream()
             .map(WorkflowRunLogFileDto::displayName)
             .toList());
+  }
+
+  @Test
+  void getLogsOrdersGroupsByMatchedGitHubJobStartTime() throws Exception {
+    Path runDirectory = tempDir.resolve("repositories/99/workflow-runs/7");
+    Files.createDirectories(runDirectory.resolve("build"));
+    Files.createDirectories(runDirectory.resolve("deploy"));
+    Files.createDirectories(runDirectory.resolve("validate"));
+    Files.writeString(runDirectory.resolve("build/system.txt"), "build log");
+    Files.writeString(runDirectory.resolve("deploy/system.txt"), "deploy log");
+    Files.writeString(runDirectory.resolve("validate/system.txt"), "validate log");
+    final WorkflowRunLogManifest manifest =
+        new WorkflowRunLogManifest(7L, 99L, OffsetDateTime.parse("2026-03-12T10:15:30Z"), 3);
+    final WorkflowRun workflowRun = createWorkflowRun(7L, "deploy", "Deploy preview");
+
+    final WorkflowJobDto buildJob = new WorkflowJobDto();
+    buildJob.setId(1L);
+    buildJob.setName("build");
+    buildJob.setStartedAt(OffsetDateTime.parse("2026-03-12T10:02:00Z"));
+
+    final WorkflowJobDto deployJob = new WorkflowJobDto();
+    deployJob.setId(2L);
+    deployJob.setName("deploy");
+    deployJob.setStartedAt(OffsetDateTime.parse("2026-03-12T10:03:00Z"));
+
+    final WorkflowJobDto validateJob = new WorkflowJobDto();
+    validateJob.setId(3L);
+    validateJob.setName("validate");
+    validateJob.setStartedAt(OffsetDateTime.parse("2026-03-12T10:01:00Z"));
+
+    final WorkflowJobsResponse workflowJobsResponse = new WorkflowJobsResponse();
+    workflowJobsResponse.setJobs(List.of(buildJob, deployJob, validateJob));
+
+    when(workflowRunLogStorageService.ensureLogsCached(7L))
+        .thenReturn(new WorkflowRunLogCacheResult(workflowRun, runDirectory, manifest, false));
+    when(deploymentService.getWorkflowJobStatus(7L)).thenReturn(workflowJobsResponse);
+
+    WorkflowRunLogsResponse response =
+        new WorkflowRunLogReaderService(
+                workflowRunLogStorageService, deploymentService, workflowRunLogFileResolver)
+            .getLogs(7L);
+
+    assertEquals(
+        List.of("validate", "build", "deploy"),
+        response.groups().stream().map(WorkflowRunLogGroupDto::name).toList());
   }
 
   @Test
@@ -189,9 +262,12 @@ class WorkflowRunLogReaderServiceTest {
 
     when(workflowRunLogStorageService.ensureLogsCached(7L))
         .thenReturn(new WorkflowRunLogCacheResult(workflowRun, runDirectory, manifest, false));
+    when(deploymentService.getWorkflowJobStatus(7L)).thenReturn(new WorkflowJobsResponse());
 
     WorkflowRunLogsResponse response =
-        new WorkflowRunLogReaderService(workflowRunLogStorageService).getLogs(7L);
+        new WorkflowRunLogReaderService(
+                workflowRunLogStorageService, deploymentService, workflowRunLogFileResolver)
+            .getLogs(7L);
 
     assertEquals(
         """
@@ -201,6 +277,69 @@ class WorkflowRunLogReaderServiceTest {
         [group]Finishing: deploy
         [endgroup]""",
         response.groups().getFirst().files().getFirst().content());
+  }
+
+  @Test
+  void getLogsEnrichesGroupsAndFilesWithGitHubJobAndStepStatus() throws Exception {
+    Path runDirectory = tempDir.resolve("repositories/99/workflow-runs/7");
+    Files.createDirectories(runDirectory.resolve("build"));
+    Files.writeString(runDirectory.resolve("build/1_checkout.txt"), "checkout log");
+    Files.writeString(runDirectory.resolve("build/2_test.txt"), "test log");
+    Files.writeString(runDirectory.resolve("build/system.txt"), "system log");
+    final WorkflowRunLogManifest manifest =
+        new WorkflowRunLogManifest(7L, 99L, OffsetDateTime.parse("2026-03-12T10:15:30Z"), 3);
+    final WorkflowRun workflowRun = createWorkflowRun(7L, "deploy", "Deploy preview");
+
+    final WorkflowJobsResponse workflowJobsResponse = new WorkflowJobsResponse();
+    WorkflowJobDto workflowJob = new WorkflowJobDto();
+    workflowJob.setName("build");
+    workflowJob.setStatus("completed");
+    workflowJob.setConclusion("failure");
+
+    WorkflowStepDto checkoutStep = new WorkflowStepDto();
+    checkoutStep.setNumber(1);
+    checkoutStep.setName("Checkout");
+    checkoutStep.setStatus("completed");
+    checkoutStep.setConclusion("success");
+
+    WorkflowStepDto testStep = new WorkflowStepDto();
+    testStep.setNumber(2);
+    testStep.setName("Test");
+    testStep.setStatus("completed");
+    testStep.setConclusion("failure");
+
+    workflowJob.setSteps(List.of(checkoutStep, testStep));
+    workflowJobsResponse.setJobs(List.of(workflowJob));
+
+    when(workflowRunLogStorageService.ensureLogsCached(7L))
+        .thenReturn(new WorkflowRunLogCacheResult(workflowRun, runDirectory, manifest, false));
+    when(deploymentService.getWorkflowJobStatus(7L)).thenReturn(workflowJobsResponse);
+
+    WorkflowRunLogsResponse response =
+        new WorkflowRunLogReaderService(
+                workflowRunLogStorageService, deploymentService, workflowRunLogFileResolver)
+            .getLogs(7L);
+
+    WorkflowRunLogGroupDto buildGroup = response.groups().getFirst();
+    assertEquals("build", buildGroup.name());
+    assertEquals("build", buildGroup.jobName());
+    assertEquals("completed", buildGroup.jobStatus());
+    assertEquals("failure", buildGroup.jobConclusion());
+    assertEquals(
+        List.of("Checkout", "Test"),
+        buildGroup.steps().stream().map(WorkflowRunLogStepDto::name).toList());
+
+    List<WorkflowRunLogFileDto> files = buildGroup.files();
+    assertEquals(Integer.valueOf(1), files.get(0).stepNumber());
+    assertEquals("Checkout", files.get(0).stepName());
+    assertEquals("success", files.get(0).stepConclusion());
+    assertEquals(null, files.get(0).stepStartedAt());
+    assertEquals(null, files.get(0).stepCompletedAt());
+    assertEquals(Integer.valueOf(2), files.get(1).stepNumber());
+    assertEquals("Test", files.get(1).stepName());
+    assertEquals("failure", files.get(1).stepConclusion());
+    assertEquals(null, files.get(2).stepNumber());
+    assertEquals(null, files.get(2).stepConclusion());
   }
 
   private WorkflowRun createWorkflowRun(Long workflowRunId, String name, String displayTitle) {

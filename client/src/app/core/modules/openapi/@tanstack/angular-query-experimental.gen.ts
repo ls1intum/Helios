@@ -61,6 +61,7 @@ import {
   getWorkflowRunById,
   getWorkflowRuns,
   getWorkflowRunLogs,
+  getWorkflowRuns,
   getWorkflowsByRepositoryId,
   getWorkflowsByState,
   healthCheck,
@@ -178,10 +179,10 @@ import type {
   GetWorkflowByIdData,
   GetWorkflowJobStatusData,
   GetWorkflowRunByIdData,
+  GetWorkflowRunLogsData,
   GetWorkflowRunsData,
   GetWorkflowRunsError,
   GetWorkflowRunsResponse,
-  GetWorkflowRunLogsData,
   GetWorkflowsByRepositoryIdData,
   GetWorkflowsByStateData,
   HealthCheckData,
@@ -968,23 +969,6 @@ export const getWorkflowsByStateOptions = (options: Options<GetWorkflowsByStateD
   });
 };
 
-export const getWorkflowRunLogsQueryKey = (options: Options<GetWorkflowRunLogsData>) => createQueryKey('getWorkflowRunLogs', options);
-
-export const getWorkflowRunLogsOptions = (options: Options<GetWorkflowRunLogsData>) => {
-  return queryOptions({
-    queryFn: async ({ queryKey, signal }) => {
-      const { data } = await getWorkflowRunLogs({
-        ...options,
-        ...queryKey[0],
-        signal,
-        throwOnError: true,
-      });
-      return data;
-    },
-    queryKey: getWorkflowRunLogsQueryKey(options),
-  });
-};
-
 export const getWorkflowRunsQueryKey = (options?: Options<GetWorkflowRunsData>) => createQueryKey('getWorkflowRuns', options);
 
 export const getWorkflowRunsOptions = (options?: Options<GetWorkflowRunsData>) => {
@@ -1075,6 +1059,12 @@ export const getWorkflowRunByIdOptions = (options: Options<GetWorkflowRunByIdDat
   return queryOptions({
     queryFn: async ({ queryKey, signal }) => {
       const { data } = await getWorkflowRunById({
+export const getWorkflowRunLogsQueryKey = (options: Options<GetWorkflowRunLogsData>) => createQueryKey('getWorkflowRunLogs', options);
+
+export const getWorkflowRunLogsOptions = (options: Options<GetWorkflowRunLogsData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getWorkflowRunLogs({
         ...options,
         ...queryKey[0],
         signal,
@@ -1083,6 +1073,7 @@ export const getWorkflowRunByIdOptions = (options: Options<GetWorkflowRunByIdDat
       return data;
     },
     queryKey: getWorkflowRunByIdQueryKey(options),
+    queryKey: getWorkflowRunLogsQueryKey(options),
   });
 };
 

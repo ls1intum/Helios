@@ -286,6 +286,46 @@ export type CancelDeploymentRequest = {
   workflowRunId: number;
 };
 
+export type PaginatedWorkflowRunsResponse = {
+  runs?: Array<WorkflowRunDto>;
+  page?: number;
+  size?: number;
+  totalElements?: number;
+  totalPages?: number;
+};
+
+export type WorkflowRunDto = {
+  id: number;
+  name: string;
+  displayTitle: string;
+  status:
+    | 'QUEUED'
+    | 'IN_PROGRESS'
+    | 'COMPLETED'
+    | 'ACTION_REQUIRED'
+    | 'CANCELLED'
+    | 'FAILURE'
+    | 'NEUTRAL'
+    | 'SKIPPED'
+    | 'STALE'
+    | 'SUCCESS'
+    | 'TIMED_OUT'
+    | 'REQUESTED'
+    | 'WAITING'
+    | 'PENDING'
+    | 'UNKNOWN';
+  workflowId: number;
+  conclusion?: 'ACTION_REQUIRED' | 'CANCELLED' | 'FAILURE' | 'NEUTRAL' | 'SUCCESS' | 'SKIPPED' | 'STALE' | 'TIMED_OUT' | 'STARTUP_FAILURE' | 'UNKNOWN';
+  htmlUrl: string;
+  label: 'NONE' | 'TEST';
+  testProcessingStatus?: 'PROCESSING' | 'PROCESSED' | 'FAILED';
+  headBranch?: string;
+  headSha?: string;
+  runStartedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type WorkflowRunLogFileDto = {
   /**
    * The relative path of the log file inside the workflow log archive
@@ -295,6 +335,30 @@ export type WorkflowRunLogFileDto = {
    * A display name for the log file
    */
   displayName: string;
+  /**
+   * The GitHub step number matched to this log file when available
+   */
+  stepNumber?: number;
+  /**
+   * The GitHub step name matched to this log file when available
+   */
+  stepName?: string;
+  /**
+   * The GitHub step status matched to this log file when available
+   */
+  stepStatus?: string;
+  /**
+   * The GitHub step conclusion matched to this log file when available
+   */
+  stepConclusion?: string;
+  /**
+   * The GitHub step start timestamp matched to this log file when available
+   */
+  stepStartedAt?: string;
+  /**
+   * The GitHub step completion timestamp matched to this log file when available
+   */
+  stepCompletedAt?: string;
   /**
    * The processed text content of the log file
    */
@@ -307,9 +371,52 @@ export type WorkflowRunLogGroupDto = {
    */
   name: string;
   /**
+   * The exact GitHub job name matched to this log group when available
+   */
+  jobName?: string;
+  /**
+   * The GitHub job status matched to this log group when available
+   */
+  jobStatus?: string;
+  /**
+   * The GitHub job conclusion matched to this log group when available
+   */
+  jobConclusion?: string;
+  /**
+   * The GitHub job steps matched to this log group when available
+   */
+  steps: Array<WorkflowRunLogStepDto>;
+  /**
    * The log files belonging to this group
    */
   files: Array<WorkflowRunLogFileDto>;
+};
+
+export type WorkflowRunLogStepDto = {
+  /**
+   * The GitHub step number when available
+   */
+  number?: number;
+  /**
+   * The GitHub step name when available
+   */
+  name?: string;
+  /**
+   * The GitHub step status when available
+   */
+  status?: string;
+  /**
+   * The GitHub step conclusion when available
+   */
+  conclusion?: string;
+  /**
+   * The GitHub step start timestamp when available
+   */
+  startedAt?: string;
+  /**
+   * The GitHub step completion timestamp when available
+   */
+  completedAt?: string;
 };
 
 export type WorkflowRunLogsResponse = {
@@ -349,46 +456,6 @@ export type WorkflowRunLogsResponse = {
    * The processed log groups
    */
   groups: Array<WorkflowRunLogGroupDto>;
-};
-
-export type PaginatedWorkflowRunsResponse = {
-  runs?: Array<WorkflowRunDto>;
-  page?: number;
-  size?: number;
-  totalElements?: number;
-  totalPages?: number;
-};
-
-export type WorkflowRunDto = {
-  id: number;
-  name: string;
-  displayTitle: string;
-  status:
-    | 'QUEUED'
-    | 'IN_PROGRESS'
-    | 'COMPLETED'
-    | 'ACTION_REQUIRED'
-    | 'CANCELLED'
-    | 'FAILURE'
-    | 'NEUTRAL'
-    | 'SKIPPED'
-    | 'STALE'
-    | 'SUCCESS'
-    | 'TIMED_OUT'
-    | 'REQUESTED'
-    | 'WAITING'
-    | 'PENDING'
-    | 'UNKNOWN';
-  workflowId: number;
-  conclusion?: 'ACTION_REQUIRED' | 'CANCELLED' | 'FAILURE' | 'NEUTRAL' | 'SUCCESS' | 'SKIPPED' | 'STALE' | 'TIMED_OUT' | 'STARTUP_FAILURE' | 'UNKNOWN';
-  htmlUrl: string;
-  label: 'NONE' | 'TEST';
-  testProcessingStatus?: 'PROCESSING' | 'PROCESSED' | 'FAILED';
-  headBranch?: string;
-  headSha?: string;
-  runStartedAt?: string;
-  createdAt: string;
-  updatedAt: string;
 };
 
 export type GitHubRepositoryRoleDto = {
@@ -1787,33 +1854,6 @@ export type GetWorkflowsByStateResponses = {
 
 export type GetWorkflowsByStateResponse = GetWorkflowsByStateResponses[keyof GetWorkflowsByStateResponses];
 
-export type GetWorkflowRunLogsData = {
-  body?: never;
-  path: {
-    workflowRunId: number;
-  };
-  query?: never;
-  url: '/api/workflows/runs/{workflowRunId}/logs';
-};
-
-export type GetWorkflowRunLogsErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type GetWorkflowRunLogsError = GetWorkflowRunLogsErrors[keyof GetWorkflowRunLogsErrors];
-
-export type GetWorkflowRunLogsResponses = {
-  /**
-   * OK
-   */
-  200: WorkflowRunLogsResponse;
-};
-
-export type GetWorkflowRunLogsResponse = GetWorkflowRunLogsResponses[keyof GetWorkflowRunLogsResponses];
-
 export type GetWorkflowRunsData = {
   body?: never;
   path?: never;
@@ -1856,6 +1896,16 @@ export type GetWorkflowRunByIdData = {
 };
 
 export type GetWorkflowRunByIdErrors = {
+export type GetWorkflowRunLogsData = {
+  body?: never;
+  path: {
+    workflowRunId: number;
+  };
+  query?: never;
+  url: '/api/workflows/runs/{workflowRunId}/logs';
+};
+
+export type GetWorkflowRunLogsErrors = {
   /**
    * Conflict
    */
@@ -1872,6 +1922,16 @@ export type GetWorkflowRunByIdResponses = {
 };
 
 export type GetWorkflowRunByIdResponse = GetWorkflowRunByIdResponses[keyof GetWorkflowRunByIdResponses];
+export type GetWorkflowRunLogsError = GetWorkflowRunLogsErrors[keyof GetWorkflowRunLogsErrors];
+
+export type GetWorkflowRunLogsResponses = {
+  /**
+   * OK
+   */
+  200: WorkflowRunLogsResponse;
+};
+
+export type GetWorkflowRunLogsResponse = GetWorkflowRunLogsResponses[keyof GetWorkflowRunLogsResponses];
 
 export type GetWorkflowsByRepositoryIdData = {
   body?: never;

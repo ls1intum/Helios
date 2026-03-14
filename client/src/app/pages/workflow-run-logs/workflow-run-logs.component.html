@@ -2,7 +2,7 @@
   <div class="flex w-full flex-wrap items-start justify-between gap-3" heading>
     <div class="min-w-0">
       <div>Workflow Logs</div>
-      @if (logs(); as response) {
+      @if (logsQuery.data(); as response) {
         <div class="mt-2 flex flex-wrap items-center gap-2 text-base font-normal text-muted-color">
           <p-tag [severity]="workflowOutcome().tagSeverity" [rounded]="true">
             <span class="inline-flex items-center gap-1.5">
@@ -24,7 +24,7 @@
         <i-tabler name="arrow-left" class="!size-4" />
       </p-button>
 
-      @if (!!logs()?.htmlUrl) {
+      @if (!!logsQuery.data()?.htmlUrl) {
         <p-button label="Open on GitHub" [outlined]="true" (click)="openExternalLogs()">
           <i-tabler name="external-link" class="!size-4" />
         </p-button>
@@ -85,7 +85,7 @@
             <i-tabler name="refresh" class="!size-4" />
           </p-button>
 
-          @if (!!logs()?.htmlUrl) {
+          @if (!!logsQuery.data()?.htmlUrl) {
             <p-button label="Open on GitHub" severity="secondary" [outlined]="true" (click)="openExternalLogs()">
               <i-tabler name="external-link" class="!size-4" />
             </p-button>
@@ -109,11 +109,11 @@
       <ng-template #start>
         <div class="flex flex-wrap gap-2 text-sm text-muted-color">
           <p-tag severity="secondary" [rounded]="true">
-            {{ logs()?.cacheHit ? 'Loaded from cache' : 'Downloaded fresh logs' }}
+            {{ logsQuery.data()?.cacheHit ? 'Loaded from cache' : 'Downloaded fresh logs' }}
           </p-tag>
-          <p-tag severity="secondary" [rounded]="true"> {{ logs()?.totalFileCount }} files </p-tag>
-          @if (logs()?.downloadedAt) {
-            <p-tag severity="secondary" [rounded]="true"> Downloaded {{ logs()?.downloadedAt | date: 'd MMM y, HH:mm:ss' }} </p-tag>
+          <p-tag severity="secondary" [rounded]="true"> {{ logsQuery.data()?.totalFileCount }} files </p-tag>
+          @if (logsQuery.data()?.downloadedAt) {
+            <p-tag severity="secondary" [rounded]="true"> Downloaded {{ logsQuery.data()?.downloadedAt | date: 'd MMM y, HH:mm:ss' }} </p-tag>
           }
         </div>
       </ng-template>
@@ -147,19 +147,29 @@
             <p-accordion-panel [value]="groupView.group.name">
               <p-accordion-header>
                 <div class="flex w-full items-start gap-3 pr-2">
-                  <span
-                    class="inline-flex size-8 shrink-0 items-center justify-center rounded-md"
-                    [class]="groupView.iconContainerClass"
-                    [attr.aria-label]="groupView.outcome.label"
-                    [title]="groupView.outcome.label"
-                  >
-                    <i-tabler [name]="groupView.outcome.icon" class="!size-4"></i-tabler>
-                  </span>
+                  @if (groupView.group.jobConclusion) {
+                    <span
+                      class="inline-flex size-8 shrink-0 items-center justify-center rounded-md"
+                      [class]="groupView.iconContainerClass"
+                      [attr.aria-label]="groupView.outcome.label"
+                      [title]="groupView.outcome.label"
+                    >
+                      <i-tabler [name]="groupView.outcome.icon" class="!size-4"></i-tabler>
+                    </span>
+                  } @else {
+                    <span
+                      class="inline-flex size-8 shrink-0 items-center justify-center rounded-md bg-surface-100 text-surface-500 dark:bg-surface-800 dark:text-surface-300"
+                      aria-label="No exact GitHub job match"
+                      title="No exact GitHub job match"
+                    >
+                      <i-tabler name="folder" class="!size-4"></i-tabler>
+                    </span>
+                  }
 
                   <div class="min-w-0 flex-1">
                     <div class="truncate font-medium">{{ groupView.group.name }}</div>
-                    @if (groupView.job?.name && groupView.job?.name !== groupView.group.name) {
-                      <div class="truncate text-xs text-muted-color">{{ groupView.job?.name }}</div>
+                    @if (groupView.group.jobName && groupView.group.jobName !== groupView.group.name) {
+                      <div class="truncate text-xs text-muted-color">{{ groupView.group.jobName }}</div>
                     }
                   </div>
 
@@ -169,26 +179,39 @@
 
               <p-accordion-content>
                 <div class="space-y-2">
-                  @for (file of groupView.group.files; track file.path) {
+                  @for (fileView of getFileViewsForGroup(groupView.group.name); track fileView.file.path) {
                     <button
                       class="flex w-full items-center gap-3 rounded-lg border px-3 py-2 text-left transition"
                       [ngClass]="
-                        activeFilePath() === file.path
+                        activeFilePath() === fileView.file.path
                           ? 'border-primary bg-primary-50 text-primary-900 dark:bg-primary-950/30'
                           : 'border-surface-200 bg-surface-0 dark:border-surface-700 dark:bg-surface-900'
                       "
                       type="button"
-                      (click)="selectFile(file.path)"
+                      (click)="selectFile(fileView.file.path)"
                     >
-                      <span
-                        class="inline-flex size-6 shrink-0 items-center justify-center rounded-md"
-                        [class]="groupView.iconContainerClass"
-                        [attr.aria-label]="groupView.outcome.label"
-                        [title]="groupView.outcome.label"
-                      >
-                        <i-tabler [name]="groupView.outcome.icon" class="!size-4"></i-tabler>
-                      </span>
-                      <span class="min-w-0 truncate text-sm">{{ file.displayName }}</span>
+                      @if (!!fileView.file.stepConclusion) {
+                        <span
+                          class="inline-flex size-6 shrink-0 items-center justify-center rounded-md"
+                          [class]="fileView.iconContainerClass"
+                          [attr.aria-label]="fileView.outcome.label"
+                          [title]="fileView.outcome.label"
+                        >
+                          <i-tabler [name]="fileView.outcome.icon" class="!size-4"></i-tabler>
+                        </span>
+                      } @else {
+                        <span class="inline-flex size-6 shrink-0 items-center justify-center rounded-md bg-surface-100 text-surface-500 dark:bg-surface-800 dark:text-surface-300">
+                          <i-tabler name="file-text" class="!size-4"></i-tabler>
+                        </span>
+                      }
+                      <span class="min-w-0 flex-1 truncate text-sm">{{ fileView.file.displayName }}</span>
+                      @if (getStepDuration(fileView.file.stepStartedAt, fileView.file.stepCompletedAt); as stepDuration) {
+                        @if (stepDuration) {
+                          <span class="shrink-0 rounded-full bg-surface-100 px-2 py-0.5 text-xs text-surface-700 dark:bg-surface-800 dark:text-surface-300">
+                            {{ stepDuration }}
+                          </span>
+                        }
+                      }
                     </button>
                   }
                 </div>
@@ -221,9 +244,19 @@
 
         @if (selectedFileView(); as selectedFileView) {
           <div class="min-w-0">
-            <div class="text-sm uppercase tracking-wide text-muted-color">{{ selectedFileView.selectedFile.groupName }}</div>
+            <div class="text-sm uppercase tracking-wide text-muted-color">{{ selectedFileView.selectedFile.groupView.group.name }}</div>
             <h3 class="mt-1 min-w-0 truncate text-xl font-semibold">{{ selectedFileView.selectedFile.file.displayName }}</h3>
             <div class="truncate text-sm text-muted-color">{{ selectedFileView.selectedFile.file.path }}</div>
+            @if (selectedStep(); as selectedStep) {
+              <div class="mt-3 flex flex-wrap gap-2">
+                <p-tag
+                  [severity]="selectedFileView.selectedFile.outcome.tagSeverity"
+                  [rounded]="true"
+                  [value]="'GitHub step: ' + (selectedStep.name || 'Step ' + (selectedStep.number ?? '?'))"
+                />
+                <p-tag [severity]="selectedFileView.selectedFile.outcome.tagSeverity" [rounded]="true" [value]="selectedFileView.selectedFile.outcome.label" />
+              </div>
+            }
             @if (selectedFileView.lineStats.errorCount > 0 || selectedFileView.lineStats.warningCount > 0) {
               <div class="mt-3 flex flex-wrap gap-2">
                 @if (selectedFileView.lineStats.errorCount > 0) {
