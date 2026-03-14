@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, ViewChild } from '@angular/core';
+import { Component, computed, inject, ViewChild } from '@angular/core';
 import { Table, TableModule, TablePageEvent } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
@@ -44,7 +44,7 @@ export function createWorkflowRunsFilterOptions(): PaginatedFilterOption[] {
       IconClockHour4,
       IconAlertTriangle,
       IconBrandGithub,
-      IconPlayerPlay
+      IconPlayerPlay,
     }),
   ],
   templateUrl: './workflow-runs-table.component.html',
