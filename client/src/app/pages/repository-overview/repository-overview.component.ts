@@ -160,7 +160,7 @@ export class RepositoryOverviewComponent {
   }
 
   navigateToWorkflowRuns(repository: RepositoryInfoDto) {
-    this.router.navigate(['repo', repository.id.toString(), 'ci-cd', 'runs']);
+    this.router.navigate(['repo', repository.id.toString(), 'ci-cd', 'pr']);
   }
 
   openProjectExternal(event: Event, repository: RepositoryInfoDto) {
