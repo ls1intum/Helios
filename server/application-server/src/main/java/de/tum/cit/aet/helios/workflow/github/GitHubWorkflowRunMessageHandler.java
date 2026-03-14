@@ -3,7 +3,9 @@ package de.tum.cit.aet.helios.workflow.github;
 import de.tum.cit.aet.helios.github.GitHubMessageHandler;
 import de.tum.cit.aet.helios.github.GitHubService;
 import de.tum.cit.aet.helios.gitrepo.github.GitHubRepositorySyncService;
+import de.tum.cit.aet.helios.tests.TestResultProcessor;
 import de.tum.cit.aet.helios.workflow.GitHubWorkflowContext;
+import de.tum.cit.aet.helios.workflow.WorkflowRun;
 import java.time.Instant;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -20,6 +22,7 @@ public class GitHubWorkflowRunMessageHandler
     extends GitHubMessageHandler<GHEventPayload.WorkflowRun> {
   private final GitHubRepositorySyncService repositorySyncService;
   private final GitHubWorkflowRunSyncService workflowSyncService;
+  private final TestResultProcessor testResultProcessor;
   private final GitHubService gitHubService;
   @Qualifier("workflowRunTaskScheduler")
   private final TaskScheduler taskScheduler;
@@ -62,7 +65,6 @@ public class GitHubWorkflowRunMessageHandler
 
     repositorySyncService.processRepository(eventPayload.getRepository());
 
-
     // Check if this is a workflow_run event
     // (??) When we check artifacts for each status,
     // then for the completed status artifact list return an empty list
@@ -79,7 +81,8 @@ public class GitHubWorkflowRunMessageHandler
       return;
     }
 
-    workflowSyncService.processRun(githubRun);
+    var run = workflowSyncService.processRun(githubRun);
+    processTestResult(run);
   }
 
   private void handleWorkflowRunEvent(GHEventPayload.WorkflowRun eventPayload) {
@@ -110,6 +113,13 @@ public class GitHubWorkflowRunMessageHandler
     log.info("Context found with triggering workflow run id: {}, head branch: {}, head sha: {}",
         context.runId(), context.headBranch(), context.headSha());
 
-    workflowSyncService.processRunWithContext(githubRun, context);
+    var run = workflowSyncService.processRunWithContext(githubRun, context);
+    processTestResult(run);
+  }
+
+  private void processTestResult(WorkflowRun run) {
+    if (run != null && testResultProcessor.shouldProcess(run)) {
+      testResultProcessor.processRun(run);
+    }
   }
 }
