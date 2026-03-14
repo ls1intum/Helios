@@ -286,52 +286,6 @@ class GitHubServiceTest {
   }
 
   @Test
-  void downloadWorkflowJobLogsSuccess() throws IOException {
-    when(clientManager.getCurrentToken()).thenReturn("test-token");
-
-    byte[] logBytes = "job log".getBytes();
-    Response mockResponse =
-        new Response.Builder()
-            .request(new Request.Builder().url("http://dummyurl").build())
-            .protocol(Protocol.HTTP_1_1)
-            .code(200)
-            .message("OK")
-            .body(ResponseBody.create(logBytes, MediaType.parse("text/plain")))
-            .build();
-    Call mockCall = mock(Call.class);
-    when(okHttpClient.newCall(any(Request.class))).thenReturn(mockCall);
-    when(mockCall.execute()).thenReturn(mockResponse);
-
-    byte[] result = gitHubService.downloadWorkflowJobLogs("owner/repo", 55L);
-
-    assertArrayEquals(logBytes, result);
-    verify(okHttpClient).newCall(any(Request.class));
-  }
-
-  @Test
-  void downloadWorkflowJobLogsFailure() throws IOException {
-    when(clientManager.getCurrentToken()).thenReturn("test-token");
-
-    Response mockResponse =
-        new Response.Builder()
-            .request(new Request.Builder().url("http://dummyurl").build())
-            .protocol(Protocol.HTTP_1_1)
-            .code(410)
-            .message("Gone")
-            .body(ResponseBody.create("missing", MediaType.parse("application/json")))
-            .build();
-    Call mockCall = mock(Call.class);
-    when(okHttpClient.newCall(any(Request.class))).thenReturn(mockCall);
-    when(mockCall.execute()).thenReturn(mockResponse);
-
-    IOException exception =
-        assertThrows(
-            IOException.class, () -> gitHubService.downloadWorkflowJobLogs("owner/repo", 55L));
-
-    assertTrue(exception.getMessage().contains("GitHub API call failed with response code: 410"));
-  }
-
-  @Test
   void dispatchWorkflowSuccess() throws IOException {
     final String repoNameWithOwners = "owner/repo";
     final String workflowFileNameOrId = "main.yml";
