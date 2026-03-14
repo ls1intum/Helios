@@ -38,7 +38,8 @@ public class GitHubReleaseMessageHandler extends GitHubMessageHandler<GHEventPay
         return;
       }
       User creator =
-          eventPayload.getAction().equals("created") && eventPayload.getSender() != null
+          (eventPayload.getAction().equals("created") || eventPayload.getAction().equals("published"))
+              && eventPayload.getSender() != null
               ? gitHubUserSyncService.processUser(eventPayload.getSender())
               : null;
       repositorySyncService.processRepository(eventPayload.getRepository());
