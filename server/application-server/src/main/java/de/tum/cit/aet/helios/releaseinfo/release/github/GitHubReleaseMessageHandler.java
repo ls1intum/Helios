@@ -33,12 +33,17 @@ public class GitHubReleaseMessageHandler extends GitHubMessageHandler<GHEventPay
         eventPayload.getAction());
     if (eventPayload.getAction().equals("created")
         || eventPayload.getAction().equals("edited")
-        || eventPayload.getAction().equals("published")) {
+        || eventPayload.getAction().equals("published")
+        || eventPayload.getAction().equals("prereleased")
+        || eventPayload.getAction().equals("released")) {
       if (eventPayload.getRelease().isDraft()) {
         return;
       }
       User creator =
-          (eventPayload.getAction().equals("created") || eventPayload.getAction().equals("published"))
+          (eventPayload.getAction().equals("created")
+                  || eventPayload.getAction().equals("published")
+                  || eventPayload.getAction().equals("prereleased")
+                  || eventPayload.getAction().equals("released"))
               && eventPayload.getSender() != null
               ? gitHubUserSyncService.processUser(eventPayload.getSender())
               : null;
