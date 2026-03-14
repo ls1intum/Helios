@@ -159,6 +159,10 @@ export class RepositoryOverviewComponent {
     this.router.navigate(['repo', repository.id.toString(), 'ci-cd', 'pr']);
   }
 
+  navigateToWorkflowRuns(repository: RepositoryInfoDto) {
+    this.router.navigate(['repo', repository.id.toString(), 'ci-cd', 'runs']);
+  }
+
   openProjectExternal(event: Event, repository: RepositoryInfoDto) {
     window.open(repository.htmlUrl, '_blank');
     event.stopPropagation();
