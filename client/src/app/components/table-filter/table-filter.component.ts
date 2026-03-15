@@ -1,4 +1,4 @@
-import { Component, computed, input, viewChild } from '@angular/core';
+import { Component, computed, input, output, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { SearchTable } from '@app/core/services/search-table.service';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
@@ -24,9 +24,15 @@ export class TableFilterComponent {
   table = computed(() => this.input() as SearchTable);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   searchTableService = input.required<any>();
+  inputChanged = output<void>();
   op = viewChild.required<Popover>('op');
 
   toggle(event: Event) {
     this.op().toggle(event);
+  }
+
+  onInput(event: Event): void {
+    this.searchTableService().onInput(this.table(), event);
+    this.inputChanged.emit();
   }
 }
