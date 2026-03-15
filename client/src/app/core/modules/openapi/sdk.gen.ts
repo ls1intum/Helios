@@ -99,6 +99,9 @@ import type {
   GetFlakinessScoresData,
   GetFlakinessScoresErrors,
   GetFlakinessScoresResponses,
+  GetFlakyTestsOverviewData,
+  GetFlakyTestsOverviewErrors,
+  GetFlakyTestsOverviewResponses,
   GetGitRepoSettingsData,
   GetGitRepoSettingsErrors,
   GetGitRepoSettingsResponses,
@@ -646,6 +649,13 @@ export const getUserPermissions = <ThrowOnError extends boolean = false>(options
 export const getLatestTestResultsByPullRequestId = <ThrowOnError extends boolean = false>(options: Options<GetLatestTestResultsByPullRequestIdData, ThrowOnError>) => {
   return (options.client ?? client).get<GetLatestTestResultsByPullRequestIdResponses, GetLatestTestResultsByPullRequestIdErrors, ThrowOnError>({
     url: '/api/tests/pr/{pullRequestId}',
+    ...options,
+  });
+};
+
+export const getFlakyTestsOverview = <ThrowOnError extends boolean = false>(options?: Options<GetFlakyTestsOverviewData, ThrowOnError>) => {
+  return (options?.client ?? client).get<GetFlakyTestsOverviewResponses, GetFlakyTestsOverviewErrors, ThrowOnError>({
+    url: '/api/tests/flaky',
     ...options,
   });
 };

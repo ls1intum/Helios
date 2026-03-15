@@ -4,13 +4,17 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import de.tum.cit.aet.helios.filters.RepositoryContext;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import de.tum.cit.aet.helios.gitreposettings.GitRepoSettings;
+import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.List;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,6 +49,13 @@ class TestResultControllerTest {
 
     repoSettings = new GitRepoSettings();
     repoSettings.setRepository(gitRepository);
+
+    RepositoryContext.setRepositoryId("1");
+  }
+
+  @AfterEach
+  void tearDown() {
+    RepositoryContext.clear();
   }
 
   @Test
@@ -171,5 +182,34 @@ class TestResultControllerTest {
         .andExpect(MockMvcResultMatchers.jsonPath("$[0].flakinessScore").value(0.0))
         .andExpect(MockMvcResultMatchers.jsonPath("$[0].defaultBranchFailureRate").value(0.0))
         .andExpect(MockMvcResultMatchers.jsonPath("$[0].combinedFailureRate").value(0.0));
+  }
+
+  @Test
+  void getFlakyTestsOverview_returnsOverview() throws Exception {
+    var summary =
+        new FlakyTestOverviewDto.FlakyTestSummary(10, 2, 1, 1, 0);
+    var flakyTest =
+        new FlakyTestOverviewDto.FlakyTestDto(
+            "testFlaky",
+            "FlakyTest",
+            "UnitTests",
+            85.0,
+            0.03,
+            0.05,
+            100,
+            5,
+            OffsetDateTime.now());
+    var expected = new FlakyTestOverviewDto(summary, List.of(flakyTest));
+
+    when(testCaseStatisticsService.getFlakyTestsOverview(1L)).thenReturn(expected);
+
+    mockMvc
+        .perform(get("/api/tests/flaky"))
+        .andExpect(MockMvcResultMatchers.status().isOk())
+        .andExpect(MockMvcResultMatchers.jsonPath("$.summary.totalTrackedTests").value(10))
+        .andExpect(MockMvcResultMatchers.jsonPath("$.summary.flakyTestCount").value(2))
+        .andExpect(MockMvcResultMatchers.jsonPath("$.flakyTests.length()").value(1))
+        .andExpect(MockMvcResultMatchers.jsonPath("$.flakyTests[0].testName").value("testFlaky"))
+        .andExpect(MockMvcResultMatchers.jsonPath("$.flakyTests[0].flakinessScore").value(85.0));
   }
 }

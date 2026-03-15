@@ -11,7 +11,7 @@ import { PermissionService } from '@app/core/services/permission.service';
 import { injectQuery } from '@tanstack/angular-query-experimental';
 import { getRepositoryByIdOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { ButtonModule } from 'primeng/button';
-import { IconAdjustmentsAlt, IconArrowGuide, IconChevronLeft, IconChevronRight, IconRocket, IconServerCog, IconEyeOff, IconEye } from 'angular-tabler-icons/icons';
+import { IconAdjustmentsAlt, IconArrowGuide, IconChevronLeft, IconChevronRight, IconRocket, IconServerCog, IconEyeOff, IconEye, IconBug } from 'angular-tabler-icons/icons';
 
 @Component({
   selector: 'app-navigation-bar',
@@ -19,6 +19,7 @@ import { IconAdjustmentsAlt, IconArrowGuide, IconChevronLeft, IconChevronRight, 
   providers: [
     provideTablerIcons({
       IconArrowGuide,
+      IconBug,
       IconServerCog,
       IconRocket,
       IconAdjustmentsAlt,
@@ -53,6 +54,11 @@ export class NavigationBarComponent {
         label: 'CI/CD',
         icon: 'arrow-guide',
         path: ['repo', this.repositoryId(), 'ci-cd'],
+      },
+      {
+        label: 'Flaky Tests',
+        icon: 'bug',
+        path: ['repo', this.repositoryId(), 'flaky-tests'],
       },
       {
         label: 'Environments',

@@ -36,6 +36,7 @@ import {
   getEnvironmentsByRepositoryId,
   getEnvironmentsByUserLocking,
   getFlakinessScores,
+  getFlakyTestsOverview,
   getGitRepoSettings,
   getGroupsWithWorkflows,
   getLatestDeploymentByEnvironmentId,
@@ -134,6 +135,7 @@ import type {
   GetFlakinessScoresData,
   GetFlakinessScoresError,
   GetFlakinessScoresResponse,
+  GetFlakyTestsOverviewData,
   GetGitRepoSettingsData,
   GetGroupsWithWorkflowsData,
   GetLatestDeploymentByEnvironmentIdData,
@@ -1093,6 +1095,23 @@ export const getLatestTestResultsByPullRequestIdInfiniteOptions = (options: Opti
       queryKey: getLatestTestResultsByPullRequestIdInfiniteQueryKey(options),
     }
   );
+};
+
+export const getFlakyTestsOverviewQueryKey = (options?: Options<GetFlakyTestsOverviewData>) => createQueryKey('getFlakyTestsOverview', options);
+
+export const getFlakyTestsOverviewOptions = (options?: Options<GetFlakyTestsOverviewData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getFlakyTestsOverview({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: getFlakyTestsOverviewQueryKey(options),
+  });
 };
 
 export const getLatestTestResultsByBranchQueryKey = (options: Options<GetLatestTestResultsByBranchData>) => createQueryKey('getLatestTestResultsByBranch', options);

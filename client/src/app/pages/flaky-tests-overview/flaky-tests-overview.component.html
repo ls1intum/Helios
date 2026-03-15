@@ -1,0 +1,129 @@
+<app-page-heading [repositoryId]="repositoryId()">
+  <div class="flex justify-between items-center w-full" heading>
+    <div>Flaky Tests Overview</div>
+  </div>
+  <span description>Identify and monitor tests that fail intermittently across your project. Tests are ranked by flakiness score.</span>
+</app-page-heading>
+
+@if (flakyTestsQuery.isPending()) {
+  <div class="flex flex-col gap-4 mt-4">
+    <div class="flex gap-4">
+      @for (_ of [1, 2, 3, 4, 5]; track $index) {
+        <p-skeleton width="180px" height="80px" />
+      }
+    </div>
+    <p-skeleton width="100%" height="400px" />
+  </div>
+} @else if (flakyTestsQuery.data(); as data) {
+  <!-- Summary Cards -->
+  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mt-4">
+    <div class="border border-surface rounded-xl p-4 flex flex-col gap-1">
+      <span class="text-muted-color text-sm font-medium">Tracked Tests</span>
+      <span class="text-2xl font-bold">{{ data.summary.totalTrackedTests }}</span>
+    </div>
+    <div class="border border-surface rounded-xl p-4 flex flex-col gap-1">
+      <span class="text-muted-color text-sm font-medium">Flaky Tests</span>
+      <span class="text-2xl font-bold">{{ data.summary.flakyTestCount }}</span>
+    </div>
+    <div class="border border-surface rounded-xl p-4 flex flex-col gap-1">
+      <span class="text-sm font-medium text-red-500">High Flakiness</span>
+      <span class="text-2xl font-bold text-red-500">{{ data.summary.highFlakinessCount }}</span>
+      <span class="text-xs text-muted-color">Score &gt; 70</span>
+    </div>
+    <div class="border border-surface rounded-xl p-4 flex flex-col gap-1">
+      <span class="text-sm font-medium text-orange-500">Medium Flakiness</span>
+      <span class="text-2xl font-bold text-orange-500">{{ data.summary.mediumFlakinessCount }}</span>
+      <span class="text-xs text-muted-color">Score 30 - 70</span>
+    </div>
+    <div class="border border-surface rounded-xl p-4 flex flex-col gap-1">
+      <span class="text-sm font-medium text-yellow-500">Low Flakiness</span>
+      <span class="text-2xl font-bold text-yellow-500">{{ data.summary.lowFlakinessCount }}</span>
+      <span class="text-xs text-muted-color">Score 1 - 30</span>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="flex flex-wrap items-center gap-3 mt-6 mb-4">
+    <span class="p-input-icon-left">
+      <i-tabler name="search" class="!size-4" />
+      <input type="text" pInputText placeholder="Search by test or class name..." class="w-80" [ngModel]="searchTerm()" (ngModelChange)="onSearchChange($event)" />
+    </span>
+
+    <div class="flex gap-1 ml-auto">
+      <p-button
+        [outlined]="severityFilter() !== 'all'"
+        [severity]="severityFilter() === 'all' ? 'primary' : 'secondary'"
+        size="small"
+        label="All"
+        (click)="setSeverityFilter('all')"
+      />
+      <p-button [outlined]="severityFilter() !== 'high'" severity="danger" size="small" label="High" (click)="setSeverityFilter('high')" />
+      <p-button [outlined]="severityFilter() !== 'medium'" severity="warn" size="small" label="Medium" (click)="setSeverityFilter('medium')" />
+      <p-button [outlined]="severityFilter() !== 'low'" severity="info" size="small" label="Low" (click)="setSeverityFilter('low')" />
+    </div>
+  </div>
+
+  <!-- Data Table -->
+  @if (paginatedFlakyTests().length === 0) {
+    <div class="flex flex-col items-center justify-center py-16 text-muted-color">
+      <i-tabler name="bug" class="!size-12 mb-4 opacity-40" />
+      @if (data.summary.flakyTestCount === 0) {
+        <p class="text-lg font-medium">No flaky tests detected</p>
+        <p class="text-sm">All tracked tests have stable results.</p>
+      } @else {
+        <p class="text-lg font-medium">No tests match your filters</p>
+        <p class="text-sm">Try adjusting the search or severity filter.</p>
+      }
+    </div>
+  } @else {
+    <p-table [value]="paginatedFlakyTests()" [scrollable]="true" styleClass="p-datatable-sm p-datatable-striped">
+      <ng-template #header>
+        <tr>
+          <th style="min-width: 200px">Test Name</th>
+          <th style="min-width: 150px">Class</th>
+          <th style="min-width: 140px">Suite</th>
+          <th style="width: 160px">Flakiness Score</th>
+          <th style="width: 140px">Default Rate</th>
+          <th style="width: 140px">Combined Rate</th>
+          <th style="width: 100px">Runs</th>
+          <th style="width: 140px">Last Updated</th>
+        </tr>
+      </ng-template>
+      <ng-template #body let-test>
+        <tr>
+          <td class="font-mono text-sm">{{ test.testName }}</td>
+          <td class="text-sm text-muted-color">{{ test.className }}</td>
+          <td class="text-sm text-muted-color">{{ test.testSuiteName }}</td>
+          <td>
+            <div class="flex items-center gap-2">
+              <p-tag
+                [value]="formatScore(test.flakinessScore)"
+                [severity]="getSeverityTag(test.flakinessScore).severity"
+                [pTooltip]="getSeverityTag(test.flakinessScore).label + ' flakiness'"
+              />
+              <span class="text-xs text-muted-color">{{ getSeverityTag(test.flakinessScore).label }}</span>
+            </div>
+          </td>
+          <td class="text-sm">{{ formatRate(test.defaultBranchFailureRate) }}</td>
+          <td class="text-sm">{{ formatRate(test.combinedFailureRate) }}</td>
+          <td class="text-sm">{{ test.totalRuns }}</td>
+          <td class="text-sm text-muted-color">{{ test.lastUpdated | date: 'short' }}</td>
+        </tr>
+      </ng-template>
+    </p-table>
+
+    <p-paginator
+      [rows]="pageSize()"
+      [totalRecords]="totalRecords()"
+      [first]="currentPage() * pageSize()"
+      [rowsPerPageOptions]="[5, 10, 20, 50]"
+      (onPageChange)="onPageChange($event)"
+    />
+  }
+} @else if (flakyTestsQuery.isError()) {
+  <div class="flex flex-col items-center justify-center py-16 text-muted-color">
+    <i-tabler name="alert-triangle" class="!size-12 mb-4 opacity-40" />
+    <p class="text-lg font-medium">Failed to load flaky tests</p>
+    <p class="text-sm">Please try refreshing the page.</p>
+  </div>
+}
