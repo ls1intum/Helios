@@ -1,5 +1,6 @@
 package de.tum.cit.aet.helios.tests;
 
+import de.tum.cit.aet.helios.filters.RepositoryContext;
 import de.tum.cit.aet.helios.gitreposettings.GitRepoSettings;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -77,6 +78,18 @@ public class TestResultController {
     Long repositoryId = repo.getRepository().getRepositoryId();
     return ResponseEntity.ok(
         testCaseStatisticsService.getFlakinessScoresForTests(repositoryId, request.testCases()));
+  }
+
+  /**
+   * Get an overview of all flaky tests for the current repository.
+   *
+   * @return aggregated flaky test overview
+   */
+  @GetMapping("/flaky")
+  public ResponseEntity<FlakyTestOverviewDto> getFlakyTestsOverview() {
+    Long repositoryId = RepositoryContext.getRepositoryId();
+    return ResponseEntity.ok(
+        testCaseStatisticsService.getFlakyTestsOverview(repositoryId));
   }
 
 }

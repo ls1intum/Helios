@@ -75,6 +75,10 @@ export const routes: Routes = [
             ],
           },
           {
+            path: 'flaky-tests',
+            loadComponent: () => import('./pages/flaky-tests-overview/flaky-tests-overview.component').then(m => m.FlakyTestsOverviewComponent),
+          },
+          {
             path: 'ci-cd',
             loadComponent: () => import('./pages/ci-cd/ci-cd.component').then(m => m.CiCdComponent),
             children: [
