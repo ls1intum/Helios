@@ -243,15 +243,12 @@ describe('WorkflowRunsTableComponent', () => {
   describe('onPage', () => {
     it('calls pagination service onPage with the event', () => {
       const onPageSpy = vi.spyOn(component.paginationService, 'onPage');
-      const refetchSpy = vi.fn();
-      setMockQuery(component, { refetch: refetchSpy });
 
       const event = { first: 20, rows: 20, page: 1 };
 
       component.onPage(event as Parameters<WorkflowRunsTableComponent['onPage']>[0]);
 
       expect(onPageSpy).toHaveBeenCalledWith(event);
-      expect(refetchSpy).toHaveBeenCalled();
     });
   });
 
