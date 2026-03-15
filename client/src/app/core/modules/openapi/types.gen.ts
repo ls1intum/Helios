@@ -237,6 +237,7 @@ export type ReleaseDto = {
   isPrerelease: boolean;
   body: string;
   githubUrl: string;
+  creator?: UserInfoDto;
 };
 
 export type ReleaseInfoDetailsDto = {

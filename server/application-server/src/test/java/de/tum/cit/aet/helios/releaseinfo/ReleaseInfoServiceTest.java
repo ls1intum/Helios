@@ -503,6 +503,7 @@ class ReleaseInfoServiceTest {
     rel.setPrerelease(false);
     rel.setBody("Release notes");
     rel.setGithubUrl("http://github.com/release/1.0");
+    rel.setCreator(creator);
 
     // --- One evaluation ---
     ReleaseCandidateEvaluation eval = new ReleaseCandidateEvaluation();
@@ -559,6 +560,8 @@ class ReleaseInfoServiceTest {
     Assertions.assertNotNull(details.release());
     assertEquals("Release notes", details.release().body());
     assertEquals("http://github.com/release/1.0", details.release().githubUrl());
+    assertEquals(42L, details.release().creator().id());
+    assertEquals("testuser", details.release().creator().login());
 
     // Creator UserInfoDto
     assertEquals(42L, details.createdBy().id());
@@ -771,6 +774,9 @@ class ReleaseInfoServiceTest {
     when(gitRepoRepository.findById(repoId)).thenReturn(Optional.of(repo));
     when(releaseCandidateRepository.findByRepositoryRepositoryIdAndName(repoId, tagName))
         .thenReturn(Optional.of(rc));
+    User releaseCreator = new User();
+    releaseCreator.setId(7L);
+    when(authService.getUserFromGithubId()).thenReturn(releaseCreator);
     when(authService.getPreferredUsername()).thenReturn("testuser");
     // Spy to stub generateReleaseNotes
     ReleaseInfoService spyService = Mockito.spy(service);
@@ -785,7 +791,8 @@ class ReleaseInfoServiceTest {
     // Act
     spyService.publishReleaseDraft(tagName);
     // Assert
-    verify(gitHubReleaseSyncService).processRelease(eq(ghRelease), eq(mockGhRepo));
+    verify(gitHubReleaseSyncService)
+        .processRelease(eq(ghRelease), eq(mockGhRepo), eq(releaseCreator));
   }
 
   @Test
@@ -805,6 +812,9 @@ class ReleaseInfoServiceTest {
     when(gitRepoRepository.findById(repoId)).thenReturn(Optional.of(repo));
     when(releaseCandidateRepository.findByRepositoryRepositoryIdAndName(repoId, tagName))
         .thenReturn(Optional.of(rc));
+    User releaseCreator = new User();
+    releaseCreator.setId(7L);
+    when(authService.getUserFromGithubId()).thenReturn(releaseCreator);
     when(authService.getPreferredUsername()).thenReturn("testuser");
     // Spy to stub generateReleaseNotes
     ReleaseInfoService spyService = Mockito.spy(service);
@@ -838,6 +848,9 @@ class ReleaseInfoServiceTest {
     when(gitRepoRepository.findById(repoId)).thenReturn(Optional.of(repo));
     when(releaseCandidateRepository.findByRepositoryRepositoryIdAndName(repoId, tagName))
         .thenReturn(Optional.of(rc));
+    User releaseCreator = new User();
+    releaseCreator.setId(7L);
+    when(authService.getUserFromGithubId()).thenReturn(releaseCreator);
     when(authService.getPreferredUsername()).thenReturn("testuser");
 
     // Stub getRepository(...) to return a non‐null GHRepository
@@ -853,7 +866,8 @@ class ReleaseInfoServiceTest {
     service.publishReleaseDraft(tagName);
 
     // Assert: now second argument to processRelease(...) will be mockGhRepo instead of null
-    verify(gitHubReleaseSyncService).processRelease(eq(ghRelease), eq(mockGhRepo));
+    verify(gitHubReleaseSyncService)
+        .processRelease(eq(ghRelease), eq(mockGhRepo), eq(releaseCreator));
   }
 
   @Test

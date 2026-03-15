@@ -58,6 +58,17 @@
           {{ releaseCandidate.createdBy?.login || 'Unknown' }}
           <span [pTooltip]="releaseCandidate.createdAt">{{ releaseCandidate.createdAt | timeAgo }}</span>
         </div>
+        @if (releaseCandidate.release?.creator; as releaseCreator) {
+          <div class="flex gap-1 items-center text-sm text-muted-color">
+            <div class="mr-1">release created by</div>
+            @if (releaseCreator.avatarUrl) {
+              <p-avatar class="size-4" shape="circle" [image]="releaseCreator.avatarUrl" />
+            } @else {
+              <i-tabler name="user" class="size-4 text-muted-color border-2 border-muted-color rounded-full" />
+            }
+            {{ releaseCreator.login }}
+          </div>
+        }
       </div>
     </div>
 

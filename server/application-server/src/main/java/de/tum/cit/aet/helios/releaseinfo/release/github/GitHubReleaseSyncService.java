@@ -8,6 +8,7 @@ import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
 import de.tum.cit.aet.helios.releaseinfo.release.ReleaseRepository;
 import de.tum.cit.aet.helios.releaseinfo.releasecandidate.ReleaseCandidate;
 import de.tum.cit.aet.helios.releaseinfo.releasecandidate.ReleaseCandidateRepository;
+import de.tum.cit.aet.helios.user.User;
 import java.io.IOException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -39,10 +40,24 @@ public class GitHubReleaseSyncService {
    */
   @Transactional
   public void processRelease(GHRelease ghRelease, GHRepository ghRepository) {
+    processRelease(ghRelease, ghRepository, null);
+  }
+
+  /**
+   * Processes a single GitHub release and stores the creator when the release is first seen.
+   *
+   * @param ghRelease the GitHub release to process
+   * @param ghRepository the repository that owns the release
+   * @param creator the creator to persist for newly created releases
+   */
+  @Transactional
+  public void processRelease(GHRelease ghRelease, GHRepository ghRepository, User creator) {
     var repository = gitRepoRepository.findByNameWithOwner(ghRepository.getFullName());
+    var existingRelease = releaseRepository.findById(ghRelease.getId());
+    boolean isNewRelease = existingRelease.isEmpty();
     var result =
-        releaseRepository
-            .findById(ghRelease.getId())
+        existingRelease
+            .map(release -> releaseConverter.update(ghRelease, release))
             .orElseGet(() -> releaseConverter.convert(ghRelease));
 
     if (result == null) {
@@ -50,6 +65,9 @@ public class GitHubReleaseSyncService {
     }
 
     result.setRepository(repository);
+    if (isNewRelease && creator != null) {
+      result.setCreator(creator);
+    }
 
     releaseRepository.saveAndFlush(result);
 
