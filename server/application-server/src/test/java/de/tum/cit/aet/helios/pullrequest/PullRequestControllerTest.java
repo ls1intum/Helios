@@ -12,6 +12,7 @@ import de.tum.cit.aet.helios.config.SecurityConfig;
 import de.tum.cit.aet.helios.error.GlobalExceptionHandler;
 import de.tum.cit.aet.helios.filters.RepoSecretFilter;
 import de.tum.cit.aet.helios.filters.RepositoryInterceptor;
+import de.tum.cit.aet.helios.permissions.RepositoryAuthorizationService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.FilterChain;
 import java.util.List;
@@ -44,6 +45,8 @@ class PullRequestControllerTest {
 
   @MockitoBean private RepositoryInterceptor repositoryInterceptor;
 
+  @MockitoBean private RepositoryAuthorizationService repositoryAuthorizationService;
+
   @BeforeEach
   void setUp() throws Exception {
     doAnswer(
@@ -58,6 +61,7 @@ class PullRequestControllerTest {
 
   @Test
   void reconcileStateReturnsResultForAdminUser() throws Exception {
+    when(repositoryAuthorizationService.hasAdminAccess(1L)).thenReturn(true);
     when(pullRequestStateReconciliationService.reconcilePullRequestState(1L, true))
         .thenReturn(
             new PullRequestStateReconciliationResultDto(
@@ -70,7 +74,6 @@ class PullRequestControllerTest {
                 List.of(42),
                 1,
                 0,
-                0,
                 List.of()));
 
     mockMvc
@@ -78,7 +81,7 @@ class PullRequestControllerTest {
             post("/api/pullrequests/repository/{repositoryId}/reconcile-state", 1L)
                 .param("dryRun", "true")
                 .with(SecurityMockMvcRequestPostProcessors.csrf())
-                .with(SecurityMockMvcRequestPostProcessors.user("admin").roles("ADMIN")))
+                .with(SecurityMockMvcRequestPostProcessors.user("admin")))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.dryRun").value(true))
         .andExpect(jsonPath("$.updatedCount").value(1));
@@ -86,6 +89,7 @@ class PullRequestControllerTest {
 
   @Test
   void reconcileStateReturnsNotFoundWhenRepositoryDoesNotExist() throws Exception {
+    when(repositoryAuthorizationService.hasAdminAccess(99L)).thenReturn(true);
     when(pullRequestStateReconciliationService.reconcilePullRequestState(99L, false))
         .thenThrow(new EntityNotFoundException("Repository not found with ID: 99"));
 
@@ -93,7 +97,19 @@ class PullRequestControllerTest {
         .perform(
             post("/api/pullrequests/repository/{repositoryId}/reconcile-state", 99L)
                 .with(SecurityMockMvcRequestPostProcessors.csrf())
-                .with(SecurityMockMvcRequestPostProcessors.user("admin").roles("ADMIN")))
+                .with(SecurityMockMvcRequestPostProcessors.user("admin")))
         .andExpect(status().isNotFound());
+  }
+
+  @Test
+  void reconcileStateReturnsForbiddenWhenUserHasNoRepositoryAdminAccess() throws Exception {
+    when(repositoryAuthorizationService.hasAdminAccess(1L)).thenReturn(false);
+
+    mockMvc
+        .perform(
+            post("/api/pullrequests/repository/{repositoryId}/reconcile-state", 1L)
+                .with(SecurityMockMvcRequestPostProcessors.csrf())
+                .with(SecurityMockMvcRequestPostProcessors.user("user")))
+        .andExpect(status().isForbidden());
   }
 }

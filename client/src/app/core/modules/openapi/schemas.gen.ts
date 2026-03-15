@@ -799,10 +799,6 @@ export const PullRequestStateReconciliationResultDtoSchema = {
       type: 'integer',
       format: 'int32',
     },
-    missingCount: {
-      type: 'integer',
-      format: 'int32',
-    },
     errorCount: {
       type: 'integer',
       format: 'int32',

@@ -2,6 +2,7 @@ package de.tum.cit.aet.helios.pullrequest;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -99,8 +100,7 @@ class PullRequestStateReconciliationServiceTest {
   }
 
   @Test
-  void reconcilePullRequestStateMarksMissingPullRequestWhenGitHubReturnsNotFound()
-      throws Exception {
+  void reconcilePullRequestStateReportsErrorWhenGitHubReturnsNotFound() throws Exception {
     GitRepository repository = new GitRepository();
     repository.setRepositoryId(1L);
     repository.setNameWithOwner("ls1intum/Helios");
@@ -120,7 +120,51 @@ class PullRequestStateReconciliationServiceTest {
     PullRequestStateReconciliationResultDto result =
         pullRequestStateReconciliationService.reconcilePullRequestState(1L, false);
 
-    assertEquals(1, result.missingCount());
-    assertEquals(0, result.errorCount());
+    assertEquals(1, result.errorCount());
+    assertTrue(result.errors().getFirst().contains("Not Found"));
+  }
+
+  @Test
+  void reconcilePullRequestStateContinuesAfterUncheckedSyncFailure() throws Exception {
+    GitRepository repository = new GitRepository();
+    repository.setRepositoryId(1L);
+    repository.setNameWithOwner("ls1intum/Helios");
+
+    PullRequest failingPullRequest = new PullRequest();
+    failingPullRequest.setId(1001L);
+    failingPullRequest.setNumber(42);
+    failingPullRequest.setRepository(repository);
+
+    PullRequest succeedingPullRequest = new PullRequest();
+    succeedingPullRequest.setId(1002L);
+    succeedingPullRequest.setNumber(43);
+    succeedingPullRequest.setRepository(repository);
+
+    GHPullRequest failingGitHubPullRequest = org.mockito.Mockito.mock(GHPullRequest.class);
+    GHPullRequest succeedingGitHubPullRequest = org.mockito.Mockito.mock(GHPullRequest.class);
+
+    when(gitRepoRepository.findByRepositoryId(1L)).thenReturn(Optional.of(repository));
+    when(gitHubFacade.getRepository("ls1intum/Helios")).thenReturn(ghRepository);
+    when(pullRequestRepository.findByRepositoryRepositoryIdAndStateOrderByUpdatedAtDesc(
+            1L, Issue.State.OPEN))
+        .thenReturn(List.of(failingPullRequest, succeedingPullRequest));
+    when(ghRepository.getPullRequest(42)).thenReturn(failingGitHubPullRequest);
+    when(ghRepository.getPullRequest(43)).thenReturn(succeedingGitHubPullRequest);
+    when(failingGitHubPullRequest.getState()).thenReturn(GHIssueState.CLOSED);
+    when(succeedingGitHubPullRequest.getState()).thenReturn(GHIssueState.CLOSED);
+    doThrow(new IllegalStateException("sync failed"))
+        .when(pullRequestSyncService)
+        .processPullRequest(failingGitHubPullRequest);
+
+    PullRequestStateReconciliationResultDto result =
+        pullRequestStateReconciliationService.reconcilePullRequestState(1L, false);
+
+    assertEquals(1, result.updatedCount());
+    assertEquals(List.of(1002L), result.updatedPullRequestIds());
+    assertEquals(List.of(43), result.updatedPullRequestNumbers());
+    assertEquals(1, result.errorCount());
+    assertTrue(result.errors().getFirst().contains("sync failed"));
+    verify(pullRequestSyncService).processPullRequest(failingGitHubPullRequest);
+    verify(pullRequestSyncService).processPullRequest(succeedingGitHubPullRequest);
   }
 }

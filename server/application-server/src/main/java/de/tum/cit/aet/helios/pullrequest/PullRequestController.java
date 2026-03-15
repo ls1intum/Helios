@@ -1,6 +1,6 @@
 package de.tum.cit.aet.helios.pullrequest;
 
-import de.tum.cit.aet.helios.config.security.annotations.EnforceAdmin;
+import de.tum.cit.aet.helios.permissions.RepositoryAuthorizationService;
 import de.tum.cit.aet.helios.pullrequest.pagination.PaginatedPullRequestsResponse;
 import de.tum.cit.aet.helios.pullrequest.pagination.PullRequestFilterType;
 import de.tum.cit.aet.helios.pullrequest.pagination.PullRequestPageRequest;
@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -22,6 +23,7 @@ public class PullRequestController {
 
   private final PullRequestService pullRequestService;
   private final PullRequestStateReconciliationService pullRequestStateReconciliationService;
+  private final RepositoryAuthorizationService repositoryAuthorizationService;
 
   @GetMapping
   public ResponseEntity<PaginatedPullRequestsResponse> getPullRequests(
@@ -76,11 +78,15 @@ public class PullRequestController {
     return ResponseEntity.ok().build();
   }
 
-  @EnforceAdmin
   @PostMapping("/repository/{repositoryId}/reconcile-state")
   public ResponseEntity<PullRequestStateReconciliationResultDto> reconcilePullRequestState(
       @PathVariable Long repositoryId,
       @RequestParam(name = "dryRun", defaultValue = "false") boolean dryRun) throws IOException {
+    if (!repositoryAuthorizationService.hasAdminAccess(repositoryId)) {
+      throw new AccessDeniedException(
+          "You do not have admin access for repository ID: " + repositoryId);
+    }
+
     return ResponseEntity.ok(
         pullRequestStateReconciliationService.reconcilePullRequestState(repositoryId, dryRun));
   }

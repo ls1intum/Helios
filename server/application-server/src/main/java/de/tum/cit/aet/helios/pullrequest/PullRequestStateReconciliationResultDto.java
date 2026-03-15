@@ -11,6 +11,5 @@ public record PullRequestStateReconciliationResultDto(
     List<Long> updatedPullRequestIds,
     List<Integer> updatedPullRequestNumbers,
     int unchangedCount,
-    int missingCount,
     int errorCount,
     List<String> errors) {}

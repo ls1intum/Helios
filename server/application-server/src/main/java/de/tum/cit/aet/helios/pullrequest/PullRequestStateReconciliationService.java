@@ -13,8 +13,8 @@ import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.kohsuke.github.GHIssueState;
+import org.kohsuke.github.GHPullRequest;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Log4j2
@@ -29,7 +29,6 @@ public class PullRequestStateReconciliationService {
   private final GitHubPullRequestSyncService pullRequestSyncService;
   private final GitHubFacade github;
 
-  @Transactional
   public PullRequestStateReconciliationResultDto reconcilePullRequestState(
       Long repositoryId, boolean dryRun)
       throws IOException {
@@ -57,52 +56,22 @@ public class PullRequestStateReconciliationService {
     List<Integer> updatedPullRequestNumbers = new ArrayList<>();
     List<String> errors = new ArrayList<>();
     int unchangedCount = 0;
-    int missingCount = 0;
 
     for (PullRequest pullRequest : pullRequests) {
-      try {
-        var gitHubPullRequest = ghRepository.getPullRequest(pullRequest.getNumber());
-        if (gitHubPullRequest.getState() == GHIssueState.CLOSED) {
+      ReconciliationOutcome outcome =
+          reconcilePullRequest(pullRequest, ghRepository, repository.getNameWithOwner(), dryRun);
+      switch (outcome.status()) {
+        case UPDATED -> {
           updatedPullRequestIds.add(pullRequest.getId());
           updatedPullRequestNumbers.add(pullRequest.getNumber());
-          if (dryRun) {
-            log.info(
-                "DRY-RUN: Would reconcile local pull request {} (#{}) "
-                    + "to closed state for repository {}.",
-                pullRequest.getId(),
-                pullRequest.getNumber(),
-                repository.getNameWithOwner());
-          } else {
-            pullRequestSyncService.processPullRequest(gitHubPullRequest);
-            log.info(
-                "Reconciled local pull request {} (#{}) to closed state for repository {}.",
-                pullRequest.getId(),
-                pullRequest.getNumber(),
-                repository.getNameWithOwner());
-          }
-        } else {
+        }
+        case UNCHANGED -> {
           unchangedCount++;
         }
-      } catch (IOException e) {
-        if (isNotFound(e)) {
-          missingCount++;
-          log.warn(
-              "Pull request {} (#{}) was not found on GitHub "
-                  + "during reconciliation for repository {}.",
-              pullRequest.getId(),
-              pullRequest.getNumber(),
-              repository.getNameWithOwner());
-        } else {
-          log.warn(
-              "Failed to reconcile pull request {} (#{}) in repository {}: {}",
-              pullRequest.getId(),
-              pullRequest.getNumber(),
-              repository.getNameWithOwner(),
-              e.getMessage());
-          errors.add(
-              "Failed to reconcile PR #%d (id=%d): %s"
-                  .formatted(pullRequest.getNumber(), pullRequest.getId(), e.getMessage()));
-        }
+        case ERROR -> errors.add(outcome.errorMessage());
+        default ->
+            throw new IllegalStateException(
+                "Unexpected reconciliation status: " + outcome.status());
       }
     }
 
@@ -115,7 +84,6 @@ public class PullRequestStateReconciliationService {
         List.copyOf(updatedPullRequestIds),
         List.copyOf(updatedPullRequestNumbers),
         unchangedCount,
-        missingCount,
         errors.size(),
         List.copyOf(errors));
   }
@@ -123,5 +91,67 @@ public class PullRequestStateReconciliationService {
   static boolean isNotFound(IOException exception) {
     return exception.getMessage() != null
         && NOT_FOUND_PATTERN.matcher(exception.getMessage()).find();
+  }
+
+  private ReconciliationOutcome reconcilePullRequest(
+      PullRequest pullRequest,
+      org.kohsuke.github.GHRepository ghRepository,
+      String repositoryNameWithOwner,
+      boolean dryRun) {
+    try {
+      GHPullRequest gitHubPullRequest = ghRepository.getPullRequest(pullRequest.getNumber());
+      if (gitHubPullRequest.getState() != GHIssueState.CLOSED) {
+        return ReconciliationOutcome.unchanged();
+      }
+
+      if (dryRun) {
+        log.info(
+            "DRY-RUN: Would reconcile local pull request {} (#{}) "
+                + "to closed state for repository {}.",
+            pullRequest.getId(),
+            pullRequest.getNumber(),
+            repositoryNameWithOwner);
+      } else {
+        pullRequestSyncService.processPullRequest(gitHubPullRequest);
+        log.info(
+            "Reconciled local pull request {} (#{}) to closed state for repository {}.",
+            pullRequest.getId(),
+            pullRequest.getNumber(),
+            repositoryNameWithOwner);
+      }
+      return ReconciliationOutcome.updated();
+    } catch (Exception e) {
+      log.warn(
+          "Failed to reconcile pull request {} (#{}) in repository {}: {}",
+          pullRequest.getId(),
+          pullRequest.getNumber(),
+          repositoryNameWithOwner,
+          e.getMessage(),
+          e);
+      return ReconciliationOutcome.error(
+          "Failed to reconcile PR #%d (id=%d): %s"
+              .formatted(pullRequest.getNumber(), pullRequest.getId(), e.getMessage()));
+    }
+  }
+
+  private record ReconciliationOutcome(ReconciliationStatus status, String errorMessage) {
+
+    private static ReconciliationOutcome updated() {
+      return new ReconciliationOutcome(ReconciliationStatus.UPDATED, null);
+    }
+
+    private static ReconciliationOutcome unchanged() {
+      return new ReconciliationOutcome(ReconciliationStatus.UNCHANGED, null);
+    }
+
+    private static ReconciliationOutcome error(String errorMessage) {
+      return new ReconciliationOutcome(ReconciliationStatus.ERROR, errorMessage);
+    }
+  }
+
+  private enum ReconciliationStatus {
+    UPDATED,
+    UNCHANGED,
+    ERROR
   }
 }

@@ -261,7 +261,6 @@ export type PullRequestStateReconciliationResultDto = {
   updatedPullRequestIds?: Array<number>;
   updatedPullRequestNumbers?: Array<number>;
   unchangedCount?: number;
-  missingCount?: number;
   errorCount?: number;
   errors?: Array<string>;
 };
