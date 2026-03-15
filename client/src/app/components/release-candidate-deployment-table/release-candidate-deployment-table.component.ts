@@ -65,6 +65,7 @@ export class ReleaseCandidateDeploymentTableComponent {
     const environments = this.environmentQuery.data() || [];
     return environments.map(env => ({ ...env, type: env.type || 'Ungrouped' }));
   });
+  deploySourceRef = computed(() => this.releaseCandidate().branch?.name || this.releaseCandidate().name);
 
   deployToEnvironment = injectMutation(() => ({
     ...deployToEnvironmentMutation(),
@@ -91,7 +92,7 @@ export class ReleaseCandidateDeploymentTableComponent {
         {
           body: {
             environmentId: this.selectedEnvironment()!.id,
-            branchName: this.releaseCandidate().branch?.name || this.releaseCandidate().name,
+            branchName: this.deploySourceRef(),
             commitSha: this.releaseCandidate().commit.sha,
           },
         },

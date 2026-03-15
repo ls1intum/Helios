@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -19,6 +20,7 @@ import de.tum.cit.aet.helios.releaseinfo.release.Release;
 import de.tum.cit.aet.helios.releaseinfo.release.ReleaseRepository;
 import de.tum.cit.aet.helios.releaseinfo.releasecandidate.ReleaseCandidate;
 import de.tum.cit.aet.helios.releaseinfo.releasecandidate.ReleaseCandidateRepository;
+import de.tum.cit.aet.helios.user.User;
 import java.io.IOException;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -82,7 +84,8 @@ class GitHubReleaseSyncServiceTest {
 
     when(gitRepoRepository.findByNameWithOwner("owner/repo")).thenReturn(repository);
     when(releaseRepository.findById(1L)).thenReturn(Optional.of(release));
-    when(releaseRepository.saveAndFlush(release)).thenReturn(release);
+    lenient().when(releaseRepository.saveAndFlush(release)).thenReturn(release);
+    lenient().when(releaseConverter.update(ghRelease, release)).thenReturn(release);
     when(releaseCandidateRepository.findByRepositoryRepositoryIdAndName(42L, "v1.0.0"))
         .thenReturn(Optional.empty());
 
@@ -154,5 +157,42 @@ class GitHubReleaseSyncServiceTest {
     verify(commitSyncService).processCommit(ghCommit, ghRepository);
     verify(currentRepository, never()).getTagObject(anyString());
     verify(releaseCandidateRepository).saveAndFlush(any(ReleaseCandidate.class));
+  }
+
+  @Test
+  void processRelease_newRelease_setsCreatorOnce() throws IOException {
+    User creator = new User();
+    creator.setId(99L);
+
+    Release newRelease = new Release();
+    newRelease.setId(1L);
+
+    when(releaseRepository.findById(1L)).thenReturn(Optional.empty());
+    when(releaseConverter.convert(ghRelease)).thenReturn(newRelease);
+    when(releaseRepository.saveAndFlush(newRelease)).thenReturn(newRelease);
+    when(refObject.getType()).thenReturn("commit");
+    when(refObject.getSha()).thenReturn("missing-commit-sha");
+    when(commitRepository.findByShaAndRepositoryRepositoryId("missing-commit-sha", 42L))
+        .thenReturn(Optional.empty());
+    when(currentRepository.getCommit("missing-commit-sha"))
+        .thenThrow(new IOException("No commit found"));
+
+    service.processRelease(ghRelease, ghRepository, creator);
+
+    assertSame(creator, newRelease.getCreator());
+  }
+
+  @Test
+  void processRelease_existingRelease_preservesOriginalCreator() {
+    User originalCreator = new User();
+    originalCreator.setId(11L);
+    release.setCreator(originalCreator);
+
+    User newCreator = new User();
+    newCreator.setId(12L);
+
+    service.processRelease(ghRelease, ghRepository, newCreator);
+
+    assertSame(originalCreator, release.getCreator());
   }
 }
