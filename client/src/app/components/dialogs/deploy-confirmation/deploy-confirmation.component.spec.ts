@@ -41,23 +41,40 @@ describe('DeployConfirmationComponent', () => {
     } as typeof component.query;
   });
 
-  it('shows the source ref when provided', async () => {
-    fixture.componentRef.setInput('sourceRef', 'main');
+  it('shows the source ref as branch when type is branch', async () => {
+    fixture.componentRef.setInput('sourceRef', { ref: 'main', type: 'branch' });
     fixture.detectChanges();
     await fixture.whenStable();
 
-    const sourceRef = fixture.nativeElement.querySelector('[data-testid="deploy-source-ref"]');
+    const deployMessage = fixture.nativeElement.querySelector('[data-testid="deploy-message"]');
 
-    expect(sourceRef).toBeTruthy();
-    expect(sourceRef.textContent).toContain('Branch to deploy:');
-    expect(sourceRef.textContent).toContain('main');
+    expect(deployMessage).toBeTruthy();
+    expect(deployMessage.textContent).toContain('You are about to deploy to production');
+    expect(deployMessage.textContent).toContain('using branch');
+    expect(deployMessage.textContent).toContain('main');
+  });
+
+  it('shows the source ref as tag when type is tag', async () => {
+    fixture.componentRef.setInput('sourceRef', { ref: 'v3.0.0', type: 'tag' });
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const deployMessage = fixture.nativeElement.querySelector('[data-testid="deploy-message"]');
+
+    expect(deployMessage).toBeTruthy();
+    expect(deployMessage.textContent).toContain('using tag');
+    expect(deployMessage.textContent).toContain('v3.0.0');
   });
 
   it('omits the source ref block when no source ref is provided', async () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    expect(fixture.nativeElement.querySelector('[data-testid="deploy-source-ref"]')).toBeNull();
+    const deployMessage = fixture.nativeElement.querySelector('[data-testid="deploy-message"]');
+
+    expect(deployMessage.textContent).toContain('You are about to deploy to production');
+    expect(deployMessage.textContent).not.toContain('using branch');
+    expect(deployMessage.textContent).not.toContain('using tag');
   });
 
   it('keeps the deploy button disabled until repository confirmation matches', async () => {
