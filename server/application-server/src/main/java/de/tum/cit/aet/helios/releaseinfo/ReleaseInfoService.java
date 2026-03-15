@@ -301,7 +301,7 @@ public class ReleaseInfoService {
         releaseNotes = generateReleaseNotes(tagName);
       }
 
-      // Get the current user's GitHub login
+      User releaseCreator = authService.getUserFromGithubId();
       String githubUserLogin = authService.getPreferredUsername();
 
       // Create the release using the user's token
@@ -317,7 +317,7 @@ public class ReleaseInfoService {
 
       // Process the release in the system
       gitHubReleaseSyncService.processRelease(
-          ghRelease, gitHubService.getRepository(repository.getNameWithOwner()));
+          ghRelease, gitHubService.getRepository(repository.getNameWithOwner()), releaseCreator);
 
     } catch (IOException e) {
       log.error("Failed to publish release: {}", e.getMessage());

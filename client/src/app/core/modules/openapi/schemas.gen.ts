@@ -712,6 +712,9 @@ export const ReleaseDtoSchema = {
     githubUrl: {
       type: 'string',
     },
+    creator: {
+      $ref: '#/components/schemas/UserInfoDto',
+    },
   },
   required: ['body', 'githubUrl', 'isDraft', 'isPrerelease'],
 } as const;
