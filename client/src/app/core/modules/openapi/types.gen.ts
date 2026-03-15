@@ -159,6 +159,23 @@ export type NotificationPreferencesWrapper = {
   preferences?: Array<NotificationPreferenceDto>;
 };
 
+export type TestCaseIdentifier = {
+  testName: string;
+  className: string;
+};
+
+export type TestFlakinessScoreRequest = {
+  testCases: Array<TestCaseIdentifier>;
+};
+
+export type TestFlakinessScoreDto = {
+  testName: string;
+  className: string;
+  flakinessScore?: number;
+  defaultBranchFailureRate?: number;
+  combinedFailureRate?: number;
+};
+
 export type ReleaseCandidateCreateDto = {
   name: string;
   commitSha: string;
@@ -220,6 +237,7 @@ export type ReleaseDto = {
   isPrerelease: boolean;
   body: string;
   githubUrl: string;
+  creator?: UserInfoDto;
 };
 
 export type ReleaseInfoDetailsDto = {
@@ -988,6 +1006,31 @@ export type UpdateNotificationPreferencesResponses = {
    */
   200: unknown;
 };
+
+export type GetFlakinessScoresData = {
+  body: TestFlakinessScoreRequest;
+  path?: never;
+  query?: never;
+  url: '/api/tests/flakiness-scores';
+};
+
+export type GetFlakinessScoresErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type GetFlakinessScoresError = GetFlakinessScoresErrors[keyof GetFlakinessScoresErrors];
+
+export type GetFlakinessScoresResponses = {
+  /**
+   * OK
+   */
+  200: Array<TestFlakinessScoreDto>;
+};
+
+export type GetFlakinessScoresResponse = GetFlakinessScoresResponses[keyof GetFlakinessScoresResponses];
 
 export type GetAllTestTypesData = {
   body?: never;

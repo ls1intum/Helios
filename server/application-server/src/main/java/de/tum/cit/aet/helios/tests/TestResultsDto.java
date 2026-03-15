@@ -94,9 +94,4 @@ public record TestResultsDto(@NonNull List<TestTypeResults> testResults, boolean
           testCase.isFailsInDefaultBranch());
     }
   }
-
-  /** Record for storing test case statistics information. */
-  record TestCaseStatisticsInfo(double failureRate, boolean failsInDefaultBranch) {}
-
-  record CombinedTestCaseStatisticsInfo(double combinedFailureRate) {}
 }

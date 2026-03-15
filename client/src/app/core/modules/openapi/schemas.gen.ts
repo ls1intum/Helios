@@ -485,6 +485,60 @@ export const NotificationPreferencesWrapperSchema = {
   },
 } as const;
 
+export const TestCaseIdentifierSchema = {
+  type: 'object',
+  properties: {
+    testName: {
+      type: 'string',
+      minLength: 1,
+    },
+    className: {
+      type: 'string',
+      minLength: 1,
+    },
+  },
+  required: ['className', 'testName'],
+} as const;
+
+export const TestFlakinessScoreRequestSchema = {
+  type: 'object',
+  properties: {
+    testCases: {
+      type: 'array',
+      items: {
+        $ref: '#/components/schemas/TestCaseIdentifier',
+      },
+      minItems: 1,
+    },
+  },
+  required: ['testCases'],
+} as const;
+
+export const TestFlakinessScoreDtoSchema = {
+  type: 'object',
+  properties: {
+    testName: {
+      type: 'string',
+    },
+    className: {
+      type: 'string',
+    },
+    flakinessScore: {
+      type: 'number',
+      format: 'double',
+    },
+    defaultBranchFailureRate: {
+      type: 'number',
+      format: 'double',
+    },
+    combinedFailureRate: {
+      type: 'number',
+      format: 'double',
+    },
+  },
+  required: ['className', 'testName'],
+} as const;
+
 export const ReleaseCandidateCreateDtoSchema = {
   type: 'object',
   properties: {
@@ -657,6 +711,9 @@ export const ReleaseDtoSchema = {
     },
     githubUrl: {
       type: 'string',
+    },
+    creator: {
+      $ref: '#/components/schemas/UserInfoDto',
     },
   },
   required: ['body', 'githubUrl', 'isDraft', 'isPrerelease'],

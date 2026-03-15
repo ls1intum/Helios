@@ -96,6 +96,9 @@ import type {
   GetEnvironmentsByUserLockingData,
   GetEnvironmentsByUserLockingErrors,
   GetEnvironmentsByUserLockingResponses,
+  GetFlakinessScoresData,
+  GetFlakinessScoresErrors,
+  GetFlakinessScoresResponses,
   GetGitRepoSettingsData,
   GetGitRepoSettingsErrors,
   GetGitRepoSettingsResponses,
@@ -386,6 +389,17 @@ export const getNotificationPreferences = <ThrowOnError extends boolean = false>
 export const updateNotificationPreferences = <ThrowOnError extends boolean = false>(options: Options<UpdateNotificationPreferencesData, ThrowOnError>) => {
   return (options.client ?? client).post<UpdateNotificationPreferencesResponses, UpdateNotificationPreferencesErrors, ThrowOnError>({
     url: '/api/user/notification-preferences',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+export const getFlakinessScores = <ThrowOnError extends boolean = false>(options: Options<GetFlakinessScoresData, ThrowOnError>) => {
+  return (options.client ?? client).post<GetFlakinessScoresResponses, GetFlakinessScoresErrors, ThrowOnError>({
+    url: '/api/tests/flakiness-scores',
     ...options,
     headers: {
       'Content-Type': 'application/json',
