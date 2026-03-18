@@ -1134,14 +1134,6 @@ export const FlakyTestDtoSchema = {
       type: 'number',
       format: 'double',
     },
-    totalRuns: {
-      type: 'integer',
-      format: 'int32',
-    },
-    failedRuns: {
-      type: 'integer',
-      format: 'int32',
-    },
     lastUpdated: {
       type: 'string',
       format: 'date-time',
@@ -1161,6 +1153,10 @@ export const FlakyTestOverviewDtoSchema = {
       items: {
         $ref: '#/components/schemas/FlakyTestDto',
       },
+    },
+    filteredCount: {
+      type: 'integer',
+      format: 'int64',
     },
   },
   required: ['flakyTests', 'summary'],

@@ -322,6 +322,7 @@ public class TestResultService {
 
     for (TestSuite suite : suites) {
       for (TestCase testCase : suite.getTestCases()) {
+        // TODO read flakiness info from precomputed table instead of computing on the fly
         var flakinessInfo =
             testCaseStatisticsService.computeFlakinessInfo(
                 testCase.getName(), testCase.getClassName(), defaultBranchStats, combinedStats);

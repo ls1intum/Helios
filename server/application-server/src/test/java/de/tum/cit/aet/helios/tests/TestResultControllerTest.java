@@ -1,6 +1,7 @@
 package de.tum.cit.aet.helios.tests;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
@@ -11,6 +12,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import de.tum.cit.aet.helios.filters.RepositoryContext;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import de.tum.cit.aet.helios.gitreposettings.GitRepoSettings;
+import de.tum.cit.aet.helios.tests.pagination.FlakyTestsPageRequest;
 import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.List;
@@ -186,8 +188,7 @@ class TestResultControllerTest {
 
   @Test
   void getFlakyTestsOverview_returnsOverview() throws Exception {
-    var summary =
-        new FlakyTestOverviewDto.FlakyTestSummary(10, 2, 1, 1, 0);
+    var summary = new FlakyTestOverviewDto.FlakyTestSummary(10, 2, 1, 1, 0);
     var flakyTest =
         new FlakyTestOverviewDto.FlakyTestDto(
             "testFlaky",
@@ -196,12 +197,12 @@ class TestResultControllerTest {
             85.0,
             0.03,
             0.05,
-            100,
-            5,
             OffsetDateTime.now());
-    var expected = new FlakyTestOverviewDto(summary, List.of(flakyTest));
+    var expected = new FlakyTestOverviewDto(summary, List.of(flakyTest), 2);
 
-    when(testCaseStatisticsService.getFlakyTestsOverview(1L)).thenReturn(expected);
+    when(testCaseStatisticsService.getFlakyTestsOverview(
+            eq(1L), any(FlakyTestsPageRequest.class)))
+        .thenReturn(expected);
 
     mockMvc
         .perform(get("/api/tests/flaky"))

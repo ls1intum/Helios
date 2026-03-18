@@ -377,14 +377,13 @@ export type FlakyTestDto = {
   flakinessScore?: number;
   defaultBranchFailureRate?: number;
   combinedFailureRate?: number;
-  totalRuns?: number;
-  failedRuns?: number;
   lastUpdated: string;
 };
 
 export type FlakyTestOverviewDto = {
   summary: FlakyTestSummary;
   flakyTests: Array<FlakyTestDto>;
+  filteredCount?: number;
 };
 
 export type FlakyTestSummary = {
@@ -1779,7 +1778,13 @@ export type GetLatestTestResultsByPullRequestIdResponse = GetLatestTestResultsBy
 export type GetFlakyTestsOverviewData = {
   body?: never;
   path?: never;
-  query?: never;
+  query?: {
+    page?: number;
+    size?: number;
+    sortDirection?: string;
+    filterType?: 'ALL' | 'HIGH' | 'MEDIUM' | 'LOW';
+    searchTerm?: string;
+  };
   url: '/api/tests/flaky';
 };
 
