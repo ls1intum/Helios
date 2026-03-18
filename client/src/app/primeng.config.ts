@@ -127,6 +127,46 @@ export default {
             },
           },
         },
+        tag: {
+          colorScheme: {
+            light: {
+              success: {
+                background: '{green.100}',
+                color: '{green.600}',
+              },
+              danger: {
+                background: '{red.100}',
+                color: '{red.600}',
+              },
+              warn: {
+                background: '{orange.50}',
+                color: '{orange.600}',
+              },
+              info: {
+                background: '{blue.50}',
+                color: '{blue.600}',
+              },
+            },
+            dark: {
+              success: {
+                background: '{green.900}',
+                color: '{green.400}',
+              },
+              danger: {
+                background: '{red.900}',
+                color: '{red.400}',
+              },
+              warn: {
+                background: '{orange.900}',
+                color: '{orange.400}',
+              },
+              info: {
+                background: '{blue.900}',
+                color: '{blue.400}',
+              },
+            },
+          },
+        },
       },
     }),
     options: {

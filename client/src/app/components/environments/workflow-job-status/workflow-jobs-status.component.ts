@@ -7,6 +7,7 @@ import { injectQuery } from '@tanstack/angular-query-experimental';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
 import { IconBrandGithub } from 'angular-tabler-icons/icons';
 import { Button } from 'primeng/button';
+import { getStatusColors } from '@app/core/utils/status-colors';
 
 @Component({
   selector: 'app-workflow-jobs-status',
@@ -102,6 +103,65 @@ export class WorkflowJobsStatusComponent {
         }, 60 * 1000); // Stop after 1 minute
       }
     });
+  }
+  // Get CSS class for job status
+  getStatusClass(status: string | null | undefined, conclusion: string | null | undefined): string {
+    return getStatusColors(conclusion, status).badge;
+  }
+
+  getStatusIndicatorClass(status: string | null | undefined, conclusion: string | null | undefined): string {
+    return getStatusColors(conclusion, status).indicator;
+  }
+
+  // Get icon for job status
+  getStatusIcon(status: string | null | undefined, conclusion: string | null | undefined): string {
+    if (conclusion === 'success') return 'circle-check';
+    if (conclusion === 'failure') return 'circle-x';
+    if (conclusion === 'skipped' || conclusion === 'cancelled') return 'circle-minus';
+
+    if (status === 'in_progress') return 'progress';
+    if (status === 'queued' || status === 'waiting') return 'clock';
+
+    return 'help';
+  }
+
+  getIconColorClass(status: string | null | undefined, conclusion: string | null | undefined): string {
+    const { icon } = getStatusColors(conclusion, status);
+    return status === 'in_progress' ? `${icon} animate-spin` : icon;
+  }
+
+  // Get status text for display
+  getStatusText(status: string | null | undefined, conclusion: string | null | undefined): string {
+    return conclusion || status || 'Unknown';
+  }
+
+  // Format timestamp to readable format
+  formatTime(timestamp: string | null | undefined): string {
+    if (!timestamp) return '';
+    return this.datePipe.transform(timestamp, 'HH:mm:ss') || '';
+  }
+
+  // Calculate duration between start and end time
+  getDuration(startTime: string | undefined, endTime: string | undefined): string {
+    if (!startTime) return '';
+
+    const start = new Date(startTime).getTime();
+    const end = endTime ? new Date(endTime).getTime() : Date.now();
+
+    const durationMs = end - start;
+    const seconds = Math.floor(durationMs / 1000);
+
+    if (seconds < 60) {
+      return `${seconds}s`;
+    } else if (seconds < 3600) {
+      const minutes = Math.floor(seconds / 60);
+      const remainingSeconds = seconds % 60;
+      return `${minutes}m ${remainingSeconds}s`;
+    } else {
+      const hours = Math.floor(seconds / 3600);
+      const minutes = Math.floor((seconds % 3600) / 60);
+      return `${hours}h ${minutes}m`;
+    }
   }
 
   openLink(url: string | undefined) {

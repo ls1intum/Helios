@@ -11,7 +11,7 @@
 
       <!-- stale red warning icon with tooltip -->
       @if (isStale()) {
-        <i-tabler name="alert-triangle" class="!h-4 !w-4" style="color: #ff0700" pTooltip="Latest update was {{ status.checkedAt | timeAgo }} – Server might be down"></i-tabler>
+        <i-tabler name="alert-triangle" class="!h-4 !w-4 text-red-600" pTooltip="Latest update was {{ status.checkedAt | timeAgo }} – Server might be down"></i-tabler>
       }
     </p-tag>
   } @else {

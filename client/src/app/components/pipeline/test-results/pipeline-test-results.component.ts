@@ -53,9 +53,9 @@ interface LogLevel {
 
 const LOG_LEVELS: LogLevel[] = [
   { value: 0, name: 'OFF', label: 'OFF', color: '', includes: ['OFF'] },
-  { value: 1, name: 'FATAL', label: 'FATAL+', color: 'text-red-800', includes: ['FATAL', 'OFF'] },
+  { value: 1, name: 'FATAL', label: 'FATAL+', color: 'text-red-700', includes: ['FATAL', 'OFF'] },
   { value: 2, name: 'ERROR', label: 'ERROR+', color: 'text-red-600', includes: ['ERROR', 'FATAL', 'OFF'] },
-  { value: 3, name: 'WARN', label: 'WARN+', color: 'text-amber-600', includes: ['WARN', 'ERROR', 'FATAL', 'OFF'] },
+  { value: 3, name: 'WARN', label: 'WARN+', color: 'text-orange-600', includes: ['WARN', 'ERROR', 'FATAL', 'OFF'] },
   { value: 4, name: 'INFO', label: 'INFO+', color: 'text-blue-600', includes: ['INFO', 'WARN', 'ERROR', 'FATAL', 'OFF'] },
   { value: 5, name: 'DEBUG', label: 'DEBUG+', color: 'text-gray-600', includes: ['DEBUG', 'INFO', 'WARN', 'ERROR', 'FATAL', 'OFF'] },
   { value: 6, name: 'TRACE', label: 'TRACE+', color: 'text-gray-400', includes: ['TRACE', 'DEBUG', 'INFO', 'WARN', 'ERROR', 'FATAL', 'OFF'] },

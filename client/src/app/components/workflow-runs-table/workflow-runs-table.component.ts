@@ -16,6 +16,7 @@ import { TableFilterPaginatedComponent } from '@app/components/table-filter-pagi
 import { MessageService, SortMeta } from 'primeng/api';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
 import { IconAlertTriangle, IconBrandGithub, IconCircleCheck, IconCircleX, IconClockHour4, IconFilterPlus, IconPlayerPlay, IconProgress } from 'angular-tabler-icons/icons';
+import { getStatusColors } from '@app/core/utils/status-colors';
 
 export function createWorkflowRunsFilterOptions(): PaginatedFilterOption[] {
   return [
@@ -155,25 +156,13 @@ export class WorkflowRunsTableComponent {
   }
 
   getWorkflowStatusClass(run: WorkflowRunDto): string {
-    if (run.conclusion === 'SUCCESS') {
-      return 'text-green-500';
-    }
-    if (run.conclusion === 'FAILURE' || run.conclusion === 'STARTUP_FAILURE' || run.conclusion === 'TIMED_OUT') {
-      return 'text-red-500';
-    }
-    if (run.conclusion === 'CANCELLED') {
-      return 'text-surface-500';
-    }
-    if (run.status === 'IN_PROGRESS') {
-      return 'text-blue-500 animate-spin';
-    }
-    if (run.status === 'QUEUED' || run.status === 'WAITING' || run.status === 'PENDING' || run.status === 'REQUESTED') {
-      return 'text-amber-500';
-    }
-    if (run.status === 'ACTION_REQUIRED' || run.conclusion === 'ACTION_REQUIRED') {
-      return 'text-orange-500';
-    }
-    return 'text-surface-500';
+    if (run.conclusion === 'SUCCESS') return getStatusColors('success').icon;
+    if (run.conclusion === 'FAILURE' || run.conclusion === 'STARTUP_FAILURE' || run.conclusion === 'TIMED_OUT') return getStatusColors('failure').icon;
+    if (run.conclusion === 'CANCELLED') return getStatusColors('cancelled').icon;
+    if (run.status === 'IN_PROGRESS') return `${getStatusColors(null, 'in_progress').icon} animate-spin`;
+    if (run.status === 'QUEUED' || run.status === 'WAITING' || run.status === 'PENDING' || run.status === 'REQUESTED') return getStatusColors(null, 'queued').icon;
+    if (run.status === 'ACTION_REQUIRED' || run.conclusion === 'ACTION_REQUIRED') return getStatusColors('cancelled').icon;
+    return getStatusColors().icon;
   }
 
   getTestStatusIcon(run: WorkflowRunDto): string {
@@ -190,16 +179,10 @@ export class WorkflowRunsTableComponent {
   }
 
   getTestStatusClass(run: WorkflowRunDto): string {
-    if (run.testProcessingStatus === 'PROCESSED') {
-      return 'text-green-500';
-    }
-    if (run.testProcessingStatus === 'FAILED') {
-      return 'text-red-500';
-    }
-    if (run.testProcessingStatus === 'PROCESSING') {
-      return 'text-blue-500 animate-spin';
-    }
-    return 'text-surface-500';
+    if (run.testProcessingStatus === 'PROCESSED') return getStatusColors('success').icon;
+    if (run.testProcessingStatus === 'FAILED') return getStatusColors('failure').icon;
+    if (run.testProcessingStatus === 'PROCESSING') return `${getStatusColors(null, 'in_progress').icon} animate-spin`;
+    return getStatusColors().icon;
   }
 
   formatExactDate(dateStr: string | null | undefined): string | undefined {

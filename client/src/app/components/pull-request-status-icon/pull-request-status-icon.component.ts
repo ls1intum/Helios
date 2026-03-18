@@ -3,6 +3,7 @@ import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
 import { Tooltip } from 'primeng/tooltip';
 import { PullRequestInfoDto } from '@app/core/modules/openapi';
 import { IconGitMerge, IconGitPullRequest, IconGitPullRequestClosed, IconGitPullRequestDraft, IconQuestionMark } from 'angular-tabler-icons/icons';
+import { getStatusColors } from '@app/core/utils/status-colors';
 
 @Component({
   selector: 'app-pull-request-status-icon',
@@ -32,10 +33,10 @@ export class PullRequestStatusIconComponent {
 
   iconColor = computed(() => {
     if (!this.pullRequest()) return 'text-muted-color';
-    if (this.pullRequest()?.isMerged) return 'text-purple-500';
-    if (this.pullRequest()?.state === 'CLOSED') return 'text-red-500';
+    if (this.pullRequest()?.isMerged) return 'text-purple-600';
+    if (this.pullRequest()?.state === 'CLOSED') return getStatusColors('failure').icon;
     if (this.pullRequest()?.isDraft) return 'text-muted-color';
-    return 'text-green-600'; // Default for open PRs
+    return getStatusColors('success').icon; // Default for open PRs
   });
 
   tooltipText = computed(() => {
