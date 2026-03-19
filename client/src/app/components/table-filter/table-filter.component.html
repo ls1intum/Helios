@@ -1,6 +1,6 @@
 <div class="flex items-center gap-2 w-full">
   @if (searchTableService().filterOptions.length > 0) {
-    <p-button (onClick)="toggle($event)" size="small">
+    <p-button type="button" outlined styleClass="!border-[var(--p-inputtext-border-color)]" (onClick)="toggle($event)" size="small">
       @if (searchTableService().hasActiveFilter()) {
         <i-tabler name="filter" />
       } @else {

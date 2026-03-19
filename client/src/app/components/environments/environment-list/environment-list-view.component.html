@@ -1,6 +1,6 @@
 <div class="flex gap-2 items-center justify-between mb-3">
   <div class="flex items-center gap-2 w-full md:w-2/3">
-    <p-button (onClick)="toggleFilterPopover($event)">
+    <p-button type="button" outlined styleClass="!border-[var(--p-inputtext-border-color)]" (onClick)="toggleFilterPopover($event)" size="small">
       @if (showAvailableOnly() || selectedEnvironmentType() !== 'ALL') {
         <i-tabler name="filter" />
       } @else {

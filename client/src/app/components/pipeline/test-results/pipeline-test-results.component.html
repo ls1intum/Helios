@@ -81,7 +81,7 @@
     <!-- Current Workflow Test Details -->
     @if (activeTestType(); as workflow) {
       <div class="flex items-center gap-2 w-full max-w-sm mb-2">
-        <p-button (onClick)="toggleFilterMenu($event)" size="small">
+        <p-button type="button" outlined styleClass="!border-[var(--p-inputtext-border-color)]" (onClick)="toggleFilterMenu($event)" size="small">
           @if (showOnlyFailed()) {
             <i-tabler name="filter" />
           } @else {

@@ -38,11 +38,11 @@ export function createBranchFilterOptions(keycloakService: KeycloakService): Fil
   const githubPreferredUsername = isLoggedIn ? keycloakService.getPreferredUsername() : '';
 
   const options: FilterOption<BranchInfoWithLink>[] = [
-    { name: 'All Branches', filter: (branches: BranchInfoWithLink[]) => branches },
-    { name: 'Default Branch', filter: (branches: BranchInfoWithLink[]) => branches.filter(branch => branch.isDefault) },
-    { name: 'Protected Branches', filter: (branches: BranchInfoWithLink[]) => branches.filter(branch => branch.isProtected) },
+    { name: 'All branches', filter: (branches: BranchInfoWithLink[]) => branches },
+    { name: 'Default branch', filter: (branches: BranchInfoWithLink[]) => branches.filter(branch => branch.isDefault) },
+    { name: 'Protected branches', filter: (branches: BranchInfoWithLink[]) => branches.filter(branch => branch.isProtected) },
     {
-      name: 'Active Branches',
+      name: 'Active branches',
       filter: (branches: BranchInfoWithLink[]) =>
         branches.filter(branch => {
           const date = new Date(branch.updatedAt || '');
@@ -53,7 +53,7 @@ export function createBranchFilterOptions(keycloakService: KeycloakService): Fil
         }),
     },
     {
-      name: 'Last 7 Day',
+      name: 'Last 7 days',
       filter: (branches: BranchInfoWithLink[]) =>
         branches.filter(branch => {
           const date = new Date(branch.updatedAt || '');
@@ -64,7 +64,7 @@ export function createBranchFilterOptions(keycloakService: KeycloakService): Fil
         }),
     },
     {
-      name: 'Stale Branches',
+      name: 'Stale branches',
       filter: (branches: BranchInfoWithLink[]) =>
         branches.filter(branch => {
           const date = new Date(branch.updatedAt || '');
@@ -79,7 +79,7 @@ export function createBranchFilterOptions(keycloakService: KeycloakService): Fil
   // Add the "Your Branches" filter option only if the user is logged in
   if (isLoggedIn && githubPreferredUsername) {
     options.splice(1, 0, {
-      name: 'Your Branches',
+      name: 'Your branches',
       filter: (branches: BranchInfoWithLink[]) => branches.filter(branch => branch.updatedBy?.login?.toLowerCase() === githubPreferredUsername.toLowerCase()),
     });
   }

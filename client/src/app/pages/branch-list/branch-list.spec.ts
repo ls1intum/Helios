@@ -28,7 +28,7 @@ describe('Integration Test Branch List Page', () => {
           provide: FILTER_OPTIONS_TOKEN,
           useFactory: (): FilterOption<BranchInfoWithLink>[] => [
             {
-              name: 'All Branches',
+              name: 'All branches',
               filter: (branches: BranchInfoWithLink[]) => branches,
             },
           ],
