@@ -276,9 +276,9 @@ public class TestCaseStatisticsService {
   }
 
   private FlakyTestOverviewDto.FlakyTestSummary buildGlobalSummary(Long repositoryId) {
-    int totalTrackedTests = (int) statisticsRepository
-        .countByBranchNameAndRepositoryRepositoryId("combined", repositoryId);
-    int totalFlakyTests = (int) flakinessRepository.countByRepositoryRepositoryId(repositoryId);
+    int totalTrackedTests = (int) flakinessRepository.countByRepositoryRepositoryId(repositoryId);
+    int totalFlakyTests = (int) flakinessRepository
+        .countByRepositoryRepositoryIdAndFlakinessScoreGreaterThan(repositoryId, 0);
     int highFlakinessCount = (int) flakinessRepository
         .countByRepositoryRepositoryIdAndFlakinessScoreGreaterThan(
             repositoryId, HIGH_FLAKINESS_THRESHOLD);
@@ -373,6 +373,9 @@ public class TestCaseStatisticsService {
 
       // Always scope to current repository
       predicates.add(cb.equal(root.get("repository").get("repositoryId"), repositoryId));
+
+      // Retrieve only tests with a flakiness score greater than zero
+      predicates.add(cb.greaterThan(root.get("flakinessScore"), 0));
 
       // Search term across testName, className, and testSuiteName
       if (request.getSearchTerm() != null && !request.getSearchTerm().trim().isEmpty()) {

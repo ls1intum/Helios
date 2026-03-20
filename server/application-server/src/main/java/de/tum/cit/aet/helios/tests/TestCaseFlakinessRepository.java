@@ -13,7 +13,7 @@ public interface TestCaseFlakinessRepository
     extends JpaRepository<TestCaseFlakiness, Long>, JpaSpecificationExecutor<TestCaseFlakiness> {
 
   /**
-   * Total number of flaky tests tracked for a repository.
+   * Total number of flaky tests for a repository, regardless of flakiness score.
    */
   long countByRepositoryRepositoryId(Long repositoryId);
 

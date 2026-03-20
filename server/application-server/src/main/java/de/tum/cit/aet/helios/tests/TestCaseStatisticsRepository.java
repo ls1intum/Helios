@@ -64,13 +64,4 @@ public interface TestCaseStatisticsRepository extends JpaRepository<TestCaseStat
    */
   List<TestCaseStatistics> findByTestSuiteNameInAndBranchNameAndRepositoryRepositoryId(
       Collection<String> testSuiteNames, String branchName, Long repositoryId);
-
-  /**
-   * Counts all statistics rows matching a branch and repository.
-   *
-   * @param branchName the branch name (use "combined" for total unique test count)
-   * @param repositoryId the repository ID
-   * @return count of matching rows
-   */
-  long countByBranchNameAndRepositoryRepositoryId(String branchName, Long repositoryId);
 }

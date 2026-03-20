@@ -53,11 +53,11 @@ class TestCaseStatisticsServiceTest {
     when(flakinessRepository.findAll(any(Specification.class), any(Pageable.class)))
         .thenReturn(page);
 
-    when(statisticsRepository.countByBranchNameAndRepositoryRepositoryId(
-        "combined", repository.getRepositoryId()))
+    when(flakinessRepository.countByRepositoryRepositoryId(repository.getRepositoryId()))
         .thenReturn(20L);
 
-    when(flakinessRepository.countByRepositoryRepositoryId(repository.getRepositoryId()))
+    when(flakinessRepository.countByRepositoryRepositoryIdAndFlakinessScoreGreaterThan(
+        repository.getRepositoryId(), 0))
         .thenReturn(5L);
 
     when(flakinessRepository.countByRepositoryRepositoryIdAndFlakinessScoreGreaterThan(
