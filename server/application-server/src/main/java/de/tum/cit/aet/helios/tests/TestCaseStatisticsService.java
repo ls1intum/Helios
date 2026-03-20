@@ -106,8 +106,8 @@ public class TestCaseStatisticsService {
   /**
    * Recomputes and persists flakiness scores for all tests belonging to the given suites.
    * Reads statistics for the default branch and combined branches to compute scores, then updates
-   * the {@code test_case_flakiness} table accordingly. Tests that are no longer flaky (score <= 0)
-   * will have their flakiness record removed to keep the table focused on only flaky tests.
+   * the {@code test_case_flakiness} table accordingly. Scores are persisted even when equal to
+   * zero so consumers can distinguish "known non-flaky" from "no record yet".
    *
    * @param testSuites the suites processed in this run
    * @param defaultBranch the repository's default branch name
@@ -133,19 +133,6 @@ public class TestCaseStatisticsService {
                 testCase.getName(), testCase.getClassName(), suite.getName(),
                 defaultBranchStats, combinedStats);
         double flakinessScore = flakinessInfo.flakinessScore();
-
-        if (flakinessScore <= 0.0) {
-          // Test is not flaky anymore; remove any existing flakiness record so the
-          // precomputed table only contains genuinely flaky tests.
-          flakinessRepository
-              .findByTestNameAndClassNameAndTestSuiteNameAndRepositoryRepositoryId(
-                  testCase.getName(),
-                  testCase.getClassName(),
-                  suite.getName(),
-                  repository.getRepositoryId())
-              .ifPresent(flakinessRepository::delete);
-          continue;
-        }
 
         upsertFlakiness(
             testCase.getName(),
