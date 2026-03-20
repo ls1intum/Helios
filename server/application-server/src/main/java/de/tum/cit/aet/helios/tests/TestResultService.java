@@ -325,7 +325,8 @@ public class TestResultService {
         // TODO read flakiness info from precomputed table instead of computing on the fly
         var flakinessInfo =
             testCaseStatisticsService.computeFlakinessInfo(
-                testCase.getName(), testCase.getClassName(), defaultBranchStats, combinedStats);
+                testCase.getName(), testCase.getClassName(), suite.getName(),
+                defaultBranchStats, combinedStats);
         testCase.setFlakinessScore(flakinessInfo.flakinessScore());
         testCase.setFailureRate(flakinessInfo.defaultBranchFailureRate());
         testCase.setCombinedFailureRate(flakinessInfo.combinedFailureRate());

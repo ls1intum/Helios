@@ -108,6 +108,7 @@ class TestResultServiceTest {
     testCase.setId(1L);
     testCase.setName("test1");
     testCase.setClassName("TestClass1");
+    testCase.setTestSuite(testSuite);
     testCase.setStatus(TestStatus.PASSED);
     testCase.setTime(0.0);
     testSuite.setTestCases(List.of(testCase));
@@ -155,7 +156,7 @@ class TestResultServiceTest {
         .thenReturn(Collections.emptyList());
     lenient()
         .when(testCaseStatisticsService.computeFlakinessInfo(
-            anyString(), anyString(), anyList(), anyList()
+            anyString(), anyString(), anyString(), anyList(), anyList()
         ))
         .thenReturn(new TestCaseStatisticsService.FlakinessInfo(0.0, 0.0, 0.0));
 
@@ -164,7 +165,7 @@ class TestResultServiceTest {
 
     // Verify the problematic call
     verify(testCaseStatisticsService).computeFlakinessInfo(
-        anyString(), anyString(), anyList(), anyList());
+        anyString(), anyString(), anyString(), anyList(), anyList());
 
     assertNotNull(result);
     assertFalse(result.testResults().isEmpty());
@@ -213,14 +214,14 @@ class TestResultServiceTest {
         .thenReturn(Collections.emptyList());
     lenient()
         .when(testCaseStatisticsService.computeFlakinessInfo(
-            anyString(), anyString(), anyList(), anyList()))
+            anyString(), anyString(), anyString(), anyList(), anyList()))
         .thenReturn(new TestCaseStatisticsService.FlakinessInfo(0.0, 0.0, 0.0));
 
     TestResultsDto result = testResultService.getLatestTestResultsForPr(1L, criteria);
 
     // Verify the problematic call
     verify(testCaseStatisticsService).computeFlakinessInfo(
-        anyString(), anyString(), anyList(), anyList());
+        anyString(), anyString(), anyString(), anyList(), anyList());
 
     assertNotNull(result);
     assertFalse(result.testResults().isEmpty());

@@ -162,7 +162,7 @@ class TestCaseStatisticsServiceTest {
 
     var info =
         service.computeFlakinessInfo(
-            "test1", "Class1", List.of(defaultStat), List.of(combinedStat));
+            "test1", "Class1", "Suite1", List.of(defaultStat), List.of(combinedStat));
 
     assertEquals(0.05, info.defaultBranchFailureRate());
     assertEquals(0.15, info.combinedFailureRate());
@@ -171,7 +171,7 @@ class TestCaseStatisticsServiceTest {
 
   @Test
   void computeFlakinessInfo_withNoMatchingStats_returnsZeroRates() {
-    var info = service.computeFlakinessInfo("unknown", "Unknown", List.of(), List.of());
+    var info = service.computeFlakinessInfo("unknown", "Unknown", "Unknown", List.of(), List.of());
 
     assertEquals(0.0, info.defaultBranchFailureRate());
     assertEquals(0.0, info.combinedFailureRate());

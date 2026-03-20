@@ -56,7 +56,7 @@
     [loading]="query.isPending()"
     (onPage)="onPage($event)"
     (onSort)="onSort($event)"
-    [sortField]="paginationService.sortField()"
+    [sortField]="paginationService.sortField() || 'flakinessScore'"
     [sortOrder]="paginationService.sortDirection() === 'asc' ? 1 : -1"
     [scrollable]="true"
     styleClass="p-datatable-sm p-datatable-striped mt-6"

@@ -116,21 +116,22 @@ public class TestCaseStatisticsService {
   public void updateFlakinessForTestSuite(
       List<TestSuite> testSuites, String defaultBranch, GitRepository repository) {
 
-    var suiteClassNames = testSuites.stream().map(TestSuite::getName).distinct().toList();
+    var suiteNames = testSuites.stream().map(TestSuite::getName).distinct().toList();
 
     List<TestCaseStatistics> defaultBranchStats =
         statisticsRepository.findByTestSuiteNameInAndBranchNameAndRepositoryRepositoryId(
-            suiteClassNames, defaultBranch, repository.getRepositoryId());
+            suiteNames, defaultBranch, repository.getRepositoryId());
 
     List<TestCaseStatistics> combinedStats =
         statisticsRepository.findByTestSuiteNameInAndBranchNameAndRepositoryRepositoryId(
-            suiteClassNames, "combined", repository.getRepositoryId());
+            suiteNames, "combined", repository.getRepositoryId());
 
     for (TestSuite suite : testSuites) {
       for (TestCase testCase : suite.getTestCases()) {
         var flakinessInfo =
             computeFlakinessInfo(
-                testCase.getName(), testCase.getClassName(), defaultBranchStats, combinedStats);
+                testCase.getName(), testCase.getClassName(), suite.getName(),
+                defaultBranchStats, combinedStats);
         double flakinessScore = flakinessInfo.flakinessScore();
 
         if (flakinessScore <= 0.0) {
@@ -304,18 +305,25 @@ public class TestCaseStatisticsService {
   public FlakinessInfo computeFlakinessInfo(
       String testName,
       String className,
+      String suiteName,
       List<TestCaseStatistics> defaultBranchStats,
       List<TestCaseStatistics> combinedStats) {
     double defaultFailureRate =
         defaultBranchStats.stream()
-            .filter(s -> s.getTestName().equals(testName) && s.getClassName().equals(className))
+            .filter(s ->
+                s.getTestName().equals(testName)
+                && s.getClassName().equals(className)
+                && s.getTestSuiteName().equals(suiteName))
             .findFirst()
             .map(TestCaseStatistics::getFailureRate)
             .orElse(0.0);
 
     double combinedFailureRate =
         combinedStats.stream()
-            .filter(s -> s.getTestName().equals(testName) && s.getClassName().equals(className))
+            .filter(s ->
+                s.getTestName().equals(testName)
+                && s.getClassName().equals(className)
+                && s.getTestSuiteName().equals(suiteName))
             .findFirst()
             .map(TestCaseStatistics::getFailureRate)
             .orElse(0.0);
