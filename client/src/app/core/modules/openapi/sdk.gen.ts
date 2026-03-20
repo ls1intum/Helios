@@ -6,6 +6,9 @@ import type {
   CancelDeploymentData,
   CancelDeploymentErrors,
   CancelDeploymentResponses,
+  CancelWorkflowRunData,
+  CancelWorkflowRunErrors,
+  CancelWorkflowRunResponses,
   CreateReleaseCandidateData,
   CreateReleaseCandidateErrors,
   CreateReleaseCandidateResponses,
@@ -147,6 +150,9 @@ import type {
   GetRepositoryByIdData,
   GetRepositoryByIdErrors,
   GetRepositoryByIdResponses,
+  GetTestResultsByWorkflowRunIdData,
+  GetTestResultsByWorkflowRunIdErrors,
+  GetTestResultsByWorkflowRunIdResponses,
   GetUserPermissionsData,
   GetUserPermissionsErrors,
   GetUserPermissionsResponses,
@@ -159,6 +165,9 @@ import type {
   GetWorkflowJobStatusData,
   GetWorkflowJobStatusErrors,
   GetWorkflowJobStatusResponses,
+  GetWorkflowRunByIdData,
+  GetWorkflowRunByIdErrors,
+  GetWorkflowRunByIdResponses,
   GetWorkflowRunsData,
   GetWorkflowRunsErrors,
   GetWorkflowRunsResponses,
@@ -177,6 +186,12 @@ import type {
   PublishReleaseDraftData,
   PublishReleaseDraftErrors,
   PublishReleaseDraftResponses,
+  ReRunFailedJobsData,
+  ReRunFailedJobsErrors,
+  ReRunFailedJobsResponses,
+  ReRunWorkflowData,
+  ReRunWorkflowErrors,
+  ReRunWorkflowResponses,
   RotateSecretData,
   RotateSecretErrors,
   RotateSecretResponses,
@@ -356,6 +371,27 @@ export const lockEnvironment = <ThrowOnError extends boolean = false>(options: O
 export const extendEnvironmentLock = <ThrowOnError extends boolean = false>(options: Options<ExtendEnvironmentLockData, ThrowOnError>) => {
   return (options.client ?? client).put<ExtendEnvironmentLockResponses, ExtendEnvironmentLockErrors, ThrowOnError>({
     url: '/api/environments/{id}/extend-lock',
+    ...options,
+  });
+};
+
+export const reRunWorkflow = <ThrowOnError extends boolean = false>(options: Options<ReRunWorkflowData, ThrowOnError>) => {
+  return (options.client ?? client).post<ReRunWorkflowResponses, ReRunWorkflowErrors, ThrowOnError>({
+    url: '/api/workflows/runs/{runId}/rerun',
+    ...options,
+  });
+};
+
+export const reRunFailedJobs = <ThrowOnError extends boolean = false>(options: Options<ReRunFailedJobsData, ThrowOnError>) => {
+  return (options.client ?? client).post<ReRunFailedJobsResponses, ReRunFailedJobsErrors, ThrowOnError>({
+    url: '/api/workflows/runs/{runId}/rerun-failed-jobs',
+    ...options,
+  });
+};
+
+export const cancelWorkflowRun = <ThrowOnError extends boolean = false>(options: Options<CancelWorkflowRunData, ThrowOnError>) => {
+  return (options.client ?? client).post<CancelWorkflowRunResponses, CancelWorkflowRunErrors, ThrowOnError>({
+    url: '/api/workflows/runs/{runId}/cancel',
     ...options,
   });
 };
@@ -614,6 +650,13 @@ export const getWorkflowRuns = <ThrowOnError extends boolean = false>(options?: 
   });
 };
 
+export const getWorkflowRunById = <ThrowOnError extends boolean = false>(options: Options<GetWorkflowRunByIdData, ThrowOnError>) => {
+  return (options.client ?? client).get<GetWorkflowRunByIdResponses, GetWorkflowRunByIdErrors, ThrowOnError>({
+    url: '/api/workflows/runs/{runId}',
+    ...options,
+  });
+};
+
 export const getWorkflowsByRepositoryId = <ThrowOnError extends boolean = false>(options: Options<GetWorkflowsByRepositoryIdData, ThrowOnError>) => {
   return (options.client ?? client).get<GetWorkflowsByRepositoryIdResponses, GetWorkflowsByRepositoryIdErrors, ThrowOnError>({
     url: '/api/workflows/repository/{repositoryId}',
@@ -642,6 +685,13 @@ export const getLatestWorkflowRunsByBranchAndHeadCommit = <ThrowOnError extends 
 export const getUserPermissions = <ThrowOnError extends boolean = false>(options?: Options<GetUserPermissionsData, ThrowOnError>) => {
   return (options?.client ?? client).get<GetUserPermissionsResponses, GetUserPermissionsErrors, ThrowOnError>({
     url: '/api/user-permissions',
+    ...options,
+  });
+};
+
+export const getTestResultsByWorkflowRunId = <ThrowOnError extends boolean = false>(options: Options<GetTestResultsByWorkflowRunIdData, ThrowOnError>) => {
+  return (options.client ?? client).get<GetTestResultsByWorkflowRunIdResponses, GetTestResultsByWorkflowRunIdErrors, ThrowOnError>({
+    url: '/api/tests/run/{workflowRunId}',
     ...options,
   });
 };

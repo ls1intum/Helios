@@ -2,13 +2,18 @@ package de.tum.cit.aet.helios.workflow;
 
 import de.tum.cit.aet.helios.branch.BranchRepository;
 import de.tum.cit.aet.helios.filters.RepositoryContext;
+import de.tum.cit.aet.helios.github.GitHubService;
+import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
 import de.tum.cit.aet.helios.pullrequest.PullRequestRepository;
 import de.tum.cit.aet.helios.workflow.pagination.PaginatedWorkflowRunsResponse;
 import de.tum.cit.aet.helios.workflow.pagination.WorkflowRunPageRequest;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.criteria.Predicate;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +35,8 @@ public class WorkflowRunService {
   private final WorkflowRunRepository workflowRunRepository;
   private final PullRequestRepository pullRequestRepository;
   private final BranchRepository branchRepository;
+  private final GitHubService gitHubService;
+  private final GitRepoRepository gitRepoRepository;
 
   public List<WorkflowRun> getAllWorkflowRuns() {
     return workflowRunRepository.findAll();
@@ -197,7 +204,62 @@ public class WorkflowRunService {
     return Sort.by(direction, property).and(defaultSort);
   }
 
-  public void deleteWorkflowRun(Long workflowRunId) {
-    workflowRunRepository.deleteById(workflowRunId);
+  public WorkflowRunDto getWorkflowRunById(Long runId) {
+    Long repositoryId = RepositoryContext.getRepositoryId();
+    return getWorkflowRunForCurrentRepository(runId, repositoryId, false)
+        .map(WorkflowRunDto::fromWorkflowRun)
+        .orElseThrow(() -> new EntityNotFoundException(
+            "Workflow run with id %d not found".formatted(runId)));
+  }
+
+  public void cancelWorkflowRun(Long runId) {
+    executeWorkflowRunAction(runId, gitHubService::cancelWorkflowRun, "cancel");
+  }
+
+  public void reRunWorkflow(Long runId) {
+    executeWorkflowRunAction(runId, gitHubService::reRunWorkflow, "re-run");
+  }
+
+  public void reRunFailedJobs(Long runId) {
+    executeWorkflowRunAction(runId, gitHubService::reRunFailedJobs, "re-run failed jobs for");
+  }
+
+  @FunctionalInterface
+  private interface WorkflowRunAction {
+    void execute(String repoNameWithOwner, long runId) throws IOException;
+  }
+
+  private void executeWorkflowRunAction(Long runId, WorkflowRunAction action, String actionName) {
+    try {
+      Long repositoryId = RepositoryContext.getRepositoryId();
+      var repository =
+          gitRepoRepository
+              .findById(repositoryId)
+              .orElseThrow(() -> new EntityNotFoundException(
+                  "Repository with id %d not found".formatted(repositoryId)));
+
+      getWorkflowRunForCurrentRepository(runId, repositoryId, true)
+          .orElseThrow(() -> new EntityNotFoundException(
+              "Workflow run with id %d not found".formatted(runId)));
+
+      action.execute(repository.getNameWithOwner(), runId);
+    } catch (IOException e) {
+      log.error("Failed to {} workflow run {}: {}", actionName, runId, e.getMessage());
+      throw new RuntimeException(
+          "Failed to %s workflow run with id %d".formatted(actionName, runId), e);
+    }
+  }
+
+  private Optional<WorkflowRun> getWorkflowRunForCurrentRepository(
+      Long runId, Long repositoryId, boolean actionRequest) {
+    return workflowRunRepository.findByIdAndRepositoryRepositoryId(runId, repositoryId).or(() -> {
+      if (actionRequest && workflowRunRepository.findById(runId).isPresent()) {
+        log.warn(
+            "Blocked workflow run action for run {} in repository {} due to repository mismatch",
+            runId,
+            repositoryId);
+      }
+      return Optional.empty();
+    });
   }
 }

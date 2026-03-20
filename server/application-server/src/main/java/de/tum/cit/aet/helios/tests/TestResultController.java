@@ -62,6 +62,25 @@ public class TestResultController {
   }
 
   /**
+   * Get the test results for a specific workflow run.
+   *
+   * @param workflowRunId the workflow run ID
+   * @return the grouped test results
+   */
+  @GetMapping("/run/{workflowRunId}")
+  public ResponseEntity<TestResultsDto> getTestResultsByWorkflowRunId(
+      @PathVariable Long workflowRunId,
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "10") int size,
+      @RequestParam(required = false) String search,
+      @RequestParam(defaultValue = "false") boolean onlyFailed) {
+    return ResponseEntity.ok(
+        testResultService.getTestResultsForWorkflowRun(
+            workflowRunId,
+            new TestResultService.TestSearchCriteria(page, size, search, onlyFailed)));
+  }
+
+  /**
    * Look up historical flakiness scores for a list of test cases.
    * Authenticated via repository shared secret.
    * Designed for CI pipelines (e.g. GitHub Actions)

@@ -10,6 +10,7 @@ import de.tum.cit.aet.helios.tests.TestResultsDto.TestTypeResults;
 import de.tum.cit.aet.helios.tests.type.TestType;
 import de.tum.cit.aet.helios.workflow.WorkflowRun;
 import de.tum.cit.aet.helios.workflow.WorkflowRunRepository;
+import jakarta.persistence.EntityNotFoundException;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -209,6 +210,52 @@ public class TestResultService {
     var context =
         new TestRunContext(
             latestRuns,
+            previousRuns,
+            defaultContext.defaultBranchName(),
+            defaultContext.defaultWorkflowRunByTestType());
+
+    return processTestResults(context, criteria);
+  }
+
+  /**
+   * Get the test results for a specific workflow run.
+   *
+   * @param workflowRunId the workflow run ID
+   * @param criteria search and pagination criteria
+   * @return the grouped test results
+   */
+  public TestResultsDto getTestResultsForWorkflowRun(
+      Long workflowRunId, TestSearchCriteria criteria) {
+    final Long repositoryId = RepositoryContext.getRepositoryId();
+    var run =
+        workflowRunRepository
+            .findByIdAndRepositoryRepositoryId(workflowRunId, repositoryId)
+            .orElseThrow(() -> new EntityNotFoundException(
+                "Workflow run with id %d not found".formatted(workflowRunId)));
+
+    var defaultContext = getDefaultBranchContext(run.getRepository());
+
+    List<WorkflowRun> previousRuns = List.of();
+    if (run.getHeadBranch() != null && run.getHeadSha() != null) {
+      previousRuns =
+          workflowRunRepository
+              .findNthLatestCommitShaBehindHeadByBranchAndRepoId(
+                  run.getHeadBranch(),
+                  run.getRepository().getRepositoryId(),
+                  0,
+                  run.getHeadSha())
+              .map(
+                  prevSha ->
+                      workflowRunRepository.findByHeadBranchAndHeadShaAndRepositoryRepositoryId(
+                          run.getHeadBranch(),
+                          prevSha,
+                          run.getRepository().getRepositoryId()))
+              .orElse(List.of());
+    }
+
+    var context =
+        new TestRunContext(
+            List.of(run),
             previousRuns,
             defaultContext.defaultBranchName(),
             defaultContext.defaultWorkflowRunByTestType());

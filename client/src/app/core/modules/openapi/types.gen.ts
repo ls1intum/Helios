@@ -924,6 +924,81 @@ export type ExtendEnvironmentLockResponses = {
 
 export type ExtendEnvironmentLockResponse = ExtendEnvironmentLockResponses[keyof ExtendEnvironmentLockResponses];
 
+export type ReRunWorkflowData = {
+  body?: never;
+  path: {
+    runId: number;
+  };
+  query?: never;
+  url: '/api/workflows/runs/{runId}/rerun';
+};
+
+export type ReRunWorkflowErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type ReRunWorkflowError = ReRunWorkflowErrors[keyof ReRunWorkflowErrors];
+
+export type ReRunWorkflowResponses = {
+  /**
+   * OK
+   */
+  200: unknown;
+};
+
+export type ReRunFailedJobsData = {
+  body?: never;
+  path: {
+    runId: number;
+  };
+  query?: never;
+  url: '/api/workflows/runs/{runId}/rerun-failed-jobs';
+};
+
+export type ReRunFailedJobsErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type ReRunFailedJobsError = ReRunFailedJobsErrors[keyof ReRunFailedJobsErrors];
+
+export type ReRunFailedJobsResponses = {
+  /**
+   * OK
+   */
+  200: unknown;
+};
+
+export type CancelWorkflowRunData = {
+  body?: never;
+  path: {
+    runId: number;
+  };
+  query?: never;
+  url: '/api/workflows/runs/{runId}/cancel';
+};
+
+export type CancelWorkflowRunErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type CancelWorkflowRunError = CancelWorkflowRunErrors[keyof CancelWorkflowRunErrors];
+
+export type CancelWorkflowRunResponses = {
+  /**
+   * OK
+   */
+  200: unknown;
+};
+
 export type SyncWorkflowsByRepositoryIdData = {
   body?: never;
   path: {
@@ -1636,6 +1711,33 @@ export type GetWorkflowRunsResponses = {
 
 export type GetWorkflowRunsResponse = GetWorkflowRunsResponses[keyof GetWorkflowRunsResponses];
 
+export type GetWorkflowRunByIdData = {
+  body?: never;
+  path: {
+    runId: number;
+  };
+  query?: never;
+  url: '/api/workflows/runs/{runId}';
+};
+
+export type GetWorkflowRunByIdErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type GetWorkflowRunByIdError = GetWorkflowRunByIdErrors[keyof GetWorkflowRunByIdErrors];
+
+export type GetWorkflowRunByIdResponses = {
+  /**
+   * OK
+   */
+  200: WorkflowRunDto;
+};
+
+export type GetWorkflowRunByIdResponse = GetWorkflowRunByIdResponses[keyof GetWorkflowRunByIdResponses];
+
 export type GetWorkflowsByRepositoryIdData = {
   body?: never;
   path: {
@@ -1743,6 +1845,38 @@ export type GetUserPermissionsResponses = {
 };
 
 export type GetUserPermissionsResponse = GetUserPermissionsResponses[keyof GetUserPermissionsResponses];
+
+export type GetTestResultsByWorkflowRunIdData = {
+  body?: never;
+  path: {
+    workflowRunId: number;
+  };
+  query?: {
+    page?: number;
+    size?: number;
+    search?: string;
+    onlyFailed?: boolean;
+  };
+  url: '/api/tests/run/{workflowRunId}';
+};
+
+export type GetTestResultsByWorkflowRunIdErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type GetTestResultsByWorkflowRunIdError = GetTestResultsByWorkflowRunIdErrors[keyof GetTestResultsByWorkflowRunIdErrors];
+
+export type GetTestResultsByWorkflowRunIdResponses = {
+  /**
+   * OK
+   */
+  200: TestResultsDto;
+};
+
+export type GetTestResultsByWorkflowRunIdResponse = GetTestResultsByWorkflowRunIdResponses[keyof GetTestResultsByWorkflowRunIdResponses];
 
 export type GetLatestTestResultsByPullRequestIdData = {
   body?: never;

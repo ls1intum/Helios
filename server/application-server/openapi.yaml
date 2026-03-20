@@ -348,6 +348,69 @@ paths:
             application/json:
               schema:
                 type: object
+  /api/workflows/runs/{runId}/rerun:
+    post:
+      tags:
+      - workflow-run-controller
+      operationId: reRunWorkflow
+      parameters:
+      - name: runId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "200":
+          description: OK
+  /api/workflows/runs/{runId}/rerun-failed-jobs:
+    post:
+      tags:
+      - workflow-run-controller
+      operationId: reRunFailedJobs
+      parameters:
+      - name: runId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "200":
+          description: OK
+  /api/workflows/runs/{runId}/cancel:
+    post:
+      tags:
+      - workflow-run-controller
+      operationId: cancelWorkflowRun
+      parameters:
+      - name: runId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "200":
+          description: OK
   /api/workflows/repository/{repositoryId}/sync:
     post:
       tags:
@@ -1024,6 +1087,31 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PaginatedWorkflowRunsResponse"
+  /api/workflows/runs/{runId}:
+    get:
+      tags:
+      - workflow-run-controller
+      operationId: getWorkflowRunById
+      parameters:
+      - name: runId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkflowRunDto"
   /api/workflows/repository/{repositoryId}:
     get:
       tags:
@@ -1122,6 +1210,56 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/GitHubRepositoryRoleDto"
+  /api/tests/run/{workflowRunId}:
+    get:
+      tags:
+      - test-result-controller
+      operationId: getTestResultsByWorkflowRunId
+      parameters:
+      - name: workflowRunId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 10
+      - name: search
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: onlyFailed
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+      responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TestResultsDto"
   /api/tests/pr/{pullRequestId}:
     get:
       tags:
