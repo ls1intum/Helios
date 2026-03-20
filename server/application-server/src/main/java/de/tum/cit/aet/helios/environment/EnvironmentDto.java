@@ -34,6 +34,7 @@ public record EnvironmentDto(
     StatusCheckType statusCheckType,
     String statusUrl,
     String deploymentWorkflowBranch,
+    List<WorkflowDto> requiredPreDeploymentWorkflows,
     EnvironmentDeployment latestDeployment,
     EnvironmentStatusDto latestStatus,
     UserInfoDto lockedBy,
@@ -140,6 +141,11 @@ public record EnvironmentDto(
         environment.getStatusCheckType(),
         environment.getStatusUrl(),
         environment.getDeploymentWorkflowBranch(),
+        environment.getRequiredPreDeploymentWorkflows() != null
+            ? environment.getRequiredPreDeploymentWorkflows().stream()
+                .map(WorkflowDto::fromWorkflow)
+                .toList()
+            : List.of(),
         envDeployment,
         latestStatus.map(EnvironmentStatusDto::fromEnvironmentStatus).orElse(null),
         UserInfoDto.fromUser(environment.getLockedBy()),

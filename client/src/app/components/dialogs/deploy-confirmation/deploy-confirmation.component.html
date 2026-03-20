@@ -7,7 +7,7 @@
   </ng-template>
 
   <!-- Loading State -->
-  @if (query.isPending()) {
+  @if (isLoading()) {
     <ng-container>
       <div class="p-4 space-y-3">
         <p-skeleton width="60%" height="1.5rem"></p-skeleton>
@@ -67,6 +67,44 @@
         </div>
       </div>
 
+      @if (showReadinessWarning()) {
+        <div class="mt-4 rounded border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-950" data-testid="deployment-readiness-warning" role="alert">
+          <div class="flex items-start gap-2">
+            <i-tabler name="alert-triangle" class="!size-5 shrink-0 text-amber-700" />
+            <div class="space-y-2">
+              <p class="font-semibold">
+                Required pre-deployment workflows are not ready. Deployment may wait for the build to finish. In most cases, it is enough if the actions in the PR have finished.
+              </p>
+              @if (deploymentReadinessSummary()) {
+                <p>{{ deploymentReadinessSummary() }}</p>
+              }
+              @if (showMissingWorkflowList()) {
+                <ul class="list-disc pl-5 space-y-1">
+                  @for (workflow of missingWorkflows(); track workflow.workflowId ?? $index) {
+                    <li>
+                      <span class="font-semibold">{{ getWorkflowDisplayName(workflow) }}</span>
+                    </li>
+                  }
+                </ul>
+              }
+              @if (showBlockedWorkflowList()) {
+                <ul class="list-disc pl-5 space-y-1">
+                  @for (workflow of blockedWorkflows(); track workflow.workflowId ?? $index) {
+                    <li>
+                      <span class="font-semibold">{{ getWorkflowDisplayName(workflow) }}</span>
+                      <span> {{ describeBlockedWorkflow(workflow) }} </span>
+                      @if (workflow.runHtmlUrl) {
+                        <a [href]="workflow.runHtmlUrl" target="_blank" rel="noopener noreferrer" class="underline underline-offset-2"> Open latest matching run </a>
+                      }
+                    </li>
+                  }
+                </ul>
+              }
+            </div>
+          </div>
+        </div>
+      }
+
       <!-- Reviewers -->
       @if (hasReviewers()) {
         <div class="mt-4 text-sm space-y-2">
@@ -112,7 +150,7 @@
         type="button"
         label="Deploy"
         class="ml-2"
-        [disabled]="query.isPending() || (environment().type !== 'TEST' && environment().repository?.nameWithOwner && repoConfirm !== environment().repository?.nameWithOwner)"
+        [disabled]="isLoading() || (environment().type !== 'TEST' && environment().repository?.nameWithOwner && repoConfirm !== environment().repository?.nameWithOwner)"
         (click)="onDeploy()"
       ></button>
     </div>

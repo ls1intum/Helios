@@ -1761,6 +1761,41 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/EnvironmentReviewersDto"
+  /api/environments/{environmentId}/deployment-readiness:
+    get:
+      tags:
+      - environment-controller
+      operationId: getDeploymentReadiness
+      parameters:
+      - name: environmentId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: branch
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: sha
+        in: query
+        required: true
+        schema:
+          type: string
+      responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EnvironmentDeploymentReadinessDto"
   /api/environments/userLocking:
     get:
       tags:
@@ -2379,6 +2414,10 @@ components:
           type: string
         deploymentWorkflowBranch:
           type: string
+        requiredPreDeploymentWorkflows:
+          type: array
+          items:
+            $ref: "#/components/schemas/WorkflowDto"
         latestDeployment:
           $ref: "#/components/schemas/EnvironmentDeployment"
         latestStatus:
@@ -3592,6 +3631,72 @@ components:
           type: string
         type:
           type: string
+    EnvironmentDeploymentReadinessDto:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+          - UNCONFIGURED
+          - READY
+          - WAITING
+          - FAILED
+          - MISSING_RUN
+        workflows:
+          type: array
+          items:
+            $ref: "#/components/schemas/RequiredWorkflowStatusDto"
+    RequiredWorkflowStatusDto:
+      type: object
+      properties:
+        workflowId:
+          type: integer
+          format: int64
+        workflowName:
+          type: string
+        status:
+          type: string
+          enum:
+          - READY
+          - WAITING
+          - FAILED
+          - MISSING_RUN
+        runId:
+          type: integer
+          format: int64
+        runHtmlUrl:
+          type: string
+        runStatus:
+          type: string
+          enum:
+          - QUEUED
+          - IN_PROGRESS
+          - COMPLETED
+          - ACTION_REQUIRED
+          - CANCELLED
+          - FAILURE
+          - NEUTRAL
+          - SKIPPED
+          - STALE
+          - SUCCESS
+          - TIMED_OUT
+          - REQUESTED
+          - WAITING
+          - PENDING
+          - UNKNOWN
+        runConclusion:
+          type: string
+          enum:
+          - ACTION_REQUIRED
+          - CANCELLED
+          - FAILURE
+          - NEUTRAL
+          - SUCCESS
+          - SKIPPED
+          - STALE
+          - TIMED_OUT
+          - STARTUP_FAILURE
+          - UNKNOWN
     EnvironmentLockHistoryDto:
       type: object
       properties:

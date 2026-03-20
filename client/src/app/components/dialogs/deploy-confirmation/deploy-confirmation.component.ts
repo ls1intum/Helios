@@ -1,6 +1,6 @@
 import { Component, computed, input, model, output } from '@angular/core';
-import { EnvironmentDto, EnvironmentReviewersDto } from '@app/core/modules/openapi';
-import { getEnvironmentReviewersOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
+import { EnvironmentDeploymentReadinessDto, EnvironmentDto, EnvironmentReviewersDto, RequiredWorkflowStatusDto } from '@app/core/modules/openapi';
+import { getDeploymentReadinessOptions, getEnvironmentReviewersOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { injectQuery } from '@tanstack/angular-query-experimental';
 import { SkeletonModule } from 'primeng/skeleton';
 import { DialogModule } from 'primeng/dialog';
@@ -34,6 +34,8 @@ export class DeployConfirmationComponent {
   environment = input.required<EnvironmentDto>();
   /** Optional source ref shown for deploy flows that need extra context. */
   sourceRef = input<{ ref: string; type: 'branch' | 'tag' }>();
+  /** Exact commit that will be deployed. */
+  commitSha = input<string | undefined>();
   environmentName = computed(() => (this.environment().displayName?.trim() ? this.environment().displayName : (this.environment().name ?? '')));
   environmentKind = computed(() => {
     switch (this.environment().type) {
@@ -46,6 +48,8 @@ export class DeployConfirmationComponent {
     }
   });
   displaySourceRef = computed(() => this.sourceRef()?.ref?.trim() || '');
+  shortCommitSha = computed(() => this.commitSha()?.slice(0, 7) || '');
+  hasReadinessContext = computed(() => !!this.environment().id && this.sourceRef()?.type === 'branch' && !!this.displaySourceRef() && !!this.commitSha()?.trim());
 
   /** Emits true if Deploy clicked, false if Cancel */
   confirmed = output<boolean>();
@@ -59,10 +63,33 @@ export class DeployConfirmationComponent {
     throwOnError: false,
     retry: false,
   }));
+  readinessQuery = injectQuery(() => ({
+    ...getDeploymentReadinessOptions({
+      path: { environmentId: this.environment().id },
+      query: {
+        branch: this.displaySourceRef(),
+        sha: this.commitSha() ?? '',
+      },
+    }),
+    enabled: () => this.hasReadinessContext(),
+    throwOnError: false,
+    retry: false,
+  }));
 
   // derived data
   reviewers = computed(() => (this.query.data() as EnvironmentReviewersDto)?.reviewers ?? []);
   hasReviewers = computed(() => this.reviewers().length > 0);
+  readiness = computed(() => this.readinessQuery.data() as EnvironmentDeploymentReadinessDto | undefined);
+  readinessStatus = computed(() => this.readiness()?.status);
+  blockedWorkflows = computed(() => (this.readiness()?.workflows ?? []).filter(workflow => workflow.status && workflow.status !== 'READY'));
+  missingWorkflows = computed(() => (this.readiness()?.workflows ?? []).filter(workflow => workflow.status === 'MISSING_RUN'));
+  showReadinessWarning = computed(() => {
+    const status = this.readinessStatus();
+    return status === 'WAITING' || status === 'FAILED' || status === 'MISSING_RUN';
+  });
+  showBlockedWorkflowList = computed(() => this.readinessStatus() !== 'MISSING_RUN');
+  showMissingWorkflowList = computed(() => this.readinessStatus() === 'MISSING_RUN');
+  isLoading = computed(() => this.query.isPending() || (this.hasReadinessContext() && this.readinessQuery.isPending()));
   reviewersLine = computed(() => {
     if (!this.hasReviewers()) {
       return '';
@@ -75,6 +102,49 @@ export class DeployConfirmationComponent {
       })
       .join(', ');
   });
+
+  deploymentReadinessSummary(): string {
+    switch (this.readinessStatus()) {
+      case 'WAITING':
+        return `Some are still running on branch ${this.displaySourceRef()} at commit ${this.shortCommitSha()}.`;
+      case 'FAILED':
+        return `At least one did not succeed on branch ${this.displaySourceRef()} at commit ${this.shortCommitSha()}.`;
+      case 'MISSING_RUN':
+        return `No matching runs were found on branch ${this.displaySourceRef()} at commit ${this.shortCommitSha()} for these workflows:`;
+      default:
+        return '';
+    }
+  }
+
+  describeBlockedWorkflow(workflow: RequiredWorkflowStatusDto): string {
+    switch (workflow.status) {
+      case 'WAITING':
+        return `Latest matching run is still ${this.formatWorkflowValue(workflow.runStatus)}.`;
+      case 'FAILED':
+        return `Latest matching run finished with ${this.formatWorkflowValue(workflow.runConclusion || workflow.runStatus)}.`;
+      case 'MISSING_RUN':
+        return 'No matching run found.';
+      default:
+        return '';
+    }
+  }
+
+  getWorkflowDisplayName(workflow: RequiredWorkflowStatusDto): string {
+    const name = workflow.workflowName?.trim();
+    if (name) {
+      return name;
+    }
+
+    if (workflow.workflowId) {
+      return `Workflow #${workflow.workflowId}`;
+    }
+
+    return 'Unnamed workflow';
+  }
+
+  private formatWorkflowValue(value?: string): string {
+    return value ? value.toLowerCase().replaceAll('_', ' ') : 'unknown';
+  }
 
   onRepoInput(event: Event) {
     this.repoConfirm = (event.target as HTMLInputElement).value;

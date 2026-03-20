@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RequiredArgsConstructor
@@ -102,6 +103,15 @@ public class EnvironmentController {
         .getEnvironmentReviewers(environmentId)
         .map(ResponseEntity::ok)
         .orElse(ResponseEntity.notFound().build());
+  }
+
+  @GetMapping("/{environmentId}/deployment-readiness")
+  public ResponseEntity<EnvironmentDeploymentReadinessDto> getDeploymentReadiness(
+      @PathVariable Long environmentId,
+      @RequestParam String branch,
+      @RequestParam String sha) {
+    return ResponseEntity.ok(
+        environmentService.getDeploymentReadiness(environmentId, branch, sha));
   }
 
   @PostMapping("/sync")

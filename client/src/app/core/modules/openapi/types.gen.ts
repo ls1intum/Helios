@@ -83,6 +83,7 @@ export type EnvironmentDto = {
   statusCheckType?: 'HTTP_STATUS' | 'ARTEMIS_INFO' | 'PUSH_UPDATE';
   statusUrl?: string;
   deploymentWorkflowBranch?: string;
+  requiredPreDeploymentWorkflows?: Array<WorkflowDto>;
   latestDeployment?: EnvironmentDeployment;
   latestStatus?: EnvironmentStatusDto;
   lockedBy?: UserInfoDto;
@@ -635,6 +636,36 @@ export type Reviewer = {
   login?: string;
   name?: string;
   type?: string;
+};
+
+export type EnvironmentDeploymentReadinessDto = {
+  status?: 'UNCONFIGURED' | 'READY' | 'WAITING' | 'FAILED' | 'MISSING_RUN';
+  workflows?: Array<RequiredWorkflowStatusDto>;
+};
+
+export type RequiredWorkflowStatusDto = {
+  workflowId?: number;
+  workflowName?: string;
+  status?: 'READY' | 'WAITING' | 'FAILED' | 'MISSING_RUN';
+  runId?: number;
+  runHtmlUrl?: string;
+  runStatus?:
+    | 'QUEUED'
+    | 'IN_PROGRESS'
+    | 'COMPLETED'
+    | 'ACTION_REQUIRED'
+    | 'CANCELLED'
+    | 'FAILURE'
+    | 'NEUTRAL'
+    | 'SKIPPED'
+    | 'STALE'
+    | 'SUCCESS'
+    | 'TIMED_OUT'
+    | 'REQUESTED'
+    | 'WAITING'
+    | 'PENDING'
+    | 'UNKNOWN';
+  runConclusion?: 'ACTION_REQUIRED' | 'CANCELLED' | 'FAILURE' | 'NEUTRAL' | 'SUCCESS' | 'SKIPPED' | 'STALE' | 'TIMED_OUT' | 'STARTUP_FAILURE' | 'UNKNOWN';
 };
 
 export type EnvironmentLockHistoryDto = {
@@ -2447,6 +2478,36 @@ export type GetEnvironmentReviewersResponses = {
 };
 
 export type GetEnvironmentReviewersResponse = GetEnvironmentReviewersResponses[keyof GetEnvironmentReviewersResponses];
+
+export type GetDeploymentReadinessData = {
+  body?: never;
+  path: {
+    environmentId: number;
+  };
+  query: {
+    branch: string;
+    sha: string;
+  };
+  url: '/api/environments/{environmentId}/deployment-readiness';
+};
+
+export type GetDeploymentReadinessErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type GetDeploymentReadinessError = GetDeploymentReadinessErrors[keyof GetDeploymentReadinessErrors];
+
+export type GetDeploymentReadinessResponses = {
+  /**
+   * OK
+   */
+  200: EnvironmentDeploymentReadinessDto;
+};
+
+export type GetDeploymentReadinessResponse = GetDeploymentReadinessResponses[keyof GetDeploymentReadinessResponses];
 
 export type GetEnvironmentsByUserLockingData = {
   body?: never;

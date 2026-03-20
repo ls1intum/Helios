@@ -26,6 +26,8 @@ import de.tum.cit.aet.helios.releaseinfo.releasecandidate.ReleaseCandidateReposi
 import de.tum.cit.aet.helios.user.User;
 import de.tum.cit.aet.helios.workflow.Workflow;
 import de.tum.cit.aet.helios.workflow.WorkflowRepository;
+import de.tum.cit.aet.helios.workflow.WorkflowRun;
+import de.tum.cit.aet.helios.workflow.WorkflowRunRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import java.io.IOException;
@@ -33,8 +35,10 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -42,6 +46,7 @@ import org.jetbrains.annotations.NotNull;
 import org.kohsuke.github.GHRepository;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.dao.OptimisticLockingFailureException;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -59,6 +64,7 @@ public class EnvironmentService {
   @Lazy private final GitRepoSettingsService gitRepoSettingsService;
   private final EnvironmentScheduler environmentScheduler;
   private final WorkflowRepository workflowRepository;
+  private final WorkflowRunRepository workflowRunRepository;
   private final ProtectionRuleRepository protectionRuleRepository;
   private final ObjectMapper objectMapper;
   private final GitHubEnvironmentSyncService environmentSyncService;
@@ -559,6 +565,7 @@ public class EnvironmentService {
                                     "Workflow not found with ID: " + workflowId));
                 environment.setDeploymentWorkflow(wf);
               }
+              updateRequiredPreDeploymentWorkflows(environment, environmentDto);
               environment.setLockExpirationThreshold(environmentDto.lockExpirationThreshold());
               environment.setLockReservationThreshold(environmentDto.lockReservationThreshold());
               if (environment.isLocked() && environment.getLockedAt() != null) {
@@ -569,6 +576,145 @@ public class EnvironmentService {
               environmentRepository.save(environment);
               return EnvironmentDto.fromEnvironment(environment);
             });
+  }
+
+  private void updateRequiredPreDeploymentWorkflows(
+      Environment environment, EnvironmentDto environmentDto) {
+    if (environmentDto.requiredPreDeploymentWorkflows() == null) {
+      environment.setRequiredPreDeploymentWorkflows(new ArrayList<>());
+      return;
+    }
+
+    List<Workflow> workflows = environmentDto.requiredPreDeploymentWorkflows().stream()
+        .map(workflowDto -> workflowRepository
+            .findById(workflowDto.id())
+            .orElseThrow(() -> new EntityNotFoundException(
+                "Workflow not found with ID: " + workflowDto.id())))
+        .toList();
+
+    boolean containsCrossRepositoryWorkflow = workflows.stream()
+        .anyMatch(workflow -> workflow.getRepository() == null
+            || environment.getRepository() == null
+            || !workflow.getRepository().getRepositoryId()
+            .equals(environment.getRepository().getRepositoryId()));
+
+    if (containsCrossRepositoryWorkflow) {
+      throw new EnvironmentException(
+          "Required pre-deployment workflows must belong to the same repository as the"
+              + " environment.");
+    }
+
+    Workflow deploymentWorkflow = environment.getDeploymentWorkflow();
+    if (deploymentWorkflow != null) {
+      Set<Long> requiredWorkflowIds =
+          workflows.stream().map(Workflow::getId).collect(Collectors.toSet());
+      if (requiredWorkflowIds.contains(deploymentWorkflow.getId())) {
+        throw new EnvironmentException(
+            "The deployment workflow cannot also be configured as a required pre-deployment"
+                + " workflow.");
+      }
+    }
+
+    environment.setRequiredPreDeploymentWorkflows(new ArrayList<>(workflows));
+  }
+
+  public EnvironmentDeploymentReadinessDto getDeploymentReadiness(
+      Long environmentId, String branch, String sha) {
+    Environment environment =
+        environmentRepository
+            .findById(environmentId)
+            .orElseThrow(
+                () ->
+                    new EntityNotFoundException("Environment not found with ID: " + environmentId));
+
+    List<Workflow> requiredWorkflows = environment.getRequiredPreDeploymentWorkflows();
+    if (requiredWorkflows == null || requiredWorkflows.isEmpty()) {
+      return new EnvironmentDeploymentReadinessDto(
+          EnvironmentDeploymentReadinessDto.Status.UNCONFIGURED,
+          List.of());
+    }
+
+    List<EnvironmentDeploymentReadinessDto.RequiredWorkflowStatusDto> workflowStatuses =
+        requiredWorkflows.stream()
+            .sorted((left, right) -> left.getName().compareToIgnoreCase(right.getName()))
+            .map(workflow -> buildRequiredWorkflowStatus(environment, workflow, branch, sha))
+            .toList();
+
+    boolean hasFailed =
+        workflowStatuses.stream()
+            .anyMatch(
+                status ->
+                    status.status() == EnvironmentDeploymentReadinessDto.WorkflowStatus.FAILED);
+    boolean hasWaiting =
+        workflowStatuses.stream()
+            .anyMatch(
+                status ->
+                    status.status() == EnvironmentDeploymentReadinessDto.WorkflowStatus.WAITING);
+    boolean hasMissingRun =
+        workflowStatuses.stream()
+            .anyMatch(
+                status ->
+                    status.status()
+                        == EnvironmentDeploymentReadinessDto.WorkflowStatus.MISSING_RUN);
+
+    EnvironmentDeploymentReadinessDto.Status status =
+        hasFailed
+            ? EnvironmentDeploymentReadinessDto.Status.FAILED
+            : hasWaiting
+                ? EnvironmentDeploymentReadinessDto.Status.WAITING
+                : hasMissingRun
+                    ? EnvironmentDeploymentReadinessDto.Status.MISSING_RUN
+                    : EnvironmentDeploymentReadinessDto.Status.READY;
+
+    return new EnvironmentDeploymentReadinessDto(status, workflowStatuses);
+  }
+
+  private EnvironmentDeploymentReadinessDto.RequiredWorkflowStatusDto buildRequiredWorkflowStatus(
+      Environment environment, Workflow workflow, String branch, String sha) {
+    Optional<WorkflowRun> latestRun =
+        workflowRunRepository
+            .findLatestForDeploymentReadiness(
+                workflow.getId(),
+                environment.getRepository().getRepositoryId(),
+                branch,
+                sha,
+                PageRequest.of(0, 1))
+            .stream()
+            .findFirst();
+
+    if (latestRun.isEmpty()) {
+      return new EnvironmentDeploymentReadinessDto.RequiredWorkflowStatusDto(
+          workflow.getId(),
+          workflow.getName(),
+          EnvironmentDeploymentReadinessDto.WorkflowStatus.MISSING_RUN,
+          null,
+          null,
+          null,
+          null);
+    }
+
+    WorkflowRun run = latestRun.get();
+    return new EnvironmentDeploymentReadinessDto.RequiredWorkflowStatusDto(
+        workflow.getId(),
+        workflow.getName(),
+        mapWorkflowRunToReadinessStatus(run),
+        run.getId(),
+        run.getHtmlUrl(),
+        run.getStatus(),
+        run.getConclusion().orElse(null));
+  }
+
+  private EnvironmentDeploymentReadinessDto.WorkflowStatus mapWorkflowRunToReadinessStatus(
+      WorkflowRun run) {
+    return switch (run.getStatus()) {
+      case COMPLETED -> run.getConclusion().orElse(WorkflowRun.Conclusion.UNKNOWN)
+              == WorkflowRun.Conclusion.SUCCESS
+          ? EnvironmentDeploymentReadinessDto.WorkflowStatus.READY
+          : EnvironmentDeploymentReadinessDto.WorkflowStatus.FAILED;
+      case REQUESTED, QUEUED, PENDING, WAITING, IN_PROGRESS, ACTION_REQUIRED ->
+          EnvironmentDeploymentReadinessDto.WorkflowStatus.WAITING;
+      default -> EnvironmentDeploymentReadinessDto.WorkflowStatus.FAILED;
+    };
   }
 
   // Called by GitRepoSettingsService when lock expiration threshold is updated

@@ -251,6 +251,12 @@ export const EnvironmentDtoSchema = {
     deploymentWorkflowBranch: {
       type: 'string',
     },
+    requiredPreDeploymentWorkflows: {
+      type: 'array',
+      items: {
+        $ref: '#/components/schemas/WorkflowDto',
+      },
+    },
     latestDeployment: {
       $ref: '#/components/schemas/EnvironmentDeployment',
     },
@@ -1699,6 +1705,70 @@ export const ReviewerSchema = {
     },
     type: {
       type: 'string',
+    },
+  },
+} as const;
+
+export const EnvironmentDeploymentReadinessDtoSchema = {
+  type: 'object',
+  properties: {
+    status: {
+      type: 'string',
+      enum: ['UNCONFIGURED', 'READY', 'WAITING', 'FAILED', 'MISSING_RUN'],
+    },
+    workflows: {
+      type: 'array',
+      items: {
+        $ref: '#/components/schemas/RequiredWorkflowStatusDto',
+      },
+    },
+  },
+} as const;
+
+export const RequiredWorkflowStatusDtoSchema = {
+  type: 'object',
+  properties: {
+    workflowId: {
+      type: 'integer',
+      format: 'int64',
+    },
+    workflowName: {
+      type: 'string',
+    },
+    status: {
+      type: 'string',
+      enum: ['READY', 'WAITING', 'FAILED', 'MISSING_RUN'],
+    },
+    runId: {
+      type: 'integer',
+      format: 'int64',
+    },
+    runHtmlUrl: {
+      type: 'string',
+    },
+    runStatus: {
+      type: 'string',
+      enum: [
+        'QUEUED',
+        'IN_PROGRESS',
+        'COMPLETED',
+        'ACTION_REQUIRED',
+        'CANCELLED',
+        'FAILURE',
+        'NEUTRAL',
+        'SKIPPED',
+        'STALE',
+        'SUCCESS',
+        'TIMED_OUT',
+        'REQUESTED',
+        'WAITING',
+        'PENDING',
+        'UNKNOWN',
+      ],
+    },
+    runConclusion: {
+      type: 'string',
+      enum: ['ACTION_REQUIRED', 'CANCELLED', 'FAILURE', 'NEUTRAL', 'SUCCESS', 'SKIPPED', 'STALE', 'TIMED_OUT', 'STARTUP_FAILURE', 'UNKNOWN'],
     },
   },
 } as const;

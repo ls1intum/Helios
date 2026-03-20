@@ -2,6 +2,7 @@ package de.tum.cit.aet.helios.workflow;
 
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -126,6 +127,19 @@ public interface WorkflowRunRepository
   List<WorkflowRun> findByHeadBranchAndHeadShaAndRepositoryRepositoryId(
       String branch, String headSha, Long repositoryId);
 
+  @Query(
+      "SELECT wr FROM WorkflowRun wr "
+          + "WHERE wr.workflow.id = :workflowId "
+          + "AND wr.repository.repositoryId = :repositoryId "
+          + "AND wr.headBranch = :headBranch "
+          + "AND wr.headSha = :headSha "
+          + "ORDER BY wr.createdAt DESC")
+  List<WorkflowRun> findLatestForDeploymentReadiness(
+      @Param("workflowId") Long workflowId,
+      @Param("repositoryId") Long repositoryId,
+      @Param("headBranch") String headBranch,
+      @Param("headSha") String headSha,
+      Pageable pageable);
 
   /**
    * IDs of workflow-runs that will **NOT** be deleted by the current policy.

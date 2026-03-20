@@ -31,6 +31,7 @@ import {
   getCommitByRepositoryIdAndName,
   getCommitsSinceLastReleaseCandidate,
   getDeploymentById,
+  getDeploymentReadiness,
   getDeploymentsByEnvironmentId,
   getEnvironmentById,
   getEnvironmentReviewers,
@@ -136,6 +137,7 @@ import type {
   GetCommitByRepositoryIdAndNameData,
   GetCommitsSinceLastReleaseCandidateData,
   GetDeploymentByIdData,
+  GetDeploymentReadinessData,
   GetDeploymentsByEnvironmentIdData,
   GetEnvironmentByIdData,
   GetEnvironmentReviewersData,
@@ -1579,6 +1581,23 @@ export const getEnvironmentReviewersOptions = (options: Options<GetEnvironmentRe
       return data;
     },
     queryKey: getEnvironmentReviewersQueryKey(options),
+  });
+};
+
+export const getDeploymentReadinessQueryKey = (options: Options<GetDeploymentReadinessData>) => createQueryKey('getDeploymentReadiness', options);
+
+export const getDeploymentReadinessOptions = (options: Options<GetDeploymentReadinessData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getDeploymentReadiness({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: getDeploymentReadinessQueryKey(options),
   });
 };
 

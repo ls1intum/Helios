@@ -3,7 +3,7 @@ import { importProvidersFrom, signal } from '@angular/core';
 import { By } from '@angular/platform-browser';
 import { DeployConfirmationComponent } from './deploy-confirmation.component';
 import { TestModule } from '@app/test.module';
-import { EnvironmentDto, EnvironmentReviewersDto } from '@app/core/modules/openapi';
+import { EnvironmentDeploymentReadinessDto, EnvironmentDto, EnvironmentReviewersDto } from '@app/core/modules/openapi';
 
 describe('DeployConfirmationComponent', () => {
   let component: DeployConfirmationComponent;
@@ -39,6 +39,11 @@ describe('DeployConfirmationComponent', () => {
       data: signal<EnvironmentReviewersDto>({ reviewers: [] }),
       isPending: signal(false),
     } as typeof component.query;
+    component.readinessQuery = {
+      ...component.readinessQuery,
+      data: signal<EnvironmentDeploymentReadinessDto | undefined>(undefined),
+      isPending: signal(false),
+    } as typeof component.readinessQuery;
   });
 
   function getAlertMessage(): string {
@@ -94,5 +99,100 @@ describe('DeployConfirmationComponent', () => {
     fixture.detectChanges();
 
     expect(deployButton.disabled).toBe(false);
+  });
+
+  it('shows an exact workflow warning when a required workflow is still running for the selected branch and commit', async () => {
+    fixture.componentRef.setInput('sourceRef', { ref: 'main', type: 'branch' });
+    fixture.componentRef.setInput('commitSha', 'abcdef1234567890');
+    component.readinessQuery = {
+      ...component.readinessQuery,
+      data: signal<EnvironmentDeploymentReadinessDto>({
+        status: 'WAITING',
+        workflows: [
+          {
+            workflowId: 2,
+            workflowName: 'Build',
+            status: 'WAITING',
+            runHtmlUrl: 'https://example.com/runs/2',
+            runStatus: 'IN_PROGRESS',
+          },
+        ],
+      }),
+      isPending: signal(false),
+    } as typeof component.readinessQuery;
+
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const warning = fixture.nativeElement.querySelector('[data-testid="deployment-readiness-warning"]');
+
+    expect(warning).toBeTruthy();
+    expect(warning.textContent).toContain('Required pre-deployment workflows are not ready.');
+    expect(warning.textContent).toContain('Deployment may wait for the build to finish.');
+    expect(warning.textContent).toContain('In most cases, it is enough if the actions in the PR have finished.');
+    expect(warning.textContent).toContain('Some are still running on branch main at commit abcdef1.');
+    expect(warning.textContent).toContain('Build');
+    expect(warning.textContent).toContain('still in progress');
+  });
+
+  it('shows the branch and commit once when matching runs are missing', async () => {
+    fixture.componentRef.setInput('sourceRef', { ref: 'main', type: 'branch' });
+    fixture.componentRef.setInput('commitSha', 'abcdef1234567890');
+    component.readinessQuery = {
+      ...component.readinessQuery,
+      data: signal<EnvironmentDeploymentReadinessDto>({
+        status: 'MISSING_RUN',
+        workflows: [
+          {
+            workflowId: 2,
+            workflowName: 'Build',
+            status: 'MISSING_RUN',
+          },
+          {
+            workflowId: 3,
+            workflowName: 'Test',
+            status: 'MISSING_RUN',
+          },
+        ],
+      }),
+      isPending: signal(false),
+    } as typeof component.readinessQuery;
+
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const warning = fixture.nativeElement.querySelector('[data-testid="deployment-readiness-warning"]');
+
+    expect(warning).toBeTruthy();
+    expect(warning.textContent).toContain('No matching runs were found on branch main at commit abcdef1 for these workflows:');
+    expect(warning.textContent).toContain('Build');
+    expect(warning.textContent).toContain('Test');
+    expect(warning.textContent).not.toContain('No matching run found.');
+  });
+
+  it('falls back to the workflow id when a missing workflow has no name', async () => {
+    fixture.componentRef.setInput('sourceRef', { ref: 'main', type: 'branch' });
+    fixture.componentRef.setInput('commitSha', 'abcdef1234567890');
+    component.readinessQuery = {
+      ...component.readinessQuery,
+      data: signal<EnvironmentDeploymentReadinessDto>({
+        status: 'MISSING_RUN',
+        workflows: [
+          {
+            workflowId: 7,
+            status: 'MISSING_RUN',
+          },
+        ],
+      }),
+      isPending: signal(false),
+    } as typeof component.readinessQuery;
+
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const warning = fixture.nativeElement.querySelector('[data-testid="deployment-readiness-warning"]');
+
+    expect(warning).toBeTruthy();
+    expect(warning.textContent).toContain('Workflow #7');
   });
 });
