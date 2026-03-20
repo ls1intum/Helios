@@ -10,7 +10,7 @@ import { injectQuery } from '@tanstack/angular-query-experimental';
 import { getFlakyTestsOverviewOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
 import { IconAlertTriangle, IconBug } from 'angular-tabler-icons/icons';
-import { PAGINATED_FILTER_OPTIONS_TOKEN, PaginatedFilterOption, PaginatedTableService } from '@app/core/services/paginated-table.service';
+import { PAGINATED_FILTER_OPTIONS_TOKEN, PAGINATION_STORAGE_KEY_TOKEN, PaginatedFilterOption, PaginatedTableService } from '@app/core/services/paginated-table.service';
 import { TableFilterPaginatedComponent } from '@app/components/table-filter-paginated/table-filter-paginated.component';
 import { SortMeta } from 'primeng/api';
 import { FlakyTestDto } from '@app/core/modules/openapi';
@@ -27,7 +27,12 @@ function createFlakinessFilterOptions(): PaginatedFilterOption[] {
 @Component({
   selector: 'app-flaky-tests-overview',
   imports: [CommonModule, TableModule, TagModule, TooltipModule, ButtonModule, SkeletonModule, PageHeadingComponent, TablerIconComponent, TableFilterPaginatedComponent],
-  providers: [PaginatedTableService, { provide: PAGINATED_FILTER_OPTIONS_TOKEN, useFactory: createFlakinessFilterOptions }, provideTablerIcons({ IconBug, IconAlertTriangle })],
+  providers: [
+    PaginatedTableService,
+    { provide: PAGINATED_FILTER_OPTIONS_TOKEN, useFactory: createFlakinessFilterOptions },
+    { provide: PAGINATION_STORAGE_KEY_TOKEN, useValue: 'flakyTestsPaginationState' },
+    provideTablerIcons({ IconBug, IconAlertTriangle }),
+  ],
   templateUrl: './flaky-tests-overview.component.html',
 })
 export class FlakyTestsOverviewComponent {
