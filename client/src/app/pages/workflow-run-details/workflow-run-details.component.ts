@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, numberAttribute } from '@angular/core';
+import { Component, computed, inject, input, numberAttribute, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { WorkflowJobDto, WorkflowRunDto } from '@app/core/modules/openapi';
 import {
@@ -6,6 +6,7 @@ import {
   getWorkflowJobStatusOptions,
   getWorkflowJobStatusQueryKey,
   getWorkflowRunByIdOptions,
+  getWorkflowRunByIdQueryKey,
   reRunWorkflowMutation,
   reRunFailedJobsMutation,
 } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
@@ -13,7 +14,7 @@ import { PermissionService } from '@app/core/services/permission.service';
 import { WorkflowJobListComponent } from '@app/components/workflow-job-list/workflow-job-list.component';
 import { PipelineTestResultsComponent } from '@app/components/pipeline/test-results/pipeline-test-results.component';
 import { PipelineSelector } from '@app/components/pipeline/pipeline.component';
-import { injectMutation, injectQuery } from '@tanstack/angular-query-experimental';
+import { injectMutation, injectQuery, QueryClient } from '@tanstack/angular-query-experimental';
 import { MessageService } from 'primeng/api';
 import { TagModule } from 'primeng/tag';
 import { ButtonModule } from 'primeng/button';
@@ -75,16 +76,28 @@ export class WorkflowRunDetailsComponent {
 
   protected permissions = inject(PermissionService);
   private messageService = inject(MessageService);
+  private queryClient = inject(QueryClient);
 
-  runQuery = injectQuery(() => ({
-    ...getWorkflowRunByIdOptions({ path: { runId: this.runId() } }),
-    refetchInterval: query => {
-      const data = query.state?.data;
-      const activeStatuses = ['IN_PROGRESS', 'QUEUED', 'WAITING', 'PENDING', 'REQUESTED'];
-      return data && activeStatuses.includes(data.status) ? 5000 : 0;
-    },
-    staleTime: 0,
-  }));
+  // Duration to continue polling after a user action (cancel/rerun) to ensure UI updates promptly.
+  private readonly FORCED_POLL_DURATION_MS = 2 * 60 * 1000;
+
+  // Timestamp set when a user action (cancel/rerun) is triggered.
+  private actionTriggeredAt = signal<number | null>(null);
+
+  runQuery = injectQuery(() => {
+    const actionAt = this.actionTriggeredAt();
+    return {
+      ...getWorkflowRunByIdOptions({ path: { runId: this.runId() } }),
+      refetchInterval: (query: { state?: { data?: WorkflowRunDto } }) => {
+        const data = query.state?.data;
+        const activeStatuses = ['IN_PROGRESS', 'QUEUED', 'WAITING', 'PENDING', 'REQUESTED'];
+        if (data && activeStatuses.includes(data.status)) return 5000;
+        if (actionAt !== null && Date.now() - actionAt < this.FORCED_POLL_DURATION_MS) return 5000;
+        return 0;
+      },
+      staleTime: 0,
+    };
+  });
 
   run = computed(() => this.runQuery.data() ?? null);
 
@@ -94,17 +107,22 @@ export class WorkflowRunDetailsComponent {
     return { repositoryId: this.repositoryId(), workflowRunId: this.runId() };
   });
 
-  workflowJobsQuery = injectQuery(() => ({
-    ...getWorkflowJobStatusOptions({ path: { runId: this.runId() } }),
-    queryKey: getWorkflowJobStatusQueryKey({ path: { runId: this.runId() } }),
-    enabled: this.permissions.hasWritePermission(),
-    refetchInterval: query => {
-      const data = query.state?.data as { jobs?: WorkflowJobDto[] } | undefined;
-      const inProgress = (data?.jobs ?? []).some(j => j.status === 'in_progress' || j.status === 'queued' || j.status === 'waiting');
-      return inProgress ? 5000 : 0;
-    },
-    staleTime: 0,
-  }));
+  workflowJobsQuery = injectQuery(() => {
+    const actionAt = this.actionTriggeredAt();
+    return {
+      ...getWorkflowJobStatusOptions({ path: { runId: this.runId() } }),
+      queryKey: getWorkflowJobStatusQueryKey({ path: { runId: this.runId() } }),
+      enabled: this.permissions.hasWritePermission(),
+      refetchInterval: (query: { state?: { data?: { jobs?: WorkflowJobDto[] } } }) => {
+        const data = query.state?.data;
+        const inProgress = (data?.jobs ?? []).some(j => j.status === 'in_progress' || j.status === 'queued' || j.status === 'waiting');
+        if (inProgress) return 5000;
+        if (actionAt !== null && Date.now() - actionAt < this.FORCED_POLL_DURATION_MS) return 5000;
+        return 0;
+      },
+      staleTime: 0,
+    };
+  });
 
   jobs = computed<WorkflowJobDto[]>(() => {
     const response = this.workflowJobsQuery.data();
@@ -116,6 +134,7 @@ export class WorkflowRunDetailsComponent {
     ...reRunWorkflowMutation(),
     onSuccess: () => {
       this.messageService.add({ severity: 'success', summary: 'Re-run triggered', detail: 'All jobs have been queued for re-run.' });
+      this.invalidateRunQueries();
     },
     onError: () => {
       this.messageService.add({ severity: 'error', summary: 'Re-run failed', detail: 'Could not trigger re-run. Please try again.' });
@@ -126,6 +145,7 @@ export class WorkflowRunDetailsComponent {
     ...reRunFailedJobsMutation(),
     onSuccess: () => {
       this.messageService.add({ severity: 'success', summary: 'Re-run triggered', detail: 'Failed jobs have been queued for re-run.' });
+      this.invalidateRunQueries();
     },
     onError: () => {
       this.messageService.add({ severity: 'error', summary: 'Re-run failed', detail: 'Could not trigger re-run of failed jobs. Please try again.' });
@@ -136,11 +156,20 @@ export class WorkflowRunDetailsComponent {
     ...cancelWorkflowRunMutation(),
     onSuccess: () => {
       this.messageService.add({ severity: 'success', summary: 'Cancellation requested', detail: 'The workflow run has been requested to cancel.' });
+      this.invalidateRunQueries();
     },
     onError: () => {
       this.messageService.add({ severity: 'error', summary: 'Cancellation failed', detail: 'Could not cancel the workflow run. Please try again.' });
     },
   }));
+
+  private invalidateRunQueries(): void {
+    const runId = this.runId();
+    // Set the timestamp to trigger more frequent polling for a short duration to ensure UI updates promptly after user actions.
+    this.actionTriggeredAt.set(Date.now());
+    this.queryClient.invalidateQueries({ queryKey: getWorkflowRunByIdQueryKey({ path: { runId } }) });
+    this.queryClient.invalidateQueries({ queryKey: getWorkflowJobStatusQueryKey({ path: { runId } }) });
+  }
 
   canReRunFailed = computed(() => {
     const r = this.run();
