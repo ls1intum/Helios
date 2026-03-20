@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, output } from '@angular/core';
+import { Component, inject, input, output } from '@angular/core';
 import { EnvironmentDeployment, EnvironmentDto } from '@app/core/modules/openapi';
 import { DeploymentStepperComponent } from '../deployment-stepper/deployment-stepper.component';
 import { EnvironmentActionsComponent } from '../environment-actions/environment-actions.component';
@@ -130,15 +130,4 @@ export class EnvironmentAccordionComponent {
       window.open(url, '_blank');
     }
   }
-
-  workflowRunId = computed(() => {
-    const deployment = this.environment()?.latestDeployment;
-    if (!deployment?.workflowRunHtmlUrl) return undefined;
-
-    const matches = deployment.workflowRunHtmlUrl.match(/\/runs\/(\d+)$/);
-    if (matches && matches[1]) {
-      return parseInt(matches[1], 10);
-    }
-    return undefined;
-  });
 }
