@@ -2379,9 +2379,13 @@ components:
         className:
           type: string
           minLength: 1
+        testSuiteName:
+          type: string
+          minLength: 1
       required:
       - className
       - testName
+      - testSuiteName
     TestFlakinessScoreRequest:
       type: object
       properties:
@@ -2399,6 +2403,8 @@ components:
           type: string
         className:
           type: string
+        testSuiteName:
+          type: string
         flakinessScore:
           type: number
           format: double
@@ -2411,6 +2417,7 @@ components:
       required:
       - className
       - testName
+      - testSuiteName
     ReleaseCandidateCreateDto:
       type: object
       properties:

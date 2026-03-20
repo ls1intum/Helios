@@ -162,6 +162,7 @@ export type NotificationPreferencesWrapper = {
 export type TestCaseIdentifier = {
   testName: string;
   className: string;
+  testSuiteName: string;
 };
 
 export type TestFlakinessScoreRequest = {
@@ -171,6 +172,7 @@ export type TestFlakinessScoreRequest = {
 export type TestFlakinessScoreDto = {
   testName: string;
   className: string;
+  testSuiteName: string;
   flakinessScore?: number;
   defaultBranchFailureRate?: number;
   combinedFailureRate?: number;

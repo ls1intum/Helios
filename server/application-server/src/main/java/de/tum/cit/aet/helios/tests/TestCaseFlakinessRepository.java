@@ -48,9 +48,11 @@ public interface TestCaseFlakinessRepository
           + " WHERE t.repository.repositoryId = :repositoryId"
           + "   AND t.testName = :testName"
           + "   AND t.className = :className"
+          + "   AND t.testSuiteName = :suiteName"
           + " ORDER BY t.flakinessScore DESC")
-  List<TestCaseFlakiness> findByRepositoryIdAndTestNameAndClassName(
+  List<TestCaseFlakiness> findByRepositoryIdAndTestNameAndClassNameAndSuiteName(
       @Param("repositoryId") Long repositoryId,
       @Param("testName") String testName,
-      @Param("className") String className);
+      @Param("className") String className,
+      @Param("suiteName") String suiteName);
 }

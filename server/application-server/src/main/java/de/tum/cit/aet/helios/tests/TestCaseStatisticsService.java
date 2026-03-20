@@ -207,20 +207,25 @@ public class TestCaseStatisticsService {
         .map(
             identifier -> {
               List<TestCaseFlakiness> matches =
-                  flakinessRepository.findByRepositoryIdAndTestNameAndClassName(
-                      repositoryId, identifier.testName(), identifier.className());
+                  flakinessRepository.findByRepositoryIdAndTestNameAndClassNameAndSuiteName(
+                      repositoryId,
+                      identifier.testName(),
+                      identifier.className(),
+                      identifier.testSuiteName());
 
               if (!matches.isEmpty()) {
                 TestCaseFlakiness best = matches.getFirst();
                 return new TestFlakinessScoreDto(
                     identifier.testName(),
                     identifier.className(),
+                    identifier.testSuiteName(),
                     best.getFlakinessScore(),
                     best.getDefaultBranchFailureRate(),
                     best.getCombinedFailureRate());
               }
               return new TestFlakinessScoreDto(
-                  identifier.testName(), identifier.className(), 0.0, 0.0, 0.0);
+                  identifier.testName(), identifier.className(), identifier.testSuiteName(),
+                  0.0, 0.0, 0.0);
             })
         .toList();
   }

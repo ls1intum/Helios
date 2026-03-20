@@ -9,7 +9,6 @@ import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import de.tum.cit.aet.helios.tests.pagination.FlakyTestsFilterType;
 import de.tum.cit.aet.helios.tests.pagination.FlakyTestsPageRequest;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.IntStream;
 import org.junit.jupiter.api.BeforeEach;
@@ -106,11 +105,12 @@ class TestCaseStatisticsServiceTest {
   @Test
   void getFlakinessScoresForTests_returnsScores() {
     TestCaseFlakiness flakiness = createFlakiness("test1", "Class1", "Suite1", 88.2, 0.05, 0.08);
-    when(flakinessRepository.findByRepositoryIdAndTestNameAndClassName(1L, "test1", "Class1"))
+    when(flakinessRepository.findByRepositoryIdAndTestNameAndClassNameAndSuiteName(
+        1L, "test1", "Class1", "Suite1"))
         .thenReturn(List.of(flakiness));
 
     TestFlakinessScoreRequest.TestCaseIdentifier identifier =
-        new TestFlakinessScoreRequest.TestCaseIdentifier("test1", "Class1");
+        new TestFlakinessScoreRequest.TestCaseIdentifier("test1", "Class1", "Suite1");
 
     List<TestFlakinessScoreDto> result =
         service.getFlakinessScoresForTests(1L, List.of(identifier));
@@ -125,11 +125,12 @@ class TestCaseStatisticsServiceTest {
 
   @Test
   void getFlakinessScoresForTests_returnsZeroDtoWhenNoMatchExists() {
-    when(flakinessRepository.findByRepositoryIdAndTestNameAndClassName(1L, "missing", "Class1"))
+    when(flakinessRepository.findByRepositoryIdAndTestNameAndClassNameAndSuiteName(
+        1L, "missing", "Class1", "Suite1"))
         .thenReturn(List.of());
 
     TestFlakinessScoreRequest.TestCaseIdentifier identifier =
-        new TestFlakinessScoreRequest.TestCaseIdentifier("missing", "Class1");
+        new TestFlakinessScoreRequest.TestCaseIdentifier("missing", "Class1", "Suite1");
 
     List<TestFlakinessScoreDto> result =
         service.getFlakinessScoresForTests(1L, List.of(identifier));
@@ -138,6 +139,7 @@ class TestCaseStatisticsServiceTest {
     assertAll(
         () -> assertEquals("missing", result.getFirst().testName()),
         () -> assertEquals("Class1", result.getFirst().className()),
+        () -> assertEquals("Suite1", result.getFirst().testSuiteName()),
         () -> assertEquals(0.0, result.getFirst().defaultBranchFailureRate()),
         () -> assertEquals(0.0, result.getFirst().combinedFailureRate()),
         () -> assertEquals(0.0, result.getFirst().flakinessScore()));

@@ -62,10 +62,10 @@ class TestResultControllerTest {
 
   @Test
   void getFlakinessScores_withValidRequest_returnsScores() throws Exception {
-    var identifier = new TestFlakinessScoreRequest.TestCaseIdentifier("test1", "Class1");
+    var identifier = new TestFlakinessScoreRequest.TestCaseIdentifier("test1", "Class1", "Suite1");
     var request = new TestFlakinessScoreRequest(List.of(identifier));
 
-    var expectedDto = new TestFlakinessScoreDto("test1", "Class1", 63.0, 0.05, 0.0);
+    var expectedDto = new TestFlakinessScoreDto("test1", "Class1", "Suite1", 63.0, 0.05, 0.0);
 
     when(testCaseStatisticsService.getFlakinessScoresForTests(eq(1L), anyList()))
         .thenReturn(List.of(expectedDto));
@@ -90,12 +90,12 @@ class TestResultControllerTest {
   void getFlakinessScores_withMultipleTests_returnsAllScores() throws Exception {
     var identifiers =
         List.of(
-            new TestFlakinessScoreRequest.TestCaseIdentifier("test1", "Class1"),
-            new TestFlakinessScoreRequest.TestCaseIdentifier("test2", "Class2"));
+            new TestFlakinessScoreRequest.TestCaseIdentifier("test1", "Class1", "Suite1"),
+            new TestFlakinessScoreRequest.TestCaseIdentifier("test2", "Class2", "Suite1"));
     var request = new TestFlakinessScoreRequest(identifiers);
 
-    var dto1 = new TestFlakinessScoreDto("test1", "Class1", 63.0, 0.05, 0.0);
-    var dto2 = new TestFlakinessScoreDto("test2", "Class2", 0.0, 0.0, 0.0);
+    var dto1 = new TestFlakinessScoreDto("test1", "Class1", "Suite1", 63.0, 0.05, 0.0);
+    var dto2 = new TestFlakinessScoreDto("test2", "Class2", "Suite1", 0.0, 0.0, 0.0);
 
     when(testCaseStatisticsService.getFlakinessScoresForTests(eq(1L), anyList()))
         .thenReturn(List.of(dto1, dto2));
@@ -165,10 +165,11 @@ class TestResultControllerTest {
 
   @Test
   void getFlakinessScores_withNoMatchingTests_returnsZeroScores() throws Exception {
-    var identifier = new TestFlakinessScoreRequest.TestCaseIdentifier("unknownTest", "Unknown");
+    var identifier = new TestFlakinessScoreRequest.TestCaseIdentifier(
+        "unknownTest", "Unknown", "Unknown");
     var request = new TestFlakinessScoreRequest(List.of(identifier));
 
-    var zeroDto = new TestFlakinessScoreDto("unknownTest", "Unknown", 0.0, 0.0, 0.0);
+    var zeroDto = new TestFlakinessScoreDto("unknownTest", "Unknown", "Unknown", 0.0, 0.0, 0.0);
 
     when(testCaseStatisticsService.getFlakinessScoresForTests(eq(1L), anyList()))
         .thenReturn(List.of(zeroDto));
