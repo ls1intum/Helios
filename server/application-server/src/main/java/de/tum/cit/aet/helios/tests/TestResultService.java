@@ -15,6 +15,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -231,6 +232,7 @@ public class TestResultService {
       for (TestType type : run.getWorkflow().getTestTypes()) {
         var testTypeResults =
             getTestTypeResultsForRun(
+                run.getRepository().getRepositoryId(),
                 type,
                 run,
                 previousWorkflowRunByTestType.get(type),
@@ -273,6 +275,7 @@ public class TestResultService {
   }
 
   private TestTypeResults getTestTypeResultsForRun(
+      Long repositoryId,
       TestType type,
       WorkflowRun run,
       Long prevWorkflowRunId,
@@ -320,34 +323,56 @@ public class TestResultService {
         testCaseRepository.findByTestSuiteWorkflowIdAndClassNamesAndTestTypeId(
             prevWorkflowRunId, suiteClassNames, type.getId());
 
+    // Pre-index everything fetched above so the per-test-case loop below runs in O(1) per test
+    // instead of O(n) linear scans or individual DB queries.
+
+    // Precomputed flakiness table - one bulk fetch instead of N+1 individual SELECTs
+    Map<TestCaseStatisticsService.StatsKey, TestCaseFlakiness> flakinessIndex =
+        testCaseStatisticsService.loadFlakinessIndex(suiteClassNames, repositoryId);
+
+    // Fallback failure-rate indexes for tests that have no precomputed flakiness record yet
+    Map<TestCaseStatisticsService.StatsKey, Double> defaultRates =
+        TestCaseStatisticsService.indexFailureRates(defaultBranchStats);
+    Map<TestCaseStatisticsService.StatsKey, Double> combinedRates =
+        TestCaseStatisticsService.indexFailureRates(combinedStats);
+
+    // "test failed on default branch" set - O(1) contains() instead of O(n) anyMatch()
+    Set<TestCaseStatisticsService.StatsKey> failedInDefaultKeys =
+        failedTestsInDefault.stream()
+            .map(t -> new TestCaseStatisticsService.StatsKey(
+                t.getName(), t.getClassName(), t.getTestSuite().getName()))
+            .collect(Collectors.toSet());
+
+    // Previous-status map - O(1) get() instead of O(n) filter().findFirst()
+    Map<TestCaseStatisticsService.StatsKey, TestStatus> prevStatusByKey =
+        prevStateCandidates.stream()
+            .collect(
+                Collectors.toMap(
+                    t -> new TestCaseStatisticsService.StatsKey(
+                        t.getName(), t.getClassName(), t.getTestSuite().getName()),
+                    TestCase::getStatus,
+                    (a, b) -> a));
+
     for (TestSuite suite : suites) {
       for (TestCase testCase : suite.getTestCases()) {
-        // TODO read flakiness info from precomputed table instead of computing on the fly
-        var flakinessInfo =
-            testCaseStatisticsService.computeFlakinessInfo(
-                testCase.getName(), testCase.getClassName(), suite.getName(),
-                defaultBranchStats, combinedStats);
-        testCase.setFlakinessScore(flakinessInfo.flakinessScore());
-        testCase.setFailureRate(flakinessInfo.defaultBranchFailureRate());
-        testCase.setCombinedFailureRate(flakinessInfo.combinedFailureRate());
+        var key = new TestCaseStatisticsService.StatsKey(
+            testCase.getName(), testCase.getClassName(), suite.getName());
+        TestCaseFlakiness flakiness = flakinessIndex.get(key);
+        if (flakiness != null) {
+          testCase.setFlakinessScore(flakiness.getFlakinessScore());
+          testCase.setFailureRate(flakiness.getDefaultBranchFailureRate());
+          testCase.setCombinedFailureRate(flakiness.getCombinedFailureRate());
+        } else {
+          var flakinessInfo = testCaseStatisticsService.computeFlakinessInfo(
+              testCase.getName(), testCase.getClassName(), suite.getName(),
+              defaultRates, combinedRates);
+          testCase.setFlakinessScore(flakinessInfo.flakinessScore());
+          testCase.setFailureRate(flakinessInfo.defaultBranchFailureRate());
+          testCase.setCombinedFailureRate(flakinessInfo.combinedFailureRate());
+        }
 
-        boolean failsInDefaultBranch =
-            failedTestsInDefault.stream()
-                .anyMatch(
-                    failedTest ->
-                        failedTest.getName().equals(testCase.getName())
-                            && failedTest.getClassName().equals(testCase.getClassName()));
-        testCase.setFailsInDefaultBranch(failsInDefaultBranch);
-
-        testCase.setPreviousStatus(
-            prevStateCandidates.stream()
-                .filter(
-                    prevTestCase ->
-                        prevTestCase.getName().equals(testCase.getName())
-                            && prevTestCase.getClassName().equals(testCase.getClassName()))
-                .findFirst()
-                .map(TestCase::getStatus)
-                .orElse(null));
+        testCase.setFailsInDefaultBranch(failedInDefaultKeys.contains(key));
+        testCase.setPreviousStatus(prevStatusByKey.get(key));
       }
     }
 

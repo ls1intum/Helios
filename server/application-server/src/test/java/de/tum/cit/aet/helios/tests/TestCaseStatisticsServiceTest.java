@@ -10,6 +10,7 @@ import de.tum.cit.aet.helios.tests.pagination.FlakyTestsFilterType;
 import de.tum.cit.aet.helios.tests.pagination.FlakyTestsPageRequest;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.IntStream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -164,7 +165,9 @@ class TestCaseStatisticsServiceTest {
 
     var info =
         service.computeFlakinessInfo(
-            "test1", "Class1", "Suite1", List.of(defaultStat), List.of(combinedStat));
+            "test1", "Class1", "Suite1",
+            TestCaseStatisticsService.indexFailureRates(List.of(defaultStat)),
+            TestCaseStatisticsService.indexFailureRates(List.of(combinedStat)));
 
     assertEquals(0.05, info.defaultBranchFailureRate());
     assertEquals(0.15, info.combinedFailureRate());
@@ -173,7 +176,8 @@ class TestCaseStatisticsServiceTest {
 
   @Test
   void computeFlakinessInfo_withNoMatchingStats_returnsZeroRates() {
-    var info = service.computeFlakinessInfo("unknown", "Unknown", "Unknown", List.of(), List.of());
+    var info = service.computeFlakinessInfo(
+        "unknown", "Unknown", "Unknown", Map.of(), Map.of());
 
     assertEquals(0.0, info.defaultBranchFailureRate());
     assertEquals(0.0, info.combinedFailureRate());

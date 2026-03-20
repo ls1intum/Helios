@@ -1,7 +1,7 @@
 package de.tum.cit.aet.helios.tests;
 
+import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -32,11 +32,11 @@ public interface TestCaseFlakinessRepository
       Long repositoryId, double minScore, double maxScore);
 
   /**
-   * Finds the existing flakiness record for a specific test in a repository, if any.
+   * Batch-fetches all flakiness records that belong to any of the given suite names in a
+   * repository. Used to pre-index flakiness data before per-test annotation loops.
    */
-  Optional<TestCaseFlakiness>
-      findByTestNameAndClassNameAndTestSuiteNameAndRepositoryRepositoryId(
-          String testName, String className, String testSuiteName, Long repositoryId);
+  List<TestCaseFlakiness> findByTestSuiteNameInAndRepositoryRepositoryId(
+      Collection<String> suiteNames, Long repositoryId);
 
   /**
    * Finds flakiness records matching a test name and class name for a repository, ordered by
