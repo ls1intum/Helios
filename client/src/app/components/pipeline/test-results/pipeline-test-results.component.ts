@@ -18,6 +18,7 @@ import {
   getGitRepoSettingsOptions,
   getLatestTestResultsByBranchOptions,
   getLatestTestResultsByPullRequestIdOptions,
+  getTestResultsByWorkflowRunIdOptions,
 } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { TestCaseDto, TestSuiteDto, TestTypeResults } from '@app/core/modules/openapi';
 import { DialogModule } from 'primeng/dialog';
@@ -257,6 +258,12 @@ export class PipelineTestResultsComponent {
     return 'pullRequestId' in selector ? selector.pullRequestId : null;
   });
 
+  workflowRunId = computed(() => {
+    const selector = this.selector();
+    if (!selector) return null;
+    return 'workflowRunId' in selector ? selector.workflowRunId : null;
+  });
+
   branchQuery = injectQuery(() => ({
     ...getLatestTestResultsByBranchOptions({
       query: {
@@ -285,8 +292,23 @@ export class PipelineTestResultsComponent {
     // refetchInterval: 15000,
   }));
 
+  workflowRunQuery = injectQuery(() => ({
+    ...getTestResultsByWorkflowRunIdOptions({
+      path: { workflowRunId: this.workflowRunId() || 0 },
+      query: {
+        page: this.testSuiteFirst() / this.testSuiteRows(),
+        size: this.testSuiteRows(),
+        search: this.searchValue(),
+        onlyFailed: this.showOnlyFailed(),
+      },
+    }),
+    enabled: this.workflowRunId() !== null,
+  }));
+
   resultsQuery = computed(() => {
-    return this.branchName() ? this.branchQuery : this.pullRequestQuery;
+    if (this.branchName()) return this.branchQuery;
+    if (this.pullRequestId()) return this.pullRequestQuery;
+    return this.workflowRunQuery;
   });
 
   op = viewChild.required<Popover>('op');
