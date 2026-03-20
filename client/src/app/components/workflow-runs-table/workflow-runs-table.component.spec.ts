@@ -68,6 +68,7 @@ describe('WorkflowRunsTableComponent', () => {
 
     fixture = TestBed.createComponent(WorkflowRunsTableComponent);
     component = fixture.componentInstance;
+    fixture.componentRef.setInput('repositoryId', 1);
 
     setMockQuery(component, { data: undefined, isPending: false, isError: false });
 
