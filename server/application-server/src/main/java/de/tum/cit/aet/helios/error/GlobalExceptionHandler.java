@@ -13,6 +13,8 @@ import java.util.stream.Collectors;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.validation.BindException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -99,7 +101,12 @@ public class GlobalExceptionHandler {
   }
 
   // -- 403 FORBIDDEN ------------------------------------
-  @ExceptionHandler({SecurityException.class, EnvironmentException.class})
+  @ExceptionHandler({
+      SecurityException.class,
+      EnvironmentException.class,
+      AccessDeniedException.class,
+      AuthorizationDeniedException.class
+  })
   public ResponseEntity<ApiError> handleSecurityExceptions(
       RuntimeException ex, HttpServletRequest request) {
 
