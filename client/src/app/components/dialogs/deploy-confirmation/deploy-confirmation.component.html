@@ -18,13 +18,6 @@
     </ng-container>
   } @else {
     <div class="pt-2">
-      @if (sourceRef()) {
-        <div class="mb-4 rounded border border-surface-300 bg-surface-50 px-3 py-2 text-sm dark:border-surface-700 dark:bg-surface-900/60" data-testid="deploy-source-ref">
-          <span class="text-muted-color">Branch to deploy:</span>
-          <code class="ml-2 font-semibold">{{ sourceRef() }}</code>
-        </div>
-      }
-
       <!-- Environment banner -->
       <div
         class="p-4 rounded flex items-start space-x-3"
@@ -44,18 +37,32 @@
         }
 
         <div class="space-y-1 text-sm">
-          <p data-testid="deploy-message">
-            You are about to deploy to {{ environmentKind() }} <span class="font-semibold italic">{{ environmentName() }}</span>
-            @if (displaySourceRef()) {
-              using {{ sourceRef()!.type }} <span class="font-semibold">{{ displaySourceRef() }}</span
-              >.
-            } @else {
-              .
-            }
-          </p>
           @if (environment().type === 'PRODUCTION') {
+            <p>
+              You are about to deploy to production <span class="font-semibold italic">{{ environmentName() }}</span>
+              @if (displaySourceRef()) {
+                from {{ sourceRef()?.type }} <span class="font-semibold italic">{{ displaySourceRef() }}</span>
+              }
+              .
+            </p>
             <br />
             <p>Double‑check everything before you continue.</p>
+          } @else if (environment().type === 'STAGING') {
+            <p>
+              You are about to deploy to staging <span class="font-semibold italic">{{ environmentName() }}</span>
+              @if (displaySourceRef()) {
+                from {{ sourceRef()?.type }} <span class="font-semibold italic">{{ displaySourceRef() }}</span>
+              }
+              .
+            </p>
+          } @else {
+            <p>
+              You are about to deploy to test server <span class="font-semibold italic">{{ environmentName() }}</span>
+              @if (displaySourceRef()) {
+                from {{ sourceRef()?.type }} <span class="font-semibold italic">{{ displaySourceRef() }}</span>
+              }
+              .
+            </p>
           }
         </div>
       </div>
