@@ -41,17 +41,22 @@ describe('DeployConfirmationComponent', () => {
     } as typeof component.query;
   });
 
+  function getAlertMessage(): string {
+    const alert = fixture.nativeElement.querySelector('[role="alert"]');
+    expect(alert).toBeTruthy();
+    return alert.textContent;
+  }
+
   it('shows the source ref as branch when type is branch', async () => {
     fixture.componentRef.setInput('sourceRef', { ref: 'main', type: 'branch' });
     fixture.detectChanges();
     await fixture.whenStable();
 
-    const deployMessage = fixture.nativeElement.querySelector('[data-testid="deploy-message"]');
+    const deployMessage = getAlertMessage();
 
-    expect(deployMessage).toBeTruthy();
-    expect(deployMessage.textContent).toContain('You are about to deploy to production');
-    expect(deployMessage.textContent).toContain('using branch');
-    expect(deployMessage.textContent).toContain('main');
+    expect(deployMessage).toContain('You are about to deploy to production');
+    expect(deployMessage).toContain('from branch');
+    expect(deployMessage).toContain('main');
   });
 
   it('shows the source ref as tag when type is tag', async () => {
@@ -59,22 +64,21 @@ describe('DeployConfirmationComponent', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    const deployMessage = fixture.nativeElement.querySelector('[data-testid="deploy-message"]');
+    const deployMessage = getAlertMessage();
 
-    expect(deployMessage).toBeTruthy();
-    expect(deployMessage.textContent).toContain('using tag');
-    expect(deployMessage.textContent).toContain('v3.0.0');
+    expect(deployMessage).toContain('from tag');
+    expect(deployMessage).toContain('v3.0.0');
   });
 
   it('omits the source ref block when no source ref is provided', async () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    const deployMessage = fixture.nativeElement.querySelector('[data-testid="deploy-message"]');
+    const deployMessage = getAlertMessage();
 
-    expect(deployMessage.textContent).toContain('You are about to deploy to production');
-    expect(deployMessage.textContent).not.toContain('using branch');
-    expect(deployMessage.textContent).not.toContain('using tag');
+    expect(deployMessage).toContain('You are about to deploy to production');
+    expect(deployMessage).not.toContain('from branch');
+    expect(deployMessage).not.toContain('from tag');
   });
 
   it('keeps the deploy button disabled until repository confirmation matches', async () => {
