@@ -4,7 +4,7 @@ import de.tum.cit.aet.helios.branch.BranchRepository;
 import de.tum.cit.aet.helios.filters.RepositoryContext;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import de.tum.cit.aet.helios.pullrequest.PullRequestRepository;
-import de.tum.cit.aet.helios.tests.TestCase.TestStatus;
+import de.tum.cit.aet.helios.tests.TestCaseRun.TestStatus;
 import de.tum.cit.aet.helios.tests.TestResultsDto.TestCaseDto;
 import de.tum.cit.aet.helios.tests.TestResultsDto.TestTypeResults;
 import de.tum.cit.aet.helios.tests.type.TestType;
@@ -30,12 +30,10 @@ public class TestResultService {
   private final WorkflowRunRepository workflowRunRepository;
   private final BranchRepository branchRepository;
   private final PullRequestRepository pullRequestRepository;
-  private final TestSuiteRepository testSuiteRepository;
-  private final TestCaseRepository testCaseRepository;
-  private final TestCaseStatisticsRepository testCaseStatisticsRepository;
-  private final TestCaseStatisticsService testCaseStatisticsService;
+  private final TestSuiteRunRepository testSuiteRunRepository;
+  private final TestCaseRunRepository testCaseRunRepository;
 
-  public static record TestSearchCriteria(int page, int size, String search, boolean onlyFailed) {}
+  public record TestSearchCriteria(int page, int size, String search, boolean onlyFailed) {}
 
   private record TestRunContext(
       List<WorkflowRun> latestRuns,
@@ -44,16 +42,15 @@ public class TestResultService {
       Map<TestType, Long> defaultWorkflowRunByTestType) {}
 
   /**
-   * Sort test cases with the following priority: 1. Test cases with updated status 2. Failed or
-   * error test cases 3. Alphabetical order by name for stable sorting
+   * Sort test case runs with the following priority: 1. Test cases with updated status 2. Failed or
+   * error test cases 3. Alphabetical order by test case name for stable sorting
    *
-   * @param testCases the test cases to sort
+   * @param testCaseRuns the test case runs to sort
    * @param previousStatusProvider function to get previous status
-   * @return sorted list of test cases
+   * @return sorted list of test case runs
    */
-  private List<TestCase> sortTestCases(List<TestCase> testCases) {
-
-    return testCases.stream()
+  private List<TestCaseRun> sortTestCaseRuns(List<TestCaseRun> testCaseRuns) {
+    return testCaseRuns.stream()
         .sorted(
             (a, b) -> {
               // Get previous statuses
@@ -101,8 +98,8 @@ public class TestResultService {
                 }
 
                 // Check if one is flaky and the other is not
-                boolean flaky = a.getFlakinessScore() > 30.0;
-                boolean otherFlaky = b.getFlakinessScore() > 30.0;
+                boolean flaky = a.getTestCase().getFlakinessScore() > 30.0;
+                boolean otherFlaky = b.getTestCase().getFlakinessScore() > 30.0;
 
                 if (!flaky && otherFlaky) {
                   return -1; // a is more important (not flaky)
@@ -113,7 +110,7 @@ public class TestResultService {
               }
 
               // 3. Third priority: Alphabetical sort for stable ordering
-              return a.getName().compareTo(b.getName());
+              return a.getTestCase().getName().compareTo(b.getTestCase().getName());
             })
         .collect(Collectors.toList());
   }
@@ -232,12 +229,10 @@ public class TestResultService {
       for (TestType type : run.getWorkflow().getTestTypes()) {
         var testTypeResults =
             getTestTypeResultsForRun(
-                run.getRepository().getRepositoryId(),
                 type,
                 run,
                 previousWorkflowRunByTestType.get(type),
                 PageRequest.of(criteria.page(), criteria.size()),
-                context.defaultBranchName(),
                 context.defaultWorkflowRunByTestType().get(type),
                 criteria.search(),
                 criteria.onlyFailed());
@@ -249,15 +244,15 @@ public class TestResultService {
     return new TestResultsDto(results, anyProcessing);
   }
 
-  private List<TestCase> filterTestCases(
-      List<TestCase> testCases, String search, boolean onlyFailed) {
-    return testCases.stream()
+  private List<TestCaseRun> filterTestCaseRuns(
+      List<TestCaseRun> testCaseRuns, String search, boolean onlyFailed) {
+    return testCaseRuns.stream()
         .filter(
-            testCase -> {
+            testCaseRun -> {
               // Filter by failed status if onlyFailed is true
               if (onlyFailed) {
-                if (testCase.getStatus() != TestStatus.FAILED
-                    && testCase.getStatus() != TestStatus.ERROR) {
+                if (testCaseRun.getStatus() != TestStatus.FAILED
+                    && testCaseRun.getStatus() != TestStatus.ERROR) {
                   return false;
                 }
               }
@@ -265,8 +260,8 @@ public class TestResultService {
               // Filter by search term if search is not null or empty
               if (search != null && !search.trim().isEmpty()) {
                 String searchLower = search.toLowerCase();
-                return testCase.getName().toLowerCase().contains(searchLower)
-                    || testCase.getClassName().toLowerCase().contains(searchLower);
+                return testCaseRun.getTestCase().getName().toLowerCase().contains(searchLower)
+                    || testCaseRun.getTestCase().getClassName().toLowerCase().contains(searchLower);
               }
 
               return true;
@@ -275,12 +270,10 @@ public class TestResultService {
   }
 
   private TestTypeResults getTestTypeResultsForRun(
-      Long repositoryId,
       TestType type,
       WorkflowRun run,
       Long prevWorkflowRunId,
       Pageable pageable,
-      String defaultBranch,
       Long defaultWorkflowRunId,
       String search,
       boolean onlyFailed) {
@@ -292,99 +285,62 @@ public class TestResultService {
         prevWorkflowRunId);
     long time = System.currentTimeMillis();
 
-    var suites =
-        testSuiteRepository.findByWorkflowRunIdAndTestTypeId(
-            run.getId(), type.getId(), prevWorkflowRunId, search, onlyFailed, pageable);
+    var suiteRuns =
+        testSuiteRunRepository.findByWorkflowRunIdAndTestTypeId(
+            run.getId(), type.getId(), search, onlyFailed, pageable);
 
     log.debug(
         "Found {} test suites in {} ms",
-        suites.getTotalElements(),
+        suiteRuns.getTotalElements(),
         System.currentTimeMillis() - time);
 
     var summary =
-        testSuiteRepository.findSummaryByWorkflowRunIdAndTestTypeId(
-            run.getId(), type.getId(), prevWorkflowRunId);
+        testSuiteRunRepository.findSummaryByWorkflowRunIdAndTestTypeId(
+            run.getId(), type.getId());
 
-    var suiteClassNames = suites.stream().map(TestSuite::getName).distinct().toList();
+    var suiteNames = suiteRuns.stream().map(TestSuiteRun::getName).distinct().toList();
 
     var failedTestsInDefault =
-        testCaseRepository.findFailedByTestSuiteWorkflowIdAndClassNamesAndTestTypeId(
-            defaultWorkflowRunId, suiteClassNames, type.getId());
-
-    List<TestCaseStatistics> defaultBranchStats =
-        testCaseStatisticsRepository.findByTestSuiteNameInAndBranchNameAndRepositoryRepositoryId(
-            suiteClassNames, defaultBranch, RepositoryContext.getRepositoryId());
-
-    List<TestCaseStatistics> combinedStats =
-        testCaseStatisticsRepository.findByTestSuiteNameInAndBranchNameAndRepositoryRepositoryId(
-            suiteClassNames, "combined", RepositoryContext.getRepositoryId());
+        testCaseRunRepository.findFailedByWorkflowRunIdAndSuiteNamesAndTestTypeId(
+            defaultWorkflowRunId, suiteNames, type.getId());
 
     var prevStateCandidates =
-        testCaseRepository.findByTestSuiteWorkflowIdAndClassNamesAndTestTypeId(
-            prevWorkflowRunId, suiteClassNames, type.getId());
-
-    // Pre-index everything fetched above so the per-test-case loop below runs in O(1) per test
-    // instead of O(n) linear scans or individual DB queries.
-
-    // Precomputed flakiness table - one bulk fetch instead of N+1 individual SELECTs
-    Map<TestCaseStatisticsService.StatsKey, TestCaseFlakiness> flakinessIndex =
-        testCaseStatisticsService.loadFlakinessIndex(suiteClassNames, repositoryId);
-
-    // Fallback failure-rate indexes for tests that have no precomputed flakiness record yet
-    Map<TestCaseStatisticsService.StatsKey, Double> defaultRates =
-        TestCaseStatisticsService.indexFailureRates(defaultBranchStats);
-    Map<TestCaseStatisticsService.StatsKey, Double> combinedRates =
-        TestCaseStatisticsService.indexFailureRates(combinedStats);
+        testCaseRunRepository.findByWorkflowRunIdAndSuiteNamesAndTestTypeId(
+            prevWorkflowRunId, suiteNames, type.getId());
 
     // "test failed on default branch" set - O(1) contains() instead of O(n) anyMatch()
-    Set<TestCaseStatisticsService.StatsKey> failedInDefaultKeys =
+    Set<Long> failedInDefaultTestCaseIds =
         failedTestsInDefault.stream()
-            .map(t -> new TestCaseStatisticsService.StatsKey(
-                t.getName(), t.getClassName(), t.getTestSuite().getName()))
+            .map(tcr -> tcr.getTestCase().getId())
             .collect(Collectors.toSet());
 
     // Previous-status map - O(1) get() instead of O(n) filter().findFirst()
-    Map<TestCaseStatisticsService.StatsKey, TestStatus> prevStatusByKey =
+    Map<Long, TestStatus> prevStatusByTestCaseId =
         prevStateCandidates.stream()
             .collect(
                 Collectors.toMap(
-                    t -> new TestCaseStatisticsService.StatsKey(
-                        t.getName(), t.getClassName(), t.getTestSuite().getName()),
-                    TestCase::getStatus,
+                    tcr -> tcr.getTestCase().getId(),
+                    TestCaseRun::getStatus,
                     (a, b) -> a));
 
-    for (TestSuite suite : suites) {
-      for (TestCase testCase : suite.getTestCases()) {
-        var key = new TestCaseStatisticsService.StatsKey(
-            testCase.getName(), testCase.getClassName(), suite.getName());
-        TestCaseFlakiness flakiness = flakinessIndex.get(key);
-        if (flakiness != null) {
-          testCase.setFlakinessScore(flakiness.getFlakinessScore());
-          testCase.setFailureRate(flakiness.getDefaultBranchFailureRate());
-          testCase.setCombinedFailureRate(flakiness.getCombinedFailureRate());
-        } else {
-          var flakinessInfo = testCaseStatisticsService.computeFlakinessInfo(
-              testCase.getName(), testCase.getClassName(), suite.getName(),
-              defaultRates, combinedRates);
-          testCase.setFlakinessScore(flakinessInfo.flakinessScore());
-          testCase.setFailureRate(flakinessInfo.defaultBranchFailureRate());
-          testCase.setCombinedFailureRate(flakinessInfo.combinedFailureRate());
-        }
-
-        testCase.setFailsInDefaultBranch(failedInDefaultKeys.contains(key));
-        testCase.setPreviousStatus(prevStatusByKey.get(key));
+    for (TestSuiteRun suite : suiteRuns) {
+      for (TestCaseRun testCaseRun : suite.getTestCaseRuns()) {
+        Long testCaseId = testCaseRun.getTestCase().getId();
+        testCaseRun.setFailsInDefaultBranch(failedInDefaultTestCaseIds.contains(testCaseId));
+        testCaseRun.setPreviousStatus(prevStatusByTestCaseId.get(testCaseId));
       }
     }
 
     var suiteDtos =
-        suites.stream()
+        suiteRuns.stream()
             .map(
                 suite -> {
-                  var filteredTestCases = filterTestCases(suite.getTestCases(), search, onlyFailed);
-                  var testCases = sortTestCases(filteredTestCases);
+                  var filteredTestCases =
+                      filterTestCaseRuns(suite.getTestCaseRuns(), search, onlyFailed);
+                  var testCases = sortTestCaseRuns(filteredTestCases);
                   var testCaseDtos = testCases.stream().map(TestCaseDto::fromTestCase).toList();
 
-                  return TestResultsDto.TestSuiteDto.fromTestSuite(suite, testCaseDtos);
+                  return TestResultsDto.TestSuiteDto.fromTestSuiteRun(suite, testCaseDtos);
                 })
             .toList();
 
@@ -394,7 +350,7 @@ public class TestResultService {
         suiteDtos,
         run.getTestProcessingStatus() == WorkflowRun.TestProcessingStatus.PROCESSING,
         new TestResultsDto.TestTypeStats(
-            (int) suites.getTotalElements(),
+            (int) suiteRuns.getTotalElements(),
             summary.getTests(),
             summary.getTests()
                 - (summary.getFailures() + summary.getErrors() + summary.getSkipped()),

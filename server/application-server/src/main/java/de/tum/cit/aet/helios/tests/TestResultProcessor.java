@@ -35,6 +35,7 @@ public class TestResultProcessor {
   private final GitRepoRepository gitRepoRepository;
   private final JunitParser junitParser;
   private final TestCaseStatisticsService statisticsService;
+  private final TestCaseRepository testCaseRepository;
 
   /**
    * Determines if a workflow run's test results should be processed.
@@ -75,19 +76,19 @@ public class TestResultProcessor {
     this.workflowRunRepository.save(workflowRun);
 
     try {
-      List<TestSuite> testSuites = this.processRunSync(workflowRun);
-      workflowRun.setTestSuites(testSuites);
+      List<TestSuiteRun> testSuiteRuns = this.processRunSync(workflowRun);
+      workflowRun.setTestSuiteRuns(testSuiteRuns);
       workflowRun.setTestProcessingStatus(WorkflowRun.TestProcessingStatus.PROCESSED);
       log.debug(
           "Successfully persisted test results for workflow run, workflow name: {}",
           workflowRun.getName());
 
       // Update test statistics if the workflow run is on the default branch
-      updateTestStatisticsIfDefaultBranch(testSuites, workflowRun);
+      updateTestStatisticsIfDefaultBranch(testSuiteRuns, workflowRun);
     } catch (Exception e) {
       log.error("Failed to process test results for workflow run {}", workflowRun.getName(), e);
       workflowRun.setTestProcessingStatus(WorkflowRun.TestProcessingStatus.FAILED);
-      workflowRun.setTestSuites(null);
+      workflowRun.setTestSuiteRuns(null);
     } finally {
       this.workflowRunRepository.save(workflowRun);
     }
@@ -99,8 +100,8 @@ public class TestResultProcessor {
    * @param workflowRun the workflow run to process
    * @return the test suites extracted from the workflow run's artifacts
    */
-  private List<TestSuite> processRunSync(WorkflowRun workflowRun) {
-    List<TestSuite> allTestSuites = new ArrayList<>();
+  private List<TestSuiteRun> processRunSync(WorkflowRun workflowRun) {
+    List<TestSuiteRun> allTestSuiteRuns = new ArrayList<>();
 
     try {
       PagedIterable<GHArtifact> artifacts =
@@ -114,14 +115,15 @@ public class TestResultProcessor {
       for (GHArtifact artifact : artifacts) {
         TestType matchingTestType = findMatchingTestType(testTypes, artifact.getName());
         if (matchingTestType != null) {
-          List<TestSuite> testSuites = processTestResultArtifact(artifact);
+          List<TestSuiteRun> testSuiteRuns =
+              processTestResultArtifact(artifact, workflowRun.getRepository());
           // Set the test type relationship for each test suite
-          testSuites.forEach(
-              testSuite -> {
-                testSuite.setWorkflowRun(workflowRun);
-                testSuite.setTestType(matchingTestType);
+          testSuiteRuns.forEach(
+              testSuiteRun -> {
+                testSuiteRun.setWorkflowRun(workflowRun);
+                testSuiteRun.setTestType(matchingTestType);
               });
-          allTestSuites.addAll(testSuites);
+          allTestSuiteRuns.addAll(testSuiteRuns);
           log.debug(
               "Processed artifact {} for test type {}",
               artifact.getName(),
@@ -132,13 +134,13 @@ public class TestResultProcessor {
       throw new TestResultException("Failed to fetch or process artifacts", e);
     }
 
-    if (allTestSuites.isEmpty()) {
+    if (allTestSuiteRuns.isEmpty()) {
       log.warn("No matching test artifacts found for workflow run {}", workflowRun.getName());
       throw new TestResultException("No matching test artifacts found");
     }
 
-    log.debug("Parsed {} test suites across all artifacts. Persisting...", allTestSuites.size());
-    return allTestSuites;
+    log.debug("Parsed {} test suites across all artifacts. Persisting...", allTestSuiteRuns.size());
+    return allTestSuiteRuns;
   }
 
   private TestType findMatchingTestType(Set<TestType> testTypes, String artifactName) {
@@ -148,64 +150,86 @@ public class TestResultProcessor {
         .orElse(null);
   }
 
-  private List<TestSuite> convertToTestSuites(List<TestResultParser.TestSuite> results) {
+  private List<TestSuiteRun> convertToTestSuites(
+      List<TestResultParser.TestSuite> results, GitRepository repository) {
     return results.stream()
         .map(
             result -> {
-              TestSuite testSuite = new TestSuite();
-              testSuite.setName(result.name());
-              testSuite.setTests(result.tests());
-              testSuite.setFailures(result.failures());
-              testSuite.setErrors(result.errors());
-              testSuite.setSkipped(result.skipped());
-              testSuite.setTime(result.time());
-              testSuite.setTimestamp(result.timestamp());
+              TestSuiteRun testSuiteRun = new TestSuiteRun();
+              testSuiteRun.setName(result.name());
+              testSuiteRun.setTests(result.tests());
+              testSuiteRun.setFailures(result.failures());
+              testSuiteRun.setErrors(result.errors());
+              testSuiteRun.setSkipped(result.skipped());
+              testSuiteRun.setTime(result.time());
+              testSuiteRun.setTimestamp(result.timestamp());
               // We don't want to store system out for passed test suites, as it can be quite large
               if (result.failures() > 0 || result.errors() > 0) {
-                testSuite.setSystemOut(result.systemOut());
+                testSuiteRun.setSystemOut(result.systemOut());
               } else {
-                testSuite.setSystemOut(null);
+                testSuiteRun.setSystemOut(null);
               }
-              testSuite.setTestCases(
-                  result.testCases().stream().map(tc -> createTestCase(tc, testSuite)).toList());
-              return testSuite;
+              testSuiteRun.setTestCaseRuns(
+                  result.testCases().stream()
+                      .map(tc ->
+                          createTestCaseRun(tc, testSuiteRun, repository))
+                      .toList());
+              return testSuiteRun;
             })
         .toList();
   }
 
-  private TestCase createTestCase(TestResultParser.TestCase tc, TestSuite testSuite) {
-    TestCase testCase = new TestCase();
-    testCase.setTestSuite(testSuite);
-    testCase.setName(tc.name());
-    testCase.setClassName(tc.className());
-    testCase.setTime(tc.time());
-    testCase.setStatus(
+  private TestCaseRun createTestCaseRun(
+      TestResultParser.TestCase tc,
+      TestSuiteRun testSuiteRun,
+      GitRepository repository) {
+    TestCase testCaseDef =
+        testCaseRepository
+            .findByRepositoryRepositoryIdAndSuiteNameAndClassNameAndName(
+                repository.getRepositoryId(), testSuiteRun.getName(), tc.className(), tc.name())
+            .orElseGet(
+                () -> {
+                  TestCase newDef = new TestCase();
+                  newDef.setRepository(repository);
+                  newDef.setSuiteName(testSuiteRun.getName());
+                  newDef.setClassName(tc.className());
+                  newDef.setName(tc.name());
+                  return testCaseRepository.save(newDef);
+                });
+
+    TestCaseRun testCaseRun = new TestCaseRun();
+    testCaseRun.setTestSuiteRun(testSuiteRun);
+    testCaseRun.setTestCase(testCaseDef);
+    testCaseRun.setTime(tc.time());
+    testCaseRun.setStatus(
         tc.failed()
-            ? TestCase.TestStatus.FAILED
+            ? TestCaseRun.TestStatus.FAILED
             : tc.error()
-                ? TestCase.TestStatus.ERROR
-                : tc.skipped() ? TestCase.TestStatus.SKIPPED : TestCase.TestStatus.PASSED);
-    testCase.setMessage(tc.message());
-    testCase.setStackTrace(tc.stackTrace());
-    testCase.setErrorType(tc.errorType());
+                ? TestCaseRun.TestStatus.ERROR
+                : tc.skipped() ? TestCaseRun.TestStatus.SKIPPED : TestCaseRun.TestStatus.PASSED);
+    testCaseRun.setMessage(tc.message());
+    testCaseRun.setStackTrace(tc.stackTrace());
+    testCaseRun.setErrorType(tc.errorType());
 
     // We don't want to store system out for passed tests, as it can be quite large
     if (tc.failed() || tc.error()) {
-      testCase.setSystemOut(tc.systemOut());
+      testCaseRun.setSystemOut(tc.systemOut());
     } else {
-      testCase.setSystemOut(null);
+      testCaseRun.setSystemOut(null);
     }
-    return testCase;
+    return testCaseRun;
   }
 
   /**
    * Processes a test result artifact.
    *
    * @param artifact the artifact to process
+   * @param repository the repository the artifact belongs to
    * @return the test suites extracted from the artifact
    * @throws IOException if an I/O error occurs
    */
-  private List<TestSuite> processTestResultArtifact(GHArtifact artifact) throws IOException {
+  private List<TestSuiteRun> processTestResultArtifact(
+      GHArtifact artifact, GitRepository repository) throws IOException {
     // Download the ZIP artifact, find all parsable XML files and parse them
     return artifact.download(
         stream -> {
@@ -241,7 +265,7 @@ public class TestResultProcessor {
             }
           }
 
-          return convertToTestSuites(results);
+          return convertToTestSuites(results, repository);
         });
   }
 
@@ -249,12 +273,12 @@ public class TestResultProcessor {
    * Updates test statistics if the workflow run is on the default branch. This method safely
    * retrieves the repository and default branch information.
    *
-   * @param testSuites the test suites containing test cases
+   * @param testSuiteRuns the test suite runs containing test cases
    * @param workflowRun the workflow run
    */
   @Transactional
   protected void updateTestStatisticsIfDefaultBranch(
-      List<TestSuite> testSuites, WorkflowRun workflowRun) {
+      List<TestSuiteRun> testSuiteRuns, WorkflowRun workflowRun) {
     try {
       String headBranch = workflowRun.getHeadBranch();
       if (headBranch == null) {
@@ -275,8 +299,8 @@ public class TestResultProcessor {
 
       if (headBranch.equals(defaultBranch)) {
         log.debug("Updating test statistics for default branch: {}", headBranch);
-        updateTestStatistics(
-            testSuites, headBranch, repository.get()); // update statistics for the default branch
+        // update statistics for the default branch
+        updateTestStatistics(testSuiteRuns, headBranch);
       } else {
         log.debug(
             "Skipping test statistics update for non-default branch: {}, default branch: {}",
@@ -284,13 +308,11 @@ public class TestResultProcessor {
             defaultBranch);
       }
 
-      updateTestStatistics(
-          testSuites,
-          "combined",
-          repository.get()); // update statistics for all the branches combined
+      // update statistics for all the branches combined
+      updateTestStatistics(testSuiteRuns, "combined");
       log.debug("Successfully updated test statistics for all branches combined");
 
-      updateFlakinessScores(testSuites, defaultBranch, repository.get());
+      updateFlakinessScores(testSuiteRuns, defaultBranch, repository.get());
       log.debug("Successfully recomputed flakiness scores for affected tests");
     } catch (Exception e) {
       log.error("Error while trying to update test statistics", e);
@@ -301,15 +323,14 @@ public class TestResultProcessor {
   /**
    * Updates test case statistics for all test cases in the given test suites.
    *
-   * @param testSuites the test suites containing test cases
+   * @param testSuiteRuns the test suite runs containing test case runs
    * @param branchName the branch name where the tests were run
-   * @param repository the repository
    */
   private void updateTestStatistics(
-      List<TestSuite> testSuites, String branchName, GitRepository repository) {
+      List<TestSuiteRun> testSuiteRuns, String branchName) {
     try {
-      for (TestSuite testSuite : testSuites) {
-        statisticsService.updateStatisticsForTestSuite(testSuite, branchName, repository);
+      for (TestSuiteRun testSuiteRun : testSuiteRuns) {
+        statisticsService.updateStatisticsForTestSuiteRun(testSuiteRun, branchName);
       }
       log.debug("Successfully updated test statistics for branch: {}", branchName);
     } catch (Exception e) {
@@ -324,14 +345,14 @@ public class TestResultProcessor {
    * Only fetches stats rows for the suite names present in the current run, keeping
    * the query bounded.
    *
-   * @param testSuites the suites processed in this run
+   * @param testSuiteRuns the suites processed in this run
    * @param defaultBranchName the repository's default branch name
    * @param repository the repository
    */
   public void updateFlakinessScores(
-      List<TestSuite> testSuites, String defaultBranchName, GitRepository repository) {
+      List<TestSuiteRun> testSuiteRuns, String defaultBranchName, GitRepository repository) {
     try {
-      statisticsService.updateFlakinessForTestSuite(testSuites, defaultBranchName, repository);
+      statisticsService.updateFlakinessForTestSuiteRun(testSuiteRuns, defaultBranchName, repository);
       log.debug("Successfully updated flakiness info for repository: {}",
           repository.getRepositoryId());
     } catch (Exception e) {

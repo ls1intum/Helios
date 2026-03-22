@@ -1,7 +1,7 @@
 package de.tum.cit.aet.helios.tests.type;
 
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
-import de.tum.cit.aet.helios.tests.TestSuite;
+import de.tum.cit.aet.helios.tests.TestSuiteRun;
 import de.tum.cit.aet.helios.workflow.Workflow;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -49,7 +49,7 @@ public class TestType {
   private Instant updatedAt;
 
   @OneToMany(mappedBy = "testType")
-  private Set<TestSuite> testSuites = new HashSet<>();
+  private Set<TestSuiteRun> testSuiteRuns = new HashSet<>();
 
   @PrePersist
   protected void onCreate() {

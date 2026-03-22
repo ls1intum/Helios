@@ -1,8 +1,8 @@
 package de.tum.cit.aet.helios.tests;
 
-import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -20,7 +20,7 @@ import org.hibernate.annotations.Filter;
 
 /**
  * Entity representing statistics for a test case across multiple runs. Used for flaky test
- * detection.
+ * detection. Keyed by (test_case_id, branch_name) instead of string-based identity.
  */
 @Entity
 @Table(
@@ -28,19 +28,11 @@ import org.hibernate.annotations.Filter;
     uniqueConstraints = {
       @UniqueConstraint(
           name = "uk_test_case_statistics",
-          columnNames = {
-            "test_name",
-            "class_name",
-            "test_suite_name",
-            "branch_name",
-            "repository_id"
-          })
+          columnNames = {"test_case_id", "branch_name"})
     },
     indexes = {
-      @Index(
-          name = "idx_test_case_statistics",
-          columnList = "test_name,class_name,test_suite_name,branch_name,repository_id"),
-      @Index(name = "idx_branch_name", columnList = "branch_name,repository_id")
+        @Index(name = "idx_test_case_statistics_case", columnList = "test_case_id"),
+        @Index(name = "idx_test_case_statistics_branch", columnList = "branch_name")
     })
 @Getter
 @Setter
@@ -52,19 +44,10 @@ public class TestCaseStatistics {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  @ManyToOne
-  @JoinColumn(name = "repository_id")
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "test_case_id", nullable = false)
   @ToString.Exclude
-  private GitRepository repository;
-
-  @Column(nullable = false, name = "test_name")
-  private String testName;
-
-  @Column(nullable = false, name = "class_name")
-  private String className;
-
-  @Column(nullable = false, name = "test_suite_name")
-  private String testSuiteName;
+  private TestCase testCase;
 
   @Column(nullable = false, name = "branch_name")
   private String branchName;
@@ -77,34 +60,6 @@ public class TestCaseStatistics {
 
   @Column(nullable = false, name = "last_updated")
   private OffsetDateTime lastUpdated;
-
-  /**
-   * Sets the test name, truncating if necessary to fit the database column.
-   *
-   * @param testName the test name to set
-   */
-  public void setTestName(String testName) {
-    this.testName = testName.length() > 255 ? testName.substring(0, 255) : testName;
-  }
-
-  /**
-   * Sets the class name, truncating if necessary to fit the database column.
-   *
-   * @param className the class name to set
-   */
-  public void setClassName(String className) {
-    this.className = className.length() > 255 ? className.substring(0, 255) : className;
-  }
-
-  /**
-   * Sets the test suite name, truncating if necessary to fit the database column.
-   *
-   * @param testSuiteName the test suite name to set
-   */
-  public void setTestSuiteName(String testSuiteName) {
-    this.testSuiteName =
-        testSuiteName.length() > 255 ? testSuiteName.substring(0, 255) : testSuiteName;
-  }
 
   /**
    * Sets the branch name, truncating if necessary to fit the database column.

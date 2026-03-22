@@ -57,6 +57,7 @@ class TestResultProcessorTest {
   @Mock private GitRepoRepository gitRepoRepository;
   @Mock private JunitParser junitParser;
   @Mock private TestCaseStatisticsService statisticsService;
+  @Mock private TestCaseRepository testCaseRepository;
 
   @InjectMocks private TestResultProcessor testResultProcessor;
 
@@ -89,7 +90,6 @@ class TestResultProcessorTest {
     workflowRun.setHeadBranch("feature-branch");
   }
 
-  // Tests for shouldProcess
   @Test
   void shouldProcess_returnsTrue_whenEligible() {
     assertTrue(testResultProcessor.shouldProcess(workflowRun));
@@ -181,7 +181,7 @@ class TestResultProcessorTest {
     when(mockArtifact.download(any()))
         .thenAnswer(
             invocation -> {
-              InputStreamFunction<List<TestSuite>> function = invocation.getArgument(0);
+              InputStreamFunction<List<TestSuiteRun>> function = invocation.getArgument(0);
               return function.apply(new ByteArrayInputStream(zipBytes));
             });
 
@@ -208,11 +208,11 @@ class TestResultProcessorTest {
     testResultProcessor.processRun(workflowRun);
 
     assertEquals(WorkflowRun.TestProcessingStatus.PROCESSED, workflowRun.getTestProcessingStatus());
-    assertNotNull(workflowRun.getTestSuites());
-    assertFalse(workflowRun.getTestSuites().isEmpty());
-    assertEquals("TestSuite", workflowRun.getTestSuites().get(0).getName());
+    assertNotNull(workflowRun.getTestSuiteRuns());
+    assertFalse(workflowRun.getTestSuiteRuns().isEmpty());
+    assertEquals("TestSuite", workflowRun.getTestSuiteRuns().get(0).getName());
     verify(statisticsService, atLeastOnce())
-        .updateStatisticsForTestSuite(any(TestSuite.class), anyString(), any(GitRepository.class));
+        .updateStatisticsForTestSuiteRun(any(TestSuiteRun.class), anyString());
   }
 
   @Test
@@ -223,7 +223,7 @@ class TestResultProcessorTest {
     testResultProcessor.processRun(workflowRun);
 
     assertEquals(WorkflowRun.TestProcessingStatus.FAILED, workflowRun.getTestProcessingStatus());
-    assertNull(workflowRun.getTestSuites());
+    assertNull(workflowRun.getTestSuiteRuns());
     verify(workflowRunRepository, times(2)).save(workflowRun); // Initial processing, then failed
   }
 
@@ -250,7 +250,7 @@ class TestResultProcessorTest {
     testResultProcessor.processRun(workflowRun);
 
     assertEquals(WorkflowRun.TestProcessingStatus.FAILED, workflowRun.getTestProcessingStatus());
-    assertNull(workflowRun.getTestSuites());
+    assertNull(workflowRun.getTestSuiteRuns());
     verify(workflowRunRepository, times(2)).save(workflowRun);
   }
 
@@ -269,7 +269,7 @@ class TestResultProcessorTest {
     when(mockArtifact.download(any()))
         .thenAnswer(
             invocation -> {
-              InputStreamFunction<List<TestSuite>> function = invocation.getArgument(0);
+              InputStreamFunction<List<TestSuiteRun>> function = invocation.getArgument(0);
               return function.apply(new ByteArrayInputStream(zipBytes));
             });
 
@@ -292,9 +292,9 @@ class TestResultProcessorTest {
 
     assertEquals(WorkflowRun.TestProcessingStatus.PROCESSED, workflowRun.getTestProcessingStatus());
     verify(statisticsService)
-        .updateStatisticsForTestSuite(any(TestSuite.class), eq("main"), eq(gitRepository));
+        .updateStatisticsForTestSuiteRun(any(TestSuiteRun.class), eq("main"));
     verify(statisticsService)
-        .updateStatisticsForTestSuite(any(TestSuite.class), eq("combined"), eq(gitRepository));
+        .updateStatisticsForTestSuiteRun(any(TestSuiteRun.class), eq("combined"));
   }
 
   // Helper to create a mock zip file in memory

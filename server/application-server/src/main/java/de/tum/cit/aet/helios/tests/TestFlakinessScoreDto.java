@@ -9,4 +9,15 @@ public record TestFlakinessScoreDto(
     double flakinessScore,
     double defaultBranchFailureRate,
     double combinedFailureRate) {
+
+  public static TestFlakinessScoreDto from(TestCase testCase) {
+    return new TestFlakinessScoreDto(
+        testCase.getName(),
+        testCase.getClassName(),
+        testCase.getSuiteName(),
+        testCase.getFlakinessScore(),
+        testCase.getDefaultBranchFailureRate(),
+        testCase.getCombinedFailureRate()
+    );
+  }
 }

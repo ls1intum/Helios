@@ -10,7 +10,7 @@ import de.tum.cit.aet.helios.tests.pagination.FlakyTestsFilterType;
 import de.tum.cit.aet.helios.tests.pagination.FlakyTestsPageRequest;
 import java.time.OffsetDateTime;
 import java.util.List;
-import java.util.Map;
+import java.util.Optional;
 import java.util.stream.IntStream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,7 +27,7 @@ import org.springframework.data.jpa.domain.Specification;
 class TestCaseStatisticsServiceTest {
 
   @Mock private TestCaseStatisticsRepository statisticsRepository;
-  @Mock private TestCaseFlakinessRepository flakinessRepository;
+  @Mock private TestCaseRepository testCaseRepository;
 
   @InjectMocks private TestCaseStatisticsService service;
 
@@ -41,30 +41,30 @@ class TestCaseStatisticsServiceTest {
 
   @Test
   void getFlakyTestsOverview_returnsPagedOverview() {
-    List<TestCaseFlakiness> flakinessList =
+    List<TestCase> testCases =
         IntStream.range(0, 5)
-            .mapToObj(i -> createFlakiness("test" + i, "ClassA", "SuiteA", 82.0, 0.05, 0.10))
+            .mapToObj(i -> createTestCase("test" + i, "ClassA", "SuiteA", 82.0, 0.05, 0.10))
             .toList();
 
-    Page<TestCaseFlakiness> page = new PageImpl<>(
-        flakinessList,
+    Page<TestCase> page = new PageImpl<>(
+        testCases,
         Pageable.ofSize(5), 10);
 
-    when(flakinessRepository.findAll(any(Specification.class), any(Pageable.class)))
+    when(testCaseRepository.findAll(any(Specification.class), any(Pageable.class)))
         .thenReturn(page);
 
-    when(flakinessRepository.countByRepositoryRepositoryId(repository.getRepositoryId()))
+    when(testCaseRepository.countByRepositoryRepositoryId(repository.getRepositoryId()))
         .thenReturn(20L);
 
-    when(flakinessRepository.countByRepositoryRepositoryIdAndFlakinessScoreGreaterThan(
+    when(testCaseRepository.countByRepositoryRepositoryIdAndFlakinessScoreGreaterThan(
         repository.getRepositoryId(), 0))
         .thenReturn(5L);
 
-    when(flakinessRepository.countByRepositoryRepositoryIdAndFlakinessScoreGreaterThan(
+    when(testCaseRepository.countByRepositoryRepositoryIdAndFlakinessScoreGreaterThan(
         repository.getRepositoryId(), TestCaseStatisticsService.HIGH_FLAKINESS_THRESHOLD))
         .thenReturn(2L);
 
-    when(flakinessRepository
+    when(testCaseRepository
         .countByRepositoryRepositoryIdAndFlakinessScoreGreaterThanAndFlakinessScoreLessThanEqual(
             repository.getRepositoryId(),
             TestCaseStatisticsService.LOW_FLAKINESS_THRESHOLD,
@@ -105,10 +105,10 @@ class TestCaseStatisticsServiceTest {
 
   @Test
   void getFlakinessScoresForTests_returnsScores() {
-    TestCaseFlakiness flakiness = createFlakiness("test1", "Class1", "Suite1", 88.2, 0.05, 0.08);
-    when(flakinessRepository.findByRepositoryIdAndTestNameAndClassNameAndSuiteName(
-        1L, "test1", "Class1", "Suite1"))
-        .thenReturn(List.of(flakiness));
+    TestCase testCase = createTestCase("test1", "Class1", "Suite1", 88.2, 0.05, 0.08);
+    when(testCaseRepository.findByRepositoryRepositoryIdAndSuiteNameAndClassNameAndName(
+        1L, "Suite1", "Class1", "test1"))
+        .thenReturn(Optional.of(testCase));
 
     TestFlakinessScoreRequest.TestCaseIdentifier identifier =
         new TestFlakinessScoreRequest.TestCaseIdentifier("test1", "Class1", "Suite1");
@@ -126,9 +126,9 @@ class TestCaseStatisticsServiceTest {
 
   @Test
   void getFlakinessScoresForTests_returnsZeroDtoWhenNoMatchExists() {
-    when(flakinessRepository.findByRepositoryIdAndTestNameAndClassNameAndSuiteName(
-        1L, "missing", "Class1", "Suite1"))
-        .thenReturn(List.of());
+    when(testCaseRepository.findByRepositoryRepositoryIdAndSuiteNameAndClassNameAndName(
+        1L, "Suite1", "Class1", "missing"))
+        .thenReturn(Optional.empty());
 
     TestFlakinessScoreRequest.TestCaseIdentifier identifier =
         new TestFlakinessScoreRequest.TestCaseIdentifier("missing", "Class1", "Suite1");
@@ -158,62 +158,22 @@ class TestCaseStatisticsServiceTest {
     assertEquals(0.0, score);
   }
 
-  @Test
-  void computeFlakinessInfo_withMatchingStats_returnsInfo() {
-    var defaultStat = createStat("test1", "Class1", "Suite1", "main", 100, 5);
-    var combinedStat = createStat("test1", "Class1", "Suite1", "combined", 200, 30);
-
-    var info =
-        service.computeFlakinessInfo(
-            "test1", "Class1", "Suite1",
-            TestCaseStatisticsService.indexFailureRates(List.of(defaultStat)),
-            TestCaseStatisticsService.indexFailureRates(List.of(combinedStat)));
-
-    assertEquals(0.05, info.defaultBranchFailureRate());
-    assertEquals(0.15, info.combinedFailureRate());
-    assertEquals(84.0, info.flakinessScore(), 0.1);
-  }
-
-  @Test
-  void computeFlakinessInfo_withNoMatchingStats_returnsZeroRates() {
-    var info = service.computeFlakinessInfo(
-        "unknown", "Unknown", "Unknown", Map.of(), Map.of());
-
-    assertEquals(0.0, info.defaultBranchFailureRate());
-    assertEquals(0.0, info.combinedFailureRate());
-    assertEquals(0.0, info.flakinessScore());
-  }
-
-  private TestCaseFlakiness createFlakiness(
+  private TestCase createTestCase(
       String testName,
       String className,
       String suiteName,
       double score,
       double defaultRate,
       double combinedRate) {
-    TestCaseFlakiness flakiness = new TestCaseFlakiness();
-    flakiness.setTestName(testName);
-    flakiness.setClassName(className);
-    flakiness.setTestSuiteName(suiteName);
-    flakiness.setFlakinessScore(score);
-    flakiness.setDefaultBranchFailureRate(defaultRate);
-    flakiness.setCombinedFailureRate(combinedRate);
-    flakiness.setRepository(repository);
-    flakiness.setLastUpdated(OffsetDateTime.now());
-    return flakiness;
-  }
-
-  private static TestCaseStatistics createStat(
-      String testName, String className, String suiteName,
-      String branchName, int total, int failed) {
-    var stat = new TestCaseStatistics();
-    stat.setTestName(testName);
-    stat.setClassName(className);
-    stat.setTestSuiteName(suiteName);
-    stat.setBranchName(branchName);
-    stat.setTotalRuns(total);
-    stat.setFailedRuns(failed);
-    stat.setLastUpdated(OffsetDateTime.now());
-    return stat;
+    TestCase testCase = new TestCase();
+    testCase.setName(testName);
+    testCase.setClassName(className);
+    testCase.setSuiteName(suiteName);
+    testCase.setFlakinessScore(score);
+    testCase.setDefaultBranchFailureRate(defaultRate);
+    testCase.setCombinedFailureRate(combinedRate);
+    testCase.setRepository(repository);
+    testCase.setUpdatedAt(OffsetDateTime.now());
+    return testCase;
   }
 }

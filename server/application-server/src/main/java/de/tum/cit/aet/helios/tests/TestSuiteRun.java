@@ -13,6 +13,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
+import jakarta.persistence.Table;
 import jakarta.validation.constraints.Min;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -23,11 +24,12 @@ import lombok.Setter;
 import lombok.ToString;
 
 @Entity
+@Table(name = "test_suite_run")
 @Getter
 @Setter
 @NoArgsConstructor
 @ToString(exclude = "workflowRun")
-public class TestSuite {
+public class TestSuiteRun {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
@@ -61,9 +63,9 @@ public class TestSuite {
   @Column(nullable = false)
   private Double time;
 
-  @OneToMany(mappedBy = "testSuite", cascade = CascadeType.ALL)
+  @OneToMany(mappedBy = "testSuiteRun", cascade = CascadeType.ALL)
   @OrderBy("id DESC")
-  private List<TestCase> testCases = new ArrayList<>();
+  private List<TestCaseRun> testCaseRuns = new ArrayList<>();
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "test_type_id")

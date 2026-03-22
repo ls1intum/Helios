@@ -18,15 +18,15 @@ public record FlakyTestOverviewDto(
       double combinedFailureRate,
       @NonNull OffsetDateTime lastUpdated) {
 
-    public static FlakyTestDto from(TestCaseFlakiness flakiness) {
+    public static FlakyTestDto from(TestCase testCase) {
       return new FlakyTestDto(
-          flakiness.getTestName(),
-          flakiness.getClassName(),
-          flakiness.getTestSuiteName(),
-          flakiness.getFlakinessScore(),
-          flakiness.getDefaultBranchFailureRate(),
-          flakiness.getCombinedFailureRate(),
-          flakiness.getLastUpdated());
+          testCase.getName(),
+          testCase.getClassName(),
+          testCase.getSuiteName(),
+          testCase.getFlakinessScore(),
+          testCase.getDefaultBranchFailureRate(),
+          testCase.getCombinedFailureRate(),
+          testCase.getUpdatedAt());
     }
   }
 

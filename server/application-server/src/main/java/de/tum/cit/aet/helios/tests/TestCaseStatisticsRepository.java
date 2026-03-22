@@ -16,52 +16,19 @@ public interface TestCaseStatisticsRepository extends JpaRepository<TestCaseStat
   /**
    * Find statistics for a specific test case on a specific branch.
    *
-   * @param testName the name of the test
-   * @param className the class name of the test
-   * @param testSuiteName the test suite name
-   * @param branchName the branch name
-   * @param repositoryId the repository ID
-   * @return the statistics if found
-   */
-  Optional<TestCaseStatistics>
-      findByTestNameAndClassNameAndTestSuiteNameAndBranchNameAndRepositoryRepositoryId(
-          String testName,
-          String className,
-          String testSuiteName,
-          String branchName,
-          Long repositoryId);
-
-  /**
-   * Find statistics for a specific test case on a specific branch.
-   *
-   * @param testName the name of the test
-   * @param className the class name of the test
-   * @param testSuiteName the test suite name
+   * @param testCaseId the ID of the test case
    * @param branchName the branch name
    * @return the statistics if found
    */
-  Optional<TestCaseStatistics> findByTestNameAndClassNameAndTestSuiteNameAndBranchName(
-      String testName, String className, String testSuiteName, String branchName);
+  Optional<TestCaseStatistics> findByTestCaseIdAndBranchName(Long testCaseId, String branchName);
 
   /**
-   * Find all statistics for a specific branch.
+   * Find all statistics for test cases on a branch in a repository.
    *
+   * @param testCaseIds the collection of test case IDs
    * @param branchName the branch name
-   * @param repositoryId the repository ID
-   * @return list of statistics for all tests on the branch
-   */
-  List<TestCaseStatistics> findByBranchNameAndRepositoryRepositoryId(
-      String branchName, Long repositoryId);
-
-  /**
-   * Find all statistics for test cases that belong to specific test suites on a branch in a
-   * repository.
-   *
-   * @param testSuiteNames collection of test suite names to search for
-   * @param branchName the branch name
-   * @param repositoryId the repository ID
    * @return list of statistics for matching test cases
    */
-  List<TestCaseStatistics> findByTestSuiteNameInAndBranchNameAndRepositoryRepositoryId(
-      Collection<String> testSuiteNames, String branchName, Long repositoryId);
+  List<TestCaseStatistics> findByTestCaseIdInAndBranchName(
+      Collection<Long> testCaseIds, String branchName);
 }

@@ -1,6 +1,6 @@
 package de.tum.cit.aet.helios.tests;
 
-import de.tum.cit.aet.helios.tests.TestCase.TestStatus;
+import de.tum.cit.aet.helios.tests.TestCaseRun.TestStatus;
 import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.lang.NonNull;
@@ -28,14 +28,7 @@ public record TestResultsDto(@NonNull List<TestTypeResults> testResults, boolean
       @NonNull Double totalTime,
       @NonNull Integer totalUpdates) {}
 
-  /** Results for a specific workflow. */
-  public static record WorkflowTestResults(
-      @NonNull Long workflowId,
-      @NonNull String workflowName,
-      @NonNull List<TestResultsDto.TestSuiteDto> testSuites,
-      boolean isProcessing) {}
-
-  static record TestSuiteDto(
+  record TestSuiteDto(
       @NonNull Long id,
       @NonNull String name,
       @NonNull LocalDateTime timestamp,
@@ -46,22 +39,23 @@ public record TestResultsDto(@NonNull List<TestTypeResults> testResults, boolean
       @NonNull Double time,
       String systemOut,
       @NonNull List<TestCaseDto> testCases) {
-    public static TestSuiteDto fromTestSuite(TestSuite testSuite, List<TestCaseDto> testCases) {
+    public static TestSuiteDto fromTestSuiteRun(
+        TestSuiteRun testSuiteRun, List<TestCaseDto> testCases) {
       return new TestSuiteDto(
-          testSuite.getId(),
-          testSuite.getName(),
-          testSuite.getTimestamp(),
-          testSuite.getTests(),
-          testSuite.getFailures(),
-          testSuite.getErrors(),
-          testSuite.getSkipped(),
-          testSuite.getTime(),
-          testSuite.getSystemOut(),
+          testSuiteRun.getId(),
+          testSuiteRun.getName(),
+          testSuiteRun.getTimestamp(),
+          testSuiteRun.getTests(),
+          testSuiteRun.getFailures(),
+          testSuiteRun.getErrors(),
+          testSuiteRun.getSkipped(),
+          testSuiteRun.getTime(),
+          testSuiteRun.getSystemOut(),
           testCases);
     }
   }
 
-  static record TestCaseDto(
+  record TestCaseDto(
       @NonNull Long id,
       @NonNull String name,
       @NonNull String className,
@@ -76,22 +70,23 @@ public record TestResultsDto(@NonNull List<TestTypeResults> testResults, boolean
       Double defaultBranchFailureRate,
       Double combinedFailureRate,
       Boolean failsInDefaultBranch) {
-    public static TestCaseDto fromTestCase(TestCase testCase) {
+    public static TestCaseDto fromTestCase(TestCaseRun testCaseRun) {
+      TestCase testCase = testCaseRun.getTestCase();
       return new TestCaseDto(
-          testCase.getId(),
+          testCaseRun.getId(),
           testCase.getName(),
           testCase.getClassName(),
-          testCase.getStatus(),
-          testCase.getPreviousStatus(),
-          testCase.getTime(),
-          testCase.getMessage(),
-          testCase.getStackTrace(),
-          testCase.getSystemOut(),
-          testCase.getErrorType(),
+          testCaseRun.getStatus(),
+          testCaseRun.getPreviousStatus(),
+          testCaseRun.getTime(),
+          testCaseRun.getMessage(),
+          testCaseRun.getStackTrace(),
+          testCaseRun.getSystemOut(),
+          testCaseRun.getErrorType(),
           testCase.getFlakinessScore(),
-          testCase.getFailureRate(),
+          testCase.getDefaultBranchFailureRate(),
           testCase.getCombinedFailureRate(),
-          testCase.isFailsInDefaultBranch());
+          testCaseRun.isFailsInDefaultBranch());
     }
   }
 }

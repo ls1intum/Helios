@@ -2,7 +2,7 @@ package de.tum.cit.aet.helios.workflow;
 
 import de.tum.cit.aet.helios.github.BaseGitServiceEntity;
 import de.tum.cit.aet.helios.pullrequest.PullRequest;
-import de.tum.cit.aet.helios.tests.TestSuite;
+import de.tum.cit.aet.helios.tests.TestSuiteRun;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -28,7 +28,7 @@ import lombok.ToString;
 @Getter
 @Setter
 @NoArgsConstructor
-@ToString(callSuper = true, exclude = "testSuites")
+@ToString(callSuper = true, exclude = "testSuiteRuns")
 public class WorkflowRun extends BaseGitServiceEntity {
   @ManyToMany private Set<PullRequest> pullRequests;
 
@@ -73,7 +73,7 @@ public class WorkflowRun extends BaseGitServiceEntity {
   private TestProcessingStatus testProcessingStatus;
 
   @OneToMany(mappedBy = "workflowRun", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-  private List<TestSuite> testSuites;
+  private List<TestSuiteRun> testSuiteRuns;
 
   @ManyToOne(optional = false, fetch = FetchType.EAGER)
   @JoinColumn(name = "workflow_id", nullable = false)
