@@ -1,5 +1,6 @@
 package de.tum.cit.aet.helios.workflow;
 
+import de.tum.cit.aet.helios.config.security.annotations.EnforceAtLeastWritePermission;
 import de.tum.cit.aet.helios.workflow.pagination.PaginatedWorkflowRunsResponse;
 import de.tum.cit.aet.helios.workflow.pagination.WorkflowRunFilterType;
 import de.tum.cit.aet.helios.workflow.pagination.WorkflowRunPageRequest;
@@ -8,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -52,5 +54,31 @@ public class WorkflowRunController {
       @RequestParam String branch) {
     var workflowRuns = workflowRunService.getLatestWorkflowRunsByBranchAndHeadCommitSha(branch);
     return ResponseEntity.ok(workflowRuns);
+  }
+
+  @GetMapping("/runs/{runId}")
+  public ResponseEntity<WorkflowRunDto> getWorkflowRunById(@PathVariable Long runId) {
+    return ResponseEntity.ok(workflowRunService.getWorkflowRunById(runId));
+  }
+
+  @EnforceAtLeastWritePermission
+  @PostMapping("/runs/{runId}/cancel")
+  public ResponseEntity<Void> cancelWorkflowRun(@PathVariable Long runId) {
+    workflowRunService.cancelWorkflowRun(runId);
+    return ResponseEntity.ok().build();
+  }
+
+  @EnforceAtLeastWritePermission
+  @PostMapping("/runs/{runId}/rerun")
+  public ResponseEntity<Void> reRunWorkflow(@PathVariable Long runId) {
+    workflowRunService.reRunWorkflow(runId);
+    return ResponseEntity.ok().build();
+  }
+
+  @EnforceAtLeastWritePermission
+  @PostMapping("/runs/{runId}/rerun-failed-jobs")
+  public ResponseEntity<Void> reRunFailedJobs(@PathVariable Long runId) {
+    workflowRunService.reRunFailedJobs(runId);
+    return ResponseEntity.ok().build();
   }
 }

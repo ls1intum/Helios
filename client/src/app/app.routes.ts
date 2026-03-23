@@ -88,6 +88,10 @@ export const routes: Routes = [
                 pathMatch: 'full',
               },
               {
+                path: 'runs/:runId',
+                loadComponent: () => import('@app/pages/workflow-run-details/workflow-run-details.component').then(m => m.WorkflowRunDetailsComponent),
+              },
+              {
                 path: 'runs',
                 loadComponent: () => import('@app/pages/workflow-run-list/workflow-run-list.component').then(m => m.WorkflowRunListComponent),
               },

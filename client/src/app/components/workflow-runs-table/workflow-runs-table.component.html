@@ -21,9 +21,9 @@
         <app-table-filter-paginated [paginationService]="typedPaginationService" [table]="table" />
       </th>
       <th class="hidden md:table-cell">Status</th>
-      <th class="hidden lg:table-cell">Tests</th>
+      <th class="hidden lg:table-cell">Test Processing</th>
       <th class="hidden lg:table-cell">Started</th>
-      <th class="hidden lg:table-cell">Updated</th>
+      <th class="hidden lg:table-cell">Duration</th>
     </tr>
   </ng-template>
 
@@ -38,7 +38,7 @@
         </td>
       </tr>
     } @else {
-      <tr>
+      <tr (click)="navigateToRun(run)" class="cursor-pointer">
         <td class="px-2 py-2">
           <div class="flex flex-col gap-2.5">
             <div class="flex flex-wrap items-center gap-2">
@@ -78,11 +78,11 @@
         </td>
         <td class="hidden lg:table-cell w-40">
           @if (run.runStartedAt) {
-            <span class="text-sm">{{ run.runStartedAt | timeAgo }}</span>
+            <span class="text-sm" [pTooltip]="formatExactDate(run.runStartedAt)" tooltipPosition="top">{{ run.runStartedAt | timeAgo }}</span>
           }
         </td>
         <td class="hidden lg:table-cell w-40">
-          <span class="text-sm">{{ run.updatedAt | timeAgo }}</span>
+          <span class="text-sm">{{ getDuration(run) }}</span>
         </td>
       </tr>
     }

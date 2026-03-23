@@ -10,6 +10,8 @@ import de.tum.cit.aet.helios.tests.TestResultsDto.TestTypeResults;
 import de.tum.cit.aet.helios.tests.type.TestType;
 import de.tum.cit.aet.helios.workflow.WorkflowRun;
 import de.tum.cit.aet.helios.workflow.WorkflowRunRepository;
+import jakarta.persistence.EntityNotFoundException;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -209,6 +211,69 @@ public class TestResultService {
     var context =
         new TestRunContext(
             latestRuns,
+            previousRuns,
+            defaultContext.defaultBranchName(),
+            defaultContext.defaultWorkflowRunByTestType());
+
+    return processTestResults(context, criteria);
+  }
+
+  /**
+   * Get the test results for a specific workflow run.
+   *
+   * @param workflowRunId the workflow run ID
+   * @param criteria search and pagination criteria
+   * @return the grouped test results
+   */
+  public TestResultsDto getTestResultsForWorkflowRun(
+      Long workflowRunId, TestSearchCriteria criteria) {
+    final Long repositoryId = RepositoryContext.getRepositoryId();
+    var run =
+        workflowRunRepository
+            .findByIdAndRepositoryRepositoryId(workflowRunId, repositoryId)
+            .orElseThrow(() -> new EntityNotFoundException(
+                "Workflow run with id %d not found".formatted(workflowRunId)));
+
+    var defaultContext = getDefaultBranchContext(run.getRepository());
+
+    List<WorkflowRun> previousRuns = List.of();
+    if (run.getHeadBranch() != null && run.getHeadSha() != null) {
+      var pullRequests = run.getPullRequests();
+      if (pullRequests != null && !pullRequests.isEmpty()) {
+        // A run can technically be associated with multiple PRs.
+        // We pick the lowest PR ID (oldest PR) for a deterministic baseline; in
+        // practice the sync service almost always resolves to exactly one PR per run.
+        // TODO consider better handling of multiple PRs
+        var prId = pullRequests.stream()
+            .min(Comparator.comparingLong(pr -> pr.getId()))
+            .orElseThrow()
+            .getId();
+        previousRuns =
+            workflowRunRepository
+                .findNthLatestCommitShaBehindHeadByPullRequestId(prId, 0, run.getHeadSha())
+                .map(prevSha -> workflowRunRepository.findByPullRequestsIdAndHeadSha(prId, prevSha))
+                .orElse(List.of());
+      } else {
+        previousRuns =
+            workflowRunRepository
+                .findNthLatestCommitShaBehindHeadByBranchAndRepoId(
+                    run.getHeadBranch(),
+                    run.getRepository().getRepositoryId(),
+                    0,
+                    run.getHeadSha())
+                .map(
+                    prevSha ->
+                        workflowRunRepository.findByHeadBranchAndHeadShaAndRepositoryRepositoryId(
+                            run.getHeadBranch(),
+                            prevSha,
+                            run.getRepository().getRepositoryId()))
+                .orElse(List.of());
+      }
+    }
+
+    var context =
+        new TestRunContext(
+            List.of(run),
             previousRuns,
             defaultContext.defaultBranchName(),
             defaultContext.defaultWorkflowRunByTestType());

@@ -23,6 +23,9 @@ export type PipelineSelector = { repositoryId: number } & (
   | {
       pullRequestId: number;
     }
+  | {
+      workflowRunId: number;
+    }
 );
 
 export interface Pipeline {

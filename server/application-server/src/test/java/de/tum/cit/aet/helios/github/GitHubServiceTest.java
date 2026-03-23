@@ -1148,6 +1148,7 @@ class GitHubServiceTest {
             () -> {
               gitHubService.cancelWorkflowRun(repoNameWithOwner, runId);
             });
-    assertTrue(exception.getMessage().contains("GitHub API call failed with response code: 500"));
+    assertTrue(exception.getMessage()
+        .contains("GitHub API cancel for run " + runId + " failed with response code: 500"));
   }
 }

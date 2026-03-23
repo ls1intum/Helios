@@ -5,6 +5,7 @@ import { type InfiniteData, infiniteQueryOptions, type MutationOptions, queryOpt
 import { client } from '../client.gen';
 import {
   cancelDeployment,
+  cancelWorkflowRun,
   createReleaseCandidate,
   createTestType,
   createWorkflowGroup,
@@ -52,10 +53,12 @@ import {
   getPullRequests,
   getReleaseInfoByName,
   getRepositoryById,
+  getTestResultsByWorkflowRunId,
   getUserPermissions,
   getUserSettings,
   getWorkflowById,
   getWorkflowJobStatus,
+  getWorkflowRunById,
   getWorkflowRuns,
   getWorkflowsByRepositoryId,
   getWorkflowsByState,
@@ -64,6 +67,8 @@ import {
   type Options,
   publishReleaseDraft,
   reconcilePullRequestState,
+  reRunFailedJobs,
+  reRunWorkflow,
   rotateSecret,
   setBranchPinnedByRepositoryIdAndNameAndUserId,
   setPrPinnedByNumber,
@@ -85,6 +90,8 @@ import type {
   CancelDeploymentData,
   CancelDeploymentError,
   CancelDeploymentResponse,
+  CancelWorkflowRunData,
+  CancelWorkflowRunError,
   CreateReleaseCandidateData,
   CreateReleaseCandidateError,
   CreateReleaseCandidateResponse,
@@ -160,10 +167,14 @@ import type {
   GetReleaseInfoByNameError,
   GetReleaseInfoByNameResponse,
   GetRepositoryByIdData,
+  GetTestResultsByWorkflowRunIdData,
+  GetTestResultsByWorkflowRunIdError,
+  GetTestResultsByWorkflowRunIdResponse,
   GetUserPermissionsData,
   GetUserSettingsData,
   GetWorkflowByIdData,
   GetWorkflowJobStatusData,
+  GetWorkflowRunByIdData,
   GetWorkflowRunsData,
   GetWorkflowRunsError,
   GetWorkflowRunsResponse,
@@ -178,6 +189,10 @@ import type {
   ReconcilePullRequestStateData,
   ReconcilePullRequestStateError,
   ReconcilePullRequestStateResponse,
+  ReRunFailedJobsData,
+  ReRunFailedJobsError,
+  ReRunWorkflowData,
+  ReRunWorkflowError,
   RotateSecretData,
   RotateSecretError,
   RotateSecretResponse,
@@ -447,6 +462,48 @@ export const extendEnvironmentLockMutation = (
   const mutationOptions: MutationOptions<ExtendEnvironmentLockResponse, ExtendEnvironmentLockError, Options<ExtendEnvironmentLockData>> = {
     mutationFn: async fnOptions => {
       const { data } = await extendEnvironmentLock({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const reRunWorkflowMutation = (options?: Partial<Options<ReRunWorkflowData>>): MutationOptions<unknown, ReRunWorkflowError, Options<ReRunWorkflowData>> => {
+  const mutationOptions: MutationOptions<unknown, ReRunWorkflowError, Options<ReRunWorkflowData>> = {
+    mutationFn: async fnOptions => {
+      const { data } = await reRunWorkflow({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const reRunFailedJobsMutation = (options?: Partial<Options<ReRunFailedJobsData>>): MutationOptions<unknown, ReRunFailedJobsError, Options<ReRunFailedJobsData>> => {
+  const mutationOptions: MutationOptions<unknown, ReRunFailedJobsError, Options<ReRunFailedJobsData>> = {
+    mutationFn: async fnOptions => {
+      const { data } = await reRunFailedJobs({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const cancelWorkflowRunMutation = (options?: Partial<Options<CancelWorkflowRunData>>): MutationOptions<unknown, CancelWorkflowRunError, Options<CancelWorkflowRunData>> => {
+  const mutationOptions: MutationOptions<unknown, CancelWorkflowRunError, Options<CancelWorkflowRunData>> = {
+    mutationFn: async fnOptions => {
+      const { data } = await cancelWorkflowRun({
         ...options,
         ...fnOptions,
         throwOnError: true,
@@ -991,6 +1048,23 @@ export const getWorkflowRunsInfiniteOptions = (options?: Options<GetWorkflowRuns
   );
 };
 
+export const getWorkflowRunByIdQueryKey = (options: Options<GetWorkflowRunByIdData>) => createQueryKey('getWorkflowRunById', options);
+
+export const getWorkflowRunByIdOptions = (options: Options<GetWorkflowRunByIdData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getWorkflowRunById({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: getWorkflowRunByIdQueryKey(options),
+  });
+};
+
 export const getWorkflowsByRepositoryIdQueryKey = (options: Options<GetWorkflowsByRepositoryIdData>) => createQueryKey('getWorkflowsByRepositoryId', options);
 
 export const getWorkflowsByRepositoryIdOptions = (options: Options<GetWorkflowsByRepositoryIdData>) => {
@@ -1059,6 +1133,60 @@ export const getUserPermissionsOptions = (options?: Options<GetUserPermissionsDa
     },
     queryKey: getUserPermissionsQueryKey(options),
   });
+};
+
+export const getTestResultsByWorkflowRunIdQueryKey = (options: Options<GetTestResultsByWorkflowRunIdData>) => createQueryKey('getTestResultsByWorkflowRunId', options);
+
+export const getTestResultsByWorkflowRunIdOptions = (options: Options<GetTestResultsByWorkflowRunIdData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getTestResultsByWorkflowRunId({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: getTestResultsByWorkflowRunIdQueryKey(options),
+  });
+};
+
+export const getTestResultsByWorkflowRunIdInfiniteQueryKey = (options: Options<GetTestResultsByWorkflowRunIdData>): QueryKey<Options<GetTestResultsByWorkflowRunIdData>> =>
+  createQueryKey('getTestResultsByWorkflowRunId', options, true);
+
+export const getTestResultsByWorkflowRunIdInfiniteOptions = (options: Options<GetTestResultsByWorkflowRunIdData>) => {
+  return infiniteQueryOptions<
+    GetTestResultsByWorkflowRunIdResponse,
+    GetTestResultsByWorkflowRunIdError,
+    InfiniteData<GetTestResultsByWorkflowRunIdResponse>,
+    QueryKey<Options<GetTestResultsByWorkflowRunIdData>>,
+    number | Pick<QueryKey<Options<GetTestResultsByWorkflowRunIdData>>[0], 'body' | 'headers' | 'path' | 'query'>
+  >(
+    // @ts-ignore
+    {
+      queryFn: async ({ pageParam, queryKey, signal }) => {
+        // @ts-ignore
+        const page: Pick<QueryKey<Options<GetTestResultsByWorkflowRunIdData>>[0], 'body' | 'headers' | 'path' | 'query'> =
+          typeof pageParam === 'object'
+            ? pageParam
+            : {
+                query: {
+                  page: pageParam,
+                },
+              };
+        const params = createInfiniteParams(queryKey, page);
+        const { data } = await getTestResultsByWorkflowRunId({
+          ...options,
+          ...params,
+          signal,
+          throwOnError: true,
+        });
+        return data;
+      },
+      queryKey: getTestResultsByWorkflowRunIdInfiniteQueryKey(options),
+    }
+  );
 };
 
 export const getLatestTestResultsByPullRequestIdQueryKey = (options: Options<GetLatestTestResultsByPullRequestIdData>) =>

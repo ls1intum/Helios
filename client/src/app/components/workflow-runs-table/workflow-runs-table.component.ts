@@ -1,4 +1,5 @@
-import { Component, computed, inject, ViewChild } from '@angular/core';
+import { Component, computed, inject, input, numberAttribute, ViewChild } from '@angular/core';
+import { Router } from '@angular/router';
 import { Table, TableModule, TablePageEvent } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
@@ -55,6 +56,9 @@ export class WorkflowRunsTableComponent {
 
   messageService = inject(MessageService);
   paginationService = inject(PaginatedTableService);
+  private router = inject(Router);
+
+  repositoryId = input.required({ transform: numberAttribute });
 
   queryOptions = computed(() => {
     const paginationState = this.paginationService.paginationState();
@@ -119,6 +123,12 @@ export class WorkflowRunsTableComponent {
   openRunExternal(event: Event, run: WorkflowRunDto) {
     window.open(run.htmlUrl, '_blank');
     event.stopPropagation();
+  }
+
+  navigateToRun(run: WorkflowRunDto) {
+    this.router.navigate(['/repo', this.repositoryId(), 'ci-cd', 'runs', run.id], {
+      state: { workflowRun: run },
+    });
   }
 
   getWorkflowStatusIcon(run: WorkflowRunDto): string {
@@ -189,5 +199,27 @@ export class WorkflowRunsTableComponent {
       return 'text-blue-500 animate-spin';
     }
     return 'text-surface-500';
+  }
+
+  formatExactDate(dateStr: string | null | undefined): string | undefined {
+    if (!dateStr) return undefined;
+    return new Date(dateStr).toLocaleString(undefined, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    });
+  }
+
+  getDuration(run: WorkflowRunDto): string {
+    if (!run.runStartedAt) return '—';
+    const start = new Date(run.runStartedAt).getTime();
+    const end = run.updatedAt ? new Date(run.updatedAt).getTime() : Date.now();
+    const seconds = Math.floor((end - start) / 1000);
+    if (seconds < 60) return `${seconds}s`;
+    if (seconds < 3600) return `${Math.floor(seconds / 60)}m ${seconds % 60}s`;
+    return `${Math.floor(seconds / 3600)}h ${Math.floor((seconds % 3600) / 60)}m`;
   }
 }
