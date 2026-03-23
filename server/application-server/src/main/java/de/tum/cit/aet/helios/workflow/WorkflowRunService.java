@@ -5,6 +5,7 @@ import de.tum.cit.aet.helios.filters.RepositoryContext;
 import de.tum.cit.aet.helios.github.GitHubService;
 import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
 import de.tum.cit.aet.helios.pullrequest.PullRequestRepository;
+import de.tum.cit.aet.helios.tests.TestSuiteRepository;
 import de.tum.cit.aet.helios.workflow.pagination.PaginatedWorkflowRunsResponse;
 import de.tum.cit.aet.helios.workflow.pagination.WorkflowRunPageRequest;
 import jakarta.persistence.EntityNotFoundException;
@@ -25,6 +26,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
 @Log4j2
 @RequiredArgsConstructor
@@ -37,6 +39,7 @@ public class WorkflowRunService {
   private final BranchRepository branchRepository;
   private final GitHubService gitHubService;
   private final GitRepoRepository gitRepoRepository;
+  private final TestSuiteRepository testSuiteRepository;
 
   public List<WorkflowRun> getAllWorkflowRuns() {
     return workflowRunRepository.findAll();
@@ -213,15 +216,15 @@ public class WorkflowRunService {
   }
 
   public void cancelWorkflowRun(Long runId) {
-    executeWorkflowRunAction(runId, gitHubService::cancelWorkflowRun, "cancel");
+    executeWorkflowRunAction(runId, gitHubService::cancelWorkflowRun, "cancel", false);
   }
 
   public void reRunWorkflow(Long runId) {
-    executeWorkflowRunAction(runId, gitHubService::reRunWorkflow, "re-run");
+    executeWorkflowRunAction(runId, gitHubService::reRunWorkflow, "re-run", true);
   }
 
   public void reRunFailedJobs(Long runId) {
-    executeWorkflowRunAction(runId, gitHubService::reRunFailedJobs, "re-run failed jobs for");
+    executeWorkflowRunAction(runId, gitHubService::reRunFailedJobs, "re-run failed jobs for", true);
   }
 
   @FunctionalInterface
@@ -229,7 +232,8 @@ public class WorkflowRunService {
     void execute(String repoNameWithOwner, long runId) throws IOException;
   }
 
-  private void executeWorkflowRunAction(Long runId, WorkflowRunAction action, String actionName) {
+  private void executeWorkflowRunAction(
+      Long runId, WorkflowRunAction action, String actionName, boolean resetTestState) {
     try {
       Long repositoryId = RepositoryContext.getRepositoryId();
       var repository =
@@ -238,11 +242,15 @@ public class WorkflowRunService {
               .orElseThrow(() -> new EntityNotFoundException(
                   "Repository with id %d not found".formatted(repositoryId)));
 
-      getWorkflowRunForCurrentRepository(runId, repositoryId, true)
+      var workflowRun = getWorkflowRunForCurrentRepository(runId, repositoryId, true)
           .orElseThrow(() -> new EntityNotFoundException(
               "Workflow run with id %d not found".formatted(runId)));
 
       action.execute(repository.getNameWithOwner(), runId);
+
+      if (resetTestState) {
+        resetTestStateForRerun(workflowRun);
+      }
     } catch (IOException e) {
       log.error("Failed to {} workflow run {}: {}", actionName, runId, e.getMessage());
       throw new RuntimeException(
@@ -261,5 +269,21 @@ public class WorkflowRunService {
       }
       return Optional.empty();
     });
+  }
+
+  private void resetTestStateForRerun(WorkflowRun workflowRun) {
+    var workflow = workflowRun.getWorkflow();
+    if (workflow == null || CollectionUtils.isEmpty(workflow.getTestTypes())) {
+      return;
+    }
+
+    var existingTestSuites = testSuiteRepository.findByWorkflowRunId(workflowRun.getId());
+    if (!existingTestSuites.isEmpty()) {
+      testSuiteRepository.deleteAll(existingTestSuites);
+    }
+
+    workflowRun.setTestSuites(null);
+    workflowRun.setTestProcessingStatus(null);
+    workflowRunRepository.save(workflowRun);
   }
 }

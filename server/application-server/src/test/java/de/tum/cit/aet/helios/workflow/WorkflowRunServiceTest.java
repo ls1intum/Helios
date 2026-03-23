@@ -2,10 +2,13 @@ package de.tum.cit.aet.helios.workflow;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -17,18 +20,24 @@ import de.tum.cit.aet.helios.github.GitHubService;
 import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import de.tum.cit.aet.helios.pullrequest.PullRequestRepository;
+import de.tum.cit.aet.helios.tests.TestSuite;
+import de.tum.cit.aet.helios.tests.TestSuiteRepository;
+import de.tum.cit.aet.helios.tests.type.TestType;
 import de.tum.cit.aet.helios.workflow.WorkflowRun.Conclusion;
 import de.tum.cit.aet.helios.workflow.WorkflowRun.Status;
 import de.tum.cit.aet.helios.workflow.pagination.PaginatedWorkflowRunsResponse;
 import de.tum.cit.aet.helios.workflow.pagination.WorkflowRunPageRequest;
 import jakarta.persistence.EntityNotFoundException;
+import java.io.IOException;
 import java.time.OffsetDateTime;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -48,6 +57,7 @@ public class WorkflowRunServiceTest {
   @Mock private BranchRepository branchRepository;
   @Mock private GitHubService gitHubService;
   @Mock private GitRepoRepository gitRepoRepository;
+  @Mock private TestSuiteRepository testSuiteRepository;
 
   @BeforeEach
   public void setUp() {
@@ -221,14 +231,51 @@ public class WorkflowRunServiceTest {
     repository.setNameWithOwner("owner/repo");
 
     WorkflowRun run = new WorkflowRun();
+    run.setId(201L);
+    Workflow workflow = new Workflow();
+    workflow.setTestTypes(new HashSet<>(List.of(new TestType())));
+    run.setWorkflow(workflow);
 
     when(gitRepoRepository.findById(1L)).thenReturn(Optional.of(repository));
     when(workflowRunRepository.findByIdAndRepositoryRepositoryId(201L, 1L))
         .thenReturn(Optional.of(run));
+    when(testSuiteRepository.findByWorkflowRunId(201L)).thenReturn(List.of());
 
     workflowRunService.reRunWorkflow(201L);
 
     verify(gitHubService).reRunWorkflow("owner/repo", 201L);
+    verify(workflowRunRepository).save(run);
+  }
+
+  @Test
+  public void reRunWorkflow_whenTestWorkflowAndExistingSuites_resetsStateAfterGithubCall()
+      throws Exception {
+    GitRepository repository = new GitRepository();
+    repository.setRepositoryId(1L);
+    repository.setNameWithOwner("owner/repo");
+
+    WorkflowRun run = new WorkflowRun();
+    run.setId(205L);
+    run.setTestProcessingStatus(WorkflowRun.TestProcessingStatus.PROCESSED);
+    Workflow workflow = new Workflow();
+    workflow.setTestTypes(new HashSet<>(List.of(new TestType())));
+    run.setWorkflow(workflow);
+
+    TestSuite existingSuite = new TestSuite();
+
+    when(gitRepoRepository.findById(1L)).thenReturn(Optional.of(repository));
+    when(workflowRunRepository.findByIdAndRepositoryRepositoryId(205L, 1L))
+        .thenReturn(Optional.of(run));
+    when(testSuiteRepository.findByWorkflowRunId(205L)).thenReturn(List.of(existingSuite));
+
+    workflowRunService.reRunWorkflow(205L);
+
+    InOrder inOrder = inOrder(gitHubService, testSuiteRepository);
+    inOrder.verify(gitHubService).reRunWorkflow("owner/repo", 205L);
+    inOrder.verify(testSuiteRepository).findByWorkflowRunId(205L);
+    verify(testSuiteRepository).deleteAll(List.of(existingSuite));
+    verify(workflowRunRepository).save(run);
+    assertNull(run.getTestProcessingStatus());
   }
 
   @Test
@@ -255,14 +302,85 @@ public class WorkflowRunServiceTest {
     repository.setNameWithOwner("owner/repo");
 
     WorkflowRun run = new WorkflowRun();
+    run.setId(202L);
+    Workflow workflow = new Workflow();
+    workflow.setTestTypes(new HashSet<>(List.of(new TestType())));
+    run.setWorkflow(workflow);
 
     when(gitRepoRepository.findById(1L)).thenReturn(Optional.of(repository));
     when(workflowRunRepository.findByIdAndRepositoryRepositoryId(202L, 1L))
         .thenReturn(Optional.of(run));
+    when(testSuiteRepository.findByWorkflowRunId(202L)).thenReturn(List.of());
 
     workflowRunService.reRunFailedJobs(202L);
 
     verify(gitHubService).reRunFailedJobs("owner/repo", 202L);
+    verify(workflowRunRepository).save(run);
+  }
+
+  @Test
+  public void reRunWorkflow_whenWorkflowHasNoTestTypes_doesNotResetTestState() throws Exception {
+    GitRepository repository = new GitRepository();
+    repository.setRepositoryId(1L);
+    repository.setNameWithOwner("owner/repo");
+
+    WorkflowRun run = new WorkflowRun();
+    Workflow workflow = new Workflow();
+    workflow.setTestTypes(new HashSet<>());
+    run.setWorkflow(workflow);
+
+    when(gitRepoRepository.findById(1L)).thenReturn(Optional.of(repository));
+    when(workflowRunRepository.findByIdAndRepositoryRepositoryId(203L, 1L))
+        .thenReturn(Optional.of(run));
+
+    workflowRunService.reRunWorkflow(203L);
+
+    verify(gitHubService).reRunWorkflow("owner/repo", 203L);
+    verify(testSuiteRepository, never()).findByWorkflowRunId(anyLong());
+  }
+
+  @Test
+  public void reRunWorkflow_whenGithubRerunFails_doesNotResetTestState() throws Exception {
+    GitRepository repository = new GitRepository();
+    repository.setRepositoryId(1L);
+    repository.setNameWithOwner("owner/repo");
+
+    WorkflowRun run = new WorkflowRun();
+    Workflow workflow = new Workflow();
+    workflow.setTestTypes(new HashSet<>(List.of(new TestType())));
+    run.setWorkflow(workflow);
+
+    when(gitRepoRepository.findById(1L)).thenReturn(Optional.of(repository));
+    when(workflowRunRepository.findByIdAndRepositoryRepositoryId(204L, 1L))
+        .thenReturn(Optional.of(run));
+    doThrow(new IOException("Dummy error")).when(gitHubService).reRunWorkflow("owner/repo", 204L);
+
+    assertThrows(RuntimeException.class, () -> workflowRunService.reRunWorkflow(204L));
+
+    verify(testSuiteRepository, never()).findByWorkflowRunId(anyLong());
+    verify(workflowRunRepository, never()).save(run);
+  }
+
+  @Test
+  public void reRunFailedJobs_whenGithubRerunFails_doesNotResetTestState() throws Exception {
+    GitRepository repository = new GitRepository();
+    repository.setRepositoryId(1L);
+    repository.setNameWithOwner("owner/repo");
+
+    WorkflowRun run = new WorkflowRun();
+    Workflow workflow = new Workflow();
+    workflow.setTestTypes(new HashSet<>(List.of(new TestType())));
+    run.setWorkflow(workflow);
+
+    when(gitRepoRepository.findById(1L)).thenReturn(Optional.of(repository));
+    when(workflowRunRepository.findByIdAndRepositoryRepositoryId(206L, 1L))
+        .thenReturn(Optional.of(run));
+    doThrow(new IOException("Dummy error")).when(gitHubService).reRunFailedJobs("owner/repo", 206L);
+
+    assertThrows(RuntimeException.class, () -> workflowRunService.reRunFailedJobs(206L));
+
+    verify(testSuiteRepository, never()).findByWorkflowRunId(anyLong());
+    verify(workflowRunRepository, never()).save(run);
   }
 
   @Test
