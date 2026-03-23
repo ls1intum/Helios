@@ -16,6 +16,7 @@ describe('Integration Test Workflow Run List Page', () => {
 
     fixture = TestBed.createComponent(WorkflowRunListComponent);
     component = fixture.componentInstance;
+    fixture.componentRef.setInput('repositoryId', 1);
 
     await fixture.whenStable();
   });

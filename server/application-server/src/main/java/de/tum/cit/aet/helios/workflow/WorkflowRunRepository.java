@@ -16,6 +16,8 @@ public interface WorkflowRunRepository
     extends JpaRepository<WorkflowRun, Long>, JpaSpecificationExecutor<WorkflowRun> {
   Optional<WorkflowRun> findById(long id);
 
+  Optional<WorkflowRun> findByIdAndRepositoryRepositoryId(long id, Long repositoryId);
+
   @Query(
       "SELECT DISTINCT wr FROM WorkflowRun wr "
           + "JOIN wr.pullRequests pr "

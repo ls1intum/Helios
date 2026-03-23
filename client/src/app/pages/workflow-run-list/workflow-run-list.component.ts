@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, input, numberAttribute } from '@angular/core';
 import { WorkflowRunsTableComponent } from '@app/components/workflow-runs-table/workflow-runs-table.component';
 
 @Component({
@@ -7,4 +7,6 @@ import { WorkflowRunsTableComponent } from '@app/components/workflow-runs-table/
   imports: [WorkflowRunsTableComponent],
   templateUrl: './workflow-run-list.component.html',
 })
-export class WorkflowRunListComponent {}
+export class WorkflowRunListComponent {
+  repositoryId = input.required({ transform: numberAttribute });
+}
