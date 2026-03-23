@@ -56,6 +56,7 @@ export type EnvironmentDeployment = {
   sha?: string;
   ref?: string;
   task?: string;
+  workflowRunId?: number;
   workflowRunHtmlUrl?: string;
   releaseCandidateNames?: Array<string>;
   prName?: string;

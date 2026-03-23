@@ -2,6 +2,7 @@ import { Component, computed, effect, inject, input, signal } from '@angular/cor
 import { EnvironmentDeployment, WorkflowJobDto } from '@app/core/modules/openapi';
 import { getWorkflowJobStatusOptions, getWorkflowJobStatusQueryKey } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { PermissionService } from '@app/core/services/permission.service';
+import { extractWorkflowRunId } from '@app/core/utils/workflow-run.util';
 import { WorkflowJobListComponent } from '@app/components/workflow-job-list/workflow-job-list.component';
 import { injectQuery } from '@tanstack/angular-query-experimental';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
@@ -29,9 +30,12 @@ export class WorkflowJobsStatusComponent {
   latestDeployment = input<EnvironmentDeployment | undefined>();
 
   workflowRunId = computed(() => {
-    const url = this.latestDeployment()?.workflowRunHtmlUrl;
-    const match = url?.match(/\/runs\/(\d+)$/);
-    return match ? parseInt(match[1], 10) : undefined;
+    const latestDeployment = this.latestDeployment();
+    if (latestDeployment?.workflowRunId) {
+      return latestDeployment.workflowRunId;
+    }
+
+    return extractWorkflowRunId(latestDeployment?.workflowRunHtmlUrl);
   });
 
   private extraRefetchStarted = signal(false);

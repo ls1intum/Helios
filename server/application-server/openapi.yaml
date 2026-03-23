@@ -2228,6 +2228,9 @@ components:
           type: string
         task:
           type: string
+        workflowRunId:
+          type: integer
+          format: int64
         workflowRunHtmlUrl:
           type: string
         releaseCandidateNames:

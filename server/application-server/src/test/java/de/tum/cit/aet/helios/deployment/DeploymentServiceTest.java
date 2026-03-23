@@ -6,6 +6,7 @@ import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -19,12 +20,16 @@ import de.tum.cit.aet.helios.environment.EnvironmentLockHistoryRepository;
 import de.tum.cit.aet.helios.environment.EnvironmentRepository;
 import de.tum.cit.aet.helios.environment.EnvironmentService;
 import de.tum.cit.aet.helios.github.GitHubService;
+import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
 import de.tum.cit.aet.helios.pullrequest.PullRequestRepository;
 import de.tum.cit.aet.helios.workflow.Workflow;
+import de.tum.cit.aet.helios.workflow.WorkflowRun;
+import de.tum.cit.aet.helios.workflow.WorkflowRunRepository;
 import de.tum.cit.aet.helios.workflow.WorkflowService;
+import java.io.IOException;
 import java.lang.reflect.Method;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -55,6 +60,8 @@ public class DeploymentServiceTest {
   @Mock private EnvironmentRepository environmentRepository;
   @Mock private BranchService branchService;
   @Mock private PullRequestRepository pullRequestRepository;
+  @Mock private GitRepoRepository gitRepoRepository;
+  @Mock private WorkflowRunRepository workflowRunRepository;
 
   private Deployment deployment;
   private GitRepository gitRepository;
@@ -69,6 +76,7 @@ public class DeploymentServiceTest {
 
     gitRepository = new GitRepository();
     gitRepository.setRepositoryId(1L);
+    gitRepository.setDefaultBranch("develop");
 
     environment = new Environment();
     environment.setId(1L);
@@ -200,21 +208,120 @@ public class DeploymentServiceTest {
   }
 
   @Test
-  public void testDeployToEnvironment() {
+  public void testDeployToEnvironment() throws IOException {
     final DeployRequest deployRequest = new DeployRequest(1L, "main", "sha");
 
     Workflow wf = new Workflow();
     wf.setId(1L);
+    wf.setFileNameWithExtension("testserver-deployment.yml");
 
     environment.setDeploymentWorkflow(wf);
+    environment.setName("artemis-test1");
+    gitRepository.setNameWithOwner("ls1intum/Artemis");
 
     when(environmentService.getEnvironmentTypeById(1L))
         .thenReturn(Optional.of(Environment.Type.PRODUCTION));
     when(authService.hasRole(anyString())).thenReturn(true);
+    when(authService.getPreferredUsername()).thenReturn("alice");
     when(environmentRepository.findById(1L)).thenReturn(Optional.of(environment));
     when(heliosDeploymentRepository.saveAndFlush(any())).thenAnswer(a -> a.getArgument(0));
 
     deploymentService.deployToEnvironment(deployRequest);
+
+    verify(gitHubService)
+        .dispatchWorkflow(
+            eq("ls1intum/Artemis"),
+            eq("testserver-deployment.yml"),
+            eq("develop"),
+            any());
+  }
+
+  @Test
+  public void testDeployToEnvironmentUsesExplicitWorkflowBranch() throws IOException {
+    final DeployRequest deployRequest = new DeployRequest(1L, "feature/my-branch", "sha");
+
+    Workflow wf = new Workflow();
+    wf.setId(1L);
+    wf.setFileNameWithExtension("testserver-deployment.yml");
+
+    environment.setDeploymentWorkflow(wf);
+    environment.setDeploymentWorkflowBranch("release/workflows");
+    environment.setName("artemis-test1");
+    gitRepository.setNameWithOwner("ls1intum/Artemis");
+
+    when(environmentService.getEnvironmentTypeById(1L))
+        .thenReturn(Optional.of(Environment.Type.PRODUCTION));
+    when(authService.hasRole(anyString())).thenReturn(true);
+    when(authService.getPreferredUsername()).thenReturn("alice");
+    when(environmentRepository.findById(1L)).thenReturn(Optional.of(environment));
+    when(heliosDeploymentRepository.saveAndFlush(any())).thenAnswer(a -> a.getArgument(0));
+
+    deploymentService.deployToEnvironment(deployRequest);
+
+    verify(gitHubService)
+        .dispatchWorkflow(
+            eq("ls1intum/Artemis"),
+            eq("testserver-deployment.yml"),
+            eq("release/workflows"),
+            any());
+  }
+
+  @Test
+  public void testCancelDeploymentUsesRepositoryFromHeliosDeployment() throws IOException {
+    CancelDeploymentRequest cancelRequest = new CancelDeploymentRequest(123L);
+
+    environment.setRepository(gitRepository);
+    gitRepository.setNameWithOwner("ls1intum/Artemis");
+    heliosDeployment.setEnvironment(environment);
+    heliosDeployment.setWorkflowRunId(123L);
+
+    when(heliosDeploymentRepository.findTopByWorkflowRunIdOrderByCreatedAtDesc(123L))
+        .thenReturn(Optional.of(heliosDeployment));
+
+    String result = deploymentService.cancelDeployment(cancelRequest);
+
+    assertEquals("Workflow cancellation request sent successfully", result);
+    verify(gitHubService).cancelWorkflowRun("ls1intum/Artemis", 123L);
+  }
+
+  @Test
+  public void testGetWorkflowJobStatusUsesRepositoryFromHeliosDeployment() throws IOException {
+    environment.setRepository(gitRepository);
+    gitRepository.setNameWithOwner("ls1intum/Artemis");
+    heliosDeployment.setEnvironment(environment);
+    heliosDeployment.setWorkflowRunId(123L);
+
+    when(heliosDeploymentRepository.findTopByWorkflowRunIdOrderByCreatedAtDesc(123L))
+        .thenReturn(Optional.of(heliosDeployment));
+    when(gitHubService.getWorkflowJobStatus("ls1intum/Artemis", 123L))
+        .thenReturn("{\"jobs\":[]}");
+
+    WorkflowJobsResponse response = deploymentService.getWorkflowJobStatus(123L);
+
+    assertEquals(0, response.getJobs().size());
+    verify(gitHubService).getWorkflowJobStatus("ls1intum/Artemis", 123L);
+  }
+
+  @Test
+  public void testCanRedeployAllowsCompletedWorkflowRunWhenHeliosDeploymentIsStale()
+      throws ReflectiveOperationException {
+    final Method canRedeployMethod =
+        DeploymentService.class.getDeclaredMethod("canRedeploy", Environment.class, long.class);
+    canRedeployMethod.setAccessible(true);
+
+    heliosDeployment.setStatus(HeliosDeployment.Status.IN_PROGRESS);
+    heliosDeployment.setWorkflowRunId(123L);
+
+    WorkflowRun workflowRun = new WorkflowRun();
+    workflowRun.setStatus(WorkflowRun.Status.COMPLETED);
+    workflowRun.setConclusion(Optional.of(WorkflowRun.Conclusion.SUCCESS));
+
+    when(heliosDeploymentRepository.findTopByEnvironmentOrderByCreatedAtDesc(environment))
+        .thenReturn(Optional.of(heliosDeployment));
+    when(workflowRunRepository.findById(123L)).thenReturn(Optional.of(workflowRun));
+
+    assertTrue((boolean) canRedeployMethod.invoke(deploymentService, environment, 10L));
+    verify(heliosDeploymentRepository).save(heliosDeployment);
   }
 
   @Test

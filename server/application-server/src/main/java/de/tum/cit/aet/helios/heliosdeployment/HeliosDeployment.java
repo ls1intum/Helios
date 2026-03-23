@@ -4,6 +4,7 @@ import de.tum.cit.aet.helios.deployment.Deployment;
 import de.tum.cit.aet.helios.environment.Environment;
 import de.tum.cit.aet.helios.pullrequest.PullRequest;
 import de.tum.cit.aet.helios.user.User;
+import de.tum.cit.aet.helios.workflow.WorkflowRun;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -140,6 +141,27 @@ public class HeliosDeployment {
     } else {
       return Status.UNKNOWN;
     }
+  }
+
+  public static HeliosDeployment.Status mapWorkflowRunStatus(
+      WorkflowRun.Status workflowStatus, WorkflowRun.Conclusion workflowConclusion) {
+    if (workflowStatus == null) {
+      return Status.UNKNOWN;
+    }
+
+    return switch (workflowStatus) {
+      case PENDING, REQUESTED, WAITING -> Status.WAITING;
+      case QUEUED -> Status.QUEUED;
+      case IN_PROGRESS -> Status.IN_PROGRESS;
+      case COMPLETED -> switch (workflowConclusion) {
+        case SUCCESS -> Status.DEPLOYMENT_SUCCESS;
+        case FAILURE, STARTUP_FAILURE, TIMED_OUT, CANCELLED -> Status.FAILED;
+        default -> Status.UNKNOWN;
+      };
+      case SUCCESS -> Status.DEPLOYMENT_SUCCESS;
+      case FAILURE, CANCELLED, TIMED_OUT -> Status.FAILED;
+      default -> Status.UNKNOWN;
+    };
   }
 
   public static Deployment.State mapHeliosStatusToDeploymentState(
