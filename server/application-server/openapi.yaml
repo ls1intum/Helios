@@ -813,6 +813,37 @@ paths:
                 $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
+  /api/pullrequests/repository/{repositoryId}/reconcile-state:
+    post:
+      tags:
+      - pull-request-controller
+      operationId: reconcilePullRequestState
+      parameters:
+      - name: repositoryId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: dryRun
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+      responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PullRequestStateReconciliationResultDto"
   /api/environments/sync:
     post:
       tags:
@@ -2678,6 +2709,42 @@ components:
       - deployments
       - evaluations
       - name
+    PullRequestStateReconciliationResultDto:
+      type: object
+      properties:
+        dryRun:
+          type: boolean
+        repositoryId:
+          type: integer
+          format: int64
+        repositoryNameWithOwner:
+          type: string
+        scannedCount:
+          type: integer
+          format: int32
+        updatedCount:
+          type: integer
+          format: int32
+        updatedPullRequestIds:
+          type: array
+          items:
+            type: integer
+            format: int64
+        updatedPullRequestNumbers:
+          type: array
+          items:
+            type: integer
+            format: int32
+        unchangedCount:
+          type: integer
+          format: int32
+        errorCount:
+          type: integer
+          format: int32
+        errors:
+          type: array
+          items:
+            type: string
     PushStatusPayload:
       type: object
       properties:

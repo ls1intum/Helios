@@ -186,6 +186,9 @@ import type {
   PublishReleaseDraftData,
   PublishReleaseDraftErrors,
   PublishReleaseDraftResponses,
+  ReconcilePullRequestStateData,
+  ReconcilePullRequestStateErrors,
+  ReconcilePullRequestStateResponses,
   ReRunFailedJobsData,
   ReRunFailedJobsErrors,
   ReRunFailedJobsResponses,
@@ -562,6 +565,13 @@ export const getReleaseInfoByName = <ThrowOnError extends boolean = false>(optio
 export const setPrPinnedByNumber = <ThrowOnError extends boolean = false>(options: Options<SetPrPinnedByNumberData, ThrowOnError>) => {
   return (options.client ?? client).post<SetPrPinnedByNumberResponses, SetPrPinnedByNumberErrors, ThrowOnError>({
     url: '/api/pullrequests/{pr}/pin',
+    ...options,
+  });
+};
+
+export const reconcilePullRequestState = <ThrowOnError extends boolean = false>(options: Options<ReconcilePullRequestStateData, ThrowOnError>) => {
+  return (options.client ?? client).post<ReconcilePullRequestStateResponses, ReconcilePullRequestStateErrors, ThrowOnError>({
+    url: '/api/pullrequests/repository/{repositoryId}/reconcile-state',
     ...options,
   });
 };

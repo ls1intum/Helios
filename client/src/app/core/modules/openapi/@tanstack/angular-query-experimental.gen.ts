@@ -66,6 +66,7 @@ import {
   lockEnvironment,
   type Options,
   publishReleaseDraft,
+  reconcilePullRequestState,
   reRunFailedJobs,
   reRunWorkflow,
   rotateSecret,
@@ -185,6 +186,9 @@ import type {
   LockEnvironmentResponse,
   PublishReleaseDraftData,
   PublishReleaseDraftError,
+  ReconcilePullRequestStateData,
+  ReconcilePullRequestStateError,
+  ReconcilePullRequestStateResponse,
   ReRunFailedJobsData,
   ReRunFailedJobsError,
   ReRunWorkflowData,
@@ -788,6 +792,22 @@ export const setPrPinnedByNumberMutation = (
   const mutationOptions: MutationOptions<unknown, SetPrPinnedByNumberError, Options<SetPrPinnedByNumberData>> = {
     mutationFn: async fnOptions => {
       const { data } = await setPrPinnedByNumber({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const reconcilePullRequestStateMutation = (
+  options?: Partial<Options<ReconcilePullRequestStateData>>
+): MutationOptions<ReconcilePullRequestStateResponse, ReconcilePullRequestStateError, Options<ReconcilePullRequestStateData>> => {
+  const mutationOptions: MutationOptions<ReconcilePullRequestStateResponse, ReconcilePullRequestStateError, Options<ReconcilePullRequestStateData>> = {
+    mutationFn: async fnOptions => {
+      const { data } = await reconcilePullRequestState({
         ...options,
         ...fnOptions,
         throwOnError: true,
