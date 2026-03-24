@@ -36,6 +36,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
@@ -70,6 +71,7 @@ public class DeploymentServiceTest {
 
     gitRepository = new GitRepository();
     gitRepository.setRepositoryId(1L);
+    gitRepository.setNameWithOwner("owner/repo");
 
     environment = new Environment();
     environment.setId(1L);
@@ -206,6 +208,7 @@ public class DeploymentServiceTest {
 
     Workflow wf = new Workflow();
     wf.setId(1L);
+    wf.setFileNameWithExtension("deploy.yml");
 
     environment.setDeploymentWorkflow(wf);
 
@@ -219,7 +222,7 @@ public class DeploymentServiceTest {
   }
 
   @Test
-  public void testDeployToEnvironmentSavesWorkflowRunIdFromDispatchResponse() {
+  public void testDeployToEnvironmentSavesWorkflowRunIdFromDispatchResponse() throws Exception {
     final DeployRequest deployRequest = new DeployRequest(1L, "main", "sha");
 
     Workflow wf = new Workflow();
@@ -233,12 +236,15 @@ public class DeploymentServiceTest {
     when(environmentRepository.findById(1L)).thenReturn(Optional.of(environment));
     when(heliosDeploymentRepository.saveAndFlush(any())).thenAnswer(a -> a.getArgument(0));
     when(heliosDeploymentRepository.save(any())).thenAnswer(a -> a.getArgument(0));
-    when(gitHubService.dispatchWorkflow(anyString(), anyString(), anyString(), any()))
+    when(gitHubService.dispatchWorkflow(any(), any(), any(), any()))
         .thenReturn(new WorkflowDispatchResult(123L, "https://api.github.com/runs/123", null));
 
     deploymentService.deployToEnvironment(deployRequest);
 
-    assertEquals(Long.valueOf(123L), heliosDeployment.getWorkflowRunId());
+    ArgumentCaptor<HeliosDeployment> deploymentCaptor =
+        ArgumentCaptor.forClass(HeliosDeployment.class);
+    verify(heliosDeploymentRepository, times(2)).save(deploymentCaptor.capture());
+    assertEquals(Long.valueOf(123L), deploymentCaptor.getValue().getWorkflowRunId());
   }
 
   @Test
