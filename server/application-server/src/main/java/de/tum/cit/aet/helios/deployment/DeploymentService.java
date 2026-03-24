@@ -12,6 +12,7 @@ import de.tum.cit.aet.helios.environment.EnvironmentRepository;
 import de.tum.cit.aet.helios.environment.EnvironmentService;
 import de.tum.cit.aet.helios.filters.RepositoryContext;
 import de.tum.cit.aet.helios.github.GitHubService;
+import de.tum.cit.aet.helios.github.WorkflowDispatchResult;
 import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
@@ -200,11 +201,18 @@ public class DeploymentService {
     heliosDeploymentRepository.save(heliosDeployment);
 
     try {
-      this.gitHubService.dispatchWorkflow(
-          environment.getRepository().getNameWithOwner(),
-          deploymentWorkflow.getFileNameWithExtension(),
-          this.getDeploymentWorkflowBranch(environment, deployRequest),
-          workflowParams);
+      WorkflowDispatchResult dispatchResult =
+          this.gitHubService.dispatchWorkflow(
+              environment.getRepository().getNameWithOwner(),
+              deploymentWorkflow.getFileNameWithExtension(),
+              this.getDeploymentWorkflowBranch(environment, deployRequest),
+              workflowParams);
+
+      if (dispatchResult != null && dispatchResult.workflowRunId() != null) {
+        heliosDeployment.setWorkflowRunId(dispatchResult.workflowRunId());
+        heliosDeployment.setWorkflowRunHtmlUrl(dispatchResult.htmlUrl());
+        heliosDeploymentRepository.save(heliosDeployment);
+      }
 
       this.environmentService.markStatusAsChanged(environment);
     } catch (IOException e) {

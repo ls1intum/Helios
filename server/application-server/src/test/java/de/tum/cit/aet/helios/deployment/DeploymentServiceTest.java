@@ -19,6 +19,7 @@ import de.tum.cit.aet.helios.environment.EnvironmentLockHistoryRepository;
 import de.tum.cit.aet.helios.environment.EnvironmentRepository;
 import de.tum.cit.aet.helios.environment.EnvironmentService;
 import de.tum.cit.aet.helios.github.GitHubService;
+import de.tum.cit.aet.helios.github.WorkflowDispatchResult;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
@@ -215,6 +216,29 @@ public class DeploymentServiceTest {
     when(heliosDeploymentRepository.saveAndFlush(any())).thenAnswer(a -> a.getArgument(0));
 
     deploymentService.deployToEnvironment(deployRequest);
+  }
+
+  @Test
+  public void testDeployToEnvironmentSavesWorkflowRunIdFromDispatchResponse() {
+    final DeployRequest deployRequest = new DeployRequest(1L, "main", "sha");
+
+    Workflow wf = new Workflow();
+    wf.setId(1L);
+
+    environment.setDeploymentWorkflow(wf);
+
+    when(environmentService.getEnvironmentTypeById(1L))
+        .thenReturn(Optional.of(Environment.Type.PRODUCTION));
+    when(authService.hasRole(anyString())).thenReturn(true);
+    when(environmentRepository.findById(1L)).thenReturn(Optional.of(environment));
+    when(heliosDeploymentRepository.saveAndFlush(any())).thenAnswer(a -> a.getArgument(0));
+    when(heliosDeploymentRepository.save(any())).thenAnswer(a -> a.getArgument(0));
+    when(gitHubService.dispatchWorkflow(anyString(), anyString(), anyString(), any()))
+        .thenReturn(new WorkflowDispatchResult(123L, "https://api.github.com/runs/123", null));
+
+    deploymentService.deployToEnvironment(deployRequest);
+
+    assertEquals(Long.valueOf(123L), heliosDeployment.getWorkflowRunId());
   }
 
   @Test

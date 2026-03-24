@@ -10,6 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
@@ -63,6 +64,7 @@ import org.kohsuke.github.PagedIterable;
 import org.kohsuke.github.PagedIterator;
 import org.kohsuke.github.function.InputStreamFunction;
 import org.mockito.Answers;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -241,10 +243,18 @@ class GitHubServiceTest {
     final String workflowFileNameOrId = "main.yml";
     final String ref = "main";
     final Map<String, Object> inputs = Map.of("key", "value");
-    final String jsonPayload = "{\"ref\":\"main\",\"inputs\":{\"key\":\"value\"}}";
+    final String jsonPayload =
+        "{\"ref\":\"main\",\"inputs\":{\"key\":\"value\"},\"return_run_details\":true}";
+    final String responseJson =
+        "{\"workflow_run_id\":123,\"run_url\":\"https://api.github.com/runs/123\","
+            + "\"html_url\":\"https://github.com/runs/123\"}";
 
     when(clientManager.getCurrentToken()).thenReturn("test-token");
     when(objectMapper.writeValueAsString(any())).thenReturn(jsonPayload);
+    when(objectMapper.readValue(responseJson, WorkflowDispatchResult.class))
+        .thenReturn(
+            new WorkflowDispatchResult(
+                123L, "https://api.github.com/runs/123", "https://github.com/runs/123"));
 
     Response mockResponse =
         new Response.Builder()
@@ -252,17 +262,28 @@ class GitHubServiceTest {
             .protocol(Protocol.HTTP_1_1)
             .code(200)
             .message("OK")
-            .body(ResponseBody.create("", MediaType.parse("application/json")))
+            .body(ResponseBody.create(responseJson, MediaType.parse("application/json")))
             .build();
     Call mockCall = mock(Call.class);
     when(okHttpClient.newCall(any(Request.class))).thenReturn(mockCall);
     when(mockCall.execute()).thenReturn(mockResponse);
 
-    assertDoesNotThrow(
-        () ->
-            gitHubService.dispatchWorkflow(repoNameWithOwners, workflowFileNameOrId, ref, inputs));
-    verify(objectMapper).writeValueAsString(Map.of("ref", ref, "inputs", inputs));
-    verify(okHttpClient).newCall(any(Request.class));
+    WorkflowDispatchResult result =
+        gitHubService.dispatchWorkflow(repoNameWithOwners, workflowFileNameOrId, ref, inputs);
+
+    assertNotNull(result);
+    assertEquals(123L, result.workflowRunId());
+    assertEquals("https://github.com/runs/123", result.htmlUrl());
+    verify(objectMapper)
+        .writeValueAsString(Map.of("ref", ref, "inputs", inputs, "return_run_details", true));
+    verify(objectMapper).readValue(responseJson, WorkflowDispatchResult.class);
+    ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
+    verify(okHttpClient).newCall(requestCaptor.capture());
+    Request request = requestCaptor.getValue();
+    assertEquals(
+        "https://api.github.com/repos/owner/repo/actions/workflows/main.yml/dispatches",
+        request.url().toString());
+    assertEquals("2026-03-10", request.header("X-GitHub-Api-Version"));
   }
 
   @Test
@@ -271,7 +292,8 @@ class GitHubServiceTest {
     String workflowFileNameOrId = "main.yml";
     String ref = "main";
     Map<String, Object> inputs = Map.of("key", "value");
-    String jsonPayload = "{\"ref\":\"main\",\"inputs\":{\"key\":\"value\"}}";
+    String jsonPayload =
+        "{\"ref\":\"main\",\"inputs\":{\"key\":\"value\"},\"return_run_details\":true}";
 
     when(clientManager.getCurrentToken()).thenReturn("test-token");
     when(objectMapper.writeValueAsString(any())).thenReturn(jsonPayload);
@@ -300,6 +322,39 @@ class GitHubServiceTest {
         exception
             .getMessage()
             .contains("GitHub API workflow dispatch failed with response code: 500"));
+  }
+
+  @Test
+  void dispatchWorkflowReturnsEmptyResultWhenGitHubDoesNotReturnRunDetails() throws IOException {
+    final String repoNameWithOwners = "owner/repo";
+    final String workflowFileNameOrId = "main.yml";
+    final String ref = "main";
+    final Map<String, Object> inputs = Map.of("key", "value");
+    final String jsonPayload =
+        "{\"ref\":\"main\",\"inputs\":{\"key\":\"value\"},\"return_run_details\":true}";
+
+    when(clientManager.getCurrentToken()).thenReturn("test-token");
+    when(objectMapper.writeValueAsString(any())).thenReturn(jsonPayload);
+
+    Response mockResponse =
+        new Response.Builder()
+            .request(new Request.Builder().url("http://dummyurl").build())
+            .protocol(Protocol.HTTP_1_1)
+            .code(204)
+            .message("No Content")
+            .body(ResponseBody.create("", MediaType.parse("application/json")))
+            .build();
+    Call mockCall = mock(Call.class);
+    when(okHttpClient.newCall(any(Request.class))).thenReturn(mockCall);
+    when(mockCall.execute()).thenReturn(mockResponse);
+
+    WorkflowDispatchResult result =
+        gitHubService.dispatchWorkflow(repoNameWithOwners, workflowFileNameOrId, ref, inputs);
+
+    assertNotNull(result);
+    assertNull(result.workflowRunId());
+    assertNull(result.htmlUrl());
+    verify(objectMapper, never()).readValue(anyString(), eq(WorkflowDispatchResult.class));
   }
 
   @Test
