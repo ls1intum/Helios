@@ -201,7 +201,12 @@ public class GitHubService {
         return WorkflowDispatchResult.empty();
       }
 
-      return objectMapper.readValue(responseBody, WorkflowDispatchResult.class);
+      try {
+        return objectMapper.readValue(responseBody, WorkflowDispatchResult.class);
+      } catch (JsonProcessingException e) {
+        log.warn("Failed to parse workflow dispatch run details, continuing without them", e);
+        return WorkflowDispatchResult.empty();
+      }
     }
   }
 

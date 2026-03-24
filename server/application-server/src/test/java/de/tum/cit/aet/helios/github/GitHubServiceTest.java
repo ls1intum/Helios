@@ -1,5 +1,6 @@
 package de.tum.cit.aet.helios.github;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -355,6 +356,42 @@ class GitHubServiceTest {
     assertNull(result.workflowRunId());
     assertNull(result.htmlUrl());
     verify(objectMapper, never()).readValue(anyString(), eq(WorkflowDispatchResult.class));
+  }
+
+  @Test
+  void dispatchWorkflowReturnsEmptyResultWhenRunDetailsCannotBeParsed() throws IOException {
+    final String repoNameWithOwners = "owner/repo";
+    final String workflowFileNameOrId = "main.yml";
+    final String ref = "main";
+    final Map<String, Object> inputs = Map.of("key", "value");
+    final String jsonPayload =
+        "{\"ref\":\"main\",\"inputs\":{\"key\":\"value\"},\"return_run_details\":true}";
+    final String responseJson = "{\"workflow_run_id\":\"not-a-number\"}";
+
+    when(clientManager.getCurrentToken()).thenReturn("test-token");
+    when(objectMapper.writeValueAsString(any())).thenReturn(jsonPayload);
+    when(objectMapper.readValue(responseJson, WorkflowDispatchResult.class))
+        .thenThrow(new JsonProcessingException("bad json") {});
+
+    Response mockResponse =
+        new Response.Builder()
+            .request(new Request.Builder().url("http://dummyurl").build())
+            .protocol(Protocol.HTTP_1_1)
+            .code(200)
+            .message("OK")
+            .body(ResponseBody.create(responseJson, MediaType.parse("application/json")))
+            .build();
+    Call mockCall = mock(Call.class);
+    when(okHttpClient.newCall(any(Request.class))).thenReturn(mockCall);
+    when(mockCall.execute()).thenReturn(mockResponse);
+
+    WorkflowDispatchResult result =
+        gitHubService.dispatchWorkflow(repoNameWithOwners, workflowFileNameOrId, ref, inputs);
+
+    assertNotNull(result);
+    assertNull(result.workflowRunId());
+    assertNull(result.htmlUrl());
+    verify(objectMapper).readValue(responseJson, WorkflowDispatchResult.class);
   }
 
   @Test
