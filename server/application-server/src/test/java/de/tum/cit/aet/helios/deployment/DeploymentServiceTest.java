@@ -227,6 +227,7 @@ public class DeploymentServiceTest {
 
     Workflow wf = new Workflow();
     wf.setId(1L);
+    wf.setFileNameWithExtension("deploy.yml");
 
     environment.setDeploymentWorkflow(wf);
 
@@ -236,7 +237,11 @@ public class DeploymentServiceTest {
     when(environmentRepository.findById(1L)).thenReturn(Optional.of(environment));
     when(heliosDeploymentRepository.saveAndFlush(any())).thenAnswer(a -> a.getArgument(0));
     when(heliosDeploymentRepository.save(any())).thenAnswer(a -> a.getArgument(0));
-    when(gitHubService.dispatchWorkflow(any(), any(), any(), any()))
+    when(gitHubService.dispatchWorkflow(
+            org.mockito.ArgumentMatchers.eq("owner/repo"),
+            org.mockito.ArgumentMatchers.eq("deploy.yml"),
+            org.mockito.ArgumentMatchers.eq("main"),
+            any()))
         .thenReturn(new WorkflowDispatchResult(123L, "https://api.github.com/runs/123", null));
 
     deploymentService.deployToEnvironment(deployRequest);
