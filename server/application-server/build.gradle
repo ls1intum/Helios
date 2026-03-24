@@ -120,6 +120,15 @@ tasks.register("bootRunDev", BootRun) {
     mainClass.set("de.tum.cit.aet.helios.HeliosApplication")
 }
 
+tasks.register("bootRunDevDebug", BootRun) {
+    jvmArgs = ["-javaagent:${configurations.runtimeAgent1.asPath}", "-javaagent:${configurations.runtimeAgent2.asPath}", "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"]
+    group = "application"
+    description = "Runs the Spring Boot application with the dev profile and remote debug on port 5005"
+    systemProperty "spring.profiles.active", "dev"
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass.set("de.tum.cit.aet.helios.HeliosApplication")
+}
+
 tasks.register("bootRunStaging", BootRun) {
     jvmArgs = ["-javaagent:${configurations.runtimeAgent1.asPath}", "-javaagent:${configurations.runtimeAgent2.asPath}"]
     group = "application"
