@@ -11,5 +11,6 @@ public record TestFlakinessScoreRequest(
 
   public record TestCaseIdentifier(
       @NonNull @NotBlank String testName,
-      @NonNull @NotBlank String className) {}
+      @NonNull @NotBlank String className,
+      @NonNull @NotBlank String testSuiteName) {}
 }

@@ -21,7 +21,7 @@ import { PullRequestStatusIconComponent } from '@app/components/pull-request-sta
 import { MessageService, SortMeta } from 'primeng/api';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
 import { IconExternalLink, IconFilterPlus, IconGitPullRequest, IconPinned, IconPinnedOff, IconPoint, IconBrandGithub } from 'angular-tabler-icons/icons';
-import { PAGINATED_FILTER_OPTIONS_TOKEN, PaginatedFilterOption, PaginatedTableService } from '@app/core/services/paginated-table.service';
+import { PAGINATED_FILTER_OPTIONS_TOKEN, PAGINATION_STORAGE_KEY_TOKEN, PaginatedFilterOption, PaginatedTableService } from '@app/core/services/paginated-table.service';
 import { TableFilterPaginatedComponent } from '@app/components/table-filter-paginated/table-filter-paginated.component';
 import { NgTemplateOutlet } from '@angular/common';
 
@@ -71,6 +71,7 @@ export function createPullRequestFilterOptions(keycloakService: KeycloakService)
   providers: [
     PaginatedTableService,
     { provide: PAGINATED_FILTER_OPTIONS_TOKEN, useFactory: createPullRequestFilterOptions, deps: [KeycloakService] },
+    { provide: PAGINATION_STORAGE_KEY_TOKEN, useValue: 'pullRequestPaginationState' },
     provideTablerIcons({
       IconFilterPlus,
       IconPoint,

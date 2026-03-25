@@ -162,6 +162,7 @@ export type NotificationPreferencesWrapper = {
 export type TestCaseIdentifier = {
   testName: string;
   className: string;
+  testSuiteName: string;
 };
 
 export type TestFlakinessScoreRequest = {
@@ -171,6 +172,7 @@ export type TestFlakinessScoreRequest = {
 export type TestFlakinessScoreDto = {
   testName: string;
   className: string;
+  testSuiteName: string;
   flakinessScore?: number;
   defaultBranchFailureRate?: number;
   combinedFailureRate?: number;
@@ -390,14 +392,13 @@ export type FlakyTestDto = {
   flakinessScore?: number;
   defaultBranchFailureRate?: number;
   combinedFailureRate?: number;
-  totalRuns?: number;
-  failedRuns?: number;
   lastUpdated: string;
 };
 
 export type FlakyTestOverviewDto = {
   summary: FlakyTestSummary;
   flakyTests: Array<FlakyTestDto>;
+  filteredCount?: number;
 };
 
 export type FlakyTestSummary = {
@@ -1955,7 +1956,13 @@ export type GetLatestTestResultsByPullRequestIdResponse = GetLatestTestResultsBy
 export type GetFlakyTestsOverviewData = {
   body?: never;
   path?: never;
-  query?: never;
+  query?: {
+    page?: number;
+    size?: number;
+    sortDirection?: string;
+    filterType?: 'ALL' | 'HIGH' | 'MEDIUM' | 'LOW';
+    searchTerm?: string;
+  };
   url: '/api/tests/flaky';
 };
 

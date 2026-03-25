@@ -15,6 +15,11 @@ export type PaginatedFilterOption = {
 // Define an injection token for filter options
 export const PAGINATED_FILTER_OPTIONS_TOKEN = new InjectionToken<PaginatedFilterOption[]>('paginatedFilterOptions');
 
+// Injection token for the localStorage key used to persist pagination state.
+// Each component that provides PaginatedTableService should supply its own unique key
+// via this token to prevent different tables from overwriting each other's state.
+export const PAGINATION_STORAGE_KEY_TOKEN = new InjectionToken<string>('paginationStorageKey');
+
 export interface PaginationState {
   page: number;
   size: number;
@@ -31,6 +36,8 @@ export class PaginatedTableService {
 
   // Inject filter options
   filterOptions = inject<PaginatedFilterOption[]>(PAGINATED_FILTER_OPTIONS_TOKEN);
+
+  private storageKey = inject(PAGINATION_STORAGE_KEY_TOKEN);
 
   // Pagination state
   page = signal(1);
@@ -66,7 +73,7 @@ export class PaginatedTableService {
   }
 
   private loadPaginationFromLocalStorage(): void {
-    const storedStateStr = localStorage.getItem('pullRequestPaginationState');
+    const storedStateStr = localStorage.getItem(this.storageKey);
     if (!storedStateStr) {
       console.log('No pagination state found in localStorage');
       return;
@@ -108,7 +115,7 @@ export class PaginatedTableService {
   }
 
   private savePaginationToLocalStorage(state: PaginationState): void {
-    localStorage.setItem('pullRequestPaginationState', JSON.stringify(state));
+    localStorage.setItem(this.storageKey, JSON.stringify(state));
   }
 
   filterType(): string {

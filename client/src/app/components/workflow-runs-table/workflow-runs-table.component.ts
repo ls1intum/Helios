@@ -11,7 +11,7 @@ import { TimeAgoPipe } from '@app/pipes/time-ago.pipe';
 import { WorkflowRunDto } from '@app/core/modules/openapi';
 import { injectQuery } from '@tanstack/angular-query-experimental';
 import { getWorkflowRunsOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
-import { PAGINATED_FILTER_OPTIONS_TOKEN, PaginatedFilterOption, PaginatedTableService } from '@app/core/services/paginated-table.service';
+import { PAGINATED_FILTER_OPTIONS_TOKEN, PAGINATION_STORAGE_KEY_TOKEN, PaginatedFilterOption, PaginatedTableService } from '@app/core/services/paginated-table.service';
 import { TableFilterPaginatedComponent } from '@app/components/table-filter-paginated/table-filter-paginated.component';
 import { MessageService, SortMeta } from 'primeng/api';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
@@ -37,6 +37,7 @@ export function createWorkflowRunsFilterOptions(): PaginatedFilterOption[] {
     PaginatedTableService,
     MessageService,
     { provide: PAGINATED_FILTER_OPTIONS_TOKEN, useFactory: createWorkflowRunsFilterOptions },
+    { provide: PAGINATION_STORAGE_KEY_TOKEN, useValue: 'workflowRunsPaginationState' },
     provideTablerIcons({
       IconFilterPlus,
       IconCircleCheck,
