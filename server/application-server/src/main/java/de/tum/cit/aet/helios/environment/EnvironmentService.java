@@ -622,7 +622,8 @@ public class EnvironmentService {
 
     if (deployment.getStatus() == HeliosDeployment.Status.FAILED
         || deployment.getStatus() == HeliosDeployment.Status.IO_ERROR
-        || deployment.getStatus() == HeliosDeployment.Status.UNKNOWN) {
+        || deployment.getStatus() == HeliosDeployment.Status.UNKNOWN
+        || deployment.getStatus() == HeliosDeployment.Status.CANCELLED) {
       return true;
     }
 

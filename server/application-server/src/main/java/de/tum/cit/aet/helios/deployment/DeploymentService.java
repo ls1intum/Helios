@@ -242,7 +242,8 @@ public class DeploymentService {
     // Allow redeployment if the previous deployment failed
     if (deployment.getStatus() == HeliosDeployment.Status.FAILED
         || deployment.getStatus() == HeliosDeployment.Status.IO_ERROR
-        || deployment.getStatus() == HeliosDeployment.Status.UNKNOWN) {
+        || deployment.getStatus() == HeliosDeployment.Status.UNKNOWN
+        || deployment.getStatus() == HeliosDeployment.Status.CANCELLED) {
       return true;
     }
 
@@ -429,6 +430,16 @@ public class DeploymentService {
 
       // Call GitHub to cancel the workflow
       gitHubService.cancelWorkflowRun(repoNameWithOwner, workflowRunId);
+
+      // Immediately mark the HeliosDeployment as cancelled so the UI updates without waiting
+      // for the GitHub webhook
+      heliosDeploymentRepository
+          .findByWorkflowRunId(workflowRunId)
+          .ifPresent(
+              heliosDeployment -> {
+                heliosDeployment.setStatus(HeliosDeployment.Status.CANCELLED);
+                heliosDeploymentRepository.save(heliosDeployment);
+              });
 
       return "Workflow cancellation request sent successfully";
     } catch (IOException e) {

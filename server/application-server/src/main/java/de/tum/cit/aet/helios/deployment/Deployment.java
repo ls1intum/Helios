@@ -78,6 +78,7 @@ public class Deployment extends BaseGitServiceEntity {
     IN_PROGRESS,
     QUEUED,
     INACTIVE,
+    CANCELLED,
     UNKNOWN; // Fallback for unmapped states
   }
 
