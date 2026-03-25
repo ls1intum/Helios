@@ -10,6 +10,7 @@ import { TagModule } from 'primeng/tag';
 import { RouterLink } from '@angular/router';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 import { PermissionService } from '@app/core/services/permission.service';
+import { extractWorkflowRunId } from '@app/core/utils/workflow-run.util';
 import { EnvironmentReviewersComponent } from '../environment-reviewers/environment-reviewers.component';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
 import { IconCheck, IconCloudUpload, IconLock, IconLockOpen, IconLockPlus, IconPencil, IconX } from 'angular-tabler-icons/icons';
@@ -130,8 +131,13 @@ export class EnvironmentActionsComponent {
     return deployment && (deployment.state === 'IN_PROGRESS' || deployment.state === 'PENDING' || deployment.state === 'QUEUED' || deployment.state === 'REQUESTED');
   });
 
+  readonly workflowRunId = computed(() => {
+    const deployment = this.environment().latestDeployment;
+    return deployment?.workflowRunId ?? extractWorkflowRunId(deployment?.workflowRunHtmlUrl);
+  });
+
   readonly canCancelDeployment = computed(() => {
-    return this.isDeploymentInProgress() && this.canUserDeploy() && this.environment().latestDeployment?.workflowRunHtmlUrl;
+    return !!(this.isDeploymentInProgress() && this.canUserDeploy());
   });
 
   openExternalLink(event: MouseEvent, link?: string): void {
@@ -171,6 +177,9 @@ export class EnvironmentActionsComponent {
   getCancelDeploymentToolTip() {
     if (!this.canCancelDeployment()) {
       return 'Cancelling deployment is not possible.';
+    }
+    if (!this.workflowRunId()) {
+      return 'GitHub is still registering the workflow run. Helios will wait briefly before sending the cancel request.';
     }
     return 'This will cancel the ongoing deployment.';
   }

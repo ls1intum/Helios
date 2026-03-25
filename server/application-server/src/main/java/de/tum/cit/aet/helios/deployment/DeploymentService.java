@@ -19,6 +19,7 @@ import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
 import de.tum.cit.aet.helios.pullrequest.PullRequest;
 import de.tum.cit.aet.helios.pullrequest.PullRequestRepository;
 import de.tum.cit.aet.helios.workflow.Workflow;
+import de.tum.cit.aet.helios.workflow.WorkflowRunRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import java.io.IOException;
@@ -50,6 +51,7 @@ public class DeploymentService {
   private final EnvironmentRepository environmentRepository;
   private final PullRequestRepository pullRequestRepository;
   private final GitRepoRepository gitRepoRepository;
+  private final WorkflowRunRepository workflowRunRepository;
 
   public Optional<DeploymentDto> getDeploymentById(Long id) {
     return deploymentRepository.findById(id).map(DeploymentDto::fromDeployment);
@@ -185,6 +187,9 @@ public class DeploymentService {
   private String getDeploymentWorkflowBranch(Environment environment, DeployRequest deployRequest) {
     String workflowBranch = environment.getDeploymentWorkflowBranch();
     if (workflowBranch == null || workflowBranch.trim().isEmpty()) {
+      workflowBranch = environment.getRepository().getDefaultBranch();
+    }
+    if (workflowBranch == null || workflowBranch.trim().isEmpty()) {
       workflowBranch = deployRequest.branchName();
     }
     return workflowBranch;
@@ -230,18 +235,20 @@ public class DeploymentService {
     }
 
     HeliosDeployment deployment = latestDeployment.get();
+    HeliosDeployment.Status deploymentStatus = refreshDeploymentStatusFromWorkflowRun(deployment);
 
     // Allow redeployment if the previous deployment failed
-    if (deployment.getStatus() == HeliosDeployment.Status.FAILED
-        || deployment.getStatus() == HeliosDeployment.Status.IO_ERROR
-        || deployment.getStatus() == HeliosDeployment.Status.UNKNOWN) {
+    if (deploymentStatus == HeliosDeployment.Status.DEPLOYMENT_SUCCESS
+        || deploymentStatus == HeliosDeployment.Status.FAILED
+        || deploymentStatus == HeliosDeployment.Status.IO_ERROR
+        || deploymentStatus == HeliosDeployment.Status.UNKNOWN) {
       return true;
     }
 
     // Check if timeout has elapsed
-    if (deployment.getStatus() == HeliosDeployment.Status.IN_PROGRESS
-        || deployment.getStatus() == HeliosDeployment.Status.WAITING
-        || deployment.getStatus() == HeliosDeployment.Status.QUEUED) {
+    if (deploymentStatus == HeliosDeployment.Status.IN_PROGRESS
+        || deploymentStatus == HeliosDeployment.Status.WAITING
+        || deploymentStatus == HeliosDeployment.Status.QUEUED) {
       OffsetDateTime now = OffsetDateTime.now();
       if (deployment.getStatusUpdatedAt().plusMinutes(timeoutMinutes).isAfter(now)) {
         return false;
@@ -409,17 +416,7 @@ public class DeploymentService {
     Long workflowRunId = cancelRequest.workflowRunId();
 
     try {
-      // We need to find a GitHub repository where we have permission to make API calls
-      // Use the current repository context if available
-      Long repositoryId = RepositoryContext.getRepositoryId();
-      GitRepository repository =
-          gitRepoRepository
-              .findById(repositoryId)
-              .orElseThrow(() -> new DeploymentException("Repository not found in context"));
-
-      String repoNameWithOwner = repository.getNameWithOwner();
-
-      // Call GitHub to cancel the workflow
+      String repoNameWithOwner = getRepositoryNameWithOwnerForWorkflowRun(workflowRunId);
       gitHubService.cancelWorkflowRun(repoNameWithOwner, workflowRunId);
 
       return "Workflow cancellation request sent successfully";
@@ -437,18 +434,7 @@ public class DeploymentService {
    */
   public WorkflowJobsResponse getWorkflowJobStatus(Long workflowRunId) {
     try {
-      // Get repository ID from context
-      Long repositoryId = RepositoryContext.getRepositoryId();
-
-      // Get repository details
-      GitRepository repository =
-          gitRepoRepository
-              .findById(repositoryId)
-              .orElseThrow(() -> new NoSuchElementException("Repository not found"));
-
-      String repoNameWithOwner = repository.getNameWithOwner();
-
-      // Call GitHub service to get raw JSON response
+      String repoNameWithOwner = getRepositoryNameWithOwnerForWorkflowRun(workflowRunId);
       String rawJsonResponse = gitHubService.getWorkflowJobStatus(repoNameWithOwner, workflowRunId);
 
       // Parse JSON response to GitHub API structure
@@ -470,5 +456,48 @@ public class DeploymentService {
       log.error("Repository not found: {}", e.getMessage());
       throw new DeploymentException("Repository not found: " + e.getMessage(), e);
     }
+  }
+
+  private String getRepositoryNameWithOwnerForWorkflowRun(Long workflowRunId) {
+    return heliosDeploymentRepository
+        .findTopByWorkflowRunIdOrderByCreatedAtDesc(workflowRunId)
+        .map(heliosDeployment -> heliosDeployment.getEnvironment().getRepository().getNameWithOwner())
+        .orElseGet(this::getRepositoryNameWithOwnerFromContext);
+  }
+
+  private String getRepositoryNameWithOwnerFromContext() {
+    Long repositoryId = RepositoryContext.getRepositoryId();
+    if (repositoryId == null) {
+      throw new NoSuchElementException("Repository not found in context");
+    }
+
+    GitRepository repository =
+        gitRepoRepository
+            .findById(repositoryId)
+            .orElseThrow(() -> new NoSuchElementException("Repository not found"));
+
+    return repository.getNameWithOwner();
+  }
+
+  private HeliosDeployment.Status refreshDeploymentStatusFromWorkflowRun(HeliosDeployment deployment) {
+    Long workflowRunId = deployment.getWorkflowRunId();
+    if (workflowRunId == null) {
+      return deployment.getStatus();
+    }
+
+    return workflowRunRepository
+        .findById(workflowRunId.longValue())
+        .map(
+            workflowRun -> {
+              HeliosDeployment.Status refreshedStatus =
+                  HeliosDeployment.mapWorkflowRunStatus(
+                      workflowRun.getStatus(), workflowRun.getConclusion().orElse(null));
+              if (refreshedStatus != deployment.getStatus()) {
+                deployment.setStatus(refreshedStatus);
+                heliosDeploymentRepository.save(deployment);
+              }
+              return refreshedStatus;
+            })
+        .orElse(deployment.getStatus());
   }
 }

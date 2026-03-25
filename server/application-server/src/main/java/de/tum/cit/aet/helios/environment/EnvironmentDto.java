@@ -74,6 +74,7 @@ public record EnvironmentDto(
       String sha,
       String ref,
       String task,
+      Long workflowRunId,
       String workflowRunHtmlUrl,
       List<String> releaseCandidateNames,
       String prName,
@@ -93,6 +94,7 @@ public record EnvironmentDto(
           union.getSha(),
           union.getRef(),
           union.getTask(),
+          union.getWorkflowRunId(),
           union.getWorkflowRunHtmlUrl(),
           releaseCandidateRepository
               .findByRepositoryRepositoryIdAndCommitSha(union.getRepository().id(), union.getSha())

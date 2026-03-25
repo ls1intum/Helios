@@ -158,6 +158,10 @@ export const EnvironmentDeploymentSchema = {
     task: {
       type: 'string',
     },
+    workflowRunId: {
+      type: 'integer',
+      format: 'int64',
+    },
     workflowRunHtmlUrl: {
       type: 'string',
     },

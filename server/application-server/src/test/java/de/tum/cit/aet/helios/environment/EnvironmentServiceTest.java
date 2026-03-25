@@ -15,12 +15,15 @@ import de.tum.cit.aet.helios.auth.AuthService;
 import de.tum.cit.aet.helios.deployment.DeploymentRepository;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import de.tum.cit.aet.helios.gitreposettings.GitRepoSettingsService;
+import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
 import de.tum.cit.aet.helios.nats.NatsNotificationPublisherService;
 import de.tum.cit.aet.helios.releaseinfo.releasecandidate.ReleaseCandidateRepository;
 import de.tum.cit.aet.helios.user.User;
 import de.tum.cit.aet.helios.workflow.Workflow;
 import de.tum.cit.aet.helios.workflow.WorkflowRepository;
+import de.tum.cit.aet.helios.workflow.WorkflowRun;
+import de.tum.cit.aet.helios.workflow.WorkflowRunRepository;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -47,6 +50,7 @@ public class EnvironmentServiceTest {
   @Mock private EnvironmentScheduler environmentScheduler;
   @Mock private WorkflowRepository workflowRepository;
   @Mock private NatsNotificationPublisherService notificationPublisherService;
+  @Mock private WorkflowRunRepository workflowRunRepository;
 
   @InjectMocks private EnvironmentService environmentService;
 
@@ -278,6 +282,35 @@ public class EnvironmentServiceTest {
     assertNull(result.lockReservationWillExpireAt());
     verify(environmentRepository, times(1)).findById(1L);
     verify(environmentRepository, times(1)).save(any(Environment.class));
+  }
+
+  @Test
+  public void testUnlockEnvironmentAllowsCompletedWorkflowRunWhenHeliosDeploymentIsStale() {
+    environment.setLocked(true);
+    environment.setLockedBy(user);
+    environment.setLockedAt(OffsetDateTime.now());
+
+    HeliosDeployment heliosDeployment = new HeliosDeployment();
+    heliosDeployment.setEnvironment(environment);
+    heliosDeployment.setStatus(HeliosDeployment.Status.IN_PROGRESS);
+    heliosDeployment.setWorkflowRunId(123L);
+
+    WorkflowRun workflowRun = new WorkflowRun();
+    workflowRun.setStatus(WorkflowRun.Status.COMPLETED);
+    workflowRun.setConclusion(Optional.of(WorkflowRun.Conclusion.SUCCESS));
+
+    when(authService.getUserFromGithubId()).thenReturn(user);
+    when(environmentRepository.findById(1L)).thenReturn(Optional.of(environment));
+    when(environmentRepository.save(any(Environment.class))).thenReturn(environment);
+    when(heliosDeploymentRepository.findTopByEnvironmentOrderByCreatedAtDesc(environment))
+        .thenReturn(Optional.of(heliosDeployment));
+    when(workflowRunRepository.findById(123L)).thenReturn(Optional.of(workflowRun));
+
+    EnvironmentDto result = environmentService.unlockEnvironment(1L);
+
+    assertNotNull(result);
+    assertFalse(result.locked());
+    verify(heliosDeploymentRepository).save(heliosDeployment);
   }
 
   @Test

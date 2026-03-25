@@ -26,6 +26,7 @@ import de.tum.cit.aet.helios.releaseinfo.releasecandidate.ReleaseCandidateReposi
 import de.tum.cit.aet.helios.user.User;
 import de.tum.cit.aet.helios.workflow.Workflow;
 import de.tum.cit.aet.helios.workflow.WorkflowRepository;
+import de.tum.cit.aet.helios.workflow.WorkflowRunRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import java.io.IOException;
@@ -66,6 +67,7 @@ public class EnvironmentService {
   private final GitRepoRepository gitRepoRepository;
   private final GitHubService gitHubService;
   private final NatsNotificationPublisherService notificationPublisherService;
+  private final WorkflowRunRepository workflowRunRepository;
 
   public Optional<EnvironmentDto> getEnvironmentById(Long id) {
     return environmentRepository.findById(id).map(EnvironmentDto::fromEnvironment);
@@ -619,17 +621,19 @@ public class EnvironmentService {
     }
 
     HeliosDeployment deployment = latestDeployment.get();
+    HeliosDeployment.Status deploymentStatus = refreshDeploymentStatusFromWorkflowRun(deployment);
 
-    if (deployment.getStatus() == HeliosDeployment.Status.FAILED
-        || deployment.getStatus() == HeliosDeployment.Status.IO_ERROR
-        || deployment.getStatus() == HeliosDeployment.Status.UNKNOWN) {
+    if (deploymentStatus == HeliosDeployment.Status.DEPLOYMENT_SUCCESS
+        || deploymentStatus == HeliosDeployment.Status.FAILED
+        || deploymentStatus == HeliosDeployment.Status.IO_ERROR
+        || deploymentStatus == HeliosDeployment.Status.UNKNOWN) {
       return true;
     }
 
     // Check if timeout has elapsed
-    if (deployment.getStatus() == HeliosDeployment.Status.IN_PROGRESS
-        || deployment.getStatus() == HeliosDeployment.Status.WAITING
-        || deployment.getStatus() == HeliosDeployment.Status.QUEUED) {
+    if (deploymentStatus == HeliosDeployment.Status.IN_PROGRESS
+        || deploymentStatus == HeliosDeployment.Status.WAITING
+        || deploymentStatus == HeliosDeployment.Status.QUEUED) {
       OffsetDateTime now = OffsetDateTime.now();
       if (deployment.getStatusUpdatedAt().plusMinutes(timeoutMinutes).isAfter(now)) {
         return false;
@@ -639,6 +643,28 @@ public class EnvironmentService {
       heliosDeploymentRepository.save(deployment);
     }
     return true;
+  }
+
+  private HeliosDeployment.Status refreshDeploymentStatusFromWorkflowRun(HeliosDeployment deployment) {
+    Long workflowRunId = deployment.getWorkflowRunId();
+    if (workflowRunId == null) {
+      return deployment.getStatus();
+    }
+
+    return workflowRunRepository
+        .findById(workflowRunId.longValue())
+        .map(
+            workflowRun -> {
+              HeliosDeployment.Status refreshedStatus =
+                  HeliosDeployment.mapWorkflowRunStatus(
+                      workflowRun.getStatus(), workflowRun.getConclusion().orElse(null));
+              if (refreshedStatus != deployment.getStatus()) {
+                deployment.setStatus(refreshedStatus);
+                heliosDeploymentRepository.save(deployment);
+              }
+              return refreshedStatus;
+            })
+        .orElse(deployment.getStatus());
   }
 
   public Optional<EnvironmentReviewersDto> getEnvironmentReviewers(Long environmentId) {

@@ -17,6 +17,7 @@ import {
 } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 import { PermissionService } from '@app/core/services/permission.service';
+import { extractWorkflowRunId } from '@app/core/utils/workflow-run.util';
 import { injectMutation, injectQuery, QueryClient } from '@tanstack/angular-query-experimental';
 import { AccordionModule } from 'primeng/accordion';
 import { ConfirmationService, MessageService } from 'primeng/api';
@@ -357,38 +358,59 @@ export class EnvironmentListViewComponent implements OnDestroy {
       return;
     }
 
-    // Extract workflowRunId from the URL if available
-    let workflowRunId: number | undefined;
-    const workflowRunUrl = environment.latestDeployment.workflowRunHtmlUrl;
-
-    if (workflowRunUrl) {
-      // URL format: https://github.com/org-name/repo-name/actions/runs/12345678
-      const matches = workflowRunUrl.match(/\/runs\/(\d+)$/);
-      if (matches && matches[1]) {
-        workflowRunId = parseInt(matches[1], 10);
-      }
-    }
-
-    // If we couldn't extract workflowRunId, show an error
-    if (!workflowRunId) {
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Error',
-        detail: 'Could not determine the workflow run ID from the deployment information',
-      });
-      return;
-    }
-
     this.confirmationService.confirm({
       header: 'Cancel Deployment',
       message: `Are you sure you want to cancel the ongoing deployment to ${environment.name}?`,
-      accept: () => {
+      accept: async () => {
+        const workflowRunId = await this.resolveWorkflowRunId(environment);
+        if (!workflowRunId) {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'GitHub has not registered the workflow run yet. Please try again in a few seconds.',
+          });
+          return;
+        }
+
         const payload = {
-          workflowRunId: workflowRunId,
+          workflowRunId,
         };
         this.cancelDeploymentMutation.mutate({ body: payload });
       },
     });
+  }
+
+  private async resolveWorkflowRunId(environment: EnvironmentDto): Promise<number | undefined> {
+    const initialWorkflowRunId = environment.latestDeployment?.workflowRunId ?? extractWorkflowRunId(environment.latestDeployment?.workflowRunHtmlUrl);
+
+    if (initialWorkflowRunId) {
+      return initialWorkflowRunId;
+    }
+
+    this.messageService.add({
+      severity: 'info',
+      summary: 'Waiting for GitHub',
+      detail: 'Helios is waiting for the workflow run to be registered before cancelling.',
+    });
+
+    const timeoutAt = Date.now() + 15000;
+    while (Date.now() < timeoutAt) {
+      const queryResult = await this.environmentQuery.refetch();
+      const refreshedEnvironment = queryResult.data?.find(currentEnvironment => currentEnvironment.id === environment.id);
+      const workflowRunId = refreshedEnvironment?.latestDeployment?.workflowRunId ?? extractWorkflowRunId(refreshedEnvironment?.latestDeployment?.workflowRunHtmlUrl);
+
+      if (workflowRunId) {
+        return workflowRunId;
+      }
+
+      await this.sleep(1000);
+    }
+
+    return undefined;
+  }
+
+  private sleep(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 
   toggleFilterPopover(event: Event) {

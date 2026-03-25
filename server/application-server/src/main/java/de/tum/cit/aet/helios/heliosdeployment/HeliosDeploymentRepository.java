@@ -48,6 +48,8 @@ public interface HeliosDeploymentRepository extends JpaRepository<HeliosDeployme
 
   Optional<HeliosDeployment> findByDeploymentId(Long deploymentId);
 
+  Optional<HeliosDeployment> findTopByWorkflowRunIdOrderByCreatedAtDesc(Long workflowRunId);
+
 
   /**
    * Finds deployments that are stuck in IN_PROGRESS state for more than the specified duration.

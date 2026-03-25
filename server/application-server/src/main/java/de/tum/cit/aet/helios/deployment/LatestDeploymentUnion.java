@@ -80,6 +80,13 @@ public class LatestDeploymentUnion {
     return null;
   }
 
+  public Long getWorkflowRunId() {
+    if (hasHeliosDeployment()) {
+      return this.getHeliosDeployment().getWorkflowRunId();
+    }
+    return null;
+  }
+
   public RepositoryInfoDto getRepository() {
     if (isRealDeployment()) {
       return RepositoryInfoDto.fromRepository(realDeployment.getRepository());
