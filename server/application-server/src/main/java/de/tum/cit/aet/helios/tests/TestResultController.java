@@ -2,6 +2,8 @@ package de.tum.cit.aet.helios.tests;
 
 import de.tum.cit.aet.helios.filters.RepositoryContext;
 import de.tum.cit.aet.helios.gitreposettings.GitRepoSettings;
+import de.tum.cit.aet.helios.tests.pagination.FlakyTestsFilterType;
+import de.tum.cit.aet.helios.tests.pagination.FlakyTestsPageRequest;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -100,15 +102,33 @@ public class TestResultController {
   }
 
   /**
-   * Get an overview of all flaky tests for the current repository.
+   * Get a paginated, optionally filtered overview of flaky tests for the current repository.
    *
+   * <p>The summary section always reflects global (unfiltered) counts. The {@code flakyTests}
+   * array contains only the requested page. Use {@code filteredCount} as the paginator total.
+   *
+   * @param page one-based page index (default 1, as used by the frontend PaginatedTableService)
+   * @param size page size (default 20)
+   * @param sortDirection optional sort direction ("asc" or "desc") by flakiness score
    * @return aggregated flaky test overview
    */
   @GetMapping("/flaky")
-  public ResponseEntity<FlakyTestOverviewDto> getFlakyTestsOverview() {
+  public ResponseEntity<FlakyTestOverviewDto> getFlakyTestsOverview(
+      @RequestParam(defaultValue = "1") int page,
+      @RequestParam(defaultValue = "20") int size,
+      @RequestParam(required = false) String sortDirection,
+      @RequestParam(required = false) FlakyTestsFilterType filterType,
+      @RequestParam(required = false) String searchTerm) {
     Long repositoryId = RepositoryContext.getRepositoryId();
+    FlakyTestsPageRequest pageRequest = FlakyTestsPageRequest.builder()
+        .page(page)
+        .size(size)
+        .sortDirection(sortDirection)
+        .filterType(filterType != null ? filterType : FlakyTestsFilterType.ALL)
+        .searchTerm(searchTerm)
+        .build();
     return ResponseEntity.ok(
-        testCaseStatisticsService.getFlakyTestsOverview(repositoryId));
+        testCaseStatisticsService.getFlakyTestsOverview(repositoryId, pageRequest));
   }
 
 }

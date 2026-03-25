@@ -9,6 +9,7 @@ import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
@@ -108,6 +109,7 @@ class TestResultServiceTest {
     testCase.setId(1L);
     testCase.setName("test1");
     testCase.setClassName("TestClass1");
+    testCase.setTestSuite(testSuite);
     testCase.setStatus(TestStatus.PASSED);
     testCase.setTime(0.0);
     testSuite.setTestCases(List.of(testCase));
@@ -153,18 +155,18 @@ class TestResultServiceTest {
     when(testCaseStatisticsRepository.findByTestSuiteNameInAndBranchNameAndRepositoryRepositoryId(
             anyList(), anyString(), anyLong()))
         .thenReturn(Collections.emptyList());
+    when(testCaseStatisticsService.loadFlakinessIndex(anyList(), anyLong()))
+        .thenReturn(Collections.emptyMap());
     lenient()
         .when(testCaseStatisticsService.computeFlakinessInfo(
-            anyString(), anyString(), anyList(), anyList()
-        ))
+            anyString(), anyString(), anyString(), anyMap(), anyMap()))
         .thenReturn(new TestCaseStatisticsService.FlakinessInfo(0.0, 0.0, 0.0));
 
     TestResultsDto result =
         testResultService.getLatestTestResultsForBranch("featureBranch", criteria);
 
-    // Verify the problematic call
     verify(testCaseStatisticsService).computeFlakinessInfo(
-        anyString(), anyString(), anyList(), anyList());
+        anyString(), anyString(), anyString(), anyMap(), anyMap());
 
     assertNotNull(result);
     assertFalse(result.testResults().isEmpty());
@@ -211,16 +213,17 @@ class TestResultServiceTest {
     when(testCaseStatisticsRepository.findByTestSuiteNameInAndBranchNameAndRepositoryRepositoryId(
             anyList(), anyString(), anyLong()))
         .thenReturn(Collections.emptyList());
+    when(testCaseStatisticsService.loadFlakinessIndex(anyList(), anyLong()))
+        .thenReturn(Collections.emptyMap());
     lenient()
         .when(testCaseStatisticsService.computeFlakinessInfo(
-            anyString(), anyString(), anyList(), anyList()))
+            anyString(), anyString(), anyString(), anyMap(), anyMap()))
         .thenReturn(new TestCaseStatisticsService.FlakinessInfo(0.0, 0.0, 0.0));
 
     TestResultsDto result = testResultService.getLatestTestResultsForPr(1L, criteria);
 
-    // Verify the problematic call
     verify(testCaseStatisticsService).computeFlakinessInfo(
-        anyString(), anyString(), anyList(), anyList());
+        anyString(), anyString(), anyString(), anyMap(), anyMap());
 
     assertNotNull(result);
     assertFalse(result.testResults().isEmpty());

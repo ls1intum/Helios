@@ -1346,6 +1346,41 @@ paths:
       tags:
       - test-result-controller
       operationId: getFlakyTestsOverview
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 1
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      - name: sortDirection
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: filterType
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - ALL
+          - HIGH
+          - MEDIUM
+          - LOW
+      - name: searchTerm
+        in: query
+        required: false
+        schema:
+          type: string
       responses:
         "409":
           description: Conflict
@@ -2513,9 +2548,13 @@ components:
         className:
           type: string
           minLength: 1
+        testSuiteName:
+          type: string
+          minLength: 1
       required:
       - className
       - testName
+      - testSuiteName
     TestFlakinessScoreRequest:
       type: object
       properties:
@@ -2533,6 +2572,8 @@ components:
           type: string
         className:
           type: string
+        testSuiteName:
+          type: string
         flakinessScore:
           type: number
           format: double
@@ -2545,6 +2586,7 @@ components:
       required:
       - className
       - testName
+      - testSuiteName
     ReleaseCandidateCreateDto:
       type: object
       properties:
@@ -3087,12 +3129,6 @@ components:
         combinedFailureRate:
           type: number
           format: double
-        totalRuns:
-          type: integer
-          format: int32
-        failedRuns:
-          type: integer
-          format: int32
         lastUpdated:
           type: string
           format: date-time
@@ -3110,6 +3146,9 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/FlakyTestDto"
+        filteredCount:
+          type: integer
+          format: int64
       required:
       - flakyTests
       - summary

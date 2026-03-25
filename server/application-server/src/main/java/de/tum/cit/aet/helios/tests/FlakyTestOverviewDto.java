@@ -6,7 +6,8 @@ import org.springframework.lang.NonNull;
 
 public record FlakyTestOverviewDto(
     @NonNull FlakyTestSummary summary,
-    @NonNull List<FlakyTestDto> flakyTests) {
+    @NonNull List<FlakyTestDto> flakyTests,
+    long filteredCount) {
 
   public record FlakyTestDto(
       @NonNull String testName,
@@ -15,16 +16,17 @@ public record FlakyTestOverviewDto(
       double flakinessScore,
       double defaultBranchFailureRate,
       double combinedFailureRate,
-      int totalRuns,
-      int failedRuns,
       @NonNull OffsetDateTime lastUpdated) {
 
-    public static FlakyTestDto from(
-        TestCaseStatistics stat, TestCaseStatisticsService.FlakinessInfo info) {
+    public static FlakyTestDto from(TestCaseFlakiness flakiness) {
       return new FlakyTestDto(
-          stat.getTestName(), stat.getClassName(), stat.getTestSuiteName(),
-          info.flakinessScore(), info.defaultBranchFailureRate(), info.combinedFailureRate(),
-          stat.getTotalRuns(), stat.getFailedRuns(), stat.getLastUpdated());
+          flakiness.getTestName(),
+          flakiness.getClassName(),
+          flakiness.getTestSuiteName(),
+          flakiness.getFlakinessScore(),
+          flakiness.getDefaultBranchFailureRate(),
+          flakiness.getCombinedFailureRate(),
+          flakiness.getLastUpdated());
     }
   }
 
@@ -33,27 +35,5 @@ public record FlakyTestOverviewDto(
       int flakyTestCount,
       int highFlakinessCount,
       int mediumFlakinessCount,
-      int lowFlakinessCount) {
-
-    public static FlakyTestSummary buildSummary(
-        int totalTrackedTests, List<FlakyTestDto> flakyTests) {
-      int highCount = 0;
-      int mediumCount = 0;
-      int lowCount = 0;
-
-      for (FlakyTestDto t : flakyTests) {
-        if (t.flakinessScore() > 70) {
-          highCount++;
-        } else if (t.flakinessScore() > 30) {
-          mediumCount++;
-        } else {
-          lowCount++;
-        }
-      }
-
-      return new FlakyTestSummary(
-          totalTrackedTests, flakyTests.size(), highCount, mediumCount, lowCount);
-    }
-  }
-
+      int lowFlakinessCount) {}
 }

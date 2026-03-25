@@ -144,6 +144,8 @@ import type {
   GetFlakinessScoresError,
   GetFlakinessScoresResponse,
   GetFlakyTestsOverviewData,
+  GetFlakyTestsOverviewError,
+  GetFlakyTestsOverviewResponse,
   GetGitRepoSettingsData,
   GetGroupsWithWorkflowsData,
   GetLatestDeploymentByEnvironmentIdData,
@@ -1260,6 +1262,43 @@ export const getFlakyTestsOverviewOptions = (options?: Options<GetFlakyTestsOver
     },
     queryKey: getFlakyTestsOverviewQueryKey(options),
   });
+};
+
+export const getFlakyTestsOverviewInfiniteQueryKey = (options?: Options<GetFlakyTestsOverviewData>): QueryKey<Options<GetFlakyTestsOverviewData>> =>
+  createQueryKey('getFlakyTestsOverview', options, true);
+
+export const getFlakyTestsOverviewInfiniteOptions = (options?: Options<GetFlakyTestsOverviewData>) => {
+  return infiniteQueryOptions<
+    GetFlakyTestsOverviewResponse,
+    GetFlakyTestsOverviewError,
+    InfiniteData<GetFlakyTestsOverviewResponse>,
+    QueryKey<Options<GetFlakyTestsOverviewData>>,
+    number | Pick<QueryKey<Options<GetFlakyTestsOverviewData>>[0], 'body' | 'headers' | 'path' | 'query'>
+  >(
+    // @ts-ignore
+    {
+      queryFn: async ({ pageParam, queryKey, signal }) => {
+        // @ts-ignore
+        const page: Pick<QueryKey<Options<GetFlakyTestsOverviewData>>[0], 'body' | 'headers' | 'path' | 'query'> =
+          typeof pageParam === 'object'
+            ? pageParam
+            : {
+                query: {
+                  page: pageParam,
+                },
+              };
+        const params = createInfiniteParams(queryKey, page);
+        const { data } = await getFlakyTestsOverview({
+          ...options,
+          ...params,
+          signal,
+          throwOnError: true,
+        });
+        return data;
+      },
+      queryKey: getFlakyTestsOverviewInfiniteQueryKey(options),
+    }
+  );
 };
 
 export const getLatestTestResultsByBranchQueryKey = (options: Options<GetLatestTestResultsByBranchData>) => createQueryKey('getLatestTestResultsByBranch', options);

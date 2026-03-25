@@ -496,8 +496,12 @@ export const TestCaseIdentifierSchema = {
       type: 'string',
       minLength: 1,
     },
+    testSuiteName: {
+      type: 'string',
+      minLength: 1,
+    },
   },
-  required: ['className', 'testName'],
+  required: ['className', 'testName', 'testSuiteName'],
 } as const;
 
 export const TestFlakinessScoreRequestSchema = {
@@ -523,6 +527,9 @@ export const TestFlakinessScoreDtoSchema = {
     className: {
       type: 'string',
     },
+    testSuiteName: {
+      type: 'string',
+    },
     flakinessScore: {
       type: 'number',
       format: 'double',
@@ -536,7 +543,7 @@ export const TestFlakinessScoreDtoSchema = {
       format: 'double',
     },
   },
-  required: ['className', 'testName'],
+  required: ['className', 'testName', 'testSuiteName'],
 } as const;
 
 export const ReleaseCandidateCreateDtoSchema = {
@@ -1186,14 +1193,6 @@ export const FlakyTestDtoSchema = {
       type: 'number',
       format: 'double',
     },
-    totalRuns: {
-      type: 'integer',
-      format: 'int32',
-    },
-    failedRuns: {
-      type: 'integer',
-      format: 'int32',
-    },
     lastUpdated: {
       type: 'string',
       format: 'date-time',
@@ -1213,6 +1212,10 @@ export const FlakyTestOverviewDtoSchema = {
       items: {
         $ref: '#/components/schemas/FlakyTestDto',
       },
+    },
+    filteredCount: {
+      type: 'integer',
+      format: 'int64',
     },
   },
   required: ['flakyTests', 'summary'],
