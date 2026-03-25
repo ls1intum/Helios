@@ -431,16 +431,6 @@ public class DeploymentService {
       // Call GitHub to cancel the workflow
       gitHubService.cancelWorkflowRun(repoNameWithOwner, workflowRunId);
 
-      // Immediately mark the HeliosDeployment as cancelled so the UI updates without waiting
-      // for the GitHub webhook
-      heliosDeploymentRepository
-          .findByWorkflowRunId(workflowRunId)
-          .ifPresent(
-              heliosDeployment -> {
-                heliosDeployment.setStatus(HeliosDeployment.Status.CANCELLED);
-                heliosDeploymentRepository.save(heliosDeployment);
-              });
-
       return "Workflow cancellation request sent successfully";
     } catch (IOException e) {
       throw new DeploymentException("Failed to cancel workflow run: " + e.getMessage(), e);
