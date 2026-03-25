@@ -6,6 +6,7 @@ import de.tum.cit.aet.helios.user.User;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import org.springframework.core.env.Profiles;
 import org.springframework.stereotype.Service;
@@ -16,8 +17,8 @@ import org.springframework.stereotype.Service;
 public class NotificationEligibilityService {
 
   /* staging allow‑list */
-  private static final Set<String> STAGING_ALLOWLIST =
-      Set.of("egekocabas", "turkerkoc", "gbanu");
+  @Value("${helios.developers:}")
+  private Set<String> heliosDevelopers;
 
   private final NotificationPreferenceRepository prefRepo;
   private final Environment springEnv;
@@ -40,11 +41,11 @@ public class NotificationEligibilityService {
 
     /* staging allow‑list */
     if (springEnv.acceptsProfiles(Profiles.of("staging"))
-        && !STAGING_ALLOWLIST.contains(user.getLogin().toLowerCase())) {
+        && !heliosDevelopers.contains(user.getLogin().toLowerCase())) {
       log.info(
           "User {} is not eligible for notifications in staging. Staging allow-list: {}",
           user.getLogin(),
-          STAGING_ALLOWLIST);
+          heliosDevelopers);
       return false;
     }
 

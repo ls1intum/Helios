@@ -6,10 +6,11 @@ import de.tum.cit.aet.helios.github.permissions.RepoPermissionType;
 import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
@@ -28,6 +29,9 @@ public class GitHubJwtAuthenticationConverter
   final String rolePrefix = "ROLE_";
   private final GitHubService gitHubService;
   private final HttpServletRequest request;
+
+  @Value("${helios.developers:}")
+  private Set<String> heliosDevelopers;
 
   @Override
   public AbstractAuthenticationToken convert(@NonNull Jwt jwt) {
@@ -51,11 +55,8 @@ public class GitHubJwtAuthenticationConverter
 
     Collection<GrantedAuthority> authorities = new ArrayList<>();
 
-    // Hardcoded Helios developers
-    String[] heliosDevelopers = {
-      "gbanu", "thielpa", "egekocabas", "turkerkoc", "stefannemeth", "bensofficial"
-    };
-    if (Arrays.asList(heliosDevelopers).contains(username)) {
+    // Give admin role to Helios developers
+    if (heliosDevelopers.contains(username)) {
       authorities.add(new SimpleGrantedAuthority(rolePrefix + RepoPermissionType.ADMIN));
       return authorities;
     }

@@ -3,6 +3,7 @@ import { injectQuery } from '@tanstack/angular-query-experimental';
 import { getUserPermissionsOptions } from '../modules/openapi/@tanstack/angular-query-experimental.gen';
 import { KeycloakService } from './keycloak/keycloak.service';
 import { RepositoryService } from './repository.service';
+import { environment } from 'environments/environment';
 
 @Injectable({
   providedIn: 'root',
@@ -16,7 +17,7 @@ export class PermissionService {
     enabled: () => !!this.repositoryService.currentRepositoryId() && !!this.keycloak.isLoggedIn(),
   }));
 
-  heliosDevelopers = ['gbanu', 'thielpa', 'egekocabas', 'turkerkoc', 'stefannemeth', 'bensofficial'];
+  heliosDevelopers: string[] = environment.heliosDevelopers;
   isHeliosDeveloper = computed(() => !!this.keycloak.profile?.username && this.heliosDevelopers.includes(this.keycloak.profile.username.toLowerCase()));
 
   hasWritePermission = computed(() => this.permissionsQuery.data()?.permission === 'WRITE' || this.permissionsQuery.data()?.permission === 'ADMIN' || this.isHeliosDeveloper());

@@ -156,9 +156,7 @@ public class GitHubClientManager {
     try {
       log.info("Forcing GitHub client refresh...");
       gitHubClient = createGitHubClientWithCache();
-      if (authType == AuthType.APP) {
-        fetchGitHubAppNodeId();
-      }
+      fetchGitHubAppNodeIdIfAvailable();
       log.info("Forced GitHub client refresh successful");
     } finally {
       lock.unlock();
@@ -172,14 +170,23 @@ public class GitHubClientManager {
       if (gitHubClient == null || Instant.now().isAfter(tokenExpirationTime)) {
         log.info("Refreshing GitHub client...");
         gitHubClient = createGitHubClientWithCache();
-        if (authType == AuthType.APP) {
-          fetchGitHubAppNodeId();
-        }
+        fetchGitHubAppNodeIdIfAvailable();
         log.info("GitHub client refreshed successfully");
       }
     } finally {
       lock.unlock();
     }
+  }
+
+  private void fetchGitHubAppNodeIdIfAvailable() {
+    if (authType != AuthType.APP) {
+      return;
+    }
+    if (gitHubClient == null || gitHubClient.isOffline()) {
+      log.warn("GitHub client is offline. Skipping GitHub App node ID fetch.");
+      return;
+    }
+    fetchGitHubAppNodeId();
   }
 
   /** Fetches the GitHub App node ID using the app name. */

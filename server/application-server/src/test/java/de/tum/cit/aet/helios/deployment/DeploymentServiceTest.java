@@ -262,6 +262,7 @@ public class DeploymentServiceTest {
 
     EnvironmentLockHistory lockHistory = new EnvironmentLockHistory();
     lockHistory.setId(1L);
+    lockHistory.setEnvironment(environment);
 
     // Set relevant dates to check correct order later on
     heliosDeployment.setCreatedAt(now.minusMinutes(1));
@@ -288,6 +289,62 @@ public class DeploymentServiceTest {
 
     assertEquals(4, result.size());
     Assertions.assertIterableEquals(List.of(unlockDto, heliosDto, deploymentDto, lockDto), result);
+  }
+
+  @Test
+  public void testGetActivityHistoryByPullRequestId() {
+    final OffsetDateTime now = OffsetDateTime.now();
+
+    // Set relevant dates to check correct order later on
+    heliosDeployment.setCreatedAt(now.minusMinutes(1));
+    heliosDeployment.setEnvironment(environment);
+    deployment.setCreatedAt(now.minusMinutes(2));
+
+    when(pullRequestRepository.findById(1L)).thenReturn(Optional.of(mock()));
+    when(deploymentRepository.findByPullRequest_IdOrderByCreatedAtDesc(1L))
+        .thenReturn(List.of(deployment));
+    when(heliosDeploymentRepository
+        .findByPullRequest_IdAndDeploymentIdIsNullOrderByCreatedAtDesc(1L))
+        .thenReturn(List.of(heliosDeployment));
+
+    List<ActivityHistoryDto> result = deploymentService.getActivityHistoryByPullRequestId(1L);
+
+    ActivityHistoryDto heliosDto = ActivityHistoryDto.fromHeliosDeployment(heliosDeployment);
+    ActivityHistoryDto deploymentDto = ActivityHistoryDto.fromDeployment(deployment);
+
+    assertEquals(2, result.size());
+    Assertions.assertIterableEquals(List.of(heliosDto, deploymentDto), result);
+  }
+
+  @Test
+  public void testGetActivityHistoryByRepositoryIdAndBranchName() {
+    final OffsetDateTime now = OffsetDateTime.now();
+    final Long repositoryId = 1L;
+    final String branchName = "main";
+
+    // Set relevant dates to check correct order later on
+    heliosDeployment.setCreatedAt(now.minusMinutes(1));
+    heliosDeployment.setEnvironment(environment);
+    heliosDeployment.setBranchName(branchName);
+    deployment.setCreatedAt(now.minusMinutes(2));
+    deployment.setRef(branchName);
+
+    when(deploymentRepository
+        .findByRepositoryRepositoryIdAndRefOrderByCreatedAtDesc(repositoryId, branchName))
+        .thenReturn(List.of(deployment));
+    when(heliosDeploymentRepository
+        .findByRepositoryIdAndBranchNameAndDeploymentIdIsNullOrderByCreatedAtDesc(
+            repositoryId, branchName))
+        .thenReturn(List.of(heliosDeployment));
+
+    List<ActivityHistoryDto> result =
+        deploymentService.getActivityHistoryByRepositoryIdAndBranchName(repositoryId, branchName);
+
+    ActivityHistoryDto heliosDto = ActivityHistoryDto.fromHeliosDeployment(heliosDeployment);
+    ActivityHistoryDto deploymentDto = ActivityHistoryDto.fromDeployment(deployment);
+
+    assertEquals(2, result.size());
+    Assertions.assertIterableEquals(List.of(heliosDto, deploymentDto), result);
   }
 
   @Test

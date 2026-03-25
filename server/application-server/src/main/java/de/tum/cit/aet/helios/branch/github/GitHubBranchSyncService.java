@@ -94,7 +94,9 @@ public class GitHubBranchSyncService {
                 .findById(updatedBy.getId())
                 .orElseGet(() -> userRepository.save(userConverter.convert(updatedBy)));
         result.setUpdatedBy(resultUpdatedBy);
-        result.setUpdatedAt(DateUtil.convertToOffsetDateTime(updatedBy.getUpdatedAt()));
+        result.setUpdatedAt(
+            DateUtil.convertToOffsetDateTime(
+                ghRepository.getCommit(ghBranch.getSHA1()).getCommitShortInfo().getCommitDate()));
       }
     } catch (IOException e) {
       log.error(

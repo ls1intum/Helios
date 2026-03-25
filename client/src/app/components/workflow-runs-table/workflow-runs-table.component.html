@@ -1,0 +1,103 @@
+<p-table
+  #table
+  [rowHover]="true"
+  [value]="runs()"
+  [lazy]="true"
+  [totalRecords]="totalElements()"
+  [paginator]="true"
+  [rows]="paginationService.size()"
+  [first]="(paginationService.page() - 1) * paginationService.size()"
+  [rowsPerPageOptions]="[5, 10, 20, 30, 50]"
+  [loading]="query.isPending()"
+  (onPage)="onPage($event)"
+  (sortFunction)="onSort($event)"
+  [customSort]="true"
+  [sortField]="paginationService.sortField()"
+  [sortOrder]="paginationService.sortDirection() === 'asc' ? 1 : -1"
+>
+  <ng-template #header>
+    <tr>
+      <th>
+        <app-table-filter-paginated [paginationService]="typedPaginationService" [table]="table" />
+      </th>
+      <th class="hidden md:table-cell">Status</th>
+      <th class="hidden lg:table-cell">Test Processing</th>
+      <th class="hidden lg:table-cell">Started</th>
+      <th class="hidden lg:table-cell">Duration</th>
+    </tr>
+  </ng-template>
+
+  <ng-template pTemplate="body" let-run>
+    @if (query.isPending() || query.isError()) {
+      <tr>
+        <td colspan="5">
+          <div class="flex flex-col gap-2">
+            <p-skeleton class="w-80" />
+            <p-skeleton class="w-64" />
+          </div>
+        </td>
+      </tr>
+    } @else {
+      <tr (click)="navigateToRun(run)" class="cursor-pointer">
+        <td class="px-2 py-2">
+          <div class="flex flex-col gap-2.5">
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="font-bold truncate max-w-md">
+                {{ run.displayTitle || run.name }}
+              </span>
+              <p-button text (click)="openRunExternal($event, run)" styleClass="p-1" class="leading-none">
+                <i-tabler name="brand-github" class="!size-4" />
+              </p-button>
+              <p-tag [value]="run.label === 'TEST' ? 'Test' : 'General'" [severity]="run.label === 'TEST' ? 'info' : 'secondary'" rounded class="text-xs" />
+            </div>
+            <div class="flex flex-wrap items-center gap-2 text-xs text-muted-color">
+              @if (run.headBranch) {
+                <span>on {{ run.headBranch }}</span>
+              }
+              @if (run.headSha) {
+                <span class="font-mono">({{ run.headSha.slice(0, 7) }})</span>
+              }
+            </div>
+          </div>
+        </td>
+        <td class="hidden md:table-cell w-40">
+          <div class="flex items-center gap-2">
+            <i-tabler [name]="getWorkflowStatusIcon(run)" [class]="getWorkflowStatusClass(run)" class="!size-5" [pTooltip]="run.conclusion || run.status" />
+            <span class="text-sm">{{ run.conclusion || run.status }}</span>
+          </div>
+        </td>
+        <td class="hidden lg:table-cell w-40">
+          @if (run.testProcessingStatus) {
+            <div class="flex items-center gap-2">
+              <i-tabler [name]="getTestStatusIcon(run)" [class]="getTestStatusClass(run)" class="!size-5" [pTooltip]="run.testProcessingStatus" />
+              <span class="text-sm">{{ run.testProcessingStatus }}</span>
+            </div>
+          } @else {
+            <span class="text-sm text-muted-color">—</span>
+          }
+        </td>
+        <td class="hidden lg:table-cell w-40">
+          @if (run.runStartedAt) {
+            <span class="text-sm" [pTooltip]="formatExactDate(run.runStartedAt)" tooltipPosition="top">{{ run.runStartedAt | timeAgo }}</span>
+          }
+        </td>
+        <td class="hidden lg:table-cell w-40">
+          <span class="text-sm">{{ getDuration(run) }}</span>
+        </td>
+      </tr>
+    }
+  </ng-template>
+
+  <ng-template pTemplate="emptymessage">
+    <tr>
+      <td colspan="5">
+        <div class="flex flex-col gap-2 p-20 justify-center items-center">
+          <i-tabler name="player-play" class="!h-20 !w-20 text-red-500" />
+          <span class="font-semibold text-xl">There are no workflow runs found matching your filter criteria.</span>
+          <span>Try clearing the filter or reloading the page.</span>
+          <p-button (click)="clearFilters()">Clear Filter</p-button>
+        </div>
+      </td>
+    </tr>
+  </ng-template>
+</p-table>

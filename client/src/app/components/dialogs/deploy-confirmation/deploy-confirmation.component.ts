@@ -32,7 +32,20 @@ export class DeployConfirmationComponent {
   isVisible = model.required<boolean>();
   /** The environment to deploy */
   environment = input.required<EnvironmentDto>();
+  /** Optional source ref shown for deploy flows that need extra context. */
+  sourceRef = input<{ ref: string; type: 'branch' | 'tag' }>();
   environmentName = computed(() => (this.environment().displayName?.trim() ? this.environment().displayName : (this.environment().name ?? '')));
+  environmentKind = computed(() => {
+    switch (this.environment().type) {
+      case 'PRODUCTION':
+        return 'production';
+      case 'STAGING':
+        return 'staging';
+      default:
+        return 'test server';
+    }
+  });
+  displaySourceRef = computed(() => this.sourceRef()?.ref?.trim() || '');
 
   /** Emits true if Deploy clicked, false if Cancel */
   confirmed = output<boolean>();

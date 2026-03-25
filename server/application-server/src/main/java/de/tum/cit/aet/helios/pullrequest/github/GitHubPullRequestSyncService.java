@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.kohsuke.github.GHPullRequest;
@@ -152,10 +153,17 @@ public class GitHubPullRequestSyncService {
             try {
               requestedReviewers.addAll(requestedTeam.getMembers());
             } catch (IOException e) {
-              log.error(
-                  "Failed to link requested reviewers (by team) for pull request {}: {}",
-                  ghPullRequest.getId(),
-                  e.getMessage());
+              if (isOfflineError(e)) {
+                log.debug(
+                    "Skipping team reviewer expansion for pull request {} "
+                        + "because GitHub client is offline.",
+                    ghPullRequest.getId());
+              } else {
+                log.error(
+                    "Failed to link requested reviewers (by team) for pull request {}: {}",
+                    ghPullRequest.getId(),
+                    e.getMessage());
+              }
             }
           });
 
@@ -175,12 +183,24 @@ public class GitHubPullRequestSyncService {
 
       result.setRequestedReviewers(resultRequestedReviewers);
     } catch (IOException e) {
-      log.error(
-          "Failed to link requested reviewers for pull request {}: {}",
-          ghPullRequest.getId(),
-          e.getMessage());
+      if (isOfflineError(e)) {
+        log.debug(
+            "Skipping requested reviewer sync for pull request {} "
+                + "because GitHub client is offline.",
+            ghPullRequest.getId());
+      } else {
+        log.error(
+            "Failed to link requested reviewers for pull request {}: {}",
+            ghPullRequest.getId(),
+            e.getMessage());
+      }
     }
 
     pullRequestRepository.save(result);
+  }
+
+  static boolean isOfflineError(IOException e) {
+    var message = e.getMessage();
+    return message != null && message.toLowerCase(Locale.ROOT).contains("offline");
   }
 }

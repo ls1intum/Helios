@@ -10,19 +10,18 @@ import { injectMutation, QueryClient } from '@tanstack/angular-query-experimenta
 import { MessageService } from 'primeng/api';
 import { EnvironmentListViewComponent } from '../environments/environment-list/environment-list-view.component';
 import { celebrateDeployment } from '@app/core/services/particle.service';
-import { Divider } from 'primeng/divider';
 
 @Component({
   selector: 'app-deployment-selection',
   templateUrl: './deployment-selection.component.html',
-  imports: [EnvironmentListViewComponent, Divider],
+  imports: [EnvironmentListViewComponent],
 })
 export class DeploymentSelectionComponent {
   private messageService = inject(MessageService);
 
   queryClient = inject(QueryClient);
 
-  sourceRef = input.required<string>();
+  branchName = input.required<string>();
   commitSha = input.required<string>();
 
   private currentEnvironmentId: number | null = null;
@@ -44,6 +43,6 @@ export class DeploymentSelectionComponent {
 
   handleDeploy = (environment: EnvironmentDto) => {
     this.currentEnvironmentId = environment.id;
-    this.deployEnvironment.mutate({ body: { environmentId: environment.id, branchName: this.sourceRef(), commitSha: this.commitSha() } });
+    this.deployEnvironment.mutate({ body: { environmentId: environment.id, branchName: this.branchName(), commitSha: this.commitSha() } });
   };
 }

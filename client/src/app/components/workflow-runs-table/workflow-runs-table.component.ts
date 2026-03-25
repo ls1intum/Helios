@@ -1,0 +1,225 @@
+import { Component, computed, inject, input, numberAttribute, ViewChild } from '@angular/core';
+import { Router } from '@angular/router';
+import { Table, TableModule, TablePageEvent } from 'primeng/table';
+import { TagModule } from 'primeng/tag';
+import { TooltipModule } from 'primeng/tooltip';
+import { SkeletonModule } from 'primeng/skeleton';
+import { ButtonModule } from 'primeng/button';
+import { DividerModule } from 'primeng/divider';
+import { SelectModule } from 'primeng/select';
+import { TimeAgoPipe } from '@app/pipes/time-ago.pipe';
+import { WorkflowRunDto } from '@app/core/modules/openapi';
+import { injectQuery } from '@tanstack/angular-query-experimental';
+import { getWorkflowRunsOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
+import { PAGINATED_FILTER_OPTIONS_TOKEN, PaginatedFilterOption, PaginatedTableService } from '@app/core/services/paginated-table.service';
+import { TableFilterPaginatedComponent } from '@app/components/table-filter-paginated/table-filter-paginated.component';
+import { MessageService, SortMeta } from 'primeng/api';
+import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
+import { IconAlertTriangle, IconBrandGithub, IconCircleCheck, IconCircleX, IconClockHour4, IconFilterPlus, IconPlayerPlay, IconProgress } from 'angular-tabler-icons/icons';
+
+export function createWorkflowRunsFilterOptions(): PaginatedFilterOption[] {
+  return [
+    { name: 'All runs', value: 'ALL' },
+    { name: 'Not started', value: 'NOT_STARTED' },
+    { name: 'In progress', value: 'IN_PROGRESS' },
+    { name: 'Succeeded', value: 'SUCCESS' },
+    { name: 'Failed', value: 'FAILURE' },
+    { name: 'Cancelled', value: 'CANCELLED' },
+    { name: 'Action required', value: 'ACTION_REQUIRED' },
+  ];
+}
+
+@Component({
+  selector: 'app-workflow-runs-table',
+  standalone: true,
+  imports: [TableModule, TagModule, TimeAgoPipe, SelectModule, TablerIconComponent, SkeletonModule, TooltipModule, ButtonModule, DividerModule, TableFilterPaginatedComponent],
+  providers: [
+    PaginatedTableService,
+    MessageService,
+    { provide: PAGINATED_FILTER_OPTIONS_TOKEN, useFactory: createWorkflowRunsFilterOptions },
+    provideTablerIcons({
+      IconFilterPlus,
+      IconCircleCheck,
+      IconCircleX,
+      IconProgress,
+      IconClockHour4,
+      IconAlertTriangle,
+      IconBrandGithub,
+      IconPlayerPlay,
+    }),
+  ],
+  templateUrl: './workflow-runs-table.component.html',
+})
+export class WorkflowRunsTableComponent {
+  @ViewChild('table') table!: Table;
+  @ViewChild(TableFilterPaginatedComponent) filterComponent!: TableFilterPaginatedComponent;
+
+  messageService = inject(MessageService);
+  paginationService = inject(PaginatedTableService);
+  private router = inject(Router);
+
+  repositoryId = input.required({ transform: numberAttribute });
+
+  queryOptions = computed(() => {
+    const paginationState = this.paginationService.paginationState();
+    const filterType = paginationState.filterType as 'ALL' | 'NOT_STARTED' | 'IN_PROGRESS' | 'CANCELLED' | 'SUCCESS' | 'FAILURE' | 'ACTION_REQUIRED' | undefined;
+
+    return getWorkflowRunsOptions({
+      query: {
+        page: paginationState.page,
+        size: paginationState.size,
+        sortField: paginationState.sortField,
+        sortDirection: paginationState.sortDirection,
+        filterType: filterType,
+        searchTerm: paginationState.searchTerm,
+      },
+    });
+  });
+
+  query = injectQuery(() => this.queryOptions());
+
+  get typedPaginationService() {
+    return this.paginationService as PaginatedTableService;
+  }
+
+  runs(): WorkflowRunDto[] {
+    // Backend returns a paginated response; keep type-safe access here.
+    // We intentionally type cast to `any` to avoid duplicating the generated type.
+    const data = this.query.data() as { runs?: WorkflowRunDto[] } | undefined;
+    return data?.runs ?? [];
+  }
+
+  totalElements(): number {
+    const data = this.query.data() as { totalElements?: number } | undefined;
+    return data?.totalElements ?? 0;
+  }
+
+  onPage(event: TablePageEvent) {
+    this.paginationService.onPage(event);
+  }
+
+  onSort(event: SortMeta) {
+    this.paginationService.onSort(event);
+  }
+
+  clearFilters() {
+    this.filterComponent.clearSearch();
+    this.paginationService.clearFilters();
+  }
+
+  statusSeverity(run: WorkflowRunDto): 'success' | 'danger' | 'info' | 'warn' | 'secondary' {
+    if (run.conclusion === 'SUCCESS') return 'success';
+    if (run.conclusion === 'FAILURE' || run.conclusion === 'STARTUP_FAILURE' || run.conclusion === 'TIMED_OUT') {
+      return 'danger';
+    }
+    if (run.conclusion === 'CANCELLED') return 'secondary';
+    if (run.status === 'IN_PROGRESS') return 'info';
+    if (run.status === 'QUEUED' || run.status === 'WAITING' || run.status === 'PENDING' || run.status === 'REQUESTED') {
+      return 'warn';
+    }
+    return 'secondary';
+  }
+
+  openRunExternal(event: Event, run: WorkflowRunDto) {
+    window.open(run.htmlUrl, '_blank');
+    event.stopPropagation();
+  }
+
+  navigateToRun(run: WorkflowRunDto) {
+    this.router.navigate(['/repo', this.repositoryId(), 'ci-cd', 'runs', run.id], {
+      state: { workflowRun: run },
+    });
+  }
+
+  getWorkflowStatusIcon(run: WorkflowRunDto): string {
+    if (run.conclusion === 'SUCCESS') {
+      return 'circle-check';
+    }
+    if (run.conclusion === 'FAILURE' || run.conclusion === 'STARTUP_FAILURE' || run.conclusion === 'TIMED_OUT') {
+      return 'circle-x';
+    }
+    if (run.conclusion === 'CANCELLED') {
+      return 'circle-x';
+    }
+    if (run.status === 'IN_PROGRESS') {
+      return 'progress';
+    }
+    if (run.status === 'QUEUED' || run.status === 'WAITING' || run.status === 'PENDING' || run.status === 'REQUESTED') {
+      return 'clock-hour-4';
+    }
+    if (run.status === 'ACTION_REQUIRED' || run.conclusion === 'ACTION_REQUIRED') {
+      return 'alert-triangle';
+    }
+    return 'circle-x';
+  }
+
+  getWorkflowStatusClass(run: WorkflowRunDto): string {
+    if (run.conclusion === 'SUCCESS') {
+      return 'text-green-500';
+    }
+    if (run.conclusion === 'FAILURE' || run.conclusion === 'STARTUP_FAILURE' || run.conclusion === 'TIMED_OUT') {
+      return 'text-red-500';
+    }
+    if (run.conclusion === 'CANCELLED') {
+      return 'text-surface-500';
+    }
+    if (run.status === 'IN_PROGRESS') {
+      return 'text-blue-500 animate-spin';
+    }
+    if (run.status === 'QUEUED' || run.status === 'WAITING' || run.status === 'PENDING' || run.status === 'REQUESTED') {
+      return 'text-amber-500';
+    }
+    if (run.status === 'ACTION_REQUIRED' || run.conclusion === 'ACTION_REQUIRED') {
+      return 'text-orange-500';
+    }
+    return 'text-surface-500';
+  }
+
+  getTestStatusIcon(run: WorkflowRunDto): string {
+    if (run.testProcessingStatus === 'PROCESSED') {
+      return 'circle-check';
+    }
+    if (run.testProcessingStatus === 'FAILED') {
+      return 'alert-triangle';
+    }
+    if (run.testProcessingStatus === 'PROCESSING') {
+      return 'progress';
+    }
+    return 'circle-check';
+  }
+
+  getTestStatusClass(run: WorkflowRunDto): string {
+    if (run.testProcessingStatus === 'PROCESSED') {
+      return 'text-green-500';
+    }
+    if (run.testProcessingStatus === 'FAILED') {
+      return 'text-red-500';
+    }
+    if (run.testProcessingStatus === 'PROCESSING') {
+      return 'text-blue-500 animate-spin';
+    }
+    return 'text-surface-500';
+  }
+
+  formatExactDate(dateStr: string | null | undefined): string | undefined {
+    if (!dateStr) return undefined;
+    return new Date(dateStr).toLocaleString(undefined, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    });
+  }
+
+  getDuration(run: WorkflowRunDto): string {
+    if (!run.runStartedAt) return '—';
+    const start = new Date(run.runStartedAt).getTime();
+    const end = run.updatedAt ? new Date(run.updatedAt).getTime() : Date.now();
+    const seconds = Math.floor((end - start) / 1000);
+    if (seconds < 60) return `${seconds}s`;
+    if (seconds < 3600) return `${Math.floor(seconds / 60)}m ${seconds % 60}s`;
+    return `${Math.floor(seconds / 3600)}h ${Math.floor((seconds % 3600) / 60)}m`;
+  }
+}

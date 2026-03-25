@@ -86,6 +86,7 @@ export class EnvironmentListViewComponent implements OnDestroy {
   editable = input<boolean | undefined>();
   deployable = input<boolean | undefined>();
   hideLinkToList = input<boolean | undefined>();
+  branchName = input<string | undefined>();
 
   isLoggedIn = computed(() => this.keycloakService.isLoggedIn());
   isAdmin = computed(() => this.permissionService.isAdmin());

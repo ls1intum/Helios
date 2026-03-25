@@ -728,21 +728,7 @@ public class GitHubService {
 
     try (Response response = okHttpClient.newCall(request).execute()) {
       if (!response.isSuccessful()) {
-        String errorBody = "No error details";
-        ResponseBody responseBody = response.body();
-        if (responseBody != null) {
-          try {
-            errorBody = responseBody.string();
-          } catch (IOException e) {
-            log.warn("Failed to read error response body", e);
-          }
-        }
-
-        log.error(
-            "GitHub API call failed to fetch workflow jobs with response code: {} and body: {}",
-            response.code(),
-            errorBody);
-        throw new IOException("GitHub API call failed with response code: " + response.code());
+        handleErrorResponse(response, "fetch workflow jobs for run " + runId);
       }
 
       ResponseBody responseBody = response.body();
@@ -764,9 +750,60 @@ public class GitHubService {
    * @throws IOException if an I/O error occurs during the API call
    */
   public void cancelWorkflowRun(String repoNameWithOwner, long runId) throws IOException {
+    executeWorkflowRunAction(
+        repoNameWithOwner,
+        runId,
+        "cancel",
+        "Successfully sent cancellation request for workflow run ID: {}"
+    );
+  }
+
+  /**
+   * Re-runs all jobs in a GitHub workflow run.
+   *
+   * @param repoNameWithOwner Repository in format "owner/repo"
+   * @param runId Workflow run ID to re-run
+   * @throws IOException if an I/O error occurs during the API call
+   */
+  public void reRunWorkflow(String repoNameWithOwner, long runId) throws IOException {
+    executeWorkflowRunAction(
+        repoNameWithOwner,
+        runId,
+        "rerun",
+        "Successfully sent re-run request for workflow run ID: {}");
+  }
+
+  /**
+   * Re-runs only the failed jobs in a GitHub workflow run.
+   *
+   * @param repoNameWithOwner Repository in format "owner/repo"
+   * @param runId Workflow run ID whose failed jobs to re-run
+   * @throws IOException if an I/O error occurs during the API call
+   */
+  public void reRunFailedJobs(String repoNameWithOwner, long runId) throws IOException {
+    executeWorkflowRunAction(
+        repoNameWithOwner,
+        runId,
+        "rerun-failed-jobs",
+        "Successfully sent re-run failed jobs request for workflow run ID: {}");
+  }
+
+  /**
+   * Sends an empty POST to a GitHub Actions workflow run sub-resource (e.g. cancel, rerun).
+   *
+   * @param repoNameWithOwner Repository in format "owner/repo"
+   * @param runId Workflow run ID
+   * @param pathSuffix URL suffix appended after the run ID (e.g. "cancel", "rerun")
+   * @param successMessage Log message on success; must contain one {} placeholder for the run ID
+   * @throws IOException if the API call fails
+   */
+  private void executeWorkflowRunAction(
+      String repoNameWithOwner, long runId, String pathSuffix, String successMessage)
+      throws IOException {
     String url =
         String.format(
-            "https://api.github.com/repos/%s/actions/runs/%d/cancel", repoNameWithOwner, runId);
+            "https://api.github.com/repos/%s/actions/runs/%d/%s",
+            repoNameWithOwner, runId, pathSuffix);
 
     Request request =
         getRequestBuilder()
@@ -776,23 +813,9 @@ public class GitHubService {
 
     try (Response response = okHttpClient.newCall(request).execute()) {
       if (!response.isSuccessful()) {
-        String errorBody = "No error details";
-        ResponseBody responseBody = response.body();
-        if (responseBody != null) {
-          try {
-            errorBody = responseBody.string();
-          } catch (IOException e) {
-            log.warn("Failed to read error response body", e);
-          }
-        }
-
-        log.error(
-            "GitHub API call failed to cancel workflow run with response code: {} and body: {}",
-            response.code(),
-            errorBody);
-        throw new IOException("GitHub API call failed with response code: " + response.code());
+        handleErrorResponse(response, pathSuffix + " for run " + runId);
       }
-      log.info("Successfully sent cancellation request for workflow run ID: {}", runId);
+      log.info(successMessage, runId);
     }
   }
 

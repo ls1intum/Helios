@@ -6,6 +6,9 @@ import type {
   CancelDeploymentData,
   CancelDeploymentErrors,
   CancelDeploymentResponses,
+  CancelWorkflowRunData,
+  CancelWorkflowRunErrors,
+  CancelWorkflowRunResponses,
   CreateReleaseCandidateData,
   CreateReleaseCandidateErrors,
   CreateReleaseCandidateResponses,
@@ -39,6 +42,12 @@ import type {
   GetActivityHistoryByEnvironmentIdData,
   GetActivityHistoryByEnvironmentIdErrors,
   GetActivityHistoryByEnvironmentIdResponses,
+  GetActivityHistoryByPullRequestIdData,
+  GetActivityHistoryByPullRequestIdErrors,
+  GetActivityHistoryByPullRequestIdResponses,
+  GetActivityHistoryByRepositoryIdAndBranchNameData,
+  GetActivityHistoryByRepositoryIdAndBranchNameErrors,
+  GetActivityHistoryByRepositoryIdAndBranchNameResponses,
   GetAllBranchesData,
   GetAllBranchesErrors,
   GetAllBranchesResponses,
@@ -90,6 +99,12 @@ import type {
   GetEnvironmentsByUserLockingData,
   GetEnvironmentsByUserLockingErrors,
   GetEnvironmentsByUserLockingResponses,
+  GetFlakinessScoresData,
+  GetFlakinessScoresErrors,
+  GetFlakinessScoresResponses,
+  GetFlakyTestsOverviewData,
+  GetFlakyTestsOverviewErrors,
+  GetFlakyTestsOverviewResponses,
   GetGitRepoSettingsData,
   GetGitRepoSettingsErrors,
   GetGitRepoSettingsResponses,
@@ -135,6 +150,9 @@ import type {
   GetRepositoryByIdData,
   GetRepositoryByIdErrors,
   GetRepositoryByIdResponses,
+  GetTestResultsByWorkflowRunIdData,
+  GetTestResultsByWorkflowRunIdErrors,
+  GetTestResultsByWorkflowRunIdResponses,
   GetUserPermissionsData,
   GetUserPermissionsErrors,
   GetUserPermissionsResponses,
@@ -147,6 +165,12 @@ import type {
   GetWorkflowJobStatusData,
   GetWorkflowJobStatusErrors,
   GetWorkflowJobStatusResponses,
+  GetWorkflowRunByIdData,
+  GetWorkflowRunByIdErrors,
+  GetWorkflowRunByIdResponses,
+  GetWorkflowRunsData,
+  GetWorkflowRunsErrors,
+  GetWorkflowRunsResponses,
   GetWorkflowsByRepositoryIdData,
   GetWorkflowsByRepositoryIdErrors,
   GetWorkflowsByRepositoryIdResponses,
@@ -162,6 +186,15 @@ import type {
   PublishReleaseDraftData,
   PublishReleaseDraftErrors,
   PublishReleaseDraftResponses,
+  ReconcilePullRequestStateData,
+  ReconcilePullRequestStateErrors,
+  ReconcilePullRequestStateResponses,
+  ReRunFailedJobsData,
+  ReRunFailedJobsErrors,
+  ReRunFailedJobsResponses,
+  ReRunWorkflowData,
+  ReRunWorkflowErrors,
+  ReRunWorkflowResponses,
   RotateSecretData,
   RotateSecretErrors,
   RotateSecretResponses,
@@ -345,6 +378,27 @@ export const extendEnvironmentLock = <ThrowOnError extends boolean = false>(opti
   });
 };
 
+export const reRunWorkflow = <ThrowOnError extends boolean = false>(options: Options<ReRunWorkflowData, ThrowOnError>) => {
+  return (options.client ?? client).post<ReRunWorkflowResponses, ReRunWorkflowErrors, ThrowOnError>({
+    url: '/api/workflows/runs/{runId}/rerun',
+    ...options,
+  });
+};
+
+export const reRunFailedJobs = <ThrowOnError extends boolean = false>(options: Options<ReRunFailedJobsData, ThrowOnError>) => {
+  return (options.client ?? client).post<ReRunFailedJobsResponses, ReRunFailedJobsErrors, ThrowOnError>({
+    url: '/api/workflows/runs/{runId}/rerun-failed-jobs',
+    ...options,
+  });
+};
+
+export const cancelWorkflowRun = <ThrowOnError extends boolean = false>(options: Options<CancelWorkflowRunData, ThrowOnError>) => {
+  return (options.client ?? client).post<CancelWorkflowRunResponses, CancelWorkflowRunErrors, ThrowOnError>({
+    url: '/api/workflows/runs/{runId}/cancel',
+    ...options,
+  });
+};
+
 export const syncWorkflowsByRepositoryId = <ThrowOnError extends boolean = false>(options: Options<SyncWorkflowsByRepositoryIdData, ThrowOnError>) => {
   return (options.client ?? client).post<SyncWorkflowsByRepositoryIdResponses, SyncWorkflowsByRepositoryIdErrors, ThrowOnError>({
     url: '/api/workflows/repository/{repositoryId}/sync',
@@ -380,6 +434,17 @@ export const getNotificationPreferences = <ThrowOnError extends boolean = false>
 export const updateNotificationPreferences = <ThrowOnError extends boolean = false>(options: Options<UpdateNotificationPreferencesData, ThrowOnError>) => {
   return (options.client ?? client).post<UpdateNotificationPreferencesResponses, UpdateNotificationPreferencesErrors, ThrowOnError>({
     url: '/api/user/notification-preferences',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+export const getFlakinessScores = <ThrowOnError extends boolean = false>(options: Options<GetFlakinessScoresData, ThrowOnError>) => {
+  return (options.client ?? client).post<GetFlakinessScoresResponses, GetFlakinessScoresErrors, ThrowOnError>({
+    url: '/api/tests/flakiness-scores',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -504,6 +569,13 @@ export const setPrPinnedByNumber = <ThrowOnError extends boolean = false>(option
   });
 };
 
+export const reconcilePullRequestState = <ThrowOnError extends boolean = false>(options: Options<ReconcilePullRequestStateData, ThrowOnError>) => {
+  return (options.client ?? client).post<ReconcilePullRequestStateResponses, ReconcilePullRequestStateErrors, ThrowOnError>({
+    url: '/api/pullrequests/repository/{repositoryId}/reconcile-state',
+    ...options,
+  });
+};
+
 export const syncEnvironments = <ThrowOnError extends boolean = false>(options?: Options<SyncEnvironmentsData, ThrowOnError>) => {
   return (options?.client ?? client).post<SyncEnvironmentsResponses, SyncEnvironmentsErrors, ThrowOnError>({
     url: '/api/environments/sync',
@@ -581,6 +653,20 @@ export const getWorkflowsByState = <ThrowOnError extends boolean = false>(option
   });
 };
 
+export const getWorkflowRuns = <ThrowOnError extends boolean = false>(options?: Options<GetWorkflowRunsData, ThrowOnError>) => {
+  return (options?.client ?? client).get<GetWorkflowRunsResponses, GetWorkflowRunsErrors, ThrowOnError>({
+    url: '/api/workflows/runs',
+    ...options,
+  });
+};
+
+export const getWorkflowRunById = <ThrowOnError extends boolean = false>(options: Options<GetWorkflowRunByIdData, ThrowOnError>) => {
+  return (options.client ?? client).get<GetWorkflowRunByIdResponses, GetWorkflowRunByIdErrors, ThrowOnError>({
+    url: '/api/workflows/runs/{runId}',
+    ...options,
+  });
+};
+
 export const getWorkflowsByRepositoryId = <ThrowOnError extends boolean = false>(options: Options<GetWorkflowsByRepositoryIdData, ThrowOnError>) => {
   return (options.client ?? client).get<GetWorkflowsByRepositoryIdResponses, GetWorkflowsByRepositoryIdErrors, ThrowOnError>({
     url: '/api/workflows/repository/{repositoryId}',
@@ -613,9 +699,23 @@ export const getUserPermissions = <ThrowOnError extends boolean = false>(options
   });
 };
 
+export const getTestResultsByWorkflowRunId = <ThrowOnError extends boolean = false>(options: Options<GetTestResultsByWorkflowRunIdData, ThrowOnError>) => {
+  return (options.client ?? client).get<GetTestResultsByWorkflowRunIdResponses, GetTestResultsByWorkflowRunIdErrors, ThrowOnError>({
+    url: '/api/tests/run/{workflowRunId}',
+    ...options,
+  });
+};
+
 export const getLatestTestResultsByPullRequestId = <ThrowOnError extends boolean = false>(options: Options<GetLatestTestResultsByPullRequestIdData, ThrowOnError>) => {
   return (options.client ?? client).get<GetLatestTestResultsByPullRequestIdResponses, GetLatestTestResultsByPullRequestIdErrors, ThrowOnError>({
     url: '/api/tests/pr/{pullRequestId}',
+    ...options,
+  });
+};
+
+export const getFlakyTestsOverview = <ThrowOnError extends boolean = false>(options?: Options<GetFlakyTestsOverviewData, ThrowOnError>) => {
+  return (options?.client ?? client).get<GetFlakyTestsOverviewResponses, GetFlakyTestsOverviewErrors, ThrowOnError>({
+    url: '/api/tests/flaky',
     ...options,
   });
 };
@@ -742,6 +842,22 @@ export const getDeploymentById = <ThrowOnError extends boolean = false>(options:
 export const getWorkflowJobStatus = <ThrowOnError extends boolean = false>(options: Options<GetWorkflowJobStatusData, ThrowOnError>) => {
   return (options.client ?? client).get<GetWorkflowJobStatusResponses, GetWorkflowJobStatusErrors, ThrowOnError>({
     url: '/api/deployments/workflowJobStatus/{runId}',
+    ...options,
+  });
+};
+
+export const getActivityHistoryByRepositoryIdAndBranchName = <ThrowOnError extends boolean = false>(
+  options: Options<GetActivityHistoryByRepositoryIdAndBranchNameData, ThrowOnError>
+) => {
+  return (options.client ?? client).get<GetActivityHistoryByRepositoryIdAndBranchNameResponses, GetActivityHistoryByRepositoryIdAndBranchNameErrors, ThrowOnError>({
+    url: '/api/deployments/repository/{repositoryId}/branch/activity-history',
+    ...options,
+  });
+};
+
+export const getActivityHistoryByPullRequestId = <ThrowOnError extends boolean = false>(options: Options<GetActivityHistoryByPullRequestIdData, ThrowOnError>) => {
+  return (options.client ?? client).get<GetActivityHistoryByPullRequestIdResponses, GetActivityHistoryByPullRequestIdErrors, ThrowOnError>({
+    url: '/api/deployments/pr/{pullRequestId}/activity-history',
     ...options,
   });
 };

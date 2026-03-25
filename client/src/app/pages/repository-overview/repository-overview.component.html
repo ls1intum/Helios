@@ -10,14 +10,22 @@
 </app-page-heading>
 
 @if (query.isPending() || query.isError()) {
-  <p-dataview [value]="[1, 2, 3, 4, 5]" layout="grid" [paginator]="true" [rows]="6">
+  <p-dataview
+    [value]="skeletonItems()"
+    layout="grid"
+    [paginator]="true"
+    [rows]="rows()"
+    [first]="first()"
+    [rowsPerPageOptions]="rowsPerPageOptions"
+    (onPage)="onRepositoryPageChange($event)"
+  >
     <ng-template #header>
       <p-skeleton styleClass="w-full !h-5" />
     </ng-template>
     <ng-template #grid let-projects>
-      <div class="grid auto-rows-auto gap-4 mt-4 max-w-[1600px] mx-auto" style="grid-template-columns: repeat(auto-fit, minmax(350px, 1fr))">
+      <div class="grid auto-rows-auto gap-4 mt-4 max-w-[1600px] mx-auto" style="grid-template-columns: repeat(auto-fit, minmax(400px, 1fr))">
         @for (project of projects; track project) {
-          <div class="flex gap-2 flex-col border border-muted-color rounded-2xl p-5 shadow-md min-w-[350px]">
+          <div class="flex gap-2 flex-col border border-muted-color rounded-2xl p-5 shadow-md min-w-[400px]">
             <div class="flex justify-between gap-2">
               <div class="flex gap-2 items-center">
                 <p-skeleton shape="circle" styleClass="!size-7" />
@@ -43,9 +51,19 @@
     </ng-template>
   </p-dataview>
 } @else {
-  <p-dataview #dataView [value]="query.data()" layout="grid" [paginator]="true" [rows]="6" filterBy="name">
+  <p-dataview
+    #dataView
+    [value]="query.data()"
+    layout="grid"
+    [paginator]="true"
+    [rows]="rows()"
+    [first]="first()"
+    [rowsPerPageOptions]="rowsPerPageOptions"
+    (onPage)="onRepositoryPageChange($event)"
+    filterBy="name"
+  >
     <ng-template #header>
-      <app-table-filter [input]="dataView" [searchTableService]="searchDataViewService" />
+      <app-table-filter [input]="dataView" [searchTableService]="searchDataViewService" (inputChanged)="onRepositoryFilterInput()" />
       <div class="mb-3"></div>
     </ng-template>
     <ng-template #grid let-projects>
@@ -57,7 +75,7 @@
                 <p-button text (click)="openProjectExternal($event, project)" styleClass="p-1" class="leading-none">
                   <i-tabler name="brand-github" class="!size-4" />
                 </p-button>
-                <div class="font-bold hover:underline cursor-pointer leading-none text-xl truncate" (click)="navigateToPullRequests(project)">{{ project.name }}</div>
+                <div class="font-bold hover:underline cursor-pointer leading-none text-xl truncate" (click)="navigateToWorkflowRuns(project)">{{ project.name }}</div>
                 @if (project.latestReleaseTagName) {
                   <p-tag rounded class="py-0.5 cursor-pointer hover:underline" (click)="navigateToReleases(project)"
                     ><i-tabler name="tag" class="!size-4" />{{ project.latestReleaseTagName }}</p-tag
@@ -141,7 +159,7 @@
         <!-- Add this section for the action button -->
         @if (step.actionButton) {
           <div class="flex justify-center mt-5">
-            <p-button [label]="step.actionButton.label" styleClass="p-button-raised" (onClick)="openExternalLink(step.actionButton.url)">
+            <p-button [label]="step.actionButton.label" styleClass="p-button-raised" [tabindex]="-1" (onClick)="openExternalLink(step.actionButton.url)">
               @if (step.actionButton.icon) {
                 <i-tabler [name]="step.actionButton.icon" class="!size-4" />
               }
@@ -160,7 +178,7 @@
     }
   </div>
   <div class="flex justify-center">
-    <p-button label="Open full documentation" [link]="true" (onClick)="openExternalLink('https://ls1intum.github.io/Helios/development/production/ls1intum/')" />
+    <p-button label="Open full documentation" [link]="true" (onClick)="openExternalLink('https://ls1intum.github.io/Helios/user_guide/ls1intum/')" />
   </div>
   <ng-template pTemplate="footer">
     <div class="flex justify-between w-full">

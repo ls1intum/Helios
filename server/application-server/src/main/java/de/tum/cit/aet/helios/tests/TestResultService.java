@@ -5,19 +5,18 @@ import de.tum.cit.aet.helios.filters.RepositoryContext;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import de.tum.cit.aet.helios.pullrequest.PullRequestRepository;
 import de.tum.cit.aet.helios.tests.TestCase.TestStatus;
-import de.tum.cit.aet.helios.tests.TestResultsDto.CombinedTestCaseStatisticsInfo;
 import de.tum.cit.aet.helios.tests.TestResultsDto.TestCaseDto;
-import de.tum.cit.aet.helios.tests.TestResultsDto.TestCaseStatisticsInfo;
 import de.tum.cit.aet.helios.tests.TestResultsDto.TestTypeResults;
 import de.tum.cit.aet.helios.tests.type.TestType;
 import de.tum.cit.aet.helios.workflow.WorkflowRun;
 import de.tum.cit.aet.helios.workflow.WorkflowRunRepository;
+import jakarta.persistence.EntityNotFoundException;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -219,6 +218,69 @@ public class TestResultService {
     return processTestResults(context, criteria);
   }
 
+  /**
+   * Get the test results for a specific workflow run.
+   *
+   * @param workflowRunId the workflow run ID
+   * @param criteria search and pagination criteria
+   * @return the grouped test results
+   */
+  public TestResultsDto getTestResultsForWorkflowRun(
+      Long workflowRunId, TestSearchCriteria criteria) {
+    final Long repositoryId = RepositoryContext.getRepositoryId();
+    var run =
+        workflowRunRepository
+            .findByIdAndRepositoryRepositoryId(workflowRunId, repositoryId)
+            .orElseThrow(() -> new EntityNotFoundException(
+                "Workflow run with id %d not found".formatted(workflowRunId)));
+
+    var defaultContext = getDefaultBranchContext(run.getRepository());
+
+    List<WorkflowRun> previousRuns = List.of();
+    if (run.getHeadBranch() != null && run.getHeadSha() != null) {
+      var pullRequests = run.getPullRequests();
+      if (pullRequests != null && !pullRequests.isEmpty()) {
+        // A run can technically be associated with multiple PRs.
+        // We pick the lowest PR ID (oldest PR) for a deterministic baseline; in
+        // practice the sync service almost always resolves to exactly one PR per run.
+        // TODO consider better handling of multiple PRs
+        var prId = pullRequests.stream()
+            .min(Comparator.comparingLong(pr -> pr.getId()))
+            .orElseThrow()
+            .getId();
+        previousRuns =
+            workflowRunRepository
+                .findNthLatestCommitShaBehindHeadByPullRequestId(prId, 0, run.getHeadSha())
+                .map(prevSha -> workflowRunRepository.findByPullRequestsIdAndHeadSha(prId, prevSha))
+                .orElse(List.of());
+      } else {
+        previousRuns =
+            workflowRunRepository
+                .findNthLatestCommitShaBehindHeadByBranchAndRepoId(
+                    run.getHeadBranch(),
+                    run.getRepository().getRepositoryId(),
+                    0,
+                    run.getHeadSha())
+                .map(
+                    prevSha ->
+                        workflowRunRepository.findByHeadBranchAndHeadShaAndRepositoryRepositoryId(
+                            run.getHeadBranch(),
+                            prevSha,
+                            run.getRepository().getRepositoryId()))
+                .orElse(List.of());
+      }
+    }
+
+    var context =
+        new TestRunContext(
+            List.of(run),
+            previousRuns,
+            defaultContext.defaultBranchName(),
+            defaultContext.defaultWorkflowRunByTestType());
+
+    return processTestResults(context, criteria);
+  }
+
   private TestResultsDto processTestResults(TestRunContext context, TestSearchCriteria criteria) {
     Map<TestType, Long> previousWorkflowRunByTestType = new HashMap<>();
 
@@ -319,58 +381,27 @@ public class TestResultService {
         testCaseStatisticsRepository.findByTestSuiteNameInAndBranchNameAndRepositoryRepositoryId(
             suiteClassNames, "combined", RepositoryContext.getRepositoryId());
 
-    Function<TestCase, TestResultsDto.TestCaseStatisticsInfo> statisticsProvider =
-        testCase -> {
-          Optional<TestCaseStatistics> stats =
-              defaultBranchStats.stream()
-                  .filter(
-                      s ->
-                          s.getTestName().equals(testCase.getName())
-                              && s.getClassName().equals(testCase.getClassName()))
-                  .findFirst();
-
-          double failureRate = stats.map(TestCaseStatistics::getFailureRate).orElse(0.0);
-
-          boolean failsInDefaultBranch =
-              failedTestsInDefault.stream()
-                  .anyMatch(
-                      failedTest ->
-                          failedTest.getName().equals(testCase.getName())
-                              && failedTest.getClassName().equals(testCase.getClassName()));
-
-          return new TestResultsDto.TestCaseStatisticsInfo(failureRate, failsInDefaultBranch);
-        };
-
-    Function<TestCase, TestResultsDto.CombinedTestCaseStatisticsInfo> combinedStatisticsProvider =
-        testCase -> {
-          Optional<TestCaseStatistics> stats =
-              combinedStats.stream()
-                  .filter(
-                      s ->
-                          s.getTestName().equals(testCase.getName())
-                              && s.getClassName().equals(testCase.getClassName()))
-                  .findFirst();
-
-          double combinedFailureRate = stats.map(TestCaseStatistics::getFailureRate).orElse(0.0);
-
-          return new TestResultsDto.CombinedTestCaseStatisticsInfo(combinedFailureRate);
-        };
-
     var prevStateCandidates =
         testCaseRepository.findByTestSuiteWorkflowIdAndClassNamesAndTestTypeId(
             prevWorkflowRunId, suiteClassNames, type.getId());
 
     for (TestSuite suite : suites) {
       for (TestCase testCase : suite.getTestCases()) {
-        TestCaseStatisticsInfo statistics = statisticsProvider.apply(testCase);
-        CombinedTestCaseStatisticsInfo combinedStatistics =
-            combinedStatisticsProvider.apply(testCase);
-        testCase.setFlakinessScore(
-            testCaseStatisticsService.calculateFlakinessScore(
-                statistics.failureRate(), combinedStatistics.combinedFailureRate()));
-        testCase.setFailsInDefaultBranch(statistics.failsInDefaultBranch());
-        testCase.setFailureRate(statistics.failureRate());
-        testCase.setCombinedFailureRate(combinedStatistics.combinedFailureRate());
+        var flakinessInfo =
+            testCaseStatisticsService.computeFlakinessInfo(
+                testCase.getName(), testCase.getClassName(), defaultBranchStats, combinedStats);
+        testCase.setFlakinessScore(flakinessInfo.flakinessScore());
+        testCase.setFailureRate(flakinessInfo.defaultBranchFailureRate());
+        testCase.setCombinedFailureRate(flakinessInfo.combinedFailureRate());
+
+        boolean failsInDefaultBranch =
+            failedTestsInDefault.stream()
+                .anyMatch(
+                    failedTest ->
+                        failedTest.getName().equals(testCase.getName())
+                            && failedTest.getClassName().equals(testCase.getClassName()));
+        testCase.setFailsInDefaultBranch(failsInDefaultBranch);
+
         testCase.setPreviousStatus(
             prevStateCandidates.stream()
                 .filter(

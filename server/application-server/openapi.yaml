@@ -348,6 +348,69 @@ paths:
             application/json:
               schema:
                 type: object
+  /api/workflows/runs/{runId}/rerun:
+    post:
+      tags:
+      - workflow-run-controller
+      operationId: reRunWorkflow
+      parameters:
+      - name: runId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "200":
+          description: OK
+  /api/workflows/runs/{runId}/rerun-failed-jobs:
+    post:
+      tags:
+      - workflow-run-controller
+      operationId: reRunFailedJobs
+      parameters:
+      - name: runId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "200":
+          description: OK
+  /api/workflows/runs/{runId}/cancel:
+    post:
+      tags:
+      - workflow-run-controller
+      operationId: cancelWorkflowRun
+      parameters:
+      - name: runId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "200":
+          description: OK
   /api/workflows/repository/{repositoryId}/sync:
     post:
       tags:
@@ -445,6 +508,32 @@ paths:
                 $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
+  /api/tests/flakiness-scores:
+    post:
+      tags:
+      - test-result-controller
+      operationId: getFlakinessScores
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TestFlakinessScoreRequest"
+        required: true
+      responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TestFlakinessScoreDto"
   /api/test-types:
     get:
       tags:
@@ -724,6 +813,37 @@ paths:
                 $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
+  /api/pullrequests/repository/{repositoryId}/reconcile-state:
+    post:
+      tags:
+      - pull-request-controller
+      operationId: reconcilePullRequestState
+      parameters:
+      - name: repositoryId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: dryRun
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+      responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PullRequestStateReconciliationResultDto"
   /api/environments/sync:
     post:
       tags:
@@ -937,6 +1057,92 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/WorkflowDto"
+  /api/workflows/runs:
+    get:
+      tags:
+      - workflow-run-controller
+      operationId: getWorkflowRuns
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 1
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      - name: sortField
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: sortDirection
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: filterType
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - ALL
+          - NOT_STARTED
+          - IN_PROGRESS
+          - CANCELLED
+          - SUCCESS
+          - FAILURE
+          - ACTION_REQUIRED
+      - name: searchTerm
+        in: query
+        required: false
+        schema:
+          type: string
+      responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedWorkflowRunsResponse"
+  /api/workflows/runs/{runId}:
+    get:
+      tags:
+      - workflow-run-controller
+      operationId: getWorkflowRunById
+      parameters:
+      - name: runId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkflowRunDto"
   /api/workflows/repository/{repositoryId}:
     get:
       tags:
@@ -1035,6 +1241,56 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/GitHubRepositoryRoleDto"
+  /api/tests/run/{workflowRunId}:
+    get:
+      tags:
+      - test-result-controller
+      operationId: getTestResultsByWorkflowRunId
+      parameters:
+      - name: workflowRunId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 10
+      - name: search
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: onlyFailed
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+      responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TestResultsDto"
   /api/tests/pr/{pullRequestId}:
     get:
       tags:
@@ -1085,6 +1341,24 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/TestResultsDto"
+  /api/tests/flaky:
+    get:
+      tags:
+      - test-result-controller
+      operationId: getFlakyTestsOverview
+      responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FlakyTestOverviewDto"
   /api/tests/branch:
     get:
       tags:
@@ -1583,6 +1857,65 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/WorkflowJobsResponse"
+  /api/deployments/repository/{repositoryId}/branch/activity-history:
+    get:
+      tags:
+      - deployment-controller
+      operationId: getActivityHistoryByRepositoryIdAndBranchName
+      parameters:
+      - name: repositoryId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: branch
+        in: query
+        required: true
+        schema:
+          type: string
+      responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActivityHistoryDto"
+  /api/deployments/pr/{pullRequestId}/activity-history:
+    get:
+      tags:
+      - deployment-controller
+      operationId: getActivityHistoryByPullRequestId
+      parameters:
+      - name: pullRequestId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActivityHistoryDto"
   /api/deployments/environment/{environmentId}:
     get:
       tags:
@@ -2184,6 +2517,47 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/NotificationPreferenceDto"
+    TestCaseIdentifier:
+      type: object
+      properties:
+        testName:
+          type: string
+          minLength: 1
+        className:
+          type: string
+          minLength: 1
+      required:
+      - className
+      - testName
+    TestFlakinessScoreRequest:
+      type: object
+      properties:
+        testCases:
+          type: array
+          items:
+            $ref: "#/components/schemas/TestCaseIdentifier"
+          minItems: 1
+      required:
+      - testCases
+    TestFlakinessScoreDto:
+      type: object
+      properties:
+        testName:
+          type: string
+        className:
+          type: string
+        flakinessScore:
+          type: number
+          format: double
+        defaultBranchFailureRate:
+          type: number
+          format: double
+        combinedFailureRate:
+          type: number
+          format: double
+      required:
+      - className
+      - testName
     ReleaseCandidateCreateDto:
       type: object
       properties:
@@ -2309,6 +2683,8 @@ components:
           type: string
         githubUrl:
           type: string
+        creator:
+          $ref: "#/components/schemas/UserInfoDto"
       required:
       - body
       - githubUrl
@@ -2346,6 +2722,42 @@ components:
       - deployments
       - evaluations
       - name
+    PullRequestStateReconciliationResultDto:
+      type: object
+      properties:
+        dryRun:
+          type: boolean
+        repositoryId:
+          type: integer
+          format: int64
+        repositoryNameWithOwner:
+          type: string
+        scannedCount:
+          type: integer
+          format: int32
+        updatedCount:
+          type: integer
+          format: int32
+        updatedPullRequestIds:
+          type: array
+          items:
+            type: integer
+            format: int64
+        updatedPullRequestNumbers:
+          type: array
+          items:
+            type: integer
+            format: int32
+        unchangedCount:
+          type: integer
+          format: int32
+        errorCount:
+          type: integer
+          format: int32
+        errors:
+          type: array
+          items:
+            type: string
     PushStatusPayload:
       type: object
       properties:
@@ -2396,6 +2808,25 @@ components:
           format: int64
       required:
       - workflowRunId
+    PaginatedWorkflowRunsResponse:
+      type: object
+      properties:
+        runs:
+          type: array
+          items:
+            $ref: "#/components/schemas/WorkflowRunDto"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
     WorkflowRunDto:
       type: object
       properties:
@@ -2453,13 +2884,28 @@ components:
           - PROCESSING
           - PROCESSED
           - FAILED
+        headBranch:
+          type: string
+        headSha:
+          type: string
+        runStartedAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
       required:
+      - createdAt
       - displayTitle
       - htmlUrl
       - id
       - label
       - name
       - status
+      - updatedAt
       - workflowId
     GitHubRepositoryRoleDto:
       type: object
@@ -2636,6 +3082,68 @@ components:
       - totalTests
       - totalTime
       - totalUpdates
+    FlakyTestDto:
+      type: object
+      properties:
+        testName:
+          type: string
+        className:
+          type: string
+        testSuiteName:
+          type: string
+        flakinessScore:
+          type: number
+          format: double
+        defaultBranchFailureRate:
+          type: number
+          format: double
+        combinedFailureRate:
+          type: number
+          format: double
+        totalRuns:
+          type: integer
+          format: int32
+        failedRuns:
+          type: integer
+          format: int32
+        lastUpdated:
+          type: string
+          format: date-time
+      required:
+      - className
+      - lastUpdated
+      - testName
+      - testSuiteName
+    FlakyTestOverviewDto:
+      type: object
+      properties:
+        summary:
+          $ref: "#/components/schemas/FlakyTestSummary"
+        flakyTests:
+          type: array
+          items:
+            $ref: "#/components/schemas/FlakyTestDto"
+      required:
+      - flakyTests
+      - summary
+    FlakyTestSummary:
+      type: object
+      properties:
+        totalTrackedTests:
+          type: integer
+          format: int32
+        flakyTestCount:
+          type: integer
+          format: int32
+        highFlakinessCount:
+          type: integer
+          format: int32
+        mediumFlakinessCount:
+          type: integer
+          format: int32
+        lowFlakinessCount:
+          type: integer
+          format: int32
     CommitsSinceReleaseCandidateDto:
       type: object
       properties:
@@ -3016,6 +3524,8 @@ components:
           format: int64
         repository:
           $ref: "#/components/schemas/RepositoryInfoDto"
+        environmentName:
+          type: string
         state:
           type: string
           enum:

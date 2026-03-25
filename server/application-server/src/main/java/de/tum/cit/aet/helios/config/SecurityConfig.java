@@ -46,6 +46,7 @@ public class SecurityConfig {
                   .requestMatchers(HttpMethod.GET, "/api/**").permitAll()
                   /* shared‑secret filter handles these requests */
                   .requestMatchers(HttpMethod.POST, "/api/environments/status/**").permitAll()
+                  .requestMatchers(HttpMethod.POST, "/api/tests/flakiness-scores").permitAll()
                   /* other public endpoints (e.g. Swagger) */
                   .requestMatchers(
                       "/auth/**",

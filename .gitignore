@@ -191,3 +191,6 @@ CMakeUserPresets.json
 test/*
 
 .cursor/*
+
+skills/
+.codacy/

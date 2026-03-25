@@ -58,6 +58,7 @@ jobs:
           proxy_port: ${{ vars.DEPLOYMENT_GATEWAY_PORT }}
           source: "./compose.prod.yaml"
           target: ${{ vars.WORKING_DIR }}
+          overwrite: true
 
       - name: SSH to VM and create .env file
         uses: appleboy/ssh-action@v1.2.2
@@ -125,6 +126,7 @@ jobs:
             echo "HELIOS_ENVIRONMENT_NAME=${{ vars.HELIOS_ENVIRONMENT_NAME }}" >> .env
             echo "HELIOS_PROD_SECRET_KEY=${{ secrets.HELIOS_PROD_SECRET_KEY }}" >> .env
             echo "HELIOS_STAGING_SECRET_KEY=${{ secrets.HELIOS_STAGING_SECRET_KEY }}" >> .env
+            echo "HELIOS_DEVELOPERS_GITHUB_USERNAMES=${{ vars.HELIOS_DEVELOPERS_GITHUB_USERNAMES }}" >> .env
             
 
       - name: SSH to VM and Execute Docker-Compose Up

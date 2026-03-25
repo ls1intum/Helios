@@ -1,4 +1,4 @@
-import { computed, Injectable } from '@angular/core';
+import { Injectable } from '@angular/core';
 import Keycloak from 'keycloak-js';
 import { UserProfile } from './user-profile';
 import { environment } from 'environments/environment';
@@ -21,17 +21,8 @@ export class KeycloakService {
     return this._profile;
   }
 
-  decodedToken = computed(() => {
-    const token = this.keycloak.token;
-    if (!token) {
-      return null;
-    }
-    const [, payload] = token.split('.');
-    return JSON.parse(atob(payload));
-  });
-
   isCurrentUser(login?: string) {
-    return this.decodedToken()?.preferred_username.toLowerCase() === login?.toLowerCase();
+    return this.getPreferredUsername()?.toLowerCase() === login?.toLowerCase();
   }
 
   async init() {
@@ -58,15 +49,18 @@ export class KeycloakService {
   }
 
   getUserId() {
-    return this.decodedToken()?.sub;
+    const sub = this.keycloak.tokenParsed?.sub;
+    return typeof sub === 'string' ? sub : undefined;
   }
 
   getPreferredUsername(): string | undefined {
-    return this.decodedToken()?.preferred_username;
+    const preferredUsername = this.keycloak.tokenParsed?.['preferred_username'];
+    return typeof preferredUsername === 'string' ? preferredUsername : undefined;
   }
 
-  getUserGithubId() {
-    return this.decodedToken()?.github_id;
+  getUserGithubId(): string | number | undefined {
+    const githubId = this.keycloak.tokenParsed?.['github_id'];
+    return typeof githubId === 'string' || typeof githubId === 'number' ? githubId : undefined;
   }
 
   getUserGithubProfilePictureUrl(): string {

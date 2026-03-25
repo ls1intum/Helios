@@ -75,6 +75,10 @@ export const routes: Routes = [
             ],
           },
           {
+            path: 'flaky-tests',
+            loadComponent: () => import('./pages/flaky-tests-overview/flaky-tests-overview.component').then(m => m.FlakyTestsOverviewComponent),
+          },
+          {
             path: 'ci-cd',
             loadComponent: () => import('./pages/ci-cd/ci-cd.component').then(m => m.CiCdComponent),
             children: [
@@ -82,6 +86,14 @@ export const routes: Routes = [
                 path: '',
                 redirectTo: 'pr',
                 pathMatch: 'full',
+              },
+              {
+                path: 'runs/:runId',
+                loadComponent: () => import('@app/pages/workflow-run-details/workflow-run-details.component').then(m => m.WorkflowRunDetailsComponent),
+              },
+              {
+                path: 'runs',
+                loadComponent: () => import('@app/pages/workflow-run-list/workflow-run-list.component').then(m => m.WorkflowRunListComponent),
               },
               {
                 path: 'pr',

@@ -60,6 +60,7 @@ public class DeploymentControllerTest {
             "DEPLOYMENT",
             1L,
             null,
+            "test-environment",
             Deployment.State.PENDING,
             "abc123",
             "main",
@@ -132,7 +133,7 @@ public class DeploymentControllerTest {
   }
 
   @Test
-  void testGetActivityHistory() throws Exception {
+  void testGetActivityHistoryByEnvironment() throws Exception {
     List<ActivityHistoryDto> history = List.of(sampleActivity);
     when(deploymentService.getActivityHistoryByEnvironmentId(1L)).thenReturn(history);
 
@@ -140,6 +141,44 @@ public class DeploymentControllerTest {
         mockMvc
             .perform(
                 get("/api/deployments/environment/{environmentId}/activity-history", 1L)
+                    .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(MockMvcResultMatchers.status().isOk())
+            .andReturn()
+            .getResponse()
+            .getContentAsString();
+
+    assertEquals(objectMapper.writeValueAsString(history), response);
+  }
+
+  @Test
+  void testGetActivityHistoryByPullRequestId() throws Exception {
+    List<ActivityHistoryDto> history = List.of(sampleActivity);
+    when(deploymentService.getActivityHistoryByPullRequestId(1L)).thenReturn(history);
+
+    String response =
+        mockMvc
+            .perform(
+                get("/api/deployments/pr/{pullRequestId}/activity-history", 1L)
+                    .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(MockMvcResultMatchers.status().isOk())
+            .andReturn()
+            .getResponse()
+            .getContentAsString();
+
+    assertEquals(objectMapper.writeValueAsString(history), response);
+  }
+
+  @Test
+  void testGetActivityHistoryByRepositoryIdAndBranchName() throws Exception {
+    List<ActivityHistoryDto> history = List.of(sampleActivity);
+    when(deploymentService.getActivityHistoryByRepositoryIdAndBranchName(1L, "main"))
+        .thenReturn(history);
+
+    String response =
+        mockMvc
+            .perform(
+                get("/api/deployments/repository/{repositoryId}/branch/activity-history", 1L)
+                    .param("branch", "main")
                     .contentType(MediaType.APPLICATION_JSON))
             .andExpect(MockMvcResultMatchers.status().isOk())
             .andReturn()

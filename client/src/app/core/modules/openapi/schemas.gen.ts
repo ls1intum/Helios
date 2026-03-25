@@ -485,6 +485,60 @@ export const NotificationPreferencesWrapperSchema = {
   },
 } as const;
 
+export const TestCaseIdentifierSchema = {
+  type: 'object',
+  properties: {
+    testName: {
+      type: 'string',
+      minLength: 1,
+    },
+    className: {
+      type: 'string',
+      minLength: 1,
+    },
+  },
+  required: ['className', 'testName'],
+} as const;
+
+export const TestFlakinessScoreRequestSchema = {
+  type: 'object',
+  properties: {
+    testCases: {
+      type: 'array',
+      items: {
+        $ref: '#/components/schemas/TestCaseIdentifier',
+      },
+      minItems: 1,
+    },
+  },
+  required: ['testCases'],
+} as const;
+
+export const TestFlakinessScoreDtoSchema = {
+  type: 'object',
+  properties: {
+    testName: {
+      type: 'string',
+    },
+    className: {
+      type: 'string',
+    },
+    flakinessScore: {
+      type: 'number',
+      format: 'double',
+    },
+    defaultBranchFailureRate: {
+      type: 'number',
+      format: 'double',
+    },
+    combinedFailureRate: {
+      type: 'number',
+      format: 'double',
+    },
+  },
+  required: ['className', 'testName'],
+} as const;
+
 export const ReleaseCandidateCreateDtoSchema = {
   type: 'object',
   properties: {
@@ -658,6 +712,9 @@ export const ReleaseDtoSchema = {
     githubUrl: {
       type: 'string',
     },
+    creator: {
+      $ref: '#/components/schemas/UserInfoDto',
+    },
   },
   required: ['body', 'githubUrl', 'isDraft', 'isPrerelease'],
 } as const;
@@ -701,6 +758,58 @@ export const ReleaseInfoDetailsDtoSchema = {
     },
   },
   required: ['commit', 'createdAt', 'deployments', 'evaluations', 'name'],
+} as const;
+
+export const PullRequestStateReconciliationResultDtoSchema = {
+  type: 'object',
+  properties: {
+    dryRun: {
+      type: 'boolean',
+    },
+    repositoryId: {
+      type: 'integer',
+      format: 'int64',
+    },
+    repositoryNameWithOwner: {
+      type: 'string',
+    },
+    scannedCount: {
+      type: 'integer',
+      format: 'int32',
+    },
+    updatedCount: {
+      type: 'integer',
+      format: 'int32',
+    },
+    updatedPullRequestIds: {
+      type: 'array',
+      items: {
+        type: 'integer',
+        format: 'int64',
+      },
+    },
+    updatedPullRequestNumbers: {
+      type: 'array',
+      items: {
+        type: 'integer',
+        format: 'int32',
+      },
+    },
+    unchangedCount: {
+      type: 'integer',
+      format: 'int32',
+    },
+    errorCount: {
+      type: 'integer',
+      format: 'int32',
+    },
+    errors: {
+      type: 'array',
+      items: {
+        type: 'string',
+      },
+    },
+  },
 } as const;
 
 export const PushStatusPayloadSchema = {
@@ -752,6 +861,34 @@ export const CancelDeploymentRequestSchema = {
     },
   },
   required: ['workflowRunId'],
+} as const;
+
+export const PaginatedWorkflowRunsResponseSchema = {
+  type: 'object',
+  properties: {
+    runs: {
+      type: 'array',
+      items: {
+        $ref: '#/components/schemas/WorkflowRunDto',
+      },
+    },
+    page: {
+      type: 'integer',
+      format: 'int32',
+    },
+    size: {
+      type: 'integer',
+      format: 'int32',
+    },
+    totalElements: {
+      type: 'integer',
+      format: 'int64',
+    },
+    totalPages: {
+      type: 'integer',
+      format: 'int32',
+    },
+  },
 } as const;
 
 export const WorkflowRunDtoSchema = {
@@ -806,8 +943,26 @@ export const WorkflowRunDtoSchema = {
       type: 'string',
       enum: ['PROCESSING', 'PROCESSED', 'FAILED'],
     },
+    headBranch: {
+      type: 'string',
+    },
+    headSha: {
+      type: 'string',
+    },
+    runStartedAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+    createdAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+    updatedAt: {
+      type: 'string',
+      format: 'date-time',
+    },
   },
-  required: ['displayTitle', 'htmlUrl', 'id', 'label', 'name', 'status', 'workflowId'],
+  required: ['createdAt', 'displayTitle', 'htmlUrl', 'id', 'label', 'name', 'status', 'updatedAt', 'workflowId'],
 } as const;
 
 export const GitHubRepositoryRoleDtoSchema = {
@@ -1005,6 +1160,88 @@ export const TestTypeStatsSchema = {
     },
   },
   required: ['errors', 'failures', 'passed', 'skipped', 'totalSuites', 'totalTests', 'totalTime', 'totalUpdates'],
+} as const;
+
+export const FlakyTestDtoSchema = {
+  type: 'object',
+  properties: {
+    testName: {
+      type: 'string',
+    },
+    className: {
+      type: 'string',
+    },
+    testSuiteName: {
+      type: 'string',
+    },
+    flakinessScore: {
+      type: 'number',
+      format: 'double',
+    },
+    defaultBranchFailureRate: {
+      type: 'number',
+      format: 'double',
+    },
+    combinedFailureRate: {
+      type: 'number',
+      format: 'double',
+    },
+    totalRuns: {
+      type: 'integer',
+      format: 'int32',
+    },
+    failedRuns: {
+      type: 'integer',
+      format: 'int32',
+    },
+    lastUpdated: {
+      type: 'string',
+      format: 'date-time',
+    },
+  },
+  required: ['className', 'lastUpdated', 'testName', 'testSuiteName'],
+} as const;
+
+export const FlakyTestOverviewDtoSchema = {
+  type: 'object',
+  properties: {
+    summary: {
+      $ref: '#/components/schemas/FlakyTestSummary',
+    },
+    flakyTests: {
+      type: 'array',
+      items: {
+        $ref: '#/components/schemas/FlakyTestDto',
+      },
+    },
+  },
+  required: ['flakyTests', 'summary'],
+} as const;
+
+export const FlakyTestSummarySchema = {
+  type: 'object',
+  properties: {
+    totalTrackedTests: {
+      type: 'integer',
+      format: 'int32',
+    },
+    flakyTestCount: {
+      type: 'integer',
+      format: 'int32',
+    },
+    highFlakinessCount: {
+      type: 'integer',
+      format: 'int32',
+    },
+    mediumFlakinessCount: {
+      type: 'integer',
+      format: 'int32',
+    },
+    lowFlakinessCount: {
+      type: 'integer',
+      format: 'int32',
+    },
+  },
 } as const;
 
 export const CommitsSinceReleaseCandidateDtoSchema = {
@@ -1488,6 +1725,9 @@ export const ActivityHistoryDtoSchema = {
     },
     repository: {
       $ref: '#/components/schemas/RepositoryInfoDto',
+    },
+    environmentName: {
+      type: 'string',
     },
     state: {
       type: 'string',

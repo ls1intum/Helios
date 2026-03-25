@@ -39,20 +39,29 @@
         <div class="space-y-1 text-sm">
           @if (environment().type === 'PRODUCTION') {
             <p>
-              You are about to deploy to production <span class="font-semibold italic">{{ environmentName() }}</span
-              >.
+              You are about to deploy to production <span class="font-semibold italic">{{ environmentName() }}</span>
+              @if (displaySourceRef()) {
+                from {{ sourceRef()?.type }} <span class="font-semibold italic">{{ displaySourceRef() }}</span>
+              }
+              .
             </p>
             <br />
             <p>Double‑check everything before you continue.</p>
           } @else if (environment().type === 'STAGING') {
             <p>
-              You are about to deploy to staging <span class="font-semibold italic">{{ environmentName() }}</span
-              >.
+              You are about to deploy to staging <span class="font-semibold italic">{{ environmentName() }}</span>
+              @if (displaySourceRef()) {
+                from {{ sourceRef()?.type }} <span class="font-semibold italic">{{ displaySourceRef() }}</span>
+              }
+              .
             </p>
           } @else {
             <p>
-              You are about to deploy to test server <span class="font-semibold italic">{{ environmentName() }}</span
-              >.
+              You are about to deploy to test server <span class="font-semibold italic">{{ environmentName() }}</span>
+              @if (displaySourceRef()) {
+                from {{ sourceRef()?.type }} <span class="font-semibold italic">{{ displaySourceRef() }}</span>
+              }
+              .
             </p>
           }
         </div>

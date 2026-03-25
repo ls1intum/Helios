@@ -31,7 +31,7 @@ public abstract class GitHubMessageHandler<T extends GHEventPayload> extends Nat
   }
 
   /**
-   * Processes a GitHub webhook event for a repository that is installed
+   * Processes a GitHub webhook event for a repository that is installed.
    *
    * @param payload The GitHub event payload for a installed repository. The payload type varies
    *     depending on the event type (Push, Pull Request, etc.).

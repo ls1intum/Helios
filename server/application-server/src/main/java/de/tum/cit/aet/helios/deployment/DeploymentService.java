@@ -19,6 +19,7 @@ import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
 import de.tum.cit.aet.helios.pullrequest.PullRequest;
 import de.tum.cit.aet.helios.pullrequest.PullRequestRepository;
 import de.tum.cit.aet.helios.workflow.Workflow;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import java.io.IOException;
 import java.time.OffsetDateTime;
@@ -308,7 +309,6 @@ public class DeploymentService {
     // 4) Combine the lists
     List<ActivityHistoryDto> combined = new ArrayList<>();
     combined.addAll(deploymentDtos);
-    // combined.addAll(heliosDtos);
     combined.addAll(lockDtos);
 
     // 4a) Add heliosDeployment for latest deployment (deployment webhook not yet received) and all
@@ -324,23 +324,77 @@ public class DeploymentService {
     }
 
     // 5) Sort by timestamp descending
-    combined.sort(
-        (a, b) -> {
-          OffsetDateTime timeA = a.timestamp();
-          OffsetDateTime timeB = b.timestamp();
-          if (timeA == null && timeB == null) {
-            return 0;
-          }
-          if (timeA == null) {
-            return 1;
-          }
-          if (timeB == null) {
-            return -1;
-          }
-          return timeB.compareTo(timeA);
-        });
+    return ActivityHistoryDto.sortActivityHistoryDtosByTimestampDesc(combined);
+  }
 
-    return combined;
+  /**
+   * Retrieves deployment activity history for a specific pull request.
+   *
+   * <p>Combines completed deployments (from GitHub webhook) with Helios deployments
+   * that are not yet linked to a Deployment record, sorted by timestamp descending.
+   *
+   * @param pullRequestId The ID of the pull request to fetch deployment history for
+   * @return Combined list of {@link ActivityHistoryDto} for the PR, sorted by timestamp
+   *     descending
+   * @throws EntityNotFoundException if the pull request does not exist
+   */
+  public List<ActivityHistoryDto> getActivityHistoryByPullRequestId(Long pullRequestId) {
+    if (pullRequestRepository.findById(pullRequestId).isEmpty()) {
+      throw new EntityNotFoundException("Pull request not found with id: " + pullRequestId);
+    }
+
+    List<ActivityHistoryDto> combined = new ArrayList<>();
+
+    List<ActivityHistoryDto> deploymentDtos =
+        deploymentRepository.findByPullRequest_IdOrderByCreatedAtDesc(pullRequestId).stream()
+            .map(ActivityHistoryDto::fromDeployment)
+            .toList();
+    combined.addAll(deploymentDtos);
+
+    List<ActivityHistoryDto> heliosDeploymentDtos =
+        heliosDeploymentRepository.findByPullRequest_IdAndDeploymentIdIsNullOrderByCreatedAtDesc(
+                pullRequestId)
+            .stream()
+            .map(ActivityHistoryDto::fromHeliosDeployment)
+            .toList();
+    combined.addAll(heliosDeploymentDtos);
+
+    return ActivityHistoryDto.sortActivityHistoryDtosByTimestampDesc(combined);
+  }
+
+  /**
+   * Retrieves deployment activity history for a specific branch in a repository.
+   *
+   * <p>Combines completed deployments (from GitHub webhook, matched by ref) with Helios
+   * deployments that are not yet linked to a Deployment record, sorted by timestamp descending.
+   *
+   * @param repositoryId The ID of the repository
+   * @param branchName The name of the branch (e.g. "main", "feature/foo")
+   * @return Combined list of {@link ActivityHistoryDto} for the branch, sorted by timestamp
+   *     descending
+   */
+  public List<ActivityHistoryDto> getActivityHistoryByRepositoryIdAndBranchName(
+      Long repositoryId, String branchName) {
+    List<ActivityHistoryDto> combined = new ArrayList<>();
+
+    List<ActivityHistoryDto> deploymentDtos =
+        deploymentRepository
+            .findByRepositoryRepositoryIdAndRefOrderByCreatedAtDesc(repositoryId, branchName)
+            .stream()
+            .map(ActivityHistoryDto::fromDeployment)
+            .toList();
+    combined.addAll(deploymentDtos);
+
+    List<ActivityHistoryDto> heliosDeploymentDtos =
+        heliosDeploymentRepository
+            .findByRepositoryIdAndBranchNameAndDeploymentIdIsNullOrderByCreatedAtDesc(
+                repositoryId, branchName)
+            .stream()
+            .map(ActivityHistoryDto::fromHeliosDeployment)
+            .toList();
+    combined.addAll(heliosDeploymentDtos);
+
+    return ActivityHistoryDto.sortActivityHistoryDtosByTimestampDesc(combined);
   }
 
   /**

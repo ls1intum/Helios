@@ -288,6 +288,10 @@ Other Application Server Settings
   Used for push-based status updates to Helios.
   *Used by:* ``application-server``.
 
+- ``HELIOS_DEVELOPERS_GITHUB_USERNAMES``
+    Comma-separated list of GitHub usernames that should have admin access to Helios.
+    *Used by:* ``application-server``.
+
 Runtime Containers
 ------------------
 

@@ -14,7 +14,11 @@
         </div>
       </div>
       <div class="flex items-center gap-2">
-        <h2 class="text-2xl" [innerHTML]="commit()?.message | markdown"></h2>
+        <h4 class="text-xl">Last commit:</h4>
+        <h4 [innerHTML]="commit()?.message | markdown"></h4>
+        @if (commit()?.sha) {
+          <h4 class="font-mono">({{ commit()!.sha.substring(0, 7) }})</h4>
+        }
       </div>
       <div class="block md:hidden">
         @if (isAtLeastMaintainer()) {
@@ -41,8 +45,25 @@
 
 <div class="flex flex-col gap-6">
   <app-pipeline [selector]="pipelineSelector()" />
+  <app-pipeline-test-results [selector]="pipelineSelector()" />
   @if (query.data(); as branch) {
-    <app-deployment-selection [sourceRef]="branch.name" [commitSha]="branch.commitSha" />
+    <div class="flex justify-center">
+      <p-divider class="w-full mt-4" />
+    </div>
+    <p-tabs [value]="deploymentTab()" (valueChange)="onDeploymentTabChange($event)">
+      <p-tablist>
+        <p-tab value="deploy">Deploy</p-tab>
+        <p-tab value="history">Deployment History</p-tab>
+      </p-tablist>
+      <p-tabpanels>
+        <p-tabpanel value="deploy">
+          <app-deployment-selection [branchName]="branch.name" [commitSha]="branch.commitSha" />
+        </p-tabpanel>
+        <p-tabpanel value="history">
+          <app-deployment-history [selector]="{ repositoryId: repositoryId(), branchName: branch.name }" />
+        </p-tabpanel>
+      </p-tabpanels>
+    </p-tabs>
   }
 </div>
 

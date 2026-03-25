@@ -159,6 +159,23 @@ export type NotificationPreferencesWrapper = {
   preferences?: Array<NotificationPreferenceDto>;
 };
 
+export type TestCaseIdentifier = {
+  testName: string;
+  className: string;
+};
+
+export type TestFlakinessScoreRequest = {
+  testCases: Array<TestCaseIdentifier>;
+};
+
+export type TestFlakinessScoreDto = {
+  testName: string;
+  className: string;
+  flakinessScore?: number;
+  defaultBranchFailureRate?: number;
+  combinedFailureRate?: number;
+};
+
 export type ReleaseCandidateCreateDto = {
   name: string;
   commitSha: string;
@@ -220,6 +237,7 @@ export type ReleaseDto = {
   isPrerelease: boolean;
   body: string;
   githubUrl: string;
+  creator?: UserInfoDto;
 };
 
 export type ReleaseInfoDetailsDto = {
@@ -232,6 +250,19 @@ export type ReleaseInfoDetailsDto = {
   createdBy?: UserInfoDto;
   createdAt: string;
   body?: string;
+};
+
+export type PullRequestStateReconciliationResultDto = {
+  dryRun?: boolean;
+  repositoryId?: number;
+  repositoryNameWithOwner?: string;
+  scannedCount?: number;
+  updatedCount?: number;
+  updatedPullRequestIds?: Array<number>;
+  updatedPullRequestNumbers?: Array<number>;
+  unchangedCount?: number;
+  errorCount?: number;
+  errors?: Array<string>;
 };
 
 export type PushStatusPayload = {
@@ -251,6 +282,14 @@ export type DeployRequest = {
 
 export type CancelDeploymentRequest = {
   workflowRunId: number;
+};
+
+export type PaginatedWorkflowRunsResponse = {
+  runs?: Array<WorkflowRunDto>;
+  page?: number;
+  size?: number;
+  totalElements?: number;
+  totalPages?: number;
 };
 
 export type WorkflowRunDto = {
@@ -278,6 +317,11 @@ export type WorkflowRunDto = {
   htmlUrl: string;
   label: 'NONE' | 'TEST';
   testProcessingStatus?: 'PROCESSING' | 'PROCESSED' | 'FAILED';
+  headBranch?: string;
+  headSha?: string;
+  runStartedAt?: string;
+  createdAt: string;
+  updatedAt: string;
 };
 
 export type GitHubRepositoryRoleDto = {
@@ -337,6 +381,31 @@ export type TestTypeStats = {
   skipped: number;
   totalTime: number;
   totalUpdates: number;
+};
+
+export type FlakyTestDto = {
+  testName: string;
+  className: string;
+  testSuiteName: string;
+  flakinessScore?: number;
+  defaultBranchFailureRate?: number;
+  combinedFailureRate?: number;
+  totalRuns?: number;
+  failedRuns?: number;
+  lastUpdated: string;
+};
+
+export type FlakyTestOverviewDto = {
+  summary: FlakyTestSummary;
+  flakyTests: Array<FlakyTestDto>;
+};
+
+export type FlakyTestSummary = {
+  totalTrackedTests?: number;
+  flakyTestCount?: number;
+  highFlakinessCount?: number;
+  mediumFlakinessCount?: number;
+  lowFlakinessCount?: number;
 };
 
 export type CommitsSinceReleaseCandidateDto = {
@@ -495,6 +564,7 @@ export type ActivityHistoryDto = {
   type?: string;
   id?: number;
   repository?: RepositoryInfoDto;
+  environmentName?: string;
   state?: 'PENDING' | 'WAITING' | 'SUCCESS' | 'ERROR' | 'FAILURE' | 'IN_PROGRESS' | 'QUEUED' | 'INACTIVE' | 'UNKNOWN';
   sha?: string;
   ref?: string;
@@ -867,6 +937,81 @@ export type ExtendEnvironmentLockResponses = {
 
 export type ExtendEnvironmentLockResponse = ExtendEnvironmentLockResponses[keyof ExtendEnvironmentLockResponses];
 
+export type ReRunWorkflowData = {
+  body?: never;
+  path: {
+    runId: number;
+  };
+  query?: never;
+  url: '/api/workflows/runs/{runId}/rerun';
+};
+
+export type ReRunWorkflowErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type ReRunWorkflowError = ReRunWorkflowErrors[keyof ReRunWorkflowErrors];
+
+export type ReRunWorkflowResponses = {
+  /**
+   * OK
+   */
+  200: unknown;
+};
+
+export type ReRunFailedJobsData = {
+  body?: never;
+  path: {
+    runId: number;
+  };
+  query?: never;
+  url: '/api/workflows/runs/{runId}/rerun-failed-jobs';
+};
+
+export type ReRunFailedJobsErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type ReRunFailedJobsError = ReRunFailedJobsErrors[keyof ReRunFailedJobsErrors];
+
+export type ReRunFailedJobsResponses = {
+  /**
+   * OK
+   */
+  200: unknown;
+};
+
+export type CancelWorkflowRunData = {
+  body?: never;
+  path: {
+    runId: number;
+  };
+  query?: never;
+  url: '/api/workflows/runs/{runId}/cancel';
+};
+
+export type CancelWorkflowRunErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type CancelWorkflowRunError = CancelWorkflowRunErrors[keyof CancelWorkflowRunErrors];
+
+export type CancelWorkflowRunResponses = {
+  /**
+   * OK
+   */
+  200: unknown;
+};
+
 export type SyncWorkflowsByRepositoryIdData = {
   body?: never;
   path: {
@@ -987,6 +1132,31 @@ export type UpdateNotificationPreferencesResponses = {
    */
   200: unknown;
 };
+
+export type GetFlakinessScoresData = {
+  body: TestFlakinessScoreRequest;
+  path?: never;
+  query?: never;
+  url: '/api/tests/flakiness-scores';
+};
+
+export type GetFlakinessScoresErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type GetFlakinessScoresError = GetFlakinessScoresErrors[keyof GetFlakinessScoresErrors];
+
+export type GetFlakinessScoresResponses = {
+  /**
+   * OK
+   */
+  200: Array<TestFlakinessScoreDto>;
+};
+
+export type GetFlakinessScoresResponse = GetFlakinessScoresResponses[keyof GetFlakinessScoresResponses];
 
 export type GetAllTestTypesData = {
   body?: never;
@@ -1290,6 +1460,35 @@ export type SetPrPinnedByNumberResponses = {
   200: unknown;
 };
 
+export type ReconcilePullRequestStateData = {
+  body?: never;
+  path: {
+    repositoryId: number;
+  };
+  query?: {
+    dryRun?: boolean;
+  };
+  url: '/api/pullrequests/repository/{repositoryId}/reconcile-state';
+};
+
+export type ReconcilePullRequestStateErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type ReconcilePullRequestStateError = ReconcilePullRequestStateErrors[keyof ReconcilePullRequestStateErrors];
+
+export type ReconcilePullRequestStateResponses = {
+  /**
+   * OK
+   */
+  200: PullRequestStateReconciliationResultDto;
+};
+
+export type ReconcilePullRequestStateResponse = ReconcilePullRequestStateResponses[keyof ReconcilePullRequestStateResponses];
+
 export type SyncEnvironmentsData = {
   body?: never;
   path?: never;
@@ -1522,6 +1721,65 @@ export type GetWorkflowsByStateResponses = {
 
 export type GetWorkflowsByStateResponse = GetWorkflowsByStateResponses[keyof GetWorkflowsByStateResponses];
 
+export type GetWorkflowRunsData = {
+  body?: never;
+  path?: never;
+  query?: {
+    page?: number;
+    size?: number;
+    sortField?: string;
+    sortDirection?: string;
+    filterType?: 'ALL' | 'NOT_STARTED' | 'IN_PROGRESS' | 'CANCELLED' | 'SUCCESS' | 'FAILURE' | 'ACTION_REQUIRED';
+    searchTerm?: string;
+  };
+  url: '/api/workflows/runs';
+};
+
+export type GetWorkflowRunsErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type GetWorkflowRunsError = GetWorkflowRunsErrors[keyof GetWorkflowRunsErrors];
+
+export type GetWorkflowRunsResponses = {
+  /**
+   * OK
+   */
+  200: PaginatedWorkflowRunsResponse;
+};
+
+export type GetWorkflowRunsResponse = GetWorkflowRunsResponses[keyof GetWorkflowRunsResponses];
+
+export type GetWorkflowRunByIdData = {
+  body?: never;
+  path: {
+    runId: number;
+  };
+  query?: never;
+  url: '/api/workflows/runs/{runId}';
+};
+
+export type GetWorkflowRunByIdErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type GetWorkflowRunByIdError = GetWorkflowRunByIdErrors[keyof GetWorkflowRunByIdErrors];
+
+export type GetWorkflowRunByIdResponses = {
+  /**
+   * OK
+   */
+  200: WorkflowRunDto;
+};
+
+export type GetWorkflowRunByIdResponse = GetWorkflowRunByIdResponses[keyof GetWorkflowRunByIdResponses];
+
 export type GetWorkflowsByRepositoryIdData = {
   body?: never;
   path: {
@@ -1630,6 +1888,38 @@ export type GetUserPermissionsResponses = {
 
 export type GetUserPermissionsResponse = GetUserPermissionsResponses[keyof GetUserPermissionsResponses];
 
+export type GetTestResultsByWorkflowRunIdData = {
+  body?: never;
+  path: {
+    workflowRunId: number;
+  };
+  query?: {
+    page?: number;
+    size?: number;
+    search?: string;
+    onlyFailed?: boolean;
+  };
+  url: '/api/tests/run/{workflowRunId}';
+};
+
+export type GetTestResultsByWorkflowRunIdErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type GetTestResultsByWorkflowRunIdError = GetTestResultsByWorkflowRunIdErrors[keyof GetTestResultsByWorkflowRunIdErrors];
+
+export type GetTestResultsByWorkflowRunIdResponses = {
+  /**
+   * OK
+   */
+  200: TestResultsDto;
+};
+
+export type GetTestResultsByWorkflowRunIdResponse = GetTestResultsByWorkflowRunIdResponses[keyof GetTestResultsByWorkflowRunIdResponses];
+
 export type GetLatestTestResultsByPullRequestIdData = {
   body?: never;
   path: {
@@ -1661,6 +1951,31 @@ export type GetLatestTestResultsByPullRequestIdResponses = {
 };
 
 export type GetLatestTestResultsByPullRequestIdResponse = GetLatestTestResultsByPullRequestIdResponses[keyof GetLatestTestResultsByPullRequestIdResponses];
+
+export type GetFlakyTestsOverviewData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/api/tests/flaky';
+};
+
+export type GetFlakyTestsOverviewErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type GetFlakyTestsOverviewError = GetFlakyTestsOverviewErrors[keyof GetFlakyTestsOverviewErrors];
+
+export type GetFlakyTestsOverviewResponses = {
+  /**
+   * OK
+   */
+  200: FlakyTestOverviewDto;
+};
+
+export type GetFlakyTestsOverviewResponse = GetFlakyTestsOverviewResponses[keyof GetFlakyTestsOverviewResponses];
 
 export type GetLatestTestResultsByBranchData = {
   body?: never;
@@ -2147,6 +2462,63 @@ export type GetWorkflowJobStatusResponses = {
 };
 
 export type GetWorkflowJobStatusResponse = GetWorkflowJobStatusResponses[keyof GetWorkflowJobStatusResponses];
+
+export type GetActivityHistoryByRepositoryIdAndBranchNameData = {
+  body?: never;
+  path: {
+    repositoryId: number;
+  };
+  query: {
+    branch: string;
+  };
+  url: '/api/deployments/repository/{repositoryId}/branch/activity-history';
+};
+
+export type GetActivityHistoryByRepositoryIdAndBranchNameErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type GetActivityHistoryByRepositoryIdAndBranchNameError = GetActivityHistoryByRepositoryIdAndBranchNameErrors[keyof GetActivityHistoryByRepositoryIdAndBranchNameErrors];
+
+export type GetActivityHistoryByRepositoryIdAndBranchNameResponses = {
+  /**
+   * OK
+   */
+  200: Array<ActivityHistoryDto>;
+};
+
+export type GetActivityHistoryByRepositoryIdAndBranchNameResponse =
+  GetActivityHistoryByRepositoryIdAndBranchNameResponses[keyof GetActivityHistoryByRepositoryIdAndBranchNameResponses];
+
+export type GetActivityHistoryByPullRequestIdData = {
+  body?: never;
+  path: {
+    pullRequestId: number;
+  };
+  query?: never;
+  url: '/api/deployments/pr/{pullRequestId}/activity-history';
+};
+
+export type GetActivityHistoryByPullRequestIdErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type GetActivityHistoryByPullRequestIdError = GetActivityHistoryByPullRequestIdErrors[keyof GetActivityHistoryByPullRequestIdErrors];
+
+export type GetActivityHistoryByPullRequestIdResponses = {
+  /**
+   * OK
+   */
+  200: Array<ActivityHistoryDto>;
+};
+
+export type GetActivityHistoryByPullRequestIdResponse = GetActivityHistoryByPullRequestIdResponses[keyof GetActivityHistoryByPullRequestIdResponses];
 
 export type GetDeploymentsByEnvironmentIdData = {
   body?: never;

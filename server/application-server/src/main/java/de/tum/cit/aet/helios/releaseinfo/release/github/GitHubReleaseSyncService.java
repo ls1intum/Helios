@@ -8,12 +8,14 @@ import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
 import de.tum.cit.aet.helios.releaseinfo.release.ReleaseRepository;
 import de.tum.cit.aet.helios.releaseinfo.releasecandidate.ReleaseCandidate;
 import de.tum.cit.aet.helios.releaseinfo.releasecandidate.ReleaseCandidateRepository;
+import de.tum.cit.aet.helios.user.User;
 import java.io.IOException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.kohsuke.github.GHRef;
 import org.kohsuke.github.GHRelease;
 import org.kohsuke.github.GHRepository;
+import org.kohsuke.github.GHTagObject;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,10 +40,24 @@ public class GitHubReleaseSyncService {
    */
   @Transactional
   public void processRelease(GHRelease ghRelease, GHRepository ghRepository) {
+    processRelease(ghRelease, ghRepository, null);
+  }
+
+  /**
+   * Processes a single GitHub release and stores the creator when the release is first seen.
+   *
+   * @param ghRelease the GitHub release to process
+   * @param ghRepository the repository that owns the release
+   * @param creator the creator to persist for newly created releases
+   */
+  @Transactional
+  public void processRelease(GHRelease ghRelease, GHRepository ghRepository, User creator) {
     var repository = gitRepoRepository.findByNameWithOwner(ghRepository.getFullName());
+    var existingRelease = releaseRepository.findById(ghRelease.getId());
+    boolean isNewRelease = existingRelease.isEmpty();
     var result =
-        releaseRepository
-            .findById(ghRelease.getId())
+        existingRelease
+            .map(release -> releaseConverter.update(ghRelease, release))
             .orElseGet(() -> releaseConverter.convert(ghRelease));
 
     if (result == null) {
@@ -49,6 +65,9 @@ public class GitHubReleaseSyncService {
     }
 
     result.setRepository(repository);
+    if (isNewRelease && creator != null) {
+      result.setCreator(creator);
+    }
 
     releaseRepository.saveAndFlush(result);
 
@@ -63,19 +82,23 @@ public class GitHubReleaseSyncService {
         .orElseGet(
             () -> {
               try {
-                GHRepository currentRepository = gitHubService
-                    .getRepository(ghRepository.getFullName());
-                final GHRef ref = currentRepository.getRef("tags/" + ghRelease.getTagName());
+                GHRepository currentRepository =
+                    gitHubService.getRepository(ghRepository.getFullName());
+                final String commitSha =
+                    resolveCommitShaForTag(currentRepository, ghRelease.getTagName());
+
+                if (commitSha == null) {
+                  return null;
+                }
+
                 final Commit commit =
                     commitRepository
-                        .findByShaAndRepositoryRepositoryId(
-                            ref.getObject().getSha(), repository.getRepositoryId())
+                        .findByShaAndRepositoryRepositoryId(commitSha, repository.getRepositoryId())
                         .orElseGet(
                             () -> {
                               try {
                                 return commitSyncService.processCommit(
-                                  currentRepository
-                                      .getCommit(ref.getObject().getSha()), ghRepository);
+                                    currentRepository.getCommit(commitSha), ghRepository);
                               } catch (IOException e) {
                                 log.error(
                                     "Failed to get commit for release candidate {}: {}",
@@ -84,6 +107,13 @@ public class GitHubReleaseSyncService {
                                 return null;
                               }
                             });
+
+                if (commit == null) {
+                  log.error(
+                      "Skipping release candidate {} because no commit could be resolved",
+                      ghRelease.getTagName());
+                  return null;
+                }
 
                 ReleaseCandidate releaseCandidate = new ReleaseCandidate();
                 releaseCandidate.setRepository(repository);
@@ -101,5 +131,31 @@ public class GitHubReleaseSyncService {
                 return null;
               }
             });
+  }
+
+  private String resolveCommitShaForTag(GHRepository repository, String tagName)
+      throws IOException {
+    GHRef.GHObject object = repository.getRef("tags/" + tagName).getObject();
+
+    // Release tags can be lightweight (points directly to commit) or annotated (points to tag
+    // object). Follow tag objects until we reach the underlying commit.
+    for (int depth = 0; depth < 5; depth++) {
+      if ("commit".equals(object.getType())) {
+        return object.getSha();
+      }
+      if (!"tag".equals(object.getType())) {
+        log.error(
+            "Unsupported tag object type '{}' for release candidate {}",
+            object.getType(),
+            tagName);
+        return null;
+      }
+      GHTagObject tagObject = repository.getTagObject(object.getSha());
+      object = tagObject.getObject();
+    }
+
+    log.error(
+        "Failed to resolve commit for release candidate {} due to excessive tag depth", tagName);
+    return null;
   }
 }

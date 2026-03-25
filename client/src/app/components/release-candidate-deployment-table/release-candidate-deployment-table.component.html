@@ -82,6 +82,7 @@
         <app-deploy-confirmation
           [(isVisible)]="deployDialogVisible"
           [environment]="this.selectedEnvironment()!"
+          [sourceRef]="deploySourceRef()"
           (confirmed)="onDeployReleaseCandidateConfirmed($event)"
         ></app-deploy-confirmation>
       }

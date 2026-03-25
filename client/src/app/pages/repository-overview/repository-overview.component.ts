@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { PageHeadingComponent } from '@app/components/page-heading/page-heading.component';
 import { RepositoryInfoDto } from '@app/core/modules/openapi';
@@ -38,9 +38,12 @@ import {
 } from 'angular-tabler-icons/icons';
 import { DialogModule } from 'primeng/dialog';
 import { CarouselModule, CarouselPageEvent } from 'primeng/carousel';
+import { DataViewPageEvent } from 'primeng/dataview';
 import { connectionSteps } from './connection-steps';
 
 const FILTER_OPTIONS = [{ name: 'All repositories', filter: (repos: RepositoryInfoDto[]) => repos }];
+const DEFAULT_REPOSITORY_ROWS = 12;
+const ROWS_PER_PAGE_OPTIONS = [6, 12, 24, 48];
 
 @Component({
   selector: 'app-repository-overview',
@@ -92,6 +95,10 @@ export class RepositoryOverviewComponent {
   connectionSteps = connectionSteps;
   addRepositoryDialogVisible = signal(false);
   currentStep = signal(0);
+  rows = signal(DEFAULT_REPOSITORY_ROWS);
+  first = signal(0);
+  skeletonItems = computed(() => Array.from({ length: this.rows() }, (_, index) => index));
+  readonly rowsPerPageOptions = ROWS_PER_PAGE_OPTIONS;
 
   query = injectQuery(() => getAllRepositoriesOptions());
 
@@ -122,6 +129,20 @@ export class RepositoryOverviewComponent {
     console.log('Page changed:', event.page);
     this.currentStep.set(event.page || 0);
   }
+
+  onRepositoryPageChange(event: DataViewPageEvent): void {
+    if (event.rows <= 0) {
+      return;
+    }
+
+    this.rows.set(event.rows);
+    this.first.set(event.first);
+  }
+
+  onRepositoryFilterInput(): void {
+    this.first.set(0);
+  }
+
   openExternalLink(url: string): void {
     window.open(url, '_blank');
   }
@@ -135,6 +156,10 @@ export class RepositoryOverviewComponent {
   }
 
   navigateToPullRequests(repository: RepositoryInfoDto) {
+    this.router.navigate(['repo', repository.id.toString(), 'ci-cd', 'pr']);
+  }
+
+  navigateToWorkflowRuns(repository: RepositoryInfoDto) {
     this.router.navigate(['repo', repository.id.toString(), 'ci-cd', 'pr']);
   }
 

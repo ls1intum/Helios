@@ -1,10 +1,17 @@
 package de.tum.cit.aet.helios.tests;
 
+import static de.tum.cit.aet.helios.tests.FlakyTestOverviewDto.FlakyTestSummary.buildSummary;
+
+import de.tum.cit.aet.helios.branch.BranchRepository;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import jakarta.transaction.Transactional;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
@@ -16,6 +23,7 @@ import org.springframework.stereotype.Service;
 public class TestCaseStatisticsService {
 
   private final TestCaseStatisticsRepository statisticsRepository;
+  private final BranchRepository branchRepository;
   private static final double DEFAULT_BRANCH_WEIGHT = 0.7;
   private static final double COMBINED_BRANCH_WEIGHT = 0.3;
   private static final double MIN_FLAKY_RATE = 0.01; // 1%
@@ -115,6 +123,134 @@ public class TestCaseStatisticsService {
    */
   public List<TestCaseStatistics> getStatisticsForBranch(String branchName, Long repositoryId) {
     return statisticsRepository.findByBranchNameAndRepositoryRepositoryId(branchName, repositoryId);
+  }
+
+  /**
+   * Returns flakiness scores for the requested test cases identified by testName + className.
+   * Matches against accumulated default-branch and combined-branch statistics.
+   *
+   * @param repositoryId the repository ID
+   * @param testIdentifiers the list of test case identifiers to look up
+   * @return matching flakiness scores
+   */
+  public List<TestFlakinessScoreDto> getFlakinessScoresForTests(
+      Long repositoryId, List<TestFlakinessScoreRequest.TestCaseIdentifier> testIdentifiers) {
+    String defaultBranchName = getDefaultBranchName(repositoryId);
+    List<TestCaseStatistics> defaultBranchStats =
+        getStatisticsForBranch(defaultBranchName, repositoryId);
+    List<TestCaseStatistics> combinedStats = getStatisticsForBranch("combined", repositoryId);
+
+    return testIdentifiers.stream()
+        .map(identifier -> {
+          FlakinessInfo info = computeFlakinessInfo(
+              identifier.testName(), identifier.className(), defaultBranchStats, combinedStats);
+          return new TestFlakinessScoreDto(
+              identifier.testName(), identifier.className(),
+              info.flakinessScore(), info.defaultBranchFailureRate(), info.combinedFailureRate());
+        })
+        .toList();
+  }
+
+  /**
+   * Builds a project-wide overview of all flaky tests for a repository.
+   *
+   * @param repositoryId the repository ID
+   * @return aggregated flaky test overview
+   */
+  public FlakyTestOverviewDto getFlakyTestsOverview(Long repositoryId) {
+    String defaultBranchName = getDefaultBranchName(repositoryId);
+    List<TestCaseStatistics> defaultBranchStats =
+        getStatisticsForBranch(defaultBranchName, repositoryId);
+    List<TestCaseStatistics> combinedStats = getStatisticsForBranch("combined", repositoryId);
+
+    Set<TestCaseStatistics> matchedDefaults = new HashSet<>();
+    List<FlakyTestOverviewDto.FlakyTestDto> flakyTests = new ArrayList<>();
+
+    for (TestCaseStatistics combined : combinedStats) {
+      findMatchingStatistic(combined, defaultBranchStats).ifPresent(matchedDefaults::add);
+
+      FlakinessInfo info = computeFlakinessInfo(
+          combined.getTestName(), combined.getClassName(), defaultBranchStats, combinedStats);
+      if (info.flakinessScore() > 0) {
+        flakyTests.add(FlakyTestOverviewDto.FlakyTestDto.from(combined, info));
+      }
+    }
+
+    for (TestCaseStatistics defaultStat : defaultBranchStats) {
+      if (matchedDefaults.contains(defaultStat)) {
+        continue;
+      }
+      FlakinessInfo info = computeFlakinessInfo(
+          defaultStat.getTestName(), defaultStat.getClassName(), defaultBranchStats, combinedStats);
+      if (info.flakinessScore() > 0) {
+        flakyTests.add(FlakyTestOverviewDto.FlakyTestDto.from(defaultStat, info));
+      }
+    }
+
+    flakyTests.sort(
+        Comparator.comparingDouble(FlakyTestOverviewDto.FlakyTestDto::flakinessScore).reversed());
+
+    int totalTrackedTests =
+        combinedStats.size() + defaultBranchStats.size() - matchedDefaults.size();
+    return new FlakyTestOverviewDto(buildSummary(totalTrackedTests, flakyTests), flakyTests);
+  }
+
+  private String getDefaultBranchName(Long repositoryId) {
+    return branchRepository
+        .findFirstByRepositoryRepositoryIdAndIsDefaultTrue(repositoryId)
+        .orElseThrow()
+        .getName();
+  }
+
+  private static Optional<TestCaseStatistics> findMatchingStatistic(
+      TestCaseStatistics target, List<TestCaseStatistics> stats) {
+    return stats.stream()
+        .filter(s -> s.getTestName().equals(target.getTestName())
+            && s.getClassName().equals(target.getClassName())
+            && s.getTestSuiteName().equals(target.getTestSuiteName()))
+        .findFirst();
+  }
+
+  /** Holds computed flakiness information for a single test case. */
+  public record FlakinessInfo(
+      double flakinessScore,
+      double defaultBranchFailureRate,
+      double combinedFailureRate
+  ) {}
+
+  /**
+   * Computes flakiness information for a single test case from pre-fetched statistics lists.
+   * This is the shared core logic.
+   * Each caller pre-fetches the two stat lists (default branch + combined),
+   * then delegates the per-test-case score computation here.
+   *
+   * @param testName the test name to look up
+   * @param className the class name to look up
+   * @param defaultBranchStats statistics for the default branch
+   * @param combinedStats statistics for the "combined" pseudo-branch
+   * @return computed flakiness info
+   */
+  public FlakinessInfo computeFlakinessInfo(
+      String testName,
+      String className,
+      List<TestCaseStatistics> defaultBranchStats,
+      List<TestCaseStatistics> combinedStats) {
+    double defaultFailureRate =
+        defaultBranchStats.stream()
+            .filter(s -> s.getTestName().equals(testName) && s.getClassName().equals(className))
+            .findFirst()
+            .map(TestCaseStatistics::getFailureRate)
+            .orElse(0.0);
+
+    double combinedFailureRate =
+        combinedStats.stream()
+            .filter(s -> s.getTestName().equals(testName) && s.getClassName().equals(className))
+            .findFirst()
+            .map(TestCaseStatistics::getFailureRate)
+            .orElse(0.0);
+
+    double flakinessScore = calculateFlakinessScore(defaultFailureRate, combinedFailureRate);
+    return new FlakinessInfo(flakinessScore, defaultFailureRate, combinedFailureRate);
   }
 
   /**
