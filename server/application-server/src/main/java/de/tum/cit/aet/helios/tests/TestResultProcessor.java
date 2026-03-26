@@ -289,6 +289,9 @@ public class TestResultProcessor {
           "combined",
           repository.get()); // update statistics for all the branches combined
       log.debug("Successfully updated test statistics for all branches combined");
+
+      updateFlakinessScores(testSuites, defaultBranch, repository.get());
+      log.debug("Successfully recomputed flakiness scores for affected tests");
     } catch (Exception e) {
       log.error("Error while trying to update test statistics", e);
       // Don't fail the overall process if statistics update fails
@@ -312,6 +315,29 @@ public class TestResultProcessor {
     } catch (Exception e) {
       log.error("Failed to update test statistics for branch: {}", branchName, e);
       // Don't fail the overall process if statistics update fails
+    }
+  }
+
+  /**
+   * Recomputes and persists flakiness scores for all tests belonging to the given suites.
+   * Called after both the default-branch and combined statistics have been updated for a run.
+   * Only fetches stats rows for the suite names present in the current run, keeping
+   * the query bounded.
+   *
+   * @param testSuites the suites processed in this run
+   * @param defaultBranchName the repository's default branch name
+   * @param repository the repository
+   */
+  public void updateFlakinessScores(
+      List<TestSuite> testSuites, String defaultBranchName, GitRepository repository) {
+    try {
+      statisticsService.updateFlakinessForTestSuite(testSuites, defaultBranchName, repository);
+      log.debug("Successfully updated flakiness info for repository: {}",
+          repository.getRepositoryId());
+    } catch (Exception e) {
+      log.error("Failed to update flakiness info for repository: {}",
+          repository.getRepositoryId(), e);
+      // Don't fail the overall process if flakiness update fails
     }
   }
 }

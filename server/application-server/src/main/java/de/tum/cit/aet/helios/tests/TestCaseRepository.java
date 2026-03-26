@@ -11,7 +11,7 @@ import org.springframework.stereotype.Repository;
 public interface TestCaseRepository extends JpaRepository<TestCase, Long> {
   @Query(
       "SELECT tc FROM TestCase tc "
-          + "JOIN tc.testSuite ts "
+          + "JOIN FETCH tc.testSuite ts "
           + "WHERE ts.workflowRun.id = :workflowRunId "
           + "AND ts.name IN :classNames "
           + "AND ts.testType.id = :testTypeId")
@@ -22,7 +22,7 @@ public interface TestCaseRepository extends JpaRepository<TestCase, Long> {
 
   @Query(
       "SELECT tc FROM TestCase tc "
-          + "JOIN tc.testSuite ts "
+          + "JOIN FETCH tc.testSuite ts "
           + "WHERE ts.workflowRun.id = :workflowRunId "
           + "AND ts.name IN :classNames "
           + "AND ts.testType.id = :testTypeId "

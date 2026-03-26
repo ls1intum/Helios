@@ -1,105 +1,87 @@
-import { Component, computed, input, numberAttribute, signal } from '@angular/core';
+import { Component, computed, inject, input, numberAttribute, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { TableModule } from 'primeng/table';
+import { Table, TableModule, TablePageEvent } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
-import { InputTextModule } from 'primeng/inputtext';
 import { ButtonModule } from 'primeng/button';
 import { SkeletonModule } from 'primeng/skeleton';
-import { PaginatorModule, PaginatorState } from 'primeng/paginator';
 import { PageHeadingComponent } from '@app/components/page-heading/page-heading.component';
 import { injectQuery } from '@tanstack/angular-query-experimental';
 import { getFlakyTestsOverviewOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
-import { IconAlertTriangle, IconBug, IconSearch } from 'angular-tabler-icons/icons';
+import { IconAlertTriangle, IconBug } from 'angular-tabler-icons/icons';
+import { PAGINATED_FILTER_OPTIONS_TOKEN, PAGINATION_STORAGE_KEY_TOKEN, PaginatedFilterOption, PaginatedTableService } from '@app/core/services/paginated-table.service';
+import { TableFilterPaginatedComponent } from '@app/components/table-filter-paginated/table-filter-paginated.component';
+import { SortMeta } from 'primeng/api';
+import { FlakyTestDto } from '@app/core/modules/openapi';
 
-type SeverityFilter = 'all' | 'high' | 'medium' | 'low';
+function createFlakinessFilterOptions(): PaginatedFilterOption[] {
+  return [
+    { name: 'All', value: 'ALL' },
+    { name: 'High (> 70)', value: 'HIGH' },
+    { name: 'Medium (30 – 70)', value: 'MEDIUM' },
+    { name: 'Low (1 – 30)', value: 'LOW' },
+  ];
+}
 
 @Component({
   selector: 'app-flaky-tests-overview',
-  imports: [
-    CommonModule,
-    FormsModule,
-    TableModule,
-    TagModule,
-    TooltipModule,
-    InputTextModule,
-    ButtonModule,
-    SkeletonModule,
-    PaginatorModule,
-    PageHeadingComponent,
-    TablerIconComponent,
-  ],
+  imports: [CommonModule, TableModule, TagModule, TooltipModule, ButtonModule, SkeletonModule, PageHeadingComponent, TablerIconComponent, TableFilterPaginatedComponent],
   providers: [
-    provideTablerIcons({
-      IconBug,
-      IconAlertTriangle,
-      IconSearch,
-    }),
+    PaginatedTableService,
+    { provide: PAGINATED_FILTER_OPTIONS_TOKEN, useFactory: createFlakinessFilterOptions },
+    { provide: PAGINATION_STORAGE_KEY_TOKEN, useValue: 'flakyTestsPaginationState' },
+    provideTablerIcons({ IconBug, IconAlertTriangle }),
   ],
   templateUrl: './flaky-tests-overview.component.html',
 })
 export class FlakyTestsOverviewComponent {
+  @ViewChild('table') table!: Table;
+  @ViewChild(TableFilterPaginatedComponent) filterComponent!: TableFilterPaginatedComponent;
+
   repositoryId = input.required({ transform: numberAttribute });
 
-  currentPage = signal(0);
-  pageSize = signal(10);
-  searchTerm = signal('');
-  severityFilter = signal<SeverityFilter>('all');
+  paginationService = inject(PaginatedTableService);
 
-  private searchDebounceTimer: ReturnType<typeof setTimeout> | null = null;
-  debouncedSearch = signal('');
-
-  flakyTestsQuery = injectQuery(() => getFlakyTestsOverviewOptions());
-
-  filteredFlakyTests = computed(() => {
-    const data = this.flakyTestsQuery.data()?.flakyTests ?? [];
-    const search = this.debouncedSearch().toLowerCase();
-    const severity = this.severityFilter();
-
-    let filtered = data;
-    if (search) {
-      filtered = filtered.filter(t => t.testName.toLowerCase().includes(search) || t.className.toLowerCase().includes(search) || t.testSuiteName.toLowerCase().includes(search));
-    }
-    if (severity !== 'all') {
-      filtered = filtered.filter(t => {
-        const score = t.flakinessScore ?? 0;
-        if (severity === 'high') return score > 70;
-        if (severity === 'medium') return score > 30 && score <= 70;
-        return score <= 30;
-      });
-    }
-    return filtered;
+  queryOptions = computed(() => {
+    const state = this.paginationService.paginationState();
+    const filterType = state.filterType as 'ALL' | 'HIGH' | 'MEDIUM' | 'LOW' | undefined;
+    return getFlakyTestsOverviewOptions({
+      query: {
+        page: state.page,
+        size: state.size,
+        sortDirection: state.sortDirection,
+        filterType,
+        searchTerm: state.searchTerm,
+      },
+    });
   });
 
-  paginatedFlakyTests = computed(() => {
-    const filtered = this.filteredFlakyTests();
-    const start = this.currentPage() * this.pageSize();
-    return filtered.slice(start, start + this.pageSize());
-  });
+  query = injectQuery(() => this.queryOptions());
 
-  totalRecords = computed(() => this.filteredFlakyTests().length);
-
-  onSearchChange(value: string) {
-    this.searchTerm.set(value);
-    if (this.searchDebounceTimer) {
-      clearTimeout(this.searchDebounceTimer);
-    }
-    this.searchDebounceTimer = setTimeout(() => {
-      this.debouncedSearch.set(value);
-      this.currentPage.set(0);
-    }, 300);
+  get typedPaginationService() {
+    return this.paginationService as PaginatedTableService;
   }
 
-  onPageChange(event: PaginatorState) {
-    this.currentPage.set(event.page ?? 0);
-    this.pageSize.set(event.rows ?? 10);
+  flakyTests(): FlakyTestDto[] {
+    return this.query.data()?.flakyTests ?? [];
   }
 
-  setSeverityFilter(filter: SeverityFilter) {
-    this.severityFilter.set(filter);
-    this.currentPage.set(0);
+  totalElements(): number {
+    return this.query.data()?.filteredCount ?? 0;
+  }
+
+  onPage(event: TablePageEvent) {
+    this.paginationService.onPage(event);
+  }
+
+  onSort(event: SortMeta) {
+    this.paginationService.onSort(event);
+  }
+
+  clearFilters() {
+    this.filterComponent.clearSearch();
+    this.paginationService.clearFilters();
   }
 
   getSeverityTag(score: number): { label: string; severity: 'danger' | 'warn' | 'info' } {
