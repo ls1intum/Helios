@@ -29,19 +29,7 @@ import { HighlightPipe } from '@app/pipes/highlight.pipe';
 import { MessageService } from 'primeng/api';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
-import {
-  IconExternalLink,
-  IconFilterPlus,
-  IconGitBranch,
-  IconGitCommit,
-  IconPinned,
-  IconPinnedOff,
-  IconShieldHalf,
-  IconBrandGithub,
-  IconChevronUp,
-  IconChevronDown,
-} from 'angular-tabler-icons/icons';
-import { Select } from 'primeng/select';
+import { IconExternalLink, IconFilterPlus, IconGitBranch, IconGitCommit, IconPinned, IconPinnedOff, IconShieldHalf, IconBrandGithub } from 'angular-tabler-icons/icons';
 
 export type BranchInfoWithLink = BranchInfoDto & { link: string; lastCommitLink: string };
 
@@ -121,7 +109,6 @@ export function createBranchFilterOptions(keycloakService: KeycloakService): Fil
     FormsModule,
     WorkflowRunStatusComponent,
     HighlightPipe,
-    Select,
   ],
   providers: [
     SearchTableService,
@@ -135,8 +122,6 @@ export function createBranchFilterOptions(keycloakService: KeycloakService): Fil
       IconExternalLink,
       IconGitCommit,
       IconGitBranch,
-      IconChevronUp,
-      IconChevronDown,
     }),
   ],
   templateUrl: './branches-table.component.html',
@@ -165,15 +150,15 @@ export class BranchTableComponent {
   );
   query = injectQuery(() => this.queryOptions());
 
-  onSortFieldChange(newValue: string | undefined): void {
-    this.sortField.set(newValue);
+  onSort(event: { field?: string; order?: number }): void {
+    if (event.field) {
+      this.sortField.set(event.field);
+    }
+    if (event.order !== undefined) {
+      this.sortDirection.set(event.order === 1 ? 'asc' : 'desc');
+    }
   }
-  toggleSortDirection(): void {
-    this.sortDirection.update(direction => (direction === 'asc' ? 'desc' : 'asc'));
-  }
-  sortDirectionIcon(): string {
-    return this.sortDirection() === 'asc' ? 'chevron-up' : 'chevron-down';
-  }
+
   setPinnedMutation = injectMutation(() => ({
     ...setBranchPinnedByRepositoryIdAndNameAndUserIdMutation(),
     onSuccess: () => {

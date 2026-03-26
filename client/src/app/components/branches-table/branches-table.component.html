@@ -26,31 +26,34 @@
   </p-table>
 } @else {
   <div class="flex flex-wrap gap-2 justify-end m-2 items-center">
-    <label class="text-base font-semibold text-surface-600 dark:text-surface-200">Sort branches</label>
-    <p-select
-      [(ngModel)]="sortField"
-      (ngModelChange)="onSortFieldChange($event)"
-      [options]="[
-        { label: 'Name', value: 'name' },
-        { label: 'Updated At', value: 'updatedAt' },
-      ]"
-      placeholder="Sort Field"
-      class="w-44"
-    ></p-select>
-    <p-button type="button" text (click)="toggleSortDirection()" [pTooltip]="sortDirection() === 'asc' ? 'Ascending' : 'Descending'" tooltipPosition="top">
-      <i-tabler [name]="sortDirectionIcon()" class="!size-5" />
-    </p-button>
     <p-button (click)="expandAll()" label="Expand All" />
     <p-button (click)="collapseAll()" label="Collapse All" />
   </div>
   <!-- Branches Tree Table -->
-  <p-treetable #table [value]="featureBranchesTree()" [globalFilterFields]="globalFilterFields" [scrollable]="true" styleClass="p-treetable-sm">
+  <p-treetable
+    #table
+    [value]="featureBranchesTree()"
+    [globalFilterFields]="globalFilterFields"
+    [scrollable]="true"
+    styleClass="p-treetable-sm"
+    [customSort]="true"
+    (sortFunction)="onSort($event)"
+    [sortField]="sortField()"
+    [sortOrder]="sortDirection() === 'asc' ? 1 : -1"
+  >
     <ng-template pTemplate="header">
       <tr>
-        <th>
-          <app-table-filter [input]="table" [searchTableService]="searchTableService" />
+        <th [ttSortableColumn]="'name'" class="cursor-pointer">
+          <div class="flex items-center gap-2">
+            <div (click)="$event.stopPropagation()">
+              <app-table-filter [input]="table" [searchTableService]="searchTableService" />
+            </div>
+            <div class="flex items-center gap-1 flex-shrink-0">Name <p-treeTableSortIcon [field]="'name'" /></div>
+          </div>
         </th>
-        <th class="hidden lg:table-cell">Last Update</th>
+        <th [ttSortableColumn]="'updatedAt'" class="hidden lg:table-cell cursor-pointer">
+          <div class="flex items-center gap-1">Last Update <p-treeTableSortIcon [field]="'updatedAt'" /></div>
+        </th>
         <th class="text-center w-36 hidden lg:table-cell">Behind | Ahead</th>
         <th class="w-40 hidden lg:table-cell">Head</th>
       </tr>
