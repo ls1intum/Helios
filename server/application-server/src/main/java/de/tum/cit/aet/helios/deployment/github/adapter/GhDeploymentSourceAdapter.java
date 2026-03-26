@@ -12,6 +12,7 @@ public class GhDeploymentSourceAdapter implements DeploymentSource {
 
   private final GHDeployment ghDeployment;
   private final Deployment.State state;
+  private final Long workflowRunId;
 
   @Override
   public Long getId() {
@@ -81,5 +82,10 @@ public class GhDeploymentSourceAdapter implements DeploymentSource {
   @Override
   public OffsetDateTime getUpdatedAt() throws IOException {
     return ghDeployment.getUpdatedAt().toInstant().atOffset(OffsetDateTime.now().getOffset());
+  }
+
+  @Override
+  public Long getWorkflowRunId() {
+    return workflowRunId;
   }
 }

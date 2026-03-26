@@ -27,6 +27,7 @@ public class DeploymentConverter implements Converter<DeploymentSource, Deployme
     deployment.setTask(source.getTask());
     deployment.setEnvironmentName(source.getEnvironment());
     deployment.setRepositoryUrl(source.getRepositoryUrl());
+    deployment.setWorkflowRunId(source.getWorkflowRunId());
     try {
       deployment.setCreatedAt(source.getCreatedAt());
     } catch (IOException e) {
