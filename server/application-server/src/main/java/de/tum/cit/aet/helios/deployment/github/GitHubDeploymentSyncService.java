@@ -75,27 +75,45 @@ public class GitHubDeploymentSyncService {
         "Updating Helios Deployment for environment {} and branch {}",
         environment.getName(),
         deployment.getRef());
-    // Linking to HeliosDeployment
-    Optional<HeliosDeployment> maybeHeliosDeployment =
-        heliosDeploymentRepository.findTopByEnvironmentAndBranchNameOrderByCreatedAtDesc(
-            environment, deployment.getRef());
-    if (maybeHeliosDeployment.isPresent()) {
-      HeliosDeployment heliosDeployment = maybeHeliosDeployment.get();
 
-      // Only update if it isn't already set
+    // Try exact match by workflowRunId first (available from webhook payloads).
+    // The REST deployments API does not expose workflow_run_id, so REST-synced deployments
+    // always fall through to the env+branch heuristic.
+    // Skip any HeliosDeployment that already has a different workflowRunId — that belongs to
+    // a different run.
+    Optional<HeliosDeployment> maybeHeliosDeployment = Optional.empty();
+
+    if (deployment.getWorkflowRunId() != null) {
+      maybeHeliosDeployment =
+          heliosDeploymentRepository.findByWorkflowRunId(deployment.getWorkflowRunId());
+    }
+
+    if (maybeHeliosDeployment.isEmpty()) {
+      maybeHeliosDeployment =
+          heliosDeploymentRepository
+              .findTopByEnvironmentAndBranchNameOrderByCreatedAtDesc(
+                  environment, deployment.getRef())
+              .filter(
+                  hd ->
+                      hd.getWorkflowRunId() == null
+                          || (deployment.getWorkflowRunId() != null
+                              && hd.getWorkflowRunId().equals(deployment.getWorkflowRunId())));
+    }
+
+    maybeHeliosDeployment.ifPresent(heliosDeployment -> {
       if (heliosDeployment.getDeploymentId() == null) {
         heliosDeployment.setDeploymentId(deployment.getId());
-        heliosDeployment.setStatus(
-            HeliosDeployment.mapDeploymentStateToHeliosStatus(deployment.getState()));
-        if (deployment
-            .getUpdatedAt()
-            .toInstant()
-            .isAfter(heliosDeployment.getUpdatedAt().toInstant())) {
-          heliosDeployment.setUpdatedAt(deployment.getUpdatedAt());
-        }
-        heliosDeploymentRepository.save(heliosDeployment);
-        log.info("Helios Deployment updated");
       }
-    }
+      heliosDeployment.setStatus(
+          HeliosDeployment.mapDeploymentStateToHeliosStatus(deployment.getState()));
+      if (deployment
+          .getUpdatedAt()
+          .toInstant()
+          .isAfter(heliosDeployment.getUpdatedAt().toInstant())) {
+        heliosDeployment.setUpdatedAt(deployment.getUpdatedAt());
+      }
+      heliosDeploymentRepository.save(heliosDeployment);
+      log.info("Helios Deployment updated");
+    });
   }
 }

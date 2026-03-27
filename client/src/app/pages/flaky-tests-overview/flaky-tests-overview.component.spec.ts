@@ -1,7 +1,12 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FlakyTestsOverviewComponent } from './flaky-tests-overview.component';
-import { importProvidersFrom, signal } from '@angular/core';
+import { importProvidersFrom } from '@angular/core';
 import { TestModule } from '@app/test.module';
+import { SortMeta } from 'primeng/api';
+import { TablePageEvent } from 'primeng/table';
+import { expect, vi } from 'vitest';
+
+import type { FlakyTestOverviewDto, GetFlakyTestsOverviewData } from '@app/core/modules/openapi';
 
 const mockFlakyTests = [
   {
@@ -11,8 +16,6 @@ const mockFlakyTests = [
     flakinessScore: 85,
     defaultBranchFailureRate: 0.03,
     combinedFailureRate: 0.05,
-    totalRuns: 320,
-    failedRuns: 12,
     lastUpdated: '2025-03-10T12:00:00Z',
   },
   {
@@ -22,8 +25,6 @@ const mockFlakyTests = [
     flakinessScore: 45,
     defaultBranchFailureRate: 0.04,
     combinedFailureRate: 0.07,
-    totalRuns: 280,
-    failedRuns: 16,
     lastUpdated: '2025-03-10T11:00:00Z',
   },
   {
@@ -33,23 +34,32 @@ const mockFlakyTests = [
     flakinessScore: 15,
     defaultBranchFailureRate: 0.01,
     combinedFailureRate: 0.02,
-    totalRuns: 500,
-    failedRuns: 5,
     lastUpdated: '2025-03-10T10:00:00Z',
   },
 ];
 
-const mockOverview = {
+const mockOverview: FlakyTestOverviewDto = {
   summary: {
     totalTrackedTests: 10,
     flakyTestCount: 3,
-    averageFlakinessScore: 48.3,
     highFlakinessCount: 1,
     mediumFlakinessCount: 1,
     lowFlakinessCount: 1,
   },
   flakyTests: mockFlakyTests,
+  filteredCount: 3,
 };
+
+function setMockQuery(component: FlakyTestsOverviewComponent, data: FlakyTestOverviewDto | undefined = mockOverview, options: { isPending?: boolean; isError?: boolean } = {}) {
+  Object.defineProperty(component, 'query', {
+    configurable: true,
+    value: {
+      data: () => data,
+      isPending: () => options.isPending ?? false,
+      isError: () => options.isError ?? false,
+    },
+  });
+}
 
 describe('FlakyTestsOverviewComponent', () => {
   let component: FlakyTestsOverviewComponent;
@@ -65,14 +75,7 @@ describe('FlakyTestsOverviewComponent', () => {
     component = fixture.componentInstance;
 
     fixture.componentRef.setInput('repositoryId', 1);
-
-    // Mock query for testing
-    component.flakyTestsQuery = {
-      ...component.flakyTestsQuery,
-      data: signal(mockOverview),
-      isPending: signal(false),
-      isError: signal(false),
-    } as unknown as typeof component.flakyTestsQuery;
+    setMockQuery(component);
 
     fixture.detectChanges();
     await fixture.whenStable();
@@ -82,9 +85,10 @@ describe('FlakyTestsOverviewComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should display summary from query data', () => {
-    expect(component.flakyTestsQuery.data()).toEqual(mockOverview);
-    expect(component.filteredFlakyTests().length).toBe(3);
+  it('should expose flaky tests from query data', () => {
+    expect(component.query.data()).toEqual(mockOverview);
+    expect(component.flakyTests().length).toBe(3);
+    expect(component.totalElements()).toBe(3);
   });
 
   describe('getSeverityTag', () => {
@@ -113,69 +117,104 @@ describe('FlakyTestsOverviewComponent', () => {
     });
   });
 
-  describe('filtering', () => {
-    it('should filter by search term (test name)', () => {
-      component.debouncedSearch.set('database');
-      fixture.detectChanges();
-      expect(component.filteredFlakyTests().length).toBe(1);
-      expect(component.filteredFlakyTests()[0].testName).toBe('testDatabaseConnection');
-    });
+  describe('onPage', () => {
+    it('calls paginationService.onPage with the event', () => {
+      const onPageSpy = vi.spyOn(component.paginationService, 'onPage');
+      const event = { first: 20, rows: 10 };
 
-    it('should filter by search term (class name)', () => {
-      component.debouncedSearch.set('WebSocket');
-      fixture.detectChanges();
-      expect(component.filteredFlakyTests().length).toBe(1);
-      expect(component.filteredFlakyTests()[0].className).toBe('WebSocketClientTest');
-    });
+      component.onPage(event as TablePageEvent);
 
-    it('should filter by severity high', () => {
-      component.setSeverityFilter('high');
-      fixture.detectChanges();
-      expect(component.filteredFlakyTests().length).toBe(1);
-      expect(component.filteredFlakyTests()[0].flakinessScore).toBe(85);
-    });
-
-    it('should filter by severity medium', () => {
-      component.setSeverityFilter('medium');
-      fixture.detectChanges();
-      expect(component.filteredFlakyTests().length).toBe(1);
-      expect(component.filteredFlakyTests()[0].flakinessScore).toBe(45);
-    });
-
-    it('should filter by severity low', () => {
-      component.setSeverityFilter('low');
-      fixture.detectChanges();
-      expect(component.filteredFlakyTests().length).toBe(1);
-      expect(component.filteredFlakyTests()[0].flakinessScore).toBe(15);
+      expect(onPageSpy).toHaveBeenCalledWith(event);
     });
   });
 
-  describe('pagination', () => {
-    it('should paginate results', () => {
-      component.pageSize.set(2);
-      fixture.detectChanges();
-      expect(component.paginatedFlakyTests().length).toBe(2);
-      expect(component.totalRecords()).toBe(3);
-    });
+  describe('onSort', () => {
+    it('calls paginationService.onSort with the event', () => {
+      const onSortSpy = vi.spyOn(component.paginationService, 'onSort');
+      const event: SortMeta = { field: 'flakinessScore', order: 1 };
 
-    it('should update page on onPageChange', () => {
-      component.onPageChange({ page: 1, rows: 10, first: 10, pageCount: 1 });
-      expect(component.currentPage()).toBe(1);
-      expect(component.pageSize()).toBe(10);
+      component.onSort(event);
+
+      expect(onSortSpy).toHaveBeenCalledWith(event);
     });
   });
 
-  describe('onSearchChange', () => {
-    it('should update searchTerm immediately', () => {
-      component.onSearchChange('foo');
-      expect(component.searchTerm()).toBe('foo');
+  describe('clearFilters', () => {
+    it('clears filter component search and pagination filters', () => {
+      const clearSearchSpy = vi.fn();
+      const clearFiltersSpy = vi.spyOn(component.paginationService, 'clearFilters');
+      (component as unknown as { filterComponent: { clearSearch: () => void } }).filterComponent = {
+        clearSearch: clearSearchSpy,
+      };
+
+      component.clearFilters();
+
+      expect(clearSearchSpy).toHaveBeenCalled();
+      expect(clearFiltersSpy).toHaveBeenCalled();
+    });
+  });
+
+  describe('queryOptions and pagination state', () => {
+    function resetPaginationToDefaults() {
+      const svc = component.paginationService;
+      svc.page.set(1);
+      svc.size.set(20);
+      svc.sortField.set(undefined);
+      svc.sortDirection.set('desc');
+      svc.searchTerm.set('');
+      svc.activeFilter.set(svc.filterOptions[0]);
+    }
+
+    function expectQueryKeyMatchesPaginationState() {
+      const state = component.paginationService.paginationState();
+      const filterType = state.filterType as NonNullable<GetFlakyTestsOverviewData['query']>['filterType'];
+      expect(component.queryOptions().queryKey[0].query).toEqual({
+        page: state.page,
+        size: state.size,
+        sortDirection: state.sortDirection,
+        filterType,
+        searchTerm: state.searchTerm,
+      });
+    }
+
+    beforeEach(() => {
+      resetPaginationToDefaults();
     });
 
-    it('should reset page to 0 after debounce', async () => {
-      component.currentPage.set(1);
-      component.onSearchChange('foo');
-      await new Promise(resolve => setTimeout(resolve, 350));
-      expect(component.currentPage()).toBe(0);
+    it('computed query key reflects page and size after onPage', () => {
+      component.paginationService.onPage({ first: 20, rows: 10 } as TablePageEvent);
+
+      expect(component.paginationService.page()).toBe(3);
+      expect(component.paginationService.size()).toBe(10);
+      expect(component.paginationService.paginationState()).toMatchObject({ page: 3, size: 10 });
+      expectQueryKeyMatchesPaginationState();
+    });
+
+    it('computed query key reflects sort direction after onSort', () => {
+      component.paginationService.onSort({ field: 'flakinessScore', order: 1 } as SortMeta);
+
+      expect(component.paginationService.sortField()).toBe('flakinessScore');
+      expect(component.paginationService.sortDirection()).toBe('asc');
+      expectQueryKeyMatchesPaginationState();
+    });
+
+    it('computed query key reflects reset state after clearFilters', () => {
+      component.paginationService.setSearchTerm('myTest');
+      component.paginationService.setFilterType('HIGH');
+      component.paginationService.onPage({ first: 30, rows: 10 } as TablePageEvent);
+
+      const clearSearchSpy = vi.fn();
+      (component as unknown as { filterComponent: { clearSearch: () => void } }).filterComponent = {
+        clearSearch: clearSearchSpy,
+      };
+
+      component.clearFilters();
+
+      expect(clearSearchSpy).toHaveBeenCalled();
+      expect(component.paginationService.page()).toBe(1);
+      expect(component.paginationService.searchTerm()).toBe('');
+      expect(component.paginationService.activeFilter().value).toBe('ALL');
+      expectQueryKeyMatchesPaginationState();
     });
   });
 });

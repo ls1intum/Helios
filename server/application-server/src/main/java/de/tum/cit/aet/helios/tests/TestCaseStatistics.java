@@ -40,8 +40,7 @@ import org.hibernate.annotations.Filter;
       @Index(
           name = "idx_test_case_statistics",
           columnList = "test_name,class_name,test_suite_name,branch_name,repository_id"),
-      @Index(name = "idx_branch_name", columnList = "branch_name,repository_id"),
-      @Index(name = "idx_is_flaky", columnList = "branch_name,is_flaky,repository_id")
+      @Index(name = "idx_branch_name", columnList = "branch_name,repository_id")
     })
 @Getter
 @Setter

@@ -226,11 +226,27 @@ public class GitHubWorkflowRunSyncService {
     // triggered the workflow run
     // Then we can check whether it's triggered via Helios-App or a Github User via Github UI.
     // We only need to update heliosDeployment if it's triggered via Helios-App
-    heliosDeploymentRepository
-        .findTopByBranchNameAndCreatedAtLessThanEqualOrderByCreatedAtDesc(
-            workflowRun.getHeadBranch(),
-            DateUtil.convertToOffsetDateTime(workflowRun.getRunStartedAt()))
-        .ifPresent(
+
+    // First try exact match by workflowRunId (set during dispatch if GitHub returned run details).
+    // Fall back to branch name + time heuristic only when the ID is not yet known, but skip
+    // any HeliosDeployment that already has a different workflowRunId — that means it belongs
+    // to a different run and we must not overwrite it.
+    Optional<HeliosDeployment> heliosDeploymentOpt =
+        heliosDeploymentRepository.findByWorkflowRunId(workflowRun.getId());
+
+    if (heliosDeploymentOpt.isEmpty()) {
+      heliosDeploymentOpt =
+          heliosDeploymentRepository
+              .findTopByBranchNameAndCreatedAtLessThanEqualOrderByCreatedAtDesc(
+                  workflowRun.getHeadBranch(),
+                  DateUtil.convertToOffsetDateTime(workflowRun.getRunStartedAt()))
+              .filter(
+                  hd ->
+                      hd.getWorkflowRunId() == null
+                          || hd.getWorkflowRunId().equals(workflowRun.getId()));
+    }
+
+    heliosDeploymentOpt.ifPresent(
             heliosDeployment -> {
               try {
                 if (workflowRun

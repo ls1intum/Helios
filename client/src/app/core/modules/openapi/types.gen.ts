@@ -51,7 +51,7 @@ export type UpdateReleaseNotesDto = {
 export type EnvironmentDeployment = {
   id: number;
   url?: string;
-  state?: 'REQUESTED' | 'PENDING' | 'WAITING' | 'SUCCESS' | 'ERROR' | 'FAILURE' | 'IN_PROGRESS' | 'QUEUED' | 'INACTIVE' | 'UNKNOWN';
+  state?: 'REQUESTED' | 'PENDING' | 'WAITING' | 'SUCCESS' | 'ERROR' | 'FAILURE' | 'IN_PROGRESS' | 'QUEUED' | 'INACTIVE' | 'CANCELLED' | 'UNKNOWN';
   statusesUrl?: string;
   sha?: string;
   ref?: string;
@@ -162,6 +162,7 @@ export type NotificationPreferencesWrapper = {
 export type TestCaseIdentifier = {
   testName: string;
   className: string;
+  testSuiteName: string;
 };
 
 export type TestFlakinessScoreRequest = {
@@ -171,6 +172,7 @@ export type TestFlakinessScoreRequest = {
 export type TestFlakinessScoreDto = {
   testName: string;
   className: string;
+  testSuiteName: string;
   flakinessScore?: number;
   defaultBranchFailureRate?: number;
   combinedFailureRate?: number;
@@ -390,14 +392,13 @@ export type FlakyTestDto = {
   flakinessScore?: number;
   defaultBranchFailureRate?: number;
   combinedFailureRate?: number;
-  totalRuns?: number;
-  failedRuns?: number;
   lastUpdated: string;
 };
 
 export type FlakyTestOverviewDto = {
   summary: FlakyTestSummary;
   flakyTests: Array<FlakyTestDto>;
+  filteredCount?: number;
 };
 
 export type FlakyTestSummary = {
@@ -517,7 +518,7 @@ export type DeploymentDto = {
   id: number;
   repository?: RepositoryInfoDto;
   url: string;
-  state?: 'PENDING' | 'WAITING' | 'SUCCESS' | 'ERROR' | 'FAILURE' | 'IN_PROGRESS' | 'QUEUED' | 'INACTIVE' | 'UNKNOWN';
+  state?: 'PENDING' | 'WAITING' | 'SUCCESS' | 'ERROR' | 'FAILURE' | 'IN_PROGRESS' | 'QUEUED' | 'INACTIVE' | 'CANCELLED' | 'UNKNOWN';
   statusesUrl: string;
   sha: string;
   ref: string;
@@ -565,7 +566,7 @@ export type ActivityHistoryDto = {
   id?: number;
   repository?: RepositoryInfoDto;
   environmentName?: string;
-  state?: 'PENDING' | 'WAITING' | 'SUCCESS' | 'ERROR' | 'FAILURE' | 'IN_PROGRESS' | 'QUEUED' | 'INACTIVE' | 'UNKNOWN';
+  state?: 'PENDING' | 'WAITING' | 'SUCCESS' | 'ERROR' | 'FAILURE' | 'IN_PROGRESS' | 'QUEUED' | 'INACTIVE' | 'CANCELLED' | 'UNKNOWN';
   sha?: string;
   ref?: string;
   user?: UserInfoDto;
@@ -1955,7 +1956,13 @@ export type GetLatestTestResultsByPullRequestIdResponse = GetLatestTestResultsBy
 export type GetFlakyTestsOverviewData = {
   body?: never;
   path?: never;
-  query?: never;
+  query?: {
+    page?: number;
+    size?: number;
+    sortDirection?: string;
+    filterType?: 'ALL' | 'HIGH' | 'MEDIUM' | 'LOW';
+    searchTerm?: string;
+  };
   url: '/api/tests/flaky';
 };
 

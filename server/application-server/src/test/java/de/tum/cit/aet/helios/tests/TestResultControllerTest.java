@@ -1,6 +1,7 @@
 package de.tum.cit.aet.helios.tests;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
@@ -11,6 +12,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import de.tum.cit.aet.helios.filters.RepositoryContext;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import de.tum.cit.aet.helios.gitreposettings.GitRepoSettings;
+import de.tum.cit.aet.helios.tests.pagination.FlakyTestsPageRequest;
 import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.List;
@@ -60,10 +62,10 @@ class TestResultControllerTest {
 
   @Test
   void getFlakinessScores_withValidRequest_returnsScores() throws Exception {
-    var identifier = new TestFlakinessScoreRequest.TestCaseIdentifier("test1", "Class1");
+    var identifier = new TestFlakinessScoreRequest.TestCaseIdentifier("test1", "Class1", "Suite1");
     var request = new TestFlakinessScoreRequest(List.of(identifier));
 
-    var expectedDto = new TestFlakinessScoreDto("test1", "Class1", 63.0, 0.05, 0.0);
+    var expectedDto = new TestFlakinessScoreDto("test1", "Class1", "Suite1", 63.0, 0.05, 0.0);
 
     when(testCaseStatisticsService.getFlakinessScoresForTests(eq(1L), anyList()))
         .thenReturn(List.of(expectedDto));
@@ -88,12 +90,12 @@ class TestResultControllerTest {
   void getFlakinessScores_withMultipleTests_returnsAllScores() throws Exception {
     var identifiers =
         List.of(
-            new TestFlakinessScoreRequest.TestCaseIdentifier("test1", "Class1"),
-            new TestFlakinessScoreRequest.TestCaseIdentifier("test2", "Class2"));
+            new TestFlakinessScoreRequest.TestCaseIdentifier("test1", "Class1", "Suite1"),
+            new TestFlakinessScoreRequest.TestCaseIdentifier("test2", "Class2", "Suite1"));
     var request = new TestFlakinessScoreRequest(identifiers);
 
-    var dto1 = new TestFlakinessScoreDto("test1", "Class1", 63.0, 0.05, 0.0);
-    var dto2 = new TestFlakinessScoreDto("test2", "Class2", 0.0, 0.0, 0.0);
+    var dto1 = new TestFlakinessScoreDto("test1", "Class1", "Suite1", 63.0, 0.05, 0.0);
+    var dto2 = new TestFlakinessScoreDto("test2", "Class2", "Suite1", 0.0, 0.0, 0.0);
 
     when(testCaseStatisticsService.getFlakinessScoresForTests(eq(1L), anyList()))
         .thenReturn(List.of(dto1, dto2));
@@ -163,10 +165,11 @@ class TestResultControllerTest {
 
   @Test
   void getFlakinessScores_withNoMatchingTests_returnsZeroScores() throws Exception {
-    var identifier = new TestFlakinessScoreRequest.TestCaseIdentifier("unknownTest", "Unknown");
+    var identifier = new TestFlakinessScoreRequest.TestCaseIdentifier(
+        "unknownTest", "Unknown", "Unknown");
     var request = new TestFlakinessScoreRequest(List.of(identifier));
 
-    var zeroDto = new TestFlakinessScoreDto("unknownTest", "Unknown", 0.0, 0.0, 0.0);
+    var zeroDto = new TestFlakinessScoreDto("unknownTest", "Unknown", "Unknown", 0.0, 0.0, 0.0);
 
     when(testCaseStatisticsService.getFlakinessScoresForTests(eq(1L), anyList()))
         .thenReturn(List.of(zeroDto));
@@ -186,8 +189,7 @@ class TestResultControllerTest {
 
   @Test
   void getFlakyTestsOverview_returnsOverview() throws Exception {
-    var summary =
-        new FlakyTestOverviewDto.FlakyTestSummary(10, 2, 1, 1, 0);
+    var summary = new FlakyTestOverviewDto.FlakyTestSummary(10, 2, 1, 1, 0);
     var flakyTest =
         new FlakyTestOverviewDto.FlakyTestDto(
             "testFlaky",
@@ -196,12 +198,12 @@ class TestResultControllerTest {
             85.0,
             0.03,
             0.05,
-            100,
-            5,
             OffsetDateTime.now());
-    var expected = new FlakyTestOverviewDto(summary, List.of(flakyTest));
+    var expected = new FlakyTestOverviewDto(summary, List.of(flakyTest), 2);
 
-    when(testCaseStatisticsService.getFlakyTestsOverview(1L)).thenReturn(expected);
+    when(testCaseStatisticsService.getFlakyTestsOverview(
+            eq(1L), any(FlakyTestsPageRequest.class)))
+        .thenReturn(expected);
 
     mockMvc
         .perform(get("/api/tests/flaky"))

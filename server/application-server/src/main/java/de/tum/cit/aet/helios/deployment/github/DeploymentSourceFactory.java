@@ -10,8 +10,12 @@ import org.springframework.stereotype.Component;
 public class DeploymentSourceFactory {
 
   public DeploymentSource create(Object source, Deployment.State state) {
+    return create(source, state, null);
+  }
+
+  public DeploymentSource create(Object source, Deployment.State state, Long workflowRunId) {
     if (source instanceof GHDeployment) {
-      return new GhDeploymentSourceAdapter((GHDeployment) source, state);
+      return new GhDeploymentSourceAdapter((GHDeployment) source, state, workflowRunId);
     } else if (source instanceof GitHubDeploymentDto) {
       return new GitHubDeploymentSourceAdapter((GitHubDeploymentDto) source, state);
     } else {
