@@ -16,5 +16,14 @@
             "webRoot": "${workspaceFolder}/client",
             "url": "http://localhost:4200/"
         },
+        {
+            "name": "Debug Java Application",
+            "type": "java",
+            "request": "attach",
+            "hostName": "localhost",
+            "port": 5005,
+            "projectName": "application-server",
+            "comment": "Start with: ./gradlew :application-server:bootRunDevDebug"
+        }
     ]
 }
