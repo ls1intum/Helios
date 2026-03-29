@@ -171,6 +171,11 @@ public class LatestDeploymentUnion {
 
   public String getSha() {
     if (isRealDeployment()) {
+      // For Helios-triggered deployments the HeliosDeployment holds the actual commit SHA,
+      // whereas the GitHub Deployment SHA is the HEAD of the workflow dispatch ref.
+      if (heliosDeployment != null && heliosDeployment.getSha() != null) {
+        return heliosDeployment.getSha();
+      }
       return realDeployment.getSha();
     } else if (isHeliosDeployment()) {
       return heliosDeployment.getSha();
@@ -181,6 +186,11 @@ public class LatestDeploymentUnion {
 
   public String getRef() {
     if (isRealDeployment()) {
+      // For Helios-triggered deployments the HeliosDeployment holds the actual deployed branch,
+      // whereas the GitHub Deployment ref is the workflow dispatch ref (e.g. "main").
+      if (heliosDeployment != null && heliosDeployment.getBranchName() != null) {
+        return heliosDeployment.getBranchName();
+      }
       return realDeployment.getRef();
     } else if (isHeliosDeployment()) {
       return heliosDeployment.getBranchName();
@@ -231,6 +241,9 @@ public class LatestDeploymentUnion {
 
   public String getPullRequestName() {
     if (isRealDeployment()) {
+      if (heliosDeployment != null && heliosDeployment.getPullRequest() != null) {
+        return heliosDeployment.getPullRequest().getTitle();
+      }
       return realDeployment.getPullRequest() != null
           ? realDeployment.getPullRequest().getTitle()
           : null;
@@ -245,6 +258,9 @@ public class LatestDeploymentUnion {
 
   public Integer getPullRequestNumber() {
     if (isRealDeployment()) {
+      if (heliosDeployment != null && heliosDeployment.getPullRequest() != null) {
+        return heliosDeployment.getPullRequest().getNumber();
+      }
       return realDeployment.getPullRequest() != null
           ? realDeployment.getPullRequest().getNumber()
           : null;

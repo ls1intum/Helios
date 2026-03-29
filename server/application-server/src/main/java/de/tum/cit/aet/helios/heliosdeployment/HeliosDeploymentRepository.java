@@ -17,8 +17,14 @@ public interface HeliosDeploymentRepository extends JpaRepository<HeliosDeployme
   Optional<HeliosDeployment> findTopByBranchNameAndCreatedAtLessThanEqualOrderByCreatedAtDesc(
       String branchName, OffsetDateTime eventTime);
 
+  Optional<HeliosDeployment> findTopByWorkflowBranchAndCreatedAtLessThanEqualOrderByCreatedAtDesc(
+      String workflowBranch, OffsetDateTime eventTime);
+
   Optional<HeliosDeployment> findTopByEnvironmentAndBranchNameOrderByCreatedAtDesc(
       Environment environment, String branchName);
+
+  Optional<HeliosDeployment> findTopByEnvironmentAndWorkflowBranchOrderByCreatedAtDesc(
+      Environment environment, String workflowBranch);
 
   List<HeliosDeployment> findByEnvironmentAndDeploymentIdIsNull(Environment environment);
 
@@ -47,6 +53,8 @@ public interface HeliosDeploymentRepository extends JpaRepository<HeliosDeployme
       @Param("repositoryId") Long repositoryId, @Param("branchName") String branchName);
 
   Optional<HeliosDeployment> findByDeploymentId(Long deploymentId);
+
+  List<HeliosDeployment> findByDeploymentIdIn(java.util.Collection<Long> deploymentIds);
 
   Optional<HeliosDeployment> findByWorkflowRunId(Long workflowRunId);
 

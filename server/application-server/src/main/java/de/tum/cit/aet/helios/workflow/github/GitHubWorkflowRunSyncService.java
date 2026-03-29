@@ -160,7 +160,7 @@ public class GitHubWorkflowRunSyncService {
 
     // Process the workflow run for HeliosDeployment
     try {
-      processRunForHeliosDeployment(ghWorkflowRun);
+      processRunForHeliosDeployment(ghWorkflowRun, result);
     } catch (IOException e) {
       log.error(
           "Failed to process workflow run {} for HeliosDeployment: {}",
@@ -201,7 +201,8 @@ public class GitHubWorkflowRunSyncService {
         && (message.contains("Bad credentials") || message.contains("\"status\": \"401\""));
   }
 
-  private void processRunForHeliosDeployment(GHWorkflowRun workflowRun) throws IOException {
+  private void processRunForHeliosDeployment(
+      GHWorkflowRun workflowRun, WorkflowRun workflowRunEntity) throws IOException {
     // Get the deployment workflow set by the managers
     List<Workflow> deploymentWorkflows =
         workflowService.getDeploymentWorkflowsForAllEnv(workflowRun.getRepository().getId());
@@ -235,6 +236,25 @@ public class GitHubWorkflowRunSyncService {
         heliosDeploymentRepository.findByWorkflowRunId(workflowRun.getId());
 
     if (heliosDeploymentOpt.isEmpty()) {
+      // Primary fallback: match by workflowBranch (the dispatch ref stored on new records).
+      heliosDeploymentOpt =
+          heliosDeploymentRepository
+              .findTopByWorkflowBranchAndCreatedAtLessThanEqualOrderByCreatedAtDesc(
+                  workflowRun.getHeadBranch(),
+                  DateUtil.convertToOffsetDateTime(workflowRun.getRunStartedAt()))
+              .filter(
+                  hd ->
+                      hd.getWorkflowRunId() == null
+                          || hd.getWorkflowRunId().equals(workflowRun.getId()));
+    }
+
+    if (heliosDeploymentOpt.isEmpty()) {
+      // Secondary fallback: match by branchName for records created before the workflowBranch
+      // field was introduced (where branchName still held the dispatch ref).
+      // Note that this fallback is still needed for old workflow runs created before the
+      // workflowBranch field was introduced, because those records were created with
+      // branchName = dispatch ref, and workflowBranch = null. So we need to check branchName here,
+      // but only for records where workflowBranch is still null (i.e. old records).
       heliosDeploymentOpt =
           heliosDeploymentRepository
               .findTopByBranchNameAndCreatedAtLessThanEqualOrderByCreatedAtDesc(
@@ -242,8 +262,9 @@ public class GitHubWorkflowRunSyncService {
                   DateUtil.convertToOffsetDateTime(workflowRun.getRunStartedAt()))
               .filter(
                   hd ->
-                      hd.getWorkflowRunId() == null
-                          || hd.getWorkflowRunId().equals(workflowRun.getId()));
+                      hd.getWorkflowBranch() == null
+                          && (hd.getWorkflowRunId() == null
+                              || hd.getWorkflowRunId().equals(workflowRun.getId())));
     }
 
     heliosDeploymentOpt.ifPresent(
@@ -310,6 +331,28 @@ public class GitHubWorkflowRunSyncService {
                       heliosDeployment.getId(),
                       mappedStatus);
                   heliosDeploymentRepository.save(heliosDeployment);
+                }
+
+                // Correct WorkflowRun.headBranch/headSha/pullRequests when a deployment workflow
+                // branch caused a mismatch (i.e. the workflow was dispatched from a different branch
+                // than the one being deployed). Only applied for Helios-triggered deployments where
+                // the actual deployed branch is known via the HeliosDeployment record.
+                if (heliosDeployment.getBranchName() != null
+                    && !heliosDeployment.getBranchName().equals(workflowRun.getHeadBranch())) {
+                  workflowRunEntity.setHeadBranch(heliosDeployment.getBranchName());
+                  if (heliosDeployment.getSha() != null) {
+                    workflowRunEntity.setHeadSha(heliosDeployment.getSha());
+                  }
+                  if (heliosDeployment.getPullRequest() != null) {
+                    workflowRunEntity.setPullRequests(
+                        new HashSet<>(
+                            Collections.singletonList(heliosDeployment.getPullRequest())));
+                  }
+                  log.info(
+                      "Corrected WorkflowRun {} headBranch from '{}' to '{}' via HeliosDeployment",
+                      workflowRun.getId(),
+                      workflowRun.getHeadBranch(),
+                      heliosDeployment.getBranchName());
                 }
               } catch (IOException e) {
                 e.printStackTrace();
