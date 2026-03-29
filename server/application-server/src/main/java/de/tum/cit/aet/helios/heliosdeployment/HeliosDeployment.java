@@ -56,6 +56,9 @@ public class HeliosDeployment {
   @Column(name = "branch_name")
   private String branchName;
 
+  @Column(name = "workflow_branch")
+  private String workflowBranch;
+
   @Column(name = "build_tag")
   private String buildTag;
 

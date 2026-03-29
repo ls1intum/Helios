@@ -34,6 +34,7 @@ public class GitHubDeploymentSyncService {
    *     DeploymentSource
    * @param gitRepository the associated GitRepository entity
    * @param environment the associated environment entity
+   * @param user the creator of the deployment
    */
   @Transactional
   public void processDeployment(
@@ -89,15 +90,35 @@ public class GitHubDeploymentSyncService {
     }
 
     if (maybeHeliosDeployment.isEmpty()) {
+      // Primary fallback: match by workflowBranch (the dispatch ref stored on new records).
       maybeHeliosDeployment =
           heliosDeploymentRepository
-              .findTopByEnvironmentAndBranchNameOrderByCreatedAtDesc(
+              .findTopByEnvironmentAndWorkflowBranchOrderByCreatedAtDesc(
                   environment, deployment.getRef())
               .filter(
                   hd ->
                       hd.getWorkflowRunId() == null
                           || (deployment.getWorkflowRunId() != null
                               && hd.getWorkflowRunId().equals(deployment.getWorkflowRunId())));
+    }
+
+    if (maybeHeliosDeployment.isEmpty()) {
+      // Secondary fallback: match by branchName for records created before the workflowBranch
+      // field was introduced (where branchName still held the dispatch ref).
+      // Note that this fallback is still needed for old workflow runs created before the
+      // workflowBranch field was introduced, because those records were created with
+      // branchName = dispatch ref, and workflowBranch = null. So we need to check branchName here,
+      // but only for records where workflowBranch is still null (i.e. old records).
+      maybeHeliosDeployment =
+          heliosDeploymentRepository
+              .findTopByEnvironmentAndBranchNameOrderByCreatedAtDesc(
+                  environment, deployment.getRef())
+              .filter(
+                  hd ->
+                      hd.getWorkflowBranch() == null
+                          && (hd.getWorkflowRunId() == null
+                          || (deployment.getWorkflowRunId() != null
+                              && hd.getWorkflowRunId().equals(deployment.getWorkflowRunId()))));
     }
 
     maybeHeliosDeployment.ifPresent(heliosDeployment -> {

@@ -40,14 +40,27 @@ public record ActivityHistoryDto(
   }
 
   public static ActivityHistoryDto fromDeployment(Deployment deployment) {
+    return fromDeployment(deployment, null);
+  }
+
+  public static ActivityHistoryDto fromDeployment(
+      Deployment deployment, HeliosDeployment heliosDeployment) {
+    // For Helios-triggered deployments, use the branch name and SHA from the HeliosDeployment if
+    // available, as the GitHub Deployment's ref and sha may not reflect the actual deployed code.
+    String ref = heliosDeployment != null && heliosDeployment.getBranchName() != null
+        ? heliosDeployment.getBranchName()
+        : deployment.getRef();
+    String sha = heliosDeployment != null && heliosDeployment.getSha() != null
+        ? heliosDeployment.getSha()
+        : deployment.getSha();
     return new ActivityHistoryDto(
         "DEPLOYMENT",
         deployment.getId(),
         RepositoryInfoDto.fromRepository(deployment.getRepository()),
         deployment.getEnvironment().getName(),
         deployment.getState(),
-        deployment.getSha(),
-        deployment.getRef(),
+        sha,
+        ref,
         UserInfoDto.fromUser(deployment.getCreator()),
         null,
         deployment.getCreatedAt(),

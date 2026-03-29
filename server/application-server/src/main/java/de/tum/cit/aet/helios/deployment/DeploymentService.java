@@ -29,6 +29,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -147,7 +148,9 @@ public class DeploymentService {
     heliosDeployment.setEnvironment(environment);
     heliosDeployment.setUser(authService.getUserId());
     heliosDeployment.setStatus(HeliosDeployment.Status.WAITING);
-    heliosDeployment.setBranchName(this.getDeploymentWorkflowBranch(environment, deployRequest));
+    heliosDeployment.setBranchName(deployRequest.branchName());
+    heliosDeployment.setWorkflowBranch(
+        this.getDeploymentWorkflowBranch(environment, deployRequest));
     heliosDeployment.setSha(deployRequest.commitSha());
     heliosDeployment.setCreator(authService.getUserFromGithubId());
     heliosDeployment.setPullRequest(optionalPullRequest.orElse(null));
@@ -290,10 +293,14 @@ public class DeploymentService {
    *     </ul>
    */
   public List<ActivityHistoryDto> getActivityHistoryByEnvironmentId(Long environmentId) {
-    // 1) Real deployments
+    // 1) Real deployments — enriched with the linked HeliosDeployment so the actual deployed
+    // branch is displayed instead of the workflow dispatch ref stored on the GitHub Deployment.
+    List<Deployment> deployments =
+        deploymentRepository.findByEnvironmentIdOrderByCreatedAtDesc(environmentId);
+    Map<Long, HeliosDeployment> heliosByDeploymentId = buildHeliosByDeploymentIdMap(deployments);
     List<ActivityHistoryDto> deploymentDtos =
-        deploymentRepository.findByEnvironmentIdOrderByCreatedAtDesc(environmentId).stream()
-            .map(ActivityHistoryDto::fromDeployment)
+        deployments.stream()
+            .map(d -> ActivityHistoryDto.fromDeployment(d, heliosByDeploymentId.get(d.getId())))
             .toList();
 
     // 3) Lock history (lock/unlock)
@@ -354,9 +361,12 @@ public class DeploymentService {
 
     List<ActivityHistoryDto> combined = new ArrayList<>();
 
+    List<Deployment> deployments =
+        deploymentRepository.findByPullRequest_IdOrderByCreatedAtDesc(pullRequestId);
+    Map<Long, HeliosDeployment> heliosByDeploymentId = buildHeliosByDeploymentIdMap(deployments);
     List<ActivityHistoryDto> deploymentDtos =
-        deploymentRepository.findByPullRequest_IdOrderByCreatedAtDesc(pullRequestId).stream()
-            .map(ActivityHistoryDto::fromDeployment)
+        deployments.stream()
+            .map(d -> ActivityHistoryDto.fromDeployment(d, heliosByDeploymentId.get(d.getId())))
             .toList();
     combined.addAll(deploymentDtos);
 
@@ -386,11 +396,13 @@ public class DeploymentService {
       Long repositoryId, String branchName) {
     List<ActivityHistoryDto> combined = new ArrayList<>();
 
+    List<Deployment> deployments =
+        deploymentRepository.findByRepositoryRepositoryIdAndRefOrderByCreatedAtDesc(
+            repositoryId, branchName);
+    Map<Long, HeliosDeployment> heliosByDeploymentId = buildHeliosByDeploymentIdMap(deployments);
     List<ActivityHistoryDto> deploymentDtos =
-        deploymentRepository
-            .findByRepositoryRepositoryIdAndRefOrderByCreatedAtDesc(repositoryId, branchName)
-            .stream()
-            .map(ActivityHistoryDto::fromDeployment)
+        deployments.stream()
+            .map(d -> ActivityHistoryDto.fromDeployment(d, heliosByDeploymentId.get(d.getId())))
             .toList();
     combined.addAll(deploymentDtos);
 
@@ -404,6 +416,41 @@ public class DeploymentService {
     combined.addAll(heliosDeploymentDtos);
 
     return ActivityHistoryDto.sortActivityHistoryDtosByTimestampDesc(combined);
+  }
+
+  /**
+   * Builds a map from GitHub deployment ID to the linked HeliosDeployment for a batch of
+   * deployments. Used to enrich ActivityHistoryDto entries so the actual deployed branch (stored on
+   * HeliosDeployment) is shown instead of the workflow dispatch ref recorded by GitHub.
+   */
+  private Map<Long, HeliosDeployment> buildHeliosByDeploymentIdMap(
+      List<Deployment> deployments) {
+    List<Long> ids =
+        deployments.stream()
+            .map(Deployment::getId)
+            .filter(Objects::nonNull)
+            .toList();
+    if (ids.isEmpty()) {
+      return Map.of();
+    }
+    return heliosDeploymentRepository.findByDeploymentIdIn(ids).stream()
+        .filter(hd -> hd.getDeploymentId() != null)
+        .collect(Collectors.toMap(
+            HeliosDeployment::getDeploymentId,
+            hd -> hd,
+            (a, b) -> {
+              HeliosDeployment kept = a.getCreatedAt().isAfter(b.getCreatedAt()) ? a : b;
+              HeliosDeployment discarded = kept == a ? b : a;
+              log.warn(
+                  "Duplicate HeliosDeployment entries for deploymentId {}: "
+                      + "keeping HeliosDeployment id={} (createdAt={}), "
+                      + "discarding HeliosDeployment id={} (createdAt={})",
+                  kept.getDeploymentId(),
+                  kept.getId(), kept.getCreatedAt(),
+                  discarded.getId(), discarded.getCreatedAt());
+              return kept;
+            }
+        ));
   }
 
   /**
