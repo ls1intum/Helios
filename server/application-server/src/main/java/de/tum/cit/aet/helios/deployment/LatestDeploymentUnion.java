@@ -130,6 +130,7 @@ public class LatestDeploymentUnion {
     IN_PROGRESS,
     QUEUED,
     INACTIVE,
+    CANCELLED,
     UNKNOWN;
 
     public static State fromDeploymentState(Deployment.State state) {
@@ -142,6 +143,7 @@ public class LatestDeploymentUnion {
         case IN_PROGRESS -> IN_PROGRESS;
         case QUEUED -> QUEUED;
         case INACTIVE -> INACTIVE;
+        case CANCELLED -> CANCELLED;
         case UNKNOWN -> UNKNOWN;
         default -> throw new IllegalArgumentException("Invalid state: " + state);
       };
@@ -153,6 +155,7 @@ public class LatestDeploymentUnion {
         case QUEUED, IN_PROGRESS -> PENDING;
         case DEPLOYMENT_SUCCESS -> SUCCESS;
         case FAILED -> FAILURE;
+        case CANCELLED -> CANCELLED;
         case IO_ERROR, UNKNOWN -> UNKNOWN;
       };
     }

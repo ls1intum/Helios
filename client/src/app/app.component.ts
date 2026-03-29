@@ -32,14 +32,15 @@ export class AppComponent {
 
     client.interceptors.response.use(async response => {
       if (!response.ok) {
+        const errorResponse = response.clone();
         // Attempt to parse the response as JSON
         let errorMessage = 'An unexpected error occurred.';
         try {
-          const errorBody = await response.json();
+          const errorBody = await errorResponse.json();
           errorMessage = errorBody.message || errorMessage;
         } catch {
           // If parsing fails, fallback to text
-          const errorText = await response.text();
+          const errorText = await errorResponse.text();
           if (errorText) {
             errorMessage = errorText;
           }

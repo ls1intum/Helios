@@ -51,7 +51,7 @@ export type UpdateReleaseNotesDto = {
 export type EnvironmentDeployment = {
   id: number;
   url?: string;
-  state?: 'REQUESTED' | 'PENDING' | 'WAITING' | 'SUCCESS' | 'ERROR' | 'FAILURE' | 'IN_PROGRESS' | 'QUEUED' | 'INACTIVE' | 'UNKNOWN';
+  state?: 'REQUESTED' | 'PENDING' | 'WAITING' | 'SUCCESS' | 'ERROR' | 'FAILURE' | 'IN_PROGRESS' | 'QUEUED' | 'INACTIVE' | 'CANCELLED' | 'UNKNOWN';
   statusesUrl?: string;
   sha?: string;
   ref?: string;
@@ -518,7 +518,7 @@ export type DeploymentDto = {
   id: number;
   repository?: RepositoryInfoDto;
   url: string;
-  state?: 'PENDING' | 'WAITING' | 'SUCCESS' | 'ERROR' | 'FAILURE' | 'IN_PROGRESS' | 'QUEUED' | 'INACTIVE' | 'UNKNOWN';
+  state?: 'PENDING' | 'WAITING' | 'SUCCESS' | 'ERROR' | 'FAILURE' | 'IN_PROGRESS' | 'QUEUED' | 'INACTIVE' | 'CANCELLED' | 'UNKNOWN';
   statusesUrl: string;
   sha: string;
   ref: string;
@@ -566,7 +566,7 @@ export type ActivityHistoryDto = {
   id?: number;
   repository?: RepositoryInfoDto;
   environmentName?: string;
-  state?: 'PENDING' | 'WAITING' | 'SUCCESS' | 'ERROR' | 'FAILURE' | 'IN_PROGRESS' | 'QUEUED' | 'INACTIVE' | 'UNKNOWN';
+  state?: 'PENDING' | 'WAITING' | 'SUCCESS' | 'ERROR' | 'FAILURE' | 'IN_PROGRESS' | 'QUEUED' | 'INACTIVE' | 'CANCELLED' | 'UNKNOWN';
   sha?: string;
   ref?: string;
   user?: UserInfoDto;

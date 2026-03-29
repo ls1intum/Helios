@@ -53,6 +53,8 @@ import org.springframework.stereotype.Service;
 @Service
 @Transactional
 public class GitHubService {
+  private static final String GITHUB_API_VERSION = "2026-03-10";
+
   private final GitHubFacade github;
   private final GitHubConfig gitHubConfig;
   private final ObjectMapper objectMapper;
@@ -161,7 +163,7 @@ public class GitHubService {
    * @param inputs the inputs for the workflow
    * @throws IOException if an I/O error occurs
    */
-  public void dispatchWorkflow(
+  public WorkflowDispatchResult dispatchWorkflow(
       String repoNameWithOwners,
       String workflowFileNameOrId,
       String ref,
@@ -172,17 +174,38 @@ public class GitHubService {
             "https://api.github.com/repos/%s/actions/workflows/%s/dispatches",
             repoNameWithOwners, workflowFileNameOrId);
 
-    var payload = Map.of("ref", ref, "inputs", inputs);
+    var payload = Map.of("ref", ref, "inputs", inputs, "return_run_details", true);
     String jsonPayload = objectMapper.writeValueAsString(payload);
 
     RequestBody requestBody =
         RequestBody.create(jsonPayload, MediaType.get("application/json; charset=utf-8"));
 
-    Request request = getRequestBuilder().url(url).post(requestBody).build();
+    Request request =
+        getRequestBuilder()
+            .header("X-GitHub-Api-Version", GITHUB_API_VERSION)
+            .url(url)
+            .post(requestBody)
+            .build();
 
     try (Response response = okHttpClient.newCall(request).execute()) {
       if (!response.isSuccessful()) {
         handleErrorResponse(response, "workflow dispatch");
+      }
+
+      if (response.body() == null) {
+        return WorkflowDispatchResult.empty();
+      }
+
+      String responseBody = response.body().string();
+      if (responseBody.isBlank()) {
+        return WorkflowDispatchResult.empty();
+      }
+
+      try {
+        return objectMapper.readValue(responseBody, WorkflowDispatchResult.class);
+      } catch (JsonProcessingException e) {
+        log.warn("Failed to parse workflow dispatch run details, continuing without them", e);
+        return WorkflowDispatchResult.empty();
       }
     }
   }

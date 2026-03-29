@@ -67,6 +67,10 @@ public class Deployment extends BaseGitServiceEntity {
   @Column(name = "repository_url")
   private String repositoryUrl;
 
+  /** Populated from webhook payloads only; the REST deployments API does not expose this field. */
+  @Column(name = "workflow_run_id", nullable = true)
+  private Long workflowRunId;
+
   // payload field is just empty JSON object
 
   public enum State {
@@ -78,6 +82,7 @@ public class Deployment extends BaseGitServiceEntity {
     IN_PROGRESS,
     QUEUED,
     INACTIVE,
+    CANCELLED,
     UNKNOWN; // Fallback for unmapped states
   }
 

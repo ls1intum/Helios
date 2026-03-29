@@ -76,4 +76,5 @@ public class GitHubDeploymentSourceAdapter implements DeploymentSource {
   public OffsetDateTime getUpdatedAt() {
     return gitHubDeploymentDto.getUpdatedAt();
   }
+
 }
