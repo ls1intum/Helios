@@ -50,6 +50,23 @@ public interface HeliosDeploymentRepository extends JpaRepository<HeliosDeployme
 
   Optional<HeliosDeployment> findByWorkflowRunId(Long workflowRunId);
 
+  @Query(
+      value =
+          "SELECT PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY sub.build_duration_seconds)"
+              + " AS median_build, "
+              + "PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY sub.deploy_duration_seconds)"
+              + " AS median_deploy "
+              + "FROM ("
+              + "  SELECT build_duration_seconds, deploy_duration_seconds "
+              + "  FROM helios_deployment "
+              + "  WHERE environment_id = :environmentId "
+              + "    AND status = 'DEPLOYMENT_SUCCESS' "
+              + "    AND build_duration_seconds IS NOT NULL "
+              + "  ORDER BY created_at DESC "
+              + "  LIMIT 100"
+              + ") sub",
+      nativeQuery = true)
+  List<Object[]> findMedianDurationsByEnvironmentId(@Param("environmentId") Long environmentId);
 
   /**
    * Finds deployments that are stuck in IN_PROGRESS state for more than the specified duration.
