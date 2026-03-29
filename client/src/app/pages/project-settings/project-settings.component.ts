@@ -11,10 +11,12 @@ import { PanelModule } from 'primeng/panel';
 import { TableModule } from 'primeng/table';
 import { LockingThresholdsComponent } from '@app/components/locking-thresholds/locking-thresholds.component';
 import { PageHeadingComponent } from '@app/components/page-heading/page-heading.component';
-import { RotateSecretResponses, TestTypeDto, WorkflowDto, WorkflowGroupDto, WorkflowMembershipDto } from '@app/core/modules/openapi';
+import { DeploymentWorkflowConfigDto, RotateSecretResponses, TestTypeDto, WorkflowDto, WorkflowGroupDto, WorkflowMembershipDto } from '@app/core/modules/openapi';
 import {
   createWorkflowGroupMutation,
   deleteWorkflowGroupMutation,
+  getDeploymentWorkflowConfigOptions,
+  getDeploymentWorkflowConfigQueryKey,
   getGitRepoSettingsOptions,
   getGroupsWithWorkflowsOptions,
   getGroupsWithWorkflowsQueryKey,
@@ -30,6 +32,7 @@ import {
   getAllTestTypesOptions,
   updateGitRepoSettingsMutation,
   rotateSecretMutation,
+  upsertDeploymentWorkflowConfigMutation,
 } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { WorkflowDtoSchema } from '@app/core/modules/openapi/schemas.gen';
 import { MessageService } from 'primeng/api';
@@ -285,6 +288,57 @@ export class ProjectSettingsComponent {
   }));
 
   workflowLabelOptions = Object.values(WorkflowDtoSchema.properties.label.enum);
+
+  // Deployment workflow config: per-workflow job name configuration
+  deploymentConfigWorkflowId = signal<number | null>(null);
+  deploymentConfigForm = signal<DeploymentWorkflowConfigDto>({ deployJobName: '' });
+  deploymentConfigDialogVisible = false;
+
+  deploymentWorkflowConfigQuery = injectQuery(() => ({
+    ...getDeploymentWorkflowConfigOptions({
+      path: { repositoryId: this.repositoryId(), workflowId: this.deploymentConfigWorkflowId()! },
+    }),
+    enabled: () => !!this.deploymentConfigWorkflowId(),
+  }));
+
+  private deploymentConfigDataEffect = effect(() => {
+    const data = this.deploymentWorkflowConfigQuery.data();
+    this.deploymentConfigForm.set({
+      deployJobName: data?.deployJobName ?? '',
+    });
+  });
+
+  upsertDeploymentWorkflowConfigMutation = injectMutation(() => ({
+    ...upsertDeploymentWorkflowConfigMutation(),
+    onSuccess: () => {
+      this.queryClient.invalidateQueries({
+        queryKey: getDeploymentWorkflowConfigQueryKey({
+          path: { repositoryId: this.repositoryId(), workflowId: this.deploymentConfigWorkflowId()! },
+        }),
+      });
+      this.deploymentConfigDialogVisible = false;
+      this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Deployment workflow config saved' });
+    },
+  }));
+
+  openDeploymentConfig(workflow: WorkflowDto) {
+    this.deploymentConfigForm.set({ deployJobName: '' });
+    this.deploymentConfigWorkflowId.set(workflow.id);
+    this.deploymentConfigDialogVisible = true;
+  }
+
+  setDeploymentConfigField(field: keyof DeploymentWorkflowConfigDto, value: string) {
+    this.deploymentConfigForm.update(form => ({ ...form, [field]: value }));
+  }
+
+  saveDeploymentConfig() {
+    const workflowId = this.deploymentConfigWorkflowId();
+    if (!workflowId) return;
+    this.upsertDeploymentWorkflowConfigMutation.mutate({
+      path: { repositoryId: this.repositoryId(), workflowId },
+      body: { ...this.deploymentConfigForm(), workflowId },
+    });
+  }
 
   storePreviousLabel(workflow: WorkflowDto) {
     // Store the current label before change
