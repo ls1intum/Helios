@@ -14,6 +14,7 @@ import {
   IconQuestionMark,
   IconRepeat,
   IconTimeDurationOff,
+  IconX,
 } from 'angular-tabler-icons/icons';
 
 type BaseDeploymentState = NonNullable<EnvironmentDeployment['state']>;
@@ -34,6 +35,7 @@ type ExtendedDeploymentState = BaseDeploymentState | 'NEVER_DEPLOYED' | 'REPLACE
       IconQuestionMark,
       IconRepeat,
       IconGitBranch,
+      IconX,
     }),
   ],
   templateUrl: './deployment-state-tag.component.html',
@@ -60,6 +62,7 @@ export class DeploymentStateTagComponent {
       ERROR: 'danger',
       FAILURE: 'danger',
       INACTIVE: 'secondary',
+      CANCELLED: 'secondary',
       UNKNOWN: 'secondary',
       NEVER_DEPLOYED: 'secondary',
       REPLACED: 'contrast',
@@ -78,6 +81,7 @@ export class DeploymentStateTagComponent {
       ERROR: 'exclamation-circle',
       FAILURE: 'exclamation-mark',
       INACTIVE: 'time-duration-off',
+      CANCELLED: 'x',
       UNKNOWN: 'question-mark',
       NEVER_DEPLOYED: 'question-mark',
       REPLACED: 'repeat',
@@ -101,6 +105,7 @@ export class DeploymentStateTagComponent {
       ERROR: 'failed',
       FAILURE: 'failed',
       INACTIVE: 'inactive',
+      CANCELLED: 'cancelled',
       UNKNOWN: 'unknown',
       NEVER_DEPLOYED: 'never deployed',
       REPLACED: 'replaced',
@@ -119,6 +124,7 @@ export class DeploymentStateTagComponent {
       ERROR: 'Latest deployment failed',
       FAILURE: 'Latest deployment failed',
       INACTIVE: 'Deployment inactive',
+      CANCELLED: 'Deployment was cancelled',
       UNKNOWN: 'Deployment state unknown',
       NEVER_DEPLOYED: 'Never deployed',
       REPLACED: 'Deployment was replaced',

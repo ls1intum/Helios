@@ -122,13 +122,6 @@ export class EnvironmentListViewComponent implements OnDestroy {
         detail: 'Deployment cancellation request sent successfully',
       });
     },
-    onError: error => {
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Error',
-        detail: `Failed to cancel deployment: ${error.message || 'Unknown error'}`,
-      });
-    },
   }));
 
   canUserDeploy(environment: EnvironmentDto): boolean {

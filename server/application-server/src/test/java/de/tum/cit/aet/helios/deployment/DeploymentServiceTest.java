@@ -19,6 +19,7 @@ import de.tum.cit.aet.helios.environment.EnvironmentLockHistoryRepository;
 import de.tum.cit.aet.helios.environment.EnvironmentRepository;
 import de.tum.cit.aet.helios.environment.EnvironmentService;
 import de.tum.cit.aet.helios.github.GitHubService;
+import de.tum.cit.aet.helios.github.WorkflowDispatchResult;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
@@ -35,6 +36,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
@@ -69,6 +71,7 @@ public class DeploymentServiceTest {
 
     gitRepository = new GitRepository();
     gitRepository.setRepositoryId(1L);
+    gitRepository.setNameWithOwner("owner/repo");
 
     environment = new Environment();
     environment.setId(1L);
@@ -205,6 +208,7 @@ public class DeploymentServiceTest {
 
     Workflow wf = new Workflow();
     wf.setId(1L);
+    wf.setFileNameWithExtension("deploy.yml");
 
     environment.setDeploymentWorkflow(wf);
 
@@ -215,6 +219,37 @@ public class DeploymentServiceTest {
     when(heliosDeploymentRepository.saveAndFlush(any())).thenAnswer(a -> a.getArgument(0));
 
     deploymentService.deployToEnvironment(deployRequest);
+  }
+
+  @Test
+  public void testDeployToEnvironmentSavesWorkflowRunIdFromDispatchResponse() throws Exception {
+    final DeployRequest deployRequest = new DeployRequest(1L, "main", "sha");
+
+    Workflow wf = new Workflow();
+    wf.setId(1L);
+    wf.setFileNameWithExtension("deploy.yml");
+
+    environment.setDeploymentWorkflow(wf);
+
+    when(environmentService.getEnvironmentTypeById(1L))
+        .thenReturn(Optional.of(Environment.Type.PRODUCTION));
+    when(authService.hasRole(anyString())).thenReturn(true);
+    when(environmentRepository.findById(1L)).thenReturn(Optional.of(environment));
+    when(heliosDeploymentRepository.saveAndFlush(any())).thenAnswer(a -> a.getArgument(0));
+    when(heliosDeploymentRepository.save(any())).thenAnswer(a -> a.getArgument(0));
+    when(gitHubService.dispatchWorkflow(
+            org.mockito.ArgumentMatchers.eq("owner/repo"),
+            org.mockito.ArgumentMatchers.eq("deploy.yml"),
+            org.mockito.ArgumentMatchers.eq("main"),
+            any()))
+        .thenReturn(new WorkflowDispatchResult(123L, "https://api.github.com/runs/123", null));
+
+    deploymentService.deployToEnvironment(deployRequest);
+
+    ArgumentCaptor<HeliosDeployment> deploymentCaptor =
+        ArgumentCaptor.forClass(HeliosDeployment.class);
+    verify(heliosDeploymentRepository, times(2)).save(deploymentCaptor.capture());
+    assertEquals(Long.valueOf(123L), deploymentCaptor.getValue().getWorkflowRunId());
   }
 
   @Test

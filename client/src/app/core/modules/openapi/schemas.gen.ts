@@ -144,7 +144,7 @@ export const EnvironmentDeploymentSchema = {
     },
     state: {
       type: 'string',
-      enum: ['REQUESTED', 'PENDING', 'WAITING', 'SUCCESS', 'ERROR', 'FAILURE', 'IN_PROGRESS', 'QUEUED', 'INACTIVE', 'UNKNOWN'],
+      enum: ['REQUESTED', 'PENDING', 'WAITING', 'SUCCESS', 'ERROR', 'FAILURE', 'IN_PROGRESS', 'QUEUED', 'INACTIVE', 'CANCELLED', 'UNKNOWN'],
     },
     statusesUrl: {
       type: 'string',
@@ -1579,7 +1579,7 @@ export const DeploymentDtoSchema = {
     },
     state: {
       type: 'string',
-      enum: ['PENDING', 'WAITING', 'SUCCESS', 'ERROR', 'FAILURE', 'IN_PROGRESS', 'QUEUED', 'INACTIVE', 'UNKNOWN'],
+      enum: ['PENDING', 'WAITING', 'SUCCESS', 'ERROR', 'FAILURE', 'IN_PROGRESS', 'QUEUED', 'INACTIVE', 'CANCELLED', 'UNKNOWN'],
     },
     statusesUrl: {
       type: 'string',
@@ -1734,7 +1734,7 @@ export const ActivityHistoryDtoSchema = {
     },
     state: {
       type: 'string',
-      enum: ['PENDING', 'WAITING', 'SUCCESS', 'ERROR', 'FAILURE', 'IN_PROGRESS', 'QUEUED', 'INACTIVE', 'UNKNOWN'],
+      enum: ['PENDING', 'WAITING', 'SUCCESS', 'ERROR', 'FAILURE', 'IN_PROGRESS', 'QUEUED', 'INACTIVE', 'CANCELLED', 'UNKNOWN'],
     },
     sha: {
       type: 'string',

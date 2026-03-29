@@ -1,5 +1,7 @@
 package de.tum.cit.aet.helios.deployment.github;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import de.tum.cit.aet.helios.deployment.Deployment;
 import de.tum.cit.aet.helios.deployment.approval.ApprovalService;
 import de.tum.cit.aet.helios.environment.Environment;
@@ -13,6 +15,7 @@ import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import de.tum.cit.aet.helios.user.User;
 import de.tum.cit.aet.helios.user.github.GitHubUserSyncService;
+import io.nats.client.Message;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.Optional;
@@ -24,6 +27,7 @@ import org.kohsuke.github.GHEvent;
 import org.kohsuke.github.GHEventPayload;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GHUser;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -42,7 +46,34 @@ public class GitHubDeploymentStatusMessageHandler
   private final GitHubFacade github;
   private final GitHubDataSyncOrchestrator gitHubDataSyncOrchestrator;
 
+  @Autowired private ObjectMapper objectMapper;
+
   private final Instant applicationStartTime = Instant.now();
+
+  /** Holds the workflow run ID extracted from the raw webhook payload for the current message. */
+  private final ThreadLocal<Long> currentWorkflowRunId = new ThreadLocal<>();
+
+  @Override
+  public void onMessage(Message msg) {
+    try {
+      JsonNode root = objectMapper.readTree(msg.getData());
+      JsonNode workflowRun = root.path("workflow_run");
+      if (!workflowRun.isMissingNode() && !workflowRun.isNull()) {
+        long id = workflowRun.path("id").asLong(0);
+        currentWorkflowRunId.set(id != 0 ? id : null);
+      } else {
+        currentWorkflowRunId.set(null);
+      }
+    } catch (Exception e) {
+      log.warn("Failed to extract workflow_run.id from deployment_status payload", e);
+      currentWorkflowRunId.set(null);
+    }
+    try {
+      super.onMessage(msg);
+    } finally {
+      currentWorkflowRunId.remove();
+    }
+  }
 
   @Override
   protected Class<GHEventPayload.DeploymentStatus> getPayloadClass() {
@@ -136,9 +167,11 @@ public class GitHubDeploymentStatusMessageHandler
     // Before calling getState() method, check if the state is WAITING and handle it gracefully
     // Deployment.mapToState handles mapping gracefully
     GHDeploymentStatus deploymentStatus = eventPayload.getDeploymentStatus();
-    // Convert GHDeployment to DeploymentSource
+    // Convert GHDeployment to DeploymentSource.
+    // workflow_run.id is extracted from the raw webhook payload (not available via Kohsuke).
     DeploymentSource deploymentSource =
-        deploymentSourceFactory.create(ghDeployment, Deployment.mapToState(deploymentStatus));
+        deploymentSourceFactory.create(
+            ghDeployment, Deployment.mapToState(deploymentStatus), currentWorkflowRunId.get());
 
     // Process this single deployment
     deploymentSyncService.processDeployment(

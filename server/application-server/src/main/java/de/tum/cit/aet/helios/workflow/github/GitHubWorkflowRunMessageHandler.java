@@ -99,11 +99,15 @@ public class GitHubWorkflowRunMessageHandler
           gitHubService.extractWorkflowContext(repository.getId(), githubRun.getId());
     } catch (Exception e) {
       log.error("Error while extracting workflow context: {}", e.getMessage());
-      return;
     }
 
     if (context == null) {
-      log.warn("No workflow context found for workflow run: {}", githubRun.getId());
+      log.warn(
+          "No workflow context found for workflow run: {}, processing without context"
+              + " (workflow may have been cancelled before uploading context artifact)",
+          githubRun.getId());
+      var run = workflowSyncService.processRun(githubRun);
+      processTestResult(run);
       return;
     }
 

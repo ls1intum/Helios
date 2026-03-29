@@ -113,6 +113,8 @@ public class HeliosDeployment {
      * the workflow.
      */
     IO_ERROR,
+    /** Deployment was cancelled. */
+    CANCELLED,
     /** Deployment status is unknown. */
     UNKNOWN;
   }
@@ -134,7 +136,8 @@ public class HeliosDeployment {
     } else if (workflowStatus == GHWorkflowRun.Status.COMPLETED) {
       return switch (workflowConclusion) {
         case SUCCESS -> Status.DEPLOYMENT_SUCCESS;
-        case FAILURE, STARTUP_FAILURE, TIMED_OUT, CANCELLED -> Status.FAILED;
+        case CANCELLED -> Status.CANCELLED;
+        case FAILURE, STARTUP_FAILURE, TIMED_OUT -> Status.FAILED;
         default -> Status.UNKNOWN;
       };
     } else {
@@ -150,6 +153,7 @@ public class HeliosDeployment {
       case IN_PROGRESS -> Deployment.State.IN_PROGRESS;
       case DEPLOYMENT_SUCCESS -> Deployment.State.SUCCESS;
       case FAILED -> Deployment.State.FAILURE;
+      case CANCELLED -> Deployment.State.CANCELLED;
       case IO_ERROR, UNKNOWN -> Deployment.State.UNKNOWN;
     };
   }
@@ -160,6 +164,7 @@ public class HeliosDeployment {
       case IN_PROGRESS -> Status.IN_PROGRESS;
       case SUCCESS -> Status.DEPLOYMENT_SUCCESS;
       case FAILURE, ERROR -> Status.FAILED;
+      case CANCELLED -> Status.CANCELLED;
       case UNKNOWN, INACTIVE -> Status.UNKNOWN;
       case QUEUED -> Status.QUEUED;
     };

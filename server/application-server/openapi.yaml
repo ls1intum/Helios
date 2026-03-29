@@ -2254,6 +2254,7 @@ components:
           - IN_PROGRESS
           - QUEUED
           - INACTIVE
+          - CANCELLED
           - UNKNOWN
         statusesUrl:
           type: string
@@ -3443,6 +3444,7 @@ components:
           - IN_PROGRESS
           - QUEUED
           - INACTIVE
+          - CANCELLED
           - UNKNOWN
         statusesUrl:
           type: string
@@ -3563,6 +3565,7 @@ components:
           - IN_PROGRESS
           - QUEUED
           - INACTIVE
+          - CANCELLED
           - UNKNOWN
         sha:
           type: string

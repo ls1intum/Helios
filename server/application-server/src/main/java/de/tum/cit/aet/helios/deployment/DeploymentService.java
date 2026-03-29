@@ -12,6 +12,7 @@ import de.tum.cit.aet.helios.environment.EnvironmentRepository;
 import de.tum.cit.aet.helios.environment.EnvironmentService;
 import de.tum.cit.aet.helios.filters.RepositoryContext;
 import de.tum.cit.aet.helios.github.GitHubService;
+import de.tum.cit.aet.helios.github.WorkflowDispatchResult;
 import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
@@ -200,11 +201,18 @@ public class DeploymentService {
     heliosDeploymentRepository.save(heliosDeployment);
 
     try {
-      this.gitHubService.dispatchWorkflow(
-          environment.getRepository().getNameWithOwner(),
-          deploymentWorkflow.getFileNameWithExtension(),
-          this.getDeploymentWorkflowBranch(environment, deployRequest),
-          workflowParams);
+      WorkflowDispatchResult dispatchResult =
+          this.gitHubService.dispatchWorkflow(
+              environment.getRepository().getNameWithOwner(),
+              deploymentWorkflow.getFileNameWithExtension(),
+              this.getDeploymentWorkflowBranch(environment, deployRequest),
+              workflowParams);
+
+      if (dispatchResult != null && dispatchResult.workflowRunId() != null) {
+        heliosDeployment.setWorkflowRunId(dispatchResult.workflowRunId());
+        heliosDeployment.setWorkflowRunHtmlUrl(dispatchResult.htmlUrl());
+        heliosDeploymentRepository.save(heliosDeployment);
+      }
 
       this.environmentService.markStatusAsChanged(environment);
     } catch (IOException e) {
@@ -234,7 +242,8 @@ public class DeploymentService {
     // Allow redeployment if the previous deployment failed
     if (deployment.getStatus() == HeliosDeployment.Status.FAILED
         || deployment.getStatus() == HeliosDeployment.Status.IO_ERROR
-        || deployment.getStatus() == HeliosDeployment.Status.UNKNOWN) {
+        || deployment.getStatus() == HeliosDeployment.Status.UNKNOWN
+        || deployment.getStatus() == HeliosDeployment.Status.CANCELLED) {
       return true;
     }
 
@@ -421,6 +430,14 @@ public class DeploymentService {
 
       // Call GitHub to cancel the workflow
       gitHubService.cancelWorkflowRun(repoNameWithOwner, workflowRunId);
+
+      // Immediately mark the HeliosDeployment as cancelled so the UI disables the cancel button
+      // right away, without waiting for the webhook to arrive.
+      heliosDeploymentRepository.findByWorkflowRunId(workflowRunId)
+          .ifPresent(heliosDeployment -> {
+            heliosDeployment.setStatus(HeliosDeployment.Status.CANCELLED);
+            heliosDeploymentRepository.save(heliosDeployment);
+          });
 
       return "Workflow cancellation request sent successfully";
     } catch (IOException e) {
