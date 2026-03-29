@@ -32,6 +32,9 @@ public interface HeliosDeploymentRepository extends JpaRepository<HeliosDeployme
   List<HeliosDeployment> findByPullRequest_IdAndDeploymentIdIsNullOrderByCreatedAtDesc(
       Long pullRequestId);
 
+  @SuppressWarnings({"checkstyle:MethodName"})
+  List<HeliosDeployment> findByPullRequest_IdOrderByCreatedAtDesc(Long pullRequestId);
+
   @Query(
       "SELECT hd FROM HeliosDeployment hd "
           + "JOIN hd.environment e "
@@ -50,6 +53,16 @@ public interface HeliosDeploymentRepository extends JpaRepository<HeliosDeployme
           + "AND hd.deploymentId IS NULL "
           + "ORDER BY hd.createdAt DESC")
   List<HeliosDeployment> findByRepositoryIdAndBranchNameAndDeploymentIdIsNullOrderByCreatedAtDesc(
+      @Param("repositoryId") Long repositoryId, @Param("branchName") String branchName);
+
+  @Query(
+      "SELECT hd FROM HeliosDeployment hd "
+          + "JOIN hd.environment e "
+          + "JOIN e.repository r "
+          + "WHERE r.id = :repositoryId "
+          + "AND hd.branchName = :branchName "
+          + "ORDER BY hd.createdAt DESC")
+  List<HeliosDeployment> findByRepositoryIdAndBranchNameOrderByCreatedAtDesc(
       @Param("repositoryId") Long repositoryId, @Param("branchName") String branchName);
 
   Optional<HeliosDeployment> findByDeploymentId(Long deploymentId);

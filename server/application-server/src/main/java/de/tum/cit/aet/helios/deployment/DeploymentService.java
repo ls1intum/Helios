@@ -359,26 +359,18 @@ public class DeploymentService {
       throw new EntityNotFoundException("Pull request not found with id: " + pullRequestId);
     }
 
-    List<ActivityHistoryDto> combined = new ArrayList<>();
-
-    List<Deployment> deployments =
-        deploymentRepository.findByPullRequest_IdOrderByCreatedAtDesc(pullRequestId);
-    Map<Long, HeliosDeployment> heliosByDeploymentId = buildHeliosByDeploymentIdMap(deployments);
-    List<ActivityHistoryDto> deploymentDtos =
-        deployments.stream()
-            .map(d -> ActivityHistoryDto.fromDeployment(d, heliosByDeploymentId.get(d.getId())))
-            .toList();
-    combined.addAll(deploymentDtos);
-
-    List<ActivityHistoryDto> heliosDeploymentDtos =
-        heliosDeploymentRepository.findByPullRequest_IdAndDeploymentIdIsNullOrderByCreatedAtDesc(
+    // TODO: Consider including Github Deployments without linked HeliosDeployment as well,
+    // For now, it is not included because the Deployment.ref stores the workflow dispatch ref
+    // (e.g. "main") instead of the actual deployed branch. So, this could lead to confusion in the
+    // UI if we show deployments with a ref that doesn't match the PR branch.
+    List<ActivityHistoryDto> heliosDeploymentDtos = new ArrayList<>(
+        heliosDeploymentRepository.findByPullRequest_IdOrderByCreatedAtDesc(
                 pullRequestId)
             .stream()
             .map(ActivityHistoryDto::fromHeliosDeployment)
-            .toList();
-    combined.addAll(heliosDeploymentDtos);
-
-    return ActivityHistoryDto.sortActivityHistoryDtosByTimestampDesc(combined);
+            .toList()
+    );
+    return ActivityHistoryDto.sortActivityHistoryDtosByTimestampDesc(heliosDeploymentDtos);
   }
 
   /**
@@ -394,28 +386,19 @@ public class DeploymentService {
    */
   public List<ActivityHistoryDto> getActivityHistoryByRepositoryIdAndBranchName(
       Long repositoryId, String branchName) {
-    List<ActivityHistoryDto> combined = new ArrayList<>();
 
-    List<Deployment> deployments =
-        deploymentRepository.findByRepositoryRepositoryIdAndRefOrderByCreatedAtDesc(
-            repositoryId, branchName);
-    Map<Long, HeliosDeployment> heliosByDeploymentId = buildHeliosByDeploymentIdMap(deployments);
-    List<ActivityHistoryDto> deploymentDtos =
-        deployments.stream()
-            .map(d -> ActivityHistoryDto.fromDeployment(d, heliosByDeploymentId.get(d.getId())))
-            .toList();
-    combined.addAll(deploymentDtos);
-
-    List<ActivityHistoryDto> heliosDeploymentDtos =
-        heliosDeploymentRepository
-            .findByRepositoryIdAndBranchNameAndDeploymentIdIsNullOrderByCreatedAtDesc(
+    // TODO: Consider including Github Deployments without linked HeliosDeployment as well,
+    // For now, it is not included because the Deployment.ref stores the workflow dispatch ref
+    // (e.g. "main") instead of the actual deployed branch. So, this could lead to confusion in the
+    // UI if we show deployments with a ref that doesn't match the branch.
+    List<ActivityHistoryDto> heliosDeploymentDtos = new ArrayList<>(
+        heliosDeploymentRepository.findByRepositoryIdAndBranchNameOrderByCreatedAtDesc(
                 repositoryId, branchName)
             .stream()
             .map(ActivityHistoryDto::fromHeliosDeployment)
-            .toList();
-    combined.addAll(heliosDeploymentDtos);
-
-    return ActivityHistoryDto.sortActivityHistoryDtosByTimestampDesc(combined);
+            .toList()
+    );
+    return ActivityHistoryDto.sortActivityHistoryDtosByTimestampDesc(heliosDeploymentDtos);
   }
 
   /**
