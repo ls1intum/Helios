@@ -21,6 +21,16 @@ import org.springframework.stereotype.Component;
 @Component
 @Log4j2
 public class JunitParser implements TestResultParser {
+  private static final JAXBContext JAXB_CONTEXT = createJaxbContext();
+
+  private static JAXBContext createJaxbContext() {
+    try {
+      return JAXBContext.newInstance(TestSuite.class, TestSuites.class);
+    } catch (JAXBException e) {
+      throw new IllegalStateException("Failed to initialize JUnit JAXB context", e);
+    }
+  }
+
   private static LocalDateTime parseDateTime(String dateTime) {
     try {
       // Try parsing as OffsetDateTime first (for Z suffix)
@@ -42,9 +52,7 @@ public class JunitParser implements TestResultParser {
   public List<TestResultParser.TestSuite> parse(InputStream inputStream)
       throws TestResultParseException {
     try {
-      // Create JAXBContext with both TestSuite and TestSuites classes
-      JAXBContext context = JAXBContext.newInstance(TestSuite.class, TestSuites.class);
-      Unmarshaller unmarshaller = context.createUnmarshaller();
+      Unmarshaller unmarshaller = JAXB_CONTEXT.createUnmarshaller();
       Object unmarshalled = unmarshaller.unmarshal(inputStream);
 
       if (unmarshalled instanceof TestSuites) {
@@ -65,6 +73,7 @@ public class JunitParser implements TestResultParser {
   }
 
   private TestResultParser.TestSuite convertJunitTestSuite(TestSuite suite) {
+    boolean hasSuiteFailures = suite.failures > 0 || suite.errors > 0;
     return new TestResultParser.TestSuite(
         suite.name,
         parseDateTime(suite.timestamp),
@@ -73,7 +82,7 @@ public class JunitParser implements TestResultParser {
         suite.errors,
         suite.skipped,
         suite.time,
-        concatenateSystemOut(suite.systemOut),
+        hasSuiteFailures ? concatenateSystemOut(suite.systemOut) : null,
         suite.testcases.stream().map(this::parseTestCase).toList());
   }
 
@@ -84,15 +93,17 @@ public class JunitParser implements TestResultParser {
   }
 
   private TestResultParser.TestCase parseTestCase(TestCase tc) {
+    boolean failed = tc.failure != null;
+    boolean errored = tc.error != null;
     String errorType = null;
     String message = null;
     String stackTrace = null;
 
-    if (tc.failure != null) {
+    if (failed) {
       errorType = tc.failure.type;
       message = tc.failure.message;
       stackTrace = tc.failure.content;
-    } else if (tc.error != null) {
+    } else if (errored) {
       errorType = tc.error.type;
       message = tc.error.message;
       stackTrace = tc.error.content;
@@ -102,13 +113,13 @@ public class JunitParser implements TestResultParser {
         tc.name,
         tc.className,
         tc.time,
-        tc.failure != null,
-        tc.error != null,
+        failed,
+        errored,
         tc.skipped != null,
         errorType,
         message,
         stackTrace,
-        concatenateSystemOut(tc.systemOut));
+        failed || errored ? concatenateSystemOut(tc.systemOut) : null);
   }
 
   @XmlRootElement(name = "testsuites")
