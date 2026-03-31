@@ -213,7 +213,7 @@ public class TestResultProcessor {
             throw new TestResultException("Empty artifact stream");
           }
 
-          List<TestResultParser.TestSuite> results = new ArrayList<>();
+          List<TestSuite> testSuites = new ArrayList<>();
 
           try (ZipInputStream zipInput = new ZipInputStream(stream)) {
             ZipEntry entry;
@@ -230,7 +230,9 @@ public class TestResultProcessor {
                       };
 
                   try {
-                    results.addAll(this.junitParser.parse(nonClosingStream));
+                    List<TestResultParser.TestSuite> parsedSuites =
+                        this.junitParser.parse(nonClosingStream);
+                    testSuites.addAll(convertToTestSuites(parsedSuites));
                   } catch (TestResultParseException e) {
                     log.error("Failed to parse JUnit XML file {}", entry.getName(), e);
                   }
@@ -241,7 +243,7 @@ public class TestResultProcessor {
             }
           }
 
-          return convertToTestSuites(results);
+          return testSuites;
         });
   }
 
