@@ -132,12 +132,15 @@ services:
       - HELIOS_PROD_SECRET_KEY=${HELIOS_PROD_SECRET_KEY}
       - HELIOS_STAGING_SECRET_KEY=${HELIOS_STAGING_SECRET_KEY}
       - HELIOS_DEVELOPERS_GITHUB_USERNAMES=${HELIOS_DEVELOPERS_GITHUB_USERNAMES}
+      - JAVA_TOOL_OPTIONS=-XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/dumps -Xlog:gc*:file=/logs/gc.log:time,uptime,level,tags
     depends_on:
       - postgres
       - nats-server
       - webhook-listener
     volumes:
       - ./heliosapp.converted_key_pkcs8.pem:/app/heliosapp.converted_key_pkcs8.pem
+      - ./dumps:/dumps
+      - ./logs:/logs
     networks:
       - helios-network
 
