@@ -2,11 +2,12 @@ package de.tum.cit.aet.helios.tests;
 
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import de.tum.cit.aet.helios.tests.pagination.FlakyTestsPageRequest;
+import jakarta.persistence.EntityManager;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.transaction.Transactional;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -32,9 +33,13 @@ public class TestCaseStatisticsService {
   private static final double COMBINED_BRANCH_WEIGHT = 0.3;
   private static final double MIN_FLAKY_RATE = 0.01; // 1%
   private static final double MAX_FLAKY_RATE = 0.5; // 50%
+  private static final int MAX_SUITE_NAMES_PER_RECOMPUTE = 10_000;
+  private static final int SUITE_NAME_QUERY_CHUNK_SIZE = 250;
+  private static final int FLAKINESS_SAVE_BATCH_SIZE = 1_000;
 
   private final TestCaseStatisticsRepository statisticsRepository;
   private final TestCaseFlakinessRepository flakinessRepository;
+  private final EntityManager entityManager;
 
   /**
    * Composite key uniquely identifying one test case within a suite.
@@ -146,45 +151,57 @@ public class TestCaseStatisticsService {
     var suiteNames = testSuites.stream().map(TestSuite::getName).distinct().toList();
 
     // Two bulk DB reads and index into Maps for O(1) per-test lookup
-    Map<StatsKey, Double> defaultRates =
-        indexFailureRates(
-            statisticsRepository.findByTestSuiteNameInAndBranchNameAndRepositoryRepositoryId(
-                suiteNames, defaultBranch, repository.getRepositoryId()));
+    Map<StatsKey, Double> defaultRates = loadFailureRateIndex(
+        suiteNames, defaultBranch, repository.getRepositoryId());
+    Map<StatsKey, Double> combinedRates = loadFailureRateIndex(
+        suiteNames, "combined", repository.getRepositoryId());
 
-    Map<StatsKey, Double> combinedRates =
-        indexFailureRates(
-            statisticsRepository.findByTestSuiteNameInAndBranchNameAndRepositoryRepositoryId(
-                suiteNames, "combined", repository.getRepositoryId()));
-
-    // One bulk read for existing flakiness records to avoid N+1 SELECTs in the loop
-    Map<StatsKey, TestCaseFlakiness> existingFlakinessRecords = loadFlakinessIndex(
+    // Fetch only IDs + key fields to avoid loading full entities into the persistence context.
+    Map<StatsKey, Long> existingFlakinessIds = loadFlakinessIdIndex(
         suiteNames, repository.getRepositoryId());
 
-    Map<StatsKey, TestCaseFlakiness> flakinessMapToSave = new LinkedHashMap<>();
+    List<TestCaseFlakiness> batchToSave = new ArrayList<>(FLAKINESS_SAVE_BATCH_SIZE);
+    int savedRows = 0;
+    int batchNumber = 0;
     for (TestSuite suite : testSuites) {
       for (TestCase testCase : suite.getTestCases()) {
         var key = new StatsKey(testCase.getName(), testCase.getClassName(), suite.getName());
+        TestCaseFlakiness record = new TestCaseFlakiness();
+        Long existingId = existingFlakinessIds.get(key);
+        if (existingId != null) {
+          record.setId(existingId);
+        }
+        record.setTestName(key.testName());
+        record.setClassName(key.className());
+        record.setTestSuiteName(key.testSuiteName());
+        record.setRepository(repository);
+
         var info = computeFlakinessInfo(
             testCase.getName(), testCase.getClassName(), suite.getName(),
             defaultRates, combinedRates);
-
-        TestCaseFlakiness record = existingFlakinessRecords.getOrDefault(key, null);
-        if (record == null) {
-          record = new TestCaseFlakiness();
-          record.setTestName(key.testName());
-          record.setClassName(key.className());
-          record.setTestSuiteName(key.testSuiteName());
-          record.setRepository(repository);
-        }
         record.setFlakinessScore(info.flakinessScore());
         record.setDefaultBranchFailureRate(info.defaultBranchFailureRate());
         record.setCombinedFailureRate(info.combinedFailureRate());
         record.setLastUpdated(OffsetDateTime.now());
-        flakinessMapToSave.put(key, record);
+        batchToSave.add(record);
+
+        if (batchToSave.size() >= FLAKINESS_SAVE_BATCH_SIZE) {
+          batchNumber++;
+          saveFlakinessBatch(repository.getRepositoryId(), batchNumber, batchToSave);
+          savedRows += batchToSave.size();
+          batchToSave.clear();
+        }
       }
     }
 
-    flakinessRepository.saveAll(flakinessMapToSave.values());
+    if (!batchToSave.isEmpty()) {
+      batchNumber++;
+      saveFlakinessBatch(repository.getRepositoryId(), batchNumber, batchToSave);
+      savedRows += batchToSave.size();
+    }
+
+    log.info("Finished flakiness recomputation for repository {}: savedRows={}",
+        repository.getRepositoryId(), savedRows);
   }
 
   /**
@@ -206,6 +223,65 @@ public class TestCaseStatisticsService {
                 f -> new StatsKey(f.getTestName(), f.getClassName(), f.getTestSuiteName()),
                 f -> f,
                 (a, b) -> a));
+  }
+
+  private Map<StatsKey, Double> loadFailureRateIndex(
+      List<String> suiteNames, String branchName, Long repositoryId) {
+    Map<StatsKey, Double> rates = new HashMap<>();
+    for (List<String> chunk : chunked(suiteNames, SUITE_NAME_QUERY_CHUNK_SIZE)) {
+      List<TestCaseStatisticsRepository.FailureRateRow> rows =
+          statisticsRepository
+              .findFailureRateRowsByTestSuiteNameInAndBranchNameAndRepositoryRepositoryId(
+                  chunk,
+                  branchName,
+                  repositoryId);
+      for (TestCaseStatisticsRepository.FailureRateRow row : rows) {
+        rates.put(
+            new StatsKey(row.getTestName(), row.getClassName(), row.getTestSuiteName()),
+            row.getTotalRuns() > 0 ? (double) row.getFailedRuns() / row.getTotalRuns() : 0.0);
+      }
+    }
+    log.info(
+        "Loaded failure rates for repository {} branch {}: rows={}",
+        repositoryId,
+        branchName,
+        rates.size());
+    return rates;
+  }
+
+  private Map<StatsKey, Long> loadFlakinessIdIndex(List<String> suiteNames, Long repositoryId) {
+    Map<StatsKey, Long> ids = new HashMap<>();
+    for (List<String> chunk : chunked(suiteNames, SUITE_NAME_QUERY_CHUNK_SIZE)) {
+      List<TestCaseFlakinessRepository.FlakinessKeyRow> rows =
+          flakinessRepository.findFlakinessKeyRowsByTestSuiteNameInAndRepositoryRepositoryId(
+              chunk, repositoryId);
+      for (TestCaseFlakinessRepository.FlakinessKeyRow row : rows) {
+        ids.put(new StatsKey(row.getTestName(), row.getClassName(), row.getTestSuiteName()),
+            row.getId());
+      }
+    }
+    log.info("Loaded flakiness keys for repository {}: rows={}", repositoryId, ids.size());
+    return ids;
+  }
+
+  private void saveFlakinessBatch(
+      Long repositoryId, int batchNumber, List<TestCaseFlakiness> batch) {
+    flakinessRepository.saveAll(batch);
+    flakinessRepository.flush();
+    entityManager.clear();
+    log.debug("Saved flakiness batch {} for repository {}: size={}",
+        batchNumber, repositoryId, batch.size());
+  }
+
+  private static <T> List<List<T>> chunked(List<T> items, int chunkSize) {
+    if (items.isEmpty()) {
+      return List.of();
+    }
+    List<List<T>> chunks = new ArrayList<>((items.size() + chunkSize - 1) / chunkSize);
+    for (int i = 0; i < items.size(); i += chunkSize) {
+      chunks.add(items.subList(i, Math.min(items.size(), i + chunkSize)));
+    }
+    return chunks;
   }
 
   /**
