@@ -33,7 +33,6 @@ public class TestCaseStatisticsService {
   private static final double COMBINED_BRANCH_WEIGHT = 0.3;
   private static final double MIN_FLAKY_RATE = 0.01; // 1%
   private static final double MAX_FLAKY_RATE = 0.5; // 50%
-  private static final int MAX_SUITE_NAMES_PER_RECOMPUTE = 10_000;
   private static final int SUITE_NAME_QUERY_CHUNK_SIZE = 250;
   private static final int FLAKINESS_SAVE_BATCH_SIZE = 1_000;
 
