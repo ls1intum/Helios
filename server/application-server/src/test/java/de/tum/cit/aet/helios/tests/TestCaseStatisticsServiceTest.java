@@ -3,18 +3,26 @@ package de.tum.cit.aet.helios.tests;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyCollection;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import de.tum.cit.aet.helios.tests.pagination.FlakyTestsFilterType;
 import de.tum.cit.aet.helios.tests.pagination.FlakyTestsPageRequest;
+import jakarta.persistence.EntityManager;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.IntStream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentMatchers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -28,6 +36,7 @@ class TestCaseStatisticsServiceTest {
 
   @Mock private TestCaseStatisticsRepository statisticsRepository;
   @Mock private TestCaseFlakinessRepository flakinessRepository;
+  @Mock private EntityManager entityManager;
 
   @InjectMocks private TestCaseStatisticsService service;
 
@@ -50,7 +59,8 @@ class TestCaseStatisticsServiceTest {
         flakinessList,
         Pageable.ofSize(5), 10);
 
-    when(flakinessRepository.findAll(any(Specification.class), any(Pageable.class)))
+    when(flakinessRepository
+        .findAll(ArgumentMatchers.<Specification<TestCaseFlakiness>>any(), any(Pageable.class)))
         .thenReturn(page);
 
     when(flakinessRepository.countByRepositoryRepositoryId(repository.getRepositoryId()))
@@ -184,6 +194,36 @@ class TestCaseStatisticsServiceTest {
     assertEquals(0.0, info.flakinessScore());
   }
 
+  @Test
+  void updateFlakinessForTestSuite_chunksQueriesAndBatchesWrites() {
+    List<TestSuite> testSuites = new ArrayList<>();
+    for (int i = 0; i < 260; i++) {
+      testSuites.add(createSuiteWithSingleTest("Suite-" + i, "test-" + i, "Class-" + i));
+    }
+
+    when(statisticsRepository
+        .findFailureRateRowsByTestSuiteNameInAndBranchNameAndRepositoryRepositoryId(
+            anyCollection(), any(), any()))
+        .thenReturn(List.of());
+    when(flakinessRepository.findFlakinessKeyRowsByTestSuiteNameInAndRepositoryRepositoryId(
+        anyCollection(), any()))
+        .thenReturn(List.of());
+
+    service.updateFlakinessForTestSuite(testSuites, "main", repository);
+
+    verify(statisticsRepository, times(2))
+        .findFailureRateRowsByTestSuiteNameInAndBranchNameAndRepositoryRepositoryId(
+            anyCollection(), eq("main"), any());
+    verify(statisticsRepository, times(2))
+        .findFailureRateRowsByTestSuiteNameInAndBranchNameAndRepositoryRepositoryId(
+            anyCollection(), eq("combined"), any());
+    verify(flakinessRepository, times(2))
+        .findFlakinessKeyRowsByTestSuiteNameInAndRepositoryRepositoryId(anyCollection(), any());
+    verify(flakinessRepository).saveAll(any());
+    verify(flakinessRepository).flush();
+    verify(entityManager).clear();
+  }
+
   private TestCaseFlakiness createFlakiness(
       String testName,
       String className,
@@ -215,5 +255,25 @@ class TestCaseStatisticsServiceTest {
     stat.setFailedRuns(failed);
     stat.setLastUpdated(OffsetDateTime.now());
     return stat;
+  }
+
+  private static TestSuite createSuiteWithSingleTest(
+      String suiteName, String testName, String className) {
+    TestCase testCase = new TestCase();
+    testCase.setName(testName);
+    testCase.setClassName(className);
+    testCase.setStatus(TestCase.TestStatus.PASSED);
+    testCase.setTime(0.1);
+
+    TestSuite suite = new TestSuite();
+    suite.setName(suiteName);
+    suite.setTimestamp(LocalDateTime.now());
+    suite.setTests(1);
+    suite.setFailures(0);
+    suite.setErrors(0);
+    suite.setSkipped(0);
+    suite.setTime(0.1);
+    suite.setTestCases(List.of(testCase));
+    return suite;
   }
 }
