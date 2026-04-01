@@ -4,6 +4,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 /**
@@ -12,6 +14,17 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 public interface TestCaseStatisticsRepository extends JpaRepository<TestCaseStatistics, Long> {
+  interface FailureRateRow {
+    String getTestName();
+
+    String getClassName();
+
+    String getTestSuiteName();
+
+    int getTotalRuns();
+
+    int getFailedRuns();
+  }
 
   /**
    * Find statistics for a specific test case on a specific branch.
@@ -64,4 +77,16 @@ public interface TestCaseStatisticsRepository extends JpaRepository<TestCaseStat
    */
   List<TestCaseStatistics> findByTestSuiteNameInAndBranchNameAndRepositoryRepositoryId(
       Collection<String> testSuiteNames, String branchName, Long repositoryId);
+
+  @Query(
+      "SELECT s.testName AS testName, s.className AS className, s.testSuiteName AS testSuiteName,"
+          + " s.totalRuns AS totalRuns, s.failedRuns AS failedRuns"
+          + " FROM TestCaseStatistics s"
+          + " WHERE s.testSuiteName IN :testSuiteNames"
+          + " AND s.branchName = :branchName"
+          + " AND s.repository.repositoryId = :repositoryId")
+  List<FailureRateRow> findFailureRateRowsByTestSuiteNameInAndBranchNameAndRepositoryRepositoryId(
+      @Param("testSuiteNames") Collection<String> testSuiteNames,
+      @Param("branchName") String branchName,
+      @Param("repositoryId") Long repositoryId);
 }

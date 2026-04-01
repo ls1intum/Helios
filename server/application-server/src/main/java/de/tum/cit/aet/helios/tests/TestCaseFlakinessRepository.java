@@ -11,6 +11,15 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface TestCaseFlakinessRepository
     extends JpaRepository<TestCaseFlakiness, Long>, JpaSpecificationExecutor<TestCaseFlakiness> {
+  interface FlakinessKeyRow {
+    Long getId();
+
+    String getTestName();
+
+    String getClassName();
+
+    String getTestSuiteName();
+  }
 
   /**
    * Total number of flaky tests for a repository, regardless of flakiness score.
@@ -37,6 +46,15 @@ public interface TestCaseFlakinessRepository
    */
   List<TestCaseFlakiness> findByTestSuiteNameInAndRepositoryRepositoryId(
       Collection<String> suiteNames, Long repositoryId);
+
+  @Query(
+      "SELECT f.id AS id, f.testName AS testName, f.className AS className,"
+          + " f.testSuiteName AS testSuiteName"
+          + " FROM TestCaseFlakiness f"
+          + " WHERE f.testSuiteName IN :suiteNames"
+          + " AND f.repository.repositoryId = :repositoryId")
+  List<FlakinessKeyRow> findFlakinessKeyRowsByTestSuiteNameInAndRepositoryRepositoryId(
+      @Param("suiteNames") Collection<String> suiteNames, @Param("repositoryId") Long repositoryId);
 
   /**
    * Finds flakiness records matching a test name and class name for a repository, ordered by
