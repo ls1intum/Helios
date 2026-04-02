@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyCollection;
+import static org.mockito.ArgumentMatchers.anyDouble;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -12,7 +13,6 @@ import static org.mockito.Mockito.when;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import de.tum.cit.aet.helios.tests.pagination.FlakyTestsFilterType;
 import de.tum.cit.aet.helios.tests.pagination.FlakyTestsPageRequest;
-import jakarta.persistence.EntityManager;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -36,7 +36,6 @@ class TestCaseStatisticsServiceTest {
 
   @Mock private TestCaseStatisticsRepository statisticsRepository;
   @Mock private TestCaseFlakinessRepository flakinessRepository;
-  @Mock private EntityManager entityManager;
 
   @InjectMocks private TestCaseStatisticsService service;
 
@@ -205,9 +204,6 @@ class TestCaseStatisticsServiceTest {
         .findFailureRateRowsByTestSuiteNameInAndBranchNameAndRepositoryRepositoryId(
             anyCollection(), any(), any()))
         .thenReturn(List.of());
-    when(flakinessRepository.findFlakinessKeyRowsByTestSuiteNameInAndRepositoryRepositoryId(
-        anyCollection(), any()))
-        .thenReturn(List.of());
 
     service.updateFlakinessForTestSuite(testSuites, "main", repository);
 
@@ -217,11 +213,27 @@ class TestCaseStatisticsServiceTest {
     verify(statisticsRepository, times(2))
         .findFailureRateRowsByTestSuiteNameInAndBranchNameAndRepositoryRepositoryId(
             anyCollection(), eq("combined"), any());
-    verify(flakinessRepository, times(2))
-        .findFlakinessKeyRowsByTestSuiteNameInAndRepositoryRepositoryId(anyCollection(), any());
-    verify(flakinessRepository).saveAll(any());
-    verify(flakinessRepository).flush();
-    verify(entityManager).clear();
+    verify(flakinessRepository, times(260)).upsertFlakiness(
+        any(), any(), any(), any(), anyDouble(), anyDouble(), anyDouble(), any());
+  }
+
+  @Test
+  void updateFlakinessForTestSuite_callsUpsertForEveryTestCaseOccurrence() {
+    // Two suites that share the same logical key — native ON CONFLICT handles duplicates in the DB
+    TestSuite suiteA = createSuiteWithSingleTest("SameSuite", "sameTest", "SameClass");
+    TestSuite suiteB = createSuiteWithSingleTest("SameSuite", "sameTest", "SameClass");
+    List<TestSuite> testSuites = List.of(suiteA, suiteB);
+
+    when(statisticsRepository
+        .findFailureRateRowsByTestSuiteNameInAndBranchNameAndRepositoryRepositoryId(
+            anyCollection(), any(), any()))
+        .thenReturn(List.of());
+
+    service.updateFlakinessForTestSuite(testSuites, "main", repository);
+
+    // Called once per test-case occurrence; DB upsert safely overwrites on conflict
+    verify(flakinessRepository, times(2)).upsertFlakiness(
+        any(), any(), any(), any(), anyDouble(), anyDouble(), anyDouble(), any());
   }
 
   private TestCaseFlakiness createFlakiness(
