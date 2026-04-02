@@ -2,7 +2,6 @@ package de.tum.cit.aet.helios.tests;
 
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import de.tum.cit.aet.helios.tests.pagination.FlakyTestsPageRequest;
-import jakarta.persistence.EntityManager;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.transaction.Transactional;
 import java.time.OffsetDateTime;
@@ -34,11 +33,9 @@ public class TestCaseStatisticsService {
   private static final double MIN_FLAKY_RATE = 0.01; // 1%
   private static final double MAX_FLAKY_RATE = 0.5; // 50%
   private static final int SUITE_NAME_QUERY_CHUNK_SIZE = 250;
-  private static final int FLAKINESS_SAVE_BATCH_SIZE = 1_000;
 
   private final TestCaseStatisticsRepository statisticsRepository;
   private final TestCaseFlakinessRepository flakinessRepository;
-  private final EntityManager entityManager;
 
   /**
    * Composite key uniquely identifying one test case within a suite.
@@ -133,11 +130,12 @@ public class TestCaseStatisticsService {
   }
 
   /**
-   * Recomputes and persists flakiness scores for all tests belonging to the given suites.
+   * Recomputes and persists flakiness scores for all test cases in the given suites.
    *
-   * <p>All statistics and existing flakiness records are fetched in two bulk queries and indexed
-   * into {@link Map}s before the test-case loop, making per-test lookups O(1). Scores are persisted
-   * even when equal to zero so consumers can distinguish "known non-flaky" from "no record yet".
+   * <p>Failure rates are pre-loaded in two bulk queries (default branch + combined) and indexed
+   * into {@link Map}s so each per-test score computation is O(1). Each score is written via a
+   * native {@code INSERT ... ON CONFLICT DO UPDATE} that bypasses the Hibernate first-level cache
+   * entirely, preventing session growth and handling concurrent calls safely.
    *
    * @param testSuites the suites processed in this run
    * @param defaultBranch the repository's default branch name
@@ -150,57 +148,32 @@ public class TestCaseStatisticsService {
     var suiteNames = testSuites.stream().map(TestSuite::getName).distinct().toList();
 
     // Two bulk DB reads and index into Maps for O(1) per-test lookup
-    Map<StatsKey, Double> defaultRates = loadFailureRateIndex(
-        suiteNames, defaultBranch, repository.getRepositoryId());
-    Map<StatsKey, Double> combinedRates = loadFailureRateIndex(
-        suiteNames, "combined", repository.getRepositoryId());
+    Map<StatsKey, Double> defaultRates =
+        loadFailureRateIndex(suiteNames, defaultBranch, repository.getRepositoryId());
+    Map<StatsKey, Double> combinedRates =
+        loadFailureRateIndex(suiteNames, "combined", repository.getRepositoryId());
 
-    // Fetch only IDs + key fields to avoid loading full entities into the persistence context.
-    Map<StatsKey, Long> existingFlakinessIds = loadFlakinessIdIndex(
-        suiteNames, repository.getRepositoryId());
-
-    List<TestCaseFlakiness> batchToSave = new ArrayList<>(FLAKINESS_SAVE_BATCH_SIZE);
-    int savedRows = 0;
-    int batchNumber = 0;
+    OffsetDateTime now = OffsetDateTime.now();
+    int count = 0;
     for (TestSuite suite : testSuites) {
       for (TestCase testCase : suite.getTestCases()) {
-        var key = new StatsKey(testCase.getName(), testCase.getClassName(), suite.getName());
-        TestCaseFlakiness record = new TestCaseFlakiness();
-        Long existingId = existingFlakinessIds.get(key);
-        if (existingId != null) {
-          record.setId(existingId);
-        }
-        record.setTestName(key.testName());
-        record.setClassName(key.className());
-        record.setTestSuiteName(key.testSuiteName());
-        record.setRepository(repository);
-
         var info = computeFlakinessInfo(
             testCase.getName(), testCase.getClassName(), suite.getName(),
             defaultRates, combinedRates);
-        record.setFlakinessScore(info.flakinessScore());
-        record.setDefaultBranchFailureRate(info.defaultBranchFailureRate());
-        record.setCombinedFailureRate(info.combinedFailureRate());
-        record.setLastUpdated(OffsetDateTime.now());
-        batchToSave.add(record);
-
-        if (batchToSave.size() >= FLAKINESS_SAVE_BATCH_SIZE) {
-          batchNumber++;
-          saveFlakinessBatch(repository.getRepositoryId(), batchNumber, batchToSave);
-          savedRows += batchToSave.size();
-          batchToSave.clear();
-        }
+        flakinessRepository.upsertFlakiness(
+            repository.getRepositoryId(),
+            testCase.getName(),
+            testCase.getClassName(),
+            suite.getName(),
+            info.flakinessScore(),
+            info.defaultBranchFailureRate(),
+            info.combinedFailureRate(),
+            now);
+        count++;
       }
     }
-
-    if (!batchToSave.isEmpty()) {
-      batchNumber++;
-      saveFlakinessBatch(repository.getRepositoryId(), batchNumber, batchToSave);
-      savedRows += batchToSave.size();
-    }
-
-    log.info("Finished flakiness recomputation for repository {}: savedRows={}",
-        repository.getRepositoryId(), savedRows);
+    log.info("Finished flakiness upsert for repository {}: rows={}",
+        repository.getRepositoryId(), count);
   }
 
   /**
@@ -246,30 +219,6 @@ public class TestCaseStatisticsService {
         branchName,
         rates.size());
     return rates;
-  }
-
-  private Map<StatsKey, Long> loadFlakinessIdIndex(List<String> suiteNames, Long repositoryId) {
-    Map<StatsKey, Long> ids = new HashMap<>();
-    for (List<String> chunk : chunked(suiteNames, SUITE_NAME_QUERY_CHUNK_SIZE)) {
-      List<TestCaseFlakinessRepository.FlakinessKeyRow> rows =
-          flakinessRepository.findFlakinessKeyRowsByTestSuiteNameInAndRepositoryRepositoryId(
-              chunk, repositoryId);
-      for (TestCaseFlakinessRepository.FlakinessKeyRow row : rows) {
-        ids.put(new StatsKey(row.getTestName(), row.getClassName(), row.getTestSuiteName()),
-            row.getId());
-      }
-    }
-    log.info("Loaded flakiness keys for repository {}: rows={}", repositoryId, ids.size());
-    return ids;
-  }
-
-  private void saveFlakinessBatch(
-      Long repositoryId, int batchNumber, List<TestCaseFlakiness> batch) {
-    flakinessRepository.saveAll(batch);
-    flakinessRepository.flush();
-    entityManager.clear();
-    log.debug("Saved flakiness batch {} for repository {}: size={}",
-        batchNumber, repositoryId, batch.size());
   }
 
   private static <T> List<List<T>> chunked(List<T> items, int chunkSize) {

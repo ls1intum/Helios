@@ -84,6 +84,7 @@ public class TestResultProcessor {
 
       // Update test statistics if the workflow run is on the default branch
       updateTestStatisticsIfDefaultBranch(testSuites, workflowRun);
+      updateFlakiness(testSuites, workflowRun);
     } catch (Exception e) {
       log.error("Failed to process test results for workflow run {}", workflowRun.getName(), e);
       workflowRun.setTestProcessingStatus(WorkflowRun.TestProcessingStatus.FAILED);
@@ -291,9 +292,6 @@ public class TestResultProcessor {
           "combined",
           repository.get()); // update statistics for all the branches combined
       log.debug("Successfully updated test statistics for all branches combined");
-
-      updateFlakinessScores(testSuites, defaultBranch, repository.get());
-      log.debug("Successfully recomputed flakiness scores for affected tests");
     } catch (Exception e) {
       log.error("Error while trying to update test statistics", e);
       // Don't fail the overall process if statistics update fails
@@ -322,24 +320,22 @@ public class TestResultProcessor {
 
   /**
    * Recomputes and persists flakiness scores for all tests belonging to the given suites.
-   * Called after both the default-branch and combined statistics have been updated for a run.
-   * Only fetches stats rows for the suite names present in the current run, keeping
-   * the query bounded.
+   * Called from {@link #processRun} after the statistics transaction has
+   * already committed, so that the flakiness update runs in its own fresh Hibernate session.
    *
-   * @param testSuites the suites processed in this run
-   * @param defaultBranchName the repository's default branch name
-   * @param repository the repository
+   * @param testSuites the test suites processed in this run
+   * @param workflowRun the workflow run
    */
-  public void updateFlakinessScores(
-      List<TestSuite> testSuites, String defaultBranchName, GitRepository repository) {
+  private void updateFlakiness(List<TestSuite> testSuites, WorkflowRun workflowRun) {
     try {
-      statisticsService.updateFlakinessForTestSuite(testSuites, defaultBranchName, repository);
-      log.debug("Successfully updated flakiness info for repository: {}",
-          repository.getRepositoryId());
+      GitRepository repository = gitRepoRepository
+          .findById(workflowRun.getRepository().getRepositoryId())
+          .orElseThrow();
+
+      statisticsService.updateFlakinessForTestSuite(
+          testSuites, repository.getDefaultBranch(), repository);
     } catch (Exception e) {
-      log.error("Failed to update flakiness info for repository: {}",
-          repository.getRepositoryId(), e);
-      // Don't fail the overall process if flakiness update fails
+      log.error("Failed to update flakiness scores for workflow run {}", workflowRun.getName(), e);
     }
   }
 }
