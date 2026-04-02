@@ -1,9 +1,11 @@
 package de.tum.cit.aet.helios.tests;
 
+import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -11,15 +13,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface TestCaseFlakinessRepository
     extends JpaRepository<TestCaseFlakiness, Long>, JpaSpecificationExecutor<TestCaseFlakiness> {
-  interface FlakinessKeyRow {
-    Long getId();
-
-    String getTestName();
-
-    String getClassName();
-
-    String getTestSuiteName();
-  }
 
   /**
    * Total number of flaky tests for a repository, regardless of flakiness score.
@@ -47,14 +40,37 @@ public interface TestCaseFlakinessRepository
   List<TestCaseFlakiness> findByTestSuiteNameInAndRepositoryRepositoryId(
       Collection<String> suiteNames, Long repositoryId);
 
+  /**
+   * Inserts or updates a flakiness row for a single test case. Uses PostgreSQL
+   * {@code ON CONFLICT DO UPDATE} so concurrent calls for the same test are safe — the second
+   * writer simply overwrites with the latest computed score rather than failing.
+   */
+  @Modifying
   @Query(
-      "SELECT f.id AS id, f.testName AS testName, f.className AS className,"
-          + " f.testSuiteName AS testSuiteName"
-          + " FROM TestCaseFlakiness f"
-          + " WHERE f.testSuiteName IN :suiteNames"
-          + " AND f.repository.repositoryId = :repositoryId")
-  List<FlakinessKeyRow> findFlakinessKeyRowsByTestSuiteNameInAndRepositoryRepositoryId(
-      @Param("suiteNames") Collection<String> suiteNames, @Param("repositoryId") Long repositoryId);
+      value =
+          """
+          INSERT INTO test_case_flakiness
+              (repository_id, test_name, class_name, test_suite_name,
+               flakiness_score, default_branch_failure_rate, combined_failure_rate, last_updated)
+          VALUES (:repositoryId, :testName, :className, :suiteName,
+                  :flakinessScore, :defaultRate, :combinedRate, :lastUpdated)
+          ON CONFLICT ON CONSTRAINT uk_test_case_flakiness
+          DO UPDATE SET
+              flakiness_score             = EXCLUDED.flakiness_score,
+              default_branch_failure_rate = EXCLUDED.default_branch_failure_rate,
+              combined_failure_rate       = EXCLUDED.combined_failure_rate,
+              last_updated                = EXCLUDED.last_updated
+          """,
+      nativeQuery = true)
+  void upsertFlakiness(
+      @Param("repositoryId") Long repositoryId,
+      @Param("testName") String testName,
+      @Param("className") String className,
+      @Param("suiteName") String suiteName,
+      @Param("flakinessScore") double flakinessScore,
+      @Param("defaultRate") double defaultRate,
+      @Param("combinedRate") double combinedRate,
+      @Param("lastUpdated") OffsetDateTime lastUpdated);
 
   /**
    * Finds flakiness records matching a test name and class name for a repository, ordered by
