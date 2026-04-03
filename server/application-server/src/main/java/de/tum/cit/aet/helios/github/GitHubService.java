@@ -19,6 +19,7 @@ import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -54,6 +55,9 @@ import org.springframework.stereotype.Service;
 @Transactional
 public class GitHubService {
   private static final String GITHUB_API_VERSION = "2026-03-10";
+  private static final int GITHUB_ENVIRONMENTS_PAGE_SIZE = 100;
+
+  public record EnvironmentFetchResult(List<GitHubEnvironmentDto> environments, boolean complete) {}
 
   private final GitHubFacade github;
   private final GitHubConfig gitHubConfig;
@@ -218,10 +222,72 @@ public class GitHubService {
    * @throws IOException if an I/O error occurs
    */
   public List<GitHubEnvironmentDto> getEnvironments(GHRepository repository) throws IOException {
+    return fetchEnvironments(repository).environments();
+  }
+
+  public EnvironmentFetchResult fetchEnvironments(GHRepository repository) throws IOException {
     final String owner = repository.getOwnerName();
     final String repoName = repository.getName();
+    List<GitHubEnvironmentDto> environments = new ArrayList<>();
+    Integer expectedTotalCount = null;
+    boolean complete = true;
+
+    for (int page = 1; ; page++) {
+      GitHubEnvironmentApiResponse envResponse = fetchEnvironmentPage(owner, repoName, page);
+      List<GitHubEnvironmentDto> pageEnvironments =
+          Optional.ofNullable(envResponse.getEnvironments()).orElse(List.of());
+
+      if (expectedTotalCount == null) {
+        expectedTotalCount = envResponse.getTotalCount();
+      } else if (!expectedTotalCount.equals(envResponse.getTotalCount())) {
+        log.warn(
+            "GitHub environments total count changed during pagination for {}/{}. Skipping"
+                + " delete cleanup for this sync.",
+            owner,
+            repoName);
+        complete = false;
+        break;
+      }
+
+      environments.addAll(pageEnvironments);
+
+      if (environments.size() >= expectedTotalCount) {
+        break;
+      }
+
+      if (pageEnvironments.isEmpty()) {
+        log.warn(
+            "Incomplete environment list from GitHub for {}/{}: expected {} but received {}."
+                + " Skipping delete cleanup for this sync.",
+            owner,
+            repoName,
+            expectedTotalCount,
+            environments.size());
+        complete = false;
+        break;
+      }
+    }
+
+    if (expectedTotalCount != null && environments.size() != expectedTotalCount) {
+      log.warn(
+          "Incomplete environment list from GitHub for {}/{}: expected {} but received {}."
+              + " Skipping delete cleanup for this sync.",
+          owner,
+          repoName,
+          expectedTotalCount,
+          environments.size());
+      complete = false;
+    }
+
+    return new EnvironmentFetchResult(List.copyOf(environments), complete);
+  }
+
+  private GitHubEnvironmentApiResponse fetchEnvironmentPage(String owner, String repoName, int page)
+      throws IOException {
     final String url =
-        String.format("https://api.github.com/repos/%s/%s/environments", owner, repoName);
+        String.format(
+            "https://api.github.com/repos/%s/%s/environments?per_page=%d&page=%d",
+            owner, repoName, GITHUB_ENVIRONMENTS_PAGE_SIZE, page);
 
     Request request = getRequestBuilder().url(url).get().build();
 
@@ -235,15 +301,7 @@ public class GitHubService {
       }
 
       String responseBody = response.body().string();
-      GitHubEnvironmentApiResponse envResponse =
-          objectMapper.readValue(responseBody, GitHubEnvironmentApiResponse.class);
-      return envResponse.getEnvironments();
-    } catch (JsonProcessingException e) {
-      log.error("Error processing JSON response: {}", e.getMessage());
-      throw e;
-    } catch (IOException e) {
-      log.error("Error occurred while fetching environments: {}", e.getMessage());
-      throw e;
+      return objectMapper.readValue(responseBody, GitHubEnvironmentApiResponse.class);
     }
   }
 

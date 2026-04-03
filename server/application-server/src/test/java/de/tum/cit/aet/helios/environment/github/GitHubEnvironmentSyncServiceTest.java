@@ -74,13 +74,10 @@ class GitHubEnvironmentSyncServiceTest {
   }
 
   @Test
-  void shouldDeleteAllWhenGitHubListIsEmpty() {
-    when(environmentRepository.findByRepositoryRepositoryIdOrderByCreatedAtDesc(100L))
-        .thenReturn(List.of(createEnvironment(1L, "env1"), createEnvironment(2L, "env2")));
-
+  void shouldNotDeleteWhenGitHubListIsEmpty() {
     syncService.removeDeletedEnvironments(List.of(), 100L);
 
-    verify(environmentRepository, times(2)).delete(any());
+    verify(environmentRepository, never()).delete(any());
   }
 
   @Test
