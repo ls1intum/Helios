@@ -428,12 +428,110 @@ class GitHubServiceTest {
     when(objectMapper.readValue(jsonResponse, GitHubEnvironmentApiResponse.class))
         .thenReturn(apiResponse);
 
+    ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
+
     List<GitHubEnvironmentDto> environments = gitHubService.getEnvironments(mockRepository);
 
     assertFalse(environments.isEmpty());
     assertEquals("env_name", environments.get(0).getName());
-    verify(okHttpClient).newCall(any(Request.class));
+    verify(okHttpClient).newCall(requestCaptor.capture());
+    assertEquals(
+        "https://api.github.com/repos/owner/repo/environments?per_page=100&page=1",
+        requestCaptor.getValue().url().toString());
     verify(objectMapper).readValue(jsonResponse, GitHubEnvironmentApiResponse.class);
+  }
+
+  @Test
+  void getEnvironmentsFetchesAllPages() throws IOException {
+    GHRepository mockRepository = mock(GHRepository.class);
+    when(mockRepository.getOwnerName()).thenReturn("owner");
+    when(mockRepository.getName()).thenReturn("repo");
+    when(clientManager.getCurrentToken()).thenReturn("test-token");
+
+    GitHubEnvironmentDto env1 = new GitHubEnvironmentDto();
+    ReflectionTestUtils.setField(env1, "id", 1L);
+    ReflectionTestUtils.setField(env1, "name", "env-1");
+    GitHubEnvironmentDto env2 = new GitHubEnvironmentDto();
+    ReflectionTestUtils.setField(env2, "id", 2L);
+    ReflectionTestUtils.setField(env2, "name", "env-2");
+
+    GitHubEnvironmentApiResponse pageOneResponse = new GitHubEnvironmentApiResponse();
+    ReflectionTestUtils.setField(pageOneResponse, "totalCount", 2);
+    ReflectionTestUtils.setField(pageOneResponse, "environments", List.of(env1));
+    GitHubEnvironmentApiResponse pageTwoResponse = new GitHubEnvironmentApiResponse();
+    ReflectionTestUtils.setField(pageTwoResponse, "totalCount", 2);
+    ReflectionTestUtils.setField(pageTwoResponse, "environments", List.of(env2));
+
+    String pageOneJson = "{\"total_count\":2,\"environments\":[{\"id\":1,\"name\":\"env-1\"}]}";
+    String pageTwoJson = "{\"total_count\":2,\"environments\":[{\"id\":2,\"name\":\"env-2\"}]}";
+
+    Call firstCall = mock(Call.class);
+    Call secondCall = mock(Call.class);
+    when(okHttpClient.newCall(any(Request.class))).thenReturn(firstCall, secondCall);
+    when(firstCall.execute()).thenReturn(buildJsonResponse(pageOneJson));
+    when(secondCall.execute()).thenReturn(buildJsonResponse(pageTwoJson));
+    when(objectMapper.readValue(pageOneJson, GitHubEnvironmentApiResponse.class))
+        .thenReturn(pageOneResponse);
+    when(objectMapper.readValue(pageTwoJson, GitHubEnvironmentApiResponse.class))
+        .thenReturn(pageTwoResponse);
+
+    ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
+
+    GitHubService.EnvironmentFetchResult fetchResult =
+        gitHubService.fetchEnvironments(mockRepository);
+    List<GitHubEnvironmentDto> environments = fetchResult.environments();
+
+    assertEquals(
+        List.of("env-1", "env-2"),
+        environments.stream().map(GitHubEnvironmentDto::getName).toList());
+    assertTrue(fetchResult.complete());
+    verify(okHttpClient, times(2)).newCall(requestCaptor.capture());
+    assertEquals(
+        "https://api.github.com/repos/owner/repo/environments?per_page=100&page=1",
+        requestCaptor.getAllValues().get(0).url().toString());
+    assertEquals(
+        "https://api.github.com/repos/owner/repo/environments?per_page=100&page=2",
+        requestCaptor.getAllValues().get(1).url().toString());
+  }
+
+  @Test
+  void fetchEnvironmentsMarksPaginationAsIncomplete() throws IOException {
+    GHRepository mockRepository = mock(GHRepository.class);
+    when(mockRepository.getOwnerName()).thenReturn("owner");
+    when(mockRepository.getName()).thenReturn("repo");
+    when(clientManager.getCurrentToken()).thenReturn("test-token");
+
+    GitHubEnvironmentDto env1 = new GitHubEnvironmentDto();
+    ReflectionTestUtils.setField(env1, "id", 1L);
+    ReflectionTestUtils.setField(env1, "name", "env-1");
+
+    GitHubEnvironmentApiResponse pageOneResponse = new GitHubEnvironmentApiResponse();
+    ReflectionTestUtils.setField(pageOneResponse, "totalCount", 2);
+    ReflectionTestUtils.setField(pageOneResponse, "environments", List.of(env1));
+    GitHubEnvironmentApiResponse pageTwoResponse = new GitHubEnvironmentApiResponse();
+    ReflectionTestUtils.setField(pageTwoResponse, "totalCount", 2);
+    ReflectionTestUtils.setField(pageTwoResponse, "environments", List.of());
+
+    String pageOneJson = "{\"total_count\":2,\"environments\":[{\"id\":1,\"name\":\"env-1\"}]}";
+    String pageTwoJson = "{\"total_count\":2,\"environments\":[]}";
+
+    Call firstCall = mock(Call.class);
+    Call secondCall = mock(Call.class);
+    when(okHttpClient.newCall(any(Request.class))).thenReturn(firstCall, secondCall);
+    when(firstCall.execute()).thenReturn(buildJsonResponse(pageOneJson));
+    when(secondCall.execute()).thenReturn(buildJsonResponse(pageTwoJson));
+    when(objectMapper.readValue(pageOneJson, GitHubEnvironmentApiResponse.class))
+        .thenReturn(pageOneResponse);
+    when(objectMapper.readValue(pageTwoJson, GitHubEnvironmentApiResponse.class))
+        .thenReturn(pageTwoResponse);
+
+    GitHubService.EnvironmentFetchResult fetchResult =
+        gitHubService.fetchEnvironments(mockRepository);
+
+    assertEquals(
+        List.of("env-1"),
+        fetchResult.environments().stream().map(GitHubEnvironmentDto::getName).toList());
+    assertFalse(fetchResult.complete());
   }
 
   @Test
@@ -1242,5 +1340,15 @@ class GitHubServiceTest {
             });
     assertTrue(exception.getMessage()
         .contains("GitHub API cancel for run " + runId + " failed with response code: 500"));
+  }
+
+  private Response buildJsonResponse(String json) {
+    return new Response.Builder()
+        .request(new Request.Builder().url("http://dummyurl").build())
+        .protocol(Protocol.HTTP_1_1)
+        .code(200)
+        .message("OK")
+        .body(ResponseBody.create(json, MediaType.parse("application/json")))
+        .build();
   }
 }

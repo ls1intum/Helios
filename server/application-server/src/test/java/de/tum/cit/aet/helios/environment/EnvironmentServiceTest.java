@@ -11,8 +11,14 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import de.tum.cit.aet.helios.auth.AuthService;
 import de.tum.cit.aet.helios.deployment.DeploymentRepository;
+import de.tum.cit.aet.helios.environment.github.GitHubEnvironmentSyncService;
+import de.tum.cit.aet.helios.environment.protectionrules.ProtectionRuleRepository;
+import de.tum.cit.aet.helios.filters.RepositoryContext;
+import de.tum.cit.aet.helios.github.GitHubService;
+import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import de.tum.cit.aet.helios.gitreposettings.GitRepoSettingsService;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
@@ -28,8 +34,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.runner.RunWith;
+import org.kohsuke.github.GHRepository;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -47,6 +55,11 @@ public class EnvironmentServiceTest {
   @Mock private EnvironmentScheduler environmentScheduler;
   @Mock private WorkflowRepository workflowRepository;
   @Mock private NatsNotificationPublisherService notificationPublisherService;
+  @Mock private ProtectionRuleRepository protectionRuleRepository;
+  @Mock private ObjectMapper objectMapper;
+  @Mock private GitHubEnvironmentSyncService environmentSyncService;
+  @Mock private GitRepoRepository gitRepoRepository;
+  @Mock private GitHubService gitHubService;
 
   @InjectMocks private EnvironmentService environmentService;
 
@@ -415,5 +428,27 @@ public class EnvironmentServiceTest {
 
     verify(environmentRepository, times(1)).findById(1L);
     verify(workflowRepository, times(1)).findById(1L);
+  }
+
+  @Test
+  public void testSyncRepositoryEnvironmentsSkipsDeletionWhenFetchIsIncomplete()
+      throws Exception {
+    gitRepository.setNameWithOwner("owner/repo");
+    GHRepository ghRepository = org.mockito.Mockito.mock(GHRepository.class);
+    when(ghRepository.getFullName()).thenReturn("owner/repo");
+    GitHubService.EnvironmentFetchResult fetchResult =
+        new GitHubService.EnvironmentFetchResult(List.of(), false);
+
+    try (MockedStatic<RepositoryContext> repositoryContext =
+        org.mockito.Mockito.mockStatic(RepositoryContext.class)) {
+      repositoryContext.when(RepositoryContext::getRepositoryId).thenReturn(1L);
+      when(gitRepoRepository.findById(1L)).thenReturn(Optional.of(gitRepository));
+      when(gitHubService.getRepository("owner/repo")).thenReturn(ghRepository);
+      when(gitHubService.fetchEnvironments(ghRepository)).thenReturn(fetchResult);
+
+      environmentService.syncRepositoryEnvironments();
+    }
+
+    verify(environmentSyncService, times(0)).removeDeletedEnvironments(any(), any());
   }
 }

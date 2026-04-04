@@ -67,6 +67,14 @@ public class GitHubEnvironmentSyncService {
   @Transactional
   public void removeDeletedEnvironments(
       @NotNull List<GitHubEnvironmentDto> gitHubEnvironments, @NotNull Long repositoryId) {
+    if (gitHubEnvironments.isEmpty()) {
+      log.warn(
+          "Skipping environment deletion for repository (ID: {}) because GitHub returned an empty"
+              + " environment list.",
+          repositoryId);
+      return;
+    }
+
     Set<Long> githubEnvironmentIds =
         gitHubEnvironments.stream().map(GitHubEnvironmentDto::getId).collect(Collectors.toSet());
 
