@@ -239,16 +239,16 @@ public class TestResultService {
 
     List<WorkflowRun> previousRuns = List.of();
     if (run.getHeadBranch() != null && run.getHeadSha() != null) {
-      var pullRequests = run.getPullRequests();
-      if (pullRequests != null && !pullRequests.isEmpty()) {
+      var pullRequestIds = workflowRunRepository.findPullRequestIdsByWorkflowRunId(run.getId());
+      if (!pullRequestIds.isEmpty()) {
         // A run can technically be associated with multiple PRs.
         // We pick the lowest PR ID (oldest PR) for a deterministic baseline; in
         // practice the sync service almost always resolves to exactly one PR per run.
         // TODO consider better handling of multiple PRs
-        var prId = pullRequests.stream()
-            .min(Comparator.comparingLong(pr -> pr.getId()))
+        var prId = pullRequestIds.stream()
+            .min(Comparator.naturalOrder())
             .orElseThrow()
-            .getId();
+            .longValue();
         previousRuns =
             workflowRunRepository
                 .findNthLatestCommitShaBehindHeadByPullRequestId(prId, 0, run.getHeadSha())
