@@ -18,9 +18,9 @@ import { FlakyTestDto } from '@app/core/modules/openapi';
 function createFlakinessFilterOptions(): PaginatedFilterOption[] {
   return [
     { name: 'All', value: 'ALL' },
-    { name: 'High (> 70)', value: 'HIGH' },
-    { name: 'Medium (30 – 70)', value: 'MEDIUM' },
-    { name: 'Low (1 – 30)', value: 'LOW' },
+    { name: 'High (70, 100]', value: 'HIGH' },
+    { name: 'Medium (30 – 70]', value: 'MEDIUM' },
+    { name: 'Low (0 – 30]', value: 'LOW' },
   ];
 }
 
@@ -96,5 +96,21 @@ export class FlakyTestsOverviewComponent {
 
   formatRate(rate: number): string {
     return (rate * 100).toFixed(1) + '%';
+  }
+
+  // Extracts the simple class name from a fully qualified class name (FQCN) e.g. "com.example.MyClass" -> "MyClass"
+  getSimpleName(fqcn: string): string {
+    return fqcn.split('.').pop() ?? fqcn;
+  }
+
+  getLocationLabel(test: FlakyTestDto): string {
+    if (test.testSuiteName === test.className) {
+      return this.getSimpleName(test.className);
+    }
+    return `${this.getSimpleName(test.testSuiteName)} › ${this.getSimpleName(test.className)}`;
+  }
+
+  getLocationTooltip(test: FlakyTestDto): string {
+    return test.testSuiteName === test.className ? `Suite / Class: ${test.className}` : `Suite: ${test.testSuiteName}\nClass: ${test.className}`;
   }
 }

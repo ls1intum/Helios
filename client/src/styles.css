@@ -13,3 +13,6 @@
 
 }
 
+.flaky-location-tooltip.p-tooltip {
+  max-width: min(60rem, 80vw);
+}
