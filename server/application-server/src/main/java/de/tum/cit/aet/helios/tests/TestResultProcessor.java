@@ -84,7 +84,9 @@ public class TestResultProcessor {
 
       // Update test statistics if the workflow run is on the default branch
       updateTestStatisticsIfDefaultBranch(testSuites, workflowRun);
-      updateFlakiness(testSuites, workflowRun);
+      // HOTFIX: Flakiness recomputation is temporarily disabled to avoid OOMs in production.
+      // TODO: Re-enable after memory-safe flakiness path is deployed.
+      log.warn("HOTFIX active: skipping flakiness update for workflow run {}", workflowRun.getName());
     } catch (Exception e) {
       log.error("Failed to process test results for workflow run {}", workflowRun.getName(), e);
       workflowRun.setTestProcessingStatus(WorkflowRun.TestProcessingStatus.FAILED);
