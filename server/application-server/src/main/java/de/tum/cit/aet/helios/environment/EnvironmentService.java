@@ -706,14 +706,22 @@ public class EnvironmentService {
       throw new EntityNotFoundException("GitHub repository not found for repository ID: " + repoId);
     }
     try {
-      List<GitHubEnvironmentDto> gitHubEnvironmentDtos =
-          gitHubService.getEnvironments(ghRepository);
+      GitHubService.EnvironmentFetchResult environmentFetchResult =
+          gitHubService.fetchEnvironments(ghRepository);
+      List<GitHubEnvironmentDto> gitHubEnvironmentDtos = environmentFetchResult.environments();
 
       for (GitHubEnvironmentDto gitHubEnvironmentDto : gitHubEnvironmentDtos) {
         environmentSyncService.processEnvironment(gitHubEnvironmentDto, ghRepository);
       }
 
-      environmentSyncService.removeDeletedEnvironments(gitHubEnvironmentDtos, repoId);
+      if (environmentFetchResult.complete()) {
+        environmentSyncService.removeDeletedEnvironments(gitHubEnvironmentDtos, repoId);
+      } else {
+        log.warn(
+            "Skipping deleted environment cleanup for repository {} because the GitHub"
+                + " environment list was incomplete.",
+            ghRepository.getFullName());
+      }
 
     } catch (IOException e) {
       log.error(
