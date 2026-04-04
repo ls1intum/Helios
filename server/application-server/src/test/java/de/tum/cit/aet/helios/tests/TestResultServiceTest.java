@@ -237,6 +237,62 @@ class TestResultServiceTest {
   }
 
   @Test
+  void getLatestTestResultsForWorkflowRun_shouldReturnResults() {
+    final TestResultService.TestSearchCriteria criteria =
+        new TestResultService.TestSearchCriteria(0, 10, "", false);
+
+    when(workflowRunRepository.findByIdAndRepositoryRepositoryId(1L, 1L))
+        .thenReturn(Optional.of(workflowRun));
+    when(branchRepository.findFirstByRepositoryRepositoryIdAndIsDefaultTrue(anyLong()))
+        .thenReturn(Optional.of(defaultBranch));
+    when(workflowRunRepository.findByHeadBranchAndHeadShaAndRepositoryRepositoryId(
+            eq("main"), eq("defaultSha"), anyLong()))
+        .thenReturn(List.of(workflowRun));
+    when(workflowRunRepository.findPullRequestIdsByWorkflowRunId(1L))
+        .thenReturn(List.of(42L));
+    when(workflowRunRepository.findNthLatestCommitShaBehindHeadByPullRequestId(
+        42L, 0, "featureSha"))
+        .thenReturn(Optional.empty());
+
+    TestSuiteSummaryDto summary = new TestSuiteSummaryDto(1L, 0L, 0L, 0L, 0.0, false);
+    when(testSuiteRepository.findByWorkflowRunIdAndTestTypeId(
+            anyLong(), anyLong(), any(), anyString(), anyBoolean(), any(PageRequest.class)))
+        .thenReturn(new PageImpl<>(List.of(testSuite)));
+    when(testSuiteRepository.findSummaryByWorkflowRunIdAndTestTypeId(anyLong(), anyLong(), any()))
+        .thenReturn(summary);
+    when(testCaseRepository.findFailedByTestSuiteWorkflowIdAndClassNamesAndTestTypeId(
+            any(), anyList(), anyLong()))
+        .thenReturn(Collections.emptyList());
+    when(testCaseStatisticsRepository.findByTestSuiteNameInAndBranchNameAndRepositoryRepositoryId(
+            anyList(), anyString(), anyLong()))
+        .thenReturn(Collections.emptyList());
+    when(testCaseStatisticsService.loadFlakinessIndex(anyList(), anyLong()))
+        .thenReturn(Collections.emptyMap());
+    lenient()
+        .when(testCaseStatisticsService.computeFlakinessInfo(
+            anyString(), anyString(), anyString(), anyMap(), anyMap()))
+        .thenReturn(new TestCaseStatisticsService.FlakinessInfo(0.0, 0.0, 0.0));
+
+    TestResultsDto result = testResultService.getTestResultsForWorkflowRun(1L, criteria);
+
+    assertNotNull(result);
+    assertFalse(result.testResults().isEmpty());
+    assertEquals(1, result.testResults().size());
+    TestResultsDto.TestTypeResults testTypeResults = result.testResults().getFirst();
+    assertEquals("Java", testTypeResults.testTypeName());
+    assertFalse(testTypeResults.testSuites().isEmpty());
+    assertEquals("TestSuite1", testTypeResults.testSuites().getFirst().name());
+    assertEquals(1, testTypeResults.testSuites().getFirst().testCases().size());
+    assertEquals("test1", testTypeResults.testSuites().getFirst().testCases().getFirst().name());
+
+    verify(workflowRunRepository).findPullRequestIdsByWorkflowRunId(1L);
+    verify(workflowRunRepository).findNthLatestCommitShaBehindHeadByPullRequestId(
+        42L, 0, "featureSha");
+    verify(testCaseStatisticsService).computeFlakinessInfo(
+        anyString(), anyString(), anyString(), anyMap(), anyMap());
+  }
+
+  @Test
   void sortTestCases_shouldSortCorrectly() throws Exception {
     TestCase tc1 = new TestCase();
     tc1.setName("AlphaTest");
