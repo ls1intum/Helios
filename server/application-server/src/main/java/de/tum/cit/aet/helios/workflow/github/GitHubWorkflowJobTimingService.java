@@ -43,7 +43,8 @@ public class GitHubWorkflowJobTimingService {
     Optional<WorkflowRun> workflowRunOpt = workflowRunRepository.findById(job.runId());
     if (workflowRunOpt.isEmpty() || workflowRunOpt.get().getWorkflow() == null) {
       log.debug(
-          "Skipping workflow_job timing persistence because workflow run {} is missing or has no workflow",
+          "Skipping workflow_job timing persistence because workflow run {} "
+              + "is missing or has no workflow",
           job.runId());
       return;
     }
@@ -61,7 +62,8 @@ public class GitHubWorkflowJobTimingService {
         heliosDeploymentRepository.findByWorkflowRunId(job.runId());
     if (heliosDeploymentOpt.isEmpty()) {
       log.debug(
-          "Skipping workflow_job timing persistence because no HeliosDeployment matched workflow run {}",
+          "Skipping workflow_job timing persistence because no HeliosDeployment "
+              + "matched workflow run {}",
           job.runId());
       return;
     }
@@ -72,7 +74,8 @@ public class GitHubWorkflowJobTimingService {
         || environment.getDeploymentWorkflow() == null
         || !environment.getDeploymentWorkflow().getId().equals(workflow.getId())) {
       log.debug(
-          "Skipping workflow_job timing persistence because workflow run {} is not linked to the configured deployment workflow {}",
+          "Skipping workflow_job timing persistence because workflow run {} "
+              + "is not linked to the configured deployment workflow {}",
           job.runId(),
           environment != null && environment.getDeploymentWorkflow() != null
               ? environment.getDeploymentWorkflow().getId()
@@ -106,7 +109,9 @@ public class GitHubWorkflowJobTimingService {
   }
 
   private OffsetDateTime resolvePreDeploymentStart(
-      WorkflowRun workflowRun, OffsetDateTime deploymentCreatedAt, HeliosDeployment heliosDeployment) {
+      WorkflowRun workflowRun,
+      OffsetDateTime deploymentCreatedAt,
+      HeliosDeployment heliosDeployment) {
     if (workflowRun != null && workflowRun.getRunStartedAt() != null) {
       return workflowRun.getRunStartedAt();
     }

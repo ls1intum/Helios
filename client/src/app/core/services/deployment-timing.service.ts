@@ -135,15 +135,9 @@ export class DeploymentTimingService {
     const prExists = deployment?.prName != null;
     const defaultPending = prExists ? 2 : 11;
 
-    const pendingMin =
-      deployment?.estimatedBuildDurationSeconds != null
-        ? deployment.estimatedBuildDurationSeconds / 60
-        : defaultPending;
+    const pendingMin = deployment?.estimatedBuildDurationSeconds != null ? deployment.estimatedBuildDurationSeconds / 60 : defaultPending;
 
-    const inProgressMin =
-      deployment?.estimatedDeployDurationSeconds != null
-        ? deployment.estimatedDeployDurationSeconds / 60
-        : 4;
+    const inProgressMin = deployment?.estimatedDeployDurationSeconds != null ? deployment.estimatedDeployDurationSeconds / 60 : 4;
 
     return {
       REQUESTED: pendingMin,

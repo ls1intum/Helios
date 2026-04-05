@@ -189,29 +189,8 @@ export const EnvironmentDeploymentSchema = {
       type: 'string',
       enum: ['GITHUB', 'HELIOS'],
     },
-    estimatedBuildDurationSeconds: {
-      type: 'integer',
-      format: 'int32',
-    },
-    estimatedDeployDurationSeconds: {
-      type: 'integer',
-      format: 'int32',
-    },
   },
   required: ['id', 'type'],
-} as const;
-
-export const DeploymentWorkflowConfigDtoSchema = {
-  type: 'object',
-  properties: {
-    workflowId: {
-      type: 'integer',
-      format: 'int64',
-    },
-    deployJobName: {
-      type: 'string',
-    },
-  },
 } as const;
 
 export const EnvironmentDtoSchema = {

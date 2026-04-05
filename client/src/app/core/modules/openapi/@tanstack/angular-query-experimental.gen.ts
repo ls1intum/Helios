@@ -32,7 +32,6 @@ import {
   getCommitsSinceLastReleaseCandidate,
   getDeploymentById,
   getDeploymentsByEnvironmentId,
-  getDeploymentWorkflowConfig,
   getEnvironmentById,
   getEnvironmentReviewers,
   getEnvironmentsByRepositoryId,
@@ -86,7 +85,6 @@ import {
   updateUserSettings,
   updateWorkflowGroups,
   updateWorkflowLabel,
-  upsertDeploymentWorkflowConfig,
 } from '../sdk.gen';
 import type {
   CancelDeploymentData,
@@ -138,7 +136,6 @@ import type {
   GetCommitsSinceLastReleaseCandidateData,
   GetDeploymentByIdData,
   GetDeploymentsByEnvironmentIdData,
-  GetDeploymentWorkflowConfigData,
   GetEnvironmentByIdData,
   GetEnvironmentReviewersData,
   GetEnvironmentsByRepositoryIdData,
@@ -236,9 +233,6 @@ import type {
   UpdateWorkflowGroupsError,
   UpdateWorkflowLabelData,
   UpdateWorkflowLabelError,
-  UpsertDeploymentWorkflowConfigData,
-  UpsertDeploymentWorkflowConfigError,
-  UpsertDeploymentWorkflowConfigResponse,
 } from '../types.gen';
 
 export const updateWorkflowLabelMutation = (
@@ -343,39 +337,6 @@ export const updateGitRepoSettingsMutation = (
   const mutationOptions: MutationOptions<UpdateGitRepoSettingsResponse, UpdateGitRepoSettingsError, Options<UpdateGitRepoSettingsData>> = {
     mutationFn: async fnOptions => {
       const { data } = await updateGitRepoSettings({
-        ...options,
-        ...fnOptions,
-        throwOnError: true,
-      });
-      return data;
-    },
-  };
-  return mutationOptions;
-};
-
-export const getDeploymentWorkflowConfigQueryKey = (options: Options<GetDeploymentWorkflowConfigData>) => createQueryKey('getDeploymentWorkflowConfig', options);
-
-export const getDeploymentWorkflowConfigOptions = (options: Options<GetDeploymentWorkflowConfigData>) => {
-  return queryOptions({
-    queryFn: async ({ queryKey, signal }) => {
-      const { data } = await getDeploymentWorkflowConfig({
-        ...options,
-        ...queryKey[0],
-        signal,
-        throwOnError: true,
-      });
-      return data;
-    },
-    queryKey: getDeploymentWorkflowConfigQueryKey(options),
-  });
-};
-
-export const upsertDeploymentWorkflowConfigMutation = (
-  options?: Partial<Options<UpsertDeploymentWorkflowConfigData>>
-): MutationOptions<UpsertDeploymentWorkflowConfigResponse, UpsertDeploymentWorkflowConfigError, Options<UpsertDeploymentWorkflowConfigData>> => {
-  const mutationOptions: MutationOptions<UpsertDeploymentWorkflowConfigResponse, UpsertDeploymentWorkflowConfigError, Options<UpsertDeploymentWorkflowConfigData>> = {
-    mutationFn: async fnOptions => {
-      const { data } = await upsertDeploymentWorkflowConfig({
         ...options,
         ...fnOptions,
         throwOnError: true,

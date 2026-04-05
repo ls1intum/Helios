@@ -87,9 +87,6 @@ import type {
   GetDeploymentsByEnvironmentIdData,
   GetDeploymentsByEnvironmentIdErrors,
   GetDeploymentsByEnvironmentIdResponses,
-  GetDeploymentWorkflowConfigData,
-  GetDeploymentWorkflowConfigErrors,
-  GetDeploymentWorkflowConfigResponses,
   GetEnvironmentByIdData,
   GetEnvironmentByIdErrors,
   GetEnvironmentByIdResponses,
@@ -246,9 +243,6 @@ import type {
   UpdateWorkflowLabelData,
   UpdateWorkflowLabelErrors,
   UpdateWorkflowLabelResponses,
-  UpsertDeploymentWorkflowConfigData,
-  UpsertDeploymentWorkflowConfigErrors,
-  UpsertDeploymentWorkflowConfigResponses,
 } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = Options2<TData, ThrowOnError> & {
@@ -304,24 +298,6 @@ export const getGitRepoSettings = <ThrowOnError extends boolean = false>(options
 export const updateGitRepoSettings = <ThrowOnError extends boolean = false>(options: Options<UpdateGitRepoSettingsData, ThrowOnError>) => {
   return (options.client ?? client).put<UpdateGitRepoSettingsResponses, UpdateGitRepoSettingsErrors, ThrowOnError>({
     url: '/api/settings/{repositoryId}/settings',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-  });
-};
-
-export const getDeploymentWorkflowConfig = <ThrowOnError extends boolean = false>(options: Options<GetDeploymentWorkflowConfigData, ThrowOnError>) => {
-  return (options.client ?? client).get<GetDeploymentWorkflowConfigResponses, GetDeploymentWorkflowConfigErrors, ThrowOnError>({
-    url: '/api/settings/{repositoryId}/workflows/{workflowId}/deployment-config',
-    ...options,
-  });
-};
-
-export const upsertDeploymentWorkflowConfig = <ThrowOnError extends boolean = false>(options: Options<UpsertDeploymentWorkflowConfigData, ThrowOnError>) => {
-  return (options.client ?? client).put<UpsertDeploymentWorkflowConfigResponses, UpsertDeploymentWorkflowConfigErrors, ThrowOnError>({
-    url: '/api/settings/{repositoryId}/workflows/{workflowId}/deployment-config',
     ...options,
     headers: {
       'Content-Type': 'application/json',
