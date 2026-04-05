@@ -136,7 +136,8 @@ public record EnvironmentDto(
       LatestDeploymentUnion latestUnion,
       Optional<EnvironmentStatus> latestStatus,
       ReleaseCandidateRepository releaseCandidateRepository) {
-    return fromEnvironment(environment, latestUnion, latestStatus, releaseCandidateRepository, null);
+    return fromEnvironment(
+        environment, latestUnion, latestStatus, releaseCandidateRepository, null);
   }
 
   /**
