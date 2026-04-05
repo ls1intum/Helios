@@ -2,22 +2,15 @@ import { Component, computed, effect, inject, input, signal } from '@angular/cor
 import { EnvironmentDeployment, WorkflowJobDto } from '@app/core/modules/openapi';
 import { getWorkflowJobStatusOptions, getWorkflowJobStatusQueryKey } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { PermissionService } from '@app/core/services/permission.service';
+import { GithubLinkButtonComponent } from '@app/components/github-link-button/github-link-button.component';
 import { WorkflowJobListComponent } from '@app/components/workflow-job-list/workflow-job-list.component';
 import { injectQuery } from '@tanstack/angular-query-experimental';
-import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
-import { IconBrandGithub } from 'angular-tabler-icons/icons';
-import { Button } from 'primeng/button';
-import { getStatusColors } from '@app/core/utils/status-colors';
+import { getStatusColors, getStatusIconClasses } from '@app/core/utils/status-colors';
 
 @Component({
   selector: 'app-workflow-jobs-status',
   standalone: true,
-  imports: [TablerIconComponent, Button, WorkflowJobListComponent],
-  providers: [
-    provideTablerIcons({
-      IconBrandGithub,
-    }),
-  ],
+  imports: [GithubLinkButtonComponent, WorkflowJobListComponent],
   templateUrl: './workflow-jobs-status.component.html',
 })
 export class WorkflowJobsStatusComponent {
@@ -126,8 +119,7 @@ export class WorkflowJobsStatusComponent {
   }
 
   getIconColorClass(status: string | null | undefined, conclusion: string | null | undefined): string {
-    const { icon } = getStatusColors(conclusion, status);
-    return status === 'in_progress' ? `${icon} animate-spin` : icon;
+    return getStatusIconClasses(conclusion, status);
   }
 
   // Get status text for display
@@ -138,7 +130,8 @@ export class WorkflowJobsStatusComponent {
   // Format timestamp to readable format
   formatTime(timestamp: string | null | undefined): string {
     if (!timestamp) return '';
-    return this.datePipe.transform(timestamp, 'HH:mm:ss') || '';
+    const date = new Date(timestamp);
+    return date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
   }
 
   // Calculate duration between start and end time
@@ -161,12 +154,6 @@ export class WorkflowJobsStatusComponent {
       const hours = Math.floor(seconds / 3600);
       const minutes = Math.floor((seconds % 3600) / 60);
       return `${hours}h ${minutes}m`;
-    }
-  }
-
-  openLink(url: string | undefined) {
-    if (url) {
-      window.open(url, '_blank');
     }
   }
 }

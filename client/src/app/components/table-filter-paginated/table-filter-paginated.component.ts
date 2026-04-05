@@ -8,6 +8,10 @@ import { Popover, PopoverModule } from 'primeng/popover';
 import { PaginatedTable, PaginatedTableService } from '@app/core/services/paginated-table.service';
 import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
 
+const FILTER_BUTTON_BASE_CLASS =
+  '!h-[2.125rem] !w-[2.35rem] !p-0 shrink-0 !border-[var(--p-inputtext-border-color)] !bg-transparent dark:!border-surface-500 dark:!bg-surface-0/8 dark:!text-primary-300 hover:dark:!bg-surface-0/12 transition-colors';
+const ACTIVE_FILTER_BUTTON_CLASS = 'dark:!border-primary-400 dark:!bg-surface-0/14 dark:!text-primary-200';
+
 @Component({
   selector: 'app-table-filter-paginated',
   imports: [ButtonModule, PopoverModule, InputTextModule, FormsModule, TablerIconComponent],
@@ -28,6 +32,10 @@ export class TableFilterPaginatedComponent implements OnInit {
   localSearchTerm = '';
   // Subject that emits every keystroke
   private searchTermSubject = new Subject<string>();
+
+  filterButtonClass(): string {
+    return `${FILTER_BUTTON_BASE_CLASS} ${this.paginationService().hasActiveFilter() ? ACTIVE_FILTER_BUTTON_CLASS : ''}`.trim();
+  }
 
   // The constructor sets up a subscription that waits 300ms of “no new keystrokes”
   // before actually updating the paginationService’s searchTerm.

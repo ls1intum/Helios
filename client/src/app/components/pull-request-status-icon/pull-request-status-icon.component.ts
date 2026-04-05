@@ -5,6 +5,8 @@ import { PullRequestInfoDto } from '@app/core/modules/openapi';
 import { IconGitMerge, IconGitPullRequest, IconGitPullRequestClosed, IconGitPullRequestDraft, IconQuestionMark } from 'angular-tabler-icons/icons';
 import { getStatusColors } from '@app/core/utils/status-colors';
 
+const MERGED_ICON_COLOR = 'text-violet-600 dark:text-violet-400';
+
 @Component({
   selector: 'app-pull-request-status-icon',
   imports: [TablerIconComponent, Tooltip],
@@ -33,7 +35,7 @@ export class PullRequestStatusIconComponent {
 
   iconColor = computed(() => {
     if (!this.pullRequest()) return 'text-muted-color';
-    if (this.pullRequest()?.isMerged) return 'text-purple-600';
+    if (this.pullRequest()?.isMerged) return MERGED_ICON_COLOR;
     if (this.pullRequest()?.state === 'CLOSED') return getStatusColors('failure').icon;
     if (this.pullRequest()?.isDraft) return 'text-muted-color';
     return getStatusColors('success').icon; // Default for open PRs

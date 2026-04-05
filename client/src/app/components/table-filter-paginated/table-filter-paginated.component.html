@@ -1,10 +1,10 @@
 <div class="flex items-center gap-2 w-full">
   @if (paginationService().filterOptions.length > 0) {
-    <p-button type="button" outlined styleClass="!border-[var(--p-inputtext-border-color)]" (onClick)="toggle($event)" size="small">
+    <p-button type="button" outlined [styleClass]="filterButtonClass()" (onClick)="toggle($event)" size="small">
       @if (paginationService().hasActiveFilter()) {
-        <i-tabler name="filter" />
+        <i-tabler name="filter" class="!size-[1.15rem] shrink-0" />
       } @else {
-        <i-tabler name="filter-plus" />
+        <i-tabler name="filter-plus" class="!size-[1.15rem] shrink-0" />
       }
     </p-button>
   }

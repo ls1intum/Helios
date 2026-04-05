@@ -28,8 +28,9 @@ import { WorkflowRunStatusComponent } from '@app/components/workflow-run-status-
 import { HighlightPipe } from '@app/pipes/highlight.pipe';
 import { MessageService } from 'primeng/api';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
+import { GithubLinkButtonComponent } from '@app/components/github-link-button/github-link-button.component';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
-import { IconExternalLink, IconFilterPlus, IconGitBranch, IconGitCommit, IconPinned, IconPinnedOff, IconShieldHalf, IconBrandGithub } from 'angular-tabler-icons/icons';
+import { IconExternalLink, IconFilterPlus, IconGitBranch, IconGitCommit, IconPinned, IconPinnedOff, IconShieldHalf } from 'angular-tabler-icons/icons';
 
 export type BranchInfoWithLink = BranchInfoDto & { link: string; lastCommitLink: string };
 
@@ -109,11 +110,12 @@ export function createBranchFilterOptions(keycloakService: KeycloakService): Fil
     FormsModule,
     WorkflowRunStatusComponent,
     HighlightPipe,
+    GithubLinkButtonComponent,
   ],
   providers: [
     SearchTableService,
     { provide: FILTER_OPTIONS_TOKEN, useFactory: createBranchFilterOptions, deps: [KeycloakService] },
-    provideTablerIcons({ IconFilterPlus, IconPinnedOff, IconPinned, IconShieldHalf, IconBrandGithub, IconExternalLink, IconGitCommit, IconGitBranch }),
+    provideTablerIcons({ IconFilterPlus, IconPinnedOff, IconPinned, IconShieldHalf, IconExternalLink, IconGitCommit, IconGitBranch }),
   ],
   templateUrl: './branches-table.component.html',
 })
@@ -154,11 +156,6 @@ export class BranchTableComponent {
   );
 
   maxAheadBehindBy = computed(() => Math.max(...this.branches().map(branch => Math.max(branch.aheadBy || 0, branch.behindBy || 0))));
-
-  openLink(event: Event, url: string): void {
-    window.open(url, '_blank');
-    event.stopPropagation();
-  }
 
   calculateProgress(value: number): number {
     return (value * 100) / this.maxAheadBehindBy();

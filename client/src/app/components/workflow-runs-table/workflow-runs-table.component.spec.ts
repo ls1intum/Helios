@@ -131,18 +131,18 @@ describe('WorkflowRunsTableComponent', () => {
     type WorkflowStatusClass = ReturnType<WorkflowRunsTableComponent['getWorkflowStatusClass']>;
 
     const cases: Array<[Partial<WorkflowRunDto>, WorkflowStatusClass]> = [
-      [{ conclusion: 'SUCCESS' }, 'text-green-500'],
-      [{ conclusion: 'FAILURE' }, 'text-red-500'],
-      [{ conclusion: 'STARTUP_FAILURE' }, 'text-red-500'],
-      [{ conclusion: 'TIMED_OUT' }, 'text-red-500'],
-      [{ conclusion: 'CANCELLED' }, 'text-surface-500'],
-      [{ status: 'QUEUED' }, 'text-amber-500'],
-      [{ status: 'WAITING' }, 'text-amber-500'],
-      [{ status: 'PENDING' }, 'text-amber-500'],
-      [{ status: 'REQUESTED' }, 'text-amber-500'],
-      [{ status: 'ACTION_REQUIRED' }, 'text-orange-500'],
-      [{ conclusion: 'ACTION_REQUIRED' }, 'text-orange-500'],
-      [{ status: 'COMPLETED' }, 'text-surface-500'],
+      [{ conclusion: 'SUCCESS' }, 'text-green-600 dark:text-green-400'],
+      [{ conclusion: 'FAILURE' }, 'text-red-600 dark:text-red-400'],
+      [{ conclusion: 'STARTUP_FAILURE' }, 'text-red-600 dark:text-red-400'],
+      [{ conclusion: 'TIMED_OUT' }, 'text-red-600 dark:text-red-400'],
+      [{ conclusion: 'CANCELLED' }, 'text-surface-500 dark:text-surface-400'],
+      [{ status: 'QUEUED' }, 'text-surface-500 dark:text-surface-400'],
+      [{ status: 'WAITING' }, 'text-surface-500 dark:text-surface-400'],
+      [{ status: 'PENDING' }, 'text-surface-500 dark:text-surface-400'],
+      [{ status: 'REQUESTED' }, 'text-surface-500 dark:text-surface-400'],
+      [{ status: 'ACTION_REQUIRED' }, 'text-orange-600 dark:text-orange-400'],
+      [{ conclusion: 'ACTION_REQUIRED' }, 'text-orange-600 dark:text-orange-400'],
+      [{ status: 'COMPLETED' }, 'text-muted-color'],
     ];
 
     cases.forEach(([overrides, expected]: [Partial<WorkflowRunDto>, WorkflowStatusClass]) => {
@@ -152,10 +152,11 @@ describe('WorkflowRunsTableComponent', () => {
       });
     });
 
-    it('returns animated blue class for IN_PROGRESS', () => {
+    it('returns animated yellow class for IN_PROGRESS', () => {
       const actual: WorkflowStatusClass = component.getWorkflowStatusClass(createRun({ status: 'IN_PROGRESS' }));
 
-      expect(actual).toContain('text-blue-500');
+      expect(actual).toContain('text-yellow-500');
+      expect(actual).toContain('dark:text-yellow-400');
       expect(actual).toContain('animate-spin');
     });
   });
@@ -182,9 +183,9 @@ describe('WorkflowRunsTableComponent', () => {
     type TestStatusClass = ReturnType<WorkflowRunsTableComponent['getTestStatusClass']>;
 
     const cases: Array<[Partial<WorkflowRunDto>, TestStatusClass]> = [
-      [{ testProcessingStatus: 'PROCESSED' }, 'text-green-500'],
-      [{ testProcessingStatus: 'FAILED' }, 'text-red-500'],
-      [{}, 'text-surface-500'],
+      [{ testProcessingStatus: 'PROCESSED' }, 'text-green-600 dark:text-green-400'],
+      [{ testProcessingStatus: 'FAILED' }, 'text-red-600 dark:text-red-400'],
+      [{}, 'text-muted-color'],
     ];
 
     cases.forEach(([overrides, expected]: [Partial<WorkflowRunDto>, TestStatusClass]) => {
@@ -194,10 +195,11 @@ describe('WorkflowRunsTableComponent', () => {
       });
     });
 
-    it('returns animated blue class for PROCESSING', () => {
+    it('returns animated yellow class for PROCESSING', () => {
       const actual: TestStatusClass = component.getTestStatusClass(createRun({ testProcessingStatus: 'PROCESSING' }));
 
-      expect(actual).toContain('text-blue-500');
+      expect(actual).toContain('text-yellow-500');
+      expect(actual).toContain('dark:text-yellow-400');
       expect(actual).toContain('animate-spin');
     });
   });
@@ -212,10 +214,11 @@ describe('WorkflowRunsTableComponent', () => {
       [{ conclusion: 'TIMED_OUT' }, 'danger'],
       [{ conclusion: 'CANCELLED' }, 'secondary'],
       [{ status: 'IN_PROGRESS' }, 'info'],
-      [{ status: 'QUEUED' }, 'warn'],
-      [{ status: 'WAITING' }, 'warn'],
-      [{ status: 'PENDING' }, 'warn'],
-      [{ status: 'REQUESTED' }, 'warn'],
+      [{ status: 'QUEUED' }, 'secondary'],
+      [{ status: 'WAITING' }, 'secondary'],
+      [{ status: 'PENDING' }, 'secondary'],
+      [{ status: 'REQUESTED' }, 'secondary'],
+      [{ status: 'ACTION_REQUIRED' }, 'warn'],
       [{ status: 'COMPLETED' }, 'secondary'],
     ];
 

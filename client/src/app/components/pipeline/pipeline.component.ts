@@ -12,9 +12,9 @@ import {
 import { SkeletonModule } from 'primeng/skeleton';
 import { WorkflowRunDto } from '@app/core/modules/openapi';
 import { DividerModule } from 'primeng/divider';
+import { GithubLinkButtonComponent } from '@app/components/github-link-button/github-link-button.component';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
-import { IconCircleCheck, IconCircleX, IconExclamationCircle, IconExternalLink, IconInfoCircle, IconProgress, IconProgressHelp, IconBrandGithub } from 'angular-tabler-icons/icons';
-import { ButtonModule } from 'primeng/button';
+import { IconCircleCheck, IconCircleX, IconExclamationCircle, IconExternalLink, IconInfoCircle, IconProgress, IconProgressHelp } from 'angular-tabler-icons/icons';
 
 export type PipelineSelector = { repositoryId: number } & (
   | {
@@ -39,7 +39,7 @@ export interface Pipeline {
 
 @Component({
   selector: 'app-pipeline',
-  imports: [TableModule, DividerModule, ButtonModule, ProgressSpinnerModule, PanelModule, TablerIconComponent, TooltipModule, SkeletonModule],
+  imports: [TableModule, DividerModule, ProgressSpinnerModule, PanelModule, TablerIconComponent, TooltipModule, SkeletonModule, GithubLinkButtonComponent],
   providers: [
     provideTablerIcons({
       IconInfoCircle,
@@ -49,7 +49,6 @@ export interface Pipeline {
       IconProgress,
       IconExternalLink,
       IconExclamationCircle,
-      IconBrandGithub,
     }),
   ],
   templateUrl: './pipeline.component.html',
@@ -122,8 +121,4 @@ export class PipelineComponent {
     const pipelineData = this.pipeline();
     return pipelineData.groups.length > 0 && pipelineData.groups.every(group => group.workflows.length === 0);
   });
-
-  openLink(url: string) {
-    window.open(url, '_blank');
-  }
 }

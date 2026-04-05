@@ -86,9 +86,7 @@
               </span>
               <app-workflow-run-status [selector]="{ type: 'pullRequest', pullRequestId: pr.id }"></app-workflow-run-status>
 
-              <p-button text (click)="openPRExternal($event, pr)" styleClass="p-1" class="leading-none -ml-1">
-                <i-tabler name="brand-github" class="!size-4" />
-              </p-button>
+              <app-github-link-button [url]="pr.htmlUrl" buttonClass="p-1 leading-none -ml-1" />
 
               @for (label of pr.labels; track label.id) {
                 <p-tag
@@ -151,7 +149,7 @@
       <tr>
         <td colspan="3">
           <div class="flex flex-col gap-2 p-20 justify-center items-center">
-            <i-tabler name="git-pull-request" class="!h-20 !w-20 text-red-500" />
+            <i-tabler name="git-pull-request" class="!h-20 !w-20 text-red-600 dark:text-red-400" />
             <span class="font-semibold text-xl"> There are no pull requests found matching your filter criteria. </span>
             <span>Try clearing the filter or reloading the page.</span>
             <p-button (click)="clearFilters()">Clear Filter</p-button>

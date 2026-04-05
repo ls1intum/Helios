@@ -38,11 +38,11 @@
                   {{ getDuration(job.startedAt, job.completedAt) }}
                 </span>
               } @else {
-                <span class="px-2 py-0.5 bg-blue-50 text-blue-600 rounded-full"> Running </span>
+                <span class="px-2 py-0.5 bg-primary-50 text-primary-700 dark:bg-primary-900/30 dark:text-primary-200 rounded-full"> Running </span>
               }
             }
             @if (!!job.htmlUrl) {
-              <p-button [link]="true" label="View Logs on Github" size="small" (click)="$event.stopPropagation(); openLink(job.htmlUrl)">
+              <p-button text severity="secondary" label="View Logs on Github" size="small" (click)="$event.stopPropagation(); openLink(job.htmlUrl)">
                 <i-tabler name="external-link" class="!size-4"></i-tabler>
               </p-button>
             }
@@ -71,7 +71,7 @@
             <!-- Waiting for Runner Message -->
             @if (job.status === 'queued' && !job.runnerId) {
               <div class="waiting-for-runner text-sm mb-2">
-                <span class="text-yellow-600 flex items-center">
+                <span class="text-orange-600 dark:text-orange-400 flex items-center">
                   <i-tabler name="clock" class="mr-1"></i-tabler>
                   Waiting for available runner...
                 </span>
@@ -81,7 +81,7 @@
             <!-- Waiting for Review Message -->
             @if (job.status === 'waiting') {
               <div class="waiting-for-runner text-sm mb-2">
-                <span class="text-yellow-600 flex items-center">
+                <span class="text-orange-600 dark:text-orange-400 flex items-center">
                   <i-tabler name="clock" class="mr-1"></i-tabler>
                   Waiting for approval...
                 </span>

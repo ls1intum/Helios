@@ -22,6 +22,7 @@ import { TooltipModule } from 'primeng/tooltip';
 import { UserAvatarComponent } from '@app/components/user-avatar/user-avatar.component';
 import { TimeAgoPipe } from '@app/pipes/time-ago.pipe';
 import { SearchDataViewService } from '@app/core/services/search-dataview.service';
+import { GithubLinkButtonComponent } from '@app/components/github-link-button/github-link-button.component';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
 import {
   IconBrandGithub,
@@ -63,6 +64,7 @@ const ROWS_PER_PAGE_OPTIONS = [6, 12, 24, 48];
     TooltipModule,
     UserAvatarComponent,
     TimeAgoPipe,
+    GithubLinkButtonComponent,
     TableModule,
     TableFilterComponent,
     DialogModule,
@@ -161,10 +163,5 @@ export class RepositoryOverviewComponent {
 
   navigateToWorkflowRuns(repository: RepositoryInfoDto) {
     this.router.navigate(['repo', repository.id.toString(), 'ci-cd', 'pr']);
-  }
-
-  openProjectExternal(event: Event, repository: RepositoryInfoDto) {
-    window.open(repository.htmlUrl, '_blank');
-    event.stopPropagation();
   }
 }

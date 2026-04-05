@@ -41,6 +41,7 @@ import { ButtonGroupModule } from 'primeng/buttongroup';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
 import { IconCircleCheck, IconPencil, IconPlus, IconTrash } from 'angular-tabler-icons/icons';
 import { SecretGenerateConfirmationComponent } from '@app/components/dialogs/secret-generate-confirmation/secret-generate-confirmation.component';
+import { getStatusColors } from '@app/core/utils/status-colors';
 
 @Component({
   selector: 'app-project-settings',
@@ -108,6 +109,7 @@ export class ProjectSettingsComponent {
   // This is recalculated from dropdown selection/assignment  in onChangeGroup()
   // This is recalculated from drag&drop logic in updateGroups()
   workflowGroupsMap = signal<Record<number, string>>({});
+  readonly successIconClasses = getStatusColors('success').icon;
 
   constructor() {
     effect(() => {
@@ -298,7 +300,7 @@ export class ProjectSettingsComponent {
           <p class="text-base font-medium mb-4">
             Are you sure you want to change the workflow label to <strong>${label}</strong>?
           </p>
-          <div class="flex items-start gap-2 p-3 bg-orange-50 dark:bg-orange-300 border border-orange-500 text-orange-500 rounded-md">
+          <div class="flex items-start gap-2 p-3 bg-orange-50 dark:bg-orange-900/30 border border-orange-300 dark:border-orange-700 text-orange-700 dark:text-orange-300 rounded-md">
             <div>
               <p class="font-semibold">Note:</p>
               <ul class="list-disc list-inside text-sm">

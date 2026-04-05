@@ -1,4 +1,4 @@
-<p-accordion-panel [value]="environment().id" [ngClass]="{ 'border-2 border-blue-500 rounded-lg': isLockedByCurrentUser(), 'border-none': !isLockedByCurrentUser() }">
+<p-accordion-panel [value]="environment().id" [ngClass]="{ 'border-2 border-primary-400 rounded-lg': isLockedByCurrentUser(), 'border-none': !isLockedByCurrentUser() }">
   <p-accordion-header>
     <div class="flex gap-2 items-start w-full flex-wrap md:flex-nowrap flex-col md:items-center md:flex-row">
       <div class="flex flex-col gap-1 flex-wrap">
@@ -31,15 +31,7 @@
               </span>
             }
             @if (environment().latestDeployment?.workflowRunHtmlUrl && environment().latestDeployment?.workflowRunHtmlUrl !== '') {
-              <p-button
-                text
-                (click)="openLink(environment().latestDeployment?.workflowRunHtmlUrl)"
-                styleClass="p-1"
-                class="leading-none"
-                [pTooltip]="'View Workflow Run in GitHub'"
-              >
-                <i-tabler name="brand-github" class="!size-4" />
-              </p-button>
+              <app-github-link-button [url]="environment().latestDeployment?.workflowRunHtmlUrl" buttonClass="p-1 leading-none" tooltip="View Workflow Run in GitHub" />
             }
             <app-deployment-state-tag [state]="deployment.state" [deployment]="deployment" />
 

@@ -19,8 +19,9 @@ import { TimeAgoPipe } from '@app/pipes/time-ago.pipe';
 import { WorkflowRunStatusComponent } from '@app/components/workflow-run-status-component/workflow-run-status.component';
 import { PullRequestStatusIconComponent } from '@app/components/pull-request-status-icon/pull-request-status-icon.component';
 import { MessageService, SortMeta } from 'primeng/api';
+import { GithubLinkButtonComponent } from '@app/components/github-link-button/github-link-button.component';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
-import { IconExternalLink, IconFilterPlus, IconGitPullRequest, IconPinned, IconPinnedOff, IconPoint, IconBrandGithub } from 'angular-tabler-icons/icons';
+import { IconExternalLink, IconFilterPlus, IconGitPullRequest, IconPinned, IconPinnedOff, IconPoint } from 'angular-tabler-icons/icons';
 import { PAGINATED_FILTER_OPTIONS_TOKEN, PAGINATION_STORAGE_KEY_TOKEN, PaginatedFilterOption, PaginatedTableService } from '@app/core/services/paginated-table.service';
 import { TableFilterPaginatedComponent } from '@app/components/table-filter-paginated/table-filter-paginated.component';
 import { NgTemplateOutlet } from '@angular/common';
@@ -67,6 +68,7 @@ export function createPullRequestFilterOptions(keycloakService: KeycloakService)
     PullRequestStatusIconComponent,
     TableFilterPaginatedComponent,
     NgTemplateOutlet,
+    GithubLinkButtonComponent,
   ],
   providers: [
     PaginatedTableService,
@@ -79,7 +81,6 @@ export function createPullRequestFilterOptions(keycloakService: KeycloakService)
       IconPinnedOff,
       IconPinned,
       IconGitPullRequest,
-      IconBrandGithub,
     }),
   ],
   templateUrl: './pull-request-table.component.html',
@@ -144,11 +145,6 @@ export class PullRequestTableComponent {
 
   get typedPaginationService() {
     return this.paginationService as PaginatedTableService;
-  }
-
-  openPRExternal(event: Event, pr: PullRequestInfoDto): void {
-    window.open(pr.htmlUrl, '_blank');
-    event.stopPropagation();
   }
 
   // TODO: Find a better way to handle color of labels

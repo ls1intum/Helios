@@ -22,20 +22,11 @@ import { DividerModule } from 'primeng/divider';
 import { ToastModule } from 'primeng/toast';
 import { SkeletonModule } from 'primeng/skeleton';
 import { TimeAgoPipe } from '@app/pipes/time-ago.pipe';
+import { GithubLinkButtonComponent } from '@app/components/github-link-button/github-link-button.component';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
-import {
-  IconArrowLeft,
-  IconBrandGithub,
-  IconCircleCheck,
-  IconCircleX,
-  IconClockHour4,
-  IconProgress,
-  IconAlertTriangle,
-  IconPlayerPlay,
-  IconRefresh,
-  IconX,
-} from 'angular-tabler-icons/icons';
+import { IconArrowLeft, IconCircleCheck, IconCircleX, IconClockHour4, IconProgress, IconAlertTriangle, IconPlayerPlay, IconRefresh, IconX } from 'angular-tabler-icons/icons';
 import { TooltipModule } from 'primeng/tooltip';
+import { getStatusColors, getStatusIconClasses } from '@app/core/utils/status-colors';
 
 @Component({
   selector: 'app-workflow-run-details',
@@ -52,12 +43,12 @@ import { TooltipModule } from 'primeng/tooltip';
     TooltipModule,
     WorkflowJobListComponent,
     PipelineTestResultsComponent,
+    GithubLinkButtonComponent,
   ],
   providers: [
     MessageService,
     provideTablerIcons({
       IconArrowLeft,
-      IconBrandGithub,
       IconCircleCheck,
       IconCircleX,
       IconClockHour4,
@@ -220,13 +211,6 @@ export class WorkflowRunDetailsComponent {
     return `${Math.floor(seconds / 3600)}h ${Math.floor((seconds % 3600) / 60)}m`;
   }
 
-  openRunExternal(): void {
-    const r = this.run();
-    if (r?.htmlUrl) {
-      window.open(r.htmlUrl, '_blank');
-    }
-  }
-
   getWorkflowStatusIcon(run: WorkflowRunDto | null): string {
     if (!run) return 'help';
     if (run.conclusion === 'SUCCESS') return 'circle-check';
@@ -239,13 +223,7 @@ export class WorkflowRunDetailsComponent {
   }
 
   getWorkflowStatusClass(run: WorkflowRunDto | null): string {
-    if (!run) return 'text-surface-500';
-    if (run.conclusion === 'SUCCESS') return 'text-green-500';
-    if (['FAILURE', 'STARTUP_FAILURE', 'TIMED_OUT'].includes(run.conclusion ?? '')) return 'text-red-500';
-    if (run.conclusion === 'CANCELLED') return 'text-surface-500';
-    if (run.status === 'IN_PROGRESS') return 'text-blue-500 animate-spin';
-    if (['QUEUED', 'WAITING', 'PENDING', 'REQUESTED'].includes(run.status)) return 'text-amber-500';
-    if (run.status === 'ACTION_REQUIRED' || run.conclusion === 'ACTION_REQUIRED') return 'text-orange-500';
-    return 'text-surface-500';
+    if (!run) return getStatusColors().icon;
+    return getStatusIconClasses(run.conclusion, run.status);
   }
 }

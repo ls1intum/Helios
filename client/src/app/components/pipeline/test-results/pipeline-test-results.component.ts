@@ -56,7 +56,7 @@ const LOG_LEVELS: LogLevel[] = [
   { value: 1, name: 'FATAL', label: 'FATAL+', color: 'text-red-700', includes: ['FATAL', 'OFF'] },
   { value: 2, name: 'ERROR', label: 'ERROR+', color: 'text-red-600', includes: ['ERROR', 'FATAL', 'OFF'] },
   { value: 3, name: 'WARN', label: 'WARN+', color: 'text-orange-600', includes: ['WARN', 'ERROR', 'FATAL', 'OFF'] },
-  { value: 4, name: 'INFO', label: 'INFO+', color: 'text-blue-600', includes: ['INFO', 'WARN', 'ERROR', 'FATAL', 'OFF'] },
+  { value: 4, name: 'INFO', label: 'INFO+', color: 'text-primary-600 dark:text-primary-300', includes: ['INFO', 'WARN', 'ERROR', 'FATAL', 'OFF'] },
   { value: 5, name: 'DEBUG', label: 'DEBUG+', color: 'text-gray-600', includes: ['DEBUG', 'INFO', 'WARN', 'ERROR', 'FATAL', 'OFF'] },
   { value: 6, name: 'TRACE', label: 'TRACE+', color: 'text-gray-400', includes: ['TRACE', 'DEBUG', 'INFO', 'WARN', 'ERROR', 'FATAL', 'OFF'] },
   { value: 7, name: 'ALL', label: 'ALL', color: '', includes: [] },

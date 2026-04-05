@@ -33,7 +33,7 @@
         } @else if (environment().type === 'STAGING') {
           <i-tabler name="info-circle" class="!size-6 shrink-0 text-amber-600" />
         } @else {
-          <i-tabler name="server" class="!size-5 shrink-0 text-slate-600" />
+          <i-tabler name="server" class="!size-5 shrink-0 text-surface-600 dark:text-surface-300" />
         }
 
         <div class="space-y-1 text-sm">
@@ -76,7 +76,7 @@
               {{ reviewersLine() }}
             </span>
           </p>
-          <p class="text-gray-700 dark:text-gray-300 text-xs italic">
+          <p class="text-surface-700 dark:text-surface-300 text-xs italic">
             Helios will attempt to auto-approve this deployment. If you or your team aren’t in the required reviewers list, the pipeline pauses just before the deploy step and
             waits for one of the reviewers to approve.
           </p>
