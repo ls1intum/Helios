@@ -48,6 +48,19 @@ export const TestTypeDtoSchema = {
   required: ['artifactName', 'name', 'workflowId'],
 } as const;
 
+export const DeploymentWorkflowConfigDtoSchema = {
+  type: 'object',
+  properties: {
+    workflowId: {
+      type: 'integer',
+      format: 'int64',
+    },
+    deployJobName: {
+      type: 'string',
+    },
+  },
+} as const;
+
 export const GitRepoSettingsDtoSchema = {
   type: 'object',
   properties: {
@@ -188,6 +201,14 @@ export const EnvironmentDeploymentSchema = {
     type: {
       type: 'string',
       enum: ['GITHUB', 'HELIOS'],
+    },
+    estimatedBuildDurationSeconds: {
+      type: 'integer',
+      format: 'int32',
+    },
+    estimatedDeployDurationSeconds: {
+      type: 'integer',
+      format: 'int32',
     },
   },
   required: ['id', 'type'],

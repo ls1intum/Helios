@@ -19,6 +19,11 @@ export type TestTypeDto = {
   workflowId: number;
 };
 
+export type DeploymentWorkflowConfigDto = {
+  workflowId?: number;
+  deployJobName?: string;
+};
+
 export type GitRepoSettingsDto = {
   id?: number;
   lockExpirationThreshold?: number;
@@ -64,6 +69,8 @@ export type EnvironmentDeployment = {
   createdAt?: string;
   updatedAt?: string;
   type: 'GITHUB' | 'HELIOS';
+  estimatedBuildDurationSeconds?: number;
+  estimatedDeployDurationSeconds?: number;
 };
 
 export type EnvironmentDto = {
@@ -667,6 +674,62 @@ export type UpdateTestTypeResponses = {
 };
 
 export type UpdateTestTypeResponse = UpdateTestTypeResponses[keyof UpdateTestTypeResponses];
+
+export type GetDeploymentWorkflowConfigData = {
+  body?: never;
+  path: {
+    repositoryId: number;
+    workflowId: number;
+  };
+  query?: never;
+  url: '/api/settings/{repositoryId}/workflows/{workflowId}/deployment-config';
+};
+
+export type GetDeploymentWorkflowConfigErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type GetDeploymentWorkflowConfigError = GetDeploymentWorkflowConfigErrors[keyof GetDeploymentWorkflowConfigErrors];
+
+export type GetDeploymentWorkflowConfigResponses = {
+  /**
+   * OK
+   */
+  200: DeploymentWorkflowConfigDto;
+};
+
+export type GetDeploymentWorkflowConfigResponse = GetDeploymentWorkflowConfigResponses[keyof GetDeploymentWorkflowConfigResponses];
+
+export type UpsertDeploymentWorkflowConfigData = {
+  body: DeploymentWorkflowConfigDto;
+  path: {
+    repositoryId: number;
+    workflowId: number;
+  };
+  query?: never;
+  url: '/api/settings/{repositoryId}/workflows/{workflowId}/deployment-config';
+};
+
+export type UpsertDeploymentWorkflowConfigErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type UpsertDeploymentWorkflowConfigError = UpsertDeploymentWorkflowConfigErrors[keyof UpsertDeploymentWorkflowConfigErrors];
+
+export type UpsertDeploymentWorkflowConfigResponses = {
+  /**
+   * OK
+   */
+  200: DeploymentWorkflowConfigDto;
+};
+
+export type UpsertDeploymentWorkflowConfigResponse = UpsertDeploymentWorkflowConfigResponses[keyof UpsertDeploymentWorkflowConfigResponses];
 
 export type GetGitRepoSettingsData = {
   body?: never;
