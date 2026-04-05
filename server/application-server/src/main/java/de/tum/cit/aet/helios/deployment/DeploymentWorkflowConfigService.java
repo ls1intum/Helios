@@ -15,7 +15,8 @@ public class DeploymentWorkflowConfigService {
   private final WorkflowRepository workflowRepository;
 
   public Optional<DeploymentWorkflowConfigDto> findByWorkflowId(Long workflowId) {
-    return configRepository.findByWorkflowId(workflowId).map(DeploymentWorkflowConfigDto::fromConfig);
+    return configRepository.findByWorkflowId(workflowId)
+        .map(DeploymentWorkflowConfigDto::fromConfig);
   }
 
   public Optional<DeploymentWorkflowConfig> findConfigByWorkflow(Workflow workflow) {
@@ -23,8 +24,8 @@ public class DeploymentWorkflowConfigService {
   }
 
   @Transactional
-  public DeploymentWorkflowConfigDto upsert(Long repositoryId, Long workflowId, DeploymentWorkflowConfigDto dto) 
-  {
+  public DeploymentWorkflowConfigDto upsert(
+      Long repositoryId, Long workflowId, DeploymentWorkflowConfigDto dto) {
     Workflow workflow =
         workflowRepository
             .findById(workflowId)

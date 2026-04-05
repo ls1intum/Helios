@@ -66,11 +66,11 @@ class GitHubWorkflowJobTimingServiceTest {
 
   @Test
   void persistDurationsUsesWorkflowRunStartWhenAvailable() {
-    GitHubWorkflowJobPayload payload = payload("deploy");
     WorkflowRun workflowRun = new WorkflowRun();
     workflowRun.setId(23716064328L);
     workflowRun.setWorkflow(deploymentWorkflow);
     workflowRun.setRunStartedAt(OffsetDateTime.parse("2026-03-29T18:31:40Z"));
+    GitHubWorkflowJobPayload payload = payload("deploy");
 
     when(deploymentWorkflowConfigRepository.findByWorkflow(any(Workflow.class)))
         .thenReturn(Optional.of(config));
@@ -88,10 +88,10 @@ class GitHubWorkflowJobTimingServiceTest {
 
   @Test
   void persistDurationsFallsBackToDeploymentCreatedAtAndBranchMatch() {
-    GitHubWorkflowJobPayload payload = payload("deploy");
     WorkflowRun workflowRun = new WorkflowRun();
     workflowRun.setId(23716064328L);
     workflowRun.setWorkflow(deploymentWorkflow);
+    GitHubWorkflowJobPayload payload = payload("deploy");
 
     when(deploymentWorkflowConfigRepository.findByWorkflow(any(Workflow.class)))
         .thenReturn(Optional.of(config));
@@ -108,12 +108,12 @@ class GitHubWorkflowJobTimingServiceTest {
 
   @Test
   void persistDurationsSkipsWorkflowRunsOutsideConfiguredWorkflow() {
-    GitHubWorkflowJobPayload payload = payload("deploy");
     Workflow otherWorkflow = new Workflow();
     otherWorkflow.setId(11L);
     WorkflowRun workflowRun = new WorkflowRun();
     workflowRun.setId(23716064328L);
     workflowRun.setWorkflow(otherWorkflow);
+    GitHubWorkflowJobPayload payload = payload("deploy");
 
     when(heliosDeploymentRepository.findByWorkflowRunId(anyLong()))
         .thenReturn(Optional.of(heliosDeployment));
