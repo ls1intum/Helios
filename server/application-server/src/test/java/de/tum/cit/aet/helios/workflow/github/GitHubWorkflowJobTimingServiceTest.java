@@ -70,7 +70,7 @@ class GitHubWorkflowJobTimingServiceTest {
     workflowRun.setId(23716064328L);
     workflowRun.setWorkflow(deploymentWorkflow);
     workflowRun.setRunStartedAt(OffsetDateTime.parse("2026-03-29T18:31:40Z"));
-    GitHubWorkflowJobPayload payload = payload("deploy");
+    final GitHubWorkflowJobPayload payload = payload("deploy");
 
     when(deploymentWorkflowConfigRepository.findByWorkflow(any(Workflow.class)))
         .thenReturn(Optional.of(config));
@@ -91,7 +91,7 @@ class GitHubWorkflowJobTimingServiceTest {
     WorkflowRun workflowRun = new WorkflowRun();
     workflowRun.setId(23716064328L);
     workflowRun.setWorkflow(deploymentWorkflow);
-    GitHubWorkflowJobPayload payload = payload("deploy");
+    final GitHubWorkflowJobPayload payload = payload("deploy");
 
     when(deploymentWorkflowConfigRepository.findByWorkflow(any(Workflow.class)))
         .thenReturn(Optional.of(config));
