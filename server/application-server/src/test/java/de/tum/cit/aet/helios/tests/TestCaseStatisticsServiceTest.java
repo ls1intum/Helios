@@ -13,6 +13,7 @@ import static org.mockito.Mockito.when;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import de.tum.cit.aet.helios.tests.pagination.FlakyTestsFilterType;
 import de.tum.cit.aet.helios.tests.pagination.FlakyTestsPageRequest;
+import java.lang.reflect.Field;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -194,7 +195,7 @@ class TestCaseStatisticsServiceTest {
   }
 
   @Test
-  void updateFlakinessForTestSuite_chunksQueriesAndBatchesWrites() {
+  void updateFlakinessForTestSuite_chunksQueriesAndBatchesWrites() throws Exception {
     List<TestSuite> testSuites = new ArrayList<>();
     for (int i = 0; i < 260; i++) {
       testSuites.add(createSuiteWithSingleTest("Suite-" + i, "test-" + i, "Class-" + i));
@@ -207,10 +208,16 @@ class TestCaseStatisticsServiceTest {
 
     service.updateFlakinessForTestSuite(testSuites, "main", repository);
 
-    verify(statisticsRepository, times(2))
+    Field chunkSizeField = TestCaseStatisticsService.class.getDeclaredField(
+        "SUITE_NAME_QUERY_CHUNK_SIZE");
+    chunkSizeField.setAccessible(true);
+    int chunkSize = (int) chunkSizeField.get(null);
+    int expectedChunks = (testSuites.size() + chunkSize - 1) / chunkSize;
+
+    verify(statisticsRepository, times(expectedChunks))
         .findFailureRateRowsByTestSuiteNameInAndBranchNameAndRepositoryRepositoryId(
             anyCollection(), eq("main"), any());
-    verify(statisticsRepository, times(2))
+    verify(statisticsRepository, times(expectedChunks))
         .findFailureRateRowsByTestSuiteNameInAndBranchNameAndRepositoryRepositoryId(
             anyCollection(), eq("combined"), any());
     verify(flakinessRepository, times(260)).upsertFlakiness(
