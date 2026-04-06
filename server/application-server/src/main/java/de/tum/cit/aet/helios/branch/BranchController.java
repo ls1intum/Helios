@@ -18,8 +18,11 @@ public class BranchController {
   private final BranchService branchService;
 
   @GetMapping
-  public ResponseEntity<List<BranchInfoDto>> getAllBranches() {
-    List<BranchInfoDto> branches = branchService.getAllBranches();
+  public ResponseEntity<List<BranchInfoDto>> getAllBranches(
+          @RequestParam(required = false, defaultValue = "updatedAt") String sortField,
+          @RequestParam(required = false, defaultValue = "desc") String sortDirection
+  ) {
+    List<BranchInfoDto> branches = branchService.getAllBranches(sortField, sortDirection);
     return ResponseEntity.ok(branches);
   }
 

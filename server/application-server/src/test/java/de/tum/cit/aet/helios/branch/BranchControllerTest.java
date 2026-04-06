@@ -70,7 +70,7 @@ public class BranchControllerTest {
 
   @Test
   void testGetAllBranches() throws Exception {
-    when(branchService.getAllBranches()).thenReturn(branches);
+    when(branchService.getAllBranches("updatedAt", "desc")).thenReturn(branches);
     ResultActions request =
         this.mockMvc
             .perform(get("/api/branches").with(user("user")))

@@ -6,10 +6,12 @@ import jakarta.persistence.criteria.Predicate;
 import jakarta.transaction.Transactional;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -32,7 +34,7 @@ public class TestCaseStatisticsService {
   private static final double COMBINED_BRANCH_WEIGHT = 0.3;
   private static final double MIN_FLAKY_RATE = 0.01; // 1%
   private static final double MAX_FLAKY_RATE = 0.5; // 50%
-  private static final int SUITE_NAME_QUERY_CHUNK_SIZE = 250;
+  private static final int SUITE_NAME_QUERY_CHUNK_SIZE = 128;
 
   private final TestCaseStatisticsRepository statisticsRepository;
   private final TestCaseFlakinessRepository flakinessRepository;
@@ -132,9 +134,9 @@ public class TestCaseStatisticsService {
   /**
    * Recomputes and persists flakiness scores for all test cases in the given suites.
    *
-   * <p>Failure rates are pre-loaded in two bulk queries (default branch + combined) and indexed
-   * into {@link Map}s so each per-test score computation is O(1). Each score is written via a
-   * native {@code INSERT ... ON CONFLICT DO UPDATE} that bypasses the Hibernate first-level cache
+   * <p>Failure rates are loaded and indexed per suite chunk (default branch + combined) so only a
+   * bounded working set is kept in memory. Each score is written via a native
+   * {@code INSERT ... ON CONFLICT DO UPDATE} that bypasses the Hibernate first-level cache
    * entirely, preventing session growth and handling concurrent calls safely.
    *
    * @param testSuites the suites processed in this run
@@ -145,31 +147,44 @@ public class TestCaseStatisticsService {
   public void updateFlakinessForTestSuite(
       List<TestSuite> testSuites, String defaultBranch, GitRepository repository) {
 
-    var suiteNames = testSuites.stream().map(TestSuite::getName).distinct().toList();
-
-    // Two bulk DB reads and index into Maps for O(1) per-test lookup
-    Map<StatsKey, Double> defaultRates =
-        loadFailureRateIndex(suiteNames, defaultBranch, repository.getRepositoryId());
-    Map<StatsKey, Double> combinedRates =
-        loadFailureRateIndex(suiteNames, "combined", repository.getRepositoryId());
-
     OffsetDateTime now = OffsetDateTime.now();
     int count = 0;
-    for (TestSuite suite : testSuites) {
-      for (TestCase testCase : suite.getTestCases()) {
-        var info = computeFlakinessInfo(
-            testCase.getName(), testCase.getClassName(), suite.getName(),
-            defaultRates, combinedRates);
-        flakinessRepository.upsertFlakiness(
-            repository.getRepositoryId(),
-            testCase.getName(),
-            testCase.getClassName(),
-            suite.getName(),
-            info.flakinessScore(),
-            info.defaultBranchFailureRate(),
-            info.combinedFailureRate(),
-            now);
-        count++;
+    for (List<TestSuite> suiteChunk : chunked(testSuites, SUITE_NAME_QUERY_CHUNK_SIZE)) {
+      Set<String> suiteNamesInChunk =
+          suiteChunk.stream().map(TestSuite::getName).collect(Collectors.toSet());
+      Set<StatsKey> chunkKeys = collectChunkKeys(suiteChunk);
+      Map<StatsKey, Double> defaultRates =
+          loadFailureRateIndex(
+              suiteNamesInChunk,
+              defaultBranch,
+              repository.getRepositoryId(),
+              chunkKeys);
+      Map<StatsKey, Double> combinedRates =
+          loadFailureRateIndex(
+              suiteNamesInChunk,
+              "combined",
+              repository.getRepositoryId(),
+              chunkKeys);
+
+      for (TestSuite suite : suiteChunk) {
+        for (TestCase testCase : suite.getTestCases()) {
+          var info = computeFlakinessInfo(
+              testCase.getName(),
+              testCase.getClassName(),
+              suite.getName(),
+              defaultRates,
+              combinedRates);
+          flakinessRepository.upsertFlakiness(
+              repository.getRepositoryId(),
+              testCase.getName(),
+              testCase.getClassName(),
+              suite.getName(),
+              info.flakinessScore(),
+              info.defaultBranchFailureRate(),
+              info.combinedFailureRate(),
+              now);
+          count++;
+        }
       }
     }
     log.info("Finished flakiness upsert for repository {}: rows={}",
@@ -198,27 +213,47 @@ public class TestCaseStatisticsService {
   }
 
   private Map<StatsKey, Double> loadFailureRateIndex(
-      List<String> suiteNames, String branchName, Long repositoryId) {
+      Collection<String> suiteNames,
+      String branchName,
+      Long repositoryId,
+      Set<StatsKey> expectedKeys) {
+    if (suiteNames.isEmpty() || expectedKeys.isEmpty()) {
+      return Map.of();
+    }
+
     Map<StatsKey, Double> rates = new HashMap<>();
-    for (List<String> chunk : chunked(suiteNames, SUITE_NAME_QUERY_CHUNK_SIZE)) {
-      List<TestCaseStatisticsRepository.FailureRateRow> rows =
-          statisticsRepository
-              .findFailureRateRowsByTestSuiteNameInAndBranchNameAndRepositoryRepositoryId(
-                  chunk,
-                  branchName,
-                  repositoryId);
-      for (TestCaseStatisticsRepository.FailureRateRow row : rows) {
-        rates.put(
-            new StatsKey(row.getTestName(), row.getClassName(), row.getTestSuiteName()),
-            row.getTotalRuns() > 0 ? (double) row.getFailedRuns() / row.getTotalRuns() : 0.0);
+    List<TestCaseStatisticsRepository.FailureRateRow> rows =
+        statisticsRepository
+            .findFailureRateRowsByTestSuiteNameInAndBranchNameAndRepositoryRepositoryId(
+                suiteNames,
+                branchName,
+                repositoryId);
+    for (TestCaseStatisticsRepository.FailureRateRow row : rows) {
+      StatsKey key = new StatsKey(row.getTestName(), row.getClassName(), row.getTestSuiteName());
+      if (!expectedKeys.contains(key)) {
+        continue;
       }
+      rates.put(
+          key,
+          row.getTotalRuns() > 0 ? (double) row.getFailedRuns() / row.getTotalRuns() : 0.0);
     }
     log.info(
-        "Loaded failure rates for repository {} branch {}: rows={}",
+        "Loaded failure rates for repository {} branch {} chunkSuites={} matchedRows={}",
         repositoryId,
         branchName,
+        suiteNames.size(),
         rates.size());
     return rates;
+  }
+
+  private static Set<StatsKey> collectChunkKeys(List<TestSuite> suiteChunk) {
+    return suiteChunk.stream()
+        .flatMap(
+            suite ->
+                suite.getTestCases().stream()
+                    .map(testCase -> new StatsKey(
+                        testCase.getName(), testCase.getClassName(), suite.getName())))
+        .collect(Collectors.toSet());
   }
 
   private static <T> List<List<T>> chunked(List<T> items, int chunkSize) {

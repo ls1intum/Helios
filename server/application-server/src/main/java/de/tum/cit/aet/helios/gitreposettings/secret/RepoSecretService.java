@@ -5,29 +5,41 @@ import de.tum.cit.aet.helios.gitreposettings.GitRepoSettingsRepository;
 import jakarta.persistence.EntityNotFoundException;
 import java.security.SecureRandom;
 import java.util.Base64;
-import lombok.RequiredArgsConstructor;
+import java.util.concurrent.Semaphore;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@RequiredArgsConstructor
 public class RepoSecretService {
 
   private static final SecureRandom RNG = new SecureRandom();
   // 256‑bit suffix
   private static final int RAW_BYTES = 32;
-  private final GitRepoSettingsRepository gitRepoSettingsRepository;
 
-  /**
-   * Argon2id encoder – allocate once, reuse.
-   */
-  private final Argon2PasswordEncoder argon2 = new Argon2PasswordEncoder(
-      16,      // salt length (bytes) – internal
-      32,      // hash length (bytes)
-      1,       // parallelism
-      1 << 16, // memory = 65 536 KiB
-      3);      // iterations
+  private final GitRepoSettingsRepository gitRepoSettingsRepository;
+  private final Argon2PasswordEncoder argon2;
+  private final Semaphore argon2VerifySemaphore;
+
+  public RepoSecretService(
+      GitRepoSettingsRepository gitRepoSettingsRepository,
+      @Value("${helios.repo-secret.argon2.salt-length:16}") int saltLength,
+      @Value("${helios.repo-secret.argon2.hash-length:32}") int hashLength,
+      @Value("${helios.repo-secret.argon2.parallelism:1}") int parallelism,
+      @Value("${helios.repo-secret.argon2.memory-kib:16384}") int memoryKiB,
+      @Value("${helios.repo-secret.argon2.iterations:2}") int iterations,
+      @Value("${helios.repo-secret.max-concurrent-verifications:4}")
+          int maxConcurrentVerifications) {
+    this.gitRepoSettingsRepository = gitRepoSettingsRepository;
+    this.argon2 = new Argon2PasswordEncoder(
+        saltLength,
+        hashLength,
+        parallelism,
+        memoryKiB,
+        iterations);
+    this.argon2VerifySemaphore = new Semaphore(Math.max(1, maxConcurrentVerifications), true);
+  }
 
   /**
    * Generate or replace the repo’s shared secret.
@@ -74,6 +86,19 @@ public class RepoSecretService {
     }
 
     String suffix = parts[2];
-    return argon2.matches(suffix, settings.getSecretHash());
+    boolean acquired = false;
+    try {
+      // Bound concurrent Argon2 allocations to avoid heap spikes under request bursts.
+      argon2VerifySemaphore.acquire();
+      acquired = true;
+      return argon2.matches(suffix, settings.getSecretHash());
+    } catch (InterruptedException interruptedException) {
+      Thread.currentThread().interrupt();
+      return false;
+    } finally {
+      if (acquired) {
+        argon2VerifySemaphore.release();
+      }
+    }
   }
 }

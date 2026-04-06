@@ -1,4 +1,4 @@
-import { Component, computed, inject, viewChild } from '@angular/core';
+import { Component, computed, inject, signal, viewChild } from '@angular/core';
 import { TableModule } from 'primeng/table';
 import { AvatarModule } from 'primeng/avatar';
 import { TagModule } from 'primeng/tag';
@@ -115,7 +115,16 @@ export function createBranchFilterOptions(keycloakService: KeycloakService): Fil
   providers: [
     SearchTableService,
     { provide: FILTER_OPTIONS_TOKEN, useFactory: createBranchFilterOptions, deps: [KeycloakService] },
-    provideTablerIcons({ IconFilterPlus, IconPinnedOff, IconPinned, IconShieldHalf, IconExternalLink, IconGitCommit, IconGitBranch }),
+    provideTablerIcons({
+      IconFilterPlus,
+      IconPinnedOff,
+      IconPinned,
+      IconShieldHalf,
+      IconBrandGithub,
+      IconExternalLink,
+      IconGitCommit,
+      IconGitBranch,
+    }),
   ],
   templateUrl: './branches-table.component.html',
 })
@@ -130,7 +139,28 @@ export class BranchTableComponent {
 
   treeTable = viewChild<TreeTable>('table');
 
-  query = injectQuery(() => getAllBranchesOptions());
+  sortField = signal<string | undefined>('updatedAt');
+  sortDirection = signal<'asc' | 'desc'>('desc');
+
+  queryOptions = computed(() =>
+    getAllBranchesOptions({
+      query: {
+        sortField: this.sortField(),
+        sortDirection: this.sortDirection(),
+      },
+    })
+  );
+  query = injectQuery(() => this.queryOptions());
+
+  onSort(event: { field?: string; order?: number }): void {
+    if (event.field) {
+      this.sortField.set(event.field);
+    }
+    if (event.order !== undefined) {
+      this.sortDirection.set(event.order === 1 ? 'asc' : 'desc');
+    }
+  }
+
   setPinnedMutation = injectMutation(() => ({
     ...setBranchPinnedByRepositoryIdAndNameAndUserIdMutation(),
     onSuccess: () => {
