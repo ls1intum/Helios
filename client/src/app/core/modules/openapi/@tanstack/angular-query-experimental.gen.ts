@@ -59,7 +59,6 @@ import {
   getWorkflowById,
   getWorkflowJobStatus,
   getWorkflowRunById,
-  getWorkflowRuns,
   getWorkflowRunLogs,
   getWorkflowRuns,
   getWorkflowsByRepositoryId,
@@ -1053,12 +1052,6 @@ export const getWorkflowRunsInfiniteOptions = (options?: Options<GetWorkflowRuns
   );
 };
 
-export const getWorkflowRunByIdQueryKey = (options: Options<GetWorkflowRunByIdData>) => createQueryKey('getWorkflowRunById', options);
-
-export const getWorkflowRunByIdOptions = (options: Options<GetWorkflowRunByIdData>) => {
-  return queryOptions({
-    queryFn: async ({ queryKey, signal }) => {
-      const { data } = await getWorkflowRunById({
 export const getWorkflowRunLogsQueryKey = (options: Options<GetWorkflowRunLogsData>) => createQueryKey('getWorkflowRunLogs', options);
 
 export const getWorkflowRunLogsOptions = (options: Options<GetWorkflowRunLogsData>) => {
@@ -1072,8 +1065,24 @@ export const getWorkflowRunLogsOptions = (options: Options<GetWorkflowRunLogsDat
       });
       return data;
     },
-    queryKey: getWorkflowRunByIdQueryKey(options),
     queryKey: getWorkflowRunLogsQueryKey(options),
+  });
+};
+
+export const getWorkflowRunByIdQueryKey = (options: Options<GetWorkflowRunByIdData>) => createQueryKey('getWorkflowRunById', options);
+
+export const getWorkflowRunByIdOptions = (options: Options<GetWorkflowRunByIdData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getWorkflowRunById({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: getWorkflowRunByIdQueryKey(options),
   });
 };
 

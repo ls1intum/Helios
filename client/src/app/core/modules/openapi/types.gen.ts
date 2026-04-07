@@ -1886,16 +1886,6 @@ export type GetWorkflowRunsResponses = {
 
 export type GetWorkflowRunsResponse = GetWorkflowRunsResponses[keyof GetWorkflowRunsResponses];
 
-export type GetWorkflowRunByIdData = {
-  body?: never;
-  path: {
-    runId: number;
-  };
-  query?: never;
-  url: '/api/workflows/runs/{runId}';
-};
-
-export type GetWorkflowRunByIdErrors = {
 export type GetWorkflowRunLogsData = {
   body?: never;
   path: {
@@ -1912,16 +1902,6 @@ export type GetWorkflowRunLogsErrors = {
   409: ApiError;
 };
 
-export type GetWorkflowRunByIdError = GetWorkflowRunByIdErrors[keyof GetWorkflowRunByIdErrors];
-
-export type GetWorkflowRunByIdResponses = {
-  /**
-   * OK
-   */
-  200: WorkflowRunDto;
-};
-
-export type GetWorkflowRunByIdResponse = GetWorkflowRunByIdResponses[keyof GetWorkflowRunByIdResponses];
 export type GetWorkflowRunLogsError = GetWorkflowRunLogsErrors[keyof GetWorkflowRunLogsErrors];
 
 export type GetWorkflowRunLogsResponses = {
@@ -1932,6 +1912,33 @@ export type GetWorkflowRunLogsResponses = {
 };
 
 export type GetWorkflowRunLogsResponse = GetWorkflowRunLogsResponses[keyof GetWorkflowRunLogsResponses];
+
+export type GetWorkflowRunByIdData = {
+  body?: never;
+  path: {
+    runId: number;
+  };
+  query?: never;
+  url: '/api/workflows/runs/{runId}';
+};
+
+export type GetWorkflowRunByIdErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type GetWorkflowRunByIdError = GetWorkflowRunByIdErrors[keyof GetWorkflowRunByIdErrors];
+
+export type GetWorkflowRunByIdResponses = {
+  /**
+   * OK
+   */
+  200: WorkflowRunDto;
+};
+
+export type GetWorkflowRunByIdResponse = GetWorkflowRunByIdResponses[keyof GetWorkflowRunByIdResponses];
 
 export type GetWorkflowsByRepositoryIdData = {
   body?: never;
