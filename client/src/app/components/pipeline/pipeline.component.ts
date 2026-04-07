@@ -94,7 +94,7 @@ export class PipelineComponent {
 
     const groupedWorkflowsRuns = workflowGroups.map(group => {
       const workflowIds = group.memberships?.map(membership => membership.workflowId) || [];
-      const matchingRuns = workflowRuns.filter(run => workflowIds.includes(run.workflowId));
+      const matchingRuns = workflowRuns.filter(run => run.workflowId !== undefined && workflowIds.includes(run.workflowId));
       return {
         name: group.name,
         id: group.id,

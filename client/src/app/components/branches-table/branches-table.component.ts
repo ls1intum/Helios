@@ -30,16 +30,7 @@ import { MessageService } from 'primeng/api';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 import { GithubLinkButtonComponent } from '@app/components/github-link-button/github-link-button.component';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
-import {
-  IconBrandGithub,
-  IconExternalLink,
-  IconFilterPlus,
-  IconGitBranch,
-  IconGitCommit,
-  IconPinned,
-  IconPinnedOff,
-  IconShieldHalf,
-} from 'angular-tabler-icons/icons';
+import { IconFilterPlus, IconPinnedOff, IconPinned, IconShieldHalf, IconExternalLink, IconGitCommit, IconGitBranch } from 'angular-tabler-icons/icons';
 
 export type BranchInfoWithLink = BranchInfoDto & { link: string; lastCommitLink: string };
 
@@ -115,7 +106,6 @@ export function createBranchFilterOptions(keycloakService: KeycloakService): Fil
     IconFieldModule,
     TableFilterComponent,
     InputIconModule,
-    InputTextModule,
     FormsModule,
     WorkflowRunStatusComponent,
     HighlightPipe,
@@ -129,7 +119,6 @@ export function createBranchFilterOptions(keycloakService: KeycloakService): Fil
       IconPinnedOff,
       IconPinned,
       IconShieldHalf,
-      IconBrandGithub,
       IconExternalLink,
       IconGitCommit,
       IconGitBranch,

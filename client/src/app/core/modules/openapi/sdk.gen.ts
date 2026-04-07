@@ -168,6 +168,9 @@ import type {
   GetWorkflowRunByIdData,
   GetWorkflowRunByIdErrors,
   GetWorkflowRunByIdResponses,
+  GetWorkflowRunLogsData,
+  GetWorkflowRunLogsErrors,
+  GetWorkflowRunLogsResponses,
   GetWorkflowRunsData,
   GetWorkflowRunsErrors,
   GetWorkflowRunsResponses,
@@ -656,6 +659,13 @@ export const getWorkflowsByState = <ThrowOnError extends boolean = false>(option
 export const getWorkflowRuns = <ThrowOnError extends boolean = false>(options?: Options<GetWorkflowRunsData, ThrowOnError>) => {
   return (options?.client ?? client).get<GetWorkflowRunsResponses, GetWorkflowRunsErrors, ThrowOnError>({
     url: '/api/workflows/runs',
+    ...options,
+  });
+};
+
+export const getWorkflowRunLogs = <ThrowOnError extends boolean = false>(options: Options<GetWorkflowRunLogsData, ThrowOnError>) => {
+  return (options.client ?? client).get<GetWorkflowRunLogsResponses, GetWorkflowRunLogsErrors, ThrowOnError>({
+    url: '/api/workflows/runs/{workflowRunId}/logs',
     ...options,
   });
 };

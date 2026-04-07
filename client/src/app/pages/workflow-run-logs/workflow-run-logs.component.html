@@ -1,0 +1,328 @@
+<app-page-heading [repositoryId]="repositoryId()">
+  <div class="flex w-full flex-wrap items-start justify-between gap-3" heading>
+    <div class="min-w-0">
+      <div>Workflow Logs</div>
+      @if (logsResponse(); as response) {
+        <div class="mt-2 flex flex-wrap items-center gap-2 text-base font-normal text-muted-color">
+          <span [class]="workflowOutcome().badgeClass">
+            <i-tabler [name]="workflowOutcome().icon" class="!size-4" />
+            {{ workflowOutcome().label }}
+          </span>
+          <span class="min-w-0 flex-1 truncate">
+            {{ response.displayTitle || response.workflowName }}
+          </span>
+        </div>
+      } @else {
+        <div class="mt-2 text-base font-normal text-muted-color">Workflow run #{{ workflowRunId() }}</div>
+      }
+    </div>
+
+    <div class="flex flex-wrap items-center gap-2">
+      <p-button label="Back" severity="secondary" [outlined]="true" (click)="goBack()">
+        <i-tabler name="arrow-left" class="!size-4" />
+      </p-button>
+
+      @if (!!logsResponse()?.htmlUrl) {
+        <p-button label="Open on GitHub" [outlined]="true" (click)="openExternalLogs()">
+          <i-tabler name="external-link" class="!size-4" />
+        </p-button>
+      }
+    </div>
+  </div>
+
+  <span description>
+    Helios downloads and prepares the workflow run logs on demand the first time this page is opened. While the request is in flight, the page stays in a loading state.
+  </span>
+</app-page-heading>
+
+<div class="px-4 pb-6">
+  @if (logsQuery.isPending()) {
+    <div class="grid gap-4 lg:grid-cols-[20rem_minmax(0,1fr)]">
+      <p-card class="border border-surface-200 shadow-sm dark:border-surface-700">
+        <div class="mb-4 flex items-center gap-2">
+          <i-tabler name="folder" class="!size-5 text-primary" />
+          <span class="font-semibold">Preparing log groups</span>
+        </div>
+
+        <div class="space-y-3">
+          <p-skeleton height="1rem" />
+          <p-skeleton height="2.5rem" />
+          <p-skeleton height="2.5rem" />
+          <p-skeleton height="2.5rem" />
+        </div>
+      </p-card>
+
+      <p-card class="border border-surface-200 shadow-sm dark:border-surface-700">
+        <div class="mb-4 flex items-center justify-between">
+          <p-skeleton width="14rem" height="1.25rem" />
+          <p-skeleton width="7rem" height="1rem" />
+        </div>
+
+        <div class="space-y-2">
+          <p-skeleton height="1rem" />
+          <p-skeleton height="1rem" />
+          <p-skeleton height="1rem" />
+          <p-skeleton height="1rem" />
+          <p-skeleton height="1rem" />
+          <p-skeleton height="1rem" />
+          <p-skeleton height="1rem" />
+          <p-skeleton height="1rem" />
+        </div>
+      </p-card>
+    </div>
+  } @else if (logsQuery.isError()) {
+    <p-card class="border border-red-200 bg-red-50/60 shadow-sm dark:border-red-900/60 dark:bg-red-950/20">
+      <div class="mx-auto flex min-h-[26rem] max-w-xl flex-col items-center justify-center text-center">
+        <i-tabler name="server-off" class="mb-4 !size-12 text-red-500" />
+        <h3 class="mb-4 text-xl font-semibold">Workflow logs could not be loaded</h3>
+        <p-message severity="error" class="mb-6 block text-left">
+          Helios only opens workflow logs after the workflow run has completed. If this run just finished, retry the same request in a moment.
+        </p-message>
+        <div class="flex flex-wrap justify-center gap-2">
+          <p-button label="Retry" (click)="retry()">
+            <i-tabler name="refresh" class="!size-4" />
+          </p-button>
+
+          @if (!!logsResponse()?.htmlUrl) {
+            <p-button label="Open on GitHub" severity="secondary" [outlined]="true" (click)="openExternalLogs()">
+              <i-tabler name="external-link" class="!size-4" />
+            </p-button>
+          }
+        </div>
+      </div>
+    </p-card>
+  } @else if (!hasLogs()) {
+    <p-card class="border border-surface-200 shadow-sm dark:border-surface-700">
+      <div class="mx-auto flex min-h-[26rem] max-w-xl flex-col items-center justify-center text-center">
+        <i-tabler name="file-text" class="mb-4 !size-12 text-muted-color" />
+        <h3 class="mb-4 text-xl font-semibold">No workflow logs were returned</h3>
+        <p-message severity="info" class="mb-6 block text-left"> Helios completed the request but there are no processed log files available to display yet. </p-message>
+        <p-button label="Retry" (click)="retry()">
+          <i-tabler name="refresh" class="!size-4" />
+        </p-button>
+      </div>
+    </p-card>
+  } @else {
+    <p-toolbar class="mb-4 rounded-xl border border-surface-200 shadow-sm dark:border-surface-700">
+      <ng-template #start>
+        <div class="flex flex-wrap gap-2 text-sm text-muted-color">
+          <p-tag severity="secondary" [rounded]="true">
+            {{ logsResponse()?.cacheHit ? 'Loaded from cache' : 'Downloaded fresh logs' }}
+          </p-tag>
+          <p-tag severity="secondary" [rounded]="true"> {{ logsResponse()?.totalFileCount }} files </p-tag>
+          @if (logsResponse()?.downloadedAt) {
+            <p-tag severity="secondary" [rounded]="true"> Downloaded {{ logsResponse()?.downloadedAt | date: 'd MMM y, HH:mm:ss' }} </p-tag>
+          }
+        </div>
+      </ng-template>
+
+      <ng-template #end>
+        <p-button
+          label="Refresh Logs"
+          severity="secondary"
+          [outlined]="true"
+          size="small"
+          [disabled]="refreshLogsMutation.isPending()"
+          [loading]="refreshLogsMutation.isPending()"
+          (click)="refreshLogs()"
+        >
+          <i-tabler name="refresh" class="!size-4" />
+        </p-button>
+      </ng-template>
+    </p-toolbar>
+
+    <p-message severity="warn" class="mb-4 block text-left">
+      In the first hour after a workflow run completes, GitHub can still provide logs separated by step. After that, step-level separation is no longer available here. Check the
+      GitHub workflow page if you need more detail.
+    </p-message>
+
+    <div class="grid gap-4 lg:grid-cols-[22rem_minmax(0,1fr)]">
+      <p-panel styleClass="border border-surface-200 shadow-sm dark:border-surface-700">
+        <ng-template pTemplate="header">
+          <div class="flex w-full items-center justify-between gap-3">
+            <div class="flex items-center gap-2">
+              <i-tabler name="folder" class="!size-5 text-primary" />
+              <span class="font-semibold">Log Files</span>
+            </div>
+            <p-tag severity="secondary" [rounded]="true" [value]="groupViews().length + ' groups'" />
+          </div>
+        </ng-template>
+
+        <p-accordion [multiple]="true" [value]="expandedGroupNames()" (valueChange)="onExpandedGroupsChange($event)">
+          @for (groupView of groupViews(); track groupView.group.name) {
+            <p-accordion-panel [value]="groupView.group.name">
+              <p-accordion-header>
+                <div class="flex w-full items-start gap-3 pr-2">
+                  @if (groupView.group.jobConclusion) {
+                    <span
+                      class="inline-flex size-8 shrink-0 items-center justify-center rounded-md"
+                      [class]="groupView.iconContainerClass"
+                      [attr.aria-label]="groupView.outcome.label"
+                      [title]="groupView.outcome.label"
+                    >
+                      <i-tabler [name]="groupView.outcome.icon" class="!size-4"></i-tabler>
+                    </span>
+                  } @else {
+                    <span
+                      class="inline-flex size-8 shrink-0 items-center justify-center rounded-md bg-surface-100 text-surface-500 dark:bg-surface-800 dark:text-surface-300"
+                      aria-label="No exact GitHub job match"
+                      title="No exact GitHub job match"
+                    >
+                      <i-tabler name="folder" class="!size-4"></i-tabler>
+                    </span>
+                  }
+
+                  <div class="min-w-0 flex-1">
+                    <div class="truncate font-medium">{{ groupView.group.name }}</div>
+                    @if (groupView.group.jobName && groupView.group.jobName !== groupView.group.name) {
+                      <div class="truncate text-xs text-muted-color">{{ groupView.group.jobName }}</div>
+                    }
+                  </div>
+
+                  <p-tag severity="secondary" [rounded]="true" [value]="groupView.group.files.length + ' files'" />
+                </div>
+              </p-accordion-header>
+
+              <p-accordion-content>
+                <div class="space-y-2">
+                  @for (fileView of getFileViewsForGroup(groupView.group.name); track fileView.file.path) {
+                    <button
+                      class="flex w-full items-center gap-3 rounded-lg border px-3 py-2 text-left transition"
+                      [ngClass]="
+                        activeFilePath() === fileView.file.path
+                          ? 'border-primary bg-primary-50 text-primary-900 shadow-sm dark:bg-primary-400/15 dark:text-primary-50'
+                          : 'border-surface-200 bg-surface-0 dark:border-surface-700 dark:bg-surface-900'
+                      "
+                      type="button"
+                      (click)="selectFile(fileView.file.path)"
+                    >
+                      @if (!!fileView.file.stepConclusion) {
+                        <span
+                          class="inline-flex size-6 shrink-0 items-center justify-center rounded-md"
+                          [class]="fileView.iconContainerClass"
+                          [attr.aria-label]="fileView.outcome.label"
+                          [title]="fileView.outcome.label"
+                        >
+                          <i-tabler [name]="fileView.outcome.icon" class="!size-4"></i-tabler>
+                        </span>
+                      } @else {
+                        <span class="inline-flex size-6 shrink-0 items-center justify-center rounded-md bg-surface-100 text-surface-500 dark:bg-surface-800 dark:text-surface-300">
+                          <i-tabler name="file-text" class="!size-4"></i-tabler>
+                        </span>
+                      }
+                      <span class="min-w-0 flex-1 truncate text-sm">{{ fileView.file.displayName }}</span>
+                      @if (getStepDuration(fileView.file.stepStartedAt, fileView.file.stepCompletedAt); as stepDuration) {
+                        @if (stepDuration) {
+                          <span class="shrink-0 rounded-full bg-surface-100 px-2 py-0.5 text-xs text-surface-700 dark:bg-surface-800 dark:text-surface-300">
+                            {{ stepDuration }}
+                          </span>
+                        }
+                      }
+                    </button>
+                  }
+                </div>
+              </p-accordion-content>
+            </p-accordion-panel>
+          }
+        </p-accordion>
+      </p-panel>
+
+      <p-panel styleClass="min-w-0 border border-surface-200 shadow-sm dark:border-surface-700">
+        <ng-template pTemplate="header">
+          <div class="flex w-full items-center justify-between gap-3">
+            <div class="flex items-center gap-2">
+              <i-tabler name="file-text" class="!size-5 text-primary" />
+              <span class="font-semibold">Selected Log</span>
+            </div>
+            @if (selectedFileView(); as selectedFileView) {
+              <p-tag
+                severity="secondary"
+                [rounded]="true"
+                [value]="
+                  selectedFileView.rows.length === selectedFileView.totalRowCount
+                    ? selectedFileView.totalRowCount + ' lines'
+                    : selectedFileView.rows.length + ' / ' + selectedFileView.totalRowCount + ' lines'
+                "
+              />
+            }
+          </div>
+        </ng-template>
+
+        @if (selectedFileView(); as selectedFileView) {
+          <div class="min-w-0">
+            <div class="text-sm uppercase tracking-wide text-muted-color">{{ selectedFileView.selectedFile.groupView.group.name }}</div>
+            <h3 class="mt-1 min-w-0 truncate text-xl font-semibold">{{ selectedFileView.selectedFile.file.displayName }}</h3>
+            <div class="truncate text-sm text-muted-color">{{ selectedFileView.selectedFile.file.path }}</div>
+            @if (selectedStep(); as selectedStep) {
+              <div class="mt-3 flex flex-wrap gap-2">
+                <span [class]="selectedFileView.selectedFile.outcome.badgeClass">
+                  {{ 'GitHub step: ' + (selectedStep.name || 'Step ' + (selectedStep.number ?? '?')) }}
+                </span>
+                <span [class]="selectedFileView.selectedFile.outcome.badgeClass">
+                  {{ selectedFileView.selectedFile.outcome.label }}
+                </span>
+              </div>
+            }
+            @if (selectedFileView.lineStats.errorCount > 0 || selectedFileView.lineStats.warningCount > 0) {
+              <div class="mt-3 flex flex-wrap gap-2">
+                @if (selectedFileView.lineStats.errorCount > 0) {
+                  <span [class]="getLineToneBadgeClass('error')">{{ selectedFileView.lineStats.errorCount + ' error lines' }}</span>
+                }
+                @if (selectedFileView.lineStats.warningCount > 0) {
+                  <span [class]="getLineToneBadgeClass('warning')">{{ selectedFileView.lineStats.warningCount + ' warning lines' }}</span>
+                }
+              </div>
+            }
+          </div>
+
+          <p-divider class="my-4" />
+
+          <div [class]="logViewClasses.container">
+            <div [class]="logViewClasses.toolbar">
+              @for (filterOption of lineFilterOptions; track filterOption.tone) {
+                <button
+                  type="button"
+                  class="rounded-full border px-2 py-1 transition"
+                  [class]="getLineToneFilterClass(filterOption.tone)"
+                  [attr.aria-pressed]="isLineToneEnabled(filterOption.tone)"
+                  (click)="toggleLineTone(filterOption.tone)"
+                >
+                  {{ filterOption.label }}
+                </button>
+              }
+            </div>
+            <div [class]="logViewClasses.content">
+              @if (selectedFileView.rows.length === 0) {
+                <div [class]="logViewClasses.emptyState">No log lines match the selected filters.</div>
+              }
+              @for (row of selectedFileView.rows; track row.type === 'group' ? row.id : row.line.number) {
+                @if (row.type === 'group') {
+                  <button type="button" [class]="getLogGroupRowClass()" (click)="toggleLogGroup(row.id)" [attr.aria-expanded]="isLogGroupExpanded(row.id)">
+                    <span [class]="logViewClasses.lineNumber">
+                      {{ row.line.number }}
+                    </span>
+                    <span class="inline-flex min-w-0 items-start gap-2 py-0.5" [class]="getLogGroupTextClass()" [style.padding-left.rem]="row.level * 1.25">
+                      <i-tabler [name]="isLogGroupExpanded(row.id) ? 'chevron-down' : 'chevron-right'" class="mt-0.5 !size-4 shrink-0" />
+                      <span class="min-w-0 whitespace-pre-wrap break-words font-semibold">
+                        {{ row.title || ' ' }}
+                      </span>
+                    </span>
+                  </button>
+                } @else {
+                  <div [class]="getLineToneRowClass(row.line.tone)">
+                    <span [class]="logViewClasses.lineNumber">
+                      {{ row.line.number }}
+                    </span>
+                    <span class="whitespace-pre-wrap break-words py-0.5" [style.padding-left.rem]="row.level * 1.25" [class]="getLineToneTextClass(row.line.tone)">
+                      {{ getRenderedLineContent(row.line) || ' ' }}
+                    </span>
+                  </div>
+                }
+              }
+            </div>
+          </div>
+        }
+      </p-panel>
+    </div>
+  }
+</div>

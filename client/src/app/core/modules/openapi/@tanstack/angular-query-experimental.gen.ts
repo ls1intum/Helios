@@ -59,6 +59,7 @@ import {
   getWorkflowById,
   getWorkflowJobStatus,
   getWorkflowRunById,
+  getWorkflowRunLogs,
   getWorkflowRuns,
   getWorkflowsByRepositoryId,
   getWorkflowsByState,
@@ -177,6 +178,7 @@ import type {
   GetWorkflowByIdData,
   GetWorkflowJobStatusData,
   GetWorkflowRunByIdData,
+  GetWorkflowRunLogsData,
   GetWorkflowRunsData,
   GetWorkflowRunsError,
   GetWorkflowRunsResponse,
@@ -1048,6 +1050,23 @@ export const getWorkflowRunsInfiniteOptions = (options?: Options<GetWorkflowRuns
       queryKey: getWorkflowRunsInfiniteQueryKey(options),
     }
   );
+};
+
+export const getWorkflowRunLogsQueryKey = (options: Options<GetWorkflowRunLogsData>) => createQueryKey('getWorkflowRunLogs', options);
+
+export const getWorkflowRunLogsOptions = (options: Options<GetWorkflowRunLogsData>) => {
+  return queryOptions({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getWorkflowRunLogs({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: getWorkflowRunLogsQueryKey(options),
+  });
 };
 
 export const getWorkflowRunByIdQueryKey = (options: Options<GetWorkflowRunByIdData>) => createQueryKey('getWorkflowRunById', options);

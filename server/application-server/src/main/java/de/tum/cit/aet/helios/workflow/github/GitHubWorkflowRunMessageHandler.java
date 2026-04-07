@@ -65,7 +65,6 @@ public class GitHubWorkflowRunMessageHandler
 
     repositorySyncService.processRepository(eventPayload.getRepository());
 
-
     // Check if this is a workflow_run event
     // (??) When we check artifacts for each status,
     // then for the completed status artifact list return an empty list
@@ -117,7 +116,6 @@ public class GitHubWorkflowRunMessageHandler
     var run = workflowSyncService.processRunWithContext(githubRun, context);
     processTestResult(run);
   }
-
 
   /**
    * Processes the test result for the given workflow run.

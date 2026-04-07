@@ -2,14 +2,21 @@ package de.tum.cit.aet.helios.workflow;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import de.tum.cit.aet.helios.workflow.WorkflowRun.Conclusion;
 import de.tum.cit.aet.helios.workflow.WorkflowRun.Status;
+import de.tum.cit.aet.helios.workflow.logs.WorkflowRunLogFileDto;
+import de.tum.cit.aet.helios.workflow.logs.WorkflowRunLogGroupDto;
+import de.tum.cit.aet.helios.workflow.logs.WorkflowRunLogReaderService;
+import de.tum.cit.aet.helios.workflow.logs.WorkflowRunLogStepDto;
+import de.tum.cit.aet.helios.workflow.logs.WorkflowRunLogsResponse;
 import de.tum.cit.aet.helios.workflow.pagination.PaginatedWorkflowRunsResponse;
 import de.tum.cit.aet.helios.workflow.pagination.WorkflowRunFilterType;
 import de.tum.cit.aet.helios.workflow.pagination.WorkflowRunPageRequest;
@@ -36,6 +43,10 @@ class WorkflowRunControllerTest {
 
   @MockitoBean
   private WorkflowRunService workflowRunService;
+
+  @MockitoBean private WorkflowRunLogReaderService workflowRunLogReaderService;
+
+  @Autowired private ObjectMapper objectMapper;
 
   private PaginatedWorkflowRunsResponse sampleResponse;
 
@@ -149,5 +160,77 @@ class WorkflowRunControllerTest {
         .andExpect(jsonPath("$.runs.length()").value(0))
         .andExpect(jsonPath("$.totalElements").value(0))
         .andExpect(jsonPath("$.totalPages").value(0));
+  }
+
+  @Test
+  void getWorkflowRunLogsReturnsProcessedLogs() throws Exception {
+    WorkflowRunLogsResponse response =
+        new WorkflowRunLogsResponse(
+            42L,
+            "deploy",
+            "Deploy preview",
+            WorkflowRun.Conclusion.SUCCESS,
+            "https://github.com/owner/repo/actions/runs/42",
+            false,
+            OffsetDateTime.parse("2026-03-12T10:15:30Z"),
+            1,
+            List.of(
+                new WorkflowRunLogGroupDto(
+                    "build",
+                    "build",
+                    "completed",
+                    "success",
+                    List.of(
+                        new WorkflowRunLogStepDto(
+                            1,
+                            "Build",
+                            "completed",
+                            "success",
+                            null,
+                            null)),
+                    List.of(
+                        new WorkflowRunLogFileDto(
+                            "build/1_build.txt",
+                            "1_build.txt",
+                            1,
+                            "Build",
+                            "completed",
+                            "success",
+                            null,
+                            null,
+                            "first log line")))));
+    when(workflowRunLogReaderService.getLogs(42L, false)).thenReturn(response);
+
+    String actualResponse =
+        mockMvc
+            .perform(get("/api/workflows/runs/{workflowRunId}/logs", 42L))
+            .andExpect(status().isOk())
+            .andReturn()
+            .getResponse()
+            .getContentAsString();
+
+    assertEquals(objectMapper.writeValueAsString(response), actualResponse);
+  }
+
+  @Test
+  void getWorkflowRunLogsPassesForceRefreshFlagToReaderService() throws Exception {
+    WorkflowRunLogsResponse response =
+        new WorkflowRunLogsResponse(
+            42L,
+            "deploy",
+            "Deploy preview",
+            WorkflowRun.Conclusion.SUCCESS,
+            "https://github.com/owner/repo/actions/runs/42",
+            false,
+            OffsetDateTime.parse("2026-03-12T10:15:30Z"),
+            0,
+            List.of());
+    when(workflowRunLogReaderService.getLogs(42L, true)).thenReturn(response);
+
+    mockMvc
+        .perform(get("/api/workflows/runs/{workflowRunId}/logs", 42L).param("forceRefresh", "true"))
+        .andExpect(status().isOk());
+
+    verify(workflowRunLogReaderService).getLogs(eq(42L), eq(true));
   }
 }

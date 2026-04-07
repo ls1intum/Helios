@@ -326,6 +326,138 @@ export type WorkflowRunDto = {
   updatedAt: string;
 };
 
+export type WorkflowRunLogFileDto = {
+  /**
+   * The relative path of the log file inside the workflow log archive
+   */
+  path: string;
+  /**
+   * A display name for the log file
+   */
+  displayName: string;
+  /**
+   * The GitHub step number matched to this log file when available
+   */
+  stepNumber?: number;
+  /**
+   * The GitHub step name matched to this log file when available
+   */
+  stepName?: string;
+  /**
+   * The GitHub step status matched to this log file when available
+   */
+  stepStatus?: string;
+  /**
+   * The GitHub step conclusion matched to this log file when available
+   */
+  stepConclusion?: string;
+  /**
+   * The GitHub step start timestamp matched to this log file when available
+   */
+  stepStartedAt?: string;
+  /**
+   * The GitHub step completion timestamp matched to this log file when available
+   */
+  stepCompletedAt?: string;
+  /**
+   * The processed text content of the log file
+   */
+  content: string;
+};
+
+export type WorkflowRunLogGroupDto = {
+  /**
+   * The name of the log group, usually derived from the top-level archive directory
+   */
+  name: string;
+  /**
+   * The exact GitHub job name matched to this log group when available
+   */
+  jobName?: string;
+  /**
+   * The GitHub job status matched to this log group when available
+   */
+  jobStatus?: string;
+  /**
+   * The GitHub job conclusion matched to this log group when available
+   */
+  jobConclusion?: string;
+  /**
+   * The GitHub job steps matched to this log group when available
+   */
+  steps: Array<WorkflowRunLogStepDto>;
+  /**
+   * The log files belonging to this group
+   */
+  files: Array<WorkflowRunLogFileDto>;
+};
+
+export type WorkflowRunLogStepDto = {
+  /**
+   * The GitHub step number when available
+   */
+  number?: number;
+  /**
+   * The GitHub step name when available
+   */
+  name?: string;
+  /**
+   * The GitHub step status when available
+   */
+  status?: string;
+  /**
+   * The GitHub step conclusion when available
+   */
+  conclusion?: string;
+  /**
+   * The GitHub step start timestamp when available
+   */
+  startedAt?: string;
+  /**
+   * The GitHub step completion timestamp when available
+   */
+  completedAt?: string;
+};
+
+export type WorkflowRunLogsResponse = {
+  /**
+   * The workflow run identifier
+   */
+  workflowRunId: number;
+  /**
+   * The workflow run name
+   */
+  workflowName: string;
+  /**
+   * The workflow run display title
+   */
+  displayTitle?: string;
+  /**
+   * The workflow run conclusion when available
+   */
+  conclusion?: 'ACTION_REQUIRED' | 'CANCELLED' | 'FAILURE' | 'NEUTRAL' | 'SUCCESS' | 'SKIPPED' | 'STALE' | 'TIMED_OUT' | 'STARTUP_FAILURE' | 'UNKNOWN';
+  /**
+   * The HTML URL of the workflow run on GitHub
+   */
+  htmlUrl?: string;
+  /**
+   * Whether the workflow logs were already cached before this request
+   */
+  cacheHit?: boolean;
+  /**
+   * When the workflow logs were downloaded and stored
+   */
+  downloadedAt: string;
+  /**
+   * The number of extracted log files
+   */
+  totalFileCount?: number;
+  /**
+   * The processed log groups
+   */
+  groups: Array<WorkflowRunLogGroupDto>;
+};
+
 export type GitHubRepositoryRoleDto = {
   permission?: 'ADMIN' | 'WRITE' | 'READ' | 'NONE';
   roleName?: string;
@@ -1753,6 +1885,35 @@ export type GetWorkflowRunsResponses = {
 };
 
 export type GetWorkflowRunsResponse = GetWorkflowRunsResponses[keyof GetWorkflowRunsResponses];
+
+export type GetWorkflowRunLogsData = {
+  body?: never;
+  path: {
+    workflowRunId: number;
+  };
+  query?: {
+    forceRefresh?: boolean;
+  };
+  url: '/api/workflows/runs/{workflowRunId}/logs';
+};
+
+export type GetWorkflowRunLogsErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type GetWorkflowRunLogsError = GetWorkflowRunLogsErrors[keyof GetWorkflowRunLogsErrors];
+
+export type GetWorkflowRunLogsResponses = {
+  /**
+   * OK
+   */
+  200: WorkflowRunLogsResponse;
+};
+
+export type GetWorkflowRunLogsResponse = GetWorkflowRunLogsResponses[keyof GetWorkflowRunLogsResponses];
 
 export type GetWorkflowRunByIdData = {
   body?: never;
