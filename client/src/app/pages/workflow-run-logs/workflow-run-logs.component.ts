@@ -1,8 +1,10 @@
 import { CommonModule, Location } from '@angular/common';
 import { Component, computed, effect, inject, input, numberAttribute, signal } from '@angular/core';
 import { PageHeadingComponent } from '@app/components/page-heading/page-heading.component';
-import { getWorkflowRunLogsOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
-import { injectQuery } from '@tanstack/angular-query-experimental';
+import { getWorkflowRunLogsQueryKey, getWorkflowRunLogsOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
+import { getWorkflowRunLogs } from '@app/core/modules/openapi/sdk.gen';
+import type { WorkflowRunLogsResponse } from '@app/core/modules/openapi/types.gen';
+import { injectMutation, injectQuery, QueryClient } from '@tanstack/angular-query-experimental';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
 import {
   IconArrowLeft,
@@ -18,6 +20,7 @@ import {
   IconRefresh,
   IconServerOff,
 } from 'angular-tabler-icons/icons';
+import { MessageService } from 'primeng/api';
 import { AccordionModule } from 'primeng/accordion';
 import { Button } from 'primeng/button';
 import { CardModule } from 'primeng/card';
@@ -30,12 +33,18 @@ import { Toolbar } from 'primeng/toolbar';
 import {
   ALL_LOG_LINE_TONES,
   LOG_LINE_FILTER_OPTIONS,
+  LOG_VIEW_CLASSES,
   buildFileViews,
   buildGroupViews,
   getAutoExpandedLogGroupIds,
   buildSelectedFileView,
   getLineTone,
   getLineToneFilterClass,
+  getLineToneBadgeClass,
+  getLineToneRowClass,
+  getLineToneTextClass,
+  getLogGroupRowClass,
+  getLogGroupTextClass,
   getRenderedLineContent,
   getWorkflowRunOutcome,
 } from './workflow-run-logs.utils';
@@ -67,13 +76,17 @@ export class WorkflowRunLogsComponent {
   workflowRunId = input.required({ transform: numberAttribute });
 
   private location = inject(Location);
+  private messageService = inject(MessageService);
+  private queryClient = inject(QueryClient);
   private hasInitializedExpandedGroups = false;
 
   expandedGroupNames = signal<string[]>([]);
   expandedLogGroupIds = signal<Record<string, boolean>>({});
   selectedFilePath = signal<string | null>(null);
+  refreshedLogs = signal<WorkflowRunLogsResponse | null>(null);
   enabledLineTones = signal<WorkflowRunLogLineTone[]>([...ALL_LOG_LINE_TONES]);
   readonly lineFilterOptions = LOG_LINE_FILTER_OPTIONS;
+  readonly logViewClasses = LOG_VIEW_CLASSES;
   readonly getWorkflowRunOutcome = getWorkflowRunOutcome;
   readonly getLineTone = getLineTone;
   readonly getRenderedLineContent = getRenderedLineContent;
@@ -84,8 +97,31 @@ export class WorkflowRunLogsComponent {
     retry: false,
   }));
 
-  workflowOutcome = computed(() => getWorkflowRunOutcome(this.logsQuery.data()?.conclusion));
-  groupViews = computed(() => buildGroupViews(this.logsQuery.data()?.groups ?? []));
+  refreshLogsMutation = injectMutation(() => ({
+    mutationFn: async (): Promise<WorkflowRunLogsResponse> => {
+      const { data } = await getWorkflowRunLogs({
+        path: { workflowRunId: this.workflowRunId() },
+        query: { forceRefresh: true },
+        throwOnError: true,
+      });
+      return data;
+    },
+    onSuccess: data => {
+      this.refreshedLogs.set(data);
+      this.queryClient.setQueryData(getWorkflowRunLogsQueryKey({ path: { workflowRunId: this.workflowRunId() } }), data);
+    },
+    onError: () => {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Failed to refresh workflow logs.',
+      });
+    },
+  }));
+
+  logsResponse = computed(() => this.refreshedLogs() ?? this.logsQuery.data() ?? null);
+  workflowOutcome = computed(() => getWorkflowRunOutcome(this.logsResponse()?.conclusion));
+  groupViews = computed(() => buildGroupViews(this.logsResponse()?.groups ?? []));
   groupedFiles = computed(() => buildFileViews(this.groupViews()));
   groupedFilesByGroup = computed(() =>
     this.groupedFiles().reduce<Record<string, ReturnType<typeof this.groupedFiles>>>((groupedFilesByGroup, fileView) => {
@@ -117,6 +153,11 @@ export class WorkflowRunLogsComponent {
   selectedFileView = computed(() => buildSelectedFileView(this.selectedFile(), new Set(this.enabledLineTones()), this.expandedLogGroupIds()));
 
   constructor() {
+    effect(() => {
+      this.workflowRunId();
+      this.refreshedLogs.set(null);
+    });
+
     effect(() => {
       const firstGroupName = this.groupViews()[0]?.group.name;
       if (firstGroupName && !this.hasInitializedExpandedGroups) {
@@ -190,7 +231,7 @@ export class WorkflowRunLogsComponent {
   }
 
   refreshLogs() {
-    this.logsQuery.refetch();
+    return this.refreshLogsMutation.mutateAsync();
   }
 
   goBack() {
@@ -198,14 +239,37 @@ export class WorkflowRunLogsComponent {
   }
 
   openExternalLogs() {
-    const htmlUrl = this.logsQuery.data()?.htmlUrl;
+    const htmlUrl = this.logsResponse()?.htmlUrl;
     if (htmlUrl) {
-      window.open(htmlUrl, '_blank');
+      const newWindow = window.open(htmlUrl, '_blank', 'noopener,noreferrer');
+      if (newWindow) {
+        newWindow.opener = null;
+      }
     }
   }
 
   getLineToneFilterClass(tone: WorkflowRunLogLineTone): string {
     return getLineToneFilterClass(tone, this.isLineToneEnabled(tone));
+  }
+
+  getLineToneBadgeClass(tone: Extract<WorkflowRunLogLineTone, 'warning' | 'error'>): string {
+    return getLineToneBadgeClass(tone);
+  }
+
+  getLineToneRowClass(tone: WorkflowRunLogLineTone): string {
+    return getLineToneRowClass(tone);
+  }
+
+  getLineToneTextClass(tone: WorkflowRunLogLineTone): string {
+    return getLineToneTextClass(tone);
+  }
+
+  getLogGroupRowClass(): string {
+    return getLogGroupRowClass();
+  }
+
+  getLogGroupTextClass(): string {
+    return getLogGroupTextClass();
   }
 
   getFileViewsForGroup(groupName: string) {

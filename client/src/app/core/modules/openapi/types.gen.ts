@@ -1891,7 +1891,9 @@ export type GetWorkflowRunLogsData = {
   path: {
     workflowRunId: number;
   };
-  query?: never;
+  query?: {
+    forceRefresh?: boolean;
+  };
   url: '/api/workflows/runs/{workflowRunId}/logs';
 };
 

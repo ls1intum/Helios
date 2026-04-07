@@ -84,6 +84,28 @@ class WorkflowRunLogReaderServiceTest {
   }
 
   @Test
+  void getLogsPassesForceRefreshFlagToStorageService() throws Exception {
+    Path runDirectory = tempDir.resolve("repositories/99/workflow-runs/7");
+    Files.createDirectories(runDirectory);
+    Files.writeString(runDirectory.resolve("summary.txt"), "summary log");
+    WorkflowRunLogManifest manifest =
+        new WorkflowRunLogManifest(7L, 99L, OffsetDateTime.parse("2026-03-12T10:15:30Z"), 1);
+    WorkflowRun workflowRun = createWorkflowRun(7L, "deploy", "Deploy preview");
+
+    when(workflowRunLogStorageService.ensureLogsCached(7L, true))
+        .thenReturn(new WorkflowRunLogCacheResult(workflowRun, runDirectory, manifest, false));
+    when(deploymentService.getWorkflowJobStatus(7L)).thenReturn(new WorkflowJobsResponse());
+
+    WorkflowRunLogReaderService service =
+        new WorkflowRunLogReaderService(
+            workflowRunLogStorageService, deploymentService, workflowRunLogFileResolver);
+
+    service.getLogs(7L, true);
+
+    verify(workflowRunLogStorageService).ensureLogsCached(7L, true);
+  }
+
+  @Test
   void getLogsAssignsRootJobFilesToMatchingJobGroups() throws Exception {
     Path runDirectory = tempDir.resolve("repositories/99/workflow-runs/7");
     Files.createDirectories(runDirectory.resolve("deploy"));

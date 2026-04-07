@@ -34,26 +34,43 @@ public class WorkflowRunLogStorageService {
 
   @Transactional
   public WorkflowRunLogCacheResult ensureLogsCached(Long workflowRunId) throws IOException {
-    return cacheLogs(loadAccessibleCompletedRun(workflowRunId));
+    return ensureLogsCached(workflowRunId, false);
   }
 
-  private WorkflowRunLogCacheResult cacheLogs(WorkflowRun workflowRun) throws IOException {
+  @Transactional
+  public WorkflowRunLogCacheResult ensureLogsCached(Long workflowRunId, boolean forceRefresh)
+      throws IOException {
+    return cacheLogs(loadAccessibleCompletedRun(workflowRunId), forceRefresh);
+  }
+
+  private WorkflowRunLogCacheResult cacheLogs(WorkflowRun workflowRun, boolean forceRefresh)
+      throws IOException {
     Long repositoryId = requireRepositoryId(workflowRun);
     Path runDirectory = getRunDirectory(workflowRun);
     Optional<WorkflowRunLogManifest> existingManifest = readManifest(runDirectory);
     if (existingManifest.isPresent()) {
       WorkflowRunLogManifest manifest = existingManifest.get();
-      if (isCurrentCache(manifest, workflowRun)) {
+      if (!forceRefresh && isCurrentCache(manifest, workflowRun)) {
         return new WorkflowRunLogCacheResult(workflowRun, runDirectory, manifest, true);
       }
 
-      log.info(
-          "Refreshing stale workflow log cache repo={} run={} cachedRunAttempt={} "
-              + "currentRunAttempt={}",
-          repositoryId,
-          workflowRun.getId(),
-          manifest.runAttempt(),
-          workflowRun.getRunAttempt());
+      if (forceRefresh) {
+        log.info(
+            "Force refreshing workflow log cache repo={} run={} cachedRunAttempt={} "
+                + "currentRunAttempt={}",
+            repositoryId,
+            workflowRun.getId(),
+            manifest.runAttempt(),
+            workflowRun.getRunAttempt());
+      } else {
+        log.info(
+            "Refreshing stale workflow log cache repo={} run={} cachedRunAttempt={} "
+                + "currentRunAttempt={}",
+            repositoryId,
+            workflowRun.getId(),
+            manifest.runAttempt(),
+            workflowRun.getRunAttempt());
+      }
       deleteRecursively(runDirectory);
     }
 

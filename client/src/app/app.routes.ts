@@ -3,6 +3,7 @@ import { RepositoryFilterGuard } from './core/middlewares/repository-filter.guar
 import { adminGuard } from './core/routeGuards/admin.guard';
 import { maintainerGuard } from './core/routeGuards/maintainer.guard';
 import { loggedInGuard } from '@app/core/routeGuards/auth.guard';
+import { writePermissionGuard } from '@app/core/routeGuards/write-permission.guard';
 
 export const routes: Routes = [
   {
@@ -116,6 +117,7 @@ export const routes: Routes = [
           },
           {
             path: 'workflow-runs/:workflowRunId/logs',
+            canActivate: [loggedInGuard, writePermissionGuard],
             loadComponent: () => import('./pages/workflow-run-logs/workflow-run-logs.component').then(m => m.WorkflowRunLogsComponent),
           },
           {

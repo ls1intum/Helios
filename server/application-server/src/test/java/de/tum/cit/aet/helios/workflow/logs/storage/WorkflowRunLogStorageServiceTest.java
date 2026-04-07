@@ -166,6 +166,26 @@ class WorkflowRunLogStorageServiceTest {
   }
 
   @Test
+  void cacheLogsForceRefreshesExistingCacheEvenWhenRunAttemptMatches() throws Exception {
+    WorkflowRun workflowRun = createWorkflowRun(7L, 99L, "owner/repo", fixedNow.minusMinutes(30));
+    when(workflowRunRepository.findById(Long.valueOf(7L))).thenReturn(Optional.of(workflowRun));
+    repositoryContextMockedStatic.when(RepositoryContext::getRepositoryId).thenReturn(99L);
+    when(gitHubService.downloadWorkflowRunLogs("owner/repo", 7L))
+        .thenReturn(createZipArchive(Map.of("job-1.txt", "first log line")))
+        .thenReturn(createZipArchive(Map.of("job-1.txt", "refreshed log line")));
+
+    WorkflowRunLogCacheResult first = workflowRunLogStorageService.ensureLogsCached(7L);
+    WorkflowRunLogCacheResult second = workflowRunLogStorageService.ensureLogsCached(7L, true);
+
+    assertFalse(first.cacheHit());
+    assertFalse(second.cacheHit());
+    assertEquals(1L, second.manifest().runAttempt());
+    assertEquals(
+        "refreshed log line", Files.readString(second.runDirectory().resolve("job-1.txt")));
+    verify(gitHubService, times(2)).downloadWorkflowRunLogs("owner/repo", 7L);
+  }
+
+  @Test
   void cacheLogsRefreshesExistingCacheWhenWorkflowRunAttemptChanges() throws Exception {
     WorkflowRun workflowRun = createWorkflowRun(7L, 99L, "owner/repo", fixedNow.minusMinutes(30));
     when(workflowRunRepository.findById(Long.valueOf(7L))).thenReturn(Optional.of(workflowRun));

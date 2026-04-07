@@ -1130,6 +1130,12 @@ paths:
         schema:
           type: integer
           format: int64
+      - name: forceRefresh
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
       responses:
         "409":
           description: Conflict

@@ -2,6 +2,7 @@ package de.tum.cit.aet.helios.workflow;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -198,7 +199,7 @@ class WorkflowRunControllerTest {
                             null,
                             null,
                             "first log line")))));
-    when(workflowRunLogReaderService.getLogs(42L)).thenReturn(response);
+    when(workflowRunLogReaderService.getLogs(42L, false)).thenReturn(response);
 
     String actualResponse =
         mockMvc
@@ -209,5 +210,27 @@ class WorkflowRunControllerTest {
             .getContentAsString();
 
     assertEquals(objectMapper.writeValueAsString(response), actualResponse);
+  }
+
+  @Test
+  void getWorkflowRunLogsPassesForceRefreshFlagToReaderService() throws Exception {
+    WorkflowRunLogsResponse response =
+        new WorkflowRunLogsResponse(
+            42L,
+            "deploy",
+            "Deploy preview",
+            WorkflowRun.Conclusion.SUCCESS,
+            "https://github.com/owner/repo/actions/runs/42",
+            false,
+            OffsetDateTime.parse("2026-03-12T10:15:30Z"),
+            0,
+            List.of());
+    when(workflowRunLogReaderService.getLogs(42L, true)).thenReturn(response);
+
+    mockMvc
+        .perform(get("/api/workflows/runs/{workflowRunId}/logs", 42L).param("forceRefresh", "true"))
+        .andExpect(status().isOk());
+
+    verify(workflowRunLogReaderService).getLogs(eq(42L), eq(true));
   }
 }

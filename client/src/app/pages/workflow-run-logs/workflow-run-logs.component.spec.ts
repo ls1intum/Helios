@@ -1,10 +1,11 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { importProvidersFrom } from '@angular/core';
 import { getWorkflowRunLogsQueryKey } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
+import * as workflowRunLogsApi from '@app/core/modules/openapi/sdk.gen';
 import type { WorkflowRunLogsResponse } from '@app/core/modules/openapi/types.gen';
 import { TestModule } from '@app/test.module';
 import { QueryClient } from '@tanstack/angular-query-experimental';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { WorkflowRunLogsComponent } from './workflow-run-logs.component';
 import { getAutoExpandedLogGroupIds } from './workflow-run-logs.utils';
 
@@ -242,6 +243,13 @@ describe('Integration Test Workflow Run Logs Page', () => {
     expect(fixture.nativeElement.textContent).toContain('1m 30s');
   });
 
+  it('should apply a readable dark-mode text color to the selected file entry', () => {
+    const selectedFileButton = fixture.nativeElement.querySelector('p-accordion-content button');
+
+    expect(selectedFileButton).toBeTruthy();
+    expect(selectedFileButton.className).toContain('dark:text-primary-50');
+  });
+
   it('should not show inferred step metadata for an unmatched group', async () => {
     component.selectFile('deploy/system.txt');
     fixture.detectChanges();
@@ -250,5 +258,43 @@ describe('Integration Test Workflow Run Logs Page', () => {
 
     expect(component.selectedStep()).toBeNull();
     expect(fixture.nativeElement.textContent).not.toContain('GitHub step:');
+  });
+
+  it('should open external logs in a safe new window', () => {
+    const openedWindow = { opener: window } as Window;
+    const openSpy = vi.spyOn(window, 'open').mockReturnValue(openedWindow);
+
+    component.openExternalLogs();
+
+    expect(openSpy).toHaveBeenCalledWith('https://github.com/example/repo/actions/runs/42', '_blank', 'noopener,noreferrer');
+    expect(openedWindow.opener).toBeNull();
+
+    openSpy.mockRestore();
+  });
+
+  it('should force refresh logs and replace the cached query data', async () => {
+    const refreshedLogs = createLogsResponse({
+      cacheHit: false,
+      downloadedAt: '2026-03-14T10:05:00Z',
+    });
+    const getWorkflowRunLogsSpy = vi.spyOn(workflowRunLogsApi, 'getWorkflowRunLogs').mockResolvedValue({
+      data: refreshedLogs,
+    } as Awaited<ReturnType<typeof workflowRunLogsApi.getWorkflowRunLogs>>);
+
+    await component.refreshLogs();
+    fixture.detectChanges();
+
+    expect(getWorkflowRunLogsSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        path: { workflowRunId },
+        query: { forceRefresh: true },
+        throwOnError: true,
+      })
+    );
+    expect(queryClient.getQueryData(getWorkflowRunLogsQueryKey({ path: { workflowRunId } }))).toEqual(refreshedLogs);
+    expect(component.logsResponse()?.cacheHit).toBe(false);
+    expect(fixture.nativeElement.textContent).toContain('Downloaded fresh logs');
+
+    getWorkflowRunLogsSpy.mockRestore();
   });
 });

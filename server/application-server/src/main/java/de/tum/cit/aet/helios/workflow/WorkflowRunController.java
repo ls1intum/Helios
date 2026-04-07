@@ -35,14 +35,15 @@ public class WorkflowRunController {
       @RequestParam(required = false) String sortDirection,
       @RequestParam(required = false) WorkflowRunFilterType filterType,
       @RequestParam(required = false) String searchTerm) {
-    WorkflowRunPageRequest pageRequest = WorkflowRunPageRequest.builder()
-        .page(page)
-        .size(size)
-        .sortField(sortField)
-        .sortDirection(sortDirection)
-        .filterType(filterType != null ? filterType : WorkflowRunFilterType.ALL)
-        .searchTerm(searchTerm)
-        .build();
+    WorkflowRunPageRequest pageRequest =
+        WorkflowRunPageRequest.builder()
+            .page(page)
+            .size(size)
+            .sortField(sortField)
+            .sortDirection(sortDirection)
+            .filterType(filterType != null ? filterType : WorkflowRunFilterType.ALL)
+            .searchTerm(searchTerm)
+            .build();
     return ResponseEntity.ok(workflowRunService.getPaginatedWorkflowRuns(pageRequest));
   }
 
@@ -88,11 +89,13 @@ public class WorkflowRunController {
     return ResponseEntity.ok().build();
   }
 
+  @EnforceAtLeastWritePermission
   @GetMapping("/runs/{workflowRunId}/logs")
   public ResponseEntity<WorkflowRunLogsResponse> getWorkflowRunLogs(
-      @PathVariable Long workflowRunId) {
+      @PathVariable Long workflowRunId,
+      @RequestParam(defaultValue = "false") boolean forceRefresh) {
     try {
-      return ResponseEntity.ok(workflowRunLogReaderService.getLogs(workflowRunId));
+      return ResponseEntity.ok(workflowRunLogReaderService.getLogs(workflowRunId, forceRefresh));
     } catch (IOException e) {
       throw new ResponseStatusException(
           HttpStatus.INTERNAL_SERVER_ERROR, "Failed to load workflow logs", e);

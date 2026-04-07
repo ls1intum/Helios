@@ -32,8 +32,19 @@ public class WorkflowRunLogReaderService {
   private final WorkflowRunLogFileResolver resolver;
 
   public WorkflowRunLogsResponse getLogs(Long workflowRunId) throws IOException {
-    WorkflowRunLogCacheResult cacheResult =
-        workflowRunLogStorageService.ensureLogsCached(workflowRunId);
+    return buildResponse(
+        workflowRunLogStorageService.ensureLogsCached(workflowRunId), workflowRunId);
+  }
+
+  public WorkflowRunLogsResponse getLogs(Long workflowRunId, boolean forceRefresh)
+      throws IOException {
+    return buildResponse(
+        workflowRunLogStorageService.ensureLogsCached(workflowRunId, forceRefresh),
+        workflowRunId);
+  }
+
+  private WorkflowRunLogsResponse buildResponse(
+      WorkflowRunLogCacheResult cacheResult, Long workflowRunId) throws IOException {
     List<WorkflowJobDto> jobs = loadWorkflowJobs(workflowRunId);
     List<WorkflowRunLogGroupDto> groups = readGroups(cacheResult.runDirectory(), jobs);
 

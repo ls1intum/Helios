@@ -2,14 +2,12 @@
   <div class="flex w-full flex-wrap items-start justify-between gap-3" heading>
     <div class="min-w-0">
       <div>Workflow Logs</div>
-      @if (logsQuery.data(); as response) {
+      @if (logsResponse(); as response) {
         <div class="mt-2 flex flex-wrap items-center gap-2 text-base font-normal text-muted-color">
-          <p-tag [severity]="workflowOutcome().tagSeverity" [rounded]="true">
-            <span class="inline-flex items-center gap-1.5">
-              <i-tabler [name]="workflowOutcome().icon" class="!size-4" [class]="workflowOutcome().iconColorClass" />
-              {{ workflowOutcome().label }}
-            </span>
-          </p-tag>
+          <span [class]="workflowOutcome().badgeClass">
+            <i-tabler [name]="workflowOutcome().icon" class="!size-4" />
+            {{ workflowOutcome().label }}
+          </span>
           <span class="min-w-0 flex-1 truncate">
             {{ response.displayTitle || response.workflowName }}
           </span>
@@ -24,7 +22,7 @@
         <i-tabler name="arrow-left" class="!size-4" />
       </p-button>
 
-      @if (!!logsQuery.data()?.htmlUrl) {
+      @if (!!logsResponse()?.htmlUrl) {
         <p-button label="Open on GitHub" [outlined]="true" (click)="openExternalLogs()">
           <i-tabler name="external-link" class="!size-4" />
         </p-button>
@@ -85,7 +83,7 @@
             <i-tabler name="refresh" class="!size-4" />
           </p-button>
 
-          @if (!!logsQuery.data()?.htmlUrl) {
+          @if (!!logsResponse()?.htmlUrl) {
             <p-button label="Open on GitHub" severity="secondary" [outlined]="true" (click)="openExternalLogs()">
               <i-tabler name="external-link" class="!size-4" />
             </p-button>
@@ -109,17 +107,25 @@
       <ng-template #start>
         <div class="flex flex-wrap gap-2 text-sm text-muted-color">
           <p-tag severity="secondary" [rounded]="true">
-            {{ logsQuery.data()?.cacheHit ? 'Loaded from cache' : 'Downloaded fresh logs' }}
+            {{ logsResponse()?.cacheHit ? 'Loaded from cache' : 'Downloaded fresh logs' }}
           </p-tag>
-          <p-tag severity="secondary" [rounded]="true"> {{ logsQuery.data()?.totalFileCount }} files </p-tag>
-          @if (logsQuery.data()?.downloadedAt) {
-            <p-tag severity="secondary" [rounded]="true"> Downloaded {{ logsQuery.data()?.downloadedAt | date: 'd MMM y, HH:mm:ss' }} </p-tag>
+          <p-tag severity="secondary" [rounded]="true"> {{ logsResponse()?.totalFileCount }} files </p-tag>
+          @if (logsResponse()?.downloadedAt) {
+            <p-tag severity="secondary" [rounded]="true"> Downloaded {{ logsResponse()?.downloadedAt | date: 'd MMM y, HH:mm:ss' }} </p-tag>
           }
         </div>
       </ng-template>
 
       <ng-template #end>
-        <p-button label="Refresh Logs" severity="secondary" [outlined]="true" size="small" (click)="refreshLogs()">
+        <p-button
+          label="Refresh Logs"
+          severity="secondary"
+          [outlined]="true"
+          size="small"
+          [disabled]="refreshLogsMutation.isPending()"
+          [loading]="refreshLogsMutation.isPending()"
+          (click)="refreshLogs()"
+        >
           <i-tabler name="refresh" class="!size-4" />
         </p-button>
       </ng-template>
@@ -184,7 +190,7 @@
                       class="flex w-full items-center gap-3 rounded-lg border px-3 py-2 text-left transition"
                       [ngClass]="
                         activeFilePath() === fileView.file.path
-                          ? 'border-primary bg-primary-50 text-primary-900 dark:bg-primary-950/30'
+                          ? 'border-primary bg-primary-50 text-primary-900 shadow-sm dark:bg-primary-400/15 dark:text-primary-50'
                           : 'border-surface-200 bg-surface-0 dark:border-surface-700 dark:bg-surface-900'
                       "
                       type="button"
@@ -249,21 +255,21 @@
             <div class="truncate text-sm text-muted-color">{{ selectedFileView.selectedFile.file.path }}</div>
             @if (selectedStep(); as selectedStep) {
               <div class="mt-3 flex flex-wrap gap-2">
-                <p-tag
-                  [severity]="selectedFileView.selectedFile.outcome.tagSeverity"
-                  [rounded]="true"
-                  [value]="'GitHub step: ' + (selectedStep.name || 'Step ' + (selectedStep.number ?? '?'))"
-                />
-                <p-tag [severity]="selectedFileView.selectedFile.outcome.tagSeverity" [rounded]="true" [value]="selectedFileView.selectedFile.outcome.label" />
+                <span [class]="selectedFileView.selectedFile.outcome.badgeClass">
+                  {{ 'GitHub step: ' + (selectedStep.name || 'Step ' + (selectedStep.number ?? '?')) }}
+                </span>
+                <span [class]="selectedFileView.selectedFile.outcome.badgeClass">
+                  {{ selectedFileView.selectedFile.outcome.label }}
+                </span>
               </div>
             }
             @if (selectedFileView.lineStats.errorCount > 0 || selectedFileView.lineStats.warningCount > 0) {
               <div class="mt-3 flex flex-wrap gap-2">
                 @if (selectedFileView.lineStats.errorCount > 0) {
-                  <p-tag severity="danger" [rounded]="true" [value]="selectedFileView.lineStats.errorCount + ' error lines'" />
+                  <span [class]="getLineToneBadgeClass('error')">{{ selectedFileView.lineStats.errorCount + ' error lines' }}</span>
                 }
                 @if (selectedFileView.lineStats.warningCount > 0) {
-                  <p-tag severity="warn" [rounded]="true" [value]="selectedFileView.lineStats.warningCount + ' warning lines'" />
+                  <span [class]="getLineToneBadgeClass('warning')">{{ selectedFileView.lineStats.warningCount + ' warning lines' }}</span>
                 }
               </div>
             }
@@ -271,10 +277,8 @@
 
           <p-divider class="my-4" />
 
-          <div class="max-h-[70vh] overflow-auto rounded-lg border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950">
-            <div
-              class="sticky top-0 z-10 flex flex-wrap gap-2 border-b border-slate-200 bg-white/95 px-4 py-3 text-xs text-slate-600 backdrop-blur dark:border-slate-800 dark:bg-slate-950/95 dark:text-slate-300"
-            >
+          <div [class]="logViewClasses.container">
+            <div [class]="logViewClasses.toolbar">
               @for (filterOption of lineFilterOptions; track filterOption.tone) {
                 <button
                   type="button"
@@ -287,22 +291,17 @@
                 </button>
               }
             </div>
-            <div class="font-mono text-sm leading-6 text-slate-900 dark:text-slate-50">
+            <div [class]="logViewClasses.content">
               @if (selectedFileView.rows.length === 0) {
-                <div class="px-4 py-6 text-sm text-slate-500 dark:text-slate-400">No log lines match the selected filters.</div>
+                <div [class]="logViewClasses.emptyState">No log lines match the selected filters.</div>
               }
               @for (row of selectedFileView.rows; track row.type === 'group' ? row.id : row.line.number) {
                 @if (row.type === 'group') {
-                  <button
-                    type="button"
-                    class="grid w-full grid-cols-[4rem_minmax(0,1fr)] gap-4 border-b border-violet-100 border-l-2 border-violet-500 bg-violet-50 px-4 text-left transition hover:bg-violet-100 dark:border-b-violet-950/40 dark:border-violet-500 dark:bg-violet-950/20 dark:hover:bg-violet-950/30"
-                    (click)="toggleLogGroup(row.id)"
-                    [attr.aria-expanded]="isLogGroupExpanded(row.id)"
-                  >
-                    <span class="select-none border-r border-slate-200 py-0.5 pr-4 text-right text-slate-500 dark:border-slate-800 dark:text-slate-500">
+                  <button type="button" [class]="getLogGroupRowClass()" (click)="toggleLogGroup(row.id)" [attr.aria-expanded]="isLogGroupExpanded(row.id)">
+                    <span [class]="logViewClasses.lineNumber">
                       {{ row.line.number }}
                     </span>
-                    <span class="inline-flex min-w-0 items-start gap-2 py-0.5 text-violet-950 dark:text-violet-50" [style.padding-left.rem]="row.level * 1.25">
+                    <span class="inline-flex min-w-0 items-start gap-2 py-0.5" [class]="getLogGroupTextClass()" [style.padding-left.rem]="row.level * 1.25">
                       <i-tabler [name]="isLogGroupExpanded(row.id) ? 'chevron-down' : 'chevron-right'" class="mt-0.5 !size-4 shrink-0" />
                       <span class="min-w-0 whitespace-pre-wrap break-words font-semibold">
                         {{ row.title || ' ' }}
@@ -310,28 +309,11 @@
                     </span>
                   </button>
                 } @else {
-                  <div
-                    class="grid grid-cols-[4rem_minmax(0,1fr)] gap-4 border-b border-slate-100 border-l-2 border-transparent bg-white px-4 dark:border-slate-900 dark:bg-slate-900/60"
-                    [ngClass]="{
-                      'bg-rose-50 border-l-rose-500 dark:bg-rose-950/25': row.line.tone === 'error',
-                      'bg-amber-50 border-l-amber-500 dark:bg-amber-950/25': row.line.tone === 'warning',
-                      'bg-blue-50 border-l-blue-500 dark:bg-blue-950/20': row.line.tone === 'command',
-                      'bg-white dark:bg-slate-900/60': row.line.tone === 'default',
-                    }"
-                  >
-                    <span class="select-none border-r border-slate-200 py-0.5 pr-4 text-right text-slate-500 dark:border-slate-800 dark:text-slate-500">
+                  <div [class]="getLineToneRowClass(row.line.tone)">
+                    <span [class]="logViewClasses.lineNumber">
                       {{ row.line.number }}
                     </span>
-                    <span
-                      class="whitespace-pre-wrap break-words py-0.5"
-                      [style.padding-left.rem]="row.level * 1.25"
-                      [ngClass]="{
-                        'text-rose-900 dark:text-rose-100': row.line.tone === 'error',
-                        'text-amber-900 dark:text-amber-100': row.line.tone === 'warning',
-                        'text-blue-900 dark:text-blue-50': row.line.tone === 'command',
-                        'text-slate-900 dark:text-slate-50': row.line.tone === 'default',
-                      }"
-                    >
+                    <span class="whitespace-pre-wrap break-words py-0.5" [style.padding-left.rem]="row.level * 1.25" [class]="getLineToneTextClass(row.line.tone)">
                       {{ getRenderedLineContent(row.line) || ' ' }}
                     </span>
                   </div>
