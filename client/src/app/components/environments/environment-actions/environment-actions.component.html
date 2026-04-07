@@ -43,7 +43,7 @@
         @if (!environment().locked) {
           <p-button (click)="onLock($event)" [disabled]="!canUserDeploy()" [pTooltip]="getLockTooltip()" tooltipPosition="top">
             <div class="flex items-center">
-              <i-tabler name="lock" class="w-4 h-4 flex-shrink-0 text-red-700" />
+              <i-tabler name="lock" class="w-4 h-4 flex-shrink-0 text-red-600" />
             </div>
           </p-button>
         } @else {

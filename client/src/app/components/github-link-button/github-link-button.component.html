@@ -1,0 +1,14 @@
+<button
+  type="button"
+  [disabled]="disabled() || !url()"
+  [class]="resolvedButtonClass()"
+  [pTooltip]="tooltip()"
+  [tooltipPosition]="tooltipPosition()"
+  [attr.aria-label]="label() || tooltip() || 'Open on GitHub'"
+  (click)="open($event)"
+>
+  <i-tabler name="brand-github" [class]="iconClass()" />
+  @if (label()) {
+    <span class="app-github-link-button-label">{{ label() }}</span>
+  }
+</button>

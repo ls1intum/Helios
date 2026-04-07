@@ -17,7 +17,7 @@
       @for (feature of coreFeatures; track feature.title) {
         <div class="mb-3 border-b pb-2 last:border-0 last:pb-0">
           <div class="flex items-center mb-1">
-            <i [ngClass]="feature.icon + ' text-blue-600 mr-2'"></i>
+            <i [ngClass]="feature.icon + ' text-primary mr-2'"></i>
             <h3 class="font-semibold">{{ feature.title }}</h3>
           </div>
           <p class="text-sm text-muted-color">{{ feature.description }}</p>
@@ -29,13 +29,13 @@
     <div class="p-4 border rounded-lg shadow-md">
       <h2 class="text-lg font-semibold mb-2">Get in Touch</h2>
       <p>
-        <a href="https://github.com/ls1intum/Helios/issues/new?template=1-bug-report.yml" class="text-blue-500 hover:underline" target="_blank">Report a Bug</a>
+        <a href="https://github.com/ls1intum/Helios/issues/new?template=1-bug-report.yml" class="text-primary-500 hover:underline" target="_blank">Report a Bug</a>
       </p>
       <p>
-        <a href="https://github.com/ls1intum/Helios/issues/new?template=2-feature-request.yml" class="text-blue-500 hover:underline" target="_blank">Request a Feature</a>
+        <a href="https://github.com/ls1intum/Helios/issues/new?template=2-feature-request.yml" class="text-primary-500 hover:underline" target="_blank">Request a Feature</a>
       </p>
       <p>
-        <a href="https://github.com/ls1intum/Helios/releases" class="text-blue-500 hover:underline" target="_blank">Release Notes</a>
+        <a href="https://github.com/ls1intum/Helios/releases" class="text-primary-500 hover:underline" target="_blank">Release Notes</a>
       </p>
     </div>
   </div>
@@ -52,10 +52,10 @@
 
           <div class="flex gap-2 justify-center">
             @if (advisor.website) {
-              <a [href]="advisor.website" target="_blank" class="text-blue-500 hover:underline inline-block mt-1">Website</a>
+              <a [href]="advisor.website" target="_blank" class="text-primary-500 hover:underline inline-block mt-1">Website</a>
             }
             @if (advisor.githubHandle) {
-              <a [href]="getGithubProfileUrl(advisor.githubHandle)" target="_blank" class="text-blue-500 hover:underline inline-block mt-1">GitHub</a>
+              <a [href]="getGithubProfileUrl(advisor.githubHandle)" target="_blank" class="text-primary-500 hover:underline inline-block mt-1">GitHub</a>
             }
           </div>
         </div>
@@ -77,10 +77,10 @@
 
             <div class="flex gap-2 justify-center">
               @if (contributor.website) {
-                <a [href]="contributor.website" class="text-blue-500 inline-block mt-1" target="_blank">Website</a>
+                <a [href]="contributor.website" class="text-primary-500 hover:underline inline-block mt-1" target="_blank">Website</a>
               }
               @if (contributor.githubHandle) {
-                <a [href]="getGithubProfileUrl(contributor.githubHandle)" class="text-blue-500 hover:underline inline-block mt-1" target="_blank">GitHub</a>
+                <a [href]="getGithubProfileUrl(contributor.githubHandle)" class="text-primary-500 hover:underline inline-block mt-1" target="_blank">GitHub</a>
               }
             </div>
           </div>
@@ -123,7 +123,7 @@
         <p class="font-semibold mt-2">Administrator</p>
         <p class="text-muted-color">Prof. Dr. Stephan Krusche</p>
         <p class="font-semibold mt-2">Contact Email</p>
-        <a href="mailto:krusche@tum.de" class="text-blue-500 hover:underline">krusche&#64;tum.de</a>
+        <a href="mailto:krusche@tum.de" class="text-primary-500 hover:underline">krusche&#64;tum.de</a>
       </div>
     </div>
   </div>

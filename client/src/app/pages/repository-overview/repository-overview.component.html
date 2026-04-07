@@ -72,9 +72,7 @@
           <div class="flex gap-2 flex-col border border-muted-color rounded-2xl p-5 shadow-md min-w-[400px]">
             <div class="flex justify-between gap-2">
               <div class="flex gap-1 items-center min-w-0">
-                <p-button text (click)="openProjectExternal($event, project)" styleClass="p-1" class="leading-none">
-                  <i-tabler name="brand-github" class="!size-4" />
-                </p-button>
+                <app-github-link-button [url]="project.htmlUrl" buttonClass="p-1 leading-none" />
                 <div class="font-bold hover:underline cursor-pointer leading-none text-xl truncate" (click)="navigateToWorkflowRuns(project)">{{ project.name }}</div>
                 @if (project.latestReleaseTagName) {
                   <p-tag rounded class="py-0.5 cursor-pointer hover:underline" (click)="navigateToReleases(project)"

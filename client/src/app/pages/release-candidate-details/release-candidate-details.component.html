@@ -24,9 +24,7 @@
                 <i-tabler name="pencil" class="!size-5" />
               </p-button>
             } @else {
-              <p-button text (click)="openReleaseInGitHub()" styleClass="p-1" class="leading-none">
-                <i-tabler name="brand-github" class="!size-4" />
-              </p-button>
+              <app-github-link-button [url]="releaseCandidate.release?.githubUrl" buttonClass="p-1 leading-none" />
             }
           }
           <p-tag class="text-xs">
@@ -115,14 +113,14 @@
               <p-avatar [image]="evaluation.user.avatarUrl" class="size-7" shape="circle" />
               <div class="absolute top-0 right-0">
                 @if (evaluation.isWorking) {
-                  <i-tabler name="check" class="!size-3 text-white bg-green-500 rounded-full" />
+                  <i-tabler name="check" class="!size-3 text-white bg-green-600 rounded-full" />
                 } @else {
-                  <i-tabler name="x" class="!size-3 text-white bg-red-500 rounded-full" />
+                  <i-tabler name="x" class="!size-3 text-white bg-red-600 rounded-full" />
                 }
               </div>
               @if (evaluation.comment && evaluation.comment.trim() !== '') {
                 <div class="absolute bottom-0 -left-1">
-                  <i-tabler name="message-circle" class="!size-3 text-white bg-blue-500 rounded-full p-0.5" />
+                  <i-tabler name="message-circle" class="!size-3 text-white bg-primary rounded-full p-0.5" />
                 </div>
               }
             </div>

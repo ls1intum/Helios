@@ -9,6 +9,7 @@ import {
 } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { WorkflowRunDto } from '@app/core/modules/openapi';
 import { IconAlertCircle, IconCheck, IconClock, IconQuestionMark, IconX } from 'angular-tabler-icons/icons';
+import { getStatusColors } from '@app/core/utils/status-colors';
 
 export type WorkflowRunSelector =
   | {
@@ -42,6 +43,7 @@ type WorkflowRunSummary = {
   templateUrl: './workflow-run-status.component.html',
 })
 export class WorkflowRunStatusComponent {
+  private readonly inProgressIconColor = 'text-yellow-500 dark:text-yellow-400';
   /**
    * Union type input: user must pass either
    * {type: 'pullRequest', pullRequestId: ...} or
@@ -135,7 +137,7 @@ export class WorkflowRunStatusComponent {
     if (runs.some(run => ['IN_PROGRESS', 'QUEUED', 'PENDING'].includes(run.status))) {
       return {
         icon: 'clock',
-        color: 'text-yellow-500',
+        color: this.inProgressIconColor,
         tooltip: 'Workflow In Progress',
       };
     }
@@ -146,7 +148,7 @@ export class WorkflowRunStatusComponent {
     if (runs.length > 0 && runs.every(run => run.status === 'COMPLETED' && run.conclusion === 'SUCCESS')) {
       return {
         icon: 'check',
-        color: 'text-green-600',
+        color: getStatusColors('success').icon,
         tooltip: `All Workflows Passed:\n- ${summary.success} successful`,
       };
     }
@@ -161,7 +163,7 @@ export class WorkflowRunStatusComponent {
       if (summary.neutral > 0) lines.push(`- ${summary.neutral} neutral`);
       return {
         icon: 'x',
-        color: 'text-red-600',
+        color: getStatusColors('failure').icon,
         tooltip: `Some Workflows Failed:\n${lines.join('\n')}`,
       };
     }

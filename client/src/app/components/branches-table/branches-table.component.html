@@ -104,9 +104,7 @@
                   <i-tabler name="shield-half" class="!size-4" pTooltip="Protected Branch" />
                 }
                 @if (!rowNode.node.children) {
-                  <p-button text (click)="openLink($event, branch.link)" styleClass="p-1" class="leading-none">
-                    <i-tabler name="brand-github" class="!size-4" />
-                  </p-button>
+                  <app-github-link-button [url]="branch.link" buttonClass="p-1 leading-none" />
                   <app-workflow-run-status [selector]="{ type: 'branch', branchName: branch.name }"></app-workflow-run-status>
                 }
               </div>
@@ -139,7 +137,7 @@
                 <div class="text-end text-sm mr-2">{{ branch.behindBy || 0 }}</div>
                 <p-progressbar [style]="{ direction: 'rtl' }" styleClass="h-3 rounded-r-none" [value]="calculateProgress(branch.behindBy)" [showValue]="false" />
               </div>
-              <p-divider layout="vertical" class="m-0 z-20" styleClass="before:border-black" />
+              <p-divider layout="vertical" class="m-0 z-20" styleClass="before:border-surface-300 dark:before:border-surface-700" />
               <div class="w-1/2">
                 <div class="text-sm ml-2">{{ branch.aheadBy || 0 }}</div>
                 <p-progressbar styleClass="h-3 rounded-l-none" [value]="calculateProgress(branch.aheadBy)" [showValue]="false" />
@@ -154,9 +152,7 @@
                 <i-tabler name="git-commit" class="!size-4"></i-tabler>
                 <span>{{ branch.commitSha.slice(0, 7) }}</span>
               </p-tag>
-              <p-button text (click)="openLink($event, branch.link)" styleClass="p-1" class="leading-none">
-                <i-tabler name="brand-github" class="!size-4" />
-              </p-button>
+              <app-github-link-button [url]="branch.link" buttonClass="p-1 leading-none" />
             </div>
           }
         </td>
@@ -167,7 +163,7 @@
       <tr>
         <td colspan="4">
           <div class="flex flex-col gap-2 p-20 justify-center items-center">
-            <i-tabler name="git-branch" class="!h-20 !w-20 text-red-500" />
+            <i-tabler name="git-branch" class="!h-20 !w-20 text-red-600 dark:text-red-400" />
             <span class="font-semibold text-xl">There are no branches found matching your filter criteria.</span>
             <span>Try clearing the filter or reloading the page.</span>
             <p-button (click)="searchTableService.clearFilter(table)">Clear Filter</p-button>

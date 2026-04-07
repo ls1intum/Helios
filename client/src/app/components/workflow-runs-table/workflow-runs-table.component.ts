@@ -14,8 +14,10 @@ import { getWorkflowRunsOptions } from '@app/core/modules/openapi/@tanstack/angu
 import { PAGINATED_FILTER_OPTIONS_TOKEN, PAGINATION_STORAGE_KEY_TOKEN, PaginatedFilterOption, PaginatedTableService } from '@app/core/services/paginated-table.service';
 import { TableFilterPaginatedComponent } from '@app/components/table-filter-paginated/table-filter-paginated.component';
 import { MessageService, SortMeta } from 'primeng/api';
+import { GithubLinkButtonComponent } from '@app/components/github-link-button/github-link-button.component';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
-import { IconAlertTriangle, IconBrandGithub, IconCircleCheck, IconCircleX, IconClockHour4, IconFilterPlus, IconPlayerPlay, IconProgress } from 'angular-tabler-icons/icons';
+import { IconAlertTriangle, IconCircleCheck, IconCircleX, IconClockHour4, IconFilterPlus, IconPlayerPlay, IconProgress } from 'angular-tabler-icons/icons';
+import { getStatusColors, getStatusIconClasses } from '@app/core/utils/status-colors';
 
 export function createWorkflowRunsFilterOptions(): PaginatedFilterOption[] {
   return [
@@ -32,7 +34,19 @@ export function createWorkflowRunsFilterOptions(): PaginatedFilterOption[] {
 @Component({
   selector: 'app-workflow-runs-table',
   standalone: true,
-  imports: [TableModule, TagModule, TimeAgoPipe, SelectModule, TablerIconComponent, SkeletonModule, TooltipModule, ButtonModule, DividerModule, TableFilterPaginatedComponent],
+  imports: [
+    TableModule,
+    TagModule,
+    TimeAgoPipe,
+    SelectModule,
+    TablerIconComponent,
+    SkeletonModule,
+    TooltipModule,
+    ButtonModule,
+    DividerModule,
+    TableFilterPaginatedComponent,
+    GithubLinkButtonComponent,
+  ],
   providers: [
     PaginatedTableService,
     MessageService,
@@ -45,7 +59,6 @@ export function createWorkflowRunsFilterOptions(): PaginatedFilterOption[] {
       IconProgress,
       IconClockHour4,
       IconAlertTriangle,
-      IconBrandGithub,
       IconPlayerPlay,
     }),
   ],
@@ -113,11 +126,8 @@ export class WorkflowRunsTableComponent {
     if (run.conclusion === 'FAILURE' || run.conclusion === 'STARTUP_FAILURE' || run.conclusion === 'TIMED_OUT') {
       return 'danger';
     }
-    if (run.conclusion === 'CANCELLED') return 'secondary';
+    if (run.conclusion === 'ACTION_REQUIRED' || run.status === 'ACTION_REQUIRED') return 'warn';
     if (run.status === 'IN_PROGRESS') return 'info';
-    if (run.status === 'QUEUED' || run.status === 'WAITING' || run.status === 'PENDING' || run.status === 'REQUESTED') {
-      return 'warn';
-    }
     return 'secondary';
   }
 
@@ -155,25 +165,7 @@ export class WorkflowRunsTableComponent {
   }
 
   getWorkflowStatusClass(run: WorkflowRunDto): string {
-    if (run.conclusion === 'SUCCESS') {
-      return 'text-green-500';
-    }
-    if (run.conclusion === 'FAILURE' || run.conclusion === 'STARTUP_FAILURE' || run.conclusion === 'TIMED_OUT') {
-      return 'text-red-500';
-    }
-    if (run.conclusion === 'CANCELLED') {
-      return 'text-surface-500';
-    }
-    if (run.status === 'IN_PROGRESS') {
-      return 'text-blue-500 animate-spin';
-    }
-    if (run.status === 'QUEUED' || run.status === 'WAITING' || run.status === 'PENDING' || run.status === 'REQUESTED') {
-      return 'text-amber-500';
-    }
-    if (run.status === 'ACTION_REQUIRED' || run.conclusion === 'ACTION_REQUIRED') {
-      return 'text-orange-500';
-    }
-    return 'text-surface-500';
+    return getStatusIconClasses(run.conclusion, run.status);
   }
 
   getTestStatusIcon(run: WorkflowRunDto): string {
@@ -190,16 +182,10 @@ export class WorkflowRunsTableComponent {
   }
 
   getTestStatusClass(run: WorkflowRunDto): string {
-    if (run.testProcessingStatus === 'PROCESSED') {
-      return 'text-green-500';
-    }
-    if (run.testProcessingStatus === 'FAILED') {
-      return 'text-red-500';
-    }
-    if (run.testProcessingStatus === 'PROCESSING') {
-      return 'text-blue-500 animate-spin';
-    }
-    return 'text-surface-500';
+    if (run.testProcessingStatus === 'PROCESSED') return getStatusColors('success').icon;
+    if (run.testProcessingStatus === 'FAILED') return getStatusColors('failure').icon;
+    if (run.testProcessingStatus === 'PROCESSING') return getStatusIconClasses(null, 'in_progress');
+    return getStatusColors().icon;
   }
 
   formatExactDate(dateStr: string | null | undefined): string | undefined {

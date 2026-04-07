@@ -51,17 +51,17 @@
                       @if (workflowRun.status === 'COMPLETED') {
                         @switch (workflowRun.conclusion) {
                           @case ('SUCCESS') {
-                            <i-tabler name="circle-check" class="text-green-500" pTooltip="Success"></i-tabler>
+                            <i-tabler name="circle-check" class="text-green-600 dark:text-green-400" pTooltip="Success"></i-tabler>
                           }
                           @case ('FAILURE') {
-                            <i-tabler name="circle-x" class="text-red-700" pTooltip="Failure"></i-tabler>
+                            <i-tabler name="circle-x" class="text-red-600 dark:text-red-400" pTooltip="Failure"></i-tabler>
                           }
                           @default {
                             <i-tabler name="progress-help" class="text-muted-color" pTooltip="Unknown"></i-tabler>
                           }
                         }
                       } @else if (['IN_PROGRESS', 'QUEUED', 'PENDING', 'WAITING', 'REQUESTED'].includes(workflowRun.status)) {
-                        <i-tabler name="progress" class="text-yellow-500 animate-spin" pTooltip="In progress"></i-tabler>
+                        <i-tabler name="progress" class="text-yellow-500 dark:text-yellow-400 animate-spin" pTooltip="In progress"></i-tabler>
                       } @else {
                         <i-tabler name="progress-help" class="text-muted-color" pTooltip="Unknown"></i-tabler>
                       }
@@ -69,9 +69,7 @@
                     <!-- Fixed width to ensure consistent alignment -->
                     <span class="font-medium flex gap-1 items-center justify-between w-full overflow-hidden">
                       <span [pTooltip]="workflowRun.name" class="truncate">{{ workflowRun.name }}</span>
-                      <p-button text severity="secondary" (click)="openLink(workflowRun.htmlUrl)" styleClass="p-1" class="leading-none">
-                        <i-tabler name="brand-github" class="!size-4" />
-                      </p-button>
+                      <app-github-link-button [url]="workflowRun.htmlUrl" buttonClass="p-1 leading-none" />
                     </span>
                   </div>
                 }

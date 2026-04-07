@@ -26,20 +26,9 @@ import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { TextareaModule } from 'primeng/textarea';
 import { InputTextModule } from 'primeng/inputtext';
 import { NgClass, SlicePipe } from '@angular/common';
+import { GithubLinkButtonComponent } from '@app/components/github-link-button/github-link-button.component';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
-import {
-  IconBrandGithub,
-  IconCheck,
-  IconUpload,
-  IconExternalLink,
-  IconGitCommit,
-  IconMessageCircle,
-  IconPencil,
-  IconPlus,
-  IconTrash,
-  IconUser,
-  IconX,
-} from 'angular-tabler-icons/icons';
+import { IconCheck, IconUpload, IconExternalLink, IconGitCommit, IconMessageCircle, IconPencil, IconPlus, IconTrash, IconUser, IconX } from 'angular-tabler-icons/icons';
 import { DialogService } from 'primeng/dynamicdialog';
 import {
   ReleaseEvaluationDialogComponent,
@@ -62,6 +51,7 @@ import { PublishDraftReleaseConfirmationComponent } from '@app/components/dialog
     TooltipModule,
     SlicePipe,
     TagModule,
+    GithubLinkButtonComponent,
     ReactiveFormsModule,
     TextareaModule,
     PublishDraftReleaseConfirmationComponent,
@@ -79,7 +69,6 @@ import { PublishDraftReleaseConfirmationComponent } from '@app/components/dialog
       IconX,
       IconPlus,
       IconPencil,
-      IconBrandGithub,
       IconMessageCircle,
     }),
     DialogService,

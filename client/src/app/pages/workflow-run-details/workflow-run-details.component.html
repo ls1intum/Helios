@@ -69,9 +69,7 @@
               </p-button>
             }
           }
-          <p-button (click)="openRunExternal()" label="Open on GitHub">
-            <i-tabler name="brand-github" class="!size-4" />
-          </p-button>
+          <app-github-link-button [url]="run()?.htmlUrl" label="Open on GitHub" />
         </div>
       </div>
     </div>

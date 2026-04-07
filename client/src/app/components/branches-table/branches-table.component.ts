@@ -28,8 +28,9 @@ import { WorkflowRunStatusComponent } from '@app/components/workflow-run-status-
 import { HighlightPipe } from '@app/pipes/highlight.pipe';
 import { MessageService } from 'primeng/api';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
+import { GithubLinkButtonComponent } from '@app/components/github-link-button/github-link-button.component';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
-import { IconExternalLink, IconFilterPlus, IconGitBranch, IconGitCommit, IconPinned, IconPinnedOff, IconShieldHalf, IconBrandGithub } from 'angular-tabler-icons/icons';
+import { IconExternalLink, IconFilterPlus, IconGitBranch, IconGitCommit, IconPinned, IconPinnedOff, IconShieldHalf } from 'angular-tabler-icons/icons';
 
 export type BranchInfoWithLink = BranchInfoDto & { link: string; lastCommitLink: string };
 
@@ -38,11 +39,11 @@ export function createBranchFilterOptions(keycloakService: KeycloakService): Fil
   const githubPreferredUsername = isLoggedIn ? keycloakService.getPreferredUsername() : '';
 
   const options: FilterOption<BranchInfoWithLink>[] = [
-    { name: 'All Branches', filter: (branches: BranchInfoWithLink[]) => branches },
-    { name: 'Default Branch', filter: (branches: BranchInfoWithLink[]) => branches.filter(branch => branch.isDefault) },
-    { name: 'Protected Branches', filter: (branches: BranchInfoWithLink[]) => branches.filter(branch => branch.isProtected) },
+    { name: 'All branches', filter: (branches: BranchInfoWithLink[]) => branches },
+    { name: 'Default branch', filter: (branches: BranchInfoWithLink[]) => branches.filter(branch => branch.isDefault) },
+    { name: 'Protected branches', filter: (branches: BranchInfoWithLink[]) => branches.filter(branch => branch.isProtected) },
     {
-      name: 'Active Branches',
+      name: 'Active branches',
       filter: (branches: BranchInfoWithLink[]) =>
         branches.filter(branch => {
           const date = new Date(branch.updatedAt || '');
@@ -53,7 +54,7 @@ export function createBranchFilterOptions(keycloakService: KeycloakService): Fil
         }),
     },
     {
-      name: 'Last 7 Day',
+      name: 'Last 7 days',
       filter: (branches: BranchInfoWithLink[]) =>
         branches.filter(branch => {
           const date = new Date(branch.updatedAt || '');
@@ -64,7 +65,7 @@ export function createBranchFilterOptions(keycloakService: KeycloakService): Fil
         }),
     },
     {
-      name: 'Stale Branches',
+      name: 'Stale branches',
       filter: (branches: BranchInfoWithLink[]) =>
         branches.filter(branch => {
           const date = new Date(branch.updatedAt || '');
@@ -79,7 +80,7 @@ export function createBranchFilterOptions(keycloakService: KeycloakService): Fil
   // Add the "Your Branches" filter option only if the user is logged in
   if (isLoggedIn && githubPreferredUsername) {
     options.splice(1, 0, {
-      name: 'Your Branches',
+      name: 'Your branches',
       filter: (branches: BranchInfoWithLink[]) => branches.filter(branch => branch.updatedBy?.login?.toLowerCase() === githubPreferredUsername.toLowerCase()),
     });
   }
@@ -109,6 +110,7 @@ export function createBranchFilterOptions(keycloakService: KeycloakService): Fil
     FormsModule,
     WorkflowRunStatusComponent,
     HighlightPipe,
+    GithubLinkButtonComponent,
   ],
   providers: [
     SearchTableService,
@@ -184,11 +186,6 @@ export class BranchTableComponent {
   );
 
   maxAheadBehindBy = computed(() => Math.max(...this.branches().map(branch => Math.max(branch.aheadBy || 0, branch.behindBy || 0))));
-
-  openLink(event: Event, url: string): void {
-    window.open(url, '_blank');
-    event.stopPropagation();
-  }
 
   calculateProgress(value: number): number {
     return (value * 100) / this.maxAheadBehindBy();

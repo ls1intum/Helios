@@ -45,9 +45,7 @@
               <span class="font-bold truncate max-w-md">
                 {{ run.displayTitle || run.name }}
               </span>
-              <p-button text (click)="openRunExternal($event, run)" styleClass="p-1" class="leading-none">
-                <i-tabler name="brand-github" class="!size-4" />
-              </p-button>
+              <app-github-link-button [url]="run.htmlUrl" buttonClass="p-1 leading-none" />
               <p-tag [value]="run.label === 'TEST' ? 'Test' : 'General'" [severity]="run.label === 'TEST' ? 'info' : 'secondary'" rounded class="text-xs" />
             </div>
             <div class="flex flex-wrap items-center gap-2 text-xs text-muted-color">
@@ -92,7 +90,7 @@
     <tr>
       <td colspan="5">
         <div class="flex flex-col gap-2 p-20 justify-center items-center">
-          <i-tabler name="player-play" class="!h-20 !w-20 text-red-500" />
+          <i-tabler name="player-play" class="!h-20 !w-20 text-red-600 dark:text-red-400" />
           <span class="font-semibold text-xl">There are no workflow runs found matching your filter criteria.</span>
           <span>Try clearing the filter or reloading the page.</span>
           <p-button (click)="clearFilters()">Clear Filter</p-button>

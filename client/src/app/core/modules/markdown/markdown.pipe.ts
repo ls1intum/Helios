@@ -26,7 +26,7 @@ export class MarkdownPipe implements PipeTransform {
       return `   • ${text}<br>`;
     };
     renderer.blockquote = text => {
-      return `<blockquote style="border-left: 4px solid #ccc; padding-left: 16px; color: #555;">${text}</blockquote>`;
+      return `<blockquote class="border-l-4 border-surface-300 dark:border-surface-700 text-muted-color pl-4">${text}</blockquote>`;
     };
     marked.setOptions({ renderer });
   }

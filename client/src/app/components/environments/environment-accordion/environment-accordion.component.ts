@@ -17,8 +17,9 @@ import { RouterLink } from '@angular/router';
 import { EnvironmentStatusTagComponent } from '../environment-status-tag/environment-status-tag.component';
 import { signal } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
+import { GithubLinkButtonComponent } from '@app/components/github-link-button/github-link-button.component';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
-import { IconExternalLink, IconGitPullRequest, IconHistory, IconTag, IconBrandGithub } from 'angular-tabler-icons/icons';
+import { IconExternalLink, IconGitPullRequest, IconHistory, IconTag } from 'angular-tabler-icons/icons';
 import { WorkflowJobsStatusComponent } from '../workflow-job-status/workflow-jobs-status.component';
 
 @Component({
@@ -42,6 +43,7 @@ import { WorkflowJobsStatusComponent } from '../workflow-job-status/workflow-job
     RouterLink,
     EnvironmentStatusTagComponent,
     WorkflowJobsStatusComponent,
+    GithubLinkButtonComponent,
   ],
   providers: [
     provideTablerIcons({
@@ -49,7 +51,6 @@ import { WorkflowJobsStatusComponent } from '../workflow-job-status/workflow-job
       IconGitPullRequest,
       IconHistory,
       IconExternalLink,
-      IconBrandGithub,
     }),
   ],
   templateUrl: './environment-accordion.component.html',
@@ -123,11 +124,5 @@ export class EnvironmentAccordionComponent {
 
   getBranchLink() {
     return ['/repo', this.environment().repository?.id, 'ci-cd', 'branch', this.environment().latestDeployment?.ref];
-  }
-
-  openLink(url: string | undefined) {
-    if (url) {
-      window.open(url, '_blank');
-    }
   }
 }
