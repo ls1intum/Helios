@@ -264,6 +264,7 @@ root ``.env`` file
 - ``OAUTH_ISSUER_URL``: URL to Keycloak realm in the format ``http://<keycloak-host>:<keycloak-port>/realms/<realm-name>``
 - ``HELIOS_TOKEN_EXCHANGE_CLIENT``: Client ID for the token exchange client in Keycloak. This is used to exchange the access token for a user token. With this Helios is able to get the logged in user's GitHub token and use it to perform actions on behalf of the user.
 - ``HELIOS_TOKEN_EXCHANGE_SECRET``: Client secret for the token exchange client in Keycloak. This is used to exchange the access token for a user token. With this Helios is able to get the logged in user's GitHub token and use it to perform actions on behalf of the user.
+- ``HELIOS_LOGS_BASE_PATH``: (Optional, default: ``/tmp/helios/workflow-logs``) Base directory where Helios stores workflow logs.
 - ``HELIOS_DEVELOPERS_GITHUB_USERNAMES``: Comma-separated list of GitHub usernames that should have admin access to Helios.
 - ``NOTIFICATIONS_ENABLED``: (Optional, default: `true`) Whether to enable notifications to users
 
@@ -326,4 +327,3 @@ If the file is not present or you want to set up a fresh Keycloak realm, you can
 
    keycloak
    keycloak_token_exchange
-
