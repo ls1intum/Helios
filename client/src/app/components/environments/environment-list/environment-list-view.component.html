@@ -117,6 +117,7 @@
           [(isVisible)]="deployDialogVisible"
           [environment]="selectedEnv()!"
           [sourceRef]="branchName() ? { ref: branchName()!, type: 'branch' } : undefined"
+          [commitSha]="commitSha()"
           (confirmed)="onDeployDialogConfirmed($event)"
         ></app-deploy-confirmation>
       } @else if (lockDialogVisible()) {

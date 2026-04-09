@@ -30,7 +30,9 @@
                 <p-select
                   id="deployment-workflow"
                   formControlName="deploymentWorkflow"
-                  [options]="workflowOptions()"
+                  [options]="activeWorkflows()"
+                  dataKey="id"
+                  optionLabel="fileNameWithExtension"
                   placeholder="Select a Deployment Workflow"
                   [style]="{ width: '100%' }"
                   [disabled]="workflowsQuery.isLoading()"
@@ -38,18 +40,39 @@
                 >
                   <ng-template #selectedItem let-workflow>
                     <div class="flex items-center gap-2">
-                      <span>{{ workflow.file }}</span>
+                      <span>{{ workflow.fileNameWithExtension || workflow.name }}</span>
                     </div>
                   </ng-template>
                   <ng-template let-workflow #item>
                     <div class="flex items-center gap-2">
-                      <span class="font-semibold">{{ workflow.file }}</span> <span>{{ workflow.name }}</span>
+                      <span class="font-semibold">{{ workflow.fileNameWithExtension || workflow.name }}</span>
+                      <span>{{ workflow.name }}</span>
                     </div>
                   </ng-template>
                 </p-select>
                 @if (workflowsQuery.isLoading()) {
                   <span class="text-sm text-muted-color">Loading workflows...</span>
                 }
+              </div>
+
+              <div class="flex flex-col gap-2">
+                <label for="required-pre-deployment-workflows">Required Pre-Deployment Workflows</label>
+                <span class="text-sm text-muted-color">
+                  Helios checks only these workflows for the exact branch and commit being deployed. This version warns but does not block deployment.
+                </span>
+                <p-multiselect
+                  id="required-pre-deployment-workflows"
+                  formControlName="requiredPreDeploymentWorkflows"
+                  [options]="activeWorkflows()"
+                  dataKey="id"
+                  optionLabel="fileNameWithExtension"
+                  placeholder="Select workflows to verify before deploy"
+                  [filter]="true"
+                  [showToggleAll]="false"
+                  display="chip"
+                  [disabled]="workflowsQuery.isLoading()"
+                ></p-multiselect>
+                <span class="text-sm text-muted-color">Do not include the deployment workflow itself in this list.</span>
               </div>
 
               <div class="flex flex-col gap-2">

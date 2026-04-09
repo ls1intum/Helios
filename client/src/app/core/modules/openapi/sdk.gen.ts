@@ -84,6 +84,9 @@ import type {
   GetDeploymentByIdData,
   GetDeploymentByIdErrors,
   GetDeploymentByIdResponses,
+  GetDeploymentReadinessData,
+  GetDeploymentReadinessErrors,
+  GetDeploymentReadinessResponses,
   GetDeploymentsByEnvironmentIdData,
   GetDeploymentsByEnvironmentIdErrors,
   GetDeploymentsByEnvironmentIdResponses,
@@ -803,6 +806,13 @@ export const getAllEnvironments = <ThrowOnError extends boolean = false>(options
 export const getEnvironmentReviewers = <ThrowOnError extends boolean = false>(options: Options<GetEnvironmentReviewersData, ThrowOnError>) => {
   return (options.client ?? client).get<GetEnvironmentReviewersResponses, GetEnvironmentReviewersErrors, ThrowOnError>({
     url: '/api/environments/{environmentId}/reviewers',
+    ...options,
+  });
+};
+
+export const getDeploymentReadiness = <ThrowOnError extends boolean = false>(options: Options<GetDeploymentReadinessData, ThrowOnError>) => {
+  return (options.client ?? client).get<GetDeploymentReadinessResponses, GetDeploymentReadinessErrors, ThrowOnError>({
+    url: '/api/environments/{environmentId}/deployment-readiness',
     ...options,
   });
 };

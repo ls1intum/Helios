@@ -11,6 +11,7 @@ import {
   getWorkflowsByRepositoryIdOptions,
   updateEnvironmentMutation,
 } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
+import { WorkflowDto } from '@app/core/modules/openapi';
 import { injectMutation, injectQuery, QueryClient } from '@tanstack/angular-query-experimental';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
 import { IconExclamationCircle } from 'angular-tabler-icons/icons';
@@ -21,12 +22,25 @@ import { CardModule } from 'primeng/card';
 import { DividerModule } from 'primeng/divider';
 import { InputTextModule } from 'primeng/inputtext';
 import { MessageModule } from 'primeng/message';
+import { MultiSelectModule } from 'primeng/multiselect';
 import { SelectModule } from 'primeng/select';
 import { ToggleSwitch } from 'primeng/toggleswitch';
 
 @Component({
   selector: 'app-environment-edit-form',
-  imports: [AutoCompleteModule, ReactiveFormsModule, InputTextModule, CardModule, DividerModule, ButtonModule, MessageModule, SelectModule, ToggleSwitch, TablerIconComponent],
+  imports: [
+    AutoCompleteModule,
+    ReactiveFormsModule,
+    InputTextModule,
+    CardModule,
+    DividerModule,
+    ButtonModule,
+    MessageModule,
+    MultiSelectModule,
+    SelectModule,
+    ToggleSwitch,
+    TablerIconComponent,
+  ],
   providers: [provideTablerIcons({ IconExclamationCircle })],
   templateUrl: './environment-edit-form.component.html',
 })
@@ -89,6 +103,7 @@ export class EnvironmentEditFormComponent implements OnInit {
       type: 'TEST' as const,
       serverUrl: '',
       deploymentWorkflowBranch: '',
+      requiredPreDeploymentWorkflows: [] as WorkflowDto[],
       description: '',
       installedApps: [] as string[],
       enabled: false,
@@ -100,11 +115,11 @@ export class EnvironmentEditFormComponent implements OnInit {
     enabled: () => !!this.repositoryId(),
   }));
 
-  workflowOptions = computed(() => {
-    const workflows = this.workflowsQuery.data() || [];
-    workflows.filter(w => w.state === 'ACTIVE');
-    return workflows.map(w => ({ name: w.name, file: w.fileNameWithExtension || '', value: w })).sort((a, b) => a.file.localeCompare(b.file));
-  });
+  activeWorkflows = computed(() =>
+    (this.workflowsQuery.data() || [])
+      .filter(workflow => workflow.state === 'ACTIVE')
+      .sort((left, right) => (left.fileNameWithExtension || left.name).localeCompare(right.fileNameWithExtension || right.name))
+  );
 
   mutateEnvironment = injectMutation(() => ({
     ...updateEnvironmentMutation(),
@@ -115,6 +130,13 @@ export class EnvironmentEditFormComponent implements OnInit {
       this.queryClient.invalidateQueries({ queryKey: getEnvironmentsByUserLockingQueryKey() });
       this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Environment updated successfully' });
       this.redirectToEnvironmentList();
+    },
+    onError: error => {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: error.message || 'Failed to update environment',
+      });
     },
   }));
 
@@ -128,6 +150,7 @@ export class EnvironmentEditFormComponent implements OnInit {
         displayName: [environment?.displayName || ''],
         type: [this.environment()?.type || 'TEST'],
         deploymentWorkflow: [environment?.deploymentWorkflow || null],
+        requiredPreDeploymentWorkflows: [environment?.requiredPreDeploymentWorkflows || []],
         installedApps: [environment?.installedApps || []],
         description: [environment?.description || ''],
         serverUrl: [environment?.serverUrl || ''],

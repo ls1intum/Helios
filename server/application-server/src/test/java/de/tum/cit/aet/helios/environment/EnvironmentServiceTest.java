@@ -7,6 +7,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -27,6 +28,8 @@ import de.tum.cit.aet.helios.releaseinfo.releasecandidate.ReleaseCandidateReposi
 import de.tum.cit.aet.helios.user.User;
 import de.tum.cit.aet.helios.workflow.Workflow;
 import de.tum.cit.aet.helios.workflow.WorkflowRepository;
+import de.tum.cit.aet.helios.workflow.WorkflowRun;
+import de.tum.cit.aet.helios.workflow.WorkflowRunRepository;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -54,6 +57,7 @@ public class EnvironmentServiceTest {
   @Mock private GitRepoSettingsService gitRepoSettingsService;
   @Mock private EnvironmentScheduler environmentScheduler;
   @Mock private WorkflowRepository workflowRepository;
+  @Mock private WorkflowRunRepository workflowRunRepository;
   @Mock private NatsNotificationPublisherService notificationPublisherService;
   @Mock private ProtectionRuleRepository protectionRuleRepository;
   @Mock private ObjectMapper objectMapper;
@@ -450,5 +454,141 @@ public class EnvironmentServiceTest {
     }
 
     verify(environmentSyncService, times(0)).removeDeletedEnvironments(any(), any());
+  }
+
+  @Test
+  public void testUpdateEnvironmentWithRequiredPreDeploymentWorkflows() {
+    final Workflow deploymentWorkflow = new Workflow();
+    deploymentWorkflow.setId(1L);
+    deploymentWorkflow.setRepository(gitRepository);
+
+    final Workflow requiredWorkflow = new Workflow();
+    requiredWorkflow.setId(2L);
+    requiredWorkflow.setName("Build");
+    requiredWorkflow.setRepository(gitRepository);
+
+    when(environmentRepository.findById(1L)).thenReturn(Optional.of(environment));
+    when(workflowRepository.findById(1L)).thenReturn(Optional.of(deploymentWorkflow));
+    when(workflowRepository.findById(2L)).thenReturn(Optional.of(requiredWorkflow));
+
+    environment.setDeploymentWorkflow(deploymentWorkflow);
+    environment.setRequiredPreDeploymentWorkflows(List.of(requiredWorkflow));
+
+    Optional<EnvironmentDto> environmentDto =
+        environmentService.updateEnvironment(1L, EnvironmentDto.fromEnvironment(environment));
+
+    assertTrue(environmentDto.isPresent());
+    assertEquals(1, environmentDto.get().requiredPreDeploymentWorkflows().size());
+    assertEquals(
+        requiredWorkflow.getId(),
+        environmentDto.get().requiredPreDeploymentWorkflows().get(0).id());
+  }
+
+  @Test
+  public void testUpdateEnvironmentRejectsDeploymentWorkflowAsRequiredPreDeploymentWorkflow() {
+    final Workflow deploymentWorkflow = new Workflow();
+    deploymentWorkflow.setId(1L);
+    deploymentWorkflow.setName("Deploy");
+    deploymentWorkflow.setRepository(gitRepository);
+
+    when(environmentRepository.findById(1L)).thenReturn(Optional.of(environment));
+    when(workflowRepository.findById(1L)).thenReturn(Optional.of(deploymentWorkflow));
+
+    environment.setDeploymentWorkflow(deploymentWorkflow);
+    environment.setRequiredPreDeploymentWorkflows(List.of(deploymentWorkflow));
+
+    Exception exception =
+        assertThrows(
+            EnvironmentException.class,
+            () ->
+                environmentService.updateEnvironment(
+                    1L, EnvironmentDto.fromEnvironment(environment)));
+
+    assertTrue(
+        exception.getMessage().contains("deployment workflow cannot also be configured"));
+  }
+
+  @Test
+  public void testGetDeploymentReadinessReturnsReadyForSuccessfulRequiredWorkflow() {
+    final Workflow requiredWorkflow = new Workflow();
+    requiredWorkflow.setId(2L);
+    requiredWorkflow.setName("Build");
+    requiredWorkflow.setRepository(gitRepository);
+    environment.setRequiredPreDeploymentWorkflows(List.of(requiredWorkflow));
+
+    WorkflowRun workflowRun = new WorkflowRun();
+    workflowRun.setId(99L);
+    workflowRun.setHtmlUrl("https://example.com/run/99");
+    workflowRun.setStatus(WorkflowRun.Status.COMPLETED);
+    workflowRun.setConclusion(Optional.of(WorkflowRun.Conclusion.SUCCESS));
+
+    when(environmentRepository.findById(1L)).thenReturn(Optional.of(environment));
+    when(
+            workflowRunRepository
+                .findLatestForDeploymentReadiness(
+                    eq(2L), eq(1L), eq("develop"), eq("abc123"), any()))
+        .thenReturn(List.of(workflowRun));
+
+    EnvironmentDeploymentReadinessDto readiness =
+        environmentService.getDeploymentReadiness(1L, "develop", "abc123");
+
+    assertEquals(EnvironmentDeploymentReadinessDto.Status.READY, readiness.status());
+    assertEquals(1, readiness.workflows().size());
+    assertEquals(
+        EnvironmentDeploymentReadinessDto.WorkflowStatus.READY,
+        readiness.workflows().get(0).status());
+  }
+
+  @Test
+  public void testGetDeploymentReadinessReturnsWaitingForRunningRequiredWorkflow() {
+    final Workflow requiredWorkflow = new Workflow();
+    requiredWorkflow.setId(2L);
+    requiredWorkflow.setName("Build");
+    requiredWorkflow.setRepository(gitRepository);
+    environment.setRequiredPreDeploymentWorkflows(List.of(requiredWorkflow));
+
+    WorkflowRun workflowRun = new WorkflowRun();
+    workflowRun.setId(100L);
+    workflowRun.setHtmlUrl("https://example.com/run/100");
+    workflowRun.setStatus(WorkflowRun.Status.IN_PROGRESS);
+
+    when(environmentRepository.findById(1L)).thenReturn(Optional.of(environment));
+    when(
+            workflowRunRepository
+                .findLatestForDeploymentReadiness(
+                    eq(2L), eq(1L), eq("develop"), eq("abc123"), any()))
+        .thenReturn(List.of(workflowRun));
+
+    EnvironmentDeploymentReadinessDto readiness =
+        environmentService.getDeploymentReadiness(1L, "develop", "abc123");
+
+    assertEquals(EnvironmentDeploymentReadinessDto.Status.WAITING, readiness.status());
+    assertEquals(
+        EnvironmentDeploymentReadinessDto.WorkflowStatus.WAITING,
+        readiness.workflows().get(0).status());
+  }
+
+  @Test
+  public void testGetDeploymentReadinessReturnsMissingRunWhenNoMatchingWorkflowRunExists() {
+    final Workflow requiredWorkflow = new Workflow();
+    requiredWorkflow.setId(2L);
+    requiredWorkflow.setName("Build");
+    requiredWorkflow.setRepository(gitRepository);
+    environment.setRequiredPreDeploymentWorkflows(List.of(requiredWorkflow));
+
+    when(environmentRepository.findById(1L)).thenReturn(Optional.of(environment));
+    when(
+            workflowRunRepository
+                .findLatestForDeploymentReadiness(
+                    eq(2L), eq(1L), eq("develop"), eq("abc123"), any()))
+        .thenReturn(List.of());
+
+    EnvironmentDeploymentReadinessDto readiness =
+        environmentService.getDeploymentReadiness(1L, "develop", "abc123");
+
+    assertEquals(EnvironmentDeploymentReadinessDto.Status.MISSING_RUN, readiness.status());
+    assertEquals(
+        EnvironmentDeploymentReadinessDto.WorkflowStatus.MISSING_RUN,
+        readiness.workflows().get(0).status());
   }
 }

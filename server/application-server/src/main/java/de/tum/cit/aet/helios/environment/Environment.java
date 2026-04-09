@@ -16,6 +16,8 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
@@ -156,6 +158,14 @@ public class Environment extends RepositoryFilterEntity {
   @ManyToOne(fetch = FetchType.EAGER)
   @JoinColumn(name = "deployment_workflow_id")
   private Workflow deploymentWorkflow;
+
+  @ManyToMany(fetch = FetchType.LAZY)
+  @JoinTable(
+      name = "environment_required_pre_deployment_workflow",
+      joinColumns = @JoinColumn(name = "environment_id"),
+      inverseJoinColumns = @JoinColumn(name = "workflow_id"))
+  @ToString.Exclude
+  private List<Workflow> requiredPreDeploymentWorkflows = new ArrayList<>();
 
   // Missing properties
   // nodeId --> GraphQl ID
