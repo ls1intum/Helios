@@ -47,9 +47,7 @@
   <app-pipeline [selector]="pipelineSelector()" />
   <app-pipeline-test-results [selector]="pipelineSelector()" />
   @if (query.data(); as branch) {
-    <div class="flex justify-center">
-      <p-divider class="w-full mt-4" />
-    </div>
+    <p-divider />
     <p-tabs [value]="deploymentTab()" (valueChange)="onDeploymentTabChange($event)">
       <p-tablist>
         <p-tab value="deploy">Deploy</p-tab>
