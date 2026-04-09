@@ -47,22 +47,21 @@
   <app-pipeline [selector]="pipelineSelector()" />
   <app-pipeline-test-results [selector]="pipelineSelector()" />
   @if (query.data(); as branch) {
-    <div class="rounded-xl border border-surface-200 dark:border-surface-700 shadow-sm overflow-hidden">
-      <p-tabs [value]="deploymentTab()" (valueChange)="onDeploymentTabChange($event)">
-        <p-tablist>
-          <p-tab value="deploy">Deploy</p-tab>
-          <p-tab value="history">Deployment History</p-tab>
-        </p-tablist>
-        <p-tabpanels>
-          <p-tabpanel value="deploy">
-            <app-deployment-selection [branchName]="branch.name" [commitSha]="branch.commitSha" />
-          </p-tabpanel>
-          <p-tabpanel value="history">
-            <app-deployment-history [selector]="{ repositoryId: repositoryId(), branchName: branch.name }" />
-          </p-tabpanel>
-        </p-tabpanels>
-      </p-tabs>
-    </div>
+    <p-divider />
+    <p-tabs [value]="deploymentTab()" (valueChange)="onDeploymentTabChange($event)">
+      <p-tablist>
+        <p-tab value="deploy">Deploy</p-tab>
+        <p-tab value="history">Deployment History</p-tab>
+      </p-tablist>
+      <p-tabpanels>
+        <p-tabpanel value="deploy">
+          <app-deployment-selection [branchName]="branch.name" [commitSha]="branch.commitSha" />
+        </p-tabpanel>
+        <p-tabpanel value="history">
+          <app-deployment-history [selector]="{ repositoryId: repositoryId(), branchName: branch.name }" />
+        </p-tabpanel>
+      </p-tabpanels>
+    </p-tabs>
   }
 </div>
 
