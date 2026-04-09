@@ -52,14 +52,16 @@ public interface HeliosDeploymentRepository extends JpaRepository<HeliosDeployme
 
 
   /**
-   * Finds deployments that are stuck in IN_PROGRESS state for more than the specified duration.
+   * Finds deployments that are stuck in incomplete state for more than the specified duration.
    *
    * @param threshold Time threshold; deployments with statusUpdatedAt before this time
-   * @return List of deployments stuck in IN_PROGRESS state beyond the time threshold
+   * @return List of deployments stuck in incomplete state beyond the time threshold
    */
   @Query(
       "SELECT hd FROM HeliosDeployment hd "
-          + "WHERE hd.status = 'IN_PROGRESS' "
-          + "AND (hd.statusUpdatedAt < :threshold)")
-  List<HeliosDeployment> findStuckDeployments(@Param("threshold") OffsetDateTime threshold);
+          + "WHERE hd.status IN ('IN_PROGRESS', 'WAITING', 'QUEUED') "
+          + "AND hd.statusUpdatedAt < :threshold "
+          + "AND hd.deploymentId IS NULL")
+  List<HeliosDeployment> findStuckDeploymentsWithoutDeploymentId(
+      @Param("threshold") OffsetDateTime threshold);
 }

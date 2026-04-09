@@ -1,6 +1,7 @@
 package de.tum.cit.aet.helios.github;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.tum.cit.aet.helios.auth.AuthService;
 import de.tum.cit.aet.helios.auth.github.GitHubAuthBroker;
@@ -67,6 +68,10 @@ public class GitHubService {
   private final GitHubAuthBroker gitHubAuthBroker;
   private final GitHubClientManager clientManager;
   private GHOrganization gitHubOrganization;
+
+  public record WorkflowRunState(String status, String conclusion, OffsetDateTime updatedAt) {}
+
+  public record DeploymentState(String state, OffsetDateTime updatedAt) {}
 
   @Value("${helios.clientBaseUrl:http://localhost:4200}")
   private String heliosClientBaseUrl;
@@ -869,6 +874,91 @@ public class GitHubService {
   }
 
   /**
+   * Fetches the latest workflow run state directly from GitHub.
+   *
+   * @param repoNameWithOwner repository in format "owner/repo"
+   * @param runId workflow run ID
+   * @return optional workflow run state (empty for 404 / no body)
+   * @throws IOException if the GitHub API call fails
+   */
+  public Optional<WorkflowRunState> getWorkflowRunState(String repoNameWithOwner, long runId)
+      throws IOException {
+    String url =
+        String.format("https://api.github.com/repos/%s/actions/runs/%d", repoNameWithOwner, runId);
+    Request request = getRequestBuilder().url(url).get().build();
+
+    try (Response response = okHttpClient.newCall(request).execute()) {
+      if (response.code() == 404) {
+        log.warn("Workflow run {} not found on GitHub for repository {}", runId, repoNameWithOwner);
+        return Optional.empty();
+      }
+      if (!response.isSuccessful()) {
+        handleErrorResponse(response, "fetch workflow run state for run " + runId);
+      }
+
+      ResponseBody responseBody = response.body();
+      if (responseBody == null) {
+        return Optional.empty();
+      }
+
+      JsonNode root = objectMapper.readTree(responseBody.string());
+      String status = root.path("status").asText(null);
+      String conclusion = root.path("conclusion").isNull()
+          ? null
+          : root.path("conclusion").asText(null);
+      OffsetDateTime updatedAt = parseOffsetDateTime(root.path("updated_at"));
+      return Optional.of(new WorkflowRunState(status, conclusion, updatedAt));
+    }
+  }
+
+  /**
+   * Fetches the latest deployment state directly from GitHub.
+   *
+   * @param repoNameWithOwner repository in format "owner/repo"
+   * @param deploymentId deployment ID
+   * @return optional deployment state (empty for 404 / empty status list / no body)
+   * @throws IOException if the GitHub API call fails
+   */
+  public Optional<DeploymentState> getLatestDeploymentState(
+      String repoNameWithOwner, long deploymentId) throws IOException {
+    // get the first item from the list of statuses, which is the latest status for the deployment
+    String url =
+        String.format(
+            "https://api.github.com/repos/%s/deployments/%d/statuses?per_page=1",
+            repoNameWithOwner, deploymentId);
+
+    Request request = getRequestBuilder().url(url).get().build();
+
+    try (Response response = okHttpClient.newCall(request).execute()) {
+      if (response.code() == 404) {
+        log.warn(
+            "Deployment {} not found on GitHub for repository {}",
+            deploymentId,
+            repoNameWithOwner);
+        return Optional.empty();
+      }
+      if (!response.isSuccessful()) {
+        handleErrorResponse(response, "fetch deployment state for deployment " + deploymentId);
+      }
+
+      ResponseBody responseBody = response.body();
+      if (responseBody == null) {
+        return Optional.empty();
+      }
+
+      JsonNode root = objectMapper.readTree(responseBody.string());
+      if (!root.isArray() || root.isEmpty()) {
+        return Optional.empty();
+      }
+
+      JsonNode latest = root.get(0);
+      String state = latest.path("state").asText(null);
+      OffsetDateTime updatedAt = parseOffsetDateTime(latest.path("updated_at"));
+      return Optional.of(new DeploymentState(state, updatedAt));
+    }
+  }
+
+  /**
    * Cancels a GitHub workflow run.
    *
    * @param repoNameWithOwner Repository in format "owner/repo"
@@ -985,5 +1075,17 @@ public class GitHubService {
             + " failed with response code: "
             + response.code()
             + (!responseBodyString.isEmpty() ? " and body: " + responseBodyString : ""));
+  }
+
+  private OffsetDateTime parseOffsetDateTime(JsonNode node) {
+    if (node == null || node.isNull()) {
+      return null;
+    }
+    try {
+      return OffsetDateTime.parse(node.asText());
+    } catch (Exception ex) {
+      log.warn("Failed to parse timestamp '{}' from GitHub response", node.asText());
+      return null;
+    }
   }
 }

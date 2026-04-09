@@ -59,9 +59,10 @@ public class GitHubWorkflowRunConverter
     workflowRun.setWorkflowUrl(source.getWorkflowUrl().toString());
     workflowRun.setHeadBranch(source.getHeadBranch().toString());
     workflowRun.setHeadSha(source.getHeadSha());
-    workflowRun.setStatus(convertStatus(source.getStatus()));
+    workflowRun.setStatus(GitHubWorkflowRunStateMapper.mapStatus(source.getStatus()));
     workflowRun.setConclusion(
-        Optional.ofNullable(source.getConclusion()).map(this::convertConclusion));
+        Optional.ofNullable(source.getConclusion())
+            .map(GitHubWorkflowRunStateMapper::mapConclusion));
 
     return workflowRun;
   }
@@ -79,67 +80,5 @@ public class GitHubWorkflowRunConverter
         sourceId,
         truncatedValue);
     return truncatedValue;
-  }
-
-  private WorkflowRun.Status convertStatus(GHWorkflowRun.Status status) {
-    switch (status) {
-      case ACTION_REQUIRED:
-        return WorkflowRun.Status.ACTION_REQUIRED;
-      case COMPLETED:
-        return WorkflowRun.Status.COMPLETED;
-      case IN_PROGRESS:
-        return WorkflowRun.Status.IN_PROGRESS;
-      case QUEUED:
-        return WorkflowRun.Status.QUEUED;
-      case REQUESTED:
-        return WorkflowRun.Status.REQUESTED;
-      case CANCELLED:
-        return WorkflowRun.Status.CANCELLED;
-      case FAILURE:
-        return WorkflowRun.Status.FAILURE;
-      case NEUTRAL:
-        return WorkflowRun.Status.NEUTRAL;
-      case PENDING:
-        return WorkflowRun.Status.PENDING;
-      case SKIPPED:
-        return WorkflowRun.Status.SKIPPED;
-      case STALE:
-        return WorkflowRun.Status.STALE;
-      case SUCCESS:
-        return WorkflowRun.Status.SUCCESS;
-      case TIMED_OUT:
-        return WorkflowRun.Status.TIMED_OUT;
-      case WAITING:
-        return WorkflowRun.Status.WAITING;
-      default:
-      case UNKNOWN:
-        return WorkflowRun.Status.UNKNOWN;
-    }
-  }
-
-  private WorkflowRun.Conclusion convertConclusion(GHWorkflowRun.Conclusion conclusion) {
-    switch (conclusion) {
-      case ACTION_REQUIRED:
-        return WorkflowRun.Conclusion.ACTION_REQUIRED;
-      case CANCELLED:
-        return WorkflowRun.Conclusion.CANCELLED;
-      case FAILURE:
-        return WorkflowRun.Conclusion.FAILURE;
-      case NEUTRAL:
-        return WorkflowRun.Conclusion.NEUTRAL;
-      case SKIPPED:
-        return WorkflowRun.Conclusion.SKIPPED;
-      case STALE:
-        return WorkflowRun.Conclusion.STALE;
-      case STARTUP_FAILURE:
-        return WorkflowRun.Conclusion.STARTUP_FAILURE;
-      case SUCCESS:
-        return WorkflowRun.Conclusion.SUCCESS;
-      case TIMED_OUT:
-        return WorkflowRun.Conclusion.TIMED_OUT;
-      default:
-      case UNKNOWN:
-        return WorkflowRun.Conclusion.UNKNOWN;
-    }
   }
 }

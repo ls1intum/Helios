@@ -109,6 +109,26 @@ public interface WorkflowRunRepository
       @Param("offset") int offset,
       @Param("head") String headCommit);
 
+  /**
+   * Finds stale workflow runs in non-terminal states and eagerly fetches their repository to avoid
+   * lazy-loading issues during reconciliation.
+   *
+   * @param threshold stale threshold for updatedAt/createdAt
+   * @param statuses incomplete statuses to reconcile
+   * @param pageable limits the number of rows processed per reconciliation run
+   * @return stale workflow runs ordered by oldest first
+   */
+  @Query(
+      "SELECT wr FROM WorkflowRun wr "
+          + "JOIN FETCH wr.repository r "
+          + "WHERE wr.status IN :statuses "
+          + "AND COALESCE(wr.updatedAt, wr.createdAt) < :threshold "
+          + "ORDER BY COALESCE(wr.updatedAt, wr.createdAt) ASC")
+  List<WorkflowRun> findStaleIncompleteRuns(
+      @Param("threshold") java.time.OffsetDateTime threshold,
+      @Param("statuses") List<WorkflowRun.Status> statuses,
+      Pageable pageable);
+
   @Query(
       "SELECT DISTINCT wr FROM WorkflowRun wr "
           + "WHERE wr.headBranch = :branch "
