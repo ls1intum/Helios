@@ -48,8 +48,14 @@ class NATSClient:
                 ack = await self.publish(subject, message)
                 return ack  # Successfully published, return the ack
             except Exception as e:
-                uvicorn_error.error(f"NATS request failed: {e}, retrying in {wait_time} seconds... (Attempt {attempt + 1}/{self.MAX_RETRIES})")
                 wait_time = self.RETRY_BACKOFF_FACTOR ** attempt
+                uvicorn_error.error(
+                    "NATS request failed: %s, retrying in %s seconds... (Attempt %s/%s)",
+                    e,
+                    wait_time,
+                    attempt + 1,
+                    self.MAX_RETRIES,
+                )
                 await asyncio.sleep(wait_time)
 
         uvicorn_error.error(f"Failed to publish to {subject} after {self.MAX_RETRIES} attempts")
