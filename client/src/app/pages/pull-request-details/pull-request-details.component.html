@@ -48,9 +48,7 @@
   <app-pipeline-test-results [selector]="pipelineSelector()" />
   @if (query.data(); as pr) {
     @if (pr.headRefRepoNameWithOwner === pr.repository?.nameWithOwner) {
-      <div class="flex justify-center">
-        <p-divider class="w-full mt-4" />
-      </div>
+      <p-divider />
       <p-tabs [value]="deploymentTab()" (valueChange)="onDeploymentTabChange($event)">
         <p-tablist>
           <p-tab value="deploy">Deploy</p-tab>

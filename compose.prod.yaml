@@ -103,6 +103,7 @@ services:
     image: "ghcr.io/ls1intum/helios/application-server:${APPLICATION_SERVER_IMAGE_TAG}"
     ports:
       - '8080:8080'
+    restart: on-failure:3
     environment:
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
       - DATASOURCE_URL=${DATASOURCE_URL}
@@ -132,7 +133,7 @@ services:
       - HELIOS_PROD_SECRET_KEY=${HELIOS_PROD_SECRET_KEY}
       - HELIOS_STAGING_SECRET_KEY=${HELIOS_STAGING_SECRET_KEY}
       - HELIOS_DEVELOPERS_GITHUB_USERNAMES=${HELIOS_DEVELOPERS_GITHUB_USERNAMES}
-      - JAVA_TOOL_OPTIONS=-XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/dumps -Xlog:gc*:file=/logs/gc.log:time,uptime,level,tags
+      - JAVA_TOOL_OPTIONS=-XX:+HeapDumpOnOutOfMemoryError -XX:+ExitOnOutOfMemoryError -XX:HeapDumpPath=/dumps -Xlog:gc*:file=/logs/gc.log:time,uptime,level,tags
     depends_on:
       - postgres
       - nats-server

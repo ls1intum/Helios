@@ -72,35 +72,40 @@
     <div class="mt-6">
       @for (group of environmentGroups(); track group[0]) {
         @if (group[1].length > 0) {
-          <div class="mb-2 mt-2">
-            <div style="width: 100%" class="font-bold mx-auto">
-              <p-divider align="center">
-                <h4 class="m-0">{{ capitalizeFirstLetter(group[0]) }}</h4>
-              </p-divider>
+          <div class="mb-4 mt-6">
+            <div class="mb-4 flex items-center justify-center gap-4">
+              <div class="h-px flex-1 bg-surface-200 dark:bg-surface-700"></div>
+              <div class="text-center">
+                <div class="text-sm font-bold uppercase tracking-[0.24em] text-surface-700 dark:text-surface-200">
+                  {{ capitalizeFirstLetter(group[0]) }}
+                </div>
+              </div>
+              <div class="h-px flex-1 bg-surface-200 dark:bg-surface-700"></div>
             </div>
 
-            <p-accordion [multiple]="true">
-              @for (environment of group[1]; track environment.id; let isLast = $last; let isFirst = $first) {
-                @if (!isFirst) {
-                  <!-- Divider -->
-                  <div class="flex justify-center">
-                    <p-divider class="w-full" />
-                  </div>
-                }
-
-                <app-environment-accordion
-                  [environment]="environment"
-                  [deployable]="!!deployable()"
-                  [canViewAllEnvironments]="!!canViewAllEnvironments()"
-                  [timeUntilReservationExpires]="timeUntilReservationExpires().get(environment.id)"
-                  [isLockedByCurrentUser]="isCurrentUserLocked(environment)"
-                  (deploy)="deployEnvironment($event)"
-                  (unlock)="onUnlockEnvironment($event.event, $event.environment)"
-                  (extend)="extendLock($event.event, $event.environment)"
-                  (lock)="lockEnvironment($event)"
-                  (cancelDeployment)="cancelDeployment($event)"
+            <p-accordion [multiple]="true" class="flex flex-col gap-3">
+              @for (environment of group[1]; track environment.id) {
+                <div
+                  class="rounded-xl shadow-sm overflow-hidden"
+                  [ngClass]="{
+                    'ring-2 ring-blue-500': isCurrentUserLocked(environment),
+                    'ring-1 ring-surface-200 dark:ring-surface-700': !isCurrentUserLocked(environment),
+                  }"
                 >
-                </app-environment-accordion>
+                  <app-environment-accordion
+                    [environment]="environment"
+                    [deployable]="!!deployable()"
+                    [canViewAllEnvironments]="!!canViewAllEnvironments()"
+                    [timeUntilReservationExpires]="timeUntilReservationExpires().get(environment.id)"
+                    [isLockedByCurrentUser]="isCurrentUserLocked(environment)"
+                    (deploy)="deployEnvironment($event)"
+                    (unlock)="onUnlockEnvironment($event.event, $event.environment)"
+                    (extend)="extendLock($event.event, $event.environment)"
+                    (lock)="lockEnvironment($event)"
+                    (cancelDeployment)="cancelDeployment($event)"
+                  >
+                  </app-environment-accordion>
+                </div>
               }
             </p-accordion>
           </div>
