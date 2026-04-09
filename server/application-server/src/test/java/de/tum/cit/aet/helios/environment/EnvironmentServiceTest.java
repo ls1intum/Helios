@@ -456,6 +456,7 @@ public class EnvironmentServiceTest {
     verify(environmentSyncService, times(0)).removeDeletedEnvironments(any(), any());
   }
 
+  @Test
   public void testUpdateEnvironmentWithRequiredPreDeploymentWorkflows() {
     final Workflow deploymentWorkflow = new Workflow();
     deploymentWorkflow.setId(1L);
