@@ -39,13 +39,13 @@ Each run creates a timestamped folder under `BACKUP_BASE`.
 Example cron entry:
 
 ```cron
-15 2 * * * /path/to/repo/ops/backup/helios-backup.sh >> /var/log/helios-backup.log 2>&1
+15 2 */2 * * /path/to/repo/ops/backup/helios-backup.sh >> /var/log/helios-backup.log 2>&1
 ```
 
 If the deployment paths differ from the defaults, set them inline in cron:
 
 ```cron
-15 2 * * * DEPLOY_DIR=/opt/helios BACKUP_BASE=/opt/backups/helios /path/to/repo/ops/backup/helios-backup.sh >> /var/log/helios-backup.log 2>&1
+15 2 */2 * * DEPLOY_DIR=/opt/helios BACKUP_BASE=/opt/backups/helios /path/to/repo/ops/backup/helios-backup.sh >> /var/log/helios-backup.log 2>&1
 ```
 
 ## Notes
