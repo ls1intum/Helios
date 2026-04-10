@@ -24,7 +24,18 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { TimeAgoPipe } from '@app/pipes/time-ago.pipe';
 import { GithubLinkButtonComponent } from '@app/components/github-link-button/github-link-button.component';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
-import { IconArrowLeft, IconCircleCheck, IconCircleX, IconClockHour4, IconProgress, IconAlertTriangle, IconPlayerPlay, IconRefresh, IconX } from 'angular-tabler-icons/icons';
+import {
+  IconAlertTriangle,
+  IconArrowLeft,
+  IconCircleCheck,
+  IconCircleX,
+  IconClockHour4,
+  IconFileText,
+  IconPlayerPlay,
+  IconProgress,
+  IconRefresh,
+  IconX,
+} from 'angular-tabler-icons/icons';
 import { TooltipModule } from 'primeng/tooltip';
 import { getStatusColors, getStatusIconClasses } from '@app/core/utils/status-colors';
 
@@ -54,6 +65,7 @@ import { getStatusColors, getStatusIconClasses } from '@app/core/utils/status-co
       IconClockHour4,
       IconProgress,
       IconAlertTriangle,
+      IconFileText,
       IconPlayerPlay,
       IconRefresh,
       IconX,

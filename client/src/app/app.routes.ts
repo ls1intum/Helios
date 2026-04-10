@@ -80,6 +80,11 @@ export const routes: Routes = [
             loadComponent: () => import('./pages/flaky-tests-overview/flaky-tests-overview.component').then(m => m.FlakyTestsOverviewComponent),
           },
           {
+            path: 'ci-cd/runs/:workflowRunId/logs',
+            canActivate: [loggedInGuard, writePermissionGuard],
+            loadComponent: () => import('./pages/workflow-run-logs/workflow-run-logs.component').then(m => m.WorkflowRunLogsComponent),
+          },
+          {
             path: 'ci-cd',
             loadComponent: () => import('./pages/ci-cd/ci-cd.component').then(m => m.CiCdComponent),
             children: [
@@ -114,11 +119,6 @@ export const routes: Routes = [
                 ],
               },
             ],
-          },
-          {
-            path: 'workflow-runs/:workflowRunId/logs',
-            canActivate: [loggedInGuard, writePermissionGuard],
-            loadComponent: () => import('./pages/workflow-run-logs/workflow-run-logs.component').then(m => m.WorkflowRunLogsComponent),
           },
           {
             path: 'settings',

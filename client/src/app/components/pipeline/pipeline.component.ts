@@ -1,4 +1,5 @@
 import { Component, computed, input } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { injectQuery } from '@tanstack/angular-query-experimental';
 import { TableModule } from 'primeng/table';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
@@ -14,7 +15,7 @@ import { WorkflowRunDto } from '@app/core/modules/openapi';
 import { DividerModule } from 'primeng/divider';
 import { GithubLinkButtonComponent } from '@app/components/github-link-button/github-link-button.component';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
-import { IconCircleCheck, IconCircleX, IconExclamationCircle, IconExternalLink, IconInfoCircle, IconProgress, IconProgressHelp } from 'angular-tabler-icons/icons';
+import { IconCircleCheck, IconCircleX, IconExclamationCircle, IconExternalLink, IconFileText, IconInfoCircle, IconProgress, IconProgressHelp } from 'angular-tabler-icons/icons';
 
 export type PipelineSelector = { repositoryId: number } & (
   | {
@@ -39,7 +40,7 @@ export interface Pipeline {
 
 @Component({
   selector: 'app-pipeline',
-  imports: [TableModule, DividerModule, ProgressSpinnerModule, PanelModule, TablerIconComponent, TooltipModule, SkeletonModule, GithubLinkButtonComponent],
+  imports: [RouterLink, TableModule, DividerModule, ProgressSpinnerModule, PanelModule, TablerIconComponent, TooltipModule, SkeletonModule, GithubLinkButtonComponent],
   providers: [
     provideTablerIcons({
       IconInfoCircle,
@@ -48,6 +49,7 @@ export interface Pipeline {
       IconProgressHelp,
       IconProgress,
       IconExternalLink,
+      IconFileText,
       IconExclamationCircle,
     }),
   ],
