@@ -60,10 +60,15 @@ set_compose_cmd() {
 dump_database() {
   local database_name="$1"
   local output_name="$2"
+  local output_path="$TARGET/$output_name"
 
   log "Dumping database '$database_name'"
   "${DOCKER_COMPOSE_CMD[@]}" -f "$COMPOSE_FILE" --env-file "$ENV_FILE" exec -T postgres \
-    pg_dump -U "$POSTGRES_USER" "$database_name" | gzip -c > "$TARGET/$output_name"
+    pg_dump -U "$POSTGRES_USER" "$database_name" | gzip -c > "$output_path"
+
+  [[ -s "$output_path" ]] || die "Dump is empty: $output_name"
+  gzip -t "$output_path" || die "Integrity check failed for $output_name"
+  log "Verified $output_name"
 }
 
 backup_nats_volume() {

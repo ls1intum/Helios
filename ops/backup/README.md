@@ -34,34 +34,6 @@ INCLUDE_NATS_VOLUME=true \
 
 Each run creates a timestamped folder under `BACKUP_BASE`.
 
-## Restore usage
-
-Restore is destructive and requires `--force`:
-
-```bash
-./ops/backup/helios-restore.sh \
-  --backup-dir /opt/backups/helios/2026-04-10_021500 \
-  --force
-```
-
-Optional override to restore the NATS volume too:
-
-```bash
-RESTORE_NATS_VOLUME=true \
-./ops/backup/helios-restore.sh \
-  --backup-dir /opt/backups/helios/2026-04-10_021500 \
-  --force
-```
-
-The restore script:
-
-- copies backed-up config files back into place
-- stops the Helios services except PostgreSQL
-- recreates the application and `keycloak` databases
-- restores both SQL dumps
-- optionally restores the NATS volume
-- starts the stack again
-
 ## Cron
 
 Example cron entry:
@@ -80,4 +52,3 @@ If the deployment paths differ from the defaults, set them inline in cron:
 
 - The scripts expect Docker Compose v2 (`docker compose`) or `docker-compose`.
 - By default the Docker Compose project name is derived from the deployment directory name. Override `COMPOSE_PROJECT_NAME` if your VM uses a different project name.
-- The restore flow assumes the application database is not named `postgres`.
