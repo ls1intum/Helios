@@ -7,6 +7,7 @@ ENV_FILE="${ENV_FILE:-$DEPLOY_DIR/.env}"
 NGINX_CONFIG_PATH="${NGINX_CONFIG_PATH:-/etc/nginx/conf/nginx.conf}"
 RETENTION_DAYS="${RETENTION_DAYS:-7}"
 INCLUDE_NATS_VOLUME="${INCLUDE_NATS_VOLUME:-true}"
+SHOW_PROGRESS="${SHOW_PROGRESS:-auto}"
 COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-$(basename "$DEPLOY_DIR")}"
 
 log() {
@@ -57,14 +58,92 @@ set_compose_cmd() {
   die "Neither 'docker compose' nor 'docker-compose' is available"
 }
 
+read_env_value() {
+  local key="$1"
+
+  awk -v key="$key" '
+    /^[[:space:]]*#/ { next }
+    {
+      line = $0
+      sub(/\r$/, "", line)
+      pattern = "^[[:space:]]*" key "[[:space:]]*="
+      if (line ~ pattern) {
+        sub(pattern, "", line)
+        sub(/^[[:space:]]+/, "", line)
+        sub(/[[:space:]]+$/, "", line)
+        if ((line ~ /^".*"$/) || (line ~ /^'\''.*'\''$/)) {
+          line = substr(line, 2, length(line) - 2)
+        }
+        print line
+        exit
+      }
+    }
+  ' "$ENV_FILE"
+}
+
+should_show_progress() {
+  case "$SHOW_PROGRESS" in
+    true)
+      return 0
+      ;;
+    false)
+      return 1
+      ;;
+    auto)
+      command -v pv >/dev/null 2>&1 && [[ -t 2 ]]
+      ;;
+    *)
+      die "SHOW_PROGRESS must be one of: auto, true, false"
+      ;;
+  esac
+}
+
+get_database_size_bytes() {
+  local database_name="$1"
+  local escaped_database_name="${database_name//\'/\'\'}"
+
+  "${DOCKER_COMPOSE_CMD[@]}" -f "$COMPOSE_FILE" --env-file "$ENV_FILE" exec -T postgres \
+    psql -U "$POSTGRES_USER" -d postgres -tA \
+      -c "SELECT pg_database_size('$escaped_database_name');" 2>/dev/null | tr -d '[:space:]'
+}
+
+dump_globals() {
+  local output_name="globals.sql.gz"
+  local output_path="$TARGET/$output_name"
+
+  log "Dumping PostgreSQL globals"
+  "${DOCKER_COMPOSE_CMD[@]}" -f "$COMPOSE_FILE" --env-file "$ENV_FILE" exec -T postgres \
+    pg_dumpall --globals-only -U "$POSTGRES_USER" | gzip -c > "$output_path"
+
+  [[ -s "$output_path" ]] || die "Dump is empty: $output_name"
+  gzip -t "$output_path" || die "Integrity check failed for $output_name"
+  log "Verified $output_name"
+}
+
 dump_database() {
   local database_name="$1"
   local output_name="$2"
   local output_path="$TARGET/$output_name"
+  local estimated_size=""
+  local pg_dump_args=(pg_dump --no-owner --no-privileges -U "$POSTGRES_USER" "$database_name")
 
   log "Dumping database '$database_name'"
-  "${DOCKER_COMPOSE_CMD[@]}" -f "$COMPOSE_FILE" --env-file "$ENV_FILE" exec -T postgres \
-    pg_dump -U "$POSTGRES_USER" "$database_name" | gzip -c > "$output_path"
+
+  if should_show_progress; then
+    estimated_size="$(get_database_size_bytes "$database_name")"
+    if [[ "$estimated_size" =~ ^[0-9]+$ ]] && [[ "$estimated_size" -gt 0 ]]; then
+      log "Showing approximate dump progress for '$database_name'"
+      "${DOCKER_COMPOSE_CMD[@]}" -f "$COMPOSE_FILE" --env-file "$ENV_FILE" exec -T postgres \
+        "${pg_dump_args[@]}" | pv -s "$estimated_size" | gzip -c > "$output_path"
+    else
+      log "Showing dump throughput for '$database_name' (database size estimate unavailable)"
+      "${DOCKER_COMPOSE_CMD[@]}" -f "$COMPOSE_FILE" --env-file "$ENV_FILE" exec -T postgres \
+        "${pg_dump_args[@]}" | pv | gzip -c > "$output_path"
+    fi
+  else
+    "${DOCKER_COMPOSE_CMD[@]}" -f "$COMPOSE_FILE" --env-file "$ENV_FILE" exec -T postgres \
+      "${pg_dump_args[@]}" | gzip -c > "$output_path"
+  fi
 
   [[ -s "$output_path" ]] || die "Dump is empty: $output_name"
   gzip -t "$output_path" || die "Integrity check failed for $output_name"
@@ -93,10 +172,8 @@ backup_nats_volume() {
 COMPOSE_FILE="$(resolve_compose_file)"
 set_compose_cmd
 
-set -a
-# shellcheck disable=SC1090
-source "$ENV_FILE"
-set +a
+POSTGRES_USER="$(read_env_value POSTGRES_USER)"
+POSTGRES_DB="$(read_env_value POSTGRES_DB)"
 
 [[ -n "${POSTGRES_USER:-}" ]] || die "POSTGRES_USER is not set in $ENV_FILE"
 [[ -n "${POSTGRES_DB:-}" ]] || die "POSTGRES_DB is not set in $ENV_FILE"
@@ -122,6 +199,7 @@ compose_file=$COMPOSE_FILE
 compose_project_name=$COMPOSE_PROJECT_NAME
 EOF
 
+dump_globals
 dump_database "$POSTGRES_DB" "app.sql.gz"
 dump_database "keycloak" "keycloak.sql.gz"
 
