@@ -67,6 +67,14 @@
               <p-button (click)="onReRun()" label="Re-run All" severity="secondary" [disabled]="reRunMutation.isPending()" pTooltip="Re-run all jobs in this workflow">
                 <i-tabler name="player-play" class="!size-4" />
               </p-button>
+              <a
+                [routerLink]="['/repo', repositoryId(), 'ci-cd', 'runs', runId(), 'logs']"
+                class="inline-flex items-center gap-2 rounded-md border border-surface-300 px-3 py-2 text-sm font-semibold text-color transition-colors hover:bg-surface-100 dark:border-surface-600 dark:hover:bg-surface-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-400 focus-visible:outline-offset-2"
+                aria-label="View workflow logs"
+              >
+                <i-tabler name="file-text" class="!size-4" />
+                <span>Open Workflow Logs</span>
+              </a>
             }
           }
           <app-github-link-button [url]="run()?.htmlUrl" label="Open on GitHub" />

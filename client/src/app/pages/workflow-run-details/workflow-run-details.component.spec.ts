@@ -89,4 +89,43 @@ describe('WorkflowRunDetailsComponent', () => {
     const jobList = hostElement.querySelector('app-workflow-job-list');
     expect(jobList).toBeTruthy();
   });
+
+  it('does not render view logs button while run is not completed', () => {
+    const hostElement: HTMLElement = fixture.nativeElement;
+    expect(hostElement.querySelector('a[aria-label="View workflow logs"]')).toBeNull();
+  });
+
+  it('renders view logs button when run is completed', async () => {
+    const completedFixture = TestBed.createComponent(WorkflowRunDetailsComponent);
+    const completedComponent = completedFixture.componentInstance;
+    completedFixture.componentRef.setInput('repositoryId', 1);
+    completedFixture.componentRef.setInput('runId', 1);
+
+    Object.defineProperty(completedComponent, 'runQuery', {
+      configurable: true,
+      value: {
+        data: () => createRun({ id: 1, conclusion: 'SUCCESS' }),
+        isPending: () => false,
+        isError: () => false,
+      },
+    });
+
+    Object.defineProperty(completedComponent, 'workflowJobsQuery', {
+      configurable: true,
+      value: {
+        data: () => ({ jobs: [] }),
+        isPending: () => false,
+        isError: () => false,
+      },
+    });
+
+    completedFixture.detectChanges();
+    await completedFixture.whenStable();
+    completedFixture.detectChanges();
+
+    const hostElement: HTMLElement = completedFixture.nativeElement;
+    const logsLink = hostElement.querySelector('a[aria-label="View workflow logs"]') as HTMLAnchorElement | null;
+    expect(logsLink).toBeTruthy();
+    expect(logsLink?.getAttribute('href')).toContain('/repo/1/ci-cd/runs/1/logs');
+  });
 });
