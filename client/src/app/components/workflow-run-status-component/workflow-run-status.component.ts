@@ -43,7 +43,6 @@ type WorkflowRunSummary = {
   templateUrl: './workflow-run-status.component.html',
 })
 export class WorkflowRunStatusComponent {
-  private readonly inProgressIconColor = 'text-yellow-500 dark:text-yellow-400';
   /**
    * Union type input: user must pass either
    * {type: 'pullRequest', pullRequestId: ...} or
@@ -134,10 +133,10 @@ export class WorkflowRunStatusComponent {
     const runs = this.workflowRuns();
 
     // Some runs are in progress --> in progress
-    if (runs.some(run => ['IN_PROGRESS', 'QUEUED', 'PENDING'].includes(run.status))) {
+    if (runs.some(run => ['IN_PROGRESS', 'QUEUED', 'WAITING', 'PENDING', 'REQUESTED'].includes(run.status))) {
       return {
         icon: 'clock',
-        color: this.inProgressIconColor,
+        color: getStatusColors(undefined, 'IN_PROGRESS').icon,
         tooltip: 'Workflow In Progress',
       };
     }

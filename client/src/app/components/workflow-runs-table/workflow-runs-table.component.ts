@@ -127,7 +127,7 @@ export class WorkflowRunsTableComponent {
       return 'danger';
     }
     if (run.conclusion === 'ACTION_REQUIRED' || run.status === 'ACTION_REQUIRED') return 'warn';
-    if (run.status === 'IN_PROGRESS') return 'info';
+    if (['IN_PROGRESS', 'QUEUED', 'WAITING', 'PENDING', 'REQUESTED'].includes(run.status ?? '')) return 'info';
     return 'secondary';
   }
 

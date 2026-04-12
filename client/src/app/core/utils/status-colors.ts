@@ -38,7 +38,7 @@ export function getStatusKey(conclusion?: string | null, status?: string | null)
   if (normalizedConclusion === 'action_required' || normalizedStatus === 'action_required') return 'warning';
   if (normalizedConclusion === 'cancelled' || normalizedConclusion === 'skipped') return 'neutral';
   if (normalizedStatus === 'in_progress') return 'in_progress';
-  if (normalizedStatus === 'queued' || normalizedStatus === 'waiting' || normalizedStatus === 'pending' || normalizedStatus === 'requested') return 'neutral';
+  if (normalizedStatus === 'queued' || normalizedStatus === 'waiting' || normalizedStatus === 'pending' || normalizedStatus === 'requested') return 'in_progress';
   return 'unknown';
 }
 
