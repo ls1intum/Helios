@@ -70,7 +70,7 @@
                     <span class="font-medium flex gap-1 items-center justify-between w-full overflow-hidden">
                       <span [pTooltip]="workflowRun.name" class="truncate">{{ workflowRun.name }}</span>
                       <span class="flex items-center gap-1">
-                        @if (!!workflowRun.id && !!repositoryId()) {
+                        @if (permissions.hasWritePermission() && !!workflowRun.id && !!repositoryId()) {
                           <a
                             [routerLink]="['/repo', repositoryId(), 'ci-cd', 'runs', workflowRun.id, 'logs']"
                             class="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-color transition-colors hover:bg-surface-100 hover:text-primary dark:hover:bg-surface-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-400 focus-visible:outline-offset-2"

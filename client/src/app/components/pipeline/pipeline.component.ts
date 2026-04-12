@@ -1,4 +1,4 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { injectQuery } from '@tanstack/angular-query-experimental';
 import { TableModule } from 'primeng/table';
@@ -16,6 +16,7 @@ import { DividerModule } from 'primeng/divider';
 import { GithubLinkButtonComponent } from '@app/components/github-link-button/github-link-button.component';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
 import { IconCircleCheck, IconCircleX, IconExclamationCircle, IconExternalLink, IconFileText, IconInfoCircle, IconProgress, IconProgressHelp } from 'angular-tabler-icons/icons';
+import { PermissionService } from '@app/core/services/permission.service';
 
 export type PipelineSelector = { repositoryId: number } & (
   | {
@@ -56,6 +57,7 @@ export interface Pipeline {
   templateUrl: './pipeline.component.html',
 })
 export class PipelineComponent {
+  protected permissions = inject(PermissionService);
   selector = input<PipelineSelector | null>();
 
   branchName = computed(() => {
