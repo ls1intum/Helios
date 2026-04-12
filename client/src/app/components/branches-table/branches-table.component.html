@@ -2,7 +2,7 @@
   <p-table [value]="[1, 2, 3, 4, 5]" styleClass="p-datatable-lg">
     <ng-template pTemplate="header">
       <tr>
-        <th>
+        <th class="min-w-[11rem] lg:min-w-[14rem]">
           <div class="flex items-center gap-2">
             <p-button type="button" outlined disabled size="small">
               <i-tabler name="filter-plus" />
@@ -10,6 +10,7 @@
             <input pInputText type="text" pSize="small" placeholder="Search" class="w-full" disabled />
           </div>
         </th>
+        <th>Name</th>
         <th>Last Update</th>
         <th class="text-center w-36 hidden md:table-cell">Behind | Ahead</th>
         <th class="w-32">Head</th>
@@ -17,7 +18,7 @@
     </ng-template>
     <ng-template pTemplate="body">
       <tr>
-        <td><p-skeleton></p-skeleton></td>
+        <td colspan="2"><p-skeleton></p-skeleton></td>
         <td><p-skeleton></p-skeleton></td>
         <td class="w-36"><p-skeleton></p-skeleton></td>
         <td class="w-32"><p-skeleton></p-skeleton></td>
@@ -43,13 +44,11 @@
   >
     <ng-template pTemplate="header">
       <tr>
+        <th class="min-w-[11rem] lg:min-w-[14rem] align-top">
+          <app-table-filter [input]="table" [searchTableService]="searchTableService" />
+        </th>
         <th [ttSortableColumn]="'name'" class="cursor-pointer">
-          <div class="flex items-center gap-2">
-            <div (click)="$event.stopPropagation()">
-              <app-table-filter [input]="table" [searchTableService]="searchTableService" />
-            </div>
-            <div class="flex items-center gap-1 flex-shrink-0">Name <p-treeTableSortIcon [field]="'name'" /></div>
-          </div>
+          <div class="flex items-center gap-1">Name <p-treeTableSortIcon [field]="'name'" /></div>
         </th>
         <th [ttSortableColumn]="'updatedAt'" class="hidden lg:table-cell cursor-pointer">
           <div class="flex items-center gap-1">Last Update <p-treeTableSortIcon [field]="'updatedAt'" /></div>
@@ -62,7 +61,7 @@
     <ng-template pTemplate="body" let-rowNode let-branch="rowData">
       <tr [class]="branch.isPinned ? 'bg-surface-200 dark:bg-surface-800' : ''" [ttRow]="rowNode">
         @if (!rowNode.node.subheader) {
-          <td class="p-0">
+          <td class="p-0" colspan="2">
             <div class="flex flex-wrap h-full items-stretch gap-2">
               <div
                 class="flex items-center border-r-4 px-2"
@@ -111,7 +110,7 @@
             </div>
           </td>
         } @else if (rowNode.node.children.length > 0) {
-          <td>
+          <td colspan="2">
             <div class="flex flex-wrap items-end gap-2 h-10">
               <span class="font-semibold">{{ branch.name }}</span>
             </div>
@@ -161,7 +160,7 @@
 
     <ng-template pTemplate="emptymessage">
       <tr>
-        <td colspan="4">
+        <td colspan="5">
           <div class="flex flex-col gap-2 p-20 justify-center items-center">
             <i-tabler name="git-branch" class="!h-20 !w-20 text-red-600 dark:text-red-400" />
             <span class="font-semibold text-xl">There are no branches found matching your filter criteria.</span>
