@@ -111,22 +111,32 @@ public interface WorkflowRunRepository
 
   /**
    * Finds stale workflow runs in non-terminal states and eagerly fetches their repository to avoid
-   * lazy-loading issues during reconciliation.
+   * lazy-loading issues during reconciliation, using keyset pagination.
    *
    * @param threshold stale threshold for updatedAt/createdAt
    * @param statuses incomplete statuses to reconcile
+   * @param cursorTime cursor timestamp of the last processed row (exclusive), nullable for the
+   *     first page
+   * @param cursorId cursor id of the last processed row (exclusive tie-breaker)
    * @param pageable limits the number of rows processed per reconciliation run
-   * @return stale workflow runs ordered by oldest first
+   * @return stale workflow runs ordered by oldest first using timestamp+id ordering
    */
   @Query(
       "SELECT wr FROM WorkflowRun wr "
           + "JOIN FETCH wr.repository r "
           + "WHERE wr.status IN :statuses "
           + "AND COALESCE(wr.updatedAt, wr.createdAt) < :threshold "
-          + "ORDER BY COALESCE(wr.updatedAt, wr.createdAt) ASC")
+          + "AND ("
+          + "  :cursorTime IS NULL "
+          + "  OR COALESCE(wr.updatedAt, wr.createdAt) > :cursorTime "
+          + "  OR (COALESCE(wr.updatedAt, wr.createdAt) = :cursorTime AND wr.id > :cursorId)"
+          + ") "
+          + "ORDER BY COALESCE(wr.updatedAt, wr.createdAt) ASC, wr.id ASC")
   List<WorkflowRun> findStaleIncompleteRuns(
       @Param("threshold") java.time.OffsetDateTime threshold,
       @Param("statuses") List<WorkflowRun.Status> statuses,
+      @Param("cursorTime") java.time.OffsetDateTime cursorTime,
+      @Param("cursorId") long cursorId,
       Pageable pageable);
 
   @Query(

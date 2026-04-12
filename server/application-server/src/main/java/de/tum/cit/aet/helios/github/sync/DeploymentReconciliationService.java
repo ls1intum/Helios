@@ -48,39 +48,67 @@ public class DeploymentReconciliationService {
     }
 
     OffsetDateTime threshold = OffsetDateTime.now().minusMinutes(STALE_AFTER_MINUTES);
-    List<Deployment> staleDeployments = deploymentRepository.findStaleIncompleteDeployments(
-        threshold,
-        INCOMPLETE_DEPLOYMENT_STATES,
-        PageRequest.of(0, BATCH_SIZE));
-
+    int processed = 0;
     int updated = 0;
-    for (Deployment deployment : staleDeployments) {
-      String repositoryNameWithOwner = resolveRepositoryNameWithOwner(deployment.getRepository());
-      if (repositoryNameWithOwner == null) {
-        log.warn("Skipping stale deployment {} because repository is missing.", deployment.getId());
-        continue;
+    int pages = 0;
+    OffsetDateTime cursorTime = null;
+    long cursorId = 0L;
+
+    while (true) {
+      List<Deployment> staleDeployments = deploymentRepository.findStaleIncompleteDeployments(
+          threshold,
+          INCOMPLETE_DEPLOYMENT_STATES,
+          cursorTime,
+          cursorId,
+          PageRequest.of(0, BATCH_SIZE));
+
+      if (staleDeployments.isEmpty()) {
+        break;
       }
 
-      try {
-        Optional<GitHubService.DeploymentState> remoteState =
-            gitHubService.getLatestDeploymentState(repositoryNameWithOwner, deployment.getId());
-        if (remoteState.isEmpty()) {
+      pages++;
+      processed += staleDeployments.size();
+      Deployment lastInBatch = staleDeployments.getLast();
+      OffsetDateTime nextCursorTime = getSortKey(lastInBatch);
+      long nextCursorId = lastInBatch.getId();
+
+      for (Deployment deployment : staleDeployments) {
+        String repositoryNameWithOwner = resolveRepositoryNameWithOwner(deployment.getRepository());
+        if (repositoryNameWithOwner == null) {
+          log.warn("Skipping stale deployment {} because repository is missing.",
+              deployment.getId());
           continue;
         }
 
-        if (applyDeploymentState(deployment, remoteState.get())) {
-          updated++;
+        try {
+          Optional<GitHubService.DeploymentState> remoteState =
+              gitHubService.getLatestDeploymentState(repositoryNameWithOwner, deployment.getId());
+          if (remoteState.isEmpty()) {
+            continue;
+          }
+
+          if (applyDeploymentState(deployment, remoteState.get())) {
+            updated++;
+          }
+        } catch (IOException ex) {
+          log.warn(
+              "Failed to reconcile deployment {} in repository {}: {}",
+              deployment.getId(),
+              repositoryNameWithOwner,
+              ex.getMessage());
         }
-      } catch (IOException ex) {
-        log.warn(
-            "Failed to reconcile deployment {} in repository {}: {}",
-            deployment.getId(),
-            repositoryNameWithOwner,
-            ex.getMessage());
       }
+
+      cursorTime = nextCursorTime;
+      cursorId = nextCursorId;
     }
 
-    log.info("Deployment reconciliation finished. Updated {} deployment(s).", updated);
+    log.info(
+        "Deployment reconciliation finished. Processed {} stale deployment(s) across {} page(s);"
+            + " updated {} deployment(s).",
+        processed,
+        pages,
+        updated);
   }
 
   private boolean applyDeploymentState(
@@ -158,6 +186,11 @@ public class DeploymentReconciliationService {
 
   private boolean isRemoteTimestampNewer(OffsetDateTime remote, OffsetDateTime local) {
     return remote != null && (local == null || remote.isAfter(local));
+  }
+
+  private OffsetDateTime getSortKey(Deployment deployment) {
+    return deployment.getUpdatedAt() != null
+        ? deployment.getUpdatedAt() : deployment.getCreatedAt();
   }
 
   private String resolveRepositoryNameWithOwner(GitRepository repository) {

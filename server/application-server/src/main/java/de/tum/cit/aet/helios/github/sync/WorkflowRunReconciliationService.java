@@ -48,41 +48,69 @@ public class WorkflowRunReconciliationService {
     }
 
     OffsetDateTime threshold = OffsetDateTime.now().minusMinutes(STALE_AFTER_MINUTES);
-    List<WorkflowRun> staleWorkflowRuns =
-        workflowRunRepository.findStaleIncompleteRuns(
-            threshold,
-            INCOMPLETE_WORKFLOW_STATUSES,
-            PageRequest.of(0, BATCH_SIZE));
-
+    int processed = 0;
     int updated = 0;
-    for (WorkflowRun workflowRun : staleWorkflowRuns) {
-      String repositoryNameWithOwner = resolveRepositoryNameWithOwner(workflowRun.getRepository());
-      if (repositoryNameWithOwner == null) {
-        log.warn(
-            "Skipping stale workflow run {} because repository is missing.", workflowRun.getId());
-        continue;
+    int pages = 0;
+    OffsetDateTime cursorTime = null;
+    long cursorId = 0L;
+
+    while (true) {
+      List<WorkflowRun> staleWorkflowRuns =
+          workflowRunRepository.findStaleIncompleteRuns(
+              threshold,
+              INCOMPLETE_WORKFLOW_STATUSES,
+              cursorTime,
+              cursorId,
+              PageRequest.of(0, BATCH_SIZE));
+
+      if (staleWorkflowRuns.isEmpty()) {
+        break;
       }
 
-      try {
-        Optional<GitHubService.WorkflowRunState> remoteState =
-            gitHubService.getWorkflowRunState(repositoryNameWithOwner, workflowRun.getId());
-        if (remoteState.isEmpty()) {
+      pages++;
+      processed += staleWorkflowRuns.size();
+      WorkflowRun lastInBatch = staleWorkflowRuns.getLast();
+      OffsetDateTime nextCursorTime = getSortKey(lastInBatch);
+      long nextCursorId = lastInBatch.getId();
+
+      for (WorkflowRun workflowRun : staleWorkflowRuns) {
+        String repositoryNameWithOwner =
+            resolveRepositoryNameWithOwner(workflowRun.getRepository());
+        if (repositoryNameWithOwner == null) {
+          log.warn(
+              "Skipping stale workflow run {} because repository is missing.", workflowRun.getId());
           continue;
         }
 
-        if (applyWorkflowRunState(workflowRun, remoteState.get())) {
-          updated++;
+        try {
+          Optional<GitHubService.WorkflowRunState> remoteState =
+              gitHubService.getWorkflowRunState(repositoryNameWithOwner, workflowRun.getId());
+          if (remoteState.isEmpty()) {
+            continue;
+          }
+
+          if (applyWorkflowRunState(workflowRun, remoteState.get())) {
+            updated++;
+          }
+        } catch (IOException ex) {
+          log.warn(
+              "Failed to reconcile workflow run {} in repository {}: {}",
+              workflowRun.getId(),
+              repositoryNameWithOwner,
+              ex.getMessage());
         }
-      } catch (IOException ex) {
-        log.warn(
-            "Failed to reconcile workflow run {} in repository {}: {}",
-            workflowRun.getId(),
-            repositoryNameWithOwner,
-            ex.getMessage());
       }
+
+      cursorTime = nextCursorTime;
+      cursorId = nextCursorId;
     }
 
-    log.info("Workflow run reconciliation finished. Updated {} workflow run(s).", updated);
+    log.info(
+        "Workflow run reconciliation finished. Processed {} stale workflow run(s) across {}"
+            + " page(s); updated {} workflow run(s).",
+        processed,
+        pages,
+        updated);
   }
 
   private boolean applyWorkflowRunState(
@@ -120,6 +148,11 @@ public class WorkflowRunReconciliationService {
 
   private boolean isRemoteTimestampNewer(OffsetDateTime remote, OffsetDateTime local) {
     return remote != null && (local == null || remote.isAfter(local));
+  }
+
+  private OffsetDateTime getSortKey(WorkflowRun workflowRun) {
+    return workflowRun.getUpdatedAt() != null
+        ? workflowRun.getUpdatedAt() : workflowRun.getCreatedAt();
   }
 
   private String resolveRepositoryNameWithOwner(GitRepository repository) {
