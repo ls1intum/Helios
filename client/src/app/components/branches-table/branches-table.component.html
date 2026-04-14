@@ -27,8 +27,24 @@
   </p-table>
 } @else {
   <div class="flex flex-wrap gap-2 justify-end m-2 items-center">
-    <p-button (click)="expandAll()" label="Expand All" />
-    <p-button (click)="collapseAll()" label="Collapse All" />
+    <p-button
+      (click)="expandAll()"
+      label="Expand All"
+      [style]="{
+        background: 'var(--p-treetable-header-cell-selected-background)',
+        borderColor: 'var(--p-treetable-header-cell-selected-background)',
+        color: 'var(--p-treetable-header-cell-selected-color)',
+      }"
+    />
+    <p-button
+      (click)="collapseAll()"
+      label="Collapse All"
+      [style]="{
+        background: 'var(--p-treetable-header-cell-selected-background)',
+        borderColor: 'var(--p-treetable-header-cell-selected-background)',
+        color: 'var(--p-treetable-header-cell-selected-color)',
+      }"
+    />
   </div>
   <!-- Branches Tree Table -->
   <p-treetable
