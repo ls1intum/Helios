@@ -1,3 +1,4 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, effect, inject, input, numberAttribute, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { injectMutation, injectQuery, QueryClient } from '@tanstack/angular-query-experimental';
@@ -45,6 +46,8 @@ import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
 import { IconCircleCheck, IconPencil, IconPlus, IconTrash } from 'angular-tabler-icons/icons';
 import { SecretGenerateConfirmationComponent } from '@app/components/dialogs/secret-generate-confirmation/secret-generate-confirmation.component';
 import { getStatusColors } from '@app/core/utils/status-colors';
+import { firstValueFrom } from 'rxjs';
+import { WorkflowAiService, WorkflowDeploymentJobDetectionResponse } from '@app/core/services/workflow-ai.service';
 
 @Component({
   selector: 'app-project-settings',
@@ -81,6 +84,7 @@ import { getStatusColors } from '@app/core/utils/status-colors';
 export class ProjectSettingsComponent {
   private messageService = inject(MessageService);
   private confirmationService = inject(ConfirmationService);
+  private workflowAiService = inject(WorkflowAiService);
   queryClient = inject(QueryClient);
 
   // Signals for repository ID, workflows, and workflow groups
@@ -112,6 +116,8 @@ export class ProjectSettingsComponent {
   // This is recalculated from dropdown selection/assignment  in onChangeGroup()
   // This is recalculated from drag&drop logic in updateGroups()
   workflowGroupsMap = signal<Record<number, string>>({});
+  workflowDetectionResults = signal<Record<number, WorkflowDeploymentJobDetectionResponse>>({});
+  detectingWorkflowId = signal<number | null>(null);
   readonly successIconClasses = getStatusColors('success').icon;
 
   constructor() {
@@ -287,6 +293,44 @@ export class ProjectSettingsComponent {
     },
   }));
 
+  detectDeploymentJobMutation = injectMutation(() => ({
+    mutationFn: async ({ workflowId }: { workflowId: number }) => {
+      return await firstValueFrom(this.workflowAiService.detectDeploymentJob(this.repositoryId(), workflowId));
+    },
+    onMutate: ({ workflowId }) => {
+      this.detectingWorkflowId.set(workflowId);
+    },
+    onSuccess: result => {
+      this.workflowDetectionResults.update(previous => ({ ...previous, [result.workflowId]: result }));
+    },
+    onError: error => {
+      const workflowId = this.detectingWorkflowId();
+      if (workflowId == null) {
+        return;
+      }
+
+      const detail =
+        error instanceof HttpErrorResponse
+          ? error.error?.message || error.message || 'Helios could not analyze the workflow right now.'
+          : 'Helios could not analyze the workflow right now.';
+
+      this.workflowDetectionResults.update(previous => ({
+        ...previous,
+        [workflowId]: {
+          workflowId,
+          workflowPath: '',
+          ref: '',
+          deploymentJobName: null,
+          status: 'ERROR',
+          message: detail,
+        },
+      }));
+    },
+    onSettled: () => {
+      this.detectingWorkflowId.set(null);
+    },
+  }));
+
   workflowLabelOptions = Object.values(WorkflowDtoSchema.properties.label.enum);
 
   // Deployment workflow config: per-workflow job name configuration
@@ -443,6 +487,22 @@ export class ProjectSettingsComponent {
     const repositoryId = this.repositoryId();
     if (!repositoryId) return;
     this.syncWorkflowsMutation.mutate({ path: { repositoryId } });
+  }
+
+  detectDeploymentJob(workflowId: number) {
+    this.detectDeploymentJobMutation.mutate({ workflowId });
+  }
+
+  getDetectionResult(workflowId: number) {
+    return this.workflowDetectionResults()[workflowId];
+  }
+
+  detectionResultClass(result: WorkflowDeploymentJobDetectionResponse | undefined) {
+    if (!result) {
+      return 'text-muted-color';
+    }
+
+    return result.status === 'FOUND' ? 'text-green-600 dark:text-green-400' : 'text-muted-color';
   }
 
   // Update the groups on the server

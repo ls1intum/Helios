@@ -19,8 +19,10 @@ import java.io.BufferedReader;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -30,6 +32,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import okhttp3.HttpUrl;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -161,6 +164,65 @@ public class GitHubService {
   public GHWorkflow getWorkflow(String repoNameWithOwners, String workflowFileNameOrId)
       throws IOException {
     return getRepository(repoNameWithOwners).getWorkflow(workflowFileNameOrId);
+  }
+
+  /**
+   * Retrieves the content of a repository file for a specific ref.
+   *
+   * @param repoNameWithOwner the repository name with owner
+   * @param path the path to the file in the repository
+   * @param ref the branch, tag, or SHA to read from
+   * @return the decoded file content
+   * @throws IOException if an I/O error occurs
+   */
+  public String getRepositoryFileContent(String repoNameWithOwner, String path, String ref)
+      throws IOException {
+    String[] repositoryParts = repoNameWithOwner.split("/", 2);
+    if (repositoryParts.length != 2) {
+      throw new IOException("Repository name must be in the form owner/repo");
+    }
+
+    String normalizedPath = path.replaceFirst("^/+", "");
+    HttpUrl url =
+        new HttpUrl.Builder()
+            .scheme("https")
+            .host("api.github.com")
+            .addPathSegment("repos")
+            .addPathSegment(repositoryParts[0])
+            .addPathSegment(repositoryParts[1])
+            .addPathSegment("contents")
+            .addEncodedPathSegments(normalizedPath)
+            .addQueryParameter("ref", ref)
+            .build();
+
+    Request request =
+        getRequestBuilder()
+            .header("X-GitHub-Api-Version", GITHUB_API_VERSION)
+            .url(url)
+            .get()
+            .build();
+
+    try (Response response = okHttpClient.newCall(request).execute()) {
+      if (!response.isSuccessful()) {
+        handleErrorResponse(response, "fetch repository file " + normalizedPath);
+      }
+
+      ResponseBody responseBody = response.body();
+      if (responseBody == null) {
+        throw new IOException("GitHub returned an empty response body");
+      }
+
+      var contentResponse = objectMapper.readTree(responseBody.string());
+      String encoding = contentResponse.path("encoding").asText();
+      String encodedContent = contentResponse.path("content").asText();
+
+      if (!"base64".equalsIgnoreCase(encoding) || encodedContent.isBlank()) {
+        throw new IOException("GitHub returned unsupported or empty content for " + normalizedPath);
+      }
+
+      return new String(
+          Base64.getMimeDecoder().decode(encodedContent), StandardCharsets.UTF_8);
+    }
   }
 
   /**

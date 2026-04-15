@@ -195,7 +195,25 @@
             </p-select>
           </td>
           <td>
-            <p-button label="Configure" size="small" severity="secondary" (click)="openDeploymentConfig(workflow)" />
+            <div class="flex flex-col items-start gap-2">
+              <p-button label="Configure" size="small" severity="secondary" (click)="openDeploymentConfig(workflow)" />
+              <p-button
+                label="Detect Deployment Job"
+                size="small"
+                severity="secondary"
+                [loading]="detectingWorkflowId() === workflow.id && detectDeploymentJobMutation.isPending()"
+                (click)="detectDeploymentJob(workflow.id)"
+              />
+              @if (getDetectionResult(workflow.id); as detectionResult) {
+                <small [class]="detectionResultClass(detectionResult)">
+                  @if (detectionResult.status === 'FOUND' && detectionResult.deploymentJobName) {
+                    Deployment job: {{ detectionResult.deploymentJobName }}
+                  } @else {
+                    {{ detectionResult.message }}
+                  }
+                </small>
+              }
+            </div>
           </td>
         </tr>
       </ng-template>
