@@ -53,15 +53,20 @@ public class WorkflowRunReconciliationService {
     int pages = 0;
     OffsetDateTime cursorTime = null;
     long cursorId = 0L;
+    boolean firstPage = true;
+    PageRequest batchRequest = PageRequest.of(0, BATCH_SIZE);
 
     while (true) {
       List<WorkflowRun> staleWorkflowRuns =
-          workflowRunRepository.findStaleIncompleteRuns(
-              threshold,
-              INCOMPLETE_WORKFLOW_STATUSES,
-              cursorTime,
-              cursorId,
-              PageRequest.of(0, BATCH_SIZE));
+          firstPage
+              ? workflowRunRepository.findStaleIncompleteRunsFirstPage(
+                  threshold, INCOMPLETE_WORKFLOW_STATUSES, batchRequest)
+              : workflowRunRepository.findStaleIncompleteRunsAfterCursor(
+                  threshold,
+                  INCOMPLETE_WORKFLOW_STATUSES,
+                  cursorTime,
+                  cursorId,
+                  batchRequest);
 
       if (staleWorkflowRuns.isEmpty()) {
         break;
@@ -69,9 +74,6 @@ public class WorkflowRunReconciliationService {
 
       pages++;
       processed += staleWorkflowRuns.size();
-      WorkflowRun lastInBatch = staleWorkflowRuns.getLast();
-      OffsetDateTime nextCursorTime = getSortKey(lastInBatch);
-      long nextCursorId = lastInBatch.getId();
 
       for (WorkflowRun workflowRun : staleWorkflowRuns) {
         String repositoryNameWithOwner =
@@ -101,8 +103,13 @@ public class WorkflowRunReconciliationService {
         }
       }
 
+      WorkflowRun lastInBatch = staleWorkflowRuns.getLast();
+      OffsetDateTime nextCursorTime = getSortKey(lastInBatch);
+      long nextCursorId = lastInBatch.getId();
+
       cursorTime = nextCursorTime;
       cursorId = nextCursorId;
+      firstPage = false;
     }
 
     log.info(

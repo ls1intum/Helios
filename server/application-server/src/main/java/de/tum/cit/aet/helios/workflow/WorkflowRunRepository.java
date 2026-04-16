@@ -110,13 +110,31 @@ public interface WorkflowRunRepository
       @Param("head") String headCommit);
 
   /**
-   * Finds stale workflow runs in non-terminal states and eagerly fetches their repository to avoid
-   * lazy-loading issues during reconciliation, using keyset pagination.
+   * Finds the first page of stale workflow runs in non-terminal states and eagerly fetches their
+   * repository to avoid lazy-loading issues during reconciliation.
    *
    * @param threshold stale threshold for updatedAt/createdAt
    * @param statuses incomplete statuses to reconcile
-   * @param cursorTime cursor timestamp of the last processed row (exclusive), nullable for the
-   *     first page
+   * @param pageable limits the number of rows processed per reconciliation run
+   * @return stale workflow runs ordered by oldest first using timestamp+id ordering
+   */
+  @Query(
+      "SELECT wr FROM WorkflowRun wr "
+          + "JOIN FETCH wr.repository r "
+          + "WHERE wr.status IN :statuses "
+          + "AND COALESCE(wr.updatedAt, wr.createdAt) < :threshold "
+          + "ORDER BY COALESCE(wr.updatedAt, wr.createdAt) ASC, wr.id ASC")
+  List<WorkflowRun> findStaleIncompleteRunsFirstPage(
+      @Param("threshold") java.time.OffsetDateTime threshold,
+      @Param("statuses") List<WorkflowRun.Status> statuses,
+      Pageable pageable);
+
+  /**
+   * Finds stale workflow runs in non-terminal states after the given keyset cursor.
+   *
+   * @param threshold stale threshold for updatedAt/createdAt
+   * @param statuses incomplete statuses to reconcile
+   * @param cursorTime cursor timestamp of the last processed row (exclusive)
    * @param cursorId cursor id of the last processed row (exclusive tie-breaker)
    * @param pageable limits the number of rows processed per reconciliation run
    * @return stale workflow runs ordered by oldest first using timestamp+id ordering
@@ -127,12 +145,11 @@ public interface WorkflowRunRepository
           + "WHERE wr.status IN :statuses "
           + "AND COALESCE(wr.updatedAt, wr.createdAt) < :threshold "
           + "AND ("
-          + "  :cursorTime IS NULL "
-          + "  OR COALESCE(wr.updatedAt, wr.createdAt) > :cursorTime "
+          + "  COALESCE(wr.updatedAt, wr.createdAt) > :cursorTime "
           + "  OR (COALESCE(wr.updatedAt, wr.createdAt) = :cursorTime AND wr.id > :cursorId)"
           + ") "
           + "ORDER BY COALESCE(wr.updatedAt, wr.createdAt) ASC, wr.id ASC")
-  List<WorkflowRun> findStaleIncompleteRuns(
+  List<WorkflowRun> findStaleIncompleteRunsAfterCursor(
       @Param("threshold") java.time.OffsetDateTime threshold,
       @Param("statuses") List<WorkflowRun.Status> statuses,
       @Param("cursorTime") java.time.OffsetDateTime cursorTime,
