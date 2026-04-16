@@ -52,8 +52,14 @@ cleanup:
 notification:
     enabled: ${NOTIFICATIONS_ENABLED:true}
 
+reconciliation:
+    enabled: ${RECONCILIATION_ENABLED:true}
+    deployments:
+        cron: "${RECONCILIATION_DEPLOYMENTS_CRON:0 */15 * * * *}"
+    workflow-runs:
+        cron: "${RECONCILIATION_WORKFLOW_RUNS_CRON:0 7/15 * * * *}"
 recovery:
-    stuck-deployments:
+    orphan-helios-deployments:
         cron: "0 0 * * * *"
 
 helios:
