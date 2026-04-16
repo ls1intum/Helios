@@ -1,7 +1,6 @@
 package de.tum.cit.aet.helios.github.sync;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -59,9 +58,13 @@ class WorkflowRunReconciliationServiceTest {
     OffsetDateTime remoteUpdatedAt = OffsetDateTime.now();
 
     when(
-            workflowRunRepository.findStaleIncompleteRuns(
-                any(), anyList(), any(), anyLong(), any(Pageable.class)))
-        .thenReturn(List.of(workflowRun), List.of());
+        workflowRunRepository.findStaleIncompleteRunsFirstPage(
+            any(), anyList(), any(Pageable.class)))
+        .thenReturn(List.of(workflowRun));
+    when(
+        workflowRunRepository.findStaleIncompleteRunsAfterCursor(
+            any(), anyList(), any(), anyLong(), any(Pageable.class)))
+        .thenReturn(List.of());
     when(gitHubService.getWorkflowRunState("owner/repo", 1001L))
         .thenReturn(
             Optional.of(new GitHubService.WorkflowRunState(
@@ -74,8 +77,11 @@ class WorkflowRunReconciliationServiceTest {
     assertEquals(remoteUpdatedAt, workflowRun.getUpdatedAt());
 
     verify(workflowRunRepository).save(workflowRun);
-    verify(workflowRunRepository, times(2))
-        .findStaleIncompleteRuns(any(), anyList(), any(), anyLong(), any(Pageable.class));
+    verify(workflowRunRepository)
+        .findStaleIncompleteRunsFirstPage(any(), anyList(), any(Pageable.class));
+    verify(workflowRunRepository)
+        .findStaleIncompleteRunsAfterCursor(
+            any(), anyList(), any(), anyLong(), any(Pageable.class));
   }
 
   @Test
@@ -99,12 +105,13 @@ class WorkflowRunReconciliationServiceTest {
     OffsetDateTime remoteUpdatedAt = OffsetDateTime.now();
 
     when(
-            workflowRunRepository.findStaleIncompleteRuns(
+            workflowRunRepository.findStaleIncompleteRunsFirstPage(
+                any(), anyList(), any(Pageable.class)))
+        .thenReturn(List.of(unresolvableWorkflowRun));
+    when(
+            workflowRunRepository.findStaleIncompleteRunsAfterCursor(
                 any(), anyList(), any(), anyLong(), any(Pageable.class)))
-        .thenReturn(
-            List.of(unresolvableWorkflowRun),
-            List.of(reconcilableWorkflowRun),
-            List.of());
+        .thenReturn(List.of(reconcilableWorkflowRun), List.of());
     when(gitHubService.getWorkflowRunState("owner/repo", 2002L))
         .thenReturn(
             Optional.of(new GitHubService.WorkflowRunState(
@@ -117,8 +124,11 @@ class WorkflowRunReconciliationServiceTest {
         WorkflowRun.Conclusion.SUCCESS, reconcilableWorkflowRun.getConclusion().orElse(null));
     assertEquals(remoteUpdatedAt, reconcilableWorkflowRun.getUpdatedAt());
     verify(workflowRunRepository).save(reconcilableWorkflowRun);
-    verify(workflowRunRepository, times(3))
-        .findStaleIncompleteRuns(any(), anyList(), any(), anyLong(), any(Pageable.class));
+    verify(workflowRunRepository)
+        .findStaleIncompleteRunsFirstPage(any(), anyList(), any(Pageable.class));
+    verify(workflowRunRepository, times(2))
+        .findStaleIncompleteRunsAfterCursor(
+            any(), anyList(), any(), anyLong(), any(Pageable.class));
   }
 
   @Test
@@ -141,9 +151,14 @@ class WorkflowRunReconciliationServiceTest {
     second.setStatus(WorkflowRun.Status.IN_PROGRESS);
     second.setUpdatedAt(secondTs);
 
-    when(workflowRunRepository.findStaleIncompleteRuns(
-        any(), anyList(), any(), anyLong(), any(Pageable.class)))
-        .thenReturn(List.of(first), List.of(second), List.of());
+    when(
+            workflowRunRepository.findStaleIncompleteRunsFirstPage(
+                any(), anyList(), any(Pageable.class)))
+        .thenReturn(List.of(first));
+    when(
+            workflowRunRepository.findStaleIncompleteRunsAfterCursor(
+                any(), anyList(), any(), anyLong(), any(Pageable.class)))
+        .thenReturn(List.of(second), List.of());
     when(gitHubService.getWorkflowRunState("owner/repo", 3001L))
         .thenReturn(
             Optional.of(new GitHubService.WorkflowRunState(
@@ -157,27 +172,32 @@ class WorkflowRunReconciliationServiceTest {
 
     ArgumentCaptor<OffsetDateTime> cursorTimeCaptor = ArgumentCaptor.forClass(OffsetDateTime.class);
     ArgumentCaptor<Long> cursorIdCaptor = ArgumentCaptor.forClass(Long.class);
-    ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+    ArgumentCaptor<Pageable> firstPageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+    ArgumentCaptor<Pageable> cursorPageableCaptor = ArgumentCaptor.forClass(Pageable.class);
 
-    verify(workflowRunRepository, times(3))
-        .findStaleIncompleteRuns(
-            any(), anyList(), cursorTimeCaptor.capture(), cursorIdCaptor.capture(),
-            pageableCaptor.capture());
+    verify(workflowRunRepository)
+        .findStaleIncompleteRunsFirstPage(
+            any(), anyList(), firstPageableCaptor.capture());
+    verify(workflowRunRepository, times(2))
+        .findStaleIncompleteRunsAfterCursor(
+            any(),
+            anyList(),
+            cursorTimeCaptor.capture(),
+            cursorIdCaptor.capture(),
+            cursorPageableCaptor.capture());
 
     List<OffsetDateTime> cursorTimes = cursorTimeCaptor.getAllValues();
-    assertNull(cursorTimes.get(0));
-    assertEquals(firstTs, cursorTimes.get(1));
-    assertEquals(secondTs, cursorTimes.get(2));
+    assertEquals(firstTs.plusMinutes(1), cursorTimes.get(0));
+    assertEquals(secondTs.plusMinutes(1), cursorTimes.get(1));
 
     List<Long> cursorIds = cursorIdCaptor.getAllValues();
-    assertEquals(0L, cursorIds.get(0));
-    assertEquals(3001L, cursorIds.get(1));
-    assertEquals(3002L, cursorIds.get(2));
+    assertEquals(3001L, cursorIds.get(0));
+    assertEquals(3002L, cursorIds.get(1));
 
-    List<Pageable> pageableList = pageableCaptor.getAllValues();
-    assertEquals(0, pageableList.get(0).getPageNumber());
-    assertEquals(0, pageableList.get(1).getPageNumber());
-    assertEquals(0, pageableList.get(2).getPageNumber());
+    assertEquals(0, firstPageableCaptor.getValue().getPageNumber());
+    List<Pageable> cursorPageables = cursorPageableCaptor.getAllValues();
+    assertEquals(0, cursorPageables.get(0).getPageNumber());
+    assertEquals(0, cursorPageables.get(1).getPageNumber());
   }
 
   @Test

@@ -53,14 +53,16 @@ public class DeploymentReconciliationService {
     int pages = 0;
     OffsetDateTime cursorTime = null;
     long cursorId = 0L;
+    boolean firstPage = true;
+    PageRequest batchRequest = PageRequest.of(0, BATCH_SIZE);
 
     while (true) {
-      List<Deployment> staleDeployments = deploymentRepository.findStaleIncompleteDeployments(
-          threshold,
-          INCOMPLETE_DEPLOYMENT_STATES,
-          cursorTime,
-          cursorId,
-          PageRequest.of(0, BATCH_SIZE));
+      List<Deployment> staleDeployments =
+          firstPage
+              ? deploymentRepository.findStaleIncompleteDeploymentsFirstPage(
+                  threshold, INCOMPLETE_DEPLOYMENT_STATES, batchRequest)
+              : deploymentRepository.findStaleIncompleteDeploymentsAfterCursor(
+                  threshold, INCOMPLETE_DEPLOYMENT_STATES, cursorTime, cursorId, batchRequest);
 
       if (staleDeployments.isEmpty()) {
         break;
@@ -68,9 +70,6 @@ public class DeploymentReconciliationService {
 
       pages++;
       processed += staleDeployments.size();
-      Deployment lastInBatch = staleDeployments.getLast();
-      OffsetDateTime nextCursorTime = getSortKey(lastInBatch);
-      long nextCursorId = lastInBatch.getId();
 
       for (Deployment deployment : staleDeployments) {
         String repositoryNameWithOwner = resolveRepositoryNameWithOwner(deployment.getRepository());
@@ -99,8 +98,13 @@ public class DeploymentReconciliationService {
         }
       }
 
+      Deployment lastInBatch = staleDeployments.getLast();
+      OffsetDateTime nextCursorTime = getSortKey(lastInBatch);
+      long nextCursorId = lastInBatch.getId();
+
       cursorTime = nextCursorTime;
       cursorId = nextCursorId;
+      firstPage = false;
     }
 
     log.info(
