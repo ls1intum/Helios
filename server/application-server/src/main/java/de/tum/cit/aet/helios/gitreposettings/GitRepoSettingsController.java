@@ -90,7 +90,7 @@ public class GitRepoSettingsController {
   public ResponseEntity<DeploymentWorkflowConfigDto> getDeploymentWorkflowConfig(
       @PathVariable Long repositoryId, @PathVariable Long workflowId) {
     return deploymentWorkflowConfigService
-        .findByWorkflowId(workflowId)
+        .findByWorkflowId(repositoryId, workflowId)
         .map(ResponseEntity::ok)
         .orElse(ResponseEntity.notFound().build());
   }
