@@ -14,9 +14,10 @@ public class DeploymentWorkflowConfigService {
   private final DeploymentWorkflowConfigRepository configRepository;
   private final WorkflowRepository workflowRepository;
 
-  public Optional<DeploymentWorkflowConfigDto> findByWorkflowId(Long workflowId) {
-    return configRepository.findByWorkflowId(workflowId)
-        .map(DeploymentWorkflowConfigDto::fromConfig);
+  public Optional<DeploymentWorkflowConfigDto> findByWorkflowId(
+      Long repositoryId, Long workflowId) {
+    Workflow workflow = findWorkflowInRepository(repositoryId, workflowId);
+    return configRepository.findByWorkflow(workflow).map(DeploymentWorkflowConfigDto::fromConfig);
   }
 
   public Optional<DeploymentWorkflowConfig> findConfigByWorkflow(Workflow workflow) {
@@ -26,6 +27,17 @@ public class DeploymentWorkflowConfigService {
   @Transactional
   public DeploymentWorkflowConfigDto upsert(
       Long repositoryId, Long workflowId, DeploymentWorkflowConfigDto dto) {
+    Workflow workflow = findWorkflowInRepository(repositoryId, workflowId);
+    DeploymentWorkflowConfig config =
+        configRepository.findByWorkflow(workflow).orElseGet(DeploymentWorkflowConfig::new);
+
+    config.setWorkflow(workflow);
+    config.setDeployJobName(dto.deployJobName());
+
+    return DeploymentWorkflowConfigDto.fromConfig(configRepository.save(config));
+  }
+
+  private Workflow findWorkflowInRepository(Long repositoryId, Long workflowId) {
     Workflow workflow =
         workflowRepository
             .findById(workflowId)
@@ -37,12 +49,6 @@ public class DeploymentWorkflowConfigService {
           "Workflow " + workflowId + " does not belong to repository " + repositoryId);
     }
 
-    DeploymentWorkflowConfig config =
-        configRepository.findByWorkflow(workflow).orElseGet(DeploymentWorkflowConfig::new);
-
-    config.setWorkflow(workflow);
-    config.setDeployJobName(dto.deployJobName());
-
-    return DeploymentWorkflowConfigDto.fromConfig(configRepository.save(config));
+    return workflow;
   }
 }

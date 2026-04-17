@@ -118,20 +118,11 @@ public class EnvironmentService {
   }
 
   /**
-   * Finds the "latest" deployment for the given environment by considering: 1) The most recent
-   * HeliosDeployment (if present), ordered by `createdAt`. 2) If the HeliosDeployment has a
-   * non-null `deploymentId`, the corresponding real Deployment is retrieved from the environment's
-   * deployments. 3) If the HeliosDeployment has a null `deploymentId`, it is treated as a
-   * placeholder. 4) If no HeliosDeployment exists, the latest real Deployment from the environment
-   * is used.
+   * Computes median build and deploy duration estimates from previous deployments for the given
+   * environment.
    *
-   * <p>The method compares the `updatedAt` timestamps of the latest HeliosDeployment and the latest
-   * real Deployment to determine which one is the most recent. It returns a wrapper object
-   * containing either the latest HeliosDeployment or the latest real Deployment.
-   *
-   * @param env The environment to search for deployments.
-   * @return A wrapper object containing the latest Deployment or HeliosDeployment, or an empty
-   *     result if no deployments exist.
+   * @param environment the environment whose duration estimates should be loaded
+   * @return a duration estimate, or {@code null} when no usable historical data exists
    */
   private DeploymentDurationEstimate computeEstimate(Environment environment) {
     List<Object[]> rows =
@@ -148,6 +139,22 @@ public class EnvironmentService {
     return new DeploymentDurationEstimate(medianBuild, medianDeploy);
   }
 
+  /**
+   * Finds the "latest" deployment for the given environment by considering: 1) The most recent
+   * HeliosDeployment (if present), ordered by `createdAt`. 2) If the HeliosDeployment has a
+   * non-null `deploymentId`, the corresponding real Deployment is retrieved from the environment's
+   * deployments. 3) If the HeliosDeployment has a null `deploymentId`, it is treated as a
+   * placeholder. 4) If no HeliosDeployment exists, the latest real Deployment from the environment
+   * is used.
+   *
+   * <p>The method compares the `updatedAt` timestamps of the latest HeliosDeployment and the latest
+   * real Deployment to determine which one is the most recent. It returns a wrapper object
+   * containing either the latest HeliosDeployment or the latest real Deployment.
+   *
+   * @param env The environment to search for deployments.
+   * @return A wrapper object containing the latest Deployment or HeliosDeployment, or an empty
+   *     result if no deployments exist.
+   */
   public LatestDeploymentUnion findLatestDeployment(Environment env) {
     // Retrieve the latest HeliosDeployment
     Optional<HeliosDeployment> latestHeliosOpt =
