@@ -2,24 +2,38 @@
   <div heading>Privacy Policy</div>
   <div description>
     <br />
-    The Research Group for Applied Education Technologies (referred to as AET in the following paragraphs) from the Technical University of Munich takes the protection of private
-    data seriously. We process automatically collected personal data obtained when you visit our website in compliance with applicable data protection regulations, in particular:
+    The Technical University of Munich and the Research Group for Applied Education Technologies (AET) take the protection of personal data seriously. Helios processes personal
+    data both when you visit this website and when you use Helios after signing in. Processing is carried out in compliance with applicable data protection regulations, in
+    particular:
     <ul class="list-disc pl-5">
       <li>The General Data Protection Regulation (GDPR)</li>
       <li>The Bavarian Data Protection Act (BayDSG), which applies to public institutions in Bavaria</li>
-      <li>The Telecommunications Telemedia Data Protection Act (TTDSG), which governs online services and the use of cookies.</li>
+      <li>The Telecommunications Digital Services Data Protection Act (TDDDG), where applicable to technically necessary browser-side storage and comparable technologies</li>
     </ul>
-    Below, we inform you about the type, scope and purpose of the collection and use of personal data.
+    Below, we inform you about the most important categories of personal data processed in Helios, the purpose of the processing and the relevant contact points.
   </div>
 </app-page-heading>
 
 <div>
   <div>
+    <h2 class="text-xl font-semibold mt-4">Purpose and legal basis for processing</h2>
+    <br />
+    <p>
+      Helios is operated to provide technical support for software-engineering and development workflows in the university context. Personal data is processed only to provide the
+      service, authenticate users, operate the system securely, troubleshoot incidents and enable optional notification features.
+    </p>
+    <br />
+    <p>
+      Unless otherwise stated, processing is carried out on the basis of the applicable public-law tasks of the Technical University of Munich and the corresponding legal obligations
+      and responsibilities under Art. 6(1)(c) and, where applicable, Art. 6(1)(e) GDPR in conjunction with the applicable university and Bavarian data protection provisions.
+    </p>
+    <br />
+
     <h2 class="text-xl font-semibold mt-4">Logging</h2>
     <br />
     <p>
-      The web servers of the AET are operated by the AET itself, based in Boltzmannstr. 3, 85748 Garching b. Munich. Every time our website is accessed, the web server temporarily
-      processes the following information in log files:
+      When Helios is accessed, the web application and backend services process technical information in log files in order to provide the service securely and reliably. This may
+      include the following information:
     </p>
     <br />
     <ul class="list-disc pl-5">
@@ -28,33 +42,72 @@
       <li>Name, URL and transferred data volume of the retrieved file</li>
       <li>Access status (requested file transferred, not found, etc.)</li>
       <li>Identification data of the browser and operating system used (if transmitted by the requesting web browser)</li>
-      <li>Web page from which access was made (if transmitted by the requesting web browser) The processing of the data in this log file can be done as follows:</li>
+      <li>Web page from which access was made (if transmitted by the requesting web browser)</li>
     </ul>
     <br />
     <p>The processing of the data in this log file takes place as follows:</p>
     <br />
     <ul class="list-disc pl-5">
-      <li>The log entries are continuously updated automatically evaluated in order to be able to detect attacks on the web server and react accordingly.</li>
+      <li>The log entries are continuously and automatically evaluated in order to detect attacks, errors and misuse and to react accordingly.</li>
       <li>In individual cases, i.e. in the case of reported disruptions, errors and security incidents, a manual analysis is carried out.</li>
-      <li>The IP addresses contained in the log entries are not merged with other databases by AET, so that no conclusions can be drawn about individual persons.</li>
+      <li>The data is not used to create personal user profiles.</li>
     </ul>
+    <br />
+    <p>
+      Helios also stores workflow run logs temporarily for troubleshooting and status analysis. These technical workflow log caches are deleted according to the configured retention
+      policy; the current default retention period is one day.
+    </p>
+    <br />
+    <p>
+      Unless statutory retention obligations require otherwise, personal data is stored only for as long as necessary to operate Helios and fulfill the respective processing purpose.
+      Technical logs and caches are deleted or overwritten as part of the configured operational retention rules.
+    </p>
+    <br />
+
+    <h2 class="text-xl font-semibold mt-4">Technical operation, cookies and recipients</h2>
+    <br />
+    <p>
+      The technical operation of Helios is carried out within the environment of the Technical University of Munich and the Research Group for Applied Education Technologies.
+      The Helios web servers are operated by AET itself at Boltzmannstraße 3, 85748 Garching b. München. In the course of operation, personal data may be processed by the
+      technical systems and services required to provide Helios securely and reliably.
+    </p>
+    <br />
+    <p>
+      Helios uses technically necessary browser-side storage and comparable session mechanisms to provide the application. This includes, for example, storing UI state in the browser.
+      If you disable such storage mechanisms, parts of the application may no longer work correctly.
+    </p>
+    <br />
+    <p>
+      Recipients or technically involved services may include the authentication infrastructure, GitHub services used by Helios, the mail delivery infrastructure for notifications and
+      the Sentry error-monitoring service hosted at <a href="https://sentry.ase.in.tum.de" class="text-primary" target="_blank" rel="noopener noreferrer">sentry.ase.in.tum.de</a>.
+    </p>
     <br />
 
     <h2 class="text-xl font-semibold mt-4">Use and transfer of personal data</h2>
     <br />
     <p>
-      Our website can be used without providing personal data. All services that might require any form of personal data (e.g. registration for events, contact forms) are offered
-      on external sites, linked here. The use of contact data published as part of the imprint obligation by third parties to send unsolicited advertising and information material
-      is hereby prohibited. The operators of the pages reserve the right to take legal action in the event of the unsolicited sending of advertising information, such as spam
-      mails.
+      Helios can be viewed publicly only to a limited extent. When you sign in, Helios authenticates you via Keycloak and processes identifiers contained in the authentication
+      token, in particular your user ID, GitHub ID and GitHub username. To provide Helios features, the application stores GitHub profile data associated with your account, such as
+      your login, display name, avatar URL, profile URL and, if available from GitHub, profile fields such as company, blog, location and email address.
+    </p>
+    <br />
+    <p>
+      If you use the settings page, Helios also stores the notification email address entered by you and your notification preferences. In addition, the frontend stores technical
+      UI settings in your browser that are required for a consistent user experience, for example the expanded or collapsed state of the sidebar.
+    </p>
+    <br />
+    <p>
+      Personal data is processed only to provide, operate, secure and improve Helios. Data is not sold and is not used for advertising. Data may be transferred to the technical
+      services required to operate Helios only to the extent necessary for the respective function.
     </p>
     <br />
 
-    <h2 class="text-xl font-semibold mt-4">Revocation of your consent to data processing</h2>
+    <h2 class="text-xl font-semibold mt-4">Voluntary information and consent</h2>
     <br />
     <p>
-      Some data processing operations require your express consent possible. You can revoke your consent that you have already given at any time. A message bye-mail is sufficient
-      for the revocation. The lawfulness of the data processing that took place up until the revocation remains unaffected by the revocation.
+      Some information is provided by you voluntarily, in particular a notification email address that you enter yourself or information that you send to us by email. You can change
+      or remove such information within Helios where the application provides this functionality. Where processing is based on consent, you may revoke that consent at any time with
+      effect for the future. The lawfulness of the processing carried out before the revocation remains unaffected.
     </p>
     <br />
 
@@ -92,17 +145,18 @@
     <br />
     <p>
       You have at any time within the framework of the applicable legal provisions the right to request information about your stored personal data, the origin of the data, its
-      recipient and the purpose of the data processing, and if necessary, a right to correction, blocking or deletion of this data. You can contact us at any time via
-      <a href="mailto:krusche@tum.de" class="text-primary">krusche&#64;tum.de</a> regarding this and other questions on the subject of personal data.
+      recipient and the purpose of the data processing, and if necessary, a right to correction, blocking or deletion of this data. You can contact the Helios project team at any
+      time via <a href="mailto:krusche@tum.de" class="text-primary">krusche&#64;tum.de</a> or the official TUM data protection officer via
+      <a href="mailto:beauftragter@datenschutz.tum.de" class="text-primary">beauftragter&#64;datenschutz.tum.de</a> regarding this and other questions on the subject of personal
+      data.
     </p>
     <br />
 
     <h2 class="text-xl font-semibold mt-4">SSL/TLS encryption</h2>
     <br />
     <p>
-      For security reasons and to protect the transmission of confidential content that you send to us send as a site operator, our website uses an SSL/TLS encryption. This means
-      that data that you transmit via this website cannot be read by third parties. You can recognize an encrypted connection by the"https://" address line in your browser and by
-      the lock symbol in the browser line.
+      For security reasons and to protect the transmission of confidential content, Helios uses SSL/TLS encryption. This means that data transmitted via this website cannot be read by
+      third parties during transport. You can recognize an encrypted connection by the "https://" address in your browser and by the lock symbol in the browser interface.
     </p>
     <br />
 
@@ -117,10 +171,24 @@
     <h2 class="text-xl font-semibold mt-4">Name and contact details of the person responsible</h2>
     <br />
     <p>
+      Controller:<br />
       Technical University of Munich<br />
-      Postal address: Prof. Dr. Stephan Krusche (CIT–I1) Boltzmannstraße 3 85748 Garching b. München<br />
-      Office: <a href="https://nav.tum.de/room/5607.01.044" class="text-primary" target="_blank">01.07.044</a><br />
-      E-mail: <a href="mailto:krusche@tum.de" class="text-primary">krusche&#64;tum.de</a><br />
+      Arcisstraße 21<br />
+      80333 Munich<br />
+      Email: <a href="mailto:poststelle@tum.de" class="text-primary">poststelle&#64;tum.de</a><br />
+      <br />
+      Operational contact for Helios:<br />
+      Prof. Dr. Stephan Krusche (CIT–I1)<br />
+      Boltzmannstraße 3<br />
+      85748 Garching b. München<br />
+      Office: <a href="https://nav.tum.de/room/5607.01.044" class="text-primary" target="_blank" rel="noopener noreferrer">01.07.044</a><br />
+      Email: <a href="mailto:krusche@tum.de" class="text-primary">krusche&#64;tum.de</a><br />
+      <br />
+      Official data protection officer of the Technical University of Munich:<br />
+      Dr. Fabian Franzen<br />
+      Datenschutzbüro, Boltzmannstraße 3, 85748 Garching<br />
+      Email: <a href="mailto:beauftragter@datenschutz.tum.de" class="text-primary">beauftragter&#64;datenschutz.tum.de</a><br />
+      Website: <a href="https://www.datenschutz.tum.de/en/datenschutz/der-datenschutzbeauftragte/" class="text-primary" target="_blank" rel="noopener noreferrer">www.datenschutz.tum.de</a><br />
     </p>
     <br />
   </div>
