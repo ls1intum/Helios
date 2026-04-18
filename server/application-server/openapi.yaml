@@ -94,6 +94,73 @@ paths:
                 $ref: "#/components/schemas/ApiError"
         "204":
           description: No Content
+  /api/settings/{repositoryId}/workflows/{workflowId}/deployment-config:
+    get:
+      tags:
+      - git-repo-settings-controller
+      operationId: getDeploymentWorkflowConfig
+      parameters:
+      - name: repositoryId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: workflowId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeploymentWorkflowConfigDto"
+    put:
+      tags:
+      - git-repo-settings-controller
+      operationId: upsertDeploymentWorkflowConfig
+      parameters:
+      - name: repositoryId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: workflowId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeploymentWorkflowConfigDto"
+        required: true
+      responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeploymentWorkflowConfigDto"
   /api/settings/{repositoryId}/settings:
     get:
       tags:
@@ -2254,6 +2321,14 @@ components:
       - artifactName
       - name
       - workflowId
+    DeploymentWorkflowConfigDto:
+      type: object
+      properties:
+        workflowId:
+          type: integer
+          format: int64
+        deployJobName:
+          type: string
     GitRepoSettingsDto:
       type: object
       properties:
@@ -2367,6 +2442,12 @@ components:
           enum:
           - GITHUB
           - HELIOS
+        estimatedBuildDurationSeconds:
+          type: integer
+          format: int32
+        estimatedDeployDurationSeconds:
+          type: integer
+          format: int32
       required:
       - id
       - type

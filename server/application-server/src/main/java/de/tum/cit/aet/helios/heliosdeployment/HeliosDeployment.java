@@ -96,6 +96,12 @@ public class HeliosDeployment {
   @JoinColumn(name = "pull_request_id")
   private PullRequest pullRequest;
 
+  @Column(name = "build_duration_seconds")
+  private Integer buildDurationSeconds;
+
+  @Column(name = "deploy_duration_seconds")
+  private Integer deployDurationSeconds;
+
   // Enum to represent deployment status
   public enum Status {
     /** Deployment called and waiting GitHub webhook listener. */

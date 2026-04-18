@@ -1,6 +1,8 @@
 package de.tum.cit.aet.helios.gitreposettings;
 
 import de.tum.cit.aet.helios.config.security.annotations.EnforceAtLeastMaintainer;
+import de.tum.cit.aet.helios.deployment.DeploymentWorkflowConfigDto;
+import de.tum.cit.aet.helios.deployment.DeploymentWorkflowConfigService;
 import de.tum.cit.aet.helios.gitreposettings.secret.RepoSecretService;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -26,6 +28,7 @@ public class GitRepoSettingsController {
   private final WorkflowGroupService workflowGroupService;
   private final GitRepoSettingsService gitRepoSettingsService;
   private final RepoSecretService secrets;
+  private final DeploymentWorkflowConfigService deploymentWorkflowConfigService;
 
   @GetMapping("/settings")
   public ResponseEntity<GitRepoSettingsDto> getGitRepoSettings(@PathVariable Long repositoryId) {
@@ -81,5 +84,25 @@ public class GitRepoSettingsController {
   public ResponseEntity<String> rotateSecret(@PathVariable Long repositoryId) {
     String token = secrets.rotate(repositoryId);
     return ResponseEntity.ok(token);
+  }
+
+  @GetMapping("/workflows/{workflowId}/deployment-config")
+  public ResponseEntity<DeploymentWorkflowConfigDto> getDeploymentWorkflowConfig(
+      @PathVariable Long repositoryId, @PathVariable Long workflowId) {
+    return deploymentWorkflowConfigService
+        .findByWorkflowId(repositoryId, workflowId)
+        .map(ResponseEntity::ok)
+        .orElse(ResponseEntity.notFound().build());
+  }
+
+  @EnforceAtLeastMaintainer
+  @PutMapping("/workflows/{workflowId}/deployment-config")
+  public ResponseEntity<DeploymentWorkflowConfigDto> upsertDeploymentWorkflowConfig(
+      @PathVariable Long repositoryId,
+      @PathVariable Long workflowId,
+      @RequestBody DeploymentWorkflowConfigDto dto) {
+    DeploymentWorkflowConfigDto result =
+        deploymentWorkflowConfigService.upsert(repositoryId, workflowId, dto);
+    return ResponseEntity.ok(result);
   }
 }

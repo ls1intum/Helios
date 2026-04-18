@@ -18,6 +18,7 @@ import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import de.tum.cit.aet.helios.gitreposettings.GitRepoSettingsDto;
 import de.tum.cit.aet.helios.gitreposettings.GitRepoSettingsService;
+import de.tum.cit.aet.helios.heliosdeployment.DeploymentDurationEstimate;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
 import de.tum.cit.aet.helios.nats.NatsNotificationPublisherService;
@@ -86,8 +87,10 @@ public class EnvironmentService {
             environment -> {
               environmentScheduler.unlockExpiredEnvironments();
               LatestDeploymentUnion latest = findLatestDeployment(environment);
+              DeploymentDurationEstimate estimate = computeEstimate(environment);
               return EnvironmentDto.fromEnvironment(
-                  environment, latest, environment.getLatestStatus(), releaseCandidateRepository);
+                  environment, latest, environment.getLatestStatus(), releaseCandidateRepository,
+                  estimate);
             })
         .collect(Collectors.toList());
   }
@@ -98,8 +101,10 @@ public class EnvironmentService {
             environment -> {
               environmentScheduler.unlockExpiredEnvironments();
               LatestDeploymentUnion latest = findLatestDeployment(environment);
+              DeploymentDurationEstimate estimate = computeEstimate(environment);
               return EnvironmentDto.fromEnvironment(
-                  environment, latest, environment.getLatestStatus(), releaseCandidateRepository);
+                  environment, latest, environment.getLatestStatus(), releaseCandidateRepository,
+                  estimate);
             })
         .collect(Collectors.toList());
   }
@@ -110,6 +115,28 @@ public class EnvironmentService {
         .stream()
         .map(EnvironmentDto::fromEnvironment)
         .collect(Collectors.toList());
+  }
+
+  /**
+   * Computes median build and deploy duration estimates from previous deployments for the given
+   * environment.
+   *
+   * @param environment the environment whose duration estimates should be loaded
+   * @return a duration estimate, or {@code null} when no usable historical data exists
+   */
+  private DeploymentDurationEstimate computeEstimate(Environment environment) {
+    List<Object[]> rows =
+        heliosDeploymentRepository.findMedianDurationsByEnvironmentId(environment.getId());
+    if (rows == null || rows.isEmpty()) {
+      return null;
+    }
+    Object[] row = rows.get(0);
+    if (row == null || row.length < 2 || row[0] == null) {
+      return null;
+    }
+    Double medianBuild = ((Number) row[0]).doubleValue();
+    Double medianDeploy = row[1] != null ? ((Number) row[1]).doubleValue() : null;
+    return new DeploymentDurationEstimate(medianBuild, medianDeploy);
   }
 
   /**

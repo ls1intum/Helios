@@ -6,6 +6,7 @@ import de.tum.cit.aet.helios.environment.status.EnvironmentStatus;
 import de.tum.cit.aet.helios.environment.status.LifecycleState;
 import de.tum.cit.aet.helios.environment.status.StatusCheckType;
 import de.tum.cit.aet.helios.gitrepo.RepositoryInfoDto;
+import de.tum.cit.aet.helios.heliosdeployment.DeploymentDurationEstimate;
 import de.tum.cit.aet.helios.releaseinfo.releasecandidate.ReleaseCandidate;
 import de.tum.cit.aet.helios.releaseinfo.releasecandidate.ReleaseCandidateRepository;
 import de.tum.cit.aet.helios.user.UserInfoDto;
@@ -82,10 +83,26 @@ public record EnvironmentDto(
       Integer pullRequestNumber,
       OffsetDateTime createdAt,
       OffsetDateTime updatedAt,
-      @NonNull DeploymentType type) {
+      @NonNull DeploymentType type,
+      Integer estimatedBuildDurationSeconds,
+      Integer estimatedDeployDurationSeconds) {
     /** Builds an EnvironmentDeployment from a LatestDeploymentUnion. */
     public static EnvironmentDeployment fromUnion(
-        LatestDeploymentUnion union, ReleaseCandidateRepository releaseCandidateRepository) {
+        LatestDeploymentUnion union,
+        ReleaseCandidateRepository releaseCandidateRepository,
+        DeploymentDurationEstimate estimate) {
+      Integer estimatedBuild = null;
+      Integer estimatedDeploy = null;
+      if (estimate != null) {
+        estimatedBuild =
+            estimate.medianBuildDurationSeconds() != null
+                ? (int) Math.round(estimate.medianBuildDurationSeconds())
+                : null;
+        estimatedDeploy =
+            estimate.medianDeployDurationSeconds() != null
+                ? (int) Math.round(estimate.medianDeployDurationSeconds())
+                : null;
+      }
       return new EnvironmentDeployment(
           union.getId(),
           union.getUrl(),
@@ -105,7 +122,9 @@ public record EnvironmentDto(
           union.getPullRequestNumber(),
           union.getCreatedAt(),
           union.getUpdatedAt(),
-          union.getType());
+          union.getType(),
+          estimatedBuild,
+          estimatedDeploy);
     }
   }
 
@@ -118,10 +137,24 @@ public record EnvironmentDto(
       LatestDeploymentUnion latestUnion,
       Optional<EnvironmentStatus> latestStatus,
       ReleaseCandidateRepository releaseCandidateRepository) {
+    return fromEnvironment(
+        environment, latestUnion, latestStatus, releaseCandidateRepository, null);
+  }
+
+  /**
+   * Main factory method that includes deployment duration estimates for the timer display.
+   */
+  public static EnvironmentDto fromEnvironment(
+      Environment environment,
+      LatestDeploymentUnion latestUnion,
+      Optional<EnvironmentStatus> latestStatus,
+      ReleaseCandidateRepository releaseCandidateRepository,
+      DeploymentDurationEstimate estimate) {
     // If union is null or none(), we won't have a 'latestDeployment'
     EnvironmentDeployment envDeployment = null;
     if (latestUnion != null && !latestUnion.isNone()) {
-      envDeployment = EnvironmentDeployment.fromUnion(latestUnion, releaseCandidateRepository);
+      envDeployment =
+          EnvironmentDeployment.fromUnion(latestUnion, releaseCandidateRepository, estimate);
     }
 
     return new EnvironmentDto(

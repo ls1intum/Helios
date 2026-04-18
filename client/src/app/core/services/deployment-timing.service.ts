@@ -133,10 +133,16 @@ export class DeploymentTimingService {
   // Get the estimated times for each step based on deployment properties
   public getEstimatedTimes(deployment: EnvironmentDeployment): EstimatedTimes {
     const prExists = deployment?.prName != null;
+    const defaultPending = prExists ? 2 : 11;
+
+    const pendingMin = deployment?.estimatedBuildDurationSeconds != null ? deployment.estimatedBuildDurationSeconds / 60 : defaultPending;
+
+    const inProgressMin = deployment?.estimatedDeployDurationSeconds != null ? deployment.estimatedDeployDurationSeconds / 60 : 4;
+
     return {
-      REQUESTED: prExists ? 2 : 11, // REQUESTED is not shown but still part of logic
-      PENDING: prExists ? 2 : 11,
-      IN_PROGRESS: 4,
+      REQUESTED: pendingMin,
+      PENDING: pendingMin,
+      IN_PROGRESS: inProgressMin,
     };
   }
 

@@ -158,6 +158,7 @@
           <th>Status</th>
           <th>Assign Group</th>
           <th>Label</th>
+          <th>Deployment Job</th>
         </tr>
       </ng-template>
       <ng-template pTemplate="body" let-workflow>
@@ -193,9 +194,37 @@
               </ng-template>
             </p-select>
           </td>
+          <td>
+            <p-button label="Configure" size="small" severity="secondary" (click)="openDeploymentConfig(workflow)" />
+          </td>
         </tr>
       </ng-template>
     </p-table>
+
+    <!-- Deployment Workflow Config Dialog -->
+    <p-dialog header="Deployment Job" [(visible)]="deploymentConfigDialogVisible" [modal]="true" [draggable]="false" [style]="{ width: '420px' }">
+      <div class="flex flex-col gap-4 p-2">
+        <div class="flex flex-col gap-1">
+          <label class="font-semibold" for="deployJobName">Deploy Job Name</label>
+          <p class="text-sm text-muted-color">
+            The GitHub Actions job name that starts the actual server deployment (e.g. <code>deploy</code>). Helios uses this job to split pre-deployment time from deployment time.
+          </p>
+          <input
+            id="deployJobName"
+            type="text"
+            pInputText
+            [ngModel]="deploymentConfigForm().deployJobName"
+            (ngModelChange)="setDeploymentConfigField('deployJobName', $event)"
+            placeholder="e.g. deploy"
+            class="w-full"
+          />
+        </div>
+        <div class="flex justify-end gap-2 mt-2">
+          <p-button label="Cancel" severity="secondary" text (click)="deploymentConfigDialogVisible = false" />
+          <p-button label="Save" (click)="saveDeploymentConfig()" [loading]="upsertDeploymentWorkflowConfigMutation.isPending()" />
+        </div>
+      </div>
+    </p-dialog>
   }
 
   <div class="flex justify-between items-center mb-2">
