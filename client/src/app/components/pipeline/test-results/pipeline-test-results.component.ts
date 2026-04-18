@@ -1,4 +1,4 @@
-import { Component, computed, input, signal, viewChild, effect, ViewChild, ElementRef } from '@angular/core';
+import { Component, computed, input, signal, viewChild, effect, ViewChild, ElementRef, inject } from '@angular/core';
 import { TableModule } from 'primeng/table';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { PanelModule } from 'primeng/panel';
@@ -42,6 +42,7 @@ import {
 } from 'angular-tabler-icons/icons';
 import { Divider } from 'primeng/divider';
 import { TestFailureAiAnalysisPanelComponent } from './ai-analysis/test-failure-ai-analysis-panel.component';
+import { PermissionService } from '@app/core/services/permission.service';
 
 // Define log level interface and constants
 interface LogLevel {
@@ -108,6 +109,7 @@ const LOG_LEVELS: LogLevel[] = [
 })
 export class PipelineTestResultsComponent {
   selector = input<PipelineSelector | null>();
+  private readonly permissionService = inject(PermissionService);
 
   testFailureAiAnalysisPanel = viewChild.required<TestFailureAiAnalysisPanelComponent>('testFailureAiAnalysisPanel');
 
@@ -252,6 +254,7 @@ export class PipelineTestResultsComponent {
 
   canAnalyzeTestFailureWithAi(testCase: TestCaseDto): boolean {
     if (!this.repositoryId()) return false;
+    if (!this.permissionService.hasWritePermission()) return false;
     return testCase.status === 'FAILED' || testCase.status === 'ERROR';
   }
 
