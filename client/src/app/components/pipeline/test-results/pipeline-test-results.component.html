@@ -227,6 +227,17 @@
                           </div>
                         </div>
 
+                        @if (canAnalyzeTestFailureWithAi(testCase)) {
+                          <button
+                            pButton
+                            type="button"
+                            label="Analyze with AI"
+                            class="p-button-text p-button-sm"
+                            (click)="analyzeTestFailureWithAi(testCase)"
+                            [disabled]="isAiAnalysisSubmitting()"
+                          ></button>
+                        }
+
                         <button
                           pButton
                           type="button"
@@ -435,6 +446,8 @@
     </div>
   }
 </p-dialog>
+
+<app-test-failure-ai-analysis-panel #testFailureAiAnalysisPanel [repositoryId]="repositoryId()"> </app-test-failure-ai-analysis-panel>
 
 <!-- Flakiness score calculation info pop-up -->
 <p-dialog [(visible)]="showFlakinessScoreInfo" [style]="{ width: '50vw' }" [modal]="true">

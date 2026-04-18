@@ -18,7 +18,9 @@ import jakarta.transaction.Transactional;
 import java.io.BufferedReader;
 import java.io.FilterInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -39,6 +41,7 @@ import okhttp3.Response;
 import okhttp3.ResponseBody;
 import org.kohsuke.github.GHArtifact;
 import org.kohsuke.github.GHCommitState;
+import org.kohsuke.github.GHContent;
 import org.kohsuke.github.GHOrganization;
 import org.kohsuke.github.GHPullRequest;
 import org.kohsuke.github.GHRelease;
@@ -124,6 +127,28 @@ public class GitHubService {
    */
   public GHRepository getRepository(String repoNameWithOwners) throws IOException {
     return github.getRepository(repoNameWithOwners);
+  }
+
+  /**
+   * Reads a text file from a repository at a specific ref.
+   *
+   * <p>Returns {@code null} if the path does not resolve to a regular file or the content cannot
+   * be read. Repository lookup failures are still propagated to the caller.
+   */
+  public String getFileContent(String repositoryNameWithOwner, String path, String ref)
+      throws IOException {
+    GHRepository repository = getRepository(repositoryNameWithOwner);
+    try {
+      GHContent content = repository.getFileContent(path, ref);
+      if (content == null || !content.isFile()) {
+        return null;
+      }
+      try (InputStream inputStream = content.read()) {
+        return new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+      }
+    } catch (IOException ex) {
+      return null;
+    }
   }
 
   /**

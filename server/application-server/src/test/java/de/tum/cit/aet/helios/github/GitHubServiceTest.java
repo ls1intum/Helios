@@ -36,6 +36,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
@@ -56,6 +57,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.kohsuke.github.GHArtifact;
 import org.kohsuke.github.GHCommitPointer;
 import org.kohsuke.github.GHCommitState;
+import org.kohsuke.github.GHContent;
 import org.kohsuke.github.GHOrganization;
 import org.kohsuke.github.GHPullRequest;
 import org.kohsuke.github.GHRelease;
@@ -181,6 +183,38 @@ class GitHubServiceTest {
 
     assertEquals(mockRepository, repository);
     verify(githubFacade).getRepository(repoNameWithOwners);
+  }
+
+  @Test
+  void getFileContentReturnsTextWhenFileExists() throws IOException {
+    GHRepository mockRepository = mock(GHRepository.class);
+    GHContent mockContent = mock(GHContent.class);
+
+    when(githubFacade.getRepository("owner/repo")).thenReturn(mockRepository);
+    when(mockRepository.getFileContent("src/test/java/AppTest.java", "abc123"))
+        .thenReturn(mockContent);
+    when(mockContent.isFile()).thenReturn(true);
+    when(mockContent.read())
+        .thenReturn(new ByteArrayInputStream("class AppTest {}".getBytes(StandardCharsets.UTF_8)));
+
+    String content =
+        gitHubService.getFileContent("owner/repo", "src/test/java/AppTest.java", "abc123");
+
+    assertEquals("class AppTest {}", content);
+  }
+
+  @Test
+  void getFileContentReturnsNullWhenFileCannotBeRead() throws IOException {
+    GHRepository mockRepository = mock(GHRepository.class);
+
+    when(githubFacade.getRepository("owner/repo")).thenReturn(mockRepository);
+    when(mockRepository.getFileContent("src/test/java/AppTest.java", "abc123"))
+        .thenThrow(new IOException("not found"));
+
+    String content =
+        gitHubService.getFileContent("owner/repo", "src/test/java/AppTest.java", "abc123");
+
+    assertNull(content);
   }
 
   @Test
