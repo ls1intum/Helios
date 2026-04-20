@@ -76,6 +76,15 @@ recovery:
         cron: "0 0 * * * *"
 
 helios:
+    ai:
+        enabled: ${HELIOS_AI_ENABLED:true}
+        default-provider: ${HELIOS_AI_DEFAULT_PROVIDER:openai}
+        providers:
+            openai:
+                enabled: ${HELIOS_AI_PROVIDER_OPENAI_ENABLED:true}
+                model: ${OPENAI_MODEL:gpt-4o-mini}
+        test-failure:
+            max-section-chars: ${HELIOS_AI_TEST_FAILURE_MAX_SECTION_CHARS:6000}
     logs:
         base-path: ${HELIOS_LOGS_BASE_PATH:/tmp/helios/workflow-logs}
         cleanup:
