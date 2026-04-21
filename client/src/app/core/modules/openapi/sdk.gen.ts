@@ -3,6 +3,9 @@
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
 import type {
+  AnalyzeFailedTestData,
+  AnalyzeFailedTestErrors,
+  AnalyzeFailedTestResponses,
   CancelDeploymentData,
   CancelDeploymentErrors,
   CancelDeploymentResponses,
@@ -450,6 +453,12 @@ export const createWorkflowGroup = <ThrowOnError extends boolean = false>(option
       'Content-Type': 'application/json',
       ...options.headers,
     },
+  });
+
+export const analyzeFailedTest = <ThrowOnError extends boolean = false>(options: Options<AnalyzeFailedTestData, ThrowOnError>) =>
+  (options.client ?? client).post<AnalyzeFailedTestResponses, AnalyzeFailedTestErrors, ThrowOnError>({
+    url: '/api/repositories/{repositoryId}/test-cases/{testCaseId}/failure-analysis',
+    ...options,
   });
 
 export const deleteReleaseCandidateByName = <ThrowOnError extends boolean = false>(options: Options<DeleteReleaseCandidateByNameData, ThrowOnError>) =>

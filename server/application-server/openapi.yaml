@@ -700,6 +700,37 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/WorkflowGroupDto"
+  /api/repositories/{repositoryId}/test-cases/{testCaseId}/failure-analysis:
+    post:
+      tags:
+      - test-failure-analysis-controller
+      operationId: analyzeFailedTest
+      parameters:
+      - name: repositoryId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: testCaseId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TestFailureAnalysisResponseDto"
   /api/release-info:
     get:
       tags:
@@ -2831,6 +2862,51 @@ components:
       - className
       - testName
       - testSuiteName
+    TestFailureAnalysisResponseDto:
+      type: object
+      properties:
+        repositoryId:
+          type: integer
+          format: int64
+        status:
+          type: string
+          enum:
+          - COMPLETED
+          - FAILED
+        result:
+          $ref: "#/components/schemas/TestFailureAnalysisResultDto"
+        errorMessage:
+          type: string
+        analyzedAt:
+          type: string
+          format: date-time
+        durationMs:
+          type: integer
+          format: int64
+    TestFailureAnalysisResultDto:
+      type: object
+      properties:
+        summary:
+          type: string
+        rootCauseHypotheses:
+          type: array
+          items:
+            type: string
+        evidence:
+          type: array
+          items:
+            type: string
+        recommendedFixes:
+          type: array
+          items:
+            type: string
+        confidence:
+          type: number
+          format: double
+        provider:
+          type: string
+        model:
+          type: string
     ReleaseCandidateCreateDto:
       type: object
       properties:

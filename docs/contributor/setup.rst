@@ -267,6 +267,9 @@ root ``.env`` file
 - ``HELIOS_LOGS_BASE_PATH``: (Optional, default: ``/tmp/helios/workflow-logs``) Base directory where Helios stores workflow logs.
 - ``HELIOS_DEVELOPERS_GITHUB_USERNAMES``: Comma-separated list of GitHub usernames that should have admin access to Helios.
 - ``NOTIFICATIONS_ENABLED``: (Optional, default: `true`) Whether to enable notifications to users
+- ``OPENAI_API_KEY``: API key for the AI provider. This is used to authenticate with the AI provider and use its services.
+- ``OPENAI_BASE_URL``: Base URL for the AI provider. For OpenAI, this should be ``https://api.openai.com/v1``. For Logos, this should be ``https://logos.aet.cit.tum.de:8080``.
+- ``OPENAI_MODEL``: Model name for the AI provider. For Logos, currently only ``openai/gpt-oss-120b`` is supported.
 
 You can configure **Helios** to work with **either** a Personal Access Token
 (``GITHUB_AUTH_TOKEN``) **or** a GitHub App. Full functionality is only available
