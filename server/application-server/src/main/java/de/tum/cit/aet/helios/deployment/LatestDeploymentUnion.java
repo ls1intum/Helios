@@ -152,7 +152,8 @@ public class LatestDeploymentUnion {
     public static State fromHeliosStatus(HeliosDeployment.Status status) {
       return switch (status) {
         case WAITING -> REQUESTED;
-        case QUEUED, IN_PROGRESS -> PENDING;
+        case QUEUED -> QUEUED;
+        case IN_PROGRESS -> PENDING;
         case DEPLOYMENT_SUCCESS -> SUCCESS;
         case FAILED -> FAILURE;
         case CANCELLED -> CANCELLED;

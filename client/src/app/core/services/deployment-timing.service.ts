@@ -11,9 +11,13 @@ interface DeploymentTimingData {
 
 interface EstimatedTimes {
   REQUESTED: number;
+  WAITING: number;
   PENDING: number;
+  QUEUED: number;
   IN_PROGRESS: number;
 }
+
+type DeploymentStep = 'PENDING' | 'IN_PROGRESS';
 
 @Injectable({
   providedIn: 'root',
@@ -25,7 +29,7 @@ export class DeploymentTimingService {
   private deploymentTimings = new Map<string, DeploymentTimingData>();
 
   // Define deployment steps
-  public readonly steps: ('PENDING' | 'IN_PROGRESS')[] = ['PENDING', 'IN_PROGRESS'];
+  public readonly steps: DeploymentStep[] = ['PENDING', 'IN_PROGRESS'];
 
   // Centralized current time that updates every second
   private _currentTime = signal<number>(Date.now());
@@ -94,21 +98,15 @@ export class DeploymentTimingService {
     if (newState !== timingData.lastKnownState) {
       const stepStartTime = this._currentTime();
       const previousState = timingData.lastKnownState;
+      const newStep = this.getStepForState(newState);
+      const previousStep = previousState ? this.getStepForState(previousState) : undefined;
 
-      // Special case: If transitioning from REQUESTED to PENDING, don't reset the timer
-      // since they're both part of the PRE-DEPLOYMENT step in the UI
-      if (previousState === 'REQUESTED' && newState === 'PENDING') {
-        // Keep the REQUESTED start time for PENDING
-        const requestedStartTime = timingData.stepStartTimes.get('REQUESTED');
-        if (requestedStartTime) {
-          timingData.stepStartTimes.set(newState, requestedStartTime);
-        } else {
-          // Fallback if there's no REQUESTED start time for some reason
-          timingData.stepStartTimes.set(newState, stepStartTime);
-        }
-      } else {
-        // Normal case: set new start time for the current state
-        timingData.stepStartTimes.set(newState, stepStartTime);
+      if (newStep && this.shouldStartStepTimer(newState)) {
+        const effectiveStartTime =
+          previousStep === newStep && previousStep
+            ? timingData.stepStartTimes.get(previousStep) || stepStartTime
+            : stepStartTime;
+        timingData.stepStartTimes.set(newStep, effectiveStartTime);
       }
 
       // If this is a terminal state, record the time
@@ -141,7 +139,9 @@ export class DeploymentTimingService {
 
     return {
       REQUESTED: pendingMin,
+      WAITING: pendingMin,
       PENDING: pendingMin,
+      QUEUED: pendingMin,
       IN_PROGRESS: inProgressMin,
     };
   }
@@ -179,14 +179,8 @@ export class DeploymentTimingService {
       return -1; // Special value to indicate no valid step found in error state
     }
 
-    const currentState = deployment.state;
-
-    // Special handling for REQUESTED state (map to PENDING in UI)
-    if (currentState === 'REQUESTED') {
-      return 0; // PENDING is now the first step in the UI
-    }
-
-    const index = this.steps.indexOf(currentState as 'PENDING' | 'IN_PROGRESS');
+    const currentStep = this.getStepForState(deployment.state);
+    const index = currentStep ? this.steps.indexOf(currentStep) : -1;
     return index !== -1 ? index : 0;
   }
 
@@ -194,7 +188,7 @@ export class DeploymentTimingService {
   public getRemainingTimeForCurrentStep(deployment: EnvironmentDeployment): number {
     if (!deployment?.state || !deployment.createdAt || !deployment.id) return 0;
 
-    const currentState = deployment.state;
+    const currentState = this.getStepForState(deployment.state) || deployment.state;
     const deploymentId = deployment.id;
 
     // Use the stored step start time or fall back to the current time
@@ -208,7 +202,7 @@ export class DeploymentTimingService {
   // Get step display name
   public getStepDisplayName(step: string): string {
     const stepMap = {
-      REQUESTED: 'PRE-DEPLOYMENT', // Map REQUESTED to PRE-DEPLOYMENT (though not shown in UI)
+      REQUESTED: 'PRE-DEPLOYMENT',
       PENDING: 'PRE-DEPLOYMENT',
       IN_PROGRESS: 'DEPLOYMENT',
     };
@@ -244,7 +238,7 @@ export class DeploymentTimingService {
     if (deployment.state === 'SUCCESS') return 100;
 
     const stepKey = this.steps[index] as keyof EstimatedTimes;
-    const currentState = deployment.state;
+    const currentState = this.getStepForState(deployment.state) || deployment.state;
     const effectiveStep = this.getCurrentEffectiveStepIndex(deployment);
     const deploymentId = deployment.id;
 
@@ -271,7 +265,7 @@ export class DeploymentTimingService {
     const elapsedMs = Math.max(0, currentTime - stepStartTime); // Ensure elapsed time is never negative
     const estimatedMs = this.getEstimatedTimes(deployment)[stepKey] * 60000;
 
-    const ratio = Math.min(elapsedMs / estimatedMs, 1);
+    const ratio = estimatedMs > 0 ? Math.min(elapsedMs / estimatedMs, 1) : 1;
     return Math.max(0, Math.floor(ratio * 100)); // Ensure we never return a negative percentage
   }
 
@@ -357,5 +351,23 @@ export class DeploymentTimingService {
         this.deploymentTimings.delete(deploymentId);
       }
     }
+  }
+
+  private getStepForState(state: string | undefined): DeploymentStep | undefined {
+    switch (state) {
+      case 'REQUESTED':
+      case 'WAITING':
+      case 'PENDING':
+      case 'QUEUED':
+        return 'PENDING';
+      case 'IN_PROGRESS':
+        return 'IN_PROGRESS';
+      default:
+        return undefined;
+    }
+  }
+
+  private shouldStartStepTimer(state: string | undefined): boolean {
+    return state === 'PENDING' || state === 'IN_PROGRESS';
   }
 }

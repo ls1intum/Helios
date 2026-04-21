@@ -63,8 +63,11 @@
               @case ('upcoming') {}
             }
           </p-tag>
-          <div class="text-sm font-medium whitespace-nowrap text-surface-500">
+          <div class="text-sm font-medium whitespace-nowrap text-surface-500 flex items-center gap-2">
             {{ getStepDisplayName(step) }}
+            @if (step === 'PENDING' && deployment()?.state === 'QUEUED') {
+              <p-tag value="Queued" severity="info" rounded styleClass="text-xs py-0 px-2" />
+            }
           </div>
         </div>
 
