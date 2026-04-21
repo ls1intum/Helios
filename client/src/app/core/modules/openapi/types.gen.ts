@@ -210,6 +210,25 @@ export type TestFlakinessScoreDto = {
   combinedFailureRate?: number;
 };
 
+export type TestFailureAnalysisResponseDto = {
+  repositoryId?: number;
+  status?: 'COMPLETED' | 'FAILED';
+  result?: TestFailureAnalysisResultDto;
+  errorMessage?: string;
+  analyzedAt?: string;
+  durationMs?: number;
+};
+
+export type TestFailureAnalysisResultDto = {
+  summary?: string;
+  rootCauseHypotheses?: Array<string>;
+  evidence?: Array<string>;
+  recommendedFixes?: Array<string>;
+  confidence?: number;
+  provider?: string;
+  model?: string;
+};
+
 export type ReleaseCandidateCreateDto = {
   name: string;
   commitSha: string;
@@ -1532,6 +1551,34 @@ export type CreateWorkflowGroupResponses = {
 };
 
 export type CreateWorkflowGroupResponse = CreateWorkflowGroupResponses[keyof CreateWorkflowGroupResponses];
+
+export type AnalyzeFailedTestData = {
+  body?: never;
+  path: {
+    repositoryId: number;
+    testCaseId: number;
+  };
+  query?: never;
+  url: '/api/repositories/{repositoryId}/test-cases/{testCaseId}/failure-analysis';
+};
+
+export type AnalyzeFailedTestErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type AnalyzeFailedTestError = AnalyzeFailedTestErrors[keyof AnalyzeFailedTestErrors];
+
+export type AnalyzeFailedTestResponses = {
+  /**
+   * OK
+   */
+  200: TestFailureAnalysisResponseDto;
+};
+
+export type AnalyzeFailedTestResponse = AnalyzeFailedTestResponses[keyof AnalyzeFailedTestResponses];
 
 export type DeleteReleaseCandidateByNameData = {
   body: ReleaseNameDto;

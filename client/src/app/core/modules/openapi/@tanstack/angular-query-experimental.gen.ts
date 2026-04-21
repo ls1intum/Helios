@@ -4,6 +4,7 @@ import { type InfiniteData, infiniteQueryOptions, type MutationOptions, queryOpt
 
 import { client } from '../client.gen';
 import {
+  analyzeFailedTest,
   cancelDeployment,
   cancelWorkflowRun,
   createReleaseCandidate,
@@ -92,6 +93,9 @@ import {
   upsertDeploymentWorkflowConfig,
 } from '../sdk.gen';
 import type {
+  AnalyzeFailedTestData,
+  AnalyzeFailedTestError,
+  AnalyzeFailedTestResponse,
   CancelDeploymentData,
   CancelDeploymentError,
   CancelDeploymentResponse,
@@ -792,6 +796,22 @@ export const createWorkflowGroupMutation = (
   const mutationOptions: MutationOptions<CreateWorkflowGroupResponse, CreateWorkflowGroupError, Options<CreateWorkflowGroupData>> = {
     mutationFn: async fnOptions => {
       const { data } = await createWorkflowGroup({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const analyzeFailedTestMutation = (
+  options?: Partial<Options<AnalyzeFailedTestData>>
+): MutationOptions<AnalyzeFailedTestResponse, AnalyzeFailedTestError, Options<AnalyzeFailedTestData>> => {
+  const mutationOptions: MutationOptions<AnalyzeFailedTestResponse, AnalyzeFailedTestError, Options<AnalyzeFailedTestData>> = {
+    mutationFn: async fnOptions => {
+      const { data } = await analyzeFailedTest({
         ...options,
         ...fnOptions,
         throwOnError: true,
