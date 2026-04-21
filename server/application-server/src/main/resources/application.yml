@@ -5,7 +5,7 @@ spring:
         import: optional:file:.env[.properties]
     ai:
         openai:
-            api-key: ${OPENAI_API_KEY:}
+            api-key: ${OPENAI_API_KEY:dummy-key}
             base-url: ${OPENAI_BASE_URL:https://api.openai.com}
             chat:
                 options:
