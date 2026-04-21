@@ -573,6 +573,33 @@ export const TestFlakinessScoreDtoSchema = {
   required: ['className', 'testName', 'testSuiteName'],
 } as const;
 
+export const WorkflowDeploymentJobDetectionDtoSchema = {
+  type: 'object',
+  properties: {
+    workflowId: {
+      type: 'integer',
+      format: 'int64',
+    },
+    workflowPath: {
+      type: 'string',
+    },
+    ref: {
+      type: 'string',
+    },
+    deploymentJobName: {
+      type: 'string',
+    },
+    status: {
+      type: 'string',
+      enum: ['FOUND', 'NOT_FOUND', 'UNCLEAR', 'ERROR'],
+    },
+    message: {
+      type: 'string',
+    },
+  },
+  required: ['message', 'ref', 'status', 'workflowId', 'workflowPath'],
+} as const;
+
 export const ReleaseCandidateCreateDtoSchema = {
   type: 'object',
   properties: {

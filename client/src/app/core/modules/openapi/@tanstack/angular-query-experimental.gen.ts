@@ -13,6 +13,7 @@ import {
   deleteTestType,
   deleteWorkflowGroup,
   deployToEnvironment,
+  detectDeploymentJob,
   evaluate,
   extendEnvironmentLock,
   generateReleaseNotes,
@@ -116,6 +117,9 @@ import type {
   DeployToEnvironmentData,
   DeployToEnvironmentError,
   DeployToEnvironmentResponse,
+  DetectDeploymentJobData,
+  DetectDeploymentJobError,
+  DetectDeploymentJobResponse,
   EvaluateData,
   EvaluateError,
   ExtendEnvironmentLockData,
@@ -680,6 +684,22 @@ export const createTestTypeMutation = (
   const mutationOptions: MutationOptions<CreateTestTypeResponse, CreateTestTypeError, Options<CreateTestTypeData>> = {
     mutationFn: async fnOptions => {
       const { data } = await createTestType({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const detectDeploymentJobMutation = (
+  options?: Partial<Options<DetectDeploymentJobData>>
+): MutationOptions<DetectDeploymentJobResponse, DetectDeploymentJobError, Options<DetectDeploymentJobData>> => {
+  const mutationOptions: MutationOptions<DetectDeploymentJobResponse, DetectDeploymentJobError, Options<DetectDeploymentJobData>> = {
+    mutationFn: async fnOptions => {
+      const { data } = await detectDeploymentJob({
         ...options,
         ...fnOptions,
         throwOnError: true,

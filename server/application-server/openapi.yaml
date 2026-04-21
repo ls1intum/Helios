@@ -644,6 +644,37 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/TestTypeDto"
+  /api/settings/{repositoryId}/workflows/{workflowId}/detect-deployment-job:
+    post:
+      tags:
+      - git-repo-settings-controller
+      operationId: detectDeploymentJob
+      parameters:
+      - name: repositoryId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: workflowId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkflowDeploymentJobDetectionDto"
   /api/settings/{repositoryId}/secret:
     post:
       tags:
@@ -2752,6 +2783,33 @@ components:
       - className
       - testName
       - testSuiteName
+    WorkflowDeploymentJobDetectionDto:
+      type: object
+      properties:
+        workflowId:
+          type: integer
+          format: int64
+        workflowPath:
+          type: string
+        ref:
+          type: string
+        deploymentJobName:
+          type: string
+        status:
+          type: string
+          enum:
+          - FOUND
+          - NOT_FOUND
+          - UNCLEAR
+          - ERROR
+        message:
+          type: string
+      required:
+      - message
+      - ref
+      - status
+      - workflowId
+      - workflowPath
     ReleaseCandidateCreateDto:
       type: object
       properties:

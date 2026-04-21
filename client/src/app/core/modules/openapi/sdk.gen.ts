@@ -30,6 +30,9 @@ import type {
   DeployToEnvironmentData,
   DeployToEnvironmentErrors,
   DeployToEnvironmentResponses,
+  DetectDeploymentJobData,
+  DetectDeploymentJobErrors,
+  DetectDeploymentJobResponses,
   EvaluateData,
   EvaluateErrors,
   EvaluateResponses,
@@ -498,6 +501,13 @@ export const createTestType = <ThrowOnError extends boolean = false>(options: Op
       'Content-Type': 'application/json',
       ...options.headers,
     },
+  });
+};
+
+export const detectDeploymentJob = <ThrowOnError extends boolean = false>(options: Options<DetectDeploymentJobData, ThrowOnError>) => {
+  return (options.client ?? client).post<DetectDeploymentJobResponses, DetectDeploymentJobErrors, ThrowOnError>({
+    url: '/api/settings/{repositoryId}/workflows/{workflowId}/detect-deployment-job',
+    ...options,
   });
 };
 

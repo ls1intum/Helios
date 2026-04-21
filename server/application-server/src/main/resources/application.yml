@@ -5,7 +5,13 @@ spring:
         import: optional:file:.env[.properties]
     ai:
         model:
+            audio:
+                speech: none
+                transcription: none
             chat: ${SPRING_AI_MODEL_CHAT:none}
+            embedding: none
+            image: none
+            moderation: none
         retry:
             exclude-on-http-codes:
                 - 520

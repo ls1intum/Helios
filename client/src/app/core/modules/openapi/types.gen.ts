@@ -186,6 +186,15 @@ export type TestFlakinessScoreDto = {
   combinedFailureRate?: number;
 };
 
+export type WorkflowDeploymentJobDetectionDto = {
+  workflowId: number;
+  workflowPath: string;
+  ref: string;
+  deploymentJobName?: string;
+  status: 'FOUND' | 'NOT_FOUND' | 'UNCLEAR' | 'ERROR';
+  message: string;
+};
+
 export type ReleaseCandidateCreateDto = {
   name: string;
   commitSha: string;
@@ -1434,6 +1443,34 @@ export type CreateTestTypeResponses = {
 };
 
 export type CreateTestTypeResponse = CreateTestTypeResponses[keyof CreateTestTypeResponses];
+
+export type DetectDeploymentJobData = {
+  body?: never;
+  path: {
+    repositoryId: number;
+    workflowId: number;
+  };
+  query?: never;
+  url: '/api/settings/{repositoryId}/workflows/{workflowId}/detect-deployment-job';
+};
+
+export type DetectDeploymentJobErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type DetectDeploymentJobError = DetectDeploymentJobErrors[keyof DetectDeploymentJobErrors];
+
+export type DetectDeploymentJobResponses = {
+  /**
+   * OK
+   */
+  200: WorkflowDeploymentJobDetectionDto;
+};
+
+export type DetectDeploymentJobResponse = DetectDeploymentJobResponses[keyof DetectDeploymentJobResponses];
 
 export type RotateSecretData = {
   body?: never;
