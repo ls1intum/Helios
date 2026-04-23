@@ -83,6 +83,8 @@ public record EnvironmentDto(
       Integer pullRequestNumber,
       OffsetDateTime createdAt,
       OffsetDateTime updatedAt,
+      OffsetDateTime deployJobStartedAt,
+      OffsetDateTime deploymentStartedAt,
       @NonNull DeploymentType type,
       Integer estimatedBuildDurationSeconds,
       Integer estimatedDeployDurationSeconds) {
@@ -122,6 +124,8 @@ public record EnvironmentDto(
           union.getPullRequestNumber(),
           union.getCreatedAt(),
           union.getUpdatedAt(),
+          union.getDeployJobStartedAt(),
+          union.getDeploymentStartedAt(),
           union.getType(),
           estimatedBuild,
           estimatedDeploy);

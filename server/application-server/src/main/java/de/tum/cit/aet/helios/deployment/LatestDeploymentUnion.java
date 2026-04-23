@@ -230,6 +230,20 @@ public class LatestDeploymentUnion {
     }
   }
 
+  public OffsetDateTime getDeployJobStartedAt() {
+    if (hasHeliosDeployment()) {
+      return heliosDeployment.getDeployJobStartedAt();
+    }
+    return null;
+  }
+
+  public OffsetDateTime getDeploymentStartedAt() {
+    if (hasHeliosDeployment()) {
+      return heliosDeployment.getDeploymentStartedAt();
+    }
+    return null;
+  }
+
   public String getPullRequestName() {
     if (isRealDeployment()) {
       return realDeployment.getPullRequest() != null
