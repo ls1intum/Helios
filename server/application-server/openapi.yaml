@@ -718,6 +718,12 @@ paths:
         schema:
           type: integer
           format: int64
+      - name: regenerate
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
       responses:
         "409":
           description: Conflict
@@ -2883,6 +2889,8 @@ components:
         durationMs:
           type: integer
           format: int64
+        cacheHit:
+          type: boolean
     TestFailureAnalysisResultDto:
       type: object
       properties:

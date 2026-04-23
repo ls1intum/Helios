@@ -678,6 +678,9 @@ export const TestFailureAnalysisResponseDtoSchema = {
       type: 'integer',
       format: 'int64',
     },
+    cacheHit: {
+      type: 'boolean',
+    },
   },
 } as const;
 

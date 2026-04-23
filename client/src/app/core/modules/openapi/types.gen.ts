@@ -216,6 +216,7 @@ export type TestFailureAnalysisResponseDto = {
   errorMessage?: string;
   analyzedAt?: string;
   durationMs?: number;
+  cacheHit?: boolean;
 };
 
 export type TestFailureAnalysisResultDto = {
@@ -1537,7 +1538,9 @@ export type AnalyzeFailedTestData = {
     repositoryId: number;
     testCaseId: number;
   };
-  query?: never;
+  query?: {
+    regenerate?: boolean;
+  };
   url: '/api/repositories/{repositoryId}/test-cases/{testCaseId}/failure-analysis';
 };
 

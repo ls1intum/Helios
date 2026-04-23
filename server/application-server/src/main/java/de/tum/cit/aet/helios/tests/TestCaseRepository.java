@@ -39,7 +39,6 @@ public interface TestCaseRepository extends JpaRepository<TestCase, Long> {
           FROM TestCase tc
           JOIN FETCH tc.testSuite ts
           JOIN FETCH ts.workflowRun wr
-          JOIN FETCH ts.testType tt
           WHERE tc.id = :testCaseId
             AND wr.repository.repositoryId = :repositoryId
           """)

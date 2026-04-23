@@ -5,31 +5,56 @@
 
   <div class="flex flex-col gap-4">
     <div class="text-sm text-muted-color">
-      @if (analyzedTestCaseName()) {
-        {{ analyzedTestCaseName() }}
+      @if (analyzedTestCase()?.name; as testCaseName) {
+        {{ testCaseName }}
       }
     </div>
 
     @if (status() === 'submitting') {
-      <div class="flex items-center gap-3 p-3 border rounded">
+      <div class="flex items-center gap-3 rounded-lg border border-surface-200 bg-surface-50 p-3 dark:border-surface-700 dark:bg-surface-900/50">
         <i-tabler name="progress" class="!size-5 animate-spin text-primary-600 dark:text-primary-300"></i-tabler>
-        <span>Analyzing failure with AI. This can take a few seconds.</span>
+        <span>{{ response()?.result ? 'Regenerating AI analysis. This can take a few seconds.' : 'Analyzing failure with AI. This can take a few seconds.' }}</span>
       </div>
     }
 
-    @if (status() === 'failed') {
-      <p-message severity="error">{{ errorMessage() || 'AI analysis failed.' }}</p-message>
+    @if (errorMessage()) {
+      <p-message severity="error">{{ errorMessage() }}</p-message>
     }
 
     @if (response()?.result; as result) {
       <div class="flex flex-col gap-4">
-        <div class="p-3 border rounded bg-surface-50 dark:bg-surface-900/50">
+        <div class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-surface-200 bg-surface-0 p-3 shadow-sm dark:border-surface-700 dark:bg-surface-900">
+          <div class="flex flex-wrap gap-2 text-xs">
+            @if (response()?.analyzedAt; as analyzedAt) {
+              <p-tag severity="secondary" [rounded]="true" [value]="'Analyzed ' + (analyzedAt | date: 'd MMM y, HH:mm:ss')"></p-tag>
+            }
+            @if (response()?.cacheHit) {
+              <p-tag severity="secondary" [rounded]="true" value="Cached result"></p-tag>
+            }
+            <p-tag severity="secondary" [rounded]="true" [value]="'Confidence: ' + formatConfidence(result.confidence)"></p-tag>
+            <p-tag severity="secondary" [rounded]="true" [value]="'Model: ' + (result.model ?? 'N/A')"></p-tag>
+          </div>
+
+          @if (canRegenerateAnalysis()) {
+            <p-button
+              label="Regenerate analysis"
+              severity="secondary"
+              [outlined]="true"
+              size="small"
+              [disabled]="isSubmitting()"
+              [loading]="isSubmitting()"
+              (click)="regenerateAnalysis()"
+            />
+          }
+        </div>
+
+        <div class="rounded-lg border border-surface-200 bg-surface-50 p-3 dark:border-surface-700 dark:bg-surface-900/50">
           <h4 class="font-medium mb-1">Summary</h4>
           <p class="text-sm leading-relaxed">{{ result.summary ?? '' }}</p>
         </div>
 
         <div class="grid md:grid-cols-2 gap-4">
-          <div class="p-3 border rounded">
+          <div class="rounded-lg border border-surface-200 p-3 dark:border-surface-700">
             <h4 class="font-medium mb-2">Likely Root Cause</h4>
             <ul class="list-disc pl-5 text-sm flex flex-col gap-1">
               @for (item of result.rootCauseHypotheses ?? []; track $index) {
@@ -38,7 +63,7 @@
             </ul>
           </div>
 
-          <div class="p-3 border rounded">
+          <div class="rounded-lg border border-surface-200 p-3 dark:border-surface-700">
             <h4 class="font-medium mb-2">Recommended Fixes</h4>
             <ul class="list-disc pl-5 text-sm flex flex-col gap-1">
               @for (item of result.recommendedFixes ?? []; track $index) {
@@ -48,18 +73,13 @@
           </div>
         </div>
 
-        <div class="p-3 border rounded">
+        <div class="rounded-lg border border-surface-200 p-3 dark:border-surface-700">
           <h4 class="font-medium mb-2">Evidence</h4>
           <ul class="list-disc pl-5 text-sm flex flex-col gap-1">
             @for (item of result.evidence ?? []; track $index) {
               <li>{{ item }}</li>
             }
           </ul>
-        </div>
-
-        <div class="flex flex-wrap gap-2 text-xs">
-          <p-tag severity="secondary" [value]="'Confidence: ' + formatConfidence(result.confidence)"></p-tag>
-          <p-tag severity="secondary" [value]="'Model: ' + (result.model ?? 'N/A')"></p-tag>
         </div>
       </div>
     }

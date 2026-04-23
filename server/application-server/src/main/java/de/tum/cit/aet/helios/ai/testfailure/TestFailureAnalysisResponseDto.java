@@ -8,4 +8,5 @@ public record TestFailureAnalysisResponseDto(
     TestFailureAnalysisResultDto result,
     String errorMessage,
     OffsetDateTime analyzedAt,
-    Long durationMs) {}
+    Long durationMs,
+    boolean cacheHit) {}
