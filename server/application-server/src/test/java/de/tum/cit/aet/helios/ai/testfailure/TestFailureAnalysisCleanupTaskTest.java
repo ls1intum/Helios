@@ -18,8 +18,8 @@ class TestFailureAnalysisCleanupTaskTest {
   @Test
   void purgeDeletesOldRowsInDeleteMode() {
     TestFailureAnalysisRepository repository = Mockito.mock(TestFailureAnalysisRepository.class);
-    when(repository.countByAnalyzedAtBefore(any(OffsetDateTime.class))).thenReturn(4L);
-    when(repository.deleteByAnalyzedAtBefore(any(OffsetDateTime.class))).thenReturn(4L);
+    when(repository.countByUpdatedAtBefore(any(OffsetDateTime.class))).thenReturn(4L);
+    when(repository.deleteByUpdatedAtBefore(any(OffsetDateTime.class))).thenReturn(4L);
 
     TestFailureAnalysisCleanupTask task = createTask(repository, Duration.ofDays(14), false);
     OffsetDateTime lowerBound = OffsetDateTime.now().minusDays(14);
@@ -29,11 +29,11 @@ class TestFailureAnalysisCleanupTaskTest {
     OffsetDateTime upperBound = OffsetDateTime.now().minusDays(14);
     ArgumentCaptor<OffsetDateTime> cutoffCaptor = ArgumentCaptor.forClass(OffsetDateTime.class);
 
-    verify(repository).countByAnalyzedAtBefore(cutoffCaptor.capture());
+    verify(repository).countByUpdatedAtBefore(cutoffCaptor.capture());
     OffsetDateTime cutoff = cutoffCaptor.getValue();
     assertFalse(cutoff.isBefore(lowerBound));
     assertFalse(cutoff.isAfter(upperBound));
-    verify(repository).deleteByAnalyzedAtBefore(cutoff);
+    verify(repository).deleteByUpdatedAtBefore(cutoff);
   }
 
   @Test
@@ -47,7 +47,7 @@ class TestFailureAnalysisCleanupTaskTest {
     OffsetDateTime upperBound = OffsetDateTime.now().minusDays(14);
     ArgumentCaptor<OffsetDateTime> cutoffCaptor = ArgumentCaptor.forClass(OffsetDateTime.class);
 
-    verify(repository).countByAnalyzedAtBefore(cutoffCaptor.capture());
+    verify(repository).countByUpdatedAtBefore(cutoffCaptor.capture());
     OffsetDateTime cutoff = cutoffCaptor.getValue();
     assertFalse(cutoff.isBefore(lowerBound));
     assertFalse(cutoff.isAfter(upperBound));

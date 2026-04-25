@@ -26,19 +26,19 @@ class TestFailureAnalysisCleanupTask {
   @Transactional
   void purge() {
     OffsetDateTime cutoff = currentTime().minus(maxAge);
-    long candidates = repository.countByAnalyzedAtBefore(cutoff);
+    long candidates = repository.countByUpdatedAtBefore(cutoff);
 
     if (dryRun) {
       log.info(
-          "DRY-RUN: AI test-failure analysis cleanup found {} rows analyzed before {}",
+          "DRY-RUN: AI test-failure analysis cleanup found {} rows updated before {}",
           candidates,
           cutoff);
       return;
     }
 
-    long deleted = repository.deleteByAnalyzedAtBefore(cutoff);
+    long deleted = repository.deleteByUpdatedAtBefore(cutoff);
     log.info(
-        "DELETE: AI test-failure analysis cleanup deleted {} rows analyzed before {}",
+        "DELETE: AI test-failure analysis cleanup deleted {} rows updated before {}",
         deleted,
         cutoff);
   }

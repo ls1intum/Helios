@@ -3,6 +3,8 @@ package de.tum.cit.aet.helios.ai.testfailure;
 import de.tum.cit.aet.helios.tests.TestCase;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -11,7 +13,6 @@ import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
 import java.time.OffsetDateTime;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -21,12 +22,12 @@ import lombok.Setter;
 @Table(
     name = "test_failure_analysis",
     indexes = {
-      @Index(name = "idx_test_failure_analysis_analyzed_at", columnList = "analyzed_at")
-    },
-    uniqueConstraints = {
-      @UniqueConstraint(
-          name = "uk_test_failure_analysis_cache_key",
-          columnNames = {"test_case_id", "provider_id"})
+      @Index(
+          name = "idx_test_failure_analysis_requester_created",
+          columnList = "requester_user_id,created_at"),
+      @Index(
+          name = "idx_test_failure_analysis_cache_lookup",
+          columnList = "test_case_id,provider_id,status,updated_at,id")
     })
 @Getter
 @Setter
@@ -44,12 +45,22 @@ public class TestFailureAnalysis {
   @Column(name = "provider_id", nullable = false)
   private String providerId;
 
-  @Column(name = "result_json", columnDefinition = "TEXT", nullable = false)
+  @Column(name = "requester_user_id")
+  private String requesterUserId;
+
+  @Enumerated(EnumType.STRING)
+  @Column(name = "status", nullable = false)
+  private TestFailureAnalysisStatus status;
+
+  @Column(name = "created_at", nullable = false)
+  private OffsetDateTime createdAt;
+
+  @Column(name = "result_json", columnDefinition = "TEXT")
   private String resultJson;
 
-  @Column(name = "analyzed_at", nullable = false)
-  private OffsetDateTime analyzedAt;
+  @Column(name = "updated_at", nullable = false)
+  private OffsetDateTime updatedAt;
 
-  @Column(name = "duration_ms", nullable = false)
+  @Column(name = "duration_ms")
   private Long durationMs;
 }

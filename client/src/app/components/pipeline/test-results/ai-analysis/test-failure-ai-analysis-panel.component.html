@@ -11,8 +11,8 @@
     </div>
 
     @if (status() === 'submitting') {
-      <div class="flex items-center gap-3 rounded-lg border border-surface-200 bg-surface-50 p-3 dark:border-surface-700 dark:bg-surface-900/50">
-        <i-tabler name="progress" class="!size-5 animate-spin text-primary-600 dark:text-primary-300"></i-tabler>
+      <div class="flex items-center gap-3 rounded border border-muted-color bg-surface-100 p-3">
+        <i-tabler name="progress" class="!size-5 animate-spin text-muted-color"></i-tabler>
         <span>{{ response()?.result ? 'Regenerating AI analysis. This can take a few seconds.' : 'Analyzing failure with AI. This can take a few seconds.' }}</span>
       </div>
     }
@@ -23,10 +23,10 @@
 
     @if (response()?.result; as result) {
       <div class="flex flex-col gap-4">
-        <div class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-surface-200 bg-surface-0 p-3 shadow-sm dark:border-surface-700 dark:bg-surface-900">
+        <div class="flex flex-wrap items-center justify-between gap-3 rounded border border-muted-color p-3">
           <div class="flex flex-wrap gap-2 text-xs">
             @if (response()?.analyzedAt; as analyzedAt) {
-              <p-tag severity="secondary" [rounded]="true" [value]="'Analyzed ' + (analyzedAt | date: 'd MMM y, HH:mm:ss')"></p-tag>
+              <p-tag severity="secondary" [rounded]="true" [value]="'Analyzed on ' + (analyzedAt | date: 'd MMM y, HH:mm:ss')"></p-tag>
             }
             @if (response()?.cacheHit) {
               <p-tag severity="secondary" [rounded]="true" value="Cached result"></p-tag>
@@ -48,13 +48,13 @@
           }
         </div>
 
-        <div class="rounded-lg border border-surface-200 bg-surface-50 p-3 dark:border-surface-700 dark:bg-surface-900/50">
+        <div class="rounded border border-muted-color bg-surface-100 p-3">
           <h4 class="font-medium mb-1">Summary</h4>
           <p class="text-sm leading-relaxed">{{ result.summary ?? '' }}</p>
         </div>
 
         <div class="grid md:grid-cols-2 gap-4">
-          <div class="rounded-lg border border-surface-200 p-3 dark:border-surface-700">
+          <div class="rounded border border-muted-color p-3">
             <h4 class="font-medium mb-2">Likely Root Cause</h4>
             <ul class="list-disc pl-5 text-sm flex flex-col gap-1">
               @for (item of result.rootCauseHypotheses ?? []; track $index) {
@@ -63,7 +63,7 @@
             </ul>
           </div>
 
-          <div class="rounded-lg border border-surface-200 p-3 dark:border-surface-700">
+          <div class="rounded border border-muted-color p-3">
             <h4 class="font-medium mb-2">Recommended Fixes</h4>
             <ul class="list-disc pl-5 text-sm flex flex-col gap-1">
               @for (item of result.recommendedFixes ?? []; track $index) {
@@ -73,7 +73,7 @@
           </div>
         </div>
 
-        <div class="rounded-lg border border-surface-200 p-3 dark:border-surface-700">
+        <div class="rounded border border-muted-color p-3">
           <h4 class="font-medium mb-2">Evidence</h4>
           <ul class="list-disc pl-5 text-sm flex flex-col gap-1">
             @for (item of result.evidence ?? []; track $index) {

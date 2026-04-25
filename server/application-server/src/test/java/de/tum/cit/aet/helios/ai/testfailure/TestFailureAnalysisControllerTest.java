@@ -78,7 +78,7 @@ class TestFailureAnalysisControllerTest {
         .thenReturn(
             new TestFailureAnalysisResponseDto(
                 1L,
-                TestFailureAnalysisStatus.COMPLETED,
+                TestFailureAnalysisResponseStatus.COMPLETED,
                 new TestFailureAnalysisResultDto(
                     "summary",
                     List.of("hypothesis"),
@@ -111,7 +111,7 @@ class TestFailureAnalysisControllerTest {
         .thenReturn(
             new TestFailureAnalysisResponseDto(
                 1L,
-                TestFailureAnalysisStatus.COMPLETED,
+                TestFailureAnalysisResponseStatus.COMPLETED,
                 new TestFailureAnalysisResultDto(
                     "summary",
                     List.of("hypothesis"),
