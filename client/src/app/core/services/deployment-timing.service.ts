@@ -102,10 +102,7 @@ export class DeploymentTimingService {
       const previousStep = previousState ? this.getStepForState(previousState) : undefined;
 
       if (newStep && this.shouldStartStepTimer(newState)) {
-        const effectiveStartTime =
-          previousStep === newStep && previousStep
-            ? timingData.stepStartTimes.get(previousStep) || stepStartTime
-            : stepStartTime;
+        const effectiveStartTime = previousStep === newStep && previousStep ? timingData.stepStartTimes.get(previousStep) || stepStartTime : stepStartTime;
         timingData.stepStartTimes.set(newStep, effectiveStartTime);
       }
 

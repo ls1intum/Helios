@@ -10,6 +10,8 @@
           Deployment Failed
         } @else if (deployment() && isUnknownState()) {
           Deployment Status Unknown
+        } @else if (deployment() && isQueuedState()) {
+          Deployment Queued
         } @else {
           Deployment in Progress
         }
@@ -43,6 +45,12 @@
     </div>
   </div>
 
+  @if (deployment() && isQueuedState()) {
+    <p-message severity="warn" class="mb-6 block text-left">
+      Waiting for GitHub Actions to start this workflow. Deployment will continue automatically once a runner is available.
+    </p-message>
+  }
+
   <!-- Vertically Aligned Steps -->
   <div class="flex flex-col gap-6 mt-6">
     @for (step of steps; track step; let i = $index) {
@@ -65,9 +73,6 @@
           </p-tag>
           <div class="text-sm font-medium whitespace-nowrap text-surface-500 flex items-center gap-2">
             {{ getStepDisplayName(step) }}
-            @if (step === 'PENDING' && deployment()?.state === 'QUEUED') {
-              <p-tag value="Queued" severity="info" rounded styleClass="text-xs py-0 px-2" />
-            }
           </div>
         </div>
 
