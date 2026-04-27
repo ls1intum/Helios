@@ -1053,28 +1053,27 @@ public class GitHubService {
       }
     }
 
-    // Try to parse the JSON error response if we have a body
     if (!responseBodyString.isEmpty()) {
       try {
         Map<String, Object> errorResponse = objectMapper.readValue(responseBodyString, Map.class);
-        String githubMessage = (String) errorResponse.get("message");
+        String githubMessage =
+            errorResponse == null ? null : (String) errorResponse.get("message");
 
-        if (githubMessage != null) {
-          throw new IOException("GitHub API error: " + githubMessage);
+        if (githubMessage != null && !githubMessage.isBlank()) {
+          throw new IOException(githubMessage);
         }
-      } catch (Exception e) {
-        // JSON parsing failed, log but continue to fallback
+      } catch (JsonProcessingException e) {
         log.warn("Failed to parse GitHub error response: {}", e.getMessage());
       }
+
+      throw new IOException(responseBodyString);
     }
 
-    // Fallback for empty or unparseable responses
     throw new IOException(
         "GitHub API "
             + context
             + " failed with response code: "
-            + response.code()
-            + (!responseBodyString.isEmpty() ? " and body: " + responseBodyString : ""));
+            + response.code());
   }
 
   private OffsetDateTime parseOffsetDateTime(JsonNode node) {

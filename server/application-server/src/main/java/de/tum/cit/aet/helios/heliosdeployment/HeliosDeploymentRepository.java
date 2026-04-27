@@ -76,9 +76,20 @@ public interface HeliosDeploymentRepository extends JpaRepository<HeliosDeployme
    */
   @Query(
       "SELECT hd FROM HeliosDeployment hd "
+          + "JOIN FETCH hd.environment e "
+          + "JOIN FETCH e.repository r "
           + "WHERE hd.status IN ('IN_PROGRESS', 'WAITING', 'QUEUED') "
           + "AND hd.statusUpdatedAt < :threshold "
-          + "AND hd.deploymentId IS NULL")
-  List<HeliosDeployment> findStuckDeploymentsWithoutDeploymentId(
+          + "AND hd.workflowRunId IS NOT NULL")
+  List<HeliosDeployment> findStuckDeploymentsWithWorkflowRunId(
+      @Param("threshold") OffsetDateTime threshold);
+
+  @Query(
+      "SELECT hd FROM HeliosDeployment hd "
+          + "WHERE hd.status IN ('IN_PROGRESS', 'WAITING', 'QUEUED') "
+          + "AND hd.statusUpdatedAt < :threshold "
+          + "AND hd.deploymentId IS NULL "
+          + "AND hd.workflowRunId IS NULL")
+  List<HeliosDeployment> findStuckDeploymentsWithoutDeploymentIdAndWorkflowRunIdIsNull(
       @Param("threshold") OffsetDateTime threshold);
 }

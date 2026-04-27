@@ -23,6 +23,9 @@ class OrphanHeliosDeploymentRecoveryServiceTest {
   @Mock
   private HeliosDeploymentRepository heliosDeploymentRepository;
 
+  @Mock
+  private HeliosDeploymentWorkflowRunSyncService heliosDeploymentWorkflowRunSyncService;
+
   @InjectMocks
   private OrphanHeliosDeploymentRecoveryService deploymentRecoveryService;
 
@@ -33,7 +36,10 @@ class OrphanHeliosDeploymentRecoveryServiceTest {
     HeliosDeployment notStuck = createStuckHeliosDeployment(3L, HeliosDeployment.Status.QUEUED);
     notStuck.setStatusUpdatedAt(OffsetDateTime.now().minusMinutes(30));
 
-    when(heliosDeploymentRepository.findStuckDeploymentsWithoutDeploymentId(any()))
+    when(heliosDeploymentRepository.findStuckDeploymentsWithWorkflowRunId(any()))
+        .thenReturn(List.of());
+    when(heliosDeploymentRepository.findStuckDeploymentsWithoutDeploymentIdAndWorkflowRunIdIsNull(
+            any()))
         .thenReturn(List.of(stuck1, stuck2));
     when(heliosDeploymentRepository.save(any(HeliosDeployment.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
@@ -42,7 +48,10 @@ class OrphanHeliosDeploymentRecoveryServiceTest {
 
     // Assert
     verify(heliosDeploymentRepository, times(1))
-        .findStuckDeploymentsWithoutDeploymentId(any(OffsetDateTime.class));
+        .findStuckDeploymentsWithWorkflowRunId(any(OffsetDateTime.class));
+    verify(heliosDeploymentRepository, times(1))
+        .findStuckDeploymentsWithoutDeploymentIdAndWorkflowRunIdIsNull(
+            any(OffsetDateTime.class));
     verify(heliosDeploymentRepository, times(2)).save(any(HeliosDeployment.class));
     assertEquals(HeliosDeployment.Status.FAILED, stuck1.getStatus());
     assertEquals(HeliosDeployment.Status.FAILED, stuck2.getStatus());
@@ -51,14 +60,20 @@ class OrphanHeliosDeploymentRecoveryServiceTest {
 
   @Test
   void markStuckOrphanDeploymentsSkipsWhenNoneFound() {
-    when(heliosDeploymentRepository.findStuckDeploymentsWithoutDeploymentId(any()))
+    when(heliosDeploymentRepository.findStuckDeploymentsWithWorkflowRunId(any()))
+        .thenReturn(List.of());
+    when(heliosDeploymentRepository.findStuckDeploymentsWithoutDeploymentIdAndWorkflowRunIdIsNull(
+            any()))
         .thenReturn(List.of());
 
     deploymentRecoveryService.markStuckOrphanHeliosDeploymentsAsFailure();
 
     // Assert
     verify(heliosDeploymentRepository, times(1))
-        .findStuckDeploymentsWithoutDeploymentId(any(OffsetDateTime.class));
+        .findStuckDeploymentsWithWorkflowRunId(any(OffsetDateTime.class));
+    verify(heliosDeploymentRepository, times(1))
+        .findStuckDeploymentsWithoutDeploymentIdAndWorkflowRunIdIsNull(
+            any(OffsetDateTime.class));
     verify(heliosDeploymentRepository, never()).save(any(HeliosDeployment.class));
   }
 

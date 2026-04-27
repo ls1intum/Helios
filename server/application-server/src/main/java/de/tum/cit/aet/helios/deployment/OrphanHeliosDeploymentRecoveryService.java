@@ -2,6 +2,7 @@ package de.tum.cit.aet.helios.deployment;
 
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
+import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class OrphanHeliosDeploymentRecoveryService {
 
   private final HeliosDeploymentRepository heliosDeploymentRepository;
+  private final HeliosDeploymentWorkflowRunSyncService heliosDeploymentWorkflowRunSyncService;
 
   /**
    * Scheduled task that runs every hour and force-finalizes very old orphan Helios deployments.
@@ -31,17 +33,45 @@ public class OrphanHeliosDeploymentRecoveryService {
     log.info("Starting orphan Helios deployment recovery task...");
     OffsetDateTime oneHourAgo = OffsetDateTime.now().minusHours(1);
 
+    int synchronizedCount = synchronizeStuckWorkflowRunBackedDeployments(oneHourAgo);
     int recoveredCount = processStuckHeliosDeployments(oneHourAgo);
 
     log.info(
-        "Orphan Helios deployment recovery completed: Marked {} deployment(s) without"
-            + " deploymentId as FAILED.",
+        "Orphan Helios deployment recovery completed: synchronized {} workflow-backed"
+            + " deployment(s), marked {} deployment(s) without workflowRunId as FAILED.",
+        synchronizedCount,
         recoveredCount);
+  }
+
+  private int synchronizeStuckWorkflowRunBackedDeployments(OffsetDateTime timeThreshold) {
+    List<HeliosDeployment> stuckDeployments =
+        heliosDeploymentRepository.findStuckDeploymentsWithWorkflowRunId(timeThreshold);
+
+    int synchronizedCount = 0;
+    for (HeliosDeployment deployment : stuckDeployments) {
+      String repositoryNameWithOwner =
+          deployment.getEnvironment().getRepository().getNameWithOwner();
+      try {
+        if (heliosDeploymentWorkflowRunSyncService.synchronizeTerminalStateFromWorkflowRun(
+            repositoryNameWithOwner, deployment.getWorkflowRunId())) {
+          synchronizedCount++;
+        }
+      } catch (IOException e) {
+        log.warn(
+            "Failed to synchronize stuck Helios deployment {} from workflow run {}: {}",
+            deployment.getId(),
+            deployment.getWorkflowRunId(),
+            e.getMessage());
+      }
+    }
+
+    return synchronizedCount;
   }
 
   private int processStuckHeliosDeployments(OffsetDateTime timeThreshold) {
     List<HeliosDeployment> stuckDeployments =
-        heliosDeploymentRepository.findStuckDeploymentsWithoutDeploymentId(timeThreshold);
+        heliosDeploymentRepository
+            .findStuckDeploymentsWithoutDeploymentIdAndWorkflowRunIdIsNull(timeThreshold);
 
     if (stuckDeployments.isEmpty()) {
       log.debug("No stuck Helios deployments found.");
