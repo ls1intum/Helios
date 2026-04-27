@@ -301,7 +301,7 @@ public class TestFailureAnalysisService {
 
   private String resolveProviderId() {
     String configuredProvider = aiProperties.getDefaultProvider();
-    if (configuredProvider == null) {
+    if (!StringUtils.hasText(configuredProvider)) {
       throw new ResponseStatusException(
           HttpStatus.SERVICE_UNAVAILABLE,
           "No AI provider configured.");
