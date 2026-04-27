@@ -73,11 +73,14 @@
       i.V.m. Art. 2 BayHIG and Art. 4(1) BayDSG. The processing is strictly limited to what is necessary to provide the service to the contributor.
     </p>
 
-    <h3 class="text-base font-semibold mt-3">Optional notification email and notification preferences</h3>
-    <p class="mt-1"><strong>Why we may do this:</strong> You opt in by entering an address and choosing preferences in the Helios settings page.</p>
+    <h3 class="text-base font-semibold mt-3">Notification email and notification preferences</h3>
     <p class="mt-1">
-      <strong>Legal basis:</strong> Art. 6(1)(a) GDPR (consent). You can withdraw consent at any time with effect for the future, without affecting the lawfulness of processing
-      done before the withdrawal (Art. 7(3) GDPR).
+      Helios may initialise your notification email from GitHub and enable notification preferences on first login. You can disable notifications, change the notification email,
+      and adjust preferences in the Helios settings page.
+    </p>
+    <p class="mt-1">
+      <strong>Legal basis:</strong> the same legal basis as the core service applies; if you manually enter a different notification email address, processing that additional
+      address is based on consent (Art. 6(1)(a) GDPR).
     </p>
 
     <h3 class="text-base font-semibold mt-3">Server access logs and self-hosted error reports</h3>
@@ -102,6 +105,10 @@
       <li>Optional GitHub profile fields: bio, company, blog, free-text location (from the GitHub profile, not GPS), follower and following counts</li>
       <li>Optional notification email address you enter on the Helios settings page</li>
       <li>Notification preferences (currently for the events <code>DEPLOYMENT_FAILED</code>, <code>LOCK_EXPIRED</code> and <code>LOCK_UNLOCKED</code>)</li>
+      <li>
+        User-linked action records created while using Helios, including deployments, workflow reruns or cancellations, environment lock and unlock history, release candidate
+        actions, release evaluations and comments, and pinned branch or pull request preferences
+      </li>
       <li>
         Technical UI state stored in your browser (currently: pagination state per table, sidebar expanded/collapsed state, theme preference, branch-view preference) plus the
         session token issued by the sign-in service. No tracking, analytics, advertising, or profiling cookies are set.
@@ -161,8 +168,8 @@
       GitHub, Inc. is based in the USA. The transfer of personal data to GitHub is covered by two safeguards: GitHub&apos;s certification under the EU&ndash;U.S. Data Privacy
       Framework (DPF &mdash; an EU adequacy decision under Art. 45(3) GDPR allowing transfers to certified U.S. companies; Commission Implementing Decision (EU) 2023/1795 of 10
       July 2023), and Standard Contractual Clauses (SCC &mdash; a standard EU-approved data-transfer contract under Art. 46(2)(c) GDPR; Commission Implementing Decision (EU)
-      2021/914 of 4 June 2021). Both safeguards are set out in the GitHub Data Protection Agreement, which applies to every github.com user. No personal data is transferred to any
-      other recipient outside the European Economic Area.
+      2021/914 of 4 June 2021). GitHub describes these safeguards in its Privacy Statement and, where applicable, in its Data Protection Agreement. No personal data is transferred
+      to any other recipient outside the European Economic Area.
     </p>
 
     <h2 class="text-xl font-semibold mt-4">How long we keep data (retention)</h2>
@@ -173,12 +180,12 @@
         control.
       </li>
       <li>
-        <strong>Workflow run records (database):</strong> a nightly cleanup at 01:00 keeps the two newest <code>PROCESSED</code> runs (finished successfully) per repository and
-        branch, and deletes runs in state <code>FAILED</code> (errored) or with no terminal state that are older than five days.
+        <strong>Workflow run records (database):</strong> a nightly cleanup at 01:00 keeps the two newest records per repository, workflow and branch for each configured processing
+        status; older <code>PROCESSED</code> runs may be deleted immediately, while older <code>FAILED</code> runs or runs with no terminal state are deleted only after five days.
       </li>
       <li><strong>Workflow run logs (filesystem):</strong> a nightly cleanup at 02:00 deletes log files older than one day.</li>
       <li><strong>Self-hosted Sentry error reports:</strong> kept for at most 30 days.</li>
-      <li><strong>Database backups:</strong> daily backups, kept for 7 days.</li>
+      <li><strong>Database backups:</strong> bidaily backups, kept for 7 days.</li>
       <li><strong>Server access logs:</strong> rotated daily by the host system; not retained for longer than 14 days under normal operation, then automatically deleted.</li>
     </ul>
     <p class="mt-3">
@@ -204,9 +211,9 @@
 
     <h2 class="text-xl font-semibold mt-4">Notification email (consent)</h2>
     <p class="mt-3">
-      You may optionally enter a notification email address and choose notification preferences on the Helios settings page. This processing is based on your consent (Art. 6(1)(a)
-      GDPR). You can change or remove the address and preferences at any time on the same settings page. Withdrawing consent does not affect the lawfulness of processing carried
-      out before the withdrawal (Art. 7(3) GDPR).
+      Helios may initialise your notification email from GitHub and enable notification preferences on first login. You can disable notifications, change the notification email
+      address, and adjust preferences on the Helios settings page. Withdrawing consent does not affect the lawfulness of processing carried out before the withdrawal (Art. 7(3)
+      GDPR).
     </p>
 
     <h2 class="text-xl font-semibold mt-4">Your rights</h2>
