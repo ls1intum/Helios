@@ -5,6 +5,7 @@ import { EnvironmentDeployment } from '@app/core/modules/openapi';
 import { TooltipModule } from 'primeng/tooltip';
 import { DeploymentTimingService } from '@app/core/services/deployment-timing.service';
 import { TagModule } from 'primeng/tag';
+import { MessageModule } from 'primeng/message';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
 import { IconCheck, IconClock, IconProgress, IconX } from 'angular-tabler-icons/icons';
 
@@ -16,7 +17,7 @@ interface EstimatedTimes {
 
 @Component({
   selector: 'app-deployment-stepper',
-  imports: [CommonModule, TablerIconComponent, TagModule, ProgressBarModule, TooltipModule],
+  imports: [CommonModule, TablerIconComponent, TagModule, MessageModule, ProgressBarModule, TooltipModule],
   providers: [
     provideTablerIcons({
       IconClock,
@@ -78,6 +79,10 @@ export class DeploymentStepperComponent implements OnInit {
     const deployment = this._deployment();
     if (!deployment) return false;
     return this.timingService.isSuccessState(deployment);
+  }
+
+  isQueuedState(): boolean {
+    return this._deployment()?.state === 'QUEUED';
   }
 
   // Methods that need to be called from the template with arguments
