@@ -156,6 +156,7 @@ export class PullRequestTableComponent {
     return {
       'border-color': `#${color}`,
       'background-color': color === 'ededed' ? `#${color}` : `#${color}75`,
+      ...(color === 'ededed' && { color: '#000000' }),
     };
   }
 
