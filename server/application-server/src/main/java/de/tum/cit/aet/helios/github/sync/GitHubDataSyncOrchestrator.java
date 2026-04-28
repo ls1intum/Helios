@@ -324,22 +324,22 @@ public class GitHubDataSyncOrchestrator {
         environmentRepository.findByRepositoryRepositoryIdOrderByCreatedAtDesc(repository.getId());
     dbEnvironments.forEach(
         dbEnvironment -> {
+          Optional<Deployment> latestDeployment =
+              deploymentRepository.findFirstByEnvironmentIdOrderByCreatedAtDesc(
+                  dbEnvironment.getId());
+          if (latestDeployment.isEmpty()) {
+            return;
+          }
+          String latestDeploymentSha = latestDeployment.get().getSha();
           try {
-            if (dbEnvironment.getDeployments() == null
-                || dbEnvironment.getDeployments().isEmpty()) {
-              return;
-            }
-            var commit = repository.getCommit(dbEnvironment.getDeployments().getLast().getSha());
-            log.info(
-                "env: {}, sha: {}",
-                dbEnvironment.getName(),
-                dbEnvironment.getDeployments().getLast().getSha());
+            var commit = repository.getCommit(latestDeploymentSha);
+            log.info("env: {}, sha: {}", dbEnvironment.getName(), latestDeploymentSha);
             commitSyncService.processCommit(commit, repository);
             commits.add(commit);
           } catch (IOException e) {
             log.error(
                 "Failed to fetch commit {} of repository {}: {}",
-                dbEnvironment.getDeployments().getLast().getSha(),
+                latestDeploymentSha,
                 repository.getFullName(),
                 e.getMessage());
           }

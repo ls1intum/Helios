@@ -5,6 +5,7 @@ import de.tum.cit.aet.helios.gitrepo.RepositoryInfoDto;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
 import de.tum.cit.aet.helios.user.User;
 import java.time.OffsetDateTime;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 
 /** Represents a union of either a real Deployment, a HeliosDeployment, or none. */
@@ -41,6 +42,28 @@ public class LatestDeploymentUnion {
 
   public static LatestDeploymentUnion none() {
     return new LatestDeploymentUnion(null, null);
+  }
+
+  public static LatestDeploymentUnion latest(
+      Optional<HeliosDeployment> latestHeliosOpt, Optional<Deployment> latestDeploymentOpt) {
+    if (latestHeliosOpt.isEmpty() && latestDeploymentOpt.isEmpty()) {
+      return LatestDeploymentUnion.none();
+    }
+
+    if (latestHeliosOpt.isPresent() && latestDeploymentOpt.isPresent()) {
+      HeliosDeployment latestHelios = latestHeliosOpt.get();
+      Deployment latestDeployment = latestDeploymentOpt.get();
+      if (latestDeployment.getCreatedAt().isAfter(latestHelios.getCreatedAt())
+          || latestDeployment.getCreatedAt().isEqual(latestHelios.getCreatedAt())) {
+        return LatestDeploymentUnion.realDeployment(latestDeployment, latestHelios);
+      }
+      return LatestDeploymentUnion.heliosDeployment(latestHelios);
+    }
+
+    if (latestHeliosOpt.isPresent()) {
+      return LatestDeploymentUnion.heliosDeployment(latestHeliosOpt.get());
+    }
+    return LatestDeploymentUnion.realDeployment(latestDeploymentOpt.get());
   }
 
   public boolean isRealDeployment() {

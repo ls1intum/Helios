@@ -23,6 +23,18 @@ public interface DeploymentRepository extends JpaRepository<Deployment, Long> {
 
   Optional<Deployment> findFirstByEnvironmentIdOrderByCreatedAtDesc(Long environmentId);
 
+  @Query(
+      "SELECT d FROM Deployment d "
+          + "JOIN FETCH d.environment e "
+          + "WHERE e.id IN :environmentIds "
+          + "AND NOT EXISTS ("
+          + "  SELECT 1 FROM Deployment newer "
+          + "  WHERE newer.environment.id = e.id "
+          + "  AND (newer.createdAt > d.createdAt "
+          + "    OR (newer.createdAt = d.createdAt AND newer.id > d.id))"
+          + ")")
+  List<Deployment> findLatestByEnvironmentIds(@Param("environmentIds") List<Long> environmentIds);
+
   /**
    * Finds the first page of stale deployments in incomplete states (e.g., IN_PROGRESS, QUEUED).
    *

@@ -61,7 +61,7 @@ public class Environment extends RepositoryFilterEntity {
 
   @Version private Integer version;
 
-  @OneToMany(fetch = FetchType.EAGER, mappedBy = "environment")
+  @OneToMany(fetch = FetchType.LAZY, mappedBy = "environment")
   @OrderBy("createdAt ASC")
   private List<Deployment> deployments;
 

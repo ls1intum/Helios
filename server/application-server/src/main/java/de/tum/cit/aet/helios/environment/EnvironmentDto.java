@@ -86,10 +86,9 @@ public record EnvironmentDto(
       @NonNull DeploymentType type,
       Integer estimatedBuildDurationSeconds,
       Integer estimatedDeployDurationSeconds) {
-    /** Builds an EnvironmentDeployment from a LatestDeploymentUnion. */
     public static EnvironmentDeployment fromUnion(
         LatestDeploymentUnion union,
-        ReleaseCandidateRepository releaseCandidateRepository,
+        List<String> releaseCandidateNames,
         DeploymentDurationEstimate estimate) {
       Integer estimatedBuild = null;
       Integer estimatedDeploy = null;
@@ -112,11 +111,7 @@ public record EnvironmentDto(
           union.getRef(),
           union.getTask(),
           union.getWorkflowRunHtmlUrl(),
-          releaseCandidateRepository
-              .findByRepositoryRepositoryIdAndCommitSha(union.getRepository().id(), union.getSha())
-              .stream()
-              .map(ReleaseCandidate::getName)
-              .toList(),
+          releaseCandidateNames,
           union.getPullRequestName(),
           UserInfoDto.fromUser(union.getCreator()),
           union.getPullRequestNumber(),
@@ -150,15 +145,53 @@ public record EnvironmentDto(
       Optional<EnvironmentStatus> latestStatus,
       ReleaseCandidateRepository releaseCandidateRepository,
       DeploymentDurationEstimate estimate) {
+    return fromEnvironment(
+        environment,
+        latestUnion,
+        latestStatus,
+        latestUnion != null && !latestUnion.isNone()
+            ? releaseCandidateRepository
+                .findByRepositoryRepositoryIdAndCommitSha(
+                    latestUnion.getRepository().id(), latestUnion.getSha())
+                .stream()
+                .map(ReleaseCandidate::getName)
+                .toList()
+            : List.of(),
+        estimate,
+        RepositoryInfoDto.fromRepository(environment.getRepository()));
+  }
+
+  public static EnvironmentDto fromEnvironmentSummary(
+      Environment environment,
+      LatestDeploymentUnion latestUnion,
+      Optional<EnvironmentStatus> latestStatus,
+      List<String> releaseCandidateNames,
+      DeploymentDurationEstimate estimate) {
+    return fromEnvironment(
+        environment,
+        latestUnion,
+        latestStatus,
+        releaseCandidateNames,
+        estimate,
+        RepositoryInfoDto.fromRepositorySummary(environment.getRepository()));
+  }
+
+  private static EnvironmentDto fromEnvironment(
+      Environment environment,
+      LatestDeploymentUnion latestUnion,
+      Optional<EnvironmentStatus> latestStatus,
+      List<String> releaseCandidateNames,
+      DeploymentDurationEstimate estimate,
+      RepositoryInfoDto repository) {
     // If union is null or none(), we won't have a 'latestDeployment'
     EnvironmentDeployment envDeployment = null;
     if (latestUnion != null && !latestUnion.isNone()) {
       envDeployment =
-          EnvironmentDeployment.fromUnion(latestUnion, releaseCandidateRepository, estimate);
+          EnvironmentDeployment.fromUnion(latestUnion, releaseCandidateNames, estimate);
     }
 
     return new EnvironmentDto(
-        RepositoryInfoDto.fromRepository(environment.getRepository()),
+        repository,
         environment.getId(),
         environment.getName(),
         environment.getDisplayName(),

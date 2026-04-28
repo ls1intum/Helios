@@ -14,6 +14,19 @@ public interface HeliosDeploymentRepository extends JpaRepository<HeliosDeployme
 
   Optional<HeliosDeployment> findTopByEnvironmentOrderByCreatedAtDesc(Environment environment);
 
+  @Query(
+      "SELECT hd FROM HeliosDeployment hd "
+          + "JOIN FETCH hd.environment e "
+          + "WHERE e.id IN :environmentIds "
+          + "AND NOT EXISTS ("
+          + "  SELECT 1 FROM HeliosDeployment newer "
+          + "  WHERE newer.environment.id = e.id "
+          + "  AND (newer.createdAt > hd.createdAt "
+          + "    OR (newer.createdAt = hd.createdAt AND newer.id > hd.id))"
+          + ")")
+  List<HeliosDeployment> findLatestByEnvironmentIds(
+      @Param("environmentIds") List<Long> environmentIds);
+
   Optional<HeliosDeployment> findTopByBranchNameAndCreatedAtLessThanEqualOrderByCreatedAtDesc(
       String branchName, OffsetDateTime eventTime);
 
@@ -52,21 +65,24 @@ public interface HeliosDeploymentRepository extends JpaRepository<HeliosDeployme
 
   @Query(
       value =
-          "SELECT PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY sub.build_duration_seconds)"
-              + " AS median_build, "
-              + "PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY sub.deploy_duration_seconds)"
-              + " AS median_deploy "
+          "SELECT environment_id, "
+              + "PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY build_duration_seconds) "
+              + "AS median_build, "
+              + "PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY deploy_duration_seconds) "
+              + "AS median_deploy "
               + "FROM ("
-              + "  SELECT build_duration_seconds, deploy_duration_seconds "
+              + "  SELECT environment_id, build_duration_seconds, deploy_duration_seconds, "
+              + "  ROW_NUMBER() OVER (PARTITION BY environment_id ORDER BY created_at DESC) AS rn "
               + "  FROM helios_deployment "
-              + "  WHERE environment_id = :environmentId "
+              + "  WHERE environment_id IN (:environmentIds) "
               + "    AND status = 'DEPLOYMENT_SUCCESS' "
-              + "    AND build_duration_seconds IS NOT NULL "
-              + "  ORDER BY created_at DESC "
-              + "  LIMIT 100"
-              + ") sub",
+              + "    AND build_duration_seconds IS NOT NULL"
+              + ") sub "
+              + "WHERE rn <= 100 "
+              + "GROUP BY environment_id",
       nativeQuery = true)
-  List<Object[]> findMedianDurationsByEnvironmentId(@Param("environmentId") Long environmentId);
+  List<Object[]> findMedianDurationsByEnvironmentIds(
+      @Param("environmentIds") List<Long> environmentIds);
 
   /**
    * Finds deployments that are stuck in incomplete state for more than the specified duration.

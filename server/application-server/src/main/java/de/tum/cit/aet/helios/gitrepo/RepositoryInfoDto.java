@@ -36,4 +36,20 @@ public record RepositoryInfoDto(
         repository.getLatestReleaseTagName(),
         repository.getContributors().stream().map(user -> UserInfoDto.fromUser(user)).toList());
   }
+
+  public static RepositoryInfoDto fromRepositorySummary(GitRepository repository) {
+    return new RepositoryInfoDto(
+        repository.getRepositoryId(),
+        repository.getName(),
+        repository.getNameWithOwner(),
+        repository.getDescription(),
+        repository.getHtmlUrl(),
+        repository.getUpdatedAt(),
+        repository.getStargazersCount(),
+        repository.getPullRequestCount(),
+        repository.getBranchCount(),
+        repository.getEnvironmentCount(),
+        repository.getLatestReleaseTagName(),
+        List.of());
+  }
 }

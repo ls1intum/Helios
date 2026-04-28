@@ -18,7 +18,6 @@ import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import de.tum.cit.aet.helios.gitreposettings.GitRepoSettingsDto;
 import de.tum.cit.aet.helios.gitreposettings.GitRepoSettingsService;
-import de.tum.cit.aet.helios.heliosdeployment.DeploymentDurationEstimate;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
 import de.tum.cit.aet.helios.nats.NatsNotificationPublisherService;
@@ -72,6 +71,7 @@ public class EnvironmentService {
   private final GitRepoRepository gitRepoRepository;
   private final GitHubService gitHubService;
   private final NatsNotificationPublisherService notificationPublisherService;
+  private final EnvironmentListDtoBuilder environmentListDtoBuilder;
 
   public Optional<EnvironmentDto> getEnvironmentById(Long id) {
     return environmentRepository.findById(id).map(EnvironmentDto::fromEnvironment);
@@ -82,31 +82,13 @@ public class EnvironmentService {
   }
 
   public List<EnvironmentDto> getAllEnvironments() {
-    return environmentRepository.findAllByOrderByNameAsc().stream()
-        .map(
-            environment -> {
-              environmentScheduler.unlockExpiredEnvironments();
-              LatestDeploymentUnion latest = findLatestDeployment(environment);
-              DeploymentDurationEstimate estimate = computeEstimate(environment);
-              return EnvironmentDto.fromEnvironment(
-                  environment, latest, environment.getLatestStatus(), releaseCandidateRepository,
-                  estimate);
-            })
-        .collect(Collectors.toList());
+    environmentScheduler.unlockExpiredEnvironments();
+    return environmentListDtoBuilder.build(environmentRepository.findAllByOrderByNameAsc());
   }
 
   public List<EnvironmentDto> getAllEnabledEnvironments() {
-    return environmentRepository.findByEnabledTrueOrderByNameAsc().stream()
-        .map(
-            environment -> {
-              environmentScheduler.unlockExpiredEnvironments();
-              LatestDeploymentUnion latest = findLatestDeployment(environment);
-              DeploymentDurationEstimate estimate = computeEstimate(environment);
-              return EnvironmentDto.fromEnvironment(
-                  environment, latest, environment.getLatestStatus(), releaseCandidateRepository,
-                  estimate);
-            })
-        .collect(Collectors.toList());
+    environmentScheduler.unlockExpiredEnvironments();
+    return environmentListDtoBuilder.build(environmentRepository.findByEnabledTrueOrderByNameAsc());
   }
 
   public List<EnvironmentDto> getEnvironmentsByRepositoryId(Long repositoryId) {
@@ -115,28 +97,6 @@ public class EnvironmentService {
         .stream()
         .map(EnvironmentDto::fromEnvironment)
         .collect(Collectors.toList());
-  }
-
-  /**
-   * Computes median build and deploy duration estimates from previous deployments for the given
-   * environment.
-   *
-   * @param environment the environment whose duration estimates should be loaded
-   * @return a duration estimate, or {@code null} when no usable historical data exists
-   */
-  private DeploymentDurationEstimate computeEstimate(Environment environment) {
-    List<Object[]> rows =
-        heliosDeploymentRepository.findMedianDurationsByEnvironmentId(environment.getId());
-    if (rows == null || rows.isEmpty()) {
-      return null;
-    }
-    Object[] row = rows.get(0);
-    if (row == null || row.length < 2 || row[0] == null) {
-      return null;
-    }
-    Double medianBuild = ((Number) row[0]).doubleValue();
-    Double medianDeploy = row[1] != null ? ((Number) row[1]).doubleValue() : null;
-    return new DeploymentDurationEstimate(medianBuild, medianDeploy);
   }
 
   /**
@@ -156,37 +116,11 @@ public class EnvironmentService {
    *     result if no deployments exist.
    */
   public LatestDeploymentUnion findLatestDeployment(Environment env) {
-    // Retrieve the latest HeliosDeployment
     Optional<HeliosDeployment> latestHeliosOpt =
         heliosDeploymentRepository.findTopByEnvironmentOrderByCreatedAtDesc(env);
     Optional<Deployment> latestDeploymentOpt =
         deploymentRepository.findFirstByEnvironmentIdOrderByCreatedAtDesc(env.getId());
-
-    // If no deployments exist at all, return empty
-    if (latestHeliosOpt.isEmpty() && latestDeploymentOpt.isEmpty()) {
-      return LatestDeploymentUnion.none();
-    }
-
-    // Compare the latest HeliosDeployment and the latest real Deployment
-    if (latestHeliosOpt.isPresent() && latestDeploymentOpt.isPresent()) {
-      HeliosDeployment latestHelios = latestHeliosOpt.get();
-      Deployment latestDeployment = latestDeploymentOpt.get();
-      // TODO: add logs and check what's returned in ehre
-      // Compare updatedAt timestamps to determine the latest
-      if (latestDeployment.getCreatedAt().isAfter(latestHelios.getCreatedAt())
-          || latestDeployment.getCreatedAt().isEqual(latestHelios.getCreatedAt())) {
-        return LatestDeploymentUnion.realDeployment(latestDeployment, latestHelios);
-      } else {
-        return LatestDeploymentUnion.heliosDeployment(latestHelios);
-      }
-    }
-
-    // If only one of them exists, return the available one
-    if (latestHeliosOpt.isPresent()) {
-      return LatestDeploymentUnion.heliosDeployment(latestHeliosOpt.get());
-    } else {
-      return LatestDeploymentUnion.realDeployment(latestDeploymentOpt.get());
-    }
+    return LatestDeploymentUnion.latest(latestHeliosOpt, latestDeploymentOpt);
   }
 
   /**

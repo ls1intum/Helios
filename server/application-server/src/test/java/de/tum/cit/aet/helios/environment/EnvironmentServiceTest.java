@@ -64,6 +64,7 @@ public class EnvironmentServiceTest {
   @Mock private GitHubEnvironmentSyncService environmentSyncService;
   @Mock private GitRepoRepository gitRepoRepository;
   @Mock private GitHubService gitHubService;
+  @Mock private EnvironmentListDtoBuilder environmentListDtoBuilder;
 
   @InjectMocks private EnvironmentService environmentService;
 
@@ -109,30 +110,32 @@ public class EnvironmentServiceTest {
 
   @Test
   public void testGetAllEnvironments() {
-    when(environmentRepository.findAllByOrderByNameAsc())
-        .thenReturn(List.of(environment, environment));
+    List<Environment> environments = List.of(environment, environment);
+    List<EnvironmentDto> expected = List.of(EnvironmentDto.fromEnvironment(environment));
+    when(environmentRepository.findAllByOrderByNameAsc()).thenReturn(environments);
+    when(environmentListDtoBuilder.build(environments)).thenReturn(expected);
 
     List<EnvironmentDto> result = environmentService.getAllEnvironments();
 
-    EnvironmentDto dto = EnvironmentDto.fromEnvironment(environment);
-
-    assertEquals(2, result.size());
-    assertEquals(List.of(dto, dto), result);
+    assertEquals(expected, result);
+    verify(environmentScheduler, times(1)).unlockExpiredEnvironments();
     verify(environmentRepository, times(1)).findAllByOrderByNameAsc();
+    verify(environmentListDtoBuilder, times(1)).build(environments);
   }
 
   @Test
   public void testGetAllEnabledEnvironments() {
-    when(environmentRepository.findByEnabledTrueOrderByNameAsc())
-        .thenReturn(List.of(environment, environment));
+    List<Environment> environments = List.of(environment, environment);
+    List<EnvironmentDto> expected = List.of(EnvironmentDto.fromEnvironment(environment));
+    when(environmentRepository.findByEnabledTrueOrderByNameAsc()).thenReturn(environments);
+    when(environmentListDtoBuilder.build(environments)).thenReturn(expected);
 
     List<EnvironmentDto> result = environmentService.getAllEnabledEnvironments();
 
-    EnvironmentDto dto = EnvironmentDto.fromEnvironment(environment);
-
-    assertEquals(2, result.size());
-    assertEquals(List.of(dto, dto), result);
+    assertEquals(expected, result);
+    verify(environmentScheduler, times(1)).unlockExpiredEnvironments();
     verify(environmentRepository, times(1)).findByEnabledTrueOrderByNameAsc();
+    verify(environmentListDtoBuilder, times(1)).build(environments);
   }
 
   @Test
