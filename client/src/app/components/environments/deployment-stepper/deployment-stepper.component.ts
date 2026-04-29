@@ -85,6 +85,35 @@ export class DeploymentStepperComponent implements OnInit {
     return this._deployment()?.state === 'QUEUED';
   }
 
+  getProgressTitle(): string {
+    const deployment = this._deployment();
+    if (!deployment) {
+      return '';
+    }
+    if (deployment.state === 'SUCCESS') {
+      return 'Deployment Completed';
+    }
+    if (this.isErrorState()) {
+      return 'Deployment Failed';
+    }
+    if (this.isUnknownState()) {
+      return 'Deployment Status Unknown';
+    }
+    if (this.isQueuedState()) {
+      return 'Deployment Queued';
+    }
+    if (this.timingService.hasStepStartTime(deployment, 1)) {
+      return 'Deployment in Progress';
+    }
+    if (this.timingService.hasStepStartTime(deployment, 0)) {
+      return 'Deployment in Progress';
+    }
+    if (['REQUESTED', 'WAITING', 'PENDING'].includes(deployment.state || '')) {
+      return 'Deployment Requested';
+    }
+    return 'Deployment in Progress';
+  }
+
   // Methods that need to be called from the template with arguments
   getStepStatus = this.timingService.createTimeAwareFunction((index: number): string => {
     const deployment = this._deployment();
@@ -125,6 +154,16 @@ export class DeploymentStepperComponent implements OnInit {
     const deployment = this._deployment();
     if (!deployment) return '';
     return this.timingService.getTotalRemainingTime(deployment);
+  });
+
+  getHeaderTimeLabel = this.timingService.timeAwareComputed(() => {
+    const deployment = this._deployment();
+    if (!deployment) return '';
+
+    const totalTime = this.timingService.getTotalRemainingTime(deployment);
+    if (!totalTime) return '';
+
+    return this.timingService.hasStepStartTime(deployment, this.currentEffectiveStepIndex) ? `${totalTime} remaining` : `~${totalTime} estimated`;
   });
 
   getStepTime = this.timingService.createTimeAwareFunction((index: number): string => {

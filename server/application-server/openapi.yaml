@@ -2440,7 +2440,7 @@ components:
         deployJobStartedAt:
           type: string
           format: date-time
-        deploymentStartedAt:
+        workflowStartedAt:
           type: string
           format: date-time
         type:
@@ -2448,7 +2448,7 @@ components:
           enum:
           - GITHUB
           - HELIOS
-        estimatedBuildDurationSeconds:
+        estimatedPreDeployDurationSeconds:
           type: integer
           format: int32
         estimatedDeployDurationSeconds:

@@ -33,8 +33,8 @@ class GitHubDeploymentSyncServiceTest {
   @InjectMocks private GitHubDeploymentSyncService gitHubDeploymentSyncService;
 
   @Test
-  void processDeploymentLatchesDeploymentStartedAtWhenDeploymentTurnsInProgress() {
-    final OffsetDateTime deploymentStartedAt = OffsetDateTime.parse("2026-04-23T10:15:00Z");
+  void processDeploymentUpdatesHeliosStatusWhenDeploymentTurnsInProgress() {
+    final OffsetDateTime deploymentUpdatedAt = OffsetDateTime.parse("2026-04-23T10:15:00Z");
 
     GitRepository repository = new GitRepository();
     repository.setRepositoryId(42L);
@@ -45,7 +45,7 @@ class GitHubDeploymentSyncServiceTest {
     HeliosDeployment heliosDeployment = new HeliosDeployment();
     heliosDeployment.setEnvironment(environment);
     heliosDeployment.setBranchName("main");
-    heliosDeployment.setUpdatedAt(deploymentStartedAt.minusMinutes(1));
+    heliosDeployment.setUpdatedAt(deploymentUpdatedAt.minusMinutes(1));
 
     DeploymentSource deploymentSource = mock(DeploymentSource.class);
     when(deploymentSource.getId()).thenReturn(99L);
@@ -56,7 +56,7 @@ class GitHubDeploymentSyncServiceTest {
       deployment.setRef("main");
       deployment.setSha("abc123");
       deployment.setState(Deployment.State.IN_PROGRESS);
-      deployment.setUpdatedAt(deploymentStartedAt);
+      deployment.setUpdatedAt(deploymentUpdatedAt);
       return deployment;
     }).when(deploymentConverter).update(any(DeploymentSource.class), any(Deployment.class));
     when(pullRequestRepository.findOpenPrByBranchNameOrSha(42L, "main", "abc123"))
@@ -69,51 +69,8 @@ class GitHubDeploymentSyncServiceTest {
     gitHubDeploymentSyncService.processDeployment(
         deploymentSource, repository, environment, null);
 
-    assertEquals(deploymentStartedAt, heliosDeployment.getDeploymentStartedAt());
     assertEquals(HeliosDeployment.Status.IN_PROGRESS, heliosDeployment.getStatus());
-    verify(heliosDeploymentRepository).save(heliosDeployment);
-  }
-
-  @Test
-  void processDeploymentDoesNotOverwriteExistingDeploymentStartedAt() {
-    final OffsetDateTime firstDeploymentStart = OffsetDateTime.parse("2026-04-23T10:15:00Z");
-    final OffsetDateTime laterStatusUpdate = OffsetDateTime.parse("2026-04-23T10:18:00Z");
-
-    GitRepository repository = new GitRepository();
-    repository.setRepositoryId(42L);
-
-    Environment environment = new Environment();
-    environment.setName("test");
-
-    HeliosDeployment heliosDeployment = new HeliosDeployment();
-    heliosDeployment.setEnvironment(environment);
-    heliosDeployment.setBranchName("main");
-    heliosDeployment.setDeploymentStartedAt(firstDeploymentStart);
-    heliosDeployment.setUpdatedAt(firstDeploymentStart);
-
-    DeploymentSource deploymentSource = mock(DeploymentSource.class);
-    when(deploymentSource.getId()).thenReturn(100L);
-    when(deploymentRepository.findById(100L)).thenReturn(Optional.empty());
-    doAnswer(invocation -> {
-      Deployment deployment = invocation.getArgument(1);
-      deployment.setId(100L);
-      deployment.setRef("main");
-      deployment.setSha("abc123");
-      deployment.setState(Deployment.State.IN_PROGRESS);
-      deployment.setUpdatedAt(laterStatusUpdate);
-      return deployment;
-    }).when(deploymentConverter).update(any(DeploymentSource.class), any(Deployment.class));
-    when(pullRequestRepository.findOpenPrByBranchNameOrSha(42L, "main", "abc123"))
-        .thenReturn(Optional.empty());
-    when(
-            heliosDeploymentRepository
-                .findTopByEnvironmentAndBranchNameOrderByCreatedAtDesc(environment, "main"))
-        .thenReturn(Optional.of(heliosDeployment));
-
-    gitHubDeploymentSyncService.processDeployment(
-        deploymentSource, repository, environment, null);
-
-    assertEquals(firstDeploymentStart, heliosDeployment.getDeploymentStartedAt());
+    assertEquals(deploymentUpdatedAt, heliosDeployment.getUpdatedAt());
     verify(heliosDeploymentRepository).save(heliosDeployment);
   }
 }

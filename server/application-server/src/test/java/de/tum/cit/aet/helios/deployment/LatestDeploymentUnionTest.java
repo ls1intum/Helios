@@ -11,8 +11,8 @@ class LatestDeploymentUnionTest {
 
   private static final OffsetDateTime DEPLOY_JOB_STARTED_AT =
       OffsetDateTime.parse("2026-04-23T10:00:00Z");
-  private static final OffsetDateTime DEPLOYMENT_STARTED_AT =
-      OffsetDateTime.parse("2026-04-23T10:02:00Z");
+  private static final OffsetDateTime WORKFLOW_STARTED_AT =
+      OffsetDateTime.parse("2026-04-23T09:58:00Z");
 
   @Test
   void fromHeliosStatusPreservesQueuedState() {
@@ -23,7 +23,7 @@ class LatestDeploymentUnionTest {
         LatestDeploymentUnion.State.QUEUED,
         LatestDeploymentUnion.State.fromHeliosStatus(HeliosDeployment.Status.QUEUED));
     assertEquals(
-        LatestDeploymentUnion.State.PENDING,
+        LatestDeploymentUnion.State.IN_PROGRESS,
         LatestDeploymentUnion.State.fromHeliosStatus(HeliosDeployment.Status.IN_PROGRESS));
   }
 
@@ -49,7 +49,7 @@ class LatestDeploymentUnionTest {
     LatestDeploymentUnion union = LatestDeploymentUnion.heliosDeployment(heliosDeployment(null));
 
     assertEquals(DEPLOY_JOB_STARTED_AT, union.getDeployJobStartedAt());
-    assertEquals(DEPLOYMENT_STARTED_AT, union.getDeploymentStartedAt());
+    assertEquals(WORKFLOW_STARTED_AT, union.getWorkflowStartedAt());
   }
 
   @Test
@@ -58,7 +58,7 @@ class LatestDeploymentUnionTest {
         LatestDeploymentUnion.realDeployment(deployment(1L), heliosDeployment(1L));
 
     assertEquals(DEPLOY_JOB_STARTED_AT, union.getDeployJobStartedAt());
-    assertEquals(DEPLOYMENT_STARTED_AT, union.getDeploymentStartedAt());
+    assertEquals(WORKFLOW_STARTED_AT, union.getWorkflowStartedAt());
   }
 
   @Test
@@ -67,16 +67,16 @@ class LatestDeploymentUnionTest {
         LatestDeploymentUnion.realDeployment(deployment(1L), heliosDeployment(2L));
 
     assertNull(union.getDeployJobStartedAt());
-    assertNull(union.getDeploymentStartedAt());
+    assertNull(union.getWorkflowStartedAt());
   }
 
   @Test
-  void hidesPhaseTimestampsForRealDeploymentFallbackWithoutDeploymentId() {
+  void exposesPhaseTimestampsForRealDeploymentFallbackWithoutDeploymentId() {
     LatestDeploymentUnion union =
         LatestDeploymentUnion.realDeployment(deployment(1L), heliosDeployment(null));
 
-    assertNull(union.getDeployJobStartedAt());
-    assertNull(union.getDeploymentStartedAt());
+    assertEquals(DEPLOY_JOB_STARTED_AT, union.getDeployJobStartedAt());
+    assertEquals(WORKFLOW_STARTED_AT, union.getWorkflowStartedAt());
   }
 
   private Deployment deployment(Long id) {
@@ -90,7 +90,7 @@ class LatestDeploymentUnionTest {
     heliosDeployment.setDeploymentId(deploymentId);
     heliosDeployment.setCreatedAt(OffsetDateTime.parse("2026-04-23T09:50:00Z"));
     heliosDeployment.setDeployJobStartedAt(DEPLOY_JOB_STARTED_AT);
-    heliosDeployment.setDeploymentStartedAt(DEPLOYMENT_STARTED_AT);
+    heliosDeployment.setWorkflowStartedAt(WORKFLOW_STARTED_AT);
     return heliosDeployment;
   }
 }

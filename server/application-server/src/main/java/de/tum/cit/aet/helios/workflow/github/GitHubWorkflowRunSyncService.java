@@ -300,6 +300,12 @@ public class GitHubWorkflowRunSyncService {
                   // Update the deployment status
                   heliosDeployment.setStatus(mappedStatus);
 
+                  if (heliosDeployment.getWorkflowStartedAt() == null
+                      && workflowRun.getRunStartedAt() != null) {
+                    heliosDeployment.setWorkflowStartedAt(
+                        DateUtil.convertToOffsetDateTime(workflowRun.getRunStartedAt()));
+                  }
+
                   // Update the workflow run html url, so we can show the approval url
                   // to the user before the Github deployment is created
                   heliosDeployment.setWorkflowRunId(workflowRun.getId());

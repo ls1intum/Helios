@@ -88,9 +88,9 @@ public record EnvironmentDto(
     private final OffsetDateTime createdAt;
     private final OffsetDateTime updatedAt;
     private final OffsetDateTime deployJobStartedAt;
-    private final OffsetDateTime deploymentStartedAt;
+    private final OffsetDateTime workflowStartedAt;
     @NonNull private final DeploymentType type;
-    private final Integer estimatedBuildDurationSeconds;
+    private final Integer estimatedPreDeployDurationSeconds;
     private final Integer estimatedDeployDurationSeconds;
 
     /** Builds an EnvironmentDeployment from a LatestDeploymentUnion. */
@@ -98,12 +98,12 @@ public record EnvironmentDto(
         LatestDeploymentUnion union,
         ReleaseCandidateRepository releaseCandidateRepository,
         DeploymentDurationEstimate estimate) {
-      Integer estimatedBuild = null;
+      Integer estimatedPreDeploy = null;
       Integer estimatedDeploy = null;
       if (estimate != null) {
-        estimatedBuild =
-            estimate.medianBuildDurationSeconds() != null
-                ? (int) Math.round(estimate.medianBuildDurationSeconds())
+        estimatedPreDeploy =
+            estimate.medianPreDeployDurationSeconds() != null
+                ? (int) Math.round(estimate.medianPreDeployDurationSeconds())
                 : null;
         estimatedDeploy =
             estimate.medianDeployDurationSeconds() != null
@@ -130,9 +130,9 @@ public record EnvironmentDto(
           union.getCreatedAt(),
           union.getUpdatedAt(),
           union.getDeployJobStartedAt(),
-          union.getDeploymentStartedAt(),
+          union.getWorkflowStartedAt(),
           union.getType(),
-          estimatedBuild,
+          estimatedPreDeploy,
           estimatedDeploy);
     }
 

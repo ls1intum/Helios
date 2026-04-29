@@ -106,8 +106,11 @@ export class DeploymentTimingService {
     const prExists = deployment?.prName != null;
     const defaultPending = prExists ? 2 : 11;
 
-    const pendingMin = deployment?.estimatedBuildDurationSeconds != null ? deployment.estimatedBuildDurationSeconds / 60 : defaultPending;
-    const inProgressMin = deployment?.estimatedDeployDurationSeconds != null ? deployment.estimatedDeployDurationSeconds / 60 : 4;
+    const pre = deployment?.estimatedBuildDurationSeconds;
+    const pendingMin = (pre != null && pre > 0) ? Math.max(pre / 60, 0.5) : defaultPending;
+
+    const dep = deployment?.estimatedDeployDurationSeconds;
+    const inProgressMin = (dep != null && dep > 0) ? Math.max(dep / 60, 0.5) : 4;
 
     return {
       REQUESTED: pendingMin,
@@ -254,7 +257,9 @@ export class DeploymentTimingService {
     const elapsedMs = Math.max(0, this.getProgressReferenceTime(deployment) - stepStartTime);
     const estimatedMs = this.getEstimatedTimes(deployment)[stepKey] * 60000;
     const ratio = estimatedMs > 0 ? Math.min(elapsedMs / estimatedMs, 1) : 1;
-    return Math.max(0, Math.floor(ratio * 100));
+    
+    const calculatedProgress = Math.max(0, Math.floor(ratio * 100));
+    return index === effectiveStep ? Math.min(calculatedProgress, 99) : calculatedProgress;
   }
 
   public getStepTime(deployment: EnvironmentDeployment, index: number): string {
@@ -288,7 +293,10 @@ export class DeploymentTimingService {
     const stepKey = this.steps[index];
     const estimatedMinutes = this.getEstimatedTimes(deployment)[stepKey];
     if (index > currentIndex || !this.getEffectiveStepStartTime(deployment, stepKey)) {
-      return `~${estimatedMinutes}m 0s\nestimated`;
+      const totalSeconds = Math.round(estimatedMinutes * 60);
+      const estMins = Math.floor(totalSeconds / 60);
+      const estSecs = totalSeconds % 60;
+      return `~${estMins}m ${estSecs}s\nestimated`;
     }
 
     const remainingMs = this.getRemainingTimeForCurrentStep(deployment);
@@ -398,7 +406,12 @@ export class DeploymentTimingService {
       return undefined;
     }
 
-    const parsed = new Date(value).getTime();
+    let timeString = value;
+    if (!timeString.endsWith('Z') && !timeString.match(/[+-]\d{2}:?\d{2}$/)) {
+      timeString += 'Z';
+    }
+
+    const parsed = new Date(timeString).getTime();
     return Number.isNaN(parsed) ? undefined : parsed;
   }
 }

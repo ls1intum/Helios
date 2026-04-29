@@ -153,7 +153,7 @@ public class LatestDeploymentUnion {
       return switch (status) {
         case WAITING -> REQUESTED;
         case QUEUED -> QUEUED;
-        case IN_PROGRESS -> PENDING;
+        case IN_PROGRESS -> IN_PROGRESS;
         case DEPLOYMENT_SUCCESS -> SUCCESS;
         case FAILED -> FAILURE;
         case CANCELLED -> CANCELLED;
@@ -231,27 +231,28 @@ public class LatestDeploymentUnion {
   }
 
   public OffsetDateTime getDeployJobStartedAt() {
-    if (hasMatchingHeliosDeployment()) {
+    if (hasTimingHeliosDeployment()) {
       return heliosDeployment.getDeployJobStartedAt();
     }
     return null;
   }
 
-  public OffsetDateTime getDeploymentStartedAt() {
-    if (hasMatchingHeliosDeployment()) {
-      return heliosDeployment.getDeploymentStartedAt();
+  public OffsetDateTime getWorkflowStartedAt() {
+    if (hasTimingHeliosDeployment()) {
+      return heliosDeployment.getWorkflowStartedAt();
     }
     return null;
   }
 
-  private boolean hasMatchingHeliosDeployment() {
+  private boolean hasTimingHeliosDeployment() {
     if (isHeliosDeployment()) {
       return true;
     }
-    return isRealDeployment()
-        && hasHeliosDeployment()
-        && heliosDeployment.getDeploymentId() != null
-        && heliosDeployment.getDeploymentId().equals(realDeployment.getId());
+    if (!isRealDeployment() || !hasHeliosDeployment()) {
+      return false;
+    }
+    return heliosDeployment.getDeploymentId() == null
+        || heliosDeployment.getDeploymentId().equals(realDeployment.getId());
   }
 
   public String getPullRequestName() {

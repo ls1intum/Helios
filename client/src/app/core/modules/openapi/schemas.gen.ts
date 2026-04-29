@@ -202,7 +202,7 @@ export const EnvironmentDeploymentSchema = {
       type: 'string',
       format: 'date-time',
     },
-    deploymentStartedAt: {
+    workflowStartedAt: {
       type: 'string',
       format: 'date-time',
     },
@@ -210,7 +210,7 @@ export const EnvironmentDeploymentSchema = {
       type: 'string',
       enum: ['GITHUB', 'HELIOS'],
     },
-    estimatedBuildDurationSeconds: {
+    estimatedPreDeployDurationSeconds: {
       type: 'integer',
       format: 'int32',
     },

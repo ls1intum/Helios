@@ -69,9 +69,9 @@ export type EnvironmentDeployment = {
   createdAt?: string;
   updatedAt?: string;
   deployJobStartedAt?: string;
-  deploymentStartedAt?: string;
+  workflowStartedAt?: string;
   type: 'GITHUB' | 'HELIOS';
-  estimatedBuildDurationSeconds?: number;
+  estimatedPreDeployDurationSeconds?: number;
   estimatedDeployDurationSeconds?: number;
 };
 
