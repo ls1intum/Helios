@@ -104,6 +104,11 @@ public class GitHubDeploymentSyncService {
       if (heliosDeployment.getDeploymentId() == null) {
         heliosDeployment.setDeploymentId(deployment.getId());
       }
+      if (deployment.getState() == Deployment.State.IN_PROGRESS
+          && heliosDeployment.getDeploymentStartedAt() == null
+          && deployment.getUpdatedAt() != null) {
+        heliosDeployment.setDeploymentStartedAt(deployment.getUpdatedAt());
+      }
       heliosDeployment.setStatus(
           HeliosDeployment.mapDeploymentStateToHeliosStatus(deployment.getState()));
       if (deployment

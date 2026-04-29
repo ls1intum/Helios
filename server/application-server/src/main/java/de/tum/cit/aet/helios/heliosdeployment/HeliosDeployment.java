@@ -102,6 +102,12 @@ public class HeliosDeployment {
   @Column(name = "deploy_duration_seconds")
   private Integer deployDurationSeconds;
 
+  @Column(name = "deploy_job_started_at")
+  private OffsetDateTime deployJobStartedAt;
+
+  @Column(name = "deployment_started_at")
+  private OffsetDateTime deploymentStartedAt;
+
   // Enum to represent deployment status
   public enum Status {
     /** Deployment called and waiting GitHub webhook listener. */

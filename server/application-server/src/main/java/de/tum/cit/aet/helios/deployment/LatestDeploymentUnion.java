@@ -230,6 +230,30 @@ public class LatestDeploymentUnion {
     }
   }
 
+  public OffsetDateTime getDeployJobStartedAt() {
+    if (hasMatchingHeliosDeployment()) {
+      return heliosDeployment.getDeployJobStartedAt();
+    }
+    return null;
+  }
+
+  public OffsetDateTime getDeploymentStartedAt() {
+    if (hasMatchingHeliosDeployment()) {
+      return heliosDeployment.getDeploymentStartedAt();
+    }
+    return null;
+  }
+
+  private boolean hasMatchingHeliosDeployment() {
+    if (isHeliosDeployment()) {
+      return true;
+    }
+    return isRealDeployment()
+        && hasHeliosDeployment()
+        && heliosDeployment.getDeploymentId() != null
+        && heliosDeployment.getDeploymentId().equals(realDeployment.getId());
+  }
+
   public String getPullRequestName() {
     if (isRealDeployment()) {
       return realDeployment.getPullRequest() != null

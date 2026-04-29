@@ -198,6 +198,14 @@ export const EnvironmentDeploymentSchema = {
       type: 'string',
       format: 'date-time',
     },
+    deployJobStartedAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+    deploymentStartedAt: {
+      type: 'string',
+      format: 'date-time',
+    },
     type: {
       type: 'string',
       enum: ['GITHUB', 'HELIOS'],

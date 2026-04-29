@@ -16,6 +16,8 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import org.springframework.lang.NonNull;
 
 public record EnvironmentDto(
@@ -68,24 +70,29 @@ public record EnvironmentDto(
   }
 
   /** This is the DTO for the "latestDeployment" portion inside EnvironmentDto. */
-  public static record EnvironmentDeployment(
-      @NonNull Long id,
-      String url,
-      LatestDeploymentUnion.State state,
-      String statusesUrl,
-      String sha,
-      String ref,
-      String task,
-      String workflowRunHtmlUrl,
-      List<String> releaseCandidateNames,
-      String prName,
-      UserInfoDto user,
-      Integer pullRequestNumber,
-      OffsetDateTime createdAt,
-      OffsetDateTime updatedAt,
-      @NonNull DeploymentType type,
-      Integer estimatedBuildDurationSeconds,
-      Integer estimatedDeployDurationSeconds) {
+  @Getter
+  @AllArgsConstructor
+  public static class EnvironmentDeployment {
+    @NonNull private final Long id;
+    private final String url;
+    private final LatestDeploymentUnion.State state;
+    private final String statusesUrl;
+    private final String sha;
+    private final String ref;
+    private final String task;
+    private final String workflowRunHtmlUrl;
+    private final List<String> releaseCandidateNames;
+    private final String prName;
+    private final UserInfoDto user;
+    private final Integer pullRequestNumber;
+    private final OffsetDateTime createdAt;
+    private final OffsetDateTime updatedAt;
+    private final OffsetDateTime deployJobStartedAt;
+    private final OffsetDateTime deploymentStartedAt;
+    @NonNull private final DeploymentType type;
+    private final Integer estimatedBuildDurationSeconds;
+    private final Integer estimatedDeployDurationSeconds;
+
     /** Builds an EnvironmentDeployment from a LatestDeploymentUnion. */
     public static EnvironmentDeployment fromUnion(
         LatestDeploymentUnion union,
@@ -122,10 +129,13 @@ public record EnvironmentDto(
           union.getPullRequestNumber(),
           union.getCreatedAt(),
           union.getUpdatedAt(),
+          union.getDeployJobStartedAt(),
+          union.getDeploymentStartedAt(),
           union.getType(),
           estimatedBuild,
           estimatedDeploy);
     }
+
   }
 
   /**
