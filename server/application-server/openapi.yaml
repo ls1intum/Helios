@@ -2388,6 +2388,77 @@ components:
           type: string
         notes:
           type: string
+    DeploymentTimerDto:
+      type: object
+      properties:
+        title:
+          type: string
+        headerMode:
+          type: string
+          enum:
+          - NONE
+          - DURATION
+          - ESTIMATED
+          - REMAINING
+        headerStartedAt:
+          type: string
+          format: date-time
+        headerEndedAt:
+          type: string
+          format: date-time
+        headerEstimateSeconds:
+          type: integer
+          format: int32
+        showQueuedMessage:
+          type: boolean
+        steps:
+          type: array
+          items:
+            $ref: "#/components/schemas/DeploymentTimerStepDto"
+      required:
+      - headerMode
+      - steps
+      - title
+    DeploymentTimerStepDto:
+      type: object
+      properties:
+        key:
+          type: string
+          enum:
+          - PRE_DEPLOYMENT
+          - DEPLOYMENT
+        label:
+          type: string
+        status:
+          type: string
+          enum:
+          - completed
+          - active
+          - error
+          - upcoming
+          - unknown
+        mode:
+          type: string
+          enum:
+          - NONE
+          - COMPLETED
+          - FAILED
+          - ESTIMATED
+          - REMAINING
+        startedAt:
+          type: string
+          format: date-time
+        endedAt:
+          type: string
+          format: date-time
+        estimateSeconds:
+          type: integer
+          format: int32
+      required:
+      - key
+      - label
+      - mode
+      - status
     EnvironmentDeployment:
       type: object
       properties:
@@ -2454,6 +2525,8 @@ components:
         estimatedDeployDurationSeconds:
           type: integer
           format: int32
+        timer:
+          $ref: "#/components/schemas/DeploymentTimerDto"
       required:
       - id
       - type

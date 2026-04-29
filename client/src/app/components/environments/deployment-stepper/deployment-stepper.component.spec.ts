@@ -1,7 +1,7 @@
 import { provideZonelessChangeDetection } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
-import { EnvironmentDeployment } from '@app/core/modules/openapi';
+import { DeploymentTimerDto, EnvironmentDeployment } from '@app/core/modules/openapi';
 import { DeploymentStepperComponent } from './deployment-stepper.component';
 
 describe('DeploymentStepperComponent', () => {
@@ -20,118 +20,109 @@ describe('DeploymentStepperComponent', () => {
     TestBed.resetTestingModule();
   });
 
-  it('shows queued as an exposed waiting state in the existing pre-deployment step', async () => {
-    const deployment: EnvironmentDeployment = {
-      id: 1,
-      state: 'QUEUED',
-      createdAt: new Date().toISOString(),
-      type: 'HELIOS',
-    };
+  const timer = (overrides: Partial<DeploymentTimerDto> = {}): DeploymentTimerDto => ({
+    title: 'Deployment in Progress',
+    headerMode: 'ESTIMATED',
+    headerEstimateSeconds: 360,
+    showQueuedMessage: false,
+    steps: [
+      {
+        key: 'PRE_DEPLOYMENT',
+        label: 'PRE-DEPLOYMENT',
+        status: 'active',
+        mode: 'ESTIMATED',
+        estimateSeconds: 120,
+      },
+      {
+        key: 'DEPLOYMENT',
+        label: 'DEPLOYMENT',
+        status: 'upcoming',
+        mode: 'ESTIMATED',
+        estimateSeconds: 240,
+      },
+    ],
+    ...overrides,
+  });
 
-    fixture.componentRef.setInput('deployment', deployment);
+  const deployment = (deploymentTimer?: DeploymentTimerDto): EnvironmentDeployment => ({
+    id: 1,
+    state: 'IN_PROGRESS',
+    createdAt: '2026-04-23T10:00:00Z',
+    type: 'HELIOS',
+    timer: deploymentTimer,
+  });
+
+  it('renders the backend-provided title, header, and steps', async () => {
+    fixture.componentRef.setInput('deployment', deployment(timer()));
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const text = fixture.nativeElement.textContent;
+    expect(text).toContain('Deployment in Progress');
+    expect(text).toContain('~6m 0s estimated');
+    expect(text).toContain('PRE-DEPLOYMENT');
+    expect(text).toContain('DEPLOYMENT');
+  });
+
+  it('renders the backend-provided queued message flag', async () => {
+    fixture.componentRef.setInput(
+      'deployment',
+      deployment(
+        timer({
+          title: 'Deployment Queued',
+          showQueuedMessage: true,
+        })
+      )
+    );
     fixture.detectChanges();
     await fixture.whenStable();
 
     const text = fixture.nativeElement.textContent;
     expect(text).toContain('Deployment Queued');
-    expect(text).toContain('Waiting for GitHub Actions to start this workflow. Deployment will continue automatically once a runner is available.');
-    expect(text).toContain('PRE-DEPLOYMENT');
-    expect(text).toContain('DEPLOYMENT');
+    expect(text).toContain('Waiting for GitHub Actions to start this workflow.');
   });
 
-  it('labels requested deployments before action progress as requested', async () => {
-    const deployment: EnvironmentDeployment = {
-      id: 1,
-      state: 'REQUESTED',
-      createdAt: new Date().toISOString(),
-      prName: 'Example PR',
-      type: 'HELIOS',
-    };
+  it('uses backend step statuses for severity and progress', async () => {
+    const currentTimer = timer({
+      steps: [
+        {
+          key: 'PRE_DEPLOYMENT',
+          label: 'PRE-DEPLOYMENT',
+          status: 'completed',
+          mode: 'COMPLETED',
+          estimateSeconds: 120,
+        },
+        {
+          key: 'DEPLOYMENT',
+          label: 'DEPLOYMENT',
+          status: 'active',
+          mode: 'REMAINING',
+          startedAt: new Date().toISOString(),
+          estimateSeconds: 240,
+        },
+      ],
+    });
 
-    fixture.componentRef.setInput('deployment', deployment);
+    fixture.componentRef.setInput('deployment', deployment(currentTimer));
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(fixture.componentInstance.getSeverityFromStepStatus(currentTimer.steps[0])).toBe('success');
+    expect(fixture.componentInstance.getSeverityFromStepStatus(currentTimer.steps[1])).toBe('info');
+    expect(fixture.componentInstance.getProgress(currentTimer.steps[0])).toBe(100);
+  });
+
+  it('falls back when the timer payload is missing during rollout', async () => {
+    fixture.componentRef.setInput('deployment', {
+      id: 1,
+      state: 'QUEUED',
+      type: 'HELIOS',
+    } satisfies EnvironmentDeployment);
     fixture.detectChanges();
     await fixture.whenStable();
 
     const text = fixture.nativeElement.textContent;
-    expect(text).toContain('Deployment Requested');
-    expect(text).toContain('~6m 0s estimated');
-    expect(text).not.toContain('Deployment in Progress');
-  });
-
-  it('labels pending deployments with a pre-deployment start as in progress', async () => {
-    const deployment: EnvironmentDeployment = {
-      id: 1,
-      state: 'PENDING',
-      createdAt: '2026-04-23T10:00:00Z',
-      workflowStartedAt: '2026-04-23T10:01:00Z',
-      estimatedPreDeployDurationSeconds: 120,
-      estimatedDeployDurationSeconds: 300,
-      type: 'HELIOS',
-    };
-
-    fixture.componentRef.setInput('deployment', deployment);
-    fixture.detectChanges();
-    await fixture.whenStable();
-
-    const text = fixture.nativeElement.textContent;
-    expect(text).toContain('Deployment in Progress');
-    expect(text).not.toContain('Deployment Requested');
-  });
-
-  it('labels workflow progress before deployment start as in progress', async () => {
-    const deployment: EnvironmentDeployment = {
-      id: 1,
-      state: 'IN_PROGRESS',
-      createdAt: new Date().toISOString(),
-      type: 'HELIOS',
-    };
-
-    fixture.componentRef.setInput('deployment', deployment);
-    fixture.detectChanges();
-    await fixture.whenStable();
-
-    const text = fixture.nativeElement.textContent;
-    expect(text).toContain('Deployment in Progress');
-    expect(text).toContain('remaining');
-    expect(text).not.toContain('Deployment Queued');
-    expect(text).not.toContain('Waiting for GitHub Actions to start this workflow.');
-  });
-
-  it('labels deployments as in progress after the deployment phase starts', async () => {
-    const deployment: EnvironmentDeployment = {
-      id: 1,
-      state: 'IN_PROGRESS',
-      createdAt: new Date().toISOString(),
-      deployJobStartedAt: new Date().toISOString(),
-      type: 'HELIOS',
-    };
-
-    fixture.componentRef.setInput('deployment', deployment);
-    fixture.detectChanges();
-    await fixture.whenStable();
-
-    const text = fixture.nativeElement.textContent;
-    expect(text).toContain('Deployment in Progress');
-  });
-
-  it('activates the deployment step when deploy job timing exists before the raw state changes', async () => {
-    const deployment: EnvironmentDeployment = {
-      id: 1,
-      state: 'PENDING',
-      createdAt: '2026-04-23T10:00:00Z',
-      deployJobStartedAt: '2026-04-23T10:01:00Z',
-      estimatedDeployDurationSeconds: 300,
-      type: 'HELIOS',
-    };
-
-    fixture.componentRef.setInput('deployment', deployment);
-    fixture.detectChanges();
-    await fixture.whenStable();
-
-    const text = fixture.nativeElement.textContent;
-    expect(text).toContain('Deployment in Progress');
-    expect(text).toContain('DEPLOYMENT');
-    expect(fixture.componentInstance.getStepStatus(0)).toBe('completed');
-    expect(fixture.componentInstance.getStepStatus(1)).toBe('active');
+    expect(text).toContain('Deployment Queued');
+    expect(text).toContain('Waiting for GitHub Actions to start this workflow.');
   });
 });

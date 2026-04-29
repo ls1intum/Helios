@@ -113,7 +113,7 @@ class GitHubWorkflowJobTimingServiceTest {
   }
 
   @Test
-  void persistDurationsLeavesWorkflowStartedAtNullWhenWorkflowRunMissing() {
+  void persistDurationsFallsBackToJobStartWhenWorkflowRunMissing() {
     final GitHubWorkflowJobPayload payload = payload("in_progress", "in_progress", "deploy");
 
     when(deploymentWorkflowConfigRepository.findByWorkflow(any(Workflow.class)))
@@ -127,7 +127,9 @@ class GitHubWorkflowJobTimingServiceTest {
     assertEquals(
         OffsetDateTime.parse("2026-03-29T18:31:53Z"),
         heliosDeployment.getDeployJobStartedAt());
-    assertEquals(null, heliosDeployment.getWorkflowStartedAt());
+    assertEquals(
+        OffsetDateTime.parse("2026-03-29T18:31:53Z"),
+        heliosDeployment.getWorkflowStartedAt());
     assertEquals(HeliosDeployment.Status.IN_PROGRESS, heliosDeployment.getStatus());
     verify(heliosDeploymentRepository).save(heliosDeployment);
   }

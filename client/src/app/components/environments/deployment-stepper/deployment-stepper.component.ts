@@ -1,19 +1,13 @@
-import { Component, inject, OnInit, signal, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ProgressBarModule } from 'primeng/progressbar';
-import { EnvironmentDeployment } from '@app/core/modules/openapi';
-import { TooltipModule } from 'primeng/tooltip';
+import { Component, computed, inject, input, signal } from '@angular/core';
+import { DeploymentTimerStepDto, EnvironmentDeployment } from '@app/core/modules/openapi';
 import { DeploymentTimingService } from '@app/core/services/deployment-timing.service';
-import { TagModule } from 'primeng/tag';
-import { MessageModule } from 'primeng/message';
-import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
 import { IconCheck, IconClock, IconProgress, IconX } from 'angular-tabler-icons/icons';
-
-interface EstimatedTimes {
-  REQUESTED: number;
-  PENDING: number;
-  IN_PROGRESS: number;
-}
+import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
+import { MessageModule } from 'primeng/message';
+import { ProgressBarModule } from 'primeng/progressbar';
+import { TagModule } from 'primeng/tag';
+import { TooltipModule } from 'primeng/tooltip';
 
 @Component({
   selector: 'app-deployment-stepper',
@@ -28,101 +22,30 @@ interface EstimatedTimes {
   ],
   templateUrl: './deployment-stepper.component.html',
 })
-export class DeploymentStepperComponent implements OnInit {
+export class DeploymentStepperComponent {
   private _deployment = signal<EnvironmentDeployment | undefined>(undefined);
   private timingService = inject(DeploymentTimingService);
 
   readonly deployment = input<EnvironmentDeployment | undefined, EnvironmentDeployment | undefined>(undefined, {
     transform: (value: EnvironmentDeployment | undefined) => {
       this._deployment.set(value);
-
-      if (value?.id && value?.state) {
-        this.timingService.updateDeploymentState(value);
-      }
-
       return value;
     },
   });
 
-  steps = this.timingService.steps;
-
-  estimatedTimes = this.timingService.timeAwareComputed<EstimatedTimes>(() => {
-    const deployment = this._deployment();
-    if (!deployment) return { REQUESTED: 0, PENDING: 0, IN_PROGRESS: 0 };
-    return this.timingService.getEstimatedTimes(deployment);
-  });
-
-  ngOnInit(): void {
-    // Run cleanup for old timing data
-    this.timingService.cleanupOldData();
-  }
-
-  get currentEffectiveStepIndex(): number {
-    const deployment = this._deployment();
-    if (!deployment) return 0;
-    return this.timingService.getCurrentEffectiveStepIndex(deployment);
-  }
-
-  isErrorState(): boolean {
-    const deployment = this._deployment();
-    if (!deployment) return false;
-    return this.timingService.isErrorState(deployment);
-  }
-
-  isUnknownState(): boolean {
-    const deployment = this._deployment();
-    if (!deployment) return false;
-    return this.timingService.isUnknownState(deployment);
-  }
-
-  isSuccessState(): boolean {
-    const deployment = this._deployment();
-    if (!deployment) return false;
-    return this.timingService.isSuccessState(deployment);
-  }
-
-  isQueuedState(): boolean {
-    return this._deployment()?.state === 'QUEUED';
-  }
+  timer = computed(() => this.timingService.getTimer(this._deployment()));
+  steps = computed(() => this.timer()?.steps ?? []);
 
   getProgressTitle(): string {
-    const deployment = this._deployment();
-    if (!deployment) {
-      return '';
-    }
-    if (deployment.state === 'SUCCESS') {
-      return 'Deployment Completed';
-    }
-    if (this.isErrorState()) {
-      return 'Deployment Failed';
-    }
-    if (this.isUnknownState()) {
-      return 'Deployment Status Unknown';
-    }
-    if (this.isQueuedState()) {
-      return 'Deployment Queued';
-    }
-    if (this.timingService.hasStepStartTime(deployment, 1)) {
-      return 'Deployment in Progress';
-    }
-    if (this.timingService.hasStepStartTime(deployment, 0)) {
-      return 'Deployment in Progress';
-    }
-    if (['REQUESTED', 'WAITING', 'PENDING'].includes(deployment.state || '')) {
-      return 'Deployment Requested';
-    }
-    return 'Deployment in Progress';
+    return this.timer()?.title ?? '';
   }
 
-  // Methods that need to be called from the template with arguments
-  getStepStatus = this.timingService.createTimeAwareFunction((index: number): string => {
-    const deployment = this._deployment();
-    if (!deployment) return 'unknown';
-    return this.timingService.getStepStatus(deployment, index);
-  });
+  shouldShowQueuedMessage(): boolean {
+    return this.timer()?.showQueuedMessage ?? false;
+  }
 
-  getSeverityFromStepStatus = (index: number) => {
-    switch (this.getStepStatus(index)) {
+  getSeverityFromStepStatus = (step: DeploymentTimerStepDto) => {
+    switch (step.status) {
       case 'completed':
         return 'success';
       case 'active':
@@ -131,54 +54,21 @@ export class DeploymentStepperComponent implements OnInit {
         return 'danger';
       case 'upcoming':
       case 'unknown':
-      case 'inactive':
         return 'secondary';
       default:
         return 'secondary';
     }
   };
 
-  getProgress = this.timingService.createTimeAwareFunction((index: number): number => {
-    const deployment = this._deployment();
-    if (!deployment) return 0;
-    return this.timingService.getProgress(deployment, index);
-  });
-
-  getRemainingTimeForCurrentStep = this.timingService.timeAwareComputed(() => {
-    const deployment = this._deployment();
-    if (!deployment) return 0;
-    return this.timingService.getRemainingTimeForCurrentStep(deployment);
-  });
-
-  getTotalRemainingTime = this.timingService.timeAwareComputed(() => {
-    const deployment = this._deployment();
-    if (!deployment) return '';
-    return this.timingService.getTotalRemainingTime(deployment);
+  getProgress = this.timingService.createTimeAwareFunction((step: DeploymentTimerStepDto): number => {
+    return this.timingService.getProgress(step);
   });
 
   getHeaderTimeLabel = this.timingService.timeAwareComputed(() => {
-    const deployment = this._deployment();
-    if (!deployment) return '';
-
-    const totalTime = this.timingService.getTotalRemainingTime(deployment);
-    if (!totalTime) return '';
-
-    return this.timingService.hasStepStartTime(deployment, this.currentEffectiveStepIndex) ? `${totalTime} remaining` : `~${totalTime} estimated`;
+    return this.timingService.getHeaderTimeLabel(this.timer());
   });
 
-  getStepTime = this.timingService.createTimeAwareFunction((index: number): string => {
-    const deployment = this._deployment();
-    if (!deployment) return '';
-    return this.timingService.getStepTime(deployment, index);
-  });
-
-  getStepDisplayName = this.timingService.createTimeAwareFunction((step: string): string => {
-    return this.timingService.getStepDisplayName(step);
-  });
-
-  getDeploymentDuration = this.timingService.timeAwareComputed(() => {
-    const deployment = this._deployment();
-    if (!deployment) return '';
-    return this.timingService.getDeploymentDuration(deployment);
+  getStepTime = this.timingService.createTimeAwareFunction((step: DeploymentTimerStepDto): string => {
+    return this.timingService.getStepTime(step);
   });
 }

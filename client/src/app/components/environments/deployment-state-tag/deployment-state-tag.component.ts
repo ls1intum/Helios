@@ -134,8 +134,8 @@ export class DeploymentStateTagComponent {
   });
 
   shouldShowRemainingTime = this.timingService.timeAwareComputed(() => {
-    const inProgressStates: ExtendedDeploymentState[] = ['REQUESTED', 'PENDING', 'IN_PROGRESS', 'QUEUED'];
-    return inProgressStates.includes(this.internalState()) && !!this.deployment();
+    const timer = this.timingService.getTimer(this.deployment());
+    return timer?.headerMode === 'REMAINING' || timer?.headerMode === 'ESTIMATED';
   });
 
   getRemainingTime = this.timingService.timeAwareComputed(() => {
