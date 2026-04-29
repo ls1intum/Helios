@@ -340,8 +340,7 @@ export class DeploymentTimingService {
       endTime = this._currentTime();
     }
 
-    const startTime =
-      this.getEffectiveStepStartTime(deployment, 'PENDING') || this.getEffectiveStepStartTime(deployment, 'IN_PROGRESS') || new Date(deployment.createdAt).getTime();
+    const startTime = this.getEffectiveStepStartTime(deployment, 'PENDING') || new Date(deployment.createdAt).getTime();
     const elapsedMs = endTime - startTime;
     if (elapsedMs < 0) {
       return '0m 0s';

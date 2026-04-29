@@ -118,4 +118,15 @@ describe('DeploymentTimingService', () => {
 
     expect(service.getDeploymentDuration(finishedDeployment)).toBe('7m 0s');
   });
+
+  it('measures the finished deployment duration from creation when deploy job start is unavailable', () => {
+    const finishedDeployment = deployment({
+      state: 'SUCCESS',
+      createdAt: '2026-04-23T09:50:00Z',
+      deploymentStartedAt: '2026-04-23T10:02:00Z',
+      updatedAt: '2026-04-23T10:07:00Z',
+    });
+
+    expect(service.getDeploymentDuration(finishedDeployment)).toBe('17m 0s');
+  });
 });
