@@ -79,7 +79,8 @@ describe('DeploymentStepperComponent', () => {
 
     const text = fixture.nativeElement.textContent;
     expect(text).toContain('Deployment Queued');
-    expect(text).toContain('Waiting for GitHub Actions to start this workflow.');
+    expect(text).toContain('Deployment is queued right now.');
+    expect(text).toContain('Pre-deployment timer might be inaccurate depending on GitHub runner availability.');
   });
 
   it('uses backend step statuses for severity and progress', async () => {
@@ -123,6 +124,7 @@ describe('DeploymentStepperComponent', () => {
 
     const text = fixture.nativeElement.textContent;
     expect(text).toContain('Deployment Queued');
-    expect(text).toContain('Waiting for GitHub Actions to start this workflow.');
+    expect(text).toContain('Deployment is queued right now.');
+    expect(text).toContain('Pre-deployment timer might be inaccurate depending on GitHub runner availability.');
   });
 });
