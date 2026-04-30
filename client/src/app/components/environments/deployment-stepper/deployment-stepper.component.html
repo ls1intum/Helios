@@ -22,7 +22,7 @@
 
   @if (shouldShowQueuedMessage()) {
     <p-message severity="warn" class="mb-6 block text-left">
-      Waiting for GitHub Actions to start this workflow. Deployment will continue automatically once a runner is available.
+      Deployment is queued right now. Pre-deployment timer might be inaccurate depending on GitHub runner availability. Check GitHub Actions for more detailed information.
     </p-message>
   }
 
