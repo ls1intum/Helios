@@ -82,6 +82,10 @@ export class KeycloakService {
   }
 
   login() {
+    if (environment.keycloak.skipLoginPage) {
+      return this.keycloak.login({ idpHint: 'github' });
+    }
+
     return this.keycloak.login();
   }
 
