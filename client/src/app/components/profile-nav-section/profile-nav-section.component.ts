@@ -11,7 +11,7 @@ import { DividerModule } from 'primeng/divider';
 import { AvatarModule } from 'primeng/avatar';
 import { Popover, PopoverModule } from 'primeng/popover';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
-import { IconLogin, IconLogout, IconSettings } from 'angular-tabler-icons/icons';
+import { IconBrandGithub, IconLogout, IconSettings } from 'angular-tabler-icons/icons';
 import { NavigationEnd, Router, RouterLink } from '@angular/router';
 import { filter } from 'rxjs';
 
@@ -33,7 +33,7 @@ import { filter } from 'rxjs';
   ],
   providers: [
     provideTablerIcons({
-      IconLogin,
+      IconBrandGithub,
       IconLogout,
       IconSettings,
     }),

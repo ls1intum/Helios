@@ -5,8 +5,13 @@
       <span class="hidden md:block text-md runcate overflow-hidden whitespace-nowrap max-w-[130px]">{{ fullName() }}</span>
     </p-button>
   } @else {
-    <p-button (click)="login()" class="rounded-xl flex items-center justify-center gap-2 w-full" size="small">
-      <i-tabler name="login" class="!size-5 !stroke-1"></i-tabler>
+    <p-button
+      (click)="login()"
+      class="rounded-xl flex items-center justify-center gap-2 w-full"
+      styleClass="!bg-white !border-white !text-primary hover:!bg-surface-100 hover:!border-surface-100 dark:!bg-surface-100 dark:!border-surface-100 dark:!text-primary"
+      size="small"
+    >
+      <i-tabler name="brand-github" class="!size-5 !stroke-1"></i-tabler>
       <span class="hidden md:block">Sign In</span>
     </p-button>
   }
