@@ -1,5 +1,6 @@
 package de.tum.cit.aet.helios.environment;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import de.tum.cit.aet.helios.deployment.LatestDeploymentUnion;
 import de.tum.cit.aet.helios.deployment.LatestDeploymentUnion.DeploymentType;
 import de.tum.cit.aet.helios.environment.status.EnvironmentStatus;
@@ -11,11 +12,13 @@ import de.tum.cit.aet.helios.releaseinfo.releasecandidate.ReleaseCandidate;
 import de.tum.cit.aet.helios.releaseinfo.releasecandidate.ReleaseCandidateRepository;
 import de.tum.cit.aet.helios.user.UserInfoDto;
 import de.tum.cit.aet.helios.workflow.WorkflowDto;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.springframework.lang.NonNull;
@@ -88,22 +91,30 @@ public record EnvironmentDto(
     private final OffsetDateTime createdAt;
     private final OffsetDateTime updatedAt;
     private final OffsetDateTime deployJobStartedAt;
-    private final OffsetDateTime deploymentStartedAt;
+    private final OffsetDateTime workflowStartedAt;
     @NonNull private final DeploymentType type;
-    private final Integer estimatedBuildDurationSeconds;
+    private final Integer estimatedPreDeployDurationSeconds;
     private final Integer estimatedDeployDurationSeconds;
+    @Getter(AccessLevel.NONE)
+    private final DeploymentTimerDto timer;
+
+    @JsonProperty("timer")
+    @Schema(implementation = DeploymentTimerDto.class)
+    public DeploymentTimerDto getTimer() {
+      return timer;
+    }
 
     /** Builds an EnvironmentDeployment from a LatestDeploymentUnion. */
     public static EnvironmentDeployment fromUnion(
         LatestDeploymentUnion union,
         ReleaseCandidateRepository releaseCandidateRepository,
         DeploymentDurationEstimate estimate) {
-      Integer estimatedBuild = null;
+      Integer estimatedPreDeploy = null;
       Integer estimatedDeploy = null;
       if (estimate != null) {
-        estimatedBuild =
-            estimate.medianBuildDurationSeconds() != null
-                ? (int) Math.round(estimate.medianBuildDurationSeconds())
+        estimatedPreDeploy =
+            estimate.medianPreDeployDurationSeconds() != null
+                ? (int) Math.round(estimate.medianPreDeployDurationSeconds())
                 : null;
         estimatedDeploy =
             estimate.medianDeployDurationSeconds() != null
@@ -130,10 +141,11 @@ public record EnvironmentDto(
           union.getCreatedAt(),
           union.getUpdatedAt(),
           union.getDeployJobStartedAt(),
-          union.getDeploymentStartedAt(),
+          union.getWorkflowStartedAt(),
           union.getType(),
-          estimatedBuild,
-          estimatedDeploy);
+          estimatedPreDeploy,
+          estimatedDeploy,
+          DeploymentTimerMapper.fromUnion(union, estimate));
     }
 
   }

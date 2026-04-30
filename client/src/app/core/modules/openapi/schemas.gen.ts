@@ -145,6 +145,75 @@ export const UpdateReleaseNotesDtoSchema = {
   },
 } as const;
 
+export const DeploymentTimerDtoSchema = {
+  type: 'object',
+  properties: {
+    title: {
+      type: 'string',
+    },
+    headerMode: {
+      type: 'string',
+      enum: ['NONE', 'DURATION', 'ESTIMATED', 'REMAINING'],
+    },
+    headerStartedAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+    headerEndedAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+    headerEstimateSeconds: {
+      type: 'integer',
+      format: 'int32',
+    },
+    showQueuedMessage: {
+      type: 'boolean',
+    },
+    steps: {
+      type: 'array',
+      items: {
+        $ref: '#/components/schemas/DeploymentTimerStepDto',
+      },
+    },
+  },
+  required: ['headerMode', 'steps', 'title'],
+} as const;
+
+export const DeploymentTimerStepDtoSchema = {
+  type: 'object',
+  properties: {
+    key: {
+      type: 'string',
+      enum: ['PRE_DEPLOYMENT', 'DEPLOYMENT'],
+    },
+    label: {
+      type: 'string',
+    },
+    status: {
+      type: 'string',
+      enum: ['completed', 'active', 'error', 'upcoming', 'unknown'],
+    },
+    mode: {
+      type: 'string',
+      enum: ['NONE', 'COMPLETED', 'FAILED', 'ESTIMATED', 'REMAINING'],
+    },
+    startedAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+    endedAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+    estimateSeconds: {
+      type: 'integer',
+      format: 'int32',
+    },
+  },
+  required: ['key', 'label', 'mode', 'status'],
+} as const;
+
 export const EnvironmentDeploymentSchema = {
   type: 'object',
   properties: {
@@ -202,7 +271,7 @@ export const EnvironmentDeploymentSchema = {
       type: 'string',
       format: 'date-time',
     },
-    deploymentStartedAt: {
+    workflowStartedAt: {
       type: 'string',
       format: 'date-time',
     },
@@ -210,13 +279,16 @@ export const EnvironmentDeploymentSchema = {
       type: 'string',
       enum: ['GITHUB', 'HELIOS'],
     },
-    estimatedBuildDurationSeconds: {
+    estimatedPreDeployDurationSeconds: {
       type: 'integer',
       format: 'int32',
     },
     estimatedDeployDurationSeconds: {
       type: 'integer',
       format: 'int32',
+    },
+    timer: {
+      $ref: '#/components/schemas/DeploymentTimerDto',
     },
   },
   required: ['id', 'type'],

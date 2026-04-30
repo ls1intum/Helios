@@ -52,18 +52,18 @@ public interface HeliosDeploymentRepository extends JpaRepository<HeliosDeployme
 
   @Query(
       value =
-          "SELECT PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY sub.build_duration_seconds)"
-              + " AS median_build, "
+          "SELECT PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY sub.pre_deploy_duration_seconds)"
+              + " AS median_pre_deploy, "
               + "PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY sub.deploy_duration_seconds)"
               + " AS median_deploy "
               + "FROM ("
-              + "  SELECT build_duration_seconds, deploy_duration_seconds "
+              + "  SELECT pre_deploy_duration_seconds, deploy_duration_seconds "
               + "  FROM helios_deployment "
               + "  WHERE environment_id = :environmentId "
               + "    AND status = 'DEPLOYMENT_SUCCESS' "
-              + "    AND build_duration_seconds IS NOT NULL "
+              + "    AND pre_deploy_duration_seconds IS NOT NULL "
               + "  ORDER BY created_at DESC "
-              + "  LIMIT 100"
+              + "  LIMIT 15"
               + ") sub",
       nativeQuery = true)
   List<Object[]> findMedianDurationsByEnvironmentId(@Param("environmentId") Long environmentId);

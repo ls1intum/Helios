@@ -53,6 +53,26 @@ export type UpdateReleaseNotesDto = {
   notes?: string;
 };
 
+export type DeploymentTimerDto = {
+  title: string;
+  headerMode: 'NONE' | 'DURATION' | 'ESTIMATED' | 'REMAINING';
+  headerStartedAt?: string;
+  headerEndedAt?: string;
+  headerEstimateSeconds?: number;
+  showQueuedMessage?: boolean;
+  steps: Array<DeploymentTimerStepDto>;
+};
+
+export type DeploymentTimerStepDto = {
+  key: 'PRE_DEPLOYMENT' | 'DEPLOYMENT';
+  label: string;
+  status: 'completed' | 'active' | 'error' | 'upcoming' | 'unknown';
+  mode: 'NONE' | 'COMPLETED' | 'FAILED' | 'ESTIMATED' | 'REMAINING';
+  startedAt?: string;
+  endedAt?: string;
+  estimateSeconds?: number;
+};
+
 export type EnvironmentDeployment = {
   id: number;
   url?: string;
@@ -69,10 +89,11 @@ export type EnvironmentDeployment = {
   createdAt?: string;
   updatedAt?: string;
   deployJobStartedAt?: string;
-  deploymentStartedAt?: string;
+  workflowStartedAt?: string;
   type: 'GITHUB' | 'HELIOS';
-  estimatedBuildDurationSeconds?: number;
+  estimatedPreDeployDurationSeconds?: number;
   estimatedDeployDurationSeconds?: number;
+  timer?: DeploymentTimerDto;
 };
 
 export type EnvironmentDto = {

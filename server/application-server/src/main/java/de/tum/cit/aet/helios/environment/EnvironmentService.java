@@ -118,8 +118,8 @@ public class EnvironmentService {
   }
 
   /**
-   * Computes median build and deploy duration estimates from previous deployments for the given
-   * environment.
+   * Computes median pre-deploy and deploy duration estimates from previous deployments for the
+   * given environment.
    *
    * @param environment the environment whose duration estimates should be loaded
    * @return a duration estimate, or {@code null} when no usable historical data exists
@@ -134,9 +134,9 @@ public class EnvironmentService {
     if (row == null || row.length < 2 || row[0] == null) {
       return null;
     }
-    Double medianBuild = ((Number) row[0]).doubleValue();
+    Double medianPreDeploy = ((Number) row[0]).doubleValue();
     Double medianDeploy = row[1] != null ? ((Number) row[1]).doubleValue() : null;
-    return new DeploymentDurationEstimate(medianBuild, medianDeploy);
+    return new DeploymentDurationEstimate(medianPreDeploy, medianDeploy);
   }
 
   /**

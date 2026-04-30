@@ -96,8 +96,8 @@ public class HeliosDeployment {
   @JoinColumn(name = "pull_request_id")
   private PullRequest pullRequest;
 
-  @Column(name = "build_duration_seconds")
-  private Integer buildDurationSeconds;
+  @Column(name = "pre_deploy_duration_seconds")
+  private Integer preDeployDurationSeconds;
 
   @Column(name = "deploy_duration_seconds")
   private Integer deployDurationSeconds;
@@ -105,8 +105,8 @@ public class HeliosDeployment {
   @Column(name = "deploy_job_started_at")
   private OffsetDateTime deployJobStartedAt;
 
-  @Column(name = "deployment_started_at")
-  private OffsetDateTime deploymentStartedAt;
+  @Column(name = "workflow_started_at")
+  private OffsetDateTime workflowStartedAt;
 
   // Enum to represent deployment status
   public enum Status {

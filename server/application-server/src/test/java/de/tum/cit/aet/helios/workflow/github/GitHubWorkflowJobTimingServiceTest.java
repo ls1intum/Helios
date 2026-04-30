@@ -80,7 +80,7 @@ class GitHubWorkflowJobTimingServiceTest {
 
     gitHubWorkflowJobTimingService.persistDurations(payload);
 
-    assertEquals(Integer.valueOf(13), heliosDeployment.getBuildDurationSeconds());
+    assertEquals(Integer.valueOf(13), heliosDeployment.getPreDeployDurationSeconds());
     assertEquals(Integer.valueOf(13), heliosDeployment.getDeployDurationSeconds());
     assertEquals(Long.valueOf(4210842007L), heliosDeployment.getDeploymentId());
     verify(heliosDeploymentRepository).save(heliosDeployment);
@@ -88,6 +88,32 @@ class GitHubWorkflowJobTimingServiceTest {
 
   @Test
   void persistDurationsPersistsDeployJobStartOnInProgress() {
+    WorkflowRun workflowRun = new WorkflowRun();
+    workflowRun.setId(23716064328L);
+    workflowRun.setWorkflow(deploymentWorkflow);
+    workflowRun.setRunStartedAt(OffsetDateTime.parse("2026-03-29T18:31:40Z"));
+    final GitHubWorkflowJobPayload payload = payload("in_progress", "in_progress", "deploy");
+
+    when(deploymentWorkflowConfigRepository.findByWorkflow(any(Workflow.class)))
+        .thenReturn(Optional.of(config));
+    when(heliosDeploymentRepository.findByWorkflowRunId(anyLong()))
+        .thenReturn(Optional.of(heliosDeployment));
+    when(workflowRunRepository.findById(any(Long.class))).thenReturn(Optional.of(workflowRun));
+
+    gitHubWorkflowJobTimingService.persistDurations(payload);
+
+    assertEquals(
+        OffsetDateTime.parse("2026-03-29T18:31:53Z"),
+        heliosDeployment.getDeployJobStartedAt());
+    assertEquals(
+        OffsetDateTime.parse("2026-03-29T18:31:40Z"),
+        heliosDeployment.getWorkflowStartedAt());
+    assertEquals(HeliosDeployment.Status.IN_PROGRESS, heliosDeployment.getStatus());
+    verify(heliosDeploymentRepository).save(heliosDeployment);
+  }
+
+  @Test
+  void persistDurationsFallsBackToJobStartWhenWorkflowRunMissing() {
     final GitHubWorkflowJobPayload payload = payload("in_progress", "in_progress", "deploy");
 
     when(deploymentWorkflowConfigRepository.findByWorkflow(any(Workflow.class)))
@@ -101,16 +127,20 @@ class GitHubWorkflowJobTimingServiceTest {
     assertEquals(
         OffsetDateTime.parse("2026-03-29T18:31:53Z"),
         heliosDeployment.getDeployJobStartedAt());
+    assertEquals(
+        OffsetDateTime.parse("2026-03-29T18:31:53Z"),
+        heliosDeployment.getWorkflowStartedAt());
+    assertEquals(HeliosDeployment.Status.IN_PROGRESS, heliosDeployment.getStatus());
     verify(heliosDeploymentRepository).save(heliosDeployment);
   }
 
   @Test
-  void persistDurationsSplitsUsingPersistedDeploymentStartWhenAvailable() {
+  void persistDurationsSplitsUsingPersistedDeployJobStartWhenAvailable() {
     heliosDeployment.setDeployJobStartedAt(OffsetDateTime.parse("2026-03-29T18:31:53Z"));
-    heliosDeployment.setDeploymentStartedAt(OffsetDateTime.parse("2026-03-29T18:31:58Z"));
     WorkflowRun workflowRun = new WorkflowRun();
     workflowRun.setId(23716064328L);
     workflowRun.setWorkflow(deploymentWorkflow);
+    workflowRun.setRunStartedAt(OffsetDateTime.parse("2026-03-29T18:31:40Z"));
     final GitHubWorkflowJobPayload payload = payload("completed", "completed", "deploy");
 
     when(deploymentWorkflowConfigRepository.findByWorkflow(any(Workflow.class)))
@@ -121,8 +151,8 @@ class GitHubWorkflowJobTimingServiceTest {
 
     gitHubWorkflowJobTimingService.persistDurations(payload);
 
-    assertEquals(Integer.valueOf(5), heliosDeployment.getBuildDurationSeconds());
-    assertEquals(Integer.valueOf(8), heliosDeployment.getDeployDurationSeconds());
+    assertEquals(Integer.valueOf(13), heliosDeployment.getPreDeployDurationSeconds());
+    assertEquals(Integer.valueOf(13), heliosDeployment.getDeployDurationSeconds());
     verify(heliosDeploymentRepository).save(heliosDeployment);
   }
 
@@ -141,7 +171,7 @@ class GitHubWorkflowJobTimingServiceTest {
 
     gitHubWorkflowJobTimingService.persistDurations(payload);
 
-    assertEquals(Integer.valueOf(3), heliosDeployment.getBuildDurationSeconds());
+    assertEquals(Integer.valueOf(3), heliosDeployment.getPreDeployDurationSeconds());
     assertEquals(Integer.valueOf(13), heliosDeployment.getDeployDurationSeconds());
     verify(heliosDeploymentRepository).save(heliosDeployment);
   }
@@ -178,6 +208,29 @@ class GitHubWorkflowJobTimingServiceTest {
     gitHubWorkflowJobTimingService.persistDurations(payload);
 
     verify(heliosDeploymentRepository, never()).save(any());
+  }
+
+  @Test
+  void persistDurationsMarksWorkflowStartedForNonConfiguredInProgressJobs() {
+    WorkflowRun workflowRun = new WorkflowRun();
+    workflowRun.setId(23716064328L);
+    workflowRun.setWorkflow(deploymentWorkflow);
+    workflowRun.setRunStartedAt(OffsetDateTime.parse("2026-03-29T18:31:40Z"));
+    GitHubWorkflowJobPayload payload = payload("in_progress", "in_progress", "build");
+
+    when(deploymentWorkflowConfigRepository.findByWorkflow(any(Workflow.class)))
+        .thenReturn(Optional.of(config));
+    when(heliosDeploymentRepository.findByWorkflowRunId(anyLong()))
+        .thenReturn(Optional.of(heliosDeployment));
+    when(workflowRunRepository.findById(any(Long.class))).thenReturn(Optional.of(workflowRun));
+
+    gitHubWorkflowJobTimingService.persistDurations(payload);
+
+    assertEquals(
+        OffsetDateTime.parse("2026-03-29T18:31:40Z"),
+        heliosDeployment.getWorkflowStartedAt());
+    assertEquals(HeliosDeployment.Status.IN_PROGRESS, heliosDeployment.getStatus());
+    verify(heliosDeploymentRepository).save(heliosDeployment);
   }
 
   private GitHubWorkflowJobPayload payload(

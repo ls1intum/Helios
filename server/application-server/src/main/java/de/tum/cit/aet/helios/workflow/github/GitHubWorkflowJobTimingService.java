@@ -57,12 +57,6 @@ public class GitHubWorkflowJobTimingService {
       return;
     }
 
-    Optional<DeploymentWorkflowConfig> configOpt =
-        deploymentWorkflowConfigRepository.findByWorkflow(workflow);
-    if (configOpt.isEmpty()) {
-      return;
-    }
-
     Optional<WorkflowRun> workflowRunOpt = workflowRunRepository.findById(job.runId());
     if (workflowRunOpt.isPresent()
         && workflowRunOpt.get().getWorkflow() != null
@@ -75,14 +69,27 @@ public class GitHubWorkflowJobTimingService {
       return;
     }
 
+    boolean changed = persistWorkflowStart(heliosDeployment, workflowRunOpt.orElse(null), payload);
+
+    Optional<DeploymentWorkflowConfig> configOpt =
+        deploymentWorkflowConfigRepository.findByWorkflow(workflow);
+    if (configOpt.isEmpty()) {
+      if (changed) {
+        heliosDeploymentRepository.save(heliosDeployment);
+      }
+      return;
+    }
+
     DeploymentWorkflowConfig config = configOpt.get();
     if (config.getDeployJobName() == null
         || config.getDeployJobName().isBlank()
         || !config.getDeployJobName().equals(job.name())) {
+      if (changed) {
+        heliosDeploymentRepository.save(heliosDeployment);
+      }
       return;
     }
 
-    boolean changed = false;
     if (payload.deployment() != null
         && heliosDeployment.getDeploymentId() == null
         && payload.deployment().id() != null) {
@@ -120,32 +127,55 @@ public class GitHubWorkflowJobTimingService {
       return;
     }
 
-    OffsetDateTime deploymentStartedAt = heliosDeployment.getDeploymentStartedAt();
-    if (deploymentStartedAt != null) {
-      OffsetDateTime deployJobStartedAt =
-          heliosDeployment.getDeployJobStartedAt() != null
-              ? heliosDeployment.getDeployJobStartedAt()
-              : job.startedAt();
-      heliosDeployment.setBuildDurationSeconds(
-          calculateDurationSeconds(deployJobStartedAt, deploymentStartedAt));
-      heliosDeployment.setDeployDurationSeconds(
-          calculateDurationSeconds(deploymentStartedAt, job.completedAt()));
-    } else {
-      OffsetDateTime preDeploymentStart =
-          resolveLegacyPreDeploymentStart(
-              workflowRunOpt.orElse(null),
-              payload.deployment() != null ? payload.deployment().createdAt() : null,
-              heliosDeployment);
-      heliosDeployment.setBuildDurationSeconds(
-          calculateDurationSeconds(preDeploymentStart, job.startedAt()));
-      heliosDeployment.setDeployDurationSeconds(
-          calculateDurationSeconds(job.startedAt(), job.completedAt()));
-    }
+    OffsetDateTime deployJobStartedAt =
+        heliosDeployment.getDeployJobStartedAt() != null
+            ? heliosDeployment.getDeployJobStartedAt()
+            : job.startedAt();
+    OffsetDateTime preDeploymentStart =
+        resolvePreDeploymentStart(
+            workflowRunOpt.orElse(null),
+            payload.deployment() != null ? payload.deployment().createdAt() : null,
+            heliosDeployment);
+    heliosDeployment.setPreDeployDurationSeconds(
+        calculateDurationSeconds(preDeploymentStart, deployJobStartedAt));
+    heliosDeployment.setDeployDurationSeconds(
+        calculateDurationSeconds(deployJobStartedAt, job.completedAt()));
     changed = true;
 
     if (changed) {
       heliosDeploymentRepository.save(heliosDeployment);
     }
+  }
+
+  private boolean persistWorkflowStart(
+      HeliosDeployment heliosDeployment,
+      WorkflowRun workflowRun,
+      GitHubWorkflowJobPayload payload) {
+    if (!isWorkflowRunningEvent(payload.action(), payload.workflowJob())) {
+      return false;
+    }
+
+    boolean changed = false;
+    OffsetDateTime workflowStartedAt =
+        workflowRun != null && workflowRun.getRunStartedAt() != null
+            ? workflowRun.getRunStartedAt()
+            : payload.workflowJob().startedAt();
+    if (heliosDeployment.getWorkflowStartedAt() == null && workflowStartedAt != null) {
+      heliosDeployment.setWorkflowStartedAt(workflowStartedAt);
+      changed = true;
+    }
+    if (heliosDeployment.getStatus() != HeliosDeployment.Status.IN_PROGRESS) {
+      heliosDeployment.setStatus(HeliosDeployment.Status.IN_PROGRESS);
+      changed = true;
+    }
+    return changed;
+  }
+
+  private boolean isWorkflowRunningEvent(
+      String action, GitHubWorkflowJobPayload.WorkflowJob job) {
+    return "in_progress".equalsIgnoreCase(action)
+        && "in_progress".equalsIgnoreCase(job.status())
+        && job.startedAt() != null;
   }
 
   private boolean isJobStartedEvent(
@@ -163,7 +193,7 @@ public class GitHubWorkflowJobTimingService {
         && job.completedAt() != null;
   }
 
-  private OffsetDateTime resolveLegacyPreDeploymentStart(
+  private OffsetDateTime resolvePreDeploymentStart(
       WorkflowRun workflowRun,
       OffsetDateTime deploymentCreatedAt,
       HeliosDeployment heliosDeployment) {

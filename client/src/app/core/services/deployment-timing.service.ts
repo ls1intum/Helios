@@ -1,33 +1,13 @@
 import { DestroyRef, Injectable, Signal, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { EnvironmentDeployment } from '@app/core/modules/openapi';
+import { DeploymentTimerDto, DeploymentTimerStepDto, EnvironmentDeployment } from '@app/core/modules/openapi';
 import { interval } from 'rxjs';
-
-type DeploymentStep = 'PENDING' | 'IN_PROGRESS';
-
-interface DeploymentTimingData {
-  lastKnownState: string | undefined;
-  stepStartTimes: Map<DeploymentStep, number>;
-  terminatedAt?: number;
-}
-
-interface EstimatedTimes {
-  REQUESTED: number;
-  WAITING: number;
-  PENDING: number;
-  QUEUED: number;
-  IN_PROGRESS: number;
-}
 
 @Injectable({
   providedIn: 'root',
 })
 export class DeploymentTimingService {
   private destroyRef = inject(DestroyRef);
-
-  private deploymentTimings = new Map<string, DeploymentTimingData>();
-
-  public readonly steps: DeploymentStep[] = ['PENDING', 'IN_PROGRESS'];
 
   private _currentTime = signal<number>(Date.now());
   public readonly currentTime: Signal<number> = this._currentTime;
@@ -54,351 +34,214 @@ export class DeploymentTimingService {
       });
   }
 
-  getTimingData(deploymentId: string | number): DeploymentTimingData {
-    const id = String(deploymentId);
-    if (!this.deploymentTimings.has(id)) {
-      this.deploymentTimings.set(id, {
-        lastKnownState: undefined,
-        stepStartTimes: new Map<DeploymentStep, number>(),
-      });
-    }
-    return this.deploymentTimings.get(id)!;
+  public getTimer(deployment: EnvironmentDeployment | null | undefined): DeploymentTimerDto | undefined {
+    return deployment?.timer ?? this.createFallbackTimer(deployment);
   }
 
-  updateDeploymentState(deployment: EnvironmentDeployment): void {
-    if (!deployment.id || !deployment.state) {
-      return;
-    }
-
-    const timingData = this.getTimingData(deployment.id);
-    const newState = deployment.state;
-
-    if (newState === timingData.lastKnownState) {
-      return;
-    }
-
-    const stepStartTime = this._currentTime();
-    const previousState = timingData.lastKnownState;
-    const newStep = this.getStepForState(newState);
-    const previousStep = previousState ? this.getStepForState(previousState) : undefined;
-
-    if (newStep && this.shouldStartStepTimer(newState) && !this.getPersistedStepStartTime(deployment, newStep)) {
-      const effectiveStartTime = previousStep === newStep && previousStep ? timingData.stepStartTimes.get(previousStep) || stepStartTime : stepStartTime;
-      timingData.stepStartTimes.set(newStep, effectiveStartTime);
-    }
-
-    if (['SUCCESS', 'ERROR', 'FAILURE'].includes(newState)) {
-      timingData.terminatedAt = stepStartTime;
-    }
-
-    timingData.lastKnownState = newState;
-  }
-
-  getStepStartTime(deploymentId: string | number, state: string): number | undefined {
-    return this.getTimingData(deploymentId).stepStartTimes.get(state as DeploymentStep);
-  }
-
-  getLastKnownState(deploymentId: string | number): string | undefined {
-    return this.getTimingData(deploymentId).lastKnownState;
-  }
-
-  public getEstimatedTimes(deployment: EnvironmentDeployment): EstimatedTimes {
-    const prExists = deployment?.prName != null;
-    const defaultPending = prExists ? 2 : 11;
-
-    const pendingMin = deployment?.estimatedBuildDurationSeconds != null ? deployment.estimatedBuildDurationSeconds / 60 : defaultPending;
-    const inProgressMin = deployment?.estimatedDeployDurationSeconds != null ? deployment.estimatedDeployDurationSeconds / 60 : 4;
-
-    return {
-      REQUESTED: pendingMin,
-      WAITING: pendingMin,
-      PENDING: pendingMin,
-      QUEUED: pendingMin,
-      IN_PROGRESS: inProgressMin,
-    };
-  }
-
-  public isErrorState(deployment: EnvironmentDeployment): boolean {
-    return ['ERROR', 'FAILURE'].includes(deployment?.state || '');
-  }
-
-  public isSuccessState(deployment: EnvironmentDeployment): boolean {
-    return deployment?.state === 'SUCCESS';
-  }
-
-  public isUnknownState(deployment: EnvironmentDeployment): boolean {
-    return ['UNKNOWN', 'INACTIVE'].includes(deployment?.state || '');
-  }
-
-  public getCurrentEffectiveStepIndex(deployment: EnvironmentDeployment): number {
-    if (!deployment || !deployment.createdAt || !deployment.id) {
-      return 0;
-    }
-
-    if (this.isErrorState(deployment)) {
-      if (this.getEffectiveStepStartTime(deployment, 'IN_PROGRESS')) {
-        return 1;
-      }
-      if (this.getEffectiveStepStartTime(deployment, 'PENDING')) {
-        return 0;
-      }
-
-      const currentStep = this.getStepForState(deployment.state);
-      return currentStep ? this.steps.indexOf(currentStep) : -1;
-    }
-
-    if (this.getEffectiveStepStartTime(deployment, 'IN_PROGRESS')) {
-      return 1;
-    }
-
-    const currentStep = this.getStepForState(deployment.state);
-    const index = currentStep ? this.steps.indexOf(currentStep) : -1;
-    return index !== -1 ? index : 0;
-  }
-
-  public getRemainingTimeForCurrentStep(deployment: EnvironmentDeployment): number {
-    if (!deployment?.state || !deployment.createdAt || !deployment.id) {
-      return 0;
-    }
-
-    const currentIndex = this.getCurrentEffectiveStepIndex(deployment);
-    if (currentIndex < 0) {
-      return 0;
-    }
-
-    const currentStep = this.steps[currentIndex];
-    const stepStartTime = this.getEffectiveStepStartTime(deployment, currentStep);
-    const estimatedMs = this.getEstimatedTimes(deployment)[currentStep] * 60000;
-
-    if (!stepStartTime) {
-      return estimatedMs;
-    }
-
-    const currentTime = this.getProgressReferenceTime(deployment);
-    const elapsedMs = Math.max(0, currentTime - stepStartTime);
-
-    return Math.max(0, estimatedMs - elapsedMs);
-  }
-
-  public getStepDisplayName(step: string): string {
-    const stepMap = {
-      REQUESTED: 'PRE-DEPLOYMENT',
-      PENDING: 'PRE-DEPLOYMENT',
-      IN_PROGRESS: 'DEPLOYMENT',
-    };
-    return stepMap[step as keyof typeof stepMap] || step;
-  }
-
-  public getStepStatus(deployment: EnvironmentDeployment, index: number): string {
-    if (!deployment) {
-      return 'unknown';
-    }
-
-    const effectiveStep = this.getCurrentEffectiveStepIndex(deployment);
-
-    if (this.isUnknownState(deployment)) {
-      return 'unknown';
-    }
-    if (this.isSuccessState(deployment)) {
-      return 'completed';
-    }
-
-    if (this.isErrorState(deployment)) {
-      if (effectiveStep === -1) {
-        return 'error';
-      }
-      if (index < effectiveStep) {
-        return 'completed';
-      }
-      if (index === effectiveStep) {
-        return 'error';
-      }
-      return 'unknown';
-    }
-
-    if (index < effectiveStep) {
-      return 'completed';
-    }
-    if (index === effectiveStep) {
-      return 'active';
-    }
-    return 'upcoming';
-  }
-
-  public getProgress(deployment: EnvironmentDeployment, index: number): number {
-    if (!deployment || !deployment.createdAt || !deployment.id) {
-      return 0;
-    }
-    if (deployment.state === 'SUCCESS') {
-      return 100;
-    }
-
-    const effectiveStep = this.getCurrentEffectiveStepIndex(deployment);
-    if (effectiveStep === -1) {
-      return 0;
-    }
-
-    if (index < effectiveStep) {
-      return 100;
-    }
-    if (index > effectiveStep) {
-      return 0;
-    }
-
-    const stepKey = this.steps[index];
-    const stepStartTime = this.getEffectiveStepStartTime(deployment, stepKey);
-    if (!stepStartTime) {
-      return 0;
-    }
-
-    const elapsedMs = Math.max(0, this.getProgressReferenceTime(deployment) - stepStartTime);
-    const estimatedMs = this.getEstimatedTimes(deployment)[stepKey] * 60000;
-    const ratio = estimatedMs > 0 ? Math.min(elapsedMs / estimatedMs, 1) : 1;
-    return Math.max(0, Math.floor(ratio * 100));
-  }
-
-  public getStepTime(deployment: EnvironmentDeployment, index: number): string {
-    if (!deployment?.state || !deployment.createdAt) {
+  public getHeaderTimeLabel(timer: DeploymentTimerDto | undefined): string {
+    if (!timer || timer.headerMode === 'NONE') {
       return '';
     }
 
-    const currentIndex = this.getCurrentEffectiveStepIndex(deployment);
+    if (timer.headerMode === 'DURATION') {
+      return this.formatDurationBetween(timer.headerStartedAt, timer.headerEndedAt);
+    }
 
-    if (this.isErrorState(deployment)) {
-      if (currentIndex === -1) {
-        return 'Failed';
-      }
-      if (index < currentIndex) {
+    const totalSeconds = timer.headerMode === 'REMAINING' ? this.getRemainingSeconds(timer) : this.getEstimatedSeconds(timer);
+    if (totalSeconds <= 0) {
+      return '';
+    }
+
+    const formatted = this.formatSeconds(totalSeconds);
+    return timer.headerMode === 'REMAINING' ? `${formatted} remaining` : `~${formatted} estimated`;
+  }
+
+  public getStepTime(step: DeploymentTimerStepDto): string {
+    switch (step.mode) {
+      case 'COMPLETED':
         return 'Completed';
-      }
-      if (index === currentIndex) {
+      case 'FAILED':
         return 'Failed';
-      }
-      return '';
+      case 'ESTIMATED':
+        return `~${this.formatSeconds(step.estimateSeconds ?? 0)}\nestimated`;
+      case 'REMAINING':
+        return `${this.formatSeconds(this.getStepRemainingSeconds(step))}\nremaining`;
+      case 'NONE':
+      default:
+        return '';
+    }
+  }
+
+  public getProgress(step: DeploymentTimerStepDto): number {
+    if (step.status === 'completed') {
+      return 100;
+    }
+    if (step.status !== 'active' || step.mode !== 'REMAINING' || !step.startedAt) {
+      return 0;
     }
 
-    if (this.isSuccessState(deployment)) {
-      return 'Completed';
+    const estimateMs = Math.max((step.estimateSeconds ?? 0) * 1000, 0);
+    if (estimateMs <= 0) {
+      return 0;
     }
 
-    if (index < currentIndex) {
-      return 'Completed';
-    }
-
-    const stepKey = this.steps[index];
-    const estimatedMinutes = this.getEstimatedTimes(deployment)[stepKey];
-    if (index > currentIndex || !this.getEffectiveStepStartTime(deployment, stepKey)) {
-      return `~${estimatedMinutes}m 0s\nestimated`;
-    }
-
-    const remainingMs = this.getRemainingTimeForCurrentStep(deployment);
-    const minutes = Math.floor(remainingMs / 60000);
-    const seconds = Math.floor((remainingMs % 60000) / 1000);
-    return `${minutes}m ${seconds}s\nremaining`;
+    const elapsedMs = Math.max(0, this._currentTime() - this.parseTime(step.startedAt));
+    return Math.min(Math.floor((elapsedMs / estimateMs) * 100), 99);
   }
 
   public getTotalRemainingTime(deployment: EnvironmentDeployment): string {
-    if (!deployment?.state || !deployment.createdAt) {
+    const timer = this.getTimer(deployment);
+    if (!timer || timer.headerMode === 'NONE' || timer.headerMode === 'DURATION') {
       return '';
     }
-    if (this.isErrorState(deployment) || this.isSuccessState(deployment)) {
-      return '';
-    }
-
-    const currentIndex = this.getCurrentEffectiveStepIndex(deployment);
-    if (currentIndex < 0) {
-      return '';
-    }
-
-    let totalRemainingMs = 0;
-
-    for (let i = currentIndex; i < this.steps.length; i++) {
-      const stepKey = this.steps[i];
-      const estimatedMs = this.getEstimatedTimes(deployment)[stepKey] * 60000;
-
-      if (i === currentIndex && this.getEffectiveStepStartTime(deployment, stepKey)) {
-        totalRemainingMs += this.getRemainingTimeForCurrentStep(deployment);
-      } else {
-        totalRemainingMs += estimatedMs;
-      }
-    }
-
-    const minutes = Math.floor(totalRemainingMs / 60000);
-    const seconds = Math.floor((totalRemainingMs % 60000) / 1000);
-    return totalRemainingMs > 0 ? `${minutes}m ${seconds}s` : '';
+    const remainingSeconds = timer.headerMode === 'REMAINING' ? this.getRemainingSeconds(timer) : this.getEstimatedSeconds(timer);
+    return remainingSeconds > 0 ? this.formatSeconds(remainingSeconds) : '';
   }
 
-  public getDeploymentDuration(deployment: EnvironmentDeployment): string {
-    if (!deployment || !deployment.createdAt) {
+  private getRemainingSeconds(timer: DeploymentTimerDto): number {
+    return timer.steps.reduce((total, step) => total + this.getStepDisplaySeconds(step), 0);
+  }
+
+  private getEstimatedSeconds(timer: DeploymentTimerDto): number {
+    return timer.headerEstimateSeconds ?? timer.steps.reduce((total, step) => total + (step.estimateSeconds ?? 0), 0);
+  }
+
+  private getStepDisplaySeconds(step: DeploymentTimerStepDto): number {
+    if (step.mode === 'REMAINING') {
+      return this.getStepRemainingSeconds(step);
+    }
+    if (step.mode === 'ESTIMATED') {
+      return step.estimateSeconds ?? 0;
+    }
+    return 0;
+  }
+
+  private getStepRemainingSeconds(step: DeploymentTimerStepDto): number {
+    const estimateMs = Math.max((step.estimateSeconds ?? 0) * 1000, 0);
+    if (!step.startedAt || estimateMs <= 0) {
+      return Math.floor(estimateMs / 1000);
+    }
+
+    const elapsedMs = Math.max(0, this._currentTime() - this.parseTime(step.startedAt));
+    return Math.floor(Math.max(0, estimateMs - elapsedMs) / 1000);
+  }
+
+  private formatDurationBetween(startedAt?: string, endedAt?: string): string {
+    if (!startedAt) {
       return '';
     }
 
-    let endTime: number;
-    if (['SUCCESS', 'ERROR', 'FAILURE'].includes(deployment.state || '')) {
-      endTime = deployment.updatedAt ? new Date(deployment.updatedAt).getTime() : this._currentTime();
-    } else {
-      endTime = this._currentTime();
-    }
+    const startTime = this.parseTime(startedAt);
+    const endTime = endedAt ? this.parseTime(endedAt) : this._currentTime();
+    const elapsedSeconds = Math.floor(Math.max(0, endTime - startTime) / 1000);
+    return this.formatSeconds(elapsedSeconds);
+  }
 
-    const startTime = this.getEffectiveStepStartTime(deployment, 'PENDING') || new Date(deployment.createdAt).getTime();
-    const elapsedMs = endTime - startTime;
-    if (elapsedMs < 0) {
-      return '0m 0s';
+  private parseTime(value: string): number {
+    let timeString = value;
+    if (!timeString.endsWith('Z') && !timeString.match(/[+-]\d{2}:?\d{2}$/)) {
+      timeString += 'Z';
     }
+    const parsed = new Date(timeString).getTime();
+    return Number.isNaN(parsed) ? this._currentTime() : parsed;
+  }
 
-    const minutes = Math.floor(elapsedMs / 60000);
-    const seconds = Math.floor((elapsedMs % 60000) / 1000);
+  private formatSeconds(totalSeconds: number): string {
+    const safeSeconds = Math.max(0, Math.floor(totalSeconds));
+    const minutes = Math.floor(safeSeconds / 60);
+    const seconds = safeSeconds % 60;
     return `${minutes}m ${seconds}s`;
   }
 
-  cleanupOldData(maxAgeInMs: number = 24 * 60 * 60 * 1000): void {
-    const now = this._currentTime();
-    for (const [deploymentId, data] of this.deploymentTimings.entries()) {
-      if (data.terminatedAt && now - data.terminatedAt > maxAgeInMs) {
-        this.deploymentTimings.delete(deploymentId);
-      }
-    }
-  }
-
-  private getStepForState(state: string | undefined): DeploymentStep | undefined {
-    switch (state) {
-      case 'REQUESTED':
-      case 'WAITING':
-      case 'PENDING':
-      case 'QUEUED':
-        return 'PENDING';
-      case 'IN_PROGRESS':
-        return 'IN_PROGRESS';
-      default:
-        return undefined;
-    }
-  }
-
-  private shouldStartStepTimer(state: string | undefined): boolean {
-    return state === 'IN_PROGRESS';
-  }
-
-  private getProgressReferenceTime(deployment: EnvironmentDeployment): number {
-    if (this.isErrorState(deployment) && deployment.updatedAt) {
-      return new Date(deployment.updatedAt).getTime();
-    }
-    return this._currentTime();
-  }
-
-  private getPersistedStepStartTime(deployment: EnvironmentDeployment, step: DeploymentStep): number | undefined {
-    return step === 'PENDING' ? this.parseTime(deployment.deployJobStartedAt) : this.parseTime(deployment.deploymentStartedAt);
-  }
-
-  private getEffectiveStepStartTime(deployment: EnvironmentDeployment, step: DeploymentStep): number | undefined {
-    return this.getPersistedStepStartTime(deployment, step) ?? this.getTimingData(deployment.id).stepStartTimes.get(step);
-  }
-
-  private parseTime(value?: string): number | undefined {
-    if (!value) {
+  private createFallbackTimer(deployment: EnvironmentDeployment | null | undefined): DeploymentTimerDto | undefined {
+    if (!deployment) {
       return undefined;
     }
 
-    const parsed = new Date(value).getTime();
-    return Number.isNaN(parsed) ? undefined : parsed;
+    const preDeployEstimate = deployment.estimatedPreDeployDurationSeconds ?? (deployment.prName != null ? 2 * 60 : 11 * 60);
+    const deployEstimate = deployment.estimatedDeployDurationSeconds ?? 4 * 60;
+    const failed = deployment.state === 'ERROR' || deployment.state === 'FAILURE';
+    const success = deployment.state === 'SUCCESS';
+    const unknown = deployment.state === 'UNKNOWN' || deployment.state === 'INACTIVE';
+
+    if (unknown) {
+      return {
+        title: 'Deployment Status Unknown',
+        headerMode: 'NONE',
+        showQueuedMessage: false,
+        steps: [this.fallbackStep('PRE_DEPLOYMENT', 'PRE-DEPLOYMENT', 'unknown', 'NONE'), this.fallbackStep('DEPLOYMENT', 'DEPLOYMENT', 'unknown', 'NONE')],
+      };
+    }
+
+    if (success || failed) {
+      const failedInDeployment = failed && !!deployment.deployJobStartedAt;
+      return {
+        title: success ? 'Deployment Completed' : 'Deployment Failed',
+        headerMode: 'DURATION',
+        headerStartedAt: deployment.workflowStartedAt ?? deployment.createdAt,
+        headerEndedAt: deployment.updatedAt,
+        showQueuedMessage: false,
+        steps: [
+          this.fallbackStep(
+            'PRE_DEPLOYMENT',
+            'PRE-DEPLOYMENT',
+            success || failedInDeployment ? 'completed' : 'error',
+            success || failedInDeployment ? 'COMPLETED' : 'FAILED',
+            deployment.workflowStartedAt,
+            deployment.deployJobStartedAt ?? deployment.updatedAt,
+            preDeployEstimate
+          ),
+          this.fallbackStep(
+            'DEPLOYMENT',
+            'DEPLOYMENT',
+            success ? 'completed' : failedInDeployment ? 'error' : 'unknown',
+            success ? 'COMPLETED' : failedInDeployment ? 'FAILED' : 'NONE',
+            deployment.deployJobStartedAt,
+            deployment.updatedAt,
+            deployEstimate
+          ),
+        ],
+      };
+    }
+
+    if (deployment.deployJobStartedAt) {
+      return {
+        title: 'Deployment in Progress',
+        headerMode: 'REMAINING',
+        headerStartedAt: deployment.deployJobStartedAt,
+        headerEstimateSeconds: deployEstimate,
+        showQueuedMessage: false,
+        steps: [
+          this.fallbackStep('PRE_DEPLOYMENT', 'PRE-DEPLOYMENT', 'completed', 'COMPLETED', deployment.workflowStartedAt, deployment.deployJobStartedAt, preDeployEstimate),
+          this.fallbackStep('DEPLOYMENT', 'DEPLOYMENT', 'active', 'REMAINING', deployment.deployJobStartedAt, undefined, deployEstimate),
+        ],
+      };
+    }
+
+    const workflowStarted = !!deployment.workflowStartedAt;
+    const queued = deployment.state === 'QUEUED';
+    return {
+      title: queued ? 'Deployment Queued' : workflowStarted || deployment.state === 'IN_PROGRESS' ? 'Deployment in Progress' : 'Deployment Requested',
+      headerMode: workflowStarted ? 'REMAINING' : 'ESTIMATED',
+      headerStartedAt: deployment.workflowStartedAt,
+      headerEstimateSeconds: preDeployEstimate + deployEstimate,
+      showQueuedMessage: queued,
+      steps: [
+        this.fallbackStep('PRE_DEPLOYMENT', 'PRE-DEPLOYMENT', 'active', workflowStarted ? 'REMAINING' : 'ESTIMATED', deployment.workflowStartedAt, undefined, preDeployEstimate),
+        this.fallbackStep('DEPLOYMENT', 'DEPLOYMENT', 'upcoming', 'ESTIMATED', undefined, undefined, deployEstimate),
+      ],
+    };
+  }
+
+  private fallbackStep(
+    key: DeploymentTimerStepDto['key'],
+    label: string,
+    status: DeploymentTimerStepDto['status'],
+    mode: DeploymentTimerStepDto['mode'],
+    startedAt?: string,
+    endedAt?: string,
+    estimateSeconds?: number
+  ): DeploymentTimerStepDto {
+    return { key, label, status, mode, startedAt, endedAt, estimateSeconds };
   }
 }
