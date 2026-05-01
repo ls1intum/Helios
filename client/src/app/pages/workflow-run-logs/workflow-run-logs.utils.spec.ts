@@ -4,8 +4,8 @@ import {
   LOG_VIEW_CLASSES,
   buildFileViews,
   buildGroupViews,
+  getEnabledTonesForLevel,
   getLineToneBadgeClass,
-  getLineToneFilterClass,
   getLineToneRowClass,
   getLineToneTextClass,
   getLogGroupRowClass,
@@ -80,29 +80,37 @@ describe('workflow-run-logs utils', () => {
     });
   });
 
-  it('keeps purple group filters in light mode and switches away from purple in dark mode', () => {
-    const filterClass = getLineToneFilterClass('group', true);
-
-    expect(filterClass).toContain('border-violet-200');
-    expect(filterClass).toContain('bg-violet-50');
-    expect(filterClass).toContain('dark:border-violet-500');
-    expect(filterClass).toContain('dark:bg-violet-900/30');
+  it('returns all five tones for the "all" log level filter', () => {
+    const tones = getEnabledTonesForLevel('all');
+    expect(tones).toContain('default');
+    expect(tones).toContain('command');
+    expect(tones).toContain('group');
+    expect(tones).toContain('warning');
+    expect(tones).toContain('error');
+    expect(tones.size).toBe(5);
   });
 
-  it('uses a higher-contrast blue for command filters in dark mode', () => {
-    const filterClass = getLineToneFilterClass('command', true);
+  it('returns only warning, error, and group tones for the "warnings" log level filter', () => {
+    const tones = getEnabledTonesForLevel('warnings');
+    expect(tones).toContain('warning');
+    expect(tones).toContain('error');
+    expect(tones).toContain('group');
+    expect(tones).not.toContain('default');
+    expect(tones).not.toContain('command');
+    expect(tones.size).toBe(3);
+  });
 
-    expect(filterClass).toContain('border-primary-200');
-    expect(filterClass).toContain('bg-primary-50');
-    expect(filterClass).toContain('dark:border-primary-500');
-    expect(filterClass).toContain('dark:bg-primary-900/30');
+  it('returns only error and group tones for the "errors" log level filter', () => {
+    const tones = getEnabledTonesForLevel('errors');
+    expect(tones).toContain('error');
+    expect(tones).toContain('group');
+    expect(tones).not.toContain('default');
+    expect(tones).not.toContain('command');
+    expect(tones).not.toContain('warning');
+    expect(tones.size).toBe(2);
   });
 
   it('uses the same orange and red families as the rest of the app for warnings and errors', () => {
-    expect(getLineToneFilterClass('warning', true)).toContain('orange');
-    expect(getLineToneFilterClass('warning', true)).not.toContain('amber');
-    expect(getLineToneFilterClass('error', true)).toContain('red');
-    expect(getLineToneFilterClass('error', true)).not.toContain('rose');
     expect(getLineToneBadgeClass('warning')).toContain('bg-orange-50');
     expect(getLineToneBadgeClass('error')).toContain('bg-red-100');
     expect(getLineToneRowClass('warning')).toContain('border-l-orange-500');
@@ -119,11 +127,8 @@ describe('workflow-run-logs utils', () => {
     expect(getLineToneTextClass('default')).toContain('text-surface-900');
   });
 
-  it('keeps the grouped rows on the same purple family as the group filter', () => {
-    const groupFilterClass = getLineToneFilterClass('group', true);
+  it('keeps the grouped rows on the same purple family', () => {
     const groupRowClass = getLogGroupRowClass();
-
-    expect(groupFilterClass).toContain('violet');
     expect(groupRowClass).toContain('violet');
   });
 

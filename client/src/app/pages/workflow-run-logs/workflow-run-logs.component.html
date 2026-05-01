@@ -278,19 +278,18 @@
           <p-divider class="my-4" />
 
           <div [class]="logViewClasses.container">
-            <div [class]="logViewClasses.toolbar">
-              @for (filterOption of lineFilterOptions; track filterOption.tone) {
-                <button
-                  type="button"
-                  class="rounded-full border px-2 py-1 transition"
-                  [class]="getLineToneFilterClass(filterOption.tone)"
-                  [attr.aria-pressed]="isLineToneEnabled(filterOption.tone)"
-                  (click)="toggleLineTone(filterOption.tone)"
-                >
-                  {{ filterOption.label }}
-                </button>
-              }
-            </div>
+            @if (hasFilterableContent()) {
+              <div [class]="logViewClasses.toolbar">
+                <p-selectButton
+                  [options]="logLevelFilterOptions"
+                  [ngModel]="logLevelFilter()"
+                  (ngModelChange)="logLevelFilter.set($event)"
+                  optionLabel="label"
+                  optionValue="value"
+                  size="small"
+                />
+              </div>
+            }
             <div [class]="logViewClasses.content">
               @if (selectedFileView.rows.length === 0) {
                 <div [class]="logViewClasses.emptyState">No log lines match the selected filters.</div>
