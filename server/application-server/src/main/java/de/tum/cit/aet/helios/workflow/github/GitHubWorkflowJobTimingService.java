@@ -1,5 +1,7 @@
 package de.tum.cit.aet.helios.workflow.github;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import de.tum.cit.aet.helios.deployment.DeploymentWorkflowConfig;
 import de.tum.cit.aet.helios.deployment.DeploymentWorkflowConfigRepository;
 import de.tum.cit.aet.helios.environment.Environment;
@@ -9,6 +11,7 @@ import de.tum.cit.aet.helios.workflow.Workflow;
 import de.tum.cit.aet.helios.workflow.WorkflowRun;
 import de.tum.cit.aet.helios.workflow.WorkflowRunRepository;
 import jakarta.transaction.Transactional;
+import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
@@ -24,6 +27,8 @@ public class GitHubWorkflowJobTimingService {
   private final DeploymentWorkflowConfigRepository deploymentWorkflowConfigRepository;
   private final HeliosDeploymentRepository heliosDeploymentRepository;
   private final WorkflowRunRepository workflowRunRepository;
+  private final Cache<Long, RunRelevance> runRelevanceCache =
+      Caffeine.newBuilder().maximumSize(10_000).expireAfterWrite(Duration.ofHours(1)).build();
 
   @Transactional
   public void persistDurations(GitHubWorkflowJobPayload payload) {
@@ -32,68 +37,47 @@ public class GitHubWorkflowJobTimingService {
     }
 
     GitHubWorkflowJobPayload.WorkflowJob job = payload.workflowJob();
+    GitHubWorkflowJobPayload.Deployment deployment = payload.deployment();
     if (job.runId() == null) {
       return;
     }
 
-    Optional<HeliosDeployment> heliosDeploymentOpt =
-        heliosDeploymentRepository.findByWorkflowRunId(job.runId());
-    if (heliosDeploymentOpt.isEmpty()) {
-      log.debug(
-          "Skipping workflow_job timing persistence because no HeliosDeployment "
-              + "matched workflow run {}",
-          job.runId());
+    if ("queued".equalsIgnoreCase(payload.action()) && deployment == null) {
       return;
     }
 
-    HeliosDeployment heliosDeployment = heliosDeploymentOpt.get();
-    Environment environment = heliosDeployment.getEnvironment();
-    Workflow workflow = environment != null ? environment.getDeploymentWorkflow() : null;
-    if (workflow == null) {
-      log.debug(
-          "Skipping workflow_job timing persistence because workflow run {} "
-              + "is not linked to an environment deployment workflow",
-          job.runId());
+    RunRelevance cachedRelevance = getCachedRelevance(job.runId());
+    if (cachedRelevance instanceof NotDeployment && deployment != null) {
+      runRelevanceCache.invalidate(job.runId());
+    } else if (cachedRelevance != null && !(cachedRelevance instanceof Relevant)) {
       return;
     }
 
-    Optional<WorkflowRun> workflowRunOpt = workflowRunRepository.findById(job.runId());
-    if (workflowRunOpt.isPresent()
-        && workflowRunOpt.get().getWorkflow() != null
-        && !workflowRunOpt.get().getWorkflow().getId().equals(workflow.getId())) {
-      log.debug(
-          "Skipping workflow_job timing persistence because workflow run {} "
-              + "is not linked to the configured deployment workflow {}",
-          job.runId(),
-          workflow.getId());
+    ResolvedRunRelevance resolvedRelevance = resolveRelevance(job.runId());
+    if (!(resolvedRelevance.relevance() instanceof Relevant)) {
+      runRelevanceCache.put(job.runId(), resolvedRelevance.relevance());
       return;
     }
 
-    boolean changed = persistWorkflowStart(heliosDeployment, workflowRunOpt.orElse(null), payload);
+    runRelevanceCache.put(job.runId(), resolvedRelevance.relevance());
 
-    Optional<DeploymentWorkflowConfig> configOpt =
-        deploymentWorkflowConfigRepository.findByWorkflow(workflow);
-    if (configOpt.isEmpty()) {
+    HeliosDeployment heliosDeployment = resolvedRelevance.heliosDeployment();
+    WorkflowRun workflowRun = resolvedRelevance.workflowRun();
+    Relevant relevance = (Relevant) resolvedRelevance.relevance();
+
+    boolean changed = persistWorkflowStart(heliosDeployment, workflowRun, payload);
+
+    if (!relevance.deployJobName().equals(job.name())) {
       if (changed) {
         heliosDeploymentRepository.save(heliosDeployment);
       }
       return;
     }
 
-    DeploymentWorkflowConfig config = configOpt.get();
-    if (config.getDeployJobName() == null
-        || config.getDeployJobName().isBlank()
-        || !config.getDeployJobName().equals(job.name())) {
-      if (changed) {
-        heliosDeploymentRepository.save(heliosDeployment);
-      }
-      return;
-    }
-
-    if (payload.deployment() != null
+    if (deployment != null
         && heliosDeployment.getDeploymentId() == null
-        && payload.deployment().id() != null) {
-      heliosDeployment.setDeploymentId(payload.deployment().id());
+        && deployment.id() != null) {
+      heliosDeployment.setDeploymentId(deployment.id());
       changed = true;
     }
 
@@ -133,8 +117,8 @@ public class GitHubWorkflowJobTimingService {
             : job.startedAt();
     OffsetDateTime preDeploymentStart =
         resolvePreDeploymentStart(
-            workflowRunOpt.orElse(null),
-            payload.deployment() != null ? payload.deployment().createdAt() : null,
+            workflowRun,
+            deployment != null ? deployment.createdAt() : null,
             heliosDeployment);
     heliosDeployment.setPreDeployDurationSeconds(
         calculateDurationSeconds(preDeploymentStart, deployJobStartedAt));
@@ -145,6 +129,69 @@ public class GitHubWorkflowJobTimingService {
     if (changed) {
       heliosDeploymentRepository.save(heliosDeployment);
     }
+  }
+
+  private RunRelevance getCachedRelevance(Long runId) {
+    RunRelevance cachedRelevance = runRelevanceCache.getIfPresent(runId);
+    log.debug(
+        "workflow_job run relevance cache {} for workflow run {}",
+        cachedRelevance == null ? "miss" : "hit",
+        runId);
+    return cachedRelevance;
+  }
+
+  private ResolvedRunRelevance resolveRelevance(Long runId) {
+    Optional<HeliosDeployment> heliosDeploymentOpt =
+        heliosDeploymentRepository.findByWorkflowRunId(runId);
+    if (heliosDeploymentOpt.isEmpty()) {
+      log.debug(
+          "Skipping workflow_job timing persistence because no HeliosDeployment "
+              + "matched workflow run {}",
+          runId);
+      return new ResolvedRunRelevance(new NotDeployment(), null, null);
+    }
+
+    HeliosDeployment heliosDeployment = heliosDeploymentOpt.get();
+    Environment environment = heliosDeployment.getEnvironment();
+    Workflow workflow = environment != null ? environment.getDeploymentWorkflow() : null;
+    if (workflow == null) {
+      log.debug(
+          "Skipping workflow_job timing persistence because workflow run {} "
+              + "is not linked to an environment deployment workflow",
+          runId);
+      return new ResolvedRunRelevance(new WrongWorkflow(), heliosDeployment, null);
+    }
+
+    Optional<WorkflowRun> workflowRunOpt = workflowRunRepository.findById(runId);
+    WorkflowRun workflowRun = workflowRunOpt.orElse(null);
+    if (workflowRun != null
+        && workflowRun.getWorkflow() != null
+        && !workflowRun.getWorkflow().getId().equals(workflow.getId())) {
+      log.debug(
+          "Skipping workflow_job timing persistence because workflow run {} "
+              + "is not linked to the configured deployment workflow {}",
+          runId,
+          workflow.getId());
+      return new ResolvedRunRelevance(new WrongWorkflow(), heliosDeployment, workflowRun);
+    }
+
+    Optional<DeploymentWorkflowConfig> configOpt =
+        deploymentWorkflowConfigRepository.findByWorkflow(workflow);
+    if (configOpt.isEmpty()) {
+      return new ResolvedRunRelevance(
+          new NoConfig(heliosDeployment.getId()), heliosDeployment, workflowRun);
+    }
+
+    DeploymentWorkflowConfig config = configOpt.get();
+    if (config.getDeployJobName() == null || config.getDeployJobName().isBlank()) {
+      return new ResolvedRunRelevance(
+          new NoConfig(heliosDeployment.getId()), heliosDeployment, workflowRun);
+    }
+
+    return new ResolvedRunRelevance(
+        new Relevant(heliosDeployment.getId(), config.getDeployJobName()),
+        heliosDeployment,
+        workflowRun);
   }
 
   private boolean persistWorkflowStart(
@@ -210,4 +257,17 @@ public class GitHubWorkflowJobTimingService {
     }
     return Math.max(0, (int) ChronoUnit.SECONDS.between(start, end));
   }
+
+  private record ResolvedRunRelevance(
+      RunRelevance relevance, HeliosDeployment heliosDeployment, WorkflowRun workflowRun) {}
+
+  private sealed interface RunRelevance permits NotDeployment, WrongWorkflow, NoConfig, Relevant {}
+
+  private record NotDeployment() implements RunRelevance {}
+
+  private record WrongWorkflow() implements RunRelevance {}
+
+  private record NoConfig(Long heliosDeploymentId) implements RunRelevance {}
+
+  private record Relevant(Long heliosDeploymentId, String deployJobName) implements RunRelevance {}
 }
