@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { PageHeadingComponent } from '@app/components/page-heading/page-heading.component';
 import { getWorkflowRunLogsQueryKey, getWorkflowRunLogsOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { getWorkflowRunLogs } from '@app/core/modules/openapi/sdk.gen';
-import type { WorkflowRunLogsResponse } from '@app/core/modules/openapi/types.gen';
+import type { WorkflowRunLogFileDto, WorkflowRunLogGroupDto, WorkflowRunLogsResponse } from '@app/core/modules/openapi/types.gen';
 import { injectMutation, injectQuery, QueryClient } from '@tanstack/angular-query-experimental';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
 import {
@@ -281,6 +281,26 @@ export class WorkflowRunLogsComponent {
 
   getFileViewsForGroup(groupName: string) {
     return this.groupedFilesByGroup()[groupName] ?? [];
+  }
+
+  getJobDisplayName(group: WorkflowRunLogGroupDto): string {
+    return group.jobName || group.name;
+  }
+
+  getStepDisplayName(file: WorkflowRunLogFileDto): string {
+    return file.stepName || file.displayName;
+  }
+
+  getStepLabel(file: WorkflowRunLogFileDto): string {
+    return file.stepName ? 'Step' : 'Log';
+  }
+
+  getStepLogCountLabel(count: number): string {
+    return `${count} ${count === 1 ? 'step log' : 'step logs'}`;
+  }
+
+  getJobCountLabel(count: number): string {
+    return `${count} ${count === 1 ? 'job' : 'jobs'}`;
   }
 
   getStepDuration(startTime: string | undefined, endTime: string | undefined): string {

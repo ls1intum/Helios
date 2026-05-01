@@ -241,10 +241,14 @@ describe('Integration Test Workflow Run Logs Page', () => {
     });
   });
 
-  it('should expose the selected file step metadata without rendering the step panel', () => {
+  it('should expose the selected file job and step metadata', () => {
     expect(component.selectedStep()?.name).toBe('Checkout');
-    expect(fixture.nativeElement.textContent).toContain('GitHub step: Checkout');
-    expect(fixture.nativeElement.textContent).not.toContain('GitHub Steps');
+    expect(fixture.nativeElement.textContent).toContain('Jobs & Steps');
+    expect(fixture.nativeElement.textContent).toContain('Job');
+    expect(fixture.nativeElement.textContent).toContain('Step');
+    expect(fixture.nativeElement.textContent).not.toContain('Step 1');
+    expect(fixture.nativeElement.textContent).toContain('Checkout');
+    expect(fixture.nativeElement.textContent).not.toContain('GitHub step:');
   });
 
   it('should derive file status from the matched GitHub step number', () => {
@@ -280,6 +284,8 @@ describe('Integration Test Workflow Run Logs Page', () => {
     fixture.detectChanges();
 
     expect(component.selectedStep()).toBeNull();
+    expect(fixture.nativeElement.textContent).toContain('Unmatched log group');
+    expect(fixture.nativeElement.textContent).toContain('Unmatched log file');
     expect(fixture.nativeElement.textContent).not.toContain('GitHub step:');
   });
 
