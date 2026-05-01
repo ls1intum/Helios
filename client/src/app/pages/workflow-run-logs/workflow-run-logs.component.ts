@@ -52,7 +52,22 @@ import type { LogLevelFilter, WorkflowRunLogLineTone } from './workflow-run-logs
 
 @Component({
   selector: 'app-workflow-run-logs',
-  imports: [CommonModule, FormsModule, PageHeadingComponent, AccordionModule, Button, CardModule, Divider, MessageModule, Panel, SelectButton, SkeletonModule, TagModule, Toolbar, TablerIconComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    PageHeadingComponent,
+    AccordionModule,
+    Button,
+    CardModule,
+    Divider,
+    MessageModule,
+    Panel,
+    SelectButton,
+    SkeletonModule,
+    TagModule,
+    Toolbar,
+    TablerIconComponent,
+  ],
   providers: [
     provideTablerIcons({
       IconArrowLeft,
@@ -191,6 +206,7 @@ export class WorkflowRunLogsComponent {
 
   selectFile(path: string) {
     this.selectedFilePath.set(path);
+    this.logLevelFilter.set('all');
 
     const selectedEntry = this.groupedFiles().find(entry => entry.file.path === path);
     if (!selectedEntry) {
