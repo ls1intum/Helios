@@ -110,26 +110,12 @@ public class HeliosDeploymentWorkflowRunSyncService {
       return Optional.empty();
     }
 
-    return switch (status) {
-      case COMPLETED -> Optional.of(mapCompletedConclusion(conclusion));
-      case CANCELLED -> Optional.of(HeliosDeployment.Status.CANCELLED);
-      case FAILURE, ACTION_REQUIRED, TIMED_OUT -> Optional.of(HeliosDeployment.Status.FAILED);
-      case SUCCESS -> Optional.of(HeliosDeployment.Status.DEPLOYMENT_SUCCESS);
-      case NEUTRAL, SKIPPED, STALE, UNKNOWN -> Optional.of(HeliosDeployment.Status.UNKNOWN);
-      case QUEUED, IN_PROGRESS, REQUESTED, WAITING, PENDING -> Optional.empty();
-    };
-  }
+    HeliosDeployment.Status mappedStatus =
+        HeliosDeployment.mapWorkflowRunStatus(status, conclusion);
 
-  private HeliosDeployment.Status mapCompletedConclusion(WorkflowRun.Conclusion conclusion) {
-    if (conclusion == null) {
-      return HeliosDeployment.Status.UNKNOWN;
-    }
-
-    return switch (conclusion) {
-      case SUCCESS -> HeliosDeployment.Status.DEPLOYMENT_SUCCESS;
-      case CANCELLED -> HeliosDeployment.Status.CANCELLED;
-      case FAILURE, STARTUP_FAILURE, TIMED_OUT, ACTION_REQUIRED -> HeliosDeployment.Status.FAILED;
-      case NEUTRAL, SKIPPED, STALE, UNKNOWN -> HeliosDeployment.Status.UNKNOWN;
+    return switch (mappedStatus) {
+      case WAITING, QUEUED, IN_PROGRESS -> Optional.empty();
+      default -> Optional.of(mappedStatus);
     };
   }
 
