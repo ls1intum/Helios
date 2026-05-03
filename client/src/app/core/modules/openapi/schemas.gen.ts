@@ -1054,17 +1054,17 @@ export const WorkflowRunDtoSchema = {
       enum: ['NONE', 'TEST'],
     },
     testProcessingStatus: {
-      type: 'string',
+      type: ['string', 'null'],
       enum: ['PROCESSING', 'PROCESSED', 'FAILED'],
     },
     headBranch: {
-      type: 'string',
+      type: ['string', 'null'],
     },
     headSha: {
-      type: 'string',
+      type: ['string', 'null'],
     },
     runStartedAt: {
-      type: 'string',
+      type: ['string', 'null'],
       format: 'date-time',
     },
     createdAt: {
@@ -1841,14 +1841,14 @@ export const RequiredWorkflowStatusDtoSchema = {
       enum: ['READY', 'WAITING', 'FAILED', 'MISSING_RUN'],
     },
     runId: {
-      type: 'integer',
+      type: ['integer', 'null'],
       format: 'int64',
     },
     runHtmlUrl: {
-      type: 'string',
+      type: ['string', 'null'],
     },
     runStatus: {
-      type: 'string',
+      type: ['string', 'null'],
       enum: [
         'QUEUED',
         'IN_PROGRESS',
@@ -1868,7 +1868,7 @@ export const RequiredWorkflowStatusDtoSchema = {
       ],
     },
     runConclusion: {
-      type: 'string',
+      type: ['string', 'null'],
       enum: ['ACTION_REQUIRED', 'CANCELLED', 'FAILURE', 'NEUTRAL', 'SUCCESS', 'SKIPPED', 'STALE', 'TIMED_OUT', 'STARTUP_FAILURE', 'UNKNOWN'],
     },
   },
@@ -1888,11 +1888,11 @@ export const EnvironmentLockHistoryDtoSchema = {
       $ref: '#/components/schemas/UserInfoDto',
     },
     lockedAt: {
-      type: 'string',
+      type: ['string', 'null'],
       format: 'date-time',
     },
     unlockedAt: {
-      type: 'string',
+      type: ['string', 'null'],
       format: 'date-time',
     },
     environment: {
