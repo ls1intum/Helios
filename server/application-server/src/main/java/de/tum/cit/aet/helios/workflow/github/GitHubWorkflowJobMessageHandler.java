@@ -2,6 +2,7 @@ package de.tum.cit.aet.helios.workflow.github;
 
 import de.tum.cit.aet.helios.github.GitHubService;
 import de.tum.cit.aet.helios.nats.JacksonMessageHandler;
+import de.tum.cit.aet.helios.workflow.ws.WorkflowRunWebSocketHandler;
 import java.io.IOException;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +17,7 @@ public class GitHubWorkflowJobMessageHandler
 
   private final GitHubService gitHubService;
   private final GitHubWorkflowJobTimingService gitHubWorkflowJobTimingService;
+  private final WorkflowRunWebSocketHandler workflowRunWebSocketHandler;
 
   @Override
   protected Class<GitHubWorkflowJobPayload> getPayloadClass() {
@@ -47,5 +49,9 @@ public class GitHubWorkflowJobMessageHandler
     }
 
     gitHubWorkflowJobTimingService.persistDurations(payload);
+
+    if (payload.workflowJob() != null && payload.workflowJob().runId() != null) {
+      workflowRunWebSocketHandler.broadcastJobsInvalidated(payload.workflowJob().runId());
+    }
   }
 }
