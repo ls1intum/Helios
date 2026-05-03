@@ -177,7 +177,7 @@
                     <div class="mt-1 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-color">
                       <span class="font-semibold uppercase text-primary-700 dark:text-primary-100">Job</span>
                       <span aria-hidden="true">·</span>
-                      <span>{{ getStepLogCountLabel(groupView.group.files.length) }}</span>
+                      <span>{{ getStepLogCountLabel(getStepFileViewsForGroup(groupView.group.name).length) }}</span>
 
                       @if (groupView.group.jobName && groupView.group.jobName !== groupView.group.name) {
                         <span aria-hidden="true">·</span>
@@ -193,7 +193,7 @@
 
               <p-accordion-content>
                 <div class="space-y-2">
-                  @for (fileView of getFileViewsForGroup(groupView.group.name); track fileView.file.path) {
+                  @for (fileView of getStepFileViewsForGroup(groupView.group.name); track fileView.file.path) {
                     <button
                       class="flex w-full items-center gap-3 rounded-lg border px-3 py-2 text-left transition"
                       [ngClass]="
@@ -235,6 +235,32 @@
                         </span>
                       </span>
                     </button>
+                  }
+                  @if (getNonStepFileViewsForGroup(groupView.group.name).length > 0) {
+                    <p-divider class="my-1" />
+                    <div class="px-2 py-1 text-xs font-semibold uppercase text-muted-color">Other logs</div>
+                    @for (fileView of getNonStepFileViewsForGroup(groupView.group.name); track fileView.file.path) {
+                      <button
+                        class="flex w-full items-center gap-3 rounded-lg border px-3 py-2 text-left transition"
+                        [ngClass]="
+                          activeFilePath() === fileView.file.path
+                            ? 'border-primary bg-primary-50 text-primary-900 shadow-sm dark:bg-primary-400/15 dark:text-primary-50'
+                            : 'border-surface-200 bg-surface-0 dark:border-surface-700 dark:bg-surface-900'
+                        "
+                        type="button"
+                        (click)="selectFile(fileView.file.path)"
+                      >
+                        <span class="inline-flex size-6 shrink-0 items-center justify-center rounded-md bg-surface-100 text-surface-500 dark:bg-surface-800 dark:text-surface-300">
+                          <i-tabler name="file-text" class="!size-4"></i-tabler>
+                        </span>
+                        <span class="min-w-0 flex-1">
+                          <span class="block truncate text-sm font-medium">{{ getStepDisplayName(fileView.file) }}</span>
+                          <span class="mt-1 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-color">
+                            <span class="font-semibold uppercase">Log</span>
+                          </span>
+                        </span>
+                      </button>
+                    }
                   }
                 </div>
               </p-accordion-content>

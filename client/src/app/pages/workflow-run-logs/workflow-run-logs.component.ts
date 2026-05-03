@@ -283,6 +283,18 @@ export class WorkflowRunLogsComponent {
     return this.groupedFilesByGroup()[groupName] ?? [];
   }
 
+  isStepFile(file: WorkflowRunLogFileDto): boolean {
+    return file.stepNumber != null;
+  }
+
+  getStepFileViewsForGroup(groupName: string) {
+    return this.getFileViewsForGroup(groupName).filter(fv => this.isStepFile(fv.file));
+  }
+
+  getNonStepFileViewsForGroup(groupName: string) {
+    return this.getFileViewsForGroup(groupName).filter(fv => !this.isStepFile(fv.file));
+  }
+
   getJobDisplayName(group: WorkflowRunLogGroupDto): string {
     return group.jobName || group.name;
   }
