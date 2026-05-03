@@ -350,9 +350,9 @@ export type WorkflowRunDto = {
   htmlUrl: string;
   label: 'NONE' | 'TEST';
   testProcessingStatus?: 'PROCESSING' | 'PROCESSED' | 'FAILED';
-  headBranch?: string;
-  headSha?: string;
-  runStartedAt?: string;
+  headBranch?: string | null;
+  headSha?: string | null;
+  runStartedAt?: string | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -677,8 +677,8 @@ export type RequiredWorkflowStatusDto = {
   workflowId?: number;
   workflowName?: string;
   status?: 'READY' | 'WAITING' | 'FAILED' | 'MISSING_RUN';
-  runId?: number;
-  runHtmlUrl?: string;
+  runId?: number | null;
+  runHtmlUrl?: string | null;
   runStatus?:
     | 'QUEUED'
     | 'IN_PROGRESS'
@@ -702,8 +702,8 @@ export type EnvironmentLockHistoryDto = {
   id: number;
   lockedBy?: UserInfoDto;
   unlockedBy?: UserInfoDto;
-  lockedAt?: string;
-  unlockedAt?: string;
+  lockedAt?: string | null;
+  unlockedAt?: string | null;
   environment?: EnvironmentDto;
 };
 

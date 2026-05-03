@@ -4,7 +4,7 @@ import org.springframework.boot.gradle.tasks.run.BootRun
 // so that it can be used to connect to the database and execute the migrations.
 buildscript {
     dependencies {
-        classpath('org.postgresql:postgresql:42.7.10')
+        classpath('org.postgresql:postgresql:42.7.11')
         classpath('org.flywaydb:flyway-database-postgresql:11.20.3')
     }
 }
@@ -13,7 +13,7 @@ plugins {
     id 'org.springframework.boot'
     id 'io.freefair.lombok'
     id 'org.springdoc.openapi-gradle-plugin' version '1.9.0'
-    id 'org.openapi.generator' version '7.20.0'
+    id 'org.openapi.generator' version '7.22.0'
     id 'org.flywaydb.flyway' version '11.20.3'
 }
 
@@ -41,8 +41,8 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
     implementation 'org.springframework.boot:spring-boot-starter-cache'
     implementation 'org.springframework.security:spring-security-oauth2-jose'
-    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.16'
-    implementation 'org.openapitools:jackson-databind-nullable:0.2.9'
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.17'
+    implementation 'org.openapitools:jackson-databind-nullable:0.2.10'
     implementation 'com.github.ben-manes.caffeine:caffeine'
     implementation 'io.nats:jnats:2.25.2'
     implementation 'org.kohsuke:github-api:1.330'
@@ -52,7 +52,7 @@ dependencies {
     implementation 'org.flywaydb:flyway-core:11.20.3'
     implementation 'org.flywaydb:flyway-database-postgresql:11.20.3'
     implementation 'io.jsonwebtoken:jjwt-api:0.13.0'
-    implementation 'io.sentry:sentry-spring-boot-starter-jakarta:8.34.1'
+    implementation 'io.sentry:sentry-spring-boot-starter-jakarta:8.40.0'
     // Helios push-based status updates
     implementation "de.tum.cit.aet:helios-status-spring-starter:1.1.0"
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.13.0'
@@ -60,9 +60,9 @@ dependencies {
     runtimeOnly 'org.postgresql:postgresql'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
-    testImplementation 'io.zonky.test:embedded-database-spring-test:2.7.1'
+    testImplementation 'io.zonky.test:embedded-database-spring-test:2.8.0'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-    runtimeAgent1 "org.springframework:spring-instrument:6.2.16"
+    runtimeAgent1 "org.springframework:spring-instrument:6.2.18"
     runtimeAgent2 "org.aspectj:aspectjweaver:1.9.25.1"
 }
 
