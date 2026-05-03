@@ -285,7 +285,7 @@ describe('Integration Test Workflow Run Logs Page', () => {
 
     expect(component.selectedStep()).toBeNull();
     expect(fixture.nativeElement.textContent).toContain('Unmatched log group');
-    expect(fixture.nativeElement.textContent).toContain('Unmatched log file');
+    expect(fixture.nativeElement.textContent).not.toContain('Unmatched log file');
     expect(fixture.nativeElement.textContent).not.toContain('GitHub step:');
   });
 

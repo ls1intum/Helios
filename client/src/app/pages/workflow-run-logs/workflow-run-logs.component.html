@@ -231,9 +231,6 @@
                           @if (fileView.file.stepName && fileView.file.displayName && fileView.file.stepName !== fileView.file.displayName) {
                             <span aria-hidden="true">·</span>
                             <span class="min-w-0 truncate">Log file: {{ fileView.file.displayName }}</span>
-                          } @else if (!fileView.file.stepName) {
-                            <span aria-hidden="true">·</span>
-                            <span>Unmatched log file</span>
                           }
                         </span>
                       </span>
