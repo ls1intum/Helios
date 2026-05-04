@@ -366,10 +366,7 @@ class GitHubServiceTest {
             () -> {
               gitHubService.dispatchWorkflow(repoNameWithOwners, workflowFileNameOrId, ref, inputs);
             });
-    assertTrue(
-        exception
-            .getMessage()
-            .contains("GitHub API workflow dispatch failed with response code: 500"));
+    assertEquals("Error", exception.getMessage());
   }
 
   @Test
@@ -1205,10 +1202,7 @@ class GitHubServiceTest {
                   repoNameWithOwner, "v1", "main", "name", "body", false, githubUserLogin);
             });
 
-    assertTrue(
-        exception
-            .getMessage()
-            .contains("GitHub API create release failed with response code: 500"));
+    assertEquals("Error", exception.getMessage());
   }
 
   @Test
@@ -1385,8 +1379,41 @@ class GitHubServiceTest {
             () -> {
               gitHubService.cancelWorkflowRun(repoNameWithOwner, runId);
             });
-    assertTrue(exception.getMessage()
-        .contains("GitHub API cancel for run " + runId + " failed with response code: 500"));
+    assertEquals("Error details", exception.getMessage());
+  }
+
+  @Test
+  void cancelWorkflowRunApiFailureUsesGithubMessage() throws IOException {
+    String repoNameWithOwner = "owner/repo";
+    long runId = 123L;
+    when(clientManager.getCurrentToken()).thenReturn("test-token");
+    when(objectMapper.readValue(
+            "{\"message\":\"Cannot cancel a workflow run that is completed.\"}", Map.class))
+        .thenReturn(Map.of("message", "Cannot cancel a workflow run that is completed."));
+
+    ResponseBody responseBody =
+        ResponseBody.create(
+            "{\"message\":\"Cannot cancel a workflow run that is completed.\"}",
+            MediaType.parse("application/json"));
+    Response mockResponse =
+        new Response.Builder()
+            .request(new Request.Builder().url("http://dummyurl").build())
+            .protocol(Protocol.HTTP_1_1)
+            .code(409)
+            .message("Conflict")
+            .body(responseBody)
+            .build();
+    Call mockCall = mock(Call.class);
+    when(okHttpClient.newCall(any(Request.class))).thenReturn(mockCall);
+    when(mockCall.execute()).thenReturn(mockResponse);
+
+    IOException exception =
+        assertThrows(
+            IOException.class,
+            () -> {
+              gitHubService.cancelWorkflowRun(repoNameWithOwner, runId);
+            });
+    assertEquals("Cannot cancel a workflow run that is completed.", exception.getMessage());
   }
 
   private Response buildJsonResponse(String json) {
