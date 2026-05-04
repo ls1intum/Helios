@@ -9,7 +9,7 @@ import org.hibernate.Session;
 @Aspect
 public class RepositoryFilterAspect {
   @Pointcut(
-      "execution (* org.hibernate.internal.SessionFactoryImpl.SessionBuilderImpl.openSession(..))")
+      "execution (* org.hibernate.SessionBuilder.openSession(..))")
   public void openSession() {}
 
   @AfterReturning(pointcut = "openSession()", returning = "session")

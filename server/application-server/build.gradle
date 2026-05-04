@@ -35,35 +35,36 @@ configurations {
 }
 
 dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter-aop'
+    implementation 'org.springframework.boot:spring-boot-starter-aspectj'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-    implementation 'org.springframework.boot:spring-boot-starter-web'
-    implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
+    implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+    implementation 'org.springframework.boot:spring-boot-starter-restclient'
+    implementation 'org.springframework.boot:spring-boot-starter-security-oauth2-resource-server'
     implementation 'org.springframework.boot:spring-boot-starter-cache'
+    implementation 'org.springframework.boot:spring-boot-starter-flyway'
+    implementation 'org.springframework.boot:spring-boot-jackson2'
     implementation 'org.springframework.security:spring-security-oauth2-jose'
-    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.17'
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3'
     implementation 'org.openapitools:jackson-databind-nullable:0.2.10'
     implementation 'com.github.ben-manes.caffeine:caffeine'
     implementation 'io.nats:jnats:2.25.2'
     implementation 'org.kohsuke:github-api:1.330'
     implementation 'com.squareup.okhttp3:okhttp:4.12.0'
     implementation 'com.squareup.okhttp3:logging-interceptor:4.12.0'
-    implementation 'javax.annotation:javax.annotation-api:1.3.2'
-    implementation 'org.flywaydb:flyway-core:11.20.3'
-    implementation 'org.flywaydb:flyway-database-postgresql:11.20.3'
+    implementation 'org.flywaydb:flyway-database-postgresql'
     implementation 'io.jsonwebtoken:jjwt-api:0.13.0'
-    implementation 'io.sentry:sentry-spring-boot-starter-jakarta:8.40.0'
+    implementation 'io.sentry:sentry-spring-boot-4-starter:8.40.0'
     // Helios push-based status updates
     implementation "de.tum.cit.aet:helios-status-spring-starter:1.1.0"
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.13.0'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.13.0'
     runtimeOnly 'org.postgresql:postgresql'
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testImplementation 'org.springframework.security:spring-security-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-security-test'
     testImplementation 'io.zonky.test:embedded-database-spring-test:2.8.0'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-    runtimeAgent1 "org.springframework:spring-instrument:6.2.18"
-    runtimeAgent2 "org.aspectj:aspectjweaver:1.9.25.1"
+    runtimeAgent1 "org.springframework:spring-instrument"
+    runtimeAgent2 "org.aspectj:aspectjweaver"
 }
 
 springBoot {

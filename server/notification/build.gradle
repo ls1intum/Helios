@@ -18,16 +18,16 @@ configurations {
 }
 
 dependencies {
-	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
 	implementation 'org.springframework.boot:spring-boot-starter-mail'
-	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.17'
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3'
 	implementation 'org.openapitools:jackson-databind-nullable:0.2.10'
+	implementation 'org.springframework.boot:spring-boot-jackson2'
 	implementation 'io.nats:jnats:2.25.2'
-	implementation 'com.fasterxml.jackson.core:jackson-databind'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-	runtimeAgent1 "org.springframework:spring-instrument:6.2.18"
-	runtimeAgent2 "org.aspectj:aspectjweaver:1.9.25.1"
+	runtimeAgent1 "org.springframework:spring-instrument"
+	runtimeAgent2 "org.aspectj:aspectjweaver"
 }
 
 // Custom bootRun task to force the user to specify an active profile
