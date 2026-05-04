@@ -22,7 +22,7 @@ jobs:
       CHANGE_DETECTED: ${{ steps.check_changes.outputs.CHANGE_DETECTED }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -103,7 +103,7 @@ jobs:
     steps:
       - name: Checkout code
         if: env.CHANGE_DETECTED == 'true'
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Set up Java
         if: env.CHANGE_DETECTED == 'true'
