@@ -2,7 +2,7 @@
   <div heading>Privacy Policy</div>
   <div description>
     <br />
-    Last updated: 2026-04-27
+    Last updated: 2026-05-04
     <br /><br />
     The Technical University of Munich (TUM) is the sole controller for the personal data processed in Helios within the meaning of Art. 4(7) GDPR. The Research Group for Applied
     Education Technologies (AET), a chair within the Department of Computer Science (TUM School of Computation, Information and Technology, organisational unit CIT&ndash;I1),
@@ -75,12 +75,13 @@
 
     <h3 class="text-base font-semibold mt-3">Notification email and notification preferences</h3>
     <p class="mt-1">
-      Helios may initialise your notification email from GitHub and enable notification preferences on first login. You can disable notifications, change the notification email,
-      and adjust preferences in the Helios settings page.
+      On first login, Helios initialises your notification email from the email GitHub returns and switches notification preferences on by default. You can change the address,
+      disable notifications, or adjust individual preferences at any time on the Helios settings page; the change takes effect immediately.
     </p>
     <p class="mt-1">
-      <strong>Legal basis:</strong> the same legal basis as the core service applies; if you manually enter a different notification email address, processing that additional
-      address is based on consent (Art. 6(1)(a) GDPR).
+      <strong>Legal basis:</strong> the same legal basis as the core service applies (Art. 6(1)(e) GDPR i.V.m. Art. 2 BayHIG and Art. 4(1) BayDSG for TUM members; Art. 6(1)(b) GDPR
+      for non-TUM contributors). Notifications are part of the chair&apos;s CI/CD service and are not based on consent. If you do not want to receive notifications, switch them off
+      on the settings page or exercise your right to object under Art. 21 GDPR (see &ldquo;Your rights&rdquo; below).
     </p>
 
     <h3 class="text-base font-semibold mt-3">Server access logs and self-hosted error reports</h3>
@@ -156,11 +157,15 @@
       </li>
       <li><strong>Self-hosted Keycloak</strong> (the sign-in service, run on TUM infrastructure) &mdash; for authentication.</li>
       <li>
-        <strong>Self-hosted Sentry</strong> (an error-reporting tool, run by AET on TUM infrastructure at
-        <a href="https://sentry.ase.in.tum.de" class="text-primary" target="_blank" rel="noopener noreferrer">sentry.ase.in.tum.de</a>) &mdash; for error reports. We do not use any
-        external Sentry cloud service.
+        <strong>Self-hosted Sentry</strong> (an error-reporting tool, run on TUM infrastructure at
+        <a href="https://sentry.ase.in.tum.de" class="text-primary" target="_blank" rel="noopener noreferrer">sentry.ase.in.tum.de</a>) &mdash; for error reports. Each error report
+        may include your IP address, your user-agent, the URL you were on, and the stack trace; if a JavaScript error occurs, a short replay of the page state at that moment may
+        also be captured to help with debugging. We do not use any external Sentry cloud service.
       </li>
-      <li><strong>TUM SMTP / AET mail relay</strong> (TUM&apos;s outgoing-mail servers) &mdash; for delivering notification emails.</li>
+      <li>
+        <strong>TUM SMTP / AET mail relay</strong> (TUM&apos;s outgoing-mail servers) &mdash; for delivering notification emails. Notification emails wait briefly on TUM-internal
+        infrastructure before they are sent.
+      </li>
     </ul>
 
     <h2 class="text-xl font-semibold mt-4">Transfer to a third country (USA)</h2>
@@ -168,8 +173,8 @@
       GitHub, Inc. is based in the USA. The transfer of personal data to GitHub is covered by two safeguards: GitHub&apos;s certification under the EU&ndash;U.S. Data Privacy
       Framework (DPF &mdash; an EU adequacy decision under Art. 45(3) GDPR allowing transfers to certified U.S. companies; Commission Implementing Decision (EU) 2023/1795 of 10
       July 2023), and Standard Contractual Clauses (SCC &mdash; a standard EU-approved data-transfer contract under Art. 46(2)(c) GDPR; Commission Implementing Decision (EU)
-      2021/914 of 4 June 2021). GitHub describes these safeguards in its Privacy Statement and, where applicable, in its Data Protection Agreement. No personal data is transferred
-      to any other recipient outside the European Economic Area.
+      2021/914 of 4 June 2021). Both safeguards are set out in the GitHub Data Protection Agreement, which applies to every github.com user. No personal data is transferred to any
+      other recipient outside the European Economic Area.
     </p>
 
     <h2 class="text-xl font-semibold mt-4">How long we keep data (retention)</h2>
@@ -180,13 +185,16 @@
         control.
       </li>
       <li>
-        <strong>Workflow run records (database):</strong> a nightly cleanup at 01:00 keeps the two newest records per repository, workflow and branch for each configured processing
-        status; older <code>PROCESSED</code> runs may be deleted immediately, while older <code>FAILED</code> runs or runs with no terminal state are deleted only after five days.
+        <strong>Workflow run records (database):</strong> a nightly cleanup at 01:00 keeps the two newest <code>PROCESSED</code> runs (finished successfully) per repository and
+        branch, and deletes runs in state <code>FAILED</code> (errored) or with no terminal state that are older than five days.
       </li>
       <li><strong>Workflow run logs (filesystem):</strong> a nightly cleanup at 02:00 deletes log files older than one day.</li>
       <li><strong>Self-hosted Sentry error reports:</strong> kept for at most 30 days.</li>
-      <li><strong>Database backups:</strong> bidaily backups, kept for 7 days.</li>
-      <li><strong>Server access logs:</strong> rotated daily by the host system; not retained for longer than 14 days under normal operation, then automatically deleted.</li>
+      <li><strong>Database backups:</strong> daily backups, kept for 7 days.</li>
+      <li>
+        <strong>Server access logs:</strong> rotated by the host system under TUM-internal log-retention policy; not retained for longer than necessary to detect and diagnose
+        security incidents.
+      </li>
     </ul>
     <p class="mt-3">
       Unless statutory retention obligations require otherwise, personal data is stored only for as long as necessary to operate Helios and fulfil the relevant processing purpose.
@@ -209,11 +217,11 @@
     <h2 class="text-xl font-semibold mt-4">No automated decisions</h2>
     <p class="mt-3">Helios does not perform automated decision-making, including profiling, within the meaning of Art. 22 GDPR.</p>
 
-    <h2 class="text-xl font-semibold mt-4">Notification email (consent)</h2>
+    <h2 class="text-xl font-semibold mt-4">Switching off notifications</h2>
     <p class="mt-3">
-      Helios may initialise your notification email from GitHub and enable notification preferences on first login. You can disable notifications, change the notification email
-      address, and adjust preferences on the Helios settings page. Withdrawing consent does not affect the lawfulness of processing carried out before the withdrawal (Art. 7(3)
-      GDPR).
+      Notifications are switched on by default on first login (see &ldquo;Optional notification email and notification preferences&rdquo; under the legal-basis section above for
+      the legal basis). You can switch them off, change the notification email address, or adjust individual preferences at any time on the Helios settings page; the change takes
+      effect immediately.
     </p>
 
     <h2 class="text-xl font-semibold mt-4">Your rights</h2>
@@ -297,7 +305,7 @@
       Research Group for Applied Education Technologies (CIT&ndash;I1)<br />
       Boltzmannstraße 3<br />
       85748 Garching b. München<br />
-      Office: <a href="https://nav.tum.de/room/5607.01.044" class="text-primary" target="_blank" rel="noopener noreferrer">01.07.044</a><br />
+      Office: <a href="https://nav.tum.de/room/5609.01.041" class="text-primary" target="_blank" rel="noopener noreferrer">01.09.041</a><br />
       Email: <a href="mailto:ls1.admin@in.tum.de" class="text-primary">ls1.admin&#64;in.tum.de</a>
     </p>
     <p class="mt-3">
