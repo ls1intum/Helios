@@ -1,5 +1,6 @@
 package de.tum.cit.aet.helios.config;
 
+import de.tum.cit.aet.helios.environment.ws.EnvironmentDeploymentWebSocketHandler;
 import de.tum.cit.aet.helios.workflow.ws.WorkflowRunWebSocketHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
@@ -14,6 +15,7 @@ import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry
 public class WebSocketConfig implements WebSocketConfigurer {
 
   private final WorkflowRunWebSocketHandler workflowRunWebSocketHandler;
+  private final EnvironmentDeploymentWebSocketHandler environmentDeploymentWebSocketHandler;
   private final WebSocketJwtHandshakeInterceptor handshakeInterceptor;
   private final Environment environment;
 
@@ -21,6 +23,12 @@ public class WebSocketConfig implements WebSocketConfigurer {
   public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
     registry
         .addHandler(workflowRunWebSocketHandler, "/ws/workflow-runs")
+        .addInterceptors(handshakeInterceptor)
+        .setAllowedOrigins(allowedOrigins())
+        .setAllowedOriginPatterns(allowedOriginPatterns());
+
+    registry
+        .addHandler(environmentDeploymentWebSocketHandler, "/ws/environments")
         .addInterceptors(handshakeInterceptor)
         .setAllowedOrigins(allowedOrigins())
         .setAllowedOriginPatterns(allowedOriginPatterns());

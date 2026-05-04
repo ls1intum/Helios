@@ -1,5 +1,11 @@
 package de.tum.cit.aet.helios.workflow.github;
 
+<<<<<<< HEAD
+=======
+import static de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment.mapWorkflowRunStatus;
+
+import de.tum.cit.aet.helios.environment.ws.EnvironmentDeploymentWebSocketPublisher;
+>>>>>>> efabc71d (feat: implement WebSocket infrastructure for real-time environment deployment status updates)
 import de.tum.cit.aet.helios.github.GitHubClientManager;
 import de.tum.cit.aet.helios.github.GitHubFacade;
 import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
@@ -47,6 +53,7 @@ public class GitHubWorkflowRunSyncService {
   private final DeploymentFailureNotificationDecider deploymentFailureNotificationDecider;
   private final NatsNotificationPublisherService notificationPublisherService;
   private final WorkflowRunWebSocketHandler workflowRunWebSocketHandler;
+  private final EnvironmentDeploymentWebSocketPublisher environmentDeploymentWebSocketPublisher;
   private final GitHubFacade github;
   private final GitHubClientManager clientManager;
 
@@ -323,6 +330,7 @@ public class GitHubWorkflowRunSyncService {
                       heliosDeployment.getId(),
                       mappedStatus);
                   heliosDeploymentRepository.save(heliosDeployment);
+                  environmentDeploymentWebSocketPublisher.publishAfterCommit(heliosDeployment);
                 }
               } catch (IOException e) {
                 e.printStackTrace();

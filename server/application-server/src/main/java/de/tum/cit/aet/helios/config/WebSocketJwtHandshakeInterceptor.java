@@ -1,6 +1,5 @@
 package de.tum.cit.aet.helios.config;
 
-import de.tum.cit.aet.helios.workflow.ws.WorkflowRunWebSocketHandler;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -61,7 +60,7 @@ public class WebSocketJwtHandshakeInterceptor implements HandshakeInterceptor {
     for (String header : subprotocols) {
       for (String raw : header.split(",")) {
         String entry = raw.trim();
-        if (WorkflowRunWebSocketHandler.SUBPROTOCOL.equals(entry)) {
+        if ("helios.v1".equals(entry)) {
           hasMarker = true;
         } else if (entry.startsWith(TOKEN_PREFIX)) {
           token = entry.substring(TOKEN_PREFIX.length());
@@ -91,10 +90,10 @@ public class WebSocketJwtHandshakeInterceptor implements HandshakeInterceptor {
       return false;
     }
 
-    attributes.put(WorkflowRunWebSocketHandler.ATTR_USERNAME, username);
-    attributes.put(WorkflowRunWebSocketHandler.ATTR_REPOSITORY_ID, repoId);
+    attributes.put(WebSocketSessionAttributes.USERNAME, username);
+    attributes.put(WebSocketSessionAttributes.REPOSITORY_ID, repoId);
     attributes.put(
-        WorkflowRunWebSocketHandler.ATTR_IS_DEVELOPER,
+        WebSocketSessionAttributes.IS_DEVELOPER,
         heliosDevelopers != null && heliosDevelopers.contains(username));
     return true;
   }

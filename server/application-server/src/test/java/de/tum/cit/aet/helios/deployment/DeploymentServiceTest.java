@@ -20,7 +20,11 @@ import de.tum.cit.aet.helios.environment.EnvironmentLockHistory;
 import de.tum.cit.aet.helios.environment.EnvironmentLockHistoryRepository;
 import de.tum.cit.aet.helios.environment.EnvironmentRepository;
 import de.tum.cit.aet.helios.environment.EnvironmentService;
+<<<<<<< HEAD
 import de.tum.cit.aet.helios.filters.RepositoryContext;
+=======
+import de.tum.cit.aet.helios.environment.ws.EnvironmentDeploymentWebSocketPublisher;
+>>>>>>> efabc71d (feat: implement WebSocket infrastructure for real-time environment deployment status updates)
 import de.tum.cit.aet.helios.github.GitHubService;
 import de.tum.cit.aet.helios.github.WorkflowDispatchResult;
 import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
@@ -61,7 +65,11 @@ public class DeploymentServiceTest {
   @Mock private BranchService branchService;
   @Mock private PullRequestRepository pullRequestRepository;
   @Mock private GitRepoRepository gitRepoRepository;
+<<<<<<< HEAD
   @Mock private HeliosDeploymentWorkflowRunSyncService heliosDeploymentWorkflowRunSyncService;
+=======
+  @Mock private EnvironmentDeploymentWebSocketPublisher environmentDeploymentWebSocketPublisher;
+>>>>>>> efabc71d (feat: implement WebSocket infrastructure for real-time environment deployment status updates)
 
   private Deployment deployment;
   private GitRepository gitRepository;

@@ -1,6 +1,8 @@
 package de.tum.cit.aet.helios.workflow.ws;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import de.tum.cit.aet.helios.config.WebSocketSessionAttributes;
+import de.tum.cit.aet.helios.config.WebSocketSessionRegistry;
 import de.tum.cit.aet.helios.github.GitHubService;
 import de.tum.cit.aet.helios.github.permissions.GitHubRepositoryRoleDto;
 import de.tum.cit.aet.helios.github.permissions.RepoPermissionType;
@@ -13,14 +15,11 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
-import org.springframework.web.socket.PingMessage;
 import org.springframework.web.socket.SubProtocolCapable;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
-import org.springframework.web.socket.handler.ConcurrentWebSocketSessionDecorator;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 @Log4j2
@@ -33,40 +32,39 @@ public class WorkflowRunWebSocketHandler extends TextWebSocketHandler
   public static final String SUBPROTOCOL = "helios.v1";
 
   /** Handshake attribute key for the authenticated GitHub username. */
-  public static final String ATTR_USERNAME = "helios.username";
+  public static final String ATTR_USERNAME = WebSocketSessionAttributes.USERNAME;
 
   /** Handshake attribute key for the repository id supplied at handshake. */
-  public static final String ATTR_REPOSITORY_ID = "helios.repositoryId";
+  public static final String ATTR_REPOSITORY_ID = WebSocketSessionAttributes.REPOSITORY_ID;
 
   /** Handshake attribute key marking a developer that bypasses per-repo permission checks. */
-  public static final String ATTR_IS_DEVELOPER = "helios.isDeveloper";
+  public static final String ATTR_IS_DEVELOPER = WebSocketSessionAttributes.IS_DEVELOPER;
 
-  private static final int SEND_BUFFER_LIMIT = 64 * 1024;
-  private static final int SEND_TIME_LIMIT_MS = 5_000;
   private static final long JOBS_INVALIDATION_INTERVAL_MS = 10_000;
 
   private final ObjectMapper objectMapper;
   private final WorkflowRunService workflowRunService;
   private final GitHubService gitHubService;
+  private final WebSocketSessionRegistry sessionRegistry;
 
   private final ConcurrentHashMap<Long, Set<WebSocketSession>> subscribersByRun =
       new ConcurrentHashMap<>();
   private final ConcurrentHashMap<String, Set<Long>> runsBySession = new ConcurrentHashMap<>();
-  private final ConcurrentHashMap<String, WebSocketSession> sessions = new ConcurrentHashMap<>();
   private final ConcurrentHashMap<Long, Long> lastJobsBroadcastAt = new ConcurrentHashMap<>();
 
   @Override
   public void afterConnectionEstablished(WebSocketSession session) {
-    WebSocketSession decorated =
-        new ConcurrentWebSocketSessionDecorator(session, SEND_TIME_LIMIT_MS, SEND_BUFFER_LIMIT);
-    sessions.put(session.getId(), decorated);
+    sessionRegistry.register(session);
     runsBySession.put(session.getId(), ConcurrentHashMap.newKeySet());
     log.debug("WS connected: sessionId={}, user={}", session.getId(), getUsername(session));
   }
 
   @Override
   protected void handleTextMessage(WebSocketSession rawSession, TextMessage message) {
-    WebSocketSession session = sessions.getOrDefault(rawSession.getId(), rawSession);
+    WebSocketSession session = sessionRegistry.get(rawSession.getId());
+    if (session == null) {
+      session = rawSession;
+    }
     WsClientMessage parsed;
     try {
       parsed = objectMapper.readValue(message.getPayload(), WsClientMessage.class);
@@ -79,7 +77,7 @@ public class WorkflowRunWebSocketHandler extends TextWebSocketHandler
     switch (parsed) {
       case WsClientMessage.Subscribe sub -> handleSubscribe(session, sub.runId());
       case WsClientMessage.Unsubscribe unsub -> handleUnsubscribe(session, unsub.runId());
-      case WsClientMessage.Ping ignored -> send(session, new WsServerMessage.Pong());
+      case WsClientMessage.Ping ignored -> sessionRegistry.send(session, new WsServerMessage.Pong());
     }
   }
 
@@ -99,10 +97,12 @@ public class WorkflowRunWebSocketHandler extends TextWebSocketHandler
     subscribersByRun.computeIfAbsent(runId, k -> ConcurrentHashMap.newKeySet()).add(session);
     runsBySession.computeIfAbsent(session.getId(), k -> ConcurrentHashMap.newKeySet()).add(runId);
 
+    final WebSocketSession target = session;
     workflowRunService
         .findByIdForRepository(runId, owningRepoId)
-        .ifPresent(dto -> send(session, new WsServerMessage.WorkflowRunUpdated(runId, dto)));
-    send(session, new WsServerMessage.WorkflowJobsInvalidated(runId));
+        .ifPresent(
+            dto -> sessionRegistry.send(target, new WsServerMessage.WorkflowRunUpdated(runId, dto)));
+    sessionRegistry.send(session, new WsServerMessage.WorkflowJobsInvalidated(runId));
   }
 
   private void handleUnsubscribe(WebSocketSession session, long runId) {
@@ -121,7 +121,7 @@ public class WorkflowRunWebSocketHandler extends TextWebSocketHandler
 
   @Override
   public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
-    sessions.remove(session.getId());
+    sessionRegistry.unregister(session.getId());
     Set<Long> runs = runsBySession.remove(session.getId());
     if (runs != null) {
       for (Long runId : runs) {
@@ -149,7 +149,7 @@ public class WorkflowRunWebSocketHandler extends TextWebSocketHandler
     WsServerMessage.WorkflowRunUpdated payload =
         new WsServerMessage.WorkflowRunUpdated(runId, run);
     for (WebSocketSession s : subs) {
-      send(s, payload);
+      sessionRegistry.send(s, payload);
     }
   }
 
@@ -173,26 +173,7 @@ public class WorkflowRunWebSocketHandler extends TextWebSocketHandler
     WsServerMessage.WorkflowJobsInvalidated payload =
         new WsServerMessage.WorkflowJobsInvalidated(runId);
     for (WebSocketSession s : subs) {
-      send(s, payload);
-    }
-  }
-
-  @Scheduled(fixedRate = 25_000)
-  public void heartbeat() {
-    for (WebSocketSession session : sessions.values()) {
-      if (!session.isOpen()) {
-        continue;
-      }
-      try {
-        session.sendMessage(new PingMessage());
-      } catch (IOException | IllegalStateException e) {
-        log.debug("Heartbeat failed for session {}: {}", session.getId(), e.getMessage());
-        try {
-          session.close(CloseStatus.SESSION_NOT_RELIABLE);
-        } catch (IOException ignored) {
-          // best-effort close
-        }
-      }
+      sessionRegistry.send(s, payload);
     }
   }
 
@@ -224,17 +205,8 @@ public class WorkflowRunWebSocketHandler extends TextWebSocketHandler
     }
   }
 
-  private void send(WebSocketSession session, WsServerMessage payload) {
-    try {
-      String json = objectMapper.writeValueAsString(payload);
-      session.sendMessage(new TextMessage(json));
-    } catch (IOException | IllegalStateException e) {
-      log.warn("Failed to send WS message to {}: {}", session.getId(), e.getMessage());
-    }
-  }
-
   private void sendError(WebSocketSession session, String code, String message, Long runId) {
-    send(session, new WsServerMessage.Error(code, message, runId));
+    sessionRegistry.send(session, new WsServerMessage.Error(code, message, runId));
   }
 
   private static String getUsername(WebSocketSession session) {

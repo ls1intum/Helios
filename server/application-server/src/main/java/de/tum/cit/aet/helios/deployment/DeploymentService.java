@@ -10,6 +10,7 @@ import de.tum.cit.aet.helios.environment.EnvironmentLockHistory;
 import de.tum.cit.aet.helios.environment.EnvironmentLockHistoryRepository;
 import de.tum.cit.aet.helios.environment.EnvironmentRepository;
 import de.tum.cit.aet.helios.environment.EnvironmentService;
+import de.tum.cit.aet.helios.environment.ws.EnvironmentDeploymentWebSocketPublisher;
 import de.tum.cit.aet.helios.filters.RepositoryContext;
 import de.tum.cit.aet.helios.github.GitHubService;
 import de.tum.cit.aet.helios.github.WorkflowDispatchResult;
@@ -55,7 +56,11 @@ public class DeploymentService {
   private final EnvironmentRepository environmentRepository;
   private final PullRequestRepository pullRequestRepository;
   private final GitRepoRepository gitRepoRepository;
+<<<<<<< HEAD
   private final HeliosDeploymentWorkflowRunSyncService heliosDeploymentWorkflowRunSyncService;
+=======
+  private final EnvironmentDeploymentWebSocketPublisher environmentDeploymentWebSocketPublisher;
+>>>>>>> efabc71d (feat: implement WebSocket infrastructure for real-time environment deployment status updates)
 
   public Optional<DeploymentDto> getDeploymentById(Long id) {
     return deploymentRepository.findById(id).map(DeploymentDto::fromDeployment);
@@ -220,9 +225,11 @@ public class DeploymentService {
       }
 
       this.environmentService.markStatusAsChanged(environment);
+      environmentDeploymentWebSocketPublisher.publishAfterCommit(heliosDeployment);
     } catch (IOException e) {
       heliosDeployment.setStatus(HeliosDeployment.Status.IO_ERROR);
       heliosDeploymentRepository.save(heliosDeployment);
+      environmentDeploymentWebSocketPublisher.publishAfterCommit(heliosDeployment);
 
       // Pass through the detailed GitHub error message
       throw new DeploymentException(e.getMessage(), e);
@@ -442,6 +449,7 @@ public class DeploymentService {
           .ifPresent(heliosDeployment -> {
             heliosDeployment.setStatus(HeliosDeployment.Status.CANCELLED);
             heliosDeploymentRepository.save(heliosDeployment);
+            environmentDeploymentWebSocketPublisher.publishAfterCommit(heliosDeployment);
           });
 
       return "Workflow cancellation request sent successfully";
