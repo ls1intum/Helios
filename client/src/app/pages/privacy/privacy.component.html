@@ -79,9 +79,9 @@
       disable notifications, or adjust individual preferences at any time on the Helios settings page; the change takes effect immediately.
     </p>
     <p class="mt-1">
-      <strong>Legal basis:</strong> the same legal basis as the core service applies (Art. 6(1)(e) GDPR i.V.m. Art. 2 BayHIG and Art. 4(1) BayDSG for TUM members; Art. 6(1)(b)
-      GDPR for non-TUM contributors). Notifications are part of the chair&apos;s CI/CD service and are not based on consent. If you do not want to receive notifications, switch
-      them off on the settings page or exercise your right to object under Art. 21 GDPR (see &ldquo;Your rights&rdquo; below).
+      <strong>Legal basis:</strong> the same legal basis as the core service applies (Art. 6(1)(e) GDPR i.V.m. Art. 2 BayHIG and Art. 4(1) BayDSG for TUM members; Art. 6(1)(b) GDPR
+      for non-TUM contributors). Notifications are part of the chair&apos;s CI/CD service and are not based on consent. If you do not want to receive notifications, switch them off
+      on the settings page or exercise your right to object under Art. 21 GDPR (see &ldquo;Your rights&rdquo; below).
     </p>
 
     <h3 class="text-base font-semibold mt-3">Server access logs and self-hosted error reports</h3>
@@ -162,7 +162,10 @@
         may include your IP address, your user-agent, the URL you were on, and the stack trace; if a JavaScript error occurs, a short replay of the page state at that moment may
         also be captured to help with debugging. We do not use any external Sentry cloud service.
       </li>
-      <li><strong>TUM SMTP / AET mail relay</strong> (TUM&apos;s outgoing-mail servers) &mdash; for delivering notification emails. Notification emails wait briefly on TUM-internal infrastructure before they are sent.</li>
+      <li>
+        <strong>TUM SMTP / AET mail relay</strong> (TUM&apos;s outgoing-mail servers) &mdash; for delivering notification emails. Notification emails wait briefly on TUM-internal
+        infrastructure before they are sent.
+      </li>
     </ul>
 
     <h2 class="text-xl font-semibold mt-4">Transfer to a third country (USA)</h2>
@@ -188,7 +191,10 @@
       <li><strong>Workflow run logs (filesystem):</strong> a nightly cleanup at 02:00 deletes log files older than one day.</li>
       <li><strong>Self-hosted Sentry error reports:</strong> kept for at most 30 days.</li>
       <li><strong>Database backups:</strong> daily backups, kept for 7 days.</li>
-      <li><strong>Server access logs:</strong> rotated by the host system under TUM-internal log-retention policy; not retained for longer than necessary to detect and diagnose security incidents.</li>
+      <li>
+        <strong>Server access logs:</strong> rotated by the host system under TUM-internal log-retention policy; not retained for longer than necessary to detect and diagnose
+        security incidents.
+      </li>
     </ul>
     <p class="mt-3">
       Unless statutory retention obligations require otherwise, personal data is stored only for as long as necessary to operate Helios and fulfil the relevant processing purpose.
@@ -213,8 +219,8 @@
 
     <h2 class="text-xl font-semibold mt-4">Switching off notifications</h2>
     <p class="mt-3">
-      Notifications are switched on by default on first login (see &ldquo;Optional notification email and notification preferences&rdquo; under the legal-basis section above for the
-      legal basis). You can switch them off, change the notification email address, or adjust individual preferences at any time on the Helios settings page; the change takes
+      Notifications are switched on by default on first login (see &ldquo;Optional notification email and notification preferences&rdquo; under the legal-basis section above for
+      the legal basis). You can switch them off, change the notification email address, or adjust individual preferences at any time on the Helios settings page; the change takes
       effect immediately.
     </p>
 
