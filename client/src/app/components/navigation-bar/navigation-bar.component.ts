@@ -55,11 +55,14 @@ export class NavigationBarComponent {
         icon: 'arrow-guide',
         path: ['repo', this.repositoryId(), 'ci-cd'],
       },
+      /*
+      // TODO: Re-enable once the flaky tests page is fixed
       {
         label: 'Flaky Tests',
         icon: 'bug',
         path: ['repo', this.repositoryId(), 'flaky-tests'],
       },
+       */
       {
         label: 'Environments',
         icon: 'server-cog',
