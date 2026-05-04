@@ -51,17 +51,25 @@ public class OrphanHeliosDeploymentRecoveryService {
     for (HeliosDeployment deployment : stuckDeployments) {
       String repositoryNameWithOwner =
           deployment.getEnvironment().getRepository().getNameWithOwner();
+      boolean wasSynchronized = false;
       try {
-        if (heliosDeploymentWorkflowRunSyncService.synchronizeTerminalStateFromWorkflowRun(
-            repositoryNameWithOwner, deployment.getWorkflowRunId())) {
-          synchronizedCount++;
-        }
+        wasSynchronized =
+            heliosDeploymentWorkflowRunSyncService.synchronizeTerminalStateFromWorkflowRun(
+                repositoryNameWithOwner, deployment.getWorkflowRunId());
       } catch (IOException e) {
         log.warn(
             "Failed to synchronize stuck Helios deployment {} from workflow run {}: {}",
             deployment.getId(),
             deployment.getWorkflowRunId(),
             e.getMessage());
+      }
+
+      if (wasSynchronized) {
+        synchronizedCount++;
+      } else if (deployment.getDeploymentId() == null) {
+        // Preserve the original safety net: orphan rows (no linked Deployment) must be
+        // force-finalized after the threshold even when GitHub did not yield a terminal state.
+        markStuckHeliosDeploymentAsFailed(deployment);
       }
     }
 
@@ -84,16 +92,20 @@ public class OrphanHeliosDeploymentRecoveryService {
 
     int updatedCount = 0;
     for (HeliosDeployment deployment : stuckDeployments) {
-      log.warn(
-          "Marking Helios deployment {} as FAILED, stuck in {} state since {}",
-          deployment.getId(),
-          deployment.getStatus(),
-          deployment.getStatusUpdatedAt());
-
-      deployment.setStatus(HeliosDeployment.Status.FAILED);
-      heliosDeploymentRepository.save(deployment);
+      markStuckHeliosDeploymentAsFailed(deployment);
       updatedCount++;
     }
     return updatedCount;
+  }
+
+  private void markStuckHeliosDeploymentAsFailed(HeliosDeployment deployment) {
+    log.warn(
+        "Marking Helios deployment {} as FAILED, stuck in {} state since {}",
+        deployment.getId(),
+        deployment.getStatus(),
+        deployment.getStatusUpdatedAt());
+
+    deployment.setStatus(HeliosDeployment.Status.FAILED);
+    heliosDeploymentRepository.save(deployment);
   }
 }
