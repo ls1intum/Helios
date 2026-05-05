@@ -31,7 +31,7 @@ jobs:
           if: (github.event.pull_request.head.repo.full_name == github.event.pull_request.base.repo.full_name) && (success() || failure())
         - name: Upload Client Test Coverage Report
           if: success() || failure()
-          uses: actions/upload-artifact@v4
+          uses: actions/upload-artifact@v7
           with:
               name: Coverage Report Client Tests
               path: client/coverage/lcov-report
@@ -68,7 +68,7 @@ jobs:
             numFailures: 99
         - name: Upload Server Test Coverage Report
           if: success() || failure()
-          uses: actions/upload-artifact@v4
+          uses: actions/upload-artifact@v7
           with:
             name: Coverage Report Server Tests
             path: server/application-server/build/reports/jacoco/test/html/
