@@ -6,17 +6,5 @@ export { formDataBodySerializer, jsonBodySerializer, urlSearchParamsBodySerializ
 export { buildClientParams } from '../core/params.gen';
 export { serializeQueryKeyValue } from '../core/queryKeySerializer.gen';
 export { createClient } from './client.gen';
-export type {
-  Client,
-  ClientOptions,
-  Config,
-  CreateClientConfig,
-  Options,
-  OptionsLegacyParser,
-  RequestOptions,
-  RequestResult,
-  ResolvedRequestOptions,
-  ResponseStyle,
-  TDataShape,
-} from './types.gen';
+export type { Client, ClientOptions, Config, CreateClientConfig, Options, RequestOptions, RequestResult, ResolvedRequestOptions, ResponseStyle, TDataShape } from './types.gen';
 export { createConfig, mergeHeaders } from './utils.gen';
