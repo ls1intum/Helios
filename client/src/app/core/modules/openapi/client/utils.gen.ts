@@ -186,7 +186,7 @@ export const mergeHeaders = (...headers: Array<Required<Config>['headers'] | und
           mergedHeaders.append(key, v as string);
         }
       } else if (value !== undefined) {
-        // assume object headers are meant to be JSON stringified, i.e. their
+        // assume object headers are meant to be JSON stringified, i.e., their
         // content value in OpenAPI specification is 'application/json'
         mergedHeaders.set(key, typeof value === 'object' ? JSON.stringify(value) : (value as string));
       }
@@ -195,7 +195,14 @@ export const mergeHeaders = (...headers: Array<Required<Config>['headers'] | und
   return mergedHeaders;
 };
 
-type ErrInterceptor<Err, Res, Req, Options> = (error: Err, response: Res, request: Req, options: Options) => Err | Promise<Err>;
+type ErrInterceptor<Err, Res, Req, Options> = (
+  error: Err,
+  /** response may be undefined due to a network error where no response object is produced */
+  response: Res | undefined,
+  /** request may be undefined, because error may be from building the request object itself */
+  request: Req | undefined,
+  options: Options
+) => Err | Promise<Err>;
 
 type ReqInterceptor<Req, Options> = (request: Req, options: Options) => Req | Promise<Req>;
 
