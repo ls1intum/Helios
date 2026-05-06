@@ -1589,6 +1589,47 @@ export const FlakyTestSummarySchema = {
   },
 } as const;
 
+export const TestFailureAnalysisUsageDtoSchema = {
+  type: 'object',
+  properties: {
+    rateLimitEnabled: {
+      type: 'boolean',
+    },
+    dailyUsed: {
+      type: 'integer',
+      format: 'int32',
+    },
+    dailyLimit: {
+      type: 'integer',
+      format: 'int32',
+    },
+    burstUsed: {
+      type: 'integer',
+      format: 'int32',
+    },
+    burstLimit: {
+      type: 'integer',
+      format: 'int32',
+    },
+    burstWindowSeconds: {
+      type: 'integer',
+      format: 'int64',
+    },
+  },
+} as const;
+
+export const TestFailureAnalysisCacheLookupDtoSchema = {
+  type: 'object',
+  properties: {
+    hasCachedResult: {
+      type: 'boolean',
+    },
+    cachedResult: {
+      $ref: '#/components/schemas/TestFailureAnalysisResponseDto',
+    },
+  },
+} as const;
+
 export const CommitsSinceReleaseCandidateDtoSchema = {
   type: 'object',
   properties: {

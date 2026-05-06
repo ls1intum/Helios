@@ -7,6 +7,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -135,4 +136,36 @@ class TestFailureAnalysisControllerTest {
 
     verify(analysisService).analyzeTestFailure(1L, 2L, true);
   }
+
+  @Test
+  void getLatestCachedFailureAnalysisReturnsLookupResult() throws Exception {
+    when(analysisService.getLatestCachedAnalysis(eq(1L), eq(2L)))
+        .thenReturn(
+            new TestFailureAnalysisCacheLookupDto(
+                true,
+                new TestFailureAnalysisResponseDto(
+                    1L,
+                    TestFailureAnalysisResponseStatus.COMPLETED,
+                    new TestFailureAnalysisResultDto(
+                        "summary",
+                        List.of("hypothesis"),
+                        List.of("evidence"),
+                        List.of("fix"),
+                        0.8,
+                        "openai",
+                        "gpt-4o-mini"),
+                    null,
+                    OffsetDateTime.parse("2026-04-16T10:15:30Z"),
+                    321L,
+                    true)));
+
+    mockMvc
+        .perform(
+            get("/api/repositories/1/test-cases/2/failure-analysis/latest")
+                .with(user("writer").roles("WRITE")))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.hasCachedResult").value(true))
+        .andExpect(jsonPath("$.cachedResult.status").value("COMPLETED"));
+  }
+
 }

@@ -297,6 +297,122 @@ class TestFailureAnalysisServiceTest {
     verify(analyzer, never()).analyze(any(), any(), anyString());
   }
 
+  @Test
+  void getLatestCachedAnalysisReturnsCachedResultWhenAvailable() throws Exception {
+    TestCase testCase = createTestCase(5L, 100L, 11L, 7L, TestCase.TestStatus.FAILED);
+    TestFailureAnalysisResultDto cachedResult =
+        new TestFailureAnalysisResultDto(
+            "Cached summary",
+            List.of("Hypothesis A"),
+            List.of("Evidence A"),
+            List.of("Fix A"),
+            0.8,
+            "openai",
+            "gpt-4o-mini");
+    OffsetDateTime completedAt = OffsetDateTime.now().minusHours(1).withNano(0);
+
+    TestFailureAnalysis cachedEntry = new TestFailureAnalysis();
+    cachedEntry.setId(10L);
+    cachedEntry.setTestCase(testCase);
+    cachedEntry.setProviderId("openai");
+    cachedEntry.setStatus(TestFailureAnalysisStatus.COMPLETED);
+    cachedEntry.setCreatedAt(completedAt.minusSeconds(10));
+    cachedEntry.setResultJson(new ObjectMapper().writeValueAsString(cachedResult));
+    cachedEntry.setUpdatedAt(completedAt);
+    cachedEntry.setDurationMs(123L);
+
+    when(testCaseRepository.findForTestFailureAnalysisByTestCaseId(5L, 42L))
+        .thenReturn(Optional.of(testCase));
+    when(
+            testFailureAnalysisRepository
+                .findFirstByTestCase_IdAndProviderIdAndStatusOrderByUpdatedAtDescIdDesc(
+                    42L, "openai", TestFailureAnalysisStatus.COMPLETED))
+        .thenReturn(Optional.of(cachedEntry));
+
+    TestFailureAnalysisCacheLookupDto lookup = service.getLatestCachedAnalysis(5L, 42L);
+
+    assertTrue(lookup.hasCachedResult());
+    assertNotNull(lookup.cachedResult());
+    assertEquals(TestFailureAnalysisResponseStatus.COMPLETED, lookup.cachedResult().status());
+    assertEquals("Cached summary", lookup.cachedResult().result().summary());
+    assertTrue(lookup.cachedResult().cacheHit());
+  }
+
+  @Test
+  void getLatestCachedAnalysisReturnsNoResultWhenCacheIsEmpty() {
+    TestCase testCase = createTestCase(5L, 100L, 11L, 7L, TestCase.TestStatus.FAILED);
+    when(testCaseRepository.findForTestFailureAnalysisByTestCaseId(5L, 42L))
+        .thenReturn(Optional.of(testCase));
+    when(
+            testFailureAnalysisRepository
+                .findFirstByTestCase_IdAndProviderIdAndStatusOrderByUpdatedAtDescIdDesc(
+                    42L, "openai", TestFailureAnalysisStatus.COMPLETED))
+        .thenReturn(Optional.empty());
+
+    TestFailureAnalysisCacheLookupDto lookup = service.getLatestCachedAnalysis(5L, 42L);
+
+    assertFalse(lookup.hasCachedResult());
+    assertNull(lookup.cachedResult());
+  }
+
+  @Test
+  void getUsageReturnsDailyAndBurstCounters() {
+    aiProperties.getTestFailure().getRateLimit().setEnabled(true);
+    aiProperties.getTestFailure().getRateLimit().setPerUserDailyMax(20);
+    aiProperties.getTestFailure().getRateLimit().setPerUserBurstMax(5);
+    aiProperties.getTestFailure().getRateLimit().setPerUserBurstWindow(Duration.ofMinutes(10));
+
+    when(testFailureAnalysisRepository.countByRequesterUserIdAndCreatedAtAfter(any(), any()))
+        .thenReturn(5L, 2L);
+
+    TestFailureAnalysisUsageDto usage = service.getUsage();
+
+    assertTrue(usage.rateLimitEnabled());
+    assertEquals(20, usage.dailyLimit());
+    assertEquals(5, usage.dailyUsed());
+    assertEquals(5, usage.burstLimit());
+    assertEquals(2, usage.burstUsed());
+    assertEquals(Duration.ofMinutes(10).toSeconds(), usage.burstWindowSeconds());
+  }
+
+  @Test
+  void getUsageReturnsNullValuesWhenLimitsAreDisabled() {
+    aiProperties.getTestFailure().getRateLimit().setEnabled(false);
+    aiProperties.getTestFailure().getRateLimit().setPerUserDailyMax(0);
+    aiProperties.getTestFailure().getRateLimit().setPerUserBurstMax(0);
+    aiProperties.getTestFailure().getRateLimit().setPerUserBurstWindow(null);
+
+    TestFailureAnalysisUsageDto usage = service.getUsage();
+
+    assertFalse(usage.rateLimitEnabled());
+    assertNull(usage.dailyLimit());
+    assertNull(usage.dailyUsed());
+    assertNull(usage.burstLimit());
+    assertNull(usage.burstUsed());
+    assertNull(usage.burstWindowSeconds());
+    verify(testFailureAnalysisRepository, never())
+        .countByRequesterUserIdAndCreatedAtAfter(any(), any());
+  }
+
+  @Test
+  void getUsageIgnoresConfiguredThresholdsWhenRateLimitIsDisabled() {
+    aiProperties.getTestFailure().getRateLimit().setEnabled(false);
+    aiProperties.getTestFailure().getRateLimit().setPerUserDailyMax(20);
+    aiProperties.getTestFailure().getRateLimit().setPerUserBurstMax(5);
+    aiProperties.getTestFailure().getRateLimit().setPerUserBurstWindow(Duration.ofMinutes(10));
+
+    TestFailureAnalysisUsageDto usage = service.getUsage();
+
+    assertFalse(usage.rateLimitEnabled());
+    assertNull(usage.dailyLimit());
+    assertNull(usage.dailyUsed());
+    assertNull(usage.burstLimit());
+    assertNull(usage.burstUsed());
+    assertNull(usage.burstWindowSeconds());
+    verify(testFailureAnalysisRepository, never())
+        .countByRequesterUserIdAndCreatedAtAfter(any(), any());
+  }
+
   private TestCase createTestCase(
       Long repositoryId,
       Long workflowRunId,

@@ -592,6 +592,20 @@ export type FlakyTestSummary = {
   lowFlakinessCount?: number;
 };
 
+export type TestFailureAnalysisUsageDto = {
+  rateLimitEnabled?: boolean;
+  dailyUsed?: number;
+  dailyLimit?: number;
+  burstUsed?: number;
+  burstLimit?: number;
+  burstWindowSeconds?: number;
+};
+
+export type TestFailureAnalysisCacheLookupDto = {
+  hasCachedResult?: boolean;
+  cachedResult?: TestFailureAnalysisResponseDto;
+};
+
 export type CommitsSinceReleaseCandidateDto = {
   aheadBy: number;
   behindBy: number;
@@ -2343,6 +2357,31 @@ export type GetLatestTestResultsByBranchResponses = {
 
 export type GetLatestTestResultsByBranchResponse = GetLatestTestResultsByBranchResponses[keyof GetLatestTestResultsByBranchResponses];
 
+export type GetFailureAnalysisUsageData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/api/test-failure-analysis/usage';
+};
+
+export type GetFailureAnalysisUsageErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type GetFailureAnalysisUsageError = GetFailureAnalysisUsageErrors[keyof GetFailureAnalysisUsageErrors];
+
+export type GetFailureAnalysisUsageResponses = {
+  /**
+   * OK
+   */
+  200: TestFailureAnalysisUsageDto;
+};
+
+export type GetFailureAnalysisUsageResponse = GetFailureAnalysisUsageResponses[keyof GetFailureAnalysisUsageResponses];
+
 export type GetGroupsWithWorkflowsData = {
   body?: never;
   path: {
@@ -2421,6 +2460,34 @@ export type GetRepositoryByIdResponses = {
 };
 
 export type GetRepositoryByIdResponse = GetRepositoryByIdResponses[keyof GetRepositoryByIdResponses];
+
+export type GetLatestCachedFailureAnalysisData = {
+  body?: never;
+  path: {
+    repositoryId: number;
+    testCaseId: number;
+  };
+  query?: never;
+  url: '/api/repositories/{repositoryId}/test-cases/{testCaseId}/failure-analysis/latest';
+};
+
+export type GetLatestCachedFailureAnalysisErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type GetLatestCachedFailureAnalysisError = GetLatestCachedFailureAnalysisErrors[keyof GetLatestCachedFailureAnalysisErrors];
+
+export type GetLatestCachedFailureAnalysisResponses = {
+  /**
+   * OK
+   */
+  200: TestFailureAnalysisCacheLookupDto;
+};
+
+export type GetLatestCachedFailureAnalysisResponse = GetLatestCachedFailureAnalysisResponses[keyof GetLatestCachedFailureAnalysisResponses];
 
 export type GetCommitsSinceLastReleaseCandidateData = {
   body?: never;

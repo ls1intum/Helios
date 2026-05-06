@@ -34,6 +34,55 @@ public class TestFailureAnalysisService {
   private final ObjectMapper objectMapper;
   private final Object rateLimitMutex = new Object();
 
+  public TestFailureAnalysisCacheLookupDto getLatestCachedAnalysis(
+      Long repositoryId, Long testCaseId) {
+    validateAiEnabled();
+
+    TestCase testCase = resolveAndValidate(repositoryId, testCaseId);
+    String providerId = resolveProviderId();
+    Optional<TestFailureAnalysisResponseDto> cachedResponse =
+        readCachedResponse(repositoryId, testCase.getId(), providerId);
+    return new TestFailureAnalysisCacheLookupDto(
+        cachedResponse.isPresent(), cachedResponse.orElse(null));
+  }
+
+  public TestFailureAnalysisUsageDto getUsage() {
+    validateAiEnabled();
+
+    AiProperties.RateLimitProperties limits = aiProperties.getTestFailure().getRateLimit();
+    if (!limits.isEnabled()) {
+      return new TestFailureAnalysisUsageDto(false, null, null, null, null, null);
+    }
+
+    String requesterUserId = resolveRequesterUserId();
+    OffsetDateTime now = OffsetDateTime.now();
+
+    Integer dailyLimit = normalizeConfiguredLimit(limits.getPerUserDailyMax());
+    Integer dailyUsed = null;
+    if (dailyLimit != null) {
+      OffsetDateTime dayStart = currentServerDayStart(now);
+      dailyUsed = (int) countUserAnalysesSince(requesterUserId, dayStart);
+    }
+
+    Duration burstWindow = limits.getPerUserBurstWindow();
+    Integer burstLimit = normalizeConfiguredLimit(limits.getPerUserBurstMax());
+    Integer burstUsed = null;
+    Long burstWindowSeconds = null;
+    if (burstLimit != null && burstWindow != null && burstWindow.isPositive()) {
+      OffsetDateTime cutoff = now.minus(burstWindow);
+      burstUsed = (int) countUserAnalysesSince(requesterUserId, cutoff);
+      burstWindowSeconds = burstWindow.getSeconds();
+    }
+
+    return new TestFailureAnalysisUsageDto(
+        true,
+        dailyUsed,
+        dailyLimit,
+        burstUsed,
+        burstLimit,
+        burstWindowSeconds);
+  }
+
   public TestFailureAnalysisResponseDto analyzeTestFailure(
       Long repositoryId, Long testCaseId, boolean regenerate) {
     validateAiEnabled();
@@ -106,15 +155,14 @@ public class TestFailureAnalysisService {
   private void enforceBurstLimit(
       String requesterUserId, OffsetDateTime now, AiProperties.RateLimitProperties limits) {
     Duration window = limits.getPerUserBurstWindow();
-    if (!isLimitEnabled(limits.getPerUserBurstMax()) || window == null || !window.isPositive()) {
+    Integer burstLimit = normalizeConfiguredLimit(limits.getPerUserBurstMax());
+    if (burstLimit == null || window == null || !window.isPositive()) {
       return;
     }
 
     OffsetDateTime cutoff = now.minus(window);
-    long recentCount =
-        testFailureAnalysisRepository.countByRequesterUserIdAndCreatedAtAfter(
-            requesterUserId, cutoff);
-    if (recentCount < limits.getPerUserBurstMax()) {
+    long recentCount = countUserAnalysesSince(requesterUserId, cutoff);
+    if (recentCount < burstLimit) {
       return;
     }
 
@@ -135,15 +183,14 @@ public class TestFailureAnalysisService {
 
   private void enforceDailyUserLimit(
       String requesterUserId, OffsetDateTime now, AiProperties.RateLimitProperties limits) {
-    if (!isLimitEnabled(limits.getPerUserDailyMax())) {
+    Integer dailyLimit = normalizeConfiguredLimit(limits.getPerUserDailyMax());
+    if (dailyLimit == null) {
       return;
     }
 
     OffsetDateTime dayStart = currentServerDayStart(now);
-    long dailyCount =
-        testFailureAnalysisRepository.countByRequesterUserIdAndCreatedAtAfter(
-            requesterUserId, dayStart);
-    if (dailyCount >= limits.getPerUserDailyMax()) {
+    long dailyCount = countUserAnalysesSince(requesterUserId, dayStart);
+    if (dailyCount >= dailyLimit) {
       throw new TestFailureAnalysisRateLimitExceededException(
           "You've reached the limit for AI analysis requests. Please try again tomorrow.",
           durationUntilNextServerDay(now).toSeconds());
@@ -175,8 +222,13 @@ public class TestFailureAnalysisService {
     return Duration.between(serverNow.toInstant(), nextDayStart.toInstant());
   }
 
-  private boolean isLimitEnabled(int limit) {
-    return limit > 0;
+  private Integer normalizeConfiguredLimit(int limit) {
+    return limit > 0 ? limit : null;
+  }
+
+  private long countUserAnalysesSince(String requesterUserId, OffsetDateTime cutoff) {
+    return testFailureAnalysisRepository.countByRequesterUserIdAndCreatedAtAfter(
+        requesterUserId, cutoff);
   }
 
   private TestCase resolveAndValidate(Long repositoryId, Long testCaseId) {
