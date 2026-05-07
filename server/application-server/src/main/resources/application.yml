@@ -3,6 +3,9 @@ spring:
         name: Helios
     config:
         import: optional:file:.env[.properties]
+    http:
+        converters:
+            preferred-json-mapper: jackson2
     task:
         scheduling:
             pool:

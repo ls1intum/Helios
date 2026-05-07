@@ -7,7 +7,7 @@
 
     <groupId>de.tum.cit.aet</groupId>
     <artifactId>helios-status-spring-starter</artifactId>
-    <version>1.1.0</version>
+    <version>1.1.1</version>
     <packaging>jar</packaging>
     <name>Helios Status Spring Starter</name>
     <description>Helios starter for Spring Boot apps – push-based lifecycle status reporting.</description>
@@ -20,7 +20,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-        <spring.boot.version>3.5.14</spring.boot.version>
+        <spring.boot.version>4.0.6</spring.boot.version>
 
         <!-- dependencies -->
         <lombok.version>1.18.46</lombok.version>
@@ -35,6 +35,7 @@
         <checkstyle.version>10.25.0</checkstyle.version>
         <spring-javaformat-checkstyle.version>0.0.46</spring-javaformat-checkstyle.version>
         <maven-gpg-plugin.version>3.2.7</maven-gpg-plugin.version>
+        <maven-enforcer-plugin.version>3.6.2</maven-enforcer-plugin.version>
     </properties>
 
     <organization>
@@ -149,6 +150,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>
+                <version>${maven-enforcer-plugin.version}</version>
                 <executions>
                     <execution>
                         <id>enforce-maven</id>

@@ -3,6 +3,9 @@ spring:
     name: NotificationService
   config:
     import: optional:file:.env[.properties]
+  http:
+    converters:
+      preferred-json-mapper: jackson2
   mail:
     properties:
       mail:

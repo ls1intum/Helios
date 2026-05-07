@@ -10,27 +10,20 @@ import de.tum.cit.aet.helios.userpreference.UserPreferenceRepository;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import org.junit.Test;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class PullRequestServiceTest {
 
   @InjectMocks private PullRequestService pullRequestService;
   @Mock private PullRequestRepository pullRequestsRepository;
   @Mock private UserPreferenceRepository userPreferenceRepository;
   @Mock private AuthService authService;
-
-  @BeforeEach
-  public void init() {
-    MockitoAnnotations.openMocks(this);
-  }
 
   @Test
   public void testPinnedBranchesAreShownFirst() {
@@ -53,6 +46,7 @@ public class PullRequestServiceTest {
     userPreference.setFavouritePullRequests(Set.of(pr2));
 
     when(pullRequestsRepository.findAllByOrderByUpdatedAtDesc()).thenReturn(prs);
+    when(authService.isLoggedIn()).thenReturn(true);
     when(authService.getUserFromGithubId()).thenReturn(null);
     when(userPreferenceRepository.findByUser(null)).thenReturn(Optional.of(userPreference));
 
