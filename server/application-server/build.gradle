@@ -55,7 +55,7 @@ dependencies {
     implementation 'io.jsonwebtoken:jjwt-api:0.13.0'
     implementation 'io.sentry:sentry-spring-boot-4-starter:8.40.0'
     // Helios push-based status updates
-    implementation "de.tum.cit.aet:helios-status-spring-starter:1.1.0"
+    implementation "de.tum.cit.aet:helios-status-spring-starter:1.1.1"
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.13.0'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.13.0'
     runtimeOnly 'org.postgresql:postgresql'
