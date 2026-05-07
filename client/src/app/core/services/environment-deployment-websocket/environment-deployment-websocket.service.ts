@@ -149,11 +149,7 @@ export class EnvironmentDeploymentWebSocketService {
 
   private buildUrl(): string {
     const base = environment.serverUrl;
-    const wsBase = base.startsWith('https://')
-      ? 'wss://' + base.slice('https://'.length)
-      : base.startsWith('http://')
-        ? 'ws://' + base.slice('http://'.length)
-        : base;
+    const wsBase = base.startsWith('https://') ? 'wss://' + base.slice('https://'.length) : base.startsWith('http://') ? 'ws://' + base.slice('http://'.length) : base;
     return wsBase.replace(/\/+$/, '') + '/ws/environments';
   }
 

@@ -1,11 +1,6 @@
 package de.tum.cit.aet.helios.workflow.github;
 
-<<<<<<< HEAD
-=======
-import static de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment.mapWorkflowRunStatus;
-
 import de.tum.cit.aet.helios.environment.ws.EnvironmentDeploymentWebSocketPublisher;
->>>>>>> efabc71d (feat: implement WebSocket infrastructure for real-time environment deployment status updates)
 import de.tum.cit.aet.helios.github.GitHubClientManager;
 import de.tum.cit.aet.helios.github.GitHubFacade;
 import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
@@ -21,9 +16,9 @@ import de.tum.cit.aet.helios.workflow.GitHubWorkflowContext;
 import de.tum.cit.aet.helios.workflow.Workflow;
 import de.tum.cit.aet.helios.workflow.WorkflowRepository;
 import de.tum.cit.aet.helios.workflow.WorkflowRun;
+import de.tum.cit.aet.helios.workflow.WorkflowRunDto;
 import de.tum.cit.aet.helios.workflow.WorkflowRunRepository;
 import de.tum.cit.aet.helios.workflow.WorkflowService;
-import de.tum.cit.aet.helios.workflow.WorkflowRunDto;
 import de.tum.cit.aet.helios.workflow.ws.WorkflowRunWebSocketHandler;
 import jakarta.transaction.Transactional;
 import java.io.IOException;

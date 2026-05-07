@@ -10,12 +10,9 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-<<<<<<< HEAD
 import de.tum.cit.aet.helios.environment.Environment;
-import de.tum.cit.aet.helios.gitrepo.GitRepository;
-=======
 import de.tum.cit.aet.helios.environment.ws.EnvironmentDeploymentWebSocketPublisher;
->>>>>>> efabc71d (feat: implement WebSocket infrastructure for real-time environment deployment status updates)
+import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
 import java.io.IOException;

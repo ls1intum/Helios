@@ -40,9 +40,7 @@ export class WorkflowRunWebSocketService {
         this.send({ type: 'subscribe', runId });
       }
 
-      const sub = this.incoming$
-        .pipe(filter(msg => 'runId' in msg && msg.runId === runId))
-        .subscribe(subscriber);
+      const sub = this.incoming$.pipe(filter(msg => 'runId' in msg && msg.runId === runId)).subscribe(subscriber);
 
       return () => {
         sub.unsubscribe();
@@ -69,7 +67,7 @@ export class WorkflowRunWebSocketService {
       .pipe(
         retry({
           delay: (_, attempt) => timer(Math.min(30_000, 500 * 2 ** Math.min(attempt, 6))),
-        }),
+        })
       )
       .subscribe({
         next: msg => this.incoming$.next(msg),
@@ -110,11 +108,7 @@ export class WorkflowRunWebSocketService {
 
   private buildUrl(): string {
     const base = environment.serverUrl;
-    const wsBase = base.startsWith('https://')
-      ? 'wss://' + base.slice('https://'.length)
-      : base.startsWith('http://')
-        ? 'ws://' + base.slice('http://'.length)
-        : base;
+    const wsBase = base.startsWith('https://') ? 'wss://' + base.slice('https://'.length) : base.startsWith('http://') ? 'ws://' + base.slice('http://'.length) : base;
     return wsBase.replace(/\/+$/, '') + '/ws/workflow-runs';
   }
 }

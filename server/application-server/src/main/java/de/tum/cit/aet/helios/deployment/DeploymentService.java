@@ -56,11 +56,8 @@ public class DeploymentService {
   private final EnvironmentRepository environmentRepository;
   private final PullRequestRepository pullRequestRepository;
   private final GitRepoRepository gitRepoRepository;
-<<<<<<< HEAD
   private final HeliosDeploymentWorkflowRunSyncService heliosDeploymentWorkflowRunSyncService;
-=======
   private final EnvironmentDeploymentWebSocketPublisher environmentDeploymentWebSocketPublisher;
->>>>>>> efabc71d (feat: implement WebSocket infrastructure for real-time environment deployment status updates)
 
   public Optional<DeploymentDto> getDeploymentById(Long id) {
     return deploymentRepository.findById(id).map(DeploymentDto::fromDeployment);

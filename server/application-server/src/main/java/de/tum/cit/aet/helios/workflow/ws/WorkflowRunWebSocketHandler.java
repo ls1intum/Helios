@@ -77,7 +77,8 @@ public class WorkflowRunWebSocketHandler extends TextWebSocketHandler
     switch (parsed) {
       case WsClientMessage.Subscribe sub -> handleSubscribe(session, sub.runId());
       case WsClientMessage.Unsubscribe unsub -> handleUnsubscribe(session, unsub.runId());
-      case WsClientMessage.Ping ignored -> sessionRegistry.send(session, new WsServerMessage.Pong());
+      case WsClientMessage.Ping ignored ->
+          sessionRegistry.send(session, new WsServerMessage.Pong());
     }
   }
 
@@ -101,7 +102,9 @@ public class WorkflowRunWebSocketHandler extends TextWebSocketHandler
     workflowRunService
         .findByIdForRepository(runId, owningRepoId)
         .ifPresent(
-            dto -> sessionRegistry.send(target, new WsServerMessage.WorkflowRunUpdated(runId, dto)));
+            dto ->
+                sessionRegistry.send(
+                    target, new WsServerMessage.WorkflowRunUpdated(runId, dto)));
     sessionRegistry.send(session, new WsServerMessage.WorkflowJobsInvalidated(runId));
   }
 

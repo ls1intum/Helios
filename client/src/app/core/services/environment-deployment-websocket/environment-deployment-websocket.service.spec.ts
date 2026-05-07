@@ -63,11 +63,7 @@ describe('EnvironmentDeploymentWebSocketService', () => {
     expect(webSocket).toHaveBeenCalledOnce();
     const config = vi.mocked(webSocket).mock.calls[0][0];
     expect(config.url).toMatch(/\/ws\/environments$/);
-    expect(config.protocol).toEqual([
-      'helios.v1',
-      'helios.token.access-token',
-      'helios.repo.42',
-    ]);
+    expect(config.protocol).toEqual(['helios.v1', 'helios.token.access-token', 'helios.repo.42']);
 
     config.openObserver?.next(undefined);
     expect(service.isConnected()).toBe(true);

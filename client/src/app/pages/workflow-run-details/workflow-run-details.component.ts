@@ -110,10 +110,7 @@ export class WorkflowRunDetailsComponent {
 
     const sub = this.wsService.subscribe(runId, repositoryId).subscribe(msg => {
       if (msg.type === 'workflow-run-updated') {
-        this.queryClient.setQueryData<WorkflowRunDto>(
-          getWorkflowRunByIdQueryKey({ path: { runId } }),
-          msg.run,
-        );
+        this.queryClient.setQueryData<WorkflowRunDto>(getWorkflowRunByIdQueryKey({ path: { runId } }), msg.run);
       } else if (msg.type === 'workflow-jobs-invalidated') {
         this.queryClient.invalidateQueries({
           queryKey: getWorkflowJobStatusQueryKey({ path: { runId } }),

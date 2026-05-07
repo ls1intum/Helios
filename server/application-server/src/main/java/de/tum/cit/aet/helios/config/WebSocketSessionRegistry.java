@@ -1,7 +1,7 @@
 package de.tum.cit.aet.helios.config;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -70,7 +70,8 @@ public class WebSocketSessionRegistry {
     try {
       json = objectMapper.writeValueAsString(payload);
     } catch (JsonProcessingException e) {
-      log.warn("Failed to serialize WS payload for session {}: {}", session.getId(), e.getMessage());
+      log.warn(
+          "Failed to serialize WS payload for session {}: {}", session.getId(), e.getMessage());
       return;
     }
     try {

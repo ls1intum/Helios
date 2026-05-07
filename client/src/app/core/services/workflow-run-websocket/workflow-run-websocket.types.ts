@@ -1,9 +1,6 @@
 import { WorkflowRunDto } from '@app/core/modules/openapi';
 
-export type WsClientMessage =
-  | { type: 'subscribe'; runId: number }
-  | { type: 'unsubscribe'; runId: number }
-  | { type: 'ping' };
+export type WsClientMessage = { type: 'subscribe'; runId: number } | { type: 'unsubscribe'; runId: number } | { type: 'ping' };
 
 export type WsServerMessage =
   | { type: 'workflow-run-updated'; runId: number; run: WorkflowRunDto }

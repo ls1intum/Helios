@@ -18,11 +18,8 @@ import org.springframework.transaction.annotation.Transactional;
 public class OrphanHeliosDeploymentRecoveryService {
 
   private final HeliosDeploymentRepository heliosDeploymentRepository;
-<<<<<<< HEAD
   private final HeliosDeploymentWorkflowRunSyncService heliosDeploymentWorkflowRunSyncService;
-=======
   private final EnvironmentDeploymentWebSocketPublisher environmentDeploymentWebSocketPublisher;
->>>>>>> efabc71d (feat: implement WebSocket infrastructure for real-time environment deployment status updates)
 
   /**
    * Scheduled task that runs every hour and force-finalizes very old orphan Helios deployments.
@@ -97,19 +94,7 @@ public class OrphanHeliosDeploymentRecoveryService {
 
     int updatedCount = 0;
     for (HeliosDeployment deployment : stuckDeployments) {
-<<<<<<< HEAD
       markStuckHeliosDeploymentAsFailed(deployment);
-=======
-      log.warn(
-          "Marking Helios deployment {} as FAILED, stuck in {} state since {}",
-          deployment.getId(),
-          deployment.getStatus(),
-          deployment.getStatusUpdatedAt());
-
-      deployment.setStatus(HeliosDeployment.Status.FAILED);
-      heliosDeploymentRepository.save(deployment);
-      environmentDeploymentWebSocketPublisher.publishAfterCommit(deployment);
->>>>>>> efabc71d (feat: implement WebSocket infrastructure for real-time environment deployment status updates)
       updatedCount++;
     }
     return updatedCount;
@@ -124,5 +109,6 @@ public class OrphanHeliosDeploymentRecoveryService {
 
     deployment.setStatus(HeliosDeployment.Status.FAILED);
     heliosDeploymentRepository.save(deployment);
+    environmentDeploymentWebSocketPublisher.publishAfterCommit(deployment);
   }
 }
