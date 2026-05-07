@@ -56,6 +56,10 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class EnvironmentService {
 
+  private static final long ACTIVE_DEPLOYMENT_UNLOCK_TIMEOUT_MINUTES = 20;
+  private static final String ACTIVE_DEPLOYMENT_UNLOCK_ERROR_MESSAGE =
+      "Cancel the ongoing deployment before unlocking this environment.";
+
   private final AuthService authService;
   private final EnvironmentRepository environmentRepository;
   private final EnvironmentLockHistoryRepository lockHistoryRepository;
@@ -463,11 +467,7 @@ public class EnvironmentService {
       }
     }
 
-    // 20 minutes timeout for redeployment
-    if (!canUnlock(environment, 20)) {
-      throw new DeploymentException("Deployment is still in progress, please wait.");
-    }
-
+    validateNoBlockingActiveDeployment(environment);
 
     // Publish email notification for lock unlocked
     // Publish only if the unlocker is different from the locker
@@ -777,41 +777,38 @@ public class EnvironmentService {
         .collect(Collectors.toList());
   }
 
-  // TODO: Move this to a more appropriate location
-  //  since we have the same code in two places
-  //  below method (EnvironmentService) & canRedeploy method in DeploymentService
-  private boolean canUnlock(Environment environment, long timeoutMinutes) {
-    // Fetch the most recent deployment for the environment
+  private void validateNoBlockingActiveDeployment(Environment environment) {
     Optional<HeliosDeployment> latestDeployment =
         heliosDeploymentRepository.findTopByEnvironmentOrderByCreatedAtDesc(environment);
 
     if (latestDeployment.isEmpty()) {
-      // No prior deployments, safe to unlock
-      return true;
+      return;
     }
 
     HeliosDeployment deployment = latestDeployment.get();
 
-    if (deployment.getStatus() == HeliosDeployment.Status.FAILED
-        || deployment.getStatus() == HeliosDeployment.Status.IO_ERROR
-        || deployment.getStatus() == HeliosDeployment.Status.UNKNOWN
-        || deployment.getStatus() == HeliosDeployment.Status.CANCELLED) {
-      return true;
+    if (!isActiveDeploymentStatus(deployment.getStatus())) {
+      return;
     }
 
-    // Check if timeout has elapsed
-    if (deployment.getStatus() == HeliosDeployment.Status.IN_PROGRESS
-        || deployment.getStatus() == HeliosDeployment.Status.WAITING
-        || deployment.getStatus() == HeliosDeployment.Status.QUEUED) {
-      OffsetDateTime now = OffsetDateTime.now();
-      if (deployment.getStatusUpdatedAt().plusMinutes(timeoutMinutes).isAfter(now)) {
-        return false;
-      }
-
-      deployment.setStatus(HeliosDeployment.Status.UNKNOWN);
-      heliosDeploymentRepository.save(deployment);
+    OffsetDateTime statusUpdatedAt = deployment.getStatusUpdatedAt();
+    boolean deploymentIsStale =
+        statusUpdatedAt != null
+            && !statusUpdatedAt
+                .plusMinutes(ACTIVE_DEPLOYMENT_UNLOCK_TIMEOUT_MINUTES)
+                .isAfter(OffsetDateTime.now());
+    if (!deploymentIsStale) {
+      throw new DeploymentException(ACTIVE_DEPLOYMENT_UNLOCK_ERROR_MESSAGE);
     }
-    return true;
+
+    deployment.setStatus(HeliosDeployment.Status.UNKNOWN);
+    heliosDeploymentRepository.save(deployment);
+  }
+
+  private boolean isActiveDeploymentStatus(HeliosDeployment.Status status) {
+    return status == HeliosDeployment.Status.WAITING
+        || status == HeliosDeployment.Status.QUEUED
+        || status == HeliosDeployment.Status.IN_PROGRESS;
   }
 
   public Optional<EnvironmentReviewersDto> getEnvironmentReviewers(Long environmentId) {
