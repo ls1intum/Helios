@@ -12,8 +12,8 @@ import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -82,7 +82,9 @@ public class DeploymentControllerTest {
             .getResponse()
             .getContentAsString();
 
-    assertEquals(objectMapper.writeValueAsString(deployments), response);
+    assertEquals(
+        objectMapper.readTree(objectMapper.writeValueAsString(deployments)),
+        objectMapper.readTree(response));
   }
 
   @Test
@@ -97,7 +99,9 @@ public class DeploymentControllerTest {
             .getResponse()
             .getContentAsString();
 
-    assertEquals(objectMapper.writeValueAsString(sampleDeployment), response);
+    assertEquals(
+        objectMapper.readTree(objectMapper.writeValueAsString(sampleDeployment)),
+        objectMapper.readTree(response));
   }
 
   @Test
@@ -147,7 +151,9 @@ public class DeploymentControllerTest {
             .getResponse()
             .getContentAsString();
 
-    assertEquals(objectMapper.writeValueAsString(history), response);
+    assertEquals(
+        objectMapper.readTree(objectMapper.writeValueAsString(history)),
+        objectMapper.readTree(response));
   }
 
   @Test
@@ -165,7 +171,9 @@ public class DeploymentControllerTest {
             .getResponse()
             .getContentAsString();
 
-    assertEquals(objectMapper.writeValueAsString(history), response);
+    assertEquals(
+        objectMapper.readTree(objectMapper.writeValueAsString(history)),
+        objectMapper.readTree(response));
   }
 
   @Test
@@ -185,7 +193,9 @@ public class DeploymentControllerTest {
             .getResponse()
             .getContentAsString();
 
-    assertEquals(objectMapper.writeValueAsString(history), response);
+    assertEquals(
+        objectMapper.readTree(objectMapper.writeValueAsString(history)),
+        objectMapper.readTree(response));
   }
 
   @Test
@@ -206,7 +216,9 @@ public class DeploymentControllerTest {
             .getResponse()
             .getContentAsString();
 
-    assertEquals(objectMapper.writeValueAsString(response), actualResponse);
+    assertEquals(
+        objectMapper.readTree(objectMapper.writeValueAsString(response)),
+        objectMapper.readTree(actualResponse));
   }
 
   @Test
