@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, Subject, Subscription, timer } from 'rxjs';
-import { filter, retry } from 'rxjs/operators';
+import { defer, Observable, Subject, Subscription, timer } from 'rxjs';
+import { filter, repeat, retry } from 'rxjs/operators';
 import { WebSocketSubject, webSocket } from 'rxjs/webSocket';
 import { environment } from 'environments/environment';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
@@ -62,12 +62,17 @@ export class WorkflowRunWebSocketService {
     if (this.socket$) {
       return;
     }
-    this.socket$ = this.openSocket(repositoryId);
-    this.socketSub = this.socket$
+    this.socketSub = defer(() => {
+      this.socket$ = this.openSocket(repositoryId);
+      return this.socket$;
+    })
       .pipe(
         retry({
-          delay: (_, attempt) => timer(Math.min(30_000, 500 * 2 ** Math.min(attempt, 6))),
-        })
+          delay: (_, attempt) => this.reconnectDelay(attempt),
+        }),
+        repeat({
+          delay: attempt => this.reconnectDelay(attempt),
+        }),
       )
       .subscribe({
         next: msg => this.incoming$.next(msg),
@@ -97,6 +102,10 @@ export class WorkflowRunWebSocketService {
 
   private send(msg: WsClientMessage): void {
     this.socket$?.next(msg as unknown as WsServerMessage);
+  }
+
+  private reconnectDelay(attempt: number): Observable<number> {
+    return timer(Math.min(30_000, 500 * 2 ** Math.min(attempt, 6)));
   }
 
   private disconnect(): void {

@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Component;
@@ -109,13 +110,7 @@ public class WorkflowRunWebSocketHandler extends TextWebSocketHandler
   }
 
   private void handleUnsubscribe(WebSocketSession session, long runId) {
-    Set<WebSocketSession> subs = subscribersByRun.get(runId);
-    if (subs != null) {
-      subs.remove(session);
-      if (subs.isEmpty()) {
-        subscribersByRun.remove(runId, subs);
-      }
-    }
+    removeSubscriber(runId, session.getId());
     Set<Long> runs = runsBySession.get(session.getId());
     if (runs != null) {
       runs.remove(runId);
@@ -128,16 +123,21 @@ public class WorkflowRunWebSocketHandler extends TextWebSocketHandler
     Set<Long> runs = runsBySession.remove(session.getId());
     if (runs != null) {
       for (Long runId : runs) {
-        Set<WebSocketSession> subs = subscribersByRun.get(runId);
-        if (subs != null) {
-          subs.remove(session);
-          if (subs.isEmpty()) {
-            subscribersByRun.remove(runId, subs);
-          }
-        }
+        removeSubscriber(runId, session.getId());
       }
     }
     log.debug("WS closed: sessionId={}, status={}", session.getId(), status);
+  }
+
+  private void removeSubscriber(long runId, String sessionId) {
+    Set<WebSocketSession> subs = subscribersByRun.get(runId);
+    if (subs == null) {
+      return;
+    }
+    subs.removeIf(existing -> existing.getId().equals(sessionId));
+    if (subs.isEmpty()) {
+      subscribersByRun.remove(runId, subs);
+    }
   }
 
   /**
@@ -164,13 +164,22 @@ public class WorkflowRunWebSocketHandler extends TextWebSocketHandler
    * {@value #JOBS_INVALIDATION_INTERVAL_MS} ms to avoid excessive GitHub API calls.
    */
   public void broadcastJobsInvalidated(long runId) {
-    long now = System.currentTimeMillis();
-    Long prev = lastJobsBroadcastAt.put(runId, now);
-    if (prev != null && now - prev < JOBS_INVALIDATION_INTERVAL_MS) {
-      return;
-    }
     Set<WebSocketSession> subs = subscribersByRun.get(runId);
     if (subs == null || subs.isEmpty()) {
+      return;
+    }
+    long now = System.currentTimeMillis();
+    AtomicBoolean shouldBroadcast = new AtomicBoolean(false);
+    lastJobsBroadcastAt.compute(
+        runId,
+        (key, prev) -> {
+          if (prev != null && now - prev < JOBS_INVALIDATION_INTERVAL_MS) {
+            return prev;
+          }
+          shouldBroadcast.set(true);
+          return now;
+        });
+    if (!shouldBroadcast.get()) {
       return;
     }
     WsServerMessage.WorkflowJobsInvalidated payload =
