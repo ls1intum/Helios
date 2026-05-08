@@ -8,12 +8,14 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.tum.cit.aet.helios.auth.AuthService;
+import de.tum.cit.aet.helios.deployment.DeploymentException;
 import de.tum.cit.aet.helios.deployment.DeploymentRepository;
 import de.tum.cit.aet.helios.environment.github.GitHubEnvironmentSyncService;
 import de.tum.cit.aet.helios.environment.protectionrules.ProtectionRuleRepository;
@@ -22,6 +24,7 @@ import de.tum.cit.aet.helios.github.GitHubService;
 import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import de.tum.cit.aet.helios.gitreposettings.GitRepoSettingsService;
+import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
 import de.tum.cit.aet.helios.nats.NatsNotificationPublisherService;
 import de.tum.cit.aet.helios.releaseinfo.releasecandidate.ReleaseCandidateRepository;
@@ -292,6 +295,130 @@ public class EnvironmentServiceTest {
     assertNull(result.lockReservationWillExpireAt());
     verify(environmentRepository, times(1)).findById(1L);
     verify(environmentRepository, times(1)).save(any(Environment.class));
+  }
+
+  @Test
+  public void testLockOwnerCanNotUnlockWithActiveDeployment() {
+    environment.setLocked(true);
+    environment.setLockedBy(user);
+    environment.setLockedAt(OffsetDateTime.now());
+    HeliosDeployment deployment =
+        createHeliosDeployment(HeliosDeployment.Status.IN_PROGRESS, OffsetDateTime.now());
+
+    when(authService.getUserFromGithubId()).thenReturn(user);
+    when(environmentRepository.findById(1L)).thenReturn(Optional.of(environment));
+    when(heliosDeploymentRepository.findTopByEnvironmentOrderByCreatedAtDesc(environment))
+        .thenReturn(Optional.of(deployment));
+
+    DeploymentException exception =
+        assertThrows(DeploymentException.class, () -> environmentService.unlockEnvironment(1L));
+
+    assertEquals(
+        "Cancel the ongoing deployment before unlocking this environment.", exception.getMessage());
+    verify(environmentRepository, never()).save(any(Environment.class));
+  }
+
+  @Test
+  public void testMaintainerCanNotUnlockWithActiveDeploymentBeforeTimeout() {
+    final User otherUser = new User();
+    otherUser.setId(2L);
+    environment.setLocked(true);
+    environment.setLockedBy(otherUser);
+    environment.setLockedAt(OffsetDateTime.now());
+    HeliosDeployment deployment =
+        createHeliosDeployment(HeliosDeployment.Status.QUEUED, OffsetDateTime.now());
+
+    when(authService.getUserFromGithubId()).thenReturn(user);
+    when(authService.isAtLeastMaintainer()).thenReturn(true);
+    when(environmentRepository.findById(1L)).thenReturn(Optional.of(environment));
+    when(heliosDeploymentRepository.findTopByEnvironmentOrderByCreatedAtDesc(environment))
+        .thenReturn(Optional.of(deployment));
+
+    DeploymentException exception =
+        assertThrows(DeploymentException.class, () -> environmentService.unlockEnvironment(1L));
+
+    assertEquals(
+        "Cancel the ongoing deployment before unlocking this environment.", exception.getMessage());
+    verify(environmentRepository, never()).save(any(Environment.class));
+  }
+
+  @Test
+  public void testMaintainerCanUnlockWithStaleActiveDeployment() {
+    final User otherUser = new User();
+    otherUser.setId(2L);
+    environment.setLocked(true);
+    environment.setLockedBy(otherUser);
+    environment.setLockedAt(OffsetDateTime.now().minusMinutes(30));
+    HeliosDeployment deployment =
+        createHeliosDeployment(
+            HeliosDeployment.Status.WAITING, OffsetDateTime.now().minusMinutes(21));
+
+    when(authService.getUserFromGithubId()).thenReturn(user);
+    when(authService.isAtLeastMaintainer()).thenReturn(true);
+    when(environmentRepository.findById(1L)).thenReturn(Optional.of(environment));
+    when(environmentRepository.save(any(Environment.class))).thenReturn(environment);
+    when(heliosDeploymentRepository.findTopByEnvironmentOrderByCreatedAtDesc(environment))
+        .thenReturn(Optional.of(deployment));
+
+    EnvironmentDto result = environmentService.unlockEnvironment(1L);
+
+    assertNotNull(result);
+    assertFalse(result.locked());
+    assertEquals(HeliosDeployment.Status.UNKNOWN, deployment.getStatus());
+    verify(heliosDeploymentRepository, times(1)).save(deployment);
+    verify(environmentRepository, times(1)).save(any(Environment.class));
+  }
+
+  @Test
+  public void testLockOwnerCanUnlockWithStaleActiveDeployment() {
+    environment.setLocked(true);
+    environment.setLockedBy(user);
+    environment.setLockedAt(OffsetDateTime.now().minusMinutes(30));
+    HeliosDeployment deployment =
+        createHeliosDeployment(
+            HeliosDeployment.Status.IN_PROGRESS, OffsetDateTime.now().minusMinutes(21));
+
+    when(authService.getUserFromGithubId()).thenReturn(user);
+    when(environmentRepository.findById(1L)).thenReturn(Optional.of(environment));
+    when(environmentRepository.save(any(Environment.class))).thenReturn(environment);
+    when(heliosDeploymentRepository.findTopByEnvironmentOrderByCreatedAtDesc(environment))
+        .thenReturn(Optional.of(deployment));
+
+    EnvironmentDto result = environmentService.unlockEnvironment(1L);
+
+    assertNotNull(result);
+    assertFalse(result.locked());
+    assertEquals(HeliosDeployment.Status.UNKNOWN, deployment.getStatus());
+    verify(heliosDeploymentRepository, times(1)).save(deployment);
+    verify(environmentRepository, times(1)).save(any(Environment.class));
+  }
+
+  @Test
+  public void testUnlockEnvironmentWithTerminalDeployments() {
+    for (HeliosDeployment.Status status :
+        List.of(
+            HeliosDeployment.Status.DEPLOYMENT_SUCCESS,
+            HeliosDeployment.Status.FAILED,
+            HeliosDeployment.Status.IO_ERROR,
+            HeliosDeployment.Status.CANCELLED,
+            HeliosDeployment.Status.UNKNOWN)) {
+      environment.setLocked(true);
+      environment.setLockedBy(user);
+      environment.setLockedAt(OffsetDateTime.now());
+      HeliosDeployment deployment = createHeliosDeployment(status, OffsetDateTime.now());
+
+      when(authService.getUserFromGithubId()).thenReturn(user);
+      when(environmentRepository.findById(1L)).thenReturn(Optional.of(environment));
+      when(environmentRepository.save(any(Environment.class))).thenReturn(environment);
+      when(heliosDeploymentRepository.findTopByEnvironmentOrderByCreatedAtDesc(environment))
+          .thenReturn(Optional.of(deployment));
+
+      EnvironmentDto result = environmentService.unlockEnvironment(1L);
+
+      assertNotNull(result);
+      assertFalse(result.locked());
+      assertEquals(status, deployment.getStatus());
+    }
   }
 
   @Test
@@ -587,5 +714,14 @@ public class EnvironmentServiceTest {
     assertEquals(
         EnvironmentDeploymentReadinessDto.WorkflowStatus.MISSING_RUN,
         readiness.workflows().get(0).status());
+  }
+
+  private HeliosDeployment createHeliosDeployment(
+      HeliosDeployment.Status status, OffsetDateTime statusUpdatedAt) {
+    HeliosDeployment deployment = new HeliosDeployment();
+    deployment.setEnvironment(environment);
+    deployment.setStatus(status);
+    deployment.setStatusUpdatedAt(statusUpdatedAt);
+    return deployment;
   }
 }
