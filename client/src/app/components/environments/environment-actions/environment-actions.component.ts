@@ -150,7 +150,7 @@ export class EnvironmentActionsComponent {
 
   readonly canUnlockStaleDeployment = computed(() => {
     const deployment = this.environment().latestDeployment;
-    if (!this.isActiveDeployment(deployment) || !deployment?.statusUpdatedAt) {
+    if (!this.isUnlockBlockingDeployment(deployment)) {
       return false;
     }
 
@@ -163,7 +163,7 @@ export class EnvironmentActionsComponent {
   });
 
   readonly activeDeploymentBlocksUnlock = computed(() => {
-    return !!this.isDeploymentInProgress() && !this.canUnlockStaleDeployment();
+    return this.isUnlockBlockingDeployment(this.environment().latestDeployment) && !this.canUnlockStaleDeployment();
   });
 
   readonly canCancelDeployment = computed(() => {
@@ -213,5 +213,9 @@ export class EnvironmentActionsComponent {
 
   private isActiveDeployment(deployment: EnvironmentDeployment | undefined): boolean {
     return !!deployment?.state && ACTIVE_DEPLOYMENT_STATES.has(deployment.state);
+  }
+
+  private isUnlockBlockingDeployment(deployment: EnvironmentDeployment | undefined): deployment is EnvironmentDeployment & { statusUpdatedAt: string } {
+    return this.isActiveDeployment(deployment) && !!deployment?.statusUpdatedAt;
   }
 }

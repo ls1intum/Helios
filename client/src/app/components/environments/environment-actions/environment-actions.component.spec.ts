@@ -99,6 +99,30 @@ describe('EnvironmentActionsComponent', () => {
     expect(component.getCancelDeploymentToolTip()).toBe('This will cancel the ongoing deployment.');
   });
 
+  it('does not block unlock for active pure GitHub deployments without a status update timestamp', () => {
+    const activeGitHubDeployment = deployment('IN_PROGRESS', {
+      type: 'GITHUB',
+    });
+    delete activeGitHubDeployment.statusUpdatedAt;
+    setEnvironment(activeGitHubDeployment);
+
+    expect(component.isDeploymentInProgress()).toBe(true);
+    expect(component.canUnlock()).toBe(true);
+    expect(component.getUnlockToolTip()).toBe('Unlock Environment');
+  });
+
+  it('blocks unlock for active Helios-backed GitHub deployments with a status update timestamp', () => {
+    setEnvironment(
+      deployment('IN_PROGRESS', {
+        type: 'GITHUB',
+      })
+    );
+
+    expect(component.isDeploymentInProgress()).toBe(true);
+    expect(component.canUnlock()).toBe(false);
+    expect(component.getUnlockToolTip()).toBe('Cancel the ongoing deployment before unlocking this environment.');
+  });
+
   it('allows the lock owner to unlock stale active deployments', () => {
     isMaintainer = false;
     currentGithubId = '1';
