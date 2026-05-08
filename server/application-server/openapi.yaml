@@ -1672,6 +1672,7 @@ paths:
         required: false
         schema:
           type: string
+          default: OPEN
           enum:
           - ALL
           - OPEN
@@ -1683,6 +1684,45 @@ paths:
           - ASSIGNED_TO_USER
           - REVIEW_REQUESTED
       - name: searchTerm
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: author
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: assignee
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: noAssignee
+        in: query
+        required: false
+        schema:
+          type: boolean
+      - name: labelId
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int64
+      - name: noLabel
+        in: query
+        required: false
+        schema:
+          type: boolean
+      - name: reviewState
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - NONE
+          - REQUIRED
+      - name: requestedReviewer
         in: query
         required: false
         schema:
@@ -1756,6 +1796,31 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PullRequestInfoDto"
+  /api/pullrequests/repository/{repoId}/filter-options:
+    get:
+      tags:
+      - pull-request-controller
+      operationId: getPullRequestFilterOptionsByRepositoryId
+      parameters:
+      - name: repoId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PullRequestFilterOptionsDto"
   /api/pullrequests/repository/{id}:
     get:
       tags:
@@ -3781,6 +3846,61 @@ components:
       - number
       - state
       - title
+    PullRequestFilterLabelOptionDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        color:
+          type: string
+      required:
+      - color
+      - id
+      - name
+    PullRequestFilterOptionsDto:
+      type: object
+      properties:
+        authors:
+          type: array
+          items:
+            $ref: "#/components/schemas/PullRequestFilterUserOptionDto"
+        assignees:
+          type: array
+          items:
+            $ref: "#/components/schemas/PullRequestFilterUserOptionDto"
+        reviewers:
+          type: array
+          items:
+            $ref: "#/components/schemas/PullRequestFilterUserOptionDto"
+        labels:
+          type: array
+          items:
+            $ref: "#/components/schemas/PullRequestFilterLabelOptionDto"
+      required:
+      - assignees
+      - authors
+      - labels
+      - reviewers
+    PullRequestFilterUserOptionDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        login:
+          type: string
+        avatarUrl:
+          type: string
+        name:
+          type: string
+      required:
+      - avatarUrl
+      - id
+      - login
+      - name
     EnvironmentReviewersDto:
       type: object
       properties:

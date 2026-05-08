@@ -3,8 +3,10 @@ package de.tum.cit.aet.helios.pullrequest;
 import de.tum.cit.aet.helios.auth.AuthService;
 import de.tum.cit.aet.helios.filters.RepositoryContext;
 import de.tum.cit.aet.helios.issue.Issue;
+import de.tum.cit.aet.helios.label.Label;
 import de.tum.cit.aet.helios.pullrequest.pagination.PaginatedPullRequestsResponse;
 import de.tum.cit.aet.helios.pullrequest.pagination.PullRequestPageRequest;
+import de.tum.cit.aet.helios.pullrequest.pagination.PullRequestReviewFilterType;
 import de.tum.cit.aet.helios.user.User;
 import de.tum.cit.aet.helios.userpreference.UserPreference;
 import de.tum.cit.aet.helios.userpreference.UserPreferenceRepository;
@@ -18,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +31,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 @Log4j2
 @Service
@@ -62,11 +66,20 @@ public class PullRequestService {
   public PaginatedPullRequestsResponse getPaginatedPullRequests(
       PullRequestPageRequest pageRequest) {
     log.debug(
-        "Input parameters - Filter: {}, Page: {}, Size: {}, Search Term: {}",
+        "Input parameters - Filter: {}, Page: {}, Size: {}, Search Term: {}, "
+            + "Author: {}, Assignee: {}, NoAssignee: {}, LabelId: {}, NoLabel: {}, "
+            + "ReviewState: {}, RequestedReviewerLogin: {}",
         pageRequest.getFilterType(),
         pageRequest.getPage(),
         pageRequest.getSize(),
-        pageRequest.getSearchTerm());
+        pageRequest.getSearchTerm(),
+        pageRequest.getAuthor(),
+        pageRequest.getAssignee(),
+        pageRequest.getNoAssignee(),
+        pageRequest.getLabelId(),
+        pageRequest.getNoLabel(),
+        pageRequest.getReviewState(),
+        pageRequest.getRequestedReviewer());
 
     final String currentUserId = authService.isLoggedIn() ? authService.getGithubId() : null;
 
@@ -101,7 +114,7 @@ public class PullRequestService {
         PageRequest.of(
             pageRequest.getPage() - 1,
             pageRequest.getSize(),
-            Sort.by(Sort.Direction.DESC, "updatedAt"));
+            resolveSort(pageRequest));
 
     // Fetch non-pinned PRs
     List<PullRequestBaseInfoDto> pageDtos =
@@ -126,6 +139,7 @@ public class PullRequestService {
   private Specification<PullRequest> buildNonPinnedPullRequestSpecification(
       PullRequestPageRequest pageRequest, String currentUserId) {
     return (root, query, cb) -> {
+      query.distinct(true);
       List<Predicate> predicates = new ArrayList<>();
 
       // Add predicate for pinned status
@@ -151,6 +165,59 @@ public class PullRequestService {
             cb.or(
                 cb.like(cb.lower(root.get("title")), searchTerm),
                 cb.like(cb.toString(root.get("number")), searchTerm)));
+      }
+
+      if (StringUtils.hasText(pageRequest.getAuthor())) {
+        Join<PullRequest, User> authorJoin = root.join("author", JoinType.INNER);
+        predicates.add(
+            cb.equal(
+                cb.lower(authorJoin.get("login")),
+                pageRequest.getAuthor().trim().toLowerCase(Locale.ROOT)));
+      }
+
+      if (StringUtils.hasText(pageRequest.getAssignee())) {
+        Join<PullRequest, User> assigneeJoin = root.join("assignees", JoinType.INNER);
+        predicates.add(
+            cb.equal(
+                cb.lower(assigneeJoin.get("login")),
+                pageRequest.getAssignee().trim().toLowerCase(Locale.ROOT)));
+      }
+
+      if (Boolean.TRUE.equals(pageRequest.getNoAssignee())) {
+        predicates.add(cb.isEmpty(root.get("assignees")));
+      }
+
+      if (pageRequest.getLabelId() != null) {
+        Join<PullRequest, Label> labelJoin = root.join("labels", JoinType.INNER);
+        predicates.add(cb.equal(labelJoin.get("id"), pageRequest.getLabelId()));
+      }
+
+      if (Boolean.TRUE.equals(pageRequest.getNoLabel())) {
+        predicates.add(cb.isEmpty(root.get("labels")));
+      }
+
+      PullRequestReviewFilterType reviewState = pageRequest.getReviewState();
+      if (reviewState != null) {
+        switch (reviewState) {
+          case NONE:
+            predicates.add(cb.isEmpty(root.get("requestedReviewers")));
+            break;
+          case REQUIRED:
+            predicates.add(cb.isNotEmpty(root.get("requestedReviewers")));
+            break;
+          default:
+            break;
+        }
+      }
+
+      String requestedReviewer = pageRequest.getRequestedReviewer();
+      if (requestedReviewer != null && !requestedReviewer.isBlank()) {
+        Join<PullRequest, User> requestedReviewerJoin =
+            root.join("requestedReviewers", JoinType.INNER);
+        predicates.add(
+            cb.equal(
+                cb.lower(requestedReviewerJoin.get("login")),
+                requestedReviewer.trim().toLowerCase(Locale.ROOT)));
       }
 
       // Add filter type predicate
@@ -207,6 +274,33 @@ public class PullRequestService {
     };
   }
 
+  private Sort resolveSort(PullRequestPageRequest pageRequest) {
+    Sort defaultSort = Sort.by(Sort.Direction.DESC, "updatedAt");
+
+    String sortField = pageRequest.getSortField();
+    if (sortField == null || sortField.isBlank()) {
+      return defaultSort;
+    }
+
+    String property;
+    switch (sortField) {
+      case "updatedAt":
+        property = "updatedAt";
+        break;
+      case "createdAt":
+        property = "createdAt";
+        break;
+      default:
+        return defaultSort;
+    }
+
+    Sort.Direction direction =
+        "asc".equalsIgnoreCase(pageRequest.getSortDirection())
+            ? Sort.Direction.ASC
+            : Sort.Direction.DESC;
+    return Sort.by(direction, property);
+  }
+
   public Optional<PullRequestInfoDto> getPullRequestById(Long id) {
     return pullRequestRepository.findById(id).map(PullRequestInfoDto::fromPullRequest);
   }
@@ -249,5 +343,33 @@ public class PullRequestService {
     return pullRequestRepository
         .findByRepositoryRepositoryIdAndNumber(repoId, number)
         .map(PullRequestInfoDto::fromPullRequest);
+  }
+
+  public PullRequestFilterOptionsDto getPullRequestFilterOptionsByRepositoryId(Long repositoryId) {
+    List<PullRequestFilterUserOptionDto> authors =
+        pullRequestRepository.findDistinctAuthorsByRepositoryId(repositoryId).stream()
+            .map(PullRequestFilterUserOptionDto::fromUser)
+            .sorted(Comparator.comparing(user -> user.login().toLowerCase(Locale.ROOT)))
+            .toList();
+
+    List<PullRequestFilterUserOptionDto> assignees =
+        pullRequestRepository.findDistinctAssigneesByRepositoryId(repositoryId).stream()
+            .map(PullRequestFilterUserOptionDto::fromUser)
+            .sorted(Comparator.comparing(user -> user.login().toLowerCase(Locale.ROOT)))
+            .toList();
+
+    List<PullRequestFilterUserOptionDto> reviewers =
+        pullRequestRepository.findDistinctReviewersByRepositoryId(repositoryId).stream()
+            .map(PullRequestFilterUserOptionDto::fromUser)
+            .sorted(Comparator.comparing(user -> user.login().toLowerCase(Locale.ROOT)))
+            .toList();
+
+    List<PullRequestFilterLabelOptionDto> labels =
+        pullRequestRepository.findDistinctLabelsByRepositoryId(repositoryId).stream()
+            .map(PullRequestFilterLabelOptionDto::fromLabel)
+            .sorted(Comparator.comparing(label -> label.name().toLowerCase(Locale.ROOT)))
+            .toList();
+
+    return new PullRequestFilterOptionsDto(authors, assignees, reviewers, labels);
   }
 }

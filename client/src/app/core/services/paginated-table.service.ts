@@ -142,6 +142,16 @@ export class PaginatedTableService {
     this.page.set(1);
   }
 
+  resetToFirstPage(): void {
+    this.page.set(1);
+  }
+
+  setSort(sortField: string | undefined, sortDirection: 'asc' | 'desc' = 'desc'): void {
+    this.sortField.set(sortField);
+    this.sortDirection.set(sortDirection);
+    this.resetToFirstPage();
+  }
+
   // Clear all filters
   clearFilters(): void {
     this.activeFilter.set(this.filterOptions[0]);

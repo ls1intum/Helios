@@ -1,0 +1,251 @@
+<div class="flex flex-col gap-2 w-full min-w-[15rem] lg:min-w-[27rem]">
+  <!-- Filter buttons + search row -->
+  <div class="flex flex-wrap items-center gap-1.5 w-full">
+    <!-- Filters (status) - leftmost, before the search -->
+    <button type="button" (click)="toggle($event, statusPopover)" [class]="menuButtonClass(paginationService().hasActiveFilter())">
+      <i-tabler name="filter" class="!size-3.5 shrink-0" />
+      <span>{{ filtersButtonLabel() }}</span>
+      <i-tabler name="chevron-down" class="!size-3 shrink-0" />
+    </button>
+
+    <!-- Search input -->
+    <div class="relative flex-1 min-w-[14rem]">
+      <input pInputText [(ngModel)]="localSearchTerm" (input)="onInput($event)" type="text" pSize="small" placeholder="Search pull requests..." class="w-full pr-8" />
+      @if (localSearchTerm) {
+        <button
+          type="button"
+          (click)="clearSearch()"
+          class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 cursor-pointer bg-transparent border-0 p-0 flex items-center justify-center"
+          aria-label="Clear search"
+        >
+          <i-tabler name="x" class="!size-4" />
+        </button>
+      }
+    </div>
+
+    <!-- Thin vertical divider -->
+    <div class="h-5 w-px bg-surface-300 dark:bg-surface-600 shrink-0"></div>
+
+    <!-- Author -->
+    <button type="button" (click)="toggle($event, authorPopover)" [class]="menuButtonClass(!!selectedAuthorLogin())">
+      <i-tabler name="user" class="!size-3.5 shrink-0" />
+      <span>Author</span>
+      <i-tabler name="chevron-down" class="!size-3 shrink-0" />
+    </button>
+
+    <!-- Label -->
+    <button type="button" (click)="toggle($event, labelPopover)" [class]="menuButtonClass(isLabelFilterActive())">
+      <i-tabler name="tag" class="!size-3.5 shrink-0" />
+      <span>Label</span>
+      <i-tabler name="chevron-down" class="!size-3 shrink-0" />
+    </button>
+
+    <!-- Assignee -->
+    <button type="button" (click)="toggle($event, assigneePopover)" [class]="menuButtonClass(isAssigneeFilterActive())">
+      <i-tabler name="user-check" class="!size-3.5 shrink-0" />
+      <span>Assignee</span>
+      <i-tabler name="chevron-down" class="!size-3 shrink-0" />
+    </button>
+
+    <!-- Review -->
+    <button type="button" (click)="toggle($event, reviewPopover)" [class]="menuButtonClass(isReviewFilterActive())">
+      <i-tabler name="eye" class="!size-3.5 shrink-0" />
+      <span>Review</span>
+      <i-tabler name="chevron-down" class="!size-3 shrink-0" />
+    </button>
+
+    <!-- Sort -->
+    <button type="button" (click)="toggle($event, sortPopover)" [class]="menuButtonClass(!!selectedSort() && selectedSort()!.value !== 'sort:updated-desc')">
+      <i-tabler name="arrows-sort" class="!size-3.5 shrink-0" />
+      <span>Sort</span>
+      <i-tabler name="chevron-down" class="!size-3 shrink-0" />
+    </button>
+  </div>
+
+  <!-- Active filter chips -->
+  @if (showChips() && activeFilterTokens().length > 0) {
+    <div class="flex flex-wrap items-center gap-1.5">
+      @for (filterToken of activeFilterTokens(); track filterToken.key) {
+        <p-chip [label]="filterToken.label" [removable]="true" styleClass="!text-xs !py-0.5" (onRemove)="removeActiveFilter(filterToken.key)" />
+      }
+      <p-button size="small" text styleClass="!text-xs" label="Clear filters" (onClick)="clearQueryFilters()" />
+    </div>
+  }
+</div>
+
+<!-- Filters / status popover -->
+<p-popover #statusPopover>
+  <div class="flex flex-col gap-1 min-w-56">
+    <p class="text-xs font-semibold text-muted-color uppercase tracking-wide px-2 pb-1 border-b border-surface-200 dark:border-surface-700 mb-1">Filter by status</p>
+    <p-button
+      severity="secondary"
+      [text]="paginationService().filterType() !== paginationService().filterOptions[0]?.value"
+      styleClass="w-full justify-start"
+      (onClick)="clearStatus(statusPopover)"
+      >All open pull requests</p-button
+    >
+    @for (filter of paginationService().filterOptions; track filter.value) {
+      @if (filter.value !== paginationService().filterOptions[0]?.value) {
+        <p-button
+          severity="secondary"
+          [text]="filter.value !== paginationService().filterType()"
+          styleClass="w-full justify-start"
+          (onClick)="selectStatus(filter.value, statusPopover)"
+          >{{ filter.name }}</p-button
+        >
+      }
+    }
+  </div>
+</p-popover>
+
+<!-- Author popover -->
+<p-popover #authorPopover>
+  <div class="flex flex-col gap-1 min-w-52 max-h-72 overflow-auto">
+    <p class="text-xs font-semibold text-muted-color uppercase tracking-wide px-2 pb-1 border-b border-surface-200 dark:border-surface-700 mb-1">Filter by author</p>
+    <input pInputText pSize="small" type="text" placeholder="Type login..." [ngModel]="authorSearchText()" (ngModelChange)="authorSearchText.set($event)" class="w-full mb-1" />
+    @if (authorSearchText().trim()) {
+      <p-button severity="secondary" text styleClass="w-full justify-start" (onClick)="selectAuthor(authorSearchText(), authorPopover)">
+        <span class="truncate">author:{{ authorSearchText().trim() }}</span>
+      </p-button>
+    }
+    <p-button severity="secondary" [text]="selectedAuthorLogin() !== null" styleClass="w-full justify-start" (onClick)="selectAuthor(null, authorPopover)">Any author</p-button>
+    @for (person of authorOptions(); track person.id) {
+      <p-button severity="secondary" [text]="selectedAuthorLogin() !== person.login" styleClass="w-full justify-start" (onClick)="selectAuthor(person.login, authorPopover)">
+        <p-avatar [image]="person.avatarUrl" shape="circle" styleClass="!size-5 shrink-0" />
+        <span class="truncate">{{ person.login }}</span>
+      </p-button>
+    }
+  </div>
+</p-popover>
+
+<!-- Label popover -->
+<p-popover #labelPopover>
+  <div class="flex flex-col gap-1 min-w-52 max-h-72 overflow-auto">
+    <p class="text-xs font-semibold text-muted-color uppercase tracking-wide px-2 pb-1 border-b border-surface-200 dark:border-surface-700 mb-1">Filter by label</p>
+    <input pInputText pSize="small" type="text" placeholder="Filter labels..." [ngModel]="labelSearchText()" (ngModelChange)="labelSearchText.set($event)" class="w-full mb-1" />
+    <p-button severity="secondary" [text]="selectedLabelId() !== null || noLabelFilter()" styleClass="w-full justify-start" (onClick)="selectLabel(null, labelPopover)">
+      Any label
+    </p-button>
+    <p-button severity="secondary" [text]="!noLabelFilter()" styleClass="w-full justify-start" (onClick)="selectNoLabel(labelPopover)">
+      <span class="inline-block size-2.5 rounded-full border border-dashed border-surface-400 shrink-0"></span>
+      <span>No label</span>
+    </p-button>
+    @if (labelOptions().length > 0) {
+      <hr class="border-surface-200 dark:border-surface-700 my-0.5" />
+    }
+    @for (label of labelOptions(); track label.id) {
+      <p-button severity="secondary" [text]="selectedLabelId() !== label.id" styleClass="w-full justify-start" (onClick)="selectLabel(label.id, labelPopover)">
+        <span class="inline-block size-2.5 rounded-full shrink-0" [style.backgroundColor]="'#' + label.color"></span>
+        <span class="truncate">{{ label.name }}</span>
+      </p-button>
+    }
+  </div>
+</p-popover>
+
+<!-- Assignee popover -->
+<p-popover #assigneePopover>
+  <div class="flex flex-col gap-1 min-w-52 max-h-72 overflow-auto">
+    <p class="text-xs font-semibold text-muted-color uppercase tracking-wide px-2 pb-1 border-b border-surface-200 dark:border-surface-700 mb-1">Filter by assignee</p>
+    <input pInputText pSize="small" type="text" placeholder="Type login..." [ngModel]="assigneeSearchText()" (ngModelChange)="assigneeSearchText.set($event)" class="w-full mb-1" />
+    @if (assigneeSearchText().trim()) {
+      <p-button severity="secondary" text styleClass="w-full justify-start" (onClick)="selectAssignee(assigneeSearchText(), assigneePopover)">
+        <span class="truncate">assignee:{{ assigneeSearchText().trim() }}</span>
+      </p-button>
+    }
+    <p-button
+      severity="secondary"
+      [text]="selectedAssigneeLogin() !== null || noAssigneeFilter()"
+      styleClass="w-full justify-start"
+      (onClick)="selectAssignee(null, assigneePopover)"
+    >
+      Any assignee
+    </p-button>
+    <p-button severity="secondary" [text]="!noAssigneeFilter()" styleClass="w-full justify-start" (onClick)="selectNoAssignee(assigneePopover)">
+      <span class="inline-block size-2.5 rounded-full border border-dashed border-surface-400 shrink-0"></span>
+      <span>No assignee</span>
+    </p-button>
+    @if (assigneeOptions().length > 0) {
+      <hr class="border-surface-200 dark:border-surface-700 my-0.5" />
+    }
+    @for (person of assigneeOptions(); track person.id) {
+      <p-button severity="secondary" [text]="selectedAssigneeLogin() !== person.login" styleClass="w-full justify-start" (onClick)="selectAssignee(person.login, assigneePopover)">
+        <p-avatar [image]="person.avatarUrl" shape="circle" styleClass="!size-5 shrink-0" />
+        <span class="truncate">{{ person.login }}</span>
+      </p-button>
+    }
+  </div>
+</p-popover>
+
+<!-- Review popover -->
+<p-popover #reviewPopover>
+  <div class="flex flex-col gap-1 min-w-56 max-h-[28rem] overflow-auto">
+    <!-- Section: review status -->
+    <p class="text-xs font-semibold text-muted-color uppercase tracking-wide px-2 pb-1 border-b border-surface-200 dark:border-surface-700 mb-1">Review status</p>
+    <p-button severity="secondary" [text]="selectedReviewStateValue() !== null" styleClass="w-full justify-start" (onClick)="selectReview(null, reviewPopover)">
+      Any review status
+    </p-button>
+    @for (review of reviewStateFilters; track review.value) {
+      <p-button severity="secondary" [text]="selectedReviewStateValue() !== review.value" styleClass="w-full justify-start" (onClick)="selectReview(review.value, reviewPopover)">
+        {{ review.label }}
+      </p-button>
+    }
+
+    <!-- Section: review-requested -->
+    <hr class="border-surface-200 dark:border-surface-700 my-1" />
+    <p class="text-xs font-semibold text-muted-color uppercase tracking-wide px-2 pb-1 border-b border-surface-200 dark:border-surface-700 mb-1">Review requested</p>
+    <input
+      pInputText
+      pSize="small"
+      type="text"
+      placeholder="Type login..."
+      [disabled]="isReviewNoneSelected()"
+      [ngModel]="reviewRequestedSearchText()"
+      (ngModelChange)="reviewRequestedSearchText.set($event)"
+      class="w-full mb-1"
+    />
+    @if (reviewRequestedSearchText().trim()) {
+      <p-button
+        severity="secondary"
+        text
+        styleClass="w-full justify-start"
+        [disabled]="isReviewNoneSelected()"
+        (onClick)="selectReviewRequested(reviewRequestedSearchText(), reviewPopover)"
+      >
+        <span class="truncate">review-requested:{{ reviewRequestedSearchText().trim() }}</span>
+      </p-button>
+    }
+    <p-button
+      severity="secondary"
+      [text]="selectedRequestedReviewerLogin() !== null"
+      styleClass="w-full justify-start"
+      [disabled]="isReviewNoneSelected() && selectedRequestedReviewerLogin() === null"
+      (onClick)="selectReviewRequested(null, reviewPopover)"
+    >
+      Any user
+    </p-button>
+    @for (person of reviewerOptions(); track person.id) {
+      <p-button
+        severity="secondary"
+        [text]="selectedRequestedReviewerLogin() !== person.login"
+        styleClass="w-full justify-start"
+        [disabled]="isReviewNoneSelected()"
+        (onClick)="selectReviewRequested(person.login, reviewPopover)"
+      >
+        <p-avatar [image]="person.avatarUrl" shape="circle" styleClass="!size-5 shrink-0" />
+        <span class="truncate">{{ person.login }}</span>
+      </p-button>
+    }
+  </div>
+</p-popover>
+
+<!-- Sort popover -->
+<p-popover #sortPopover>
+  <div class="flex flex-col gap-1 min-w-52">
+    <p class="text-xs font-semibold text-muted-color uppercase tracking-wide px-2 pb-1 border-b border-surface-200 dark:border-surface-700 mb-1">Sort by</p>
+    @for (sort of sortFilters; track sort.value) {
+      <p-button severity="secondary" [text]="selectedSort()?.value !== sort.value" styleClass="w-full justify-start" (onClick)="selectSort(sort.value, sortPopover)">
+        {{ sort.label }}
+      </p-button>
+    }
+  </div>
+</p-popover>

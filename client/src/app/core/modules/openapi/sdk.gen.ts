@@ -147,6 +147,9 @@ import type {
   GetPullRequestByRepositoryIdData,
   GetPullRequestByRepositoryIdErrors,
   GetPullRequestByRepositoryIdResponses,
+  GetPullRequestFilterOptionsByRepositoryIdData,
+  GetPullRequestFilterOptionsByRepositoryIdErrors,
+  GetPullRequestFilterOptionsByRepositoryIdResponses,
   GetPullRequestsData,
   GetPullRequestsErrors,
   GetPullRequestsResponses,
@@ -648,6 +651,12 @@ export const getPullRequestById = <ThrowOnError extends boolean = false>(options
 export const getPullRequestByRepositoryIdAndNumber = <ThrowOnError extends boolean = false>(options: Options<GetPullRequestByRepositoryIdAndNumberData, ThrowOnError>) =>
   (options.client ?? client).get<GetPullRequestByRepositoryIdAndNumberResponses, GetPullRequestByRepositoryIdAndNumberErrors, ThrowOnError>({
     url: '/api/pullrequests/repository/{repoId}/pr/{number}',
+    ...options,
+  });
+
+export const getPullRequestFilterOptionsByRepositoryId = <ThrowOnError extends boolean = false>(options: Options<GetPullRequestFilterOptionsByRepositoryIdData, ThrowOnError>) =>
+  (options.client ?? client).get<GetPullRequestFilterOptionsByRepositoryIdResponses, GetPullRequestFilterOptionsByRepositoryIdErrors, ThrowOnError>({
+    url: '/api/pullrequests/repository/{repoId}/filter-options',
     ...options,
   });
 
