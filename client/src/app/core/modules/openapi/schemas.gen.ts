@@ -267,6 +267,10 @@ export const EnvironmentDeploymentSchema = {
       type: 'string',
       format: 'date-time',
     },
+    statusUpdatedAt: {
+      type: 'string',
+      format: 'date-time',
+    },
     deployJobStartedAt: {
       type: 'string',
       format: 'date-time',

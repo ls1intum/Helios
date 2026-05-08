@@ -88,6 +88,7 @@ export type EnvironmentDeployment = {
   pullRequestNumber?: number;
   createdAt?: string;
   updatedAt?: string;
+  statusUpdatedAt?: string;
   deployJobStartedAt?: string;
   workflowStartedAt?: string;
   type: 'GITHUB' | 'HELIOS';

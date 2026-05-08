@@ -230,6 +230,13 @@ public class LatestDeploymentUnion {
     }
   }
 
+  public OffsetDateTime getStatusUpdatedAt() {
+    if (hasHeliosDeployment()) {
+      return heliosDeployment.getStatusUpdatedAt();
+    }
+    return null;
+  }
+
   public OffsetDateTime getDeployJobStartedAt() {
     if (hasTimingHeliosDeployment()) {
       return heliosDeployment.getDeployJobStartedAt();

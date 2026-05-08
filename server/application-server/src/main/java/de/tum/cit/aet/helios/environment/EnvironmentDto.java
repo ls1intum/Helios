@@ -90,6 +90,8 @@ public record EnvironmentDto(
     private final Integer pullRequestNumber;
     private final OffsetDateTime createdAt;
     private final OffsetDateTime updatedAt;
+    @Schema(type = "string", format = "date-time")
+    private final OffsetDateTime statusUpdatedAt;
     private final OffsetDateTime deployJobStartedAt;
     private final OffsetDateTime workflowStartedAt;
     @NonNull private final DeploymentType type;
@@ -140,6 +142,7 @@ public record EnvironmentDto(
           union.getPullRequestNumber(),
           union.getCreatedAt(),
           union.getUpdatedAt(),
+          union.getStatusUpdatedAt(),
           union.getDeployJobStartedAt(),
           union.getWorkflowStartedAt(),
           union.getType(),
