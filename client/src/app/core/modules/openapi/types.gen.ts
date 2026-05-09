@@ -210,6 +210,26 @@ export type TestFlakinessScoreDto = {
   combinedFailureRate?: number;
 };
 
+export type TestFailureAnalysisResponseDto = {
+  repositoryId?: number;
+  status?: 'COMPLETED' | 'FAILED';
+  result?: TestFailureAnalysisResultDto;
+  errorMessage?: string;
+  analyzedAt?: string;
+  durationMs?: number;
+  cacheHit?: boolean;
+};
+
+export type TestFailureAnalysisResultDto = {
+  summary?: string;
+  rootCauseHypotheses?: Array<string>;
+  evidence?: Array<string>;
+  recommendedFixes?: Array<string>;
+  confidence?: number;
+  provider?: string;
+  model?: string;
+};
+
 export type ReleaseCandidateCreateDto = {
   name: string;
   commitSha: string;
@@ -571,6 +591,20 @@ export type FlakyTestSummary = {
   highFlakinessCount?: number;
   mediumFlakinessCount?: number;
   lowFlakinessCount?: number;
+};
+
+export type TestFailureAnalysisUsageDto = {
+  rateLimitEnabled?: boolean;
+  dailyUsed?: number;
+  dailyLimit?: number;
+  burstUsed?: number;
+  burstLimit?: number;
+  burstWindowSeconds?: number;
+};
+
+export type TestFailureAnalysisCacheLookupDto = {
+  hasCachedResult?: boolean;
+  cachedResult?: TestFailureAnalysisResponseDto;
 };
 
 export type CommitsSinceReleaseCandidateDto = {
@@ -1533,6 +1567,36 @@ export type CreateWorkflowGroupResponses = {
 
 export type CreateWorkflowGroupResponse = CreateWorkflowGroupResponses[keyof CreateWorkflowGroupResponses];
 
+export type AnalyzeFailedTestData = {
+  body?: never;
+  path: {
+    repositoryId: number;
+    testCaseId: number;
+  };
+  query?: {
+    regenerate?: boolean;
+  };
+  url: '/api/repositories/{repositoryId}/test-cases/{testCaseId}/failure-analysis';
+};
+
+export type AnalyzeFailedTestErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type AnalyzeFailedTestError = AnalyzeFailedTestErrors[keyof AnalyzeFailedTestErrors];
+
+export type AnalyzeFailedTestResponses = {
+  /**
+   * OK
+   */
+  200: TestFailureAnalysisResponseDto;
+};
+
+export type AnalyzeFailedTestResponse = AnalyzeFailedTestResponses[keyof AnalyzeFailedTestResponses];
+
 export type DeleteReleaseCandidateByNameData = {
   body: ReleaseNameDto;
   path?: never;
@@ -2314,6 +2378,31 @@ export type GetLatestTestResultsByBranchResponses = {
 
 export type GetLatestTestResultsByBranchResponse = GetLatestTestResultsByBranchResponses[keyof GetLatestTestResultsByBranchResponses];
 
+export type GetFailureAnalysisUsageData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/api/test-failure-analysis/usage';
+};
+
+export type GetFailureAnalysisUsageErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type GetFailureAnalysisUsageError = GetFailureAnalysisUsageErrors[keyof GetFailureAnalysisUsageErrors];
+
+export type GetFailureAnalysisUsageResponses = {
+  /**
+   * OK
+   */
+  200: TestFailureAnalysisUsageDto;
+};
+
+export type GetFailureAnalysisUsageResponse = GetFailureAnalysisUsageResponses[keyof GetFailureAnalysisUsageResponses];
+
 export type GetGroupsWithWorkflowsData = {
   body?: never;
   path: {
@@ -2392,6 +2481,34 @@ export type GetRepositoryByIdResponses = {
 };
 
 export type GetRepositoryByIdResponse = GetRepositoryByIdResponses[keyof GetRepositoryByIdResponses];
+
+export type GetLatestCachedFailureAnalysisData = {
+  body?: never;
+  path: {
+    repositoryId: number;
+    testCaseId: number;
+  };
+  query?: never;
+  url: '/api/repositories/{repositoryId}/test-cases/{testCaseId}/failure-analysis/latest';
+};
+
+export type GetLatestCachedFailureAnalysisErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type GetLatestCachedFailureAnalysisError = GetLatestCachedFailureAnalysisErrors[keyof GetLatestCachedFailureAnalysisErrors];
+
+export type GetLatestCachedFailureAnalysisResponses = {
+  /**
+   * OK
+   */
+  200: TestFailureAnalysisCacheLookupDto;
+};
+
+export type GetLatestCachedFailureAnalysisResponse = GetLatestCachedFailureAnalysisResponses[keyof GetLatestCachedFailureAnalysisResponses];
 
 export type GetCommitsSinceLastReleaseCandidateData = {
   body?: never;

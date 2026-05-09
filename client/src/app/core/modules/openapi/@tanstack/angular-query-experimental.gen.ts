@@ -4,6 +4,7 @@ import { type InfiniteData, infiniteQueryOptions, type MutationOptions, queryOpt
 
 import { client } from '../client.gen';
 import {
+  analyzeFailedTest,
   cancelDeployment,
   cancelWorkflowRun,
   createReleaseCandidate,
@@ -38,10 +39,12 @@ import {
   getEnvironmentReviewers,
   getEnvironmentsByRepositoryId,
   getEnvironmentsByUserLocking,
+  getFailureAnalysisUsage,
   getFlakinessScores,
   getFlakyTestsOverview,
   getGitRepoSettings,
   getGroupsWithWorkflows,
+  getLatestCachedFailureAnalysis,
   getLatestDeploymentByEnvironmentId,
   getLatestTestResultsByBranch,
   getLatestTestResultsByPullRequestId,
@@ -92,6 +95,9 @@ import {
   upsertDeploymentWorkflowConfig,
 } from '../sdk.gen';
 import type {
+  AnalyzeFailedTestData,
+  AnalyzeFailedTestError,
+  AnalyzeFailedTestResponse,
   CancelDeploymentData,
   CancelDeploymentError,
   CancelDeploymentResponse,
@@ -191,6 +197,9 @@ import type {
   GetEnvironmentsByUserLockingData,
   GetEnvironmentsByUserLockingError,
   GetEnvironmentsByUserLockingResponse,
+  GetFailureAnalysisUsageData,
+  GetFailureAnalysisUsageError,
+  GetFailureAnalysisUsageResponse,
   GetFlakinessScoresData,
   GetFlakinessScoresError,
   GetFlakinessScoresResponse,
@@ -203,6 +212,9 @@ import type {
   GetGroupsWithWorkflowsData,
   GetGroupsWithWorkflowsError,
   GetGroupsWithWorkflowsResponse,
+  GetLatestCachedFailureAnalysisData,
+  GetLatestCachedFailureAnalysisError,
+  GetLatestCachedFailureAnalysisResponse,
   GetLatestDeploymentByEnvironmentIdData,
   GetLatestDeploymentByEnvironmentIdError,
   GetLatestDeploymentByEnvironmentIdResponse,
@@ -792,6 +804,22 @@ export const createWorkflowGroupMutation = (
   const mutationOptions: MutationOptions<CreateWorkflowGroupResponse, CreateWorkflowGroupError, Options<CreateWorkflowGroupData>> = {
     mutationFn: async fnOptions => {
       const { data } = await createWorkflowGroup({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const analyzeFailedTestMutation = (
+  options?: Partial<Options<AnalyzeFailedTestData>>
+): MutationOptions<AnalyzeFailedTestResponse, AnalyzeFailedTestError, Options<AnalyzeFailedTestData>> => {
+  const mutationOptions: MutationOptions<AnalyzeFailedTestResponse, AnalyzeFailedTestError, Options<AnalyzeFailedTestData>> = {
+    mutationFn: async fnOptions => {
+      const { data } = await analyzeFailedTest({
         ...options,
         ...fnOptions,
         throwOnError: true,
@@ -1499,6 +1527,22 @@ export const getLatestTestResultsByBranchInfiniteOptions = (options: Options<Get
     }
   );
 
+export const getFailureAnalysisUsageQueryKey = (options?: Options<GetFailureAnalysisUsageData>) => createQueryKey('getFailureAnalysisUsage', options);
+
+export const getFailureAnalysisUsageOptions = (options?: Options<GetFailureAnalysisUsageData>) =>
+  queryOptions<GetFailureAnalysisUsageResponse, GetFailureAnalysisUsageError, GetFailureAnalysisUsageResponse, ReturnType<typeof getFailureAnalysisUsageQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getFailureAnalysisUsage({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: getFailureAnalysisUsageQueryKey(options),
+  });
+
 export const getGroupsWithWorkflowsQueryKey = (options: Options<GetGroupsWithWorkflowsData>) => createQueryKey('getGroupsWithWorkflows', options);
 
 export const getGroupsWithWorkflowsOptions = (options: Options<GetGroupsWithWorkflowsData>) =>
@@ -1545,6 +1589,27 @@ export const getRepositoryByIdOptions = (options: Options<GetRepositoryByIdData>
       return data;
     },
     queryKey: getRepositoryByIdQueryKey(options),
+  });
+
+export const getLatestCachedFailureAnalysisQueryKey = (options: Options<GetLatestCachedFailureAnalysisData>) => createQueryKey('getLatestCachedFailureAnalysis', options);
+
+export const getLatestCachedFailureAnalysisOptions = (options: Options<GetLatestCachedFailureAnalysisData>) =>
+  queryOptions<
+    GetLatestCachedFailureAnalysisResponse,
+    GetLatestCachedFailureAnalysisError,
+    GetLatestCachedFailureAnalysisResponse,
+    ReturnType<typeof getLatestCachedFailureAnalysisQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getLatestCachedFailureAnalysis({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: getLatestCachedFailureAnalysisQueryKey(options),
   });
 
 export const getCommitsSinceLastReleaseCandidateQueryKey = (options: Options<GetCommitsSinceLastReleaseCandidateData>) =>
