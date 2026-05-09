@@ -12,5 +12,5 @@ export const environment = {
     skipLoginPage: true,
   },
   clientUrl: 'https://helios-staging.aet.cit.tum.de',
-  heliosDevelopers: ['meryemefe', 'mertilginoglu', 'gbanu', 'thielpa', 'egekocabas', 'turkerkoc', 'stefannemeth', 'bensofficial'],
+  heliosDevelopers: ['meryemefe', 'bensofficial'],
 };
