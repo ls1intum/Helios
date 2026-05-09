@@ -217,9 +217,10 @@ export class PullRequestFilterBarComponent implements OnInit {
     popover.toggle(event);
   }
 
-  /** Clears the local input and forwards an empty search term to the debounced stream. */
+  /** Clears the local input, applies empty search immediately, and flushes pending debounced input. */
   clearSearch(): void {
     this.localSearchTerm = '';
+    this.paginationService().setSearchTerm('');
     this.searchTermSubject.next('');
   }
 
