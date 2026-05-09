@@ -1780,6 +1780,74 @@ export const PullRequestInfoDtoSchema = {
   required: ['additions', 'commentsCount', 'deletions', 'headRefName', 'headRefRepoNameWithOwner', 'headSha', 'htmlUrl', 'id', 'isDraft', 'isMerged', 'number', 'state', 'title'],
 } as const;
 
+export const PullRequestFilterLabelOptionDtoSchema = {
+  type: 'object',
+  properties: {
+    id: {
+      type: 'integer',
+      format: 'int64',
+    },
+    name: {
+      type: 'string',
+    },
+    color: {
+      type: 'string',
+    },
+  },
+  required: ['color', 'id', 'name'],
+} as const;
+
+export const PullRequestFilterOptionsDtoSchema = {
+  type: 'object',
+  properties: {
+    authors: {
+      type: 'array',
+      items: {
+        $ref: '#/components/schemas/PullRequestFilterUserOptionDto',
+      },
+    },
+    assignees: {
+      type: 'array',
+      items: {
+        $ref: '#/components/schemas/PullRequestFilterUserOptionDto',
+      },
+    },
+    reviewers: {
+      type: 'array',
+      items: {
+        $ref: '#/components/schemas/PullRequestFilterUserOptionDto',
+      },
+    },
+    labels: {
+      type: 'array',
+      items: {
+        $ref: '#/components/schemas/PullRequestFilterLabelOptionDto',
+      },
+    },
+  },
+  required: ['assignees', 'authors', 'labels', 'reviewers'],
+} as const;
+
+export const PullRequestFilterUserOptionDtoSchema = {
+  type: 'object',
+  properties: {
+    id: {
+      type: 'integer',
+      format: 'int64',
+    },
+    login: {
+      type: 'string',
+    },
+    avatarUrl: {
+      type: 'string',
+    },
+    name: {
+      type: 'string',
+    },
+  },
+  required: ['avatarUrl', 'id', 'login', 'name'],
+} as const;
+
 export const EnvironmentReviewersDtoSchema = {
   type: 'object',
   properties: {

@@ -2,11 +2,11 @@ package de.tum.cit.aet.helios.pullrequest;
 
 import de.tum.cit.aet.helios.permissions.RepositoryAuthorizationService;
 import de.tum.cit.aet.helios.pullrequest.pagination.PaginatedPullRequestsResponse;
-import de.tum.cit.aet.helios.pullrequest.pagination.PullRequestFilterType;
 import de.tum.cit.aet.helios.pullrequest.pagination.PullRequestPageRequest;
 import java.io.IOException;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,20 +27,7 @@ public class PullRequestController {
 
   @GetMapping
   public ResponseEntity<PaginatedPullRequestsResponse> getPullRequests(
-      @RequestParam(defaultValue = "1") int page,
-      @RequestParam(defaultValue = "20") int size,
-      @RequestParam(required = false) String sortField,
-      @RequestParam(required = false) String sortDirection,
-      @RequestParam(required = false) PullRequestFilterType filterType,
-      @RequestParam(required = false) String searchTerm) {
-    PullRequestPageRequest pageRequest = new PullRequestPageRequest();
-    pageRequest.setPage(page);
-    pageRequest.setSize(size);
-    pageRequest.setSortField(sortField);
-    pageRequest.setSortDirection(sortDirection);
-    pageRequest.setFilterType(filterType != null ? filterType : PullRequestFilterType.OPEN);
-    pageRequest.setSearchTerm(searchTerm);
-
+      @ParameterObject PullRequestPageRequest pageRequest) {
     PaginatedPullRequestsResponse response =
         pullRequestService.getPaginatedPullRequests(pageRequest);
     return ResponseEntity.ok(response);
@@ -69,6 +56,12 @@ public class PullRequestController {
         .getPullRequestByRepositoryIdAndNumber(repoId, number)
         .map(ResponseEntity::ok)
         .orElseGet(() -> ResponseEntity.notFound().build());
+  }
+
+  @GetMapping("/repository/{repoId}/filter-options")
+  public ResponseEntity<PullRequestFilterOptionsDto> getPullRequestFilterOptionsByRepositoryId(
+      @PathVariable Long repoId) {
+    return ResponseEntity.ok(pullRequestService.getPullRequestFilterOptionsByRepositoryId(repoId));
   }
 
   @PostMapping("/{pr}/pin")
