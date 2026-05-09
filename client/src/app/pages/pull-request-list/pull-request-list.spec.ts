@@ -34,6 +34,7 @@ describe('Integration Test Pull Request List Page', () => {
 
     fixture = TestBed.createComponent(PullRequestListComponent);
     component = fixture.componentInstance;
+    fixture.componentRef.setInput('repositoryId', 1);
 
     await fixture.whenStable();
   });

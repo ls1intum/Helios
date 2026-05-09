@@ -52,6 +52,7 @@ import {
   getPullRequestById,
   getPullRequestByRepositoryId,
   getPullRequestByRepositoryIdAndNumber,
+  getPullRequestFilterOptionsByRepositoryId,
   getPullRequests,
   getReleaseInfoByName,
   getRepositoryById,
@@ -232,6 +233,9 @@ import type {
   GetPullRequestByRepositoryIdData,
   GetPullRequestByRepositoryIdError,
   GetPullRequestByRepositoryIdResponse,
+  GetPullRequestFilterOptionsByRepositoryIdData,
+  GetPullRequestFilterOptionsByRepositoryIdError,
+  GetPullRequestFilterOptionsByRepositoryIdResponse,
   GetPullRequestsData,
   GetPullRequestsError,
   GetPullRequestsResponse,
@@ -1652,6 +1656,28 @@ export const getPullRequestByRepositoryIdAndNumberOptions = (options: Options<Ge
       return data;
     },
     queryKey: getPullRequestByRepositoryIdAndNumberQueryKey(options),
+  });
+
+export const getPullRequestFilterOptionsByRepositoryIdQueryKey = (options: Options<GetPullRequestFilterOptionsByRepositoryIdData>) =>
+  createQueryKey('getPullRequestFilterOptionsByRepositoryId', options);
+
+export const getPullRequestFilterOptionsByRepositoryIdOptions = (options: Options<GetPullRequestFilterOptionsByRepositoryIdData>) =>
+  queryOptions<
+    GetPullRequestFilterOptionsByRepositoryIdResponse,
+    GetPullRequestFilterOptionsByRepositoryIdError,
+    GetPullRequestFilterOptionsByRepositoryIdResponse,
+    ReturnType<typeof getPullRequestFilterOptionsByRepositoryIdQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getPullRequestFilterOptionsByRepositoryId({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: getPullRequestFilterOptionsByRepositoryIdQueryKey(options),
   });
 
 export const getPullRequestByRepositoryIdQueryKey = (options: Options<GetPullRequestByRepositoryIdData>) => createQueryKey('getPullRequestByRepositoryId', options);

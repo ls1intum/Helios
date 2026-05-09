@@ -9,30 +9,51 @@
   [rows]="paginationService.size()"
   [first]="(paginationService.page() - 1) * paginationService.size()"
   [rowsPerPageOptions]="[5, 10, 20, 30, 50]"
-  [loading]="query.isPending()"
+  [loading]="query.isFetching()"
   (onPage)="onPage($event)"
   (onSort)="onSort($event)"
   [sortField]="paginationService.sortField()"
   [sortOrder]="paginationService.sortDirection() === 'asc' ? 1 : -1"
 >
   <ng-template #header>
+    <!-- Row 1: fixed height — filter buttons + column names always aligned -->
     <tr>
       <th>
-        <app-table-filter-paginated [paginationService]="typedPaginationService" [table]="table" />
+        <app-pull-request-filter-bar
+          #filterBar
+          [repositoryId]="repositoryId()"
+          [paginationService]="typedPaginationService"
+          [filterOptions]="dropdownOptionsQuery.data() ?? null"
+          [showChips]="false"
+          (queryFiltersChange)="onQueryFiltersChange($event)"
+        />
       </th>
       <th class="hidden lg:table-cell">Assignee</th>
       <th class="hidden lg:table-cell">Reviewers</th>
     </tr>
+    <!-- Row 2: active filter tokens, only visible when at least one is set -->
+    @if (filterBar.activeFilterTokens().length > 0) {
+      <tr>
+        <th colspan="3" class="pt-0">
+          <div class="flex flex-wrap items-center gap-1.5">
+            @for (filterToken of filterBar.activeFilterTokens(); track filterToken.key) {
+              <p-chip [label]="filterToken.label" [removable]="true" styleClass="!text-xs !py-0.5" (onRemove)="filterBar.removeActiveFilter(filterToken.key)" />
+            }
+            <p-button size="small" text styleClass="!text-xs" label="Clear filters" (onClick)="filterBar.clearQueryFilters()" />
+          </div>
+        </th>
+      </tr>
+    }
   </ng-template>
   <!-- PINNED -->
   <ng-template pTemplate="frozenbody" let-pr>
-    @if (!(query.isPending() || query.isError()) && query.data()?.pinned?.length) {
+    @if (!(query.isFetching() || query.isError()) && query.data()?.pinned?.length) {
       <ng-container [ngTemplateOutlet]="prRow" [ngTemplateOutletContext]="{ $implicit: pr }"> </ng-container>
     }
   </ng-template>
   <!-- NON-PINNED -->
   <ng-template pTemplate="body" let-pr>
-    @if (query.isPending() || query.isError()) {
+    @if (query.isFetching() || query.isError()) {
       <tr>
         <td>
           <div class="flex items-center gap-2">

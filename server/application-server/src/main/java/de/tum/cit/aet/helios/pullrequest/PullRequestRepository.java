@@ -1,6 +1,8 @@
 package de.tum.cit.aet.helios.pullrequest;
 
 import de.tum.cit.aet.helios.issue.Issue;
+import de.tum.cit.aet.helios.label.Label;
+import de.tum.cit.aet.helios.user.User;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -41,5 +43,41 @@ public interface PullRequestRepository extends JpaRepository<PullRequest, Long>,
   List<PullRequest> findByRepositoryRepositoryIdOrderByUpdatedAtDesc(Long repositoryId);
 
   Optional<PullRequest> findByRepositoryRepositoryIdAndNumber(Long repositoryId, Integer number);
+
+  @Query(
+      """
+      SELECT DISTINCT p.author
+      FROM PullRequest p
+      WHERE p.repository.repositoryId = :repositoryId
+        AND p.author IS NOT NULL
+      """)
+  List<User> findDistinctAuthorsByRepositoryId(@Param("repositoryId") Long repositoryId);
+
+  @Query(
+      """
+      SELECT DISTINCT assignee
+      FROM PullRequest p
+      JOIN p.assignees assignee
+      WHERE p.repository.repositoryId = :repositoryId
+      """)
+  List<User> findDistinctAssigneesByRepositoryId(@Param("repositoryId") Long repositoryId);
+
+  @Query(
+      """
+      SELECT DISTINCT reviewer
+      FROM PullRequest p
+      JOIN p.requestedReviewers reviewer
+      WHERE p.repository.repositoryId = :repositoryId
+      """)
+  List<User> findDistinctReviewersByRepositoryId(@Param("repositoryId") Long repositoryId);
+
+  @Query(
+      """
+      SELECT DISTINCT label
+      FROM PullRequest p
+      JOIN p.labels label
+      WHERE p.repository.repositoryId = :repositoryId
+      """)
+  List<Label> findDistinctLabelsByRepositoryId(@Param("repositoryId") Long repositoryId);
 
 }

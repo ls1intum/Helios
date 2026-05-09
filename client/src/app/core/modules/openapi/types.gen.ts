@@ -657,6 +657,26 @@ export type PullRequestInfoDto = {
   updatedAt?: string;
 };
 
+export type PullRequestFilterLabelOptionDto = {
+  id: number;
+  name: string;
+  color: string;
+};
+
+export type PullRequestFilterOptionsDto = {
+  authors: Array<PullRequestFilterUserOptionDto>;
+  assignees: Array<PullRequestFilterUserOptionDto>;
+  reviewers: Array<PullRequestFilterUserOptionDto>;
+  labels: Array<PullRequestFilterLabelOptionDto>;
+};
+
+export type PullRequestFilterUserOptionDto = {
+  id: number;
+  login: string;
+  avatarUrl: string;
+  name: string;
+};
+
 export type EnvironmentReviewersDto = {
   preventSelfReview?: boolean;
   reviewers?: Array<Reviewer>;
@@ -2410,6 +2430,13 @@ export type GetPullRequestsData = {
     sortDirection?: string;
     filterType?: 'ALL' | 'OPEN' | 'OPEN_READY_FOR_REVIEW' | 'DRAFT' | 'MERGED' | 'CLOSED' | 'USER_AUTHORED' | 'ASSIGNED_TO_USER' | 'REVIEW_REQUESTED';
     searchTerm?: string;
+    author?: string;
+    assignee?: string;
+    noAssignee?: boolean;
+    labelId?: number;
+    noLabel?: boolean;
+    reviewState?: 'NONE' | 'REQUIRED';
+    requestedReviewer?: string;
   };
   url: '/api/pullrequests';
 };
@@ -2486,6 +2513,33 @@ export type GetPullRequestByRepositoryIdAndNumberResponses = {
 };
 
 export type GetPullRequestByRepositoryIdAndNumberResponse = GetPullRequestByRepositoryIdAndNumberResponses[keyof GetPullRequestByRepositoryIdAndNumberResponses];
+
+export type GetPullRequestFilterOptionsByRepositoryIdData = {
+  body?: never;
+  path: {
+    repoId: number;
+  };
+  query?: never;
+  url: '/api/pullrequests/repository/{repoId}/filter-options';
+};
+
+export type GetPullRequestFilterOptionsByRepositoryIdErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type GetPullRequestFilterOptionsByRepositoryIdError = GetPullRequestFilterOptionsByRepositoryIdErrors[keyof GetPullRequestFilterOptionsByRepositoryIdErrors];
+
+export type GetPullRequestFilterOptionsByRepositoryIdResponses = {
+  /**
+   * OK
+   */
+  200: PullRequestFilterOptionsDto;
+};
+
+export type GetPullRequestFilterOptionsByRepositoryIdResponse = GetPullRequestFilterOptionsByRepositoryIdResponses[keyof GetPullRequestFilterOptionsByRepositoryIdResponses];
 
 export type GetPullRequestByRepositoryIdData = {
   body?: never;
