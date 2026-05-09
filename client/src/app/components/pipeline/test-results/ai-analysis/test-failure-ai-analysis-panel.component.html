@@ -1,0 +1,223 @@
+<p-dialog [(visible)]="isPreparingVisible" [style]="{ width: '30rem' }" [modal]="true" [closable]="false" [draggable]="false" [dismissableMask]="false">
+  <ng-template pTemplate="header">
+    <div class="font-bold text-xl">Preparing AI Analysis</div>
+  </ng-template>
+
+  <div class="flex flex-col gap-4">
+    <div class="text-sm text-muted-color">
+      @if (pendingTestCase()?.name; as testCaseName) {
+        Test name: <span class="font-semibold">{{ testCaseName }}</span>
+      }
+    </div>
+
+    <div class="flex items-start gap-3 rounded border border-muted-color bg-surface-100 p-3">
+      <i-tabler name="progress" class="!size-5 animate-spin text-muted-color mt-0.5"></i-tabler>
+      <div class="text-sm leading-relaxed">
+        <div class="font-medium">Checking for a cached analysis...</div>
+        <div class="text-muted-color">If one is available, we’ll show it instantly without using quota.</div>
+      </div>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-end w-full">
+      <p-button label="Cancel" [text]="true" (click)="cancelPreparation()" />
+    </div>
+  </ng-template>
+</p-dialog>
+
+<ng-template #usageLimitsSection>
+  @if (isUsageLoading()) {
+    <div class="flex items-center gap-3 rounded border border-muted-color bg-surface-100 p-3">
+      <i-tabler name="progress" class="!size-5 animate-spin text-muted-color"></i-tabler>
+      <span class="text-sm">Loading AI usage limits...</span>
+    </div>
+  }
+
+  @if (usageErrorMessage()) {
+    <p-message severity="warn">{{ usageErrorMessage() }}</p-message>
+  }
+
+  @if (shouldShowUsageLimits()) {
+    @if (usage(); as usage) {
+      <div class="text-sm font-medium">Current AI usage limits</div>
+
+      <div class="rounded border border-muted-color p-3 flex flex-col gap-2">
+        <div class="flex items-center justify-between gap-2 text-sm">
+          <span class="text-muted-color">Daily limit</span>
+          <span class="font-medium">{{ formatUsage(usage.dailyUsed, usage.dailyLimit) }}</span>
+        </div>
+        <div class="flex items-center justify-between gap-2 text-sm">
+          <span class="text-muted-color">Rate limit window ({{ formatBurstWindow(usage.burstWindowSeconds) }})</span>
+          <span class="font-medium">{{ formatUsage(usage.burstUsed, usage.burstLimit) }}</span>
+        </div>
+      </div>
+    }
+  }
+</ng-template>
+
+<p-dialog [(visible)]="isConfirmationVisible" [style]="{ width: '34rem' }" [modal]="true" draggable="false" (onHide)="onConfirmationDialogHide()">
+  <ng-template pTemplate="header">
+    <div class="font-bold text-xl">Run AI Analysis?</div>
+  </ng-template>
+
+  <div class="flex flex-col gap-4">
+    <div class="text-sm text-muted-color">
+      @if (pendingTestCase()?.name; as testCaseName) {
+        Test name: <span class="font-semibold">{{ testCaseName }}</span>
+      }
+    </div>
+
+    <div class="text-sm text-muted-color">
+      Do you want to analyze this test failure with AI?
+      @if (shouldShowUsageLimits()) {
+        This uses 1 request from your quota.
+      }
+    </div>
+
+    @if (isUsageLoading() || usageErrorMessage() || shouldShowUsageLimits()) {
+      <ng-container [ngTemplateOutlet]="usageLimitsSection"></ng-container>
+    }
+
+    @if (isUsageExhausted()) {
+      <p-message severity="error">You’ve reached your AI analysis quota for now. Please try again when your quota resets.</p-message>
+    }
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-between w-full">
+      <p-button label="Cancel" [text]="true" (click)="cancelConfirmation()" />
+      <p-button label="Run analysis" (click)="confirmAnalysis()" [disabled]="isUsageLoading() || isSubmitting() || isUsageExhausted()" />
+    </div>
+  </ng-template>
+</p-dialog>
+
+<p-dialog [(visible)]="isRegenerateConfirmationVisible" [style]="{ width: '34rem' }" [modal]="true" draggable="false" (onHide)="onRegenerateDialogHide()">
+  <ng-template pTemplate="header">
+    <div class="font-bold text-xl">Regenerate Analysis?</div>
+  </ng-template>
+
+  <div class="flex flex-col gap-4">
+    <div class="text-sm text-muted-color">
+      @if (analyzedTestCase()?.name; as testCaseName) {
+        Test name: <span class="font-semibold">{{ testCaseName }}</span>
+      }
+    </div>
+
+    <div class="text-sm text-muted-color">
+      Do you want to run a new AI analysis for this test?
+      @if (shouldShowUsageLimits()) {
+        This uses 1 request from your quota.
+      }
+    </div>
+
+    @if (isUsageLoading() || usageErrorMessage() || shouldShowUsageLimits()) {
+      <ng-container [ngTemplateOutlet]="usageLimitsSection"></ng-container>
+    }
+
+    @if (isUsageExhausted()) {
+      <p-message severity="error">You’ve reached your AI analysis quota for now. Please try again when your quota resets.</p-message>
+    }
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-between w-full">
+      <p-button label="Cancel" [text]="true" (click)="cancelRegenerateConfirmation()" />
+      <p-button label="Regenerate" (click)="confirmRegenerateAnalysis()" [disabled]="isUsageLoading() || isSubmitting() || isUsageExhausted()" />
+    </div>
+  </ng-template>
+</p-dialog>
+
+<p-dialog [(visible)]="isVisible" [style]="{ width: '60vw' }" [modal]="true" (onHide)="onDialogHide()">
+  <ng-template pTemplate="header">
+    <div class="font-bold text-xl">AI Test Failure Analysis</div>
+  </ng-template>
+
+  <div class="flex flex-col gap-4">
+    <div class="text-sm text-muted-color">
+      @if (analyzedTestCase()?.name; as testCaseName) {
+        Test name: {{ testCaseName }}
+      }
+    </div>
+
+    @if (isUsageLoading() || usageErrorMessage() || shouldShowUsageLimits()) {
+      <ng-container [ngTemplateOutlet]="usageLimitsSection"></ng-container>
+    }
+
+    @if (isShowingCachedResult()) {
+      <p-message severity="info">Showing cached analysis. Opening this result did not consume any quota.</p-message>
+    }
+
+    @if (status() === 'submitting') {
+      <div class="flex items-center gap-3 rounded border border-muted-color bg-surface-100 p-3">
+        <i-tabler name="progress" class="!size-5 animate-spin text-muted-color"></i-tabler>
+        <span>{{ response()?.result ? 'Regenerating AI analysis... This may take a few seconds.' : 'Analyzing failure with AI... This may take a few seconds.' }}</span>
+      </div>
+    }
+
+    @if (errorMessage()) {
+      <p-message severity="error">{{ errorMessage() }}</p-message>
+    }
+
+    @if (response()?.result; as result) {
+      <div class="flex flex-col gap-4">
+        <div class="flex flex-wrap items-center justify-between gap-3 rounded border border-muted-color p-3">
+          <div class="flex flex-wrap gap-2 text-xs">
+            @if (response()?.analyzedAt; as analyzedAt) {
+              <p-tag severity="secondary" [rounded]="true" [value]="'Analyzed on ' + (analyzedAt | date: 'd MMM y, HH:mm:ss')"></p-tag>
+            }
+            @if (response()?.cacheHit) {
+              <p-tag severity="secondary" [rounded]="true" value="Cached result"></p-tag>
+            }
+            <p-tag severity="secondary" [rounded]="true" [value]="'Confidence: ' + formatConfidence(result.confidence)"></p-tag>
+            <p-tag severity="secondary" [rounded]="true" [value]="'Model: ' + (result.model ?? 'N/A')"></p-tag>
+          </div>
+
+          @if (canRegenerateAnalysis()) {
+            <p-button
+              label="Regenerate analysis"
+              size="small"
+              [disabled]="isSubmitting() || isUsageExhausted()"
+              [loading]="isSubmitting()"
+              (click)="requestRegenerateConfirmation()"
+            />
+          }
+        </div>
+
+        <div class="rounded border border-muted-color bg-surface-100 p-3">
+          <h4 class="font-medium mb-1">Summary</h4>
+          <p class="text-sm leading-relaxed">{{ result.summary ?? '' }}</p>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-4">
+          <div class="rounded border border-muted-color p-3">
+            <h4 class="font-medium mb-2">Likely Root Causes</h4>
+            <ul class="list-disc pl-5 text-sm flex flex-col gap-1">
+              @for (item of result.rootCauseHypotheses ?? []; track $index) {
+                <li>{{ item }}</li>
+              }
+            </ul>
+          </div>
+
+          <div class="rounded border border-muted-color p-3">
+            <h4 class="font-medium mb-2">Recommended Fixes</h4>
+            <ul class="list-disc pl-5 text-sm flex flex-col gap-1">
+              @for (item of result.recommendedFixes ?? []; track $index) {
+                <li>{{ item }}</li>
+              }
+            </ul>
+          </div>
+        </div>
+
+        <div class="rounded border border-muted-color p-3">
+          <h4 class="font-medium mb-2">Evidence</h4>
+          <ul class="list-disc pl-5 text-sm flex flex-col gap-1">
+            @for (item of result.evidence ?? []; track $index) {
+              <li>{{ item }}</li>
+            }
+          </ul>
+        </div>
+      </div>
+    }
+  </div>
+</p-dialog>

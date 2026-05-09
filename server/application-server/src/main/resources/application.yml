@@ -6,6 +6,15 @@ spring:
     http:
         converters:
             preferred-json-mapper: jackson2
+    ai:
+        openai:
+            api-key: ${OPENAI_API_KEY:dummy-key}
+            base-url: ${OPENAI_BASE_URL:https://api.openai.com}
+            chat:
+                options:
+                    model: ${OPENAI_MODEL:gpt-4o-mini}
+                    temperature: ${OPENAI_TEMPERATURE:0.0}
+                    max-tokens: ${OPENAI_MAX_TOKENS:1200}
     task:
         scheduling:
             pool:
@@ -66,6 +75,25 @@ recovery:
         cron: "0 0 * * * *"
 
 helios:
+    ai:
+        enabled: ${HELIOS_AI_ENABLED:true}
+        default-provider: ${HELIOS_AI_DEFAULT_PROVIDER:openai}
+        providers:
+            openai:
+                enabled: ${HELIOS_AI_PROVIDER_OPENAI_ENABLED:true}
+                model: ${OPENAI_MODEL:gpt-4o-mini}
+        test-failure:
+            max-section-chars: ${HELIOS_AI_TEST_FAILURE_MAX_SECTION_CHARS:6000}
+            rate-limit:
+                enabled: ${HELIOS_AI_TEST_FAILURE_RATE_LIMIT_ENABLED:true}
+                per-user-burst-max: ${HELIOS_AI_TEST_FAILURE_PER_USER_BURST_MAX:5}
+                per-user-burst-window: ${HELIOS_AI_TEST_FAILURE_PER_USER_BURST_WINDOW:10m}
+                per-user-daily-max: ${HELIOS_AI_TEST_FAILURE_PER_USER_DAILY_MAX:50}
+            cleanup:
+                dry-run: ${HELIOS_AI_TEST_FAILURE_CLEANUP_DRY_RUN:false}
+                # runs every day at 03:00 (server time)
+                cron: "0 0 3 * * *"
+                max-age: 14d
     logs:
         base-path: ${HELIOS_LOGS_BASE_PATH:/tmp/helios/workflow-logs}
         cleanup:

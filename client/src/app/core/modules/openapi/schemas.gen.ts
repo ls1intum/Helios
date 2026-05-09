@@ -657,6 +657,74 @@ export const TestFlakinessScoreDtoSchema = {
   required: ['className', 'testName', 'testSuiteName'],
 } as const;
 
+export const TestFailureAnalysisResponseDtoSchema = {
+  type: 'object',
+  properties: {
+    repositoryId: {
+      type: 'integer',
+      format: 'int64',
+    },
+    status: {
+      type: 'string',
+      enum: ['COMPLETED', 'FAILED'],
+    },
+    result: {
+      $ref: '#/components/schemas/TestFailureAnalysisResultDto',
+    },
+    errorMessage: {
+      type: 'string',
+    },
+    analyzedAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+    durationMs: {
+      type: 'integer',
+      format: 'int64',
+    },
+    cacheHit: {
+      type: 'boolean',
+    },
+  },
+} as const;
+
+export const TestFailureAnalysisResultDtoSchema = {
+  type: 'object',
+  properties: {
+    summary: {
+      type: 'string',
+    },
+    rootCauseHypotheses: {
+      type: 'array',
+      items: {
+        type: 'string',
+      },
+    },
+    evidence: {
+      type: 'array',
+      items: {
+        type: 'string',
+      },
+    },
+    recommendedFixes: {
+      type: 'array',
+      items: {
+        type: 'string',
+      },
+    },
+    confidence: {
+      type: 'number',
+      format: 'double',
+    },
+    provider: {
+      type: 'string',
+    },
+    model: {
+      type: 'string',
+    },
+  },
+} as const;
+
 export const ReleaseCandidateCreateDtoSchema = {
   type: 'object',
   properties: {
@@ -1521,6 +1589,47 @@ export const FlakyTestSummarySchema = {
     lowFlakinessCount: {
       type: 'integer',
       format: 'int32',
+    },
+  },
+} as const;
+
+export const TestFailureAnalysisUsageDtoSchema = {
+  type: 'object',
+  properties: {
+    rateLimitEnabled: {
+      type: 'boolean',
+    },
+    dailyUsed: {
+      type: 'integer',
+      format: 'int32',
+    },
+    dailyLimit: {
+      type: 'integer',
+      format: 'int32',
+    },
+    burstUsed: {
+      type: 'integer',
+      format: 'int32',
+    },
+    burstLimit: {
+      type: 'integer',
+      format: 'int32',
+    },
+    burstWindowSeconds: {
+      type: 'integer',
+      format: 'int64',
+    },
+  },
+} as const;
+
+export const TestFailureAnalysisCacheLookupDtoSchema = {
+  type: 'object',
+  properties: {
+    hasCachedResult: {
+      type: 'boolean',
+    },
+    cachedResult: {
+      $ref: '#/components/schemas/TestFailureAnalysisResponseDto',
     },
   },
 } as const;
