@@ -108,6 +108,9 @@ import type {
   GetEnvironmentsByUserLockingData,
   GetEnvironmentsByUserLockingErrors,
   GetEnvironmentsByUserLockingResponses,
+  GetFailureAnalysisUsageData,
+  GetFailureAnalysisUsageErrors,
+  GetFailureAnalysisUsageResponses,
   GetFlakinessScoresData,
   GetFlakinessScoresErrors,
   GetFlakinessScoresResponses,
@@ -120,6 +123,9 @@ import type {
   GetGroupsWithWorkflowsData,
   GetGroupsWithWorkflowsErrors,
   GetGroupsWithWorkflowsResponses,
+  GetLatestCachedFailureAnalysisData,
+  GetLatestCachedFailureAnalysisErrors,
+  GetLatestCachedFailureAnalysisResponses,
   GetLatestDeploymentByEnvironmentIdData,
   GetLatestDeploymentByEnvironmentIdErrors,
   GetLatestDeploymentByEnvironmentIdResponses,
@@ -636,6 +642,9 @@ export const getFlakyTestsOverview = <ThrowOnError extends boolean = false>(opti
 export const getLatestTestResultsByBranch = <ThrowOnError extends boolean = false>(options: Options<GetLatestTestResultsByBranchData, ThrowOnError>) =>
   (options.client ?? client).get<GetLatestTestResultsByBranchResponses, GetLatestTestResultsByBranchErrors, ThrowOnError>({ url: '/api/tests/branch', ...options });
 
+export const getFailureAnalysisUsage = <ThrowOnError extends boolean = false>(options?: Options<GetFailureAnalysisUsageData, ThrowOnError>) =>
+  (options?.client ?? client).get<GetFailureAnalysisUsageResponses, GetFailureAnalysisUsageErrors, ThrowOnError>({ url: '/api/test-failure-analysis/usage', ...options });
+
 export const getGroupsWithWorkflows = <ThrowOnError extends boolean = false>(options: Options<GetGroupsWithWorkflowsData, ThrowOnError>) =>
   (options.client ?? client).get<GetGroupsWithWorkflowsResponses, GetGroupsWithWorkflowsErrors, ThrowOnError>({ url: '/api/settings/{repositoryId}/groups', ...options });
 
@@ -644,6 +653,12 @@ export const getAllRepositories = <ThrowOnError extends boolean = false>(options
 
 export const getRepositoryById = <ThrowOnError extends boolean = false>(options: Options<GetRepositoryByIdData, ThrowOnError>) =>
   (options.client ?? client).get<GetRepositoryByIdResponses, GetRepositoryByIdErrors, ThrowOnError>({ url: '/api/repository/{id}', ...options });
+
+export const getLatestCachedFailureAnalysis = <ThrowOnError extends boolean = false>(options: Options<GetLatestCachedFailureAnalysisData, ThrowOnError>) =>
+  (options.client ?? client).get<GetLatestCachedFailureAnalysisResponses, GetLatestCachedFailureAnalysisErrors, ThrowOnError>({
+    url: '/api/repositories/{repositoryId}/test-cases/{testCaseId}/failure-analysis/latest',
+    ...options,
+  });
 
 export const getCommitsSinceLastReleaseCandidate = <ThrowOnError extends boolean = false>(options: Options<GetCommitsSinceLastReleaseCandidateData, ThrowOnError>) =>
   (options.client ?? client).get<GetCommitsSinceLastReleaseCandidateResponses, GetCommitsSinceLastReleaseCandidateErrors, ThrowOnError>({

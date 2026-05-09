@@ -718,6 +718,12 @@ paths:
         schema:
           type: integer
           format: int64
+      - name: regenerate
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
       responses:
         "409":
           description: Conflict
@@ -1572,6 +1578,24 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/TestResultsDto"
+  /api/test-failure-analysis/usage:
+    get:
+      tags:
+      - test-failure-analysis-usage-controller
+      operationId: getFailureAnalysisUsage
+      responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TestFailureAnalysisUsageDto"
   /api/settings/{repositoryId}/groups:
     get:
       tags:
@@ -1644,6 +1668,37 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/RepositoryInfoDto"
+  /api/repositories/{repositoryId}/test-cases/{testCaseId}/failure-analysis/latest:
+    get:
+      tags:
+      - test-failure-analysis-controller
+      operationId: getLatestCachedFailureAnalysis
+      parameters:
+      - name: repositoryId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: testCaseId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TestFailureAnalysisCacheLookupDto"
   /api/release-info/newcommits:
     get:
       tags:
@@ -2951,6 +3006,8 @@ components:
         durationMs:
           type: integer
           format: int64
+        cacheHit:
+          type: boolean
     TestFailureAnalysisResultDto:
       type: object
       properties:
@@ -3711,6 +3768,33 @@ components:
         lowFlakinessCount:
           type: integer
           format: int32
+    TestFailureAnalysisUsageDto:
+      type: object
+      properties:
+        rateLimitEnabled:
+          type: boolean
+        dailyUsed:
+          type: integer
+          format: int32
+        dailyLimit:
+          type: integer
+          format: int32
+        burstUsed:
+          type: integer
+          format: int32
+        burstLimit:
+          type: integer
+          format: int32
+        burstWindowSeconds:
+          type: integer
+          format: int64
+    TestFailureAnalysisCacheLookupDto:
+      type: object
+      properties:
+        hasCachedResult:
+          type: boolean
+        cachedResult:
+          $ref: "#/components/schemas/TestFailureAnalysisResponseDto"
     CommitsSinceReleaseCandidateDto:
       type: object
       properties:

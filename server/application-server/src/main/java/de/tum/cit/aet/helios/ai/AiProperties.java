@@ -1,5 +1,6 @@
 package de.tum.cit.aet.helios.ai;
 
+import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import lombok.Getter;
@@ -27,5 +28,15 @@ public class AiProperties {
   @Setter
   public static class TestFailureProperties {
     private int maxSectionChars;
+    private RateLimitProperties rateLimit = new RateLimitProperties();
+  }
+
+  @Getter
+  @Setter
+  public static class RateLimitProperties {
+    private boolean enabled;
+    private int perUserBurstMax;
+    private Duration perUserBurstWindow;
+    private int perUserDailyMax;
   }
 }
