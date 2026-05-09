@@ -91,14 +91,25 @@ describe('KeycloakService', () => {
     expect(clearToken).toHaveBeenCalledTimes(1);
   });
 
-  it('should clear local auth state and broadcast on auto-logout events', () => {
+  it('should clear local auth state and broadcast after max consecutive refresh attempts with auth refresh errors', async () => {
+    vi.useFakeTimers();
     const service = new KeycloakService();
     const clearToken = vi.fn();
     const localStorageSpy = vi.spyOn(window.localStorage, 'setItem');
 
-    const keycloakStub = {
+    let keycloakStub: {
+      clearToken: () => void;
+      updateToken: ReturnType<typeof vi.fn>;
+      authenticated: boolean;
+      token: string | undefined;
+      onAuthRefreshError?: () => void;
+    };
+    keycloakStub = {
       clearToken,
-      updateToken: vi.fn(),
+      updateToken: vi.fn().mockImplementation(() => {
+        keycloakStub.onAuthRefreshError?.();
+        return Promise.reject(new Error('refresh error'));
+      }),
       authenticated: false,
       token: undefined,
     };
@@ -107,12 +118,91 @@ describe('KeycloakService', () => {
     (service as unknown as { _isLoggedIn: { set: (value: boolean) => void } })._isLoggedIn.set(true);
 
     (service as unknown as { bindKeycloakEvents: () => void }).bindKeycloakEvents();
-    (keycloakStub as unknown as { onAuthRefreshError?: () => void }).onAuthRefreshError?.();
+    (service as unknown as { startTokenRefresh: () => void }).startTokenRefresh();
 
+    await vi.advanceTimersByTimeAsync(60000);
+    expect(service.isLoggedIn()).toBe(true);
+    expect(clearToken).not.toHaveBeenCalled();
+
+    await vi.advanceTimersByTimeAsync(60000);
+    expect(service.isLoggedIn()).toBe(true);
+    expect(clearToken).not.toHaveBeenCalled();
+
+    await vi.advanceTimersByTimeAsync(60000);
     expect(service.isLoggedIn()).toBe(false);
     expect(clearToken).toHaveBeenCalledTimes(1);
     expect(localStorageSpy).toHaveBeenCalledWith(AUTH_SYNC_STORAGE_KEY, expect.any(String));
 
     localStorageSpy.mockRestore();
+    vi.useRealTimers();
+  });
+
+  it('should only logout after max consecutive token refresh failures', async () => {
+    vi.useFakeTimers();
+    const service = new KeycloakService();
+    const clearToken = vi.fn();
+    const localStorageSpy = vi.spyOn(window.localStorage, 'setItem');
+
+    const keycloakStub = {
+      clearToken,
+      updateToken: vi.fn().mockRejectedValue(new Error('network error')),
+      authenticated: true,
+      token: 'token',
+    };
+
+    (service as unknown as { _keycloak: unknown })._keycloak = keycloakStub;
+    (service as unknown as { _isLoggedIn: { set: (value: boolean) => void } })._isLoggedIn.set(true);
+
+    (service as unknown as { startTokenRefresh: () => void }).startTokenRefresh();
+
+    await vi.advanceTimersByTimeAsync(60000);
+    expect(service.isLoggedIn()).toBe(true);
+    expect(clearToken).not.toHaveBeenCalled();
+
+    await vi.advanceTimersByTimeAsync(60000);
+    expect(service.isLoggedIn()).toBe(true);
+    expect(clearToken).not.toHaveBeenCalled();
+
+    await vi.advanceTimersByTimeAsync(60000);
+    expect(service.isLoggedIn()).toBe(false);
+    expect(clearToken).toHaveBeenCalledTimes(1);
+    expect(localStorageSpy).toHaveBeenCalledWith(AUTH_SYNC_STORAGE_KEY, expect.any(String));
+
+    localStorageSpy.mockRestore();
+    vi.useRealTimers();
+  });
+
+  it('should not double-count a refresh failure when onAuthRefreshError fires after updateToken rejection', async () => {
+    vi.useFakeTimers();
+    const service = new KeycloakService();
+    const clearToken = vi.fn();
+    const localStorageSpy = vi.spyOn(window.localStorage, 'setItem');
+
+    const keycloakStub = {
+      clearToken,
+      updateToken: vi.fn().mockRejectedValue(new Error('network error')),
+      authenticated: true,
+      token: 'token',
+    };
+
+    (service as unknown as { _keycloak: unknown })._keycloak = keycloakStub;
+    (service as unknown as { _isLoggedIn: { set: (value: boolean) => void } })._isLoggedIn.set(true);
+    (service as unknown as { bindKeycloakEvents: () => void }).bindKeycloakEvents();
+    (service as unknown as { startTokenRefresh: () => void }).startTokenRefresh();
+
+    await vi.advanceTimersByTimeAsync(60000);
+    (keycloakStub as unknown as { onAuthRefreshError?: () => void }).onAuthRefreshError?.();
+
+    await vi.advanceTimersByTimeAsync(60000);
+    expect(service.isLoggedIn()).toBe(true);
+    expect(clearToken).not.toHaveBeenCalled();
+
+    await vi.advanceTimersByTimeAsync(60000);
+    expect(service.isLoggedIn()).toBe(false);
+    expect(clearToken).toHaveBeenCalledTimes(1);
+    expect(localStorageSpy).toHaveBeenCalledWith(AUTH_SYNC_STORAGE_KEY, expect.any(String));
+
+    localStorageSpy.mockRestore();
+    vi.useRealTimers();
   });
 });

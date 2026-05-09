@@ -7,12 +7,16 @@ import { environment } from 'environments/environment';
 })
 export class KeycloakService {
   private static readonly AUTH_SYNC_STORAGE_KEY = 'helios:auth:sync';
+  private static readonly MAX_CONSECUTIVE_REFRESH_FAILURES = 3;
 
   private _keycloak: Keycloak | undefined;
   private tokenRefreshIntervalId: ReturnType<typeof setInterval> | undefined;
   private keycloakEventsBound = false;
   private isClearingToken = false;
   private suppressLogoutBroadcast = false;
+  private consecutiveRefreshFailures = 0;
+  // Prevent counting the same refresh attempt twice when both error paths fire.
+  private refreshErrorHandledForAttempt = false;
 
   private _isLoggedIn = signal(false);
   private _profile = signal<UserProfile | undefined>(undefined);
@@ -119,11 +123,13 @@ export class KeycloakService {
 
     this.keycloak.onAuthSuccess = async () => {
       this._isLoggedIn.set(true);
+      this.resetRefreshFailureCount();
       this.startTokenRefresh();
       await this.reloadProfile();
     };
 
     this.keycloak.onAuthRefreshSuccess = () => {
+      this.resetRefreshFailureCount();
       this._isLoggedIn.set(!!this.keycloak.authenticated);
       const profile = this._profile();
       if (profile) {
@@ -135,7 +141,7 @@ export class KeycloakService {
     };
 
     this.keycloak.onAuthRefreshError = () => {
-      this.applyLoggedOutState({ clearToken: true, broadcast: true });
+      this.handleRefreshFailureOncePerAttempt();
     };
 
     this.keycloak.onAuthLogout = () => {
@@ -153,11 +159,13 @@ export class KeycloakService {
       if (!this.isLoggedIn()) {
         return;
       }
+      this.refreshErrorHandledForAttempt = false;
       try {
         // Update the token when it will be valid for less than 1 minute.
         await this.keycloak.updateToken(60);
+        this.resetRefreshFailureCount();
       } catch {
-        this.applyLoggedOutState({ clearToken: true, broadcast: true });
+        this.handleRefreshFailureOncePerAttempt();
       }
     }, 60000);
   }
@@ -189,6 +197,7 @@ export class KeycloakService {
 
   private applyLoggedOutState(options: { clearToken?: boolean; broadcast?: boolean } = {}) {
     this.stopTokenRefresh();
+    this.resetRefreshFailureCount();
     this._isLoggedIn.set(false);
     this._profile.set(undefined);
 
@@ -202,6 +211,26 @@ export class KeycloakService {
     if (options.broadcast) {
       this.broadcastLogoutEvent();
     }
+  }
+
+  private resetRefreshFailureCount() {
+    this.consecutiveRefreshFailures = 0;
+    this.refreshErrorHandledForAttempt = false;
+  }
+
+  private handleRefreshFailure() {
+    this.consecutiveRefreshFailures += 1;
+    if (this.consecutiveRefreshFailures >= KeycloakService.MAX_CONSECUTIVE_REFRESH_FAILURES) {
+      this.applyLoggedOutState({ clearToken: true, broadcast: true });
+    }
+  }
+
+  private handleRefreshFailureOncePerAttempt() {
+    if (this.refreshErrorHandledForAttempt) {
+      return;
+    }
+    this.refreshErrorHandledForAttempt = true;
+    this.handleRefreshFailure();
   }
 
   private handleStorageEvent = (event: StorageEvent) => {
@@ -224,12 +253,16 @@ export class KeycloakService {
       return;
     }
 
-    window.localStorage.setItem(
-      KeycloakService.AUTH_SYNC_STORAGE_KEY,
-      JSON.stringify({
-        type: 'logout',
-        at: Date.now(),
-      })
-    );
+    try {
+      window.localStorage.setItem(
+        KeycloakService.AUTH_SYNC_STORAGE_KEY,
+        JSON.stringify({
+          type: 'logout',
+          at: Date.now(),
+        })
+      );
+    } catch {
+      // Ignore storage write failures so logout can continue in the current tab.
+    }
   }
 }
