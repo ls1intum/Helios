@@ -46,6 +46,15 @@ public class AuthService {
     throw new IllegalStateException("Unable to fetch user ID");
   }
 
+  public String getCurrentAccessToken() {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    if (authentication instanceof JwtAuthenticationToken jwtAuthenticationToken) {
+      return jwtAuthenticationToken.getToken().getTokenValue();
+    }
+
+    throw new IllegalStateException("Unable to fetch current access token");
+  }
+
   public boolean isLoggedIn() {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     return authentication != null

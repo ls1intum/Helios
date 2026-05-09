@@ -2,7 +2,7 @@
 Keycloak Token Exchange
 =========================
 
-This document describes how to set up token exchange functionality in Keycloak 26.1.3, which allows a client to obtain identity provider tokens of users.
+This document describes how to set up token exchange functionality in Keycloak 26.4.0, which allows a client to obtain identity provider tokens of users.
 
 Prerequisites
 -------------
@@ -118,8 +118,18 @@ A successful response will include an access token:
 NOTE:
 --------------
 
-GitHub access tokens are valid for 8 hours. Identity provider tokens are not refreshed automatically in Keycloak.
-In order to make sure you always have a valid token, limit the session to 8 hours.
+With Keycloak 26.4.0 or newer, GitHub identity provider tokens can be refreshed automatically
+when Helios retrieves the current user's token through the broker endpoint:
+
+.. code-block:: bash
+
+   GET /realms/<your-realm>/broker/github/token
+   Authorization: Bearer <current-user-keycloak-access-token>
+
+For GitHub, this requires using a GitHub App and enabling **Store Tokens**, **Stored Tokens
+Readable**, and **JSON Format** on the GitHub identity provider. The named-user token exchange
+flow above is still used by background flows that do not have the current user's Keycloak access
+token available.
 
 Security Considerations
 -----------------------

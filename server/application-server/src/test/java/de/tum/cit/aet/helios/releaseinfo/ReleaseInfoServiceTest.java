@@ -777,7 +777,6 @@ class ReleaseInfoServiceTest {
     User releaseCreator = new User();
     releaseCreator.setId(7L);
     when(authService.getUserFromGithubId()).thenReturn(releaseCreator);
-    when(authService.getPreferredUsername()).thenReturn("testuser");
     // Spy to stub generateReleaseNotes
     ReleaseInfoService spyService = Mockito.spy(service);
     doReturn("generated-notes").when(spyService).generateReleaseNotes(tagName);
@@ -785,8 +784,8 @@ class ReleaseInfoServiceTest {
     GHRepository mockGhRepo = mock(GHRepository.class);
     when(gitHubService.getRepository("owner/repo")).thenReturn(mockGhRepo);
     GHRelease ghRelease = mock(GHRelease.class);
-    when(gitHubService.createReleaseOnBehalfOfUser(
-            "owner/repo", tagName, "shaValue", tagName, "generated-notes", true, "testuser"))
+    when(gitHubService.createReleaseAsCurrentUser(
+            "owner/repo", tagName, "shaValue", tagName, "generated-notes", true))
         .thenReturn(ghRelease);
     // Act
     spyService.publishReleaseDraft(tagName);
@@ -815,13 +814,12 @@ class ReleaseInfoServiceTest {
     User releaseCreator = new User();
     releaseCreator.setId(7L);
     when(authService.getUserFromGithubId()).thenReturn(releaseCreator);
-    when(authService.getPreferredUsername()).thenReturn("testuser");
     // Spy to stub generateReleaseNotes
     ReleaseInfoService spyService = Mockito.spy(service);
     doReturn("generated-notes").when(spyService).generateReleaseNotes(tagName);
     // Stub GH interactions to throw
-    when(gitHubService.createReleaseOnBehalfOfUser(
-            "owner/repo", tagName, "shaValue", tagName, "generated-notes", true, "testuser"))
+    when(gitHubService.createReleaseAsCurrentUser(
+            "owner/repo", tagName, "shaValue", tagName, "generated-notes", true))
         .thenThrow(new IOException("GH create error"));
     // Act & Assert
     ReleaseCandidateException ex =
@@ -851,15 +849,14 @@ class ReleaseInfoServiceTest {
     User releaseCreator = new User();
     releaseCreator.setId(7L);
     when(authService.getUserFromGithubId()).thenReturn(releaseCreator);
-    when(authService.getPreferredUsername()).thenReturn("testuser");
 
     // Stub getRepository(...) to return a non‐null GHRepository
     GHRepository mockGhRepo = mock(GHRepository.class);
     when(gitHubService.getRepository("owner/repo")).thenReturn(mockGhRepo);
 
     GHRelease ghRelease = mock(GHRelease.class);
-    when(gitHubService.createReleaseOnBehalfOfUser(
-            "owner/repo", tagName, "shaValue", tagName, "Custom release notes", true, "testuser"))
+    when(gitHubService.createReleaseAsCurrentUser(
+            "owner/repo", tagName, "shaValue", tagName, "Custom release notes", true))
         .thenReturn(ghRelease);
 
     // Act

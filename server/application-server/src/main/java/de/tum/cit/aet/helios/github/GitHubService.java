@@ -613,7 +613,54 @@ public class GitHubService {
       throw new IOException("Failed to exchange token for GitHub user: " + githubUserLogin);
     }
 
-    // Construct the request payload
+    return createReleaseWithUserToken(
+        repoNameWithOwner,
+        tagName,
+        commitish,
+        name,
+        body,
+        draft,
+        tokenExchangeResponse.getAccessToken());
+  }
+
+  /**
+   * Creates and publishes a GitHub release draft with the current user's refreshed GitHub token
+   * retrieved from Keycloak.
+   */
+  public GHRelease createReleaseAsCurrentUser(
+      String repoNameWithOwner,
+      String tagName,
+      String commitish,
+      String name,
+      String body,
+      boolean draft)
+      throws IOException {
+    TokenExchangeResponse tokenExchangeResponse =
+        this.gitHubAuthBroker.retrieveCurrentUserGitHubToken(authService.getCurrentAccessToken());
+    if (tokenExchangeResponse == null) {
+      log.error("Broker token response is null");
+      throw new IOException("Failed to retrieve GitHub token for current user");
+    }
+
+    return createReleaseWithUserToken(
+        repoNameWithOwner,
+        tagName,
+        commitish,
+        name,
+        body,
+        draft,
+        tokenExchangeResponse.getAccessToken());
+  }
+
+  private GHRelease createReleaseWithUserToken(
+      String repoNameWithOwner,
+      String tagName,
+      String commitish,
+      String name,
+      String body,
+      boolean draft,
+      String userGithubToken)
+      throws IOException {
     Map<String, Object> requestPayload = new HashMap<>();
     requestPayload.put("tag_name", tagName);
 
@@ -639,14 +686,12 @@ public class GitHubService {
     RequestBody requestBody =
         RequestBody.create(jsonPayload, MediaType.get("application/json; charset=utf-8"));
 
-    String userGithubToken = tokenExchangeResponse.getAccessToken();
-
     Request request =
         new Request.Builder()
             .url(url)
             .post(requestBody)
             .header("Authorization", "Bearer " + userGithubToken)
-            .header("Accept", "application/json")
+            .header("Accept", "application/vnd.github+json")
             .build();
 
     // Execute the request

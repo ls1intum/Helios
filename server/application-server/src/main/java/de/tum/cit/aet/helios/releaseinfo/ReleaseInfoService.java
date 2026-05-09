@@ -302,18 +302,16 @@ public class ReleaseInfoService {
       }
 
       User releaseCreator = authService.getUserFromGithubId();
-      String githubUserLogin = authService.getPreferredUsername();
 
       // Create the release using the user's token
       GHRelease ghRelease =
-          gitHubService.createReleaseOnBehalfOfUser(
+          gitHubService.createReleaseAsCurrentUser(
               repository.getNameWithOwner(),
               tagName,
               releaseCandidate.getCommit().getSha(),
               tagName, // Using tagName as the release name
               releaseNotes,
-              true,
-              githubUserLogin);
+              true);
 
       // Process the release in the system
       gitHubReleaseSyncService.processRelease(

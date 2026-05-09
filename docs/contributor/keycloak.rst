@@ -60,7 +60,7 @@ Docker Compose Configuration
          - helios-network
 
      keycloak:
-       image: quay.io/keycloak/keycloak:26.1.3
+      image: quay.io/keycloak/keycloak:26.4.0
        container_name: keycloak
        environment:
          KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}
@@ -155,8 +155,10 @@ Go back to the Github App created in prevous section (Setup Guide)
 
 5. Scopes: ``read:user`` workflow
 6. Enable **Store Tokens** (so Keycloak retains the GitHub access token).
-7. Click ``Save``
-8. Add a Protocol Mapper:
+7. Enable **Stored Tokens Readable** (so Helios can retrieve the stored GitHub token).
+8. Enable **JSON Format** (required for Keycloak to refresh GitHub tokens automatically).
+9. Click ``Save``
+10. Add a Protocol Mapper:
 
   - With this mapper, the generated Keycloak JWT will include the GitHub user ID as a user attribute, which can be used to link Keycloak users with their GitHub accounts in our ``application-server``.
 

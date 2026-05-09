@@ -1153,6 +1153,71 @@ class GitHubServiceTest {
   }
 
   @Test
+  void createReleaseAsCurrentUserUsesBrokerToken() throws IOException {
+    final String repoNameWithOwner = "owner/repo";
+    final String tagName = "v1.0";
+    final String commitish = "main";
+    final String name = "Release v1.0";
+    final String body = "Release notes";
+    final boolean draft = true;
+    final String keycloakAccessToken = "keycloak-token";
+    final String userGithubToken = "user-token";
+    final long releaseId = 12345L;
+
+    when(authService.getCurrentAccessToken()).thenReturn(keycloakAccessToken);
+    TokenExchangeResponse tokenResponse = new TokenExchangeResponse();
+    tokenResponse.setAccessToken(userGithubToken);
+    when(gitHubAuthBroker.retrieveCurrentUserGitHubToken(keycloakAccessToken))
+        .thenReturn(tokenResponse);
+
+    Map<String, Object> expectedPayload =
+        Map.of(
+            "tag_name", tagName,
+            "target_commitish", commitish,
+            "name", name,
+            "body", body,
+            "draft", draft);
+    String jsonPayload =
+        "{\"tag_name\":\"v1.0\", \"target_commitish\":\"main\", \"name\":\"Release v1.0\","
+            + " \"body\":\"Release notes\", \"draft\":true}";
+    when(objectMapper.writeValueAsString(expectedPayload)).thenReturn(jsonPayload);
+
+    String responseJson = "{\"id\":" + releaseId + "}";
+    ResponseBody responseBody =
+        ResponseBody.create(responseJson, MediaType.parse("application/json"));
+    Response mockOkHttpResponse =
+        new Response.Builder()
+            .request(new Request.Builder().url("http://dummyurl").build())
+            .protocol(Protocol.HTTP_1_1)
+            .code(201)
+            .message("Created")
+            .body(responseBody)
+            .build();
+    Call mockCall = mock(Call.class);
+    when(okHttpClient.newCall(any(Request.class))).thenReturn(mockCall);
+    when(mockCall.execute()).thenReturn(mockOkHttpResponse);
+    when(objectMapper.readValue(responseJson, Map.class)).thenReturn(Map.of("id", releaseId));
+
+    GHRepository mockRepo = mock(GHRepository.class);
+    GHRelease mockRelease = mock(GHRelease.class);
+    when(githubFacade.getRepository(repoNameWithOwner)).thenReturn(mockRepo);
+    when(mockRepo.getRelease(releaseId)).thenReturn(mockRelease);
+
+    GHRelease actualRelease =
+        gitHubService.createReleaseAsCurrentUser(
+            repoNameWithOwner, tagName, commitish, name, body, draft);
+
+    assertEquals(mockRelease, actualRelease);
+    verify(authService).getCurrentAccessToken();
+    verify(gitHubAuthBroker).retrieveCurrentUserGitHubToken(keycloakAccessToken);
+    verify(gitHubAuthBroker, never()).exchangeToken(anyString());
+    verify(objectMapper).writeValueAsString(expectedPayload);
+    verify(okHttpClient).newCall(any(Request.class));
+    verify(objectMapper).readValue(responseJson, Map.class);
+    verify(mockRepo).getRelease(releaseId);
+  }
+
+  @Test
   void createReleaseOnBehalfOfUserTokenExchangeFails() throws IOException {
     String repoNameWithOwner = "owner/repo";
     String githubUserLogin = "testUser";

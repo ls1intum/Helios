@@ -79,4 +79,50 @@ public class GitHubAuthBroker {
       throw e;
     }
   }
+
+  /**
+   * Retrieves the current user's GitHub token from Keycloak's broker token endpoint.
+   *
+   * <p>Keycloak refreshes stored external IDP tokens for this endpoint when the identity provider
+   * returned a refresh token and the stored access token is close to expiry.
+   *
+   * @param keycloakAccessToken the current user's Keycloak access token
+   * @return the GitHub token response
+   * @throws IOException if the broker token retrieval fails
+   */
+  public TokenExchangeResponse retrieveCurrentUserGitHubToken(String keycloakAccessToken)
+      throws IOException {
+    Request request =
+        new Request.Builder()
+            .url(issuerUri + "/broker/github/token")
+            .get()
+            .header("Authorization", "Bearer " + keycloakAccessToken)
+            .header("Accept", "application/json")
+            .build();
+
+    try (Response response = okHttpClient.newCall(request).execute()) {
+      ResponseBody responseBody = response.body();
+      String responseBodyContent = responseBody == null ? "" : responseBody.string();
+
+      if (!response.isSuccessful()) {
+        throw new IOException(
+            "GitHub broker token retrieval failed with response code: "
+                + response.code()
+                + " and body: "
+                + responseBodyContent);
+      }
+
+      if (responseBodyContent.isEmpty()) {
+        throw new IOException("Response body is empty");
+      }
+
+      return objectMapper.readValue(responseBodyContent, TokenExchangeResponse.class);
+    } catch (JsonProcessingException e) {
+      log.error("Error processing broker token JSON response: {}", e.getMessage());
+      throw new IOException("Error processing broker token response", e);
+    } catch (IOException e) {
+      log.error("Error occurred while retrieving broker token: {}", e.getMessage());
+      throw e;
+    }
+  }
 }

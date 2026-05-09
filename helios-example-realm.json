@@ -1806,7 +1806,7 @@
       "updateProfileFirstLoginMode": "on",
       "trustEmail": false,
       "storeToken": true,
-      "addReadTokenRoleOnCreate": false,
+      "addReadTokenRoleOnCreate": true,
       "authenticateByDefault": false,
       "linkOnly": false,
       "hideOnLogin": false,
@@ -1818,6 +1818,7 @@
         "syncMode": "LEGACY",
         "clientSecret": "d4465624691ff36b973e8b53bbc0f1896cb62067",
         "caseSensitiveOriginalUsername": "false",
+        "githubJsonFormat": "true",
         "defaultScope": "read:user workflow"
       }
     }
@@ -2742,7 +2743,7 @@
     "cibaInterval": "5",
     "realmReusableOtpCode": "false"
   },
-  "keycloakVersion": "26.1.3",
+  "keycloakVersion": "26.4.0",
   "userManagedAccessAllowed": false,
   "organizationsEnabled": false,
   "verifiableCredentialsEnabled": false,
