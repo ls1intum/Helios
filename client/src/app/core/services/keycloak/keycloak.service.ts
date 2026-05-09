@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 import Keycloak from 'keycloak-js';
 import { UserProfile } from './user-profile';
 import { environment } from 'environments/environment';
@@ -6,7 +6,26 @@ import { environment } from 'environments/environment';
   providedIn: 'root',
 })
 export class KeycloakService {
+  private static readonly AUTH_SYNC_STORAGE_KEY = 'helios:auth:sync';
+  private static readonly MAX_CONSECUTIVE_REFRESH_FAILURES = 3;
+
   private _keycloak: Keycloak | undefined;
+  private tokenRefreshIntervalId: ReturnType<typeof setInterval> | undefined;
+  private keycloakEventsBound = false;
+  private isClearingToken = false;
+  private suppressLogoutBroadcast = false;
+  private consecutiveRefreshFailures = 0;
+  // Prevent counting the same refresh attempt twice when both error paths fire.
+  private refreshErrorHandledForAttempt = false;
+
+  private _isLoggedIn = signal(false);
+  private _profile = signal<UserProfile | undefined>(undefined);
+
+  constructor() {
+    if (typeof window !== 'undefined') {
+      window.addEventListener('storage', this.handleStorageEvent);
+    }
+  }
 
   get keycloak() {
     if (!this._keycloak) {
@@ -15,10 +34,8 @@ export class KeycloakService {
     return this._keycloak;
   }
 
-  private _profile: UserProfile | undefined;
-
   get profile(): UserProfile | undefined {
-    return this._profile;
+    return this._profile();
   }
 
   isCurrentUser(login?: string) {
@@ -26,26 +43,24 @@ export class KeycloakService {
   }
 
   async init() {
+    this.bindKeycloakEvents();
+
     const authenticated = await this.keycloak.init({
       onLoad: 'check-sso',
     });
 
     if (!authenticated) {
+      this.applyLoggedOutState();
       return;
     }
 
-    // Regulary check if the token needs to be refreshed and refresh it if necessary
-    setInterval(() => {
-      // Update the token when will last less than 5 minutes
-      this.keycloak.updateToken(300);
-    }, 60000);
-
-    this._profile = (await this.keycloak.loadUserProfile()) as UserProfile;
-    this._profile.token = this.keycloak.token || '';
+    this._isLoggedIn.set(true);
+    this.startTokenRefresh();
+    await this.reloadProfile();
   }
 
   isLoggedIn() {
-    return this.keycloak.authenticated;
+    return this._isLoggedIn();
   }
 
   getUserId() {
@@ -90,6 +105,164 @@ export class KeycloakService {
   }
 
   logout() {
+    this.broadcastLogoutEvent();
     return this.keycloak.logout({ redirectUri: window.location.href });
+  }
+
+  private async reloadProfile() {
+    const profile = (await this.keycloak.loadUserProfile()) as UserProfile;
+    profile.token = this.keycloak.token || '';
+    this._profile.set(profile);
+  }
+
+  private bindKeycloakEvents() {
+    if (this.keycloakEventsBound) {
+      return;
+    }
+    this.keycloakEventsBound = true;
+
+    this.keycloak.onAuthSuccess = async () => {
+      this._isLoggedIn.set(true);
+      this.resetRefreshFailureCount();
+      this.startTokenRefresh();
+      await this.reloadProfile();
+    };
+
+    this.keycloak.onAuthRefreshSuccess = () => {
+      this.resetRefreshFailureCount();
+      this._isLoggedIn.set(!!this.keycloak.authenticated);
+      const profile = this._profile();
+      if (profile) {
+        this._profile.set({
+          ...profile,
+          token: this.keycloak.token || '',
+        });
+      }
+    };
+
+    this.keycloak.onAuthRefreshError = () => {
+      this.handleRefreshFailureOncePerAttempt();
+    };
+
+    this.keycloak.onAuthLogout = () => {
+      this.applyLoggedOutState({ broadcast: !this.suppressLogoutBroadcast });
+    };
+  }
+
+  private startTokenRefresh() {
+    if (this.tokenRefreshIntervalId !== undefined) {
+      return;
+    }
+
+    // Regularly check if the token needs to be refreshed.
+    this.tokenRefreshIntervalId = setInterval(async () => {
+      if (!this.isLoggedIn()) {
+        return;
+      }
+      this.refreshErrorHandledForAttempt = false;
+      try {
+        // Update the token when it will be valid for less than 1 minute.
+        await this.keycloak.updateToken(60);
+        this.resetRefreshFailureCount();
+      } catch {
+        this.handleRefreshFailureOncePerAttempt();
+      }
+    }, 60000);
+  }
+
+  private stopTokenRefresh() {
+    if (this.tokenRefreshIntervalId !== undefined) {
+      clearInterval(this.tokenRefreshIntervalId);
+      this.tokenRefreshIntervalId = undefined;
+    }
+  }
+
+  private clearToken() {
+    if (!this._keycloak || this.isClearingToken) {
+      return;
+    }
+
+    const keycloak = this._keycloak as Keycloak & { clearToken?: () => void };
+    if (typeof keycloak.clearToken !== 'function') {
+      return;
+    }
+
+    this.isClearingToken = true;
+    try {
+      keycloak.clearToken();
+    } finally {
+      this.isClearingToken = false;
+    }
+  }
+
+  private applyLoggedOutState(options: { clearToken?: boolean; broadcast?: boolean } = {}) {
+    this.stopTokenRefresh();
+    this.resetRefreshFailureCount();
+    this._isLoggedIn.set(false);
+    this._profile.set(undefined);
+
+    if (options.clearToken) {
+      const previousSuppressLogoutBroadcast = this.suppressLogoutBroadcast;
+      this.suppressLogoutBroadcast = true;
+      this.clearToken();
+      this.suppressLogoutBroadcast = previousSuppressLogoutBroadcast;
+    }
+
+    if (options.broadcast) {
+      this.broadcastLogoutEvent();
+    }
+  }
+
+  private resetRefreshFailureCount() {
+    this.consecutiveRefreshFailures = 0;
+    this.refreshErrorHandledForAttempt = false;
+  }
+
+  private handleRefreshFailure() {
+    this.consecutiveRefreshFailures += 1;
+    if (this.consecutiveRefreshFailures >= KeycloakService.MAX_CONSECUTIVE_REFRESH_FAILURES) {
+      this.applyLoggedOutState({ clearToken: true, broadcast: true });
+    }
+  }
+
+  private handleRefreshFailureOncePerAttempt() {
+    if (this.refreshErrorHandledForAttempt) {
+      return;
+    }
+    this.refreshErrorHandledForAttempt = true;
+    this.handleRefreshFailure();
+  }
+
+  private handleStorageEvent = (event: StorageEvent) => {
+    if (event.key !== KeycloakService.AUTH_SYNC_STORAGE_KEY || !event.newValue) {
+      return;
+    }
+
+    try {
+      const authEvent = JSON.parse(event.newValue) as { type?: string };
+      if (authEvent.type === 'logout') {
+        this.applyLoggedOutState({ clearToken: true });
+      }
+    } catch {
+      // Ignore malformed storage events.
+    }
+  };
+
+  private broadcastLogoutEvent() {
+    if (typeof window === 'undefined' || !window.localStorage) {
+      return;
+    }
+
+    try {
+      window.localStorage.setItem(
+        KeycloakService.AUTH_SYNC_STORAGE_KEY,
+        JSON.stringify({
+          type: 'logout',
+          at: Date.now(),
+        })
+      );
+    } catch {
+      // Ignore storage write failures so logout can continue in the current tab.
+    }
   }
 }
