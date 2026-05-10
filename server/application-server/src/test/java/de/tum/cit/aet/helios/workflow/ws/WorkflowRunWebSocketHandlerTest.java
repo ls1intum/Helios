@@ -46,7 +46,7 @@ class WorkflowRunWebSocketHandlerTest {
 
   @Test
   void afterConnectionClosedRemovesDecoratedSessionById() {
-    WebSocketSession rawSession = session("session-1");
+    final WebSocketSession rawSession = session("session-1");
     WebSocketSession decoratedSession = session("session-1");
 
     subscribersByRun().put(RUN_ID, ConcurrentHashMap.newKeySet());
