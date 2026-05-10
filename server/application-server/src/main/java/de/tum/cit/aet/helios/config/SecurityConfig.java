@@ -47,8 +47,6 @@ public class SecurityConfig {
                   /* shared‑secret filter handles these requests */
                   .requestMatchers(HttpMethod.POST, "/api/environments/status/**").permitAll()
                   .requestMatchers(HttpMethod.POST, "/api/tests/flakiness-scores").permitAll()
-                  /* WebSocket handshake auth happens in WebSocketJwtHandshakeInterceptor */
-                  .requestMatchers("/ws/**").permitAll()
                   /* other public endpoints (e.g. Swagger) */
                   .requestMatchers(
                       "/auth/**",

@@ -12,7 +12,6 @@ import de.tum.cit.aet.helios.environment.github.GitHubEnvironmentProtectionRuleD
 import de.tum.cit.aet.helios.environment.github.GitHubEnvironmentSyncService;
 import de.tum.cit.aet.helios.environment.protectionrules.ProtectionRule;
 import de.tum.cit.aet.helios.environment.protectionrules.ProtectionRuleRepository;
-import de.tum.cit.aet.helios.environment.ws.EnvironmentDeploymentWebSocketPublisher;
 import de.tum.cit.aet.helios.filters.RepositoryContext;
 import de.tum.cit.aet.helios.github.GitHubService;
 import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
@@ -77,7 +76,6 @@ public class EnvironmentService {
   private final GitRepoRepository gitRepoRepository;
   private final GitHubService gitHubService;
   private final NatsNotificationPublisherService notificationPublisherService;
-  private final EnvironmentDeploymentWebSocketPublisher environmentDeploymentWebSocketPublisher;
 
   public Optional<EnvironmentDto> getEnvironmentById(Long id) {
     return environmentRepository.findById(id).map(EnvironmentDto::fromEnvironment);
@@ -258,7 +256,6 @@ public class EnvironmentService {
       return Optional.empty();
     }
 
-    environmentDeploymentWebSocketPublisher.publishAfterCommit(environment);
     return Optional.of(environment);
   }
 
@@ -381,7 +378,6 @@ public class EnvironmentService {
       return Optional.empty();
     }
 
-    environmentDeploymentWebSocketPublisher.publishAfterCommit(environment);
     return Optional.of(environment);
   }
 
@@ -508,7 +504,6 @@ public class EnvironmentService {
     }
 
     environmentRepository.save(environment);
-    environmentDeploymentWebSocketPublisher.publishAfterCommit(environment);
 
     return EnvironmentDto.fromEnvironment(environment);
   }

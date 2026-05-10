@@ -215,29 +215,6 @@ public class WorkflowRunService {
             "Workflow run with id %d not found".formatted(runId)));
   }
 
-  /**
-   * Returns the run scoped to the supplied repository, bypassing {@link RepositoryContext}.
-   *
-   * <p>Used by paths that don't run inside a Spring MVC request thread (e.g. WebSocket handlers),
-   * where the {@code X-Repository-Id} header has not been bound to {@code RepositoryContext}.
-   */
-  public Optional<WorkflowRunDto> findByIdForRepository(Long runId, Long repositoryId) {
-    return workflowRunRepository
-        .findByIdAndRepositoryRepositoryId(runId, repositoryId)
-        .map(WorkflowRunDto::fromWorkflowRun);
-  }
-
-  /**
-   * Returns the {@code repositoryId} that owns this run, ignoring the current
-   * {@link RepositoryContext}. Used by WebSocket subscribe authorization to look up which repo
-   * a run belongs to so we can permission-check the connecting user.
-   */
-  public Optional<Long> findOwningRepositoryId(Long runId) {
-    return workflowRunRepository
-        .findById(runId)
-        .map(run -> run.getRepository() == null ? null : run.getRepository().getRepositoryId());
-  }
-
   public void cancelWorkflowRun(Long runId) {
     executeWorkflowRunAction(runId, gitHubService::cancelWorkflowRun, "cancel", false);
   }

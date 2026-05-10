@@ -3,7 +3,6 @@ package de.tum.cit.aet.helios.deployment.github;
 import de.tum.cit.aet.helios.deployment.Deployment;
 import de.tum.cit.aet.helios.deployment.DeploymentRepository;
 import de.tum.cit.aet.helios.environment.Environment;
-import de.tum.cit.aet.helios.environment.ws.EnvironmentDeploymentWebSocketPublisher;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
@@ -26,7 +25,6 @@ public class GitHubDeploymentSyncService {
   private final PullRequestRepository pullRequestRepository;
   private final DeploymentConverter deploymentConverter;
   private final HeliosDeploymentRepository heliosDeploymentRepository;
-  private final EnvironmentDeploymentWebSocketPublisher environmentDeploymentWebSocketPublisher;
 
   /**
    * Processes a single DeploymentSource by updating or creating a Deployment in the local
@@ -70,7 +68,6 @@ public class GitHubDeploymentSyncService {
 
     // Update Helios Deployment
     updateHeliosDeployment(deployment, environment);
-    environmentDeploymentWebSocketPublisher.publishAfterCommit(environment);
   }
 
   private void updateHeliosDeployment(Deployment deployment, Environment environment) {

@@ -1,6 +1,5 @@
 package de.tum.cit.aet.helios.environment;
 
-import de.tum.cit.aet.helios.environment.ws.EnvironmentDeploymentWebSocketPublisher;
 import de.tum.cit.aet.helios.gitreposettings.GitRepoSettingsDto;
 import de.tum.cit.aet.helios.gitreposettings.GitRepoSettingsService;
 import de.tum.cit.aet.helios.nats.NatsNotificationPublisherService;
@@ -27,7 +26,6 @@ public class EnvironmentScheduler {
   private final UserRepository userRepository;
   private final org.springframework.core.env.Environment springEnvironment;
   private final NatsNotificationPublisherService notificationPublisherService;
-  private final EnvironmentDeploymentWebSocketPublisher environmentDeploymentWebSocketPublisher;
 
   // Every minute
   @Scheduled(fixedRate = 60000)
@@ -105,7 +103,6 @@ public class EnvironmentScheduler {
           }
 
           environmentRepository.save(environment);
-          environmentDeploymentWebSocketPublisher.publishAfterCommit(environment);
         }
       } catch (Exception e) {
         log.error("Error unlocking environment {}: {}", environment.getId(), e.getMessage());

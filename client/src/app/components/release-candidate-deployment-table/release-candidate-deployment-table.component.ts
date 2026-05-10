@@ -1,4 +1,4 @@
-import { Component, OnDestroy, computed, inject, input, signal } from '@angular/core';
+import { Component, computed, inject, input, signal } from '@angular/core';
 import { EnvironmentDto, getReleaseInfoByName, ReleaseInfoDetailsDto } from '@app/core/modules/openapi';
 import {
   deployToEnvironmentMutation,
@@ -6,7 +6,6 @@ import {
   getAllEnabledEnvironmentsQueryKey,
   getEnvironmentByIdQueryKey,
 } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
-import { EnvironmentDeploymentWebSocketService } from '@app/core/services/environment-deployment-websocket/environment-deployment-websocket.service';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 import { PermissionService } from '@app/core/services/permission.service';
 import { injectMutation, injectQuery, QueryClient } from '@tanstack/angular-query-experimental';
@@ -47,7 +46,7 @@ import { DeployConfirmationComponent } from '@app/components/dialogs/deploy-conf
   ],
   templateUrl: './release-candidate-deployment-table.component.html',
 })
-export class ReleaseCandidateDeploymentTableComponent implements OnDestroy {
+export class ReleaseCandidateDeploymentTableComponent {
   releaseCandidate = input.required<ReleaseInfoDetailsDto>();
   queryClient = inject(QueryClient);
   selectedEnvironment = signal<EnvironmentDto | undefined>(undefined);
@@ -56,16 +55,11 @@ export class ReleaseCandidateDeploymentTableComponent implements OnDestroy {
   messageService = inject(MessageService);
   keycloakService = inject(KeycloakService);
   permissions = inject(PermissionService);
-  private environmentDeploymentWebSocketService = inject(EnvironmentDeploymentWebSocketService);
-  private webSocketCleanup = this.environmentDeploymentWebSocketService.activate();
   isLoggedIn = computed(() => this.keycloakService.isLoggedIn());
 
   userCanDeploy = computed(() => !!(this.isLoggedIn() && this.permissions.isAdmin()));
 
-  environmentQuery = injectQuery(() => ({
-    ...getAllEnabledEnvironmentsOptions(),
-    refetchInterval: () => (this.environmentDeploymentWebSocketService.isConnected() ? false : 60000),
-  }));
+  environmentQuery = injectQuery(() => ({ ...getAllEnabledEnvironmentsOptions(), refetchInterval: 3000 }));
 
   groupedEnvironments = computed(() => {
     const environments = this.environmentQuery.data() || [];
@@ -161,9 +155,5 @@ export class ReleaseCandidateDeploymentTableComponent implements OnDestroy {
       return 'http://' + url;
     }
     return url;
-  }
-
-  ngOnDestroy(): void {
-    this.webSocketCleanup();
   }
 }

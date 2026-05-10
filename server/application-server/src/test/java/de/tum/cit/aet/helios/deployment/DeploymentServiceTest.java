@@ -20,7 +20,6 @@ import de.tum.cit.aet.helios.environment.EnvironmentLockHistory;
 import de.tum.cit.aet.helios.environment.EnvironmentLockHistoryRepository;
 import de.tum.cit.aet.helios.environment.EnvironmentRepository;
 import de.tum.cit.aet.helios.environment.EnvironmentService;
-import de.tum.cit.aet.helios.environment.ws.EnvironmentDeploymentWebSocketPublisher;
 import de.tum.cit.aet.helios.filters.RepositoryContext;
 import de.tum.cit.aet.helios.github.GitHubService;
 import de.tum.cit.aet.helios.github.WorkflowDispatchResult;
@@ -63,7 +62,6 @@ public class DeploymentServiceTest {
   @Mock private PullRequestRepository pullRequestRepository;
   @Mock private GitRepoRepository gitRepoRepository;
   @Mock private HeliosDeploymentWorkflowRunSyncService heliosDeploymentWorkflowRunSyncService;
-  @Mock private EnvironmentDeploymentWebSocketPublisher environmentDeploymentWebSocketPublisher;
 
   private Deployment deployment;
   private GitRepository gitRepository;
