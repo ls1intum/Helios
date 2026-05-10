@@ -127,6 +127,10 @@ jobs:
             echo "HELIOS_PROD_SECRET_KEY=${{ secrets.HELIOS_PROD_SECRET_KEY }}" >> .env
             echo "HELIOS_STAGING_SECRET_KEY=${{ secrets.HELIOS_STAGING_SECRET_KEY }}" >> .env
             echo "HELIOS_DEVELOPERS_GITHUB_USERNAMES=${{ vars.HELIOS_DEVELOPERS_GITHUB_USERNAMES }}" >> .env
+            echo "HELIOS_AI_ENABLED=${{ vars.HELIOS_AI_ENABLED }}" >> .env            
+            echo "HELIOS_AI_DEFAULT_PROVIDER=${{ vars.HELIOS_AI_DEFAULT_PROVIDER }}" >> .env            
+            echo "HELIOS_AI_TEST_FAILURE_MAX_SECTION_CHARS=${{ vars.HELIOS_AI_TEST_FAILURE_MAX_SECTION_CHARS }}" >> .env            
+            echo "HELIOS_AI_PROVIDER_OPENAI_ENABLED=${{ vars.HELIOS_AI_PROVIDER_OPENAI_ENABLED }}" >> .env            
             echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" >> .env
             echo "OPENAI_BASE_URL=${{ secrets.OPENAI_BASE_URL }}" >> .env
             echo "OPENAI_MODEL=${{ secrets.OPENAI_MODEL }}" >> .env
