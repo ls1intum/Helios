@@ -267,6 +267,10 @@ root ``.env`` file
 - ``HELIOS_LOGS_BASE_PATH``: (Optional, default: ``/tmp/helios/workflow-logs``) Base directory where Helios stores workflow logs.
 - ``HELIOS_DEVELOPERS_GITHUB_USERNAMES``: Comma-separated list of GitHub usernames that should have admin access to Helios.
 - ``NOTIFICATIONS_ENABLED``: (Optional, default: `true`) Whether to enable notifications to users
+- ``HELIOS_AI_ENABLED``: (Optional, default: `true`) Whether to enable AI features in Helios. If set to `true`, you need to also set the following AI-related environment variables:
+- ``HELIOS_AI_DEFAULT_PROVIDER``: Default AI provider to use. This variable is used to specify which AI provider to use for AI features in Helios. For now, the only supported provider is ``openai``. In the future, if more providers are added, you can set this variable to the desired provider.
+- ``HELIOS_AI_TEST_FAILURE_MAX_SECTION_CHARS``: Maximum number of characters for a section in the AI test failure analysis. This is used to limit the input size for the AI model when analyzing test failures.
+- ``HELIOS_AI_PROVIDER_OPENAI_ENABLED``: Whether to enable OpenAI as an AI provider. If set to `true`, you need to also set the OpenAI-related environment variables (``OPENAI_API_KEY``, ``OPENAI_BASE_URL``, ``OPENAI_MODEL``).
 - ``OPENAI_API_KEY``: API key for the AI provider. This is used to authenticate with the AI provider and use its services.
 - ``OPENAI_BASE_URL``: Base URL for the AI provider. For OpenAI, this should be ``https://api.openai.com/v1``. For Logos, this should be ``https://logos.aet.cit.tum.de:8080``.
 - ``OPENAI_MODEL``: Model name for the AI provider. For Logos, currently only ``openai/gpt-oss-120b`` is supported.
