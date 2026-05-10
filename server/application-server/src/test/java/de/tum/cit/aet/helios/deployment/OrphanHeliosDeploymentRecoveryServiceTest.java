@@ -11,7 +11,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import de.tum.cit.aet.helios.environment.Environment;
-import de.tum.cit.aet.helios.environment.ws.EnvironmentDeploymentWebSocketPublisher;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
@@ -29,8 +28,6 @@ class OrphanHeliosDeploymentRecoveryServiceTest {
 
   @Mock
   private HeliosDeploymentRepository heliosDeploymentRepository;
-  @Mock
-  private EnvironmentDeploymentWebSocketPublisher environmentDeploymentWebSocketPublisher;
 
   @Mock
   private HeliosDeploymentWorkflowRunSyncService heliosDeploymentWorkflowRunSyncService;
@@ -62,8 +59,6 @@ class OrphanHeliosDeploymentRecoveryServiceTest {
         .findStuckDeploymentsWithoutDeploymentIdAndWorkflowRunIdIsNull(
             any(OffsetDateTime.class));
     verify(heliosDeploymentRepository, times(2)).save(any(HeliosDeployment.class));
-    verify(environmentDeploymentWebSocketPublisher, times(2))
-        .publishAfterCommit(any(HeliosDeployment.class));
     assertEquals(HeliosDeployment.Status.FAILED, stuck1.getStatus());
     assertEquals(HeliosDeployment.Status.FAILED, stuck2.getStatus());
     assertEquals(HeliosDeployment.Status.QUEUED, notStuck.getStatus());
@@ -170,8 +165,6 @@ class OrphanHeliosDeploymentRecoveryServiceTest {
         .findStuckDeploymentsWithoutDeploymentIdAndWorkflowRunIdIsNull(
             any(OffsetDateTime.class));
     verify(heliosDeploymentRepository, never()).save(any(HeliosDeployment.class));
-    verify(environmentDeploymentWebSocketPublisher, never())
-        .publishAfterCommit(any(HeliosDeployment.class));
   }
 
   private HeliosDeployment createStuckHeliosDeployment(Long id, HeliosDeployment.Status status) {

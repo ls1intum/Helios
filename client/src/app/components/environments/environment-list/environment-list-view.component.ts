@@ -15,7 +15,6 @@ import {
   unlockEnvironmentMutation,
   cancelDeploymentMutation,
 } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
-import { EnvironmentDeploymentWebSocketService } from '@app/core/services/environment-deployment-websocket/environment-deployment-websocket.service';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 import { PermissionService } from '@app/core/services/permission.service';
 import { injectMutation, injectQuery, QueryClient } from '@tanstack/angular-query-experimental';
@@ -74,10 +73,8 @@ export class EnvironmentListViewComponent implements OnDestroy {
   private confirmationService = inject(ConfirmationService);
   private keycloakService = inject(KeycloakService);
   private permissionService = inject(PermissionService);
-  private environmentDeploymentWebSocketService = inject(EnvironmentDeploymentWebSocketService);
   private currentTime = signal(Date.now());
   private intervalId: number | undefined;
-  private webSocketCleanup: (() => void) | undefined;
   private messageService = inject(MessageService);
 
   deployDialogVisible = signal(false);
@@ -160,10 +157,7 @@ export class EnvironmentListViewComponent implements OnDestroy {
   canViewAllEnvironments = computed(() => this.isLoggedIn() && this.editable() && this.hasEditEnvironmentPermissions());
   queryFunction = computed(() => {
     const options = this.canViewAllEnvironments() ? getAllEnvironmentsOptions() : getAllEnabledEnvironmentsOptions();
-    return {
-      ...options,
-      refetchInterval: () => (this.environmentDeploymentWebSocketService.isConnected() ? false : 60000),
-    };
+    return { ...options, refetchInterval: 3000 };
   });
   queryKey = computed(() => (this.canViewAllEnvironments() ? getAllEnvironmentsQueryKey() : getAllEnabledEnvironmentsQueryKey()));
 
@@ -205,14 +199,12 @@ export class EnvironmentListViewComponent implements OnDestroy {
   }
 
   constructor() {
-    this.webSocketCleanup = this.environmentDeploymentWebSocketService.activate();
     this.intervalId = window.setInterval(() => {
       this.currentTime.set(Date.now());
     }, 1000);
   }
 
   ngOnDestroy(): void {
-    this.webSocketCleanup?.();
     if (this.intervalId !== undefined) {
       clearInterval(this.intervalId);
     }

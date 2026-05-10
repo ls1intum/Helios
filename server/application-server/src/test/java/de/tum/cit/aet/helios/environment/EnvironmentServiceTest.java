@@ -19,7 +19,6 @@ import de.tum.cit.aet.helios.deployment.DeploymentException;
 import de.tum.cit.aet.helios.deployment.DeploymentRepository;
 import de.tum.cit.aet.helios.environment.github.GitHubEnvironmentSyncService;
 import de.tum.cit.aet.helios.environment.protectionrules.ProtectionRuleRepository;
-import de.tum.cit.aet.helios.environment.ws.EnvironmentDeploymentWebSocketPublisher;
 import de.tum.cit.aet.helios.filters.RepositoryContext;
 import de.tum.cit.aet.helios.github.GitHubService;
 import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
@@ -65,7 +64,6 @@ public class EnvironmentServiceTest {
   @Mock private GitHubEnvironmentSyncService environmentSyncService;
   @Mock private GitRepoRepository gitRepoRepository;
   @Mock private GitHubService gitHubService;
-  @Mock private EnvironmentDeploymentWebSocketPublisher environmentDeploymentWebSocketPublisher;
 
   @InjectMocks private EnvironmentService environmentService;
 
@@ -151,7 +149,6 @@ public class EnvironmentServiceTest {
     assertTrue(result.get().isLocked());
     verify(environmentRepository, times(1)).findById(1L);
     verify(environmentRepository, times(1)).save(any(Environment.class));
-    verify(environmentDeploymentWebSocketPublisher, times(1)).publishAfterCommit(environment);
   }
 
   @Test
@@ -170,8 +167,6 @@ public class EnvironmentServiceTest {
     // Should not modify lockedAt
     assertTrue(result.get().getLockedAt().isEqual(environment.getLockedAt()));
     verify(environmentRepository, times(1)).findById(1L);
-    verify(environmentDeploymentWebSocketPublisher, never())
-        .publishAfterCommit(any(Environment.class));
   }
 
   @Test
@@ -193,8 +188,6 @@ public class EnvironmentServiceTest {
 
     assertTrue(exception.getMessage().contains("Environment is locked by another user"));
     verify(environmentRepository, times(1)).findById(1L);
-    verify(environmentDeploymentWebSocketPublisher, never())
-        .publishAfterCommit(any(Environment.class));
   }
 
   @Test
@@ -227,7 +220,6 @@ public class EnvironmentServiceTest {
             .isAfter(dateTimeNow.plusMinutes(lockReservationExpirationThreshold)));
     verify(environmentRepository, times(1)).findById(1L);
     verify(environmentRepository, times(1)).save(any(Environment.class));
-    verify(environmentDeploymentWebSocketPublisher, times(1)).publishAfterCommit(environment);
   }
 
   @Test
@@ -244,8 +236,6 @@ public class EnvironmentServiceTest {
 
     assertEquals("Environment is not locked. Cannot extend lock.", exception.getMessage());
     verify(environmentRepository, times(1)).findById(1L);
-    verify(environmentDeploymentWebSocketPublisher, never())
-        .publishAfterCommit(any(Environment.class));
   }
 
   @Test
@@ -264,8 +254,6 @@ public class EnvironmentServiceTest {
 
     assertEquals("Only TEST environments can have their locks extended", exception.getMessage());
     verify(environmentRepository, times(1)).findById(1L);
-    verify(environmentDeploymentWebSocketPublisher, never())
-        .publishAfterCommit(any(Environment.class));
   }
 
   @Test
@@ -284,8 +272,6 @@ public class EnvironmentServiceTest {
 
     assertEquals("Environment is disabled", exception.getMessage());
     verify(environmentRepository, times(1)).findById(1L);
-    verify(environmentDeploymentWebSocketPublisher, never())
-        .publishAfterCommit(any(Environment.class));
   }
 
   @Test
@@ -309,7 +295,6 @@ public class EnvironmentServiceTest {
     assertNull(result.lockReservationWillExpireAt());
     verify(environmentRepository, times(1)).findById(1L);
     verify(environmentRepository, times(1)).save(any(Environment.class));
-    verify(environmentDeploymentWebSocketPublisher, times(1)).publishAfterCommit(environment);
   }
 
   @Test
@@ -450,8 +435,6 @@ public class EnvironmentServiceTest {
 
     assertEquals("Environment is not locked", exception.getMessage());
     verify(environmentRepository, times(1)).findById(1L);
-    verify(environmentDeploymentWebSocketPublisher, never())
-        .publishAfterCommit(any(Environment.class));
   }
 
   @Test
@@ -476,7 +459,6 @@ public class EnvironmentServiceTest {
     assertNull(result.lockReservationWillExpireAt());
     verify(environmentRepository, times(1)).findById(1L);
     verify(environmentRepository, times(1)).save(any(Environment.class));
-    verify(environmentDeploymentWebSocketPublisher, times(1)).publishAfterCommit(environment);
   }
 
   @Test
@@ -500,8 +482,6 @@ public class EnvironmentServiceTest {
     assertTrue(
         exception.getMessage().contains("You do not have permission to unlock this environment"));
     verify(environmentRepository, times(1)).findById(1L);
-    verify(environmentDeploymentWebSocketPublisher, never())
-        .publishAfterCommit(any(Environment.class));
   }
 
   @Test

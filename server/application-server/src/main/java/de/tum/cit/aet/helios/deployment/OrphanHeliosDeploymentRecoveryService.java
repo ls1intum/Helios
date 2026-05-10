@@ -1,6 +1,5 @@
 package de.tum.cit.aet.helios.deployment;
 
-import de.tum.cit.aet.helios.environment.ws.EnvironmentDeploymentWebSocketPublisher;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
 import java.io.IOException;
@@ -19,7 +18,6 @@ public class OrphanHeliosDeploymentRecoveryService {
 
   private final HeliosDeploymentRepository heliosDeploymentRepository;
   private final HeliosDeploymentWorkflowRunSyncService heliosDeploymentWorkflowRunSyncService;
-  private final EnvironmentDeploymentWebSocketPublisher environmentDeploymentWebSocketPublisher;
 
   /**
    * Scheduled task that runs every hour and force-finalizes very old orphan Helios deployments.
@@ -109,6 +107,5 @@ public class OrphanHeliosDeploymentRecoveryService {
 
     deployment.setStatus(HeliosDeployment.Status.FAILED);
     heliosDeploymentRepository.save(deployment);
-    environmentDeploymentWebSocketPublisher.publishAfterCommit(deployment);
   }
 }

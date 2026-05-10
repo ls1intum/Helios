@@ -12,7 +12,6 @@ import static org.mockito.Mockito.when;
 import de.tum.cit.aet.helios.deployment.DeploymentWorkflowConfig;
 import de.tum.cit.aet.helios.deployment.DeploymentWorkflowConfigRepository;
 import de.tum.cit.aet.helios.environment.Environment;
-import de.tum.cit.aet.helios.environment.ws.EnvironmentDeploymentWebSocketPublisher;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
 import de.tum.cit.aet.helios.workflow.Workflow;
@@ -36,7 +35,6 @@ class GitHubWorkflowJobTimingServiceTest {
   @Mock private DeploymentWorkflowConfigRepository deploymentWorkflowConfigRepository;
   @Mock private HeliosDeploymentRepository heliosDeploymentRepository;
   @Mock private WorkflowRunRepository workflowRunRepository;
-  @Mock private EnvironmentDeploymentWebSocketPublisher environmentDeploymentWebSocketPublisher;
 
   @InjectMocks private GitHubWorkflowJobTimingService gitHubWorkflowJobTimingService;
 

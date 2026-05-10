@@ -5,7 +5,6 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import de.tum.cit.aet.helios.deployment.DeploymentWorkflowConfig;
 import de.tum.cit.aet.helios.deployment.DeploymentWorkflowConfigRepository;
 import de.tum.cit.aet.helios.environment.Environment;
-import de.tum.cit.aet.helios.environment.ws.EnvironmentDeploymentWebSocketPublisher;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
 import de.tum.cit.aet.helios.workflow.Workflow;
@@ -28,7 +27,6 @@ public class GitHubWorkflowJobTimingService {
   private final DeploymentWorkflowConfigRepository deploymentWorkflowConfigRepository;
   private final HeliosDeploymentRepository heliosDeploymentRepository;
   private final WorkflowRunRepository workflowRunRepository;
-  private final EnvironmentDeploymentWebSocketPublisher environmentDeploymentWebSocketPublisher;
   private final Cache<Long, RunRelevance> runRelevanceCache =
       Caffeine.newBuilder().maximumSize(10_000).expireAfterWrite(Duration.ofHours(1)).build();
 
@@ -71,7 +69,7 @@ public class GitHubWorkflowJobTimingService {
 
     if (!relevance.deployJobName().equals(job.name())) {
       if (changed) {
-        saveAndPublish(heliosDeployment);
+        heliosDeploymentRepository.save(heliosDeployment);
       }
       return;
     }
@@ -89,14 +87,14 @@ public class GitHubWorkflowJobTimingService {
         changed = true;
       }
       if (changed) {
-        saveAndPublish(heliosDeployment);
+        heliosDeploymentRepository.save(heliosDeployment);
       }
       return;
     }
 
     if (!isCompletedEvent(payload.action(), job)) {
       if (changed) {
-        saveAndPublish(heliosDeployment);
+        heliosDeploymentRepository.save(heliosDeployment);
       }
       return;
     }
@@ -108,7 +106,7 @@ public class GitHubWorkflowJobTimingService {
 
     if (job.startedAt() == null || job.completedAt() == null) {
       if (changed) {
-        saveAndPublish(heliosDeployment);
+        heliosDeploymentRepository.save(heliosDeployment);
       }
       return;
     }
@@ -129,13 +127,8 @@ public class GitHubWorkflowJobTimingService {
     changed = true;
 
     if (changed) {
-      saveAndPublish(heliosDeployment);
+      heliosDeploymentRepository.save(heliosDeployment);
     }
-  }
-
-  private void saveAndPublish(HeliosDeployment heliosDeployment) {
-    heliosDeploymentRepository.save(heliosDeployment);
-    environmentDeploymentWebSocketPublisher.publishAfterCommit(heliosDeployment);
   }
 
   private RunRelevance getCachedRelevance(Long runId) {

@@ -10,7 +10,6 @@ import static org.mockito.Mockito.when;
 import de.tum.cit.aet.helios.deployment.Deployment;
 import de.tum.cit.aet.helios.deployment.DeploymentRepository;
 import de.tum.cit.aet.helios.environment.Environment;
-import de.tum.cit.aet.helios.environment.ws.EnvironmentDeploymentWebSocketPublisher;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
@@ -30,7 +29,6 @@ class GitHubDeploymentSyncServiceTest {
   @Mock private PullRequestRepository pullRequestRepository;
   @Mock private DeploymentConverter deploymentConverter;
   @Mock private HeliosDeploymentRepository heliosDeploymentRepository;
-  @Mock private EnvironmentDeploymentWebSocketPublisher environmentDeploymentWebSocketPublisher;
 
   @InjectMocks private GitHubDeploymentSyncService gitHubDeploymentSyncService;
 
@@ -74,6 +72,5 @@ class GitHubDeploymentSyncServiceTest {
     assertEquals(HeliosDeployment.Status.IN_PROGRESS, heliosDeployment.getStatus());
     assertEquals(deploymentUpdatedAt, heliosDeployment.getUpdatedAt());
     verify(heliosDeploymentRepository).save(heliosDeployment);
-    verify(environmentDeploymentWebSocketPublisher).publishAfterCommit(environment);
   }
 }
