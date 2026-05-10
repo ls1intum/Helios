@@ -72,7 +72,7 @@ export class WorkflowRunWebSocketService {
         }),
         repeat({
           delay: attempt => this.reconnectDelay(attempt),
-        }),
+        })
       )
       .subscribe({
         next: msg => this.incoming$.next(msg),
