@@ -1,5 +1,6 @@
 package de.tum.cit.aet.helios.workflow.github;
 
+import de.tum.cit.aet.helios.environment.ws.EnvironmentDeploymentWebSocketPublisher;
 import de.tum.cit.aet.helios.github.GitHubClientManager;
 import de.tum.cit.aet.helios.github.GitHubFacade;
 import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
@@ -15,8 +16,10 @@ import de.tum.cit.aet.helios.workflow.GitHubWorkflowContext;
 import de.tum.cit.aet.helios.workflow.Workflow;
 import de.tum.cit.aet.helios.workflow.WorkflowRepository;
 import de.tum.cit.aet.helios.workflow.WorkflowRun;
+import de.tum.cit.aet.helios.workflow.WorkflowRunDto;
 import de.tum.cit.aet.helios.workflow.WorkflowRunRepository;
 import de.tum.cit.aet.helios.workflow.WorkflowService;
+import de.tum.cit.aet.helios.workflow.ws.WorkflowRunWebSocketHandler;
 import jakarta.transaction.Transactional;
 import java.io.IOException;
 import java.util.Collections;
@@ -44,6 +47,8 @@ public class GitHubWorkflowRunSyncService {
   private final HeliosDeploymentRepository heliosDeploymentRepository;
   private final DeploymentFailureNotificationDecider deploymentFailureNotificationDecider;
   private final NatsNotificationPublisherService notificationPublisherService;
+  private final WorkflowRunWebSocketHandler workflowRunWebSocketHandler;
+  private final EnvironmentDeploymentWebSocketPublisher environmentDeploymentWebSocketPublisher;
   private final GitHubFacade github;
   private final GitHubClientManager clientManager;
 
@@ -167,6 +172,11 @@ public class GitHubWorkflowRunSyncService {
     }
 
     workflowRunRepository.save(result);
+
+    var dto = WorkflowRunDto.fromWorkflowRun(result);
+    var runId = result.getId();
+    workflowRunWebSocketHandler.broadcastRunUpdated(runId, dto);
+    workflowRunWebSocketHandler.broadcastJobsInvalidated(runId);
 
     return result;
   }
@@ -315,6 +325,7 @@ public class GitHubWorkflowRunSyncService {
                       heliosDeployment.getId(),
                       mappedStatus);
                   heliosDeploymentRepository.save(heliosDeployment);
+                  environmentDeploymentWebSocketPublisher.publishAfterCommit(heliosDeployment);
                 }
               } catch (IOException e) {
                 e.printStackTrace();
