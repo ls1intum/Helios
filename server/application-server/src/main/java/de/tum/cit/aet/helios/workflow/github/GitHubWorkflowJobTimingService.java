@@ -2,14 +2,9 @@ package de.tum.cit.aet.helios.workflow.github;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import de.tum.cit.aet.helios.deployment.DeploymentWorkflowConfig;
-import de.tum.cit.aet.helios.deployment.DeploymentWorkflowConfigRepository;
-import de.tum.cit.aet.helios.environment.Environment;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
-import de.tum.cit.aet.helios.workflow.Workflow;
-import de.tum.cit.aet.helios.workflow.WorkflowRun;
-import de.tum.cit.aet.helios.workflow.WorkflowRunRepository;
+import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentWorkflowJobTimingMeta;
 import jakarta.transaction.Transactional;
 import java.time.Duration;
 import java.time.OffsetDateTime;
@@ -24,9 +19,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class GitHubWorkflowJobTimingService {
 
-  private final DeploymentWorkflowConfigRepository deploymentWorkflowConfigRepository;
   private final HeliosDeploymentRepository heliosDeploymentRepository;
-  private final WorkflowRunRepository workflowRunRepository;
   private final Cache<Long, RunRelevance> runRelevanceCache =
       Caffeine.newBuilder().maximumSize(10_000).expireAfterWrite(Duration.ofHours(1)).build();
 
@@ -37,41 +30,69 @@ public class GitHubWorkflowJobTimingService {
     }
 
     GitHubWorkflowJobPayload.WorkflowJob job = payload.workflowJob();
-    GitHubWorkflowJobPayload.Deployment deployment = payload.deployment();
     if (job.runId() == null) {
       return;
     }
 
-    if ("queued".equalsIgnoreCase(payload.action()) && deployment == null) {
+    if ("queued".equalsIgnoreCase(payload.action()) && payload.deployment() == null) {
       return;
     }
 
     RunRelevance cachedRelevance = getCachedRelevance(job.runId());
-    if (cachedRelevance instanceof NotDeployment && deployment != null) {
-      runRelevanceCache.invalidate(job.runId());
-    } else if (cachedRelevance != null && !(cachedRelevance instanceof Relevant)) {
+    if (cachedRelevance != null) {
+      if (!(cachedRelevance instanceof Relevant relevance)) {
+        return;
+      }
+      if (canSkipFromCache(payload, relevance)) {
+        return;
+      }
+      processRelevantRun(job.runId(), payload, relevance);
       return;
     }
 
-    ResolvedRunRelevance resolvedRelevance = resolveRelevance(job.runId());
-    if (!(resolvedRelevance.relevance() instanceof Relevant)) {
-      runRelevanceCache.put(job.runId(), resolvedRelevance.relevance());
+    RunRelevance resolvedRelevance = resolveRelevance(job.runId());
+    runRelevanceCache.put(job.runId(), resolvedRelevance);
+    if (!(resolvedRelevance instanceof Relevant relevance)) {
       return;
     }
 
-    runRelevanceCache.put(job.runId(), resolvedRelevance.relevance());
+    if (canSkipFromCache(payload, relevance)) {
+      return;
+    }
 
-    HeliosDeployment heliosDeployment = resolvedRelevance.heliosDeployment();
-    WorkflowRun workflowRun = resolvedRelevance.workflowRun();
-    Relevant relevance = (Relevant) resolvedRelevance.relevance();
+    processRelevantRun(job.runId(), payload, relevance);
+  }
 
-    boolean changed = persistWorkflowStart(heliosDeployment, workflowRun, payload);
+  private void processRelevantRun(
+      Long runId, GitHubWorkflowJobPayload payload, Relevant relevance) {
+    Optional<HeliosDeployment> heliosDeploymentOpt =
+        heliosDeploymentRepository.findById(relevance.heliosDeploymentId());
+    if (heliosDeploymentOpt.isEmpty()) {
+      runRelevanceCache.invalidate(runId);
+      return;
+    }
+
+    HeliosDeployment heliosDeployment = heliosDeploymentOpt.get();
+    boolean changed = applyTimingChanges(heliosDeployment, relevance, payload);
+
+    if (changed) {
+      heliosDeploymentRepository.save(heliosDeployment);
+    }
+    runRelevanceCache.put(runId, relevanceFromDeployment(relevance, heliosDeployment));
+  }
+
+  private boolean applyTimingChanges(
+      HeliosDeployment heliosDeployment,
+      Relevant relevance,
+      GitHubWorkflowJobPayload payload) {
+    GitHubWorkflowJobPayload.WorkflowJob job = payload.workflowJob();
+    GitHubWorkflowJobPayload.Deployment deployment = payload.deployment();
+
+    boolean changed =
+        persistWorkflowStart(heliosDeployment, relevance.workflowRunStartedAt(), payload);
 
     if (!relevance.deployJobName().equals(job.name())) {
-      if (changed) {
-        heliosDeploymentRepository.save(heliosDeployment);
-      }
-      return;
+      return changed;
     }
 
     if (deployment != null
@@ -86,17 +107,11 @@ public class GitHubWorkflowJobTimingService {
         heliosDeployment.setDeployJobStartedAt(job.startedAt());
         changed = true;
       }
-      if (changed) {
-        heliosDeploymentRepository.save(heliosDeployment);
-      }
-      return;
+      return changed;
     }
 
     if (!isCompletedEvent(payload.action(), job)) {
-      if (changed) {
-        heliosDeploymentRepository.save(heliosDeployment);
-      }
-      return;
+      return changed;
     }
 
     if (heliosDeployment.getDeployJobStartedAt() == null && job.startedAt() != null) {
@@ -105,10 +120,7 @@ public class GitHubWorkflowJobTimingService {
     }
 
     if (job.startedAt() == null || job.completedAt() == null) {
-      if (changed) {
-        heliosDeploymentRepository.save(heliosDeployment);
-      }
-      return;
+      return changed;
     }
 
     OffsetDateTime deployJobStartedAt =
@@ -117,18 +129,43 @@ public class GitHubWorkflowJobTimingService {
             : job.startedAt();
     OffsetDateTime preDeploymentStart =
         resolvePreDeploymentStart(
-            workflowRun,
+            relevance.workflowRunStartedAt(),
             deployment != null ? deployment.createdAt() : null,
             heliosDeployment);
     heliosDeployment.setPreDeployDurationSeconds(
         calculateDurationSeconds(preDeploymentStart, deployJobStartedAt));
     heliosDeployment.setDeployDurationSeconds(
         calculateDurationSeconds(deployJobStartedAt, job.completedAt()));
-    changed = true;
+    return true;
+  }
 
-    if (changed) {
-      heliosDeploymentRepository.save(heliosDeployment);
+  private boolean canSkipFromCache(GitHubWorkflowJobPayload payload, Relevant relevance) {
+    GitHubWorkflowJobPayload.WorkflowJob job = payload.workflowJob();
+    boolean deployJob = relevance.deployJobName().equals(job.name());
+    boolean canRecordDeploymentId =
+        deployJob
+            && !relevance.deploymentIdRecorded()
+            && payload.deployment() != null
+            && payload.deployment().id() != null;
+
+    if (!deployJob) {
+      return !isWorkflowRunningEvent(payload.action(), job)
+          || (relevance.workflowStartRecorded() && relevance.statusInProgressRecorded());
     }
+
+    if (isJobStartedEvent(payload.action(), job)) {
+      return relevance.workflowStartRecorded()
+          && relevance.statusInProgressRecorded()
+          && relevance.deployJobStartRecorded()
+          && !canRecordDeploymentId;
+    }
+
+    if (isCompletedEvent(payload.action(), job)) {
+      return relevance.deployDurationsRecorded()
+          && (relevance.deploymentIdRecorded() || payload.deployment() == null);
+    }
+
+    return !canRecordDeploymentId;
   }
 
   private RunRelevance getCachedRelevance(Long runId) {
@@ -140,63 +177,69 @@ public class GitHubWorkflowJobTimingService {
     return cachedRelevance;
   }
 
-  private ResolvedRunRelevance resolveRelevance(Long runId) {
-    Optional<HeliosDeployment> heliosDeploymentOpt =
-        heliosDeploymentRepository.findByWorkflowRunId(runId);
-    if (heliosDeploymentOpt.isEmpty()) {
+  private RunRelevance resolveRelevance(Long runId) {
+    Optional<HeliosDeploymentWorkflowJobTimingMeta> metaOpt =
+        heliosDeploymentRepository.findWorkflowJobTimingMetaByWorkflowRunId(runId);
+    if (metaOpt.isEmpty()) {
       log.debug(
           "Skipping workflow_job timing persistence because no HeliosDeployment "
               + "matched workflow run {}",
           runId);
-      return new ResolvedRunRelevance(new NotDeployment(), null, null);
+      return new NotDeployment();
     }
 
-    HeliosDeployment heliosDeployment = heliosDeploymentOpt.get();
-    Environment environment = heliosDeployment.getEnvironment();
-    Workflow workflow = environment != null ? environment.getDeploymentWorkflow() : null;
-    if (workflow == null) {
+    HeliosDeploymentWorkflowJobTimingMeta meta = metaOpt.get();
+    if (meta.configuredWorkflowId() == null) {
       log.debug(
           "Skipping workflow_job timing persistence because workflow run {} "
               + "is not linked to an environment deployment workflow",
           runId);
-      return new ResolvedRunRelevance(new WrongWorkflow(), heliosDeployment, null);
+      return new WrongWorkflow();
     }
 
-    Optional<WorkflowRun> workflowRunOpt = workflowRunRepository.findById(runId);
-    WorkflowRun workflowRun = workflowRunOpt.orElse(null);
-    if (workflowRun != null
-        && workflowRun.getWorkflow() != null
-        && !workflowRun.getWorkflow().getId().equals(workflow.getId())) {
+    if (meta.workflowRunWorkflowId() != null
+        && !meta.workflowRunWorkflowId().equals(meta.configuredWorkflowId())) {
       log.debug(
           "Skipping workflow_job timing persistence because workflow run {} "
               + "is not linked to the configured deployment workflow {}",
           runId,
-          workflow.getId());
-      return new ResolvedRunRelevance(new WrongWorkflow(), heliosDeployment, workflowRun);
+          meta.configuredWorkflowId());
+      return new WrongWorkflow();
     }
 
-    Optional<DeploymentWorkflowConfig> configOpt =
-        deploymentWorkflowConfigRepository.findByWorkflow(workflow);
-    if (configOpt.isEmpty()) {
-      return new ResolvedRunRelevance(
-          new NoConfig(heliosDeployment.getId()), heliosDeployment, workflowRun);
+    if (meta.deployJobName() == null || meta.deployJobName().isBlank()) {
+      return new NoConfig(meta.heliosDeploymentId());
     }
 
-    DeploymentWorkflowConfig config = configOpt.get();
-    if (config.getDeployJobName() == null || config.getDeployJobName().isBlank()) {
-      return new ResolvedRunRelevance(
-          new NoConfig(heliosDeployment.getId()), heliosDeployment, workflowRun);
-    }
+    return new Relevant(
+        meta.heliosDeploymentId(),
+        meta.deployJobName(),
+        meta.workflowRunStartedAt(),
+        meta.createdAt(),
+        meta.workflowStartedAt() != null,
+        meta.status() == HeliosDeployment.Status.IN_PROGRESS,
+        meta.deployJobStartedAt() != null,
+        meta.deploymentId() != null,
+        meta.preDeployDurationSeconds() != null && meta.deployDurationSeconds() != null);
+  }
 
-    return new ResolvedRunRelevance(
-        new Relevant(heliosDeployment.getId(), config.getDeployJobName()),
-        heliosDeployment,
-        workflowRun);
+  private Relevant relevanceFromDeployment(Relevant previous, HeliosDeployment heliosDeployment) {
+    return new Relevant(
+        previous.heliosDeploymentId(),
+        previous.deployJobName(),
+        previous.workflowRunStartedAt(),
+        previous.deploymentCreatedAt(),
+        heliosDeployment.getWorkflowStartedAt() != null,
+        heliosDeployment.getStatus() == HeliosDeployment.Status.IN_PROGRESS,
+        heliosDeployment.getDeployJobStartedAt() != null,
+        heliosDeployment.getDeploymentId() != null,
+        heliosDeployment.getPreDeployDurationSeconds() != null
+            && heliosDeployment.getDeployDurationSeconds() != null);
   }
 
   private boolean persistWorkflowStart(
       HeliosDeployment heliosDeployment,
-      WorkflowRun workflowRun,
+      OffsetDateTime workflowRunStartedAt,
       GitHubWorkflowJobPayload payload) {
     if (!isWorkflowRunningEvent(payload.action(), payload.workflowJob())) {
       return false;
@@ -204,9 +247,7 @@ public class GitHubWorkflowJobTimingService {
 
     boolean changed = false;
     OffsetDateTime workflowStartedAt =
-        workflowRun != null && workflowRun.getRunStartedAt() != null
-            ? workflowRun.getRunStartedAt()
-            : payload.workflowJob().startedAt();
+        workflowRunStartedAt != null ? workflowRunStartedAt : payload.workflowJob().startedAt();
     if (heliosDeployment.getWorkflowStartedAt() == null && workflowStartedAt != null) {
       heliosDeployment.setWorkflowStartedAt(workflowStartedAt);
       changed = true;
@@ -241,11 +282,11 @@ public class GitHubWorkflowJobTimingService {
   }
 
   private OffsetDateTime resolvePreDeploymentStart(
-      WorkflowRun workflowRun,
+      OffsetDateTime workflowRunStartedAt,
       OffsetDateTime deploymentCreatedAt,
       HeliosDeployment heliosDeployment) {
-    if (workflowRun != null && workflowRun.getRunStartedAt() != null) {
-      return workflowRun.getRunStartedAt();
+    if (workflowRunStartedAt != null) {
+      return workflowRunStartedAt;
     }
 
     return deploymentCreatedAt != null ? deploymentCreatedAt : heliosDeployment.getCreatedAt();
@@ -258,9 +299,6 @@ public class GitHubWorkflowJobTimingService {
     return Math.max(0, (int) ChronoUnit.SECONDS.between(start, end));
   }
 
-  private record ResolvedRunRelevance(
-      RunRelevance relevance, HeliosDeployment heliosDeployment, WorkflowRun workflowRun) {}
-
   private sealed interface RunRelevance permits NotDeployment, WrongWorkflow, NoConfig, Relevant {}
 
   private record NotDeployment() implements RunRelevance {}
@@ -269,5 +307,15 @@ public class GitHubWorkflowJobTimingService {
 
   private record NoConfig(Long heliosDeploymentId) implements RunRelevance {}
 
-  private record Relevant(Long heliosDeploymentId, String deployJobName) implements RunRelevance {}
+  private record Relevant(
+      Long heliosDeploymentId,
+      String deployJobName,
+      OffsetDateTime workflowRunStartedAt,
+      OffsetDateTime deploymentCreatedAt,
+      boolean workflowStartRecorded,
+      boolean statusInProgressRecorded,
+      boolean deployJobStartRecorded,
+      boolean deploymentIdRecorded,
+      boolean deployDurationsRecorded)
+      implements RunRelevance {}
 }

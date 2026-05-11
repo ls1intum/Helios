@@ -9,14 +9,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-import de.tum.cit.aet.helios.deployment.DeploymentWorkflowConfig;
-import de.tum.cit.aet.helios.deployment.DeploymentWorkflowConfigRepository;
-import de.tum.cit.aet.helios.environment.Environment;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
-import de.tum.cit.aet.helios.workflow.Workflow;
-import de.tum.cit.aet.helios.workflow.WorkflowRun;
-import de.tum.cit.aet.helios.workflow.WorkflowRunRepository;
+import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentWorkflowJobTimingMeta;
 import java.time.OffsetDateTime;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,35 +30,26 @@ import org.mockito.quality.Strictness;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class GitHubWorkflowJobTimingServiceTest {
 
-  @Mock private DeploymentWorkflowConfigRepository deploymentWorkflowConfigRepository;
+  private static final Long DEPLOYMENT_ID = 5L;
+  private static final Long WORKFLOW_RUN_ID = 23716064328L;
+  private static final Long WORKFLOW_ID = 10L;
+  private static final OffsetDateTime WORKFLOW_RUN_STARTED_AT =
+      OffsetDateTime.parse("2026-03-29T18:31:40Z");
+  private static final OffsetDateTime DEPLOYMENT_CREATED_AT =
+      OffsetDateTime.parse("2026-03-29T18:31:49Z");
+
   @Mock private HeliosDeploymentRepository heliosDeploymentRepository;
-  @Mock private WorkflowRunRepository workflowRunRepository;
 
   @InjectMocks private GitHubWorkflowJobTimingService gitHubWorkflowJobTimingService;
 
-  private Environment environment;
-  private Workflow deploymentWorkflow;
-  private DeploymentWorkflowConfig config;
   private HeliosDeployment heliosDeployment;
 
   @BeforeEach
   void setUp() {
-    deploymentWorkflow = new Workflow();
-    deploymentWorkflow.setId(10L);
-
-    environment = new Environment();
-    environment.setId(1L);
-    environment.setName("test");
-    environment.setDeploymentWorkflow(deploymentWorkflow);
-
-    config = new DeploymentWorkflowConfig();
-    config.setDeployJobName("deploy");
-
     heliosDeployment = new HeliosDeployment();
-    heliosDeployment.setId(5L);
-    heliosDeployment.setEnvironment(environment);
-    heliosDeployment.setWorkflowRunId(23716064328L);
-    heliosDeployment.setCreatedAt(OffsetDateTime.parse("2026-03-29T18:31:49Z"));
+    heliosDeployment.setId(DEPLOYMENT_ID);
+    heliosDeployment.setWorkflowRunId(WORKFLOW_RUN_ID);
+    heliosDeployment.setCreatedAt(DEPLOYMENT_CREATED_AT);
   }
 
   @Test
@@ -72,33 +58,7 @@ class GitHubWorkflowJobTimingServiceTest {
 
     gitHubWorkflowJobTimingService.persistDurations(payload);
 
-    verifyNoInteractions(
-        deploymentWorkflowConfigRepository, heliosDeploymentRepository, workflowRunRepository);
-  }
-
-  @Test
-  void persistDurationsProcessesRelevantCacheHitThroughTimingPath() {
-    WorkflowRun workflowRun = new WorkflowRun();
-    workflowRun.setId(23716064328L);
-    workflowRun.setWorkflow(deploymentWorkflow);
-    workflowRun.setRunStartedAt(OffsetDateTime.parse("2026-03-29T18:31:40Z"));
-    final GitHubWorkflowJobPayload payload = payload("completed", "completed", "deploy");
-
-    when(deploymentWorkflowConfigRepository.findByWorkflow(any(Workflow.class)))
-        .thenReturn(Optional.of(config));
-    when(heliosDeploymentRepository.findByWorkflowRunId(anyLong()))
-        .thenReturn(Optional.of(heliosDeployment));
-    when(workflowRunRepository.findById(any(Long.class))).thenReturn(Optional.of(workflowRun));
-
-    gitHubWorkflowJobTimingService.persistDurations(payload);
-    gitHubWorkflowJobTimingService.persistDurations(payload);
-
-    assertEquals(Integer.valueOf(13), heliosDeployment.getPreDeployDurationSeconds());
-    assertEquals(Integer.valueOf(13), heliosDeployment.getDeployDurationSeconds());
-    verify(heliosDeploymentRepository, times(2)).findByWorkflowRunId(23716064328L);
-    verify(workflowRunRepository, times(2)).findById(any(Long.class));
-    verify(deploymentWorkflowConfigRepository, times(2)).findByWorkflow(any(Workflow.class));
-    verify(heliosDeploymentRepository, times(2)).save(heliosDeployment);
+    verifyNoInteractions(heliosDeploymentRepository);
   }
 
   @Test
@@ -106,56 +66,100 @@ class GitHubWorkflowJobTimingServiceTest {
     final GitHubWorkflowJobPayload payload =
         payloadWithoutDeployment("completed", "completed", "deploy");
 
-    when(heliosDeploymentRepository.findByWorkflowRunId(anyLong())).thenReturn(Optional.empty());
+    when(heliosDeploymentRepository.findWorkflowJobTimingMetaByWorkflowRunId(anyLong()))
+        .thenReturn(Optional.empty());
 
     gitHubWorkflowJobTimingService.persistDurations(payload);
     gitHubWorkflowJobTimingService.persistDurations(payload);
 
-    verify(heliosDeploymentRepository).findByWorkflowRunId(23716064328L);
+    verify(heliosDeploymentRepository).findWorkflowJobTimingMetaByWorkflowRunId(WORKFLOW_RUN_ID);
+    verify(heliosDeploymentRepository, never()).findById(anyLong());
     verify(heliosDeploymentRepository, never()).save(any());
-    verifyNoInteractions(deploymentWorkflowConfigRepository, workflowRunRepository);
   }
 
   @Test
-  void persistDurationsBypassesCachedNotDeploymentForDeploymentPayload() {
-    WorkflowRun workflowRun = new WorkflowRun();
-    workflowRun.setId(23716064328L);
-    workflowRun.setWorkflow(deploymentWorkflow);
-    workflowRun.setRunStartedAt(OffsetDateTime.parse("2026-03-29T18:31:40Z"));
+  void persistDurationsTrustsCachedNotDeploymentEvenWhenDeploymentPayloadArrives() {
     final GitHubWorkflowJobPayload initialPayload =
         payloadWithoutDeployment("completed", "completed", "deploy");
     final GitHubWorkflowJobPayload deploymentPayload = payload("completed", "completed", "deploy");
 
-    when(heliosDeploymentRepository.findByWorkflowRunId(anyLong()))
-        .thenReturn(Optional.empty(), Optional.of(heliosDeployment));
-    when(workflowRunRepository.findById(any(Long.class))).thenReturn(Optional.of(workflowRun));
-    when(deploymentWorkflowConfigRepository.findByWorkflow(any(Workflow.class)))
-        .thenReturn(Optional.of(config));
+    when(heliosDeploymentRepository.findWorkflowJobTimingMetaByWorkflowRunId(anyLong()))
+        .thenReturn(Optional.empty());
 
     gitHubWorkflowJobTimingService.persistDurations(initialPayload);
     gitHubWorkflowJobTimingService.persistDurations(deploymentPayload);
 
-    assertEquals(Integer.valueOf(13), heliosDeployment.getPreDeployDurationSeconds());
-    assertEquals(Integer.valueOf(13), heliosDeployment.getDeployDurationSeconds());
-    verify(heliosDeploymentRepository, times(2)).findByWorkflowRunId(23716064328L);
-    verify(workflowRunRepository).findById(any(Long.class));
-    verify(deploymentWorkflowConfigRepository).findByWorkflow(any(Workflow.class));
-    verify(heliosDeploymentRepository).save(heliosDeployment);
+    verify(heliosDeploymentRepository).findWorkflowJobTimingMetaByWorkflowRunId(WORKFLOW_RUN_ID);
+    verify(heliosDeploymentRepository, never()).findById(anyLong());
+    verify(heliosDeploymentRepository, never()).save(any());
   }
 
   @Test
-  void persistDurationsUsesWorkflowRunStartWhenAvailable() {
-    WorkflowRun workflowRun = new WorkflowRun();
-    workflowRun.setId(23716064328L);
-    workflowRun.setWorkflow(deploymentWorkflow);
-    workflowRun.setRunStartedAt(OffsetDateTime.parse("2026-03-29T18:31:40Z"));
+  void persistDurationsRecordsFirstNonDeployInProgressThenShortCircuitsLaterNonDeployJobs() {
+    final GitHubWorkflowJobPayload buildJobInProgress =
+        payload("in_progress", "in_progress", "build");
+    final GitHubWorkflowJobPayload buildJobCompleted =
+        payload("completed", "completed", "build");
+
+    when(heliosDeploymentRepository.findWorkflowJobTimingMetaByWorkflowRunId(anyLong()))
+        .thenReturn(Optional.of(meta(WORKFLOW_RUN_STARTED_AT)));
+    when(heliosDeploymentRepository.findById(DEPLOYMENT_ID))
+        .thenReturn(Optional.of(heliosDeployment));
+
+    gitHubWorkflowJobTimingService.persistDurations(buildJobInProgress);
+    gitHubWorkflowJobTimingService.persistDurations(buildJobCompleted);
+    gitHubWorkflowJobTimingService.persistDurations(buildJobInProgress);
+
+    assertEquals(WORKFLOW_RUN_STARTED_AT, heliosDeployment.getWorkflowStartedAt());
+    assertEquals(HeliosDeployment.Status.IN_PROGRESS, heliosDeployment.getStatus());
+    verify(heliosDeploymentRepository, times(1))
+        .findWorkflowJobTimingMetaByWorkflowRunId(WORKFLOW_RUN_ID);
+    verify(heliosDeploymentRepository, times(1)).findById(DEPLOYMENT_ID);
+    verify(heliosDeploymentRepository, times(1)).save(heliosDeployment);
+  }
+
+  @Test
+  void persistDurationsDeployInProgressShortCircuitsAfterStartRecorded() {
+    final GitHubWorkflowJobPayload payload = payload("in_progress", "in_progress", "deploy");
+
+    when(heliosDeploymentRepository.findWorkflowJobTimingMetaByWorkflowRunId(anyLong()))
+        .thenReturn(Optional.of(meta(WORKFLOW_RUN_STARTED_AT)));
+    when(heliosDeploymentRepository.findById(DEPLOYMENT_ID))
+        .thenReturn(Optional.of(heliosDeployment));
+
+    gitHubWorkflowJobTimingService.persistDurations(payload);
+    gitHubWorkflowJobTimingService.persistDurations(payload);
+
+    assertEquals(
+        OffsetDateTime.parse("2026-03-29T18:31:53Z"),
+        heliosDeployment.getDeployJobStartedAt());
+    assertEquals(WORKFLOW_RUN_STARTED_AT, heliosDeployment.getWorkflowStartedAt());
+    assertEquals(HeliosDeployment.Status.IN_PROGRESS, heliosDeployment.getStatus());
+    verify(heliosDeploymentRepository, times(1)).findById(DEPLOYMENT_ID);
+    verify(heliosDeploymentRepository, times(1)).save(heliosDeployment);
+  }
+
+  @Test
+  void persistDurationsCompletedDeployJobShortCircuitsWhenDurationsAlreadyRecorded() {
     final GitHubWorkflowJobPayload payload = payload("completed", "completed", "deploy");
 
-    when(deploymentWorkflowConfigRepository.findByWorkflow(any(Workflow.class)))
-        .thenReturn(Optional.of(config));
-    when(heliosDeploymentRepository.findByWorkflowRunId(anyLong()))
+    when(heliosDeploymentRepository.findWorkflowJobTimingMetaByWorkflowRunId(anyLong()))
+        .thenReturn(Optional.of(completedMeta()));
+
+    gitHubWorkflowJobTimingService.persistDurations(payload);
+
+    verify(heliosDeploymentRepository, never()).findById(anyLong());
+    verify(heliosDeploymentRepository, never()).save(any());
+  }
+
+  @Test
+  void persistDurationsCompletedDeployJobLoadsAndSavesWhenDurationsAreMissing() {
+    final GitHubWorkflowJobPayload payload = payload("completed", "completed", "deploy");
+
+    when(heliosDeploymentRepository.findWorkflowJobTimingMetaByWorkflowRunId(anyLong()))
+        .thenReturn(Optional.of(meta(WORKFLOW_RUN_STARTED_AT)));
+    when(heliosDeploymentRepository.findById(DEPLOYMENT_ID))
         .thenReturn(Optional.of(heliosDeployment));
-    when(workflowRunRepository.findById(any(Long.class))).thenReturn(Optional.of(workflowRun));
 
     gitHubWorkflowJobTimingService.persistDurations(payload);
 
@@ -166,28 +170,18 @@ class GitHubWorkflowJobTimingServiceTest {
   }
 
   @Test
-  void persistDurationsPersistsDeployJobStartOnInProgress() {
-    WorkflowRun workflowRun = new WorkflowRun();
-    workflowRun.setId(23716064328L);
-    workflowRun.setWorkflow(deploymentWorkflow);
-    workflowRun.setRunStartedAt(OffsetDateTime.parse("2026-03-29T18:31:40Z"));
-    final GitHubWorkflowJobPayload payload = payload("in_progress", "in_progress", "deploy");
+  void persistDurationsUsesWorkflowRunStartWhenAvailable() {
+    final GitHubWorkflowJobPayload payload = payload("completed", "completed", "deploy");
 
-    when(deploymentWorkflowConfigRepository.findByWorkflow(any(Workflow.class)))
-        .thenReturn(Optional.of(config));
-    when(heliosDeploymentRepository.findByWorkflowRunId(anyLong()))
+    when(heliosDeploymentRepository.findWorkflowJobTimingMetaByWorkflowRunId(anyLong()))
+        .thenReturn(Optional.of(meta(WORKFLOW_RUN_STARTED_AT)));
+    when(heliosDeploymentRepository.findById(DEPLOYMENT_ID))
         .thenReturn(Optional.of(heliosDeployment));
-    when(workflowRunRepository.findById(any(Long.class))).thenReturn(Optional.of(workflowRun));
 
     gitHubWorkflowJobTimingService.persistDurations(payload);
 
-    assertEquals(
-        OffsetDateTime.parse("2026-03-29T18:31:53Z"),
-        heliosDeployment.getDeployJobStartedAt());
-    assertEquals(
-        OffsetDateTime.parse("2026-03-29T18:31:40Z"),
-        heliosDeployment.getWorkflowStartedAt());
-    assertEquals(HeliosDeployment.Status.IN_PROGRESS, heliosDeployment.getStatus());
+    assertEquals(Integer.valueOf(13), heliosDeployment.getPreDeployDurationSeconds());
+    assertEquals(Integer.valueOf(13), heliosDeployment.getDeployDurationSeconds());
     verify(heliosDeploymentRepository).save(heliosDeployment);
   }
 
@@ -195,11 +189,10 @@ class GitHubWorkflowJobTimingServiceTest {
   void persistDurationsFallsBackToJobStartWhenWorkflowRunMissing() {
     final GitHubWorkflowJobPayload payload = payload("in_progress", "in_progress", "deploy");
 
-    when(deploymentWorkflowConfigRepository.findByWorkflow(any(Workflow.class)))
-        .thenReturn(Optional.of(config));
-    when(heliosDeploymentRepository.findByWorkflowRunId(anyLong()))
+    when(heliosDeploymentRepository.findWorkflowJobTimingMetaByWorkflowRunId(anyLong()))
+        .thenReturn(Optional.of(meta(null)));
+    when(heliosDeploymentRepository.findById(DEPLOYMENT_ID))
         .thenReturn(Optional.of(heliosDeployment));
-    when(workflowRunRepository.findById(any(Long.class))).thenReturn(Optional.empty());
 
     gitHubWorkflowJobTimingService.persistDurations(payload);
 
@@ -216,17 +209,12 @@ class GitHubWorkflowJobTimingServiceTest {
   @Test
   void persistDurationsSplitsUsingPersistedDeployJobStartWhenAvailable() {
     heliosDeployment.setDeployJobStartedAt(OffsetDateTime.parse("2026-03-29T18:31:53Z"));
-    WorkflowRun workflowRun = new WorkflowRun();
-    workflowRun.setId(23716064328L);
-    workflowRun.setWorkflow(deploymentWorkflow);
-    workflowRun.setRunStartedAt(OffsetDateTime.parse("2026-03-29T18:31:40Z"));
     final GitHubWorkflowJobPayload payload = payload("completed", "completed", "deploy");
 
-    when(deploymentWorkflowConfigRepository.findByWorkflow(any(Workflow.class)))
-        .thenReturn(Optional.of(config));
-    when(heliosDeploymentRepository.findByWorkflowRunId(anyLong()))
+    when(heliosDeploymentRepository.findWorkflowJobTimingMetaByWorkflowRunId(anyLong()))
+        .thenReturn(Optional.of(meta(WORKFLOW_RUN_STARTED_AT)));
+    when(heliosDeploymentRepository.findById(DEPLOYMENT_ID))
         .thenReturn(Optional.of(heliosDeployment));
-    when(workflowRunRepository.findById(any(Long.class))).thenReturn(Optional.of(workflowRun));
 
     gitHubWorkflowJobTimingService.persistDurations(payload);
 
@@ -237,16 +225,12 @@ class GitHubWorkflowJobTimingServiceTest {
 
   @Test
   void persistDurationsFallsBackToDeploymentCreatedAtAndBranchMatch() {
-    WorkflowRun workflowRun = new WorkflowRun();
-    workflowRun.setId(23716064328L);
-    workflowRun.setWorkflow(deploymentWorkflow);
     final GitHubWorkflowJobPayload payload = payload("completed", "completed", "deploy");
 
-    when(deploymentWorkflowConfigRepository.findByWorkflow(any(Workflow.class)))
-        .thenReturn(Optional.of(config));
-    when(heliosDeploymentRepository.findByWorkflowRunId(anyLong()))
+    when(heliosDeploymentRepository.findWorkflowJobTimingMetaByWorkflowRunId(anyLong()))
+        .thenReturn(Optional.of(meta(null)));
+    when(heliosDeploymentRepository.findById(DEPLOYMENT_ID))
         .thenReturn(Optional.of(heliosDeployment));
-    when(workflowRunRepository.findById(any(Long.class))).thenReturn(Optional.of(workflowRun));
 
     gitHubWorkflowJobTimingService.persistDurations(payload);
 
@@ -257,59 +241,94 @@ class GitHubWorkflowJobTimingServiceTest {
 
   @Test
   void persistDurationsSkipsWorkflowRunsOutsideConfiguredWorkflow() {
-    Workflow otherWorkflow = new Workflow();
-    otherWorkflow.setId(11L);
-    WorkflowRun workflowRun = new WorkflowRun();
-    workflowRun.setId(23716064328L);
-    workflowRun.setWorkflow(otherWorkflow);
     final GitHubWorkflowJobPayload payload = payload("completed", "completed", "deploy");
 
-    when(deploymentWorkflowConfigRepository.findByWorkflow(any(Workflow.class)))
-        .thenReturn(Optional.of(config));
-    when(heliosDeploymentRepository.findByWorkflowRunId(anyLong()))
-        .thenReturn(Optional.of(heliosDeployment));
-    when(workflowRunRepository.findById(any(Long.class))).thenReturn(Optional.of(workflowRun));
+    when(heliosDeploymentRepository.findWorkflowJobTimingMetaByWorkflowRunId(anyLong()))
+        .thenReturn(Optional.of(meta(WORKFLOW_RUN_STARTED_AT, WORKFLOW_ID, 11L, "deploy")));
 
     gitHubWorkflowJobTimingService.persistDurations(payload);
 
+    verify(heliosDeploymentRepository, never()).findById(anyLong());
     verify(heliosDeploymentRepository, never()).save(any());
   }
 
   @Test
-  void persistDurationsSkipsNonConfiguredJobs() {
+  void persistDurationsSkipsWhenDeploymentWorkflowConfigIsMissing() {
+    final GitHubWorkflowJobPayload payload = payload("completed", "completed", "deploy");
+
+    when(heliosDeploymentRepository.findWorkflowJobTimingMetaByWorkflowRunId(anyLong()))
+        .thenReturn(Optional.of(meta(WORKFLOW_RUN_STARTED_AT, WORKFLOW_ID, WORKFLOW_ID, null)));
+
+    gitHubWorkflowJobTimingService.persistDurations(payload);
+
+    verify(heliosDeploymentRepository, never()).findById(anyLong());
+    verify(heliosDeploymentRepository, never()).save(any());
+  }
+
+  @Test
+  void persistDurationsSkipsWhenEnvironmentHasNoDeploymentWorkflow() {
+    final GitHubWorkflowJobPayload payload = payload("completed", "completed", "deploy");
+
+    when(heliosDeploymentRepository.findWorkflowJobTimingMetaByWorkflowRunId(anyLong()))
+        .thenReturn(Optional.of(meta(WORKFLOW_RUN_STARTED_AT, null, WORKFLOW_ID, "deploy")));
+
+    gitHubWorkflowJobTimingService.persistDurations(payload);
+
+    verify(heliosDeploymentRepository, never()).findById(anyLong());
+    verify(heliosDeploymentRepository, never()).save(any());
+  }
+
+  @Test
+  void persistDurationsSkipsNonConfiguredCompletedJobsWithoutEntityLoad() {
     GitHubWorkflowJobPayload payload = payload("completed", "completed", "build");
 
-    when(deploymentWorkflowConfigRepository.findByWorkflow(any(Workflow.class)))
-        .thenReturn(Optional.of(config));
-    when(heliosDeploymentRepository.findByWorkflowRunId(anyLong()))
-        .thenReturn(Optional.of(heliosDeployment));
+    when(heliosDeploymentRepository.findWorkflowJobTimingMetaByWorkflowRunId(anyLong()))
+        .thenReturn(Optional.of(meta(WORKFLOW_RUN_STARTED_AT)));
 
     gitHubWorkflowJobTimingService.persistDurations(payload);
 
+    verify(heliosDeploymentRepository, never()).findById(anyLong());
     verify(heliosDeploymentRepository, never()).save(any());
   }
 
-  @Test
-  void persistDurationsMarksWorkflowStartedForNonConfiguredInProgressJobs() {
-    WorkflowRun workflowRun = new WorkflowRun();
-    workflowRun.setId(23716064328L);
-    workflowRun.setWorkflow(deploymentWorkflow);
-    workflowRun.setRunStartedAt(OffsetDateTime.parse("2026-03-29T18:31:40Z"));
-    final GitHubWorkflowJobPayload payload = payload("in_progress", "in_progress", "build");
+  private HeliosDeploymentWorkflowJobTimingMeta meta(OffsetDateTime runStartedAt) {
+    return meta(runStartedAt, WORKFLOW_ID, WORKFLOW_ID, "deploy");
+  }
 
-    when(deploymentWorkflowConfigRepository.findByWorkflow(any(Workflow.class)))
-        .thenReturn(Optional.of(config));
-    when(heliosDeploymentRepository.findByWorkflowRunId(anyLong()))
-        .thenReturn(Optional.of(heliosDeployment));
-    when(workflowRunRepository.findById(any(Long.class))).thenReturn(Optional.of(workflowRun));
+  private HeliosDeploymentWorkflowJobTimingMeta meta(
+      OffsetDateTime runStartedAt,
+      Long configuredWorkflowId,
+      Long workflowRunWorkflowId,
+      String deployJobName) {
+    return new HeliosDeploymentWorkflowJobTimingMeta(
+        DEPLOYMENT_ID,
+        heliosDeployment.getWorkflowStartedAt(),
+        heliosDeployment.getStatus(),
+        heliosDeployment.getDeployJobStartedAt(),
+        heliosDeployment.getPreDeployDurationSeconds(),
+        heliosDeployment.getDeployDurationSeconds(),
+        heliosDeployment.getDeploymentId(),
+        heliosDeployment.getCreatedAt(),
+        configuredWorkflowId,
+        deployJobName,
+        runStartedAt,
+        workflowRunWorkflowId);
+  }
 
-    gitHubWorkflowJobTimingService.persistDurations(payload);
-
-    assertEquals(
-        OffsetDateTime.parse("2026-03-29T18:31:40Z"),
-        heliosDeployment.getWorkflowStartedAt());
-    assertEquals(HeliosDeployment.Status.IN_PROGRESS, heliosDeployment.getStatus());
-    verify(heliosDeploymentRepository).save(heliosDeployment);
+  private HeliosDeploymentWorkflowJobTimingMeta completedMeta() {
+    return new HeliosDeploymentWorkflowJobTimingMeta(
+        DEPLOYMENT_ID,
+        WORKFLOW_RUN_STARTED_AT,
+        HeliosDeployment.Status.IN_PROGRESS,
+        OffsetDateTime.parse("2026-03-29T18:31:53Z"),
+        13,
+        13,
+        4210842007L,
+        DEPLOYMENT_CREATED_AT,
+        WORKFLOW_ID,
+        "deploy",
+        WORKFLOW_RUN_STARTED_AT,
+        WORKFLOW_ID);
   }
 
   private GitHubWorkflowJobPayload payload(
@@ -326,11 +345,12 @@ class GitHubWorkflowJobTimingServiceTest {
         action,
         new GitHubWorkflowJobPayload.WorkflowJob(
             69083291077L,
-            23716064328L,
+            WORKFLOW_RUN_ID,
             "New Deploy Test",
             "new-branch",
             "b49e899f86b523027348c31adce8d7b41ac0cb00",
-            "https://github.com/mert-test-org/helios-test-repo/actions/runs/23716064328/job/69083291077",
+            "https://github.com/mert-test-org/helios-test-repo/actions/runs/"
+                + "23716064328/job/69083291077",
             workflowJobStatus,
             "success",
             OffsetDateTime.parse("2026-03-29T18:31:49Z"),
