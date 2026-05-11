@@ -51,6 +51,20 @@ public interface HeliosDeploymentRepository extends JpaRepository<HeliosDeployme
   Optional<HeliosDeployment> findByWorkflowRunId(Long workflowRunId);
 
   @Query(
+      "SELECT new de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentWorkflowJobTimingMeta("
+          + "hd.id, hd.workflowStartedAt, hd.status, hd.deployJobStartedAt, "
+          + "hd.preDeployDurationSeconds, hd.deployDurationSeconds, hd.deploymentId, "
+          + "hd.createdAt, workflow.id, config.deployJobName, wr.runStartedAt, wr.workflow.id) "
+          + "FROM HeliosDeployment hd "
+          + "JOIN hd.environment environment "
+          + "LEFT JOIN environment.deploymentWorkflow workflow "
+          + "LEFT JOIN DeploymentWorkflowConfig config ON config.workflow = workflow "
+          + "LEFT JOIN WorkflowRun wr ON wr.id = hd.workflowRunId "
+          + "WHERE hd.workflowRunId = :workflowRunId")
+  Optional<HeliosDeploymentWorkflowJobTimingMeta> findWorkflowJobTimingMetaByWorkflowRunId(
+      @Param("workflowRunId") Long workflowRunId);
+
+  @Query(
       value =
           "SELECT PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY sub.pre_deploy_duration_seconds)"
               + " AS median_pre_deploy, "
