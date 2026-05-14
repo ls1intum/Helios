@@ -9,6 +9,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import de.tum.cit.aet.helios.environment.ws.EnvironmentDeploymentWebSocketPublisher;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentWorkflowJobTimingMeta;
@@ -36,6 +37,7 @@ class GitHubWorkflowJobTimingServiceTest {
       OffsetDateTime.parse("2026-03-29T18:31:49Z");
 
   @Mock private HeliosDeploymentRepository heliosDeploymentRepository;
+  @Mock private EnvironmentDeploymentWebSocketPublisher environmentDeploymentWebSocketPublisher;
 
   @InjectMocks private GitHubWorkflowJobTimingService gitHubWorkflowJobTimingService;
 
@@ -134,6 +136,7 @@ class GitHubWorkflowJobTimingServiceTest {
     assertEquals(HeliosDeployment.Status.IN_PROGRESS, heliosDeployment.getStatus());
     verify(heliosDeploymentRepository, times(1)).findById(DEPLOYMENT_ID);
     verify(heliosDeploymentRepository, times(1)).save(heliosDeployment);
+    verify(environmentDeploymentWebSocketPublisher, times(1)).publishAfterCommit(heliosDeployment);
   }
 
   @Test

@@ -2,6 +2,7 @@ package de.tum.cit.aet.helios.workflow.github;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import de.tum.cit.aet.helios.environment.ws.EnvironmentDeploymentWebSocketPublisher;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentWorkflowJobTimingMeta;
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Service;
 public class GitHubWorkflowJobTimingService {
 
   private final HeliosDeploymentRepository heliosDeploymentRepository;
+  private final EnvironmentDeploymentWebSocketPublisher environmentDeploymentWebSocketPublisher;
   private final Cache<Long, RunRelevance> runRelevanceCache =
       Caffeine.newBuilder().maximumSize(10_000).expireAfterWrite(Duration.ofHours(1)).build();
 
@@ -77,6 +79,7 @@ public class GitHubWorkflowJobTimingService {
 
     if (changed) {
       heliosDeploymentRepository.save(heliosDeployment);
+      environmentDeploymentWebSocketPublisher.publishAfterCommit(heliosDeployment);
     }
     runRelevanceCache.put(runId, relevanceFromDeployment(relevance, heliosDeployment));
   }
