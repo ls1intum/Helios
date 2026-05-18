@@ -31,7 +31,9 @@ public record ActivityHistoryDto(
         heliosDeployment.getEnvironment().getName(),
         HeliosDeployment.mapHeliosStatusToDeploymentState(heliosDeployment.getStatus()),
         heliosDeployment.getSha(),
-        heliosDeployment.getBranchName(),
+        heliosDeployment.getSourceBranchName() != null
+            ? heliosDeployment.getSourceBranchName()
+            : heliosDeployment.getBranchName(),
         UserInfoDto.fromUser(heliosDeployment.getCreator()),
         null,
         heliosDeployment.getCreatedAt(),
