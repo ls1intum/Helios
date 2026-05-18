@@ -31,7 +31,7 @@ jobs:
         with:
           name: Documentation
           path: docs/_build/html/
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: docs/_build/dirhtml/
   deploy:
