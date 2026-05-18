@@ -111,6 +111,44 @@ class WorkflowJobPersistenceServiceTest {
   }
 
   @Test
+  void upsertIsIdempotentOnRepeatedDelivery() {
+    // First call → finds nothing, creates a new row.
+    when(workflowJobRepository.findById(42L)).thenReturn(Optional.empty());
+    OffsetDateTime t0 = OffsetDateTime.parse("2026-05-18T10:00:00Z");
+    var p = payload(buildJob("queued", t0, null, null, List.of("self-hosted")), 7L);
+    service.upsert(p);
+
+    // Now simulate the same payload arriving a second time — repository should be called via
+    // findById and update the existing row, not insert a new one.
+    de.tum.cit.aet.helios.workflow.queue.WorkflowJob existing =
+        new de.tum.cit.aet.helios.workflow.queue.WorkflowJob();
+    existing.setId(42L);
+    when(workflowJobRepository.findById(42L)).thenReturn(Optional.of(existing));
+    service.upsert(p);
+
+    ArgumentCaptor<de.tum.cit.aet.helios.workflow.queue.WorkflowJob> captor =
+        ArgumentCaptor.forClass(de.tum.cit.aet.helios.workflow.queue.WorkflowJob.class);
+    verify(workflowJobRepository, org.mockito.Mockito.times(2)).save(captor.capture());
+    // Both saves write the same primary key — second call must update, not insert.
+    assertEquals(42L, captor.getAllValues().get(0).getId());
+    assertEquals(42L, captor.getAllValues().get(1).getId());
+  }
+
+  @Test
+  void upsertPreservesStatusCase() {
+    // Webhook always sends lowercase. We must not transform it because the partial index on
+    // workflow_job WHERE status='queued' is case-sensitive in Postgres.
+    when(workflowJobRepository.findById(42L)).thenReturn(Optional.empty());
+    OffsetDateTime t = OffsetDateTime.parse("2026-05-18T10:00:00Z");
+    service.upsert(payload(buildJob("queued", t, null, null, List.of("self-hosted")), 7L));
+
+    ArgumentCaptor<de.tum.cit.aet.helios.workflow.queue.WorkflowJob> captor =
+        ArgumentCaptor.forClass(de.tum.cit.aet.helios.workflow.queue.WorkflowJob.class);
+    verify(workflowJobRepository).save(captor.capture());
+    assertEquals("queued", captor.getValue().getStatus());
+  }
+
+  @Test
   void upsertMergesIntoExistingRow() {
     de.tum.cit.aet.helios.workflow.queue.WorkflowJob existing =
         new de.tum.cit.aet.helios.workflow.queue.WorkflowJob();

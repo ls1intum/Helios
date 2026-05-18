@@ -63,4 +63,22 @@ describe('ThemeService', () => {
     expect(service.isDarkMode()).toBe(!initial);
     expect(store.theme).toBe(!initial ? 'dark' : 'light');
   });
+
+  it('applies the dark-mode-enabled class on <html> when dark mode is on', () => {
+    store.theme = 'dark';
+    document.querySelector('html')?.classList.remove('dark-mode-enabled');
+    getService();
+    TestBed.tick(); // flush the constructor effect
+    expect(document.querySelector('html')?.classList.contains('dark-mode-enabled')).toBe(true);
+  });
+
+  it('removes the dark-mode-enabled class when toggled off', () => {
+    store.theme = 'dark';
+    const service = getService();
+    TestBed.tick();
+    expect(document.querySelector('html')?.classList.contains('dark-mode-enabled')).toBe(true);
+    service.toggle();
+    TestBed.tick();
+    expect(document.querySelector('html')?.classList.contains('dark-mode-enabled')).toBe(false);
+  });
 });
