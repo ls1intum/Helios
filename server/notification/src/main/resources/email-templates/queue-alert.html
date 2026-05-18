@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Queue Alert - Helios</title>
+    <!--
+    Expected parameters:
+    {
+      "kind": "QUEUE_P95_OVER",
+      "measuredValue": 950,
+      "thresholdValue": 600,
+      "repositoryName": "ls1intum/Artemis",
+      "details": "threshold=600 measured=950"
+    }
+    -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #d9534f;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 5px 5px 0 0;
+        }
+        .content {
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-top: none;
+            border-radius: 0 0 5px 5px;
+        }
+        .row {
+            margin-bottom: 8px;
+        }
+        .label {
+            font-weight: bold;
+        }
+        .footer {
+            margin-top: 20px;
+            font-size: 12px;
+            color: #888;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <h2 style="margin:0;">Queue alert: ${kind}</h2>
+    </div>
+    <div class="content">
+        <p>A Helios queue-monitoring rule has been breached.</p>
+
+        <div class="row"><span class="label">Kind:</span> ${kind}</div>
+        <div class="row"><span class="label">Measured value:</span> ${measuredValue!"-"}</div>
+        <div class="row"><span class="label">Threshold:</span> ${thresholdValue!"-"}</div>
+        <#if repositoryName??>
+            <div class="row"><span class="label">Repository:</span> ${repositoryName}</div>
+        </#if>
+        <#if details??>
+            <div class="row"><span class="label">Details:</span> ${details}</div>
+        </#if>
+
+        <p style="margin-top:16px;">
+            Open the queue dashboard for diagnostics, or unsubscribe from this notification
+            type from your user settings.
+        </p>
+    </div>
+    <div class="footer">
+        Helios — automated CI/CD observability
+    </div>
+</body>
+</html>

@@ -56,6 +56,9 @@ public class NotificationPreference {
     DEPLOYMENT_FAILED,
     LOCK_EXPIRED,
     LOCK_UNLOCKED,
+    QUEUE_P95_BREACH,
+    RUNNER_OFFLINE,
+    STUCK_JOBS,
   }
 
   /**

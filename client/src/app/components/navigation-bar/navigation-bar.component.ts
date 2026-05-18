@@ -11,7 +11,7 @@ import { PermissionService } from '@app/core/services/permission.service';
 import { injectQuery } from '@tanstack/angular-query-experimental';
 import { getRepositoryByIdOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { ButtonModule } from 'primeng/button';
-import { IconAdjustmentsAlt, IconArrowGuide, IconChevronLeft, IconChevronRight, IconRocket, IconServerCog, IconEyeOff, IconEye, IconBug } from 'angular-tabler-icons/icons';
+import { IconAdjustmentsAlt, IconArrowGuide, IconChevronLeft, IconChevronRight, IconRocket, IconServerCog, IconEyeOff, IconEye, IconBug, IconListNumbers } from 'angular-tabler-icons/icons';
 
 @Component({
   selector: 'app-navigation-bar',
@@ -27,6 +27,7 @@ import { IconAdjustmentsAlt, IconArrowGuide, IconChevronLeft, IconChevronRight, 
       IconChevronRight,
       IconEyeOff,
       IconEye,
+      IconListNumbers,
     }),
   ],
   templateUrl: './navigation-bar.component.html',
@@ -68,6 +69,20 @@ export class NavigationBarComponent {
         icon: 'server-cog',
         path: ['repo', this.repositoryId(), 'environment'],
       },
+      {
+        label: 'Queue',
+        icon: 'list-numbers',
+        path: ['repo', this.repositoryId(), 'ci-cd', 'queue'],
+      },
+      ...(this.permissionService.isAdmin()
+        ? [
+            {
+              label: 'Org Queue',
+              icon: 'list-numbers',
+              path: ['/queue'],
+            },
+          ]
+        : []),
       ...(this.keycloakService.profile && this.permissionService.isAtLeastMaintainer()
         ? [
             {

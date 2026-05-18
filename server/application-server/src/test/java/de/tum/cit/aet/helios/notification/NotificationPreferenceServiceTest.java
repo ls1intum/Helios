@@ -60,12 +60,18 @@ class NotificationPreferenceServiceTest {
         .thenReturn(Optional.empty());
     when(repository.findByUserAndType(testUser, NotificationPreference.Type.LOCK_UNLOCKED))
         .thenReturn(Optional.empty());
+    when(repository.findByUserAndType(testUser, NotificationPreference.Type.QUEUE_P95_BREACH))
+        .thenReturn(Optional.empty());
+    when(repository.findByUserAndType(testUser, NotificationPreference.Type.RUNNER_OFFLINE))
+        .thenReturn(Optional.empty());
+    when(repository.findByUserAndType(testUser, NotificationPreference.Type.STUCK_JOBS))
+        .thenReturn(Optional.empty());
 
     // Act
     service.initializeDefaultsForUser(testUser);
 
-    // Assert
-    verify(repository, times(2)).save(any()); // Only for non-existing preferences
+    // Assert: 5 non-existing preferences (LOCK_EXPIRED, LOCK_UNLOCKED + 3 queue types) → 5 saves.
+    verify(repository, times(5)).save(any());
   }
 
   @Test

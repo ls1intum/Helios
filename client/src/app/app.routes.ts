@@ -118,6 +118,10 @@ export const routes: Routes = [
                   { path: ':branchName', loadComponent: () => import('./pages/branch-details/branch-details.component').then(m => m.BranchDetailsComponent) },
                 ],
               },
+              {
+                path: 'queue',
+                loadChildren: () => import('./pages/queue/queue.routes').then(m => m.queueRoutes),
+              },
             ],
           },
           {
@@ -128,6 +132,11 @@ export const routes: Routes = [
         ],
       },
     ],
+  },
+  {
+    path: 'queue',
+    canActivate: [adminGuard],
+    loadChildren: () => import('./pages/queue/queue.routes').then(m => m.queueRoutes),
   },
   {
     path: 'unauthorized',

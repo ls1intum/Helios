@@ -353,7 +353,12 @@ class GitHubWorkflowJobTimingServiceTest {
             OffsetDateTime.parse("2026-03-29T18:31:49Z"),
             OffsetDateTime.parse("2026-03-29T18:31:53Z"),
             OffsetDateTime.parse("2026-03-29T18:32:06Z"),
-            jobName),
+            jobName,
+            null,
+            null,
+            null,
+            null,
+            null),
         deployment,
         new GitHubWorkflowJobPayload.Repository(
             1097747382L,

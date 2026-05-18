@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import java.time.OffsetDateTime;
+import java.util.List;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
@@ -27,7 +28,12 @@ public record GitHubWorkflowJobPayload(
       OffsetDateTime createdAt,
       OffsetDateTime startedAt,
       OffsetDateTime completedAt,
-      String name) {}
+      String name,
+      List<String> labels,
+      Long runnerId,
+      String runnerName,
+      Long runnerGroupId,
+      String runnerGroupName) {}
 
   @JsonIgnoreProperties(ignoreUnknown = true)
   @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
