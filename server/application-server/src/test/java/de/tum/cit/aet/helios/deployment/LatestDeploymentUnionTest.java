@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
+import de.tum.cit.aet.helios.pullrequest.PullRequest;
 import java.time.OffsetDateTime;
 import org.junit.jupiter.api.Test;
 
@@ -79,10 +80,80 @@ class LatestDeploymentUnionTest {
     assertEquals(WORKFLOW_STARTED_AT, union.getWorkflowStartedAt());
   }
 
+  @Test
+  void realDeploymentFallbackWithoutDeploymentIdDoesNotOverrideSourceFields() {
+    Deployment deployment = deployment(1L);
+    deployment.setRef("staging");
+    deployment.setSha("workflow-sha");
+
+    HeliosDeployment heliosDeployment = heliosDeployment(null);
+    heliosDeployment.setSourceBranchName("feature/source");
+    heliosDeployment.setSha("source-sha");
+
+    LatestDeploymentUnion union = LatestDeploymentUnion.realDeployment(deployment,
+        heliosDeployment);
+
+    assertEquals("staging", union.getRef());
+    assertEquals("workflow-sha", union.getSha());
+  }
+
+  @Test
+  void heliosDeploymentExposesSourceBranchAndSha() {
+    HeliosDeployment heliosDeployment = heliosDeployment(null);
+    heliosDeployment.setBranchName("staging");
+    heliosDeployment.setSourceBranchName("feature/source");
+    heliosDeployment.setSha("source-sha");
+
+    LatestDeploymentUnion union = LatestDeploymentUnion.heliosDeployment(heliosDeployment);
+
+    assertEquals("feature/source", union.getRef());
+    assertEquals("source-sha", union.getSha());
+  }
+
+  @Test
+  void realDeploymentWithMatchingHeliosFallbackExposesSourceBranchPrAndSha() {
+    Deployment deployment = deployment(1L);
+    deployment.setRef("staging");
+    deployment.setSha("workflow-sha");
+
+    HeliosDeployment heliosDeployment = heliosDeployment(1L);
+    heliosDeployment.setBranchName("staging");
+    heliosDeployment.setSourceBranchName("feature/source");
+    heliosDeployment.setSha("source-sha");
+    heliosDeployment.setPullRequest(pullRequest(42, "Source PR"));
+
+    LatestDeploymentUnion union = LatestDeploymentUnion.realDeployment(deployment,
+        heliosDeployment);
+
+    assertEquals("feature/source", union.getRef());
+    assertEquals("source-sha", union.getSha());
+    assertEquals("Source PR", union.getPullRequestName());
+    assertEquals(42, union.getPullRequestNumber());
+  }
+
+  @Test
+  void realDeploymentWithoutHeliosFallbackExposesGitHubRefAndSha() {
+    Deployment deployment = deployment(1L);
+    deployment.setRef("staging");
+    deployment.setSha("workflow-sha");
+
+    LatestDeploymentUnion union = LatestDeploymentUnion.realDeployment(deployment);
+
+    assertEquals("staging", union.getRef());
+    assertEquals("workflow-sha", union.getSha());
+  }
+
   private Deployment deployment(Long id) {
     Deployment deployment = new Deployment();
     deployment.setId(id);
     return deployment;
+  }
+
+  private PullRequest pullRequest(int number, String title) {
+    PullRequest pullRequest = new PullRequest();
+    pullRequest.setNumber(number);
+    pullRequest.setTitle(title);
+    return pullRequest;
   }
 
   private HeliosDeployment heliosDeployment(Long deploymentId) {

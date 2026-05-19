@@ -153,6 +153,7 @@ public class DeploymentService {
     heliosDeployment.setUser(authService.getUserId());
     heliosDeployment.setStatus(HeliosDeployment.Status.WAITING);
     heliosDeployment.setBranchName(this.getDeploymentWorkflowBranch(environment, deployRequest));
+    heliosDeployment.setSourceBranchName(deployRequest.branchName());
     heliosDeployment.setSha(deployRequest.commitSha());
     heliosDeployment.setCreator(authService.getUserFromGithubId());
     heliosDeployment.setPullRequest(optionalPullRequest.orElse(null));
@@ -401,8 +402,7 @@ public class DeploymentService {
 
     List<ActivityHistoryDto> heliosDeploymentDtos =
         heliosDeploymentRepository
-            .findByRepositoryIdAndBranchNameAndDeploymentIdIsNullOrderByCreatedAtDesc(
-                repositoryId, branchName)
+            .findByRepositoryIdAndSourceBranchNameOrderByCreatedAtDesc(repositoryId, branchName)
             .stream()
             .map(ActivityHistoryDto::fromHeliosDeployment)
             .toList();

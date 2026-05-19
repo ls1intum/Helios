@@ -214,14 +214,15 @@ public class DeploymentServiceTest {
   }
 
   @Test
-  public void testDeployToEnvironment() {
-    final DeployRequest deployRequest = new DeployRequest(1L, "main", "sha");
+  public void testDeployToEnvironment() throws Exception {
+    final DeployRequest deployRequest = new DeployRequest(1L, "feature/x", "sha");
 
     Workflow wf = new Workflow();
     wf.setId(1L);
     wf.setFileNameWithExtension("deploy.yml");
 
     environment.setDeploymentWorkflow(wf);
+    environment.setDeploymentWorkflowBranch("staging");
 
     when(environmentService.getEnvironmentTypeById(1L))
         .thenReturn(Optional.of(Environment.Type.PRODUCTION));
@@ -230,6 +231,15 @@ public class DeploymentServiceTest {
     when(heliosDeploymentRepository.saveAndFlush(any())).thenAnswer(a -> a.getArgument(0));
 
     deploymentService.deployToEnvironment(deployRequest);
+
+    ArgumentCaptor<HeliosDeployment> deploymentCaptor =
+        ArgumentCaptor.forClass(HeliosDeployment.class);
+    verify(heliosDeploymentRepository).saveAndFlush(deploymentCaptor.capture());
+    HeliosDeployment capturedDeployment = deploymentCaptor.getValue();
+    assertEquals("staging", capturedDeployment.getBranchName());
+    assertEquals("feature/x", capturedDeployment.getSourceBranchName());
+    verify(gitHubService)
+        .dispatchWorkflow(eq("owner/repo"), eq("deploy.yml"), eq("staging"), any());
   }
 
   @Test
@@ -379,8 +389,7 @@ public class DeploymentServiceTest {
         .findByRepositoryRepositoryIdAndRefOrderByCreatedAtDesc(repositoryId, branchName))
         .thenReturn(List.of(deployment));
     when(heliosDeploymentRepository
-        .findByRepositoryIdAndBranchNameAndDeploymentIdIsNullOrderByCreatedAtDesc(
-            repositoryId, branchName))
+        .findByRepositoryIdAndSourceBranchNameOrderByCreatedAtDesc(repositoryId, branchName))
         .thenReturn(List.of(heliosDeployment));
 
     List<ActivityHistoryDto> result =
@@ -391,6 +400,36 @@ public class DeploymentServiceTest {
 
     assertEquals(2, result.size());
     Assertions.assertIterableEquals(List.of(heliosDto, deploymentDto), result);
+  }
+
+  @Test
+  public void testGetActivityHistoryByRepositoryIdAndSourceBranchNameForLinkedDeployment() {
+    final OffsetDateTime now = OffsetDateTime.now();
+    final Long repositoryId = 1L;
+    final String sourceBranchName = "feature/x";
+
+    heliosDeployment.setCreatedAt(now.minusMinutes(1));
+    heliosDeployment.setEnvironment(environment);
+    heliosDeployment.setDeploymentId(1L);
+    heliosDeployment.setBranchName("staging");
+    heliosDeployment.setSourceBranchName(sourceBranchName);
+    deployment.setCreatedAt(now.minusMinutes(2));
+    deployment.setRef("staging");
+
+    when(deploymentRepository
+        .findByRepositoryRepositoryIdAndRefOrderByCreatedAtDesc(repositoryId, sourceBranchName))
+        .thenReturn(List.of());
+    when(heliosDeploymentRepository
+        .findByRepositoryIdAndSourceBranchNameOrderByCreatedAtDesc(
+            repositoryId, sourceBranchName))
+        .thenReturn(List.of(heliosDeployment));
+
+    List<ActivityHistoryDto> result =
+        deploymentService.getActivityHistoryByRepositoryIdAndBranchName(
+            repositoryId, sourceBranchName);
+
+    assertEquals(1, result.size());
+    assertEquals(sourceBranchName, result.getFirst().ref());
   }
 
   @Test

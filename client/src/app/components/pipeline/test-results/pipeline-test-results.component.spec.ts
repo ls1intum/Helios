@@ -53,4 +53,11 @@ describe('PipelineTestResultsComponent', () => {
 
     expect(component.canAnalyzeTestFailureWithAi(failedTestCase)).toBe(false);
   });
+
+  it('hides AI analysis when AI analysis is disabled by environment', () => {
+    permissionServiceMock.hasWritePermission = () => true;
+    (component as unknown as { aiAnalysisEnabled: boolean }).aiAnalysisEnabled = false;
+
+    expect(component.canAnalyzeTestFailureWithAi(failedTestCase)).toBe(false);
+  });
 });
