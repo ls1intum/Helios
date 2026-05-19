@@ -92,7 +92,8 @@ class StuckJobClassifierTest {
     when(repositoryRepository.findById(7L)).thenReturn(Optional.of(repo()));
     ObjectNode runNode = om.createObjectNode();
     runNode.put("status", "waiting");
-    when(restClient.get(eq("/repos/ls1intum/Helios/actions/runs/42"))).thenReturn(Optional.of(runNode));
+    when(restClient.get(eq("/repos/ls1intum/Helios/actions/runs/42")))
+        .thenReturn(Optional.of(runNode));
 
     WorkflowJob j = job(WorkflowJob.RunnerKind.SELF_HOSTED, List.of("self-hosted", "linux"));
     assertThat(classify(j)).isEqualTo(WorkflowJob.QueuedReason.PENDING_APPROVAL);
@@ -103,7 +104,8 @@ class StuckJobClassifierTest {
     when(repositoryRepository.findById(7L)).thenReturn(Optional.of(repo()));
     ObjectNode runNode = om.createObjectNode();
     runNode.put("status", "queued");
-    when(restClient.get(eq("/repos/ls1intum/Helios/actions/runs/42"))).thenReturn(Optional.of(runNode));
+    when(restClient.get(eq("/repos/ls1intum/Helios/actions/runs/42")))
+        .thenReturn(Optional.of(runNode));
     ArrayNode pending = om.createArrayNode();
     pending.add(om.createObjectNode());
     when(restClient.get(eq("/repos/ls1intum/Helios/actions/runs/42/pending_deployments")))

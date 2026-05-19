@@ -21,7 +21,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 /**
- * Regression contract from plan §B2 / §H:
+ * Regression contract from plan §B2 / §H.
  *
  * <ol>
  *   <li>Existing {@code persistDurations} path is called first and behaves identically.
@@ -84,7 +84,8 @@ class GitHubWorkflowJobMessageHandlerTest {
   @Test
   void queueIndexFailureDoesNotBreakOtherPaths() throws Exception {
     when(gitHubService.getInstalledRepositories()).thenReturn(List.of("ls1intum/Helios"));
-    doThrow(new RuntimeException("cache exploded")).when(queueIndexService).onWorkflowJobEvent(any());
+    doThrow(new RuntimeException("cache exploded"))
+        .when(queueIndexService).onWorkflowJobEvent(any());
 
     invokeHandleMessage(payload());
 

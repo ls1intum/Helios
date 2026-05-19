@@ -32,7 +32,7 @@ public class QueueAlertEvent {
   @Column(name = "repository_id")
   private Long repositoryId;
 
-  @Column(name = "label_set_hash", length = 40)
+  @Column(name = "label_set_hash", length = 64)
   private String labelSetHash;
 
   @Column(name = "fired_at", nullable = false)

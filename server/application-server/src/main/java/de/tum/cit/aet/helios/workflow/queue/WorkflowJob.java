@@ -76,7 +76,7 @@ public class WorkflowJob {
   @Column(name = "labels", columnDefinition = "text[]")
   private List<String> labels;
 
-  @Column(name = "label_set_hash", length = 40)
+  @Column(name = "label_set_hash", length = 64)
   private String labelSetHash;
 
   @Column(name = "runner_id")

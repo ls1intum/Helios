@@ -53,7 +53,7 @@ public class QueueAlertRule {
   @Column(name = "repository_id")
   private Long repositoryId;
 
-  @Column(name = "label_set_hash", length = 40)
+  @Column(name = "label_set_hash", length = 64)
   private String labelSetHash;
 
   @JdbcTypeCode(SqlTypes.ARRAY)

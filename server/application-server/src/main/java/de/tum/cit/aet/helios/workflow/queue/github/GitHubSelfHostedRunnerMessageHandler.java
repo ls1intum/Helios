@@ -53,8 +53,8 @@ public class GitHubSelfHostedRunnerMessageHandler
       return;
     }
 
-    Runner runner = runnerRepository.findById(src.id()).orElseGet(Runner::new);
-    boolean isNew = runner.getId() == null;
+    java.util.Optional<Runner> existing = runnerRepository.findById(src.id());
+    Runner runner = existing.orElseGet(Runner::new);
     runner.setId(src.id());
     if (src.name() != null) {
       runner.setName(src.name());
@@ -73,7 +73,7 @@ public class GitHubSelfHostedRunnerMessageHandler
     }
 
     OffsetDateTime now = OffsetDateTime.now();
-    if (isNew) {
+    if (existing.isEmpty()) {
       runner.setFirstRegisteredAt(now);
     }
     runner.setLastSeenAt(now);

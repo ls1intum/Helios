@@ -57,8 +57,8 @@ public class RunnerInventoryReconciler {
           continue;
         }
         seen.add(id);
-        Runner runner = runnerRepository.findById(id).orElseGet(Runner::new);
-        boolean isNew = runner.getId() == null;
+        Optional<Runner> existing = runnerRepository.findById(id);
+        Runner runner = existing.orElseGet(Runner::new);
         runner.setId(id);
         if (node.hasNonNull("name")) {
           runner.setName(node.get("name").asText());
@@ -87,7 +87,7 @@ public class RunnerInventoryReconciler {
           }
         }
         runner.setLabels(LabelSets.canonical(labelNames));
-        if (isNew) {
+        if (existing.isEmpty()) {
           runner.setFirstRegisteredAt(now);
         }
         runner.setLastSeenAt(now);

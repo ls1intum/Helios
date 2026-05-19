@@ -37,7 +37,7 @@ public class QueueWaitStat {
   @Column(name = "head_branch", length = 512, nullable = false)
   private String headBranch = "";
 
-  @Column(name = "label_set_hash", length = 40, nullable = false)
+  @Column(name = "label_set_hash", length = 64, nullable = false)
   private String labelSetHash = "";
 
   @Column(name = "bucket_start", nullable = false)

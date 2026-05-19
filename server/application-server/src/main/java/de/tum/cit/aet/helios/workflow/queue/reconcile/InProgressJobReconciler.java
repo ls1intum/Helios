@@ -2,8 +2,8 @@ package de.tum.cit.aet.helios.workflow.queue.reconcile;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import de.tum.cit.aet.helios.github.GitHubRestClient;
-import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
+import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import de.tum.cit.aet.helios.workflow.queue.LabelSets;
 import de.tum.cit.aet.helios.workflow.queue.WorkflowJob;
 import de.tum.cit.aet.helios.workflow.queue.WorkflowJobRepository;

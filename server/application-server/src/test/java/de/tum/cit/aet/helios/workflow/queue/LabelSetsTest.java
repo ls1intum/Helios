@@ -69,6 +69,7 @@ class LabelSetsTest {
 
   @Test
   void hashHasFixedWidth() {
-    assertTrue(LabelSets.hash(List.of("anything")).matches("[0-9a-f]{40}"));
+    // SHA-256 hex = 64 characters (changed from SHA-1's 40 to satisfy static analysis).
+    assertTrue(LabelSets.hash(List.of("anything")).matches("[0-9a-f]{64}"));
   }
 }
