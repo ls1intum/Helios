@@ -12,20 +12,28 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 
 /**
- * Caffeine-backed hot index of recent queue activity per (repository, label-set hash).
- *
- * <p>Read by the dashboard for sub-100ms queue-depth responses; truth source is {@code
- * workflow_job} table. See plan §C1.
+ * Caffeine-backed hot index of recent queue activity per (repository, label-set hash). Tracks
+ * per-job state so redelivered webhooks don't drift the counter. See plan §C1.
  */
 @Service
 @Log4j2
 public class QueueIndexService {
 
-  /** key = repositoryId + ":" + labelSetHash → atomic queued-count snapshot. */
+  /** Per-(repoId:hash) counter snapshot. */
   private final Cache<String, AtomicInteger> queuedByLabelSet =
       Caffeine.newBuilder()
-          .expireAfterWrite(Duration.ofMinutes(15))
+          .expireAfterWrite(Duration.ofHours(2))
           .maximumSize(10_000)
+          .build();
+
+  /**
+   * Last observed state per job id. Caffeine entries time out after 4h so we don't accumulate
+   * forever; webhooks fire faster than that for any active job.
+   */
+  private final Cache<Long, JobState> jobState =
+      Caffeine.newBuilder()
+          .expireAfterAccess(Duration.ofHours(4))
+          .maximumSize(50_000)
           .build();
 
   public void onWorkflowJobEvent(GitHubWorkflowJobPayload payload) {
@@ -40,21 +48,32 @@ public class QueueIndexService {
     String key = payload.repository().id() + ":" + hash;
     String status = job.status() == null ? "" : job.status().toLowerCase();
 
-    AtomicInteger counter =
-        queuedByLabelSet.get(key, k -> new AtomicInteger(0));
+    JobState newState = JobState.fromStatus(status);
+    JobState prev = jobState.getIfPresent(job.id());
 
-    switch (status) {
-      case "queued" -> counter.incrementAndGet();
-      case "in_progress", "completed" -> {
-        if (counter.get() > 0) {
-          counter.decrementAndGet();
-        }
-      }
-      default -> {
-        // No-op for unknown statuses.
+    if (newState == prev) {
+      // Redelivery of the same state — counter must not move.
+      log.trace("queue-index redelivery for job {} status={} (no-op)", job.id(), status);
+      return;
+    }
+
+    AtomicInteger counter = queuedByLabelSet.get(key, k -> new AtomicInteger(0));
+    // Apply the transition: only QUEUED contributes to the counter.
+    if (newState == JobState.QUEUED) {
+      counter.incrementAndGet();
+    } else if (prev == JobState.QUEUED) {
+      // Leaving QUEUED (→ IN_PROGRESS / COMPLETED / OTHER).
+      if (counter.get() > 0) {
+        counter.decrementAndGet();
       }
     }
-    log.debug("queue-index {} status={} count={}", key, status, counter.get());
+
+    if (newState == JobState.COMPLETED) {
+      jobState.invalidate(job.id()); // Don't retain after completion.
+    } else {
+      jobState.put(job.id(), newState);
+    }
+    log.debug("queue-index {} prev={} new={} count={}", key, prev, newState, counter.get());
   }
 
   /** Snapshot of queued counts by (repoId, labelSetHash). */
@@ -70,5 +89,25 @@ public class QueueIndexService {
     String key = repositoryId + ":" + LabelSets.hash(labels);
     AtomicInteger counter = queuedByLabelSet.getIfPresent(key);
     return counter == null ? 0 : counter.get();
+  }
+
+  /**
+   * Coarse job-state classification — collapses GitHub's vocabulary to the three buckets the
+   * counter cares about.
+   */
+  enum JobState {
+    QUEUED,
+    IN_PROGRESS,
+    COMPLETED,
+    OTHER;
+
+    static JobState fromStatus(String status) {
+      return switch (status == null ? "" : status.toLowerCase()) {
+        case "queued", "waiting" -> QUEUED;
+        case "in_progress" -> IN_PROGRESS;
+        case "completed" -> COMPLETED;
+        default -> OTHER;
+      };
+    }
   }
 }

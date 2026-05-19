@@ -134,9 +134,11 @@ export const routes: Routes = [
     ],
   },
   {
+    // Admin org-wide overview only. Repo-scoped stats/alerts have no meaning here so are not
+    // exposed at the top level — those live under /repo/:repositoryId/ci-cd/queue/*.
     path: 'queue',
     canActivate: [adminGuard],
-    loadChildren: () => import('./pages/queue/queue.routes').then(m => m.queueRoutes),
+    loadComponent: () => import('./pages/queue/queue-overview.component').then(m => m.QueueOverviewComponent),
   },
   {
     path: 'unauthorized',

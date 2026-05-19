@@ -2,6 +2,7 @@ package de.tum.cit.aet.helios.workflow.queue.reconcile;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import de.tum.cit.aet.helios.github.GitHubRestClient;
+import de.tum.cit.aet.helios.workflow.queue.LabelSets;
 import de.tum.cit.aet.helios.workflow.queue.Runner;
 import de.tum.cit.aet.helios.workflow.queue.RunnerRepository;
 import jakarta.transaction.Transactional;
@@ -35,6 +36,7 @@ public class RunnerInventoryReconciler {
     List<Long> seen = new ArrayList<>();
     int page = 1;
     int perPage = 100;
+    boolean sawAnyResponse = false;
     while (true) {
       String path =
           "/orgs/" + githubOrg + "/actions/runners?per_page=" + perPage + "&page=" + page;
@@ -43,6 +45,7 @@ public class RunnerInventoryReconciler {
         log.debug("RunnerInventoryReconciler: no body (304 or error) for page {}", page);
         break;
       }
+      sawAnyResponse = true;
       JsonNode runners = body.get().get("runners");
       if (runners == null || !runners.isArray() || runners.isEmpty()) {
         break;
@@ -83,7 +86,7 @@ public class RunnerInventoryReconciler {
             }
           }
         }
-        runner.setLabels(labelNames);
+        runner.setLabels(LabelSets.canonical(labelNames));
         if (isNew) {
           runner.setFirstRegisteredAt(now);
         }
@@ -95,8 +98,10 @@ public class RunnerInventoryReconciler {
       }
       page++;
     }
-    if (!seen.isEmpty()) {
-      int markedOffline = runnerRepository.markMissingOffline(seen, OffsetDateTime.now());
+    if (sawAnyResponse) {
+      // Empty inventory is a legitimate signal — mark every previously-online runner offline.
+      int markedOffline = runnerRepository.markMissingOffline(
+          seen.isEmpty() ? List.of(-1L) : seen, OffsetDateTime.now());
       if (markedOffline > 0) {
         log.info("RunnerInventoryReconciler: marked {} runners OFFLINE", markedOffline);
       }

@@ -3,14 +3,15 @@ package de.tum.cit.aet.helios.github;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.Optional;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -20,13 +21,27 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @Log4j2
-@RequiredArgsConstructor
 public class GitHubRestClient {
 
   private final GitHubClientManager clientManager;
   private final EtagCache etagCache;
   private final ObjectMapper objectMapper;
+  /**
+   * Optional in profiles that don't auto-configure actuator (e.g. {@code openapi}). When absent we
+   * fall back to a {@link SimpleMeterRegistry} so metric calls remain no-ops instead of throwing.
+   */
   private final MeterRegistry meterRegistry;
+
+  public GitHubRestClient(
+      GitHubClientManager clientManager,
+      EtagCache etagCache,
+      ObjectMapper objectMapper,
+      ObjectProvider<MeterRegistry> meterRegistryProvider) {
+    this.clientManager = clientManager;
+    this.etagCache = etagCache;
+    this.objectMapper = objectMapper;
+    this.meterRegistry = meterRegistryProvider.getIfAvailable(SimpleMeterRegistry::new);
+  }
 
   @Value("${helios.github.apiBaseUrl:https://api.github.com}")
   private String apiBaseUrl;
@@ -52,7 +67,8 @@ public class GitHubRestClient {
       }
       etagCache.getEtag(url).ifPresent(etag -> builder.header("If-None-Match", etag));
 
-      HttpResponse<String> response = http.send(builder.build(), HttpResponse.BodyHandlers.ofString());
+      HttpResponse<String> response =
+          http.send(builder.build(), HttpResponse.BodyHandlers.ofString());
       int status = response.statusCode();
 
       if (status == 304) {

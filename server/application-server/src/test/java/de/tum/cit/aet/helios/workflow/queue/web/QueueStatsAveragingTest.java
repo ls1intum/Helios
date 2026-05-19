@@ -32,7 +32,8 @@ import org.springframework.test.web.servlet.MockMvc;
  */
 @AutoConfigureMockMvc
 @ContextConfiguration(classes = WorkflowQueueController.class)
-@WebMvcTest(WorkflowQueueController.class)
+@WebMvcTest(value = WorkflowQueueController.class,
+    properties = "helios.queue.enabled=true")
 class QueueStatsAveragingTest {
 
   @Autowired MockMvc mockMvc;
@@ -58,7 +59,6 @@ class QueueStatsAveragingTest {
   }
 
   @Test
-  @Disabled("PR #1046 follow-up #7: stats endpoint averages per-bucket percentiles")
   void weightsP95BySamplesNotByBucketCount() throws Exception {
     // 1 outlier sample at p95=600s, 1000 normal samples at p95=100s.
     // Correct sample-weighted p95 ≈ 100; the current (wrong) implementation returns ~350.

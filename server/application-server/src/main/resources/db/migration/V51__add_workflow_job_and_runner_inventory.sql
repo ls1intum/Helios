@@ -3,6 +3,22 @@
 -- queue_alert_rule, queue_alert_event). See plan §A.
 -- =====================================================================
 
+-- Extend the notification_preference CHECK constraint from V34 so the 3
+-- new enum values can be persisted (QUEUE_P95_BREACH, RUNNER_OFFLINE,
+-- STUCK_JOBS).
+ALTER TABLE public.notification_preference
+    DROP CONSTRAINT IF EXISTS chk_notification_type;
+ALTER TABLE public.notification_preference
+    ADD CONSTRAINT chk_notification_type
+        CHECK (type IN (
+                        'DEPLOYMENT_FAILED',
+                        'LOCK_EXPIRED',
+                        'LOCK_UNLOCKED',
+                        'QUEUE_P95_BREACH',
+                        'RUNNER_OFFLINE',
+                        'STUCK_JOBS'
+            ));
+
 -- ---------------------------------------------------------------------
 -- workflow_job: durable row per GitHub Actions job. Today this data is
 -- dropped for non-deployment jobs.
@@ -89,13 +105,15 @@ CREATE INDEX idx_runner_labels_gin ON runner USING GIN (labels);
 -- ---------------------------------------------------------------------
 -- queue_wait_stat: pre-aggregated hourly buckets for 7/30-day rolls.
 -- ---------------------------------------------------------------------
+-- All natural-key parts are NOT NULL to keep ON CONFLICT dedup correct;
+-- callers normalize nullable fields to '' before insert (see rollup SQL).
 CREATE TABLE queue_wait_stat (
     id              BIGSERIAL PRIMARY KEY,
     repository_id   BIGINT NOT NULL,
-    workflow_name   VARCHAR(512),
-    job_name        VARCHAR(512),
-    head_branch     VARCHAR(512),
-    label_set_hash  CHAR(40),
+    workflow_name   VARCHAR(512) NOT NULL DEFAULT '',
+    job_name        VARCHAR(512) NOT NULL DEFAULT '',
+    head_branch     VARCHAR(512) NOT NULL DEFAULT '',
+    label_set_hash  CHAR(40)     NOT NULL DEFAULT '',
     bucket_start    TIMESTAMPTZ NOT NULL,
     samples         INT NOT NULL,
     queue_p50       INT,
@@ -129,7 +147,8 @@ CREATE TABLE queue_alert_rule (
     label_set_hash      CHAR(40),
     channels            TEXT[] NOT NULL DEFAULT '{EMAIL}',
     enabled             BOOLEAN NOT NULL DEFAULT TRUE,
-    quiet_hours_cron    VARCHAR(64),
+    -- HH:mm-HH:mm local-time window during which evaluation is skipped (see §I.9).
+    quiet_window        VARCHAR(32),
     created_by_user_id  BIGINT,
     created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -162,7 +181,9 @@ CREATE TABLE queue_alert_event (
             ON DELETE CASCADE
 );
 
-CREATE INDEX idx_queue_alert_event_open
+-- UNIQUE so concurrent evaluator threads / instances cannot create two
+-- open events for the same rule (would cause duplicate emails).
+CREATE UNIQUE INDEX idx_queue_alert_event_open
     ON queue_alert_event (rule_id)
     WHERE cleared_at IS NULL;
 CREATE INDEX idx_queue_alert_event_fired_at

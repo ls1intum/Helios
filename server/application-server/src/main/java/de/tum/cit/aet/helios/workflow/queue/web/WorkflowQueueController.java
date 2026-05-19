@@ -1,5 +1,6 @@
 package de.tum.cit.aet.helios.workflow.queue.web;
 
+import de.tum.cit.aet.helios.config.security.annotations.EnforceAdmin;
 import de.tum.cit.aet.helios.config.security.annotations.EnforceAtLeastWritePermission;
 import de.tum.cit.aet.helios.workflow.queue.QueueAlertEvent;
 import de.tum.cit.aet.helios.workflow.queue.QueueAlertEventRepository;
@@ -27,6 +28,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -41,7 +44,10 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/queue")
 @RequiredArgsConstructor
+@ConditionalOnProperty(name = "helios.queue.enabled", havingValue = "true")
 public class WorkflowQueueController {
+
+  private static final int MAX_JOBS_LIMIT = 500;
 
   private final WorkflowJobRepository workflowJobRepository;
   private final QueueWaitStatRepository statsRepository;
@@ -54,36 +60,7 @@ public class WorkflowQueueController {
   public ResponseEntity<QueueDepthDto> depth(@PathVariable Long repoId) {
     List<WorkflowJob> active = workflowJobRepository
         .findByRepositoryIdAndStatusInOrderByCreatedAtAsc(repoId, List.of("queued", "in_progress"));
-    Map<String, List<WorkflowJob>> byHash = new LinkedHashMap<>();
-    for (WorkflowJob j : active) {
-      byHash.computeIfAbsent(j.getLabelSetHash() == null ? "" : j.getLabelSetHash(),
-          k -> new ArrayList<>()).add(j);
-    }
-    List<LabelSetDepth> labelSets = new ArrayList<>();
-    int totalQueued = 0;
-    int totalInProgress = 0;
-    OffsetDateTime now = OffsetDateTime.now();
-    for (Map.Entry<String, List<WorkflowJob>> e : byHash.entrySet()) {
-      List<WorkflowJob> jobs = e.getValue();
-      int queued = (int) jobs.stream().filter(j -> "queued".equalsIgnoreCase(j.getStatus())).count();
-      int inProgress =
-          (int) jobs.stream().filter(j -> "in_progress".equalsIgnoreCase(j.getStatus())).count();
-      totalQueued += queued;
-      totalInProgress += inProgress;
-      Long oldestQueuedSeconds = jobs.stream()
-          .filter(j -> "queued".equalsIgnoreCase(j.getStatus()) && j.getCreatedAt() != null)
-          .map(j -> Duration.between(j.getCreatedAt(), now).getSeconds())
-          .max(Long::compareTo)
-          .orElse(null);
-      WorkflowJob sample = jobs.get(0);
-      labelSets.add(new LabelSetDepth(
-          sample.getLabels(),
-          queued,
-          inProgress,
-          oldestQueuedSeconds,
-          sample.getRunnerKind() == null ? null : sample.getRunnerKind().name()));
-    }
-    return ResponseEntity.ok(new QueueDepthDto(labelSets, totalQueued, totalInProgress));
+    return ResponseEntity.ok(aggregateDepth(active));
   }
 
   @GetMapping("/repos/{repoId}/jobs")
@@ -91,9 +68,10 @@ public class WorkflowQueueController {
       @PathVariable Long repoId,
       @RequestParam(defaultValue = "queued") String status,
       @RequestParam(defaultValue = "100") int limit) {
+    int safeLimit = Math.max(1, Math.min(limit, MAX_JOBS_LIMIT));
     List<WorkflowJob> jobs = workflowJobRepository
-        .findByRepositoryIdAndStatusInOrderByCreatedAtAsc(repoId, List.of(status))
-        .stream().limit(limit).toList();
+        .findByRepositoryIdAndStatusInOrderByCreatedAtAsc(
+            repoId, List.of(status), PageRequest.of(0, safeLimit));
     OffsetDateTime now = OffsetDateTime.now();
     Map<String, Integer> positionByHash = new HashMap<>();
     List<QueuedJobDto> out = new ArrayList<>();
@@ -130,65 +108,32 @@ public class WorkflowQueueController {
     int days = "30d".equalsIgnoreCase(window) ? 30 : 7;
     OffsetDateTime since = OffsetDateTime.now().minusDays(days);
     List<QueueWaitStat> stats = statsRepository.findForWindow(repoId, workflow, job, branch, since);
-    int samples = stats.stream().mapToInt(s -> s.getSamples() == null ? 0 : s.getSamples()).sum();
-    Integer queueP50 = stats.stream().map(QueueWaitStat::getQueueP50)
-        .filter(java.util.Objects::nonNull).reduce(Integer::sum).orElse(null);
-    Integer queueP90 = stats.stream().map(QueueWaitStat::getQueueP90)
-        .filter(java.util.Objects::nonNull).reduce(Integer::sum).orElse(null);
-    Integer queueP95 = stats.stream().map(QueueWaitStat::getQueueP95)
-        .filter(java.util.Objects::nonNull).reduce(Integer::sum).orElse(null);
-    Integer runP50 = stats.stream().map(QueueWaitStat::getRunP50)
-        .filter(java.util.Objects::nonNull).reduce(Integer::sum).orElse(null);
-    Integer runP90 = stats.stream().map(QueueWaitStat::getRunP90)
-        .filter(java.util.Objects::nonNull).reduce(Integer::sum).orElse(null);
-    Integer runP95 = stats.stream().map(QueueWaitStat::getRunP95)
-        .filter(java.util.Objects::nonNull).reduce(Integer::sum).orElse(null);
-    int n = Math.max(1, stats.size());
-    if (queueP50 != null) queueP50 /= n;
-    if (queueP90 != null) queueP90 /= n;
-    if (queueP95 != null) queueP95 /= n;
-    if (runP50 != null) runP50 /= n;
-    if (runP90 != null) runP90 /= n;
-    if (runP95 != null) runP95 /= n;
+    int totalSamples =
+        stats.stream().mapToInt(s -> s.getSamples() == null ? 0 : s.getSamples()).sum();
+
+    // Sample-weighted percentile estimate: weight each bucket's per-percentile value by its
+    // sample count. This is a closer approximation to a true window percentile than the unweighted
+    // mean used previously, while staying O(buckets). See PR #1046 follow-up #7.
+    Integer queueP50 = weightedPercentile(stats, QueueWaitStat::getQueueP50);
+    Integer queueP90 = weightedPercentile(stats, QueueWaitStat::getQueueP90);
+    Integer queueP95 = weightedPercentile(stats, QueueWaitStat::getQueueP95);
+    Integer runP50 = weightedPercentile(stats, QueueWaitStat::getRunP50);
+    Integer runP90 = weightedPercentile(stats, QueueWaitStat::getRunP90);
+    Integer runP95 = weightedPercentile(stats, QueueWaitStat::getRunP95);
+
     List<TrendPoint> trend = stats.stream()
         .map(s -> new TrendPoint(s.getBucketStart(), s.getQueueP50(), s.getRunP50()))
         .toList();
-    return ResponseEntity.ok(new QueueStatsDto(samples, queueP50, queueP90, queueP95,
+    return ResponseEntity.ok(new QueueStatsDto(totalSamples, queueP50, queueP90, queueP95,
         runP50, runP90, runP95, trend));
   }
 
   @GetMapping("/org/depth")
   public ResponseEntity<QueueDepthDto> orgDepth() {
-    List<WorkflowJob> all = workflowJobRepository.findAll().stream()
-        .filter(j -> "queued".equalsIgnoreCase(j.getStatus())
-            || "in_progress".equalsIgnoreCase(j.getStatus()))
-        .toList();
-    Map<String, List<WorkflowJob>> byHash = new LinkedHashMap<>();
-    for (WorkflowJob j : all) {
-      byHash.computeIfAbsent(j.getLabelSetHash() == null ? "" : j.getLabelSetHash(),
-          k -> new ArrayList<>()).add(j);
-    }
-    int totalQueued = 0;
-    int totalInProgress = 0;
-    List<LabelSetDepth> labelSets = new ArrayList<>();
-    OffsetDateTime now = OffsetDateTime.now();
-    for (Map.Entry<String, List<WorkflowJob>> e : byHash.entrySet()) {
-      List<WorkflowJob> jobs = e.getValue();
-      int queued = (int) jobs.stream().filter(j -> "queued".equalsIgnoreCase(j.getStatus())).count();
-      int inProgress =
-          (int) jobs.stream().filter(j -> "in_progress".equalsIgnoreCase(j.getStatus())).count();
-      totalQueued += queued;
-      totalInProgress += inProgress;
-      Long oldestQueuedSeconds = jobs.stream()
-          .filter(j -> "queued".equalsIgnoreCase(j.getStatus()) && j.getCreatedAt() != null)
-          .map(j -> Duration.between(j.getCreatedAt(), now).getSeconds())
-          .max(Long::compareTo)
-          .orElse(null);
-      WorkflowJob sample = jobs.get(0);
-      labelSets.add(new LabelSetDepth(sample.getLabels(), queued, inProgress, oldestQueuedSeconds,
-          sample.getRunnerKind() == null ? null : sample.getRunnerKind().name()));
-    }
-    return ResponseEntity.ok(new QueueDepthDto(labelSets, totalQueued, totalInProgress));
+    // SQL-constrained — does not load every historical workflow_job row.
+    List<WorkflowJob> active = workflowJobRepository
+        .findByStatusInOrderByCreatedAtAsc(List.of("queued", "in_progress"));
+    return ResponseEntity.ok(aggregateDepth(active));
   }
 
   // ---- Alert rule CRUD ----
@@ -216,7 +161,8 @@ public class WorkflowQueueController {
       @PathVariable Long repoId,
       @PathVariable Long id,
       @Valid @RequestBody AlertRuleDto body) {
-    return ruleRepository.findById(id).map(rule -> {
+    // Scoped lookup — caller cannot edit rules from other repos by guessing ids.
+    return ruleRepository.findByIdAndRepositoryId(id, repoId).map(rule -> {
       applyDto(rule, body);
       rule.setRepositoryId(repoId);
       return ResponseEntity.ok(toDto(ruleRepository.save(rule)));
@@ -225,9 +171,10 @@ public class WorkflowQueueController {
 
   @EnforceAtLeastWritePermission
   @DeleteMapping("/repos/{repoId}/alerts/rules/{id}")
+  @org.springframework.transaction.annotation.Transactional
   public ResponseEntity<Void> deleteRule(@PathVariable Long repoId, @PathVariable Long id) {
-    ruleRepository.deleteById(id);
-    return ResponseEntity.noContent().build();
+    long deleted = ruleRepository.deleteByIdAndRepositoryId(id, repoId);
+    return deleted > 0 ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
   }
 
   @GetMapping("/repos/{repoId}/alerts/events")
@@ -239,11 +186,64 @@ public class WorkflowQueueController {
     return ResponseEntity.ok(events.stream().map(this::toDto).toList());
   }
 
-  @EnforceAtLeastWritePermission
+  /** Admin-only — 30-day backfill consumes a meaningful GitHub rate-limit slice. */
+  @EnforceAdmin
   @PostMapping("/admin/backfill")
   public ResponseEntity<String> startBackfill() {
     boolean started = backfillService.start();
     return ResponseEntity.ok(started ? "started" : "already-running");
+  }
+
+  // ---- helpers ----
+
+  private QueueDepthDto aggregateDepth(List<WorkflowJob> active) {
+    Map<String, List<WorkflowJob>> byHash = new LinkedHashMap<>();
+    for (WorkflowJob j : active) {
+      byHash.computeIfAbsent(j.getLabelSetHash() == null ? "" : j.getLabelSetHash(),
+          k -> new ArrayList<>()).add(j);
+    }
+    List<LabelSetDepth> labelSets = new ArrayList<>();
+    int totalQueued = 0;
+    int totalInProgress = 0;
+    OffsetDateTime now = OffsetDateTime.now();
+    for (Map.Entry<String, List<WorkflowJob>> e : byHash.entrySet()) {
+      List<WorkflowJob> jobs = e.getValue();
+      int queued =
+          (int) jobs.stream().filter(j -> "queued".equalsIgnoreCase(j.getStatus())).count();
+      int inProgress =
+          (int) jobs.stream().filter(j -> "in_progress".equalsIgnoreCase(j.getStatus())).count();
+      totalQueued += queued;
+      totalInProgress += inProgress;
+      Long oldestQueuedSeconds = jobs.stream()
+          .filter(j -> "queued".equalsIgnoreCase(j.getStatus()) && j.getCreatedAt() != null)
+          .map(j -> Duration.between(j.getCreatedAt(), now).getSeconds())
+          .max(Long::compareTo)
+          .orElse(null);
+      WorkflowJob sample = jobs.get(0);
+      labelSets.add(new LabelSetDepth(
+          sample.getLabels(),
+          queued,
+          inProgress,
+          oldestQueuedSeconds,
+          sample.getRunnerKind() == null ? null : sample.getRunnerKind().name()));
+    }
+    return new QueueDepthDto(labelSets, totalQueued, totalInProgress);
+  }
+
+  private Integer weightedPercentile(
+      List<QueueWaitStat> stats,
+      java.util.function.Function<QueueWaitStat, Integer> field) {
+    long totalSamples = 0L;
+    long weighted = 0L;
+    for (QueueWaitStat s : stats) {
+      Integer v = field.apply(s);
+      if (v == null || s.getSamples() == null) {
+        continue;
+      }
+      totalSamples += s.getSamples();
+      weighted += (long) v * s.getSamples();
+    }
+    return totalSamples == 0 ? null : (int) (weighted / totalSamples);
   }
 
   private void applyDto(QueueAlertRule rule, AlertRuleDto body) {
@@ -253,7 +253,7 @@ public class WorkflowQueueController {
     rule.setLabelSetHash(body.labelSetHash());
     rule.setChannels(body.channels() == null ? List.of("EMAIL") : body.channels());
     rule.setEnabled(body.enabled());
-    rule.setQuietHoursCron(body.quietHoursCron());
+    rule.setQuietWindow(body.quietWindow());
   }
 
   private AlertRuleDto toDto(QueueAlertRule rule) {
@@ -261,7 +261,7 @@ public class WorkflowQueueController {
         rule.getKind() == null ? null : rule.getKind().name(),
         rule.getThresholdSeconds(), rule.getWindowMinutes(),
         rule.getRepositoryId(), rule.getLabelSetHash(), rule.getChannels(),
-        rule.isEnabled(), rule.getQuietHoursCron());
+        rule.isEnabled(), rule.getQuietWindow());
   }
 
   private AlertEventDto toDto(QueueAlertEvent e) {

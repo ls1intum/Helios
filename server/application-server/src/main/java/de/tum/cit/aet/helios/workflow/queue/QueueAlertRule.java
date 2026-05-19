@@ -36,6 +36,14 @@ public class QueueAlertRule {
   @Column(name = "kind", nullable = false, length = 32)
   private Kind kind;
 
+  /**
+   * Threshold value. Units depend on {@link Kind#unit()}:
+   * <ul>
+   *   <li>{@link Kind#QUEUE_P95_OVER}: seconds</li>
+   *   <li>{@link Kind#RUNNER_OFFLINE_OVER}: count of runners</li>
+   *   <li>{@link Kind#STUCK_JOBS_OVER}: count of stuck jobs</li>
+   * </ul>
+   */
   @Column(name = "threshold_seconds")
   private Integer thresholdSeconds;
 
@@ -55,9 +63,12 @@ public class QueueAlertRule {
   @Column(name = "enabled", nullable = false)
   private boolean enabled = true;
 
-  /** Cron expression for windows during which evaluation is skipped (e.g. nights). */
-  @Column(name = "quiet_hours_cron", length = 64)
-  private String quietHoursCron;
+  /**
+   * {@code HH:mm-HH:mm} local-time window during which evaluation is skipped (e.g.
+   * {@code 18:00-08:00} suppresses alerts overnight). End-before-start crosses midnight.
+   */
+  @Column(name = "quiet_window", length = 32)
+  private String quietWindow;
 
   @Column(name = "created_by_user_id")
   private Long createdByUserId;
@@ -81,8 +92,23 @@ public class QueueAlertRule {
   }
 
   public enum Kind {
-    QUEUE_P95_OVER,
-    RUNNER_OFFLINE_OVER,
-    STUCK_JOBS_OVER
+    QUEUE_P95_OVER(Unit.SECONDS),
+    RUNNER_OFFLINE_OVER(Unit.COUNT),
+    STUCK_JOBS_OVER(Unit.COUNT);
+
+    private final Unit unit;
+
+    Kind(Unit unit) {
+      this.unit = unit;
+    }
+
+    public Unit unit() {
+      return unit;
+    }
+  }
+
+  public enum Unit {
+    SECONDS,
+    COUNT
   }
 }

@@ -145,6 +145,51 @@ export const UpdateReleaseNotesDtoSchema = {
   },
 } as const;
 
+export const AlertRuleDtoSchema = {
+  type: 'object',
+  properties: {
+    id: {
+      type: 'integer',
+      format: 'int64',
+    },
+    kind: {
+      type: 'string',
+      pattern: 'QUEUE_P95_OVER|RUNNER_OFFLINE_OVER|STUCK_JOBS_OVER',
+    },
+    thresholdSeconds: {
+      type: 'integer',
+      format: 'int32',
+      minimum: 0,
+    },
+    windowMinutes: {
+      type: 'integer',
+      format: 'int32',
+      minimum: 1,
+    },
+    repositoryId: {
+      type: 'integer',
+      format: 'int64',
+    },
+    labelSetHash: {
+      type: 'string',
+    },
+    channels: {
+      type: 'array',
+      items: {
+        type: 'string',
+      },
+    },
+    enabled: {
+      type: 'boolean',
+    },
+    quietWindow: {
+      type: 'string',
+      pattern: '^$|^([01][0-9]|2[0-3]):[0-5][0-9]-([01][0-9]|2[0-3]):[0-5][0-9]$',
+    },
+  },
+  required: ['kind', 'thresholdSeconds'],
+} as const;
+
 export const DeploymentTimerDtoSchema = {
   type: 'object',
   properties: {
@@ -576,7 +621,7 @@ export const NotificationPreferenceDtoSchema = {
   properties: {
     type: {
       type: 'string',
-      enum: ['DEPLOYMENT_FAILED', 'LOCK_EXPIRED', 'LOCK_UNLOCKED'],
+      enum: ['DEPLOYMENT_FAILED', 'LOCK_EXPIRED', 'LOCK_UNLOCKED', 'QUEUE_P95_BREACH', 'RUNNER_OFFLINE', 'STUCK_JOBS'],
     },
     enabled: {
       type: 'boolean',
@@ -1622,6 +1667,81 @@ export const TestFailureAnalysisUsageDtoSchema = {
   },
 } as const;
 
+export const RunnerDtoSchema = {
+  type: 'object',
+  properties: {
+    id: {
+      type: 'integer',
+      format: 'int64',
+    },
+    name: {
+      type: 'string',
+    },
+    os: {
+      type: 'string',
+    },
+    status: {
+      type: 'string',
+    },
+    busy: {
+      type: 'boolean',
+    },
+    labels: {
+      type: 'array',
+      items: {
+        type: 'string',
+      },
+    },
+    runnerGroupId: {
+      type: 'integer',
+      format: 'int64',
+    },
+    runnerGroupName: {
+      type: 'string',
+    },
+    currentJobId: {
+      type: 'integer',
+      format: 'int64',
+    },
+    lastSeenAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+    offlineSince: {
+      type: 'string',
+      format: 'date-time',
+    },
+  },
+} as const;
+
+export const RunnerPoolDtoSchema = {
+  type: 'object',
+  properties: {
+    labels: {
+      type: 'array',
+      items: {
+        type: 'string',
+      },
+    },
+    online: {
+      type: 'integer',
+      format: 'int32',
+    },
+    busy: {
+      type: 'integer',
+      format: 'int32',
+    },
+    idle: {
+      type: 'integer',
+      format: 'int32',
+    },
+    offline: {
+      type: 'integer',
+      format: 'int32',
+    },
+  },
+} as const;
+
 export const TestFailureAnalysisCacheLookupDtoSchema = {
   type: 'object',
   properties: {
@@ -1678,6 +1798,194 @@ export const CompareCommitInfoDtoSchema = {
     },
   },
   required: ['authorEmail', 'authorName', 'message', 'sha', 'url'],
+} as const;
+
+export const QueueStatsDtoSchema = {
+  type: 'object',
+  properties: {
+    samples: {
+      type: 'integer',
+      format: 'int32',
+    },
+    queueP50: {
+      type: 'integer',
+      format: 'int32',
+    },
+    queueP90: {
+      type: 'integer',
+      format: 'int32',
+    },
+    queueP95: {
+      type: 'integer',
+      format: 'int32',
+    },
+    runP50: {
+      type: 'integer',
+      format: 'int32',
+    },
+    runP90: {
+      type: 'integer',
+      format: 'int32',
+    },
+    runP95: {
+      type: 'integer',
+      format: 'int32',
+    },
+    trend: {
+      type: 'array',
+      items: {
+        $ref: '#/components/schemas/TrendPoint',
+      },
+    },
+  },
+} as const;
+
+export const TrendPointSchema = {
+  type: 'object',
+  properties: {
+    bucket: {
+      type: 'string',
+      format: 'date-time',
+    },
+    queueP50: {
+      type: 'integer',
+      format: 'int32',
+    },
+    runP50: {
+      type: 'integer',
+      format: 'int32',
+    },
+  },
+} as const;
+
+export const QueuedJobDtoSchema = {
+  type: 'object',
+  properties: {
+    jobId: {
+      type: 'integer',
+      format: 'int64',
+    },
+    runId: {
+      type: 'integer',
+      format: 'int64',
+    },
+    workflowName: {
+      type: 'string',
+    },
+    jobName: {
+      type: 'string',
+    },
+    headBranch: {
+      type: 'string',
+    },
+    labels: {
+      type: 'array',
+      items: {
+        type: 'string',
+      },
+    },
+    waitSeconds: {
+      type: 'integer',
+      format: 'int32',
+    },
+    etaSeconds: {
+      type: 'integer',
+      format: 'int64',
+    },
+    positionInQueue: {
+      type: 'integer',
+      format: 'int32',
+    },
+    queuedReason: {
+      type: 'string',
+    },
+    isStuck: {
+      type: 'boolean',
+    },
+    runnerKind: {
+      type: 'string',
+    },
+  },
+} as const;
+
+export const LabelSetDepthSchema = {
+  type: 'object',
+  properties: {
+    labels: {
+      type: 'array',
+      items: {
+        type: 'string',
+      },
+    },
+    queued: {
+      type: 'integer',
+      format: 'int32',
+    },
+    inProgress: {
+      type: 'integer',
+      format: 'int32',
+    },
+    oldestQueuedSeconds: {
+      type: 'integer',
+      format: 'int64',
+    },
+    runnerKind: {
+      type: 'string',
+    },
+  },
+} as const;
+
+export const QueueDepthDtoSchema = {
+  type: 'object',
+  properties: {
+    labelSets: {
+      type: 'array',
+      items: {
+        $ref: '#/components/schemas/LabelSetDepth',
+      },
+    },
+    totalQueued: {
+      type: 'integer',
+      format: 'int32',
+    },
+    totalInProgress: {
+      type: 'integer',
+      format: 'int32',
+    },
+  },
+} as const;
+
+export const AlertEventDtoSchema = {
+  type: 'object',
+  properties: {
+    id: {
+      type: 'integer',
+      format: 'int64',
+    },
+    ruleId: {
+      type: 'integer',
+      format: 'int64',
+    },
+    repositoryId: {
+      type: 'integer',
+      format: 'int64',
+    },
+    firedAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+    clearedAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+    measuredValue: {
+      type: 'integer',
+      format: 'int32',
+    },
+    details: {
+      type: 'string',
+    },
+  },
 } as const;
 
 export const LabelInfoDtoSchema = {

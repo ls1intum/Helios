@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { CardModule } from 'primeng/card';
@@ -17,24 +18,34 @@ import { queueApi, type QueueStats } from '../queue.api';
       <h2 class="text-xl font-semibold">Queue statistics</h2>
 
       <div class="flex flex-wrap items-center gap-2">
-        <input pInputText placeholder="Workflow" [(ngModel)]="workflowFilter" />
-        <input pInputText placeholder="Job" [(ngModel)]="jobFilter" />
-        <input pInputText placeholder="Branch" [(ngModel)]="branchFilter" />
-        <p-select
-          [options]="windowOptions"
-          [(ngModel)]="windowSel"
-          optionLabel="label"
-          optionValue="value"
-        />
+        <input pInputText placeholder="Workflow" [ngModel]="workflowFilter()" (ngModelChange)="workflowFilter.set($event)" />
+        <input pInputText placeholder="Job" [ngModel]="jobFilter()" (ngModelChange)="jobFilter.set($event)" />
+        <input pInputText placeholder="Branch" [ngModel]="branchFilter()" (ngModelChange)="branchFilter.set($event)" />
+        <p-select [options]="windowOptions" [ngModel]="windowSel()" (ngModelChange)="windowSel.set($event)" optionLabel="label" optionValue="value" />
       </div>
 
       @if (stats(); as s) {
         <div class="grid grid-cols-2 gap-4 md:grid-cols-6">
-          <p-card><strong>{{ s.samples }}</strong><div class="text-xs">samples</div></p-card>
-          <p-card><strong>{{ s.queueP50 ?? '—' }}</strong><div class="text-xs">queue&nbsp;p50</div></p-card>
-          <p-card><strong>{{ s.queueP95 ?? '—' }}</strong><div class="text-xs">queue&nbsp;p95</div></p-card>
-          <p-card><strong>{{ s.runP50 ?? '—' }}</strong><div class="text-xs">run&nbsp;p50</div></p-card>
-          <p-card><strong>{{ s.runP95 ?? '—' }}</strong><div class="text-xs">run&nbsp;p95</div></p-card>
+          <p-card
+            ><strong>{{ s.samples }}</strong>
+            <div class="text-xs">samples</div></p-card
+          >
+          <p-card
+            ><strong>{{ s.queueP50 ?? '—' }}</strong>
+            <div class="text-xs">queue&nbsp;p50</div></p-card
+          >
+          <p-card
+            ><strong>{{ s.queueP95 ?? '—' }}</strong>
+            <div class="text-xs">queue&nbsp;p95</div></p-card
+          >
+          <p-card
+            ><strong>{{ s.runP50 ?? '—' }}</strong>
+            <div class="text-xs">run&nbsp;p50</div></p-card
+          >
+          <p-card
+            ><strong>{{ s.runP95 ?? '—' }}</strong>
+            <div class="text-xs">run&nbsp;p95</div></p-card
+          >
         </div>
 
         <app-helios-line-chart [series]="series()" yAxisLabel="seconds" />
@@ -51,21 +62,26 @@ export class QueueStatsComponent {
     { label: 'Last 30 days', value: '30d' },
   ];
 
-  workflowFilter = '';
-  jobFilter = '';
-  branchFilter = '';
-  windowSel: '7d' | '30d' = '7d';
+  workflowFilter = signal<string>('');
+  jobFilter = signal<string>('');
+  branchFilter = signal<string>('');
+  windowSel = signal<'7d' | '30d'>('7d');
 
   stats = signal<QueueStats | null>(null);
   private interval?: ReturnType<typeof setInterval>;
 
+  private paramMap = toSignal(this.route.paramMap, { requireSync: true });
   repositoryId = computed(() => {
-    let r = this.route.snapshot;
-    while (r && !r.params['repositoryId'] && r.parent) {
+    this.paramMap();
+    let r: ActivatedRoute | null = this.route;
+    while (r) {
+      const raw = r.snapshot.paramMap.get('repositoryId');
+      if (raw && !isNaN(Number(raw))) {
+        return Number(raw);
+      }
       r = r.parent;
     }
-    const raw = r?.params['repositoryId'];
-    return raw ? Number(raw) : null;
+    return null;
   });
 
   series = computed<ChartSeries[]>(() => {
@@ -84,18 +100,23 @@ export class QueueStatsComponent {
   });
 
   constructor() {
+    // Effect re-runs when any filter signal changes, immediately re-fetching with new params.
     effect(onCleanup => {
       const repoId = this.repositoryId();
       if (!repoId) return;
+      const workflow = this.workflowFilter();
+      const job = this.jobFilter();
+      const branch = this.branchFilter();
+      const window = this.windowSel();
       const tick = async () => {
         try {
           this.stats.set(
             await this.api.stats(repoId, {
-              workflow: this.workflowFilter || undefined,
-              job: this.jobFilter || undefined,
-              branch: this.branchFilter || undefined,
-              window: this.windowSel,
-            }),
+              workflow: workflow || undefined,
+              job: job || undefined,
+              branch: branch || undefined,
+              window,
+            })
           );
         } catch {
           // Ignore; next tick retries.

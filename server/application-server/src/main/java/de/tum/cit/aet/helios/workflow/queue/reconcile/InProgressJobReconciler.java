@@ -59,54 +59,62 @@ public class InProgressJobReconciler {
         continue;
       }
       String fullName = repoOpt.get().getNameWithOwner();
-      String path =
-          "/repos/" + fullName + "/actions/runs/" + job.getWorkflowRunId() + "/jobs?per_page=100";
-      Optional<JsonNode> body = restClient.get(path);
-      if (body.isEmpty()) {
-        continue;
-      }
-      JsonNode list = body.get().get("jobs");
-      if (list == null || !list.isArray()) {
-        continue;
-      }
-      for (JsonNode node : list) {
-        if (!node.hasNonNull("id")) {
-          continue;
+      // Paginate — large matrix runs can push the target job past the first page.
+      int page = 1;
+      while (true) {
+        String path = "/repos/" + fullName + "/actions/runs/" + job.getWorkflowRunId()
+            + "/jobs?per_page=100&page=" + page;
+        Optional<JsonNode> body = restClient.get(path);
+        if (body.isEmpty()) {
+          break;
         }
-        Long id = node.get("id").asLong();
-        Optional<WorkflowJob> wjOpt = workflowJobRepository.findById(id);
-        if (wjOpt.isEmpty()) {
-          continue;
+        JsonNode list = body.get().get("jobs");
+        if (list == null || !list.isArray() || list.isEmpty()) {
+          break;
         }
-        WorkflowJob wj = wjOpt.get();
-        if (node.hasNonNull("runner_id")) {
-          wj.setRunnerId(node.get("runner_id").asLong());
-        }
-        if (node.hasNonNull("runner_name")) {
-          wj.setRunnerName(node.get("runner_name").asText());
-        }
-        if (node.hasNonNull("runner_group_id")) {
-          wj.setRunnerGroupId(node.get("runner_group_id").asLong());
-        }
-        if (node.hasNonNull("runner_group_name")) {
-          wj.setRunnerGroupName(node.get("runner_group_name").asText());
-        }
-        JsonNode labels = node.get("labels");
-        if (labels != null && labels.isArray()) {
-          List<String> labelNames = new ArrayList<>();
-          for (JsonNode l : labels) {
-            if (l.isTextual()) {
-              labelNames.add(l.asText());
+        for (JsonNode node : list) {
+          if (!node.hasNonNull("id")) {
+            continue;
+          }
+          Long id = node.get("id").asLong();
+          Optional<WorkflowJob> wjOpt = workflowJobRepository.findById(id);
+          if (wjOpt.isEmpty()) {
+            continue;
+          }
+          WorkflowJob wj = wjOpt.get();
+          if (node.hasNonNull("runner_id")) {
+            wj.setRunnerId(node.get("runner_id").asLong());
+          }
+          if (node.hasNonNull("runner_name")) {
+            wj.setRunnerName(node.get("runner_name").asText());
+          }
+          if (node.hasNonNull("runner_group_id")) {
+            wj.setRunnerGroupId(node.get("runner_group_id").asLong());
+          }
+          if (node.hasNonNull("runner_group_name")) {
+            wj.setRunnerGroupName(node.get("runner_group_name").asText());
+          }
+          JsonNode labels = node.get("labels");
+          if (labels != null && labels.isArray()) {
+            List<String> labelNames = new ArrayList<>();
+            for (JsonNode l : labels) {
+              if (l.isTextual()) {
+                labelNames.add(l.asText());
+              }
+            }
+            if (!labelNames.isEmpty()) {
+              List<String> canonical = LabelSets.canonical(labelNames);
+              wj.setLabels(canonical);
+              wj.setLabelSetHash(LabelSets.hash(canonical));
+              wj.setRunnerKind(LabelSets.deriveRunnerKind(canonical));
             }
           }
-          if (!labelNames.isEmpty()) {
-            List<String> canonical = LabelSets.canonical(labelNames);
-            wj.setLabels(canonical);
-            wj.setLabelSetHash(LabelSets.hash(canonical));
-            wj.setRunnerKind(LabelSets.deriveRunnerKind(canonical));
-          }
+          workflowJobRepository.save(wj);
         }
-        workflowJobRepository.save(wj);
+        if (list.size() < 100) {
+          break;
+        }
+        page++;
       }
     }
 

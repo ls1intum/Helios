@@ -20,7 +20,8 @@ import org.springframework.test.web.servlet.MockMvc;
 
 @AutoConfigureMockMvc
 @ContextConfiguration(classes = RunnerController.class)
-@WebMvcTest(RunnerController.class)
+@WebMvcTest(value = RunnerController.class,
+    properties = "helios.queue.enabled=true")
 class RunnerControllerTest {
 
   @Autowired MockMvc mockMvc;

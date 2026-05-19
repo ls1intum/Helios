@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
@@ -14,17 +15,7 @@ import { queueApi, type AlertEventDto, type AlertRuleDto } from '../queue.api';
 @Component({
   selector: 'app-queue-alerts',
   standalone: true,
-  imports: [
-    ButtonModule,
-    CardModule,
-    FormsModule,
-    InputNumberModule,
-    InputTextModule,
-    SelectModule,
-    TableModule,
-    TagModule,
-    ToggleSwitchModule,
-  ],
+  imports: [ButtonModule, CardModule, FormsModule, InputNumberModule, InputTextModule, SelectModule, TableModule, TagModule, ToggleSwitchModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="p-4 space-y-6">
@@ -34,15 +25,10 @@ import { queueApi, type AlertEventDto, type AlertRuleDto } from '../queue.api';
           <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
             <div>
               <label class="block text-sm">Kind</label>
-              <p-select
-                [options]="kindOptions"
-                [(ngModel)]="draft.kind"
-                optionLabel="label"
-                optionValue="value"
-              />
+              <p-select [options]="kindOptions" [(ngModel)]="draft.kind" optionLabel="label" optionValue="value" />
             </div>
             <div>
-              <label class="block text-sm">Threshold (seconds)</label>
+              <label class="block text-sm">Threshold ({{ thresholdUnit() }})</label>
               <p-inputNumber [(ngModel)]="draft.thresholdSeconds" />
             </div>
             <div>
@@ -50,8 +36,8 @@ import { queueApi, type AlertEventDto, type AlertRuleDto } from '../queue.api';
               <p-inputNumber [(ngModel)]="draft.windowMinutes" />
             </div>
             <div>
-              <label class="block text-sm">Quiet hours cron</label>
-              <input pInputText [(ngModel)]="draft.quietHoursCron" />
+              <label class="block text-sm">Quiet window (HH:mm-HH:mm)</label>
+              <input pInputText [(ngModel)]="draft.quietWindow" placeholder="22:00-06:00" />
             </div>
             <div class="flex items-center gap-2">
               <p-toggleSwitch [(ngModel)]="draft.enabled" />
@@ -83,13 +69,14 @@ import { queueApi, type AlertEventDto, type AlertRuleDto } from '../queue.api';
               <td>{{ rule.thresholdSeconds }}s</td>
               <td>{{ rule.windowMinutes }}m</td>
               <td>
-                <p-tag
-                  [value]="rule.enabled ? 'on' : 'off'"
-                  [severity]="rule.enabled ? 'success' : 'secondary'"
-                />
+                <p-tag [value]="rule.enabled ? 'on' : 'off'" [severity]="rule.enabled ? 'success' : 'secondary'" />
               </td>
               <td>{{ rule.quietHoursCron ?? '—' }}</td>
-              <td><p-button label="Delete" severity="danger" (onClick)="remove(rule.id)" /></td>
+              <td>
+                @if (rule.id != null) {
+                  <p-button label="Delete" severity="danger" (onClick)="remove(rule.id)" />
+                }
+              </td>
             </tr>
           </ng-template>
         </p-table>
@@ -140,19 +127,29 @@ export class QueueAlertsComponent {
     labelSetHash: null,
     channels: ['EMAIL'],
     enabled: true,
-    quietHoursCron: null,
+    quietWindow: null,
   };
+
+  // QUEUE_P95_OVER measures seconds; the other two are counts.
+  thresholdUnit(): string {
+    return this.draft.kind === 'QUEUE_P95_OVER' ? 'seconds' : 'count';
+  }
 
   rules = signal<AlertRuleDto[]>([]);
   events = signal<AlertEventDto[]>([]);
 
+  private paramMap = toSignal(this.route.paramMap, { requireSync: true });
   repositoryId = computed(() => {
-    let r = this.route.snapshot;
-    while (r && !r.params['repositoryId'] && r.parent) {
+    this.paramMap();
+    let r: ActivatedRoute | null = this.route;
+    while (r) {
+      const raw = r.snapshot.paramMap.get('repositoryId');
+      if (raw && !isNaN(Number(raw))) {
+        return Number(raw);
+      }
       r = r.parent;
     }
-    const raw = r?.params['repositoryId'];
-    return raw ? Number(raw) : null;
+    return null;
   });
 
   constructor() {
@@ -167,10 +164,7 @@ export class QueueAlertsComponent {
     const repoId = this.repositoryId();
     if (!repoId) return;
     try {
-      const [rules, events] = await Promise.all([
-        this.api.listRules(repoId),
-        this.api.events(repoId, 72),
-      ]);
+      const [rules, events] = await Promise.all([this.api.listRules(repoId), this.api.events(repoId, 72)]);
       this.rules.set(rules);
       this.events.set(events);
     } catch {

@@ -23,6 +23,17 @@ public interface QueueWaitStatRepository extends JpaRepository<QueueWaitStat, Lo
       @Param("headBranch") String headBranch,
       @Param("since") OffsetDateTime since);
 
+  @Query(
+      "SELECT s FROM QueueWaitStat s WHERE "
+          + "(:repoId IS NULL OR s.repositoryId = :repoId) "
+          + "AND (:labelSetHash IS NULL OR s.labelSetHash = :labelSetHash) "
+          + "AND s.bucketStart >= :since "
+          + "ORDER BY s.bucketStart ASC")
+  List<QueueWaitStat> findForRuleWindow(
+      @Param("repoId") Long repositoryId,
+      @Param("labelSetHash") String labelSetHash,
+      @Param("since") OffsetDateTime since);
+
   Optional<QueueWaitStat>
       findFirstByRepositoryIdAndWorkflowNameAndJobNameAndHeadBranchAndLabelSetHashAndBucketStart(
           Long repositoryId,

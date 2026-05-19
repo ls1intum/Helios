@@ -10,14 +10,7 @@ import type { QueuedJob } from '../queue.api';
   imports: [TableModule, TagModule, QueuedReasonChipComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <p-table
-      [value]="jobs()"
-      [scrollable]="true"
-      scrollHeight="480px"
-      dataKey="jobId"
-      [virtualScroll]="jobs().length > 50"
-      [virtualScrollItemSize]="44"
-    >
+    <p-table [value]="jobs()" [scrollable]="true" scrollHeight="480px" dataKey="jobId" [virtualScroll]="jobs().length > 50" [virtualScrollItemSize]="44">
       <ng-template pTemplate="header">
         <tr>
           <th>Workflow / Job</th>

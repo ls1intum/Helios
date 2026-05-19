@@ -115,15 +115,14 @@ class QueueAlertEvaluatorTest {
   }
 
   @Test
-  void quietHoursCronSkipsEvaluationDuringMatchingMinute() {
+  void quietWindowAllDaySkipsEvaluation() {
     QueueAlertRule r = rule(QueueAlertRule.Kind.RUNNER_OFFLINE_OVER, 0);
-    // Cron firing every minute → "next" from a minute ago should fall inside the window.
-    r.setQuietHoursCron("0 * * * * *");
+    // 00:00-23:59 ≈ "all day". With the new HH:mm-HH:mm window semantics this should suppress.
+    r.setQuietWindow("00:00-23:59");
     when(ruleRepository.findByEnabledTrue()).thenReturn(List.of(r));
 
     newEvaluator().evaluate();
 
-    // No event saved, no email sent — quiet path.
     verify(eventRepository, times(0)).save(any(QueueAlertEvent.class));
     verify(emailChannel, times(0)).send(any());
   }

@@ -67,30 +67,49 @@ class QueueEtaServiceTest {
 
   @Test
   void selfHostedLabelSupersetIncludedInCapacity() {
-    WorkflowJob job = queued(1L, List.of("self-hosted", "linux"), OffsetDateTime.now());
+    // A job with one job ahead in the queue, on a label-set served by a runner that has a
+    // SUPERSET of the needed labels.
+    OffsetDateTime now = OffsetDateTime.now();
+    WorkflowJob ahead = queued(1L, List.of("self-hosted", "linux"), now.minusMinutes(2));
+    WorkflowJob job = queued(2L, List.of("self-hosted", "linux"), now);
     when(runnerRepository.findByStatus(Runner.Status.ONLINE))
-        .thenReturn(List.of(
-            // Runner has a SUPERSET of needed labels — must be counted.
-            runner(101L, List.of("self-hosted", "linux", "x64"), false)));
+        .thenReturn(List.of(runner(101L, List.of("self-hosted", "linux", "x64"), false)));
     when(workflowJobRepository.findByRepositoryIdAndStatusInOrderByCreatedAtAsc(7L,
-        List.of("queued"))).thenReturn(List.of(job));
+        List.of("queued"))).thenReturn(List.of(ahead, job));
     when(workflowJobRepository.findByRepositoryIdAndStatusInOrderByCreatedAtAsc(7L,
         List.of("in_progress"))).thenReturn(List.of());
 
     QueueEtaService.EtaResult r = service.computeEta(job);
 
     assertThat(r.capacity()).isEqualTo(1);
+    // queueAhead excludes the job being estimated, but includes the earlier-created job.
     assertThat(r.queueAhead()).isEqualTo(1);
     assertThat(r.etaSeconds()).isNotNull();
   }
 
   @Test
-  void runnerWithStrictSubsetLabelsIsNotCounted() {
+  void runnerWithStrictSubsetLabelsReturnsNullEta() {
     WorkflowJob job = queued(1L, List.of("self-hosted", "linux", "gpu"), OffsetDateTime.now());
     when(runnerRepository.findByStatus(Runner.Status.ONLINE))
         .thenReturn(List.of(
-            // Missing `gpu` — should NOT be in capacity.
+            // Missing `gpu` — no runner can pick this up.
             runner(101L, List.of("self-hosted", "linux"), false)));
+
+    QueueEtaService.EtaResult r = service.computeEta(job);
+
+    // Capacity 0 ⇒ unschedulable ⇒ ETA must be null (don't pretend it's runnable).
+    assertThat(r.capacity()).isEqualTo(0);
+    assertThat(r.etaSeconds()).isNull();
+  }
+
+  @Test
+  void onlyQueuedJobItselfHasZeroQueueAhead() {
+    // Single-runner pool with only the job we're estimating in the queue → queueAhead = 0,
+    // ETA ≈ 0 (modulo currently-running jobs, of which there are none).
+    OffsetDateTime now = OffsetDateTime.now();
+    WorkflowJob job = queued(1L, List.of("self-hosted", "linux"), now);
+    when(runnerRepository.findByStatus(Runner.Status.ONLINE))
+        .thenReturn(List.of(runner(101L, List.of("self-hosted", "linux"), false)));
     when(workflowJobRepository.findByRepositoryIdAndStatusInOrderByCreatedAtAsc(7L,
         List.of("queued"))).thenReturn(List.of(job));
     when(workflowJobRepository.findByRepositoryIdAndStatusInOrderByCreatedAtAsc(7L,
@@ -98,6 +117,7 @@ class QueueEtaServiceTest {
 
     QueueEtaService.EtaResult r = service.computeEta(job);
 
-    assertThat(r.capacity()).isEqualTo(0);
+    assertThat(r.queueAhead()).isEqualTo(0);
+    assertThat(r.etaSeconds()).isEqualTo(0L);
   }
 }

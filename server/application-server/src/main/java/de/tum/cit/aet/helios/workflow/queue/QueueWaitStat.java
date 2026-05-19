@@ -28,17 +28,17 @@ public class QueueWaitStat {
   @Column(name = "repository_id", nullable = false)
   private Long repositoryId;
 
-  @Column(name = "workflow_name", length = 512)
-  private String workflowName;
+  @Column(name = "workflow_name", length = 512, nullable = false)
+  private String workflowName = "";
 
-  @Column(name = "job_name", length = 512)
-  private String jobName;
+  @Column(name = "job_name", length = 512, nullable = false)
+  private String jobName = "";
 
-  @Column(name = "head_branch", length = 512)
-  private String headBranch;
+  @Column(name = "head_branch", length = 512, nullable = false)
+  private String headBranch = "";
 
-  @Column(name = "label_set_hash", length = 40)
-  private String labelSetHash;
+  @Column(name = "label_set_hash", length = 40, nullable = false)
+  private String labelSetHash = "";
 
   @Column(name = "bucket_start", nullable = false)
   private OffsetDateTime bucketStart;

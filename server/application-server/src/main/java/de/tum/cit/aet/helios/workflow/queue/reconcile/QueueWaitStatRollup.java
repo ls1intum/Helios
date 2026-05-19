@@ -34,10 +34,10 @@ public class QueueWaitStatRollup {
       )
       SELECT
         repository_id,
-        workflow_name,
-        name AS job_name,
-        head_branch,
-        label_set_hash,
+        COALESCE(workflow_name, '') AS workflow_name,
+        COALESCE(name, '')          AS job_name,
+        COALESCE(head_branch, '')   AS head_branch,
+        COALESCE(label_set_hash, '') AS label_set_hash,
         :bucketStart AS bucket_start,
         COUNT(*) AS samples,
         PERCENTILE_CONT(0.5)  WITHIN GROUP (ORDER BY queue_wait_seconds) AS queue_p50,
@@ -51,7 +51,11 @@ public class QueueWaitStatRollup {
         AND completed_at >= :bucketStart
         AND completed_at <  :bucketEnd
         AND queue_wait_seconds IS NOT NULL
-      GROUP BY repository_id, workflow_name, name, head_branch, label_set_hash
+      GROUP BY repository_id,
+               COALESCE(workflow_name, ''),
+               COALESCE(name, ''),
+               COALESCE(head_branch, ''),
+               COALESCE(label_set_hash, '')
       ON CONFLICT (repository_id, workflow_name, job_name, head_branch,
                    label_set_hash, bucket_start)
       DO UPDATE SET
@@ -70,7 +74,12 @@ public class QueueWaitStatRollup {
     OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
     OffsetDateTime bucketEnd = now.truncatedTo(ChronoUnit.HOURS);
     OffsetDateTime bucketStart = bucketEnd.minusHours(1);
+    rollupBucket(bucketStart, bucketEnd);
+  }
 
+  /** Rolls up an explicit hour bucket — used by the backfill service to populate history. */
+  @Transactional
+  public void rollupBucket(OffsetDateTime bucketStart, OffsetDateTime bucketEnd) {
     int rows = em.createNativeQuery(UPSERT_SQL)
         .setParameter("bucketStart", bucketStart)
         .setParameter("bucketEnd", bucketEnd)
@@ -78,6 +87,16 @@ public class QueueWaitStatRollup {
     if (rows > 0) {
       log.info("QueueWaitStatRollup: upserted {} rows for bucket {}..{}", rows, bucketStart,
           bucketEnd);
+    }
+  }
+
+  /** Rolls up every hour bucket from {@code from} (inclusive) to {@code until} (exclusive). */
+  public void rollupRange(OffsetDateTime from, OffsetDateTime until) {
+    OffsetDateTime cursor = from.truncatedTo(ChronoUnit.HOURS);
+    OffsetDateTime end = until.truncatedTo(ChronoUnit.HOURS);
+    while (cursor.isBefore(end)) {
+      rollupBucket(cursor, cursor.plusHours(1));
+      cursor = cursor.plusHours(1);
     }
   }
 }

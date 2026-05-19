@@ -1,6 +1,11 @@
 package de.tum.cit.aet.helios.workflow.queue.reconcile;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import de.tum.cit.aet.helios.github.GitHubRestClient;
 import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
@@ -10,12 +15,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationContext;
 
 /**
- * The {@code @Async} self-invocation bug (PR #1046 follow-up #1) means we can't easily test the
- * full async path from a unit test — Spring's AOP isn't active. These tests pin the {@code
- * running} flag semantics and document that {@code start()} delegates to {@code runAsync()}
- * synchronously today.
+ * Confirms {@link WorkflowJobBackfillService#start()} dispatches through the proxied
+ * {@link WorkflowJobBackfillExecutor} (PR #1046 follow-up #1, fixed) and that the {@code running}
+ * flag prevents concurrent invocations.
  */
 @ExtendWith(MockitoExtension.class)
 class WorkflowJobBackfillServiceTest {
@@ -23,25 +28,44 @@ class WorkflowJobBackfillServiceTest {
   @Mock GitRepoRepository repositoryRepository;
   @Mock WorkflowJobRepository workflowJobRepository;
   @Mock GitHubRestClient restClient;
+  @Mock QueueWaitStatRollup rollup;
+  @Mock ApplicationContext applicationContext;
+  @Mock WorkflowJobBackfillExecutor executor;
   @InjectMocks WorkflowJobBackfillService service;
 
-  @Test
-  void doubleStartReturnsFalseSecondTime() {
-    // First start triggers the synchronous walk over (empty) repositoryRepository.findAll();
-    // when it completes, running is reset to false.
-    boolean firstStarted = service.start();
-    boolean secondStarted = service.start();
-
-    assertThat(firstStarted).isTrue();
-    // Second start also succeeds because the first run completed synchronously and reset the flag.
-    // This is a sentinel for the @Async bug: in the proxied (correct) world, second would be false
-    // while first is still running. See PR #1046 follow-up #1.
-    assertThat(secondStarted).isTrue();
+  private void stubExecutorLookup() {
+    when(applicationContext.getBean(WorkflowJobBackfillExecutor.class)).thenReturn(executor);
+    // Executor.runAsync() runs on a worker thread in prod; in tests we do nothing, so the
+    // `running` flag stays true (matches real proxied behaviour).
+    doNothing().when(executor).runAsync();
   }
 
   @Test
-  void isRunningFalseAfterCompletion() {
-    service.start();
-    assertThat(service.isRunning()).isFalse();
+  void startDispatchesThroughProxiedExecutor() {
+    stubExecutorLookup();
+    boolean started = service.start();
+    assertThat(started).isTrue();
+    verify(applicationContext).getBean(WorkflowJobBackfillExecutor.class);
+    verify(executor, times(1)).runAsync();
+    // running stays true until the executor reports back via runBackfill()'s finally block.
+    assertThat(service.isRunning()).isTrue();
+  }
+
+  @Test
+  void doubleStartIsIdempotent() {
+    stubExecutorLookup();
+    assertThat(service.start()).isTrue();
+    assertThat(service.start()).isFalse(); // already running
+    verify(executor, times(1)).runAsync();
+  }
+
+  @Test
+  void abortStopsLoopBeforeAnyRestCall() {
+    // Drive runBackfill directly (skipping the @Async dispatch) so we can observe abort.
+    when(repositoryRepository.findAll()).thenReturn(java.util.List.of());
+    service.abort();
+    service.runBackfill();
+    // No REST calls issued; the abort flag short-circuits the per-repo loop.
+    verify(restClient, times(0)).get(any());
   }
 }

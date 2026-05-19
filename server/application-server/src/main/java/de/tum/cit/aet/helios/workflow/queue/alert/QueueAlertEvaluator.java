@@ -11,21 +11,25 @@ import de.tum.cit.aet.helios.workflow.queue.Runner;
 import de.tum.cit.aet.helios.workflow.queue.RunnerRepository;
 import de.tum.cit.aet.helios.workflow.queue.WorkflowJobRepository;
 import jakarta.transaction.Transactional;
-import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.OffsetDateTime;
-import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.scheduling.support.CronExpression;
 import org.springframework.stereotype.Service;
 
-/** Evaluates alert rules every 30s, dedups via open events. See plan §F. */
+/**
+ * Evaluates alert rules every 30s, dedups via open events. See plan §F.
+ *
+ * <p>Quiet windows are encoded as {@code HH:mm-HH:mm} ranges (local time). End-before-start spans
+ * midnight (e.g. {@code 22:00-06:00}).
+ */
 @Service
 @Log4j2
 @RequiredArgsConstructor
@@ -49,7 +53,7 @@ public class QueueAlertEvaluator {
     }
     for (QueueAlertRule rule : rules) {
       try {
-        if (inQuietHours(rule)) {
+        if (inQuietWindow(rule, LocalTime.now())) {
           continue;
         }
         Integer measured = measure(rule);
@@ -69,22 +73,38 @@ public class QueueAlertEvaluator {
     }
   }
 
-  private boolean inQuietHours(QueueAlertRule rule) {
-    if (rule.getQuietHoursCron() == null || rule.getQuietHoursCron().isBlank()) {
+  /**
+   * Returns true if {@code now} is inside the rule's quiet window. Package-private for tests.
+   * Window is {@code HH:mm-HH:mm} local time; end-before-start crosses midnight.
+   */
+  boolean inQuietWindow(QueueAlertRule rule, LocalTime now) {
+    String window = rule.getQuietWindow();
+    if (window == null || window.isBlank()) {
       return false;
     }
+    String[] parts = window.split("-");
+    if (parts.length != 2) {
+      log.warn("Invalid quiet_window on rule {}: {}", rule.getId(), window);
+      return false;
+    }
+    LocalTime start;
+    LocalTime end;
     try {
-      CronExpression expr = CronExpression.parse(rule.getQuietHoursCron());
-      LocalDateTime now = LocalDateTime.now(ZoneId.systemDefault());
-      LocalDateTime next = expr.next(now.minusMinutes(1));
-      if (next == null) {
-        return false;
-      }
-      return !next.isAfter(now.plusMinutes(1));
+      start = LocalTime.parse(parts[0].trim());
+      end = LocalTime.parse(parts[1].trim());
     } catch (Exception e) {
-      log.warn("Invalid quiet_hours_cron on rule {}: {}", rule.getId(), e.getMessage());
+      log.warn("Invalid quiet_window times on rule {}: {}", rule.getId(), window);
       return false;
     }
+    if (start.equals(end)) {
+      return false; // Empty window.
+    }
+    if (start.isBefore(end)) {
+      // Same-day window: [start, end).
+      return !now.isBefore(start) && now.isBefore(end);
+    }
+    // Overnight: [start, 24:00) ∪ [00:00, end).
+    return !now.isBefore(start) || now.isBefore(end);
   }
 
   private Integer measure(QueueAlertRule rule) {
@@ -97,28 +117,37 @@ public class QueueAlertEvaluator {
 
   private Integer measureQueueP95(QueueAlertRule rule) {
     OffsetDateTime since = OffsetDateTime.now().minusMinutes(rule.getWindowMinutes());
-    List<QueueWaitStat> stats = statsRepository.findForWindow(
-        rule.getRepositoryId() == null ? 0L : rule.getRepositoryId(), null, null, null, since);
+    // repositoryId NULL ⇒ org-wide; label_set_hash NULL ⇒ any label set.
+    List<QueueWaitStat> stats =
+        statsRepository.findForRuleWindow(rule.getRepositoryId(), rule.getLabelSetHash(), since);
     return stats.stream()
         .map(QueueWaitStat::getQueueP95)
-        .filter(java.util.Objects::nonNull)
+        .filter(Objects::nonNull)
         .max(Integer::compareTo)
         .orElse(null);
   }
 
   private Integer measureRunnersOffline(QueueAlertRule rule) {
-    return (int) runnerRepository.findByStatus(Runner.Status.OFFLINE).size();
+    // Offline runners. If the rule scopes to a label-set, only count runners whose label set
+    // matches; otherwise count all offline runners.
+    List<Runner> offline = runnerRepository.findByStatus(Runner.Status.OFFLINE);
+    if (rule.getLabelSetHash() == null) {
+      return offline.size();
+    }
+    return (int) offline.stream()
+        .filter(r -> rule.getLabelSetHash().equals(hashOrEmpty(r.getLabels())))
+        .count();
   }
 
   private Integer measureStuckJobs(QueueAlertRule rule) {
-    if (rule.getRepositoryId() != null) {
-      return workflowJobRepository.findByRepositoryIdAndStatus(rule.getRepositoryId(), "queued")
-          .stream()
-          .filter(j -> j.isStuck())
-          .toList()
-          .size();
-    }
-    return (int) workflowJobRepository.findAll().stream().filter(j -> j.isStuck()).count();
+    return (int) workflowJobRepository.countCurrentlyStuck(
+        rule.getRepositoryId(), rule.getLabelSetHash());
+  }
+
+  private String hashOrEmpty(List<String> labels) {
+    return labels == null
+        ? ""
+        : de.tum.cit.aet.helios.workflow.queue.LabelSets.hash(labels);
   }
 
   private void openEvent(QueueAlertRule rule, int measured, Map<String, AlertChannel> channelById) {
@@ -127,24 +156,30 @@ public class QueueAlertEvaluator {
     event.setRepositoryId(rule.getRepositoryId());
     event.setLabelSetHash(rule.getLabelSetHash());
     event.setMeasuredValue(measured);
-    event.setDetails("threshold=" + rule.getThresholdSeconds() + " measured=" + measured);
+    event.setDetails("threshold=" + rule.getThresholdSeconds() + " measured=" + measured
+        + " unit=" + rule.getKind().unit());
     eventRepository.save(event);
 
     QueueAlertEmailPayload payload = new QueueAlertEmailPayload(
         rule.getKind().name(), measured, rule.getThresholdSeconds(), null, event.getDetails());
 
-    if (rule.getChannels() != null) {
+    if (rule.getChannels() != null && !rule.getChannels().isEmpty()) {
       for (String chId : rule.getChannels()) {
         AlertChannel ch = channelById.get(chId);
         if (ch != null) {
           ch.send(payload);
+        } else {
+          log.warn("Unknown alert channel {} on rule {}", chId, rule.getId());
         }
       }
     } else {
-      channelById.getOrDefault("EMAIL", channels.isEmpty() ? null : channels.get(0))
-          .send(payload);
+      AlertChannel email = channelById.get("EMAIL");
+      if (email != null) {
+        email.send(payload);
+      }
     }
-    log.info("Opened alert event for rule {} measured={}", rule.getId(), measured);
+    log.info("Opened alert event for rule {} measured={} unit={}",
+        rule.getId(), measured, rule.getKind().unit());
   }
 
   private void closeEvent(QueueAlertEvent event) {

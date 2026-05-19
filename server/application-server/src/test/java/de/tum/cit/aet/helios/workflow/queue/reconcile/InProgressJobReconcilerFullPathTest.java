@@ -80,7 +80,8 @@ class InProgressJobReconcilerFullPathTest {
     when(workflowJobRepository.findJobsNeedingRunnerReconciliation(any(), any()))
         .thenReturn(List.of(job));
     when(repositoryRepository.findById(7L)).thenReturn(Optional.of(repository()));
-    when(restClient.get(eq("/repos/ls1intum/Helios/actions/runs/99/jobs?per_page=100")))
+    // Page 1 returns one job; loop exits because list.size() < 100.
+    when(restClient.get(eq("/repos/ls1intum/Helios/actions/runs/99/jobs?per_page=100&page=1")))
         .thenReturn(Optional.of(jobsResponse(42L, 101L, "runner-1",
             List.of("self-hosted", "linux"))));
     when(workflowJobRepository.findById(42L)).thenReturn(Optional.of(job));

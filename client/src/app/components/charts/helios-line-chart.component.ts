@@ -1,6 +1,9 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, input } from '@angular/core';
 import { ChartModule } from 'primeng/chart';
 import { ThemeService } from '@app/core/services/theme.service';
+// Required side-effect import: registers the date adapter used by `type: 'time'` scales below.
+// Without it Chart.js throws at render time ("complete date adapter is provided").
+import 'chartjs-adapter-date-fns';
 
 export interface ChartSeries {
   label: string;

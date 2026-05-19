@@ -85,7 +85,7 @@ export interface AlertRuleDto {
   labelSetHash: string | null;
   channels: string[] | null;
   enabled: boolean;
-  quietHoursCron: string | null;
+  quietWindow: string | null;
 }
 
 export interface AlertEventDto {
@@ -101,42 +101,23 @@ export interface AlertEventDto {
 export function queueApi() {
   const http = inject(HttpClient);
   return {
-    depth: (repoId: number) =>
-      firstValueFrom(http.get<QueueDepth>(`/api/queue/repos/${repoId}/depth`)),
+    depth: (repoId: number) => firstValueFrom(http.get<QueueDepth>(`/api/queue/repos/${repoId}/depth`)),
     jobs: (repoId: number, status: string, limit = 100) =>
-      firstValueFrom(
-        http.get<QueuedJob[]>(
-          `/api/queue/repos/${repoId}/jobs?status=${encodeURIComponent(status)}&limit=${limit}`,
-        ),
-      ),
-    stats: (
-      repoId: number,
-      params: { workflow?: string; job?: string; branch?: string; window?: '7d' | '30d' } = {},
-    ) => {
+      firstValueFrom(http.get<QueuedJob[]>(`/api/queue/repos/${repoId}/jobs?status=${encodeURIComponent(status)}&limit=${limit}`)),
+    stats: (repoId: number, params: { workflow?: string; job?: string; branch?: string; window?: '7d' | '30d' } = {}) => {
       const q = new URLSearchParams();
       if (params.workflow) q.set('workflow', params.workflow);
       if (params.job) q.set('job', params.job);
       if (params.branch) q.set('branch', params.branch);
       if (params.window) q.set('window', params.window);
-      return firstValueFrom(
-        http.get<QueueStats>(`/api/queue/repos/${repoId}/stats?${q.toString()}`),
-      );
+      return firstValueFrom(http.get<QueueStats>(`/api/queue/repos/${repoId}/stats?${q.toString()}`));
     },
     orgDepth: () => firstValueFrom(http.get<QueueDepth>(`/api/queue/org/depth`)),
-    listRules: (repoId: number) =>
-      firstValueFrom(http.get<AlertRuleDto[]>(`/api/queue/repos/${repoId}/alerts/rules`)),
-    createRule: (repoId: number, body: AlertRuleDto) =>
-      firstValueFrom(http.post<AlertRuleDto>(`/api/queue/repos/${repoId}/alerts/rules`, body)),
-    updateRule: (repoId: number, id: number, body: AlertRuleDto) =>
-      firstValueFrom(http.put<AlertRuleDto>(`/api/queue/repos/${repoId}/alerts/rules/${id}`, body)),
-    deleteRule: (repoId: number, id: number) =>
-      firstValueFrom(http.delete<void>(`/api/queue/repos/${repoId}/alerts/rules/${id}`)),
-    events: (repoId: number, hoursBack = 24) =>
-      firstValueFrom(
-        http.get<AlertEventDto[]>(
-          `/api/queue/repos/${repoId}/alerts/events?hoursBack=${hoursBack}`,
-        ),
-      ),
+    listRules: (repoId: number) => firstValueFrom(http.get<AlertRuleDto[]>(`/api/queue/repos/${repoId}/alerts/rules`)),
+    createRule: (repoId: number, body: AlertRuleDto) => firstValueFrom(http.post<AlertRuleDto>(`/api/queue/repos/${repoId}/alerts/rules`, body)),
+    updateRule: (repoId: number, id: number, body: AlertRuleDto) => firstValueFrom(http.put<AlertRuleDto>(`/api/queue/repos/${repoId}/alerts/rules/${id}`, body)),
+    deleteRule: (repoId: number, id: number) => firstValueFrom(http.delete<void>(`/api/queue/repos/${repoId}/alerts/rules/${id}`)),
+    events: (repoId: number, hoursBack = 24) => firstValueFrom(http.get<AlertEventDto[]>(`/api/queue/repos/${repoId}/alerts/events?hoursBack=${hoursBack}`)),
   };
 }
 

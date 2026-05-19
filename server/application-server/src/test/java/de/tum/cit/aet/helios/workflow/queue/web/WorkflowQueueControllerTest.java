@@ -27,7 +27,8 @@ import org.springframework.test.web.servlet.MockMvc;
 
 @AutoConfigureMockMvc
 @ContextConfiguration(classes = WorkflowQueueController.class)
-@WebMvcTest(WorkflowQueueController.class)
+@WebMvcTest(value = WorkflowQueueController.class,
+    properties = "helios.queue.enabled=true")
 class WorkflowQueueControllerTest {
 
   @Autowired MockMvc mockMvc;
@@ -70,7 +71,8 @@ class WorkflowQueueControllerTest {
   @Test
   void jobsEndpointIncludesEtaResolvedFromService() throws Exception {
     when(workflowJobRepository.findByRepositoryIdAndStatusInOrderByCreatedAtAsc(
-            org.mockito.ArgumentMatchers.eq(7L), anyList()))
+            org.mockito.ArgumentMatchers.eq(7L), anyList(),
+            org.mockito.ArgumentMatchers.any(org.springframework.data.domain.Pageable.class)))
         .thenReturn(List.of(job("queued", List.of("self-hosted", "linux"))));
     when(etaService.computeEta(any()))
         .thenReturn(new QueueEtaService.EtaResult(120L, 2, 1, null, null, false));

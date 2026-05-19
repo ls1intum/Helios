@@ -1,5 +1,8 @@
 package de.tum.cit.aet.helios.workflow.queue.web;
 
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import java.time.OffsetDateTime;
 import java.util.List;
 
@@ -63,14 +66,18 @@ public final class QueueDtos {
 
   public record AlertRuleDto(
       Long id,
-      String kind,
-      Integer thresholdSeconds,
-      Integer windowMinutes,
+      @NotNull @Pattern(regexp = "QUEUE_P95_OVER|RUNNER_OFFLINE_OVER|STUCK_JOBS_OVER")
+          String kind,
+      @NotNull @Min(0) Integer thresholdSeconds,
+      @Min(1) Integer windowMinutes,
       Long repositoryId,
       String labelSetHash,
       List<String> channels,
       boolean enabled,
-      String quietHoursCron) {}
+      @Pattern(
+              regexp = "^$|^([01][0-9]|2[0-3]):[0-5][0-9]-([01][0-9]|2[0-3]):[0-5][0-9]$",
+              message = "quietWindow must be HH:mm-HH:mm")
+          String quietWindow) {}
 
   public record AlertEventDto(
       Long id,

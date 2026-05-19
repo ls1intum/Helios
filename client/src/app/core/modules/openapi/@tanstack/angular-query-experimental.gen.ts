@@ -5,16 +5,21 @@ import { type InfiniteData, infiniteQueryOptions, type MutationOptions, queryOpt
 import { client } from '../client.gen';
 import {
   analyzeFailedTest,
+  byId,
   cancelDeployment,
   cancelWorkflowRun,
   createReleaseCandidate,
+  createRule,
   createTestType,
   createWorkflowGroup,
   deleteReleaseCandidateByName,
+  deleteRule,
   deleteTestType,
   deleteWorkflowGroup,
   deployToEnvironment,
+  depth,
   evaluate,
+  events,
   extendEnvironmentLock,
   generateReleaseNotes,
   getActivityHistoryByEnvironmentId,
@@ -70,8 +75,13 @@ import {
   getWorkflowsByRepositoryId,
   getWorkflowsByState,
   healthCheck,
+  jobs,
+  list,
+  listRules,
   lockEnvironment,
   type Options,
+  orgDepth,
+  pools,
   publishReleaseDraft,
   reconcilePullRequestState,
   reRunFailedJobs,
@@ -79,6 +89,8 @@ import {
   rotateSecret,
   setBranchPinnedByRepositoryIdAndNameAndUserId,
   setPrPinnedByNumber,
+  startBackfill,
+  stats,
   syncEnvironments,
   syncWorkflowsByRepositoryId,
   unlockEnvironment,
@@ -88,6 +100,7 @@ import {
   updateNotificationPreferences,
   updateReleaseName,
   updateReleaseNotes,
+  updateRule,
   updateTestType,
   updateUserSettings,
   updateWorkflowGroups,
@@ -98,6 +111,9 @@ import type {
   AnalyzeFailedTestData,
   AnalyzeFailedTestError,
   AnalyzeFailedTestResponse,
+  ByIdData,
+  ByIdError,
+  ByIdResponse,
   CancelDeploymentData,
   CancelDeploymentError,
   CancelDeploymentResponse,
@@ -106,6 +122,9 @@ import type {
   CreateReleaseCandidateData,
   CreateReleaseCandidateError,
   CreateReleaseCandidateResponse,
+  CreateRuleData,
+  CreateRuleError,
+  CreateRuleResponse,
   CreateTestTypeData,
   CreateTestTypeError,
   CreateTestTypeResponse,
@@ -115,6 +134,8 @@ import type {
   DeleteReleaseCandidateByNameData,
   DeleteReleaseCandidateByNameError,
   DeleteReleaseCandidateByNameResponse,
+  DeleteRuleData,
+  DeleteRuleError,
   DeleteTestTypeData,
   DeleteTestTypeError,
   DeleteTestTypeResponse,
@@ -123,8 +144,14 @@ import type {
   DeployToEnvironmentData,
   DeployToEnvironmentError,
   DeployToEnvironmentResponse,
+  DepthData,
+  DepthError,
+  DepthResponse,
   EvaluateData,
   EvaluateError,
+  EventsData,
+  EventsError,
+  EventsResponse,
   ExtendEnvironmentLockData,
   ExtendEnvironmentLockError,
   ExtendEnvironmentLockResponse,
@@ -290,9 +317,24 @@ import type {
   HealthCheckData,
   HealthCheckError,
   HealthCheckResponse,
+  JobsData,
+  JobsError,
+  JobsResponse,
+  ListData,
+  ListError,
+  ListResponse,
+  ListRulesData,
+  ListRulesError,
+  ListRulesResponse,
   LockEnvironmentData,
   LockEnvironmentError,
   LockEnvironmentResponse,
+  OrgDepthData,
+  OrgDepthError,
+  OrgDepthResponse,
+  PoolsData,
+  PoolsError,
+  PoolsResponse,
   PublishReleaseDraftData,
   PublishReleaseDraftError,
   ReconcilePullRequestStateData,
@@ -309,6 +351,12 @@ import type {
   SetBranchPinnedByRepositoryIdAndNameAndUserIdError,
   SetPrPinnedByNumberData,
   SetPrPinnedByNumberError,
+  StartBackfillData,
+  StartBackfillError,
+  StartBackfillResponse,
+  StatsData,
+  StatsError,
+  StatsResponse,
   SyncEnvironmentsData,
   SyncEnvironmentsError,
   SyncEnvironmentsResponse,
@@ -331,6 +379,9 @@ import type {
   UpdateReleaseNameError,
   UpdateReleaseNotesData,
   UpdateReleaseNotesError,
+  UpdateRuleData,
+  UpdateRuleError,
+  UpdateRuleResponse,
   UpdateTestTypeData,
   UpdateTestTypeError,
   UpdateTestTypeResponse,
@@ -524,6 +575,34 @@ export const updateReleaseNotesMutation = (
   const mutationOptions: MutationOptions<unknown, UpdateReleaseNotesError, Options<UpdateReleaseNotesData>> = {
     mutationFn: async fnOptions => {
       const { data } = await updateReleaseNotes({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const deleteRuleMutation = (options?: Partial<Options<DeleteRuleData>>): MutationOptions<unknown, DeleteRuleError, Options<DeleteRuleData>> => {
+  const mutationOptions: MutationOptions<unknown, DeleteRuleError, Options<DeleteRuleData>> = {
+    mutationFn: async fnOptions => {
+      const { data } = await deleteRule({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const updateRuleMutation = (options?: Partial<Options<UpdateRuleData>>): MutationOptions<UpdateRuleResponse, UpdateRuleError, Options<UpdateRuleData>> => {
+  const mutationOptions: MutationOptions<UpdateRuleResponse, UpdateRuleError, Options<UpdateRuleData>> = {
+    mutationFn: async fnOptions => {
+      const { data } = await updateRule({
         ...options,
         ...fnOptions,
         throwOnError: true,
@@ -930,6 +1009,50 @@ export const getReleaseInfoByNameMutation = (
   const mutationOptions: MutationOptions<GetReleaseInfoByNameResponse, GetReleaseInfoByNameError, Options<GetReleaseInfoByNameData>> = {
     mutationFn: async fnOptions => {
       const { data } = await getReleaseInfoByName({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const listRulesQueryKey = (options: Options<ListRulesData>) => createQueryKey('listRules', options);
+
+export const listRulesOptions = (options: Options<ListRulesData>) =>
+  queryOptions<ListRulesResponse, ListRulesError, ListRulesResponse, ReturnType<typeof listRulesQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await listRules({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: listRulesQueryKey(options),
+  });
+
+export const createRuleMutation = (options?: Partial<Options<CreateRuleData>>): MutationOptions<CreateRuleResponse, CreateRuleError, Options<CreateRuleData>> => {
+  const mutationOptions: MutationOptions<CreateRuleResponse, CreateRuleError, Options<CreateRuleData>> = {
+    mutationFn: async fnOptions => {
+      const { data } = await createRule({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const startBackfillMutation = (options?: Partial<Options<StartBackfillData>>): MutationOptions<StartBackfillResponse, StartBackfillError, Options<StartBackfillData>> => {
+  const mutationOptions: MutationOptions<StartBackfillResponse, StartBackfillError, Options<StartBackfillData>> = {
+    mutationFn: async fnOptions => {
+      const { data } = await startBackfill({
         ...options,
         ...fnOptions,
         throwOnError: true,
@@ -1559,6 +1682,54 @@ export const getGroupsWithWorkflowsOptions = (options: Options<GetGroupsWithWork
     queryKey: getGroupsWithWorkflowsQueryKey(options),
   });
 
+export const listQueryKey = (options?: Options<ListData>) => createQueryKey('list', options);
+
+export const listOptions = (options?: Options<ListData>) =>
+  queryOptions<ListResponse, ListError, ListResponse, ReturnType<typeof listQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await list({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: listQueryKey(options),
+  });
+
+export const byIdQueryKey = (options: Options<ByIdData>) => createQueryKey('byId', options);
+
+export const byIdOptions = (options: Options<ByIdData>) =>
+  queryOptions<ByIdResponse, ByIdError, ByIdResponse, ReturnType<typeof byIdQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await byId({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: byIdQueryKey(options),
+  });
+
+export const poolsQueryKey = (options?: Options<PoolsData>) => createQueryKey('pools', options);
+
+export const poolsOptions = (options?: Options<PoolsData>) =>
+  queryOptions<PoolsResponse, PoolsError, PoolsResponse, ReturnType<typeof poolsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await pools({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: poolsQueryKey(options),
+  });
+
 export const getAllRepositoriesQueryKey = (options?: Options<GetAllRepositoriesData>) => createQueryKey('getAllRepositories', options);
 
 export const getAllRepositoriesOptions = (options?: Options<GetAllRepositoriesData>) =>
@@ -1632,6 +1803,86 @@ export const getCommitsSinceLastReleaseCandidateOptions = (options: Options<GetC
       return data;
     },
     queryKey: getCommitsSinceLastReleaseCandidateQueryKey(options),
+  });
+
+export const statsQueryKey = (options: Options<StatsData>) => createQueryKey('stats', options);
+
+export const statsOptions = (options: Options<StatsData>) =>
+  queryOptions<StatsResponse, StatsError, StatsResponse, ReturnType<typeof statsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await stats({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: statsQueryKey(options),
+  });
+
+export const jobsQueryKey = (options: Options<JobsData>) => createQueryKey('jobs', options);
+
+export const jobsOptions = (options: Options<JobsData>) =>
+  queryOptions<JobsResponse, JobsError, JobsResponse, ReturnType<typeof jobsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await jobs({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: jobsQueryKey(options),
+  });
+
+export const depthQueryKey = (options: Options<DepthData>) => createQueryKey('depth', options);
+
+export const depthOptions = (options: Options<DepthData>) =>
+  queryOptions<DepthResponse, DepthError, DepthResponse, ReturnType<typeof depthQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await depth({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: depthQueryKey(options),
+  });
+
+export const eventsQueryKey = (options: Options<EventsData>) => createQueryKey('events', options);
+
+export const eventsOptions = (options: Options<EventsData>) =>
+  queryOptions<EventsResponse, EventsError, EventsResponse, ReturnType<typeof eventsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await events({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: eventsQueryKey(options),
+  });
+
+export const orgDepthQueryKey = (options?: Options<OrgDepthData>) => createQueryKey('orgDepth', options);
+
+export const orgDepthOptions = (options?: Options<OrgDepthData>) =>
+  queryOptions<OrgDepthResponse, OrgDepthError, OrgDepthResponse, ReturnType<typeof orgDepthQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await orgDepth({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: orgDepthQueryKey(options),
   });
 
 export const getPullRequestsQueryKey = (options?: Options<GetPullRequestsData>) => createQueryKey('getPullRequests', options);

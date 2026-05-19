@@ -30,10 +30,7 @@ import { runnerApi, type RunnerDto } from '../queue.api';
             <td>{{ r.os }}</td>
             <td>{{ r.runnerGroupName }}</td>
             <td>
-              <p-tag
-                [value]="r.status"
-                [severity]="r.status === 'ONLINE' ? 'success' : 'danger'"
-              />
+              <p-tag [value]="r.status" [severity]="r.status === 'ONLINE' ? 'success' : 'danger'" />
             </td>
             <td>
               @if (r.busy) {

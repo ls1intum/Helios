@@ -79,9 +79,9 @@ public class StuckJobClassifier {
     if (run.isPresent() && "waiting".equalsIgnoreCase(run.get().path("status").asText(""))) {
       return true;
     }
-    Optional<JsonNode> pending =
-        restClient.get(
-            "/repos/" + fullName + "/actions/runs/" + job.getWorkflowRunId() + "/pending_deployments");
+    Optional<JsonNode> pending = restClient.get(
+        "/repos/" + fullName + "/actions/runs/" + job.getWorkflowRunId()
+            + "/pending_deployments");
     return pending.isPresent() && pending.get().isArray() && pending.get().size() > 0;
   }
 

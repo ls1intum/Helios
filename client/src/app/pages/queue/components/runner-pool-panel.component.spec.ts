@@ -16,9 +16,7 @@ describe('RunnerPoolPanelComponent', () => {
   });
 
   it('renders busy / idle / offline counts for each pool', async () => {
-    const pools: RunnerPool[] = [
-      { labels: ['self-hosted', 'linux'], online: 3, busy: 2, idle: 1, offline: 1 },
-    ];
+    const pools: RunnerPool[] = [{ labels: ['self-hosted', 'linux'], online: 3, busy: 2, idle: 1, offline: 1 }];
     fixture.componentRef.setInput('pools', pools);
     fixture.detectChanges();
     await fixture.whenStable();

@@ -30,7 +30,7 @@ describe('ThemeService', () => {
     originalMatchMedia = window.matchMedia;
     Object.defineProperty(window, 'matchMedia', {
       configurable: true,
-      value: () => ({ matches: false } as MediaQueryList),
+      value: () => ({ matches: false }) as MediaQueryList,
     });
   });
 

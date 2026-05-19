@@ -52,7 +52,8 @@ class QueueIndexServiceTest {
   @Test
   void unknownStatusIsNoop() {
     QueueIndexService service = new QueueIndexService();
-    service.onWorkflowJobEvent(event("waiting", 1L, List.of("linux")));
+    // "other" is mapped to JobState.OTHER which neither increments nor decrements the counter.
+    service.onWorkflowJobEvent(event("scheduled", 1L, List.of("linux")));
     assertEquals(0, service.snapshotFor(7L, List.of("linux")));
   }
 }

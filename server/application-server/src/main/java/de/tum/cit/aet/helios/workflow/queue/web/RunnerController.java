@@ -1,5 +1,6 @@
 package de.tum.cit.aet.helios.workflow.queue.web;
 
+import de.tum.cit.aet.helios.workflow.queue.LabelSets;
 import de.tum.cit.aet.helios.workflow.queue.Runner;
 import de.tum.cit.aet.helios.workflow.queue.RunnerRepository;
 import de.tum.cit.aet.helios.workflow.queue.web.QueueDtos.RunnerDto;
@@ -10,6 +11,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,14 +23,17 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/runners")
 @RequiredArgsConstructor
 @PreAuthorize("isAuthenticated()")
+@ConditionalOnProperty(name = "helios.queue.enabled", havingValue = "true")
 public class RunnerController {
 
   private final RunnerRepository runnerRepository;
 
   @GetMapping
   public ResponseEntity<List<RunnerDto>> list() {
+    Comparator<Runner> byName =
+        Comparator.comparing(Runner::getName, Comparator.nullsLast(Comparator.naturalOrder()));
     List<RunnerDto> dtos = runnerRepository.findAll().stream()
-        .sorted(Comparator.comparing(Runner::getName, Comparator.nullsLast(Comparator.naturalOrder())))
+        .sorted(byName)
         .map(this::toDto)
         .toList();
     return ResponseEntity.ok(dtos);
@@ -44,10 +49,12 @@ public class RunnerController {
 
   @GetMapping("/pools")
   public ResponseEntity<List<RunnerPoolDto>> pools() {
+    // Group by canonical-label hash so two runners with the same labels in different order
+    // appear as one pool. Order may differ between webhook payloads and inventory polling.
     Map<List<String>, List<Runner>> byLabels = new HashMap<>();
     for (Runner r : runnerRepository.findAll()) {
-      byLabels.computeIfAbsent(r.getLabels() == null ? List.of() : r.getLabels(),
-          k -> new ArrayList<>()).add(r);
+      List<String> key = LabelSets.canonical(r.getLabels());
+      byLabels.computeIfAbsent(key, k -> new ArrayList<>()).add(r);
     }
     List<RunnerPoolDto> pools = new ArrayList<>();
     for (Map.Entry<List<String>, List<Runner>> e : byLabels.entrySet()) {

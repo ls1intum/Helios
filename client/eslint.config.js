@@ -13,6 +13,7 @@ module.exports = [
       '.github/',
       'build/',
       'coverage/',
+      'dist/',
       'node/',
       'node_modules/',
       'src/app/core/modules/openapi/',

@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 /** Handles org-level {@code self_hosted_runner} events. See plan §B3. */
@@ -19,6 +20,9 @@ public class GitHubSelfHostedRunnerMessageHandler
     extends JacksonMessageHandler<GitHubSelfHostedRunnerPayload> {
 
   private final RunnerRepository runnerRepository;
+
+  @Value("${helios.github.org:ls1intum}")
+  private String githubOrg;
 
   @Override
   protected Class<GitHubSelfHostedRunnerPayload> getPayloadClass() {
@@ -34,6 +38,14 @@ public class GitHubSelfHostedRunnerMessageHandler
   @Transactional
   protected void handleMessage(GitHubSelfHostedRunnerPayload payload) {
     if (payload == null || payload.selfHostedRunner() == null) {
+      return;
+    }
+    // Reject events from other GitHub installations / orgs that may share the NATS stream.
+    if (payload.organization() != null
+        && payload.organization().login() != null
+        && !payload.organization().login().equalsIgnoreCase(githubOrg)) {
+      log.debug("Ignoring self_hosted_runner event from org {} (configured: {})",
+          payload.organization().login(), githubOrg);
       return;
     }
     GitHubSelfHostedRunnerPayload.SelfHostedRunner src = payload.selfHostedRunner();
@@ -54,7 +66,8 @@ public class GitHubSelfHostedRunnerMessageHandler
       runner.setRunnerGroupId(src.runnerGroup().id());
       runner.setRunnerGroupName(src.runnerGroup().name());
     }
-    runner.setLabels(extractLabelNames(src.labels()));
+    runner.setLabels(
+        de.tum.cit.aet.helios.workflow.queue.LabelSets.canonical(extractLabelNames(src.labels())));
     if (src.busy() != null) {
       runner.setBusy(src.busy());
     }
@@ -71,7 +84,8 @@ public class GitHubSelfHostedRunnerMessageHandler
         runner.setStatus(Runner.Status.ONLINE);
         runner.setOfflineSince(null);
       }
-      case "offline", "removed" -> {
+      // GitHub uses "deleted" for un-registration; "removed" is included for forward-compat.
+      case "offline", "removed", "deleted" -> {
         runner.setStatus(Runner.Status.OFFLINE);
         if (runner.getOfflineSince() == null) {
           runner.setOfflineSince(now);

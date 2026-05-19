@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
 import { CardModule } from 'primeng/card';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
@@ -10,13 +11,7 @@ import { queueApi, runnerApi, type QueueDepth, type QueuedJob, type RunnerPool }
 @Component({
   selector: 'app-queue-overview',
   standalone: true,
-  imports: [
-    CardModule,
-    ProgressSpinnerModule,
-    QueueDepthPanelComponent,
-    QueuedJobsTableComponent,
-    RunnerPoolPanelComponent,
-  ],
+  imports: [CardModule, ProgressSpinnerModule, QueueDepthPanelComponent, QueuedJobsTableComponent, RunnerPoolPanelComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="p-4 space-y-6">
@@ -46,13 +41,22 @@ export class QueueOverviewComponent {
   private api = queueApi();
   private rApi = runnerApi();
 
+  // Reactive — re-fires when the URL's repositoryId param changes (e.g. switching repos in-place).
+  private paramMap = toSignal(this.route.paramMap, { requireSync: true });
   repositoryId = computed(() => {
-    let r = this.route.snapshot;
-    while (r && !r.params['repositoryId'] && r.parent) {
+    // Walk up the active route chain via paramMap snapshots — the route param can live on a
+    // parent (e.g. /repo/:repositoryId/ci-cd/queue).
+    let r: ActivatedRoute | null = this.route;
+    // Touch the reactive paramMap so the computed re-evaluates on navigation.
+    this.paramMap();
+    while (r) {
+      const raw = r.snapshot.paramMap.get('repositoryId');
+      if (raw && !isNaN(Number(raw))) {
+        return Number(raw);
+      }
       r = r.parent;
     }
-    const raw = r?.params['repositoryId'];
-    return raw ? Number(raw) : null;
+    return null;
   });
 
   depth = signal<QueueDepth | null>(null);
@@ -64,19 +68,20 @@ export class QueueOverviewComponent {
   constructor() {
     effect(onCleanup => {
       const repoId = this.repositoryId();
-      if (!repoId) {
-        return;
-      }
       const tick = async () => {
         try {
-          const [d, j, p] = await Promise.all([
-            this.api.depth(repoId),
-            this.api.jobs(repoId, 'queued', 200),
-            this.rApi.pools(),
-          ]);
-          this.depth.set(d);
-          this.jobs.set(j);
-          this.pools.set(p);
+          if (repoId) {
+            const [d, j, p] = await Promise.all([this.api.depth(repoId), this.api.jobs(repoId, 'queued', 200), this.rApi.pools()]);
+            this.depth.set(d);
+            this.jobs.set(j);
+            this.pools.set(p);
+          } else {
+            // Admin /queue route — no repositoryId, fall back to the org-wide endpoint.
+            const [d, p] = await Promise.all([this.api.orgDepth(), this.rApi.pools()]);
+            this.depth.set(d);
+            this.jobs.set([]); // org-wide queued-job listing isn't exposed yet
+            this.pools.set(p);
+          }
         } catch {
           // Ignore transient errors; the next tick will retry.
         }

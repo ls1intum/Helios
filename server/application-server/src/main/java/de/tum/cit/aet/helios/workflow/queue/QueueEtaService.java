@@ -7,7 +7,6 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
-import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,8 +15,9 @@ import org.springframework.stereotype.Service;
 /**
  * ETA computation with label-superset capacity. See plan §C3.
  *
- * <p>Cached for 3 s per (repoId, labelSetHash). GitHub-hosted returns no ETA; only a saturation
- * badge based on a configurable concurrency ceiling.
+ * <p>Cached per <em>job id</em> for 3 s (the result depends on the specific job's position in the
+ * queue, not just its label set). GitHub-hosted returns no ETA; only a saturation badge based on a
+ * configurable concurrency ceiling.
  */
 @Service
 @Log4j2
@@ -31,20 +31,23 @@ public class QueueEtaService {
   @Value("${helios.queue.eta.githubHostedConcurrencyCeiling:20}")
   private int githubHostedCeiling;
 
-  private final Cache<String, EtaResult> etaCache =
+  /** Cache key = job id. Reusing across jobs is wrong because position-in-queue differs. */
+  private final Cache<Long, EtaResult> etaCache =
       Caffeine.newBuilder()
           .expireAfterWrite(Duration.ofSeconds(3))
           .maximumSize(10_000)
           .build();
 
   public EtaResult computeEta(WorkflowJob job) {
-    String key = job.getRepositoryId() + ":" + job.getLabelSetHash();
-    EtaResult cached = etaCache.getIfPresent(key);
+    if (job == null || job.getId() == null) {
+      return new EtaResult(null, null, null, null, null, false);
+    }
+    EtaResult cached = etaCache.getIfPresent(job.getId());
     if (cached != null) {
       return cached;
     }
     EtaResult result = computeUncached(job);
-    etaCache.put(key, result);
+    etaCache.put(job.getId(), result);
     return result;
   }
 
@@ -56,8 +59,9 @@ public class QueueEtaService {
   }
 
   private EtaResult computeGitHubHosted(WorkflowJob job) {
-    List<WorkflowJob> active = workflowJobRepository.findByRepositoryIdAndStatusInOrderByCreatedAtAsc(
-        job.getRepositoryId(), List.of("queued", "in_progress"));
+    List<WorkflowJob> active = workflowJobRepository
+        .findByRepositoryIdAndStatusInOrderByCreatedAtAsc(
+            job.getRepositoryId(), List.of("queued", "in_progress"));
     long ghhActive = active.stream()
         .filter(j -> j.getRunnerKind() == WorkflowJob.RunnerKind.GITHUB_HOSTED).count();
     double saturation = githubHostedCeiling <= 0 ? 0.0 : (double) ghhActive / githubHostedCeiling;
@@ -72,6 +76,11 @@ public class QueueEtaService {
         .filter(r -> hasLabels(r.getLabels(), needed))
         .toList();
     int capacity = competing.size();
+    if (capacity == 0) {
+      // No runner could ever pick this job up — don't pretend it's schedulable.
+      return new EtaResult(null, 0, null, null, null, false);
+    }
+
     Integer p50run = lookupRunP50(job);
     if (p50run == null) {
       p50run = medianRunDuration(job.getRepositoryId());
@@ -79,22 +88,22 @@ public class QueueEtaService {
     if (p50run == null) {
       p50run = 0;
     }
-    Set<String> competingRunnerKeys = competing.stream()
-        .map(r -> safeHash(r.getLabels()))
-        .collect(java.util.stream.Collectors.toSet());
 
     List<WorkflowJob> queuedAhead = workflowJobRepository
         .findByRepositoryIdAndStatusInOrderByCreatedAtAsc(job.getRepositoryId(), List.of("queued"))
         .stream()
+        // Strictly before this job — exclude the job being estimated.
         .filter(q -> q.getCreatedAt() != null
             && job.getCreatedAt() != null
-            && !q.getCreatedAt().isAfter(job.getCreatedAt()))
+            && q.getCreatedAt().isBefore(job.getCreatedAt())
+            && !q.getId().equals(job.getId()))
         .filter(q -> jobCanRunOnAnyCompeting(q, competing))
         .toList();
     int queueAhead = queuedAhead.size();
 
     List<WorkflowJob> activeJobs = workflowJobRepository
-        .findByRepositoryIdAndStatusInOrderByCreatedAtAsc(job.getRepositoryId(), List.of("in_progress"))
+        .findByRepositoryIdAndStatusInOrderByCreatedAtAsc(
+            job.getRepositoryId(), List.of("in_progress"))
         .stream()
         .filter(j -> jobCanRunOnAnyCompeting(j, competing))
         .toList();
@@ -110,9 +119,8 @@ public class QueueEtaService {
       long remaining = Math.max(0L, (long) p50run - elapsed);
       remainingRunningSum += remaining;
     }
-    int safeCapacity = Math.max(1, capacity);
-    long remainingRunning = remainingRunningSum / safeCapacity;
-    int slotsAhead = (int) Math.ceil((double) queueAhead / safeCapacity);
+    long remainingRunning = remainingRunningSum / capacity;
+    int slotsAhead = (int) Math.ceil((double) queueAhead / capacity);
     long eta = (long) slotsAhead * p50run + remainingRunning;
 
     return new EtaResult(eta, capacity, queueAhead, null, null, false);
@@ -146,10 +154,6 @@ public class QueueEtaService {
     return in.stream().map(s -> s == null ? "" : s.toLowerCase(Locale.ROOT)).toList();
   }
 
-  private String safeHash(List<String> labels) {
-    return labels == null ? "" : LabelSets.hash(labels);
-  }
-
   private Integer lookupQueueP50(WorkflowJob job) {
     Optional<QueueWaitStat> recent = statsRepository
         .findForWindow(job.getRepositoryId(), job.getWorkflowName(), job.getName(),
@@ -169,13 +173,10 @@ public class QueueEtaService {
   }
 
   private Integer medianRunDuration(Long repositoryId) {
-    // Cheap fallback: median over the last 50 completed jobs in this repo.
+    // Ordered + bounded by JPA — never loads the whole table.
     List<WorkflowJob> recent = workflowJobRepository
-        .findByRepositoryIdAndStatus(repositoryId, "completed")
-        .stream()
-        .filter(j -> j.getRunDurationSeconds() != null)
-        .limit(50)
-        .toList();
+        .findTop50ByRepositoryIdAndStatusAndRunDurationSecondsNotNullOrderByCompletedAtDesc(
+            repositoryId, "completed");
     if (recent.isEmpty()) {
       return null;
     }
