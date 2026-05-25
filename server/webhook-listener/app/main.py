@@ -3,7 +3,7 @@ import hashlib
 from contextlib import asynccontextmanager
 from fastapi import Body, FastAPI, HTTPException, Header, Request, status
 from pydantic import BaseModel
-from nats.js.api import RetentionPolicy, StreamConfig
+from nats.js.api import DiscardPolicy, StreamConfig
 from nats.js.errors import BadRequestError
 from app.config import settings
 from app.logger import logger
@@ -16,57 +16,42 @@ RETENTION_MAX_AGE_SECONDS = RETENTION_DAYS * SECONDS_PER_DAY
 GIB = 1024 ** 3
 MIB = 1024 ** 2
 
-# Per-stream byte caps act as a disk-usage safety net if a consumer falls behind.
-# With Interest retention, normal steady-state usage stays far below these.
-STREAM_MAX_BYTES = {
-    "github": 2 * GIB,
-    "notification": 64 * MIB,
-}
-
-# JetStream rejects retention-policy changes on an existing stream. When that
-# happens, the stream must be recreated by an operator (see README ops notes).
-ERR_STREAM_NAME_IN_USE = 10058
-ERR_STREAM_UPDATE_INVALID = 10052
+# Returned by add_stream when a stream with the given name already exists
+# with a different configuration. When the existing config matches deeply,
+# add_stream is idempotent and returns success.
+ERR_STREAM_NAME_EXISTS = 10058
 
 
-async def ensure_stream(name: str, subjects: list[str]) -> None:
+async def ensure_stream(name: str, subjects: list[str], max_bytes: int) -> None:
+    # Default Limits retention preserves the time-bounded replay that the
+    # application-server's durable consumer relies on after a restart or after
+    # NATS auto-deletes an inactive consumer. max_bytes bounds disk usage;
+    # DiscardPolicy.NEW propagates backpressure to GitHub (which retries
+    # webhook deliveries) rather than silently dropping the oldest events.
     stream_config = StreamConfig(
         name=name,
         subjects=subjects,
         storage="file",
-        retention=RetentionPolicy.INTEREST,
         max_age=RETENTION_MAX_AGE_SECONDS,
-        max_bytes=STREAM_MAX_BYTES[name],
+        max_bytes=max_bytes,
+        discard=DiscardPolicy.NEW,
     )
     try:
         await nats_client.js.add_stream(config=stream_config)
         return
     except BadRequestError as error:
-        if getattr(error, "err_code", None) != ERR_STREAM_NAME_IN_USE:
+        if getattr(error, "err_code", None) != ERR_STREAM_NAME_EXISTS:
             raise
 
-    try:
-        await nats_client.js.update_stream(config=stream_config)
-        logger.info(f"Updated existing stream configuration for '{name}'")
-    except BadRequestError as error:
-        if getattr(error, "err_code", None) != ERR_STREAM_UPDATE_INVALID:
-            raise
-        # Most likely cause: retention policy changed (Limits → Interest).
-        # JetStream forbids this on an existing stream; recreate manually:
-        #   nats stream rm <name> --force && restart this service
-        logger.error(
-            "Cannot update stream '%s' in place — likely a retention-policy "
-            "change. Recreate the stream manually to apply the new config. "
-            "Continuing with the existing stream config.",
-            name,
-        )
+    await nats_client.js.update_stream(config=stream_config)
+    logger.info("Updated existing stream configuration for '%s'", name)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await nats_client.connect()
-    await ensure_stream(name="github", subjects=["github.>"])
-    await ensure_stream(name="notification", subjects=["notification.>"])
+    await ensure_stream(name="github", subjects=["github.>"], max_bytes=2 * GIB)
+    await ensure_stream(name="notification", subjects=["notification.>"], max_bytes=64 * MIB)
     yield
     await nats_client.close()
 
