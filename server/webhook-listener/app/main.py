@@ -3,15 +3,30 @@ import hashlib
 from contextlib import asynccontextmanager
 from fastapi import Body, FastAPI, HTTPException, Header, Request, status
 from pydantic import BaseModel
-from nats.js.api import StreamConfig
+from nats.js.api import RetentionPolicy, StreamConfig
 from nats.js.errors import BadRequestError
 from app.config import settings
 from app.logger import logger
 from app.nats_client import nats_client
 
-RETENTION_DAYS = 28
+RETENTION_DAYS = 7
 SECONDS_PER_DAY = 24 * 60 * 60
 RETENTION_MAX_AGE_SECONDS = RETENTION_DAYS * SECONDS_PER_DAY
+
+GIB = 1024 ** 3
+MIB = 1024 ** 2
+
+# Per-stream byte caps act as a disk-usage safety net if a consumer falls behind.
+# With Interest retention, normal steady-state usage stays far below these.
+STREAM_MAX_BYTES = {
+    "github": 2 * GIB,
+    "notification": 64 * MIB,
+}
+
+# JetStream rejects retention-policy changes on an existing stream. When that
+# happens, the stream must be recreated by an operator (see README ops notes).
+ERR_STREAM_NAME_IN_USE = 10058
+ERR_STREAM_UPDATE_INVALID = 10052
 
 
 async def ensure_stream(name: str, subjects: list[str]) -> None:
@@ -19,15 +34,32 @@ async def ensure_stream(name: str, subjects: list[str]) -> None:
         name=name,
         subjects=subjects,
         storage="file",
+        retention=RetentionPolicy.INTEREST,
         max_age=RETENTION_MAX_AGE_SECONDS,
+        max_bytes=STREAM_MAX_BYTES[name],
     )
     try:
         await nats_client.js.add_stream(config=stream_config)
+        return
     except BadRequestError as error:
-        if getattr(error, "err_code", None) != 10058:
+        if getattr(error, "err_code", None) != ERR_STREAM_NAME_IN_USE:
             raise
+
+    try:
         await nats_client.js.update_stream(config=stream_config)
         logger.info(f"Updated existing stream configuration for '{name}'")
+    except BadRequestError as error:
+        if getattr(error, "err_code", None) != ERR_STREAM_UPDATE_INVALID:
+            raise
+        # Most likely cause: retention policy changed (Limits → Interest).
+        # JetStream forbids this on an existing stream; recreate manually:
+        #   nats stream rm <name> --force && restart this service
+        logger.error(
+            "Cannot update stream '%s' in place — likely a retention-policy "
+            "change. Recreate the stream manually to apply the new config. "
+            "Continuing with the existing stream config.",
+            name,
+        )
 
 
 @asynccontextmanager
