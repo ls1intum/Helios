@@ -5,13 +5,20 @@ on:
       - opened
       - reopened
       - synchronize
+
+permissions:
+  contents: read
+
 jobs:
   check-branches:
     runs-on: ubuntu-latest
     steps:
-      - name: Check branches
+      # The branch names are evaluated in the `if:` expression (resolved by the
+      # Actions runner, never interpolated into a shell), so an attacker-
+      # controlled PR branch name cannot inject commands. The job always runs,
+      # so it always reports a status; the step fails only on a violation.
+      - name: Enforce staging-only source for main
+        if: github.head_ref != 'staging' && github.base_ref == 'main'
         run: |
-          if [ ${{ github.head_ref }} != "staging" ] && [ ${{ github.base_ref }} == "main" ]; then
-            echo "::error::Merge requests to main branch are only allowed from staging branch."
-            exit 1
-          fi
+          echo "::error::Merge requests to main branch are only allowed from staging branch."
+          exit 1

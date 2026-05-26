@@ -24,6 +24,10 @@ concurrency:
   group: staging
   cancel-in-progress: true
 
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   validate-flyway:
     uses: ./.github/workflows/flyway-validate.yml

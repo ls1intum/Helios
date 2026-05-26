@@ -3,6 +3,11 @@ on:
   pull_request_target:
     types: [ready_for_review]
 
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
 jobs:
   pullRequestReadyForReview:
     runs-on: ubuntu-latest
