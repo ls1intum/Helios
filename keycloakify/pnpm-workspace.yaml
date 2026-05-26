@@ -1,6 +1,11 @@
-# pnpm 11 reads project settings from here (no longer the "pnpm" key in package.json)
+# pnpm 11 reads project settings from here (the "pnpm" key in package.json is
+# no longer read). Skip the pre-run dependency check so `pnpm run <script>`
+# doesn't re-trigger an install inside containers where deps are already present.
 verifyDepsBeforeRun: false
-onlyBuiltDependencies:
-  - esbuild
+
+# pnpm 11 blocks dependency build scripts by default and, under
+# --frozen-lockfile, fails hard (ERR_PNPM_IGNORED_BUILDS) unless each package is
+# explicitly approved. `allowBuilds` is pnpm 11's replacement for the old
+# `onlyBuiltDependencies` key.
 allowBuilds:
-  esbuild: set this to true or false
+  esbuild: true
