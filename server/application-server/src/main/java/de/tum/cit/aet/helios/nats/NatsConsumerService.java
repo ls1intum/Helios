@@ -49,6 +49,9 @@ public class NatsConsumerService {
   @Value("${nats.consumerAckWaitSeconds}")
   private int consumerAckWaitSeconds;
 
+  @Value("${nats.consumerMaxAckPending:500}")
+  private int consumerMaxAckPending;
+
   @Value("${monitoring.repositories}")
   private String[] repositoriesToMonitor;
 
@@ -163,6 +166,7 @@ public class NatsConsumerService {
             ConsumerConfiguration.builder(existingConfig)
                 .inactiveThreshold(Duration.ofMinutes(consumerInactiveThresholdMinutes))
                 .ackWait(Duration.ofSeconds(consumerAckWaitSeconds))
+                .maxAckPending(consumerMaxAckPending)
                 .filterSubjects(subjects);
       } else {
         log.info("Creating new configuration for consumer.");
@@ -173,6 +177,7 @@ public class NatsConsumerService {
                 .startTime(ZonedDateTime.now().minusDays(timeframe))
                 .inactiveThreshold(Duration.ofMinutes(consumerInactiveThresholdMinutes))
                 .ackWait(Duration.ofSeconds(consumerAckWaitSeconds))
+                .maxAckPending(consumerMaxAckPending)
                 .filterSubjects(subjects);
 
         if (durableConsumerName != null && !durableConsumerName.isEmpty()) {
