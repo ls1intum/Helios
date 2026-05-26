@@ -5,6 +5,9 @@ on:
       - opened
       - reopened
       - synchronize
+      # `edited` fires when the PR base branch is changed, so retargeting a PR
+      # onto `main` re-runs this gate (otherwise the check could be bypassed).
+      - edited
 
 permissions:
   contents: read

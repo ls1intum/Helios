@@ -4,7 +4,7 @@ on:
     types: [opened]
 
 permissions:
-  contents: read
+  # Only assigns the PR author via the API — no checkout / repo reads needed.
   pull-requests: write
 
 jobs:
