@@ -52,6 +52,13 @@ public class WorkflowRunCleanupProps {
   private List<Policy> policies = List.of();
 
   /**
+   * Settings for the orphan-branch sweep — deletes workflow runs whose
+   * {@code head_branch} no longer exists in the {@code branch} table,
+   * with a grace period to avoid races with branch-sync state.
+   */
+  private OrphanBranches orphanBranches = new OrphanBranches();
+
+  /**
    * A single retention rule that targets one {@code test_processing_status}.
    */
   @Data
@@ -77,5 +84,36 @@ public class WorkflowRunCleanupProps {
      * ignore age completely.
      */
     private int ageDays;
+  }
+
+  /**
+   * Configuration for the orphan-branch sweep. A workflow run is considered
+   * orphaned when its {@code head_branch} no longer matches any row in the
+   * {@code branch} table for the same repository. The sweep also excludes
+   * runs still referenced by {@code helios_deployment} or {@code deployment}
+   * so the deployment → build link is preserved.
+   */
+  @Data
+  public static class OrphanBranches {
+
+    /**
+     * Master switch for the orphan-branch sweep. Defaults to {@code true};
+     * the parent {@link WorkflowRunCleanupProps#dryRun} flag still gates
+     * whether anything is actually deleted.
+     */
+    private boolean enabled = true;
+
+    /**
+     * Minimum age (in days) before an orphan run becomes eligible for
+     * deletion. Acts as a grace window for transient branch-sync state.
+     */
+    private int graceDays = 7;
+
+    /**
+     * Cron expression for the orphan sweep. Declared here so the value is
+     * discoverable in IDE config completion; the actual schedule lives in
+     * the {@code @Scheduled} annotation on {@code WorkflowRunCleanupTask}.
+     */
+    private String cron = "0 30 1 * * *";
   }
 }

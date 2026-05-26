@@ -93,4 +93,43 @@ public class WorkflowRunCleanupTask {
 
     log.info("Workflow‑run cleanup finished.  Total rows deleted: {}", totalDeleted);
   }
+
+
+  /**
+   * Sweeps workflow runs whose {@code head_branch} no longer exists in the
+   * {@code branch} table — typically feature branches deleted after a PR
+   * merged. The keep-N policy in {@link #purge()} cannot detect these,
+   * so they would otherwise accumulate indefinitely.
+   *
+   * <p>Runs daily at 01:30 (30 minutes after {@link #purge()}) and honours
+   * the same {@link WorkflowRunCleanupProps#isDryRun()} flag. Runs younger
+   * than {@code graceDays} are skipped to avoid races with branch-sync
+   * state. Runs still referenced by a {@code helios_deployment} or
+   * {@code deployment} row are skipped to preserve the deployment → build
+   * audit link.
+   */
+  @Scheduled(cron = "${cleanup.workflow-run.orphan-branches.cron:0 30 1 * * *}")
+  @Transactional
+  public void purgeOrphanBranchRuns() {
+    WorkflowRunCleanupProps.OrphanBranches cfg = props.getOrphanBranches();
+    if (!cfg.isEnabled()) {
+      log.debug("Orphan-branch cleanup skipped (disabled).");
+      return;
+    }
+
+    int graceDays = cfg.getGraceDays();
+    log.info("Orphan-branch cleanup started (graceDays={}).", graceDays);
+
+    if (props.isDryRun()) {
+      List<Long> ids = repo.previewOrphanBranchRunIds(graceDays);
+      log.info("DRY-RUN: Orphan-branch cleanup graceDays={}  →  {} rows would be deleted",
+          graceDays, ids.size());
+    } else {
+      int deleted = repo.purgeOrphanBranchRuns(graceDays);
+      log.info("DELETE: Orphan-branch cleanup graceDays={}  →  {} rows deleted",
+          graceDays, deleted);
+    }
+
+    log.info("Orphan-branch cleanup finished.");
+  }
 }

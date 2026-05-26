@@ -297,4 +297,64 @@ public interface WorkflowRunRepository
                         @Param("ageDays") int ageDays,
                         @Param("tps") String testProcessingStatus);
 
+  /**
+   * IDs of workflow runs whose {@code head_branch} no longer exists in the
+   * {@code branch} table for the same repository, older than the grace
+   * window, and not referenced by any deployment row.
+   *
+   * <p>Used to preview which runs the orphan-branch sweep would remove in
+   * dry-run mode. The matching {@code DELETE} query lives in
+   * {@link #purgeOrphanBranchRuns(int)}.
+   */
+  @Query(value = """
+      SELECT wr.id
+      FROM workflow_run wr
+      WHERE wr.created_at < now() - (:graceDays * interval '1 day')
+        AND NOT EXISTS (
+          SELECT 1 FROM branch b
+          WHERE b.repository_id = wr.repository_id
+            AND b.name          = wr.head_branch
+        )
+        AND NOT EXISTS (
+          SELECT 1 FROM helios_deployment hd
+          WHERE hd.workflow_run_id = wr.id
+        )
+        AND NOT EXISTS (
+          SELECT 1 FROM deployment d
+          WHERE d.workflow_run_id = wr.id
+        )
+      """, nativeQuery = true)
+  List<Long> previewOrphanBranchRunIds(@Param("graceDays") int graceDays);
+
+  /**
+   * Deletes workflow runs whose {@code head_branch} no longer exists in the
+   * {@code branch} table, are older than the grace window, and are not
+   * referenced by any deployment. Cascades through {@code test_suite},
+   * {@code test_case}, {@code test_failure_analysis}, and
+   * {@code workflow_run_pull_requests} via existing FK constraints.
+   *
+   * @return number of {@code workflow_run} rows deleted (not including
+   *     cascaded child rows)
+   */
+  @Modifying
+  @Transactional
+  @Query(value = """
+      DELETE FROM workflow_run wr
+      WHERE wr.created_at < now() - (:graceDays * interval '1 day')
+        AND NOT EXISTS (
+          SELECT 1 FROM branch b
+          WHERE b.repository_id = wr.repository_id
+            AND b.name          = wr.head_branch
+        )
+        AND NOT EXISTS (
+          SELECT 1 FROM helios_deployment hd
+          WHERE hd.workflow_run_id = wr.id
+        )
+        AND NOT EXISTS (
+          SELECT 1 FROM deployment d
+          WHERE d.workflow_run_id = wr.id
+        )
+      """, nativeQuery = true)
+  int purgeOrphanBranchRuns(@Param("graceDays") int graceDays);
+
 }

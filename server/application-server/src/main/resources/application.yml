@@ -60,6 +60,14 @@ cleanup:
             - test-processing-status: null
               keep: 2
               age-days: 5
+        # Sweep workflow runs whose head_branch no longer exists in the branch
+        # table (e.g. feature branches deleted after PR merge). Runs daily at
+        # 01:30, skips runs younger than grace-days, and never touches runs
+        # referenced by a helios_deployment or deployment row.
+        orphan-branches:
+            enabled: true
+            grace-days: 7
+            cron: "0 30 1 * * *"
 
 notification:
     enabled: ${NOTIFICATIONS_ENABLED:true}
