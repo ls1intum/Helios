@@ -61,13 +61,16 @@ cleanup:
               keep: 2
               age-days: 5
         # Sweep workflow runs whose head_branch no longer exists in the branch
-        # table (e.g. feature branches deleted after PR merge). Runs daily at
-        # 01:30, skips runs younger than grace-days, and never touches runs
-        # referenced by a helios_deployment or deployment row.
+        # table (e.g. feature branches deleted after PR merge). Disabled by
+        # default so the historical backlog isn't wiped on the first
+        # scheduled tick — operators enable via env after reviewing dry-run
+        # output. Skips runs younger than grace-days, runs with a NULL
+        # head_branch, and runs referenced by a helios_deployment or
+        # deployment row.
         orphan-branches:
-            enabled: true
-            grace-days: 7
-            cron: "0 30 1 * * *"
+            enabled: ${CLEANUP_WORKFLOW_RUN_ORPHAN_BRANCHES_ENABLED:false}
+            grace-days: ${CLEANUP_WORKFLOW_RUN_ORPHAN_BRANCHES_GRACE_DAYS:7}
+            batch-size: ${CLEANUP_WORKFLOW_RUN_ORPHAN_BRANCHES_BATCH_SIZE:5000}
 
 notification:
     enabled: ${NOTIFICATIONS_ENABLED:true}

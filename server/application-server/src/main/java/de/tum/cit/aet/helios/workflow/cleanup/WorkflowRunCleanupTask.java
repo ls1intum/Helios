@@ -101,15 +101,24 @@ public class WorkflowRunCleanupTask {
    * merged. The keep-N policy in {@link #purge()} cannot detect these,
    * so they would otherwise accumulate indefinitely.
    *
-   * <p>Runs daily at 01:30 (30 minutes after {@link #purge()}) and honours
-   * the same {@link WorkflowRunCleanupProps#isDryRun()} flag. Runs younger
-   * than {@code graceDays} are skipped to avoid races with branch-sync
-   * state. Runs still referenced by a {@code helios_deployment} or
-   * {@code deployment} row are skipped to preserve the deployment → build
-   * audit link.
+   * <p>Runs daily at 03:30, after the test-failure cleanup at 03:00 and
+   * well clear of the keep-N sweep at 01:00 — this avoids two concurrent
+   * DELETEs against {@code workflow_run} on the scheduler's shared
+   * thread pool. Honours the same {@link WorkflowRunCleanupProps#isDryRun()}
+   * flag. Runs younger than {@code graceDays} are skipped to avoid races
+   * with branch-sync state. Runs with a {@code NULL head_branch} (tag
+   * pushes, scheduled, {@code workflow_dispatch}) are skipped because they
+   * have no branch identity. Runs still referenced by a
+   * {@code helios_deployment} or {@code deployment} row are skipped to
+   * preserve the deployment → build audit link.
+   *
+   * <p>Deletes in batches of {@link WorkflowRunCleanupProps.OrphanBranches#getBatchSize()}
+   * so a multi-tens-of-thousands backlog doesn't run as one transaction
+   * that would hold locks and grow WAL for tens of minutes. Each batch is
+   * its own short transaction (opened by the {@code @Modifying} repository
+   * method); the outer loop is intentionally non-transactional.
    */
-  @Scheduled(cron = "${cleanup.workflow-run.orphan-branches.cron:0 30 1 * * *}")
-  @Transactional
+  @Scheduled(cron = "${cleanup.workflow-run.orphan-branches.cron:0 30 3 * * *}")
   public void purgeOrphanBranchRuns() {
     WorkflowRunCleanupProps.OrphanBranches cfg = props.getOrphanBranches();
     if (!cfg.isEnabled()) {
@@ -118,18 +127,27 @@ public class WorkflowRunCleanupTask {
     }
 
     int graceDays = cfg.getGraceDays();
-    log.info("Orphan-branch cleanup started (graceDays={}).", graceDays);
+    int batchSize = cfg.getBatchSize();
+    log.info("Orphan-branch cleanup started (graceDays={}, batchSize={}, dryRun={}).",
+        graceDays, batchSize, props.isDryRun());
 
+    int totalDeleted = 0;
     if (props.isDryRun()) {
-      List<Long> ids = repo.previewOrphanBranchRunIds(graceDays);
-      log.info("DRY-RUN: Orphan-branch cleanup graceDays={}  →  {} rows would be deleted",
-          graceDays, ids.size());
+      List<Long> ids = repo.previewOrphanBranchRunIds(graceDays, batchSize);
+      log.info(
+          "DRY-RUN: Orphan-branch cleanup graceDays={}  →  {} rows would be deleted "
+              + "(preview capped at batchSize={}).",
+          graceDays, ids.size(), batchSize);
     } else {
-      int deleted = repo.purgeOrphanBranchRuns(graceDays);
-      log.info("DELETE: Orphan-branch cleanup graceDays={}  →  {} rows deleted",
-          graceDays, deleted);
+      while (true) {
+        int deleted = repo.purgeOrphanBranchRunsBatch(graceDays, batchSize);
+        totalDeleted += deleted;
+        if (deleted < batchSize) {
+          break;
+        }
+      }
     }
 
-    log.info("Orphan-branch cleanup finished.");
+    log.info("Orphan-branch cleanup finished.  Total rows deleted: {}", totalDeleted);
   }
 }

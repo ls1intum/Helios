@@ -97,11 +97,13 @@ public class WorkflowRunCleanupProps {
   public static class OrphanBranches {
 
     /**
-     * Master switch for the orphan-branch sweep. Defaults to {@code true};
-     * the parent {@link WorkflowRunCleanupProps#dryRun} flag still gates
-     * whether anything is actually deleted.
+     * Master switch for the orphan-branch sweep. Defaults to {@code false}
+     * so the historical backlog isn't wiped on the first scheduled tick
+     * after deploy — operators flip this on once they've reviewed the
+     * dry-run output. The parent {@link WorkflowRunCleanupProps#dryRun}
+     * flag still gates whether anything is actually deleted.
      */
-    private boolean enabled = true;
+    private boolean enabled = false;
 
     /**
      * Minimum age (in days) before an orphan run becomes eligible for
@@ -110,10 +112,11 @@ public class WorkflowRunCleanupProps {
     private int graceDays = 7;
 
     /**
-     * Cron expression for the orphan sweep. Declared here so the value is
-     * discoverable in IDE config completion; the actual schedule lives in
-     * the {@code @Scheduled} annotation on {@code WorkflowRunCleanupTask}.
+     * Maximum number of {@code workflow_run} rows deleted per transaction.
+     * The task loops until a batch returns fewer rows than this. Bounds
+     * lock-hold time and WAL growth on large backlogs where the cascade
+     * touches millions of {@code test_case} rows.
      */
-    private String cron = "0 30 1 * * *";
+    private int batchSize = 5000;
   }
 }
