@@ -155,5 +155,5 @@ In the client directory execute following command:
 
 .. code-block:: sh
 
-  yarn
-  yarn test:unit
+  pnpm install
+  pnpm test:unit

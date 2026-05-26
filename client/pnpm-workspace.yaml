@@ -1,0 +1,8 @@
+# pnpm 11 reads project settings from here (no longer the "pnpm" key in package.json)
+verifyDepsBeforeRun: false
+onlyBuiltDependencies:
+  - '@parcel/watcher'
+  - '@sentry/cli'
+  - esbuild
+  - lmdb
+  - msgpackr-extract

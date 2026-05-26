@@ -1,0 +1,6 @@
+# pnpm 11 reads project settings from here (no longer the "pnpm" key in package.json)
+verifyDepsBeforeRun: false
+onlyBuiltDependencies:
+  - esbuild
+allowBuilds:
+  esbuild: set this to true or false

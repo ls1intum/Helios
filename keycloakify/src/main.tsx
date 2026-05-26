@@ -2,7 +2,7 @@ import { createRoot } from "react-dom/client";
 import { StrictMode } from "react";
 import { KcPage } from "./kc.gen";
 
-// The following block can be uncommented to test a specific page with `yarn dev`
+// The following block can be uncommented to test a specific page with `pnpm dev`
 // Don't forget to comment back or your bundle size will increase
 // dev is accessible on http://localhost:5173/
 // import { getKcContextMock } from "./login/KcPageStory";
