@@ -4,8 +4,8 @@
   "scripts": {
     "dev": "ng serve --watch --host 0.0.0.0 --configuration development",
     "build": "ng build",
-    "test:unit": "node --require ./scripts/lru-cache-compat.js ./node_modules/vitest/vitest.mjs --ui --reporter=html",
-    "test:unit:ci": "node --require ./scripts/lru-cache-compat.js ./node_modules/vitest/vitest.mjs run --coverage",
+    "test:unit": "ng test --watch",
+    "test:unit:ci": "ng test --no-watch --coverage",
     "lint": "eslint --max-warnings 0 --fix .",
     "generate:openapi": "openapi-ts"
   },
@@ -45,8 +45,6 @@
     "tslib": "2.8.1"
   },
   "devDependencies": {
-    "@analogjs/vite-plugin-angular": "2.5.2",
-    "@analogjs/vitest-angular": "2.5.2",
     "@angular-devkit/build-angular": "21.2.12",
     "@angular-eslint/builder": "21.4.0",
     "@angular-eslint/eslint-plugin": "21.4.0",
@@ -58,13 +56,12 @@
     "@angular/compiler-cli": "21.2.14",
     "@hey-api/openapi-ts": "0.97.3",
     "@types/canvas-confetti": "1.9.0",
-    "@types/jasmine": "5.1.15",
     "@types/node": "24.12.4",
     "@typescript-eslint/eslint-plugin": "8.60.0",
     "@typescript-eslint/parser": "8.60.0",
     "@typescript-eslint/types": "8.60.0",
     "@typescript-eslint/utils": "8.60.0",
-    "@vitest/coverage-istanbul": "4.1.7",
+    "@vitest/coverage-v8": "4.1.7",
     "@vitest/ui": "4.1.7",
     "autoprefixer": "10.5.0",
     "eslint": "9.39.4",
@@ -72,7 +69,6 @@
     "eslint-plugin-jsdoc": "61.7.1",
     "eslint-plugin-prefer-arrow": "1.2.3",
     "eslint-plugin-prettier": "5.5.5",
-    "jasmine-core": "5.13.0",
     "jsdom": "26.1.0",
     "postcss": "8.5.15",
     "prettier": "3.8.3",
@@ -80,7 +76,6 @@
     "tailwindcss-primeui": "0.6.1",
     "typescript": "5.9.3",
     "vite": "7.3.3",
-    "vite-tsconfig-paths": "5.1.4",
     "vitest": "4.1.7"
   },
   "packageManager": "pnpm@11.3.0"

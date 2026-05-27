@@ -9,7 +9,6 @@ import primeNGConfig from './primeng.config';
 import { routes } from './app.routes';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
-import { provideAnimations } from '@angular/platform-browser/animations';
 import { KeycloakService } from './core/services/keycloak/keycloak.service';
 import { DatePipe } from '@angular/common';
 import { RepositoryFilterGuard } from './core/middlewares/repository-filter.guard';
@@ -38,7 +37,6 @@ export const appConfig: ApplicationConfig = {
     MessageService,
     ConfirmationService,
     provideHttpClient(withInterceptorsFromDi()),
-    provideAnimations(),
     provideQueryClient(queryClient),
     provideAppInitializer(() => {
       const keycloakService = inject(KeycloakService);
