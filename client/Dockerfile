@@ -1,5 +1,5 @@
 # Stage 1: Build Angular app
-FROM node:24.15.0 AS build
+FROM node:24.16.0 AS build
 
 # Set the working directory
 WORKDIR /app
@@ -28,7 +28,7 @@ RUN echo "export const version = { deployed_version: '$DEPLOYED_VERSION', deploy
 RUN pnpm run build --configuration $BUILD_CONFIG
 
 # Stage 2: Serve Angular app using Nginx
-FROM nginx:1.30.0-alpine
+FROM nginx:1.31.1-alpine
 
 # Remove the default Nginx configuration file
 RUN rm /etc/nginx/conf.d/default.conf
