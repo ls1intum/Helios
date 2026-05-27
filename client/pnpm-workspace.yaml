@@ -1,0 +1,29 @@
+# pnpm 11 reads project settings from here (the "pnpm" key in package.json is
+# no longer read). Skip the pre-run dependency check so `pnpm run <script>`
+# doesn't re-trigger an install inside containers where deps are already present.
+verifyDepsBeforeRun: false
+
+# pnpm 11 blocks dependency build scripts by default and, under
+# --frozen-lockfile, fails hard (ERR_PNPM_IGNORED_BUILDS) unless each package is
+# explicitly approved. `allowBuilds` is pnpm 11's replacement for the old
+# `onlyBuiltDependencies` key. These are the native/tooling packages that ship
+# build scripts; their platform binaries come from optional deps, so the build
+# works on linux/CI once they're approved here.
+allowBuilds:
+  '@parcel/watcher': true
+  '@sentry/cli': true
+  esbuild: true
+  lmdb: true
+  msgpackr-extract: true
+
+# Force patched versions of transitive, dev-only dependencies flagged by
+# Dependabot. Both are pulled in solely via the Angular dev-server chain
+# (@angular-devkit/build-angular -> webpack-dev-server -> sockjs -> uuid):
+#  - webpack-dev-server <=5.2.3: cross-origin source exposure on non-HTTPS
+#    origins (GHSA fixed in 5.2.4). build-webpack requires ^5.0.2, so 5.2.4 fits.
+#  - uuid <11.1.1: missing buffer bounds check in v3/v5/v6 when `buf` is passed.
+#    sockjs only calls uuid.v4() with no buffer, so it isn't actually exploitable,
+#    but bumping clears the alert; v11 keeps the .v4 CJS export sockjs uses.
+overrides:
+  webpack-dev-server: 5.2.4
+  uuid: 11.1.1

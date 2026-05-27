@@ -17,7 +17,7 @@ jobs:
       pull-requests: write
     steps:
       - name: validate conventional commit message
-        uses:  ytanikin/pr-conventional-commits@fda730cb152c05a849d6d84325e50c6182d9d1e9
+        uses:  ytanikin/pr-conventional-commits@639145d78959c53c43112365837e3abd21ed67c1  # 1.5.2
         with:
           task_types: '["feat","fix","docs","test","ci","refactor","perf","chore","revert"]'
           add_label: 'false'
@@ -25,7 +25,7 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
       - name: post comment about invalid PR title
         if: failure()
-        uses: marocchino/sticky-pull-request-comment@v2
+        uses: marocchino/sticky-pull-request-comment@0ea0beb66eb9baf113663a64ec522f60e49231c0  # v3.0.4
         with:
           header: conventional-commit-pr-title
           message: |
@@ -42,7 +42,7 @@ jobs:
             </details>
       - name: delete comment about invalid PR title
         if: success()
-        uses: marocchino/sticky-pull-request-comment@v2
+        uses: marocchino/sticky-pull-request-comment@0ea0beb66eb9baf113663a64ec522f60e49231c0  # v3.0.4
         with:
           header: conventional-commit-pr-title
           delete: true

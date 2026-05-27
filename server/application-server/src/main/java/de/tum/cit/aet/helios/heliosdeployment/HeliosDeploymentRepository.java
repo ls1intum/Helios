@@ -46,6 +46,18 @@ public interface HeliosDeploymentRepository extends JpaRepository<HeliosDeployme
   List<HeliosDeployment> findByRepositoryIdAndBranchNameAndDeploymentIdIsNullOrderByCreatedAtDesc(
       @Param("repositoryId") Long repositoryId, @Param("branchName") String branchName);
 
+  @Query(
+      "SELECT hd FROM HeliosDeployment hd "
+          + "JOIN hd.environment e "
+          + "JOIN e.repository r "
+          + "WHERE r.repositoryId = :repositoryId "
+          + "AND hd.sourceBranchName = :sourceBranchName "
+          + "AND (hd.deploymentId IS NULL OR hd.branchName <> hd.sourceBranchName) "
+          + "ORDER BY hd.createdAt DESC")
+  List<HeliosDeployment> findByRepositoryIdAndSourceBranchNameOrderByCreatedAtDesc(
+      @Param("repositoryId") Long repositoryId,
+      @Param("sourceBranchName") String sourceBranchName);
+
   Optional<HeliosDeployment> findByDeploymentId(Long deploymentId);
 
   Optional<HeliosDeployment> findByWorkflowRunId(Long workflowRunId);

@@ -1,11 +1,7 @@
-import '@analogjs/vitest-angular/setup-snapshots';
-import '@angular/compiler';
-
-import { getTestBed } from '@angular/core/testing';
+// The Angular testing environment (TestBed/initTestEnvironment) is initialized
+// automatically by the @angular/build:unit-test builder, so this file only
+// provides the global browser-API mocks the suite relies on.
 import { vi } from 'vitest';
-import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
-
-getTestBed().initTestEnvironment(BrowserTestingModule, platformBrowserTesting());
 
 Object.defineProperty(window, 'matchMedia', {
   writable: true,

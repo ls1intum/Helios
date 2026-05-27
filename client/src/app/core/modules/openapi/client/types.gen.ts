@@ -122,9 +122,15 @@ type MethodFn = <TData = unknown, TError = unknown, ThrowOnError extends boolean
   options: Omit<RequestOptions<TData, TResponseStyle, ThrowOnError>, 'method'>
 ) => RequestResult<TData, TError, ThrowOnError, TResponseStyle>;
 
-type SseFn = <TData = unknown, TError = unknown, ThrowOnError extends boolean = false, TResponseStyle extends ResponseStyle = 'fields'>(
+type SseFn = <
+  TData = unknown,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _TError = unknown,
+  ThrowOnError extends boolean = false,
+  TResponseStyle extends ResponseStyle = 'fields',
+>(
   options: Omit<RequestOptions<never, TResponseStyle, ThrowOnError>, 'method'>
-) => Promise<ServerSentEventsResult<TData, TError>>;
+) => Promise<ServerSentEventsResult<TData>>;
 
 type RequestFn = <TData = unknown, TError = unknown, ThrowOnError extends boolean = false, TResponseStyle extends ResponseStyle = 'fields'>(
   options: Omit<RequestOptions<TData, TResponseStyle, ThrowOnError>, 'method'> & Pick<Required<RequestOptions<TData, TResponseStyle, ThrowOnError>>, 'method'>
