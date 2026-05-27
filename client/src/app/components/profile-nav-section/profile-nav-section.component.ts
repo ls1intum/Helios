@@ -1,4 +1,3 @@
-import { CommonModule } from '@angular/common';
 import { Component, inject, input, ViewChild } from '@angular/core';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 import { ButtonModule } from 'primeng/button';
@@ -17,20 +16,7 @@ import { filter } from 'rxjs';
 
 @Component({
   selector: 'app-profile-nav-section',
-  imports: [
-    ToastModule,
-    PopoverModule,
-    DividerModule,
-    AvatarModule,
-    DataViewModule,
-    ButtonModule,
-    TagModule,
-    CommonModule,
-    CardModule,
-    ChipModule,
-    TablerIconComponent,
-    RouterLink,
-  ],
+  imports: [ToastModule, PopoverModule, DividerModule, AvatarModule, DataViewModule, ButtonModule, TagModule, CardModule, ChipModule, TablerIconComponent, RouterLink],
   providers: [
     provideTablerIcons({
       IconBrandGithub,

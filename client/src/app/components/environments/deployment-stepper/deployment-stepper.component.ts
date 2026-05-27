@@ -1,4 +1,3 @@
-import { CommonModule } from '@angular/common';
 import { Component, computed, inject, input, signal } from '@angular/core';
 import { DeploymentTimerStepDto, EnvironmentDeployment } from '@app/core/modules/openapi';
 import { DeploymentTimingService } from '@app/core/services/deployment-timing.service';
@@ -11,7 +10,7 @@ import { TooltipModule } from 'primeng/tooltip';
 
 @Component({
   selector: 'app-deployment-stepper',
-  imports: [CommonModule, TablerIconComponent, TagModule, MessageModule, ProgressBarModule, TooltipModule],
+  imports: [TablerIconComponent, TagModule, MessageModule, ProgressBarModule, TooltipModule],
   providers: [
     provideTablerIcons({
       IconClock,

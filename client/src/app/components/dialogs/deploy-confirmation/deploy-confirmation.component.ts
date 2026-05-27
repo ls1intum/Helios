@@ -1,4 +1,4 @@
-import { Component, computed, input, model, output } from '@angular/core';
+import { Component, computed, input, model, output, signal } from '@angular/core';
 import { EnvironmentDeploymentReadinessDto, EnvironmentDto, EnvironmentReviewersDto, RequiredWorkflowStatusDto } from '@app/core/modules/openapi';
 import { getDeploymentReadinessOptions, getEnvironmentReviewersOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { injectQuery } from '@tanstack/angular-query-experimental';
@@ -26,7 +26,7 @@ import { InputText } from 'primeng/inputtext';
 })
 export class DeployConfirmationComponent {
   /** Input text for the confirmation */
-  repoConfirm = '';
+  repoConfirm = signal('');
 
   /** Two-way bind this from the parent */
   isVisible = model.required<boolean>();
@@ -90,6 +90,14 @@ export class DeployConfirmationComponent {
   showBlockedWorkflowList = computed(() => this.readinessStatus() !== 'MISSING_RUN');
   showMissingWorkflowList = computed(() => this.readinessStatus() === 'MISSING_RUN');
   isLoading = computed(() => this.query.isPending() || (this.hasReadinessContext() && this.readinessQuery.isPending()));
+  /** The Deploy button stays disabled while loading or until the repo name is typed back exactly (non-test envs). */
+  deployDisabled = computed(() => {
+    if (this.isLoading()) {
+      return true;
+    }
+    const nameWithOwner = this.environment().repository?.nameWithOwner;
+    return this.environment().type !== 'TEST' && !!nameWithOwner && this.repoConfirm() !== nameWithOwner;
+  });
   reviewersLine = computed(() => {
     if (!this.hasReviewers()) {
       return '';
@@ -147,7 +155,7 @@ export class DeployConfirmationComponent {
   }
 
   onRepoInput(event: Event) {
-    this.repoConfirm = (event.target as HTMLInputElement).value;
+    this.repoConfirm.set((event.target as HTMLInputElement).value);
   }
 
   onCancel() {

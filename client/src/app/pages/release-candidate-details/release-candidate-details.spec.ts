@@ -63,7 +63,7 @@ describe('Integration Test Release Candidate Details Page', () => {
       data: signal(releaseCandidate),
       isPending: signal(false),
       isError: signal(false),
-    } as typeof component.releaseCandidateQuery;
+    } as unknown as typeof component.releaseCandidateQuery;
 
     await fixture.whenStable();
   });
