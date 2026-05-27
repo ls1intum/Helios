@@ -38,7 +38,7 @@
   "devDependencies": {
     "@storybook/react": "8.6.18",
     "@storybook/react-vite": "8.6.18",
-    "@types/node": "22.19.19",
+    "@types/node": "24.12.4",
     "@types/react": "19.2.15",
     "@types/react-dom": "19.2.3",
     "@typescript-eslint/eslint-plugin": "8.60.0",
