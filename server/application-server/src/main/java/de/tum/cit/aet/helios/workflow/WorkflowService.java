@@ -1,6 +1,5 @@
 package de.tum.cit.aet.helios.workflow;
 
-import de.tum.cit.aet.helios.environment.EnvironmentService;
 import jakarta.transaction.Transactional;
 import java.util.List;
 import java.util.Optional;
@@ -13,7 +12,6 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class WorkflowService {
   private final WorkflowRepository workflowRepository;
-  private final EnvironmentService environmentService;
 
   public Optional<WorkflowDto> getWorkflowById(Long id) {
     return workflowRepository.findById(id).map(WorkflowDto::fromWorkflow);
@@ -49,15 +47,8 @@ public class WorkflowService {
   }
 
   public List<Workflow> getDeploymentWorkflowsForAllEnv(Long repositoryId) {
-    return environmentService.getAllEnabledEnvironments().stream()
-        .filter(env -> env.repository().id().equals(repositoryId))
-        .filter(env -> env.deploymentWorkflow() != null)
-        .map(env -> env.deploymentWorkflow().id())
-        .distinct()
-        .map(workflowId -> workflowRepository.findById(workflowId))
-        .filter(Optional::isPresent)
-        .map(Optional::get)
-        .collect(Collectors.toList());
+    return workflowRepository.findDeploymentWorkflowsForEnabledEnvironmentsByRepositoryId(
+        repositoryId);
   }
 
   public List<Workflow> getTestWorkflows(Long repositoryId) {

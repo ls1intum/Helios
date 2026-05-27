@@ -22,6 +22,9 @@ on:
 
 concurrency: ${{ github.event.inputs.environment_name }}
 
+permissions:
+  contents: read
+
 env:
   build_workflow_name: build.yml
 

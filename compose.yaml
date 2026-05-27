@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: postgres:17.6-alpine
+    image: postgres:17.10-alpine
     environment:
       - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
@@ -69,7 +69,7 @@ services:
       - helios-network
 
   nats-server:
-    image: nats:2.14.0-alpine
+    image: nats:2.14.1-alpine
     ports:
       - "4222:4222"
       - "8222:8222"
@@ -86,6 +86,10 @@ services:
           jetstream {
 
           \  store_dir: \"/data\"
+
+          \  max_mem: 1G
+
+          \  max_file: 8G
 
           }
 
@@ -116,7 +120,7 @@ services:
 
   client:
     container_name: client
-    command: sh -c "yarn dev"
+    command: sh -c "pnpm dev"
     build:
       context: ./client
       dockerfile: Dockerfile.dev
@@ -151,6 +155,7 @@ services:
       - NATS_DURABLE_CONSUMER_NAME=notification-consumer
       - NATS_CONSUMER_INACTIVE_THRESHOLD_MINUTES=5
       - NATS_CONSUMER_ACK_WAIT_SECONDS=30
+      - NATS_CONSUMER_MAX_ACK_PENDING=500
       - MAIL_HOST=mailhog
       - MAIL_PORT=1025
       - EMAIL_ENABLED=true

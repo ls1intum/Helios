@@ -3,4 +3,3 @@ node_modules/
 /dist_keycloak/
 /public/keycloakify-dev-resources/
 /.vscode/
-/.yarn_home/

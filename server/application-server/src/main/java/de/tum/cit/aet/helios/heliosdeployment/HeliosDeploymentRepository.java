@@ -46,9 +46,35 @@ public interface HeliosDeploymentRepository extends JpaRepository<HeliosDeployme
   List<HeliosDeployment> findByRepositoryIdAndBranchNameAndDeploymentIdIsNullOrderByCreatedAtDesc(
       @Param("repositoryId") Long repositoryId, @Param("branchName") String branchName);
 
+  @Query(
+      "SELECT hd FROM HeliosDeployment hd "
+          + "JOIN hd.environment e "
+          + "JOIN e.repository r "
+          + "WHERE r.repositoryId = :repositoryId "
+          + "AND hd.sourceBranchName = :sourceBranchName "
+          + "AND (hd.deploymentId IS NULL OR hd.branchName <> hd.sourceBranchName) "
+          + "ORDER BY hd.createdAt DESC")
+  List<HeliosDeployment> findByRepositoryIdAndSourceBranchNameOrderByCreatedAtDesc(
+      @Param("repositoryId") Long repositoryId,
+      @Param("sourceBranchName") String sourceBranchName);
+
   Optional<HeliosDeployment> findByDeploymentId(Long deploymentId);
 
   Optional<HeliosDeployment> findByWorkflowRunId(Long workflowRunId);
+
+  @Query(
+      "SELECT new de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentWorkflowJobTimingMeta("
+          + "hd.id, hd.workflowStartedAt, hd.status, hd.deployJobStartedAt, "
+          + "hd.preDeployDurationSeconds, hd.deployDurationSeconds, hd.deploymentId, "
+          + "hd.createdAt, workflow.id, config.deployJobName, wr.runStartedAt, wr.workflow.id) "
+          + "FROM HeliosDeployment hd "
+          + "JOIN hd.environment environment "
+          + "LEFT JOIN environment.deploymentWorkflow workflow "
+          + "LEFT JOIN DeploymentWorkflowConfig config ON config.workflow = workflow "
+          + "LEFT JOIN WorkflowRun wr ON wr.id = hd.workflowRunId "
+          + "WHERE hd.workflowRunId = :workflowRunId")
+  Optional<HeliosDeploymentWorkflowJobTimingMeta> findWorkflowJobTimingMetaByWorkflowRunId(
+      @Param("workflowRunId") Long workflowRunId);
 
   @Query(
       value =

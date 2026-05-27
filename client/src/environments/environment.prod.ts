@@ -1,5 +1,6 @@
 export const environment = {
   production: true,
+  aiAnalysisEnabled: false,
   sentry: {
     enabled: true,
     dsn: 'https://8f1ada8034a481454b663bb091cd0eb9@sentry.ase.in.tum.de/4',

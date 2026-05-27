@@ -7,6 +7,9 @@ on:
   push:
     branches: [staging]
 
+permissions:
+  contents: read
+
 env:
   DATASOURCE_URL: jdbc:postgresql://localhost:5432/helios
   DATASOURCE_USERNAME: helios

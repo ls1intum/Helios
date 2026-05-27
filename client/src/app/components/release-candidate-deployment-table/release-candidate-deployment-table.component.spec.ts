@@ -73,11 +73,11 @@ describe('ReleaseCandidateDeploymentTableComponent', () => {
       data: signal([environment]),
       isPending: signal(false),
       isError: signal(false),
-    } as typeof component.environmentQuery;
+    } as unknown as typeof component.environmentQuery;
     component.deployToEnvironment = {
       ...component.deployToEnvironment,
       isPending: signal(false),
-    } as typeof component.deployToEnvironment;
+    } as unknown as typeof component.deployToEnvironment;
   });
 
   it('passes the release candidate branch to the deploy confirmation dialog', async () => {

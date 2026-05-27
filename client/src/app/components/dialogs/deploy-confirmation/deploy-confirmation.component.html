@@ -145,14 +145,7 @@
     <div class="flex justify-between w-full">
       <button pButton type="button" label="Cancel" class="p-button-text" (click)="onCancel()"></button>
 
-      <button
-        pButton
-        type="button"
-        label="Deploy"
-        class="ml-2"
-        [disabled]="isLoading() || (environment().type !== 'TEST' && environment().repository?.nameWithOwner && repoConfirm !== environment().repository?.nameWithOwner)"
-        (click)="onDeploy()"
-      ></button>
+      <button pButton type="button" label="Deploy" class="ml-2" [disabled]="deployDisabled()" (click)="onDeploy()"></button>
     </div>
   </ng-template>
 </p-dialog>
