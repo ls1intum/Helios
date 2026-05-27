@@ -30,7 +30,7 @@
     "@angular/router": "20.3.21",
     "@hey-api/client-fetch": "0.13.1",
     "@primeng/themes": "20.4.0",
-    "@sentry/angular": "10.54.0",
+    "@sentry/angular": "10.53.1",
     "@sentry/cli": "2.58.6",
     "@tanstack/angular-query-experimental": "5.100.14",
     "angular-tabler-icons": "3.26.0",
