@@ -255,7 +255,7 @@ public interface WorkflowRunRepository
                                    @Param("tps") String tps);
 
   /**
-   * Custom database clean‑up for workflow runs.
+   * Custom database clean-up for workflow runs.
    */
   @Modifying
   @Transactional
@@ -296,5 +296,123 @@ public interface WorkflowRunRepository
   int purgeObsoleteRuns(@Param("keep") int keepPerCombo,
                         @Param("ageDays") int ageDays,
                         @Param("tps") String testProcessingStatus);
+
+  /**
+   * IDs (up to {@code limit}) of workflow runs whose {@code head_branch} no
+   * longer exists in the {@code branch} table for the same repository,
+   * older than the grace window, and not referenced by any deployment row.
+   *
+   * <p>Used to preview which runs the orphan-branch sweep would remove in
+   * dry-run mode. The matching batched {@code DELETE} query lives in
+   * {@link #purgeOrphanBranchRunsBatch(int, int)}.
+   *
+   * <p>Runs with a {@code NULL head_branch} (tag pushes, scheduled and
+   * {@code workflow_dispatch} runs) are excluded — they have no branch
+   * identity to compare against and the keep-N policy in
+   * {@link #purgeObsoleteRuns} already handles their retention.
+   */
+  @Query(value = """
+      SELECT wr.id
+      FROM workflow_run wr
+      WHERE wr.created_at < now() - (:graceDays * interval '1 day')
+        AND wr.head_branch IS NOT NULL
+        AND NOT EXISTS (
+          SELECT 1 FROM branch b
+          WHERE b.repository_id = wr.repository_id
+            AND b.name          = wr.head_branch
+        )
+        AND NOT EXISTS (
+          SELECT 1 FROM helios_deployment hd
+          WHERE hd.workflow_run_id = wr.id
+        )
+        AND NOT EXISTS (
+          SELECT 1 FROM deployment d
+          WHERE d.workflow_run_id = wr.id
+        )
+      LIMIT :limit
+      """, nativeQuery = true)
+  List<Long> previewOrphanBranchRunIds(@Param("graceDays") int graceDays,
+                                       @Param("limit") int limit);
+
+  /**
+   * Total number of workflow runs the orphan-branch sweep would delete for the
+   * given grace window. Uses the exact same predicate as
+   * {@link #previewOrphanBranchRunIds(int, int)} and
+   * {@link #purgeOrphanBranchRunsBatch(int, int)} but without a {@code LIMIT},
+   * so dry-run mode can report the true backlog size rather than a single
+   * batch's worth.
+   */
+  @Query(value = """
+      SELECT count(*)
+      FROM workflow_run wr
+      WHERE wr.created_at < now() - (:graceDays * interval '1 day')
+        AND wr.head_branch IS NOT NULL
+        AND NOT EXISTS (
+          SELECT 1 FROM branch b
+          WHERE b.repository_id = wr.repository_id
+            AND b.name          = wr.head_branch
+        )
+        AND NOT EXISTS (
+          SELECT 1 FROM helios_deployment hd
+          WHERE hd.workflow_run_id = wr.id
+        )
+        AND NOT EXISTS (
+          SELECT 1 FROM deployment d
+          WHERE d.workflow_run_id = wr.id
+        )
+      """, nativeQuery = true)
+  long countOrphanBranchRunIds(@Param("graceDays") int graceDays);
+
+  /**
+   * Deletes up to {@code batchSize} workflow runs whose {@code head_branch}
+   * no longer exists in the {@code branch} table, are older than the grace
+   * window, and are not referenced by any deployment. Cascades through
+   * {@code test_suite}, {@code test_case}, {@code test_failure_analysis},
+   * {@code workflow_run_pull_requests}, and {@code issue_workflow_runs}
+   * via existing FK constraints.
+   *
+   * <p>Bounded by {@code batchSize} so the caller can loop and split the
+   * work into multiple short transactions; this avoids long-held locks and
+   * unbounded WAL growth on a backlog that may exceed tens of thousands of
+   * rows.
+   *
+   * <p>Note: {@code helios_deployment.workflow_run_id} was intentionally
+   * de-FK'd in {@code V42} because that column is populated at dispatch
+   * time, before the workflow_run row arrives via webhook sync. The
+   * {@code NOT EXISTS} guard here remains correct because the orphan sweep
+   * only targets workflow_runs that already exist and are older than the
+   * grace window.
+   *
+   * @return number of {@code workflow_run} rows deleted in this batch (not
+   *     including cascaded child rows). Callers loop until the return is
+   *     less than {@code batchSize}.
+   */
+  @Modifying
+  @Transactional
+  @Query(value = """
+      DELETE FROM workflow_run
+      WHERE id IN (
+        SELECT wr.id
+        FROM workflow_run wr
+        WHERE wr.created_at < now() - (:graceDays * interval '1 day')
+          AND wr.head_branch IS NOT NULL
+          AND NOT EXISTS (
+            SELECT 1 FROM branch b
+            WHERE b.repository_id = wr.repository_id
+              AND b.name          = wr.head_branch
+          )
+          AND NOT EXISTS (
+            SELECT 1 FROM helios_deployment hd
+            WHERE hd.workflow_run_id = wr.id
+          )
+          AND NOT EXISTS (
+            SELECT 1 FROM deployment d
+            WHERE d.workflow_run_id = wr.id
+          )
+        LIMIT :batchSize
+      )
+      """, nativeQuery = true)
+  int purgeOrphanBranchRunsBatch(@Param("graceDays") int graceDays,
+                                 @Param("batchSize") int batchSize);
 
 }
