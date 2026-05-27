@@ -53,7 +53,7 @@ want a faster feedback loop while working on the frontend, you can run the
    cd client
    pnpm install              # install dependencies (uses the committed pnpm-lock.yaml)
    pnpm dev                  # start the dev server on http://localhost:4200
-   pnpm test:unit            # run unit tests
+   pnpm test:unit:ci         # run unit tests once with coverage (use `pnpm test:unit` for the interactive Vitest UI)
    pnpm lint                 # run ESLint
    pnpm generate:openapi     # regenerate the typed API client from the server's OpenAPI spec
 

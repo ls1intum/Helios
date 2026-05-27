@@ -156,4 +156,4 @@ In the client directory execute following command:
 .. code-block:: sh
 
   pnpm install
-  pnpm test:unit
+  pnpm test:unit:ci   # one-shot run with coverage; use `pnpm test:unit` for the interactive Vitest UI
