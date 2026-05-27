@@ -39,6 +39,32 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
         'meta[name="theme-color"]'
     );
 
+    // These helpers are declared before the effect/handlers that call them so
+    // react-hooks (v7) doesn't flag access-before-declaration. updateMetaThemeColor
+    // is first since applyTheme/applySystemTheme depend on it.
+    const updateMetaThemeColor = () => {
+        if (metaThemeColor) {
+            const backgroundColor = getComputedStyle(htmlElement)
+                .getPropertyValue("--background")
+                .trim();
+            // Assuming --background is a valid HSL color, adjust as needed
+            metaThemeColor.setAttribute("content", `hsl(${backgroundColor})`);
+        }
+    };
+
+    const applyTheme = (theme: AppTheme) => {
+        htmlElement.classList.toggle(AppTheme.DARK, theme === AppTheme.DARK);
+        htmlElement.setAttribute("data-color-mode", theme);
+        updateMetaThemeColor();
+    };
+
+    const applySystemTheme = () => {
+        const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        htmlElement.classList.toggle(AppTheme.DARK, isDark);
+        htmlElement.setAttribute("data-color-mode", AppTheme.AUTO);
+        updateMetaThemeColor();
+    };
+
     useEffect(() => {
         if (currentTheme === AppTheme.AUTO) {
             applySystemTheme();
@@ -75,29 +101,6 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
         localStorage.removeItem(LOCAL_STORAGE_THEME_KEY);
         applySystemTheme();
         updateMetaThemeColor();
-    };
-
-    const applyTheme = (theme: AppTheme) => {
-        htmlElement.classList.toggle(AppTheme.DARK, theme === AppTheme.DARK);
-        htmlElement.setAttribute("data-color-mode", theme);
-        updateMetaThemeColor();
-    };
-
-    const applySystemTheme = () => {
-        const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-        htmlElement.classList.toggle(AppTheme.DARK, isDark);
-        htmlElement.setAttribute("data-color-mode", AppTheme.AUTO);
-        updateMetaThemeColor();
-    };
-
-    const updateMetaThemeColor = () => {
-        if (metaThemeColor) {
-            const backgroundColor = getComputedStyle(htmlElement)
-                .getPropertyValue("--background")
-                .trim();
-            // Assuming --background is a valid HSL color, adjust as needed
-            metaThemeColor.setAttribute("content", `hsl(${backgroundColor})`);
-        }
     };
 
     function getInitialTheme(): AppTheme | undefined {
