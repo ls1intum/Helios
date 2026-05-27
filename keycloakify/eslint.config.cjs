@@ -58,4 +58,15 @@ module.exports = [
             "import/no-anonymous-default-export": "off"
         }
     },
+    {
+        // src/login/** are pages ejected verbatim from keycloakify. They follow
+        // keycloakify's upstream patterns (e.g. reading/writing a ref during
+        // render to emit group headers), which react-hooks v7's new "refs" rule
+        // flags. We don't own this logic, so scope that rule off here rather than
+        // diverge from upstream.
+        files: ["src/login/**/*.{ts,tsx}"],
+        rules: {
+            "react-hooks/refs": "off"
+        }
+    },
 ];
