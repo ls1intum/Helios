@@ -24,7 +24,7 @@
 
         <!-- dependencies -->
         <lombok.version>1.18.46</lombok.version>
-        <slf4j-api.version>2.0.17</slf4j-api.version>
+        <slf4j-api.version>2.0.18</slf4j-api.version>
 
         <!-- plugins -->
         <maven-compiler-plugin.version>3.14.0</maven-compiler-plugin.version>
