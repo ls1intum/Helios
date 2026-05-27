@@ -1,4 +1,3 @@
-import { CommonModule } from '@angular/common';
 import { Component, inject, input, output, computed } from '@angular/core';
 import { UserAvatarComponent } from '@app/components/user-avatar/user-avatar.component';
 import { EnvironmentDeployment, EnvironmentDto } from '@app/core/modules/openapi';
@@ -21,18 +20,7 @@ const STALE_DEPLOYMENT_UNLOCK_TIMEOUT_MS = 20 * 60 * 1000;
 
 @Component({
   selector: 'app-environment-actions',
-  imports: [
-    CommonModule,
-    UserAvatarComponent,
-    LockTimeComponent,
-    ButtonModule,
-    ButtonGroupModule,
-    TooltipModule,
-    TagModule,
-    RouterLink,
-    TablerIconComponent,
-    EnvironmentReviewersComponent,
-  ],
+  imports: [UserAvatarComponent, LockTimeComponent, ButtonModule, ButtonGroupModule, TooltipModule, TagModule, RouterLink, TablerIconComponent, EnvironmentReviewersComponent],
   providers: [
     provideTablerIcons({
       IconCloudUpload,

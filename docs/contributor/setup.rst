@@ -25,6 +25,31 @@ Before you can start Helios, you need to install and configure some dependencies
    We use Ngrok to expose the webhook listener to the internet. You can check if you installed Ngrok correctly by running
    ``ngrok --version`` in your terminal. In the coming sections, we will guide you through the setup of Ngrok.
 
+4. `Node.js <https://nodejs.org/>`__ **and pnpm**:
+   Only required if you want to develop the frontend (the ``client`` Angular app
+   or the ``keycloakify`` Keycloak theme) **outside** of Docker — for example to
+   run the dev server, tests, linting, or to regenerate the OpenAPI client.
+   The standard Docker Compose flow does not need a local Node install.
+
+   - Install **Node.js 24** (see ``client/.nvmrc`` for the exact version; ``nvm install`` picks it up automatically).
+   - This repository uses **pnpm** as its package manager (not npm or yarn).
+     The version is pinned via the ``packageManager`` field in ``package.json``
+     and is best installed through `Corepack <https://nodejs.org/api/corepack.html>`__,
+     which ships with Node.js:
+
+     .. code-block:: shell
+
+        corepack enable          # makes the pinned pnpm version available automatically
+
+     Alternatively, install it directly: ``npm install -g pnpm@11.2.2``.
+     Verify with ``pnpm --version`` (should print ``11.2.2``).
+
+   .. warning::
+
+      Do **not** use ``npm`` or ``yarn`` in ``client`` or ``keycloakify`` — it
+      would create a conflicting lockfile. Always use ``pnpm`` so the committed
+      ``pnpm-lock.yaml`` stays authoritative.
+
 IDE Setup
 ---------
 

@@ -1,4 +1,3 @@
-import { CommonModule } from '@angular/common';
 import { Component, input } from '@angular/core';
 import { EnvironmentDto } from '@app/core/modules/openapi';
 import { EnvironmentDeploymentInfoComponent } from '../deployment-info/environment-deployment-info.component';
@@ -6,7 +5,7 @@ import { EnvironmentStatusInfoComponent } from '../environment-status-info/envir
 
 @Component({
   selector: 'app-environment-details',
-  imports: [CommonModule, EnvironmentDeploymentInfoComponent, EnvironmentStatusInfoComponent],
+  imports: [EnvironmentDeploymentInfoComponent, EnvironmentStatusInfoComponent],
   templateUrl: './environment-details.component.html',
 })
 export class EnvironmentDetailsComponent {

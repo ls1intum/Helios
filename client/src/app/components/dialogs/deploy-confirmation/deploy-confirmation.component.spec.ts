@@ -38,12 +38,12 @@ describe('DeployConfirmationComponent', () => {
       ...component.query,
       data: signal<EnvironmentReviewersDto>({ reviewers: [] }),
       isPending: signal(false),
-    } as typeof component.query;
+    } as unknown as typeof component.query;
     component.readinessQuery = {
       ...component.readinessQuery,
       data: signal<EnvironmentDeploymentReadinessDto | undefined>(undefined),
       isPending: signal(false),
-    } as typeof component.readinessQuery;
+    } as unknown as typeof component.readinessQuery;
   });
 
   function getAlertMessage(): string {
@@ -95,7 +95,7 @@ describe('DeployConfirmationComponent', () => {
 
     expect(deployButton.disabled).toBe(true);
 
-    component.repoConfirm = 'ls1intum/Helios';
+    component.repoConfirm.set('ls1intum/Helios');
     fixture.detectChanges();
 
     expect(deployButton.disabled).toBe(false);
@@ -119,7 +119,7 @@ describe('DeployConfirmationComponent', () => {
         ],
       }),
       isPending: signal(false),
-    } as typeof component.readinessQuery;
+    } as unknown as typeof component.readinessQuery;
 
     fixture.detectChanges();
     await fixture.whenStable();
@@ -156,7 +156,7 @@ describe('DeployConfirmationComponent', () => {
         ],
       }),
       isPending: signal(false),
-    } as typeof component.readinessQuery;
+    } as unknown as typeof component.readinessQuery;
 
     fixture.detectChanges();
     await fixture.whenStable();
@@ -185,7 +185,7 @@ describe('DeployConfirmationComponent', () => {
         ],
       }),
       isPending: signal(false),
-    } as typeof component.readinessQuery;
+    } as unknown as typeof component.readinessQuery;
 
     fixture.detectChanges();
     await fixture.whenStable();

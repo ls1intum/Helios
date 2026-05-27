@@ -21,6 +21,9 @@ on:
 
 concurrency: ${{ github.event.inputs.environment_name }}
 
+permissions:
+  contents: read
+
 env:
   CI: true
 

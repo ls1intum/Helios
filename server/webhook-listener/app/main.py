@@ -3,38 +3,49 @@ import hashlib
 from contextlib import asynccontextmanager
 from fastapi import Body, FastAPI, HTTPException, Header, Request, status
 from pydantic import BaseModel
-from nats.js.api import StreamConfig
+from nats.js.api import DiscardPolicy, RetentionPolicy, StorageType, StreamConfig
 from nats.js.errors import BadRequestError
 from app.config import settings
 from app.logger import logger
 from app.nats_client import nats_client
 
-RETENTION_DAYS = 28
+RETENTION_DAYS = 7
 SECONDS_PER_DAY = 24 * 60 * 60
 RETENTION_MAX_AGE_SECONDS = RETENTION_DAYS * SECONDS_PER_DAY
 
+GIB = 1024 ** 3
+MIB = 1024 ** 2
 
-async def ensure_stream(name: str, subjects: list[str]) -> None:
-    stream_config = StreamConfig(
+ERR_STREAM_NAME_EXISTS = 10058
+
+
+async def ensure_stream(name: str, subjects: list[str], max_bytes: int) -> None:
+    config = StreamConfig(
         name=name,
         subjects=subjects,
-        storage="file",
+        storage=StorageType.FILE,
+        retention=RetentionPolicy.LIMITS,
+        discard=DiscardPolicy.OLD,
         max_age=RETENTION_MAX_AGE_SECONDS,
+        max_bytes=max_bytes,
     )
     try:
-        await nats_client.js.add_stream(config=stream_config)
+        await nats_client.js.add_stream(config=config)
+        logger.info("Created JetStream stream '%s'", name)
+        return
     except BadRequestError as error:
-        if getattr(error, "err_code", None) != 10058:
+        if getattr(error, "err_code", None) != ERR_STREAM_NAME_EXISTS:
             raise
-        await nats_client.js.update_stream(config=stream_config)
-        logger.info(f"Updated existing stream configuration for '{name}'")
+
+    await nats_client.js.update_stream(config=config)
+    logger.info("Updated JetStream stream '%s'", name)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await nats_client.connect()
-    await ensure_stream(name="github", subjects=["github.>"])
-    await ensure_stream(name="notification", subjects=["notification.>"])
+    await ensure_stream(name="github",       subjects=["github.>"],       max_bytes=2 * GIB)
+    await ensure_stream(name="notification", subjects=["notification.>"], max_bytes=64 * MIB)
     yield
     await nats_client.close()
 
@@ -50,28 +61,28 @@ def verify_github_signature(signature, secret, body):
 
 @app.post("/github")
 async def github_webhook(
-    request: Request, 
+    request: Request,
     signature: str = Header(
-        None, 
-        alias="X-Hub-Signature", 
+        None,
+        alias="X-Hub-Signature",
         description="GitHub's HMAC hex digest of the payload, used for verifying the webhook's authenticity"
-    ), 
+    ),
     event_type: str = Header(
-        None, 
+        None,
         alias="X-Github-Event",
         description="The type of event that triggered the webhook, such as 'push', 'pull_request', etc.",
     ),
     body = Body(...),
-):    
+):
     body = await request.body()
-    
+
     if not verify_github_signature(signature, settings.WEBHOOK_SECRET, body):
         raise HTTPException(status_code=401, detail="Invalid signature")
-    
+
     # Ignore ping events
     if event_type == "ping":
         return { "status": "pong" }
-    
+
     # Extract subject from the payload
     payload = await request.json()
 
@@ -82,7 +93,7 @@ async def github_webhook(
         repo = payload["repository"]["name"]
     elif "organization" in payload:
         org = payload["organization"]["login"]
-    
+
     org_sanitized = org.replace('.', '~')
     repo_sanitized = repo.replace('.', '~')
 
