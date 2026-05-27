@@ -22,7 +22,7 @@ jobs:
         - name: Setup pnpm
           uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
           with:
-            version: 11.2.2
+            version: 11.4.0
         - name: Setup Node.js
           uses: actions/setup-node@v6
           with:
@@ -37,14 +37,14 @@ jobs:
           uses: codacy/codacy-coverage-reporter-action@89d6c85cfafaec52c72b6c5e8b2878d33104c699  # v1.3.0
           with:
             project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
-            coverage-reports: client/coverage/lcov.info
+            coverage-reports: client/coverage/client/lcov.info
           if: (github.event.pull_request.head.repo.full_name == github.event.pull_request.base.repo.full_name) && (success() || failure())
         - name: Upload Client Test Coverage Report
           if: success() || failure()
           uses: actions/upload-artifact@v7
           with:
               name: Coverage Report Client Tests
-              path: client/coverage/lcov-report
+              path: client/coverage/client/lcov-report
     server-tests:
         runs-on: ubuntu-latest
         timeout-minutes: 60
