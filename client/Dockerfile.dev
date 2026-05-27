@@ -1,5 +1,5 @@
 # Node pinned to 24.15.0 to match client/.nvmrc and the production Dockerfile.
-FROM node:24.15.0-alpine
+FROM node:24.16.0-alpine
 
 # Create app directory
 RUN mkdir -p /usr/src/app
