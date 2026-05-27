@@ -3,7 +3,11 @@ const typescriptParser = require('@typescript-eslint/parser');
 const prettierPlugin = require('eslint-plugin-prettier');
 const tssUnusedClasses = require('eslint-plugin-tss-unused-classes');
 const reactHooks = require('eslint-plugin-react-hooks');
-const reactRefresh = require('eslint-plugin-react-refresh');
+// eslint-plugin-react-refresh >=0.5 ships ESM-first: `configs`/`rules` live on
+// the `default` export, so unwrap it for CJS interop (older versions exposed
+// them on the namespace object directly).
+const reactRefreshModule = require('eslint-plugin-react-refresh');
+const reactRefresh = reactRefreshModule.default ?? reactRefreshModule;
 
 module.exports = [
     {
