@@ -5,7 +5,7 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { TableModule } from 'primeng/table';
 import { getActivityHistoryByEnvironmentIdOptions, getEnvironmentByIdOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { DateService } from '@app/core/services/date.service';
-import { CommonModule } from '@angular/common';
+
 import { PageHeadingComponent } from '@app/components/page-heading/page-heading.component';
 import { AvatarModule } from 'primeng/avatar';
 import { TooltipModule } from 'primeng/tooltip';
@@ -14,7 +14,7 @@ import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
 import { IconCloudUpload, IconGitBranch, IconGitCommit, IconLock, IconLockOpen, IconStatusChange } from 'angular-tabler-icons/icons';
 @Component({
   selector: 'app-environment-deployment-history',
-  imports: [CommonModule, TablerIconComponent, PrimeTemplate, SkeletonModule, TableModule, PageHeadingComponent, AvatarModule, TooltipModule, UserAvatarComponent],
+  imports: [TablerIconComponent, PrimeTemplate, SkeletonModule, TableModule, PageHeadingComponent, AvatarModule, TooltipModule, UserAvatarComponent],
   providers: [
     provideTablerIcons({
       IconCloudUpload,
