@@ -29,3 +29,44 @@ If you haven't followed the setup guide and ``ngrok.yml`` is not configured yet,
 
 .. note::
   The server will start and you can access the application (client) at `http://localhost:4200 <http://localhost:4200>`_.
+
+Developing the Frontend with pnpm
+---------------------------------
+
+The ``docker compose up`` flow above already runs the client for you. If you
+want a faster feedback loop while working on the frontend, you can run the
+``client`` (Angular) or ``keycloakify`` (Keycloak theme) apps directly with
+**pnpm**, this repository's package manager.
+
+.. important::
+
+   This repo uses **pnpm**, not npm or yarn. The version is pinned in
+   ``package.json`` (``packageManager``) and is easiest to get via Corepack:
+   run ``corepack enable`` once (or ``npm install -g pnpm@11.2.2``). See the
+   `Setup Guide <../setup#prerequisites>`_ for details. Never run ``npm`` or
+   ``yarn`` here — it would create a conflicting lockfile.
+
+**Client (Angular):**
+
+.. code-block:: shell
+
+   cd client
+   pnpm install              # install dependencies (uses the committed pnpm-lock.yaml)
+   pnpm dev                  # start the dev server on http://localhost:4200
+   pnpm test:unit            # run unit tests
+   pnpm lint                 # run ESLint
+   pnpm generate:openapi     # regenerate the typed API client from the server's OpenAPI spec
+
+**Keycloakify (Keycloak theme):**
+
+.. code-block:: shell
+
+   cd keycloakify
+   pnpm install
+   pnpm build-keycloak-theme   # build the theme into dist_keycloak/
+
+.. note::
+
+   ``pnpm install`` is reproducible from the committed ``pnpm-lock.yaml``; in CI
+   we use ``pnpm install --frozen-lockfile``. If you add or update a dependency,
+   commit the updated ``pnpm-lock.yaml`` along with your ``package.json`` change.
