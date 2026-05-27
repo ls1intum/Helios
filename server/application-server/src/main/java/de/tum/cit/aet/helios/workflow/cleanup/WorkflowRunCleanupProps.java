@@ -5,7 +5,7 @@ import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * Externalised configuration for the nightly workflow‑run clean‑up.
+ * Externalised configuration for the nightly workflow-run clean-up.
  *
  * <p>It binds the YAML fragment
  * <pre>{@code
@@ -47,7 +47,7 @@ public class WorkflowRunCleanupProps {
    * Ordered list of retention policies.  The task iterates over them
    * in the declared order and applies each individually.
    *
-   * <p>Empty list ⇒ no clean‑up at all.</p>
+   * <p>Empty list ⇒ no clean-up at all.</p>
    */
   private List<Policy> policies = List.of();
 
@@ -95,6 +95,15 @@ public class WorkflowRunCleanupProps {
    */
   @Data
   public static class OrphanBranches {
+
+    /**
+     * Cron expression controlling when the orphan-branch sweep runs.
+     * Default → {@code "0 30 3 * * *"} (every day at 03:30, after the keep-N
+     * sweep at 01:00). Bound from
+     * {@code cleanup.workflow-run.orphan-branches.cron} — the same property the
+     * {@code @Scheduled} expression on {@code WorkflowRunCleanupTask} reads.
+     */
+    private String cron = "0 30 3 * * *";
 
     /**
      * Master switch for the orphan-branch sweep. Defaults to {@code false}

@@ -255,7 +255,7 @@ public interface WorkflowRunRepository
                                    @Param("tps") String tps);
 
   /**
-   * Custom database clean‑up for workflow runs.
+   * Custom database clean-up for workflow runs.
    */
   @Modifying
   @Transactional
@@ -333,6 +333,35 @@ public interface WorkflowRunRepository
       """, nativeQuery = true)
   List<Long> previewOrphanBranchRunIds(@Param("graceDays") int graceDays,
                                        @Param("limit") int limit);
+
+  /**
+   * Total number of workflow runs the orphan-branch sweep would delete for the
+   * given grace window. Uses the exact same predicate as
+   * {@link #previewOrphanBranchRunIds(int, int)} and
+   * {@link #purgeOrphanBranchRunsBatch(int, int)} but without a {@code LIMIT},
+   * so dry-run mode can report the true backlog size rather than a single
+   * batch's worth.
+   */
+  @Query(value = """
+      SELECT count(*)
+      FROM workflow_run wr
+      WHERE wr.created_at < now() - (:graceDays * interval '1 day')
+        AND wr.head_branch IS NOT NULL
+        AND NOT EXISTS (
+          SELECT 1 FROM branch b
+          WHERE b.repository_id = wr.repository_id
+            AND b.name          = wr.head_branch
+        )
+        AND NOT EXISTS (
+          SELECT 1 FROM helios_deployment hd
+          WHERE hd.workflow_run_id = wr.id
+        )
+        AND NOT EXISTS (
+          SELECT 1 FROM deployment d
+          WHERE d.workflow_run_id = wr.id
+        )
+      """, nativeQuery = true)
+  long countOrphanBranchRunIds(@Param("graceDays") int graceDays);
 
   /**
    * Deletes up to {@code batchSize} workflow runs whose {@code head_branch}

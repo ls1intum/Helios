@@ -65,14 +65,36 @@ class WorkflowRunCleanupTaskTest {
   @Test
   void purgeOrphanBranchRunsPreviewsOnlyInDryRunMode() {
     WorkflowRunRepository repo = Mockito.mock(WorkflowRunRepository.class);
+    // Dry-run reports the true backlog via count(*) and a capped id sample.
+    when(repo.countOrphanBranchRunIds(14)).thenReturn(12_345L);
     when(repo.previewOrphanBranchRunIds(14, BATCH_SIZE)).thenReturn(List.of(1L, 2L, 3L));
 
     WorkflowRunCleanupTask task = createTask(repo, /* dryRun */ true, /* enabled */ true, 14);
 
     task.purgeOrphanBranchRuns();
 
+    verify(repo).countOrphanBranchRunIds(14);
     verify(repo).previewOrphanBranchRunIds(14, BATCH_SIZE);
     verify(repo, never()).purgeOrphanBranchRunsBatch(anyInt(), anyInt());
+    verifyNoMoreInteractions(repo);
+  }
+
+  @Test
+  void purgeOrphanBranchRunsSkipsInvalidBatchSize() {
+    WorkflowRunRepository repo = Mockito.mock(WorkflowRunRepository.class);
+    WorkflowRunCleanupProps props = new WorkflowRunCleanupProps();
+    props.setDryRun(false);
+    WorkflowRunCleanupProps.OrphanBranches orphan = new WorkflowRunCleanupProps.OrphanBranches();
+    orphan.setEnabled(true);
+    orphan.setGraceDays(7);
+    orphan.setBatchSize(0); // invalid: before the guard this looped forever (LIMIT 0 deletes 0)
+    props.setOrphanBranches(orphan);
+
+    WorkflowRunCleanupTask task = new WorkflowRunCleanupTask(repo, props);
+
+    task.purgeOrphanBranchRuns();
+
+    // Skipped before issuing any query — and the test terminates instead of hanging.
     verifyNoMoreInteractions(repo);
   }
 

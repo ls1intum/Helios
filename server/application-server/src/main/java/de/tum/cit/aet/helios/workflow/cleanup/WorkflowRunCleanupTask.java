@@ -32,9 +32,9 @@ public class WorkflowRunCleanupTask {
   @EventListener(ApplicationReadyEvent.class)
   public void init() {
     if (props.isDryRun()) {
-      log.info("Workflow‑run cleanup is in DRY-RUN mode. No rows will be deleted.");
+      log.info("Workflow-run cleanup is in DRY-RUN mode. No rows will be deleted.");
     } else {
-      log.info("Workflow‑run cleanup is in DELETE mode.");
+      log.info("Workflow-run cleanup is in DELETE mode.");
     }
   }
 
@@ -46,7 +46,7 @@ public class WorkflowRunCleanupTask {
   @Scheduled(cron = "${cleanup.workflow-run.cron:0 0 1 * * *}")
   @Transactional
   public void purge() {
-    log.info("Workflow‑run cleanup started.");
+    log.info("Workflow-run cleanup started.");
     int totalDeleted = 0;
 
     for (WorkflowRunCleanupProps.Policy policy : props.getPolicies()) {
@@ -91,7 +91,7 @@ public class WorkflowRunCleanupTask {
       totalDeleted += deleted;
     }
 
-    log.info("Workflow‑run cleanup finished.  Total rows deleted: {}", totalDeleted);
+    log.info("Workflow-run cleanup finished.  Total rows deleted: {}", totalDeleted);
   }
 
 
@@ -128,16 +128,25 @@ public class WorkflowRunCleanupTask {
 
     int graceDays = cfg.getGraceDays();
     int batchSize = cfg.getBatchSize();
+    if (graceDays < 0 || batchSize < 1) {
+      log.warn(
+          "Orphan-branch cleanup skipped: invalid configuration (graceDays={}, batchSize={}). "
+              + "Require graceDays >= 0 and batchSize >= 1.",
+          graceDays, batchSize);
+      return;
+    }
+
     log.info("Orphan-branch cleanup started (graceDays={}, batchSize={}, dryRun={}).",
         graceDays, batchSize, props.isDryRun());
 
     int totalDeleted = 0;
     if (props.isDryRun()) {
-      List<Long> ids = repo.previewOrphanBranchRunIds(graceDays, batchSize);
+      long total = repo.countOrphanBranchRunIds(graceDays);
+      List<Long> sample = repo.previewOrphanBranchRunIds(graceDays, batchSize);
       log.info(
           "DRY-RUN: Orphan-branch cleanup graceDays={}  →  {} rows would be deleted "
-              + "(preview capped at batchSize={}).",
-          graceDays, ids.size(), batchSize);
+              + "(showing first {} id(s): {}).",
+          graceDays, total, sample.size(), sample);
     } else {
       while (true) {
         int deleted = repo.purgeOrphanBranchRunsBatch(graceDays, batchSize);

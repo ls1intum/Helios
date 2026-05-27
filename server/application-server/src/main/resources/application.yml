@@ -69,6 +69,7 @@ cleanup:
         # deployment row.
         orphan-branches:
             enabled: ${CLEANUP_WORKFLOW_RUN_ORPHAN_BRANCHES_ENABLED:false}
+            cron: ${CLEANUP_WORKFLOW_RUN_ORPHAN_BRANCHES_CRON:0 30 3 * * *}
             grace-days: ${CLEANUP_WORKFLOW_RUN_ORPHAN_BRANCHES_GRACE_DAYS:7}
             batch-size: ${CLEANUP_WORKFLOW_RUN_ORPHAN_BRANCHES_BATCH_SIZE:5000}
 
