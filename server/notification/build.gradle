@@ -102,6 +102,10 @@ jacocoTestReport {
 
 tasks.named('test') {
 	useJUnitPlatform()
+	// The notification module currently has no active tests (the only test
+	// class is an empty @SpringBootTest). Gradle 9 fails a test task that
+	// discovers no tests, so opt out until real tests are added.
+	failOnNoDiscoveredTests = false
 }
 
 // Load environment variables from the .env file
