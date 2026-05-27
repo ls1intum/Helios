@@ -133,7 +133,7 @@ class WorkflowRunOrphanSweepIntegrationTest {
   }
 
   @Test
-  void deletingAConfirmedOrphanCascadesToItsChildren() {
+  void deletingConfirmedOrphanCascadesToItsChildren() {
     // The task confirms candidates against GitHub, then deletes by id; here we
     // exercise that delete-by-id path and assert the FK cascade.
     repo.deleteAllByIdInBatch(List.of(ORPHAN_OLD));
