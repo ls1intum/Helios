@@ -22,16 +22,16 @@ jobs:
   docs:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v5
-      - uses: FelixTJDietrich/sphinx-action@java
+      - uses: actions/checkout@v6
+      - uses: FelixTJDietrich/sphinx-action@f240fcdaaf6fedf6b3f66b29ec34893346f028d8  # java (fork branch head)
         with:
           docs-folder: "docs/"
           build-command: make html dirhtml
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: Documentation
           path: docs/_build/html/
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: docs/_build/dirhtml/
   deploy:
@@ -44,4 +44,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5

@@ -1,16 +1,22 @@
 import { MarkdownPipe } from '@app/core/modules/markdown/markdown.pipe';
 import { AvatarGroupModule } from 'primeng/avatargroup';
 import { TooltipModule } from 'primeng/tooltip';
-import { Component, computed, effect, inject, ViewChild } from '@angular/core';
-import { Table, TableModule, TablePageEvent } from 'primeng/table';
+import { Component, computed, effect, inject, input, numberAttribute, signal, viewChild } from '@angular/core';
+import { TableModule, TablePageEvent } from 'primeng/table';
 import { AvatarModule } from 'primeng/avatar';
 import { TagModule } from 'primeng/tag';
 import { injectMutation, injectQuery, QueryClient } from '@tanstack/angular-query-experimental';
 import { SkeletonModule } from 'primeng/skeleton';
 import { ActivatedRoute, Router } from '@angular/router';
-import { getPullRequestsOptions, getPullRequestsQueryKey, setPrPinnedByNumberMutation } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
-import { PullRequestInfoDto } from '@app/core/modules/openapi';
+import {
+  getPullRequestFilterOptionsByRepositoryIdOptions,
+  getPullRequestsOptions,
+  getPullRequestsQueryKey,
+  setPrPinnedByNumberMutation,
+} from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
+import { PullRequestBaseInfoDto } from '@app/core/modules/openapi';
 import { ButtonModule } from 'primeng/button';
+import { ChipModule } from 'primeng/chip';
 import { DividerModule } from 'primeng/divider';
 import { SelectModule } from 'primeng/select';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
@@ -23,8 +29,8 @@ import { GithubLinkButtonComponent } from '@app/components/github-link-button/gi
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
 import { IconExternalLink, IconFilterPlus, IconGitPullRequest, IconPinned, IconPinnedOff, IconPoint } from 'angular-tabler-icons/icons';
 import { PAGINATED_FILTER_OPTIONS_TOKEN, PAGINATION_STORAGE_KEY_TOKEN, PaginatedFilterOption, PaginatedTableService } from '@app/core/services/paginated-table.service';
-import { TableFilterPaginatedComponent } from '@app/components/table-filter-paginated/table-filter-paginated.component';
 import { NgTemplateOutlet } from '@angular/common';
+import { PullRequestFilterBarComponent, PullRequestQueryFilters } from '@app/components/pull-request-filter-bar/pull-request-filter-bar.component';
 
 // Define filter options for pull requests
 export function createPullRequestFilterOptions(keycloakService: KeycloakService): PaginatedFilterOption[] {
@@ -63,10 +69,11 @@ export function createPullRequestFilterOptions(keycloakService: KeycloakService)
     TooltipModule,
     MarkdownPipe,
     ButtonModule,
+    ChipModule,
     DividerModule,
     WorkflowRunStatusComponent,
     PullRequestStatusIconComponent,
-    TableFilterPaginatedComponent,
+    PullRequestFilterBarComponent,
     NgTemplateOutlet,
     GithubLinkButtonComponent,
   ],
@@ -86,8 +93,7 @@ export function createPullRequestFilterOptions(keycloakService: KeycloakService)
   templateUrl: './pull-request-table.component.html',
 })
 export class PullRequestTableComponent {
-  @ViewChild('table') table!: Table;
-  @ViewChild(TableFilterPaginatedComponent) filterComponent!: TableFilterPaginatedComponent;
+  filterBar = viewChild.required<PullRequestFilterBarComponent>('filterBar');
 
   messageService = inject(MessageService);
   queryClient = inject(QueryClient);
@@ -95,10 +101,23 @@ export class PullRequestTableComponent {
   route = inject(ActivatedRoute);
   keycloak = inject(KeycloakService);
   paginationService = inject(PaginatedTableService);
+  repositoryId = input.required({ transform: numberAttribute });
+  queryFilters = signal<PullRequestQueryFilters>({
+    author: null,
+    assignee: null,
+    noAssignee: false,
+    labelId: null,
+    noLabel: false,
+    reviewState: null,
+    requestedReviewer: null,
+  });
 
-  // Create a computed query options that will update when pagination state changes
-  queryOptions = computed(() => {
+  pullRequestQueryState = computed((): NonNullable<Parameters<typeof getPullRequestsOptions>[0]>['query'] => {
     const paginationState = this.paginationService.paginationState();
+    const queryFilters = this.queryFilters();
+    const effectiveAssignee = queryFilters.noAssignee ? null : queryFilters.assignee;
+    const effectiveLabelId = queryFilters.noLabel ? null : queryFilters.labelId;
+    const effectiveRequestedReviewer = queryFilters.reviewState === 'NONE' ? null : queryFilters.requestedReviewer;
 
     // Convert the string filterType to the specific union type
     const filterType = paginationState.filterType as
@@ -113,32 +132,66 @@ export class PullRequestTableComponent {
       | 'REVIEW_REQUESTED'
       | undefined;
 
+    return {
+      page: paginationState.page,
+      size: paginationState.size,
+      sortField: paginationState.sortField,
+      sortDirection: paginationState.sortDirection,
+      repositoryId: this.repositoryId(),
+      filterType: filterType,
+      searchTerm: paginationState.searchTerm,
+      author: queryFilters.author ?? undefined,
+      assignee: effectiveAssignee ?? undefined,
+      noAssignee: queryFilters.noAssignee || undefined,
+      labelId: effectiveLabelId ?? undefined,
+      noLabel: queryFilters.noLabel || undefined,
+      reviewState: queryFilters.reviewState ?? undefined,
+      requestedReviewer: effectiveRequestedReviewer ?? undefined,
+    } as unknown as NonNullable<Parameters<typeof getPullRequestsOptions>[0]>['query'];
+  });
+
+  // Create a computed query options that will update when pagination state changes
+  queryOptions = computed(() => {
     return getPullRequestsOptions({
-      query: {
-        page: paginationState.page,
-        size: paginationState.size,
-        sortField: paginationState.sortField,
-        sortDirection: paginationState.sortDirection,
-        filterType: filterType,
-        searchTerm: paginationState.searchTerm,
-      },
+      query: this.pullRequestQueryState(),
     });
   });
 
   query = injectQuery(() => this.queryOptions());
+  dropdownOptionsQuery = injectQuery(() =>
+    getPullRequestFilterOptionsByRepositoryIdOptions({
+      path: { repoId: this.repositoryId() },
+    })
+  );
 
   setPinnedMutation = injectMutation(() => ({
     ...setPrPinnedByNumberMutation(),
   }));
 
   isHovered = new Map<number, boolean>();
+  visiblePullRequests = computed(() => {
+    const data = this.query.data();
+    return [...(data?.pinned ?? []), ...(data?.page ?? [])];
+  });
+  private retriedStuckQuery = false;
 
   constructor() {
+    if (!this.paginationService.sortField()) {
+      this.paginationService.setSort('updatedAt', 'desc');
+    }
+
     // Re-fetch data when pagination state changes
     effect(() => {
-      this.paginationService.paginationState();
-      if (this.query.data()) {
+      const isPending = this.query.isPending();
+      const isFetching = this.query.isFetching();
+
+      if (!this.retriedStuckQuery && isPending && !isFetching) {
+        this.retriedStuckQuery = true;
         this.query.refetch();
+      }
+
+      if (!isPending) {
+        this.retriedStuckQuery = false;
       }
     });
   }
@@ -156,20 +209,22 @@ export class PullRequestTableComponent {
     return {
       'border-color': `#${color}`,
       'background-color': color === 'ededed' ? `#${color}` : `#${color}75`,
+      ...(color === 'ededed' && { color: '#000000' }),
     };
   }
 
-  getAvatarBorderClass(login: string) {
+  getAvatarBorderClass(login: string | undefined): string {
+    if (!login) return '';
     return this.keycloak.isCurrentUser(login) ? 'border-2 border-primary-400 rounded-full' : '';
   }
 
-  openPR(pr: PullRequestInfoDto): void {
+  openPR(pr: PullRequestBaseInfoDto): void {
     this.router.navigate([pr.number], {
       relativeTo: this.route.parent,
     });
   }
 
-  setPinned(event: Event, pr: PullRequestInfoDto, isPinned: boolean): void {
+  setPinned(event: Event, pr: PullRequestBaseInfoDto, isPinned: boolean): void {
     event.stopPropagation();
 
     this.setPinnedMutation.mutate(
@@ -192,21 +247,22 @@ export class PullRequestTableComponent {
   }
 
   onPage(event: TablePageEvent) {
-    console.log('Page event received:', event);
-
     // Update the pagination state
     this.paginationService.onPage(event);
-
-    // Force a refetch with the updated pagination parameters
-    this.query.refetch();
   }
 
   onSort(event: SortMeta) {
     this.paginationService.onSort(event);
   }
 
+  onQueryFiltersChange(filters: PullRequestQueryFilters): void {
+    this.queryFilters.set(filters);
+    this.paginationService.resetToFirstPage();
+  }
+
   clearFilters() {
-    this.filterComponent.clearSearch();
+    this.filterBar().clearSearch();
+    this.filterBar().clearQueryFilters();
     this.paginationService.clearFilters();
   }
 }

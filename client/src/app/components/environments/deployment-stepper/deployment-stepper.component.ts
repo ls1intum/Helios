@@ -1,22 +1,16 @@
-import { Component, inject, OnInit, signal, input } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { ProgressBarModule } from 'primeng/progressbar';
-import { EnvironmentDeployment } from '@app/core/modules/openapi';
-import { TooltipModule } from 'primeng/tooltip';
+import { Component, computed, inject, input, signal } from '@angular/core';
+import { DeploymentTimerStepDto, EnvironmentDeployment } from '@app/core/modules/openapi';
 import { DeploymentTimingService } from '@app/core/services/deployment-timing.service';
-import { TagModule } from 'primeng/tag';
-import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
 import { IconCheck, IconClock, IconProgress, IconX } from 'angular-tabler-icons/icons';
-
-interface EstimatedTimes {
-  REQUESTED: number;
-  PENDING: number;
-  IN_PROGRESS: number;
-}
+import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
+import { MessageModule } from 'primeng/message';
+import { ProgressBarModule } from 'primeng/progressbar';
+import { TagModule } from 'primeng/tag';
+import { TooltipModule } from 'primeng/tooltip';
 
 @Component({
   selector: 'app-deployment-stepper',
-  imports: [CommonModule, TablerIconComponent, TagModule, ProgressBarModule, TooltipModule],
+  imports: [TablerIconComponent, TagModule, MessageModule, ProgressBarModule, TooltipModule],
   providers: [
     provideTablerIcons({
       IconClock,
@@ -27,68 +21,30 @@ interface EstimatedTimes {
   ],
   templateUrl: './deployment-stepper.component.html',
 })
-export class DeploymentStepperComponent implements OnInit {
+export class DeploymentStepperComponent {
   private _deployment = signal<EnvironmentDeployment | undefined>(undefined);
   private timingService = inject(DeploymentTimingService);
 
   readonly deployment = input<EnvironmentDeployment | undefined, EnvironmentDeployment | undefined>(undefined, {
     transform: (value: EnvironmentDeployment | undefined) => {
       this._deployment.set(value);
-
-      if (value?.id && value?.state) {
-        this.timingService.updateDeploymentState(value);
-      }
-
       return value;
     },
   });
 
-  steps = this.timingService.steps;
+  timer = computed(() => this.timingService.getTimer(this._deployment()));
+  steps = computed(() => this.timer()?.steps ?? []);
 
-  estimatedTimes = this.timingService.timeAwareComputed<EstimatedTimes>(() => {
-    const deployment = this._deployment();
-    if (!deployment) return { REQUESTED: 0, PENDING: 0, IN_PROGRESS: 0 };
-    return this.timingService.getEstimatedTimes(deployment);
-  });
-
-  ngOnInit(): void {
-    // Run cleanup for old timing data
-    this.timingService.cleanupOldData();
+  getProgressTitle(): string {
+    return this.timer()?.title ?? '';
   }
 
-  get currentEffectiveStepIndex(): number {
-    const deployment = this._deployment();
-    if (!deployment) return 0;
-    return this.timingService.getCurrentEffectiveStepIndex(deployment);
+  shouldShowQueuedMessage(): boolean {
+    return this.timer()?.showQueuedMessage ?? false;
   }
 
-  isErrorState(): boolean {
-    const deployment = this._deployment();
-    if (!deployment) return false;
-    return this.timingService.isErrorState(deployment);
-  }
-
-  isUnknownState(): boolean {
-    const deployment = this._deployment();
-    if (!deployment) return false;
-    return this.timingService.isUnknownState(deployment);
-  }
-
-  isSuccessState(): boolean {
-    const deployment = this._deployment();
-    if (!deployment) return false;
-    return this.timingService.isSuccessState(deployment);
-  }
-
-  // Methods that need to be called from the template with arguments
-  getStepStatus = this.timingService.createTimeAwareFunction((index: number): string => {
-    const deployment = this._deployment();
-    if (!deployment) return 'unknown';
-    return this.timingService.getStepStatus(deployment, index);
-  });
-
-  getSeverityFromStepStatus = (index: number) => {
-    switch (this.getStepStatus(index)) {
+  getSeverityFromStepStatus = (step: DeploymentTimerStepDto) => {
+    switch (step.status) {
       case 'completed':
         return 'success';
       case 'active':
@@ -97,44 +53,21 @@ export class DeploymentStepperComponent implements OnInit {
         return 'danger';
       case 'upcoming':
       case 'unknown':
-      case 'inactive':
         return 'secondary';
       default:
         return 'secondary';
     }
   };
 
-  getProgress = this.timingService.createTimeAwareFunction((index: number): number => {
-    const deployment = this._deployment();
-    if (!deployment) return 0;
-    return this.timingService.getProgress(deployment, index);
+  getProgress = this.timingService.createTimeAwareFunction((step: DeploymentTimerStepDto): number => {
+    return this.timingService.getProgress(step);
   });
 
-  getRemainingTimeForCurrentStep = this.timingService.timeAwareComputed(() => {
-    const deployment = this._deployment();
-    if (!deployment) return 0;
-    return this.timingService.getRemainingTimeForCurrentStep(deployment);
+  getHeaderTimeLabel = this.timingService.timeAwareComputed(() => {
+    return this.timingService.getHeaderTimeLabel(this.timer());
   });
 
-  getTotalRemainingTime = this.timingService.timeAwareComputed(() => {
-    const deployment = this._deployment();
-    if (!deployment) return '';
-    return this.timingService.getTotalRemainingTime(deployment);
-  });
-
-  getStepTime = this.timingService.createTimeAwareFunction((index: number): string => {
-    const deployment = this._deployment();
-    if (!deployment) return '';
-    return this.timingService.getStepTime(deployment, index);
-  });
-
-  getStepDisplayName = this.timingService.createTimeAwareFunction((step: string): string => {
-    return this.timingService.getStepDisplayName(step);
-  });
-
-  getDeploymentDuration = this.timingService.timeAwareComputed(() => {
-    const deployment = this._deployment();
-    if (!deployment) return '';
-    return this.timingService.getDeploymentDuration(deployment);
+  getStepTime = this.timingService.createTimeAwareFunction((step: DeploymentTimerStepDto): string => {
+    return this.timingService.getStepTime(step);
   });
 }

@@ -1,9 +1,10 @@
 import { CommonModule, Location } from '@angular/common';
 import { Component, computed, effect, inject, input, numberAttribute, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { PageHeadingComponent } from '@app/components/page-heading/page-heading.component';
 import { getWorkflowRunLogsQueryKey, getWorkflowRunLogsOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { getWorkflowRunLogs } from '@app/core/modules/openapi/sdk.gen';
-import type { WorkflowRunLogsResponse } from '@app/core/modules/openapi/types.gen';
+import type { WorkflowRunLogFileDto, WorkflowRunLogGroupDto, WorkflowRunLogsResponse } from '@app/core/modules/openapi/types.gen';
 import { injectMutation, injectQuery, QueryClient } from '@tanstack/angular-query-experimental';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
 import {
@@ -27,19 +28,18 @@ import { CardModule } from 'primeng/card';
 import { Divider } from 'primeng/divider';
 import { MessageModule } from 'primeng/message';
 import { Panel } from 'primeng/panel';
+import { SelectButton } from 'primeng/selectbutton';
 import { SkeletonModule } from 'primeng/skeleton';
 import { TagModule } from 'primeng/tag';
 import { Toolbar } from 'primeng/toolbar';
 import {
-  ALL_LOG_LINE_TONES,
-  LOG_LINE_FILTER_OPTIONS,
+  LOG_LEVEL_FILTER_OPTIONS,
   LOG_VIEW_CLASSES,
   buildFileViews,
   buildGroupViews,
   getAutoExpandedLogGroupIds,
   buildSelectedFileView,
   getLineTone,
-  getLineToneFilterClass,
   getLineToneBadgeClass,
   getLineToneRowClass,
   getLineToneTextClass,
@@ -48,11 +48,26 @@ import {
   getRenderedLineContent,
   getWorkflowRunOutcome,
 } from './workflow-run-logs.utils';
-import type { WorkflowRunLogLineTone } from './workflow-run-logs.utils';
+import type { LogLevelFilter, WorkflowRunLogLineTone } from './workflow-run-logs.utils';
 
 @Component({
   selector: 'app-workflow-run-logs',
-  imports: [CommonModule, PageHeadingComponent, AccordionModule, Button, CardModule, Divider, MessageModule, Panel, SkeletonModule, TagModule, Toolbar, TablerIconComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    PageHeadingComponent,
+    AccordionModule,
+    Button,
+    CardModule,
+    Divider,
+    MessageModule,
+    Panel,
+    SelectButton,
+    SkeletonModule,
+    TagModule,
+    Toolbar,
+    TablerIconComponent,
+  ],
   providers: [
     provideTablerIcons({
       IconArrowLeft,
@@ -84,8 +99,8 @@ export class WorkflowRunLogsComponent {
   expandedLogGroupIds = signal<Record<string, boolean>>({});
   selectedFilePath = signal<string | null>(null);
   refreshedLogs = signal<WorkflowRunLogsResponse | null>(null);
-  enabledLineTones = signal<WorkflowRunLogLineTone[]>([...ALL_LOG_LINE_TONES]);
-  readonly lineFilterOptions = LOG_LINE_FILTER_OPTIONS;
+  logLevelFilter = signal<LogLevelFilter>('all');
+  readonly logLevelFilterOptions = LOG_LEVEL_FILTER_OPTIONS;
   readonly logViewClasses = LOG_VIEW_CLASSES;
   readonly getWorkflowRunOutcome = getWorkflowRunOutcome;
   readonly getLineTone = getLineTone;
@@ -150,7 +165,12 @@ export class WorkflowRunLogsComponent {
 
     return selectedFile.groupView.group.steps.find(step => step.number === selectedFile.file.stepNumber && step.name === selectedFile.file.stepName) ?? null;
   });
-  selectedFileView = computed(() => buildSelectedFileView(this.selectedFile(), new Set(this.enabledLineTones()), this.expandedLogGroupIds()));
+  selectedFileView = computed(() => buildSelectedFileView(this.selectedFile(), this.logLevelFilter(), this.expandedLogGroupIds()));
+  hasFilterableContent = computed(() => {
+    const view = this.selectedFileView();
+    if (!view) return false;
+    return view.lineStats.errorCount > 0 || view.lineStats.warningCount > 0;
+  });
 
   constructor() {
     effect(() => {
@@ -186,6 +206,7 @@ export class WorkflowRunLogsComponent {
 
   selectFile(path: string) {
     this.selectedFilePath.set(path);
+    this.logLevelFilter.set('all');
 
     const selectedEntry = this.groupedFiles().find(entry => entry.file.path === path);
     if (!selectedEntry) {
@@ -207,16 +228,6 @@ export class WorkflowRunLogsComponent {
 
   retry() {
     this.logsQuery.refetch();
-  }
-
-  toggleLineTone(tone: WorkflowRunLogLineTone) {
-    this.enabledLineTones.update(enabledLineTones =>
-      enabledLineTones.includes(tone) ? enabledLineTones.filter(enabledTone => enabledTone !== tone) : [...enabledLineTones, tone]
-    );
-  }
-
-  isLineToneEnabled(tone: WorkflowRunLogLineTone): boolean {
-    return this.enabledLineTones().includes(tone);
   }
 
   toggleLogGroup(groupId: string) {
@@ -248,10 +259,6 @@ export class WorkflowRunLogsComponent {
     }
   }
 
-  getLineToneFilterClass(tone: WorkflowRunLogLineTone): string {
-    return getLineToneFilterClass(tone, this.isLineToneEnabled(tone));
-  }
-
   getLineToneBadgeClass(tone: Extract<WorkflowRunLogLineTone, 'warning' | 'error'>): string {
     return getLineToneBadgeClass(tone);
   }
@@ -274,6 +281,38 @@ export class WorkflowRunLogsComponent {
 
   getFileViewsForGroup(groupName: string) {
     return this.groupedFilesByGroup()[groupName] ?? [];
+  }
+
+  isStepFile(file: WorkflowRunLogFileDto): boolean {
+    return file.stepNumber != null;
+  }
+
+  getStepFileViewsForGroup(groupName: string) {
+    return this.getFileViewsForGroup(groupName).filter(fv => this.isStepFile(fv.file));
+  }
+
+  getNonStepFileViewsForGroup(groupName: string) {
+    return this.getFileViewsForGroup(groupName).filter(fv => !this.isStepFile(fv.file));
+  }
+
+  getJobDisplayName(group: WorkflowRunLogGroupDto): string {
+    return group.jobName || group.name;
+  }
+
+  getStepDisplayName(file: WorkflowRunLogFileDto): string {
+    return file.stepName || file.displayName;
+  }
+
+  getStepLabel(file: WorkflowRunLogFileDto): string {
+    return file.stepName ? 'Step' : 'Log';
+  }
+
+  getStepLogCountLabel(count: number): string {
+    return `${count} ${count === 1 ? 'step log' : 'step logs'}`;
+  }
+
+  getJobCountLabel(count: number): string {
+    return `${count} ${count === 1 ? 'job' : 'jobs'}`;
   }
 
   getStepDuration(startTime: string | undefined, endTime: string | undefined): string {

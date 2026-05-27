@@ -3,6 +3,9 @@
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
 import type {
+  AnalyzeFailedTestData,
+  AnalyzeFailedTestErrors,
+  AnalyzeFailedTestResponses,
   CancelDeploymentData,
   CancelDeploymentErrors,
   CancelDeploymentResponses,
@@ -108,6 +111,9 @@ import type {
   GetEnvironmentsByUserLockingData,
   GetEnvironmentsByUserLockingErrors,
   GetEnvironmentsByUserLockingResponses,
+  GetFailureAnalysisUsageData,
+  GetFailureAnalysisUsageErrors,
+  GetFailureAnalysisUsageResponses,
   GetFlakinessScoresData,
   GetFlakinessScoresErrors,
   GetFlakinessScoresResponses,
@@ -120,6 +126,9 @@ import type {
   GetGroupsWithWorkflowsData,
   GetGroupsWithWorkflowsErrors,
   GetGroupsWithWorkflowsResponses,
+  GetLatestCachedFailureAnalysisData,
+  GetLatestCachedFailureAnalysisErrors,
+  GetLatestCachedFailureAnalysisResponses,
   GetLatestDeploymentByEnvironmentIdData,
   GetLatestDeploymentByEnvironmentIdErrors,
   GetLatestDeploymentByEnvironmentIdResponses,
@@ -150,6 +159,9 @@ import type {
   GetPullRequestByRepositoryIdData,
   GetPullRequestByRepositoryIdErrors,
   GetPullRequestByRepositoryIdResponses,
+  GetPullRequestFilterOptionsByRepositoryIdData,
+  GetPullRequestFilterOptionsByRepositoryIdErrors,
+  GetPullRequestFilterOptionsByRepositoryIdResponses,
   GetPullRequestsData,
   GetPullRequestsErrors,
   GetPullRequestsResponses,
@@ -260,7 +272,7 @@ import type {
   UpsertDeploymentWorkflowConfigResponses,
 } from './types.gen';
 
-export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = Options2<TData, ThrowOnError> & {
+export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
   /**
    * You can provide a client instance returned by `createClient()` instead of
    * individual options. This might be also useful if you want to implement a
@@ -274,8 +286,8 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
   meta?: Record<string, unknown>;
 };
 
-export const updateWorkflowLabel = <ThrowOnError extends boolean = false>(options: Options<UpdateWorkflowLabelData, ThrowOnError>) => {
-  return (options.client ?? client).put<UpdateWorkflowLabelResponses, UpdateWorkflowLabelErrors, ThrowOnError>({
+export const updateWorkflowLabel = <ThrowOnError extends boolean = false>(options: Options<UpdateWorkflowLabelData, ThrowOnError>) =>
+  (options.client ?? client).put<UpdateWorkflowLabelResponses, UpdateWorkflowLabelErrors, ThrowOnError>({
     url: '/api/workflows/{workflowId}/label',
     ...options,
     headers: {
@@ -283,17 +295,12 @@ export const updateWorkflowLabel = <ThrowOnError extends boolean = false>(option
       ...options.headers,
     },
   });
-};
 
-export const deleteTestType = <ThrowOnError extends boolean = false>(options: Options<DeleteTestTypeData, ThrowOnError>) => {
-  return (options.client ?? client).delete<DeleteTestTypeResponses, DeleteTestTypeErrors, ThrowOnError>({
-    url: '/api/test-types/{testTypeId}',
-    ...options,
-  });
-};
+export const deleteTestType = <ThrowOnError extends boolean = false>(options: Options<DeleteTestTypeData, ThrowOnError>) =>
+  (options.client ?? client).delete<DeleteTestTypeResponses, DeleteTestTypeErrors, ThrowOnError>({ url: '/api/test-types/{testTypeId}', ...options });
 
-export const updateTestType = <ThrowOnError extends boolean = false>(options: Options<UpdateTestTypeData, ThrowOnError>) => {
-  return (options.client ?? client).put<UpdateTestTypeResponses, UpdateTestTypeErrors, ThrowOnError>({
+export const updateTestType = <ThrowOnError extends boolean = false>(options: Options<UpdateTestTypeData, ThrowOnError>) =>
+  (options.client ?? client).put<UpdateTestTypeResponses, UpdateTestTypeErrors, ThrowOnError>({
     url: '/api/test-types/{testTypeId}',
     ...options,
     headers: {
@@ -301,17 +308,15 @@ export const updateTestType = <ThrowOnError extends boolean = false>(options: Op
       ...options.headers,
     },
   });
-};
 
-export const getDeploymentWorkflowConfig = <ThrowOnError extends boolean = false>(options: Options<GetDeploymentWorkflowConfigData, ThrowOnError>) => {
-  return (options.client ?? client).get<GetDeploymentWorkflowConfigResponses, GetDeploymentWorkflowConfigErrors, ThrowOnError>({
+export const getDeploymentWorkflowConfig = <ThrowOnError extends boolean = false>(options: Options<GetDeploymentWorkflowConfigData, ThrowOnError>) =>
+  (options.client ?? client).get<GetDeploymentWorkflowConfigResponses, GetDeploymentWorkflowConfigErrors, ThrowOnError>({
     url: '/api/settings/{repositoryId}/workflows/{workflowId}/deployment-config',
     ...options,
   });
-};
 
-export const upsertDeploymentWorkflowConfig = <ThrowOnError extends boolean = false>(options: Options<UpsertDeploymentWorkflowConfigData, ThrowOnError>) => {
-  return (options.client ?? client).put<UpsertDeploymentWorkflowConfigResponses, UpsertDeploymentWorkflowConfigErrors, ThrowOnError>({
+export const upsertDeploymentWorkflowConfig = <ThrowOnError extends boolean = false>(options: Options<UpsertDeploymentWorkflowConfigData, ThrowOnError>) =>
+  (options.client ?? client).put<UpsertDeploymentWorkflowConfigResponses, UpsertDeploymentWorkflowConfigErrors, ThrowOnError>({
     url: '/api/settings/{repositoryId}/workflows/{workflowId}/deployment-config',
     ...options,
     headers: {
@@ -319,17 +324,12 @@ export const upsertDeploymentWorkflowConfig = <ThrowOnError extends boolean = fa
       ...options.headers,
     },
   });
-};
 
-export const getGitRepoSettings = <ThrowOnError extends boolean = false>(options: Options<GetGitRepoSettingsData, ThrowOnError>) => {
-  return (options.client ?? client).get<GetGitRepoSettingsResponses, GetGitRepoSettingsErrors, ThrowOnError>({
-    url: '/api/settings/{repositoryId}/settings',
-    ...options,
-  });
-};
+export const getGitRepoSettings = <ThrowOnError extends boolean = false>(options: Options<GetGitRepoSettingsData, ThrowOnError>) =>
+  (options.client ?? client).get<GetGitRepoSettingsResponses, GetGitRepoSettingsErrors, ThrowOnError>({ url: '/api/settings/{repositoryId}/settings', ...options });
 
-export const updateGitRepoSettings = <ThrowOnError extends boolean = false>(options: Options<UpdateGitRepoSettingsData, ThrowOnError>) => {
-  return (options.client ?? client).put<UpdateGitRepoSettingsResponses, UpdateGitRepoSettingsErrors, ThrowOnError>({
+export const updateGitRepoSettings = <ThrowOnError extends boolean = false>(options: Options<UpdateGitRepoSettingsData, ThrowOnError>) =>
+  (options.client ?? client).put<UpdateGitRepoSettingsResponses, UpdateGitRepoSettingsErrors, ThrowOnError>({
     url: '/api/settings/{repositoryId}/settings',
     ...options,
     headers: {
@@ -337,10 +337,9 @@ export const updateGitRepoSettings = <ThrowOnError extends boolean = false>(opti
       ...options.headers,
     },
   });
-};
 
-export const updateWorkflowGroups = <ThrowOnError extends boolean = false>(options: Options<UpdateWorkflowGroupsData, ThrowOnError>) => {
-  return (options.client ?? client).put<UpdateWorkflowGroupsResponses, UpdateWorkflowGroupsErrors, ThrowOnError>({
+export const updateWorkflowGroups = <ThrowOnError extends boolean = false>(options: Options<UpdateWorkflowGroupsData, ThrowOnError>) =>
+  (options.client ?? client).put<UpdateWorkflowGroupsResponses, UpdateWorkflowGroupsErrors, ThrowOnError>({
     url: '/api/settings/{repositoryId}/groups/update',
     ...options,
     headers: {
@@ -348,10 +347,9 @@ export const updateWorkflowGroups = <ThrowOnError extends boolean = false>(optio
       ...options.headers,
     },
   });
-};
 
-export const updateReleaseName = <ThrowOnError extends boolean = false>(options: Options<UpdateReleaseNameData, ThrowOnError>) => {
-  return (options.client ?? client).put<UpdateReleaseNameResponses, UpdateReleaseNameErrors, ThrowOnError>({
+export const updateReleaseName = <ThrowOnError extends boolean = false>(options: Options<UpdateReleaseNameData, ThrowOnError>) =>
+  (options.client ?? client).put<UpdateReleaseNameResponses, UpdateReleaseNameErrors, ThrowOnError>({
     url: '/api/release-info/update-name',
     ...options,
     headers: {
@@ -359,10 +357,9 @@ export const updateReleaseName = <ThrowOnError extends boolean = false>(options:
       ...options.headers,
     },
   });
-};
 
-export const updateReleaseNotes = <ThrowOnError extends boolean = false>(options: Options<UpdateReleaseNotesData, ThrowOnError>) => {
-  return (options.client ?? client).put<UpdateReleaseNotesResponses, UpdateReleaseNotesErrors, ThrowOnError>({
+export const updateReleaseNotes = <ThrowOnError extends boolean = false>(options: Options<UpdateReleaseNotesData, ThrowOnError>) =>
+  (options.client ?? client).put<UpdateReleaseNotesResponses, UpdateReleaseNotesErrors, ThrowOnError>({
     url: '/api/release-info/release-notes',
     ...options,
     headers: {
@@ -370,17 +367,12 @@ export const updateReleaseNotes = <ThrowOnError extends boolean = false>(options
       ...options.headers,
     },
   });
-};
 
-export const getEnvironmentById = <ThrowOnError extends boolean = false>(options: Options<GetEnvironmentByIdData, ThrowOnError>) => {
-  return (options.client ?? client).get<GetEnvironmentByIdResponses, GetEnvironmentByIdErrors, ThrowOnError>({
-    url: '/api/environments/{id}',
-    ...options,
-  });
-};
+export const getEnvironmentById = <ThrowOnError extends boolean = false>(options: Options<GetEnvironmentByIdData, ThrowOnError>) =>
+  (options.client ?? client).get<GetEnvironmentByIdResponses, GetEnvironmentByIdErrors, ThrowOnError>({ url: '/api/environments/{id}', ...options });
 
-export const updateEnvironment = <ThrowOnError extends boolean = false>(options: Options<UpdateEnvironmentData, ThrowOnError>) => {
-  return (options.client ?? client).put<UpdateEnvironmentResponses, UpdateEnvironmentErrors, ThrowOnError>({
+export const updateEnvironment = <ThrowOnError extends boolean = false>(options: Options<UpdateEnvironmentData, ThrowOnError>) =>
+  (options.client ?? client).put<UpdateEnvironmentResponses, UpdateEnvironmentErrors, ThrowOnError>({
     url: '/api/environments/{id}',
     ...options,
     headers: {
@@ -388,66 +380,36 @@ export const updateEnvironment = <ThrowOnError extends boolean = false>(options:
       ...options.headers,
     },
   });
-};
 
-export const unlockEnvironment = <ThrowOnError extends boolean = false>(options: Options<UnlockEnvironmentData, ThrowOnError>) => {
-  return (options.client ?? client).put<UnlockEnvironmentResponses, UnlockEnvironmentErrors, ThrowOnError>({
-    url: '/api/environments/{id}/unlock',
-    ...options,
-  });
-};
+export const unlockEnvironment = <ThrowOnError extends boolean = false>(options: Options<UnlockEnvironmentData, ThrowOnError>) =>
+  (options.client ?? client).put<UnlockEnvironmentResponses, UnlockEnvironmentErrors, ThrowOnError>({ url: '/api/environments/{id}/unlock', ...options });
 
-export const lockEnvironment = <ThrowOnError extends boolean = false>(options: Options<LockEnvironmentData, ThrowOnError>) => {
-  return (options.client ?? client).put<LockEnvironmentResponses, LockEnvironmentErrors, ThrowOnError>({
-    url: '/api/environments/{id}/lock',
-    ...options,
-  });
-};
+export const lockEnvironment = <ThrowOnError extends boolean = false>(options: Options<LockEnvironmentData, ThrowOnError>) =>
+  (options.client ?? client).put<LockEnvironmentResponses, LockEnvironmentErrors, ThrowOnError>({ url: '/api/environments/{id}/lock', ...options });
 
-export const extendEnvironmentLock = <ThrowOnError extends boolean = false>(options: Options<ExtendEnvironmentLockData, ThrowOnError>) => {
-  return (options.client ?? client).put<ExtendEnvironmentLockResponses, ExtendEnvironmentLockErrors, ThrowOnError>({
-    url: '/api/environments/{id}/extend-lock',
-    ...options,
-  });
-};
+export const extendEnvironmentLock = <ThrowOnError extends boolean = false>(options: Options<ExtendEnvironmentLockData, ThrowOnError>) =>
+  (options.client ?? client).put<ExtendEnvironmentLockResponses, ExtendEnvironmentLockErrors, ThrowOnError>({ url: '/api/environments/{id}/extend-lock', ...options });
 
-export const reRunWorkflow = <ThrowOnError extends boolean = false>(options: Options<ReRunWorkflowData, ThrowOnError>) => {
-  return (options.client ?? client).post<ReRunWorkflowResponses, ReRunWorkflowErrors, ThrowOnError>({
-    url: '/api/workflows/runs/{runId}/rerun',
-    ...options,
-  });
-};
+export const reRunWorkflow = <ThrowOnError extends boolean = false>(options: Options<ReRunWorkflowData, ThrowOnError>) =>
+  (options.client ?? client).post<ReRunWorkflowResponses, ReRunWorkflowErrors, ThrowOnError>({ url: '/api/workflows/runs/{runId}/rerun', ...options });
 
-export const reRunFailedJobs = <ThrowOnError extends boolean = false>(options: Options<ReRunFailedJobsData, ThrowOnError>) => {
-  return (options.client ?? client).post<ReRunFailedJobsResponses, ReRunFailedJobsErrors, ThrowOnError>({
-    url: '/api/workflows/runs/{runId}/rerun-failed-jobs',
-    ...options,
-  });
-};
+export const reRunFailedJobs = <ThrowOnError extends boolean = false>(options: Options<ReRunFailedJobsData, ThrowOnError>) =>
+  (options.client ?? client).post<ReRunFailedJobsResponses, ReRunFailedJobsErrors, ThrowOnError>({ url: '/api/workflows/runs/{runId}/rerun-failed-jobs', ...options });
 
-export const cancelWorkflowRun = <ThrowOnError extends boolean = false>(options: Options<CancelWorkflowRunData, ThrowOnError>) => {
-  return (options.client ?? client).post<CancelWorkflowRunResponses, CancelWorkflowRunErrors, ThrowOnError>({
-    url: '/api/workflows/runs/{runId}/cancel',
-    ...options,
-  });
-};
+export const cancelWorkflowRun = <ThrowOnError extends boolean = false>(options: Options<CancelWorkflowRunData, ThrowOnError>) =>
+  (options.client ?? client).post<CancelWorkflowRunResponses, CancelWorkflowRunErrors, ThrowOnError>({ url: '/api/workflows/runs/{runId}/cancel', ...options });
 
-export const syncWorkflowsByRepositoryId = <ThrowOnError extends boolean = false>(options: Options<SyncWorkflowsByRepositoryIdData, ThrowOnError>) => {
-  return (options.client ?? client).post<SyncWorkflowsByRepositoryIdResponses, SyncWorkflowsByRepositoryIdErrors, ThrowOnError>({
+export const syncWorkflowsByRepositoryId = <ThrowOnError extends boolean = false>(options: Options<SyncWorkflowsByRepositoryIdData, ThrowOnError>) =>
+  (options.client ?? client).post<SyncWorkflowsByRepositoryIdResponses, SyncWorkflowsByRepositoryIdErrors, ThrowOnError>({
     url: '/api/workflows/repository/{repositoryId}/sync',
     ...options,
   });
-};
 
-export const getUserSettings = <ThrowOnError extends boolean = false>(options?: Options<GetUserSettingsData, ThrowOnError>) => {
-  return (options?.client ?? client).get<GetUserSettingsResponses, GetUserSettingsErrors, ThrowOnError>({
-    url: '/api/user/settings',
-    ...options,
-  });
-};
+export const getUserSettings = <ThrowOnError extends boolean = false>(options?: Options<GetUserSettingsData, ThrowOnError>) =>
+  (options?.client ?? client).get<GetUserSettingsResponses, GetUserSettingsErrors, ThrowOnError>({ url: '/api/user/settings', ...options });
 
-export const updateUserSettings = <ThrowOnError extends boolean = false>(options: Options<UpdateUserSettingsData, ThrowOnError>) => {
-  return (options.client ?? client).post<UpdateUserSettingsResponses, UpdateUserSettingsErrors, ThrowOnError>({
+export const updateUserSettings = <ThrowOnError extends boolean = false>(options: Options<UpdateUserSettingsData, ThrowOnError>) =>
+  (options.client ?? client).post<UpdateUserSettingsResponses, UpdateUserSettingsErrors, ThrowOnError>({
     url: '/api/user/settings',
     ...options,
     headers: {
@@ -455,17 +417,12 @@ export const updateUserSettings = <ThrowOnError extends boolean = false>(options
       ...options.headers,
     },
   });
-};
 
-export const getNotificationPreferences = <ThrowOnError extends boolean = false>(options?: Options<GetNotificationPreferencesData, ThrowOnError>) => {
-  return (options?.client ?? client).get<GetNotificationPreferencesResponses, GetNotificationPreferencesErrors, ThrowOnError>({
-    url: '/api/user/notification-preferences',
-    ...options,
-  });
-};
+export const getNotificationPreferences = <ThrowOnError extends boolean = false>(options?: Options<GetNotificationPreferencesData, ThrowOnError>) =>
+  (options?.client ?? client).get<GetNotificationPreferencesResponses, GetNotificationPreferencesErrors, ThrowOnError>({ url: '/api/user/notification-preferences', ...options });
 
-export const updateNotificationPreferences = <ThrowOnError extends boolean = false>(options: Options<UpdateNotificationPreferencesData, ThrowOnError>) => {
-  return (options.client ?? client).post<UpdateNotificationPreferencesResponses, UpdateNotificationPreferencesErrors, ThrowOnError>({
+export const updateNotificationPreferences = <ThrowOnError extends boolean = false>(options: Options<UpdateNotificationPreferencesData, ThrowOnError>) =>
+  (options.client ?? client).post<UpdateNotificationPreferencesResponses, UpdateNotificationPreferencesErrors, ThrowOnError>({
     url: '/api/user/notification-preferences',
     ...options,
     headers: {
@@ -473,10 +430,9 @@ export const updateNotificationPreferences = <ThrowOnError extends boolean = fal
       ...options.headers,
     },
   });
-};
 
-export const getFlakinessScores = <ThrowOnError extends boolean = false>(options: Options<GetFlakinessScoresData, ThrowOnError>) => {
-  return (options.client ?? client).post<GetFlakinessScoresResponses, GetFlakinessScoresErrors, ThrowOnError>({
+export const getFlakinessScores = <ThrowOnError extends boolean = false>(options: Options<GetFlakinessScoresData, ThrowOnError>) =>
+  (options.client ?? client).post<GetFlakinessScoresResponses, GetFlakinessScoresErrors, ThrowOnError>({
     url: '/api/tests/flakiness-scores',
     ...options,
     headers: {
@@ -484,17 +440,12 @@ export const getFlakinessScores = <ThrowOnError extends boolean = false>(options
       ...options.headers,
     },
   });
-};
 
-export const getAllTestTypes = <ThrowOnError extends boolean = false>(options?: Options<GetAllTestTypesData, ThrowOnError>) => {
-  return (options?.client ?? client).get<GetAllTestTypesResponses, GetAllTestTypesErrors, ThrowOnError>({
-    url: '/api/test-types',
-    ...options,
-  });
-};
+export const getAllTestTypes = <ThrowOnError extends boolean = false>(options?: Options<GetAllTestTypesData, ThrowOnError>) =>
+  (options?.client ?? client).get<GetAllTestTypesResponses, GetAllTestTypesErrors, ThrowOnError>({ url: '/api/test-types', ...options });
 
-export const createTestType = <ThrowOnError extends boolean = false>(options: Options<CreateTestTypeData, ThrowOnError>) => {
-  return (options.client ?? client).post<CreateTestTypeResponses, CreateTestTypeErrors, ThrowOnError>({
+export const createTestType = <ThrowOnError extends boolean = false>(options: Options<CreateTestTypeData, ThrowOnError>) =>
+  (options.client ?? client).post<CreateTestTypeResponses, CreateTestTypeErrors, ThrowOnError>({
     url: '/api/test-types',
     ...options,
     headers: {
@@ -502,24 +453,18 @@ export const createTestType = <ThrowOnError extends boolean = false>(options: Op
       ...options.headers,
     },
   });
-};
 
-export const detectDeploymentJob = <ThrowOnError extends boolean = false>(options: Options<DetectDeploymentJobData, ThrowOnError>) => {
-  return (options.client ?? client).post<DetectDeploymentJobResponses, DetectDeploymentJobErrors, ThrowOnError>({
+export const detectDeploymentJob = <ThrowOnError extends boolean = false>(options: Options<DetectDeploymentJobData, ThrowOnError>) =>
+  (options.client ?? client).post<DetectDeploymentJobResponses, DetectDeploymentJobErrors, ThrowOnError>({
     url: '/api/settings/{repositoryId}/workflows/{workflowId}/detect-deployment-job',
     ...options,
   });
-};
 
-export const rotateSecret = <ThrowOnError extends boolean = false>(options: Options<RotateSecretData, ThrowOnError>) => {
-  return (options.client ?? client).post<RotateSecretResponses, RotateSecretErrors, ThrowOnError>({
-    url: '/api/settings/{repositoryId}/secret',
-    ...options,
-  });
-};
+export const rotateSecret = <ThrowOnError extends boolean = false>(options: Options<RotateSecretData, ThrowOnError>) =>
+  (options.client ?? client).post<RotateSecretResponses, RotateSecretErrors, ThrowOnError>({ url: '/api/settings/{repositoryId}/secret', ...options });
 
-export const createWorkflowGroup = <ThrowOnError extends boolean = false>(options: Options<CreateWorkflowGroupData, ThrowOnError>) => {
-  return (options.client ?? client).post<CreateWorkflowGroupResponses, CreateWorkflowGroupErrors, ThrowOnError>({
+export const createWorkflowGroup = <ThrowOnError extends boolean = false>(options: Options<CreateWorkflowGroupData, ThrowOnError>) =>
+  (options.client ?? client).post<CreateWorkflowGroupResponses, CreateWorkflowGroupErrors, ThrowOnError>({
     url: '/api/settings/{repositoryId}/groups/create',
     ...options,
     headers: {
@@ -527,10 +472,15 @@ export const createWorkflowGroup = <ThrowOnError extends boolean = false>(option
       ...options.headers,
     },
   });
-};
 
-export const deleteReleaseCandidateByName = <ThrowOnError extends boolean = false>(options: Options<DeleteReleaseCandidateByNameData, ThrowOnError>) => {
-  return (options.client ?? client).delete<DeleteReleaseCandidateByNameResponses, DeleteReleaseCandidateByNameErrors, ThrowOnError>({
+export const analyzeFailedTest = <ThrowOnError extends boolean = false>(options: Options<AnalyzeFailedTestData, ThrowOnError>) =>
+  (options.client ?? client).post<AnalyzeFailedTestResponses, AnalyzeFailedTestErrors, ThrowOnError>({
+    url: '/api/repositories/{repositoryId}/test-cases/{testCaseId}/failure-analysis',
+    ...options,
+  });
+
+export const deleteReleaseCandidateByName = <ThrowOnError extends boolean = false>(options: Options<DeleteReleaseCandidateByNameData, ThrowOnError>) =>
+  (options.client ?? client).delete<DeleteReleaseCandidateByNameResponses, DeleteReleaseCandidateByNameErrors, ThrowOnError>({
     url: '/api/release-info',
     ...options,
     headers: {
@@ -538,17 +488,12 @@ export const deleteReleaseCandidateByName = <ThrowOnError extends boolean = fals
       ...options.headers,
     },
   });
-};
 
-export const getAllReleaseInfos = <ThrowOnError extends boolean = false>(options?: Options<GetAllReleaseInfosData, ThrowOnError>) => {
-  return (options?.client ?? client).get<GetAllReleaseInfosResponses, GetAllReleaseInfosErrors, ThrowOnError>({
-    url: '/api/release-info',
-    ...options,
-  });
-};
+export const getAllReleaseInfos = <ThrowOnError extends boolean = false>(options?: Options<GetAllReleaseInfosData, ThrowOnError>) =>
+  (options?.client ?? client).get<GetAllReleaseInfosResponses, GetAllReleaseInfosErrors, ThrowOnError>({ url: '/api/release-info', ...options });
 
-export const createReleaseCandidate = <ThrowOnError extends boolean = false>(options: Options<CreateReleaseCandidateData, ThrowOnError>) => {
-  return (options.client ?? client).post<CreateReleaseCandidateResponses, CreateReleaseCandidateErrors, ThrowOnError>({
+export const createReleaseCandidate = <ThrowOnError extends boolean = false>(options: Options<CreateReleaseCandidateData, ThrowOnError>) =>
+  (options.client ?? client).post<CreateReleaseCandidateResponses, CreateReleaseCandidateErrors, ThrowOnError>({
     url: '/api/release-info',
     ...options,
     headers: {
@@ -556,10 +501,9 @@ export const createReleaseCandidate = <ThrowOnError extends boolean = false>(opt
       ...options.headers,
     },
   });
-};
 
-export const publishReleaseDraft = <ThrowOnError extends boolean = false>(options: Options<PublishReleaseDraftData, ThrowOnError>) => {
-  return (options.client ?? client).post<PublishReleaseDraftResponses, PublishReleaseDraftErrors, ThrowOnError>({
+export const publishReleaseDraft = <ThrowOnError extends boolean = false>(options: Options<PublishReleaseDraftData, ThrowOnError>) =>
+  (options.client ?? client).post<PublishReleaseDraftResponses, PublishReleaseDraftErrors, ThrowOnError>({
     url: '/api/release-info/publish',
     ...options,
     headers: {
@@ -567,10 +511,9 @@ export const publishReleaseDraft = <ThrowOnError extends boolean = false>(option
       ...options.headers,
     },
   });
-};
 
-export const generateReleaseNotes = <ThrowOnError extends boolean = false>(options: Options<GenerateReleaseNotesData, ThrowOnError>) => {
-  return (options.client ?? client).post<GenerateReleaseNotesResponses, GenerateReleaseNotesErrors, ThrowOnError>({
+export const generateReleaseNotes = <ThrowOnError extends boolean = false>(options: Options<GenerateReleaseNotesData, ThrowOnError>) =>
+  (options.client ?? client).post<GenerateReleaseNotesResponses, GenerateReleaseNotesErrors, ThrowOnError>({
     url: '/api/release-info/generate-release-notes',
     ...options,
     headers: {
@@ -578,10 +521,9 @@ export const generateReleaseNotes = <ThrowOnError extends boolean = false>(optio
       ...options.headers,
     },
   });
-};
 
-export const evaluate = <ThrowOnError extends boolean = false>(options: Options<EvaluateData, ThrowOnError>) => {
-  return (options.client ?? client).post<EvaluateResponses, EvaluateErrors, ThrowOnError>({
+export const evaluate = <ThrowOnError extends boolean = false>(options: Options<EvaluateData, ThrowOnError>) =>
+  (options.client ?? client).post<EvaluateResponses, EvaluateErrors, ThrowOnError>({
     url: '/api/release-info/evaluate',
     ...options,
     headers: {
@@ -589,10 +531,9 @@ export const evaluate = <ThrowOnError extends boolean = false>(options: Options<
       ...options.headers,
     },
   });
-};
 
-export const getReleaseInfoByName = <ThrowOnError extends boolean = false>(options: Options<GetReleaseInfoByNameData, ThrowOnError>) => {
-  return (options.client ?? client).post<GetReleaseInfoByNameResponses, GetReleaseInfoByNameErrors, ThrowOnError>({
+export const getReleaseInfoByName = <ThrowOnError extends boolean = false>(options: Options<GetReleaseInfoByNameData, ThrowOnError>) =>
+  (options.client ?? client).post<GetReleaseInfoByNameResponses, GetReleaseInfoByNameErrors, ThrowOnError>({
     url: '/api/release-info/details',
     ...options,
     headers: {
@@ -600,31 +541,21 @@ export const getReleaseInfoByName = <ThrowOnError extends boolean = false>(optio
       ...options.headers,
     },
   });
-};
 
-export const setPrPinnedByNumber = <ThrowOnError extends boolean = false>(options: Options<SetPrPinnedByNumberData, ThrowOnError>) => {
-  return (options.client ?? client).post<SetPrPinnedByNumberResponses, SetPrPinnedByNumberErrors, ThrowOnError>({
-    url: '/api/pullrequests/{pr}/pin',
-    ...options,
-  });
-};
+export const setPrPinnedByNumber = <ThrowOnError extends boolean = false>(options: Options<SetPrPinnedByNumberData, ThrowOnError>) =>
+  (options.client ?? client).post<SetPrPinnedByNumberResponses, SetPrPinnedByNumberErrors, ThrowOnError>({ url: '/api/pullrequests/{pr}/pin', ...options });
 
-export const reconcilePullRequestState = <ThrowOnError extends boolean = false>(options: Options<ReconcilePullRequestStateData, ThrowOnError>) => {
-  return (options.client ?? client).post<ReconcilePullRequestStateResponses, ReconcilePullRequestStateErrors, ThrowOnError>({
+export const reconcilePullRequestState = <ThrowOnError extends boolean = false>(options: Options<ReconcilePullRequestStateData, ThrowOnError>) =>
+  (options.client ?? client).post<ReconcilePullRequestStateResponses, ReconcilePullRequestStateErrors, ThrowOnError>({
     url: '/api/pullrequests/repository/{repositoryId}/reconcile-state',
     ...options,
   });
-};
 
-export const syncEnvironments = <ThrowOnError extends boolean = false>(options?: Options<SyncEnvironmentsData, ThrowOnError>) => {
-  return (options?.client ?? client).post<SyncEnvironmentsResponses, SyncEnvironmentsErrors, ThrowOnError>({
-    url: '/api/environments/sync',
-    ...options,
-  });
-};
+export const syncEnvironments = <ThrowOnError extends boolean = false>(options?: Options<SyncEnvironmentsData, ThrowOnError>) =>
+  (options?.client ?? client).post<SyncEnvironmentsResponses, SyncEnvironmentsErrors, ThrowOnError>({ url: '/api/environments/sync', ...options });
 
-export const update = <ThrowOnError extends boolean = false>(options: Options<UpdateData, ThrowOnError>) => {
-  return (options.client ?? client).post<UpdateResponses, UpdateErrors, ThrowOnError>({
+export const update = <ThrowOnError extends boolean = false>(options: Options<UpdateData, ThrowOnError>) =>
+  (options.client ?? client).post<UpdateResponses, UpdateErrors, ThrowOnError>({
     url: '/api/environments/status',
     ...options,
     headers: {
@@ -632,10 +563,9 @@ export const update = <ThrowOnError extends boolean = false>(options: Options<Up
       ...options.headers,
     },
   });
-};
 
-export const deployToEnvironment = <ThrowOnError extends boolean = false>(options: Options<DeployToEnvironmentData, ThrowOnError>) => {
-  return (options.client ?? client).post<DeployToEnvironmentResponses, DeployToEnvironmentErrors, ThrowOnError>({
+export const deployToEnvironment = <ThrowOnError extends boolean = false>(options: Options<DeployToEnvironmentData, ThrowOnError>) =>
+  (options.client ?? client).post<DeployToEnvironmentResponses, DeployToEnvironmentErrors, ThrowOnError>({
     url: '/api/deployments/deploy',
     ...options,
     headers: {
@@ -643,10 +573,9 @@ export const deployToEnvironment = <ThrowOnError extends boolean = false>(option
       ...options.headers,
     },
   });
-};
 
-export const cancelDeployment = <ThrowOnError extends boolean = false>(options: Options<CancelDeploymentData, ThrowOnError>) => {
-  return (options.client ?? client).post<CancelDeploymentResponses, CancelDeploymentErrors, ThrowOnError>({
+export const cancelDeployment = <ThrowOnError extends boolean = false>(options: Options<CancelDeploymentData, ThrowOnError>) =>
+  (options.client ?? client).post<CancelDeploymentResponses, CancelDeploymentErrors, ThrowOnError>({
     url: '/api/deployments/cancel',
     ...options,
     headers: {
@@ -654,313 +583,204 @@ export const cancelDeployment = <ThrowOnError extends boolean = false>(options: 
       ...options.headers,
     },
   });
-};
 
 export const setBranchPinnedByRepositoryIdAndNameAndUserId = <ThrowOnError extends boolean = false>(
   options: Options<SetBranchPinnedByRepositoryIdAndNameAndUserIdData, ThrowOnError>
-) => {
-  return (options.client ?? client).post<SetBranchPinnedByRepositoryIdAndNameAndUserIdResponses, SetBranchPinnedByRepositoryIdAndNameAndUserIdErrors, ThrowOnError>({
+) =>
+  (options.client ?? client).post<SetBranchPinnedByRepositoryIdAndNameAndUserIdResponses, SetBranchPinnedByRepositoryIdAndNameAndUserIdErrors, ThrowOnError>({
     url: '/api/branches/repository/{repoId}/pin',
     ...options,
   });
-};
 
-export const healthCheck = <ThrowOnError extends boolean = false>(options?: Options<HealthCheckData, ThrowOnError>) => {
-  return (options?.client ?? client).get<HealthCheckResponses, HealthCheckErrors, ThrowOnError>({
-    url: '/status/health',
-    ...options,
-  });
-};
+export const healthCheck = <ThrowOnError extends boolean = false>(options?: Options<HealthCheckData, ThrowOnError>) =>
+  (options?.client ?? client).get<HealthCheckResponses, HealthCheckErrors, ThrowOnError>({ url: '/status/health', ...options });
 
-export const getAllWorkflows = <ThrowOnError extends boolean = false>(options?: Options<GetAllWorkflowsData, ThrowOnError>) => {
-  return (options?.client ?? client).get<GetAllWorkflowsResponses, GetAllWorkflowsErrors, ThrowOnError>({
-    url: '/api/workflows',
-    ...options,
-  });
-};
+export const getAllWorkflows = <ThrowOnError extends boolean = false>(options?: Options<GetAllWorkflowsData, ThrowOnError>) =>
+  (options?.client ?? client).get<GetAllWorkflowsResponses, GetAllWorkflowsErrors, ThrowOnError>({ url: '/api/workflows', ...options });
 
-export const getWorkflowById = <ThrowOnError extends boolean = false>(options: Options<GetWorkflowByIdData, ThrowOnError>) => {
-  return (options.client ?? client).get<GetWorkflowByIdResponses, GetWorkflowByIdErrors, ThrowOnError>({
-    url: '/api/workflows/{id}',
-    ...options,
-  });
-};
+export const getWorkflowById = <ThrowOnError extends boolean = false>(options: Options<GetWorkflowByIdData, ThrowOnError>) =>
+  (options.client ?? client).get<GetWorkflowByIdResponses, GetWorkflowByIdErrors, ThrowOnError>({ url: '/api/workflows/{id}', ...options });
 
-export const getWorkflowsByState = <ThrowOnError extends boolean = false>(options: Options<GetWorkflowsByStateData, ThrowOnError>) => {
-  return (options.client ?? client).get<GetWorkflowsByStateResponses, GetWorkflowsByStateErrors, ThrowOnError>({
-    url: '/api/workflows/state/{state}',
-    ...options,
-  });
-};
+export const getWorkflowsByState = <ThrowOnError extends boolean = false>(options: Options<GetWorkflowsByStateData, ThrowOnError>) =>
+  (options.client ?? client).get<GetWorkflowsByStateResponses, GetWorkflowsByStateErrors, ThrowOnError>({ url: '/api/workflows/state/{state}', ...options });
 
-export const getWorkflowRuns = <ThrowOnError extends boolean = false>(options?: Options<GetWorkflowRunsData, ThrowOnError>) => {
-  return (options?.client ?? client).get<GetWorkflowRunsResponses, GetWorkflowRunsErrors, ThrowOnError>({
-    url: '/api/workflows/runs',
-    ...options,
-  });
-};
+export const getWorkflowRuns = <ThrowOnError extends boolean = false>(options?: Options<GetWorkflowRunsData, ThrowOnError>) =>
+  (options?.client ?? client).get<GetWorkflowRunsResponses, GetWorkflowRunsErrors, ThrowOnError>({ url: '/api/workflows/runs', ...options });
 
-export const getWorkflowRunLogs = <ThrowOnError extends boolean = false>(options: Options<GetWorkflowRunLogsData, ThrowOnError>) => {
-  return (options.client ?? client).get<GetWorkflowRunLogsResponses, GetWorkflowRunLogsErrors, ThrowOnError>({
-    url: '/api/workflows/runs/{workflowRunId}/logs',
-    ...options,
-  });
-};
+export const getWorkflowRunLogs = <ThrowOnError extends boolean = false>(options: Options<GetWorkflowRunLogsData, ThrowOnError>) =>
+  (options.client ?? client).get<GetWorkflowRunLogsResponses, GetWorkflowRunLogsErrors, ThrowOnError>({ url: '/api/workflows/runs/{workflowRunId}/logs', ...options });
 
-export const getWorkflowRunById = <ThrowOnError extends boolean = false>(options: Options<GetWorkflowRunByIdData, ThrowOnError>) => {
-  return (options.client ?? client).get<GetWorkflowRunByIdResponses, GetWorkflowRunByIdErrors, ThrowOnError>({
-    url: '/api/workflows/runs/{runId}',
-    ...options,
-  });
-};
+export const getWorkflowRunById = <ThrowOnError extends boolean = false>(options: Options<GetWorkflowRunByIdData, ThrowOnError>) =>
+  (options.client ?? client).get<GetWorkflowRunByIdResponses, GetWorkflowRunByIdErrors, ThrowOnError>({ url: '/api/workflows/runs/{runId}', ...options });
 
-export const getWorkflowsByRepositoryId = <ThrowOnError extends boolean = false>(options: Options<GetWorkflowsByRepositoryIdData, ThrowOnError>) => {
-  return (options.client ?? client).get<GetWorkflowsByRepositoryIdResponses, GetWorkflowsByRepositoryIdErrors, ThrowOnError>({
+export const getWorkflowsByRepositoryId = <ThrowOnError extends boolean = false>(options: Options<GetWorkflowsByRepositoryIdData, ThrowOnError>) =>
+  (options.client ?? client).get<GetWorkflowsByRepositoryIdResponses, GetWorkflowsByRepositoryIdErrors, ThrowOnError>({
     url: '/api/workflows/repository/{repositoryId}',
     ...options,
   });
-};
 
 export const getLatestWorkflowRunsByPullRequestIdAndHeadCommit = <ThrowOnError extends boolean = false>(
   options: Options<GetLatestWorkflowRunsByPullRequestIdAndHeadCommitData, ThrowOnError>
-) => {
-  return (options.client ?? client).get<GetLatestWorkflowRunsByPullRequestIdAndHeadCommitResponses, GetLatestWorkflowRunsByPullRequestIdAndHeadCommitErrors, ThrowOnError>({
+) =>
+  (options.client ?? client).get<GetLatestWorkflowRunsByPullRequestIdAndHeadCommitResponses, GetLatestWorkflowRunsByPullRequestIdAndHeadCommitErrors, ThrowOnError>({
     url: '/api/workflows/pr/{pullRequestId}',
     ...options,
   });
-};
 
-export const getLatestWorkflowRunsByBranchAndHeadCommit = <ThrowOnError extends boolean = false>(
-  options: Options<GetLatestWorkflowRunsByBranchAndHeadCommitData, ThrowOnError>
-) => {
-  return (options.client ?? client).get<GetLatestWorkflowRunsByBranchAndHeadCommitResponses, GetLatestWorkflowRunsByBranchAndHeadCommitErrors, ThrowOnError>({
+export const getLatestWorkflowRunsByBranchAndHeadCommit = <ThrowOnError extends boolean = false>(options: Options<GetLatestWorkflowRunsByBranchAndHeadCommitData, ThrowOnError>) =>
+  (options.client ?? client).get<GetLatestWorkflowRunsByBranchAndHeadCommitResponses, GetLatestWorkflowRunsByBranchAndHeadCommitErrors, ThrowOnError>({
     url: '/api/workflows/branch',
     ...options,
   });
-};
 
-export const getUserPermissions = <ThrowOnError extends boolean = false>(options?: Options<GetUserPermissionsData, ThrowOnError>) => {
-  return (options?.client ?? client).get<GetUserPermissionsResponses, GetUserPermissionsErrors, ThrowOnError>({
-    url: '/api/user-permissions',
-    ...options,
-  });
-};
+export const getUserPermissions = <ThrowOnError extends boolean = false>(options?: Options<GetUserPermissionsData, ThrowOnError>) =>
+  (options?.client ?? client).get<GetUserPermissionsResponses, GetUserPermissionsErrors, ThrowOnError>({ url: '/api/user-permissions', ...options });
 
-export const getTestResultsByWorkflowRunId = <ThrowOnError extends boolean = false>(options: Options<GetTestResultsByWorkflowRunIdData, ThrowOnError>) => {
-  return (options.client ?? client).get<GetTestResultsByWorkflowRunIdResponses, GetTestResultsByWorkflowRunIdErrors, ThrowOnError>({
-    url: '/api/tests/run/{workflowRunId}',
-    ...options,
-  });
-};
+export const getTestResultsByWorkflowRunId = <ThrowOnError extends boolean = false>(options: Options<GetTestResultsByWorkflowRunIdData, ThrowOnError>) =>
+  (options.client ?? client).get<GetTestResultsByWorkflowRunIdResponses, GetTestResultsByWorkflowRunIdErrors, ThrowOnError>({ url: '/api/tests/run/{workflowRunId}', ...options });
 
-export const getLatestTestResultsByPullRequestId = <ThrowOnError extends boolean = false>(options: Options<GetLatestTestResultsByPullRequestIdData, ThrowOnError>) => {
-  return (options.client ?? client).get<GetLatestTestResultsByPullRequestIdResponses, GetLatestTestResultsByPullRequestIdErrors, ThrowOnError>({
+export const getLatestTestResultsByPullRequestId = <ThrowOnError extends boolean = false>(options: Options<GetLatestTestResultsByPullRequestIdData, ThrowOnError>) =>
+  (options.client ?? client).get<GetLatestTestResultsByPullRequestIdResponses, GetLatestTestResultsByPullRequestIdErrors, ThrowOnError>({
     url: '/api/tests/pr/{pullRequestId}',
     ...options,
   });
-};
 
-export const getFlakyTestsOverview = <ThrowOnError extends boolean = false>(options?: Options<GetFlakyTestsOverviewData, ThrowOnError>) => {
-  return (options?.client ?? client).get<GetFlakyTestsOverviewResponses, GetFlakyTestsOverviewErrors, ThrowOnError>({
-    url: '/api/tests/flaky',
+export const getFlakyTestsOverview = <ThrowOnError extends boolean = false>(options?: Options<GetFlakyTestsOverviewData, ThrowOnError>) =>
+  (options?.client ?? client).get<GetFlakyTestsOverviewResponses, GetFlakyTestsOverviewErrors, ThrowOnError>({ url: '/api/tests/flaky', ...options });
+
+export const getLatestTestResultsByBranch = <ThrowOnError extends boolean = false>(options: Options<GetLatestTestResultsByBranchData, ThrowOnError>) =>
+  (options.client ?? client).get<GetLatestTestResultsByBranchResponses, GetLatestTestResultsByBranchErrors, ThrowOnError>({ url: '/api/tests/branch', ...options });
+
+export const getFailureAnalysisUsage = <ThrowOnError extends boolean = false>(options?: Options<GetFailureAnalysisUsageData, ThrowOnError>) =>
+  (options?.client ?? client).get<GetFailureAnalysisUsageResponses, GetFailureAnalysisUsageErrors, ThrowOnError>({ url: '/api/test-failure-analysis/usage', ...options });
+
+export const getGroupsWithWorkflows = <ThrowOnError extends boolean = false>(options: Options<GetGroupsWithWorkflowsData, ThrowOnError>) =>
+  (options.client ?? client).get<GetGroupsWithWorkflowsResponses, GetGroupsWithWorkflowsErrors, ThrowOnError>({ url: '/api/settings/{repositoryId}/groups', ...options });
+
+export const getAllRepositories = <ThrowOnError extends boolean = false>(options?: Options<GetAllRepositoriesData, ThrowOnError>) =>
+  (options?.client ?? client).get<GetAllRepositoriesResponses, GetAllRepositoriesErrors, ThrowOnError>({ url: '/api/repository', ...options });
+
+export const getRepositoryById = <ThrowOnError extends boolean = false>(options: Options<GetRepositoryByIdData, ThrowOnError>) =>
+  (options.client ?? client).get<GetRepositoryByIdResponses, GetRepositoryByIdErrors, ThrowOnError>({ url: '/api/repository/{id}', ...options });
+
+export const getLatestCachedFailureAnalysis = <ThrowOnError extends boolean = false>(options: Options<GetLatestCachedFailureAnalysisData, ThrowOnError>) =>
+  (options.client ?? client).get<GetLatestCachedFailureAnalysisResponses, GetLatestCachedFailureAnalysisErrors, ThrowOnError>({
+    url: '/api/repositories/{repositoryId}/test-cases/{testCaseId}/failure-analysis/latest',
     ...options,
   });
-};
 
-export const getLatestTestResultsByBranch = <ThrowOnError extends boolean = false>(options: Options<GetLatestTestResultsByBranchData, ThrowOnError>) => {
-  return (options.client ?? client).get<GetLatestTestResultsByBranchResponses, GetLatestTestResultsByBranchErrors, ThrowOnError>({
-    url: '/api/tests/branch',
-    ...options,
-  });
-};
-
-export const getGroupsWithWorkflows = <ThrowOnError extends boolean = false>(options: Options<GetGroupsWithWorkflowsData, ThrowOnError>) => {
-  return (options.client ?? client).get<GetGroupsWithWorkflowsResponses, GetGroupsWithWorkflowsErrors, ThrowOnError>({
-    url: '/api/settings/{repositoryId}/groups',
-    ...options,
-  });
-};
-
-export const getAllRepositories = <ThrowOnError extends boolean = false>(options?: Options<GetAllRepositoriesData, ThrowOnError>) => {
-  return (options?.client ?? client).get<GetAllRepositoriesResponses, GetAllRepositoriesErrors, ThrowOnError>({
-    url: '/api/repository',
-    ...options,
-  });
-};
-
-export const getRepositoryById = <ThrowOnError extends boolean = false>(options: Options<GetRepositoryByIdData, ThrowOnError>) => {
-  return (options.client ?? client).get<GetRepositoryByIdResponses, GetRepositoryByIdErrors, ThrowOnError>({
-    url: '/api/repository/{id}',
-    ...options,
-  });
-};
-
-export const getCommitsSinceLastReleaseCandidate = <ThrowOnError extends boolean = false>(options: Options<GetCommitsSinceLastReleaseCandidateData, ThrowOnError>) => {
-  return (options.client ?? client).get<GetCommitsSinceLastReleaseCandidateResponses, GetCommitsSinceLastReleaseCandidateErrors, ThrowOnError>({
+export const getCommitsSinceLastReleaseCandidate = <ThrowOnError extends boolean = false>(options: Options<GetCommitsSinceLastReleaseCandidateData, ThrowOnError>) =>
+  (options.client ?? client).get<GetCommitsSinceLastReleaseCandidateResponses, GetCommitsSinceLastReleaseCandidateErrors, ThrowOnError>({
     url: '/api/release-info/newcommits',
     ...options,
   });
-};
 
-export const getPullRequests = <ThrowOnError extends boolean = false>(options?: Options<GetPullRequestsData, ThrowOnError>) => {
-  return (options?.client ?? client).get<GetPullRequestsResponses, GetPullRequestsErrors, ThrowOnError>({
-    url: '/api/pullrequests',
-    ...options,
-  });
-};
+export const getPullRequests = <ThrowOnError extends boolean = false>(options?: Options<GetPullRequestsData, ThrowOnError>) =>
+  (options?.client ?? client).get<GetPullRequestsResponses, GetPullRequestsErrors, ThrowOnError>({ url: '/api/pullrequests', ...options });
 
-export const getPullRequestById = <ThrowOnError extends boolean = false>(options: Options<GetPullRequestByIdData, ThrowOnError>) => {
-  return (options.client ?? client).get<GetPullRequestByIdResponses, GetPullRequestByIdErrors, ThrowOnError>({
-    url: '/api/pullrequests/{id}',
-    ...options,
-  });
-};
+export const getPullRequestById = <ThrowOnError extends boolean = false>(options: Options<GetPullRequestByIdData, ThrowOnError>) =>
+  (options.client ?? client).get<GetPullRequestByIdResponses, GetPullRequestByIdErrors, ThrowOnError>({ url: '/api/pullrequests/{id}', ...options });
 
-export const getPullRequestByRepositoryIdAndNumber = <ThrowOnError extends boolean = false>(options: Options<GetPullRequestByRepositoryIdAndNumberData, ThrowOnError>) => {
-  return (options.client ?? client).get<GetPullRequestByRepositoryIdAndNumberResponses, GetPullRequestByRepositoryIdAndNumberErrors, ThrowOnError>({
+export const getPullRequestByRepositoryIdAndNumber = <ThrowOnError extends boolean = false>(options: Options<GetPullRequestByRepositoryIdAndNumberData, ThrowOnError>) =>
+  (options.client ?? client).get<GetPullRequestByRepositoryIdAndNumberResponses, GetPullRequestByRepositoryIdAndNumberErrors, ThrowOnError>({
     url: '/api/pullrequests/repository/{repoId}/pr/{number}',
     ...options,
   });
-};
 
-export const getPullRequestByRepositoryId = <ThrowOnError extends boolean = false>(options: Options<GetPullRequestByRepositoryIdData, ThrowOnError>) => {
-  return (options.client ?? client).get<GetPullRequestByRepositoryIdResponses, GetPullRequestByRepositoryIdErrors, ThrowOnError>({
-    url: '/api/pullrequests/repository/{id}',
+export const getPullRequestFilterOptionsByRepositoryId = <ThrowOnError extends boolean = false>(options: Options<GetPullRequestFilterOptionsByRepositoryIdData, ThrowOnError>) =>
+  (options.client ?? client).get<GetPullRequestFilterOptionsByRepositoryIdResponses, GetPullRequestFilterOptionsByRepositoryIdErrors, ThrowOnError>({
+    url: '/api/pullrequests/repository/{repoId}/filter-options',
     ...options,
   });
-};
 
-export const getAllEnvironments = <ThrowOnError extends boolean = false>(options?: Options<GetAllEnvironmentsData, ThrowOnError>) => {
-  return (options?.client ?? client).get<GetAllEnvironmentsResponses, GetAllEnvironmentsErrors, ThrowOnError>({
-    url: '/api/environments',
-    ...options,
-  });
-};
+export const getPullRequestByRepositoryId = <ThrowOnError extends boolean = false>(options: Options<GetPullRequestByRepositoryIdData, ThrowOnError>) =>
+  (options.client ?? client).get<GetPullRequestByRepositoryIdResponses, GetPullRequestByRepositoryIdErrors, ThrowOnError>({ url: '/api/pullrequests/repository/{id}', ...options });
 
-export const getEnvironmentReviewers = <ThrowOnError extends boolean = false>(options: Options<GetEnvironmentReviewersData, ThrowOnError>) => {
-  return (options.client ?? client).get<GetEnvironmentReviewersResponses, GetEnvironmentReviewersErrors, ThrowOnError>({
-    url: '/api/environments/{environmentId}/reviewers',
-    ...options,
-  });
-};
+export const getAllEnvironments = <ThrowOnError extends boolean = false>(options?: Options<GetAllEnvironmentsData, ThrowOnError>) =>
+  (options?.client ?? client).get<GetAllEnvironmentsResponses, GetAllEnvironmentsErrors, ThrowOnError>({ url: '/api/environments', ...options });
 
-export const getDeploymentReadiness = <ThrowOnError extends boolean = false>(options: Options<GetDeploymentReadinessData, ThrowOnError>) => {
-  return (options.client ?? client).get<GetDeploymentReadinessResponses, GetDeploymentReadinessErrors, ThrowOnError>({
+export const getEnvironmentReviewers = <ThrowOnError extends boolean = false>(options: Options<GetEnvironmentReviewersData, ThrowOnError>) =>
+  (options.client ?? client).get<GetEnvironmentReviewersResponses, GetEnvironmentReviewersErrors, ThrowOnError>({ url: '/api/environments/{environmentId}/reviewers', ...options });
+
+export const getDeploymentReadiness = <ThrowOnError extends boolean = false>(options: Options<GetDeploymentReadinessData, ThrowOnError>) =>
+  (options.client ?? client).get<GetDeploymentReadinessResponses, GetDeploymentReadinessErrors, ThrowOnError>({
     url: '/api/environments/{environmentId}/deployment-readiness',
     ...options,
   });
-};
 
-export const getEnvironmentsByUserLocking = <ThrowOnError extends boolean = false>(options?: Options<GetEnvironmentsByUserLockingData, ThrowOnError>) => {
-  return (options?.client ?? client).get<GetEnvironmentsByUserLockingResponses, GetEnvironmentsByUserLockingErrors, ThrowOnError>({
-    url: '/api/environments/userLocking',
-    ...options,
-  });
-};
+export const getEnvironmentsByUserLocking = <ThrowOnError extends boolean = false>(options?: Options<GetEnvironmentsByUserLockingData, ThrowOnError>) =>
+  (options?.client ?? client).get<GetEnvironmentsByUserLockingResponses, GetEnvironmentsByUserLockingErrors, ThrowOnError>({ url: '/api/environments/userLocking', ...options });
 
-export const getEnvironmentsByRepositoryId = <ThrowOnError extends boolean = false>(options: Options<GetEnvironmentsByRepositoryIdData, ThrowOnError>) => {
-  return (options.client ?? client).get<GetEnvironmentsByRepositoryIdResponses, GetEnvironmentsByRepositoryIdErrors, ThrowOnError>({
+export const getEnvironmentsByRepositoryId = <ThrowOnError extends boolean = false>(options: Options<GetEnvironmentsByRepositoryIdData, ThrowOnError>) =>
+  (options.client ?? client).get<GetEnvironmentsByRepositoryIdResponses, GetEnvironmentsByRepositoryIdErrors, ThrowOnError>({
     url: '/api/environments/repository/{repositoryId}',
     ...options,
   });
-};
 
-export const getLockHistoryByEnvironmentId = <ThrowOnError extends boolean = false>(options: Options<GetLockHistoryByEnvironmentIdData, ThrowOnError>) => {
-  return (options.client ?? client).get<GetLockHistoryByEnvironmentIdResponses, GetLockHistoryByEnvironmentIdErrors, ThrowOnError>({
+export const getLockHistoryByEnvironmentId = <ThrowOnError extends boolean = false>(options: Options<GetLockHistoryByEnvironmentIdData, ThrowOnError>) =>
+  (options.client ?? client).get<GetLockHistoryByEnvironmentIdResponses, GetLockHistoryByEnvironmentIdErrors, ThrowOnError>({
     url: '/api/environments/environment/{environmentId}/lockHistory',
     ...options,
   });
-};
 
-export const getAllEnabledEnvironments = <ThrowOnError extends boolean = false>(options?: Options<GetAllEnabledEnvironmentsData, ThrowOnError>) => {
-  return (options?.client ?? client).get<GetAllEnabledEnvironmentsResponses, GetAllEnabledEnvironmentsErrors, ThrowOnError>({
-    url: '/api/environments/enabled',
-    ...options,
-  });
-};
+export const getAllEnabledEnvironments = <ThrowOnError extends boolean = false>(options?: Options<GetAllEnabledEnvironmentsData, ThrowOnError>) =>
+  (options?.client ?? client).get<GetAllEnabledEnvironmentsResponses, GetAllEnabledEnvironmentsErrors, ThrowOnError>({ url: '/api/environments/enabled', ...options });
 
-export const getAllDeployments = <ThrowOnError extends boolean = false>(options?: Options<GetAllDeploymentsData, ThrowOnError>) => {
-  return (options?.client ?? client).get<GetAllDeploymentsResponses, GetAllDeploymentsErrors, ThrowOnError>({
-    url: '/api/deployments',
-    ...options,
-  });
-};
+export const getAllDeployments = <ThrowOnError extends boolean = false>(options?: Options<GetAllDeploymentsData, ThrowOnError>) =>
+  (options?.client ?? client).get<GetAllDeploymentsResponses, GetAllDeploymentsErrors, ThrowOnError>({ url: '/api/deployments', ...options });
 
-export const getDeploymentById = <ThrowOnError extends boolean = false>(options: Options<GetDeploymentByIdData, ThrowOnError>) => {
-  return (options.client ?? client).get<GetDeploymentByIdResponses, GetDeploymentByIdErrors, ThrowOnError>({
-    url: '/api/deployments/{id}',
-    ...options,
-  });
-};
+export const getDeploymentById = <ThrowOnError extends boolean = false>(options: Options<GetDeploymentByIdData, ThrowOnError>) =>
+  (options.client ?? client).get<GetDeploymentByIdResponses, GetDeploymentByIdErrors, ThrowOnError>({ url: '/api/deployments/{id}', ...options });
 
-export const getWorkflowJobStatus = <ThrowOnError extends boolean = false>(options: Options<GetWorkflowJobStatusData, ThrowOnError>) => {
-  return (options.client ?? client).get<GetWorkflowJobStatusResponses, GetWorkflowJobStatusErrors, ThrowOnError>({
-    url: '/api/deployments/workflowJobStatus/{runId}',
-    ...options,
-  });
-};
+export const getWorkflowJobStatus = <ThrowOnError extends boolean = false>(options: Options<GetWorkflowJobStatusData, ThrowOnError>) =>
+  (options.client ?? client).get<GetWorkflowJobStatusResponses, GetWorkflowJobStatusErrors, ThrowOnError>({ url: '/api/deployments/workflowJobStatus/{runId}', ...options });
 
 export const getActivityHistoryByRepositoryIdAndBranchName = <ThrowOnError extends boolean = false>(
   options: Options<GetActivityHistoryByRepositoryIdAndBranchNameData, ThrowOnError>
-) => {
-  return (options.client ?? client).get<GetActivityHistoryByRepositoryIdAndBranchNameResponses, GetActivityHistoryByRepositoryIdAndBranchNameErrors, ThrowOnError>({
+) =>
+  (options.client ?? client).get<GetActivityHistoryByRepositoryIdAndBranchNameResponses, GetActivityHistoryByRepositoryIdAndBranchNameErrors, ThrowOnError>({
     url: '/api/deployments/repository/{repositoryId}/branch/activity-history',
     ...options,
   });
-};
 
-export const getActivityHistoryByPullRequestId = <ThrowOnError extends boolean = false>(options: Options<GetActivityHistoryByPullRequestIdData, ThrowOnError>) => {
-  return (options.client ?? client).get<GetActivityHistoryByPullRequestIdResponses, GetActivityHistoryByPullRequestIdErrors, ThrowOnError>({
+export const getActivityHistoryByPullRequestId = <ThrowOnError extends boolean = false>(options: Options<GetActivityHistoryByPullRequestIdData, ThrowOnError>) =>
+  (options.client ?? client).get<GetActivityHistoryByPullRequestIdResponses, GetActivityHistoryByPullRequestIdErrors, ThrowOnError>({
     url: '/api/deployments/pr/{pullRequestId}/activity-history',
     ...options,
   });
-};
 
-export const getDeploymentsByEnvironmentId = <ThrowOnError extends boolean = false>(options: Options<GetDeploymentsByEnvironmentIdData, ThrowOnError>) => {
-  return (options.client ?? client).get<GetDeploymentsByEnvironmentIdResponses, GetDeploymentsByEnvironmentIdErrors, ThrowOnError>({
+export const getDeploymentsByEnvironmentId = <ThrowOnError extends boolean = false>(options: Options<GetDeploymentsByEnvironmentIdData, ThrowOnError>) =>
+  (options.client ?? client).get<GetDeploymentsByEnvironmentIdResponses, GetDeploymentsByEnvironmentIdErrors, ThrowOnError>({
     url: '/api/deployments/environment/{environmentId}',
     ...options,
   });
-};
 
-export const getLatestDeploymentByEnvironmentId = <ThrowOnError extends boolean = false>(options: Options<GetLatestDeploymentByEnvironmentIdData, ThrowOnError>) => {
-  return (options.client ?? client).get<GetLatestDeploymentByEnvironmentIdResponses, GetLatestDeploymentByEnvironmentIdErrors, ThrowOnError>({
+export const getLatestDeploymentByEnvironmentId = <ThrowOnError extends boolean = false>(options: Options<GetLatestDeploymentByEnvironmentIdData, ThrowOnError>) =>
+  (options.client ?? client).get<GetLatestDeploymentByEnvironmentIdResponses, GetLatestDeploymentByEnvironmentIdErrors, ThrowOnError>({
     url: '/api/deployments/environment/{environmentId}/latest',
     ...options,
   });
-};
 
-export const getActivityHistoryByEnvironmentId = <ThrowOnError extends boolean = false>(options: Options<GetActivityHistoryByEnvironmentIdData, ThrowOnError>) => {
-  return (options.client ?? client).get<GetActivityHistoryByEnvironmentIdResponses, GetActivityHistoryByEnvironmentIdErrors, ThrowOnError>({
+export const getActivityHistoryByEnvironmentId = <ThrowOnError extends boolean = false>(options: Options<GetActivityHistoryByEnvironmentIdData, ThrowOnError>) =>
+  (options.client ?? client).get<GetActivityHistoryByEnvironmentIdResponses, GetActivityHistoryByEnvironmentIdErrors, ThrowOnError>({
     url: '/api/deployments/environment/{environmentId}/activity-history',
     ...options,
   });
-};
 
-export const getCommitByRepositoryIdAndName = <ThrowOnError extends boolean = false>(options: Options<GetCommitByRepositoryIdAndNameData, ThrowOnError>) => {
-  return (options.client ?? client).get<GetCommitByRepositoryIdAndNameResponses, GetCommitByRepositoryIdAndNameErrors, ThrowOnError>({
+export const getCommitByRepositoryIdAndName = <ThrowOnError extends boolean = false>(options: Options<GetCommitByRepositoryIdAndNameData, ThrowOnError>) =>
+  (options.client ?? client).get<GetCommitByRepositoryIdAndNameResponses, GetCommitByRepositoryIdAndNameErrors, ThrowOnError>({
     url: '/api/commits/repository/{repoId}/commit/{sha}',
     ...options,
   });
-};
 
-export const getAllBranches = <ThrowOnError extends boolean = false>(options?: Options<GetAllBranchesData, ThrowOnError>) => {
-  return (options?.client ?? client).get<GetAllBranchesResponses, GetAllBranchesErrors, ThrowOnError>({
-    url: '/api/branches',
-    ...options,
-  });
-};
+export const getAllBranches = <ThrowOnError extends boolean = false>(options?: Options<GetAllBranchesData, ThrowOnError>) =>
+  (options?.client ?? client).get<GetAllBranchesResponses, GetAllBranchesErrors, ThrowOnError>({ url: '/api/branches', ...options });
 
-export const getBranchByRepositoryIdAndName = <ThrowOnError extends boolean = false>(options: Options<GetBranchByRepositoryIdAndNameData, ThrowOnError>) => {
-  return (options.client ?? client).get<GetBranchByRepositoryIdAndNameResponses, GetBranchByRepositoryIdAndNameErrors, ThrowOnError>({
+export const getBranchByRepositoryIdAndName = <ThrowOnError extends boolean = false>(options: Options<GetBranchByRepositoryIdAndNameData, ThrowOnError>) =>
+  (options.client ?? client).get<GetBranchByRepositoryIdAndNameResponses, GetBranchByRepositoryIdAndNameErrors, ThrowOnError>({
     url: '/api/branches/repository/{repoId}/branch',
     ...options,
   });
-};
 
-export const deleteWorkflowGroup = <ThrowOnError extends boolean = false>(options: Options<DeleteWorkflowGroupData, ThrowOnError>) => {
-  return (options.client ?? client).delete<DeleteWorkflowGroupResponses, DeleteWorkflowGroupErrors, ThrowOnError>({
-    url: '/api/settings/{repositoryId}/groups/{groupId}',
-    ...options,
-  });
-};
+export const deleteWorkflowGroup = <ThrowOnError extends boolean = false>(options: Options<DeleteWorkflowGroupData, ThrowOnError>) =>
+  (options.client ?? client).delete<DeleteWorkflowGroupResponses, DeleteWorkflowGroupErrors, ThrowOnError>({ url: '/api/settings/{repositoryId}/groups/{groupId}', ...options });

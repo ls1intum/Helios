@@ -1,4 +1,3 @@
-import { CommonModule } from '@angular/common';
 import { Component, inject, input, ViewChild } from '@angular/core';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 import { ButtonModule } from 'primeng/button';
@@ -11,29 +10,16 @@ import { DividerModule } from 'primeng/divider';
 import { AvatarModule } from 'primeng/avatar';
 import { Popover, PopoverModule } from 'primeng/popover';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
-import { IconLogin, IconLogout, IconSettings } from 'angular-tabler-icons/icons';
+import { IconBrandGithub, IconLogout, IconSettings } from 'angular-tabler-icons/icons';
 import { NavigationEnd, Router, RouterLink } from '@angular/router';
 import { filter } from 'rxjs';
 
 @Component({
   selector: 'app-profile-nav-section',
-  imports: [
-    ToastModule,
-    PopoverModule,
-    DividerModule,
-    AvatarModule,
-    DataViewModule,
-    ButtonModule,
-    TagModule,
-    CommonModule,
-    CardModule,
-    ChipModule,
-    TablerIconComponent,
-    RouterLink,
-  ],
+  imports: [ToastModule, PopoverModule, DividerModule, AvatarModule, DataViewModule, ButtonModule, TagModule, CardModule, ChipModule, TablerIconComponent, RouterLink],
   providers: [
     provideTablerIcons({
-      IconLogin,
+      IconBrandGithub,
       IconLogout,
       IconSettings,
     }),

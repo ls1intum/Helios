@@ -88,6 +88,14 @@ public class EmailTemplateService {
    * @return the template content
    */
   private String getTemplateContent(String templateName) {
+    // Reject anything but a plain template name before it reaches the classpath
+    // lookup below. templateName can originate from a request path variable
+    // (see EmailTestController), so allowing '/', '\\' or '..' would permit
+    // path traversal to other classpath resources.
+    if (templateName == null || !templateName.matches("[A-Za-z0-9_-]+")) {
+      throw new IllegalArgumentException("Invalid email template name: " + templateName);
+    }
+
     // Check if template is in cache
     if (templateCache.containsKey(templateName)) {
       return templateCache.get(templateName);

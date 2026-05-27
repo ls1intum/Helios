@@ -4,6 +4,7 @@ import de.tum.cit.aet.helios.deployment.Deployment;
 import de.tum.cit.aet.helios.environment.Environment;
 import de.tum.cit.aet.helios.pullrequest.PullRequest;
 import de.tum.cit.aet.helios.user.User;
+import de.tum.cit.aet.helios.workflow.WorkflowRun;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -24,7 +25,6 @@ import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
-import org.kohsuke.github.GHWorkflowRun;
 
 @Entity
 @Table(name = "helios_deployment")
@@ -55,6 +55,9 @@ public class HeliosDeployment {
 
   @Column(name = "branch_name")
   private String branchName;
+
+  @Column(name = "source_branch_name")
+  private String sourceBranchName;
 
   @Column(name = "build_tag")
   private String buildTag;
@@ -96,11 +99,17 @@ public class HeliosDeployment {
   @JoinColumn(name = "pull_request_id")
   private PullRequest pullRequest;
 
-  @Column(name = "build_duration_seconds")
-  private Integer buildDurationSeconds;
+  @Column(name = "pre_deploy_duration_seconds")
+  private Integer preDeployDurationSeconds;
 
   @Column(name = "deploy_duration_seconds")
   private Integer deployDurationSeconds;
+
+  @Column(name = "deploy_job_started_at")
+  private OffsetDateTime deployJobStartedAt;
+
+  @Column(name = "workflow_started_at")
+  private OffsetDateTime workflowStartedAt;
 
   // Enum to represent deployment status
   public enum Status {
@@ -131,24 +140,30 @@ public class HeliosDeployment {
     this.statusUpdatedAt = OffsetDateTime.now();
   }
 
-  public static HeliosDeployment.Status mapWorkflowRunStatus(
-      GHWorkflowRun.Status workflowStatus, GHWorkflowRun.Conclusion workflowConclusion) {
-    if (workflowStatus == GHWorkflowRun.Status.PENDING) {
-      return Status.WAITING;
-    } else if (workflowStatus == GHWorkflowRun.Status.QUEUED) {
-      return Status.QUEUED;
-    } else if (workflowStatus == GHWorkflowRun.Status.IN_PROGRESS) {
-      return HeliosDeployment.Status.IN_PROGRESS;
-    } else if (workflowStatus == GHWorkflowRun.Status.COMPLETED) {
-      return switch (workflowConclusion) {
-        case SUCCESS -> Status.DEPLOYMENT_SUCCESS;
-        case CANCELLED -> Status.CANCELLED;
-        case FAILURE, STARTUP_FAILURE, TIMED_OUT -> Status.FAILED;
-        default -> Status.UNKNOWN;
-      };
-    } else {
+  public static Status mapWorkflowRunStatus(
+      WorkflowRun.Status status, WorkflowRun.Conclusion conclusion) {
+    return switch (status) {
+      case PENDING, WAITING, REQUESTED -> Status.WAITING;
+      case QUEUED -> Status.QUEUED;
+      case IN_PROGRESS -> Status.IN_PROGRESS;
+      case COMPLETED -> mapCompletedConclusion(conclusion);
+      case CANCELLED -> Status.CANCELLED;
+      case SUCCESS -> Status.DEPLOYMENT_SUCCESS;
+      case FAILURE, ACTION_REQUIRED, TIMED_OUT -> Status.FAILED;
+      case NEUTRAL, SKIPPED, STALE, UNKNOWN -> Status.UNKNOWN;
+    };
+  }
+
+  private static Status mapCompletedConclusion(WorkflowRun.Conclusion conclusion) {
+    if (conclusion == null) {
       return Status.UNKNOWN;
     }
+    return switch (conclusion) {
+      case SUCCESS -> Status.DEPLOYMENT_SUCCESS;
+      case CANCELLED -> Status.CANCELLED;
+      case FAILURE, STARTUP_FAILURE, TIMED_OUT, ACTION_REQUIRED -> Status.FAILED;
+      case NEUTRAL, SKIPPED, STALE, UNKNOWN -> Status.UNKNOWN;
+    };
   }
 
   public static Deployment.State mapHeliosStatusToDeploymentState(

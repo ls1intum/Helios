@@ -18,6 +18,7 @@ import jakarta.transaction.Transactional;
 import java.io.BufferedReader;
 import java.io.FilterInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
@@ -42,6 +43,7 @@ import okhttp3.Response;
 import okhttp3.ResponseBody;
 import org.kohsuke.github.GHArtifact;
 import org.kohsuke.github.GHCommitState;
+import org.kohsuke.github.GHContent;
 import org.kohsuke.github.GHOrganization;
 import org.kohsuke.github.GHPullRequest;
 import org.kohsuke.github.GHRelease;
@@ -127,6 +129,28 @@ public class GitHubService {
    */
   public GHRepository getRepository(String repoNameWithOwners) throws IOException {
     return github.getRepository(repoNameWithOwners);
+  }
+
+  /**
+   * Reads a text file from a repository at a specific ref.
+   *
+   * <p>Returns {@code null} if the path does not resolve to a regular file or the content cannot
+   * be read. Repository lookup failures are still propagated to the caller.
+   */
+  public String getFileContent(String repositoryNameWithOwner, String path, String ref)
+      throws IOException {
+    GHRepository repository = getRepository(repositoryNameWithOwner);
+    try {
+      GHContent content = repository.getFileContent(path, ref);
+      if (content == null || !content.isFile()) {
+        return null;
+      }
+      try (InputStream inputStream = content.read()) {
+        return new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+      }
+    } catch (IOException ex) {
+      return null;
+    }
   }
 
   /**
@@ -1115,28 +1139,27 @@ public class GitHubService {
       }
     }
 
-    // Try to parse the JSON error response if we have a body
     if (!responseBodyString.isEmpty()) {
       try {
         Map<String, Object> errorResponse = objectMapper.readValue(responseBodyString, Map.class);
-        String githubMessage = (String) errorResponse.get("message");
+        String githubMessage =
+            errorResponse == null ? null : (String) errorResponse.get("message");
 
-        if (githubMessage != null) {
-          throw new IOException("GitHub API error: " + githubMessage);
+        if (githubMessage != null && !githubMessage.isBlank()) {
+          throw new IOException(githubMessage);
         }
-      } catch (Exception e) {
-        // JSON parsing failed, log but continue to fallback
+      } catch (JsonProcessingException e) {
         log.warn("Failed to parse GitHub error response: {}", e.getMessage());
       }
+
+      throw new IOException(responseBodyString);
     }
 
-    // Fallback for empty or unparseable responses
     throw new IOException(
         "GitHub API "
             + context
             + " failed with response code: "
-            + response.code()
-            + (!responseBodyString.isEmpty() ? " and body: " + responseBodyString : ""));
+            + response.code());
   }
 
   private OffsetDateTime parseOffsetDateTime(JsonNode node) {

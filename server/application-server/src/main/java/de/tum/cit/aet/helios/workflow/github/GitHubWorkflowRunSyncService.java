@@ -1,7 +1,5 @@
 package de.tum.cit.aet.helios.workflow.github;
 
-import static de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment.mapWorkflowRunStatus;
-
 import de.tum.cit.aet.helios.github.GitHubClientManager;
 import de.tum.cit.aet.helios.github.GitHubFacade;
 import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
@@ -260,7 +258,8 @@ public class GitHubWorkflowRunSyncService {
                   heliosDeployment.setUpdatedAt(
                       DateUtil.convertToOffsetDateTime(workflowRun.getUpdatedAt()));
                   HeliosDeployment.Status mappedStatus =
-                      mapWorkflowRunStatus(workflowRun.getStatus(), workflowRun.getConclusion());
+                      mapLiveWorkflowRunStatus(
+                          workflowRun.getStatus(), workflowRun.getConclusion());
                   log.debug("Mapped status {} to {}", workflowRun.getStatus(), mappedStatus);
 
                   try {
@@ -300,6 +299,12 @@ public class GitHubWorkflowRunSyncService {
                   // Update the deployment status
                   heliosDeployment.setStatus(mappedStatus);
 
+                  if (heliosDeployment.getWorkflowStartedAt() == null
+                      && workflowRun.getRunStartedAt() != null) {
+                    heliosDeployment.setWorkflowStartedAt(
+                        DateUtil.convertToOffsetDateTime(workflowRun.getRunStartedAt()));
+                  }
+
                   // Update the workflow run html url, so we can show the approval url
                   // to the user before the Github deployment is created
                   heliosDeployment.setWorkflowRunId(workflowRun.getId());
@@ -315,5 +320,25 @@ public class GitHubWorkflowRunSyncService {
                 e.printStackTrace();
               }
             });
+  }
+
+  static HeliosDeployment.Status mapLiveWorkflowRunStatus(
+      GHWorkflowRun.Status workflowStatus, GHWorkflowRun.Conclusion workflowConclusion) {
+    if (workflowStatus == GHWorkflowRun.Status.PENDING) {
+      return HeliosDeployment.Status.WAITING;
+    } else if (workflowStatus == GHWorkflowRun.Status.QUEUED) {
+      return HeliosDeployment.Status.QUEUED;
+    } else if (workflowStatus == GHWorkflowRun.Status.IN_PROGRESS) {
+      return HeliosDeployment.Status.IN_PROGRESS;
+    } else if (workflowStatus == GHWorkflowRun.Status.COMPLETED) {
+      return switch (workflowConclusion) {
+        case SUCCESS -> HeliosDeployment.Status.DEPLOYMENT_SUCCESS;
+        case CANCELLED -> HeliosDeployment.Status.CANCELLED;
+        case FAILURE, STARTUP_FAILURE, TIMED_OUT -> HeliosDeployment.Status.FAILED;
+        default -> HeliosDeployment.Status.UNKNOWN;
+      };
+    } else {
+      return HeliosDeployment.Status.UNKNOWN;
+    }
   }
 }

@@ -46,24 +46,50 @@ public interface HeliosDeploymentRepository extends JpaRepository<HeliosDeployme
   List<HeliosDeployment> findByRepositoryIdAndBranchNameAndDeploymentIdIsNullOrderByCreatedAtDesc(
       @Param("repositoryId") Long repositoryId, @Param("branchName") String branchName);
 
+  @Query(
+      "SELECT hd FROM HeliosDeployment hd "
+          + "JOIN hd.environment e "
+          + "JOIN e.repository r "
+          + "WHERE r.repositoryId = :repositoryId "
+          + "AND hd.sourceBranchName = :sourceBranchName "
+          + "AND (hd.deploymentId IS NULL OR hd.branchName <> hd.sourceBranchName) "
+          + "ORDER BY hd.createdAt DESC")
+  List<HeliosDeployment> findByRepositoryIdAndSourceBranchNameOrderByCreatedAtDesc(
+      @Param("repositoryId") Long repositoryId,
+      @Param("sourceBranchName") String sourceBranchName);
+
   Optional<HeliosDeployment> findByDeploymentId(Long deploymentId);
 
   Optional<HeliosDeployment> findByWorkflowRunId(Long workflowRunId);
 
   @Query(
+      "SELECT new de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentWorkflowJobTimingMeta("
+          + "hd.id, hd.workflowStartedAt, hd.status, hd.deployJobStartedAt, "
+          + "hd.preDeployDurationSeconds, hd.deployDurationSeconds, hd.deploymentId, "
+          + "hd.createdAt, workflow.id, config.deployJobName, wr.runStartedAt, wr.workflow.id) "
+          + "FROM HeliosDeployment hd "
+          + "JOIN hd.environment environment "
+          + "LEFT JOIN environment.deploymentWorkflow workflow "
+          + "LEFT JOIN DeploymentWorkflowConfig config ON config.workflow = workflow "
+          + "LEFT JOIN WorkflowRun wr ON wr.id = hd.workflowRunId "
+          + "WHERE hd.workflowRunId = :workflowRunId")
+  Optional<HeliosDeploymentWorkflowJobTimingMeta> findWorkflowJobTimingMetaByWorkflowRunId(
+      @Param("workflowRunId") Long workflowRunId);
+
+  @Query(
       value =
-          "SELECT PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY sub.build_duration_seconds)"
-              + " AS median_build, "
+          "SELECT PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY sub.pre_deploy_duration_seconds)"
+              + " AS median_pre_deploy, "
               + "PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY sub.deploy_duration_seconds)"
               + " AS median_deploy "
               + "FROM ("
-              + "  SELECT build_duration_seconds, deploy_duration_seconds "
+              + "  SELECT pre_deploy_duration_seconds, deploy_duration_seconds "
               + "  FROM helios_deployment "
               + "  WHERE environment_id = :environmentId "
               + "    AND status = 'DEPLOYMENT_SUCCESS' "
-              + "    AND build_duration_seconds IS NOT NULL "
+              + "    AND pre_deploy_duration_seconds IS NOT NULL "
               + "  ORDER BY created_at DESC "
-              + "  LIMIT 100"
+              + "  LIMIT 15"
               + ") sub",
       nativeQuery = true)
   List<Object[]> findMedianDurationsByEnvironmentId(@Param("environmentId") Long environmentId);
@@ -76,9 +102,20 @@ public interface HeliosDeploymentRepository extends JpaRepository<HeliosDeployme
    */
   @Query(
       "SELECT hd FROM HeliosDeployment hd "
+          + "JOIN FETCH hd.environment e "
+          + "JOIN FETCH e.repository r "
           + "WHERE hd.status IN ('IN_PROGRESS', 'WAITING', 'QUEUED') "
           + "AND hd.statusUpdatedAt < :threshold "
-          + "AND hd.deploymentId IS NULL")
-  List<HeliosDeployment> findStuckDeploymentsWithoutDeploymentId(
+          + "AND hd.workflowRunId IS NOT NULL")
+  List<HeliosDeployment> findStuckDeploymentsWithWorkflowRunId(
+      @Param("threshold") OffsetDateTime threshold);
+
+  @Query(
+      "SELECT hd FROM HeliosDeployment hd "
+          + "WHERE hd.status IN ('IN_PROGRESS', 'WAITING', 'QUEUED') "
+          + "AND hd.statusUpdatedAt < :threshold "
+          + "AND hd.deploymentId IS NULL "
+          + "AND hd.workflowRunId IS NULL")
+  List<HeliosDeployment> findStuckDeploymentsWithoutDeploymentIdAndWorkflowRunIdIsNull(
       @Param("threshold") OffsetDateTime threshold);
 }

@@ -14,7 +14,7 @@
     <p-buttongroup>
       <!-- Deploy/Cancel Button -->
       @if (deployable()) {
-        @if (isDeploymentInProgress()) {
+        @if (isDeploymentInProgress() && canUserDeploy()) {
           <p-button
             class="border-r-2"
             severity="danger"
@@ -28,7 +28,7 @@
               <span>Cancel</span>
             </div>
           </p-button>
-        } @else {
+        } @else if (!isDeploymentInProgress()) {
           <p-button class="border-r-2" (click)="onDeploy($event)" [disabled]="!canUserDeploy()" [pTooltip]="getDeployTooltip()" tooltipPosition="top">
             <div class="flex items-center">
               <i-tabler name="cloud-upload" class="w-4 h-4 mr-1.5 flex-shrink-0" />
@@ -54,7 +54,7 @@
               </div>
             </p-button>
             @if (isCurrentUserLocked()) {
-              <p-button severity="success" (click)="onExtend($event)" [disabled]="!canUnlock()" [pTooltip]="'Extend my lock expiration'" tooltipPosition="top">
+              <p-button severity="success" (click)="onExtend($event)" [disabled]="!canExtendLock()" [pTooltip]="'Extend my lock expiration'" tooltipPosition="top">
                 <i-tabler name="lock-plus" class="w-4 h-4 flex-shrink-0" />
               </p-button>
             }

@@ -1,5 +1,6 @@
 export const environment = {
   production: true,
+  aiAnalysisEnabled: false,
   sentry: {
     enabled: true,
     dsn: 'https://8f1ada8034a481454b663bb091cd0eb9@sentry.ase.in.tum.de/4',
@@ -12,5 +13,5 @@ export const environment = {
     skipLoginPage: true,
   },
   clientUrl: 'https://helios.aet.cit.tum.de',
-  heliosDevelopers: ['meryemefe', 'mertilginoglu', 'gbanu', 'thielpa', 'egekocabas', 'turkerkoc', 'stefannemeth', 'bensofficial'],
+  heliosDevelopers: ['meryemefe', 'mertilginoglu', 'bensofficial'],
 };

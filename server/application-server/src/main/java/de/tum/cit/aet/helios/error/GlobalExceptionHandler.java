@@ -1,5 +1,6 @@
 package de.tum.cit.aet.helios.error;
 
+import de.tum.cit.aet.helios.ai.testfailure.TestFailureAnalysisRateLimitExceededException;
 import de.tum.cit.aet.helios.deployment.DeploymentException;
 import de.tum.cit.aet.helios.environment.EnvironmentException;
 import de.tum.cit.aet.helios.releaseinfo.releasecandidate.ReleaseCandidateException;
@@ -11,6 +12,7 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.stream.Collectors;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -118,6 +120,22 @@ public class GlobalExceptionHandler {
     error.setTimestamp(Instant.now());
 
     return new ResponseEntity<>(error, HttpStatus.FORBIDDEN);
+  }
+
+  @ExceptionHandler(TestFailureAnalysisRateLimitExceededException.class)
+  public ResponseEntity<ApiError> handleTestFailureAnalysisRateLimitException(
+      TestFailureAnalysisRateLimitExceededException ex, HttpServletRequest request) {
+
+    ApiError error = new ApiError();
+    error.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
+    error.setError(HttpStatus.TOO_MANY_REQUESTS.getReasonPhrase());
+    error.setMessage(ex.getMessage());
+    error.setPath(request.getRequestURI());
+    error.setTimestamp(Instant.now());
+
+    return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+        .header(HttpHeaders.RETRY_AFTER, String.valueOf(ex.getRetryAfterSeconds()))
+        .body(error);
   }
 
   // -- 500 INTERNAL SERVER ERROR (FALLBACK) -------------

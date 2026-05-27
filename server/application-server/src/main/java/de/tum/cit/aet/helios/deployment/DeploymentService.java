@@ -27,6 +27,7 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -42,6 +43,9 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class DeploymentService {
 
+  private static final String COMPLETED_WORKFLOW_RUN_CANCELLATION_MESSAGE =
+      "cannot cancel a workflow run that is completed";
+
   private final DeploymentRepository deploymentRepository;
   private final GitHubService gitHubService;
   private final EnvironmentService environmentService;
@@ -51,6 +55,7 @@ public class DeploymentService {
   private final EnvironmentRepository environmentRepository;
   private final PullRequestRepository pullRequestRepository;
   private final GitRepoRepository gitRepoRepository;
+  private final HeliosDeploymentWorkflowRunSyncService heliosDeploymentWorkflowRunSyncService;
 
   public Optional<DeploymentDto> getDeploymentById(Long id) {
     return deploymentRepository.findById(id).map(DeploymentDto::fromDeployment);
@@ -148,6 +153,7 @@ public class DeploymentService {
     heliosDeployment.setUser(authService.getUserId());
     heliosDeployment.setStatus(HeliosDeployment.Status.WAITING);
     heliosDeployment.setBranchName(this.getDeploymentWorkflowBranch(environment, deployRequest));
+    heliosDeployment.setSourceBranchName(deployRequest.branchName());
     heliosDeployment.setSha(deployRequest.commitSha());
     heliosDeployment.setCreator(authService.getUserFromGithubId());
     heliosDeployment.setPullRequest(optionalPullRequest.orElse(null));
@@ -396,8 +402,7 @@ public class DeploymentService {
 
     List<ActivityHistoryDto> heliosDeploymentDtos =
         heliosDeploymentRepository
-            .findByRepositoryIdAndBranchNameAndDeploymentIdIsNullOrderByCreatedAtDesc(
-                repositoryId, branchName)
+            .findByRepositoryIdAndSourceBranchNameOrderByCreatedAtDesc(repositoryId, branchName)
             .stream()
             .map(ActivityHistoryDto::fromHeliosDeployment)
             .toList();
@@ -441,8 +446,43 @@ public class DeploymentService {
 
       return "Workflow cancellation request sent successfully";
     } catch (IOException e) {
-      throw new DeploymentException("Failed to cancel workflow run: " + e.getMessage(), e);
+      if (isCompletedWorkflowRunCancellationError(e)
+          && syncTerminalWorkflowRunStateAfterFailedCancellation(workflowRunId)) {
+        return "Workflow run already completed; deployment status synchronized from GitHub";
+      }
+      throw new DeploymentException(e.getMessage(), e);
     }
+  }
+
+  private boolean isCompletedWorkflowRunCancellationError(IOException exception) {
+    String message = exception.getMessage();
+    if (message == null) {
+      return false;
+    }
+
+    String normalizedMessage = message.toLowerCase(Locale.ROOT);
+    return normalizedMessage.contains(COMPLETED_WORKFLOW_RUN_CANCELLATION_MESSAGE);
+  }
+
+  private boolean syncTerminalWorkflowRunStateAfterFailedCancellation(Long workflowRunId) {
+    Long repositoryId = RepositoryContext.getRepositoryId();
+    return gitRepoRepository
+        .findById(repositoryId)
+        .map(GitRepository::getNameWithOwner)
+        .map(repositoryNameWithOwner -> {
+          try {
+            return heliosDeploymentWorkflowRunSyncService.synchronizeTerminalStateFromWorkflowRun(
+                repositoryNameWithOwner, workflowRunId);
+          } catch (IOException syncException) {
+            log.warn(
+                "Failed to synchronize deployment state for workflow run {} after cancellation"
+                    + " failed: {}",
+                workflowRunId,
+                syncException.getMessage());
+            return false;
+          }
+        })
+        .orElse(false);
   }
 
   /**

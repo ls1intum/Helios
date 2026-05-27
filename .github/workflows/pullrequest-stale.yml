@@ -3,13 +3,17 @@ on:
   schedule:
     - cron: "0 12 * * *"
 
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
   stale:
     if: github.repository_owner == 'ls1intum'
     runs-on: ubuntu-latest
     steps:
       - name: Check for stale PRs
-        uses: actions/stale@v9
+        uses: actions/stale@v10
         with:
           days-before-stale: 7
           days-before-close: 14

@@ -14,6 +14,8 @@ import {
 export type { WorkflowRunLogLineTone } from './workflow-run-logs.parser';
 export { getLineTone, getRenderedLineContent } from './workflow-run-logs.parser';
 
+export type LogLevelFilter = 'all' | 'warnings' | 'errors';
+
 export type WorkflowRunLogFileView = {
   groupView: WorkflowRunLogGroupView;
   file: WorkflowRunLogFileDto;
@@ -31,16 +33,27 @@ type SelectedWorkflowRunLogFileView = {
 const BADGE_BASE_CLASS = 'inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-semibold';
 
 export const ALL_LOG_LINE_TONES: WorkflowRunLogLineTone[] = ['default', 'command', 'group', 'warning', 'error'];
-export const LOG_LINE_FILTER_OPTIONS = [
-  { tone: 'default', label: 'Default' },
-  { tone: 'command', label: 'Commands' },
-  { tone: 'warning', label: 'Warnings' },
-  { tone: 'error', label: 'Errors' },
-] as const satisfies ReadonlyArray<{ tone: WorkflowRunLogLineTone; label: string }>;
+
+export const LOG_LEVEL_FILTER_OPTIONS: { label: string; value: LogLevelFilter }[] = [
+  { label: 'All Logs', value: 'all' },
+  { label: 'Warnings & Errors', value: 'warnings' },
+  { label: 'Errors Only', value: 'errors' },
+];
 
 const ALL_LOG_LINE_TONE_SET: ReadonlySet<WorkflowRunLogLineTone> = new Set(ALL_LOG_LINE_TONES);
-const DISABLED_LINE_TONE_FILTER_CLASS =
-  'border-surface-300 bg-surface-0 text-surface-500 hover:border-surface-400 hover:bg-surface-100 hover:text-surface-700 dark:border-surface-700 dark:bg-surface-900 dark:text-surface-400 dark:hover:border-surface-600 dark:hover:bg-surface-800 dark:hover:text-surface-200';
+const WARNINGS_AND_ERRORS_TONE_SET: ReadonlySet<WorkflowRunLogLineTone> = new Set<WorkflowRunLogLineTone>(['warning', 'error', 'group']);
+const ERRORS_ONLY_TONE_SET: ReadonlySet<WorkflowRunLogLineTone> = new Set<WorkflowRunLogLineTone>(['error', 'group']);
+
+export function getEnabledTonesForLevel(level: LogLevelFilter): ReadonlySet<WorkflowRunLogLineTone> {
+  switch (level) {
+    case 'warnings':
+      return WARNINGS_AND_ERRORS_TONE_SET;
+    case 'errors':
+      return ERRORS_ONLY_TONE_SET;
+    default:
+      return ALL_LOG_LINE_TONE_SET;
+  }
+}
 const LOG_LINE_TONE_STYLES: Record<
   WorkflowRunLogLineTone,
   {
@@ -200,7 +213,7 @@ export function buildGroupViews(groups: WorkflowRunLogGroupDto[]): WorkflowRunLo
 
 export function buildSelectedFileView(
   selectedFile: WorkflowRunLogFileView | null,
-  enabledLineTones: ReadonlySet<WorkflowRunLogLineTone>,
+  logLevelFilter: LogLevelFilter,
   expandedLogGroupIds: Readonly<Record<string, boolean>>
 ): SelectedWorkflowRunLogFileView | null {
   if (!selectedFile) {
@@ -210,11 +223,12 @@ export function buildSelectedFileView(
   const lines = buildLogLines(selectedFile.file.content);
   const entries = buildLogEntries(lines);
   const allRows = buildVisibleLogRows(entries, ALL_LOG_LINE_TONE_SET, expandedLogGroupIds, 0, true);
+  const enabledTones = getEnabledTonesForLevel(logLevelFilter);
 
   return {
     selectedFile,
     lineStats: getLineStats(lines),
-    rows: buildVisibleLogRows(entries, enabledLineTones, expandedLogGroupIds),
+    rows: buildVisibleLogRows(entries, enabledTones, expandedLogGroupIds),
     totalRowCount: allRows.length,
   };
 }
@@ -240,10 +254,6 @@ export function getAutoExpandedLogGroupIds(content: string, tone: Extract<Workfl
   collectGroupIdsContainingTone(entries, tone, expandedGroupIds);
 
   return Object.fromEntries(Array.from(expandedGroupIds, groupId => [groupId, true]));
-}
-
-export function getLineToneFilterClass(tone: WorkflowRunLogLineTone, isEnabled: boolean): string {
-  return isEnabled ? LOG_LINE_TONE_STYLES[tone].filterClass : DISABLED_LINE_TONE_FILTER_CLASS;
 }
 
 export function getLineToneRowClass(tone: WorkflowRunLogLineTone): string {

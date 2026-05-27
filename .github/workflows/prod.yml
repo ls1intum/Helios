@@ -8,6 +8,10 @@ concurrency:
   group: production
   cancel-in-progress: false
 
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   validate-flyway:
     uses: ./.github/workflows/flyway-validate.yml

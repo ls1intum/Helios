@@ -36,6 +36,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
@@ -56,6 +57,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.kohsuke.github.GHArtifact;
 import org.kohsuke.github.GHCommitPointer;
 import org.kohsuke.github.GHCommitState;
+import org.kohsuke.github.GHContent;
 import org.kohsuke.github.GHOrganization;
 import org.kohsuke.github.GHPullRequest;
 import org.kohsuke.github.GHRelease;
@@ -181,6 +183,38 @@ class GitHubServiceTest {
 
     assertEquals(mockRepository, repository);
     verify(githubFacade).getRepository(repoNameWithOwners);
+  }
+
+  @Test
+  void getFileContentReturnsTextWhenFileExists() throws IOException {
+    GHRepository mockRepository = mock(GHRepository.class);
+    GHContent mockContent = mock(GHContent.class);
+
+    when(githubFacade.getRepository("owner/repo")).thenReturn(mockRepository);
+    when(mockRepository.getFileContent("src/test/java/AppTest.java", "abc123"))
+        .thenReturn(mockContent);
+    when(mockContent.isFile()).thenReturn(true);
+    when(mockContent.read())
+        .thenReturn(new ByteArrayInputStream("class AppTest {}".getBytes(StandardCharsets.UTF_8)));
+
+    String content =
+        gitHubService.getFileContent("owner/repo", "src/test/java/AppTest.java", "abc123");
+
+    assertEquals("class AppTest {}", content);
+  }
+
+  @Test
+  void getFileContentReturnsNullWhenFileCannotBeRead() throws IOException {
+    GHRepository mockRepository = mock(GHRepository.class);
+
+    when(githubFacade.getRepository("owner/repo")).thenReturn(mockRepository);
+    when(mockRepository.getFileContent("src/test/java/AppTest.java", "abc123"))
+        .thenThrow(new IOException("not found"));
+
+    String content =
+        gitHubService.getFileContent("owner/repo", "src/test/java/AppTest.java", "abc123");
+
+    assertNull(content);
   }
 
   @Test
@@ -366,10 +400,7 @@ class GitHubServiceTest {
             () -> {
               gitHubService.dispatchWorkflow(repoNameWithOwners, workflowFileNameOrId, ref, inputs);
             });
-    assertTrue(
-        exception
-            .getMessage()
-            .contains("GitHub API workflow dispatch failed with response code: 500"));
+    assertEquals("Error", exception.getMessage());
   }
 
   @Test
@@ -1205,10 +1236,7 @@ class GitHubServiceTest {
                   repoNameWithOwner, "v1", "main", "name", "body", false, githubUserLogin);
             });
 
-    assertTrue(
-        exception
-            .getMessage()
-            .contains("GitHub API create release failed with response code: 500"));
+    assertEquals("Error", exception.getMessage());
   }
 
   @Test
@@ -1385,8 +1413,41 @@ class GitHubServiceTest {
             () -> {
               gitHubService.cancelWorkflowRun(repoNameWithOwner, runId);
             });
-    assertTrue(exception.getMessage()
-        .contains("GitHub API cancel for run " + runId + " failed with response code: 500"));
+    assertEquals("Error details", exception.getMessage());
+  }
+
+  @Test
+  void cancelWorkflowRunApiFailureUsesGithubMessage() throws IOException {
+    String repoNameWithOwner = "owner/repo";
+    long runId = 123L;
+    when(clientManager.getCurrentToken()).thenReturn("test-token");
+    when(objectMapper.readValue(
+            "{\"message\":\"Cannot cancel a workflow run that is completed.\"}", Map.class))
+        .thenReturn(Map.of("message", "Cannot cancel a workflow run that is completed."));
+
+    ResponseBody responseBody =
+        ResponseBody.create(
+            "{\"message\":\"Cannot cancel a workflow run that is completed.\"}",
+            MediaType.parse("application/json"));
+    Response mockResponse =
+        new Response.Builder()
+            .request(new Request.Builder().url("http://dummyurl").build())
+            .protocol(Protocol.HTTP_1_1)
+            .code(409)
+            .message("Conflict")
+            .body(responseBody)
+            .build();
+    Call mockCall = mock(Call.class);
+    when(okHttpClient.newCall(any(Request.class))).thenReturn(mockCall);
+    when(mockCall.execute()).thenReturn(mockResponse);
+
+    IOException exception =
+        assertThrows(
+            IOException.class,
+            () -> {
+              gitHubService.cancelWorkflowRun(repoNameWithOwner, runId);
+            });
+    assertEquals("Cannot cancel a workflow run that is completed.", exception.getMessage());
   }
 
   private Response buildJsonResponse(String json) {

@@ -4,6 +4,7 @@ import { type InfiniteData, infiniteQueryOptions, type MutationOptions, queryOpt
 
 import { client } from '../client.gen';
 import {
+  analyzeFailedTest,
   cancelDeployment,
   cancelWorkflowRun,
   createReleaseCandidate,
@@ -39,10 +40,12 @@ import {
   getEnvironmentReviewers,
   getEnvironmentsByRepositoryId,
   getEnvironmentsByUserLocking,
+  getFailureAnalysisUsage,
   getFlakinessScores,
   getFlakyTestsOverview,
   getGitRepoSettings,
   getGroupsWithWorkflows,
+  getLatestCachedFailureAnalysis,
   getLatestDeploymentByEnvironmentId,
   getLatestTestResultsByBranch,
   getLatestTestResultsByPullRequestId,
@@ -53,6 +56,7 @@ import {
   getPullRequestById,
   getPullRequestByRepositoryId,
   getPullRequestByRepositoryIdAndNumber,
+  getPullRequestFilterOptionsByRepositoryId,
   getPullRequests,
   getReleaseInfoByName,
   getRepositoryById,
@@ -92,6 +96,9 @@ import {
   upsertDeploymentWorkflowConfig,
 } from '../sdk.gen';
 import type {
+  AnalyzeFailedTestData,
+  AnalyzeFailedTestError,
+  AnalyzeFailedTestResponse,
   CancelDeploymentData,
   CancelDeploymentError,
   CancelDeploymentResponse,
@@ -129,27 +136,74 @@ import type {
   GenerateReleaseNotesError,
   GenerateReleaseNotesResponse,
   GetActivityHistoryByEnvironmentIdData,
+  GetActivityHistoryByEnvironmentIdError,
+  GetActivityHistoryByEnvironmentIdResponse,
   GetActivityHistoryByPullRequestIdData,
+  GetActivityHistoryByPullRequestIdError,
+  GetActivityHistoryByPullRequestIdResponse,
   GetActivityHistoryByRepositoryIdAndBranchNameData,
+  GetActivityHistoryByRepositoryIdAndBranchNameError,
+  GetActivityHistoryByRepositoryIdAndBranchNameResponse,
   GetAllBranchesData,
+  GetAllBranchesError,
+  GetAllBranchesResponse,
   GetAllDeploymentsData,
+  GetAllDeploymentsError,
+  GetAllDeploymentsResponse,
   GetAllEnabledEnvironmentsData,
+  GetAllEnabledEnvironmentsError,
+  GetAllEnabledEnvironmentsResponse,
   GetAllEnvironmentsData,
+  GetAllEnvironmentsError,
+  GetAllEnvironmentsResponse,
   GetAllReleaseInfosData,
+  GetAllReleaseInfosError,
+  GetAllReleaseInfosResponse,
   GetAllRepositoriesData,
+  GetAllRepositoriesError,
+  GetAllRepositoriesResponse,
   GetAllTestTypesData,
+  GetAllTestTypesError,
+  GetAllTestTypesResponse,
   GetAllWorkflowsData,
+  GetAllWorkflowsError,
+  GetAllWorkflowsResponse,
   GetBranchByRepositoryIdAndNameData,
+  GetBranchByRepositoryIdAndNameError,
+  GetBranchByRepositoryIdAndNameResponse,
   GetCommitByRepositoryIdAndNameData,
+  GetCommitByRepositoryIdAndNameError,
+  GetCommitByRepositoryIdAndNameResponse,
   GetCommitsSinceLastReleaseCandidateData,
+  GetCommitsSinceLastReleaseCandidateError,
+  GetCommitsSinceLastReleaseCandidateResponse,
   GetDeploymentByIdData,
+  GetDeploymentByIdError,
+  GetDeploymentByIdResponse,
   GetDeploymentReadinessData,
+  GetDeploymentReadinessError,
+  GetDeploymentReadinessResponse,
   GetDeploymentsByEnvironmentIdData,
+  GetDeploymentsByEnvironmentIdError,
+  GetDeploymentsByEnvironmentIdResponse,
   GetDeploymentWorkflowConfigData,
+  GetDeploymentWorkflowConfigError,
+  GetDeploymentWorkflowConfigResponse,
   GetEnvironmentByIdData,
+  GetEnvironmentByIdError,
+  GetEnvironmentByIdResponse,
   GetEnvironmentReviewersData,
+  GetEnvironmentReviewersError,
+  GetEnvironmentReviewersResponse,
   GetEnvironmentsByRepositoryIdData,
+  GetEnvironmentsByRepositoryIdError,
+  GetEnvironmentsByRepositoryIdResponse,
   GetEnvironmentsByUserLockingData,
+  GetEnvironmentsByUserLockingError,
+  GetEnvironmentsByUserLockingResponse,
+  GetFailureAnalysisUsageData,
+  GetFailureAnalysisUsageError,
+  GetFailureAnalysisUsageResponse,
   GetFlakinessScoresData,
   GetFlakinessScoresError,
   GetFlakinessScoresResponse,
@@ -157,8 +211,17 @@ import type {
   GetFlakyTestsOverviewError,
   GetFlakyTestsOverviewResponse,
   GetGitRepoSettingsData,
+  GetGitRepoSettingsError,
+  GetGitRepoSettingsResponse,
   GetGroupsWithWorkflowsData,
+  GetGroupsWithWorkflowsError,
+  GetGroupsWithWorkflowsResponse,
+  GetLatestCachedFailureAnalysisData,
+  GetLatestCachedFailureAnalysisError,
+  GetLatestCachedFailureAnalysisResponse,
   GetLatestDeploymentByEnvironmentIdData,
+  GetLatestDeploymentByEnvironmentIdError,
+  GetLatestDeploymentByEnvironmentIdResponse,
   GetLatestTestResultsByBranchData,
   GetLatestTestResultsByBranchError,
   GetLatestTestResultsByBranchResponse,
@@ -166,12 +229,29 @@ import type {
   GetLatestTestResultsByPullRequestIdError,
   GetLatestTestResultsByPullRequestIdResponse,
   GetLatestWorkflowRunsByBranchAndHeadCommitData,
+  GetLatestWorkflowRunsByBranchAndHeadCommitError,
+  GetLatestWorkflowRunsByBranchAndHeadCommitResponse,
   GetLatestWorkflowRunsByPullRequestIdAndHeadCommitData,
+  GetLatestWorkflowRunsByPullRequestIdAndHeadCommitError,
+  GetLatestWorkflowRunsByPullRequestIdAndHeadCommitResponse,
   GetLockHistoryByEnvironmentIdData,
+  GetLockHistoryByEnvironmentIdError,
+  GetLockHistoryByEnvironmentIdResponse,
   GetNotificationPreferencesData,
+  GetNotificationPreferencesError,
+  GetNotificationPreferencesResponse,
   GetPullRequestByIdData,
+  GetPullRequestByIdError,
+  GetPullRequestByIdResponse,
   GetPullRequestByRepositoryIdAndNumberData,
+  GetPullRequestByRepositoryIdAndNumberError,
+  GetPullRequestByRepositoryIdAndNumberResponse,
   GetPullRequestByRepositoryIdData,
+  GetPullRequestByRepositoryIdError,
+  GetPullRequestByRepositoryIdResponse,
+  GetPullRequestFilterOptionsByRepositoryIdData,
+  GetPullRequestFilterOptionsByRepositoryIdError,
+  GetPullRequestFilterOptionsByRepositoryIdResponse,
   GetPullRequestsData,
   GetPullRequestsError,
   GetPullRequestsResponse,
@@ -179,21 +259,41 @@ import type {
   GetReleaseInfoByNameError,
   GetReleaseInfoByNameResponse,
   GetRepositoryByIdData,
+  GetRepositoryByIdError,
+  GetRepositoryByIdResponse,
   GetTestResultsByWorkflowRunIdData,
   GetTestResultsByWorkflowRunIdError,
   GetTestResultsByWorkflowRunIdResponse,
   GetUserPermissionsData,
+  GetUserPermissionsError,
+  GetUserPermissionsResponse,
   GetUserSettingsData,
+  GetUserSettingsError,
+  GetUserSettingsResponse,
   GetWorkflowByIdData,
+  GetWorkflowByIdError,
+  GetWorkflowByIdResponse,
   GetWorkflowJobStatusData,
+  GetWorkflowJobStatusError,
+  GetWorkflowJobStatusResponse,
   GetWorkflowRunByIdData,
+  GetWorkflowRunByIdError,
+  GetWorkflowRunByIdResponse,
   GetWorkflowRunLogsData,
+  GetWorkflowRunLogsError,
+  GetWorkflowRunLogsResponse,
   GetWorkflowRunsData,
   GetWorkflowRunsError,
   GetWorkflowRunsResponse,
   GetWorkflowsByRepositoryIdData,
+  GetWorkflowsByRepositoryIdError,
+  GetWorkflowsByRepositoryIdResponse,
   GetWorkflowsByStateData,
+  GetWorkflowsByStateError,
+  GetWorkflowsByStateResponse,
   HealthCheckData,
+  HealthCheckError,
+  HealthCheckResponse,
   LockEnvironmentData,
   LockEnvironmentError,
   LockEnvironmentResponse,
@@ -330,8 +430,8 @@ const createQueryKey = <TOptions extends Options>(id: string, options?: TOptions
 
 export const getDeploymentWorkflowConfigQueryKey = (options: Options<GetDeploymentWorkflowConfigData>) => createQueryKey('getDeploymentWorkflowConfig', options);
 
-export const getDeploymentWorkflowConfigOptions = (options: Options<GetDeploymentWorkflowConfigData>) => {
-  return queryOptions({
+export const getDeploymentWorkflowConfigOptions = (options: Options<GetDeploymentWorkflowConfigData>) =>
+  queryOptions<GetDeploymentWorkflowConfigResponse, GetDeploymentWorkflowConfigError, GetDeploymentWorkflowConfigResponse, ReturnType<typeof getDeploymentWorkflowConfigQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
       const { data } = await getDeploymentWorkflowConfig({
         ...options,
@@ -343,7 +443,6 @@ export const getDeploymentWorkflowConfigOptions = (options: Options<GetDeploymen
     },
     queryKey: getDeploymentWorkflowConfigQueryKey(options),
   });
-};
 
 export const upsertDeploymentWorkflowConfigMutation = (
   options?: Partial<Options<UpsertDeploymentWorkflowConfigData>>
@@ -363,8 +462,8 @@ export const upsertDeploymentWorkflowConfigMutation = (
 
 export const getGitRepoSettingsQueryKey = (options: Options<GetGitRepoSettingsData>) => createQueryKey('getGitRepoSettings', options);
 
-export const getGitRepoSettingsOptions = (options: Options<GetGitRepoSettingsData>) => {
-  return queryOptions({
+export const getGitRepoSettingsOptions = (options: Options<GetGitRepoSettingsData>) =>
+  queryOptions<GetGitRepoSettingsResponse, GetGitRepoSettingsError, GetGitRepoSettingsResponse, ReturnType<typeof getGitRepoSettingsQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
       const { data } = await getGitRepoSettings({
         ...options,
@@ -376,7 +475,6 @@ export const getGitRepoSettingsOptions = (options: Options<GetGitRepoSettingsDat
     },
     queryKey: getGitRepoSettingsQueryKey(options),
   });
-};
 
 export const updateGitRepoSettingsMutation = (
   options?: Partial<Options<UpdateGitRepoSettingsData>>
@@ -442,8 +540,8 @@ export const updateReleaseNotesMutation = (
 
 export const getEnvironmentByIdQueryKey = (options: Options<GetEnvironmentByIdData>) => createQueryKey('getEnvironmentById', options);
 
-export const getEnvironmentByIdOptions = (options: Options<GetEnvironmentByIdData>) => {
-  return queryOptions({
+export const getEnvironmentByIdOptions = (options: Options<GetEnvironmentByIdData>) =>
+  queryOptions<GetEnvironmentByIdResponse, GetEnvironmentByIdError, GetEnvironmentByIdResponse, ReturnType<typeof getEnvironmentByIdQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
       const { data } = await getEnvironmentById({
         ...options,
@@ -455,7 +553,6 @@ export const getEnvironmentByIdOptions = (options: Options<GetEnvironmentByIdDat
     },
     queryKey: getEnvironmentByIdQueryKey(options),
   });
-};
 
 export const updateEnvironmentMutation = (
   options?: Partial<Options<UpdateEnvironmentData>>
@@ -581,8 +678,8 @@ export const syncWorkflowsByRepositoryIdMutation = (
 
 export const getUserSettingsQueryKey = (options?: Options<GetUserSettingsData>) => createQueryKey('getUserSettings', options);
 
-export const getUserSettingsOptions = (options?: Options<GetUserSettingsData>) => {
-  return queryOptions({
+export const getUserSettingsOptions = (options?: Options<GetUserSettingsData>) =>
+  queryOptions<GetUserSettingsResponse, GetUserSettingsError, GetUserSettingsResponse, ReturnType<typeof getUserSettingsQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
       const { data } = await getUserSettings({
         ...options,
@@ -594,7 +691,6 @@ export const getUserSettingsOptions = (options?: Options<GetUserSettingsData>) =
     },
     queryKey: getUserSettingsQueryKey(options),
   });
-};
 
 export const updateUserSettingsMutation = (
   options?: Partial<Options<UpdateUserSettingsData>>
@@ -614,8 +710,8 @@ export const updateUserSettingsMutation = (
 
 export const getNotificationPreferencesQueryKey = (options?: Options<GetNotificationPreferencesData>) => createQueryKey('getNotificationPreferences', options);
 
-export const getNotificationPreferencesOptions = (options?: Options<GetNotificationPreferencesData>) => {
-  return queryOptions({
+export const getNotificationPreferencesOptions = (options?: Options<GetNotificationPreferencesData>) =>
+  queryOptions<GetNotificationPreferencesResponse, GetNotificationPreferencesError, GetNotificationPreferencesResponse, ReturnType<typeof getNotificationPreferencesQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
       const { data } = await getNotificationPreferences({
         ...options,
@@ -627,7 +723,6 @@ export const getNotificationPreferencesOptions = (options?: Options<GetNotificat
     },
     queryKey: getNotificationPreferencesQueryKey(options),
   });
-};
 
 export const updateNotificationPreferencesMutation = (
   options?: Partial<Options<UpdateNotificationPreferencesData>>
@@ -663,8 +758,8 @@ export const getFlakinessScoresMutation = (
 
 export const getAllTestTypesQueryKey = (options?: Options<GetAllTestTypesData>) => createQueryKey('getAllTestTypes', options);
 
-export const getAllTestTypesOptions = (options?: Options<GetAllTestTypesData>) => {
-  return queryOptions({
+export const getAllTestTypesOptions = (options?: Options<GetAllTestTypesData>) =>
+  queryOptions<GetAllTestTypesResponse, GetAllTestTypesError, GetAllTestTypesResponse, ReturnType<typeof getAllTestTypesQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
       const { data } = await getAllTestTypes({
         ...options,
@@ -676,7 +771,6 @@ export const getAllTestTypesOptions = (options?: Options<GetAllTestTypesData>) =
     },
     queryKey: getAllTestTypesQueryKey(options),
   });
-};
 
 export const createTestTypeMutation = (
   options?: Partial<Options<CreateTestTypeData>>
@@ -740,6 +834,22 @@ export const createWorkflowGroupMutation = (
   return mutationOptions;
 };
 
+export const analyzeFailedTestMutation = (
+  options?: Partial<Options<AnalyzeFailedTestData>>
+): MutationOptions<AnalyzeFailedTestResponse, AnalyzeFailedTestError, Options<AnalyzeFailedTestData>> => {
+  const mutationOptions: MutationOptions<AnalyzeFailedTestResponse, AnalyzeFailedTestError, Options<AnalyzeFailedTestData>> = {
+    mutationFn: async fnOptions => {
+      const { data } = await analyzeFailedTest({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
 export const deleteReleaseCandidateByNameMutation = (
   options?: Partial<Options<DeleteReleaseCandidateByNameData>>
 ): MutationOptions<DeleteReleaseCandidateByNameResponse, DeleteReleaseCandidateByNameError, Options<DeleteReleaseCandidateByNameData>> => {
@@ -758,8 +868,8 @@ export const deleteReleaseCandidateByNameMutation = (
 
 export const getAllReleaseInfosQueryKey = (options?: Options<GetAllReleaseInfosData>) => createQueryKey('getAllReleaseInfos', options);
 
-export const getAllReleaseInfosOptions = (options?: Options<GetAllReleaseInfosData>) => {
-  return queryOptions({
+export const getAllReleaseInfosOptions = (options?: Options<GetAllReleaseInfosData>) =>
+  queryOptions<GetAllReleaseInfosResponse, GetAllReleaseInfosError, GetAllReleaseInfosResponse, ReturnType<typeof getAllReleaseInfosQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
       const { data } = await getAllReleaseInfos({
         ...options,
@@ -771,7 +881,6 @@ export const getAllReleaseInfosOptions = (options?: Options<GetAllReleaseInfosDa
     },
     queryKey: getAllReleaseInfosQueryKey(options),
   });
-};
 
 export const createReleaseCandidateMutation = (
   options?: Partial<Options<CreateReleaseCandidateData>>
@@ -963,8 +1072,8 @@ export const setBranchPinnedByRepositoryIdAndNameAndUserIdMutation = (
 
 export const healthCheckQueryKey = (options?: Options<HealthCheckData>) => createQueryKey('healthCheck', options);
 
-export const healthCheckOptions = (options?: Options<HealthCheckData>) => {
-  return queryOptions({
+export const healthCheckOptions = (options?: Options<HealthCheckData>) =>
+  queryOptions<HealthCheckResponse, HealthCheckError, HealthCheckResponse, ReturnType<typeof healthCheckQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
       const { data } = await healthCheck({
         ...options,
@@ -976,12 +1085,11 @@ export const healthCheckOptions = (options?: Options<HealthCheckData>) => {
     },
     queryKey: healthCheckQueryKey(options),
   });
-};
 
 export const getAllWorkflowsQueryKey = (options?: Options<GetAllWorkflowsData>) => createQueryKey('getAllWorkflows', options);
 
-export const getAllWorkflowsOptions = (options?: Options<GetAllWorkflowsData>) => {
-  return queryOptions({
+export const getAllWorkflowsOptions = (options?: Options<GetAllWorkflowsData>) =>
+  queryOptions<GetAllWorkflowsResponse, GetAllWorkflowsError, GetAllWorkflowsResponse, ReturnType<typeof getAllWorkflowsQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
       const { data } = await getAllWorkflows({
         ...options,
@@ -993,12 +1101,11 @@ export const getAllWorkflowsOptions = (options?: Options<GetAllWorkflowsData>) =
     },
     queryKey: getAllWorkflowsQueryKey(options),
   });
-};
 
 export const getWorkflowByIdQueryKey = (options: Options<GetWorkflowByIdData>) => createQueryKey('getWorkflowById', options);
 
-export const getWorkflowByIdOptions = (options: Options<GetWorkflowByIdData>) => {
-  return queryOptions({
+export const getWorkflowByIdOptions = (options: Options<GetWorkflowByIdData>) =>
+  queryOptions<GetWorkflowByIdResponse, GetWorkflowByIdError, GetWorkflowByIdResponse, ReturnType<typeof getWorkflowByIdQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
       const { data } = await getWorkflowById({
         ...options,
@@ -1010,12 +1117,11 @@ export const getWorkflowByIdOptions = (options: Options<GetWorkflowByIdData>) =>
     },
     queryKey: getWorkflowByIdQueryKey(options),
   });
-};
 
 export const getWorkflowsByStateQueryKey = (options: Options<GetWorkflowsByStateData>) => createQueryKey('getWorkflowsByState', options);
 
-export const getWorkflowsByStateOptions = (options: Options<GetWorkflowsByStateData>) => {
-  return queryOptions({
+export const getWorkflowsByStateOptions = (options: Options<GetWorkflowsByStateData>) =>
+  queryOptions<GetWorkflowsByStateResponse, GetWorkflowsByStateError, GetWorkflowsByStateResponse, ReturnType<typeof getWorkflowsByStateQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
       const { data } = await getWorkflowsByState({
         ...options,
@@ -1027,12 +1133,11 @@ export const getWorkflowsByStateOptions = (options: Options<GetWorkflowsByStateD
     },
     queryKey: getWorkflowsByStateQueryKey(options),
   });
-};
 
 export const getWorkflowRunsQueryKey = (options?: Options<GetWorkflowRunsData>) => createQueryKey('getWorkflowRuns', options);
 
-export const getWorkflowRunsOptions = (options?: Options<GetWorkflowRunsData>) => {
-  return queryOptions({
+export const getWorkflowRunsOptions = (options?: Options<GetWorkflowRunsData>) =>
+  queryOptions<GetWorkflowRunsResponse, GetWorkflowRunsError, GetWorkflowRunsResponse, ReturnType<typeof getWorkflowRunsQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
       const { data } = await getWorkflowRuns({
         ...options,
@@ -1044,12 +1149,9 @@ export const getWorkflowRunsOptions = (options?: Options<GetWorkflowRunsData>) =
     },
     queryKey: getWorkflowRunsQueryKey(options),
   });
-};
 
 const createInfiniteParams = <K extends Pick<QueryKey<Options>[0], 'body' | 'headers' | 'path' | 'query'>>(queryKey: QueryKey<Options>, page: K) => {
-  const params = {
-    ...queryKey[0],
-  };
+  const params = { ...queryKey[0] };
   if (page.body) {
     params.body = {
       ...(queryKey[0].body as any),
@@ -1079,8 +1181,8 @@ const createInfiniteParams = <K extends Pick<QueryKey<Options>[0], 'body' | 'hea
 
 export const getWorkflowRunsInfiniteQueryKey = (options?: Options<GetWorkflowRunsData>): QueryKey<Options<GetWorkflowRunsData>> => createQueryKey('getWorkflowRuns', options, true);
 
-export const getWorkflowRunsInfiniteOptions = (options?: Options<GetWorkflowRunsData>) => {
-  return infiniteQueryOptions<
+export const getWorkflowRunsInfiniteOptions = (options?: Options<GetWorkflowRunsData>) =>
+  infiniteQueryOptions<
     GetWorkflowRunsResponse,
     GetWorkflowRunsError,
     InfiniteData<GetWorkflowRunsResponse>,
@@ -1111,12 +1213,11 @@ export const getWorkflowRunsInfiniteOptions = (options?: Options<GetWorkflowRuns
       queryKey: getWorkflowRunsInfiniteQueryKey(options),
     }
   );
-};
 
 export const getWorkflowRunLogsQueryKey = (options: Options<GetWorkflowRunLogsData>) => createQueryKey('getWorkflowRunLogs', options);
 
-export const getWorkflowRunLogsOptions = (options: Options<GetWorkflowRunLogsData>) => {
-  return queryOptions({
+export const getWorkflowRunLogsOptions = (options: Options<GetWorkflowRunLogsData>) =>
+  queryOptions<GetWorkflowRunLogsResponse, GetWorkflowRunLogsError, GetWorkflowRunLogsResponse, ReturnType<typeof getWorkflowRunLogsQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
       const { data } = await getWorkflowRunLogs({
         ...options,
@@ -1128,12 +1229,11 @@ export const getWorkflowRunLogsOptions = (options: Options<GetWorkflowRunLogsDat
     },
     queryKey: getWorkflowRunLogsQueryKey(options),
   });
-};
 
 export const getWorkflowRunByIdQueryKey = (options: Options<GetWorkflowRunByIdData>) => createQueryKey('getWorkflowRunById', options);
 
-export const getWorkflowRunByIdOptions = (options: Options<GetWorkflowRunByIdData>) => {
-  return queryOptions({
+export const getWorkflowRunByIdOptions = (options: Options<GetWorkflowRunByIdData>) =>
+  queryOptions<GetWorkflowRunByIdResponse, GetWorkflowRunByIdError, GetWorkflowRunByIdResponse, ReturnType<typeof getWorkflowRunByIdQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
       const { data } = await getWorkflowRunById({
         ...options,
@@ -1145,12 +1245,11 @@ export const getWorkflowRunByIdOptions = (options: Options<GetWorkflowRunByIdDat
     },
     queryKey: getWorkflowRunByIdQueryKey(options),
   });
-};
 
 export const getWorkflowsByRepositoryIdQueryKey = (options: Options<GetWorkflowsByRepositoryIdData>) => createQueryKey('getWorkflowsByRepositoryId', options);
 
-export const getWorkflowsByRepositoryIdOptions = (options: Options<GetWorkflowsByRepositoryIdData>) => {
-  return queryOptions({
+export const getWorkflowsByRepositoryIdOptions = (options: Options<GetWorkflowsByRepositoryIdData>) =>
+  queryOptions<GetWorkflowsByRepositoryIdResponse, GetWorkflowsByRepositoryIdError, GetWorkflowsByRepositoryIdResponse, ReturnType<typeof getWorkflowsByRepositoryIdQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
       const { data } = await getWorkflowsByRepositoryId({
         ...options,
@@ -1162,13 +1261,17 @@ export const getWorkflowsByRepositoryIdOptions = (options: Options<GetWorkflowsB
     },
     queryKey: getWorkflowsByRepositoryIdQueryKey(options),
   });
-};
 
 export const getLatestWorkflowRunsByPullRequestIdAndHeadCommitQueryKey = (options: Options<GetLatestWorkflowRunsByPullRequestIdAndHeadCommitData>) =>
   createQueryKey('getLatestWorkflowRunsByPullRequestIdAndHeadCommit', options);
 
-export const getLatestWorkflowRunsByPullRequestIdAndHeadCommitOptions = (options: Options<GetLatestWorkflowRunsByPullRequestIdAndHeadCommitData>) => {
-  return queryOptions({
+export const getLatestWorkflowRunsByPullRequestIdAndHeadCommitOptions = (options: Options<GetLatestWorkflowRunsByPullRequestIdAndHeadCommitData>) =>
+  queryOptions<
+    GetLatestWorkflowRunsByPullRequestIdAndHeadCommitResponse,
+    GetLatestWorkflowRunsByPullRequestIdAndHeadCommitError,
+    GetLatestWorkflowRunsByPullRequestIdAndHeadCommitResponse,
+    ReturnType<typeof getLatestWorkflowRunsByPullRequestIdAndHeadCommitQueryKey>
+  >({
     queryFn: async ({ queryKey, signal }) => {
       const { data } = await getLatestWorkflowRunsByPullRequestIdAndHeadCommit({
         ...options,
@@ -1180,13 +1283,17 @@ export const getLatestWorkflowRunsByPullRequestIdAndHeadCommitOptions = (options
     },
     queryKey: getLatestWorkflowRunsByPullRequestIdAndHeadCommitQueryKey(options),
   });
-};
 
 export const getLatestWorkflowRunsByBranchAndHeadCommitQueryKey = (options: Options<GetLatestWorkflowRunsByBranchAndHeadCommitData>) =>
   createQueryKey('getLatestWorkflowRunsByBranchAndHeadCommit', options);
 
-export const getLatestWorkflowRunsByBranchAndHeadCommitOptions = (options: Options<GetLatestWorkflowRunsByBranchAndHeadCommitData>) => {
-  return queryOptions({
+export const getLatestWorkflowRunsByBranchAndHeadCommitOptions = (options: Options<GetLatestWorkflowRunsByBranchAndHeadCommitData>) =>
+  queryOptions<
+    GetLatestWorkflowRunsByBranchAndHeadCommitResponse,
+    GetLatestWorkflowRunsByBranchAndHeadCommitError,
+    GetLatestWorkflowRunsByBranchAndHeadCommitResponse,
+    ReturnType<typeof getLatestWorkflowRunsByBranchAndHeadCommitQueryKey>
+  >({
     queryFn: async ({ queryKey, signal }) => {
       const { data } = await getLatestWorkflowRunsByBranchAndHeadCommit({
         ...options,
@@ -1198,12 +1305,11 @@ export const getLatestWorkflowRunsByBranchAndHeadCommitOptions = (options: Optio
     },
     queryKey: getLatestWorkflowRunsByBranchAndHeadCommitQueryKey(options),
   });
-};
 
 export const getUserPermissionsQueryKey = (options?: Options<GetUserPermissionsData>) => createQueryKey('getUserPermissions', options);
 
-export const getUserPermissionsOptions = (options?: Options<GetUserPermissionsData>) => {
-  return queryOptions({
+export const getUserPermissionsOptions = (options?: Options<GetUserPermissionsData>) =>
+  queryOptions<GetUserPermissionsResponse, GetUserPermissionsError, GetUserPermissionsResponse, ReturnType<typeof getUserPermissionsQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
       const { data } = await getUserPermissions({
         ...options,
@@ -1215,12 +1321,16 @@ export const getUserPermissionsOptions = (options?: Options<GetUserPermissionsDa
     },
     queryKey: getUserPermissionsQueryKey(options),
   });
-};
 
 export const getTestResultsByWorkflowRunIdQueryKey = (options: Options<GetTestResultsByWorkflowRunIdData>) => createQueryKey('getTestResultsByWorkflowRunId', options);
 
-export const getTestResultsByWorkflowRunIdOptions = (options: Options<GetTestResultsByWorkflowRunIdData>) => {
-  return queryOptions({
+export const getTestResultsByWorkflowRunIdOptions = (options: Options<GetTestResultsByWorkflowRunIdData>) =>
+  queryOptions<
+    GetTestResultsByWorkflowRunIdResponse,
+    GetTestResultsByWorkflowRunIdError,
+    GetTestResultsByWorkflowRunIdResponse,
+    ReturnType<typeof getTestResultsByWorkflowRunIdQueryKey>
+  >({
     queryFn: async ({ queryKey, signal }) => {
       const { data } = await getTestResultsByWorkflowRunId({
         ...options,
@@ -1232,13 +1342,12 @@ export const getTestResultsByWorkflowRunIdOptions = (options: Options<GetTestRes
     },
     queryKey: getTestResultsByWorkflowRunIdQueryKey(options),
   });
-};
 
 export const getTestResultsByWorkflowRunIdInfiniteQueryKey = (options: Options<GetTestResultsByWorkflowRunIdData>): QueryKey<Options<GetTestResultsByWorkflowRunIdData>> =>
   createQueryKey('getTestResultsByWorkflowRunId', options, true);
 
-export const getTestResultsByWorkflowRunIdInfiniteOptions = (options: Options<GetTestResultsByWorkflowRunIdData>) => {
-  return infiniteQueryOptions<
+export const getTestResultsByWorkflowRunIdInfiniteOptions = (options: Options<GetTestResultsByWorkflowRunIdData>) =>
+  infiniteQueryOptions<
     GetTestResultsByWorkflowRunIdResponse,
     GetTestResultsByWorkflowRunIdError,
     InfiniteData<GetTestResultsByWorkflowRunIdResponse>,
@@ -1269,13 +1378,17 @@ export const getTestResultsByWorkflowRunIdInfiniteOptions = (options: Options<Ge
       queryKey: getTestResultsByWorkflowRunIdInfiniteQueryKey(options),
     }
   );
-};
 
 export const getLatestTestResultsByPullRequestIdQueryKey = (options: Options<GetLatestTestResultsByPullRequestIdData>) =>
   createQueryKey('getLatestTestResultsByPullRequestId', options);
 
-export const getLatestTestResultsByPullRequestIdOptions = (options: Options<GetLatestTestResultsByPullRequestIdData>) => {
-  return queryOptions({
+export const getLatestTestResultsByPullRequestIdOptions = (options: Options<GetLatestTestResultsByPullRequestIdData>) =>
+  queryOptions<
+    GetLatestTestResultsByPullRequestIdResponse,
+    GetLatestTestResultsByPullRequestIdError,
+    GetLatestTestResultsByPullRequestIdResponse,
+    ReturnType<typeof getLatestTestResultsByPullRequestIdQueryKey>
+  >({
     queryFn: async ({ queryKey, signal }) => {
       const { data } = await getLatestTestResultsByPullRequestId({
         ...options,
@@ -1287,14 +1400,13 @@ export const getLatestTestResultsByPullRequestIdOptions = (options: Options<GetL
     },
     queryKey: getLatestTestResultsByPullRequestIdQueryKey(options),
   });
-};
 
 export const getLatestTestResultsByPullRequestIdInfiniteQueryKey = (
   options: Options<GetLatestTestResultsByPullRequestIdData>
 ): QueryKey<Options<GetLatestTestResultsByPullRequestIdData>> => createQueryKey('getLatestTestResultsByPullRequestId', options, true);
 
-export const getLatestTestResultsByPullRequestIdInfiniteOptions = (options: Options<GetLatestTestResultsByPullRequestIdData>) => {
-  return infiniteQueryOptions<
+export const getLatestTestResultsByPullRequestIdInfiniteOptions = (options: Options<GetLatestTestResultsByPullRequestIdData>) =>
+  infiniteQueryOptions<
     GetLatestTestResultsByPullRequestIdResponse,
     GetLatestTestResultsByPullRequestIdError,
     InfiniteData<GetLatestTestResultsByPullRequestIdResponse>,
@@ -1325,12 +1437,11 @@ export const getLatestTestResultsByPullRequestIdInfiniteOptions = (options: Opti
       queryKey: getLatestTestResultsByPullRequestIdInfiniteQueryKey(options),
     }
   );
-};
 
 export const getFlakyTestsOverviewQueryKey = (options?: Options<GetFlakyTestsOverviewData>) => createQueryKey('getFlakyTestsOverview', options);
 
-export const getFlakyTestsOverviewOptions = (options?: Options<GetFlakyTestsOverviewData>) => {
-  return queryOptions({
+export const getFlakyTestsOverviewOptions = (options?: Options<GetFlakyTestsOverviewData>) =>
+  queryOptions<GetFlakyTestsOverviewResponse, GetFlakyTestsOverviewError, GetFlakyTestsOverviewResponse, ReturnType<typeof getFlakyTestsOverviewQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
       const { data } = await getFlakyTestsOverview({
         ...options,
@@ -1342,13 +1453,12 @@ export const getFlakyTestsOverviewOptions = (options?: Options<GetFlakyTestsOver
     },
     queryKey: getFlakyTestsOverviewQueryKey(options),
   });
-};
 
 export const getFlakyTestsOverviewInfiniteQueryKey = (options?: Options<GetFlakyTestsOverviewData>): QueryKey<Options<GetFlakyTestsOverviewData>> =>
   createQueryKey('getFlakyTestsOverview', options, true);
 
-export const getFlakyTestsOverviewInfiniteOptions = (options?: Options<GetFlakyTestsOverviewData>) => {
-  return infiniteQueryOptions<
+export const getFlakyTestsOverviewInfiniteOptions = (options?: Options<GetFlakyTestsOverviewData>) =>
+  infiniteQueryOptions<
     GetFlakyTestsOverviewResponse,
     GetFlakyTestsOverviewError,
     InfiniteData<GetFlakyTestsOverviewResponse>,
@@ -1379,12 +1489,16 @@ export const getFlakyTestsOverviewInfiniteOptions = (options?: Options<GetFlakyT
       queryKey: getFlakyTestsOverviewInfiniteQueryKey(options),
     }
   );
-};
 
 export const getLatestTestResultsByBranchQueryKey = (options: Options<GetLatestTestResultsByBranchData>) => createQueryKey('getLatestTestResultsByBranch', options);
 
-export const getLatestTestResultsByBranchOptions = (options: Options<GetLatestTestResultsByBranchData>) => {
-  return queryOptions({
+export const getLatestTestResultsByBranchOptions = (options: Options<GetLatestTestResultsByBranchData>) =>
+  queryOptions<
+    GetLatestTestResultsByBranchResponse,
+    GetLatestTestResultsByBranchError,
+    GetLatestTestResultsByBranchResponse,
+    ReturnType<typeof getLatestTestResultsByBranchQueryKey>
+  >({
     queryFn: async ({ queryKey, signal }) => {
       const { data } = await getLatestTestResultsByBranch({
         ...options,
@@ -1396,13 +1510,12 @@ export const getLatestTestResultsByBranchOptions = (options: Options<GetLatestTe
     },
     queryKey: getLatestTestResultsByBranchQueryKey(options),
   });
-};
 
 export const getLatestTestResultsByBranchInfiniteQueryKey = (options: Options<GetLatestTestResultsByBranchData>): QueryKey<Options<GetLatestTestResultsByBranchData>> =>
   createQueryKey('getLatestTestResultsByBranch', options, true);
 
-export const getLatestTestResultsByBranchInfiniteOptions = (options: Options<GetLatestTestResultsByBranchData>) => {
-  return infiniteQueryOptions<
+export const getLatestTestResultsByBranchInfiniteOptions = (options: Options<GetLatestTestResultsByBranchData>) =>
+  infiniteQueryOptions<
     GetLatestTestResultsByBranchResponse,
     GetLatestTestResultsByBranchError,
     InfiniteData<GetLatestTestResultsByBranchResponse>,
@@ -1433,12 +1546,27 @@ export const getLatestTestResultsByBranchInfiniteOptions = (options: Options<Get
       queryKey: getLatestTestResultsByBranchInfiniteQueryKey(options),
     }
   );
-};
+
+export const getFailureAnalysisUsageQueryKey = (options?: Options<GetFailureAnalysisUsageData>) => createQueryKey('getFailureAnalysisUsage', options);
+
+export const getFailureAnalysisUsageOptions = (options?: Options<GetFailureAnalysisUsageData>) =>
+  queryOptions<GetFailureAnalysisUsageResponse, GetFailureAnalysisUsageError, GetFailureAnalysisUsageResponse, ReturnType<typeof getFailureAnalysisUsageQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getFailureAnalysisUsage({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: getFailureAnalysisUsageQueryKey(options),
+  });
 
 export const getGroupsWithWorkflowsQueryKey = (options: Options<GetGroupsWithWorkflowsData>) => createQueryKey('getGroupsWithWorkflows', options);
 
-export const getGroupsWithWorkflowsOptions = (options: Options<GetGroupsWithWorkflowsData>) => {
-  return queryOptions({
+export const getGroupsWithWorkflowsOptions = (options: Options<GetGroupsWithWorkflowsData>) =>
+  queryOptions<GetGroupsWithWorkflowsResponse, GetGroupsWithWorkflowsError, GetGroupsWithWorkflowsResponse, ReturnType<typeof getGroupsWithWorkflowsQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
       const { data } = await getGroupsWithWorkflows({
         ...options,
@@ -1450,12 +1578,11 @@ export const getGroupsWithWorkflowsOptions = (options: Options<GetGroupsWithWork
     },
     queryKey: getGroupsWithWorkflowsQueryKey(options),
   });
-};
 
 export const getAllRepositoriesQueryKey = (options?: Options<GetAllRepositoriesData>) => createQueryKey('getAllRepositories', options);
 
-export const getAllRepositoriesOptions = (options?: Options<GetAllRepositoriesData>) => {
-  return queryOptions({
+export const getAllRepositoriesOptions = (options?: Options<GetAllRepositoriesData>) =>
+  queryOptions<GetAllRepositoriesResponse, GetAllRepositoriesError, GetAllRepositoriesResponse, ReturnType<typeof getAllRepositoriesQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
       const { data } = await getAllRepositories({
         ...options,
@@ -1467,12 +1594,11 @@ export const getAllRepositoriesOptions = (options?: Options<GetAllRepositoriesDa
     },
     queryKey: getAllRepositoriesQueryKey(options),
   });
-};
 
 export const getRepositoryByIdQueryKey = (options: Options<GetRepositoryByIdData>) => createQueryKey('getRepositoryById', options);
 
-export const getRepositoryByIdOptions = (options: Options<GetRepositoryByIdData>) => {
-  return queryOptions({
+export const getRepositoryByIdOptions = (options: Options<GetRepositoryByIdData>) =>
+  queryOptions<GetRepositoryByIdResponse, GetRepositoryByIdError, GetRepositoryByIdResponse, ReturnType<typeof getRepositoryByIdQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
       const { data } = await getRepositoryById({
         ...options,
@@ -1484,13 +1610,38 @@ export const getRepositoryByIdOptions = (options: Options<GetRepositoryByIdData>
     },
     queryKey: getRepositoryByIdQueryKey(options),
   });
-};
+
+export const getLatestCachedFailureAnalysisQueryKey = (options: Options<GetLatestCachedFailureAnalysisData>) => createQueryKey('getLatestCachedFailureAnalysis', options);
+
+export const getLatestCachedFailureAnalysisOptions = (options: Options<GetLatestCachedFailureAnalysisData>) =>
+  queryOptions<
+    GetLatestCachedFailureAnalysisResponse,
+    GetLatestCachedFailureAnalysisError,
+    GetLatestCachedFailureAnalysisResponse,
+    ReturnType<typeof getLatestCachedFailureAnalysisQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getLatestCachedFailureAnalysis({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: getLatestCachedFailureAnalysisQueryKey(options),
+  });
 
 export const getCommitsSinceLastReleaseCandidateQueryKey = (options: Options<GetCommitsSinceLastReleaseCandidateData>) =>
   createQueryKey('getCommitsSinceLastReleaseCandidate', options);
 
-export const getCommitsSinceLastReleaseCandidateOptions = (options: Options<GetCommitsSinceLastReleaseCandidateData>) => {
-  return queryOptions({
+export const getCommitsSinceLastReleaseCandidateOptions = (options: Options<GetCommitsSinceLastReleaseCandidateData>) =>
+  queryOptions<
+    GetCommitsSinceLastReleaseCandidateResponse,
+    GetCommitsSinceLastReleaseCandidateError,
+    GetCommitsSinceLastReleaseCandidateResponse,
+    ReturnType<typeof getCommitsSinceLastReleaseCandidateQueryKey>
+  >({
     queryFn: async ({ queryKey, signal }) => {
       const { data } = await getCommitsSinceLastReleaseCandidate({
         ...options,
@@ -1502,12 +1653,11 @@ export const getCommitsSinceLastReleaseCandidateOptions = (options: Options<GetC
     },
     queryKey: getCommitsSinceLastReleaseCandidateQueryKey(options),
   });
-};
 
 export const getPullRequestsQueryKey = (options?: Options<GetPullRequestsData>) => createQueryKey('getPullRequests', options);
 
-export const getPullRequestsOptions = (options?: Options<GetPullRequestsData>) => {
-  return queryOptions({
+export const getPullRequestsOptions = (options?: Options<GetPullRequestsData>) =>
+  queryOptions<GetPullRequestsResponse, GetPullRequestsError, GetPullRequestsResponse, ReturnType<typeof getPullRequestsQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
       const { data } = await getPullRequests({
         ...options,
@@ -1519,12 +1669,11 @@ export const getPullRequestsOptions = (options?: Options<GetPullRequestsData>) =
     },
     queryKey: getPullRequestsQueryKey(options),
   });
-};
 
 export const getPullRequestsInfiniteQueryKey = (options?: Options<GetPullRequestsData>): QueryKey<Options<GetPullRequestsData>> => createQueryKey('getPullRequests', options, true);
 
-export const getPullRequestsInfiniteOptions = (options?: Options<GetPullRequestsData>) => {
-  return infiniteQueryOptions<
+export const getPullRequestsInfiniteOptions = (options?: Options<GetPullRequestsData>) =>
+  infiniteQueryOptions<
     GetPullRequestsResponse,
     GetPullRequestsError,
     InfiniteData<GetPullRequestsResponse>,
@@ -1555,12 +1704,11 @@ export const getPullRequestsInfiniteOptions = (options?: Options<GetPullRequests
       queryKey: getPullRequestsInfiniteQueryKey(options),
     }
   );
-};
 
 export const getPullRequestByIdQueryKey = (options: Options<GetPullRequestByIdData>) => createQueryKey('getPullRequestById', options);
 
-export const getPullRequestByIdOptions = (options: Options<GetPullRequestByIdData>) => {
-  return queryOptions({
+export const getPullRequestByIdOptions = (options: Options<GetPullRequestByIdData>) =>
+  queryOptions<GetPullRequestByIdResponse, GetPullRequestByIdError, GetPullRequestByIdResponse, ReturnType<typeof getPullRequestByIdQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
       const { data } = await getPullRequestById({
         ...options,
@@ -1572,13 +1720,17 @@ export const getPullRequestByIdOptions = (options: Options<GetPullRequestByIdDat
     },
     queryKey: getPullRequestByIdQueryKey(options),
   });
-};
 
 export const getPullRequestByRepositoryIdAndNumberQueryKey = (options: Options<GetPullRequestByRepositoryIdAndNumberData>) =>
   createQueryKey('getPullRequestByRepositoryIdAndNumber', options);
 
-export const getPullRequestByRepositoryIdAndNumberOptions = (options: Options<GetPullRequestByRepositoryIdAndNumberData>) => {
-  return queryOptions({
+export const getPullRequestByRepositoryIdAndNumberOptions = (options: Options<GetPullRequestByRepositoryIdAndNumberData>) =>
+  queryOptions<
+    GetPullRequestByRepositoryIdAndNumberResponse,
+    GetPullRequestByRepositoryIdAndNumberError,
+    GetPullRequestByRepositoryIdAndNumberResponse,
+    ReturnType<typeof getPullRequestByRepositoryIdAndNumberQueryKey>
+  >({
     queryFn: async ({ queryKey, signal }) => {
       const { data } = await getPullRequestByRepositoryIdAndNumber({
         ...options,
@@ -1590,12 +1742,38 @@ export const getPullRequestByRepositoryIdAndNumberOptions = (options: Options<Ge
     },
     queryKey: getPullRequestByRepositoryIdAndNumberQueryKey(options),
   });
-};
+
+export const getPullRequestFilterOptionsByRepositoryIdQueryKey = (options: Options<GetPullRequestFilterOptionsByRepositoryIdData>) =>
+  createQueryKey('getPullRequestFilterOptionsByRepositoryId', options);
+
+export const getPullRequestFilterOptionsByRepositoryIdOptions = (options: Options<GetPullRequestFilterOptionsByRepositoryIdData>) =>
+  queryOptions<
+    GetPullRequestFilterOptionsByRepositoryIdResponse,
+    GetPullRequestFilterOptionsByRepositoryIdError,
+    GetPullRequestFilterOptionsByRepositoryIdResponse,
+    ReturnType<typeof getPullRequestFilterOptionsByRepositoryIdQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getPullRequestFilterOptionsByRepositoryId({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: getPullRequestFilterOptionsByRepositoryIdQueryKey(options),
+  });
 
 export const getPullRequestByRepositoryIdQueryKey = (options: Options<GetPullRequestByRepositoryIdData>) => createQueryKey('getPullRequestByRepositoryId', options);
 
-export const getPullRequestByRepositoryIdOptions = (options: Options<GetPullRequestByRepositoryIdData>) => {
-  return queryOptions({
+export const getPullRequestByRepositoryIdOptions = (options: Options<GetPullRequestByRepositoryIdData>) =>
+  queryOptions<
+    GetPullRequestByRepositoryIdResponse,
+    GetPullRequestByRepositoryIdError,
+    GetPullRequestByRepositoryIdResponse,
+    ReturnType<typeof getPullRequestByRepositoryIdQueryKey>
+  >({
     queryFn: async ({ queryKey, signal }) => {
       const { data } = await getPullRequestByRepositoryId({
         ...options,
@@ -1607,12 +1785,11 @@ export const getPullRequestByRepositoryIdOptions = (options: Options<GetPullRequ
     },
     queryKey: getPullRequestByRepositoryIdQueryKey(options),
   });
-};
 
 export const getAllEnvironmentsQueryKey = (options?: Options<GetAllEnvironmentsData>) => createQueryKey('getAllEnvironments', options);
 
-export const getAllEnvironmentsOptions = (options?: Options<GetAllEnvironmentsData>) => {
-  return queryOptions({
+export const getAllEnvironmentsOptions = (options?: Options<GetAllEnvironmentsData>) =>
+  queryOptions<GetAllEnvironmentsResponse, GetAllEnvironmentsError, GetAllEnvironmentsResponse, ReturnType<typeof getAllEnvironmentsQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
       const { data } = await getAllEnvironments({
         ...options,
@@ -1624,12 +1801,11 @@ export const getAllEnvironmentsOptions = (options?: Options<GetAllEnvironmentsDa
     },
     queryKey: getAllEnvironmentsQueryKey(options),
   });
-};
 
 export const getEnvironmentReviewersQueryKey = (options: Options<GetEnvironmentReviewersData>) => createQueryKey('getEnvironmentReviewers', options);
 
-export const getEnvironmentReviewersOptions = (options: Options<GetEnvironmentReviewersData>) => {
-  return queryOptions({
+export const getEnvironmentReviewersOptions = (options: Options<GetEnvironmentReviewersData>) =>
+  queryOptions<GetEnvironmentReviewersResponse, GetEnvironmentReviewersError, GetEnvironmentReviewersResponse, ReturnType<typeof getEnvironmentReviewersQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
       const { data } = await getEnvironmentReviewers({
         ...options,
@@ -1641,12 +1817,11 @@ export const getEnvironmentReviewersOptions = (options: Options<GetEnvironmentRe
     },
     queryKey: getEnvironmentReviewersQueryKey(options),
   });
-};
 
 export const getDeploymentReadinessQueryKey = (options: Options<GetDeploymentReadinessData>) => createQueryKey('getDeploymentReadiness', options);
 
-export const getDeploymentReadinessOptions = (options: Options<GetDeploymentReadinessData>) => {
-  return queryOptions({
+export const getDeploymentReadinessOptions = (options: Options<GetDeploymentReadinessData>) =>
+  queryOptions<GetDeploymentReadinessResponse, GetDeploymentReadinessError, GetDeploymentReadinessResponse, ReturnType<typeof getDeploymentReadinessQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
       const { data } = await getDeploymentReadiness({
         ...options,
@@ -1658,12 +1833,16 @@ export const getDeploymentReadinessOptions = (options: Options<GetDeploymentRead
     },
     queryKey: getDeploymentReadinessQueryKey(options),
   });
-};
 
 export const getEnvironmentsByUserLockingQueryKey = (options?: Options<GetEnvironmentsByUserLockingData>) => createQueryKey('getEnvironmentsByUserLocking', options);
 
-export const getEnvironmentsByUserLockingOptions = (options?: Options<GetEnvironmentsByUserLockingData>) => {
-  return queryOptions({
+export const getEnvironmentsByUserLockingOptions = (options?: Options<GetEnvironmentsByUserLockingData>) =>
+  queryOptions<
+    GetEnvironmentsByUserLockingResponse,
+    GetEnvironmentsByUserLockingError,
+    GetEnvironmentsByUserLockingResponse,
+    ReturnType<typeof getEnvironmentsByUserLockingQueryKey>
+  >({
     queryFn: async ({ queryKey, signal }) => {
       const { data } = await getEnvironmentsByUserLocking({
         ...options,
@@ -1675,12 +1854,16 @@ export const getEnvironmentsByUserLockingOptions = (options?: Options<GetEnviron
     },
     queryKey: getEnvironmentsByUserLockingQueryKey(options),
   });
-};
 
 export const getEnvironmentsByRepositoryIdQueryKey = (options: Options<GetEnvironmentsByRepositoryIdData>) => createQueryKey('getEnvironmentsByRepositoryId', options);
 
-export const getEnvironmentsByRepositoryIdOptions = (options: Options<GetEnvironmentsByRepositoryIdData>) => {
-  return queryOptions({
+export const getEnvironmentsByRepositoryIdOptions = (options: Options<GetEnvironmentsByRepositoryIdData>) =>
+  queryOptions<
+    GetEnvironmentsByRepositoryIdResponse,
+    GetEnvironmentsByRepositoryIdError,
+    GetEnvironmentsByRepositoryIdResponse,
+    ReturnType<typeof getEnvironmentsByRepositoryIdQueryKey>
+  >({
     queryFn: async ({ queryKey, signal }) => {
       const { data } = await getEnvironmentsByRepositoryId({
         ...options,
@@ -1692,12 +1875,16 @@ export const getEnvironmentsByRepositoryIdOptions = (options: Options<GetEnviron
     },
     queryKey: getEnvironmentsByRepositoryIdQueryKey(options),
   });
-};
 
 export const getLockHistoryByEnvironmentIdQueryKey = (options: Options<GetLockHistoryByEnvironmentIdData>) => createQueryKey('getLockHistoryByEnvironmentId', options);
 
-export const getLockHistoryByEnvironmentIdOptions = (options: Options<GetLockHistoryByEnvironmentIdData>) => {
-  return queryOptions({
+export const getLockHistoryByEnvironmentIdOptions = (options: Options<GetLockHistoryByEnvironmentIdData>) =>
+  queryOptions<
+    GetLockHistoryByEnvironmentIdResponse,
+    GetLockHistoryByEnvironmentIdError,
+    GetLockHistoryByEnvironmentIdResponse,
+    ReturnType<typeof getLockHistoryByEnvironmentIdQueryKey>
+  >({
     queryFn: async ({ queryKey, signal }) => {
       const { data } = await getLockHistoryByEnvironmentId({
         ...options,
@@ -1709,12 +1896,11 @@ export const getLockHistoryByEnvironmentIdOptions = (options: Options<GetLockHis
     },
     queryKey: getLockHistoryByEnvironmentIdQueryKey(options),
   });
-};
 
 export const getAllEnabledEnvironmentsQueryKey = (options?: Options<GetAllEnabledEnvironmentsData>) => createQueryKey('getAllEnabledEnvironments', options);
 
-export const getAllEnabledEnvironmentsOptions = (options?: Options<GetAllEnabledEnvironmentsData>) => {
-  return queryOptions({
+export const getAllEnabledEnvironmentsOptions = (options?: Options<GetAllEnabledEnvironmentsData>) =>
+  queryOptions<GetAllEnabledEnvironmentsResponse, GetAllEnabledEnvironmentsError, GetAllEnabledEnvironmentsResponse, ReturnType<typeof getAllEnabledEnvironmentsQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
       const { data } = await getAllEnabledEnvironments({
         ...options,
@@ -1726,12 +1912,11 @@ export const getAllEnabledEnvironmentsOptions = (options?: Options<GetAllEnabled
     },
     queryKey: getAllEnabledEnvironmentsQueryKey(options),
   });
-};
 
 export const getAllDeploymentsQueryKey = (options?: Options<GetAllDeploymentsData>) => createQueryKey('getAllDeployments', options);
 
-export const getAllDeploymentsOptions = (options?: Options<GetAllDeploymentsData>) => {
-  return queryOptions({
+export const getAllDeploymentsOptions = (options?: Options<GetAllDeploymentsData>) =>
+  queryOptions<GetAllDeploymentsResponse, GetAllDeploymentsError, GetAllDeploymentsResponse, ReturnType<typeof getAllDeploymentsQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
       const { data } = await getAllDeployments({
         ...options,
@@ -1743,12 +1928,11 @@ export const getAllDeploymentsOptions = (options?: Options<GetAllDeploymentsData
     },
     queryKey: getAllDeploymentsQueryKey(options),
   });
-};
 
 export const getDeploymentByIdQueryKey = (options: Options<GetDeploymentByIdData>) => createQueryKey('getDeploymentById', options);
 
-export const getDeploymentByIdOptions = (options: Options<GetDeploymentByIdData>) => {
-  return queryOptions({
+export const getDeploymentByIdOptions = (options: Options<GetDeploymentByIdData>) =>
+  queryOptions<GetDeploymentByIdResponse, GetDeploymentByIdError, GetDeploymentByIdResponse, ReturnType<typeof getDeploymentByIdQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
       const { data } = await getDeploymentById({
         ...options,
@@ -1760,12 +1944,11 @@ export const getDeploymentByIdOptions = (options: Options<GetDeploymentByIdData>
     },
     queryKey: getDeploymentByIdQueryKey(options),
   });
-};
 
 export const getWorkflowJobStatusQueryKey = (options: Options<GetWorkflowJobStatusData>) => createQueryKey('getWorkflowJobStatus', options);
 
-export const getWorkflowJobStatusOptions = (options: Options<GetWorkflowJobStatusData>) => {
-  return queryOptions({
+export const getWorkflowJobStatusOptions = (options: Options<GetWorkflowJobStatusData>) =>
+  queryOptions<GetWorkflowJobStatusResponse, GetWorkflowJobStatusError, GetWorkflowJobStatusResponse, ReturnType<typeof getWorkflowJobStatusQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
       const { data } = await getWorkflowJobStatus({
         ...options,
@@ -1777,13 +1960,17 @@ export const getWorkflowJobStatusOptions = (options: Options<GetWorkflowJobStatu
     },
     queryKey: getWorkflowJobStatusQueryKey(options),
   });
-};
 
 export const getActivityHistoryByRepositoryIdAndBranchNameQueryKey = (options: Options<GetActivityHistoryByRepositoryIdAndBranchNameData>) =>
   createQueryKey('getActivityHistoryByRepositoryIdAndBranchName', options);
 
-export const getActivityHistoryByRepositoryIdAndBranchNameOptions = (options: Options<GetActivityHistoryByRepositoryIdAndBranchNameData>) => {
-  return queryOptions({
+export const getActivityHistoryByRepositoryIdAndBranchNameOptions = (options: Options<GetActivityHistoryByRepositoryIdAndBranchNameData>) =>
+  queryOptions<
+    GetActivityHistoryByRepositoryIdAndBranchNameResponse,
+    GetActivityHistoryByRepositoryIdAndBranchNameError,
+    GetActivityHistoryByRepositoryIdAndBranchNameResponse,
+    ReturnType<typeof getActivityHistoryByRepositoryIdAndBranchNameQueryKey>
+  >({
     queryFn: async ({ queryKey, signal }) => {
       const { data } = await getActivityHistoryByRepositoryIdAndBranchName({
         ...options,
@@ -1795,12 +1982,16 @@ export const getActivityHistoryByRepositoryIdAndBranchNameOptions = (options: Op
     },
     queryKey: getActivityHistoryByRepositoryIdAndBranchNameQueryKey(options),
   });
-};
 
 export const getActivityHistoryByPullRequestIdQueryKey = (options: Options<GetActivityHistoryByPullRequestIdData>) => createQueryKey('getActivityHistoryByPullRequestId', options);
 
-export const getActivityHistoryByPullRequestIdOptions = (options: Options<GetActivityHistoryByPullRequestIdData>) => {
-  return queryOptions({
+export const getActivityHistoryByPullRequestIdOptions = (options: Options<GetActivityHistoryByPullRequestIdData>) =>
+  queryOptions<
+    GetActivityHistoryByPullRequestIdResponse,
+    GetActivityHistoryByPullRequestIdError,
+    GetActivityHistoryByPullRequestIdResponse,
+    ReturnType<typeof getActivityHistoryByPullRequestIdQueryKey>
+  >({
     queryFn: async ({ queryKey, signal }) => {
       const { data } = await getActivityHistoryByPullRequestId({
         ...options,
@@ -1812,12 +2003,16 @@ export const getActivityHistoryByPullRequestIdOptions = (options: Options<GetAct
     },
     queryKey: getActivityHistoryByPullRequestIdQueryKey(options),
   });
-};
 
 export const getDeploymentsByEnvironmentIdQueryKey = (options: Options<GetDeploymentsByEnvironmentIdData>) => createQueryKey('getDeploymentsByEnvironmentId', options);
 
-export const getDeploymentsByEnvironmentIdOptions = (options: Options<GetDeploymentsByEnvironmentIdData>) => {
-  return queryOptions({
+export const getDeploymentsByEnvironmentIdOptions = (options: Options<GetDeploymentsByEnvironmentIdData>) =>
+  queryOptions<
+    GetDeploymentsByEnvironmentIdResponse,
+    GetDeploymentsByEnvironmentIdError,
+    GetDeploymentsByEnvironmentIdResponse,
+    ReturnType<typeof getDeploymentsByEnvironmentIdQueryKey>
+  >({
     queryFn: async ({ queryKey, signal }) => {
       const { data } = await getDeploymentsByEnvironmentId({
         ...options,
@@ -1829,13 +2024,17 @@ export const getDeploymentsByEnvironmentIdOptions = (options: Options<GetDeploym
     },
     queryKey: getDeploymentsByEnvironmentIdQueryKey(options),
   });
-};
 
 export const getLatestDeploymentByEnvironmentIdQueryKey = (options: Options<GetLatestDeploymentByEnvironmentIdData>) =>
   createQueryKey('getLatestDeploymentByEnvironmentId', options);
 
-export const getLatestDeploymentByEnvironmentIdOptions = (options: Options<GetLatestDeploymentByEnvironmentIdData>) => {
-  return queryOptions({
+export const getLatestDeploymentByEnvironmentIdOptions = (options: Options<GetLatestDeploymentByEnvironmentIdData>) =>
+  queryOptions<
+    GetLatestDeploymentByEnvironmentIdResponse,
+    GetLatestDeploymentByEnvironmentIdError,
+    GetLatestDeploymentByEnvironmentIdResponse,
+    ReturnType<typeof getLatestDeploymentByEnvironmentIdQueryKey>
+  >({
     queryFn: async ({ queryKey, signal }) => {
       const { data } = await getLatestDeploymentByEnvironmentId({
         ...options,
@@ -1847,12 +2046,16 @@ export const getLatestDeploymentByEnvironmentIdOptions = (options: Options<GetLa
     },
     queryKey: getLatestDeploymentByEnvironmentIdQueryKey(options),
   });
-};
 
 export const getActivityHistoryByEnvironmentIdQueryKey = (options: Options<GetActivityHistoryByEnvironmentIdData>) => createQueryKey('getActivityHistoryByEnvironmentId', options);
 
-export const getActivityHistoryByEnvironmentIdOptions = (options: Options<GetActivityHistoryByEnvironmentIdData>) => {
-  return queryOptions({
+export const getActivityHistoryByEnvironmentIdOptions = (options: Options<GetActivityHistoryByEnvironmentIdData>) =>
+  queryOptions<
+    GetActivityHistoryByEnvironmentIdResponse,
+    GetActivityHistoryByEnvironmentIdError,
+    GetActivityHistoryByEnvironmentIdResponse,
+    ReturnType<typeof getActivityHistoryByEnvironmentIdQueryKey>
+  >({
     queryFn: async ({ queryKey, signal }) => {
       const { data } = await getActivityHistoryByEnvironmentId({
         ...options,
@@ -1864,12 +2067,16 @@ export const getActivityHistoryByEnvironmentIdOptions = (options: Options<GetAct
     },
     queryKey: getActivityHistoryByEnvironmentIdQueryKey(options),
   });
-};
 
 export const getCommitByRepositoryIdAndNameQueryKey = (options: Options<GetCommitByRepositoryIdAndNameData>) => createQueryKey('getCommitByRepositoryIdAndName', options);
 
-export const getCommitByRepositoryIdAndNameOptions = (options: Options<GetCommitByRepositoryIdAndNameData>) => {
-  return queryOptions({
+export const getCommitByRepositoryIdAndNameOptions = (options: Options<GetCommitByRepositoryIdAndNameData>) =>
+  queryOptions<
+    GetCommitByRepositoryIdAndNameResponse,
+    GetCommitByRepositoryIdAndNameError,
+    GetCommitByRepositoryIdAndNameResponse,
+    ReturnType<typeof getCommitByRepositoryIdAndNameQueryKey>
+  >({
     queryFn: async ({ queryKey, signal }) => {
       const { data } = await getCommitByRepositoryIdAndName({
         ...options,
@@ -1881,12 +2088,11 @@ export const getCommitByRepositoryIdAndNameOptions = (options: Options<GetCommit
     },
     queryKey: getCommitByRepositoryIdAndNameQueryKey(options),
   });
-};
 
 export const getAllBranchesQueryKey = (options?: Options<GetAllBranchesData>) => createQueryKey('getAllBranches', options);
 
-export const getAllBranchesOptions = (options?: Options<GetAllBranchesData>) => {
-  return queryOptions({
+export const getAllBranchesOptions = (options?: Options<GetAllBranchesData>) =>
+  queryOptions<GetAllBranchesResponse, GetAllBranchesError, GetAllBranchesResponse, ReturnType<typeof getAllBranchesQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
       const { data } = await getAllBranches({
         ...options,
@@ -1898,12 +2104,16 @@ export const getAllBranchesOptions = (options?: Options<GetAllBranchesData>) => 
     },
     queryKey: getAllBranchesQueryKey(options),
   });
-};
 
 export const getBranchByRepositoryIdAndNameQueryKey = (options: Options<GetBranchByRepositoryIdAndNameData>) => createQueryKey('getBranchByRepositoryIdAndName', options);
 
-export const getBranchByRepositoryIdAndNameOptions = (options: Options<GetBranchByRepositoryIdAndNameData>) => {
-  return queryOptions({
+export const getBranchByRepositoryIdAndNameOptions = (options: Options<GetBranchByRepositoryIdAndNameData>) =>
+  queryOptions<
+    GetBranchByRepositoryIdAndNameResponse,
+    GetBranchByRepositoryIdAndNameError,
+    GetBranchByRepositoryIdAndNameResponse,
+    ReturnType<typeof getBranchByRepositoryIdAndNameQueryKey>
+  >({
     queryFn: async ({ queryKey, signal }) => {
       const { data } = await getBranchByRepositoryIdAndName({
         ...options,
@@ -1915,7 +2125,6 @@ export const getBranchByRepositoryIdAndNameOptions = (options: Options<GetBranch
     },
     queryKey: getBranchByRepositoryIdAndNameQueryKey(options),
   });
-};
 
 export const deleteWorkflowGroupMutation = (
   options?: Partial<Options<DeleteWorkflowGroupData>>

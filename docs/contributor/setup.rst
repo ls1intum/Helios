@@ -25,6 +25,31 @@ Before you can start Helios, you need to install and configure some dependencies
    We use Ngrok to expose the webhook listener to the internet. You can check if you installed Ngrok correctly by running
    ``ngrok --version`` in your terminal. In the coming sections, we will guide you through the setup of Ngrok.
 
+4. `Node.js <https://nodejs.org/>`__ **and pnpm**:
+   Only required if you want to develop the frontend (the ``client`` Angular app
+   or the ``keycloakify`` Keycloak theme) **outside** of Docker — for example to
+   run the dev server, tests, linting, or to regenerate the OpenAPI client.
+   The standard Docker Compose flow does not need a local Node install.
+
+   - Install **Node.js 24** (see ``client/.nvmrc`` for the exact version; ``nvm install`` picks it up automatically).
+   - This repository uses **pnpm** as its package manager (not npm or yarn).
+     The version is pinned via the ``packageManager`` field in ``package.json``
+     and is best installed through `Corepack <https://nodejs.org/api/corepack.html>`__,
+     which ships with Node.js:
+
+     .. code-block:: shell
+
+        corepack enable          # makes the pinned pnpm version available automatically
+
+     Alternatively, install it directly: ``npm install -g pnpm@11.2.2``.
+     Verify with ``pnpm --version`` (should print ``11.2.2``).
+
+   .. warning::
+
+      Do **not** use ``npm`` or ``yarn`` in ``client`` or ``keycloakify`` — it
+      would create a conflicting lockfile. Always use ``pnpm`` so the committed
+      ``pnpm-lock.yaml`` stays authoritative.
+
 IDE Setup
 ---------
 
@@ -267,6 +292,13 @@ root ``.env`` file
 - ``HELIOS_LOGS_BASE_PATH``: (Optional, default: ``/tmp/helios/workflow-logs``) Base directory where Helios stores workflow logs.
 - ``HELIOS_DEVELOPERS_GITHUB_USERNAMES``: Comma-separated list of GitHub usernames that should have admin access to Helios.
 - ``NOTIFICATIONS_ENABLED``: (Optional, default: `true`) Whether to enable notifications to users
+- ``HELIOS_AI_ENABLED``: (Optional, default: `true`) Whether to enable AI features in Helios. If set to `true`, you need to also set the following AI-related environment variables:
+- ``HELIOS_AI_DEFAULT_PROVIDER``: Default AI provider to use. This variable is used to specify which AI provider to use for AI features in Helios. For now, the only supported provider is ``openai``. In the future, if more providers are added, you can set this variable to the desired provider.
+- ``HELIOS_AI_TEST_FAILURE_MAX_SECTION_CHARS``: Maximum number of characters for a section in the AI test failure analysis. This is used to limit the input size for the AI model when analyzing test failures.
+- ``HELIOS_AI_PROVIDER_OPENAI_ENABLED``: Whether to enable OpenAI as an AI provider. If set to `true`, you need to also set the OpenAI-related environment variables (``OPENAI_API_KEY``, ``OPENAI_BASE_URL``, ``OPENAI_MODEL``).
+- ``OPENAI_API_KEY``: API key for the AI provider. This is used to authenticate with the AI provider and use its services.
+- ``OPENAI_BASE_URL``: Base URL for the AI provider. For OpenAI, this should be ``https://api.openai.com/v1``. For Logos, this should be ``https://logos.aet.cit.tum.de:8080``.
+- ``OPENAI_MODEL``: Model name for the AI provider. For Logos, currently only ``openai/gpt-oss-120b`` is supported.
 
 You can configure **Helios** to work with **either** a Personal Access Token
 (``GITHUB_AUTH_TOKEN``) **or** a GitHub App. Full functionality is only available

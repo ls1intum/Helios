@@ -1,7 +1,6 @@
-import { CommonModule } from '@angular/common';
 import { Component, inject, input, output, computed } from '@angular/core';
 import { UserAvatarComponent } from '@app/components/user-avatar/user-avatar.component';
-import { EnvironmentDto } from '@app/core/modules/openapi';
+import { EnvironmentDeployment, EnvironmentDto } from '@app/core/modules/openapi';
 import { LockTimeComponent } from '../lock-time/lock-time.component';
 import { ButtonModule } from 'primeng/button';
 import { ButtonGroupModule } from 'primeng/buttongroup';
@@ -14,20 +13,14 @@ import { EnvironmentReviewersComponent } from '../environment-reviewers/environm
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
 import { IconCheck, IconCloudUpload, IconLock, IconLockOpen, IconLockPlus, IconPencil, IconX } from 'angular-tabler-icons/icons';
 
+type DeploymentState = NonNullable<EnvironmentDeployment['state']>;
+
+const ACTIVE_DEPLOYMENT_STATES = new Set<DeploymentState>(['WAITING', 'PENDING', 'REQUESTED', 'QUEUED', 'IN_PROGRESS']);
+const STALE_DEPLOYMENT_UNLOCK_TIMEOUT_MS = 20 * 60 * 1000;
+
 @Component({
   selector: 'app-environment-actions',
-  imports: [
-    CommonModule,
-    UserAvatarComponent,
-    LockTimeComponent,
-    ButtonModule,
-    ButtonGroupModule,
-    TooltipModule,
-    TagModule,
-    RouterLink,
-    TablerIconComponent,
-    EnvironmentReviewersComponent,
-  ],
+  imports: [UserAvatarComponent, LockTimeComponent, ButtonModule, ButtonGroupModule, TooltipModule, TagModule, RouterLink, TablerIconComponent, EnvironmentReviewersComponent],
   providers: [
     provideTablerIcons({
       IconCloudUpload,
@@ -77,6 +70,10 @@ export class EnvironmentActionsComponent {
   );
 
   readonly canUnlock = computed(() => {
+    if (this.activeDeploymentBlocksUnlock()) {
+      return false;
+    }
+
     if (this.hasUnlockPermissions() || this.isCurrentUserLocked()) {
       return true;
     } else if (!this.isCurrentUserLocked() && (this.timeUntilReservationExpires() ?? -1) === 0) {
@@ -85,6 +82,8 @@ export class EnvironmentActionsComponent {
       return false;
     }
   });
+
+  readonly canExtendLock = computed(() => this.isLoggedIn() && this.isCurrentUserLocked());
 
   readonly getLockTooltip = computed(() =>
     this.canUserDeploy() ? 'This will only lock the environment without any deployment.' : 'You do not have permission to lock this environment.'
@@ -98,6 +97,14 @@ export class EnvironmentActionsComponent {
   });
 
   readonly getUnlockToolTip = computed(() => {
+    if (this.canUnlockStaleDeployment()) {
+      return 'Deployment appears stale. You can unlock this environment.';
+    }
+
+    if (this.activeDeploymentBlocksUnlock()) {
+      return 'Cancel the ongoing deployment before unlocking this environment.';
+    }
+
     if (!this.canUnlock()) {
       return 'You do not have permission to unlock this environment.';
     }
@@ -126,12 +133,29 @@ export class EnvironmentActionsComponent {
   });
 
   readonly isDeploymentInProgress = computed(() => {
+    return this.isActiveDeployment(this.environment().latestDeployment);
+  });
+
+  readonly canUnlockStaleDeployment = computed(() => {
     const deployment = this.environment().latestDeployment;
-    return deployment && (deployment.state === 'IN_PROGRESS' || deployment.state === 'PENDING' || deployment.state === 'QUEUED' || deployment.state === 'REQUESTED');
+    if (!this.isUnlockBlockingDeployment(deployment)) {
+      return false;
+    }
+
+    const isAllowed = this.hasUnlockPermissions() || this.isCurrentUserLocked() || (this.timeUntilReservationExpires() ?? -1) === 0;
+    if (!isAllowed) {
+      return false;
+    }
+
+    return Date.now() - new Date(deployment.statusUpdatedAt).getTime() >= STALE_DEPLOYMENT_UNLOCK_TIMEOUT_MS;
+  });
+
+  readonly activeDeploymentBlocksUnlock = computed(() => {
+    return this.isUnlockBlockingDeployment(this.environment().latestDeployment) && !this.canUnlockStaleDeployment();
   });
 
   readonly canCancelDeployment = computed(() => {
-    return this.isDeploymentInProgress() && this.canUserDeploy() && this.environment().latestDeployment?.workflowRunHtmlUrl;
+    return !!(this.isDeploymentInProgress() && this.canUserDeploy() && this.environment().latestDeployment?.workflowRunHtmlUrl);
   });
 
   openExternalLink(event: MouseEvent, link?: string): void {
@@ -173,5 +197,13 @@ export class EnvironmentActionsComponent {
       return 'Cancelling deployment is not possible.';
     }
     return 'This will cancel the ongoing deployment.';
+  }
+
+  private isActiveDeployment(deployment: EnvironmentDeployment | undefined): boolean {
+    return !!deployment?.state && ACTIVE_DEPLOYMENT_STATES.has(deployment.state);
+  }
+
+  private isUnlockBlockingDeployment(deployment: EnvironmentDeployment | undefined): deployment is EnvironmentDeployment & { statusUpdatedAt: string } {
+    return this.isActiveDeployment(deployment) && !!deployment?.statusUpdatedAt;
   }
 }

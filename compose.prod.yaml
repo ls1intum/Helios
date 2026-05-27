@@ -1,6 +1,12 @@
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: "20m"
+    max-file: "5"
+
 services:
   postgres:
-    image: postgres:17.6-alpine
+    image: postgres:17.10-alpine
     environment:
       - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
@@ -9,6 +15,7 @@ services:
       - '5432:5432'
     volumes:
       - db-data:/var/lib/postgresql/data
+    logging: *default-logging
     command: >
       bash -c "
         set -m
@@ -41,11 +48,12 @@ services:
       - NATS_URL=nats-server
     depends_on:
       - nats-server
+    logging: *default-logging
     networks:
       - helios-network
 
   nats-server:
-    image: nats:2.12.4-alpine
+    image: nats:2.14.1-alpine
     ports:
       - "4222:4222"
       - "8222:8222"
@@ -62,6 +70,10 @@ services:
           jetstream {
 
           \  store_dir: \"/data\"
+
+          \  max_mem: 1G
+
+          \  max_file: 8G
 
           }
 
@@ -82,11 +94,7 @@ services:
       timeout: 10s
       retries: 5
       start_period: 3s
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+    logging: *default-logging
     networks:
       - helios-network
 
@@ -96,6 +104,7 @@ services:
       # Do not expose the client to 80 or 443
       - "90:80"
     restart: always
+    logging: *default-logging
     networks:
       - helios-network
 
@@ -103,7 +112,7 @@ services:
     image: "ghcr.io/ls1intum/helios/application-server:${APPLICATION_SERVER_IMAGE_TAG}"
     ports:
       - '8080:8080'
-    restart: on-failure:3
+    restart: on-failure
     environment:
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
       - DATASOURCE_URL=${DATASOURCE_URL}
@@ -114,6 +123,7 @@ services:
       - NATS_DURABLE_CONSUMER_NAME=${NATS_DURABLE_CONSUMER_NAME}
       - NATS_CONSUMER_INACTIVE_THRESHOLD_MINUTES=${NATS_CONSUMER_INACTIVE_THRESHOLD_MINUTES}
       - NATS_CONSUMER_ACK_WAIT_SECONDS=${NATS_CONSUMER_ACK_WAIT_SECONDS}
+      - NATS_CONSUMER_MAX_ACK_PENDING=${NATS_CONSUMER_MAX_ACK_PENDING:-500}
       - ORGANIZATION_NAME=${ORGANIZATION_NAME}
       - GITHUB_AUTH_TOKEN=${GITHUB_AUTH_TOKEN}
       - REPOSITORY_NAME=${REPOSITORY_NAME}
@@ -127,12 +137,24 @@ services:
       - SENTRY_DSN=${SENTRY_DSN}
       - HELIOS_TOKEN_EXCHANGE_CLIENT=${HELIOS_TOKEN_EXCHANGE_CLIENT}
       - HELIOS_TOKEN_EXCHANGE_SECRET=${HELIOS_TOKEN_EXCHANGE_SECRET}
-      - DATA_SYNC_RUN_ON_STARTUP=${DATA_SYNC_RUN_ON_STARTUP}
+      - DATA_SYNC_RUN_ON_STARTUP=${DATA_SYNC_RUN_ON_STARTUP:-true}
       - CLEANUP_WORKFLOW_RUN_DRY_RUN=${CLEANUP_WORKFLOW_RUN_DRY_RUN}
+      # Orphan-branch sweep — off by default; enable per environment once the
+      # dry-run output has been reviewed (see application.yml for semantics).
+      - CLEANUP_WORKFLOW_RUN_ORPHAN_BRANCHES_ENABLED=${CLEANUP_WORKFLOW_RUN_ORPHAN_BRANCHES_ENABLED:-false}
+      - CLEANUP_WORKFLOW_RUN_ORPHAN_BRANCHES_GRACE_DAYS=${CLEANUP_WORKFLOW_RUN_ORPHAN_BRANCHES_GRACE_DAYS:-7}
+      - CLEANUP_WORKFLOW_RUN_ORPHAN_BRANCHES_BATCH_SIZE=${CLEANUP_WORKFLOW_RUN_ORPHAN_BRANCHES_BATCH_SIZE:-5000}
       - HELIOS_ENVIRONMENT_NAME=${HELIOS_ENVIRONMENT_NAME}
       - HELIOS_PROD_SECRET_KEY=${HELIOS_PROD_SECRET_KEY}
       - HELIOS_STAGING_SECRET_KEY=${HELIOS_STAGING_SECRET_KEY}
       - HELIOS_DEVELOPERS_GITHUB_USERNAMES=${HELIOS_DEVELOPERS_GITHUB_USERNAMES}
+      - HELIOS_AI_ENABLED=${HELIOS_AI_ENABLED}
+      - HELIOS_AI_DEFAULT_PROVIDER=${HELIOS_AI_DEFAULT_PROVIDER}
+      - HELIOS_AI_TEST_FAILURE_MAX_SECTION_CHARS=${HELIOS_AI_TEST_FAILURE_MAX_SECTION_CHARS}
+      - HELIOS_AI_PROVIDER_OPENAI_ENABLED=${HELIOS_AI_PROVIDER_OPENAI_ENABLED}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_BASE_URL=${OPENAI_BASE_URL}
+      - OPENAI_MODEL=${OPENAI_MODEL}
       - JAVA_TOOL_OPTIONS=-XX:+HeapDumpOnOutOfMemoryError -XX:+ExitOnOutOfMemoryError -XX:HeapDumpPath=/dumps -Xlog:gc*:file=/logs/gc.log:time,uptime,level,tags
     depends_on:
       - postgres
@@ -142,6 +164,7 @@ services:
       - ./heliosapp.converted_key_pkcs8.pem:/app/heliosapp.converted_key_pkcs8.pem
       - ./dumps:/dumps
       - ./logs:/logs
+    logging: *default-logging
     networks:
       - helios-network
 
@@ -154,12 +177,14 @@ services:
       - NATS_DURABLE_CONSUMER_NAME=notification-consumer
       - NATS_CONSUMER_INACTIVE_THRESHOLD_MINUTES=${NATS_CONSUMER_INACTIVE_THRESHOLD_MINUTES}
       - NATS_CONSUMER_ACK_WAIT_SECONDS=${NATS_CONSUMER_ACK_WAIT_SECONDS}
+      - NATS_CONSUMER_MAX_ACK_PENDING=${NATS_CONSUMER_MAX_ACK_PENDING:-500}
       - MAIL_HOST=${MAIL_HOST}
       - MAIL_PORT=${MAIL_PORT}
       - EMAIL_ENABLED=${EMAIL_ENABLED}
       - EMAIL_FROM=${EMAIL_FROM}
     depends_on:
       - nats-server
+    logging: *default-logging
     networks:
       - helios-network
     extra_hosts:
@@ -184,6 +209,7 @@ services:
     volumes:
       - ./helios-realm.json:/opt/keycloak/data/import/prod-realm-export.json
     command: start-dev --import-realm --http-port=8081 --proxy-headers xforwarded --hostname-strict=true --features="token-exchange,admin-fine-grained-authz:v1"
+    logging: *default-logging
     networks:
       - helios-network
 

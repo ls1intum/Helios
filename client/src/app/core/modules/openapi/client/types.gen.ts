@@ -50,11 +50,12 @@ export interface Config<T extends ClientOptions = ClientOptions> extends Omit<Re
 }
 
 export interface RequestOptions<TData = unknown, TResponseStyle extends ResponseStyle = 'fields', ThrowOnError extends boolean = boolean, Url extends string = string>
-  extends Config<{
+  extends
+    Config<{
       responseStyle: TResponseStyle;
       throwOnError: ThrowOnError;
     }>,
-    Pick<ServerSentEventsOptions<TData>, 'onSseError' | 'onSseEvent' | 'sseDefaultRetryDelay' | 'sseMaxRetryAttempts' | 'sseMaxRetryDelay'> {
+    Pick<ServerSentEventsOptions<TData>, 'onRequest' | 'onSseError' | 'onSseEvent' | 'sseDefaultRetryDelay' | 'sseMaxRetryAttempts' | 'sseMaxRetryDelay'> {
   /**
    * Any body that you want to add to your request.
    *
@@ -70,8 +71,12 @@ export interface RequestOptions<TData = unknown, TResponseStyle extends Response
   url: Url;
 }
 
-export interface ResolvedRequestOptions<TResponseStyle extends ResponseStyle = 'fields', ThrowOnError extends boolean = boolean, Url extends string = string>
-  extends RequestOptions<unknown, TResponseStyle, ThrowOnError, Url> {
+export interface ResolvedRequestOptions<
+  TResponseStyle extends ResponseStyle = 'fields',
+  ThrowOnError extends boolean = boolean,
+  Url extends string = string,
+> extends RequestOptions<unknown, TResponseStyle, ThrowOnError, Url> {
+  headers: Headers;
   serializedBody?: string;
 }
 
@@ -100,8 +105,10 @@ export type RequestResult<TData = unknown, TError = unknown, ThrowOnError extend
                 error: TError extends Record<string, unknown> ? TError[keyof TError] : TError;
               }
           ) & {
-            request: Request;
-            response: Response;
+            /** request may be undefined, because error may be from building the request object itself */
+            request?: Request;
+            /** response may be undefined, because error may be from building the request object itself or from a network error */
+            response?: Response;
           }
     >;
 
@@ -115,9 +122,15 @@ type MethodFn = <TData = unknown, TError = unknown, ThrowOnError extends boolean
   options: Omit<RequestOptions<TData, TResponseStyle, ThrowOnError>, 'method'>
 ) => RequestResult<TData, TError, ThrowOnError, TResponseStyle>;
 
-type SseFn = <TData = unknown, TError = unknown, ThrowOnError extends boolean = false, TResponseStyle extends ResponseStyle = 'fields'>(
-  options: Omit<RequestOptions<TData, TResponseStyle, ThrowOnError>, 'method'>
-) => Promise<ServerSentEventsResult<TData, TError>>;
+type SseFn = <
+  TData = unknown,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _TError = unknown,
+  ThrowOnError extends boolean = false,
+  TResponseStyle extends ResponseStyle = 'fields',
+>(
+  options: Omit<RequestOptions<never, TResponseStyle, ThrowOnError>, 'method'>
+) => Promise<ServerSentEventsResult<TData>>;
 
 type RequestFn = <TData = unknown, TError = unknown, ThrowOnError extends boolean = false, TResponseStyle extends ResponseStyle = 'fields'>(
   options: Omit<RequestOptions<TData, TResponseStyle, ThrowOnError>, 'method'> & Pick<Required<RequestOptions<TData, TResponseStyle, ThrowOnError>>, 'method'>
@@ -131,7 +144,7 @@ type BuildUrlFn = <
     url: string;
   },
 >(
-  options: Pick<TData, 'url'> & Options<TData>
+  options: TData & Options<TData>
 ) => string;
 
 export type Client = CoreClient<RequestFn, Config, MethodFn, BuildUrlFn, SseFn> & {
@@ -162,12 +175,4 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
   RequestOptions<TResponse, TResponseStyle, ThrowOnError>,
   'body' | 'path' | 'query' | 'url'
 > &
-  Omit<TData, 'url'>;
-
-export type OptionsLegacyParser<TData = unknown, ThrowOnError extends boolean = boolean, TResponseStyle extends ResponseStyle = 'fields'> = TData extends { body?: any }
-  ? TData extends { headers?: any }
-    ? OmitKeys<RequestOptions<unknown, TResponseStyle, ThrowOnError>, 'body' | 'headers' | 'url'> & TData
-    : OmitKeys<RequestOptions<unknown, TResponseStyle, ThrowOnError>, 'body' | 'url'> & TData & Pick<RequestOptions<unknown, TResponseStyle, ThrowOnError>, 'headers'>
-  : TData extends { headers?: any }
-    ? OmitKeys<RequestOptions<unknown, TResponseStyle, ThrowOnError>, 'headers' | 'url'> & TData & Pick<RequestOptions<unknown, TResponseStyle, ThrowOnError>, 'body'>
-    : OmitKeys<RequestOptions<unknown, TResponseStyle, ThrowOnError>, 'url'> & TData;
+  ([TData] extends [never] ? unknown : Omit<TData, 'url'>);

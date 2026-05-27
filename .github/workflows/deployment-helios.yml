@@ -21,6 +21,9 @@ on:
 
 concurrency: ${{ github.event.inputs.environment_name }}
 
+permissions:
+  contents: read
+
 env:
   CI: true
 
@@ -33,6 +36,7 @@ jobs:
           echo "Branch: ${{ github.event.inputs.branch_name }}"
           echo "Environment: ${{ github.event.inputs.environment_name }}"
           echo "Triggered by?: ${{ github.event.inputs.triggered_by }}"
+          sleep 30
 
 
   deploy:
@@ -44,3 +48,4 @@ jobs:
       - name: Echo
         run: |
           echo "Deploying to ${{ github.event.inputs.environment_name }}"
+          sleep 30

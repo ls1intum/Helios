@@ -1,12 +1,14 @@
 package de.tum.cit.aet.helios.deployment;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -18,31 +20,32 @@ import de.tum.cit.aet.helios.environment.EnvironmentLockHistory;
 import de.tum.cit.aet.helios.environment.EnvironmentLockHistoryRepository;
 import de.tum.cit.aet.helios.environment.EnvironmentRepository;
 import de.tum.cit.aet.helios.environment.EnvironmentService;
+import de.tum.cit.aet.helios.filters.RepositoryContext;
 import de.tum.cit.aet.helios.github.GitHubService;
 import de.tum.cit.aet.helios.github.WorkflowDispatchResult;
+import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
 import de.tum.cit.aet.helios.pullrequest.PullRequestRepository;
 import de.tum.cit.aet.helios.workflow.Workflow;
 import de.tum.cit.aet.helios.workflow.WorkflowService;
+import java.io.IOException;
 import java.lang.reflect.Method;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-@RunWith(MockitoJUnitRunner.class)
 @ExtendWith(MockitoExtension.class)
 public class DeploymentServiceTest {
 
@@ -57,6 +60,8 @@ public class DeploymentServiceTest {
   @Mock private EnvironmentRepository environmentRepository;
   @Mock private BranchService branchService;
   @Mock private PullRequestRepository pullRequestRepository;
+  @Mock private GitRepoRepository gitRepoRepository;
+  @Mock private HeliosDeploymentWorkflowRunSyncService heliosDeploymentWorkflowRunSyncService;
 
   private Deployment deployment;
   private GitRepository gitRepository;
@@ -65,6 +70,7 @@ public class DeploymentServiceTest {
 
   @BeforeEach
   public void setUp() {
+    RepositoryContext.setRepositoryId("1");
     heliosDeployment = new HeliosDeployment();
     heliosDeployment.setId(1L);
     heliosDeployment.setEnvironment(environment);
@@ -81,6 +87,11 @@ public class DeploymentServiceTest {
     deployment.setId(1L);
     deployment.setRepository(gitRepository);
     deployment.setEnvironment(environment);
+  }
+
+  @AfterEach
+  public void tearDown() {
+    RepositoryContext.clear();
   }
 
   @Test
@@ -203,14 +214,15 @@ public class DeploymentServiceTest {
   }
 
   @Test
-  public void testDeployToEnvironment() {
-    final DeployRequest deployRequest = new DeployRequest(1L, "main", "sha");
+  public void testDeployToEnvironment() throws Exception {
+    final DeployRequest deployRequest = new DeployRequest(1L, "feature/x", "sha");
 
     Workflow wf = new Workflow();
     wf.setId(1L);
     wf.setFileNameWithExtension("deploy.yml");
 
     environment.setDeploymentWorkflow(wf);
+    environment.setDeploymentWorkflowBranch("staging");
 
     when(environmentService.getEnvironmentTypeById(1L))
         .thenReturn(Optional.of(Environment.Type.PRODUCTION));
@@ -219,6 +231,15 @@ public class DeploymentServiceTest {
     when(heliosDeploymentRepository.saveAndFlush(any())).thenAnswer(a -> a.getArgument(0));
 
     deploymentService.deployToEnvironment(deployRequest);
+
+    ArgumentCaptor<HeliosDeployment> deploymentCaptor =
+        ArgumentCaptor.forClass(HeliosDeployment.class);
+    verify(heliosDeploymentRepository).saveAndFlush(deploymentCaptor.capture());
+    HeliosDeployment capturedDeployment = deploymentCaptor.getValue();
+    assertEquals("staging", capturedDeployment.getBranchName());
+    assertEquals("feature/x", capturedDeployment.getSourceBranchName());
+    verify(gitHubService)
+        .dispatchWorkflow(eq("owner/repo"), eq("deploy.yml"), eq("staging"), any());
   }
 
   @Test
@@ -368,8 +389,7 @@ public class DeploymentServiceTest {
         .findByRepositoryRepositoryIdAndRefOrderByCreatedAtDesc(repositoryId, branchName))
         .thenReturn(List.of(deployment));
     when(heliosDeploymentRepository
-        .findByRepositoryIdAndBranchNameAndDeploymentIdIsNullOrderByCreatedAtDesc(
-            repositoryId, branchName))
+        .findByRepositoryIdAndSourceBranchNameOrderByCreatedAtDesc(repositoryId, branchName))
         .thenReturn(List.of(heliosDeployment));
 
     List<ActivityHistoryDto> result =
@@ -380,6 +400,36 @@ public class DeploymentServiceTest {
 
     assertEquals(2, result.size());
     Assertions.assertIterableEquals(List.of(heliosDto, deploymentDto), result);
+  }
+
+  @Test
+  public void testGetActivityHistoryByRepositoryIdAndSourceBranchNameForLinkedDeployment() {
+    final OffsetDateTime now = OffsetDateTime.now();
+    final Long repositoryId = 1L;
+    final String sourceBranchName = "feature/x";
+
+    heliosDeployment.setCreatedAt(now.minusMinutes(1));
+    heliosDeployment.setEnvironment(environment);
+    heliosDeployment.setDeploymentId(1L);
+    heliosDeployment.setBranchName("staging");
+    heliosDeployment.setSourceBranchName(sourceBranchName);
+    deployment.setCreatedAt(now.minusMinutes(2));
+    deployment.setRef("staging");
+
+    when(deploymentRepository
+        .findByRepositoryRepositoryIdAndRefOrderByCreatedAtDesc(repositoryId, sourceBranchName))
+        .thenReturn(List.of());
+    when(heliosDeploymentRepository
+        .findByRepositoryIdAndSourceBranchNameOrderByCreatedAtDesc(
+            repositoryId, sourceBranchName))
+        .thenReturn(List.of(heliosDeployment));
+
+    List<ActivityHistoryDto> result =
+        deploymentService.getActivityHistoryByRepositoryIdAndBranchName(
+            repositoryId, sourceBranchName);
+
+    assertEquals(1, result.size());
+    assertEquals(sourceBranchName, result.getFirst().ref());
   }
 
   @Test
@@ -477,5 +527,75 @@ public class DeploymentServiceTest {
     when(heliosDeploymentRepository.findTopByEnvironmentOrderByCreatedAtDesc(environment))
         .thenReturn(Optional.of(heliosDeployment));
     assertFalse((boolean) canRedeployMethod.invoke(deploymentService, environment, 10L));
+  }
+
+  @Test
+  public void testCancelDeploymentMarksHeliosDeploymentCancelled() throws Exception {
+    heliosDeployment.setWorkflowRunId(123L);
+
+    when(gitRepoRepository.findById(1L)).thenReturn(Optional.of(gitRepository));
+    when(heliosDeploymentRepository.findByWorkflowRunId(123L))
+        .thenReturn(Optional.of(heliosDeployment));
+
+    String result = deploymentService.cancelDeployment(new CancelDeploymentRequest(123L));
+
+    assertEquals("Workflow cancellation request sent successfully", result);
+    assertEquals(HeliosDeployment.Status.CANCELLED, heliosDeployment.getStatus());
+    verify(gitHubService).cancelWorkflowRun("owner/repo", 123L);
+    verify(heliosDeploymentRepository).save(heliosDeployment);
+  }
+
+  @Test
+  public void testCancelDeploymentSynchronizesTerminalStateWhenGitHubRunAlreadyCompleted()
+      throws Exception {
+    when(gitRepoRepository.findById(1L)).thenReturn(Optional.of(gitRepository));
+    org.mockito.Mockito.doThrow(new IOException("Cannot cancel a workflow run that is completed."))
+        .when(gitHubService)
+        .cancelWorkflowRun("owner/repo", 123L);
+    when(heliosDeploymentWorkflowRunSyncService.synchronizeTerminalStateFromWorkflowRun(
+            eq("owner/repo"), eq(123L)))
+        .thenReturn(true);
+
+    String result = deploymentService.cancelDeployment(new CancelDeploymentRequest(123L));
+
+    assertEquals("Workflow run already completed; deployment status synchronized from GitHub",
+        result);
+  }
+
+  @Test
+  public void testCancelDeploymentReturnsGithubErrorWhenSynchronizationCannotRecover()
+      throws Exception {
+    when(gitRepoRepository.findById(1L)).thenReturn(Optional.of(gitRepository));
+    org.mockito.Mockito.doThrow(new IOException("Cannot cancel a workflow run that is completed."))
+        .when(gitHubService)
+        .cancelWorkflowRun("owner/repo", 123L);
+    when(heliosDeploymentWorkflowRunSyncService.synchronizeTerminalStateFromWorkflowRun(
+            eq("owner/repo"), eq(123L)))
+        .thenReturn(false);
+
+    DeploymentException exception =
+        assertThrows(
+            DeploymentException.class,
+            () -> deploymentService.cancelDeployment(new CancelDeploymentRequest(123L)));
+
+    assertEquals("Cannot cancel a workflow run that is completed.", exception.getMessage());
+  }
+
+  @Test
+  public void testCancelDeploymentReturnsGithubErrorWithoutSyncForOtherFailures()
+      throws Exception {
+    when(gitRepoRepository.findById(1L)).thenReturn(Optional.of(gitRepository));
+    org.mockito.Mockito.doThrow(new IOException("GitHub rate limit exceeded"))
+        .when(gitHubService)
+        .cancelWorkflowRun("owner/repo", 123L);
+
+    DeploymentException exception =
+        assertThrows(
+            DeploymentException.class,
+            () -> deploymentService.cancelDeployment(new CancelDeploymentRequest(123L)));
+
+    assertEquals("GitHub rate limit exceeded", exception.getMessage());
+    verify(heliosDeploymentWorkflowRunSyncService, never())
+        .synchronizeTerminalStateFromWorkflowRun(anyString(), any());
   }
 }

@@ -22,7 +22,7 @@ jobs:
       CHANGE_DETECTED: ${{ steps.check_changes.outputs.CHANGE_DETECTED }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -70,7 +70,7 @@ jobs:
 
       - name: Post comment about OpenAPI validation failure
         if: failure() && steps.check_changes.outputs.CHANGE_DETECTED == 'true'
-        uses: marocchino/sticky-pull-request-comment@v2
+        uses: marocchino/sticky-pull-request-comment@0ea0beb66eb9baf113663a64ec522f60e49231c0  # v3.0.4
         with:
           header: openapi-validation-yml
           message: |
@@ -86,7 +86,7 @@ jobs:
 
       - name: Remove sticky comment on OpenAPI validation success
         if: success() || steps.check_changes.outputs.CHANGE_DETECTED == 'false'
-        uses: marocchino/sticky-pull-request-comment@v2
+        uses: marocchino/sticky-pull-request-comment@0ea0beb66eb9baf113663a64ec522f60e49231c0  # v3.0.4
         with:
           header: openapi-validation-yml
           delete: true
@@ -103,7 +103,7 @@ jobs:
     steps:
       - name: Checkout code
         if: env.CHANGE_DETECTED == 'true'
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Set up Java
         if: env.CHANGE_DETECTED == 'true'
@@ -114,9 +114,9 @@ jobs:
 
       - name: Set up Node.js
         if: env.CHANGE_DETECTED == 'true'
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         with:
-          node-version: "24"
+          node-version-file: client/.nvmrc
 
       - name: Enable Corepack
         if: env.CHANGE_DETECTED == 'true'
@@ -126,12 +126,12 @@ jobs:
       - name: Install Dependencies
         if: env.CHANGE_DETECTED == 'true'
         working-directory: ./client
-        run: yarn install --frozen-lockfile
+        run: pnpm install --frozen-lockfile
 
       - name: Generate client code
         if: env.CHANGE_DETECTED == 'true'
         working-directory: ./client
-        run: yarn generate:openapi
+        run: pnpm generate:openapi
 
       - name: Check for client code differences
         if: env.CHANGE_DETECTED == 'true'
@@ -146,7 +146,7 @@ jobs:
 
       - name: Post comment about client code validation failure
         if: failure() && env.CHANGE_DETECTED == 'true'
-        uses: marocchino/sticky-pull-request-comment@v2
+        uses: marocchino/sticky-pull-request-comment@0ea0beb66eb9baf113663a64ec522f60e49231c0  # v3.0.4
         with:
           header: client-code-validation
           message: |
@@ -156,13 +156,13 @@ jobs:
             Please regenerate the client code by running:
             ```bash
             cd ./client
-            yarn generate:openapi
+            pnpm generate:openapi
             ```
             Commit and push the updated files.
 
       - name: Remove sticky comment on client code validation success
         if: success() || env.CHANGE_DETECTED == 'false'
-        uses: marocchino/sticky-pull-request-comment@v2
+        uses: marocchino/sticky-pull-request-comment@0ea0beb66eb9baf113663a64ec522f60e49231c0  # v3.0.4
         with:
           header: client-code-validation
           delete: true

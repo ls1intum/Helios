@@ -164,7 +164,19 @@ export function buildVisibleLogRows(
     const isExpanded = expandAllGroups || !showGroups || expandedLogGroupIds[entry.id] === true;
     const childLevel = showGroups ? level + 1 : level;
 
-    if (showGroups) {
+    if (!showGroups) {
+      // Groups hidden — just inline children when expanded
+      if (isExpanded) {
+        rows.push(...buildVisibleLogRows(entry.entries, enabledLineTones, expandedLogGroupIds, childLevel, expandAllGroups));
+      }
+      continue;
+    }
+
+    // Compute child rows first so we can skip groups with no matching content
+    const childRows = isExpanded ? buildVisibleLogRows(entry.entries, enabledLineTones, expandedLogGroupIds, childLevel, expandAllGroups) : [];
+    const hasMatchingContent = childRows.length > 0 || groupHasMatchingLines(entry, enabledLineTones);
+
+    if (hasMatchingContent) {
       rows.push({
         type: 'group',
         level,
@@ -172,10 +184,7 @@ export function buildVisibleLogRows(
         line: entry.headerLine,
         title: entry.title,
       });
-    }
-
-    if (isExpanded) {
-      rows.push(...buildVisibleLogRows(entry.entries, enabledLineTones, expandedLogGroupIds, childLevel, expandAllGroups));
+      rows.push(...childRows);
     }
   }
 
@@ -203,6 +212,18 @@ export function collectGroupIdsContainingTone(
   }
 
   return containsTone;
+}
+
+function groupHasMatchingLines(group: Extract<WorkflowRunLogEntry, { type: 'group' }>, enabledLineTones: ReadonlySet<WorkflowRunLogLineTone>): boolean {
+  for (const entry of group.entries) {
+    if (entry.type === 'line' && enabledLineTones.has(entry.line.tone)) {
+      return true;
+    }
+    if (entry.type === 'group' && groupHasMatchingLines(entry, enabledLineTones)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 function isGroupEndLine(content: string): boolean {

@@ -145,6 +145,75 @@ export const UpdateReleaseNotesDtoSchema = {
   },
 } as const;
 
+export const DeploymentTimerDtoSchema = {
+  type: 'object',
+  properties: {
+    title: {
+      type: 'string',
+    },
+    headerMode: {
+      type: 'string',
+      enum: ['NONE', 'DURATION', 'ESTIMATED', 'REMAINING'],
+    },
+    headerStartedAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+    headerEndedAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+    headerEstimateSeconds: {
+      type: 'integer',
+      format: 'int32',
+    },
+    showQueuedMessage: {
+      type: 'boolean',
+    },
+    steps: {
+      type: 'array',
+      items: {
+        $ref: '#/components/schemas/DeploymentTimerStepDto',
+      },
+    },
+  },
+  required: ['headerMode', 'steps', 'title'],
+} as const;
+
+export const DeploymentTimerStepDtoSchema = {
+  type: 'object',
+  properties: {
+    key: {
+      type: 'string',
+      enum: ['PRE_DEPLOYMENT', 'DEPLOYMENT'],
+    },
+    label: {
+      type: 'string',
+    },
+    status: {
+      type: 'string',
+      enum: ['completed', 'active', 'error', 'upcoming', 'unknown'],
+    },
+    mode: {
+      type: 'string',
+      enum: ['NONE', 'COMPLETED', 'FAILED', 'ESTIMATED', 'REMAINING'],
+    },
+    startedAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+    endedAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+    estimateSeconds: {
+      type: 'integer',
+      format: 'int32',
+    },
+  },
+  required: ['key', 'label', 'mode', 'status'],
+} as const;
+
 export const EnvironmentDeploymentSchema = {
   type: 'object',
   properties: {
@@ -198,17 +267,32 @@ export const EnvironmentDeploymentSchema = {
       type: 'string',
       format: 'date-time',
     },
+    statusUpdatedAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+    deployJobStartedAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+    workflowStartedAt: {
+      type: 'string',
+      format: 'date-time',
+    },
     type: {
       type: 'string',
       enum: ['GITHUB', 'HELIOS'],
     },
-    estimatedBuildDurationSeconds: {
+    estimatedPreDeployDurationSeconds: {
       type: 'integer',
       format: 'int32',
     },
     estimatedDeployDurationSeconds: {
       type: 'integer',
       format: 'int32',
+    },
+    timer: {
+      $ref: '#/components/schemas/DeploymentTimerDto',
     },
   },
   required: ['id', 'type'],
@@ -598,6 +682,74 @@ export const WorkflowDeploymentJobDetectionDtoSchema = {
     },
   },
   required: ['message', 'ref', 'status', 'workflowId', 'workflowPath'],
+} as const;
+
+export const TestFailureAnalysisResponseDtoSchema = {
+  type: 'object',
+  properties: {
+    repositoryId: {
+      type: 'integer',
+      format: 'int64',
+    },
+    status: {
+      type: 'string',
+      enum: ['COMPLETED', 'FAILED'],
+    },
+    result: {
+      $ref: '#/components/schemas/TestFailureAnalysisResultDto',
+    },
+    errorMessage: {
+      type: 'string',
+    },
+    analyzedAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+    durationMs: {
+      type: 'integer',
+      format: 'int64',
+    },
+    cacheHit: {
+      type: 'boolean',
+    },
+  },
+} as const;
+
+export const TestFailureAnalysisResultDtoSchema = {
+  type: 'object',
+  properties: {
+    summary: {
+      type: 'string',
+    },
+    rootCauseHypotheses: {
+      type: 'array',
+      items: {
+        type: 'string',
+      },
+    },
+    evidence: {
+      type: 'array',
+      items: {
+        type: 'string',
+      },
+    },
+    recommendedFixes: {
+      type: 'array',
+      items: {
+        type: 'string',
+      },
+    },
+    confidence: {
+      type: 'number',
+      format: 'double',
+    },
+    provider: {
+      type: 'string',
+    },
+    model: {
+      type: 'string',
+    },
+  },
 } as const;
 
 export const ReleaseCandidateCreateDtoSchema = {
@@ -1001,17 +1153,17 @@ export const WorkflowRunDtoSchema = {
       enum: ['NONE', 'TEST'],
     },
     testProcessingStatus: {
-      type: 'string',
+      type: ['string', 'null'],
       enum: ['PROCESSING', 'PROCESSED', 'FAILED'],
     },
     headBranch: {
-      type: 'string',
+      type: ['string', 'null'],
     },
     headSha: {
-      type: 'string',
+      type: ['string', 'null'],
     },
     runStartedAt: {
-      type: 'string',
+      type: ['string', 'null'],
       format: 'date-time',
     },
     createdAt: {
@@ -1468,6 +1620,47 @@ export const FlakyTestSummarySchema = {
   },
 } as const;
 
+export const TestFailureAnalysisUsageDtoSchema = {
+  type: 'object',
+  properties: {
+    rateLimitEnabled: {
+      type: 'boolean',
+    },
+    dailyUsed: {
+      type: 'integer',
+      format: 'int32',
+    },
+    dailyLimit: {
+      type: 'integer',
+      format: 'int32',
+    },
+    burstUsed: {
+      type: 'integer',
+      format: 'int32',
+    },
+    burstLimit: {
+      type: 'integer',
+      format: 'int32',
+    },
+    burstWindowSeconds: {
+      type: 'integer',
+      format: 'int64',
+    },
+  },
+} as const;
+
+export const TestFailureAnalysisCacheLookupDtoSchema = {
+  type: 'object',
+  properties: {
+    hasCachedResult: {
+      type: 'boolean',
+    },
+    cachedResult: {
+      $ref: '#/components/schemas/TestFailureAnalysisResponseDto',
+    },
+  },
+} as const;
+
 export const CommitsSinceReleaseCandidateDtoSchema = {
   type: 'object',
   properties: {
@@ -1723,6 +1916,74 @@ export const PullRequestInfoDtoSchema = {
   required: ['additions', 'commentsCount', 'deletions', 'headRefName', 'headRefRepoNameWithOwner', 'headSha', 'htmlUrl', 'id', 'isDraft', 'isMerged', 'number', 'state', 'title'],
 } as const;
 
+export const PullRequestFilterLabelOptionDtoSchema = {
+  type: 'object',
+  properties: {
+    id: {
+      type: 'integer',
+      format: 'int64',
+    },
+    name: {
+      type: 'string',
+    },
+    color: {
+      type: 'string',
+    },
+  },
+  required: ['color', 'id', 'name'],
+} as const;
+
+export const PullRequestFilterOptionsDtoSchema = {
+  type: 'object',
+  properties: {
+    authors: {
+      type: 'array',
+      items: {
+        $ref: '#/components/schemas/PullRequestFilterUserOptionDto',
+      },
+    },
+    assignees: {
+      type: 'array',
+      items: {
+        $ref: '#/components/schemas/PullRequestFilterUserOptionDto',
+      },
+    },
+    reviewers: {
+      type: 'array',
+      items: {
+        $ref: '#/components/schemas/PullRequestFilterUserOptionDto',
+      },
+    },
+    labels: {
+      type: 'array',
+      items: {
+        $ref: '#/components/schemas/PullRequestFilterLabelOptionDto',
+      },
+    },
+  },
+  required: ['assignees', 'authors', 'labels', 'reviewers'],
+} as const;
+
+export const PullRequestFilterUserOptionDtoSchema = {
+  type: 'object',
+  properties: {
+    id: {
+      type: 'integer',
+      format: 'int64',
+    },
+    login: {
+      type: 'string',
+    },
+    avatarUrl: {
+      type: 'string',
+    },
+    name: {
+      type: 'string',
+    },
+  },
+  required: ['avatarUrl', 'id', 'login', 'name'],
+} as const;
+
 export const EnvironmentReviewersDtoSchema = {
   type: 'object',
   properties: {
@@ -1788,14 +2049,14 @@ export const RequiredWorkflowStatusDtoSchema = {
       enum: ['READY', 'WAITING', 'FAILED', 'MISSING_RUN'],
     },
     runId: {
-      type: 'integer',
+      type: ['integer', 'null'],
       format: 'int64',
     },
     runHtmlUrl: {
-      type: 'string',
+      type: ['string', 'null'],
     },
     runStatus: {
-      type: 'string',
+      type: ['string', 'null'],
       enum: [
         'QUEUED',
         'IN_PROGRESS',
@@ -1815,7 +2076,7 @@ export const RequiredWorkflowStatusDtoSchema = {
       ],
     },
     runConclusion: {
-      type: 'string',
+      type: ['string', 'null'],
       enum: ['ACTION_REQUIRED', 'CANCELLED', 'FAILURE', 'NEUTRAL', 'SUCCESS', 'SKIPPED', 'STALE', 'TIMED_OUT', 'STARTUP_FAILURE', 'UNKNOWN'],
     },
   },
@@ -1835,11 +2096,11 @@ export const EnvironmentLockHistoryDtoSchema = {
       $ref: '#/components/schemas/UserInfoDto',
     },
     lockedAt: {
-      type: 'string',
+      type: ['string', 'null'],
       format: 'date-time',
     },
     unlockedAt: {
-      type: 'string',
+      type: ['string', 'null'],
       format: 'date-time',
     },
     environment: {

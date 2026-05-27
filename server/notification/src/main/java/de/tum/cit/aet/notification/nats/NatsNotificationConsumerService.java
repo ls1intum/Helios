@@ -58,6 +58,9 @@ public class NatsNotificationConsumerService {
   @Value("${nats.consumerAckWaitSeconds:30}")
   private int consumerAckWaitSeconds;
 
+  @Value("${nats.consumerMaxAckPending:500}")
+  private int consumerMaxAckPending;
+
   @Value("${nats.auth.token}")
   private String natsAuthToken;
 
@@ -180,6 +183,7 @@ public class NatsNotificationConsumerService {
             ConsumerConfiguration.builder(existingConfig)
                 .inactiveThreshold(Duration.ofMinutes(consumerInactiveThresholdMinutes))
                 .ackWait(Duration.ofSeconds(consumerAckWaitSeconds))
+                .maxAckPending(consumerMaxAckPending)
                 .filterSubjects(subjects);
       } else {
         log.info("Creating new configuration for consumer.");
@@ -190,6 +194,7 @@ public class NatsNotificationConsumerService {
                 .startTime(ZonedDateTime.now().minusDays(timeframe))
                 .inactiveThreshold(Duration.ofMinutes(consumerInactiveThresholdMinutes))
                 .ackWait(Duration.ofSeconds(consumerAckWaitSeconds))
+                .maxAckPending(consumerMaxAckPending)
                 .filterSubjects(subjects);
 
         if (durableConsumerName != null && !durableConsumerName.isEmpty()) {

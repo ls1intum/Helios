@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { importProvidersFrom } from '@angular/core';
 import { getWorkflowRunLogsQueryKey } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
-import * as workflowRunLogsApi from '@app/core/modules/openapi/sdk.gen';
+import { client } from '@app/core/modules/openapi/client.gen';
 import type { WorkflowRunLogsResponse } from '@app/core/modules/openapi/types.gen';
 import { TestModule } from '@app/test.module';
 import { QueryClient } from '@tanstack/angular-query-experimental';
@@ -177,12 +177,35 @@ describe('Integration Test Workflow Run Logs Page', () => {
     ).toBe('/usr/bin/git status');
   });
 
-  it('should toggle line tone filters', () => {
-    expect(component.isLineToneEnabled('error')).toBe(true);
-    component.toggleLineTone('error');
-    expect(component.isLineToneEnabled('error')).toBe(false);
-    component.toggleLineTone('error');
-    expect(component.isLineToneEnabled('error')).toBe(true);
+  it('should switch log level filter and affect visible rows', () => {
+    expect(component.logLevelFilter()).toBe('all');
+
+    component.logLevelFilter.set('errors');
+    expect(component.selectedFileView()?.rows.every(row => row.type === 'group' || row.line.tone === 'error')).toBe(true);
+
+    component.logLevelFilter.set('warnings');
+    expect(component.selectedFileView()?.rows.every(row => row.type === 'group' || row.line.tone === 'warning' || row.line.tone === 'error')).toBe(true);
+
+    component.logLevelFilter.set('all');
+    const allRowCount = component.selectedFileView()?.rows.length ?? 0;
+    expect(allRowCount).toBeGreaterThan(0);
+    expect(allRowCount).toBe(component.selectedFileView()?.totalRowCount);
+  });
+
+  it('should show filter toolbar when the selected file has errors or warnings', () => {
+    expect(component.hasFilterableContent()).toBe(true);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('p-selectbutton')).toBeTruthy();
+  });
+
+  it('should hide filter toolbar when the selected file has no errors or warnings', async () => {
+    component.selectFile('deploy/system.txt');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(component.hasFilterableContent()).toBe(false);
+    expect(fixture.nativeElement.querySelector('p-selectbutton')).toBeFalsy();
   });
 
   it('should keep log groups collapsed by default and toggle them on demand', () => {
@@ -218,10 +241,14 @@ describe('Integration Test Workflow Run Logs Page', () => {
     });
   });
 
-  it('should expose the selected file step metadata without rendering the step panel', () => {
+  it('should expose the selected file job and step metadata', () => {
     expect(component.selectedStep()?.name).toBe('Checkout');
-    expect(fixture.nativeElement.textContent).toContain('GitHub step: Checkout');
-    expect(fixture.nativeElement.textContent).not.toContain('GitHub Steps');
+    expect(fixture.nativeElement.textContent).toContain('Jobs & Steps');
+    expect(fixture.nativeElement.textContent).toContain('Job');
+    expect(fixture.nativeElement.textContent).toContain('Step');
+    expect(fixture.nativeElement.textContent).not.toContain('Step 1');
+    expect(fixture.nativeElement.textContent).toContain('Checkout');
+    expect(fixture.nativeElement.textContent).not.toContain('GitHub step:');
   });
 
   it('should derive file status from the matched GitHub step number', () => {
@@ -257,6 +284,8 @@ describe('Integration Test Workflow Run Logs Page', () => {
     fixture.detectChanges();
 
     expect(component.selectedStep()).toBeNull();
+    expect(fixture.nativeElement.textContent).toContain('Unmatched log group');
+    expect(fixture.nativeElement.textContent).not.toContain('Unmatched log file');
     expect(fixture.nativeElement.textContent).not.toContain('GitHub step:');
   });
 
@@ -277,24 +306,31 @@ describe('Integration Test Workflow Run Logs Page', () => {
       cacheHit: false,
       downloadedAt: '2026-03-14T10:05:00Z',
     });
-    const getWorkflowRunLogsSpy = vi.spyOn(workflowRunLogsApi, 'getWorkflowRunLogs').mockResolvedValue({
-      data: refreshedLogs,
-    } as Awaited<ReturnType<typeof workflowRunLogsApi.getWorkflowRunLogs>>);
-
-    await component.refreshLogs();
-    fixture.detectChanges();
-
-    expect(getWorkflowRunLogsSpy).toHaveBeenCalledWith(
-      expect.objectContaining({
-        path: { workflowRunId },
-        query: { forceRefresh: true },
-        throwOnError: true,
+    // Override the SDK client's fetch (a config method, unaffected by the build
+    // system bundling) rather than spying on the bundled SDK module export.
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify(refreshedLogs), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
       })
     );
-    expect(queryClient.getQueryData(getWorkflowRunLogsQueryKey({ path: { workflowRunId } }))).toEqual(refreshedLogs);
-    expect(component.logsResponse()?.cacheHit).toBe(false);
-    expect(fixture.nativeElement.textContent).toContain('Downloaded fresh logs');
+    const originalConfig = client.getConfig();
+    client.setConfig({ baseUrl: 'http://localhost', fetch: fetchMock });
 
-    getWorkflowRunLogsSpy.mockRestore();
+    try {
+      await component.refreshLogs();
+      fixture.detectChanges();
+
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      const request = fetchMock.mock.calls[0][0] as Request;
+      expect(request.url).toContain(`/api/workflows/runs/${workflowRunId}/logs`);
+      expect(request.url).toContain('forceRefresh=true');
+
+      expect(queryClient.getQueryData(getWorkflowRunLogsQueryKey({ path: { workflowRunId } }))).toEqual(refreshedLogs);
+      expect(component.logsResponse()?.cacheHit).toBe(false);
+      expect(fixture.nativeElement.textContent).toContain('Downloaded fresh logs');
+    } finally {
+      client.setConfig({ baseUrl: originalConfig.baseUrl, fetch: originalConfig.fetch });
+    }
   });
 });

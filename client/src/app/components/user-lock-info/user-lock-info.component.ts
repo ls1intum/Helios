@@ -23,16 +23,26 @@ export class UserLockInfoComponent implements OnInit, OnDestroy {
   private dateService = inject(DateService);
   timeNow = signal<Date>(new Date());
   private intervalId?: ReturnType<typeof setInterval>;
-  timeUntilLockExpires = computed(() =>
-    this.latestLockExpiration()?.environment?.lockWillExpireAt !== null
-      ? this.dateService.timeUntilExpire(this.timeNow(), this.latestLockExpiration()?.environment?.lockWillExpireAt)
-      : `Unlimited`
-  );
+  isLoggedIn = computed(() => this.keycloakService.isLoggedIn());
+
+  timeUntilLockExpires = computed(() => {
+    if (!this.isLoggedIn()) {
+      return '';
+    }
+
+    const lockWillExpireAt = this.latestLockExpiration()?.environment?.lockWillExpireAt;
+    if (lockWillExpireAt == null) {
+      return 'Unlimited';
+    }
+
+    return this.dateService.timeUntilExpire(this.timeNow(), lockWillExpireAt);
+  });
+
   // Returns the latest lock information for the current user
   lockQuery = injectQuery(() => ({
     ...getEnvironmentsByUserLockingOptions(),
-    refetchInterval: 10000,
-    enabled: () => !!this.keycloakService.isLoggedIn(),
+    refetchInterval: () => (this.isLoggedIn() ? 10000 : false),
+    enabled: this.isLoggedIn(),
   }));
 
   ngOnInit() {
@@ -49,6 +59,10 @@ export class UserLockInfoComponent implements OnInit, OnDestroy {
   }
 
   latestLockExpiration = computed(() => {
+    if (!this.isLoggedIn()) {
+      return null;
+    }
+
     const lock = this.lockQuery.data();
 
     // For some reason, when there is no lock

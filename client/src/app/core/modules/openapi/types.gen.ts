@@ -53,6 +53,26 @@ export type UpdateReleaseNotesDto = {
   notes?: string;
 };
 
+export type DeploymentTimerDto = {
+  title: string;
+  headerMode: 'NONE' | 'DURATION' | 'ESTIMATED' | 'REMAINING';
+  headerStartedAt?: string;
+  headerEndedAt?: string;
+  headerEstimateSeconds?: number;
+  showQueuedMessage?: boolean;
+  steps: Array<DeploymentTimerStepDto>;
+};
+
+export type DeploymentTimerStepDto = {
+  key: 'PRE_DEPLOYMENT' | 'DEPLOYMENT';
+  label: string;
+  status: 'completed' | 'active' | 'error' | 'upcoming' | 'unknown';
+  mode: 'NONE' | 'COMPLETED' | 'FAILED' | 'ESTIMATED' | 'REMAINING';
+  startedAt?: string;
+  endedAt?: string;
+  estimateSeconds?: number;
+};
+
 export type EnvironmentDeployment = {
   id: number;
   url?: string;
@@ -68,9 +88,13 @@ export type EnvironmentDeployment = {
   pullRequestNumber?: number;
   createdAt?: string;
   updatedAt?: string;
+  statusUpdatedAt?: string;
+  deployJobStartedAt?: string;
+  workflowStartedAt?: string;
   type: 'GITHUB' | 'HELIOS';
-  estimatedBuildDurationSeconds?: number;
+  estimatedPreDeployDurationSeconds?: number;
   estimatedDeployDurationSeconds?: number;
+  timer?: DeploymentTimerDto;
 };
 
 export type EnvironmentDto = {
@@ -193,6 +217,26 @@ export type WorkflowDeploymentJobDetectionDto = {
   deploymentJobName?: string;
   status: 'FOUND' | 'NOT_FOUND' | 'UNCLEAR' | 'ERROR';
   message: string;
+};
+
+export type TestFailureAnalysisResponseDto = {
+  repositoryId?: number;
+  status?: 'COMPLETED' | 'FAILED';
+  result?: TestFailureAnalysisResultDto;
+  errorMessage?: string;
+  analyzedAt?: string;
+  durationMs?: number;
+  cacheHit?: boolean;
+};
+
+export type TestFailureAnalysisResultDto = {
+  summary?: string;
+  rootCauseHypotheses?: Array<string>;
+  evidence?: Array<string>;
+  recommendedFixes?: Array<string>;
+  confidence?: number;
+  provider?: string;
+  model?: string;
 };
 
 export type ReleaseCandidateCreateDto = {
@@ -336,9 +380,9 @@ export type WorkflowRunDto = {
   htmlUrl: string;
   label: 'NONE' | 'TEST';
   testProcessingStatus?: 'PROCESSING' | 'PROCESSED' | 'FAILED';
-  headBranch?: string;
-  headSha?: string;
-  runStartedAt?: string;
+  headBranch?: string | null;
+  headSha?: string | null;
+  runStartedAt?: string | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -558,6 +602,20 @@ export type FlakyTestSummary = {
   lowFlakinessCount?: number;
 };
 
+export type TestFailureAnalysisUsageDto = {
+  rateLimitEnabled?: boolean;
+  dailyUsed?: number;
+  dailyLimit?: number;
+  burstUsed?: number;
+  burstLimit?: number;
+  burstWindowSeconds?: number;
+};
+
+export type TestFailureAnalysisCacheLookupDto = {
+  hasCachedResult?: boolean;
+  cachedResult?: TestFailureAnalysisResponseDto;
+};
+
 export type CommitsSinceReleaseCandidateDto = {
   aheadBy: number;
   behindBy: number;
@@ -642,6 +700,26 @@ export type PullRequestInfoDto = {
   updatedAt?: string;
 };
 
+export type PullRequestFilterLabelOptionDto = {
+  id: number;
+  name: string;
+  color: string;
+};
+
+export type PullRequestFilterOptionsDto = {
+  authors: Array<PullRequestFilterUserOptionDto>;
+  assignees: Array<PullRequestFilterUserOptionDto>;
+  reviewers: Array<PullRequestFilterUserOptionDto>;
+  labels: Array<PullRequestFilterLabelOptionDto>;
+};
+
+export type PullRequestFilterUserOptionDto = {
+  id: number;
+  login: string;
+  avatarUrl: string;
+  name: string;
+};
+
 export type EnvironmentReviewersDto = {
   preventSelfReview?: boolean;
   reviewers?: Array<Reviewer>;
@@ -663,8 +741,8 @@ export type RequiredWorkflowStatusDto = {
   workflowId?: number;
   workflowName?: string;
   status?: 'READY' | 'WAITING' | 'FAILED' | 'MISSING_RUN';
-  runId?: number;
-  runHtmlUrl?: string;
+  runId?: number | null;
+  runHtmlUrl?: string | null;
   runStatus?:
     | 'QUEUED'
     | 'IN_PROGRESS'
@@ -688,8 +766,8 @@ export type EnvironmentLockHistoryDto = {
   id: number;
   lockedBy?: UserInfoDto;
   unlockedBy?: UserInfoDto;
-  lockedAt?: string;
-  unlockedAt?: string;
+  lockedAt?: string | null;
+  unlockedAt?: string | null;
   environment?: EnvironmentDto;
 };
 
@@ -1526,6 +1604,36 @@ export type CreateWorkflowGroupResponses = {
 
 export type CreateWorkflowGroupResponse = CreateWorkflowGroupResponses[keyof CreateWorkflowGroupResponses];
 
+export type AnalyzeFailedTestData = {
+  body?: never;
+  path: {
+    repositoryId: number;
+    testCaseId: number;
+  };
+  query?: {
+    regenerate?: boolean;
+  };
+  url: '/api/repositories/{repositoryId}/test-cases/{testCaseId}/failure-analysis';
+};
+
+export type AnalyzeFailedTestErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type AnalyzeFailedTestError = AnalyzeFailedTestErrors[keyof AnalyzeFailedTestErrors];
+
+export type AnalyzeFailedTestResponses = {
+  /**
+   * OK
+   */
+  200: TestFailureAnalysisResponseDto;
+};
+
+export type AnalyzeFailedTestResponse = AnalyzeFailedTestResponses[keyof AnalyzeFailedTestResponses];
+
 export type DeleteReleaseCandidateByNameData = {
   body: ReleaseNameDto;
   path?: never;
@@ -2307,6 +2415,31 @@ export type GetLatestTestResultsByBranchResponses = {
 
 export type GetLatestTestResultsByBranchResponse = GetLatestTestResultsByBranchResponses[keyof GetLatestTestResultsByBranchResponses];
 
+export type GetFailureAnalysisUsageData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/api/test-failure-analysis/usage';
+};
+
+export type GetFailureAnalysisUsageErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type GetFailureAnalysisUsageError = GetFailureAnalysisUsageErrors[keyof GetFailureAnalysisUsageErrors];
+
+export type GetFailureAnalysisUsageResponses = {
+  /**
+   * OK
+   */
+  200: TestFailureAnalysisUsageDto;
+};
+
+export type GetFailureAnalysisUsageResponse = GetFailureAnalysisUsageResponses[keyof GetFailureAnalysisUsageResponses];
+
 export type GetGroupsWithWorkflowsData = {
   body?: never;
   path: {
@@ -2386,6 +2519,34 @@ export type GetRepositoryByIdResponses = {
 
 export type GetRepositoryByIdResponse = GetRepositoryByIdResponses[keyof GetRepositoryByIdResponses];
 
+export type GetLatestCachedFailureAnalysisData = {
+  body?: never;
+  path: {
+    repositoryId: number;
+    testCaseId: number;
+  };
+  query?: never;
+  url: '/api/repositories/{repositoryId}/test-cases/{testCaseId}/failure-analysis/latest';
+};
+
+export type GetLatestCachedFailureAnalysisErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type GetLatestCachedFailureAnalysisError = GetLatestCachedFailureAnalysisErrors[keyof GetLatestCachedFailureAnalysisErrors];
+
+export type GetLatestCachedFailureAnalysisResponses = {
+  /**
+   * OK
+   */
+  200: TestFailureAnalysisCacheLookupDto;
+};
+
+export type GetLatestCachedFailureAnalysisResponse = GetLatestCachedFailureAnalysisResponses[keyof GetLatestCachedFailureAnalysisResponses];
+
 export type GetCommitsSinceLastReleaseCandidateData = {
   body?: never;
   path?: never;
@@ -2423,6 +2584,13 @@ export type GetPullRequestsData = {
     sortDirection?: string;
     filterType?: 'ALL' | 'OPEN' | 'OPEN_READY_FOR_REVIEW' | 'DRAFT' | 'MERGED' | 'CLOSED' | 'USER_AUTHORED' | 'ASSIGNED_TO_USER' | 'REVIEW_REQUESTED';
     searchTerm?: string;
+    author?: string;
+    assignee?: string;
+    noAssignee?: boolean;
+    labelId?: number;
+    noLabel?: boolean;
+    reviewState?: 'NONE' | 'REQUIRED';
+    requestedReviewer?: string;
   };
   url: '/api/pullrequests';
 };
@@ -2499,6 +2667,33 @@ export type GetPullRequestByRepositoryIdAndNumberResponses = {
 };
 
 export type GetPullRequestByRepositoryIdAndNumberResponse = GetPullRequestByRepositoryIdAndNumberResponses[keyof GetPullRequestByRepositoryIdAndNumberResponses];
+
+export type GetPullRequestFilterOptionsByRepositoryIdData = {
+  body?: never;
+  path: {
+    repoId: number;
+  };
+  query?: never;
+  url: '/api/pullrequests/repository/{repoId}/filter-options';
+};
+
+export type GetPullRequestFilterOptionsByRepositoryIdErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type GetPullRequestFilterOptionsByRepositoryIdError = GetPullRequestFilterOptionsByRepositoryIdErrors[keyof GetPullRequestFilterOptionsByRepositoryIdErrors];
+
+export type GetPullRequestFilterOptionsByRepositoryIdResponses = {
+  /**
+   * OK
+   */
+  200: PullRequestFilterOptionsDto;
+};
+
+export type GetPullRequestFilterOptionsByRepositoryIdResponse = GetPullRequestFilterOptionsByRepositoryIdResponses[keyof GetPullRequestFilterOptionsByRepositoryIdResponses];
 
 export type GetPullRequestByRepositoryIdData = {
   body?: never;

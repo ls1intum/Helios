@@ -152,7 +152,8 @@ public class LatestDeploymentUnion {
     public static State fromHeliosStatus(HeliosDeployment.Status status) {
       return switch (status) {
         case WAITING -> REQUESTED;
-        case QUEUED, IN_PROGRESS -> PENDING;
+        case QUEUED -> QUEUED;
+        case IN_PROGRESS -> IN_PROGRESS;
         case DEPLOYMENT_SUCCESS -> SUCCESS;
         case FAILED -> FAILURE;
         case CANCELLED -> CANCELLED;
@@ -170,20 +171,22 @@ public class LatestDeploymentUnion {
   }
 
   public String getSha() {
-    if (isRealDeployment()) {
-      return realDeployment.getSha();
-    } else if (isHeliosDeployment()) {
+    if (hasMatchingSourceHeliosDeployment() && heliosDeployment.getSha() != null) {
       return heliosDeployment.getSha();
+    } else if (isRealDeployment()) {
+      return realDeployment.getSha();
     } else {
       return null;
     }
   }
 
   public String getRef() {
-    if (isRealDeployment()) {
+    if (hasMatchingSourceHeliosDeployment()) {
+      return heliosDeployment.getSourceBranchName() != null
+          ? heliosDeployment.getSourceBranchName()
+          : heliosDeployment.getBranchName();
+    } else if (isRealDeployment()) {
       return realDeployment.getRef();
-    } else if (isHeliosDeployment()) {
-      return heliosDeployment.getBranchName();
     } else {
       return null;
     }
@@ -229,14 +232,48 @@ public class LatestDeploymentUnion {
     }
   }
 
+  public OffsetDateTime getStatusUpdatedAt() {
+    if (hasHeliosDeployment()) {
+      return heliosDeployment.getStatusUpdatedAt();
+    }
+    return null;
+  }
+
+  public OffsetDateTime getDeployJobStartedAt() {
+    if (hasTimingHeliosDeployment()) {
+      return heliosDeployment.getDeployJobStartedAt();
+    }
+    return null;
+  }
+
+  public OffsetDateTime getWorkflowStartedAt() {
+    if (hasTimingHeliosDeployment()) {
+      return heliosDeployment.getWorkflowStartedAt();
+    }
+    return null;
+  }
+
+  private boolean hasTimingHeliosDeployment() {
+    return hasMatchingHeliosDeployment();
+  }
+
+  private boolean hasMatchingHeliosDeployment() {
+    if (isHeliosDeployment()) {
+      return true;
+    }
+    if (!isRealDeployment() || !hasHeliosDeployment()) {
+      return false;
+    }
+    return heliosDeployment.getDeploymentId() == null
+        || heliosDeployment.getDeploymentId().equals(realDeployment.getId());
+  }
+
   public String getPullRequestName() {
-    if (isRealDeployment()) {
+    if (hasMatchingSourceHeliosDeployment() && heliosDeployment.getPullRequest() != null) {
+      return heliosDeployment.getPullRequest().getTitle();
+    } else if (isRealDeployment()) {
       return realDeployment.getPullRequest() != null
           ? realDeployment.getPullRequest().getTitle()
-          : null;
-    } else if (isHeliosDeployment()) {
-      return heliosDeployment.getPullRequest() != null
-          ? heliosDeployment.getPullRequest().getTitle()
           : null;
     } else {
       return null;
@@ -244,13 +281,11 @@ public class LatestDeploymentUnion {
   }
 
   public Integer getPullRequestNumber() {
-    if (isRealDeployment()) {
+    if (hasMatchingSourceHeliosDeployment() && heliosDeployment.getPullRequest() != null) {
+      return heliosDeployment.getPullRequest().getNumber();
+    } else if (isRealDeployment()) {
       return realDeployment.getPullRequest() != null
           ? realDeployment.getPullRequest().getNumber()
-          : null;
-    } else if (isHeliosDeployment()) {
-      return heliosDeployment.getPullRequest() != null
-          ? heliosDeployment.getPullRequest().getNumber()
           : null;
     } else {
       return null;
@@ -259,6 +294,17 @@ public class LatestDeploymentUnion {
 
   public boolean isNone() {
     return !isRealDeployment() && !isHeliosDeployment();
+  }
+
+  private boolean hasMatchingSourceHeliosDeployment() {
+    if (isHeliosDeployment()) {
+      return true;
+    }
+    if (!isRealDeployment() || !hasHeliosDeployment()) {
+      return false;
+    }
+    return heliosDeployment.getDeploymentId() != null
+        && heliosDeployment.getDeploymentId().equals(realDeployment.getId());
   }
 
   public DeploymentType getType() {
