@@ -22,6 +22,9 @@ on:
         default: "latest"
         type: string
 
+permissions:
+  contents: read
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -29,7 +32,7 @@ jobs:
       name: ${{ inputs.environment }}
     steps:
       - name: SSH to VM and Execute Docker-Compose Down
-        uses: appleboy/ssh-action@v1.2.2
+        uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2  # v1.2.5
         with:
           host: ${{ vars.VM_HOST }}
           username: ${{ secrets.VM_USERNAME }}
@@ -47,7 +50,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Copy Docker Compose File From Repo to VM Host
-        uses: appleboy/scp-action@v1.0.0
+        uses: appleboy/scp-action@ff85246acaad7bdce478db94a363cd2bf7c90345  # v1.0.0
         with:
           host: ${{ vars.VM_HOST }}
           username: ${{ secrets.VM_USERNAME }}
@@ -61,7 +64,7 @@ jobs:
           overwrite: true
 
       - name: SSH to VM and create .env file
-        uses: appleboy/ssh-action@v1.2.2
+        uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2  # v1.2.5
         with:
           host: ${{ vars.VM_HOST }}
           username: ${{ secrets.VM_USERNAME }}
@@ -137,7 +140,7 @@ jobs:
             
 
       - name: SSH to VM and Execute Docker-Compose Up
-        uses: appleboy/ssh-action@v1.2.2
+        uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2  # v1.2.5
         with:
           host: ${{ vars.VM_HOST }}
           username: ${{ secrets.VM_USERNAME }}

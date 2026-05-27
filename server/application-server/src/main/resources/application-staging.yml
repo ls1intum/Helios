@@ -60,6 +60,7 @@ nats:
     consumerInactiveThresholdMinutes: ${NATS_CONSUMER_INACTIVE_THRESHOLD_MINUTES:30}
     # Acknowledgment wait (in seconds): Specifies how long NATS waits for a message acknowledgment before resending the message.
     consumerAckWaitSeconds: ${NATS_CONSUMER_ACK_WAIT_SECONDS:60}
+    consumerMaxAckPending: ${NATS_CONSUMER_MAX_ACK_PENDING:500}
     server: ${NATS_SERVER}
     auth:
         token: ${NATS_AUTH_TOKEN}

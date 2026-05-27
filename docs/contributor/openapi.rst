@@ -24,4 +24,4 @@ You can generate the models and tanstack query options for the client from the O
 .. code-block:: shell
 
     cd client
-    yarn generate:openapi
+    pnpm generate:openapi

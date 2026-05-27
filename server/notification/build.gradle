@@ -23,7 +23,7 @@ dependencies {
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3'
 	implementation 'org.openapitools:jackson-databind-nullable:0.2.10'
 	implementation 'org.springframework.boot:spring-boot-jackson2'
-	implementation 'io.nats:jnats:2.25.2'
+	implementation 'io.nats:jnats:2.25.3'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 	runtimeAgent1 "org.springframework:spring-instrument"
@@ -102,6 +102,10 @@ jacocoTestReport {
 
 tasks.named('test') {
 	useJUnitPlatform()
+	// The notification module currently has no active tests (the only test
+	// class is an empty @SpringBootTest). Gradle 9 fails a test task that
+	// discovers no tests, so opt out until real tests are added.
+	failOnNoDiscoveredTests = false
 }
 
 // Load environment variables from the .env file

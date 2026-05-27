@@ -17,14 +17,16 @@ plugins {
     id 'org.flywaydb.flyway' version '11.20.3'
 }
 
-// Detect if the generateOpenApiDocs task is being executed
-gradle.taskGraph.whenReady { taskGraph ->
-    if (taskGraph.hasTask(':application-server:generateOpenApiDocs') || taskGraph.hasTask(':application-server:bootRunOpenApi')) {
-        println "OpenAPI task detected. Adding H2 dependency."
-        // Add the H2 dependency dynamically
-        dependencies {
-            runtimeOnly 'com.h2database:h2'
-        }
+// The OpenAPI tasks boot the app against the in-memory H2 database, so H2 is
+// added only when such a task is requested - decided at configuration time from
+// the requested task names. (Gradle 9 forbids mutating a configuration's
+// dependencies once it has been resolved, so the previous taskGraph.whenReady
+// approach now fails with "Cannot mutate the dependencies of configuration".)
+def openApiTaskHints = ['generateOpenApiDocs', 'bootRunOpenApi']
+if (gradle.startParameter.taskNames.any { requested -> openApiTaskHints.any { requested.contains(it) } }) {
+    logger.lifecycle("OpenAPI task detected. Adding H2 dependency.")
+    dependencies {
+        runtimeOnly 'com.h2database:h2'
     }
 }
 
@@ -35,7 +37,7 @@ configurations {
 }
 
 dependencies {
-    implementation(platform("org.springframework.ai:spring-ai-bom:2.0.0-M6"))
+    implementation(platform("org.springframework.ai:spring-ai-bom:2.0.0-M8"))
     implementation 'org.springframework.boot:spring-boot-starter-aspectj'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-webmvc'
@@ -48,14 +50,14 @@ dependencies {
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3'
     implementation 'org.openapitools:jackson-databind-nullable:0.2.10'
     implementation 'com.github.ben-manes.caffeine:caffeine'
-    implementation 'io.nats:jnats:2.25.2'
+    implementation 'io.nats:jnats:2.25.3'
     implementation 'org.springframework.ai:spring-ai-starter-model-openai'
     implementation 'org.kohsuke:github-api:1.330'
     implementation 'com.squareup.okhttp3:okhttp:4.12.0'
     implementation 'com.squareup.okhttp3:logging-interceptor:4.12.0'
     implementation 'org.flywaydb:flyway-database-postgresql'
     implementation 'io.jsonwebtoken:jjwt-api:0.13.0'
-    implementation 'io.sentry:sentry-spring-boot-4-starter:8.40.0'
+    implementation 'io.sentry:sentry-spring-boot-4-starter:8.43.0'
     // Helios push-based status updates
     implementation "de.tum.cit.aet:helios-status-spring-starter:1.1.1"
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.13.0'
@@ -63,6 +65,9 @@ dependencies {
     runtimeOnly 'org.postgresql:postgresql'
     testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
     testImplementation 'org.springframework.boot:spring-boot-starter-security-test'
+    // JPA test slice (@DataJpaTest, @AutoConfigureTestDatabase) — Spring Boot 4
+    // ships it as a dedicated module rather than via spring-boot-starter-test.
+    testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
     testImplementation 'io.zonky.test:embedded-database-spring-test:2.8.0'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     runtimeAgent1 "org.springframework:spring-instrument"

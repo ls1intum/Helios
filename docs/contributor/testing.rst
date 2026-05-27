@@ -155,5 +155,5 @@ In the client directory execute following command:
 
 .. code-block:: sh
 
-  yarn
-  yarn test:unit
+  pnpm install
+  pnpm test:unit:ci   # one-shot run with coverage; use `pnpm test:unit` for the interactive Vitest UI

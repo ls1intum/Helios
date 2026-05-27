@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { importProvidersFrom } from '@angular/core';
 import { getWorkflowRunLogsQueryKey } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
-import * as workflowRunLogsApi from '@app/core/modules/openapi/sdk.gen';
+import { client } from '@app/core/modules/openapi/client.gen';
 import type { WorkflowRunLogsResponse } from '@app/core/modules/openapi/types.gen';
 import { TestModule } from '@app/test.module';
 import { QueryClient } from '@tanstack/angular-query-experimental';
@@ -306,24 +306,31 @@ describe('Integration Test Workflow Run Logs Page', () => {
       cacheHit: false,
       downloadedAt: '2026-03-14T10:05:00Z',
     });
-    const getWorkflowRunLogsSpy = vi.spyOn(workflowRunLogsApi, 'getWorkflowRunLogs').mockResolvedValue({
-      data: refreshedLogs,
-    } as Awaited<ReturnType<typeof workflowRunLogsApi.getWorkflowRunLogs>>);
-
-    await component.refreshLogs();
-    fixture.detectChanges();
-
-    expect(getWorkflowRunLogsSpy).toHaveBeenCalledWith(
-      expect.objectContaining({
-        path: { workflowRunId },
-        query: { forceRefresh: true },
-        throwOnError: true,
+    // Override the SDK client's fetch (a config method, unaffected by the build
+    // system bundling) rather than spying on the bundled SDK module export.
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify(refreshedLogs), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
       })
     );
-    expect(queryClient.getQueryData(getWorkflowRunLogsQueryKey({ path: { workflowRunId } }))).toEqual(refreshedLogs);
-    expect(component.logsResponse()?.cacheHit).toBe(false);
-    expect(fixture.nativeElement.textContent).toContain('Downloaded fresh logs');
+    const originalConfig = client.getConfig();
+    client.setConfig({ baseUrl: 'http://localhost', fetch: fetchMock });
 
-    getWorkflowRunLogsSpy.mockRestore();
+    try {
+      await component.refreshLogs();
+      fixture.detectChanges();
+
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      const request = fetchMock.mock.calls[0][0] as Request;
+      expect(request.url).toContain(`/api/workflows/runs/${workflowRunId}/logs`);
+      expect(request.url).toContain('forceRefresh=true');
+
+      expect(queryClient.getQueryData(getWorkflowRunLogsQueryKey({ path: { workflowRunId } }))).toEqual(refreshedLogs);
+      expect(component.logsResponse()?.cacheHit).toBe(false);
+      expect(fixture.nativeElement.textContent).toContain('Downloaded fresh logs');
+    } finally {
+      client.setConfig({ baseUrl: originalConfig.baseUrl, fetch: originalConfig.fetch });
+    }
   });
 });

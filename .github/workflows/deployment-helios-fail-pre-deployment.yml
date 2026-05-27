@@ -19,6 +19,9 @@ on:
         required: false
         type: string
 
+permissions:
+  contents: read
+
 concurrency: ${{ github.event.inputs.environment_name }}
 
 env:

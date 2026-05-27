@@ -3,7 +3,11 @@ const typescriptParser = require('@typescript-eslint/parser');
 const prettierPlugin = require('eslint-plugin-prettier');
 const tssUnusedClasses = require('eslint-plugin-tss-unused-classes');
 const reactHooks = require('eslint-plugin-react-hooks');
-const reactRefresh = require('eslint-plugin-react-refresh');
+// eslint-plugin-react-refresh >=0.5 ships ESM-first: `configs`/`rules` live on
+// the `default` export, so unwrap it for CJS interop (older versions exposed
+// them on the namespace object directly).
+const reactRefreshModule = require('eslint-plugin-react-refresh');
+const reactRefresh = reactRefreshModule.default ?? reactRefreshModule;
 
 module.exports = [
     {
@@ -56,6 +60,17 @@ module.exports = [
         files: ["**/*.stories.*"],
         rules: {
             "import/no-anonymous-default-export": "off"
+        }
+    },
+    {
+        // src/login/** are pages ejected verbatim from keycloakify. They follow
+        // keycloakify's upstream patterns (e.g. reading/writing a ref during
+        // render to emit group headers), which react-hooks v7's new "refs" rule
+        // flags. We don't own this logic, so scope that rule off here rather than
+        // diverge from upstream.
+        files: ["src/login/**/*.{ts,tsx}"],
+        rules: {
+            "react-hooks/refs": "off"
         }
     },
 ];
