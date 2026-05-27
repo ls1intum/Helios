@@ -3,6 +3,11 @@ on:
   pull_request_target:
     types: [ready_for_review]
 
+permissions:
+  # Adds a label to the PR via the API — labeling a PR needs only this scope
+  # (no checkout / repo reads, and `issues: write` is not required for PRs).
+  pull-requests: write
+
 jobs:
   pullRequestReadyForReview:
     runs-on: ubuntu-latest
