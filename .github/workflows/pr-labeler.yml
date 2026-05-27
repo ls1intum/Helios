@@ -19,7 +19,7 @@ jobs:
           sync-labels: true
 
       - name: "Apply size label"
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             console.log("Fetching pull request diff...");

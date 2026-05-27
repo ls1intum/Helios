@@ -1,0 +1,25 @@
+# Node modules (must not leak host-built/symlinked deps into the image)
+node_modules
+npm-debug.log
+yarn-error.log
+pnpm-debug.log*
+
+# Build output
+dist
+dist_keycloak
+
+# Environment files (if any)
+.env
+*.env
+
+# Editor and OS-specific files
+*.swp
+*.log
+.DS_Store
+
+Dockerfile*
+docker-compose*
+.dockerignore
+.git
+.gitignore
+.vscode

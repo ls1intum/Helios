@@ -6,15 +6,15 @@ keycloakify/src/login/pages/Login.tsx
 `
 Before starting install the dependencies:
 ```
-yarn
+pnpm install
 ```
 To run locally
 ```
-yarn dev
+pnpm dev
 ```
 To change the theme, edit React file you want to change and then run
 ```
-yarn build-keycloak-theme
+pnpm build-keycloak-theme
 ```
 Our docker-compose file is configured to use `keycloakify/dist_keycloak` as a volume so the theme will be accessible in keycloak after the build. You may need to restart the docker container to see the changes.
 
@@ -31,7 +31,7 @@ This starter is based on Vite. There is also [a Webpack based starter](https://g
 
 ```bash
 cd keycloakify
-yarn install # Or use an other package manager, just be sure to delete the yarn.lock if you use another package manager.
+pnpm install # This repo uses pnpm; the version is pinned via the "packageManager" field and enforced by corepack.
 ```
 
 # Testing the theme locally

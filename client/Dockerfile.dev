@@ -1,15 +1,16 @@
-FROM alpine:3.23
+# Node pinned to 24.15.0 to match client/.nvmrc and the production Dockerfile.
+FROM node:24.15.0-alpine
 
 # Create app directory
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
 
-# Install app dependencies
-RUN apk add --no-cache git yarn nodejs
-RUN yarn
+# node:alpine already ships node + npm; add git, then pnpm (pinned to the repo's package manager)
+RUN apk add --no-cache git && npm install -g pnpm@11.2.2
 
-COPY yarn.lock package.json /usr/src/app/
-RUN yarn
+# Copy manifest, lockfile, and pnpm settings, then install
+COPY package.json pnpm-lock.yaml .npmrc pnpm-workspace.yaml /usr/src/app/
+RUN pnpm install --frozen-lockfile
 
 ENV HOST 0.0.0.0
 
