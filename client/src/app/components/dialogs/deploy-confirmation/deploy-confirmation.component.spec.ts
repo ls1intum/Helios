@@ -95,7 +95,7 @@ describe('DeployConfirmationComponent', () => {
 
     expect(deployButton.disabled).toBe(true);
 
-    component.repoConfirm = 'ls1intum/Helios';
+    component.repoConfirm.set('ls1intum/Helios');
     fixture.detectChanges();
 
     expect(deployButton.disabled).toBe(false);

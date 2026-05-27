@@ -2,7 +2,7 @@ import { Component, computed, inject, input } from '@angular/core';
 import { injectQuery } from '@tanstack/angular-query-experimental';
 import { getActivityHistoryByPullRequestIdOptions, getActivityHistoryByRepositoryIdAndBranchNameOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { DateService } from '@app/core/services/date.service';
-import { CommonModule } from '@angular/common';
+
 import { SkeletonModule } from 'primeng/skeleton';
 import { TableModule } from 'primeng/table';
 import { AvatarModule } from 'primeng/avatar';
@@ -17,7 +17,7 @@ export type DeploymentHistorySelector = { repositoryId: number; branchName: stri
 @Component({
   selector: 'app-deployment-history',
   standalone: true,
-  imports: [CommonModule, TablerIconComponent, SkeletonModule, TableModule, AvatarModule, TooltipModule, UserAvatarComponent],
+  imports: [TablerIconComponent, SkeletonModule, TableModule, AvatarModule, TooltipModule, UserAvatarComponent],
   providers: [
     provideTablerIcons({
       IconCloudUpload,

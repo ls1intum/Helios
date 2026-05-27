@@ -7,7 +7,7 @@ import { UserAvatarComponent } from '@app/components/user-avatar/user-avatar.com
 import { LockTagComponent } from '../lock-tag/lock-tag.component';
 import { AccordionModule } from 'primeng/accordion';
 import { TagModule } from 'primeng/tag';
-import { CommonModule, DatePipe } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { TimeAgoPipe } from '@app/pipes/time-ago.pipe';
 import { TooltipModule } from 'primeng/tooltip';
 import { EnvironmentDetailsComponent } from '../environment-details/environment-details.component';
@@ -25,7 +25,6 @@ import { WorkflowJobsStatusComponent } from '../workflow-job-status/workflow-job
 @Component({
   selector: 'app-environment-accordion',
   imports: [
-    CommonModule,
     AccordionModule,
     LockTagComponent,
     TagModule,

@@ -1,4 +1,3 @@
-import { CommonModule } from '@angular/common';
 import { Component, computed, inject, input } from '@angular/core';
 import { injectQuery } from '@tanstack/angular-query-experimental';
 import { TooltipModule } from 'primeng/tooltip';
@@ -13,7 +12,7 @@ import { IconExclamationMark, IconShieldExclamation, IconUser, IconUsersGroup } 
 @Component({
   selector: 'app-environment-reviewers',
   standalone: true,
-  imports: [CommonModule, TablerIconComponent, TooltipModule, AvatarModule, TagModule],
+  imports: [TablerIconComponent, TooltipModule, AvatarModule, TagModule],
   providers: [
     provideTablerIcons({
       IconShieldExclamation,
