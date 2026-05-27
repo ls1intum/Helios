@@ -4,11 +4,14 @@ FROM node:24 AS build
 # Set the working directory
 WORKDIR /app
 
-# Copy package.json and yarn.lock
-COPY package.json yarn.lock ./
+# Enable pnpm via corepack (version pinned by package.json "packageManager")
+RUN corepack enable
+
+# Copy manifest, lockfile, and pnpm settings (node-linker + allowed builds)
+COPY package.json pnpm-lock.yaml .npmrc pnpm-workspace.yaml ./
 
 # Install dependencies
-RUN yarn install --network-timeout 1000000
+RUN pnpm install --frozen-lockfile
 
 # Copy the entire project to the working directory
 COPY . .
@@ -22,7 +25,7 @@ ARG DEPLOYED_COMMIT_SHA=''
 RUN echo "export const version = { deployed_version: '$DEPLOYED_VERSION', deployed_commit_sha: '$DEPLOYED_COMMIT_SHA' };" > /app/src/environments/version.ts
 
 # Build the Angular app using the specified configuration
-RUN yarn run build --configuration $BUILD_CONFIG
+RUN pnpm run build --configuration $BUILD_CONFIG
 
 # Stage 2: Serve Angular app using Nginx
 FROM nginx:1.30.0-alpine

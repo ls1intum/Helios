@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - uses: dbelyaev/action-checkstyle@master
+      - uses: dbelyaev/action-checkstyle@ebd9df2e22f6696655aeba7c6d26956e7f41e1cc  # v3.10.0
         with:
           github_token: ${{ secrets.github_token }}
           reporter: github-pr-review
@@ -22,24 +22,40 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+      - name: Setup pnpm
+        uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
+        with:
+          version: 11.2.2
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
           node-version-file: client/.nvmrc
+          cache: 'pnpm'
+          cache-dependency-path: client/pnpm-lock.yaml
       - name: Install modules
         working-directory: ./client
-        run: yarn
+        run: pnpm install --frozen-lockfile
       - name: Run ESLint
         working-directory: ./client
-        run: npx eslint --max-warnings 0 .
+        run: pnpm exec eslint --max-warnings 0 .
   lint-keycloakify:
     name: Linting Keycloakify
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+      - name: Setup pnpm
+        uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
+        with:
+          version: 11.2.2
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: client/.nvmrc
+          cache: 'pnpm'
+          cache-dependency-path: keycloakify/pnpm-lock.yaml
       - name: Install modules
         working-directory: ./keycloakify
-        run: yarn
+        run: pnpm install --frozen-lockfile
       - name: Run ESLint
         working-directory: ./keycloakify
-        run: npx eslint --max-warnings 0 .
+        run: pnpm exec eslint --max-warnings 0 .

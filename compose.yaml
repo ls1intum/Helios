@@ -120,7 +120,7 @@ services:
 
   client:
     container_name: client
-    command: sh -c "yarn dev"
+    command: sh -c "pnpm dev"
     build:
       context: ./client
       dockerfile: Dockerfile.dev

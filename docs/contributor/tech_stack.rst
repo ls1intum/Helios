@@ -16,6 +16,11 @@ Client
 Angular is a platform and framework for building client-side applications using HTML, CSS, and TypeScript.
 It provides a comprehensive set of tools and libraries for developing interactive web applications.
 
+**pnpm**: Package Manager
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+`pnpm <https://pnpm.io/>`_ is the package manager for both the ``client`` and ``keycloakify`` apps (it replaced yarn). It is fast, disk-efficient, and strict about dependency resolution. The version is pinned via the ``packageManager`` field in ``package.json`` and is managed through Corepack — run ``corepack enable`` once, then use ``pnpm install`` / ``pnpm dev`` / ``pnpm build``. Do **not** use npm or yarn. See the `Setup Guide <../setup#prerequisites>`_ to get started.
+
 **Angular Tanstack Query**: Powerful asynchronous data fetching library
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

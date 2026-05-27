@@ -4,12 +4,12 @@ FROM alpine:3.23
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
 
-# Install app dependencies
-RUN apk add --no-cache git yarn nodejs
-RUN yarn
+# Install app dependencies and pnpm (pinned to the repo's package manager)
+RUN apk add --no-cache git nodejs npm && npm install -g pnpm@11.2.2
 
-COPY yarn.lock package.json /usr/src/app/
-RUN yarn
+# Copy manifest, lockfile, and pnpm settings, then install
+COPY package.json pnpm-lock.yaml .npmrc pnpm-workspace.yaml /usr/src/app/
+RUN pnpm install --frozen-lockfile
 
 ENV HOST 0.0.0.0
 
