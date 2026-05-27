@@ -57,6 +57,9 @@ class WorkflowRunOrphanSweepIntegrationTest {
   // orphan branch, but referenced by a deployment → keep
   private static final long ORPHAN_WITH_DEPLOYMENT = 104L;
 
+  private static final long REPOSITORY_ID = 1L;
+  private static final String DELETED_BRANCH = "deleted-feature";
+
   @Autowired private WorkflowRunRepository repo;
   @Autowired private DataSource dataSource;
   private JdbcTemplate jdbc;
@@ -78,11 +81,11 @@ class WorkflowRunOrphanSweepIntegrationTest {
         "INSERT INTO branch (repository_id, name, ahead_by, behind_by, is_default, protection) "
             + "VALUES (1, 'main', 0, 0, true, false)");
 
-    insertRun(ORPHAN_OLD, "deleted-feature", "30 days");
+    insertRun(ORPHAN_OLD, DELETED_BRANCH, "30 days");
     insertRun(LIVE_BRANCH, "main", "30 days");
-    insertRun(ORPHAN_YOUNG, "deleted-feature", "1 day");
+    insertRun(ORPHAN_YOUNG, DELETED_BRANCH, "1 day");
     insertRun(NULL_BRANCH, null, "30 days");
-    insertRun(ORPHAN_WITH_DEPLOYMENT, "deleted-feature", "30 days");
+    insertRun(ORPHAN_WITH_DEPLOYMENT, DELETED_BRANCH, "30 days");
 
     // A deployment references the orphan run → the sweep must preserve it.
     jdbc.update(
@@ -116,15 +119,25 @@ class WorkflowRunOrphanSweepIntegrationTest {
   }
 
   @Test
-  void previewReturnsOnlyTheDeletableOrphan() {
-    assertThat(repo.previewOrphanBranchRunIds(GRACE_DAYS, BATCH_SIZE)).containsExactly(ORPHAN_OLD);
+  void candidateQueriesReturnOnlyTheDeletableOrphan() {
+    // Only repo 1 has a candidate, and within it only the old, branch-deleted,
+    // non-deployment-referenced run — the live/young/null/deployment runs are excluded.
+    assertThat(repo.findRepositoriesWithOrphanCandidates(GRACE_DAYS))
+        .containsExactly(REPOSITORY_ID);
+
+    var candidates =
+        repo.findOrphanBranchRunCandidatesForRepo(REPOSITORY_ID, GRACE_DAYS, BATCH_SIZE);
+    assertThat(candidates).hasSize(1);
+    assertThat(candidates.get(0).getId()).isEqualTo(ORPHAN_OLD);
+    assertThat(candidates.get(0).getHeadBranch()).isEqualTo(DELETED_BRANCH);
   }
 
   @Test
-  void purgeDeletesOnlyTheOrphanAndCascadesItsChildren() {
-    int deleted = repo.purgeOrphanBranchRunsBatch(GRACE_DAYS, BATCH_SIZE);
+  void deletingAConfirmedOrphanCascadesToItsChildren() {
+    // The task confirms candidates against GitHub, then deletes by id; here we
+    // exercise that delete-by-id path and assert the FK cascade.
+    repo.deleteAllByIdInBatch(List.of(ORPHAN_OLD));
 
-    assertThat(deleted).isEqualTo(1);
     assertThat(remainingRunIds())
         .containsExactlyInAnyOrder(LIVE_BRANCH, ORPHAN_YOUNG, NULL_BRANCH, ORPHAN_WITH_DEPLOYMENT);
     // ON DELETE CASCADE removed the orphan's test suite and case.
@@ -133,9 +146,8 @@ class WorkflowRunOrphanSweepIntegrationTest {
   }
 
   @Test
-  void purgeRespectsBatchSizeLimit() {
-    // batchSize 2 must delete at most 2 rows even though only one is eligible here.
-    assertThat(repo.purgeOrphanBranchRunsBatch(GRACE_DAYS, 2)).isEqualTo(1);
+  void candidateQueryRespectsTheLimit() {
+    assertThat(repo.findOrphanBranchRunCandidatesForRepo(REPOSITORY_ID, GRACE_DAYS, 1)).hasSize(1);
   }
 
   private List<Long> remainingRunIds() {
