@@ -81,7 +81,6 @@ class WorkflowRunCleanupTaskTest {
 
   @Test
   void purgeOrphanBranchRunsSkipsInvalidBatchSize() {
-    WorkflowRunRepository repo = Mockito.mock(WorkflowRunRepository.class);
     WorkflowRunCleanupProps props = new WorkflowRunCleanupProps();
     props.setDryRun(false);
     WorkflowRunCleanupProps.OrphanBranches orphan = new WorkflowRunCleanupProps.OrphanBranches();
@@ -90,6 +89,7 @@ class WorkflowRunCleanupTaskTest {
     orphan.setBatchSize(0); // invalid: before the guard this looped forever (LIMIT 0 deletes 0)
     props.setOrphanBranches(orphan);
 
+    WorkflowRunRepository repo = Mockito.mock(WorkflowRunRepository.class);
     WorkflowRunCleanupTask task = new WorkflowRunCleanupTask(repo, props);
 
     task.purgeOrphanBranchRuns();
