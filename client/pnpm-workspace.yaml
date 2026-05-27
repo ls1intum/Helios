@@ -15,3 +15,15 @@ allowBuilds:
   esbuild: true
   lmdb: true
   msgpackr-extract: true
+
+# Force patched versions of transitive, dev-only dependencies flagged by
+# Dependabot. Both are pulled in solely via the Angular dev-server chain
+# (@angular-devkit/build-angular -> webpack-dev-server -> sockjs -> uuid):
+#  - webpack-dev-server <=5.2.3: cross-origin source exposure on non-HTTPS
+#    origins (GHSA fixed in 5.2.4). build-webpack requires ^5.0.2, so 5.2.4 fits.
+#  - uuid <11.1.1: missing buffer bounds check in v3/v5/v6 when `buf` is passed.
+#    sockjs only calls uuid.v4() with no buffer, so it isn't actually exploitable,
+#    but bumping clears the alert; v11 keeps the .v4 CJS export sockjs uses.
+overrides:
+  webpack-dev-server: 5.2.4
+  uuid: 11.1.1
