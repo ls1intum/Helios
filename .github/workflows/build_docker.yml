@@ -2,6 +2,12 @@ name: Build Docker Image
 
 on:
   workflow_call:
+    inputs:
+      ref:
+        description: 'Git ref (branch, tag, or SHA) to build. Defaults to the triggering ref.'
+        required: false
+        type: string
+        default: ''
 
 permissions:
   contents: read
@@ -38,6 +44,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
         with:
+          # When called from a workflow_dispatch with an explicit ref input, build that ref's
+          # source. For normal push-triggered calls, inputs.ref is empty and we fall back to
+          # github.ref (the triggering ref). The ref is passed only to actions/checkout, which
+          # validates it as a git reference — never used in a `run:` step (no shell exposure).
+          ref: ${{ inputs.ref || github.ref }}
           fetch-depth: 1
 
       - name: Log in to the Container registry
