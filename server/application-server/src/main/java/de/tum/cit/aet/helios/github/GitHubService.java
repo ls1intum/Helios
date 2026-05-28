@@ -466,41 +466,91 @@ public class GitHubService {
   }
 
   /**
-   * Approves GitHub pending deployments for a workflow run on behalf of user.
+   * Approves GitHub pending deployments for a workflow run on behalf of a user. The user is
+   * impersonated via Keycloak's GitHub identity-broker token exchange ({@code requested_subject =
+   * githubUserLogin}); the resulting access token is used to POST {@code state: approved} to
+   * {@code /actions/runs/{run_id}/pending_deployments}.
    *
-   * @param repoNameWithOwner the repository name with owner
+   * @param repoNameWithOwner repository {@code owner/name}
    * @param runId the workflow run ID
-   * @param environmentId the IDs of environments to approve
-   * @param githubUserLogin the GitHub user login
+   * @param environmentId the environment to approve for this run
+   * @param githubUserLogin the GitHub login of the user to act as
+   * @param comment shown in the GitHub UI alongside the approval; lets us distinguish auto vs
+   *     in-app vs email-link approvals during audit
    * @throws IOException if an I/O error occurs during the API call
+   */
+  public void approveDeploymentOnBehalfOfUser(
+      String repoNameWithOwner,
+      long runId,
+      Long environmentId,
+      String githubUserLogin,
+      String comment)
+      throws IOException {
+    reviewPendingDeployment(
+        repoNameWithOwner, runId, environmentId, githubUserLogin, "approved", comment);
+  }
+
+  /**
+   * Backwards-compatible overload that uses the legacy "auto-approved" comment. Prefer the
+   * {@code (..., String comment)} variant in new code so the GitHub-side audit comment carries the
+   * source of the decision (auto / in-app / email-link).
    */
   public void approveDeploymentOnBehalfOfUser(
       String repoNameWithOwner, long runId, Long environmentId, String githubUserLogin)
       throws IOException {
-    // Construct the approval payload
+    approveDeploymentOnBehalfOfUser(
+        repoNameWithOwner,
+        runId,
+        environmentId,
+        githubUserLogin,
+        "Automatically approved by Helios");
+  }
+
+  /**
+   * Rejects a GitHub pending deployment on behalf of a user. Symmetric to
+   * {@link #approveDeploymentOnBehalfOfUser(String, long, Long, String, String)} — sets
+   * {@code state: rejected}, which causes GitHub to mark the workflow run as failed for everyone.
+   */
+  public void rejectDeploymentOnBehalfOfUser(
+      String repoNameWithOwner,
+      long runId,
+      Long environmentId,
+      String githubUserLogin,
+      String comment)
+      throws IOException {
+    reviewPendingDeployment(
+        repoNameWithOwner, runId, environmentId, githubUserLogin, "rejected", comment);
+  }
+
+  private void reviewPendingDeployment(
+      String repoNameWithOwner,
+      long runId,
+      Long environmentId,
+      String githubUserLogin,
+      String state,
+      String comment)
+      throws IOException {
     Map<String, Object> requestPayload =
         Map.of(
             "environment_ids", List.of(environmentId),
-            "state", "approved",
-            "comment", "Automatically approved by Helios");
+            "state", state,
+            "comment", comment == null ? "" : comment);
 
     String jsonPayload = objectMapper.writeValueAsString(requestPayload);
 
-    // Construct the URL
     String url =
         String.format(
             "https://api.github.com/repos/%s/actions/runs/%d/pending_deployments",
             repoNameWithOwner, runId);
 
-    // Build the request with the GitHub token from Keycloak
     RequestBody requestBody =
         RequestBody.create(jsonPayload, MediaType.get("application/json; charset=utf-8"));
 
     TokenExchangeResponse tokenExchangeResponse =
         this.gitHubAuthBroker.exchangeToken(githubUserLogin);
     if (tokenExchangeResponse == null) {
-      log.error("Token exchange response is null");
-      return;
+      log.error("Token exchange response is null for {}", githubUserLogin);
+      throw new IOException("Failed to exchange GitHub token for user: " + githubUserLogin);
     }
     String userGithubToken = tokenExchangeResponse.getAccessToken();
 
@@ -512,7 +562,6 @@ public class GitHubService {
             .header("Accept", "application/json")
             .build();
 
-    // Execute the request
     try (Response response = okHttpClient.newCall(request).execute()) {
       if (!response.isSuccessful()) {
         String errorBody = "No error details";
@@ -524,17 +573,18 @@ public class GitHubService {
             log.warn("Failed to read error response body", e);
           }
         }
-
         log.error(
-            "GitHub API call failed with response code: {} and body: {}",
+            "GitHub pending-deployment {} failed for run {}: HTTP {} body={}",
+            state,
+            runId,
             response.code(),
             errorBody);
-        throw new IOException("GitHub API call failed with response code: " + response.code());
+        throw new IOException(
+            "GitHub pending-deployment " + state + " failed: HTTP " + response.code());
       }
-
-      log.info("Successfully approved deployment for run ID: {}", runId);
+      log.info("Successfully set deployment state '{}' for run ID {}", state, runId);
     } catch (IOException e) {
-      log.error("Error occurred while approving deployment: {}", e.getMessage());
+      log.error("Error while setting deployment state '{}': {}", state, e.getMessage());
       throw e;
     }
   }
