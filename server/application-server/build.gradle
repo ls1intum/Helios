@@ -30,15 +30,8 @@ if (gradle.startParameter.taskNames.any { requested -> openApiTaskHints.any { re
     }
 }
 
-configurations {
-    // Configuration that tracks the agents added to the JVM at run-time
-    runtimeAgent1
-    runtimeAgent2
-}
-
 dependencies {
     implementation(platform("org.springframework.ai:spring-ai-bom:2.0.0-M8"))
-    implementation 'org.springframework.boot:spring-boot-starter-aspectj'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-webmvc'
     implementation 'org.springframework.boot:spring-boot-starter-restclient'
@@ -70,8 +63,6 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
     testImplementation 'io.zonky.test:embedded-database-spring-test:2.8.0'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-    runtimeAgent1 "org.springframework:spring-instrument"
-    runtimeAgent2 "org.aspectj:aspectjweaver"
 }
 
 springBoot {
@@ -120,7 +111,6 @@ tasks.named("bootRun") {
 }
 
 tasks.register("bootRunDev", BootRun) {
-    jvmArgs = ["-javaagent:${configurations.runtimeAgent1.asPath}", "-javaagent:${configurations.runtimeAgent2.asPath}"]
     group = "application"
     description = "Runs the Spring Boot application with the dev profile"
     // Set the active profile to 'dev'
@@ -130,7 +120,7 @@ tasks.register("bootRunDev", BootRun) {
 }
 
 tasks.register("bootRunDevDebug", BootRun) {
-    jvmArgs = ["-javaagent:${configurations.runtimeAgent1.asPath}", "-javaagent:${configurations.runtimeAgent2.asPath}", "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"]
+    jvmArgs = ["-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"]
     group = "application"
     description = "Runs the Spring Boot application with the dev profile and remote debug on port 5005"
     systemProperty "spring.profiles.active", "dev"
@@ -139,7 +129,6 @@ tasks.register("bootRunDevDebug", BootRun) {
 }
 
 tasks.register("bootRunStaging", BootRun) {
-    jvmArgs = ["-javaagent:${configurations.runtimeAgent1.asPath}", "-javaagent:${configurations.runtimeAgent2.asPath}"]
     group = "application"
     description = "Runs the Spring Boot application with the staging profile"
     // Set the active profile to 'staging'
@@ -149,7 +138,6 @@ tasks.register("bootRunStaging", BootRun) {
 }
 
 tasks.register("bootRunProd", BootRun) {
-    jvmArgs = ["-javaagent:${configurations.runtimeAgent1.asPath}", "-javaagent:${configurations.runtimeAgent2.asPath}"]
     group = "application"
     description = "Runs the Spring Boot application with the prod profile"
     // Set the active profile to 'prod'
@@ -196,8 +184,7 @@ openApi {
     outputFileName = 'openapi.yaml'
     // Set the active profile to 'openapi'
     customBootRun {
-        args.set(["--spring.profiles.active=openapi", "-javaagent:${configurations.runtimeAgent1.asPath}", "-javaagent:${configurations.runtimeAgent2.asPath}"])
-        jvmArgs.set(["-javaagent:${configurations.runtimeAgent1.asPath}", "-javaagent:${configurations.runtimeAgent2.asPath}"])
+        args.set(["--spring.profiles.active=openapi"])
     }
     waitTimeInSeconds.set(60)
 }
