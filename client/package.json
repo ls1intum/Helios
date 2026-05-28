@@ -32,7 +32,7 @@
     "@hey-api/client-fetch": "0.13.1",
     "@primeng/themes": "21.0.4",
     "@sentry/angular": "10.54.0",
-    "@sentry/cli": "2.58.6",
+    "@sentry/cli": "3.4.3",
     "@tanstack/angular-query-experimental": "5.100.14",
     "angular-tabler-icons": "3.26.0",
     "canvas-confetti": "1.9.4",
