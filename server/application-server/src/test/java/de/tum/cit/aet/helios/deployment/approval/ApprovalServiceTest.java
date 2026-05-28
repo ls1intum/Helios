@@ -92,6 +92,70 @@ class ApprovalServiceTest {
   }
 
   @Test
+  void persistsPendingRowAndPublishesEmailForEachReviewerOnDeferral() {
+    Fixture f = new Fixture();
+    f.deploymentExists();
+    f.reviewersAre(reviewers("bob", "carol"));
+    User bob = f.stubReviewerUser("bob");
+    User carol = f.stubReviewerUser("carol");
+
+    f.service().reviewDeployment(f.source, f.gitRepository, f.environment, f.user);
+
+    // One PENDING row per reviewer with a Helios user (deployer is NOT in the list here).
+    ArgumentCaptor<DeploymentApprovalRequest> rowCaptor =
+        ArgumentCaptor.forClass(DeploymentApprovalRequest.class);
+    verify(f.approvalRequestRepository, org.mockito.Mockito.times(2)).save(rowCaptor.capture());
+    java.util.Set<String> persistedFor =
+        rowCaptor.getAllValues().stream()
+            .map(DeploymentApprovalRequest::getReviewerLogin)
+            .collect(java.util.stream.Collectors.toSet());
+    org.junit.jupiter.api.Assertions.assertEquals(Set.of("bob", "carol"), persistedFor);
+    for (DeploymentApprovalRequest row : rowCaptor.getAllValues()) {
+      org.junit.jupiter.api.Assertions.assertEquals(
+          DeploymentApprovalRequest.State.PENDING, row.getState());
+      org.junit.jupiter.api.Assertions.assertNotNull(row.getEmailSentAt());
+    }
+
+    // Email published once per reviewer.
+    verify(f.notificationPublisher).send(eq(bob), any());
+    verify(f.notificationPublisher).send(eq(carol), any());
+  }
+
+  @Test
+  void skipsCreatorWhenPreventSelfReviewBlocksThem() {
+    Fixture f = new Fixture();
+    f.deploymentExists();
+    // alice = deployer, also a reviewer; bob is a separate reviewer. preventSelfReview is ON.
+    f.reviewersAre(new ReviewerResolution(true, Set.of("alice", "bob"), Set.of()));
+    User aliceAsReviewer = f.stubReviewerUser("alice");
+    User bob = f.stubReviewerUser("bob");
+
+    f.service().reviewDeployment(f.source, f.gitRepository, f.environment, f.user);
+
+    // Alice is skipped (would self-review); bob is notified.
+    verify(f.notificationPublisher, org.mockito.Mockito.never()).send(eq(aliceAsReviewer), any());
+    verify(f.notificationPublisher).send(eq(bob), any());
+  }
+
+  @Test
+  void skipsReviewersWithoutHeliosUserRow() {
+    Fixture f = new Fixture();
+    f.deploymentExists();
+    f.reviewersAre(reviewers("bob", "stranger"));
+    User bob = f.stubReviewerUser("bob"); // stranger intentionally has no Helios user row
+
+    f.service().reviewDeployment(f.source, f.gitRepository, f.environment, f.user);
+
+    verify(f.approvalRequestRepository, org.mockito.Mockito.times(1))
+        .save(any(DeploymentApprovalRequest.class));
+    verify(f.notificationPublisher).send(eq(bob), any());
+    verify(f.notificationPublisher, org.mockito.Mockito.never())
+        .send(org.mockito.ArgumentMatchers.argThat(
+                u -> u != null && "stranger".equalsIgnoreCase(u.getLogin())),
+            any());
+  }
+
+  @Test
   void noopsWhenEnvironmentHasNoRequiredReviewerRule() throws IOException {
     Fixture f = new Fixture();
     f.deploymentExists();
@@ -216,6 +280,12 @@ class ApprovalServiceTest {
         mock(HeliosDeploymentRepository.class);
     final EnvironmentService environmentService = mock(EnvironmentService.class);
     final ApprovalDecisionWriter decisionWriter = mock(ApprovalDecisionWriter.class);
+    final de.tum.cit.aet.helios.user.UserRepository userRepository =
+        mock(de.tum.cit.aet.helios.user.UserRepository.class);
+    final DeploymentApprovalRequestRepository approvalRequestRepository =
+        mock(DeploymentApprovalRequestRepository.class);
+    final de.tum.cit.aet.helios.nats.NatsNotificationPublisherService notificationPublisher =
+        mock(de.tum.cit.aet.helios.nats.NatsNotificationPublisherService.class);
 
     final DeploymentSource source = mock(DeploymentSource.class);
     final GitRepository gitRepository = mock(GitRepository.class);
@@ -228,8 +298,18 @@ class ApprovalServiceTest {
     Fixture() {
       when(source.getId()).thenReturn(DEPLOYMENT_ID);
       when(gitRepository.getNameWithOwner()).thenReturn(REPO);
+      when(gitRepository.getRepositoryId()).thenReturn(880304517L);
       when(environment.getId()).thenReturn(ENV_ID);
       when(environment.getName()).thenReturn(ENV_NAME);
+      // Default: no reviewer has a Helios user row. Tests that exercise the email path
+      // override per-login as needed via stubReviewerUser().
+      when(userRepository.findByLoginIgnoreCase(org.mockito.ArgumentMatchers.anyString()))
+          .thenReturn(Optional.empty());
+      when(approvalRequestRepository.lockByDeploymentAndReviewerLogin(
+              org.mockito.ArgumentMatchers.anyLong(), org.mockito.ArgumentMatchers.anyString()))
+          .thenReturn(Optional.empty());
+      when(approvalRequestRepository.save(any(DeploymentApprovalRequest.class)))
+          .thenAnswer(inv -> inv.getArgument(0));
     }
 
     void deploymentExists() {
@@ -242,9 +322,24 @@ class ApprovalServiceTest {
       when(environmentService.resolveReviewers(ENV_ID)).thenReturn(Optional.of(resolution));
     }
 
+    /** Make a known reviewer login resolvable to a Helios user row so the email path runs. */
+    User stubReviewerUser(String login) {
+      User u = new User();
+      u.setId((long) (login.hashCode() & 0x7fffffff));
+      u.setLogin(login);
+      when(userRepository.findByLoginIgnoreCase(login)).thenReturn(Optional.of(u));
+      return u;
+    }
+
     ApprovalService service() {
       return new ApprovalService(
-          gitHubService, heliosDeploymentRepository, environmentService, decisionWriter);
+          gitHubService,
+          heliosDeploymentRepository,
+          environmentService,
+          decisionWriter,
+          userRepository,
+          approvalRequestRepository,
+          notificationPublisher);
     }
   }
 

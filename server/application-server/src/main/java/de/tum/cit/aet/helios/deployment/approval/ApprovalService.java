@@ -9,8 +9,12 @@ import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment.AutoApprovalDecision;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
+import de.tum.cit.aet.helios.nats.NatsNotificationPublisherService;
+import de.tum.cit.aet.helios.notification.email.DeploymentApprovalRequestPayload;
 import de.tum.cit.aet.helios.user.User;
+import de.tum.cit.aet.helios.user.UserRepository;
 import java.io.IOException;
+import java.time.OffsetDateTime;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -50,6 +54,9 @@ public class ApprovalService {
   private final HeliosDeploymentRepository heliosDeploymentRepository;
   private final EnvironmentService environmentService;
   private final ApprovalDecisionWriter decisionWriter;
+  private final UserRepository userRepository;
+  private final DeploymentApprovalRequestRepository approvalRequestRepository;
+  private final NatsNotificationPublisherService notificationPublisherService;
 
   public void reviewDeployment(
       DeploymentSource deploymentSource,
@@ -144,8 +151,7 @@ public class ApprovalService {
           String.join(", ", reviewers.userLogins()));
       decisionWriter.recordDecisionOnly(
           heliosDeployment, AutoApprovalDecision.DEFERRED_TO_REVIEWERS);
-      // Phase 2 surfaces these in the in-app pending-approvals list (and Phase 3 emails). For
-      // now the deployment stays WAITING on GitHub until a reviewer acts in Helios.
+      notifyReviewers(heliosDeployment, gitRepository, environment, reviewers, creatorLogin);
       return;
     }
 
@@ -210,6 +216,88 @@ public class ApprovalService {
     row.setState(DeploymentApprovalRequest.State.PENDING);
     // AUTO rows have no token TTL semantics; expiresAt is left null (column is nullable).
     return row;
+  }
+
+  /**
+   * For every User-type required reviewer, persists a {@code PENDING}
+   * {@link DeploymentApprovalRequest} (so the in-app pending-approvals list surfaces the
+   * deployment) and publishes a {@link DeploymentApprovalRequestPayload} via the notification
+   * pipeline. The notification publisher enforces the per-user eligibility gate
+   * ({@code helios.developers} staging allow-list and the user's
+   * {@code DEPLOYMENT_APPROVAL_REQUEST} preference) — if the reviewer has opted out (or has no
+   * Helios account at all), the audit row is still persisted so the in-app UI works the moment
+   * they next sign in.
+   *
+   * <p>Excludes the deployment creator when {@code preventSelfReview} is set on the protection
+   * rule (GitHub would 422 a self-review attempt). For other configurations the creator gets a
+   * pending row too — useful when the same person is one of several required reviewers and is
+   * deferred to (e.g. by being one of N).
+   *
+   * <p>Reviewers without a corresponding Helios {@link User} row (never signed in) are skipped
+   * silently: there is no email address to send to and no UI session to surface the row in.
+   * If they later sign in, the env sync will create their {@link User} row but this missed
+   * notification will not be retroactively emailed — the next deployment is the next chance.
+   */
+  private void notifyReviewers(
+      HeliosDeployment heliosDeployment,
+      GitRepository gitRepository,
+      Environment environment,
+      ReviewerResolution reviewers,
+      String creatorLogin) {
+
+    String workflowRunHtmlUrl =
+        heliosDeployment.getWorkflowRunHtmlUrl() != null
+            ? heliosDeployment.getWorkflowRunHtmlUrl()
+            : "";
+
+    for (String reviewerLogin : reviewers.userLogins()) {
+      if (reviewers.preventSelfReview() && reviewerLogin.equals(creatorLogin)) {
+        // GitHub would 422 a self-review and the UI hides the row from the creator anyway.
+        continue;
+      }
+      Optional<User> reviewerOpt = userRepository.findByLoginIgnoreCase(reviewerLogin);
+      if (reviewerOpt.isEmpty()) {
+        log.info(
+            "No Helios user row for required reviewer @{} on deployment {}; skipping pending row "
+                + "and email — reviewer must sign in to Helios at least once before they can be "
+                + "notified.",
+            reviewerLogin,
+            heliosDeployment.getId());
+        continue;
+      }
+      User reviewer = reviewerOpt.get();
+
+      // Persist (or update) one row per (deployment, reviewer). For a redelivered webhook the
+      // outer idempotency guard short-circuits before we get here, so we don't need to worry
+      // about duplicate rows. find-or-insert is still cheap and defensive.
+      DeploymentApprovalRequest row =
+          approvalRequestRepository
+              .lockByDeploymentAndReviewerLogin(heliosDeployment.getId(), reviewerLogin)
+              .orElseGet(DeploymentApprovalRequest::new);
+      row.setHeliosDeployment(heliosDeployment);
+      row.setReviewer(reviewer);
+      row.setReviewerLogin(reviewerLogin);
+      row.setState(DeploymentApprovalRequest.State.PENDING);
+      row.setEmailSentAt(OffsetDateTime.now());
+      approvalRequestRepository.save(row);
+
+      notificationPublisherService.send(
+          reviewer,
+          new DeploymentApprovalRequestPayload(
+              reviewer.getLogin(),
+              environment.getName(),
+              gitRepository.getNameWithOwner(),
+              gitRepository.getRepositoryId().toString(),
+              heliosDeployment.getId().toString(),
+              creatorLogin != null ? creatorLogin : "",
+              heliosDeployment.getSourceBranchName() != null
+                  ? heliosDeployment.getSourceBranchName()
+                  : (heliosDeployment.getBranchName() != null
+                      ? heliosDeployment.getBranchName()
+                      : ""),
+              heliosDeployment.getSha() != null ? heliosDeployment.getSha() : "",
+              workflowRunHtmlUrl));
+    }
   }
 
   /**

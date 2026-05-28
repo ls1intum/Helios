@@ -1,6 +1,8 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, effect, ElementRef, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { map } from 'rxjs/operators';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
@@ -48,17 +50,61 @@ import { PageHeadingComponent } from '@app/components/page-heading/page-heading.
   ],
   providers: [ConfirmationService, MessageService, provideTablerIcons({ IconCheck, IconX, IconClock, IconGitBranch, IconExternalLink })],
   templateUrl: './pending-approvals.component.html',
+  styleUrl: './pending-approvals.component.css',
 })
 export class PendingApprovalsComponent {
   private queryClient = inject(QueryClient);
   private confirmationService = inject(ConfirmationService);
   private messageService = inject(MessageService);
+  private hostEl: ElementRef<HTMLElement> = inject(ElementRef);
 
   /** Source of truth for the list — polled so the badge & table stay fresh while the tab is open. */
   pendingQuery = injectQuery(() => ({
     ...myPendingApprovalsOptions(),
     refetchInterval: 30_000,
   }));
+
+  /**
+   * Deep-link target from the approval-request email (`/pending-approvals?focus=<id>`). When set,
+   * the matching row scrolls into view and pulses briefly so the reviewer's eye lands on it. The
+   * auth flow can interleave a Keycloak redirect between the email click and the page actually
+   * mounting; both before and after-login arrivals are handled because the focus signal is
+   * driven by the query-param observable, not a one-shot init read.
+   */
+  private focusDeploymentId = toSignal(
+    inject(ActivatedRoute).queryParamMap.pipe(
+      map(params => {
+        const raw = params.get('focus');
+        if (!raw) return null;
+        const n = Number(raw);
+        return Number.isFinite(n) && n > 0 ? n : null;
+      })
+    ),
+    { initialValue: null as number | null }
+  );
+
+  /** Row id we've already focused (so refetches don't re-scroll the user mid-read). */
+  private alreadyFocusedId: number | null = null;
+
+  constructor() {
+    // When both the focus param and the row data are present, scroll once and highlight.
+    effect(() => {
+      const target = this.focusDeploymentId();
+      const rows = this.pendingQuery.data() ?? [];
+      if (target == null || target === this.alreadyFocusedId) return;
+      const row = rows.find(r => r.deploymentId === target);
+      if (!row) return;
+      this.alreadyFocusedId = target;
+      // Defer to next paint so the table has rendered the row.
+      queueMicrotask(() => {
+        const el = this.hostEl.nativeElement.querySelector(`tr[data-deployment-id="${target}"]`) as HTMLElement | null;
+        if (!el) return;
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.classList.add('row-focused');
+        setTimeout(() => el.classList.remove('row-focused'), 2400);
+      });
+    });
+  }
 
   declineDialogVisible = signal(false);
   declineTarget = signal<PendingApprovalDto | null>(null);

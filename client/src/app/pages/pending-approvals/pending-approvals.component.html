@@ -21,7 +21,7 @@
   </ng-template>
 
   <ng-template pTemplate="body" let-row>
-    <tr>
+    <tr [attr.data-deployment-id]="row.deploymentId">
       <td class="font-medium">{{ row.environmentName }}</td>
       <td>
         @if (row.repositoryId) {
