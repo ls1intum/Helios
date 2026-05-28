@@ -135,7 +135,7 @@ services:
       - helios-network
 
   notification:
-    image: eclipse-temurin:21
+    image: eclipse-temurin:25
     container_name: notification
     volumes:
       - ./server/notification:/app/notification
