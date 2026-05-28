@@ -10,4 +10,4 @@ sphinxcontrib-bibtex==2.7.0
 starlette==0.52.1
 urllib3==2.7.0
 uvicorn==0.48.0
-zipp==3.23.1
+zipp==4.1.0
