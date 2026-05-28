@@ -608,47 +608,6 @@ public class GitHubService {
   }
 
   /**
-   * Creates and publishes a GitHub release draft on behalf of a user.
-   *
-   * @param repoNameWithOwner the repository name with owner
-   * @param tagName the tag name for the release
-   * @param commitish the commitish value (branch or commit SHA)
-   * @param name the name of the release (title)
-   * @param body the body text of the release (release notes)
-   * @param draft whether this is a draft release (true) or a published release (false)
-   * @param githubUserLogin the GitHub user login
-   * @return the created GHRelease object
-   * @throws IOException if an I/O error occurs during the API call
-   */
-  public GHRelease createReleaseOnBehalfOfUser(
-      String repoNameWithOwner,
-      String tagName,
-      String commitish,
-      String name,
-      String body,
-      boolean draft,
-      String githubUserLogin)
-      throws IOException {
-
-    // Exchange token for the user
-    TokenExchangeResponse tokenExchangeResponse =
-        this.gitHubAuthBroker.exchangeToken(githubUserLogin);
-    if (tokenExchangeResponse == null) {
-      log.error("Token exchange response is null");
-      throw new IOException("Failed to exchange token for GitHub user: " + githubUserLogin);
-    }
-
-    return createReleaseWithUserToken(
-        repoNameWithOwner,
-        tagName,
-        commitish,
-        name,
-        body,
-        draft,
-        tokenExchangeResponse.getAccessToken());
-  }
-
-  /**
    * Creates and publishes a GitHub release draft with the current user's refreshed GitHub token
    * retrieved from Keycloak.
    */

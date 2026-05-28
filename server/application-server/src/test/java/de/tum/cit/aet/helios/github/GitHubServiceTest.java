@@ -1126,67 +1126,6 @@ class GitHubServiceTest {
   }
 
   @Test
-  void createReleaseOnBehalfOfUserSuccess() throws IOException {
-    final String repoNameWithOwner = "owner/repo";
-    final String tagName = "v1.0";
-    final String commitish = "main";
-    final String name = "Release v1.0";
-    final String body = "Release notes";
-    boolean draft = false;
-    String githubUserLogin = "testUser";
-    final String userGithubToken = "user-token";
-    final long releaseId = 12345L;
-
-    TokenExchangeResponse tokenResponse = new TokenExchangeResponse();
-    tokenResponse.setAccessToken(userGithubToken);
-    when(gitHubAuthBroker.exchangeToken(githubUserLogin)).thenReturn(tokenResponse);
-
-    Map<String, Object> expectedPayload =
-        Map.of(
-            "tag_name", tagName,
-            "target_commitish", commitish,
-            "name", name,
-            "body", body,
-            "draft", draft);
-    String jsonPayload =
-        "{\"tag_name\":\"v1.0\", \"target_commitish\":\"main\", \"name\":\"Release v1.0\","
-            + " \"body\":\"Release notes\", \"draft\":false}"; // Abridged
-    when(objectMapper.writeValueAsString(expectedPayload)).thenReturn(jsonPayload);
-
-    String responseJson = "{\"id\":" + releaseId + "}";
-    ResponseBody responseBody =
-        ResponseBody.create(responseJson, MediaType.parse("application/json"));
-    Response mockOkHttpResponse =
-        new Response.Builder()
-            .request(new Request.Builder().url("http://dummyurl").build())
-            .protocol(Protocol.HTTP_1_1)
-            .code(201) // Created
-            .message("Created")
-            .body(responseBody)
-            .build();
-    Call mockCall = mock(Call.class);
-    when(okHttpClient.newCall(any(Request.class))).thenReturn(mockCall);
-    when(mockCall.execute()).thenReturn(mockOkHttpResponse);
-    when(objectMapper.readValue(responseJson, Map.class)).thenReturn(Map.of("id", releaseId));
-
-    GHRepository mockRepo = mock(GHRepository.class);
-    GHRelease mockRelease = mock(GHRelease.class);
-    when(githubFacade.getRepository(repoNameWithOwner)).thenReturn(mockRepo);
-    when(mockRepo.getRelease(releaseId)).thenReturn(mockRelease);
-
-    GHRelease actualRelease =
-        gitHubService.createReleaseOnBehalfOfUser(
-            repoNameWithOwner, tagName, commitish, name, body, draft, githubUserLogin);
-
-    assertEquals(mockRelease, actualRelease);
-    verify(gitHubAuthBroker).exchangeToken(githubUserLogin);
-    verify(objectMapper).writeValueAsString(expectedPayload);
-    verify(okHttpClient).newCall(any(Request.class));
-    verify(objectMapper).readValue(responseJson, Map.class);
-    verify(mockRepo).getRelease(releaseId);
-  }
-
-  @Test
   void createReleaseAsCurrentUserUsesBrokerToken() throws IOException {
     final String repoNameWithOwner = "owner/repo";
     final String tagName = "v1.0";
@@ -1249,59 +1188,6 @@ class GitHubServiceTest {
     verify(okHttpClient).newCall(any(Request.class));
     verify(objectMapper).readValue(responseJson, Map.class);
     verify(mockRepo).getRelease(releaseId);
-  }
-
-  @Test
-  void createReleaseOnBehalfOfUserTokenExchangeFails() throws IOException {
-    String repoNameWithOwner = "owner/repo";
-    String githubUserLogin = "testUser";
-    when(gitHubAuthBroker.exchangeToken(githubUserLogin)).thenReturn(null);
-
-    IOException exception =
-        assertThrows(
-            IOException.class,
-            () -> {
-              gitHubService.createReleaseOnBehalfOfUser(
-                  repoNameWithOwner, "v1", "main", "name", "body", false, githubUserLogin);
-            });
-    assertEquals(
-        "Failed to exchange token for GitHub user: " + githubUserLogin, exception.getMessage());
-  }
-
-  @Test
-  void createReleaseOnBehalfOfUserApiFailure() throws IOException {
-    final String repoNameWithOwner = "owner/repo";
-    final String githubUserLogin = "testUser";
-    final String userGithubToken = "user-token";
-
-    TokenExchangeResponse tokenResponse = new TokenExchangeResponse();
-    tokenResponse.setAccessToken(userGithubToken);
-    when(gitHubAuthBroker.exchangeToken(githubUserLogin)).thenReturn(tokenResponse);
-    when(objectMapper.writeValueAsString(anyMap())).thenReturn("{}"); // Dummy JSON
-
-    ResponseBody errorResponseBody =
-        ResponseBody.create("Error", MediaType.parse("application/json"));
-    Response mockOkHttpResponse =
-        new Response.Builder()
-            .request(new Request.Builder().url("http://dummyurl").build())
-            .protocol(Protocol.HTTP_1_1)
-            .code(500)
-            .message("Error")
-            .body(errorResponseBody)
-            .build();
-    Call mockCall = mock(Call.class);
-    when(okHttpClient.newCall(any(Request.class))).thenReturn(mockCall);
-    when(mockCall.execute()).thenReturn(mockOkHttpResponse);
-
-    IOException exception =
-        assertThrows(
-            IOException.class,
-            () -> {
-              gitHubService.createReleaseOnBehalfOfUser(
-                  repoNameWithOwner, "v1", "main", "name", "body", false, githubUserLogin);
-            });
-
-    assertEquals("Error", exception.getMessage());
   }
 
   @Test
