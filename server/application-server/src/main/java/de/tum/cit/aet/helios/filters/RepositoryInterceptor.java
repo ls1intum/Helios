@@ -22,10 +22,14 @@ public class RepositoryInterceptor implements WebRequestInterceptor {
 
   @Override
   public void postHandle(@NonNull WebRequest request, @Nullable ModelMap model) {
-    RepositoryContext.clear();
+    // Intentionally empty — clearing happens in afterCompletion so the ThreadLocal is wiped
+    // even when the handler threw (postHandle is skipped on exception, afterCompletion runs
+    // unconditionally). Otherwise a Tomcat worker thread keeps a stale repositoryId across
+    // requests, which would silently apply the previous user's tenant filter to the next.
   }
 
   @Override
-  public void afterCompletion(@NonNull WebRequest request, @Nullable Exception ex)
-      throws Exception {}
+  public void afterCompletion(@NonNull WebRequest request, @Nullable Exception ex) {
+    RepositoryContext.clear();
+  }
 }

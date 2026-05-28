@@ -11,12 +11,6 @@ plugins {
 group = 'de.tum.cit.aet'
 version = '0.0.1-SNAPSHOT'
 
-configurations {
-	// Configuration that tracks the agents added to the JVM at run-time
-	runtimeAgent1
-	runtimeAgent2
-}
-
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
 	implementation 'org.springframework.boot:spring-boot-starter-mail'
@@ -26,8 +20,6 @@ dependencies {
 	implementation 'io.nats:jnats:2.25.3'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-	runtimeAgent1 "org.springframework:spring-instrument"
-	runtimeAgent2 "org.aspectj:aspectjweaver"
 }
 
 // Custom bootRun task to force the user to specify an active profile
@@ -74,11 +66,6 @@ tasks.named("bootRun") {
 tasks.register("bootRunDev", BootRun) {
 	group = "application"
 	description = "Runs the Spring Boot application with the dev profile"
-
-	jvmArgs = [
-			"-javaagent:${configurations.runtimeAgent1.asPath}",
-			"-javaagent:${configurations.runtimeAgent2.asPath}"
-	]
 	systemProperty "spring.profiles.active", "dev"
 	classpath = sourceSets.main.runtimeClasspath
 	mainClass.set("de.tum.cit.aet.notification.NotificationApplication") // Adjust this!
