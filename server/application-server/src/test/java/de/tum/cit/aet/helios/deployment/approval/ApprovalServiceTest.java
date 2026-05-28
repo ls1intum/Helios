@@ -1,6 +1,5 @@
 package de.tum.cit.aet.helios.deployment.approval;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -10,6 +9,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import de.tum.cit.aet.helios.deployment.github.DeploymentSource;
@@ -23,6 +23,7 @@ import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment.AutoApprovalDecis
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
 import de.tum.cit.aet.helios.user.User;
 import java.io.IOException;
+import java.time.OffsetDateTime;
 import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
@@ -42,57 +43,52 @@ class ApprovalServiceTest {
   void autoApprovesWhenDeployerIsRequiredReviewer() throws IOException {
     Fixture f = new Fixture();
     f.deploymentExists();
-    f.reviewersAre(reviewers("alice", "bob")); // alice = deployer
+    f.reviewersAre(reviewers("alice", "bob"));
 
     f.service().reviewDeployment(f.source, f.gitRepository, f.environment, f.user);
 
     verify(f.gitHubService)
         .approveDeploymentOnBehalfOfUser(
-            eq(REPO),
-            eq(WORKFLOW_RUN_ID),
-            eq(ENV_ID),
-            eq(DEPLOYER),
-            anyString());
-    assertEquals(AutoApprovalDecision.AUTO_APPROVED, f.heliosDeployment.getAutoApprovalDecision());
+            eq(REPO), eq(WORKFLOW_RUN_ID), eq(ENV_ID), eq(DEPLOYER), anyString());
 
+    // Audit row + stamp written atomically via the writer service.
     ArgumentCaptor<DeploymentApprovalRequest> rowCaptor =
         ArgumentCaptor.forClass(DeploymentApprovalRequest.class);
-    verify(f.approvalRequestRepository).save(rowCaptor.capture());
+    verify(f.decisionWriter)
+        .recordSuccess(eq(f.heliosDeployment), rowCaptor.capture(),
+            eq(AutoApprovalDecision.AUTO_APPROVED));
     DeploymentApprovalRequest row = rowCaptor.getValue();
-    assertEquals(DeploymentApprovalRequest.State.APPROVED, row.getState());
-    assertEquals(DeploymentApprovalRequest.Via.AUTO, row.getVia());
-    assertEquals(DEPLOYER, row.getReviewerLogin());
+    org.junit.jupiter.api.Assertions.assertEquals(DEPLOYER, row.getReviewerLogin());
+    org.junit.jupiter.api.Assertions.assertEquals(
+        DeploymentApprovalRequest.Via.AUTO, row.getVia());
   }
 
   @Test
   void defersWhenPreventSelfReviewBlocksDeployer() throws IOException {
     Fixture f = new Fixture();
     f.deploymentExists();
-    f.reviewersAre(
-        new ReviewerResolution(true, Set.of("alice", "bob"), Set.of())); // self-review blocked
+    f.reviewersAre(new ReviewerResolution(true, Set.of("alice", "bob"), Set.of()));
 
     f.service().reviewDeployment(f.source, f.gitRepository, f.environment, f.user);
 
     verify(f.gitHubService, never())
         .approveDeploymentOnBehalfOfUser(any(), anyLong(), any(), any(), any());
-    assertEquals(
-        AutoApprovalDecision.DEFERRED_TO_REVIEWERS, f.heliosDeployment.getAutoApprovalDecision());
-    // No AUTO audit row created when we never attempted to approve.
-    verify(f.approvalRequestRepository, never()).save(any());
+    verify(f.decisionWriter)
+        .recordDecisionOnly(f.heliosDeployment, AutoApprovalDecision.DEFERRED_TO_REVIEWERS);
   }
 
   @Test
   void defersWhenDeployerIsNotARequiredReviewer() throws IOException {
     Fixture f = new Fixture();
     f.deploymentExists();
-    f.reviewersAre(reviewers("bob", "carol")); // alice not listed
+    f.reviewersAre(reviewers("bob", "carol"));
 
     f.service().reviewDeployment(f.source, f.gitRepository, f.environment, f.user);
 
     verify(f.gitHubService, never())
         .approveDeploymentOnBehalfOfUser(any(), anyLong(), any(), any(), any());
-    assertEquals(
-        AutoApprovalDecision.DEFERRED_TO_REVIEWERS, f.heliosDeployment.getAutoApprovalDecision());
+    verify(f.decisionWriter)
+        .recordDecisionOnly(f.heliosDeployment, AutoApprovalDecision.DEFERRED_TO_REVIEWERS);
   }
 
   @Test
@@ -105,16 +101,14 @@ class ApprovalServiceTest {
 
     verify(f.gitHubService, never())
         .approveDeploymentOnBehalfOfUser(any(), anyLong(), any(), any(), any());
-    assertEquals(
-        AutoApprovalDecision.NOT_APPLICABLE, f.heliosDeployment.getAutoApprovalDecision());
+    verify(f.decisionWriter)
+        .recordDecisionOnly(f.heliosDeployment, AutoApprovalDecision.NOT_APPLICABLE);
   }
 
   @Test
   void teamReviewerFallsBackToLegacyImpersonation() throws IOException {
     Fixture f = new Fixture();
     f.deploymentExists();
-    // Team-only rule (no user logins) — Helios doesn't yet expand teams, so we attempt the
-    // legacy "impersonate deployer" path and stamp TEAM_REVIEWER_FALLBACK.
     f.reviewersAre(new ReviewerResolution(false, Set.of(), Set.of("maintainers")));
 
     f.service().reviewDeployment(f.source, f.gitRepository, f.environment, f.user);
@@ -122,9 +116,9 @@ class ApprovalServiceTest {
     verify(f.gitHubService)
         .approveDeploymentOnBehalfOfUser(
             eq(REPO), eq(WORKFLOW_RUN_ID), eq(ENV_ID), eq(DEPLOYER), anyString());
-    assertEquals(
-        AutoApprovalDecision.TEAM_REVIEWER_FALLBACK,
-        f.heliosDeployment.getAutoApprovalDecision());
+    verify(f.decisionWriter)
+        .recordSuccess(eq(f.heliosDeployment), any(),
+            eq(AutoApprovalDecision.TEAM_REVIEWER_FALLBACK));
   }
 
   @Test
@@ -139,15 +133,33 @@ class ApprovalServiceTest {
 
     f.service().reviewDeployment(f.source, f.gitRepository, f.environment, f.user);
 
-    // We attempted, GitHub rejected, the audit row carries FAILED_AT_GITHUB so the deployment
-    // can still be resolved by a reviewer in Phase 2.
-    ArgumentCaptor<DeploymentApprovalRequest> rowCaptor =
-        ArgumentCaptor.forClass(DeploymentApprovalRequest.class);
-    verify(f.approvalRequestRepository).save(rowCaptor.capture());
-    assertEquals(
-        DeploymentApprovalRequest.State.FAILED_AT_GITHUB, rowCaptor.getValue().getState());
-    assertEquals(
-        AutoApprovalDecision.DEFERRED_TO_REVIEWERS, f.heliosDeployment.getAutoApprovalDecision());
+    // The writer's recordFailure captures both the audit-row and the deployment-stamp in one
+    // transaction; we verify the fallback decision is DEFERRED_TO_REVIEWERS (the user can still
+    // be served via Phase-2 in-app approval).
+    verify(f.decisionWriter)
+        .recordFailure(
+            eq(f.heliosDeployment),
+            any(),
+            eq(AutoApprovalDecision.DEFERRED_TO_REVIEWERS),
+            eq("HTTP 403"));
+    verify(f.decisionWriter, never()).recordSuccess(any(), any(), any());
+  }
+
+  @Test
+  void skipsWhenDeploymentAlreadyDecided() throws IOException {
+    // Idempotency: if a webhook is redelivered after we already decided (e.g. AUTO_APPROVED on
+    // run 1), run 2 must not call GitHub again or stamp a different decision.
+    Fixture f = new Fixture();
+    f.heliosDeployment.setAutoApprovalDecision(AutoApprovalDecision.AUTO_APPROVED);
+    f.heliosDeployment.setAutoApprovalAt(OffsetDateTime.now());
+    f.deploymentExists();
+
+    f.service().reviewDeployment(f.source, f.gitRepository, f.environment, f.user);
+
+    verify(f.gitHubService, never())
+        .approveDeploymentOnBehalfOfUser(any(), anyLong(), any(), any(), any());
+    verifyNoInteractions(f.decisionWriter);
+    verify(f.environmentService, never()).resolveReviewers(any());
   }
 
   @Test
@@ -160,13 +172,12 @@ class ApprovalServiceTest {
 
     verify(f.gitHubService, never())
         .approveDeploymentOnBehalfOfUser(any(), anyLong(), any(), any(), any());
+    verifyNoInteractions(f.decisionWriter);
   }
 
   @Test
   void retryCatchesDeploymentThatWasPersistedJustBefore() throws IOException {
     Fixture f = new Fixture();
-    // The first lookup misses (the deploy-side transaction hadn't committed yet), the next finds
-    // the row.
     when(f.heliosDeploymentRepository.findByDeploymentId(DEPLOYMENT_ID))
         .thenReturn(Optional.empty(), Optional.of(f.heliosDeployment));
     f.reviewersAre(reviewers("alice"));
@@ -176,7 +187,8 @@ class ApprovalServiceTest {
     verify(f.gitHubService)
         .approveDeploymentOnBehalfOfUser(
             eq(REPO), eq(WORKFLOW_RUN_ID), eq(ENV_ID), eq(DEPLOYER), anyString());
-    assertEquals(AutoApprovalDecision.AUTO_APPROVED, f.heliosDeployment.getAutoApprovalDecision());
+    verify(f.decisionWriter)
+        .recordSuccess(eq(f.heliosDeployment), any(), eq(AutoApprovalDecision.AUTO_APPROVED));
   }
 
   @Test
@@ -190,6 +202,7 @@ class ApprovalServiceTest {
     verify(f.gitHubService, never())
         .approveDeploymentOnBehalfOfUser(any(), anyLong(), any(), any(), any());
     verify(f.environmentService, never()).resolveReviewers(any());
+    verifyNoInteractions(f.decisionWriter);
   }
 
   private static ReviewerResolution reviewers(String... logins) {
@@ -202,8 +215,7 @@ class ApprovalServiceTest {
     final HeliosDeploymentRepository heliosDeploymentRepository =
         mock(HeliosDeploymentRepository.class);
     final EnvironmentService environmentService = mock(EnvironmentService.class);
-    final DeploymentApprovalRequestRepository approvalRequestRepository =
-        mock(DeploymentApprovalRequestRepository.class);
+    final ApprovalDecisionWriter decisionWriter = mock(ApprovalDecisionWriter.class);
 
     final DeploymentSource source = mock(DeploymentSource.class);
     final GitRepository gitRepository = mock(GitRepository.class);
@@ -218,20 +230,12 @@ class ApprovalServiceTest {
       when(gitRepository.getNameWithOwner()).thenReturn(REPO);
       when(environment.getId()).thenReturn(ENV_ID);
       when(environment.getName()).thenReturn(ENV_NAME);
-      // approvalRequestRepository.save just returns its argument
-      when(approvalRequestRepository.save(any(DeploymentApprovalRequest.class)))
-          .thenAnswer(inv -> inv.getArgument(0));
-      when(heliosDeploymentRepository.save(any(HeliosDeployment.class)))
-          .thenAnswer(inv -> inv.getArgument(0));
     }
 
-    /** Make the default findByDeploymentId return the test deployment. */
     void deploymentExists() {
       reset(heliosDeploymentRepository);
       when(heliosDeploymentRepository.findByDeploymentId(DEPLOYMENT_ID))
           .thenReturn(Optional.of(heliosDeployment));
-      when(heliosDeploymentRepository.save(any(HeliosDeployment.class)))
-          .thenAnswer(inv -> inv.getArgument(0));
     }
 
     void reviewersAre(ReviewerResolution resolution) {
@@ -240,7 +244,7 @@ class ApprovalServiceTest {
 
     ApprovalService service() {
       return new ApprovalService(
-          gitHubService, heliosDeploymentRepository, environmentService, approvalRequestRepository);
+          gitHubService, heliosDeploymentRepository, environmentService, decisionWriter);
     }
   }
 

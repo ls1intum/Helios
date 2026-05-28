@@ -91,7 +91,11 @@ public class DeploymentApprovalRequest {
   @Column(name = "responded_at")
   private OffsetDateTime respondedAt;
 
-  @Column(name = "expires_at", nullable = false)
+  /**
+   * Null for {@code AUTO} and {@code IN_APP} rows (no TTL); set only for {@code EMAIL_LINK} rows
+   * where the token expires 24h after issuance. See V53 migration for the schema.
+   */
+  @Column(name = "expires_at")
   private OffsetDateTime expiresAt;
 
   @Column(name = "failure_reason", columnDefinition = "TEXT")

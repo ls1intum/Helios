@@ -16,7 +16,10 @@ CREATE TABLE public.deployment_approval_request (
     created_at            TIMESTAMPTZ NOT NULL,
     email_sent_at         TIMESTAMPTZ,
     responded_at          TIMESTAMPTZ,
-    expires_at            TIMESTAMPTZ NOT NULL,
+    -- Null for AUTO and IN_APP rows (no TTL); set only for email-link rows where the token
+    -- expires 24h after issuance. Keeping this nullable avoids polluting future expiry sweeps
+    -- with rows that have no meaningful TTL.
+    expires_at            TIMESTAMPTZ,
     failure_reason        TEXT
 );
 

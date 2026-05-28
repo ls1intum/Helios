@@ -125,11 +125,6 @@ public class HeliosDeployment {
 
   // Enum to represent deployment status
   public enum Status {
-    /**
-     * Persisted before GitHub dispatch; we hold a row to attach approval state to without racing
-     * the {@code deployment_status} webhook (which can arrive within ~100ms of dispatch).
-     */
-    PENDING_DISPATCH,
     /** Deployment called and waiting GitHub webhook listener. */
     WAITING,
     /** The queued. */
@@ -204,7 +199,6 @@ public class HeliosDeployment {
   public static Deployment.State mapHeliosStatusToDeploymentState(
       HeliosDeployment.Status heliosStatus) {
     return switch (heliosStatus) {
-      case PENDING_DISPATCH -> Deployment.State.PENDING;
       case WAITING -> Deployment.State.PENDING;
       case QUEUED -> Deployment.State.PENDING;
       case IN_PROGRESS -> Deployment.State.IN_PROGRESS;

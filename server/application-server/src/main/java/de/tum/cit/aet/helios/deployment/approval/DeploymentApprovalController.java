@@ -7,6 +7,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -35,13 +36,19 @@ public class DeploymentApprovalController {
   private final AuthService authService;
 
   @GetMapping("/pending-approvals")
+  @Transactional(readOnly = true)
   public ResponseEntity<List<PendingApprovalDto>> myPendingApprovals() {
     User currentUser = authService.getUserFromGithubId();
     if (currentUser == null) {
       throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "No authenticated user.");
     }
+    // Keep the Hibernate session open across the DTO mapping in case any association referenced
+    // by PendingApprovalDto.from is LAZY despite the join fetch (e.g. if someone later flips
+    // creator to LAZY, this still works rather than silently breaking under OSIV=false).
     List<PendingApprovalDto> result =
-        approvalRequestRepository.findPendingForReviewer(currentUser.getId()).stream()
+        approvalRequestRepository
+            .findByReviewerAndState(currentUser.getId(), DeploymentApprovalRequest.State.PENDING)
+            .stream()
             .map(PendingApprovalDto::from)
             .toList();
     return ResponseEntity.ok(result);

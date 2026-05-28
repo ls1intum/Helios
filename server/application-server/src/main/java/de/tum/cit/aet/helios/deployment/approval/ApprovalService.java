@@ -11,7 +11,6 @@ import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment.AutoApprovalDecis
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
 import de.tum.cit.aet.helios.user.User;
 import java.io.IOException;
-import java.time.OffsetDateTime;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -19,13 +18,19 @@ import org.springframework.stereotype.Service;
 
 /**
  * Decides what to do when GitHub fires a {@code deployment_status: waiting} event for a Helios-
- * originated deployment to a protected environment. This is the entry point that turns "GitHub is
- * waiting on a required reviewer" into either an immediate auto-approval (when the deployer is
- * themselves a required reviewer) or a deferral that surfaces the deployment in the in-app
- * pending-approvals list (Phase 2 — and later, an email to every reviewer in Phase 3).
+ * originated deployment to a protected environment. Turns "GitHub is waiting on a required
+ * reviewer" into either an immediate auto-approval (when the deployer is themselves a required
+ * reviewer) or a deferral that surfaces the deployment in the in-app pending-approvals list.
  *
  * <p>The upstream startup-time gate on the webhook still applies (see
- * {@code GitHubDeploymentStatusMessageHandler}), so we don't re-approve old events on restart.
+ * {@code GitHubDeploymentStatusMessageHandler}), so old events aren't re-processed on restart.
+ * On top of that, this service is itself idempotent against webhook redelivery: once
+ * {@link HeliosDeployment#getAutoApprovalDecision()} is non-null, a second invocation is a no-op.
+ *
+ * <p>Atomicity: the audit-row save and the deployment-stamp save live in a single transaction via
+ * {@link ApprovalDecisionWriter}, so a crash between the two writes cannot leave the database in
+ * a half-state. The bounded retry against the persist-vs-webhook race runs *outside* that
+ * transaction so each lookup reads a fresh snapshot.
  */
 @Log4j2
 @Service
@@ -35,16 +40,16 @@ public class ApprovalService {
   /**
    * Total attempts to find the {@link HeliosDeployment} row when the webhook arrives just before
    * the deploy-side transaction commits. Three attempts with the delays below close the race
-   * window for any realistic dispatch latency.
+   * window for any realistic dispatch latency without blocking the NATS dispatcher for long.
    */
   private static final int FIND_DEPLOYMENT_MAX_ATTEMPTS = 3;
 
-  private static final long[] FIND_DEPLOYMENT_RETRY_DELAYS_MS = {100L, 500L, 2000L};
+  private static final long[] FIND_DEPLOYMENT_RETRY_DELAYS_MS = {100L, 300L};
 
   private final GitHubService gitHubService;
   private final HeliosDeploymentRepository heliosDeploymentRepository;
   private final EnvironmentService environmentService;
-  private final DeploymentApprovalRequestRepository approvalRequestRepository;
+  private final ApprovalDecisionWriter decisionWriter;
 
   public void reviewDeployment(
       DeploymentSource deploymentSource,
@@ -58,6 +63,16 @@ public class ApprovalService {
       // The deployment_status webhook arrived for something Helios doesn't know about — most
       // likely a deployment that wasn't dispatched from Helios. Leave it for GitHub's normal flow.
       log.info("Skipping approval for non-Helios deployment with ID {}", deploymentSource.getId());
+      return;
+    }
+
+    // Idempotency: GitHub redelivers webhooks; we treat the first decision as authoritative.
+    AutoApprovalDecision priorDecision = heliosDeployment.getAutoApprovalDecision();
+    if (priorDecision != null) {
+      log.info(
+          "Skipping reviewDeployment for {}; already decided as {}.",
+          heliosDeployment.getId(),
+          priorDecision);
       return;
     }
 
@@ -81,7 +96,7 @@ public class ApprovalService {
           "No required-reviewer rule for environment {}; leaving deployment {} to GitHub.",
           environment.getName(),
           heliosDeployment.getId());
-      stampAutoApprovalDecision(heliosDeployment, AutoApprovalDecision.NOT_APPLICABLE);
+      decisionWriter.recordDecisionOnly(heliosDeployment, AutoApprovalDecision.NOT_APPLICABLE);
       return;
     }
 
@@ -127,7 +142,8 @@ public class ApprovalService {
           reason,
           reviewers.userLogins().size(),
           String.join(", ", reviewers.userLogins()));
-      stampAutoApprovalDecision(heliosDeployment, AutoApprovalDecision.DEFERRED_TO_REVIEWERS);
+      decisionWriter.recordDecisionOnly(
+          heliosDeployment, AutoApprovalDecision.DEFERRED_TO_REVIEWERS);
       // Phase 2 surfaces these in the in-app pending-approvals list (and Phase 3 emails). For
       // now the deployment stays WAITING on GitHub until a reviewer acts in Helios.
       return;
@@ -160,10 +176,7 @@ public class ApprovalService {
       gitHubService.approveDeploymentOnBehalfOfUser(
           repoNameWithOwner, workflowRunId, environmentId, impersonatedLogin, comment);
 
-      auditRow.setState(DeploymentApprovalRequest.State.APPROVED);
-      auditRow.setRespondedAt(OffsetDateTime.now());
-      approvalRequestRepository.save(auditRow);
-      stampAutoApprovalDecision(heliosDeployment, decisionOnSuccess);
+      decisionWriter.recordSuccess(heliosDeployment, auditRow, decisionOnSuccess);
       log.info(
           "Auto-approved deployment {} on behalf of @{} ({}).",
           heliosDeployment.getId(),
@@ -173,17 +186,11 @@ public class ApprovalService {
       // Most likely "creator is not actually authorised on this env" (legacy team-fallback) or a
       // transient GitHub failure. Persist the audit row so the failure is visible and the row
       // can be retried by Phase-2 in-app approval (a reviewer can still resolve it manually).
-      auditRow.setState(DeploymentApprovalRequest.State.FAILED_AT_GITHUB);
-      auditRow.setFailureReason(e.getMessage());
-      auditRow.setRespondedAt(OffsetDateTime.now());
-      approvalRequestRepository.save(auditRow);
-      // Still stamp the deployment so it doesn't look untouched by Helios; treat this as "we
-      // tried but GitHub rejected" — the deployment falls back to manual review.
-      stampAutoApprovalDecision(
-          heliosDeployment,
+      AutoApprovalDecision fallback =
           decisionOnSuccess == AutoApprovalDecision.TEAM_REVIEWER_FALLBACK
               ? AutoApprovalDecision.TEAM_REVIEWER_FALLBACK
-              : AutoApprovalDecision.DEFERRED_TO_REVIEWERS);
+              : AutoApprovalDecision.DEFERRED_TO_REVIEWERS;
+      decisionWriter.recordFailure(heliosDeployment, auditRow, fallback, e.getMessage());
       log.warn(
           "Auto-approve failed for deployment {} (impersonating @{}): {}. "
               + "Falling back to deferred approval.",
@@ -201,33 +208,36 @@ public class ApprovalService {
     row.setReviewerLogin(impersonatedLogin != null ? impersonatedLogin : "");
     row.setVia(DeploymentApprovalRequest.Via.AUTO);
     row.setState(DeploymentApprovalRequest.State.PENDING);
-    // AUTO rows have no token TTL semantics; use now() to satisfy NOT NULL.
-    row.setExpiresAt(OffsetDateTime.now());
+    // AUTO rows have no token TTL semantics; expiresAt is left null (column is nullable).
     return row;
   }
 
-  private void stampAutoApprovalDecision(
-      HeliosDeployment heliosDeployment, AutoApprovalDecision decision) {
-    heliosDeployment.setAutoApprovalDecision(decision);
-    heliosDeployment.setAutoApprovalAt(OffsetDateTime.now());
-    heliosDeploymentRepository.save(heliosDeployment);
-  }
-
+  /**
+   * Bounded retry against the race between {@code DeploymentService.deployToEnvironment}'s commit
+   * and the webhook arrival. Each attempt is its own (implicit) transaction so it reads a fresh
+   * snapshot; if all attempts miss we treat the deployment as non-Helios.
+   */
   private Optional<HeliosDeployment> findHeliosDeploymentWithRetry(Long deploymentId) {
-    for (int attempt = 0; attempt < FIND_DEPLOYMENT_MAX_ATTEMPTS; attempt++) {
-      Optional<HeliosDeployment> found = heliosDeploymentRepository.findByDeploymentId(deploymentId);
+    Optional<HeliosDeployment> found = heliosDeploymentRepository.findByDeploymentId(deploymentId);
+    if (found.isPresent()) {
+      return found;
+    }
+    for (int delayIdx = 0;
+        delayIdx < FIND_DEPLOYMENT_RETRY_DELAYS_MS.length
+            && delayIdx < FIND_DEPLOYMENT_MAX_ATTEMPTS - 1;
+        delayIdx++) {
+      try {
+        Thread.sleep(FIND_DEPLOYMENT_RETRY_DELAYS_MS[delayIdx]);
+      } catch (InterruptedException ie) {
+        Thread.currentThread().interrupt();
+        return Optional.empty();
+      }
+      found = heliosDeploymentRepository.findByDeploymentId(deploymentId);
       if (found.isPresent()) {
         return found;
-      }
-      if (attempt + 1 < FIND_DEPLOYMENT_MAX_ATTEMPTS) {
-        try {
-          Thread.sleep(FIND_DEPLOYMENT_RETRY_DELAYS_MS[attempt]);
-        } catch (InterruptedException ie) {
-          Thread.currentThread().interrupt();
-          return Optional.empty();
-        }
       }
     }
     return Optional.empty();
   }
+
 }

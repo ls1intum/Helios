@@ -22,11 +22,7 @@ describe('ProfileNavSectionComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [ProfileNavSectionComponent, RouterTestingModule],
-      providers: [
-        provideZonelessChangeDetection(),
-        provideQueryClient(new QueryClient()),
-        { provide: KeycloakService, useValue: keycloakStub },
-      ],
+      providers: [provideZonelessChangeDetection(), provideQueryClient(new QueryClient()), { provide: KeycloakService, useValue: keycloakStub }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(ProfileNavSectionComponent);

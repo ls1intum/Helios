@@ -37,12 +37,19 @@ public class DeploymentReviewActionService {
   private final EnvironmentService environmentService;
   private final GitHubService gitHubService;
 
-  @Transactional
+  /**
+   * The {@code noRollbackFor = ResponseStatusException.class} is load-bearing: when GitHub
+   * rejects an approval we throw {@link ResponseStatusException} with {@code BAD_GATEWAY} *after*
+   * persisting a {@code FAILED_AT_GITHUB} audit row, and Spring's default behaviour is to roll
+   * back the transaction on any {@link RuntimeException}. Without this annotation the audit row
+   * is silently discarded and the UI cannot offer a meaningful retry path.
+   */
+  @Transactional(noRollbackFor = ResponseStatusException.class)
   public DeploymentApprovalRequest approveAsCurrentUser(Long heliosDeploymentId, User currentUser) {
     return review(heliosDeploymentId, currentUser, true, null);
   }
 
-  @Transactional
+  @Transactional(noRollbackFor = ResponseStatusException.class)
   public DeploymentApprovalRequest declineAsCurrentUser(
       Long heliosDeploymentId, User currentUser, String comment) {
     return review(heliosDeploymentId, currentUser, false, comment);
@@ -172,8 +179,7 @@ public class DeploymentReviewActionService {
               row.setReviewer(reviewer);
               row.setReviewerLogin(reviewer.getLogin());
               row.setState(DeploymentApprovalRequest.State.PENDING);
-              // No token issued for an in-app click; use now() to satisfy NOT NULL.
-              row.setExpiresAt(OffsetDateTime.now());
+              // expiresAt stays null — no TTL semantics for in-app clicks.
               return row;
             });
   }

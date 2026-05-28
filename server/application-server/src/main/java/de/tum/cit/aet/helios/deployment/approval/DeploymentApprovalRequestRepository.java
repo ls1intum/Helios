@@ -32,18 +32,26 @@ public interface DeploymentApprovalRequestRepository
       @Param("deploymentId") Long deploymentId, @Param("reviewerLogin") String reviewerLogin);
 
   /**
-   * Outstanding (PENDING) requests for a reviewer, used by the in-app pending-approvals list. Join
-   * fetch the deployment + environment + repo so the list can render without N+1 queries.
+   * Outstanding requests for a reviewer in the given state, used by the in-app pending-approvals
+   * list. Join-fetches everything the row's DTO touches (deployment, environment, repo, creator)
+   * so the list renders without N+1 queries and remains correct even if any of those associations
+   * is later switched to LAZY or {@code spring.jpa.open-in-view=false}.
+   *
+   * <p>The state is passed as a parameter rather than inlined as a JPQL enum literal — the
+   * inlined form needs the non-portable nested-class {@code $} separator and is brittle to
+   * Hibernate parser changes.
    */
   @Query(
       "select r from DeploymentApprovalRequest r "
           + "join fetch r.heliosDeployment d "
+          + "left join fetch d.creator "
           + "join fetch d.environment e "
           + "join fetch e.repository "
-          + "where r.reviewer.id = :reviewerId and r.state = "
-          + "de.tum.cit.aet.helios.deployment.approval.DeploymentApprovalRequest$State.PENDING "
+          + "where r.reviewer.id = :reviewerId and r.state = :state "
           + "order by r.createdAt desc")
-  List<DeploymentApprovalRequest> findPendingForReviewer(@Param("reviewerId") Long reviewerId);
+  List<DeploymentApprovalRequest> findByReviewerAndState(
+      @Param("reviewerId") Long reviewerId,
+      @Param("state") DeploymentApprovalRequest.State state);
 
   long countByReviewerIdAndState(Long reviewerId, DeploymentApprovalRequest.State state);
 }

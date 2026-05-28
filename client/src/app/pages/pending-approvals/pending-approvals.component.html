@@ -24,29 +24,33 @@
     <tr>
       <td class="font-medium">{{ row.environmentName }}</td>
       <td>
-        <a *ngIf="row.repositoryId" [routerLink]="['/repo', row.repositoryId, 'ci-cd']" class="text-primary hover:underline">
-          {{ row.repositoryNameWithOwner }}
-        </a>
-        <span *ngIf="!row.repositoryId">{{ row.repositoryNameWithOwner }}</span>
+        @if (row.repositoryId) {
+          <a [routerLink]="['/repo', row.repositoryId, 'ci-cd']" class="text-primary hover:underline">{{ row.repositoryNameWithOwner }}</a>
+        } @else {
+          <span>{{ row.repositoryNameWithOwner }}</span>
+        }
       </td>
       <td>{{ row.creatorLogin || '—' }}</td>
       <td class="font-mono text-xs">
         <i-tabler name="git-branch" class="!size-3 inline-block" />
         {{ row.sourceBranchName }}
-        <span *ngIf="row.sha" class="text-muted-color"> · {{ row.sha.substring(0, 7) }}</span>
+        @if (row.sha) {
+          <span class="text-muted-color"> · {{ row.sha.substring(0, 7) }}</span>
+        }
       </td>
       <td>
-        <a
-          *ngIf="row.workflowRunHtmlUrl"
-          [href]="row.workflowRunHtmlUrl"
-          target="_blank"
-          rel="noopener"
-          class="text-primary hover:underline inline-flex items-center gap-1"
-          pTooltip="Open the GitHub workflow run in a new tab"
-        >
-          Run #{{ row.workflowRunId }}
-          <i-tabler name="external-link" class="!size-3" />
-        </a>
+        @if (row.workflowRunHtmlUrl) {
+          <a
+            [href]="row.workflowRunHtmlUrl"
+            target="_blank"
+            rel="noopener"
+            class="text-primary hover:underline inline-flex items-center gap-1"
+            pTooltip="Open the GitHub workflow run in a new tab"
+          >
+            Run #{{ row.workflowRunId }}
+            <i-tabler name="external-link" class="!size-3" />
+          </a>
+        }
       </td>
       <td>
         <i-tabler name="clock" class="!size-3 inline-block" />
