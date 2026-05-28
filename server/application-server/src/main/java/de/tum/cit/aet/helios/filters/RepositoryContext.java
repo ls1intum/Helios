@@ -7,8 +7,11 @@ public class RepositoryContext {
 
   private RepositoryContext() {}
 
-  private static final InheritableThreadLocal<Long> currentRepository =
-      new InheritableThreadLocal<>();
+  // Plain ThreadLocal — no consumer in this codebase relies on parent→child inheritance, and
+  // inheritance is a footgun under virtual threads (the value propagates at thread creation,
+  // so any virtual thread started inside a request would silently inherit that request's tenant).
+  // Async / scheduled / NATS-handler paths do their own repo resolution.
+  private static final ThreadLocal<Long> currentRepository = new ThreadLocal<>();
 
   public static void setRepositoryId(String repositoryId) {
     try {
