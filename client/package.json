@@ -21,7 +21,7 @@
   ],
   "dependencies": {
     "@angular/animations": "21.2.14",
-    "@angular/cdk": "21.2.12",
+    "@angular/cdk": "21.2.13",
     "@angular/common": "21.2.14",
     "@angular/compiler": "21.2.14",
     "@angular/core": "21.2.14",
@@ -31,7 +31,7 @@
     "@angular/router": "21.2.14",
     "@hey-api/client-fetch": "0.13.1",
     "@primeng/themes": "21.0.4",
-    "@sentry/angular": "10.53.1",
+    "@sentry/angular": "10.54.0",
     "@sentry/cli": "2.58.6",
     "@tanstack/angular-query-experimental": "5.100.14",
     "angular-tabler-icons": "3.26.0",
@@ -78,5 +78,5 @@
     "vite": "7.3.3",
     "vitest": "4.1.7"
   },
-  "packageManager": "pnpm@11.3.0"
+  "packageManager": "pnpm@11.4.0"
 }
