@@ -1,0 +1,106 @@
+<app-page-heading title="Pending deployment approvals">
+  <p class="text-sm text-muted-color mt-1">
+    Deployments to protected environments where you're a required reviewer. Approve or decline here — Helios talks to GitHub on your behalf.
+  </p>
+</app-page-heading>
+
+<p-toast />
+<p-confirmdialog />
+
+<p-table [value]="pendingQuery.data() ?? []" [loading]="pendingQuery.isLoading()" styleClass="p-datatable-sm" [rowHover]="true">
+  <ng-template pTemplate="header">
+    <tr>
+      <th>Environment</th>
+      <th>Repository</th>
+      <th>Triggered by</th>
+      <th>Branch / SHA</th>
+      <th>Workflow</th>
+      <th>Waiting since</th>
+      <th class="text-right">Actions</th>
+    </tr>
+  </ng-template>
+
+  <ng-template pTemplate="body" let-row>
+    <tr>
+      <td class="font-medium">{{ row.environmentName }}</td>
+      <td>
+        <a *ngIf="row.repositoryId" [routerLink]="['/repo', row.repositoryId, 'ci-cd']" class="text-primary hover:underline">
+          {{ row.repositoryNameWithOwner }}
+        </a>
+        <span *ngIf="!row.repositoryId">{{ row.repositoryNameWithOwner }}</span>
+      </td>
+      <td>{{ row.creatorLogin || '—' }}</td>
+      <td class="font-mono text-xs">
+        <i-tabler name="git-branch" class="!size-3 inline-block" />
+        {{ row.sourceBranchName }}
+        <span *ngIf="row.sha" class="text-muted-color"> · {{ row.sha.substring(0, 7) }}</span>
+      </td>
+      <td>
+        <a
+          *ngIf="row.workflowRunHtmlUrl"
+          [href]="row.workflowRunHtmlUrl"
+          target="_blank"
+          rel="noopener"
+          class="text-primary hover:underline inline-flex items-center gap-1"
+          pTooltip="Open the GitHub workflow run in a new tab"
+        >
+          Run #{{ row.workflowRunId }}
+          <i-tabler name="external-link" class="!size-3" />
+        </a>
+      </td>
+      <td>
+        <i-tabler name="clock" class="!size-3 inline-block" />
+        {{ row.requestedAt | date: 'short' }}
+      </td>
+      <td class="text-right whitespace-nowrap">
+        <p-button
+          icon="pi pi-check"
+          label="Approve"
+          severity="success"
+          size="small"
+          [loading]="inFlightDeploymentId() === row.deploymentId"
+          [disabled]="inFlightDeploymentId() !== null"
+          (onClick)="onApprove(row)"
+        />
+        <p-button
+          icon="pi pi-times"
+          label="Decline"
+          severity="danger"
+          size="small"
+          styleClass="ml-2"
+          [disabled]="inFlightDeploymentId() !== null"
+          (onClick)="openDeclineDialog(row)"
+        />
+      </td>
+    </tr>
+  </ng-template>
+
+  <ng-template pTemplate="emptymessage">
+    <tr>
+      <td colspan="7" class="text-center py-8 text-muted-color">
+        @if (pendingQuery.isLoading()) {
+          <p-skeleton width="50%" height="1rem" />
+        } @else {
+          Nothing waiting on you right now.
+        }
+      </td>
+    </tr>
+  </ng-template>
+</p-table>
+
+<p-dialog header="Decline this deployment?" [(visible)]="declineDialogVisible" [modal]="true" [closable]="true" [style]="{ width: '32rem' }">
+  @if (declineTarget(); as t) {
+    <p class="mb-3 text-sm">
+      Declining will <b>reject the workflow run on GitHub</b> — the deployment will not happen and the run is marked as failed. This affects everyone watching this deployment.
+    </p>
+    <p class="mb-3 text-sm">
+      Environment: <b>{{ t.environmentName }}</b> · Repository: {{ t.repositoryNameWithOwner }}
+    </p>
+    <label class="text-sm font-medium block mb-1">Optional reason (shown in the GitHub audit comment):</label>
+    <textarea pTextarea class="w-full" [rows]="3" [maxlength]="500" [(ngModel)]="declineComment" placeholder="e.g. wrong branch / not ready"></textarea>
+  }
+  <ng-template pTemplate="footer">
+    <p-button label="Cancel" severity="secondary" (onClick)="declineDialogVisible.set(false)" />
+    <p-button label="Decline deployment" severity="danger" (onClick)="confirmDecline()" />
+  </ng-template>
+</p-dialog>

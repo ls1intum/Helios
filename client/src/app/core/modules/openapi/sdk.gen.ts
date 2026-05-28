@@ -6,6 +6,9 @@ import type {
   AnalyzeFailedTestData,
   AnalyzeFailedTestErrors,
   AnalyzeFailedTestResponses,
+  ApproveData,
+  ApproveErrors,
+  ApproveResponses,
   CancelDeploymentData,
   CancelDeploymentErrors,
   CancelDeploymentResponses,
@@ -21,6 +24,9 @@ import type {
   CreateWorkflowGroupData,
   CreateWorkflowGroupErrors,
   CreateWorkflowGroupResponses,
+  DeclineData,
+  DeclineErrors,
+  DeclineResponses,
   DeleteReleaseCandidateByNameData,
   DeleteReleaseCandidateByNameErrors,
   DeleteReleaseCandidateByNameResponses,
@@ -204,6 +210,9 @@ import type {
   LockEnvironmentData,
   LockEnvironmentErrors,
   LockEnvironmentResponses,
+  MyPendingApprovalsData,
+  MyPendingApprovalsErrors,
+  MyPendingApprovalsResponses,
   PublishReleaseDraftData,
   PublishReleaseDraftErrors,
   PublishReleaseDraftResponses,
@@ -555,6 +564,19 @@ export const update = <ThrowOnError extends boolean = false>(options: Options<Up
     },
   });
 
+export const decline = <ThrowOnError extends boolean = false>(options: Options<DeclineData, ThrowOnError>) =>
+  (options.client ?? client).post<DeclineResponses, DeclineErrors, ThrowOnError>({
+    url: '/api/deployments/{deploymentId}/decline',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+
+export const approve = <ThrowOnError extends boolean = false>(options: Options<ApproveData, ThrowOnError>) =>
+  (options.client ?? client).post<ApproveResponses, ApproveErrors, ThrowOnError>({ url: '/api/deployments/{deploymentId}/approve', ...options });
+
 export const deployToEnvironment = <ThrowOnError extends boolean = false>(options: Options<DeployToEnvironmentData, ThrowOnError>) =>
   (options.client ?? client).post<DeployToEnvironmentResponses, DeployToEnvironmentErrors, ThrowOnError>({
     url: '/api/deployments/deploy',
@@ -739,6 +761,9 @@ export const getActivityHistoryByPullRequestId = <ThrowOnError extends boolean =
     url: '/api/deployments/pr/{pullRequestId}/activity-history',
     ...options,
   });
+
+export const myPendingApprovals = <ThrowOnError extends boolean = false>(options?: Options<MyPendingApprovalsData, ThrowOnError>) =>
+  (options?.client ?? client).get<MyPendingApprovalsResponses, MyPendingApprovalsErrors, ThrowOnError>({ url: '/api/deployments/pending-approvals', ...options });
 
 export const getDeploymentsByEnvironmentId = <ThrowOnError extends boolean = false>(options: Options<GetDeploymentsByEnvironmentIdData, ThrowOnError>) =>
   (options.client ?? client).get<GetDeploymentsByEnvironmentIdResponses, GetDeploymentsByEnvironmentIdErrors, ThrowOnError>({
