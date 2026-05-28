@@ -166,6 +166,17 @@
       ],
       "groupName": "all non-major github-actions dependencies",
       "groupSlug": "all-minor-patch-github-actions"
+    },
+    {
+      "description": "Sphinx 8.x (current docs pin) requires docutils <0.22; cap until the docs toolchain is upgraded.",
+      "matchPackageNames": ["docutils"],
+      "allowedVersions": "<0.22"
+    },
+    {
+      "description": "Sphinx 9 requires a coordinated upgrade of theme + extensions + docutils; block major bumps until that work happens in its own PR.",
+      "matchPackageNames": ["sphinx"],
+      "matchUpdateTypes": ["major"],
+      "enabled": false
     }
   ]
 }
