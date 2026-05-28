@@ -3,7 +3,7 @@ COPY --chown=gradle:gradle . /home/gradle/src
 WORKDIR /home/gradle/src
 RUN gradle :application-server:build --no-daemon
 
-FROM eclipse-temurin:21
+FROM eclipse-temurin:25
 
 EXPOSE 8080
 
