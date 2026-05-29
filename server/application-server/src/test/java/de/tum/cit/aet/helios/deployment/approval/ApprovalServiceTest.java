@@ -21,6 +21,7 @@ import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment.AutoApprovalDecision;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
+import de.tum.cit.aet.helios.notification.email.DeploymentApprovalRequestPayload;
 import de.tum.cit.aet.helios.user.User;
 import java.io.IOException;
 import java.time.OffsetDateTime;
@@ -78,7 +79,7 @@ class ApprovalServiceTest {
   }
 
   @Test
-  void defersWhenDeployerIsNotARequiredReviewer() throws IOException {
+  void defersWhenDeployerIsNotRequiredReviewer() throws IOException {
     Fixture f = new Fixture();
     f.deploymentExists();
     f.reviewersAre(reviewers("bob", "carol"));
@@ -96,8 +97,8 @@ class ApprovalServiceTest {
     Fixture f = new Fixture();
     f.deploymentExists();
     f.reviewersAre(reviewers("bob", "carol"));
-    User bob = f.stubReviewerUser("bob");
-    User carol = f.stubReviewerUser("carol");
+    final User bob = f.stubReviewerUser("bob");
+    final User carol = f.stubReviewerUser("carol");
 
     f.service().reviewDeployment(f.source, f.gitRepository, f.environment, f.user);
 
@@ -116,9 +117,20 @@ class ApprovalServiceTest {
       org.junit.jupiter.api.Assertions.assertNotNull(row.getEmailSentAt());
     }
 
-    // Email published once per reviewer.
-    verify(f.notificationPublisher).send(eq(bob), any());
-    verify(f.notificationPublisher).send(eq(carol), any());
+    // Email published once per reviewer, carrying the deep-link payload. Assert the load-bearing
+    // fields (not just any()) so an id/URL regression in notifyReviewers is caught.
+    ArgumentCaptor<DeploymentApprovalRequestPayload> payloadCaptor =
+        ArgumentCaptor.forClass(DeploymentApprovalRequestPayload.class);
+    verify(f.notificationPublisher).send(eq(bob), payloadCaptor.capture());
+    verify(f.notificationPublisher).send(eq(carol), payloadCaptor.capture());
+    for (DeploymentApprovalRequestPayload payload : payloadCaptor.getAllValues()) {
+      org.junit.jupiter.api.Assertions.assertEquals(
+          f.heliosDeployment.getId().toString(), payload.deploymentId());
+      org.junit.jupiter.api.Assertions.assertEquals(ENV_NAME, payload.environmentName());
+      org.junit.jupiter.api.Assertions.assertEquals(DEPLOYER, payload.creatorLogin());
+      org.junit.jupiter.api.Assertions.assertTrue(
+          Set.of("bob", "carol").contains(payload.username()));
+    }
   }
 
   @Test

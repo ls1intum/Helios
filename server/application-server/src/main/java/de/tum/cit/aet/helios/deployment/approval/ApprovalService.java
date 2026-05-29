@@ -19,6 +19,7 @@ import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
+import org.springframework.web.util.HtmlUtils;
 
 /**
  * Decides what to do when GitHub fires a {@code deployment_status: waiting} event for a Helios-
@@ -114,7 +115,10 @@ public class ApprovalService {
 
     // Team-type reviewers are not yet expanded to members. Fall back to today's behavior
     // (impersonate creator, try anyway) rather than silently no-opping, which would regress
-    // working setups where the creator is a team member.
+    // working setups where the creator is a team member. Note this branch is checked FIRST: a
+    // mixed rule that lists both a Team and the deployer as an explicit User reviewer
+    // intentionally takes this legacy path (not the pure-User auto-approve below), deferring
+    // preventSelfReview enforcement to GitHub's own 422. Phase 4 (team expansion) will revisit.
     if (reviewers.hasTeamReviewers()) {
       log.info(
           "Environment {} has team-type required reviewers; attempting legacy auto-approve as "
@@ -156,17 +160,33 @@ public class ApprovalService {
     }
 
     // Happy path: the deployer is one of the required reviewers and self-review is allowed.
-    attemptAutoApprove(
-        heliosDeployment,
-        repoNameWithOwner,
-        workflowRunId,
-        environment.getId(),
-        creatorLogin,
-        "Auto-approved by Helios (deployer is required reviewer)",
-        AutoApprovalDecision.AUTO_APPROVED);
+    AutoApprovalDecision applied =
+        attemptAutoApprove(
+            heliosDeployment,
+            repoNameWithOwner,
+            workflowRunId,
+            environment.getId(),
+            creatorLogin,
+            "Auto-approved by Helios (deployer is required reviewer)",
+            AutoApprovalDecision.AUTO_APPROVED);
+
+    // If the GitHub approve call failed and we fell back to deferral (transient 5xx, token-exchange
+    // failure, reviewer lost access), surface the deployment to the required reviewers — in-app
+    // pending rows + email — exactly like the explicit defer branch above. Without this, a failed
+    // auto-approval would strand the deployment in WAITING with nobody notified.
+    if (applied == AutoApprovalDecision.DEFERRED_TO_REVIEWERS) {
+      notifyReviewers(heliosDeployment, gitRepository, environment, reviewers, creatorLogin);
+    }
   }
 
-  private void attemptAutoApprove(
+  /**
+   * Attempts the impersonated GitHub approval and records the outcome. Returns the decision that
+   * was actually applied: {@code decisionOnSuccess} when GitHub accepted, or the fallback decision
+   * ({@code TEAM_REVIEWER_FALLBACK} for the legacy team path, else {@code DEFERRED_TO_REVIEWERS})
+   * when the GitHub call threw. The caller uses the return value to decide whether to notify
+   * reviewers on a fallback.
+   */
+  private AutoApprovalDecision attemptAutoApprove(
       HeliosDeployment heliosDeployment,
       String repoNameWithOwner,
       long workflowRunId,
@@ -188,6 +208,7 @@ public class ApprovalService {
           heliosDeployment.getId(),
           impersonatedLogin,
           decisionOnSuccess);
+      return decisionOnSuccess;
     } catch (IOException e) {
       // Most likely "creator is not actually authorised on this env" (legacy team-fallback) or a
       // transient GitHub failure. Persist the audit row so the failure is visible and the row
@@ -203,6 +224,7 @@ public class ApprovalService {
           heliosDeployment.getId(),
           impersonatedLogin,
           e.getMessage());
+      return fallback;
     }
   }
 
@@ -281,21 +303,28 @@ public class ApprovalService {
       row.setEmailSentAt(OffsetDateTime.now());
       approvalRequestRepository.save(row);
 
+      String branchName =
+          heliosDeployment.getSourceBranchName() != null
+              ? heliosDeployment.getSourceBranchName()
+              : (heliosDeployment.getBranchName() != null ? heliosDeployment.getBranchName() : "");
+      String sha = heliosDeployment.getSha() != null ? heliosDeployment.getSha() : "";
+
+      // HTML-escape the GitHub-/user-sourced free-text fields before they reach the email
+      // template: the notification module's placeholder substitution writes values straight into
+      // HTML with no escaping, so a branch name like `</p><script>` would otherwise break (or
+      // inject into) the rendered mail. Numeric ids and the GitHub-generated workflow URL are not
+      // escaped — they carry no HTML metacharacters and the URL is used in an href.
       notificationPublisherService.send(
           reviewer,
           new DeploymentApprovalRequestPayload(
-              reviewer.getLogin(),
-              environment.getName(),
-              gitRepository.getNameWithOwner(),
+              HtmlUtils.htmlEscape(reviewer.getLogin()),
+              HtmlUtils.htmlEscape(environment.getName()),
+              HtmlUtils.htmlEscape(gitRepository.getNameWithOwner()),
               gitRepository.getRepositoryId().toString(),
               heliosDeployment.getId().toString(),
-              creatorLogin != null ? creatorLogin : "",
-              heliosDeployment.getSourceBranchName() != null
-                  ? heliosDeployment.getSourceBranchName()
-                  : (heliosDeployment.getBranchName() != null
-                      ? heliosDeployment.getBranchName()
-                      : ""),
-              heliosDeployment.getSha() != null ? heliosDeployment.getSha() : "",
+              HtmlUtils.htmlEscape(creatorLogin != null ? creatorLogin : ""),
+              HtmlUtils.htmlEscape(branchName),
+              HtmlUtils.htmlEscape(sha),
               workflowRunHtmlUrl));
     }
   }

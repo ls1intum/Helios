@@ -85,6 +85,12 @@ public class DeploymentApprovalRequest {
   @Column(name = "created_at", nullable = false, updatable = false)
   private OffsetDateTime createdAt;
 
+  /**
+   * When the approval-request email was <em>enqueued</em> for this reviewer — not a delivery
+   * confirmation. {@code NatsNotificationPublisherService.send} is fire-and-forget and may suppress
+   * the mail (eligibility gate, notifications disabled) or fail silently, so a non-null value means
+   * "Helios attempted to notify", not "the reviewer received an email".
+   */
   @Column(name = "email_sent_at")
   private OffsetDateTime emailSentAt;
 

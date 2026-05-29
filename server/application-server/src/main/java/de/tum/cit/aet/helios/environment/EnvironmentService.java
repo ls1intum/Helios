@@ -893,10 +893,16 @@ public class EnvironmentService {
                 }
               } catch (JsonProcessingException e) {
                 log.error(
-                    "Failed to parse reviewers for environment {}: {}",
+                    "Failed to parse reviewers for environment {}: {}. Treating the rule as "
+                        + "unresolved (deployment left for manual review) rather than deferring to "
+                        + "zero reviewers, which would have stamped DEFERRED and notified nobody.",
                     environmentId,
                     e.getMessage());
+                return null; // -> Optional.empty(): the caller treats this as "no actionable rule".
               }
+              // A null prevent_self_review from GitHub collapses to false (self-review allowed),
+              // matching GitHub's own default; auto-approval still only fires for an explicitly
+              // configured User-type reviewer, so this is the safe default.
               return new ReviewerResolution(
                   Boolean.TRUE.equals(rule.getPreventSelfReview()), userLogins, teamSlugs);
             });

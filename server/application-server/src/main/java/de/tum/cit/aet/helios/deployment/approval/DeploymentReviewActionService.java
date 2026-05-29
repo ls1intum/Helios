@@ -56,6 +56,9 @@ public class DeploymentReviewActionService {
   }
 
   /**
+   * Validates the caller is an eligible required reviewer, then approves or declines the deployment
+   * on GitHub on their behalf and records the audit outcome.
+   *
    * @param approve {@code true} for approval, {@code false} for decline
    * @param userComment optional free-form comment from the reviewer (decline path mostly)
    */

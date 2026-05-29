@@ -183,7 +183,7 @@ export type UserSettingsDto = {
 };
 
 export type NotificationPreferenceDto = {
-  type?: 'DEPLOYMENT_FAILED' | 'LOCK_EXPIRED' | 'LOCK_UNLOCKED';
+  type?: 'DEPLOYMENT_FAILED' | 'LOCK_EXPIRED' | 'LOCK_UNLOCKED' | 'DEPLOYMENT_APPROVAL_REQUEST';
   enabled?: boolean;
 };
 

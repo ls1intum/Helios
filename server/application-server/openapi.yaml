@@ -3003,6 +3003,7 @@ components:
           - DEPLOYMENT_FAILED
           - LOCK_EXPIRED
           - LOCK_UNLOCKED
+          - DEPLOYMENT_APPROVAL_REQUEST
         enabled:
           type: boolean
     NotificationPreferencesWrapper:

@@ -576,7 +576,7 @@ export const NotificationPreferenceDtoSchema = {
   properties: {
     type: {
       type: 'string',
-      enum: ['DEPLOYMENT_FAILED', 'LOCK_EXPIRED', 'LOCK_UNLOCKED'],
+      enum: ['DEPLOYMENT_FAILED', 'LOCK_EXPIRED', 'LOCK_UNLOCKED', 'DEPLOYMENT_APPROVAL_REQUEST'],
     },
     enabled: {
       type: 'boolean',

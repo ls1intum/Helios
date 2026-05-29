@@ -64,7 +64,8 @@ class DeploymentReviewActionServiceTest {
     Fixture f = new Fixture();
     f.reviewersAre("alice", "bob");
 
-    f.service().declineAsCurrentUser(DEPLOYMENT_ID, f.userWithLogin(REVIEWER), "wrong branch");
+    final DeploymentApprovalRequest row =
+        f.service().declineAsCurrentUser(DEPLOYMENT_ID, f.userWithLogin(REVIEWER), "wrong branch");
 
     ArgumentCaptor<String> commentCaptor = ArgumentCaptor.forClass(String.class);
     verify(f.gitHubService)
@@ -72,10 +73,13 @@ class DeploymentReviewActionServiceTest {
             eq(REPO), eq(WORKFLOW_RUN_ID), eq(ENV_ID), eq(REVIEWER), commentCaptor.capture());
     assertEquals(true, commentCaptor.getValue().contains("Declined by @alice"));
     assertEquals(true, commentCaptor.getValue().contains("wrong branch"));
+    // The returned row reflects the finalised terminal state (mirrors the approve test).
+    assertEquals(DeploymentApprovalRequest.State.DECLINED, row.getState());
+    assertEquals(DeploymentApprovalRequest.Via.IN_APP, row.getVia());
   }
 
   @Test
-  void rejectsCallWhenUserIsNotARequiredReviewer() throws IOException {
+  void rejectsCallWhenUserIsNotRequiredReviewer() throws IOException {
     Fixture f = new Fixture();
     f.reviewersAre("bob", "carol"); // alice not listed
 
