@@ -2,6 +2,7 @@ package de.tum.cit.aet.helios.deployment.approval;
 
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
 import jakarta.persistence.LockModeType;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -52,6 +53,26 @@ public interface DeploymentApprovalRequestRepository
   List<DeploymentApprovalRequest> findByReviewerAndState(
       @Param("reviewerId") Long reviewerId,
       @Param("state") DeploymentApprovalRequest.State state);
+
+  /**
+   * Outstanding requests for a reviewer across multiple states, used by the in-app
+   * pending-approvals list so it can surface both {@code PENDING} rows and {@code FAILED_AT_GITHUB}
+   * rows. The latter represent a click that reached Helios but failed at GitHub (transient 5xx,
+   * token exchange); they must reappear in the list so the reviewer can retry — otherwise the queue
+   * looks empty while the deployment is still waiting on GitHub. Same join-fetch as
+   * {@link #findByReviewerAndState} to keep the DTO mapping free of N+1 queries.
+   */
+  @Query(
+      "select r from DeploymentApprovalRequest r "
+          + "join fetch r.heliosDeployment d "
+          + "left join fetch d.creator "
+          + "join fetch d.environment e "
+          + "join fetch e.repository "
+          + "where r.reviewer.id = :reviewerId and r.state in :states "
+          + "order by r.createdAt desc")
+  List<DeploymentApprovalRequest> findByReviewerAndStateIn(
+      @Param("reviewerId") Long reviewerId,
+      @Param("states") Collection<DeploymentApprovalRequest.State> states);
 
   long countByReviewerIdAndState(Long reviewerId, DeploymentApprovalRequest.State state);
 }

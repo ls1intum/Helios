@@ -153,40 +153,33 @@ public class ApprovalService {
           reason,
           reviewers.userLogins().size(),
           String.join(", ", reviewers.userLogins()));
+      // Persist the per-reviewer pending rows (and publish the emails) BEFORE stamping the
+      // DEFERRED decision. The stamp is the idempotency gate: if it is written first and
+      // notifyReviewers then fails, a redelivered webhook short-circuits and the deployment is
+      // stranded with no in-app rows and nobody notified. Stamping last means a failure leaves
+      // autoApprovalDecision null so the webhook redelivery re-runs the whole deferral.
+      notifyReviewers(heliosDeployment, gitRepository, environment, reviewers, creatorLogin);
       decisionWriter.recordDecisionOnly(
           heliosDeployment, AutoApprovalDecision.DEFERRED_TO_REVIEWERS);
-      notifyReviewers(heliosDeployment, gitRepository, environment, reviewers, creatorLogin);
       return;
     }
 
-    // Happy path: the deployer is one of the required reviewers and self-review is allowed.
-    AutoApprovalDecision applied =
-        attemptAutoApprove(
-            heliosDeployment,
-            repoNameWithOwner,
-            workflowRunId,
-            environment.getId(),
-            creatorLogin,
-            "Auto-approved by Helios (deployer is required reviewer)",
-            AutoApprovalDecision.AUTO_APPROVED);
-
-    // If the GitHub approve call failed and we fell back to deferral (transient 5xx, token-exchange
-    // failure, reviewer lost access), surface the deployment to the required reviewers — in-app
-    // pending rows + email — exactly like the explicit defer branch above. Without this, a failed
-    // auto-approval would strand the deployment in WAITING with nobody notified.
-    if (applied == AutoApprovalDecision.DEFERRED_TO_REVIEWERS) {
-      notifyReviewers(heliosDeployment, gitRepository, environment, reviewers, creatorLogin);
-    }
+    // Happy path: the deployer is one of the required reviewers and self-review is allowed. If the
+    // GitHub approve call fails (transient 5xx, token-exchange failure), attemptAutoApprove records
+    // a FAILED_AT_GITHUB audit row for the deployer and stamps DEFERRED_TO_REVIEWERS; because the
+    // deployer is themselves a required reviewer, that row surfaces in their pending-approvals list
+    // (which now includes FAILED_AT_GITHUB rows) so they can retry in-app — no separate notify.
+    attemptAutoApprove(
+        heliosDeployment,
+        repoNameWithOwner,
+        workflowRunId,
+        environment.getId(),
+        creatorLogin,
+        "Auto-approved by Helios (deployer is required reviewer)",
+        AutoApprovalDecision.AUTO_APPROVED);
   }
 
-  /**
-   * Attempts the impersonated GitHub approval and records the outcome. Returns the decision that
-   * was actually applied: {@code decisionOnSuccess} when GitHub accepted, or the fallback decision
-   * ({@code TEAM_REVIEWER_FALLBACK} for the legacy team path, else {@code DEFERRED_TO_REVIEWERS})
-   * when the GitHub call threw. The caller uses the return value to decide whether to notify
-   * reviewers on a fallback.
-   */
-  private AutoApprovalDecision attemptAutoApprove(
+  private void attemptAutoApprove(
       HeliosDeployment heliosDeployment,
       String repoNameWithOwner,
       long workflowRunId,
@@ -208,7 +201,6 @@ public class ApprovalService {
           heliosDeployment.getId(),
           impersonatedLogin,
           decisionOnSuccess);
-      return decisionOnSuccess;
     } catch (IOException e) {
       // Most likely "creator is not actually authorised on this env" (legacy team-fallback) or a
       // transient GitHub failure. Persist the audit row so the failure is visible and the row
@@ -224,7 +216,6 @@ public class ApprovalService {
           heliosDeployment.getId(),
           impersonatedLogin,
           e.getMessage());
-      return fallback;
     }
   }
 

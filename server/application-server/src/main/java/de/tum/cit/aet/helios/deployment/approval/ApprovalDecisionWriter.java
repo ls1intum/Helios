@@ -5,6 +5,7 @@ import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment.AutoApprovalDecis
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
 import java.time.OffsetDateTime;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,7 +15,15 @@ import org.springframework.transaction.annotation.Transactional;
  * single transaction so a crash between the two writes cannot leave Helios in a half-state. Lives
  * in its own bean because {@code @Transactional} via self-invocation on {@link ApprovalService}
  * would be bypassed by Spring's proxy.
+ *
+ * <p>Each method re-loads the deployment under a {@code SELECT ... FOR UPDATE} lock and re-checks
+ * that no decision has been recorded yet. The webhook auto-approve path reads the deployment
+ * <em>without</em> a lock and then calls GitHub before persisting, so a concurrent in-app
+ * approve/decline (which does hold the row lock for its whole transaction) could otherwise have
+ * its decision silently overwritten here, or a duplicate audit row written. Re-checking under the
+ * lock makes the first recorded decision authoritative and turns a losing writer into a no-op.
  */
+@Log4j2
 @Service
 @RequiredArgsConstructor
 public class ApprovalDecisionWriter {
@@ -28,13 +37,18 @@ public class ApprovalDecisionWriter {
       HeliosDeployment deployment,
       DeploymentApprovalRequest auditRow,
       AutoApprovalDecision decision) {
+    HeliosDeployment managed = lockIfStillUndecided(deployment);
+    if (managed == null) {
+      return;
+    }
     OffsetDateTime now = OffsetDateTime.now();
+    auditRow.setHeliosDeployment(managed);
     auditRow.setState(DeploymentApprovalRequest.State.APPROVED);
     auditRow.setRespondedAt(now);
     approvalRequestRepository.save(auditRow);
-    deployment.setAutoApprovalDecision(decision);
-    deployment.setAutoApprovalAt(now);
-    heliosDeploymentRepository.save(deployment);
+    managed.setAutoApprovalDecision(decision);
+    managed.setAutoApprovalAt(now);
+    heliosDeploymentRepository.save(managed);
   }
 
   /**
@@ -48,21 +62,48 @@ public class ApprovalDecisionWriter {
       DeploymentApprovalRequest auditRow,
       AutoApprovalDecision fallbackDecision,
       String reason) {
+    HeliosDeployment managed = lockIfStillUndecided(deployment);
+    if (managed == null) {
+      return;
+    }
     OffsetDateTime now = OffsetDateTime.now();
+    auditRow.setHeliosDeployment(managed);
     auditRow.setState(DeploymentApprovalRequest.State.FAILED_AT_GITHUB);
     auditRow.setRespondedAt(now);
     auditRow.setFailureReason(reason);
     approvalRequestRepository.save(auditRow);
-    deployment.setAutoApprovalDecision(fallbackDecision);
-    deployment.setAutoApprovalAt(now);
-    heliosDeploymentRepository.save(deployment);
+    managed.setAutoApprovalDecision(fallbackDecision);
+    managed.setAutoApprovalAt(now);
+    heliosDeploymentRepository.save(managed);
   }
 
-  /** No-op decision stamp for the "no rule applies / nothing to do" branch. */
+  /** No-op decision stamp for the "no rule applies / nothing to do" / deferral branches. */
   @Transactional
   public void recordDecisionOnly(HeliosDeployment deployment, AutoApprovalDecision decision) {
-    deployment.setAutoApprovalDecision(decision);
-    deployment.setAutoApprovalAt(OffsetDateTime.now());
-    heliosDeploymentRepository.save(deployment);
+    HeliosDeployment managed = lockIfStillUndecided(deployment);
+    if (managed == null) {
+      return;
+    }
+    managed.setAutoApprovalDecision(decision);
+    managed.setAutoApprovalAt(OffsetDateTime.now());
+    heliosDeploymentRepository.save(managed);
+  }
+
+  /**
+   * Re-loads the deployment under a pessimistic write lock and returns the managed instance only if
+   * no decision has been recorded yet; returns {@code null} (caller must no-op) when another path
+   * already decided. Falls back to the passed-in instance if the row can't be re-loaded.
+   */
+  private HeliosDeployment lockIfStillUndecided(HeliosDeployment deployment) {
+    HeliosDeployment managed =
+        heliosDeploymentRepository.findByIdForUpdate(deployment.getId()).orElse(deployment);
+    if (managed.getAutoApprovalDecision() != null) {
+      log.info(
+          "Deployment {} already decided as {} by another path; skipping auto-decision write.",
+          managed.getId(),
+          managed.getAutoApprovalDecision());
+      return null;
+    }
+    return managed;
   }
 }

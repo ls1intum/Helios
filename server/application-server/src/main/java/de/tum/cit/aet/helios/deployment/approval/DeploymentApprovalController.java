@@ -42,12 +42,18 @@ public class DeploymentApprovalController {
     if (currentUser == null) {
       throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "No authenticated user.");
     }
-    // Keep the Hibernate session open across the DTO mapping in case any association referenced
-    // by PendingApprovalDto.from is LAZY despite the join fetch (e.g. if someone later flips
-    // creator to LAZY, this still works rather than silently breaking under OSIV=false).
+    // Surface both PENDING rows and FAILED_AT_GITHUB rows: the latter are clicks that reached
+    // Helios but failed at GitHub (transient 5xx / token exchange) and must remain visible so the
+    // reviewer can retry — clicking Approve/Decline again reuses the same row. Keep the Hibernate
+    // session open across the DTO mapping in case any association referenced by
+    // PendingApprovalDto.from is LAZY despite the join fetch (robust under OSIV=false).
     List<PendingApprovalDto> result =
         approvalRequestRepository
-            .findByReviewerAndState(currentUser.getId(), DeploymentApprovalRequest.State.PENDING)
+            .findByReviewerAndStateIn(
+                currentUser.getId(),
+                List.of(
+                    DeploymentApprovalRequest.State.PENDING,
+                    DeploymentApprovalRequest.State.FAILED_AT_GITHUB))
             .stream()
             .map(PendingApprovalDto::from)
             .toList();
