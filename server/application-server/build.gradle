@@ -5,7 +5,7 @@ import org.springframework.boot.gradle.tasks.run.BootRun
 buildscript {
     dependencies {
         classpath('org.postgresql:postgresql:42.7.11')
-        classpath('org.flywaydb:flyway-database-postgresql:11.20.3')
+        classpath('org.flywaydb:flyway-database-postgresql:12.9.0')
     }
 }
 
@@ -14,7 +14,7 @@ plugins {
     id 'io.freefair.lombok'
     id 'org.springdoc.openapi-gradle-plugin' version '1.9.0'
     id 'org.openapi.generator' version '7.22.0'
-    id 'org.flywaydb.flyway' version '11.20.3'
+    id 'org.flywaydb.flyway' version '12.9.0'
 }
 
 // The OpenAPI tasks boot the app against the in-memory H2 database, so H2 is
