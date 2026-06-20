@@ -31,5 +31,5 @@ allowBuilds:
 #    sockjs only calls uuid.v4() with no buffer, so it isn't actually exploitable,
 #    but bumping clears the alert; v11 keeps the .v4 CJS export sockjs uses.
 overrides:
-  webpack-dev-server: 5.2.4
+  webpack-dev-server: 5.2.5
   uuid: 14.0.0
