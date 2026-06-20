@@ -7,7 +7,7 @@ settings:
 overrides:
   webpack-dev-server: 5.2.5
   uuid: 14.0.0
-  undici@6: 6.27.0
+  undici@6: 7.28.0
   undici@7: 7.28.0
   hono: 4.12.26
   tar: 7.5.16
@@ -5870,10 +5870,6 @@ packages:
   undici-types@7.18.2:
     resolution: {integrity: sha512-AsuCzffGHJybSaRrmr5eHr81mwJU3kjw6M+uprWvCXiNeN9SOGwQ3Jn8jb8m3Z6izVgknn1R0FTCEAP2QrLY/w==}
 
-  undici@6.27.0:
-    resolution: {integrity: sha512-YmfV3YnEDzXRC5lZ2jWtWWHKGUm1zIt8AhesR1tens+HTNv+YZlN/dp6G727LOvMJ8xjP9Be7Y2Sdr96LDm+pg==}
-    engines: {node: '>=18.17'}
-
   undici@7.28.0:
     resolution: {integrity: sha512-cRZYrTDwWznlnRiPjggAGxZXanty6M8RV1ff8Wm4LWXBp7/IG8v5DnOm74DtUBp9OONpK75YlPnIjQqX0dBDtA==}
     engines: {node: '>=20.18.1'}
@@ -8669,7 +8665,7 @@ snapshots:
     dependencies:
       progress: 2.0.3
       proxy-from-env: 1.1.0
-      undici: 6.27.0
+      undici: 7.28.0
       which: 2.0.2
     optionalDependencies:
       '@sentry/cli-darwin': 3.5.1
@@ -11238,7 +11234,7 @@ snapshots:
       semver: 7.8.4
       tar: 7.5.16
       tinyglobby: 0.2.17
-      undici: 6.27.0
+      undici: 7.28.0
       which: 6.0.1
 
   node-releases@2.0.46: {}
@@ -12553,8 +12549,6 @@ snapshots:
   undici-types@7.16.0: {}
 
   undici-types@7.18.2: {}
-
-  undici@6.27.0: {}
 
   undici@7.28.0: {}
 
