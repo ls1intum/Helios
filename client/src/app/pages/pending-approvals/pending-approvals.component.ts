@@ -155,9 +155,16 @@ export class PendingApprovalsComponent {
   onApprove(row: PendingApprovalDto) {
     if (!row.deploymentId) return;
     const deploymentId = row.deploymentId;
+    // PrimeNG renders the confirm message via [innerHTML] and this version has no `escape`
+    // option, so the GitHub-controlled environment/repo names must be HTML-escaped before they
+    // are interpolated — an environment named `<img src=x onerror=...>` would otherwise run
+    // script in the reviewer's session. (The decline copy in the template uses {{ }}, which
+    // Angular escapes automatically.)
+    const env = this.escapeHtml(row.environmentName);
+    const repo = this.escapeHtml(row.repositoryNameWithOwner);
     this.confirmationService.confirm({
       header: 'Approve this deployment?',
-      message: `Helios will approve deployment to <b>${row.environmentName}</b> on <b>${row.repositoryNameWithOwner}</b> as you.`,
+      message: `Helios will approve deployment to <b>${env}</b> on <b>${repo}</b> as you.`,
       accept: () => {
         this.inFlightDeploymentId.set(deploymentId);
         this.approveMutation.mutate(deploymentId);
@@ -183,6 +190,12 @@ export class PendingApprovalsComponent {
 
   private refreshList() {
     this.queryClient.invalidateQueries({ queryKey: myPendingApprovalsQueryKey() });
+  }
+
+  /** Escapes HTML metacharacters so GitHub-controlled strings are safe inside a PrimeNG
+   * confirm message (rendered via [innerHTML], which does not escape). */
+  private escapeHtml(value: string | undefined | null): string {
+    return (value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
 
   private showServerError(summary: string, err: unknown) {
