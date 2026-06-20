@@ -963,16 +963,19 @@ class GitHubServiceTest {
     String githubUserLogin = "testUser";
 
     when(gitHubAuthBroker.exchangeToken(githubUserLogin)).thenReturn(null);
-    // objectMapper.writeValueAsString will be called before the token check,
-    // so it needs to be stubbed to prevent an NPE from RequestBody.create(null, ...)
-    when(objectMapper.writeValueAsString(anyMap())).thenReturn("{}"); // Stub to return dummy JSON
+    // objectMapper.writeValueAsString runs before the token check.
+    when(objectMapper.writeValueAsString(anyMap())).thenReturn("{}");
 
-    // Method should log an error and return, not throw an exception upwards in this specific case.
-    assertDoesNotThrow(
-        () ->
-            gitHubService.approveDeploymentOnBehalfOfUser(
-                repoNameWithOwner, runId, environmentId, githubUserLogin));
-    // objectMapper.writeValueAsString IS called before the early exit for null token
+    // Token-exchange failure now surfaces as an IOException so callers can mark the approval
+    // FAILED_AT_GITHUB and react, instead of the legacy silent return that left deployments
+    // stuck in WAITING with no signal.
+    IOException exception =
+        assertThrows(
+            IOException.class,
+            () ->
+                gitHubService.approveDeploymentOnBehalfOfUser(
+                    repoNameWithOwner, runId, environmentId, githubUserLogin));
+    assertTrue(exception.getMessage().contains("Failed to exchange GitHub token"));
     verify(objectMapper, times(1)).writeValueAsString(anyMap());
     verify(okHttpClient, never()).newCall(any(Request.class));
   }
@@ -1014,7 +1017,82 @@ class GitHubServiceTest {
               gitHubService.approveDeploymentOnBehalfOfUser(
                   repoNameWithOwner, runId, environmentId, githubUserLogin);
             });
-    assertTrue(exception.getMessage().contains("GitHub API call failed with response code: 500"));
+    assertTrue(exception.getMessage().contains("approved failed: HTTP 500"));
+  }
+
+  @Test
+  void approveDeploymentOnBehalfOfUserPassesCommentToGitHub() throws IOException {
+    final String repoNameWithOwner = "owner/repo";
+    final long runId = 1L;
+    final Long environmentId = 10L;
+    final String githubUserLogin = "testUser";
+    final String userGithubToken = "user-token";
+    final String customComment = "Approved by @alice via Helios (in-app)";
+
+    TokenExchangeResponse tokenResponse = new TokenExchangeResponse();
+    tokenResponse.setAccessToken(userGithubToken);
+    when(gitHubAuthBroker.exchangeToken(githubUserLogin)).thenReturn(tokenResponse);
+    when(objectMapper.writeValueAsString(any())).thenReturn("{}");
+
+    Response mockResponse =
+        new Response.Builder()
+            .request(new Request.Builder().url("http://dummyurl").build())
+            .protocol(Protocol.HTTP_1_1)
+            .code(200)
+            .message("OK")
+            .body(ResponseBody.create("", MediaType.parse("application/json")))
+            .build();
+    Call mockCall = mock(Call.class);
+    when(okHttpClient.newCall(any(Request.class))).thenReturn(mockCall);
+    when(mockCall.execute()).thenReturn(mockResponse);
+
+    gitHubService.approveDeploymentOnBehalfOfUser(
+        repoNameWithOwner, runId, environmentId, githubUserLogin, customComment);
+
+    // The audit comment threads through to the GitHub payload.
+    verify(objectMapper)
+        .writeValueAsString(
+            Map.of(
+                "environment_ids", List.of(environmentId),
+                "state", "approved",
+                "comment", customComment));
+  }
+
+  @Test
+  void rejectDeploymentOnBehalfOfUserSendsRejectedState() throws IOException {
+    final String repoNameWithOwner = "owner/repo";
+    final long runId = 1L;
+    final Long environmentId = 10L;
+    final String githubUserLogin = "testUser";
+    final String userGithubToken = "user-token";
+    final String comment = "Declined by @alice via Helios (in-app)";
+
+    TokenExchangeResponse tokenResponse = new TokenExchangeResponse();
+    tokenResponse.setAccessToken(userGithubToken);
+    when(gitHubAuthBroker.exchangeToken(githubUserLogin)).thenReturn(tokenResponse);
+    when(objectMapper.writeValueAsString(any())).thenReturn("{}");
+
+    Response mockResponse =
+        new Response.Builder()
+            .request(new Request.Builder().url("http://dummyurl").build())
+            .protocol(Protocol.HTTP_1_1)
+            .code(200)
+            .message("OK")
+            .body(ResponseBody.create("", MediaType.parse("application/json")))
+            .build();
+    Call mockCall = mock(Call.class);
+    when(okHttpClient.newCall(any(Request.class))).thenReturn(mockCall);
+    when(mockCall.execute()).thenReturn(mockResponse);
+
+    gitHubService.rejectDeploymentOnBehalfOfUser(
+        repoNameWithOwner, runId, environmentId, githubUserLogin, comment);
+
+    verify(objectMapper)
+        .writeValueAsString(
+            Map.of(
+                "environment_ids", List.of(environmentId),
+                "state", "rejected",
+                "comment", comment));
   }
 
   @Test

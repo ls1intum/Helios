@@ -1,0 +1,371 @@
+package de.tum.cit.aet.helios.deployment.approval;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
+
+import de.tum.cit.aet.helios.deployment.github.DeploymentSource;
+import de.tum.cit.aet.helios.environment.Environment;
+import de.tum.cit.aet.helios.environment.EnvironmentService;
+import de.tum.cit.aet.helios.environment.EnvironmentService.ReviewerResolution;
+import de.tum.cit.aet.helios.github.GitHubService;
+import de.tum.cit.aet.helios.gitrepo.GitRepository;
+import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
+import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment.AutoApprovalDecision;
+import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
+import de.tum.cit.aet.helios.notification.email.DeploymentApprovalRequestPayload;
+import de.tum.cit.aet.helios.user.User;
+import java.io.IOException;
+import java.time.OffsetDateTime;
+import java.util.Optional;
+import java.util.Set;
+import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+
+class ApprovalServiceTest {
+
+  private static final long DEPLOYMENT_ID = 42L;
+  private static final long HELIOS_DEPLOYMENT_ROW_ID = 1L;
+  private static final long WORKFLOW_RUN_ID = 9999L;
+  private static final long ENV_ID = 7L;
+  private static final String ENV_NAME = "production";
+  private static final String REPO = "ls1intum/Helios";
+  private static final String DEPLOYER = "alice";
+
+  @Test
+  void autoApprovesWhenDeployerIsRequiredReviewer() throws IOException {
+    Fixture f = new Fixture();
+    f.deploymentExists();
+    f.reviewersAre(reviewers("alice", "bob"));
+
+    f.service().reviewDeployment(f.source, f.gitRepository, f.environment, f.user);
+
+    verify(f.gitHubService)
+        .approveDeploymentOnBehalfOfUser(
+            eq(REPO), eq(WORKFLOW_RUN_ID), eq(ENV_ID), eq(DEPLOYER), anyString());
+
+    // Audit row + stamp written atomically via the writer service.
+    ArgumentCaptor<DeploymentApprovalRequest> rowCaptor =
+        ArgumentCaptor.forClass(DeploymentApprovalRequest.class);
+    verify(f.decisionWriter)
+        .recordSuccess(eq(f.heliosDeployment), rowCaptor.capture(),
+            eq(AutoApprovalDecision.AUTO_APPROVED));
+    DeploymentApprovalRequest row = rowCaptor.getValue();
+    org.junit.jupiter.api.Assertions.assertEquals(DEPLOYER, row.getReviewerLogin());
+    org.junit.jupiter.api.Assertions.assertEquals(
+        DeploymentApprovalRequest.Via.AUTO, row.getVia());
+  }
+
+  @Test
+  void defersWhenPreventSelfReviewBlocksDeployer() throws IOException {
+    Fixture f = new Fixture();
+    f.deploymentExists();
+    f.reviewersAre(new ReviewerResolution(true, Set.of("alice", "bob"), Set.of()));
+
+    f.service().reviewDeployment(f.source, f.gitRepository, f.environment, f.user);
+
+    verify(f.gitHubService, never())
+        .approveDeploymentOnBehalfOfUser(any(), anyLong(), any(), any(), any());
+    verify(f.decisionWriter)
+        .recordDecisionOnly(f.heliosDeployment, AutoApprovalDecision.DEFERRED_TO_REVIEWERS);
+  }
+
+  @Test
+  void defersWhenDeployerIsNotRequiredReviewer() throws IOException {
+    Fixture f = new Fixture();
+    f.deploymentExists();
+    f.reviewersAre(reviewers("bob", "carol"));
+
+    f.service().reviewDeployment(f.source, f.gitRepository, f.environment, f.user);
+
+    verify(f.gitHubService, never())
+        .approveDeploymentOnBehalfOfUser(any(), anyLong(), any(), any(), any());
+    verify(f.decisionWriter)
+        .recordDecisionOnly(f.heliosDeployment, AutoApprovalDecision.DEFERRED_TO_REVIEWERS);
+  }
+
+  @Test
+  void persistsPendingRowAndPublishesEmailForEachReviewerOnDeferral() {
+    Fixture f = new Fixture();
+    f.deploymentExists();
+    f.reviewersAre(reviewers("bob", "carol"));
+    final User bob = f.stubReviewerUser("bob");
+    final User carol = f.stubReviewerUser("carol");
+
+    f.service().reviewDeployment(f.source, f.gitRepository, f.environment, f.user);
+
+    // One PENDING row per reviewer with a Helios user (deployer is NOT in the list here).
+    ArgumentCaptor<DeploymentApprovalRequest> rowCaptor =
+        ArgumentCaptor.forClass(DeploymentApprovalRequest.class);
+    verify(f.approvalRequestRepository, org.mockito.Mockito.times(2)).save(rowCaptor.capture());
+    java.util.Set<String> persistedFor =
+        rowCaptor.getAllValues().stream()
+            .map(DeploymentApprovalRequest::getReviewerLogin)
+            .collect(java.util.stream.Collectors.toSet());
+    org.junit.jupiter.api.Assertions.assertEquals(Set.of("bob", "carol"), persistedFor);
+    for (DeploymentApprovalRequest row : rowCaptor.getAllValues()) {
+      org.junit.jupiter.api.Assertions.assertEquals(
+          DeploymentApprovalRequest.State.PENDING, row.getState());
+      org.junit.jupiter.api.Assertions.assertNotNull(row.getEmailSentAt());
+    }
+
+    // Email published once per reviewer, carrying the deep-link payload. Assert the load-bearing
+    // fields (not just any()) so an id/URL regression in notifyReviewers is caught.
+    ArgumentCaptor<DeploymentApprovalRequestPayload> payloadCaptor =
+        ArgumentCaptor.forClass(DeploymentApprovalRequestPayload.class);
+    verify(f.notificationPublisher).send(eq(bob), payloadCaptor.capture());
+    verify(f.notificationPublisher).send(eq(carol), payloadCaptor.capture());
+    for (DeploymentApprovalRequestPayload payload : payloadCaptor.getAllValues()) {
+      org.junit.jupiter.api.Assertions.assertEquals(
+          f.heliosDeployment.getId().toString(), payload.deploymentId());
+      org.junit.jupiter.api.Assertions.assertEquals(ENV_NAME, payload.environmentName());
+      org.junit.jupiter.api.Assertions.assertEquals(DEPLOYER, payload.creatorLogin());
+      org.junit.jupiter.api.Assertions.assertTrue(
+          Set.of("bob", "carol").contains(payload.username()));
+    }
+  }
+
+  @Test
+  void skipsCreatorWhenPreventSelfReviewBlocksThem() {
+    Fixture f = new Fixture();
+    f.deploymentExists();
+    // alice = deployer, also a reviewer; bob is a separate reviewer. preventSelfReview is ON.
+    f.reviewersAre(new ReviewerResolution(true, Set.of("alice", "bob"), Set.of()));
+    User aliceAsReviewer = f.stubReviewerUser("alice");
+    User bob = f.stubReviewerUser("bob");
+
+    f.service().reviewDeployment(f.source, f.gitRepository, f.environment, f.user);
+
+    // Alice is skipped (would self-review); bob is notified.
+    verify(f.notificationPublisher, org.mockito.Mockito.never()).send(eq(aliceAsReviewer), any());
+    verify(f.notificationPublisher).send(eq(bob), any());
+  }
+
+  @Test
+  void skipsReviewersWithoutHeliosUserRow() {
+    Fixture f = new Fixture();
+    f.deploymentExists();
+    f.reviewersAre(reviewers("bob", "stranger"));
+    User bob = f.stubReviewerUser("bob"); // stranger intentionally has no Helios user row
+
+    f.service().reviewDeployment(f.source, f.gitRepository, f.environment, f.user);
+
+    verify(f.approvalRequestRepository, org.mockito.Mockito.times(1))
+        .save(any(DeploymentApprovalRequest.class));
+    verify(f.notificationPublisher).send(eq(bob), any());
+    verify(f.notificationPublisher, org.mockito.Mockito.never())
+        .send(org.mockito.ArgumentMatchers.argThat(
+                u -> u != null && "stranger".equalsIgnoreCase(u.getLogin())),
+            any());
+  }
+
+  @Test
+  void noopsWhenEnvironmentHasNoRequiredReviewerRule() throws IOException {
+    Fixture f = new Fixture();
+    f.deploymentExists();
+    when(f.environmentService.resolveReviewers(ENV_ID)).thenReturn(Optional.empty());
+
+    f.service().reviewDeployment(f.source, f.gitRepository, f.environment, f.user);
+
+    verify(f.gitHubService, never())
+        .approveDeploymentOnBehalfOfUser(any(), anyLong(), any(), any(), any());
+    verify(f.decisionWriter)
+        .recordDecisionOnly(f.heliosDeployment, AutoApprovalDecision.NOT_APPLICABLE);
+  }
+
+  @Test
+  void teamReviewerFallsBackToLegacyImpersonation() throws IOException {
+    Fixture f = new Fixture();
+    f.deploymentExists();
+    f.reviewersAre(new ReviewerResolution(false, Set.of(), Set.of("maintainers")));
+
+    f.service().reviewDeployment(f.source, f.gitRepository, f.environment, f.user);
+
+    verify(f.gitHubService)
+        .approveDeploymentOnBehalfOfUser(
+            eq(REPO), eq(WORKFLOW_RUN_ID), eq(ENV_ID), eq(DEPLOYER), anyString());
+    verify(f.decisionWriter)
+        .recordSuccess(eq(f.heliosDeployment), any(),
+            eq(AutoApprovalDecision.TEAM_REVIEWER_FALLBACK));
+  }
+
+  @Test
+  void recordsFailureWhenGitHubRejectsAutoApproval() throws IOException {
+    Fixture f = new Fixture();
+    f.deploymentExists();
+    f.reviewersAre(reviewers("alice", "bob"));
+    doThrow(new IOException("HTTP 403"))
+        .when(f.gitHubService)
+        .approveDeploymentOnBehalfOfUser(
+            anyString(), anyLong(), any(), anyString(), anyString());
+
+    f.service().reviewDeployment(f.source, f.gitRepository, f.environment, f.user);
+
+    // The writer's recordFailure captures both the audit-row and the deployment-stamp in one
+    // transaction; we verify the fallback decision is DEFERRED_TO_REVIEWERS (the user can still
+    // be served via Phase-2 in-app approval).
+    verify(f.decisionWriter)
+        .recordFailure(
+            eq(f.heliosDeployment),
+            any(),
+            eq(AutoApprovalDecision.DEFERRED_TO_REVIEWERS),
+            eq("HTTP 403"));
+    verify(f.decisionWriter, never()).recordSuccess(any(), any(), any());
+  }
+
+  @Test
+  void skipsWhenDeploymentAlreadyDecided() throws IOException {
+    // Idempotency: if a webhook is redelivered after we already decided (e.g. AUTO_APPROVED on
+    // run 1), run 2 must not call GitHub again or stamp a different decision.
+    Fixture f = new Fixture();
+    f.heliosDeployment.setAutoApprovalDecision(AutoApprovalDecision.AUTO_APPROVED);
+    f.heliosDeployment.setAutoApprovalAt(OffsetDateTime.now());
+    f.deploymentExists();
+
+    f.service().reviewDeployment(f.source, f.gitRepository, f.environment, f.user);
+
+    verify(f.gitHubService, never())
+        .approveDeploymentOnBehalfOfUser(any(), anyLong(), any(), any(), any());
+    verifyNoInteractions(f.decisionWriter);
+    verify(f.environmentService, never()).resolveReviewers(any());
+  }
+
+  @Test
+  void skipsNonHeliosDeploymentAfterRetries() throws IOException {
+    Fixture f = new Fixture();
+    when(f.heliosDeploymentRepository.findByDeploymentId(DEPLOYMENT_ID))
+        .thenReturn(Optional.empty());
+
+    f.service().reviewDeployment(f.source, f.gitRepository, f.environment, f.user);
+
+    verify(f.gitHubService, never())
+        .approveDeploymentOnBehalfOfUser(any(), anyLong(), any(), any(), any());
+    verifyNoInteractions(f.decisionWriter);
+  }
+
+  @Test
+  void retryCatchesDeploymentThatWasPersistedJustBefore() throws IOException {
+    Fixture f = new Fixture();
+    when(f.heliosDeploymentRepository.findByDeploymentId(DEPLOYMENT_ID))
+        .thenReturn(Optional.empty(), Optional.of(f.heliosDeployment));
+    f.reviewersAre(reviewers("alice"));
+
+    f.service().reviewDeployment(f.source, f.gitRepository, f.environment, f.user);
+
+    verify(f.gitHubService)
+        .approveDeploymentOnBehalfOfUser(
+            eq(REPO), eq(WORKFLOW_RUN_ID), eq(ENV_ID), eq(DEPLOYER), anyString());
+    verify(f.decisionWriter)
+        .recordSuccess(eq(f.heliosDeployment), any(), eq(AutoApprovalDecision.AUTO_APPROVED));
+  }
+
+  @Test
+  void skipsWhenWorkflowRunIdIsMissing() throws IOException {
+    Fixture f = new Fixture();
+    f.heliosDeployment.setWorkflowRunId(null);
+    f.deploymentExists();
+
+    f.service().reviewDeployment(f.source, f.gitRepository, f.environment, f.user);
+
+    verify(f.gitHubService, never())
+        .approveDeploymentOnBehalfOfUser(any(), anyLong(), any(), any(), any());
+    verify(f.environmentService, never()).resolveReviewers(any());
+    verifyNoInteractions(f.decisionWriter);
+  }
+
+  private static ReviewerResolution reviewers(String... logins) {
+    return new ReviewerResolution(false, Set.of(logins), Set.of());
+  }
+
+  /** Wires the service's collaborators as bare mocks; each test stubs only what it needs. */
+  private static final class Fixture {
+    final GitHubService gitHubService = mock(GitHubService.class);
+    final HeliosDeploymentRepository heliosDeploymentRepository =
+        mock(HeliosDeploymentRepository.class);
+    final EnvironmentService environmentService = mock(EnvironmentService.class);
+    final ApprovalDecisionWriter decisionWriter = mock(ApprovalDecisionWriter.class);
+    final de.tum.cit.aet.helios.user.UserRepository userRepository =
+        mock(de.tum.cit.aet.helios.user.UserRepository.class);
+    final DeploymentApprovalRequestRepository approvalRequestRepository =
+        mock(DeploymentApprovalRequestRepository.class);
+    final de.tum.cit.aet.helios.nats.NatsNotificationPublisherService notificationPublisher =
+        mock(de.tum.cit.aet.helios.nats.NatsNotificationPublisherService.class);
+
+    final DeploymentSource source = mock(DeploymentSource.class);
+    final GitRepository gitRepository = mock(GitRepository.class);
+    final Environment environment = mock(Environment.class);
+    final User user = mock(User.class);
+
+    final User creator = creatorWithLogin(DEPLOYER);
+    final HeliosDeployment heliosDeployment = newHeliosDeployment(creator);
+
+    Fixture() {
+      when(source.getId()).thenReturn(DEPLOYMENT_ID);
+      when(gitRepository.getNameWithOwner()).thenReturn(REPO);
+      when(gitRepository.getRepositoryId()).thenReturn(880304517L);
+      when(environment.getId()).thenReturn(ENV_ID);
+      when(environment.getName()).thenReturn(ENV_NAME);
+      // Default: no reviewer has a Helios user row. Tests that exercise the email path
+      // override per-login as needed via stubReviewerUser().
+      when(userRepository.findByLoginIgnoreCase(org.mockito.ArgumentMatchers.anyString()))
+          .thenReturn(Optional.empty());
+      when(approvalRequestRepository.lockByDeploymentAndReviewerLogin(
+              org.mockito.ArgumentMatchers.anyLong(), org.mockito.ArgumentMatchers.anyString()))
+          .thenReturn(Optional.empty());
+      when(approvalRequestRepository.save(any(DeploymentApprovalRequest.class)))
+          .thenAnswer(inv -> inv.getArgument(0));
+    }
+
+    void deploymentExists() {
+      reset(heliosDeploymentRepository);
+      when(heliosDeploymentRepository.findByDeploymentId(DEPLOYMENT_ID))
+          .thenReturn(Optional.of(heliosDeployment));
+    }
+
+    void reviewersAre(ReviewerResolution resolution) {
+      when(environmentService.resolveReviewers(ENV_ID)).thenReturn(Optional.of(resolution));
+    }
+
+    /** Make a known reviewer login resolvable to a Helios user row so the email path runs. */
+    User stubReviewerUser(String login) {
+      User u = new User();
+      u.setId((long) (login.hashCode() & 0x7fffffff));
+      u.setLogin(login);
+      when(userRepository.findByLoginIgnoreCase(login)).thenReturn(Optional.of(u));
+      return u;
+    }
+
+    ApprovalService service() {
+      return new ApprovalService(
+          gitHubService,
+          heliosDeploymentRepository,
+          environmentService,
+          decisionWriter,
+          userRepository,
+          approvalRequestRepository,
+          notificationPublisher);
+    }
+  }
+
+  private static User creatorWithLogin(String login) {
+    User u = new User();
+    u.setLogin(login);
+    return u;
+  }
+
+  private static HeliosDeployment newHeliosDeployment(User creator) {
+    HeliosDeployment d = new HeliosDeployment();
+    d.setId(HELIOS_DEPLOYMENT_ROW_ID);
+    d.setCreator(creator);
+    d.setWorkflowRunId(WORKFLOW_RUN_ID);
+    return d;
+  }
+}

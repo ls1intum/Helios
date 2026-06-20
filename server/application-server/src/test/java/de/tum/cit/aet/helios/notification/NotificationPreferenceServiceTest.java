@@ -51,21 +51,19 @@ class NotificationPreferenceServiceTest {
 
   @Test
   void initializeDefaultsForUserShouldNotCreateExistingPreferences() {
-    // Arrange
+    // Arrange: DEPLOYMENT_FAILED already exists; the rest do not. The save count must equal
+    // (number of types) - 1, regardless of how many new types get added in the future.
     NotificationPreference existingPref =
         new NotificationPreference(testUser, NotificationPreference.Type.DEPLOYMENT_FAILED, true);
+    when(repository.findByUserAndType(any(), any())).thenReturn(Optional.empty());
     when(repository.findByUserAndType(testUser, NotificationPreference.Type.DEPLOYMENT_FAILED))
         .thenReturn(Optional.of(existingPref));
-    when(repository.findByUserAndType(testUser, NotificationPreference.Type.LOCK_EXPIRED))
-        .thenReturn(Optional.empty());
-    when(repository.findByUserAndType(testUser, NotificationPreference.Type.LOCK_UNLOCKED))
-        .thenReturn(Optional.empty());
 
     // Act
     service.initializeDefaultsForUser(testUser);
 
-    // Assert
-    verify(repository, times(2)).save(any()); // Only for non-existing preferences
+    // Assert: one save per type that didn't already exist.
+    verify(repository, times(NotificationPreference.Type.values().length - 1)).save(any());
   }
 
   @Test

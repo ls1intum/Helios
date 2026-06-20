@@ -111,6 +111,18 @@ public class HeliosDeployment {
   @Column(name = "workflow_started_at")
   private OffsetDateTime workflowStartedAt;
 
+  /**
+   * What Helios decided to do about required-reviewer approval when the {@code deployment_status}
+   * webhook landed in WAITING state. Stamped from {@code ApprovalService} for audit visibility and
+   * to short-circuit duplicate processing.
+   */
+  @Enumerated(EnumType.STRING)
+  @Column(name = "auto_approval_decision", length = 40)
+  private AutoApprovalDecision autoApprovalDecision;
+
+  @Column(name = "auto_approval_at")
+  private OffsetDateTime autoApprovalAt;
+
   // Enum to represent deployment status
   public enum Status {
     /** Deployment called and waiting GitHub webhook listener. */
@@ -132,6 +144,24 @@ public class HeliosDeployment {
     CANCELLED,
     /** Deployment status is unknown. */
     UNKNOWN;
+  }
+
+  /** Outcome of Helios's reviewer-aware auto-approval branch when the WAITING webhook arrives. */
+  public enum AutoApprovalDecision {
+    /** No required-reviewer protection rule, or the environment doesn't gate on reviewers. */
+    NOT_APPLICABLE,
+    /** Helios auto-approved on behalf of the deployer (they're a required reviewer). */
+    AUTO_APPROVED,
+    /**
+     * The deployer is not a required reviewer; approval is deferred to the reviewers (via the
+     * Helios pending-approvals UI in Phase 2; via email in Phase 3).
+     */
+    DEFERRED_TO_REVIEWERS,
+    /**
+     * A required-reviewer rule referenced a GitHub Team (which Helios doesn't yet expand). The
+     * legacy "impersonate the deployment creator and try anyway" path was used as a fallback.
+     */
+    TEAM_REVIEWER_FALLBACK
   }
 
   public void setStatus(Status status) {

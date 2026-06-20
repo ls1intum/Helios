@@ -51,11 +51,22 @@ public class NotificationPreference {
 
   /**
    * Enum representing the different types of notifications.
+   *
+   * <p>The DB-side {@code chk_notification_type} CHECK constraint on the {@code type} column
+   * must be updated in lockstep when values are added or removed — see Flyway migrations.
    */
   public enum Type {
     DEPLOYMENT_FAILED,
     LOCK_EXPIRED,
     LOCK_UNLOCKED,
+    /**
+     * Sent to each User-type required reviewer when a deployment to a protected environment is
+     * deferred to manual review (i.e. when the deployment's
+     * {@code auto_approval_decision} is stamped {@code DEFERRED_TO_REVIEWERS}). The email links
+     * back to the Helios pending-approvals page where the reviewer can approve / decline; auth
+     * is via the regular Keycloak login + reviewer-list check (no extra token in the URL).
+     */
+    DEPLOYMENT_APPROVAL_REQUEST,
   }
 
   /**

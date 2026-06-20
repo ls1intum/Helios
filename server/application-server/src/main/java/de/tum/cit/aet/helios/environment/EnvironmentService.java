@@ -859,6 +859,82 @@ public class EnvironmentService {
   }
 
   /**
+   * Leaner sibling of {@link #getEnvironmentReviewers(Long)} for hot-path approval checks. Avoids
+   * constructing the public-facing DTO; returns the GitHub logins / team slugs directly along with
+   * whether the rule even exists and whether self-review is prevented.
+   *
+   * <p>An {@link Optional#empty()} result means "no {@code REQUIRED_REVIEWERS} rule on this env" —
+   * the deployment is not gated on reviewers (it may still be gated on wait-timer or branch
+   * policy, which GitHub handles itself).
+   */
+  public Optional<ReviewerResolution> resolveReviewers(Long environmentId) {
+    return protectionRuleRepository
+        .findByEnvironmentIdAndRuleType(environmentId, ProtectionRule.RuleType.REQUIRED_REVIEWERS)
+        .map(
+            rule -> {
+              Set<String> userLogins = new java.util.HashSet<>();
+              Set<String> teamSlugs = new java.util.HashSet<>();
+              try {
+                List<GitHubEnvironmentProtectionRuleDto.ReviewerContainer> containers =
+                    objectMapper.readValue(
+                        rule.getReviewers(),
+                        objectMapper
+                            .getTypeFactory()
+                            .constructCollectionType(
+                                List.class,
+                                GitHubEnvironmentProtectionRuleDto.ReviewerContainer.class));
+                for (GitHubEnvironmentProtectionRuleDto.ReviewerContainer c : containers) {
+                  GitHubEnvironmentProtectionRuleDto.Reviewer r = c.getReviewer();
+                  if ("User".equals(c.getType()) && r != null && r.getLogin() != null) {
+                    userLogins.add(r.getLogin());
+                  } else if ("Team".equals(c.getType()) && r != null && r.getName() != null) {
+                    teamSlugs.add(r.getName());
+                  }
+                }
+              } catch (JsonProcessingException e) {
+                log.error(
+                    "Failed to parse reviewers for environment {}: {}. Treating the rule as "
+                        + "unresolved (deployment left for manual review) rather than deferring to "
+                        + "zero reviewers, which would have stamped DEFERRED and notified nobody.",
+                    environmentId,
+                    e.getMessage());
+                return null; // -> Optional.empty(): the caller treats this as "no actionable rule".
+              }
+              // A null prevent_self_review from GitHub collapses to false (self-review allowed),
+              // matching GitHub's own default; auto-approval still only fires for an explicitly
+              // configured User-type reviewer, so this is the safe default.
+              return new ReviewerResolution(
+                  Boolean.TRUE.equals(rule.getPreventSelfReview()), userLogins, teamSlugs);
+            });
+  }
+
+  /**
+   * Convenience predicate: is the user one of the User-type required reviewers for this env?
+   * Returns {@code false} if there's no rule, or only Team-type reviewers (which Helios doesn't yet
+   * expand to members).
+   */
+  public boolean isUserRequiredReviewer(Long environmentId, String userLogin) {
+    if (userLogin == null) {
+      return false;
+    }
+    return resolveReviewers(environmentId)
+        .map(r -> r.userLogins().contains(userLogin))
+        .orElse(false);
+  }
+
+  /**
+   * Lean reviewer info for the approval flow. {@code userLogins} are GitHub User-type required
+   * reviewers; {@code teamSlugs} are Team-type reviewers (left unexpanded for now — Helios falls
+   * back to today's "impersonate creator" behaviour when teams are present).
+   */
+  public record ReviewerResolution(
+      boolean preventSelfReview, Set<String> userLogins, Set<String> teamSlugs) {
+    public boolean hasTeamReviewers() {
+      return !teamSlugs.isEmpty();
+    }
+  }
+
+  /**
    * Synchronizes the environments of the current repository with the GitHub repository.
    */
   public void syncRepositoryEnvironments() throws IOException {

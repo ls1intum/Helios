@@ -34,6 +34,13 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/user-settings/user-settings.component').then(m => m.UserSettingsComponent),
       },
       {
+        // Cross-repo list of deployments waiting on the current user as a required reviewer.
+        // Intentionally not nested under /repo/:id — a reviewer's queue spans every repo.
+        path: 'pending-approvals',
+        canActivate: [loggedInGuard],
+        loadComponent: () => import('./pages/pending-approvals/pending-approvals.component').then(m => m.PendingApprovalsComponent),
+      },
+      {
         path: 'repo/:repositoryId',
         children: [
           { path: '', loadComponent: () => import('./pages/ci-cd/ci-cd.component').then(m => m.CiCdComponent) },

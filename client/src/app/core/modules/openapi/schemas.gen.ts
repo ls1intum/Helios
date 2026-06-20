@@ -576,7 +576,7 @@ export const NotificationPreferenceDtoSchema = {
   properties: {
     type: {
       type: 'string',
-      enum: ['DEPLOYMENT_FAILED', 'LOCK_EXPIRED', 'LOCK_UNLOCKED'],
+      enum: ['DEPLOYMENT_FAILED', 'LOCK_EXPIRED', 'LOCK_UNLOCKED', 'DEPLOYMENT_APPROVAL_REQUEST'],
     },
     enabled: {
       type: 'boolean',
@@ -1019,6 +1019,37 @@ export const PushStatusPayloadSchema = {
     },
   },
   required: ['environment', 'state', 'timestamp'],
+} as const;
+
+export const ReviewDeploymentRequestSchema = {
+  type: 'object',
+  properties: {
+    comment: {
+      type: 'string',
+    },
+  },
+} as const;
+
+export const ApprovalDecisionDtoSchema = {
+  type: 'object',
+  properties: {
+    approvalRequestId: {
+      type: 'integer',
+      format: 'int64',
+    },
+    deploymentId: {
+      type: 'integer',
+      format: 'int64',
+    },
+    state: {
+      type: 'string',
+      enum: ['PENDING', 'APPROVED', 'DECLINED', 'EXPIRED', 'CONSUMED_BY_OTHER', 'FAILED_AT_GITHUB'],
+    },
+    via: {
+      type: 'string',
+      enum: ['AUTO', 'IN_APP', 'EMAIL_LINK'],
+    },
+  },
 } as const;
 
 export const DeployRequestSchema = {
@@ -2276,6 +2307,54 @@ export const ActivityHistoryDtoSchema = {
       format: 'date-time',
     },
     updatedAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+  },
+} as const;
+
+export const PendingApprovalDtoSchema = {
+  type: 'object',
+  properties: {
+    approvalRequestId: {
+      type: 'integer',
+      format: 'int64',
+    },
+    deploymentId: {
+      type: 'integer',
+      format: 'int64',
+    },
+    workflowRunId: {
+      type: 'integer',
+      format: 'int64',
+    },
+    workflowRunHtmlUrl: {
+      type: 'string',
+    },
+    environmentId: {
+      type: 'integer',
+      format: 'int64',
+    },
+    environmentName: {
+      type: 'string',
+    },
+    repositoryId: {
+      type: 'integer',
+      format: 'int64',
+    },
+    repositoryNameWithOwner: {
+      type: 'string',
+    },
+    creatorLogin: {
+      type: 'string',
+    },
+    sourceBranchName: {
+      type: 'string',
+    },
+    sha: {
+      type: 'string',
+    },
+    requestedAt: {
       type: 'string',
       format: 'date-time',
     },

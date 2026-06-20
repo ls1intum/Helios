@@ -10,16 +10,21 @@ import { DividerModule } from 'primeng/divider';
 import { AvatarModule } from 'primeng/avatar';
 import { Popover, PopoverModule } from 'primeng/popover';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
-import { IconBrandGithub, IconLogout, IconSettings } from 'angular-tabler-icons/icons';
+import { IconBrandGithub, IconChecklist, IconLogout, IconSettings } from 'angular-tabler-icons/icons';
+import { injectQuery } from '@tanstack/angular-query-experimental';
+import { myPendingApprovalsOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
+import { computed } from '@angular/core';
+import { Badge } from 'primeng/badge';
 import { NavigationEnd, Router, RouterLink } from '@angular/router';
 import { filter } from 'rxjs';
 
 @Component({
   selector: 'app-profile-nav-section',
-  imports: [ToastModule, PopoverModule, DividerModule, AvatarModule, DataViewModule, ButtonModule, TagModule, CardModule, ChipModule, TablerIconComponent, RouterLink],
+  imports: [ToastModule, PopoverModule, DividerModule, AvatarModule, DataViewModule, ButtonModule, TagModule, CardModule, ChipModule, TablerIconComponent, RouterLink, Badge],
   providers: [
     provideTablerIcons({
       IconBrandGithub,
+      IconChecklist,
       IconLogout,
       IconSettings,
     }),
@@ -33,6 +38,16 @@ export class ProfileNavSectionComponent {
   private router = inject(Router);
 
   isExpanded = input.required<boolean>();
+
+  /** Drives the badge on the profile button. Polls every 30 s; cheap server-side query. */
+  pendingApprovalsQuery = injectQuery(() => ({
+    ...myPendingApprovalsOptions(),
+    enabled: () => this.isLoggedIn(),
+    refetchInterval: 30_000,
+    refetchOnWindowFocus: true,
+  }));
+
+  pendingApprovalsCount = computed(() => this.pendingApprovalsQuery.data()?.length ?? 0);
 
   constructor() {
     this.router.events.pipe(filter(event => event instanceof NavigationEnd)).subscribe(() => {

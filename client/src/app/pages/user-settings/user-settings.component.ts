@@ -31,6 +31,7 @@ export class UserSettingsComponent implements OnInit {
     DEPLOYMENT_FAILED: 'Deployment failed',
     LOCK_EXPIRED: 'Lock expired',
     LOCK_UNLOCKED: 'Lock unlocked',
+    DEPLOYMENT_APPROVAL_REQUEST: 'Deployment approval requested',
   };
 
   constructor() {
