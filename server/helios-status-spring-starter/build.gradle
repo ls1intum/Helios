@@ -1,0 +1,92 @@
+plugins {
+    id 'java-library'
+    id 'checkstyle'
+    id 'maven-publish'
+    id 'com.vanniktech.maven.publish' version '0.36.0'
+}
+
+// group/version are derived by the maven-publish plugin from GROUP / VERSION_NAME
+// in gradle.properties (VERSION_NAME is overridden at release time via
+// -PVERSION_NAME=<version>).
+
+ext {
+    springBootVersion = '4.0.6'
+    lombokVersion = '1.18.46'
+    checkstyleVersion = '13.6.0'
+    springJavaformatVersion = '0.0.47'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // Spring Boot BOM – keeps managed versions consistent (Maven imported the same BOM)
+    api platform("org.springframework.boot:spring-boot-dependencies:${springBootVersion}")
+    annotationProcessor platform("org.springframework.boot:spring-boot-dependencies:${springBootVersion}")
+
+    // Public API – transitive to consumers, matching the Maven 'compile' scope
+    api 'org.springframework.boot:spring-boot-autoconfigure'
+    api 'org.springframework:spring-context'
+    api 'org.springframework:spring-web'
+    api 'com.fasterxml.jackson.core:jackson-databind'
+    api 'jakarta.annotation:jakarta.annotation-api'
+
+    // Compile-only – provided by the consuming Spring Boot app at runtime
+    // (matches the Maven 'provided' scope; non-transitive either way)
+    compileOnly 'org.slf4j:slf4j-api'
+    compileOnly 'org.hibernate.validator:hibernate-validator'
+    compileOnly 'org.springframework.boot:spring-boot-configuration-processor'
+    compileOnly "org.projectlombok:lombok:${lombokVersion}"
+
+    // Annotation processors – generate config metadata / Lombok code at build time
+    annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
+    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+    annotationProcessor 'org.springframework.boot:spring-boot-autoconfigure-processor'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+    // Checkstyle runtime: pin the engine + Spring's javaformat checks (the
+    // shared ../checkstyle.xml is the same config the app modules use)
+    checkstyle "com.puppycrawl.tools:checkstyle:${checkstyleVersion}"
+    checkstyle "io.spring.javaformat:spring-javaformat-checkstyle:${springJavaformatVersion}"
+}
+
+checkstyle {
+    toolVersion = checkstyleVersion
+    configFile = file('../checkstyle.xml')
+    // Maven ran checkstyle in the 'validate' phase with failOnViolation=true
+    ignoreFailures = false
+}
+
+// Lint test sources too (Maven set includeTestSourceDirectory=true)
+tasks.named('checkstyleMain')
+tasks.named('checkstyleTest')
+
+tasks.named('test') {
+    useJUnitPlatform()
+    // The starter currently ships no test classes; Gradle 9 fails a test task
+    // that discovers none, so opt out until real tests are added.
+    failOnNoDiscoveredTests = false
+}
+
+// Secondary mirror: GitHub Packages (the vanniktech plugin handles Maven Central).
+// The 'maven' publication is created by the vanniktech/maven-publish plugins.
+publishing {
+    repositories {
+        maven {
+            name = 'GitHubPackages'
+            url = uri('https://maven.pkg.github.com/ls1intum/Helios')
+            credentials {
+                username = System.getenv('GITHUB_ACTOR')
+                password = System.getenv('GITHUB_TOKEN')
+            }
+        }
+    }
+}
