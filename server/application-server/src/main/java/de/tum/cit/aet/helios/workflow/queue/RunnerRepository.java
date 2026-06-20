@@ -11,7 +11,7 @@ public interface RunnerRepository extends JpaRepository<Runner, Long> {
 
   List<Runner> findByStatus(Runner.Status status);
 
-  @Modifying
+  @Modifying(clearAutomatically = true, flushAutomatically = true)
   @Query(
       "UPDATE Runner r SET r.status = 'OFFLINE', r.offlineSince = :now "
           + "WHERE r.status = 'ONLINE' AND r.id NOT IN :seenIds")

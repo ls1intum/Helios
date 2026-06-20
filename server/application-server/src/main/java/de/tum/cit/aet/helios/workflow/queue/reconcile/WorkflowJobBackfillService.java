@@ -123,8 +123,7 @@ public class WorkflowJobBackfillService {
     }
   }
 
-  @Transactional
-  protected void ingestRunJobs(String fullName, Long runId, Long repositoryId,
+  public void ingestRunJobs(String fullName, Long runId, Long repositoryId,
       String workflowName, String headBranch, String headSha) {
     int page = 1;
     while (!aborted.get()) {
@@ -138,16 +137,26 @@ public class WorkflowJobBackfillService {
       if (jobs == null || !jobs.isArray() || jobs.isEmpty()) {
         return;
       }
-      for (JsonNode node : jobs) {
-        if (!node.hasNonNull("id")) {
-          continue;
-        }
-        saveJob(node, runId, repositoryId, workflowName, headBranch, headSha);
-      }
+      // Persist the page through the Spring proxy so @Transactional applies (a direct
+      // self-invocation would bypass the proxy). The transaction wraps only the DB writes — never
+      // the GitHub pagination above — so a connection is not held open across network I/O.
+      context.getBean(WorkflowJobBackfillService.class)
+          .saveJobPage(jobs, runId, repositoryId, workflowName, headBranch, headSha);
       if (jobs.size() < 100) {
         return;
       }
       page++;
+    }
+  }
+
+  @Transactional
+  public void saveJobPage(JsonNode jobs, Long runId, Long repositoryId,
+      String workflowName, String headBranch, String headSha) {
+    for (JsonNode node : jobs) {
+      if (!node.hasNonNull("id")) {
+        continue;
+      }
+      saveJob(node, runId, repositoryId, workflowName, headBranch, headSha);
     }
   }
 

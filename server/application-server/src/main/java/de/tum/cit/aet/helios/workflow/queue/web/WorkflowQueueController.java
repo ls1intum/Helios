@@ -2,6 +2,7 @@ package de.tum.cit.aet.helios.workflow.queue.web;
 
 import de.tum.cit.aet.helios.config.security.annotations.EnforceAdmin;
 import de.tum.cit.aet.helios.config.security.annotations.EnforceAtLeastWritePermission;
+import de.tum.cit.aet.helios.filters.RepositoryContext;
 import de.tum.cit.aet.helios.workflow.queue.QueueAlertEvent;
 import de.tum.cit.aet.helios.workflow.queue.QueueAlertEventRepository;
 import de.tum.cit.aet.helios.workflow.queue.QueueAlertRule;
@@ -30,6 +31,7 @@ import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -40,6 +42,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/api/queue")
@@ -144,10 +147,25 @@ public class WorkflowQueueController {
         ruleRepository.findByRepositoryId(repoId).stream().map(this::toDto).toList());
   }
 
+  /**
+   * {@code @EnforceAtLeastWritePermission} grants the WRITE role for the repo in the
+   * X-Repository-Id header (the request's {@link RepositoryContext}), not for the {@code repoId}
+   * path variable. Guard that they are the same repo, so a user with write access to repo A cannot
+   * create/edit/delete alert rules on repo B by keeping A in the header while putting B in the path.
+   */
+  private void assertRepoInContext(Long repoId) {
+    Long contextRepoId = RepositoryContext.getRepositoryId();
+    if (contextRepoId == null || !contextRepoId.equals(repoId)) {
+      throw new ResponseStatusException(
+          HttpStatus.FORBIDDEN, "Path repository does not match the authorized repository.");
+    }
+  }
+
   @EnforceAtLeastWritePermission
   @PostMapping("/repos/{repoId}/alerts/rules")
   public ResponseEntity<AlertRuleDto> createRule(
       @PathVariable Long repoId, @Valid @RequestBody AlertRuleDto body) {
+    assertRepoInContext(repoId);
     QueueAlertRule rule = new QueueAlertRule();
     applyDto(rule, body);
     rule.setRepositoryId(repoId);
@@ -161,7 +179,7 @@ public class WorkflowQueueController {
       @PathVariable Long repoId,
       @PathVariable Long id,
       @Valid @RequestBody AlertRuleDto body) {
-    // Scoped lookup — caller cannot edit rules from other repos by guessing ids.
+    assertRepoInContext(repoId);
     return ruleRepository.findByIdAndRepositoryId(id, repoId).map(rule -> {
       applyDto(rule, body);
       rule.setRepositoryId(repoId);
@@ -173,6 +191,7 @@ public class WorkflowQueueController {
   @DeleteMapping("/repos/{repoId}/alerts/rules/{id}")
   @org.springframework.transaction.annotation.Transactional
   public ResponseEntity<Void> deleteRule(@PathVariable Long repoId, @PathVariable Long id) {
+    assertRepoInContext(repoId);
     long deleted = ruleRepository.deleteByIdAndRepositoryId(id, repoId);
     return deleted > 0 ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
   }

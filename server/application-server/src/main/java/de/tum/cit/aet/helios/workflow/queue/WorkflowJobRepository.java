@@ -37,7 +37,7 @@ public interface WorkflowJobRepository extends JpaRepository<WorkflowJob, Long> 
 
   Optional<WorkflowJob> findByWorkflowRunIdAndName(Long workflowRunId, String name);
 
-  @Modifying
+  @Modifying(clearAutomatically = true, flushAutomatically = true)
   @Query(
       "UPDATE WorkflowJob j SET j.lastReconcileAttemptAt = :now WHERE j.id IN :ids")
   void touchReconcileAttempt(@Param("ids") List<Long> ids, @Param("now") OffsetDateTime now);
