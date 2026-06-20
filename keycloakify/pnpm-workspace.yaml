@@ -16,3 +16,9 @@ allowBuilds:
 # the lowest release that clears the advisory.
 overrides:
   esbuild: 0.28.1
+
+# pnpm 11.3+ holds packages younger than the default 24h supply-chain cutoff.
+# keycloakify@11.15.10 was published <24h before this bump, so it is explicitly
+# allowed here. Safe to remove once the version has aged past the cutoff.
+minimumReleaseAgeExclude:
+  - keycloakify@11.15.10
