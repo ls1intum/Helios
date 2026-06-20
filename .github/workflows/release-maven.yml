@@ -53,7 +53,7 @@ jobs:
       - name: Publish to Maven Central
         run: ./gradlew publishAndReleaseToMavenCentral -PVERSION_NAME="$VERSION"
         env:
-          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.OSS_SONATYPE_USERNAME }}
-          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.OSS_SONATYPE_PASSWORD }}
+          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.OSSRH_USERNAME }}
+          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.OSSRH_PASSWORD }}
           ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
           ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
