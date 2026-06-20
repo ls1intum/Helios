@@ -51,6 +51,7 @@ import org.springframework.web.server.ResponseStatusException;
 public class WorkflowQueueController {
 
   private static final int MAX_JOBS_LIMIT = 500;
+  private static final int MAX_EVENTS_HOURS_BACK = 24 * 90; // 90 days
 
   private final WorkflowJobRepository workflowJobRepository;
   private final QueueWaitStatRepository statsRepository;
@@ -200,7 +201,10 @@ public class WorkflowQueueController {
   public ResponseEntity<List<AlertEventDto>> events(
       @PathVariable Long repoId,
       @RequestParam(defaultValue = "24") int hoursBack) {
-    OffsetDateTime since = OffsetDateTime.now().minusHours(hoursBack);
+    // findRecent has no LIMIT, so the time window is the only bound — clamp it (1h..90d) to keep an
+    // arbitrary hoursBack (e.g. Integer.MAX_VALUE, or a negative) from returning an unbounded set.
+    int safeHoursBack = Math.max(1, Math.min(hoursBack, MAX_EVENTS_HOURS_BACK));
+    OffsetDateTime since = OffsetDateTime.now().minusHours(safeHoursBack);
     List<QueueAlertEvent> events = eventRepository.findRecent(repoId, since);
     return ResponseEntity.ok(events.stream().map(this::toDto).toList());
   }
