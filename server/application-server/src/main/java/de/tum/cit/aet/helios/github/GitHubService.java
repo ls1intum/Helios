@@ -559,7 +559,8 @@ public class GitHubService {
             .url(url)
             .post(requestBody)
             .header("Authorization", "Bearer " + userGithubToken)
-            .header("Accept", "application/json")
+            .header("Accept", "application/vnd.github+json")
+            .header("X-GitHub-Api-Version", GITHUB_API_VERSION)
             .build();
 
     try (Response response = okHttpClient.newCall(request).execute()) {
