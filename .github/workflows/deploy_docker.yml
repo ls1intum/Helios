@@ -47,7 +47,7 @@ jobs:
             docker compose -f compose.prod.yaml down --remove-orphans --rmi all
 
       - name: checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Copy Docker Compose File From Repo to VM Host
         uses: appleboy/scp-action@v1

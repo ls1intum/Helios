@@ -23,7 +23,7 @@ jobs:
 
     steps:
       - run: echo "Releasing helios-status-spring-starter version ${{ github.event.inputs.releaseversion }}"
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Set up JDK 21
         uses: actions/setup-java@v5
         with:
