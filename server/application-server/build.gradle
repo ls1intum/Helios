@@ -13,7 +13,7 @@ plugins {
     id 'org.springframework.boot'
     id 'io.freefair.lombok'
     id 'org.springdoc.openapi-gradle-plugin' version '1.9.0'
-    id 'org.openapi.generator' version '7.22.0'
+    id 'org.openapi.generator' version '7.23.0'
     id 'org.flywaydb.flyway' version '12.9.0'
 }
 
