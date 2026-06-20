@@ -2,3 +2,6 @@
 exclude_paths:
   - "*.gen.ts"
   - "test-setup.ts"
+  # Generated Gradle wrapper scripts (shipped by Gradle, not hand-maintained)
+  - "**/gradlew"
+  - "**/gradlew.bat"
