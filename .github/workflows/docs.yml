@@ -22,7 +22,7 @@ jobs:
   docs:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: FelixTJDietrich/sphinx-action@f240fcdaaf6fedf6b3f66b29ec34893346f028d8  # java (fork branch head)
         with:
           docs-folder: "docs/"

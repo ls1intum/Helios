@@ -5,7 +5,7 @@ import org.springframework.boot.gradle.tasks.run.BootRun
 buildscript {
     dependencies {
         classpath('org.postgresql:postgresql:42.7.11')
-        classpath('org.flywaydb:flyway-database-postgresql:11.20.3')
+        classpath('org.flywaydb:flyway-database-postgresql:12.9.0')
     }
 }
 
@@ -13,8 +13,8 @@ plugins {
     id 'org.springframework.boot'
     id 'io.freefair.lombok'
     id 'org.springdoc.openapi-gradle-plugin' version '1.9.0'
-    id 'org.openapi.generator' version '7.22.0'
-    id 'org.flywaydb.flyway' version '11.20.3'
+    id 'org.openapi.generator' version '7.23.0'
+    id 'org.flywaydb.flyway' version '12.9.0'
 }
 
 // The OpenAPI tasks boot the app against the in-memory H2 database, so H2 is
@@ -31,7 +31,7 @@ if (gradle.startParameter.taskNames.any { requested -> openApiTaskHints.any { re
 }
 
 dependencies {
-    implementation(platform("org.springframework.ai:spring-ai-bom:2.0.0-M8"))
+    implementation(platform("org.springframework.ai:spring-ai-bom:2.0.0"))
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-webmvc'
     implementation 'org.springframework.boot:spring-boot-starter-restclient'
@@ -50,7 +50,7 @@ dependencies {
     implementation 'com.squareup.okhttp3:logging-interceptor:4.12.0'
     implementation 'org.flywaydb:flyway-database-postgresql'
     implementation 'io.jsonwebtoken:jjwt-api:0.13.0'
-    implementation 'io.sentry:sentry-spring-boot-4-starter:8.43.0'
+    implementation 'io.sentry:sentry-spring-boot-4-starter:8.44.1'
     // Helios push-based status updates
     implementation "de.tum.cit.aet:helios-status-spring-starter:1.1.1"
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.13.0'
