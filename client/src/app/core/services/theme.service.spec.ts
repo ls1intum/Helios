@@ -45,13 +45,13 @@ describe('ThemeService', () => {
   }
 
   it('initializes from localStorage when "dark" is saved', () => {
-    store.theme = 'dark';
+    store['theme'] = 'dark';
     const service = getService();
     expect(service.isDarkMode()).toBe(true);
   });
 
   it('initializes from localStorage when "light" is saved', () => {
-    store.theme = 'light';
+    store['theme'] = 'light';
     const service = getService();
     expect(service.isDarkMode()).toBe(false);
   });
@@ -61,11 +61,11 @@ describe('ThemeService', () => {
     const initial = service.isDarkMode();
     service.toggle();
     expect(service.isDarkMode()).toBe(!initial);
-    expect(store.theme).toBe(!initial ? 'dark' : 'light');
+    expect(store['theme']).toBe(!initial ? 'dark' : 'light');
   });
 
   it('applies the dark-mode-enabled class on <html> when dark mode is on', () => {
-    store.theme = 'dark';
+    store['theme'] = 'dark';
     document.querySelector('html')?.classList.remove('dark-mode-enabled');
     getService();
     TestBed.tick(); // flush the constructor effect
@@ -73,7 +73,7 @@ describe('ThemeService', () => {
   });
 
   it('removes the dark-mode-enabled class when toggled off', () => {
-    store.theme = 'dark';
+    store['theme'] = 'dark';
     const service = getService();
     TestBed.tick();
     expect(document.querySelector('html')?.classList.contains('dark-mode-enabled')).toBe(true);

@@ -7,7 +7,7 @@ The format follows **[Keep a Changelog 1.1.0]** and the project adheres to **[Se
   When cutting an official release:
     1. Move changes from *Unreleased* to a new, dated version heading.
     2. Use ISO 8601 date format — YYYY-MM-DD — for every released section header.
-    3. Bump the version in pom.xml and commit both files together.
+    3. Bump VERSION_NAME in gradle.properties and commit both files together.
     4. After PR is merged, tag the commit:  git tag -a helios-starter-vX.Y.Z -m "Helios starter X.Y.Z"
 -->
 
@@ -26,6 +26,19 @@ The format follows **[Keep a Changelog 1.1.0]** and the project adheres to **[Se
 - _(nothing yet)_
 ### Migration notes
 - _(nothing yet)_
+
+---
+
+## [1.2.0] – 2026-06-20
+### Changed
+- **Build system:** migrated the starter from Maven to Gradle (standalone Gradle build with
+  the Vanniktech `maven-publish` plugin; published to Maven Central via the Sonatype Central
+  Portal and to GitHub Packages). No source or runtime behaviour change.
+
+### Migration notes
+- The published POM no longer lists the former `provided`-scope dependencies (`slf4j-api`,
+  `hibernate-validator`); Gradle keeps them off the published model. They were non-transitive
+  under Maven too, so consumers are unaffected.
 
 ---
 

@@ -5,6 +5,7 @@ import { type InfiniteData, infiniteQueryOptions, type MutationOptions, queryOpt
 import { client } from '../client.gen';
 import {
   analyzeFailedTest,
+  approve,
   byId,
   cancelDeployment,
   cancelWorkflowRun,
@@ -12,6 +13,7 @@ import {
   createRule,
   createTestType,
   createWorkflowGroup,
+  decline,
   deleteReleaseCandidateByName,
   deleteRule,
   deleteTestType,
@@ -79,6 +81,7 @@ import {
   list,
   listRules,
   lockEnvironment,
+  myPendingApprovals,
   type Options,
   orgDepth,
   pools,
@@ -111,6 +114,9 @@ import type {
   AnalyzeFailedTestData,
   AnalyzeFailedTestError,
   AnalyzeFailedTestResponse,
+  ApproveData,
+  ApproveError,
+  ApproveResponse,
   ByIdData,
   ByIdError,
   ByIdResponse,
@@ -131,6 +137,9 @@ import type {
   CreateWorkflowGroupData,
   CreateWorkflowGroupError,
   CreateWorkflowGroupResponse,
+  DeclineData,
+  DeclineError,
+  DeclineResponse,
   DeleteReleaseCandidateByNameData,
   DeleteReleaseCandidateByNameError,
   DeleteReleaseCandidateByNameResponse,
@@ -329,6 +338,9 @@ import type {
   LockEnvironmentData,
   LockEnvironmentError,
   LockEnvironmentResponse,
+  MyPendingApprovalsData,
+  MyPendingApprovalsError,
+  MyPendingApprovalsResponse,
   OrgDepthData,
   OrgDepthError,
   OrgDepthResponse,
@@ -1115,6 +1127,34 @@ export const updateMutation = (options?: Partial<Options<UpdateData>>): Mutation
   const mutationOptions: MutationOptions<unknown, UpdateError, Options<UpdateData>> = {
     mutationFn: async fnOptions => {
       const { data } = await update({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const declineMutation = (options?: Partial<Options<DeclineData>>): MutationOptions<DeclineResponse, DeclineError, Options<DeclineData>> => {
+  const mutationOptions: MutationOptions<DeclineResponse, DeclineError, Options<DeclineData>> = {
+    mutationFn: async fnOptions => {
+      const { data } = await decline({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const approveMutation = (options?: Partial<Options<ApproveData>>): MutationOptions<ApproveResponse, ApproveError, Options<ApproveData>> => {
+  const mutationOptions: MutationOptions<ApproveResponse, ApproveError, Options<ApproveData>> = {
+    mutationFn: async fnOptions => {
+      const { data } = await approve({
         ...options,
         ...fnOptions,
         throwOnError: true,
@@ -2233,6 +2273,22 @@ export const getActivityHistoryByPullRequestIdOptions = (options: Options<GetAct
       return data;
     },
     queryKey: getActivityHistoryByPullRequestIdQueryKey(options),
+  });
+
+export const myPendingApprovalsQueryKey = (options?: Options<MyPendingApprovalsData>) => createQueryKey('myPendingApprovals', options);
+
+export const myPendingApprovalsOptions = (options?: Options<MyPendingApprovalsData>) =>
+  queryOptions<MyPendingApprovalsResponse, MyPendingApprovalsError, MyPendingApprovalsResponse, ReturnType<typeof myPendingApprovalsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await myPendingApprovals({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: myPendingApprovalsQueryKey(options),
   });
 
 export const getDeploymentsByEnvironmentIdQueryKey = (options: Options<GetDeploymentsByEnvironmentIdData>) => createQueryKey('getDeploymentsByEnvironmentId', options);

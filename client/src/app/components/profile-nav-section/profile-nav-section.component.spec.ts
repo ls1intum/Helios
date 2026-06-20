@@ -3,6 +3,7 @@ import { ProfileNavSectionComponent } from './profile-nav-section.component';
 import { provideZonelessChangeDetection } from '@angular/core';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 import { RouterTestingModule } from '@angular/router/testing';
+import { provideQueryClient, QueryClient } from '@tanstack/angular-query-experimental';
 
 const keycloakStub = {
   isLoggedIn: () => true,
@@ -21,7 +22,7 @@ describe('ProfileNavSectionComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [ProfileNavSectionComponent, RouterTestingModule],
-      providers: [provideZonelessChangeDetection(), { provide: KeycloakService, useValue: keycloakStub }],
+      providers: [provideZonelessChangeDetection(), provideQueryClient(new QueryClient()), { provide: KeycloakService, useValue: keycloakStub }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(ProfileNavSectionComponent);

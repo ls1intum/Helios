@@ -1,8 +1,11 @@
 <div class="flex flex-col gap-3 items-center">
   @if (isLoggedIn()) {
-    <p-button class="flex gap-3 items-center cursor-pointer" (click)="profileMenu.toggle($event)" size="small">
+    <p-button class="flex gap-3 items-center cursor-pointer relative" (click)="profileMenu.toggle($event)" size="small">
       <p-avatar class="size-5 flex-shrink-0" shape="circle" size="normal" [image]="getProfilePictureUrl()" />
       <span class="hidden md:block text-md runcate overflow-hidden whitespace-nowrap max-w-[130px]">{{ fullName() }}</span>
+      @if (pendingApprovalsCount() > 0) {
+        <p-badge [value]="pendingApprovalsCount().toString()" severity="warn" class="!absolute -top-1 -right-1" />
+      }
     </p-button>
   } @else {
     <p-button (click)="login()" class="rounded-xl flex items-center justify-center gap-2 w-full" size="small">
@@ -14,6 +17,15 @@
 
 <p-popover #profileMenu>
   <div class="flex flex-col items-start gap-2">
+    <!-- Pending deployment approvals -->
+    <p-button [routerLink]="'/pending-approvals'" severity="secondary" text size="small">
+      <i-tabler name="checklist" class="!size-5 !stroke-1"></i-tabler>
+      <span>Pending approvals</span>
+      @if (pendingApprovalsCount() > 0) {
+        <p-badge [value]="pendingApprovalsCount().toString()" severity="warn" styleClass="ml-2" />
+      }
+    </p-button>
+
     <!-- Settings Button -->
     <p-button [routerLink]="'/settings'" severity="secondary" text size="small">
       <i-tabler name="settings" class="!size-5 !stroke-1"></i-tabler>

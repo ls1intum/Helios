@@ -1124,6 +1124,61 @@ paths:
                 $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
+  /api/deployments/{deploymentId}/decline:
+    post:
+      tags:
+      - deployment-approval-controller
+      operationId: decline
+      parameters:
+      - name: deploymentId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReviewDeploymentRequest"
+      responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApprovalDecisionDto"
+  /api/deployments/{deploymentId}/approve:
+    post:
+      tags:
+      - deployment-approval-controller
+      operationId: approve
+      parameters:
+      - name: deploymentId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApprovalDecisionDto"
   /api/deployments/deploy:
     post:
       tags:
@@ -2601,6 +2656,26 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/ActivityHistoryDto"
+  /api/deployments/pending-approvals:
+    get:
+      tags:
+      - deployment-approval-controller
+      operationId: myPendingApprovals
+      responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PendingApprovalDto"
   /api/deployments/environment/{environmentId}:
     get:
       tags:
@@ -3328,6 +3403,7 @@ components:
           - DEPLOYMENT_FAILED
           - LOCK_EXPIRED
           - LOCK_UNLOCKED
+          - DEPLOYMENT_APPROVAL_REQUEST
           - QUEUE_P95_BREACH
           - RUNNER_OFFLINE
           - STUCK_JOBS
@@ -3663,6 +3739,35 @@ components:
       - environment
       - state
       - timestamp
+    ReviewDeploymentRequest:
+      type: object
+      properties:
+        comment:
+          type: string
+    ApprovalDecisionDto:
+      type: object
+      properties:
+        approvalRequestId:
+          type: integer
+          format: int64
+        deploymentId:
+          type: integer
+          format: int64
+        state:
+          type: string
+          enum:
+          - PENDING
+          - APPROVED
+          - DECLINED
+          - EXPIRED
+          - CONSUMED_BY_OTHER
+          - FAILED_AT_GITHUB
+        via:
+          type: string
+          enum:
+          - AUTO
+          - IN_APP
+          - EMAIL_LINK
     DeployRequest:
       type: object
       properties:
@@ -4921,6 +5026,39 @@ components:
           type: string
           format: date-time
         updatedAt:
+          type: string
+          format: date-time
+    PendingApprovalDto:
+      type: object
+      properties:
+        approvalRequestId:
+          type: integer
+          format: int64
+        deploymentId:
+          type: integer
+          format: int64
+        workflowRunId:
+          type: integer
+          format: int64
+        workflowRunHtmlUrl:
+          type: string
+        environmentId:
+          type: integer
+          format: int64
+        environmentName:
+          type: string
+        repositoryId:
+          type: integer
+          format: int64
+        repositoryNameWithOwner:
+          type: string
+        creatorLogin:
+          type: string
+        sourceBranchName:
+          type: string
+        sha:
+          type: string
+        requestedAt:
           type: string
           format: date-time
     BranchDetailsDto:

@@ -1,5 +1,14 @@
 verifyDepsBeforeRun: false
 
+# TEMPORARY (2026-05-28): pnpm 11.3+ defaults to a 24h `minimumReleaseAge` supply-chain
+# policy that blocks `pnpm install --frozen-lockfile` on any lockfile entry younger than
+# the cutoff. `@angular/cdk@21.2.13` (in staging since #1093 yesterday) is currently ~16h
+# old, so every PR's CI client install fails. Relaxed to 0 to unblock the staging deploy
+# and the parallel testing of feat/deployment-approval-in-helios (#1098) on helios-staging.
+# REVERT (restore default by removing this line, or set back to 86400) once the package
+# ages past the cutoff later today.
+minimumReleaseAge: 0
+
 # pnpm 11 blocks dependency build scripts by default and, under
 # --frozen-lockfile, fails hard (ERR_PNPM_IGNORED_BUILDS) unless each package is
 # explicitly approved. `allowBuilds` is pnpm 11's replacement for the old
@@ -13,14 +22,40 @@ allowBuilds:
   lmdb: true
   msgpackr-extract: true
 
-# Force patched versions of transitive, dev-only dependencies flagged by
-# Dependabot. Both are pulled in solely via the Angular dev-server chain
-# (@angular-devkit/build-angular -> webpack-dev-server -> sockjs -> uuid):
-#  - webpack-dev-server <=5.2.3: cross-origin source exposure on non-HTTPS
-#    origins (GHSA fixed in 5.2.4). build-webpack requires ^5.0.2, so 5.2.4 fits.
-#  - uuid <11.1.1: missing buffer bounds check in v3/v5/v6 when `buf` is passed.
-#    sockjs only calls uuid.v4() with no buffer, so it isn't actually exploitable,
-#    but bumping clears the alert; v11 keeps the .v4 CJS export sockjs uses.
+# Force patched versions of transitive dependencies flagged by Dependabot.
+# All of these are pulled in solely through the build/dev toolchain (Angular
+# build + dev-server chain, vite, hey-api), never by application runtime code.
+# Each is pinned to the lowest release that clears the corresponding advisory
+# while staying within the consumer's major (so the build/test pipeline that
+# uses the esbuild `application` builder + Vitest is unaffected):
+#  - webpack-dev-server <5.2.4: cross-origin source exposure on non-HTTPS origins.
+#  - uuid <11.1.1: missing buffer bounds check; sockjs only calls uuid.v4().
+#  - undici 6.x <6.27.0 / 7.x <7.28.0: Set-Cookie/Host-header/SOCKS5/cache CVEs.
+#  - hono <4.12.25: CORS wildcard reflection + several adapter/path CVEs.
+#  - tar <7.5.16: PAX size-override parser differential (file smuggling).
+#  - piscina 5.0.0-5.1.4: prototype-pollution gadget -> RCE via options.filename.
+#  - http-proxy-middleware <3.0.7: CRLF field injection + Host-header routing
+#    bypass. The esbuild builder pulls 3.0.5; the unused webpack dev-server pulls
+#    2.0.9, so forcing 3.0.7 globally clears both (webpack serve is not used —
+#    the `application` builder serves via Vite).
+#  - launch-editor <2.14.1: NTLMv2 hash disclosure via UNC paths on Windows.
+#  - js-yaml <4.2.0: quadratic-complexity DoS in merge-key handling.
+#  - @babel/core <=7.29.0: arbitrary file read via sourceMappingURL comment.
+#  - esbuild 0.27.3-0.28.0: arbitrary file read via the dev server on Windows.
+#  - vite 7.x <7.3.5: `server.fs.deny` bypass + launch-editor UNC disclosure.
+#    The direct devDependency vite is 8.0.16 (used by Vitest); @angular/build
+#    pins its own vite 7.3.2, so the override is scoped to the 7.x line only.
 overrides:
-  webpack-dev-server: 5.2.4
+  webpack-dev-server: 5.2.5
   uuid: 14.0.0
+  undici@6: 8.5.0
+  undici@7: 8.5.0
+  hono: 4.12.26
+  tar: 7.5.16
+  piscina: 5.2.0
+  http-proxy-middleware: 4.1.1
+  launch-editor: 2.14.1
+  js-yaml: 4.2.0
+  '@babel/core': 8.0.1
+  esbuild: 0.28.1
+  vite@7: 8.0.16

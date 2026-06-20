@@ -1,0 +1,18 @@
+/*
+ * One-off highlight applied to the focused row when /pending-approvals?focus=<id> arrives
+ * from an approval-request email. The transition is intentionally short so it draws the
+ * reviewer's eye without lingering.
+ */
+:host ::ng-deep tr.row-focused > td {
+  animation: row-focused-pulse 2.4s ease-out;
+}
+
+@keyframes row-focused-pulse {
+  0%,
+  20% {
+    background-color: rgba(var(--p-primary-200), 0.7);
+  }
+  100% {
+    background-color: transparent;
+  }
+}

@@ -19,6 +19,26 @@ on:
       - '!.github/workflows/deploy_docker.yml'
       - '.vscode/**'
       - 'docs/**'
+  # Admins (repo write permission) can manually deploy any branch / tag / SHA to
+  # helios-staging without going through git push. The chosen ref is built and pushed
+  # under the `:staging` image tag (overwriting it), then the standard deploy_docker.yml
+  # step rolls it out. To revert, dispatch again with `ref: staging`.
+  #
+  # Limitations (acceptable for ad-hoc PR testing):
+  #   - validate-flyway and deploy_docker.yml's checkout both run against github.ref
+  #     (the dispatching branch, normally `staging`), not against `inputs.ref`. So the
+  #     compose.prod.yaml on the VM and the validated migrations come from the
+  #     dispatching branch. A PR that changes compose.prod.yaml or migrations relies on
+  #     its own PR-side CI to have validated them.
+  #   - The input flows only to actions/checkout's `ref:` parameter — never to a
+  #     `run:` step. See build_docker.yml for the validation.
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Branch / tag / SHA to deploy to helios-staging (default: staging)'
+        required: true
+        type: string
+        default: staging
 
 concurrency:
   group: staging
@@ -35,6 +55,11 @@ jobs:
     needs: validate-flyway
     uses: ./.github/workflows/build_docker.yml
     secrets: inherit
+    with:
+      # On push triggers `inputs.ref` is undefined and this resolves to github.ref
+      # (preserving the existing behavior). On workflow_dispatch, the user-supplied
+      # ref wins.
+      ref: ${{ inputs.ref || github.ref }}
   deploy-staging-container:
     needs: build-staging-container
     uses: ./.github/workflows/deploy_docker.yml

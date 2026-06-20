@@ -51,27 +51,19 @@ class NotificationPreferenceServiceTest {
 
   @Test
   void initializeDefaultsForUserShouldNotCreateExistingPreferences() {
-    // Arrange
+    // Arrange: DEPLOYMENT_FAILED already exists; the rest do not. The save count must equal
+    // (number of types) - 1, regardless of how many new types get added in the future.
     NotificationPreference existingPref =
         new NotificationPreference(testUser, NotificationPreference.Type.DEPLOYMENT_FAILED, true);
+    when(repository.findByUserAndType(any(), any())).thenReturn(Optional.empty());
     when(repository.findByUserAndType(testUser, NotificationPreference.Type.DEPLOYMENT_FAILED))
         .thenReturn(Optional.of(existingPref));
-    when(repository.findByUserAndType(testUser, NotificationPreference.Type.LOCK_EXPIRED))
-        .thenReturn(Optional.empty());
-    when(repository.findByUserAndType(testUser, NotificationPreference.Type.LOCK_UNLOCKED))
-        .thenReturn(Optional.empty());
-    when(repository.findByUserAndType(testUser, NotificationPreference.Type.QUEUE_P95_BREACH))
-        .thenReturn(Optional.empty());
-    when(repository.findByUserAndType(testUser, NotificationPreference.Type.RUNNER_OFFLINE))
-        .thenReturn(Optional.empty());
-    when(repository.findByUserAndType(testUser, NotificationPreference.Type.STUCK_JOBS))
-        .thenReturn(Optional.empty());
 
     // Act
     service.initializeDefaultsForUser(testUser);
 
-    // Assert: 5 non-existing preferences (LOCK_EXPIRED, LOCK_UNLOCKED + 3 queue types) → 5 saves.
-    verify(repository, times(5)).save(any());
+    // Assert: one save per type that didn't already exist.
+    verify(repository, times(NotificationPreference.Type.values().length - 1)).save(any());
   }
 
   @Test

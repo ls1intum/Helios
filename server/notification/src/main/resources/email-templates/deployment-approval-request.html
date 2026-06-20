@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Approval needed - Helios</title>
+    <!--
+    Expected parameters:
+    {
+      "username": "alice",
+      "environmentName": "test-server-7",
+      "repositoryNameWithOwner": "ls1intum/Helios",
+      "repositoryId": "880304517",
+      "deploymentId": "188",
+      "creatorLogin": "bob",
+      "branchName": "feat/foo",
+      "sha": "abc1234567890abcdef",
+      "workflowRunHtmlUrl": "https://github.com/ls1intum/Helios/actions/runs/12345"
+    }
+    -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #4a86e8;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 5px 5px 0 0;
+        }
+        .content {
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-top: none;
+            border-radius: 0 0 5px 5px;
+        }
+        .deployment-details {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        .deployment-details p {
+            margin: 5px 0;
+        }
+        .deployment-details code {
+            font-family: "SFMono-Regular", Consolas, Menlo, monospace;
+            font-size: 90%;
+            background-color: #eef0f3;
+            padding: 1px 4px;
+            border-radius: 3px;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 12px;
+            color: #777;
+        }
+        .button {
+            display: inline-block;
+            background-color: #28a745;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        .secondary-link {
+            color: #4a86e8;
+        }
+        .review-icon {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        .buttons-container {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <span class="review-icon">🚦</span>
+        <h1>Deployment needs your approval</h1>
+    </div>
+    <div class="content">
+        <p>Hi <strong>${username}</strong>,</p>
+
+        <p>A deployment to <strong>${environmentName}</strong> on
+            <a href="${heliosBaseUrl}/repo/${repositoryId}/ci-cd/pr">${repositoryNameWithOwner}</a>
+            is waiting for your approval.</p>
+
+        <div class="deployment-details">
+            <p><strong>Triggered by:</strong> @${creatorLogin}</p>
+            <p><strong>Branch:</strong> <code>${branchName}</code></p>
+            <p><strong>Commit:</strong> <code>${sha}</code></p>
+            <p><strong>Workflow run:</strong>
+                <a class="secondary-link" href="${workflowRunHtmlUrl}" target="_blank" rel="noopener">View on GitHub</a>
+            </p>
+        </div>
+
+        <p>Open Helios to approve or decline directly — no extra step in GitHub needed. You will
+            need to sign in if you aren't already.</p>
+
+        <div class="buttons-container">
+            <a href="${heliosBaseUrl}/pending-approvals?focus=${deploymentId}" class="button">
+                Review in Helios
+            </a>
+        </div>
+
+        <p style="margin-top: 24px; color: #777; font-size: 13px;">
+            You're receiving this email because you're a required reviewer for
+            <strong>${environmentName}</strong>. You can manage which notifications you receive
+            from your <a class="secondary-link" href="${heliosBaseUrl}/settings">user settings</a>.
+        </p>
+    </div>
+    <div class="footer">
+        <p>&copy; ${currentYear} Helios - Technical University of Munich</p>
+        <p><small><a href="${heliosBaseUrl}">${heliosBaseUrl}</a></small></p>
+    </div>
+</body>
+
+</html>

@@ -195,7 +195,7 @@ export type UserSettingsDto = {
 };
 
 export type NotificationPreferenceDto = {
-  type?: 'DEPLOYMENT_FAILED' | 'LOCK_EXPIRED' | 'LOCK_UNLOCKED' | 'QUEUE_P95_BREACH' | 'RUNNER_OFFLINE' | 'STUCK_JOBS';
+  type?: 'DEPLOYMENT_FAILED' | 'LOCK_EXPIRED' | 'LOCK_UNLOCKED' | 'DEPLOYMENT_APPROVAL_REQUEST' | 'QUEUE_P95_BREACH' | 'RUNNER_OFFLINE' | 'STUCK_JOBS';
   enabled?: boolean;
 };
 
@@ -338,6 +338,17 @@ export type PushStatusPayload = {
   details?: {
     [key: string]: unknown;
   };
+};
+
+export type ReviewDeploymentRequest = {
+  comment?: string;
+};
+
+export type ApprovalDecisionDto = {
+  approvalRequestId?: number;
+  deploymentId?: number;
+  state?: 'PENDING' | 'APPROVED' | 'DECLINED' | 'EXPIRED' | 'CONSUMED_BY_OTHER' | 'FAILED_AT_GITHUB';
+  via?: 'AUTO' | 'IN_APP' | 'EMAIL_LINK';
 };
 
 export type DeployRequest = {
@@ -912,6 +923,21 @@ export type ActivityHistoryDto = {
   timestamp?: string;
   createdAt?: string;
   updatedAt?: string;
+};
+
+export type PendingApprovalDto = {
+  approvalRequestId?: number;
+  deploymentId?: number;
+  workflowRunId?: number;
+  workflowRunHtmlUrl?: string;
+  environmentId?: number;
+  environmentName?: string;
+  repositoryId?: number;
+  repositoryNameWithOwner?: string;
+  creatorLogin?: string;
+  sourceBranchName?: string;
+  sha?: string;
+  requestedAt?: string;
 };
 
 export type BranchDetailsDto = {
@@ -2096,6 +2122,60 @@ export type UpdateResponses = {
    */
   200: unknown;
 };
+
+export type DeclineData = {
+  body?: ReviewDeploymentRequest;
+  path: {
+    deploymentId: number;
+  };
+  query?: never;
+  url: '/api/deployments/{deploymentId}/decline';
+};
+
+export type DeclineErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type DeclineError = DeclineErrors[keyof DeclineErrors];
+
+export type DeclineResponses = {
+  /**
+   * OK
+   */
+  200: ApprovalDecisionDto;
+};
+
+export type DeclineResponse = DeclineResponses[keyof DeclineResponses];
+
+export type ApproveData = {
+  body?: never;
+  path: {
+    deploymentId: number;
+  };
+  query?: never;
+  url: '/api/deployments/{deploymentId}/approve';
+};
+
+export type ApproveErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type ApproveError = ApproveErrors[keyof ApproveErrors];
+
+export type ApproveResponses = {
+  /**
+   * OK
+   */
+  200: ApprovalDecisionDto;
+};
+
+export type ApproveResponse = ApproveResponses[keyof ApproveResponses];
 
 export type DeployToEnvironmentData = {
   body: DeployRequest;
@@ -3449,6 +3529,31 @@ export type GetActivityHistoryByPullRequestIdResponses = {
 };
 
 export type GetActivityHistoryByPullRequestIdResponse = GetActivityHistoryByPullRequestIdResponses[keyof GetActivityHistoryByPullRequestIdResponses];
+
+export type MyPendingApprovalsData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/api/deployments/pending-approvals';
+};
+
+export type MyPendingApprovalsErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type MyPendingApprovalsError = MyPendingApprovalsErrors[keyof MyPendingApprovalsErrors];
+
+export type MyPendingApprovalsResponses = {
+  /**
+   * OK
+   */
+  200: Array<PendingApprovalDto>;
+};
+
+export type MyPendingApprovalsResponse = MyPendingApprovalsResponses[keyof MyPendingApprovalsResponses];
 
 export type GetDeploymentsByEnvironmentIdData = {
   body?: never;

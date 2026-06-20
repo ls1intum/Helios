@@ -1,11 +1,13 @@
 -- =====================================================================
--- V51: Queue monitoring schema (workflow_job, runner, queue_wait_stat,
+-- V56: Queue monitoring schema (workflow_job, runner, queue_wait_stat,
 -- queue_alert_rule, queue_alert_event). See plan §A.
 -- =====================================================================
 
--- Extend the notification_preference CHECK constraint from V34 so the 3
--- new enum values can be persisted (QUEUE_P95_BREACH, RUNNER_OFFLINE,
--- STUCK_JOBS).
+-- Extend the notification_preference CHECK constraint so the 3 new queue enum
+-- values can be persisted (QUEUE_P95_BREACH, RUNNER_OFFLINE, STUCK_JOBS). This
+-- runs AFTER V54__add_deployment_approval_request_notification_type, so the list
+-- must keep DEPLOYMENT_APPROVAL_REQUEST too — otherwise this DROP/ADD would
+-- silently remove it and break the deployment-approval notifications.
 ALTER TABLE public.notification_preference
     DROP CONSTRAINT IF EXISTS chk_notification_type;
 ALTER TABLE public.notification_preference
@@ -14,6 +16,7 @@ ALTER TABLE public.notification_preference
                         'DEPLOYMENT_FAILED',
                         'LOCK_EXPIRED',
                         'LOCK_UNLOCKED',
+                        'DEPLOYMENT_APPROVAL_REQUEST',
                         'QUEUE_P95_BREACH',
                         'RUNNER_OFFLINE',
                         'STUCK_JOBS'

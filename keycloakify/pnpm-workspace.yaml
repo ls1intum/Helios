@@ -9,3 +9,16 @@ verifyDepsBeforeRun: false
 # `onlyBuiltDependencies` key.
 allowBuilds:
   esbuild: true
+
+# Force the patched esbuild flagged by Dependabot. esbuild 0.27.3-0.28.0 allows
+# arbitrary file read via its dev server on Windows; it is pulled transitively
+# through the Vite/Storybook toolchain, never used at runtime. Pinned to 0.28.1,
+# the lowest release that clears the advisory.
+overrides:
+  esbuild: 0.28.1
+
+# pnpm 11.3+ holds packages younger than the default 24h supply-chain cutoff.
+# keycloakify@11.15.10 was published <24h before this bump, so it is explicitly
+# allowed here. Safe to remove once the version has aged past the cutoff.
+minimumReleaseAgeExclude:
+  - keycloakify@11.15.10

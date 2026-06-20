@@ -1,16 +1,27 @@
 package de.tum.cit.aet.helios.heliosdeployment;
 
 import de.tum.cit.aet.helios.environment.Environment;
+import jakarta.persistence.LockModeType;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 @Repository
 public interface HeliosDeploymentRepository extends JpaRepository<HeliosDeployment, Long> {
+
+  /**
+   * Take a pessimistic write lock on a deployment row to serialise concurrent approve/decline
+   * calls. The transaction holding the lock is the only one that can transition this deployment's
+   * approval state, so the GitHub API call is never made twice for the same deployment.
+   */
+  @Lock(LockModeType.PESSIMISTIC_WRITE)
+  @Query("select d from HeliosDeployment d where d.id = :id")
+  Optional<HeliosDeployment> findByIdForUpdate(@Param("id") Long id);
 
   Optional<HeliosDeployment> findTopByEnvironmentOrderByCreatedAtDesc(Environment environment);
 

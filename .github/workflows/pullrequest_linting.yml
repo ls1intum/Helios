@@ -9,8 +9,8 @@ jobs:
     name: Linting Server (Java)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-      - uses: dbelyaev/action-checkstyle@ebd9df2e22f6696655aeba7c6d26956e7f41e1cc  # v3.10.0
+      - uses: actions/checkout@v7
+      - uses: dbelyaev/action-checkstyle@v3
         with:
           github_token: ${{ secrets.github_token }}
           reporter: github-pr-review
@@ -21,11 +21,11 @@ jobs:
     name: Linting Client (Angular)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Setup pnpm
-        uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
+        uses: pnpm/action-setup@v6
         with:
-          version: 11.4.0
+          version: 11.8.0
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
@@ -42,11 +42,11 @@ jobs:
     name: Linting Keycloakify
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Setup pnpm
-        uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
+        uses: pnpm/action-setup@v6
         with:
-          version: 11.4.0
+          version: 11.8.0
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
