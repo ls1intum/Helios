@@ -101,9 +101,16 @@ public class DeploymentReviewActionService {
                         HttpStatus.CONFLICT,
                         "This environment has no required-reviewer rule; nothing to approve."));
 
-    if (!reviewers.userLogins().contains(currentLogin)) {
-      // Team-type reviewers (which Helios doesn't yet expand) deliberately don't satisfy this
-      // check from in-app; those approvals still need to happen on GitHub for now.
+    // The caller may act if they are an explicit User-type required reviewer, or if they already
+    // own an approval-request row for this deployment. The row-owner case is the recovery path
+    // for the team-reviewer fallback: when an env has only Team-type reviewers, userLogins() is
+    // empty, so the auto-approve path impersonated the creator and, on a GitHub rejection (e.g.
+    // a transient 5xx), left them a FAILED_AT_GITHUB row they could not otherwise retry in-app.
+    // GitHub stays the authority (it re-checks team membership and 502s an unauthorized retry),
+    // so a row owner retrying cannot bypass it. Full team-member expansion is Phase-4.
+    boolean ownsExistingRequest =
+        existing.stream().anyMatch(r -> currentLogin.equals(r.getReviewerLogin()));
+    if (!reviewers.userLogins().contains(currentLogin) && !ownsExistingRequest) {
       throw new ResponseStatusException(
           HttpStatus.FORBIDDEN, "You are not a required reviewer for this environment.");
     }
