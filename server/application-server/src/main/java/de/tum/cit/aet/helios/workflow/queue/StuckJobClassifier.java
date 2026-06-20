@@ -7,6 +7,7 @@ import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import jakarta.transaction.Transactional;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -87,10 +88,16 @@ public class StuckJobClassifier {
 
   private List<Runner> matchingRunners(WorkflowJob job) {
     List<Runner> online = runnerRepository.findByStatus(Runner.Status.ONLINE);
-    List<String> needed = job.getLabels() == null ? List.of() : job.getLabels();
+    // Lower-case BOTH sides: GitHub runner labels are case-insensitive, and a job whose
+    // runs-on label carries any uppercase (e.g. "GPU") must still match a runner labelled "gpu".
+    // (Previously only the runner side was lower-cased, so uppercase job labels never matched.)
+    List<String> needed =
+        job.getLabels() == null
+            ? List.of()
+            : job.getLabels().stream().map(s -> s.toLowerCase(Locale.ROOT)).toList();
     return online.stream()
         .filter(r -> r.getLabels() != null
-            && r.getLabels().stream().map(String::toLowerCase).toList().containsAll(needed))
+            && r.getLabels().stream().map(s -> s.toLowerCase(Locale.ROOT)).toList().containsAll(needed))
         .toList();
   }
 

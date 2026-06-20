@@ -60,14 +60,10 @@
         <p>A Helios queue-monitoring rule has been breached.</p>
 
         <div class="row"><span class="label">Kind:</span> ${kind}</div>
-        <div class="row"><span class="label">Measured value:</span> ${measuredValue!"-"}</div>
-        <div class="row"><span class="label">Threshold:</span> ${thresholdValue!"-"}</div>
-        <#if repositoryName??>
-            <div class="row"><span class="label">Repository:</span> ${repositoryName}</div>
-        </#if>
-        <#if details??>
-            <div class="row"><span class="label">Details:</span> ${details}</div>
-        </#if>
+        <div class="row"><span class="label">Measured value:</span> ${measuredValue}</div>
+        <div class="row"><span class="label">Threshold:</span> ${thresholdValue}</div>
+        <div class="row"><span class="label">Repository:</span> ${repositoryName}</div>
+        <div class="row"><span class="label">Details:</span> ${details}</div>
 
         <p style="margin-top:16px;">
             Open the queue dashboard for diagnostics, or unsubscribe from this notification
