@@ -283,10 +283,15 @@ class TestResultProcessorTest {
               return fn.apply(new ByteArrayInputStream(zip2));
             });
 
+    // A third, non-matching artifact that must be excluded — proves the glob is selective and
+    // does not simply match everything.
+    GHArtifact nonMatching = mock(GHArtifact.class);
+    when(nonMatching.getName()).thenReturn("Coverage Report Server Tests");
+
     @SuppressWarnings("unchecked")
     PagedIterator<GHArtifact> mockPagedIterator = mock(PagedIterator.class);
-    when(mockPagedIterator.hasNext()).thenReturn(true, true, false);
-    when(mockPagedIterator.next()).thenReturn(phase1, phase2);
+    when(mockPagedIterator.hasNext()).thenReturn(true, true, true, false);
+    when(mockPagedIterator.next()).thenReturn(phase1, phase2, nonMatching);
     @SuppressWarnings("unchecked")
     PagedIterable<GHArtifact> artifacts = mock(PagedIterable.class);
     when(artifacts.iterator()).thenReturn(mockPagedIterator);
@@ -306,10 +311,45 @@ class TestResultProcessorTest {
 
     assertEquals(WorkflowRun.TestProcessingStatus.PROCESSED, workflowRun.getTestProcessingStatus());
     assertNotNull(workflowRun.getTestSuites());
-    // Both phases parsed and aggregated under the single E2E test type.
+    // Both phases parsed and aggregated under the single E2E test type; the non-matching artifact
+    // is excluded (size stays 2), and each phase's suite is present.
     assertEquals(2, workflowRun.getTestSuites().size());
     assertTrue(
         workflowRun.getTestSuites().stream().allMatch(ts -> ts.getTestType() == e2eTestType));
+    List<String> suiteNames =
+        workflowRun.getTestSuites().stream().map(TestSuite::getName).toList();
+    assertTrue(suiteNames.contains("P1"));
+    assertTrue(suiteNames.contains("P2"));
+  }
+
+  @Test
+  void processRun_treatsRegexMetacharactersInGlobAsLiterals() throws IOException {
+    // A '.' in the configured pattern must match a literal dot, not "any char": pattern "a.b *"
+    // must NOT match artifact "aXb 1". Guards that globToRegex quotes regex metacharacters.
+    TestType weirdType = new TestType();
+    weirdType.setId(3L);
+    weirdType.setName("Weird");
+    weirdType.setArtifactName("a.b *");
+    workflow.setTestTypes(Set.of(weirdType));
+
+    GHArtifact artifact = mock(GHArtifact.class);
+    when(artifact.getName()).thenReturn("aXb 1"); // '.' literal -> does NOT match
+
+    @SuppressWarnings("unchecked")
+    PagedIterator<GHArtifact> mockPagedIterator = mock(PagedIterator.class);
+    when(mockPagedIterator.hasNext()).thenReturn(true, false);
+    when(mockPagedIterator.next()).thenReturn(artifact);
+    @SuppressWarnings("unchecked")
+    PagedIterable<GHArtifact> artifacts = mock(PagedIterable.class);
+    when(artifacts.iterator()).thenReturn(mockPagedIterator);
+    when(gitHubService.getWorkflowRunArtifacts(anyLong(), anyLong())).thenReturn(artifacts);
+
+    testResultProcessor.processRun(workflowRun);
+
+    // No match (dot is literal) -> no results, but PROCESSED rather than FAILED.
+    assertEquals(WorkflowRun.TestProcessingStatus.PROCESSED, workflowRun.getTestProcessingStatus());
+    assertNotNull(workflowRun.getTestSuites());
+    assertTrue(workflowRun.getTestSuites().isEmpty());
   }
 
   @Test
