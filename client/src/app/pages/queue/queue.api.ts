@@ -98,6 +98,14 @@ export interface AlertEventDto {
   details: string | null;
 }
 
+/**
+ * Repo-scoped writes need the X-Repository-Id header: the backend derives the WRITE role from that
+ * header (not the URL path), and returns no authorities when it is absent — so without it every
+ * create/update/delete 403s. Matching it to the path repo also satisfies the controller's
+ * path-vs-context check.
+ */
+const repoHeader = (repoId: number) => ({ headers: { 'X-Repository-Id': String(repoId) } });
+
 export function queueApi() {
   const http = inject(HttpClient);
   return {
@@ -114,9 +122,10 @@ export function queueApi() {
     },
     orgDepth: () => firstValueFrom(http.get<QueueDepth>(`/api/queue/org/depth`)),
     listRules: (repoId: number) => firstValueFrom(http.get<AlertRuleDto[]>(`/api/queue/repos/${repoId}/alerts/rules`)),
-    createRule: (repoId: number, body: AlertRuleDto) => firstValueFrom(http.post<AlertRuleDto>(`/api/queue/repos/${repoId}/alerts/rules`, body)),
-    updateRule: (repoId: number, id: number, body: AlertRuleDto) => firstValueFrom(http.put<AlertRuleDto>(`/api/queue/repos/${repoId}/alerts/rules/${id}`, body)),
-    deleteRule: (repoId: number, id: number) => firstValueFrom(http.delete<void>(`/api/queue/repos/${repoId}/alerts/rules/${id}`)),
+    createRule: (repoId: number, body: AlertRuleDto) => firstValueFrom(http.post<AlertRuleDto>(`/api/queue/repos/${repoId}/alerts/rules`, body, repoHeader(repoId))),
+    updateRule: (repoId: number, id: number, body: AlertRuleDto) =>
+      firstValueFrom(http.put<AlertRuleDto>(`/api/queue/repos/${repoId}/alerts/rules/${id}`, body, repoHeader(repoId))),
+    deleteRule: (repoId: number, id: number) => firstValueFrom(http.delete<void>(`/api/queue/repos/${repoId}/alerts/rules/${id}`, repoHeader(repoId))),
     events: (repoId: number, hoursBack = 24) => firstValueFrom(http.get<AlertEventDto[]>(`/api/queue/repos/${repoId}/alerts/events?hoursBack=${hoursBack}`)),
   };
 }
