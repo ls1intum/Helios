@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import lombok.RequiredArgsConstructor;
@@ -102,17 +103,20 @@ public class TestResultProcessor {
    */
   private List<TestSuite> processRunSync(WorkflowRun workflowRun) {
     List<TestSuite> allTestSuites = new ArrayList<>();
+    // Names of every artifact seen on the run; used to make a no-match diagnosable (see below).
+    List<String> seenArtifactNames = new ArrayList<>();
+
+    // Get all test types for this workflow
+    Set<TestType> testTypes = workflowRun.getWorkflow().getTestTypes();
 
     try {
       PagedIterable<GHArtifact> artifacts =
           this.gitHubService.getWorkflowRunArtifacts(
               workflowRun.getRepository().getRepositoryId(), workflowRun.getId());
 
-      // Get all test types for this workflow
-      Set<TestType> testTypes = workflowRun.getWorkflow().getTestTypes();
-
       // Process each artifact that matches a test type's artifact name
       for (GHArtifact artifact : artifacts) {
+        seenArtifactNames.add(artifact.getName());
         TestType matchingTestType = findMatchingTestType(testTypes, artifact.getName());
         if (matchingTestType != null) {
           List<TestSuite> testSuites = processTestResultArtifact(artifact);
@@ -134,8 +138,22 @@ public class TestResultProcessor {
     }
 
     if (allTestSuites.isEmpty()) {
-      log.warn("No matching test artifacts found for workflow run {}", workflowRun.getName());
-      throw new TestResultException("No matching test artifacts found");
+      // Artemis's single conditional CI workflow (ci.yml) gates the test/e2e jobs on changed
+      // areas, so a COMPLETED run legitimately carries no matching test artifact (e.g. a docs-only
+      // PR, or a skipped job). That is "no results", not a failure: returning empty lets it be
+      // PROCESSED instead of FAILED, which would otherwise paint a red state and spam errors on
+      // every non-test PR. A genuine fetch/download error still throws above and ends up FAILED.
+      //
+      // Log the artifacts that WERE present alongside the configured artifact-name patterns so a
+      // stale/typo'd TestType config (the other reason nothing matches) stays diagnosable — the
+      // relaxation above otherwise makes a misconfiguration look identical to a skipped job.
+      log.info(
+          "No matching test artifacts for workflow run {}; storing no results. "
+              + "Artifacts present: {}; configured test-type artifact names: {}",
+          workflowRun.getName(),
+          seenArtifactNames,
+          testTypes.stream().map(TestType::getArtifactName).toList());
+      return allTestSuites;
     }
 
     log.debug("Parsed {} test suites across all artifacts. Persisting...", allTestSuites.size());
@@ -144,9 +162,42 @@ public class TestResultProcessor {
 
   private TestType findMatchingTestType(Set<TestType> testTypes, String artifactName) {
     return testTypes.stream()
-        .filter(testType -> testType.getArtifactName().equals(artifactName))
+        .filter(testType -> artifactNameMatches(testType.getArtifactName(), artifactName))
         .findFirst()
         .orElse(null);
+  }
+
+  /**
+   * Matches a configured {@link TestType#getArtifactName() artifact name} against an actual GitHub
+   * artifact name. A plain name matches exactly (backward-compatible). A name containing {@code *}
+   * is treated as a glob, where {@code *} matches any run of characters — e.g.
+   * {@code "JUnit Test Results Phase *"} matches both {@code "JUnit Test Results Phase 1"} and
+   * {@code "… Phase 2"}. This lets a single test type aggregate artifacts that a workflow splits
+   * across matrix/sharded/phased jobs (as Artemis's reusable CI now does for E2E).
+   */
+  private boolean artifactNameMatches(String pattern, String artifactName) {
+    if (pattern == null || artifactName == null) {
+      return false;
+    }
+    if (pattern.indexOf('*') < 0) {
+      return pattern.equals(artifactName);
+    }
+    return globToRegex(pattern).matcher(artifactName).matches();
+  }
+
+  /** Translates a {@code *}-glob into an anchored regex, quoting all other characters literally. */
+  private static Pattern globToRegex(String glob) {
+    StringBuilder regex = new StringBuilder();
+    String[] literals = glob.split("\\*", -1);
+    for (int i = 0; i < literals.length; i++) {
+      if (i > 0) {
+        regex.append(".*");
+      }
+      if (!literals[i].isEmpty()) {
+        regex.append(Pattern.quote(literals[i]));
+      }
+    }
+    return Pattern.compile(regex.toString());
   }
 
   private List<TestSuite> convertToTestSuites(List<TestResultParser.TestSuite> results) {
