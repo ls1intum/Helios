@@ -133,8 +133,8 @@ class TestResultProcessorTest {
 
   // --- Tests for processRun ---
   @Test
-  void processRun_setsStatusToProcessingAndSavesCorrectly() throws IOException {
-    // Mock to avoid NPE and ensure "No matching test artifacts" path
+  void processRun_marksProcessedWithNoResults_whenRunHasNoArtifacts() throws IOException {
+    // A completed CI run can legitimately carry no test artifact (conditional/skipped jobs).
     @SuppressWarnings("unchecked")
     PagedIterable<GHArtifact> emptyArtifacts = mock(PagedIterable.class);
     @SuppressWarnings("unchecked")
@@ -159,10 +159,12 @@ class TestResultProcessorTest {
     // Verify save was called twice
     verify(workflowRunRepository, times(2)).save(any(WorkflowRun.class));
 
-    // Assert the captured statuses
+    // No artifacts is "no results", not a failure: PROCESSING -> PROCESSED with empty suites.
     assertEquals(2, capturedStatuses.size());
     assertEquals(WorkflowRun.TestProcessingStatus.PROCESSING, capturedStatuses.get(0));
-    assertEquals(WorkflowRun.TestProcessingStatus.FAILED, capturedStatuses.get(1));
+    assertEquals(WorkflowRun.TestProcessingStatus.PROCESSED, capturedStatuses.get(1));
+    assertNotNull(workflowRun.getTestSuites());
+    assertTrue(workflowRun.getTestSuites().isEmpty());
   }
 
   @Test
@@ -228,16 +230,12 @@ class TestResultProcessorTest {
   }
 
   @Test
-  void processRun_setsStatusToFailed_whenNoMatchingArtifactsFound() throws IOException {
+  void processRun_marksProcessedWithNoResults_whenNoArtifactMatchesTestType() throws IOException {
     GHArtifact mockArtifact = mock(GHArtifact.class);
     when(mockArtifact.getName()).thenReturn("other-artifact"); // Does not match javaTestType
 
-    // Mock PagedIterator to be empty or not contain matching artifacts
     @SuppressWarnings("unchecked")
     PagedIterator<GHArtifact> mockPagedIterator = mock(PagedIterator.class);
-    // Option 1: Iterator is empty
-    // when(mockPagedIterator.hasNext()).thenReturn(false);
-    // Option 2: Iterator has one non-matching artifact (as per original intent)
     when(mockPagedIterator.hasNext()).thenReturn(true, false);
     when(mockPagedIterator.next()).thenReturn(mockArtifact);
 
@@ -249,9 +247,69 @@ class TestResultProcessorTest {
 
     testResultProcessor.processRun(workflowRun);
 
-    assertEquals(WorkflowRun.TestProcessingStatus.FAILED, workflowRun.getTestProcessingStatus());
-    assertNull(workflowRun.getTestSuites());
+    // No matching artifact is "no results" for this run, not a failure.
+    assertEquals(WorkflowRun.TestProcessingStatus.PROCESSED, workflowRun.getTestProcessingStatus());
+    assertNotNull(workflowRun.getTestSuites());
+    assertTrue(workflowRun.getTestSuites().isEmpty());
     verify(workflowRunRepository, times(2)).save(workflowRun);
+  }
+
+  @Test
+  void processRun_aggregatesPhasedArtifactsMatchedByGlob() throws IOException {
+    // One test type whose artifact name is a glob spanning both E2E phases.
+    TestType e2eTestType = new TestType();
+    e2eTestType.setId(2L);
+    e2eTestType.setName("E2E Tests");
+    e2eTestType.setArtifactName("JUnit Test Results Phase *");
+    workflow.setTestTypes(Set.of(e2eTestType));
+
+    GHArtifact phase1 = mock(GHArtifact.class);
+    when(phase1.getName()).thenReturn("JUnit Test Results Phase 1");
+    GHArtifact phase2 = mock(GHArtifact.class);
+    when(phase2.getName()).thenReturn("JUnit Test Results Phase 2");
+
+    byte[] zip1 = createMockZip("results.xml", "<testsuite name='P1'></testsuite>".getBytes());
+    byte[] zip2 = createMockZip("results.xml", "<testsuite name='P2'></testsuite>".getBytes());
+    when(phase1.download(any()))
+        .thenAnswer(
+            invocation -> {
+              InputStreamFunction<List<TestSuite>> fn = invocation.getArgument(0);
+              return fn.apply(new ByteArrayInputStream(zip1));
+            });
+    when(phase2.download(any()))
+        .thenAnswer(
+            invocation -> {
+              InputStreamFunction<List<TestSuite>> fn = invocation.getArgument(0);
+              return fn.apply(new ByteArrayInputStream(zip2));
+            });
+
+    @SuppressWarnings("unchecked")
+    PagedIterator<GHArtifact> mockPagedIterator = mock(PagedIterator.class);
+    when(mockPagedIterator.hasNext()).thenReturn(true, true, false);
+    when(mockPagedIterator.next()).thenReturn(phase1, phase2);
+    @SuppressWarnings("unchecked")
+    PagedIterable<GHArtifact> artifacts = mock(PagedIterable.class);
+    when(artifacts.iterator()).thenReturn(mockPagedIterator);
+    when(gitHubService.getWorkflowRunArtifacts(anyLong(), anyLong())).thenReturn(artifacts);
+
+    when(junitParser.supports(eq("results.xml"))).thenReturn(true);
+    TestResultParser.TestSuite s1 =
+        new TestResultParser.TestSuite(
+            "P1", LocalDateTime.now(), 1, 0, 0, 0, 0.0, "", Collections.emptyList());
+    TestResultParser.TestSuite s2 =
+        new TestResultParser.TestSuite(
+            "P2", LocalDateTime.now(), 1, 0, 0, 0, 0.0, "", Collections.emptyList());
+    when(junitParser.parse(any(InputStream.class))).thenReturn(List.of(s1), List.of(s2));
+    when(gitRepoRepository.findById(anyLong())).thenReturn(Optional.of(gitRepository));
+
+    testResultProcessor.processRun(workflowRun);
+
+    assertEquals(WorkflowRun.TestProcessingStatus.PROCESSED, workflowRun.getTestProcessingStatus());
+    assertNotNull(workflowRun.getTestSuites());
+    // Both phases parsed and aggregated under the single E2E test type.
+    assertEquals(2, workflowRun.getTestSuites().size());
+    assertTrue(
+        workflowRun.getTestSuites().stream().allMatch(ts -> ts.getTestType() == e2eTestType));
   }
 
   @Test
