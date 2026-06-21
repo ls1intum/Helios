@@ -20,6 +20,7 @@ import de.tum.cit.aet.helios.github.GitHubService;
 import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import de.tum.cit.aet.helios.tests.parsers.JunitParser;
+import de.tum.cit.aet.helios.tests.parsers.TestResultParseException;
 import de.tum.cit.aet.helios.tests.parsers.TestResultParser;
 import de.tum.cit.aet.helios.tests.type.TestType;
 import de.tum.cit.aet.helios.workflow.Workflow;
@@ -347,6 +348,40 @@ class TestResultProcessorTest {
     testResultProcessor.processRun(workflowRun);
 
     // No match (dot is literal) -> no results, but PROCESSED rather than FAILED.
+    assertEquals(WorkflowRun.TestProcessingStatus.PROCESSED, workflowRun.getTestProcessingStatus());
+    assertNotNull(workflowRun.getTestSuites());
+    assertTrue(workflowRun.getTestSuites().isEmpty());
+  }
+
+  @Test
+  void processRun_marksProcessedWithNoResults_whenMatchedArtifactFailsToParse() throws IOException {
+    // Artifact matches a test type, but its XML is unparseable: processTestResultArtifact swallows
+    // the per-file parse error, so the run yields no suites -> PROCESSED (empty), not FAILED.
+    GHArtifact mockArtifact = mock(GHArtifact.class);
+    when(mockArtifact.getName()).thenReturn("java-test-results"); // matches javaTestType
+    byte[] zipBytes = createMockZip("test-results.xml", "<not-valid-junit".getBytes());
+    when(mockArtifact.download(any()))
+        .thenAnswer(
+            invocation -> {
+              InputStreamFunction<List<TestSuite>> function = invocation.getArgument(0);
+              return function.apply(new ByteArrayInputStream(zipBytes));
+            });
+
+    @SuppressWarnings("unchecked")
+    PagedIterator<GHArtifact> mockPagedIterator = mock(PagedIterator.class);
+    when(mockPagedIterator.hasNext()).thenReturn(true, false);
+    when(mockPagedIterator.next()).thenReturn(mockArtifact);
+    @SuppressWarnings("unchecked")
+    PagedIterable<GHArtifact> artifacts = mock(PagedIterable.class);
+    when(artifacts.iterator()).thenReturn(mockPagedIterator);
+    when(gitHubService.getWorkflowRunArtifacts(anyLong(), anyLong())).thenReturn(artifacts);
+
+    when(junitParser.supports(eq("test-results.xml"))).thenReturn(true);
+    when(junitParser.parse(any(InputStream.class)))
+        .thenThrow(new TestResultParseException("unparseable xml"));
+
+    testResultProcessor.processRun(workflowRun);
+
     assertEquals(WorkflowRun.TestProcessingStatus.PROCESSED, workflowRun.getTestProcessingStatus());
     assertNotNull(workflowRun.getTestSuites());
     assertTrue(workflowRun.getTestSuites().isEmpty());
