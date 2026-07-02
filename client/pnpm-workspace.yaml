@@ -43,8 +43,9 @@ allowBuilds:
 #  - @babel/core <=7.29.0: arbitrary file read via sourceMappingURL comment.
 #  - esbuild 0.27.3-0.28.0: arbitrary file read via the dev server on Windows.
 #  - vite 7.x <7.3.5: `server.fs.deny` bypass + launch-editor UNC disclosure.
-#    The direct devDependency vite is 8.0.16 (used by Vitest); @angular/build
-#    pins its own vite 7.3.2, so the override is scoped to the 7.x line only.
+#    Vite has since moved to the 8.x line (unaffected by this 7.x advisory); the
+#    `vite@7` override forces any lingering transitive 7.x resolution up to the
+#    8.x release used directly by Vitest / @angular/build.
 overrides:
   webpack-dev-server: 5.2.5
   uuid: 14.0.1
