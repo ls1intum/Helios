@@ -29,13 +29,18 @@ The format follows **[Keep a Changelog 1.1.0]** and the project adheres to **[Se
 
 ---
 
-## [1.2.0] – 2026-06-20
+## [1.2.0] – 2026-07-02
 ### Changed
 - **Build system:** migrated the starter from Maven to Gradle (standalone Gradle build with
   the Vanniktech `maven-publish` plugin; published to Maven Central via the Sonatype Central
   Portal and to GitHub Packages). No source or runtime behaviour change.
+- **Spring Boot:** built against the Spring Boot **4.1.0** dependency BOM.
+- **Java baseline:** the starter is now compiled for **Java 25** (previously Java 21).
 
 ### Migration notes
+- **Requires JDK 25+:** the artifact now targets Java 25 bytecode, so consuming applications
+  must run on Java 25 or newer. Apps on an older JDK will fail to load the starter with
+  `UnsupportedClassVersionError`.
 - The published POM no longer lists the former `provided`-scope dependencies (`slf4j-api`,
   `hibernate-validator`); Gradle keeps them off the published model. They were non-transitive
   under Maven too, so consumers are unaffected.
@@ -76,7 +81,8 @@ The format follows **[Keep a Changelog 1.1.0]** and the project adheres to **[Se
     - Heart-beat every 30 s (configurable).
     - Package README and comprehensive publishing instructions.
 
-[Unreleased]:   https://github.com/ls1intum/Helios/compare/helios-starter-v1.1.0...HEAD
+[Unreleased]:   https://github.com/ls1intum/Helios/compare/helios-starter-v1.2.0...HEAD
+[1.2.0]:        https://github.com/ls1intum/Helios/compare/helios-starter-v1.1.0...helios-starter-v1.2.0
 [1.1.0]:        https://github.com/ls1intum/Helios/compare/helios-starter-v1.0.0...helios-starter-v1.1.0
 [1.0.0]:        https://github.com/ls1intum/Helios/tree/helios-starter-v1.0.0
 [Keep a Changelog 1.1.0]: https://keepachangelog.com/en/1.1.0/
