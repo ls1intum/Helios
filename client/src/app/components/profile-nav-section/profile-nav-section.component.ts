@@ -16,6 +16,7 @@ import { myPendingApprovalsOptions } from '@app/core/modules/openapi/@tanstack/a
 import { computed } from '@angular/core';
 import { Badge } from 'primeng/badge';
 import { NavigationEnd, Router, RouterLink } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { filter } from 'rxjs';
 
 @Component({
@@ -50,9 +51,14 @@ export class ProfileNavSectionComponent {
   pendingApprovalsCount = computed(() => this.pendingApprovalsQuery.data()?.length ?? 0);
 
   constructor() {
-    this.router.events.pipe(filter(event => event instanceof NavigationEnd)).subscribe(() => {
-      this.profileMenu?.hide?.();
-    });
+    this.router.events
+      .pipe(
+        filter(event => event instanceof NavigationEnd),
+        takeUntilDestroyed()
+      )
+      .subscribe(() => {
+        this.profileMenu?.hide?.();
+      });
   }
 
   isLoggedIn() {

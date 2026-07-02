@@ -105,6 +105,6 @@
   }
   <ng-template pTemplate="footer">
     <p-button label="Cancel" severity="secondary" (onClick)="declineDialogVisible.set(false)" />
-    <p-button label="Decline deployment" severity="danger" (onClick)="confirmDecline()" />
+    <p-button label="Decline deployment" severity="danger" [disabled]="inFlightDeploymentId() !== null" [loading]="inFlightDeploymentId() !== null" (onClick)="confirmDecline()" />
   </ng-template>
 </p-dialog>
