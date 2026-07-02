@@ -1201,8 +1201,8 @@ const createInfiniteParams = <K extends Pick<QueryKey<Options>[0], 'body' | 'hea
 
 export const getWorkflowRunsInfiniteQueryKey = (options?: Options<GetWorkflowRunsData>): QueryKey<Options<GetWorkflowRunsData>> => createQueryKey('getWorkflowRuns', options, true);
 
-export const getWorkflowRunsInfiniteOptions = (options?: Options<GetWorkflowRunsData>) =>
-  infiniteQueryOptions<
+export const getWorkflowRunsInfiniteOptions = (options?: Options<GetWorkflowRunsData>) => {
+  const opts = infiniteQueryOptions<
     GetWorkflowRunsResponse,
     GetWorkflowRunsError,
     InfiniteData<GetWorkflowRunsResponse>,
@@ -1233,6 +1233,8 @@ export const getWorkflowRunsInfiniteOptions = (options?: Options<GetWorkflowRuns
       queryKey: getWorkflowRunsInfiniteQueryKey(options),
     }
   );
+  return opts as Omit<typeof opts, 'initialData'>;
+};
 
 export const getWorkflowRunLogsQueryKey = (options: Options<GetWorkflowRunLogsData>) => createQueryKey('getWorkflowRunLogs', options);
 
@@ -1366,8 +1368,8 @@ export const getTestResultsByWorkflowRunIdOptions = (options: Options<GetTestRes
 export const getTestResultsByWorkflowRunIdInfiniteQueryKey = (options: Options<GetTestResultsByWorkflowRunIdData>): QueryKey<Options<GetTestResultsByWorkflowRunIdData>> =>
   createQueryKey('getTestResultsByWorkflowRunId', options, true);
 
-export const getTestResultsByWorkflowRunIdInfiniteOptions = (options: Options<GetTestResultsByWorkflowRunIdData>) =>
-  infiniteQueryOptions<
+export const getTestResultsByWorkflowRunIdInfiniteOptions = (options: Options<GetTestResultsByWorkflowRunIdData>) => {
+  const opts = infiniteQueryOptions<
     GetTestResultsByWorkflowRunIdResponse,
     GetTestResultsByWorkflowRunIdError,
     InfiniteData<GetTestResultsByWorkflowRunIdResponse>,
@@ -1398,6 +1400,8 @@ export const getTestResultsByWorkflowRunIdInfiniteOptions = (options: Options<Ge
       queryKey: getTestResultsByWorkflowRunIdInfiniteQueryKey(options),
     }
   );
+  return opts as Omit<typeof opts, 'initialData'>;
+};
 
 export const getLatestTestResultsByPullRequestIdQueryKey = (options: Options<GetLatestTestResultsByPullRequestIdData>) =>
   createQueryKey('getLatestTestResultsByPullRequestId', options);
@@ -1425,8 +1429,8 @@ export const getLatestTestResultsByPullRequestIdInfiniteQueryKey = (
   options: Options<GetLatestTestResultsByPullRequestIdData>
 ): QueryKey<Options<GetLatestTestResultsByPullRequestIdData>> => createQueryKey('getLatestTestResultsByPullRequestId', options, true);
 
-export const getLatestTestResultsByPullRequestIdInfiniteOptions = (options: Options<GetLatestTestResultsByPullRequestIdData>) =>
-  infiniteQueryOptions<
+export const getLatestTestResultsByPullRequestIdInfiniteOptions = (options: Options<GetLatestTestResultsByPullRequestIdData>) => {
+  const opts = infiniteQueryOptions<
     GetLatestTestResultsByPullRequestIdResponse,
     GetLatestTestResultsByPullRequestIdError,
     InfiniteData<GetLatestTestResultsByPullRequestIdResponse>,
@@ -1457,6 +1461,8 @@ export const getLatestTestResultsByPullRequestIdInfiniteOptions = (options: Opti
       queryKey: getLatestTestResultsByPullRequestIdInfiniteQueryKey(options),
     }
   );
+  return opts as Omit<typeof opts, 'initialData'>;
+};
 
 export const getFlakyTestsOverviewQueryKey = (options?: Options<GetFlakyTestsOverviewData>) => createQueryKey('getFlakyTestsOverview', options);
 
@@ -1477,8 +1483,8 @@ export const getFlakyTestsOverviewOptions = (options?: Options<GetFlakyTestsOver
 export const getFlakyTestsOverviewInfiniteQueryKey = (options?: Options<GetFlakyTestsOverviewData>): QueryKey<Options<GetFlakyTestsOverviewData>> =>
   createQueryKey('getFlakyTestsOverview', options, true);
 
-export const getFlakyTestsOverviewInfiniteOptions = (options?: Options<GetFlakyTestsOverviewData>) =>
-  infiniteQueryOptions<
+export const getFlakyTestsOverviewInfiniteOptions = (options?: Options<GetFlakyTestsOverviewData>) => {
+  const opts = infiniteQueryOptions<
     GetFlakyTestsOverviewResponse,
     GetFlakyTestsOverviewError,
     InfiniteData<GetFlakyTestsOverviewResponse>,
@@ -1509,6 +1515,8 @@ export const getFlakyTestsOverviewInfiniteOptions = (options?: Options<GetFlakyT
       queryKey: getFlakyTestsOverviewInfiniteQueryKey(options),
     }
   );
+  return opts as Omit<typeof opts, 'initialData'>;
+};
 
 export const getLatestTestResultsByBranchQueryKey = (options: Options<GetLatestTestResultsByBranchData>) => createQueryKey('getLatestTestResultsByBranch', options);
 
@@ -1534,8 +1542,8 @@ export const getLatestTestResultsByBranchOptions = (options: Options<GetLatestTe
 export const getLatestTestResultsByBranchInfiniteQueryKey = (options: Options<GetLatestTestResultsByBranchData>): QueryKey<Options<GetLatestTestResultsByBranchData>> =>
   createQueryKey('getLatestTestResultsByBranch', options, true);
 
-export const getLatestTestResultsByBranchInfiniteOptions = (options: Options<GetLatestTestResultsByBranchData>) =>
-  infiniteQueryOptions<
+export const getLatestTestResultsByBranchInfiniteOptions = (options: Options<GetLatestTestResultsByBranchData>) => {
+  const opts = infiniteQueryOptions<
     GetLatestTestResultsByBranchResponse,
     GetLatestTestResultsByBranchError,
     InfiniteData<GetLatestTestResultsByBranchResponse>,
@@ -1566,6 +1574,8 @@ export const getLatestTestResultsByBranchInfiniteOptions = (options: Options<Get
       queryKey: getLatestTestResultsByBranchInfiniteQueryKey(options),
     }
   );
+  return opts as Omit<typeof opts, 'initialData'>;
+};
 
 export const getFailureAnalysisUsageQueryKey = (options?: Options<GetFailureAnalysisUsageData>) => createQueryKey('getFailureAnalysisUsage', options);
 
@@ -1692,8 +1702,8 @@ export const getPullRequestsOptions = (options?: Options<GetPullRequestsData>) =
 
 export const getPullRequestsInfiniteQueryKey = (options?: Options<GetPullRequestsData>): QueryKey<Options<GetPullRequestsData>> => createQueryKey('getPullRequests', options, true);
 
-export const getPullRequestsInfiniteOptions = (options?: Options<GetPullRequestsData>) =>
-  infiniteQueryOptions<
+export const getPullRequestsInfiniteOptions = (options?: Options<GetPullRequestsData>) => {
+  const opts = infiniteQueryOptions<
     GetPullRequestsResponse,
     GetPullRequestsError,
     InfiniteData<GetPullRequestsResponse>,
@@ -1724,6 +1734,8 @@ export const getPullRequestsInfiniteOptions = (options?: Options<GetPullRequests
       queryKey: getPullRequestsInfiniteQueryKey(options),
     }
   );
+  return opts as Omit<typeof opts, 'initialData'>;
+};
 
 export const getPullRequestByIdQueryKey = (options: Options<GetPullRequestByIdData>) => createQueryKey('getPullRequestById', options);
 
