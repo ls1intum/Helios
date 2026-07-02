@@ -121,16 +121,7 @@ export class PullRequestTableComponent {
 
     // Convert the string filterType to the specific union type
     const filterType = paginationState.filterType as
-      | 'OPEN'
-      | 'ALL'
-      | 'OPEN_READY_FOR_REVIEW'
-      | 'DRAFT'
-      | 'MERGED'
-      | 'CLOSED'
-      | 'USER_AUTHORED'
-      | 'ASSIGNED_TO_USER'
-      | 'REVIEW_REQUESTED'
-      | undefined;
+      'OPEN' | 'ALL' | 'OPEN_READY_FOR_REVIEW' | 'DRAFT' | 'MERGED' | 'CLOSED' | 'USER_AUTHORED' | 'ASSIGNED_TO_USER' | 'REVIEW_REQUESTED' | undefined;
 
     return {
       page: paginationState.page,

@@ -21,15 +21,7 @@ import { Tooltip } from 'primeng/tooltip';
 
 // union that matches the Java enum
 export type LifecycleState =
-  | 'STARTING_UP'
-  | 'DB_MIGRATION_STARTED'
-  | 'DB_MIGRATION_FAILED'
-  | 'DB_MIGRATION_FINISHED'
-  | 'RUNNING'
-  | 'DEGRADED'
-  | 'SHUTTING_DOWN'
-  | 'STOPPED'
-  | 'FAILED';
+  'STARTING_UP' | 'DB_MIGRATION_STARTED' | 'DB_MIGRATION_FAILED' | 'DB_MIGRATION_FINISHED' | 'RUNNING' | 'DEGRADED' | 'SHUTTING_DOWN' | 'STOPPED' | 'FAILED';
 
 // EnvironmentStatusDto plus lifecycleState
 export type EnvironmentStatusEx = EnvironmentStatusDto & {
