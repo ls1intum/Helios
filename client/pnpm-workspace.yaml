@@ -47,7 +47,7 @@ allowBuilds:
 #    `vite@7` override forces any lingering transitive 7.x resolution up to the
 #    8.x release used directly by Vitest / @angular/build.
 overrides:
-  webpack-dev-server: 5.2.6
+  webpack-dev-server: 6.0.0
   uuid: 14.0.1
   undici@6: 8.6.0
   undici@7: 8.6.0
