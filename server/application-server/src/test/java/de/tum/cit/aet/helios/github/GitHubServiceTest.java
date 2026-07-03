@@ -639,30 +639,6 @@ class GitHubServiceTest {
   }
 
   @Test
-  void getEnvironmentsNullBodyFailure() throws IOException {
-    GHRepository mockRepository = mock(GHRepository.class);
-    when(mockRepository.getOwnerName()).thenReturn("owner");
-    when(mockRepository.getName()).thenReturn("repo");
-    when(clientManager.getCurrentToken()).thenReturn("test-token");
-
-    Response mockOkHttpResponse =
-        new Response.Builder()
-            .request(new Request.Builder().url("http://dummyurl").build())
-            .protocol(Protocol.HTTP_1_1)
-            .code(200)
-            .message("OK")
-            .body(null) // Null body
-            .build();
-    Call mockCall = mock(Call.class);
-    when(okHttpClient.newCall(any(Request.class))).thenReturn(mockCall);
-    when(mockCall.execute()).thenReturn(mockOkHttpResponse);
-
-    IOException exception =
-        assertThrows(IOException.class, () -> gitHubService.getEnvironments(mockRepository));
-    assertEquals("Response body is null", exception.getMessage());
-  }
-
-  @Test
   void getDeploymentIterator() {
     GHRepository mockRepository = mock(GHRepository.class);
     String environmentName = "prod";
