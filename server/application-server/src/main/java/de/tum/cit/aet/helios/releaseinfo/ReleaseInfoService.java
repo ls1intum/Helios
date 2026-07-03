@@ -65,7 +65,13 @@ public class ReleaseInfoService {
   private final GitHubReleaseSyncService gitHubReleaseSyncService;
 
   public List<ReleaseInfoListDto> getAllReleaseInfos() {
-    return releaseCandidateRepository.findAllByOrderByCreatedAtDesc().stream()
+    Long repositoryId = RepositoryContext.getRepositoryId();
+    if (repositoryId == null) {
+      return List.of();
+    }
+    return releaseCandidateRepository
+        .findByRepositoryRepositoryIdOrderByCreatedAtDesc(repositoryId)
+        .stream()
         .map(ReleaseInfoListDto::fromReleaseCandidate)
         .toList();
   }

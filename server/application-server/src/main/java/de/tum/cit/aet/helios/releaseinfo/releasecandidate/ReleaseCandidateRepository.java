@@ -12,6 +12,8 @@ public interface ReleaseCandidateRepository extends JpaRepository<ReleaseCandida
 
   List<ReleaseCandidate> findByRepository(GitRepository repository);
 
+  List<ReleaseCandidate> findByRepositoryRepositoryIdOrderByCreatedAtDesc(Long repositoryId);
+
   Optional<ReleaseCandidate> findByRepositoryRepositoryIdAndName(Long repositoryId, String name);
 
   Optional<ReleaseCandidate> findByRepositoryRepositoryIdAndReleaseId(

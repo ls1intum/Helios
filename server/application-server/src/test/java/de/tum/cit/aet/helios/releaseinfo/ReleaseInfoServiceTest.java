@@ -459,7 +459,8 @@ class ReleaseInfoServiceTest {
     commit2.setSha("dummySha2");
     rc2.setCommit(commit2);
 
-    when(releaseCandidateRepository.findAllByOrderByCreatedAtDesc()).thenReturn(List.of(rc2, rc1));
+    when(releaseCandidateRepository.findByRepositoryRepositoryIdOrderByCreatedAtDesc(repoId))
+        .thenReturn(List.of(rc2, rc1));
 
     // Act
     List<ReleaseInfoListDto> result = service.getAllReleaseInfos();
