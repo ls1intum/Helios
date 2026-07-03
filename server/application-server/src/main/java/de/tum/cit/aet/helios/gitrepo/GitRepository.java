@@ -20,7 +20,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import org.hibernate.annotations.Filter;
 import org.springframework.lang.NonNull;
 
 @Entity
@@ -29,7 +28,6 @@ import org.springframework.lang.NonNull;
 @Setter
 @NoArgsConstructor
 @ToString(callSuper = true)
-@Filter(name = "gitRepositoryFilter")
 public class GitRepository {
 
   @Id

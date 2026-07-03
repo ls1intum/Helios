@@ -16,7 +16,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import org.hibernate.annotations.Filter;
 
 /**
  * Entity representing statistics for a test case across multiple runs. Used for flaky test
@@ -46,7 +45,6 @@ import org.hibernate.annotations.Filter;
 @Setter
 @NoArgsConstructor
 @ToString
-@Filter(name = "gitRepositoryFilter")
 public class TestCaseStatistics {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)

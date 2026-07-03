@@ -95,10 +95,7 @@ public class SecurityConfig {
 
       @Override
       public void addInterceptors(@NonNull InterceptorRegistry registry) {
-        // Order last (Integer.MAX_VALUE == Ordered.LOWEST_PRECEDENCE) so this runs AFTER Spring's
-        // Open-Session-In-View interceptor. That guarantees the request's EntityManager is already
-        // bound when RepositoryInterceptor enables the tenant filter on it.
-        registry.addWebRequestInterceptor(requestInterceptor).order(Integer.MAX_VALUE);
+        registry.addWebRequestInterceptor(requestInterceptor);
       }
 
       @Override

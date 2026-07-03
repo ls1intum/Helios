@@ -24,7 +24,6 @@ import java.util.Set;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import org.hibernate.annotations.Filter;
 
 @Entity
 @Getter
@@ -35,7 +34,6 @@ import org.hibernate.annotations.Filter;
       @UniqueConstraint(columnNames = {"repository_id", "name"}),
       @UniqueConstraint(columnNames = {"release_id"})
     })
-@Filter(name = "gitRepositoryFilter")
 public class ReleaseCandidate {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)

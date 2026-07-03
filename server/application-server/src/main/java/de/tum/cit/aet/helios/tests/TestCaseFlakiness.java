@@ -16,7 +16,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import org.hibernate.annotations.Filter;
 
 /**
  * Precomputed flakiness metric for test cases, stored in a separate table for efficient retrieval.
@@ -40,7 +39,6 @@ import org.hibernate.annotations.Filter;
 @Setter
 @NoArgsConstructor
 @ToString
-@Filter(name = "gitRepositoryFilter")
 public class TestCaseFlakiness {
 
   @Id
