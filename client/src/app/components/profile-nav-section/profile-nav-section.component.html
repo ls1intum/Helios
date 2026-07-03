@@ -1,11 +1,17 @@
 <div class="flex flex-col gap-3 items-center">
   @if (isLoggedIn()) {
-    <p-button class="flex gap-3 items-center cursor-pointer relative" (click)="profileMenu.toggle($event)" size="small">
-      <p-avatar class="size-5 flex-shrink-0" shape="circle" size="normal" [image]="getProfilePictureUrl()" />
-      <span class="hidden md:block text-md runcate overflow-hidden whitespace-nowrap max-w-[130px]">{{ fullName() }}</span>
-      @if (pendingApprovalsCount() > 0) {
-        <p-badge [value]="pendingApprovalsCount().toString()" severity="warn" class="!absolute -top-1 -right-1" />
-      }
+    <p-button class="flex gap-3 items-center cursor-pointer" (click)="profileMenu.toggle($event)" size="small">
+      <span class="relative inline-flex flex-shrink-0">
+        <p-avatar class="size-5" shape="circle" size="normal" [image]="getProfilePictureUrl()" />
+        @if (pendingApprovalsCount() > 0) {
+          <p-badge
+            [value]="pendingApprovalsCount().toString()"
+            severity="warn"
+            class="!absolute -top-1.5 -right-1.5 !flex !items-center !justify-center !h-[1.1rem] !min-w-[1.1rem] !p-0 !text-[0.65rem] !leading-none"
+          />
+        }
+      </span>
+      <span class="hidden md:block text-md truncate max-w-[130px]">{{ fullName() }}</span>
     </p-button>
   } @else {
     <p-button (click)="login()" class="rounded-xl flex items-center justify-center gap-2 w-full" size="small">
