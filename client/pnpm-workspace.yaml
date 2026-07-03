@@ -40,7 +40,10 @@ allowBuilds:
 #    the `application` builder serves via Vite).
 #  - launch-editor <2.14.1: NTLMv2 hash disclosure via UNC paths on Windows.
 #  - js-yaml <4.2.0: quadratic-complexity DoS in merge-key handling.
-#  - @babel/core <=7.29.0: arbitrary file read via sourceMappingURL comment.
+#  - @babel/core <=7.29.0: arbitrary file read via sourceMappingURL comment. Pinned to the
+#    patched 7.29.7 (>7.29.0) — NOT the 8.x line: Angular 21's build (esbuild/AOT linker) is
+#    not Babel-8 compatible and crashes with "NumericLiterals must be non-negative" on
+#    dependency ESM (e.g. PrimeNG 21). 7.29.7 clears the advisory and builds cleanly.
 #  - esbuild 0.27.3-0.28.0: arbitrary file read via the dev server on Windows.
 #  - vite 7.x <7.3.5: `server.fs.deny` bypass + launch-editor UNC disclosure.
 #    Vite has since moved to the 8.x line (unaffected by this 7.x advisory); the
@@ -57,6 +60,6 @@ overrides:
   http-proxy-middleware: 4.1.1
   launch-editor: 2.14.1
   js-yaml: 5.2.1
-  '@babel/core': 8.0.1
+  '@babel/core': 7.29.7
   esbuild: 0.28.1
   vite@7: 8.1.3
