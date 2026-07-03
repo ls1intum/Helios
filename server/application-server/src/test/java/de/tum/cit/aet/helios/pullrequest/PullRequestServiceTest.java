@@ -8,6 +8,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import de.tum.cit.aet.helios.auth.AuthService;
+import de.tum.cit.aet.helios.filters.RepositoryContext;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import de.tum.cit.aet.helios.gitrepo.GitRepository.Visibility;
 import de.tum.cit.aet.helios.label.Label;
@@ -19,6 +20,8 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -38,6 +41,16 @@ public class PullRequestServiceTest {
   @Mock private PullRequestRepository pullRequestsRepository;
   @Mock private UserPreferenceRepository userPreferenceRepository;
   @Mock private AuthService authService;
+
+  @BeforeEach
+  public void setUp() {
+    RepositoryContext.setRepositoryId("1");
+  }
+
+  @AfterEach
+  public void tearDown() {
+    RepositoryContext.clear();
+  }
 
   @Test
   public void testPinnedBranchesAreShownFirst() {
@@ -59,7 +72,8 @@ public class PullRequestServiceTest {
     final UserPreference userPreference = new UserPreference();
     userPreference.setFavouritePullRequests(Set.of(pr2));
 
-    when(pullRequestsRepository.findAllByOrderByUpdatedAtDesc()).thenReturn(prs);
+    when(pullRequestsRepository.findByRepositoryRepositoryIdOrderByUpdatedAtDesc(1L))
+        .thenReturn(prs);
     when(authService.isLoggedIn()).thenReturn(true);
     when(authService.getUserFromGithubId()).thenReturn(null);
     when(userPreferenceRepository.findByUser(null)).thenReturn(Optional.of(userPreference));

@@ -42,6 +42,8 @@ public interface PullRequestRepository extends JpaRepository<PullRequest, Long>,
 
   List<PullRequest> findByRepositoryRepositoryIdOrderByUpdatedAtDesc(Long repositoryId);
 
+  Optional<PullRequest> findByIdAndRepositoryRepositoryId(Long id, Long repositoryId);
+
   Optional<PullRequest> findByRepositoryRepositoryIdAndNumber(Long repositoryId, Integer number);
 
   @Query(
