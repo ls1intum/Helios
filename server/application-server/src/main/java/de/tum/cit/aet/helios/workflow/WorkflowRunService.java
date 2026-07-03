@@ -41,10 +41,6 @@ public class WorkflowRunService {
   private final GitRepoRepository gitRepoRepository;
   private final TestSuiteRepository testSuiteRepository;
 
-  public List<WorkflowRun> getAllWorkflowRuns() {
-    return workflowRunRepository.findAll();
-  }
-
   private Stream<WorkflowRun> getLatestWorkflowRuns(List<WorkflowRun> runs) {
     return runs.stream()
         .collect(Collectors.groupingBy(WorkflowRun::getWorkflowId))
