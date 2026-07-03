@@ -14,7 +14,6 @@ import de.tum.cit.aet.helios.github.permissions.GitHubPermissionsResponse;
 import de.tum.cit.aet.helios.github.permissions.GitHubRepositoryRoleDto;
 import de.tum.cit.aet.helios.github.permissions.RepoPermissionType;
 import de.tum.cit.aet.helios.workflow.GitHubWorkflowContext;
-import jakarta.transaction.Transactional;
 import java.io.BufferedReader;
 import java.io.FilterInputStream;
 import java.io.IOException;
@@ -56,7 +55,6 @@ import org.springframework.stereotype.Service;
 @Log4j2
 @RequiredArgsConstructor
 @Service
-@Transactional
 public class GitHubService {
   private static final String GITHUB_API_VERSION = "2026-03-10";
   private static final int GITHUB_ENVIRONMENTS_PAGE_SIZE = 100;
