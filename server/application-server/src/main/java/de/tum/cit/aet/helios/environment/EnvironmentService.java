@@ -98,11 +98,10 @@ public class EnvironmentService {
 
   public List<EnvironmentDto> getAllEnvironments() {
     Long repositoryId = RepositoryContext.getRepositoryId();
-    List<Environment> environments =
-        repositoryId == null
-            ? environmentRepository.findAllByOrderByNameAsc()
-            : environmentRepository.findByRepositoryRepositoryIdOrderByNameAsc(repositoryId);
-    return environments.stream()
+    if (repositoryId == null) {
+      return List.of();
+    }
+    return environmentRepository.findByRepositoryRepositoryIdOrderByNameAsc(repositoryId).stream()
         .map(
             environment -> {
               LatestDeploymentUnion latest = findLatestDeployment(environment);
@@ -116,12 +115,12 @@ public class EnvironmentService {
 
   public List<EnvironmentDto> getAllEnabledEnvironments() {
     Long repositoryId = RepositoryContext.getRepositoryId();
-    List<Environment> environments =
-        repositoryId == null
-            ? environmentRepository.findByEnabledTrueOrderByNameAsc()
-            : environmentRepository.findByEnabledTrueAndRepositoryRepositoryIdOrderByNameAsc(
-                repositoryId);
-    return environments.stream()
+    if (repositoryId == null) {
+      return List.of();
+    }
+    return environmentRepository
+        .findByEnabledTrueAndRepositoryRepositoryIdOrderByNameAsc(repositoryId)
+        .stream()
         .map(
             environment -> {
               LatestDeploymentUnion latest = findLatestDeployment(environment);

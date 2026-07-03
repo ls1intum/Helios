@@ -50,6 +50,15 @@ class BranchScopingIT extends HeliosIntegrationTest {
         .andExpect(jsonPath("$[0].repository.id").value((int) REPO_B));
   }
 
+  @Test
+  void withoutRepositoryContextReturnsEmpty() throws Exception {
+    // No X-REPOSITORY-ID header → a tenant-scoped read has no repository → empty (never findAll).
+    mockMvc
+        .perform(get("/api/branches"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.length()").value(0));
+  }
+
   private static void insertRepo(JdbcTemplate jdbc, long id, String nameWithOwner) {
     jdbc.update(
         "INSERT INTO repository (repository_id, has_issues, has_projects, has_wiki, is_archived, "

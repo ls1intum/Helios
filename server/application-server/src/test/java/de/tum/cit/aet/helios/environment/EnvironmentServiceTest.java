@@ -36,6 +36,7 @@ import de.tum.cit.aet.helios.workflow.WorkflowRunRepository;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -86,6 +87,11 @@ public class EnvironmentServiceTest {
     user.setId(1L);
   }
 
+  @AfterEach
+  public void tearDown() {
+    RepositoryContext.clear();
+  }
+
   @Test
   public void testGetEnvironmentById() {
     when(environmentRepository.findById(1L)).thenReturn(Optional.of(environment));
@@ -109,7 +115,8 @@ public class EnvironmentServiceTest {
 
   @Test
   public void testGetAllEnvironments() {
-    when(environmentRepository.findAllByOrderByNameAsc())
+    RepositoryContext.setRepositoryId("1");
+    when(environmentRepository.findByRepositoryRepositoryIdOrderByNameAsc(1L))
         .thenReturn(List.of(environment, environment));
 
     List<EnvironmentDto> result = environmentService.getAllEnvironments();
@@ -118,12 +125,13 @@ public class EnvironmentServiceTest {
 
     assertEquals(2, result.size());
     assertEquals(List.of(dto, dto), result);
-    verify(environmentRepository, times(1)).findAllByOrderByNameAsc();
+    verify(environmentRepository, times(1)).findByRepositoryRepositoryIdOrderByNameAsc(1L);
   }
 
   @Test
   public void testGetAllEnabledEnvironments() {
-    when(environmentRepository.findByEnabledTrueOrderByNameAsc())
+    RepositoryContext.setRepositoryId("1");
+    when(environmentRepository.findByEnabledTrueAndRepositoryRepositoryIdOrderByNameAsc(1L))
         .thenReturn(List.of(environment, environment));
 
     List<EnvironmentDto> result = environmentService.getAllEnabledEnvironments();
@@ -132,7 +140,8 @@ public class EnvironmentServiceTest {
 
     assertEquals(2, result.size());
     assertEquals(List.of(dto, dto), result);
-    verify(environmentRepository, times(1)).findByEnabledTrueOrderByNameAsc();
+    verify(environmentRepository, times(1))
+        .findByEnabledTrueAndRepositoryRepositoryIdOrderByNameAsc(1L);
   }
 
   @Test

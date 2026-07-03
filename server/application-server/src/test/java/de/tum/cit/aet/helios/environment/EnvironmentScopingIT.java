@@ -76,6 +76,19 @@ class EnvironmentScopingIT extends HeliosIntegrationTest {
         .andExpect(status().isOk());
   }
 
+  @Test
+  void withoutRepositoryContextReturnsEmpty() throws Exception {
+    // No X-REPOSITORY-ID header → a tenant-scoped read has no repository → empty (never findAll).
+    mockMvc
+        .perform(get("/api/environments/enabled"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.length()").value(0));
+    mockMvc
+        .perform(get("/api/environments"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.length()").value(0));
+  }
+
   private static void insertRepo(JdbcTemplate jdbc, long id, String nameWithOwner) {
     jdbc.update(
         "INSERT INTO repository (repository_id, has_issues, has_projects, has_wiki, is_archived, "

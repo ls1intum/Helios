@@ -34,11 +34,10 @@ public class BranchService {
         : Optional.empty();
     Comparator<BranchInfoDto> comparator = buildBranchInfoDtoComparator(sortField, sortDirection);
     Long repositoryId = RepositoryContext.getRepositoryId();
-    List<Branch> branches =
-        repositoryId == null
-            ? branchRepository.findAll()
-            : branchRepository.findByRepositoryRepositoryId(repositoryId);
-    return branches.stream()
+    if (repositoryId == null) {
+      return List.of();
+    }
+    return branchRepository.findByRepositoryRepositoryId(repositoryId).stream()
         .map((branch) -> BranchInfoDto.fromBranchAndUserPreference(branch, userPreference,
             commitRepository))
         .sorted(comparator)
