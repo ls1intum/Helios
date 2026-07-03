@@ -67,7 +67,6 @@ public class EnvironmentService {
   private final ReleaseCandidateRepository releaseCandidateRepository;
   private final DeploymentRepository deploymentRepository;
   @Lazy private final GitRepoSettingsService gitRepoSettingsService;
-  private final EnvironmentScheduler environmentScheduler;
   private final WorkflowRepository workflowRepository;
   private final WorkflowRunRepository workflowRunRepository;
   private final ProtectionRuleRepository protectionRuleRepository;
@@ -89,7 +88,6 @@ public class EnvironmentService {
     return environmentRepository.findAllByOrderByNameAsc().stream()
         .map(
             environment -> {
-              environmentScheduler.unlockExpiredEnvironments();
               LatestDeploymentUnion latest = findLatestDeployment(environment);
               DeploymentDurationEstimate estimate = computeEstimate(environment);
               return EnvironmentDto.fromEnvironment(
@@ -103,7 +101,6 @@ public class EnvironmentService {
     return environmentRepository.findByEnabledTrueOrderByNameAsc().stream()
         .map(
             environment -> {
-              environmentScheduler.unlockExpiredEnvironments();
               LatestDeploymentUnion latest = findLatestDeployment(environment);
               DeploymentDurationEstimate estimate = computeEstimate(environment);
               return EnvironmentDto.fromEnvironment(
