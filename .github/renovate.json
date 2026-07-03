@@ -177,6 +177,11 @@
       "matchPackageNames": ["sphinx"],
       "matchUpdateTypes": ["major"],
       "enabled": false
+    },
+    {
+      "description": "Angular 21's build tooling is not Babel 8 compatible — @babel/core 8.x breaks the production AOT build ('NumericLiterals must be non-negative'). Stay on the patched 7.x (also enforced via the client pnpm override) until Angular supports Babel 8.",
+      "matchPackageNames": ["@babel/core"],
+      "allowedVersions": "<8"
     }
   ]
 }
