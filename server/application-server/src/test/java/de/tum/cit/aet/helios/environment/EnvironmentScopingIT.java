@@ -63,9 +63,18 @@ class EnvironmentScopingIT extends HeliosIntegrationTest {
         .andExpect(jsonPath("$[*].repository.id", everyItem(equalTo((int) REPO_A))));
   }
 
-  // NOTE: getEnvironmentById scoping is added together with the Phase-B migration. The Hibernate
-  // @Filter does not apply to findById()/PK loads, so today getEnvironmentById(cross-repo-id) leaks
-  // the other repo's environment; the explicit-filtering commit fixes that (red→green).
+  @Test
+  void environmentByIdIsInvisibleFromAnotherRepository() throws Exception {
+    // ENV_B1 belongs to repo B: invisible when scoped to repo A, visible when scoped to repo B.
+    mockMvc
+        .perform(
+            get("/api/environments/{id}", ENV_B1).header(X_REPOSITORY_ID, String.valueOf(REPO_A)))
+        .andExpect(status().isNotFound());
+    mockMvc
+        .perform(
+            get("/api/environments/{id}", ENV_B1).header(X_REPOSITORY_ID, String.valueOf(REPO_B)))
+        .andExpect(status().isOk());
+  }
 
   private static void insertRepo(JdbcTemplate jdbc, long id, String nameWithOwner) {
     jdbc.update(

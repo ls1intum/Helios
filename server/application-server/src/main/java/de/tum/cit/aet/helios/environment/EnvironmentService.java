@@ -77,15 +77,32 @@ public class EnvironmentService {
   private final NatsNotificationPublisherService notificationPublisherService;
 
   public Optional<EnvironmentDto> getEnvironmentById(Long id) {
-    return environmentRepository.findById(id).map(EnvironmentDto::fromEnvironment);
+    return findScopedById(id).map(EnvironmentDto::fromEnvironment);
   }
 
   public Optional<Environment.Type> getEnvironmentTypeById(Long id) {
-    return environmentRepository.findById(id).map(Environment::getType);
+    return findScopedById(id).map(Environment::getType);
+  }
+
+  /**
+   * Loads an environment by id, scoped to the current repository when a repository context is
+   * present. Explicit replacement for the ambient gitRepositoryFilter, which never applied to
+   * findById/PK loads — so this also closes a latent cross-repository read.
+   */
+  private Optional<Environment> findScopedById(Long id) {
+    Long repositoryId = RepositoryContext.getRepositoryId();
+    return repositoryId == null
+        ? environmentRepository.findById(id)
+        : environmentRepository.findByIdAndRepositoryRepositoryId(id, repositoryId);
   }
 
   public List<EnvironmentDto> getAllEnvironments() {
-    return environmentRepository.findAllByOrderByNameAsc().stream()
+    Long repositoryId = RepositoryContext.getRepositoryId();
+    List<Environment> environments =
+        repositoryId == null
+            ? environmentRepository.findAllByOrderByNameAsc()
+            : environmentRepository.findByRepositoryRepositoryIdOrderByNameAsc(repositoryId);
+    return environments.stream()
         .map(
             environment -> {
               LatestDeploymentUnion latest = findLatestDeployment(environment);
@@ -98,7 +115,13 @@ public class EnvironmentService {
   }
 
   public List<EnvironmentDto> getAllEnabledEnvironments() {
-    return environmentRepository.findByEnabledTrueOrderByNameAsc().stream()
+    Long repositoryId = RepositoryContext.getRepositoryId();
+    List<Environment> environments =
+        repositoryId == null
+            ? environmentRepository.findByEnabledTrueOrderByNameAsc()
+            : environmentRepository.findByEnabledTrueAndRepositoryRepositoryIdOrderByNameAsc(
+                repositoryId);
+    return environments.stream()
         .map(
             environment -> {
               LatestDeploymentUnion latest = findLatestDeployment(environment);

@@ -24,6 +24,13 @@ public interface EnvironmentRepository extends JpaRepository<Environment, Long> 
 
   List<Environment> findByEnabledTrueOrderByNameAsc();
 
+  // Explicit per-repository scoped finders (Option B: replaces the ambient gitRepositoryFilter).
+  List<Environment> findByRepositoryRepositoryIdOrderByNameAsc(Long repositoryId);
+
+  List<Environment> findByEnabledTrueAndRepositoryRepositoryIdOrderByNameAsc(Long repositoryId);
+
+  Optional<Environment> findByIdAndRepositoryRepositoryId(Long id, Long repositoryId);
+
   @Query("SELECT DISTINCT e FROM Environment e "
       + "LEFT JOIN FETCH e.statusHistory es "
       + "WHERE (es is NULL OR es.checkTimestamp = "
