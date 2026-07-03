@@ -126,6 +126,7 @@ jobs:
             echo "EMAIL_FROM=${{ vars.EMAIL_FROM }}" >> .env
             
             echo "CLEANUP_WORKFLOW_RUN_DRY_RUN=${{ vars.CLEANUP_WORKFLOW_RUN_DRY_RUN }}" >> .env
+            echo "CLEANUP_WORKFLOW_RUN_ORPHAN_BRANCHES_ENABLED=${{ vars.CLEANUP_WORKFLOW_RUN_ORPHAN_BRANCHES_ENABLED }}" >> .env
             echo "HELIOS_ENVIRONMENT_NAME=${{ vars.HELIOS_ENVIRONMENT_NAME }}" >> .env
             echo "HELIOS_PROD_SECRET_KEY=${{ secrets.HELIOS_PROD_SECRET_KEY }}" >> .env
             echo "HELIOS_STAGING_SECRET_KEY=${{ secrets.HELIOS_STAGING_SECRET_KEY }}" >> .env
