@@ -1,10 +1,53 @@
+# Profile used by full-context integration tests (HeliosIntegrationTest). Supplies dummy values for
+# every no-default @Value placeholder and disables all external integrations / schedulers so the
+# context boots without credentials, network, NATS, or a running scheduler. Not used in any real
+# deployment (prod/staging/dev activate their own profiles).
 spring:
     data:
         jpa:
             repositories:
-                bootstrap-mode: deferred
+                # deferred needs an async bootstrap executor not wired in the test context
+                bootstrap-mode: default
     security:
         oauth2:
             resourceserver:
                 jwt:
                     issuer-uri: "url.invalid"
+    flyway:
+        enabled: true
+
+nats:
+    enabled: false
+    server: "nats://localhost:4222"
+    auth:
+        token: "dummy"
+    durableConsumerName: "test-consumer"
+    consumerAckWaitSeconds: 300
+    consumerInactiveThresholdMinutes: 45
+    timeframe: 1440
+
+github:
+    organizationName: "test-org"
+    authToken: "dummy-token"
+    appName: "test-app"
+    clientId: "dummy-client"
+    privateKeyPath: "dummy-key.pem"
+    tokenExchangeClientId: "dummy-exchange-client"
+    tokenExchangeClientSecret: "dummy-exchange-secret"
+
+monitoring:
+    repositories: ""
+    timeframe: 14
+    repository-sync-cron: "0 0 4 * * *"
+    runOnStartup: false
+    runOnStartupCooldownInMinutes: 1440
+
+notification:
+    enabled: false
+
+reconciliation:
+    enabled: false
+
+helios:
+    ai:
+        enabled: false
