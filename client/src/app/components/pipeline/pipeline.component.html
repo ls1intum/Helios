@@ -67,9 +67,9 @@
                       }
                     </div>
                     <!-- Fixed width to ensure consistent alignment -->
-                    <span class="font-medium flex gap-1 items-center justify-between w-full overflow-hidden">
-                      <span [pTooltip]="workflowRun.name" class="truncate">{{ workflowRun.name }}</span>
-                      <span class="flex items-center gap-1">
+                    <span class="font-medium flex gap-1 items-center w-full min-w-0 overflow-hidden">
+                      <span [pTooltip]="workflowRun.name" class="truncate min-w-0 flex-1">{{ workflowRun.name }}</span>
+                      <span class="flex items-center gap-1 flex-shrink-0">
                         @if (permissions.hasWritePermission() && !!workflowRun.id && !!repositoryId()) {
                           <a
                             [routerLink]="['/repo', repositoryId(), 'ci-cd', 'runs', workflowRun.id, 'logs']"
