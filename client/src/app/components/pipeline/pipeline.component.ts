@@ -107,6 +107,21 @@ export class PipelineComponent {
       };
     });
 
+    // Fallback bucket: surface runs whose workflow is not a member of ANY configured
+    // group so a newly added or renamed workflow (e.g. after a CI refactor that
+    // introduces a new orchestrator workflow) stays visible in the pipeline instead of
+    // silently disappearing until someone manually adds it to a group.
+    const groupedWorkflowIds = new Set(workflowGroups.flatMap(group => group.memberships?.map(membership => membership.workflowId) ?? []));
+    const ungroupedRuns = workflowRuns.filter(run => run.workflowId === undefined || !groupedWorkflowIds.has(run.workflowId));
+    if (ungroupedRuns.length > 0) {
+      groupedWorkflowsRuns.push({
+        name: 'Ungrouped',
+        id: -1,
+        workflows: ungroupedRuns,
+        isLastWithWorkflows: false,
+      });
+    }
+
     let lastWithWorkflowsFound = false;
     // For loop in reverse to set isLastWithWorkflows in the correct order
     groupedWorkflowsRuns.reverse().forEach(group => {
