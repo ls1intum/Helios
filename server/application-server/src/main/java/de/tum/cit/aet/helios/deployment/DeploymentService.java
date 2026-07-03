@@ -60,11 +60,21 @@ public class DeploymentService {
   private final WorkflowRunRepository workflowRunRepository;
 
   public Optional<DeploymentDto> getDeploymentById(Long id) {
-    return deploymentRepository.findById(id).map(DeploymentDto::fromDeployment);
+    Long repositoryId = RepositoryContext.getRepositoryId();
+    Optional<Deployment> deployment =
+        repositoryId == null
+            ? deploymentRepository.findById(id)
+            : deploymentRepository.findByIdAndRepositoryRepositoryId(id, repositoryId);
+    return deployment.map(DeploymentDto::fromDeployment);
   }
 
   public List<DeploymentDto> getAllDeployments() {
-    return deploymentRepository.findAll().stream()
+    Long repositoryId = RepositoryContext.getRepositoryId();
+    if (repositoryId == null) {
+      return List.of();
+    }
+    return deploymentRepository.findByRepositoryRepositoryIdOrderByCreatedAtDesc(repositoryId)
+        .stream()
         .map(DeploymentDto::fromDeployment)
         .collect(Collectors.toList());
   }

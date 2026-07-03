@@ -100,7 +100,8 @@ public class DeploymentServiceTest {
 
   @Test
   public void testGetDeploymentById() {
-    when(deploymentRepository.findById(1L)).thenReturn(Optional.of(deployment));
+    when(deploymentRepository.findByIdAndRepositoryRepositoryId(1L, 1L))
+        .thenReturn(Optional.of(deployment));
 
     Optional<DeploymentDto> result = deploymentService.getDeploymentById(1L);
 
@@ -109,13 +110,14 @@ public class DeploymentServiceTest {
     assertTrue(result.isPresent());
     assertEquals(deploymentDto, result.get());
 
-    verify(deploymentRepository, times(1)).findById(1L);
+    verify(deploymentRepository, times(1)).findByIdAndRepositoryRepositoryId(1L, 1L);
   }
 
   @Test
   public void testGetAllDeployments() {
 
-    when(deploymentRepository.findAll()).thenReturn(List.of(deployment, deployment));
+    when(deploymentRepository.findByRepositoryRepositoryIdOrderByCreatedAtDesc(1L))
+        .thenReturn(List.of(deployment, deployment));
 
     List<DeploymentDto> result = deploymentService.getAllDeployments();
 
