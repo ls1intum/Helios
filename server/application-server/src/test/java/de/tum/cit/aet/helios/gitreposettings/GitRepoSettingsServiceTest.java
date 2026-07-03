@@ -113,6 +113,18 @@ public class GitRepoSettingsServiceTest {
   }
 
   @Test
+  public void getGitRepoSettingsByRepositoryId_returnsDefaultsWithoutWriting() {
+    when(gitRepoRepository.findByRepositoryRepositoryId(1L)).thenReturn(Optional.empty());
+    when(gitRepository.findByRepositoryId(1L)).thenReturn(Optional.of(testGitRepository));
+
+    GitRepoSettingsDto result = gitRepoSettingsService.getGitRepoSettingsByRepositoryId(1L);
+
+    assertNotNull(result);
+    // A plain GET must not persist a settings row.
+    verify(gitRepoRepository, times(0)).save(any(GitRepoSettings.class));
+  }
+
+  @Test
   public void testUpdateGitRepoSettings() {
     when(gitRepoRepository.findByRepositoryRepositoryId(1L))
         .thenReturn(Optional.of(gitRepoSettings));

@@ -45,6 +45,30 @@ public class GitRepoSettingsService {
                 }));
   }
 
+  /**
+   * Read-only lookup for the settings GET endpoint: returns the persisted settings, or transient
+   * defaults when none exist yet — WITHOUT writing. (getOrCreate persists a row, which a plain GET
+   * must not do; callers that need the row to exist keep using getOrCreate.)
+   */
+  public GitRepoSettingsDto getGitRepoSettingsByRepositoryId(Long repositoryId) {
+    return gitRepoRepository
+        .findByRepositoryRepositoryId(repositoryId)
+        .map(GitRepoSettingsDto::fromGitRepoSettings)
+        .orElseGet(
+            () -> {
+              GitRepository gitRepo =
+                  gitRepository
+                      .findByRepositoryId(repositoryId)
+                      .orElseThrow(
+                          () ->
+                              new IllegalArgumentException(
+                                  "Repository with id " + repositoryId + " not found"));
+              GitRepoSettings defaults = new GitRepoSettings();
+              defaults.setRepository(gitRepo);
+              return GitRepoSettingsDto.fromGitRepoSettings(defaults);
+            });
+  }
+
   public Optional<GitRepoSettingsDto> updateGitRepoSettings(
       @PathVariable Long repositoryId, @RequestBody GitRepoSettingsDto gitRepoSettingsDto) {
     GitRepoSettings gitRepoSettings =
