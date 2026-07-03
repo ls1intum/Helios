@@ -35,7 +35,6 @@ import org.springframework.util.StringUtils;
 
 @Log4j2
 @Service
-@Transactional
 @RequiredArgsConstructor
 public class PullRequestService {
 
@@ -330,6 +329,8 @@ public class PullRequestService {
         .collect(Collectors.toList());
   }
 
+  // Atomic: create-if-absent preference, mutate its favourites collection, and save together.
+  @Transactional
   public void setPrPinnedByNumberAndUserId(Long prId, Boolean isPinned) {
     final UserPreference userPreference =
         userPreferenceRepository

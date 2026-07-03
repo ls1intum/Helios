@@ -1,7 +1,6 @@
 package de.tum.cit.aet.helios.workflow;
 
 import de.tum.cit.aet.helios.filters.RepositoryContext;
-import jakarta.transaction.Transactional;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -9,7 +8,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
-@Transactional
 @RequiredArgsConstructor
 public class WorkflowService {
   private final WorkflowRepository workflowRepository;

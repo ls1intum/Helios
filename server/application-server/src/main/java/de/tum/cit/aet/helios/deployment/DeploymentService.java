@@ -40,7 +40,6 @@ import org.springframework.stereotype.Service;
 
 @Log4j2
 @Service
-@Transactional
 @RequiredArgsConstructor
 public class DeploymentService {
 
@@ -91,6 +90,8 @@ public class DeploymentService {
         .map(DeploymentDto::fromDeployment);
   }
 
+  // Atomic: locks the environment, creates the HeliosDeployment, and dispatches — all or nothing.
+  @Transactional
   public void deployToEnvironment(DeployRequest deployRequest) {
     validateDeployRequest(deployRequest);
     validateEnvironmentAndPermissions(deployRequest.environmentId());

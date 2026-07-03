@@ -46,7 +46,6 @@ import org.kohsuke.github.GHRepository;
 import org.springframework.stereotype.Service;
 
 @Service
-@Transactional
 @Log4j2
 @RequiredArgsConstructor
 public class ReleaseInfoService {
@@ -275,6 +274,8 @@ public class ReleaseInfoService {
     releaseCandidateEvaluationRepository.save(evaluation);
   }
 
+  // Derived delete query requires an active transaction.
+  @Transactional
   public ReleaseInfoListDto deleteReleaseCandidateByName(String name) {
     final Long repositoryId = RepositoryContext.getRepositoryId();
 
@@ -290,6 +291,8 @@ public class ReleaseInfoService {
     return rc;
   }
 
+  // Atomic: publishing persists the Release and links it to the candidate via processRelease.
+  @Transactional
   public void publishReleaseDraft(String tagName) {
     Long repositoryId = RepositoryContext.getRepositoryId();
     GitRepository repository = gitRepoRepository.findById(repositoryId).orElseThrow();

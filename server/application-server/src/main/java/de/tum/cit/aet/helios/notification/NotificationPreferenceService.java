@@ -9,12 +9,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class NotificationPreferenceService {
 
   private final NotificationPreferenceRepository repository;
   private final AuthService authService;
 
+  // Atomic: seed every default preference row for the user or none.
+  @Transactional
   public void initializeDefaultsForUser(User user) {
     for (NotificationPreference.Type type : NotificationPreference.Type.values()) {
       boolean exists = repository.findByUserAndType(user, type).isPresent();
@@ -31,6 +32,8 @@ public class NotificationPreferenceService {
         .toList();
   }
 
+  // Atomic: apply all preference updates together.
+  @Transactional
   public void updatePreferencesForCurrentUser(List<NotificationPreferenceDto> preferences) {
     User user = authService.getUserFromGithubId();
     for (NotificationPreferenceDto dto : preferences) {

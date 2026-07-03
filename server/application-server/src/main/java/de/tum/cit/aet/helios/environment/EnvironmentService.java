@@ -51,7 +51,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 @Service
-@Transactional
 @Log4j2
 @RequiredArgsConstructor
 public class EnvironmentService {
@@ -538,6 +537,8 @@ public class EnvironmentService {
    *     no environment is found with the specified ID
    * @throws EnvironmentException if the environment is locked and cannot be disabled
    */
+  // Atomic: many field mutations plus lock-expiry recalculation on one environment.
+  @Transactional
   public Optional<EnvironmentDto> updateEnvironment(Long id, EnvironmentDto environmentDto)
       throws EnvironmentException {
     return environmentRepository
@@ -764,6 +765,8 @@ public class EnvironmentService {
   }
 
   // Called by GitRepoSettingsService when lock expiration threshold is updated
+  // Atomic: recompute and persist expiry for every locked environment together.
+  @Transactional
   public void updateLockExpirationAndReservation(Long repositoryId) {
     List<Environment> lockedEnvironments =
         environmentRepository.findByRepositoryRepositoryIdAndLockedTrue(repositoryId);
@@ -956,6 +959,8 @@ public class EnvironmentService {
   /**
    * Synchronizes the environments of the current repository with the GitHub repository.
    */
+  // Atomic: reconciles (creates/updates/deletes) the repository's environments as one unit.
+  @Transactional
   public void syncRepositoryEnvironments() throws IOException {
     Long repoId = RepositoryContext.getRepositoryId();
     GitRepository repo = gitRepoRepository.findById(repoId).orElseThrow();

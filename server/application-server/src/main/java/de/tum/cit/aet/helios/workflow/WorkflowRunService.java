@@ -31,7 +31,6 @@ import org.springframework.util.CollectionUtils;
 @Log4j2
 @RequiredArgsConstructor
 @Service
-@Transactional
 public class WorkflowRunService {
 
   private final WorkflowRunRepository workflowRunRepository;
@@ -215,10 +214,14 @@ public class WorkflowRunService {
     executeWorkflowRunAction(runId, gitHubService::cancelWorkflowRun, "cancel", false);
   }
 
+  // Atomic: the test-suite delete and the workflow-run reset must commit together.
+  @Transactional
   public void reRunWorkflow(Long runId) {
     executeWorkflowRunAction(runId, gitHubService::reRunWorkflow, "re-run", true);
   }
 
+  // Atomic: the test-suite delete and the workflow-run reset must commit together.
+  @Transactional
   public void reRunFailedJobs(Long runId) {
     executeWorkflowRunAction(runId, gitHubService::reRunFailedJobs, "re-run failed jobs for", true);
   }
