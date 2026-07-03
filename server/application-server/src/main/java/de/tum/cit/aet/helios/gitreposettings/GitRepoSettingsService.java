@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 @RequiredArgsConstructor
 @Service
-@Transactional
 public class GitRepoSettingsService {
 
   private final GitRepoSettingsRepository gitRepoRepository;
@@ -69,6 +68,8 @@ public class GitRepoSettingsService {
             });
   }
 
+  // Atomic: persist the settings change and recalculate all locked-environment expiries together.
+  @Transactional
   public Optional<GitRepoSettingsDto> updateGitRepoSettings(
       @PathVariable Long repositoryId, @RequestBody GitRepoSettingsDto gitRepoSettingsDto) {
     GitRepoSettings gitRepoSettings =
