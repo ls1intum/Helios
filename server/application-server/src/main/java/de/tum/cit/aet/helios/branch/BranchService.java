@@ -2,6 +2,7 @@ package de.tum.cit.aet.helios.branch;
 
 import de.tum.cit.aet.helios.auth.AuthService;
 import de.tum.cit.aet.helios.commit.CommitRepository;
+import de.tum.cit.aet.helios.filters.RepositoryContext;
 import de.tum.cit.aet.helios.releaseinfo.releasecandidate.ReleaseCandidate;
 import de.tum.cit.aet.helios.releaseinfo.releasecandidate.ReleaseCandidateRepository;
 import de.tum.cit.aet.helios.userpreference.UserPreference;
@@ -32,7 +33,12 @@ public class BranchService {
         ? userPreferenceRepository.findByUser(authService.getUserFromGithubId())
         : Optional.empty();
     Comparator<BranchInfoDto> comparator = buildBranchInfoDtoComparator(sortField, sortDirection);
-    return branchRepository.findAll().stream()
+    Long repositoryId = RepositoryContext.getRepositoryId();
+    List<Branch> branches =
+        repositoryId == null
+            ? branchRepository.findAll()
+            : branchRepository.findByRepositoryRepositoryId(repositoryId);
+    return branches.stream()
         .map((branch) -> BranchInfoDto.fromBranchAndUserPreference(branch, userPreference,
             commitRepository))
         .sorted(comparator)
