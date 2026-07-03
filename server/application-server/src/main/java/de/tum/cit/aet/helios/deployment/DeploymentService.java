@@ -20,6 +20,7 @@ import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
 import de.tum.cit.aet.helios.pullrequest.PullRequest;
 import de.tum.cit.aet.helios.pullrequest.PullRequestRepository;
 import de.tum.cit.aet.helios.workflow.Workflow;
+import de.tum.cit.aet.helios.workflow.WorkflowRunRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import java.io.IOException;
@@ -56,6 +57,7 @@ public class DeploymentService {
   private final PullRequestRepository pullRequestRepository;
   private final GitRepoRepository gitRepoRepository;
   private final HeliosDeploymentWorkflowRunSyncService heliosDeploymentWorkflowRunSyncService;
+  private final WorkflowRunRepository workflowRunRepository;
 
   public Optional<DeploymentDto> getDeploymentById(Long id) {
     return deploymentRepository.findById(id).map(DeploymentDto::fromDeployment);
@@ -494,16 +496,7 @@ public class DeploymentService {
    */
   public WorkflowJobsResponse getWorkflowJobStatus(Long workflowRunId) {
     try {
-      // Get repository ID from context
-      Long repositoryId = RepositoryContext.getRepositoryId();
-
-      // Get repository details
-      GitRepository repository =
-          gitRepoRepository
-              .findById(repositoryId)
-              .orElseThrow(() -> new NoSuchElementException("Repository not found"));
-
-      String repoNameWithOwner = repository.getNameWithOwner();
+      String repoNameWithOwner = resolveWorkflowRunRepositoryName(workflowRunId);
 
       // Call GitHub service to get raw JSON response
       String rawJsonResponse = gitHubService.getWorkflowJobStatus(repoNameWithOwner, workflowRunId);
@@ -527,5 +520,27 @@ public class DeploymentService {
       log.error("Repository not found: {}", e.getMessage());
       throw new DeploymentException("Repository not found: " + e.getMessage(), e);
     }
+  }
+
+  private String resolveWorkflowRunRepositoryName(Long workflowRunId) {
+    return workflowRunRepository
+        .findById(workflowRunId.longValue())
+        .map(workflowRun -> workflowRun.getRepository().getNameWithOwner())
+        .or(
+            () ->
+                heliosDeploymentRepository
+                    .findByWorkflowRunId(workflowRunId)
+                    .map(
+                        heliosDeployment ->
+                            heliosDeployment.getEnvironment().getRepository().getNameWithOwner()))
+        .or(
+            () ->
+                Optional.ofNullable(RepositoryContext.getRepositoryId())
+                    .flatMap(gitRepoRepository::findById)
+                    .map(GitRepository::getNameWithOwner))
+        .orElseThrow(
+            () ->
+                new NoSuchElementException(
+                    "Repository not found for workflow run " + workflowRunId));
   }
 }

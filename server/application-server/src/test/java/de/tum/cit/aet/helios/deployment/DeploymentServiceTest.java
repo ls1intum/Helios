@@ -29,6 +29,8 @@ import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
 import de.tum.cit.aet.helios.pullrequest.PullRequestRepository;
 import de.tum.cit.aet.helios.workflow.Workflow;
+import de.tum.cit.aet.helios.workflow.WorkflowRun;
+import de.tum.cit.aet.helios.workflow.WorkflowRunRepository;
 import de.tum.cit.aet.helios.workflow.WorkflowService;
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -62,6 +64,7 @@ public class DeploymentServiceTest {
   @Mock private PullRequestRepository pullRequestRepository;
   @Mock private GitRepoRepository gitRepoRepository;
   @Mock private HeliosDeploymentWorkflowRunSyncService heliosDeploymentWorkflowRunSyncService;
+  @Mock private WorkflowRunRepository workflowRunRepository;
 
   private Deployment deployment;
   private GitRepository gitRepository;
@@ -71,9 +74,6 @@ public class DeploymentServiceTest {
   @BeforeEach
   public void setUp() {
     RepositoryContext.setRepositoryId("1");
-    heliosDeployment = new HeliosDeployment();
-    heliosDeployment.setId(1L);
-    heliosDeployment.setEnvironment(environment);
 
     gitRepository = new GitRepository();
     gitRepository.setRepositoryId(1L);
@@ -82,6 +82,10 @@ public class DeploymentServiceTest {
     environment = new Environment();
     environment.setId(1L);
     environment.setRepository(gitRepository);
+
+    heliosDeployment = new HeliosDeployment();
+    heliosDeployment.setId(1L);
+    heliosDeployment.setEnvironment(environment);
 
     deployment = new Deployment();
     deployment.setId(1L);
@@ -430,6 +434,46 @@ public class DeploymentServiceTest {
 
     assertEquals(1, result.size());
     assertEquals(sourceBranchName, result.getFirst().ref());
+  }
+
+  @Test
+  public void testGetWorkflowJobStatusUsesWorkflowRunRepository() throws IOException {
+    WorkflowRun workflowRun = new WorkflowRun();
+    workflowRun.setId(42L);
+    workflowRun.setRepository(gitRepository);
+
+    when(workflowRunRepository.findById(42L)).thenReturn(Optional.of(workflowRun));
+    when(gitHubService.getWorkflowJobStatus("owner/repo", 42L))
+        .thenReturn("{\"total_count\":0,\"jobs\":[]}");
+
+    WorkflowJobsResponse result = deploymentService.getWorkflowJobStatus(42L);
+
+    assertEquals(0, result.getTotalCount());
+    assertTrue(result.getJobs().isEmpty());
+    verify(gitHubService).getWorkflowJobStatus("owner/repo", 42L);
+    verify(gitRepoRepository, never()).findById(any());
+  }
+
+  @Test
+  public void testGetWorkflowJobStatusFallsBackToHeliosDeploymentRepository() throws IOException {
+    GitRepository otherRepository = new GitRepository();
+    otherRepository.setRepositoryId(2L);
+    otherRepository.setNameWithOwner("other/repo");
+    environment.setRepository(otherRepository);
+    heliosDeployment.setWorkflowRunId(43L);
+
+    when(workflowRunRepository.findById(43L)).thenReturn(Optional.empty());
+    when(heliosDeploymentRepository.findByWorkflowRunId(43L))
+        .thenReturn(Optional.of(heliosDeployment));
+    when(gitHubService.getWorkflowJobStatus("other/repo", 43L))
+        .thenReturn("{\"total_count\":0,\"jobs\":[]}");
+
+    WorkflowJobsResponse result = deploymentService.getWorkflowJobStatus(43L);
+
+    assertEquals(0, result.getTotalCount());
+    assertTrue(result.getJobs().isEmpty());
+    verify(gitHubService).getWorkflowJobStatus("other/repo", 43L);
+    verify(gitRepoRepository, never()).findById(any());
   }
 
   @Test

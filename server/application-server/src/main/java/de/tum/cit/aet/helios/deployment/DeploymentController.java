@@ -5,6 +5,7 @@ import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -95,7 +96,7 @@ public class DeploymentController {
     return ResponseEntity.ok(result);
   }
 
-  @EnforceAtLeastWritePermission
+  @PreAuthorize("isAuthenticated()")
   @GetMapping("/workflowJobStatus/{runId}")
   public ResponseEntity<WorkflowJobsResponse> getWorkflowJobStatus(@PathVariable Long runId) {
     WorkflowJobsResponse jobStatusResponse = deploymentService.getWorkflowJobStatus(runId);
