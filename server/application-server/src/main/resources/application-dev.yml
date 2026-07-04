@@ -30,6 +30,24 @@ helios:
               secretKey: ${HELIOS_LOCAL_SECRET_KEY:}
     clientBaseUrl: "http://localhost:4200"
     developers: ${HELIOS_DEVELOPERS_GITHUB_USERNAMES:}
+    github:
+        org: ${HELIOS_GITHUB_ORG:ls1intum}
+        apiBaseUrl: ${HELIOS_GITHUB_API_BASE_URL:https://api.github.com}
+    queue:
+        enabled: ${HELIOS_QUEUE_ENABLED:false}
+        eta:
+            githubHostedConcurrencyCeiling: ${HELIOS_QUEUE_GHH_CEILING:20}
+        reconcile:
+            runner:
+                fixedRateMs: 60000
+            jobs:
+                fixedRateMs: 30000
+            stuck:
+                fixedRateMs: 60000
+            rollup:
+                fixedRateMs: 300000
+            alerts:
+                fixedRateMs: 30000
 
 logging:
     level:

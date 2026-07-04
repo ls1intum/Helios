@@ -1,6 +1,7 @@
-import { Component, computed, inject, OnInit, signal, effect } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
+import { ThemeService } from '@app/core/services/theme.service';
 import { AvatarModule } from 'primeng/avatar';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
@@ -45,20 +46,14 @@ import { IconMoon, IconSun } from 'angular-tabler-icons/icons';
   templateUrl: './main-layout.component.html',
 })
 export class MainLayoutComponent implements OnInit {
-  private STORAGE_KEY = 'theme';
   private keycloakService = inject(KeycloakService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private themeService = inject(ThemeService);
 
   repositoryId = signal<number | undefined>(undefined);
-  isDarkModeEnabled = signal(this.isThemeDark());
+  isDarkModeEnabled = this.themeService.isDarkMode;
   isLoggedIn = computed(() => this.keycloakService.isLoggedIn());
-
-  constructor() {
-    effect(() => {
-      document.querySelector('html')?.classList.toggle('dark-mode-enabled', this.isDarkModeEnabled());
-    });
-  }
 
   ngOnInit(): void {
     // Initialize on first load (Refresh)
@@ -128,30 +123,7 @@ export class MainLayoutComponent implements OnInit {
     this.keycloakService.login();
   }
 
-  /**
-   * Checks if the current theme is dark.
-   *
-   * This method retrieves the saved theme from localStorage and checks if it is set to 'dark'.
-   * If not found, it falls back to the user's OS preference using `window.matchMedia`.
-   *
-   * @returns {boolean} - Returns true if the theme is dark, false otherwise.
-   */
-  private isThemeDark(): boolean {
-    // Get the saved theme from localStorage
-    const saved = localStorage.getItem('theme');
-
-    // Check if the saved theme is either 'light' or 'dark'
-    if (saved === 'light' || saved === 'dark') {
-      return saved === 'dark';
-    }
-
-    // fall back to OS preference
-    return window.matchMedia('(prefers-color-scheme: dark)').matches;
-  }
-
   toggleDarkMode() {
-    const next = !this.isDarkModeEnabled();
-    this.isDarkModeEnabled.set(next);
-    localStorage.setItem(this.STORAGE_KEY, next ? 'dark' : 'light');
+    this.themeService.toggle();
   }
 }

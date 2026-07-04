@@ -53,6 +53,18 @@ export type UpdateReleaseNotesDto = {
   notes?: string;
 };
 
+export type AlertRuleDto = {
+  id?: number;
+  kind: string;
+  thresholdSeconds: number;
+  windowMinutes?: number;
+  repositoryId?: number;
+  labelSetHash?: string;
+  channels?: Array<string>;
+  enabled?: boolean;
+  quietWindow?: string;
+};
+
 export type DeploymentTimerDto = {
   title: string;
   headerMode: 'NONE' | 'DURATION' | 'ESTIMATED' | 'REMAINING';
@@ -183,7 +195,7 @@ export type UserSettingsDto = {
 };
 
 export type NotificationPreferenceDto = {
-  type?: 'DEPLOYMENT_FAILED' | 'LOCK_EXPIRED' | 'LOCK_UNLOCKED' | 'DEPLOYMENT_APPROVAL_REQUEST';
+  type?: 'DEPLOYMENT_FAILED' | 'LOCK_EXPIRED' | 'LOCK_UNLOCKED' | 'DEPLOYMENT_APPROVAL_REQUEST' | 'QUEUE_P95_BREACH' | 'RUNNER_OFFLINE' | 'STUCK_JOBS';
   enabled?: boolean;
 };
 
@@ -613,6 +625,28 @@ export type TestFailureAnalysisUsageDto = {
   burstWindowSeconds?: number;
 };
 
+export type RunnerDto = {
+  id?: number;
+  name?: string;
+  os?: string;
+  status?: string;
+  busy?: boolean;
+  labels?: Array<string>;
+  runnerGroupId?: number;
+  runnerGroupName?: string;
+  currentJobId?: number;
+  lastSeenAt?: string;
+  offlineSince?: string;
+};
+
+export type RunnerPoolDto = {
+  labels?: Array<string>;
+  online?: number;
+  busy?: number;
+  idle?: number;
+  offline?: number;
+};
+
 export type TestFailureAnalysisCacheLookupDto = {
   hasCachedResult?: boolean;
   cachedResult?: TestFailureAnalysisResponseDto;
@@ -631,6 +665,62 @@ export type CompareCommitInfoDto = {
   authorName: string;
   authorEmail: string;
   url: string;
+};
+
+export type QueueStatsDto = {
+  samples?: number;
+  queueP50?: number;
+  queueP90?: number;
+  queueP95?: number;
+  runP50?: number;
+  runP90?: number;
+  runP95?: number;
+  trend?: Array<TrendPoint>;
+};
+
+export type TrendPoint = {
+  bucket?: string;
+  queueP50?: number;
+  runP50?: number;
+};
+
+export type QueuedJobDto = {
+  jobId?: number;
+  runId?: number;
+  workflowName?: string;
+  jobName?: string;
+  headBranch?: string;
+  labels?: Array<string>;
+  waitSeconds?: number;
+  etaSeconds?: number;
+  positionInQueue?: number;
+  queuedReason?: string;
+  isStuck?: boolean;
+  runnerKind?: string;
+};
+
+export type LabelSetDepth = {
+  labels?: Array<string>;
+  queued?: number;
+  inProgress?: number;
+  oldestQueuedSeconds?: number;
+  runnerKind?: string;
+};
+
+export type QueueDepthDto = {
+  labelSets?: Array<LabelSetDepth>;
+  totalQueued?: number;
+  totalInProgress?: number;
+};
+
+export type AlertEventDto = {
+  id?: number;
+  ruleId?: number;
+  repositoryId?: number;
+  firedAt?: string;
+  clearedAt?: string;
+  measuredValue?: number;
+  details?: string;
 };
 
 export type LabelInfoDto = {
@@ -1124,6 +1214,60 @@ export type UpdateReleaseNotesResponses = {
    */
   200: unknown;
 };
+
+export type DeleteRuleData = {
+  body?: never;
+  path: {
+    repoId: number;
+    id: number;
+  };
+  query?: never;
+  url: '/api/queue/repos/{repoId}/alerts/rules/{id}';
+};
+
+export type DeleteRuleErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type DeleteRuleError = DeleteRuleErrors[keyof DeleteRuleErrors];
+
+export type DeleteRuleResponses = {
+  /**
+   * OK
+   */
+  200: unknown;
+};
+
+export type UpdateRuleData = {
+  body: AlertRuleDto;
+  path: {
+    repoId: number;
+    id: number;
+  };
+  query?: never;
+  url: '/api/queue/repos/{repoId}/alerts/rules/{id}';
+};
+
+export type UpdateRuleErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type UpdateRuleError = UpdateRuleErrors[keyof UpdateRuleErrors];
+
+export type UpdateRuleResponses = {
+  /**
+   * OK
+   */
+  200: AlertRuleDto;
+};
+
+export type UpdateRuleResponse = UpdateRuleResponses[keyof UpdateRuleResponses];
 
 export type GetEnvironmentByIdData = {
   body?: never;
@@ -1793,6 +1937,85 @@ export type GetReleaseInfoByNameResponses = {
 };
 
 export type GetReleaseInfoByNameResponse = GetReleaseInfoByNameResponses[keyof GetReleaseInfoByNameResponses];
+
+export type ListRulesData = {
+  body?: never;
+  path: {
+    repoId: number;
+  };
+  query?: never;
+  url: '/api/queue/repos/{repoId}/alerts/rules';
+};
+
+export type ListRulesErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type ListRulesError = ListRulesErrors[keyof ListRulesErrors];
+
+export type ListRulesResponses = {
+  /**
+   * OK
+   */
+  200: Array<AlertRuleDto>;
+};
+
+export type ListRulesResponse = ListRulesResponses[keyof ListRulesResponses];
+
+export type CreateRuleData = {
+  body: AlertRuleDto;
+  path: {
+    repoId: number;
+  };
+  query?: never;
+  url: '/api/queue/repos/{repoId}/alerts/rules';
+};
+
+export type CreateRuleErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type CreateRuleError = CreateRuleErrors[keyof CreateRuleErrors];
+
+export type CreateRuleResponses = {
+  /**
+   * OK
+   */
+  200: AlertRuleDto;
+};
+
+export type CreateRuleResponse = CreateRuleResponses[keyof CreateRuleResponses];
+
+export type StartBackfillData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/api/queue/admin/backfill';
+};
+
+export type StartBackfillErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type StartBackfillError = StartBackfillErrors[keyof StartBackfillErrors];
+
+export type StartBackfillResponses = {
+  /**
+   * OK
+   */
+  200: string;
+};
+
+export type StartBackfillResponse = StartBackfillResponses[keyof StartBackfillResponses];
 
 export type SetPrPinnedByNumberData = {
   body?: never;
@@ -2510,6 +2733,83 @@ export type GetGroupsWithWorkflowsResponses = {
 
 export type GetGroupsWithWorkflowsResponse = GetGroupsWithWorkflowsResponses[keyof GetGroupsWithWorkflowsResponses];
 
+export type ListData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/api/runners';
+};
+
+export type ListErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type ListError = ListErrors[keyof ListErrors];
+
+export type ListResponses = {
+  /**
+   * OK
+   */
+  200: Array<RunnerDto>;
+};
+
+export type ListResponse = ListResponses[keyof ListResponses];
+
+export type ByIdData = {
+  body?: never;
+  path: {
+    id: number;
+  };
+  query?: never;
+  url: '/api/runners/{id}';
+};
+
+export type ByIdErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type ByIdError = ByIdErrors[keyof ByIdErrors];
+
+export type ByIdResponses = {
+  /**
+   * OK
+   */
+  200: RunnerDto;
+};
+
+export type ByIdResponse = ByIdResponses[keyof ByIdResponses];
+
+export type PoolsData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/api/runners/pools';
+};
+
+export type PoolsErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type PoolsError = PoolsErrors[keyof PoolsErrors];
+
+export type PoolsResponses = {
+  /**
+   * OK
+   */
+  200: Array<RunnerPoolDto>;
+};
+
+export type PoolsResponse = PoolsResponses[keyof PoolsResponses];
+
 export type GetAllRepositoriesData = {
   body?: never;
   path?: never;
@@ -2616,6 +2916,149 @@ export type GetCommitsSinceLastReleaseCandidateResponses = {
 };
 
 export type GetCommitsSinceLastReleaseCandidateResponse = GetCommitsSinceLastReleaseCandidateResponses[keyof GetCommitsSinceLastReleaseCandidateResponses];
+
+export type StatsData = {
+  body?: never;
+  path: {
+    repoId: number;
+  };
+  query?: {
+    workflow?: string;
+    job?: string;
+    branch?: string;
+    window?: string;
+  };
+  url: '/api/queue/repos/{repoId}/stats';
+};
+
+export type StatsErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type StatsError = StatsErrors[keyof StatsErrors];
+
+export type StatsResponses = {
+  /**
+   * OK
+   */
+  200: QueueStatsDto;
+};
+
+export type StatsResponse = StatsResponses[keyof StatsResponses];
+
+export type JobsData = {
+  body?: never;
+  path: {
+    repoId: number;
+  };
+  query?: {
+    status?: string;
+    limit?: number;
+  };
+  url: '/api/queue/repos/{repoId}/jobs';
+};
+
+export type JobsErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type JobsError = JobsErrors[keyof JobsErrors];
+
+export type JobsResponses = {
+  /**
+   * OK
+   */
+  200: Array<QueuedJobDto>;
+};
+
+export type JobsResponse = JobsResponses[keyof JobsResponses];
+
+export type DepthData = {
+  body?: never;
+  path: {
+    repoId: number;
+  };
+  query?: never;
+  url: '/api/queue/repos/{repoId}/depth';
+};
+
+export type DepthErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type DepthError = DepthErrors[keyof DepthErrors];
+
+export type DepthResponses = {
+  /**
+   * OK
+   */
+  200: QueueDepthDto;
+};
+
+export type DepthResponse = DepthResponses[keyof DepthResponses];
+
+export type EventsData = {
+  body?: never;
+  path: {
+    repoId: number;
+  };
+  query?: {
+    hoursBack?: number;
+  };
+  url: '/api/queue/repos/{repoId}/alerts/events';
+};
+
+export type EventsErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type EventsError = EventsErrors[keyof EventsErrors];
+
+export type EventsResponses = {
+  /**
+   * OK
+   */
+  200: Array<AlertEventDto>;
+};
+
+export type EventsResponse = EventsResponses[keyof EventsResponses];
+
+export type OrgDepthData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/api/queue/org/depth';
+};
+
+export type OrgDepthErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type OrgDepthError = OrgDepthErrors[keyof OrgDepthErrors];
+
+export type OrgDepthResponses = {
+  /**
+   * OK
+   */
+  200: QueueDepthDto;
+};
+
+export type OrgDepthResponse = OrgDepthResponses[keyof OrgDepthResponses];
 
 export type GetPullRequestsData = {
   body?: never;

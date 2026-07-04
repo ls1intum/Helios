@@ -51,6 +51,21 @@ monitoring:
     runOnStartupCooldownInMinutes: 0
     repository-sync-cron: "0 0 5 31 2 ?"
 
+helios:
+    github:
+        org: "ls1intum"
+        apiBaseUrl: "https://api.github.com"
+    queue:
+        enabled: true
+        eta:
+            githubHostedConcurrencyCeiling: 20
+        reconcile:
+            runner: { fixedRateMs: 60000 }
+            jobs: { fixedRateMs: 30000 }
+            stuck: { fixedRateMs: 60000 }
+            rollup: { fixedRateMs: 300000 }
+            alerts: { fixedRateMs: 30000 }
+
 logging:
     level:
         root: INFO

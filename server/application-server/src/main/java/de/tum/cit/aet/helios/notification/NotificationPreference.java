@@ -67,6 +67,9 @@ public class NotificationPreference {
      * is via the regular Keycloak login + reviewer-list check (no extra token in the URL).
      */
     DEPLOYMENT_APPROVAL_REQUEST,
+    QUEUE_P95_BREACH,
+    RUNNER_OFFLINE,
+    STUCK_JOBS,
   }
 
   /**

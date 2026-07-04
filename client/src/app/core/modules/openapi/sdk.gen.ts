@@ -9,6 +9,9 @@ import type {
   ApproveData,
   ApproveErrors,
   ApproveResponses,
+  ByIdData,
+  ByIdErrors,
+  ByIdResponses,
   CancelDeploymentData,
   CancelDeploymentErrors,
   CancelDeploymentResponses,
@@ -18,6 +21,9 @@ import type {
   CreateReleaseCandidateData,
   CreateReleaseCandidateErrors,
   CreateReleaseCandidateResponses,
+  CreateRuleData,
+  CreateRuleErrors,
+  CreateRuleResponses,
   CreateTestTypeData,
   CreateTestTypeErrors,
   CreateTestTypeResponses,
@@ -30,6 +36,9 @@ import type {
   DeleteReleaseCandidateByNameData,
   DeleteReleaseCandidateByNameErrors,
   DeleteReleaseCandidateByNameResponses,
+  DeleteRuleData,
+  DeleteRuleErrors,
+  DeleteRuleResponses,
   DeleteTestTypeData,
   DeleteTestTypeErrors,
   DeleteTestTypeResponses,
@@ -39,9 +48,15 @@ import type {
   DeployToEnvironmentData,
   DeployToEnvironmentErrors,
   DeployToEnvironmentResponses,
+  DepthData,
+  DepthErrors,
+  DepthResponses,
   EvaluateData,
   EvaluateErrors,
   EvaluateResponses,
+  EventsData,
+  EventsErrors,
+  EventsResponses,
   ExtendEnvironmentLockData,
   ExtendEnvironmentLockErrors,
   ExtendEnvironmentLockResponses,
@@ -207,12 +222,27 @@ import type {
   HealthCheckData,
   HealthCheckErrors,
   HealthCheckResponses,
+  JobsData,
+  JobsErrors,
+  JobsResponses,
+  ListData,
+  ListErrors,
+  ListResponses,
+  ListRulesData,
+  ListRulesErrors,
+  ListRulesResponses,
   LockEnvironmentData,
   LockEnvironmentErrors,
   LockEnvironmentResponses,
   MyPendingApprovalsData,
   MyPendingApprovalsErrors,
   MyPendingApprovalsResponses,
+  OrgDepthData,
+  OrgDepthErrors,
+  OrgDepthResponses,
+  PoolsData,
+  PoolsErrors,
+  PoolsResponses,
   PublishReleaseDraftData,
   PublishReleaseDraftErrors,
   PublishReleaseDraftResponses,
@@ -234,6 +264,12 @@ import type {
   SetPrPinnedByNumberData,
   SetPrPinnedByNumberErrors,
   SetPrPinnedByNumberResponses,
+  StartBackfillData,
+  StartBackfillErrors,
+  StartBackfillResponses,
+  StatsData,
+  StatsErrors,
+  StatsResponses,
   SyncEnvironmentsData,
   SyncEnvironmentsErrors,
   SyncEnvironmentsResponses,
@@ -261,6 +297,9 @@ import type {
   UpdateReleaseNotesErrors,
   UpdateReleaseNotesResponses,
   UpdateResponses,
+  UpdateRuleData,
+  UpdateRuleErrors,
+  UpdateRuleResponses,
   UpdateTestTypeData,
   UpdateTestTypeErrors,
   UpdateTestTypeResponses,
@@ -387,6 +426,23 @@ export const updateReleaseNotes = <ThrowOnError extends boolean = false>(
 ): RequestResult<UpdateReleaseNotesResponses, UpdateReleaseNotesErrors, ThrowOnError> =>
   (options.client ?? client).put<UpdateReleaseNotesResponses, UpdateReleaseNotesErrors, ThrowOnError>({
     url: '/api/release-info/release-notes',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+
+export const deleteRule = <ThrowOnError extends boolean = false>(
+  options: Options<DeleteRuleData, ThrowOnError>
+): RequestResult<DeleteRuleResponses, DeleteRuleErrors, ThrowOnError> =>
+  (options.client ?? client).delete<DeleteRuleResponses, DeleteRuleErrors, ThrowOnError>({ url: '/api/queue/repos/{repoId}/alerts/rules/{id}', ...options });
+
+export const updateRule = <ThrowOnError extends boolean = false>(
+  options: Options<UpdateRuleData, ThrowOnError>
+): RequestResult<UpdateRuleResponses, UpdateRuleErrors, ThrowOnError> =>
+  (options.client ?? client).put<UpdateRuleResponses, UpdateRuleErrors, ThrowOnError>({
+    url: '/api/queue/repos/{repoId}/alerts/rules/{id}',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -612,6 +668,26 @@ export const getReleaseInfoByName = <ThrowOnError extends boolean = false>(
     },
   });
 
+export const listRules = <ThrowOnError extends boolean = false>(options: Options<ListRulesData, ThrowOnError>): RequestResult<ListRulesResponses, ListRulesErrors, ThrowOnError> =>
+  (options.client ?? client).get<ListRulesResponses, ListRulesErrors, ThrowOnError>({ url: '/api/queue/repos/{repoId}/alerts/rules', ...options });
+
+export const createRule = <ThrowOnError extends boolean = false>(
+  options: Options<CreateRuleData, ThrowOnError>
+): RequestResult<CreateRuleResponses, CreateRuleErrors, ThrowOnError> =>
+  (options.client ?? client).post<CreateRuleResponses, CreateRuleErrors, ThrowOnError>({
+    url: '/api/queue/repos/{repoId}/alerts/rules',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+
+export const startBackfill = <ThrowOnError extends boolean = false>(
+  options?: Options<StartBackfillData, ThrowOnError>
+): RequestResult<StartBackfillResponses, StartBackfillErrors, ThrowOnError> =>
+  (options?.client ?? client).post<StartBackfillResponses, StartBackfillErrors, ThrowOnError>({ url: '/api/queue/admin/backfill', ...options });
+
 export const setPrPinnedByNumber = <ThrowOnError extends boolean = false>(
   options: Options<SetPrPinnedByNumberData, ThrowOnError>
 ): RequestResult<SetPrPinnedByNumberResponses, SetPrPinnedByNumberErrors, ThrowOnError> =>
@@ -782,6 +858,15 @@ export const getGroupsWithWorkflows = <ThrowOnError extends boolean = false>(
 ): RequestResult<GetGroupsWithWorkflowsResponses, GetGroupsWithWorkflowsErrors, ThrowOnError> =>
   (options.client ?? client).get<GetGroupsWithWorkflowsResponses, GetGroupsWithWorkflowsErrors, ThrowOnError>({ url: '/api/settings/{repositoryId}/groups', ...options });
 
+export const list = <ThrowOnError extends boolean = false>(options?: Options<ListData, ThrowOnError>): RequestResult<ListResponses, ListErrors, ThrowOnError> =>
+  (options?.client ?? client).get<ListResponses, ListErrors, ThrowOnError>({ url: '/api/runners', ...options });
+
+export const byId = <ThrowOnError extends boolean = false>(options: Options<ByIdData, ThrowOnError>): RequestResult<ByIdResponses, ByIdErrors, ThrowOnError> =>
+  (options.client ?? client).get<ByIdResponses, ByIdErrors, ThrowOnError>({ url: '/api/runners/{id}', ...options });
+
+export const pools = <ThrowOnError extends boolean = false>(options?: Options<PoolsData, ThrowOnError>): RequestResult<PoolsResponses, PoolsErrors, ThrowOnError> =>
+  (options?.client ?? client).get<PoolsResponses, PoolsErrors, ThrowOnError>({ url: '/api/runners/pools', ...options });
+
 export const getAllRepositories = <ThrowOnError extends boolean = false>(
   options?: Options<GetAllRepositoriesData, ThrowOnError>
 ): RequestResult<GetAllRepositoriesResponses, GetAllRepositoriesErrors, ThrowOnError> =>
@@ -807,6 +892,21 @@ export const getCommitsSinceLastReleaseCandidate = <ThrowOnError extends boolean
     url: '/api/release-info/newcommits',
     ...options,
   });
+
+export const stats = <ThrowOnError extends boolean = false>(options: Options<StatsData, ThrowOnError>): RequestResult<StatsResponses, StatsErrors, ThrowOnError> =>
+  (options.client ?? client).get<StatsResponses, StatsErrors, ThrowOnError>({ url: '/api/queue/repos/{repoId}/stats', ...options });
+
+export const jobs = <ThrowOnError extends boolean = false>(options: Options<JobsData, ThrowOnError>): RequestResult<JobsResponses, JobsErrors, ThrowOnError> =>
+  (options.client ?? client).get<JobsResponses, JobsErrors, ThrowOnError>({ url: '/api/queue/repos/{repoId}/jobs', ...options });
+
+export const depth = <ThrowOnError extends boolean = false>(options: Options<DepthData, ThrowOnError>): RequestResult<DepthResponses, DepthErrors, ThrowOnError> =>
+  (options.client ?? client).get<DepthResponses, DepthErrors, ThrowOnError>({ url: '/api/queue/repos/{repoId}/depth', ...options });
+
+export const events = <ThrowOnError extends boolean = false>(options: Options<EventsData, ThrowOnError>): RequestResult<EventsResponses, EventsErrors, ThrowOnError> =>
+  (options.client ?? client).get<EventsResponses, EventsErrors, ThrowOnError>({ url: '/api/queue/repos/{repoId}/alerts/events', ...options });
+
+export const orgDepth = <ThrowOnError extends boolean = false>(options?: Options<OrgDepthData, ThrowOnError>): RequestResult<OrgDepthResponses, OrgDepthErrors, ThrowOnError> =>
+  (options?.client ?? client).get<OrgDepthResponses, OrgDepthErrors, ThrowOnError>({ url: '/api/queue/org/depth', ...options });
 
 export const getPullRequests = <ThrowOnError extends boolean = false>(
   options?: Options<GetPullRequestsData, ThrowOnError>

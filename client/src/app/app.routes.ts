@@ -125,6 +125,10 @@ export const routes: Routes = [
                   { path: ':branchName', loadComponent: () => import('./pages/branch-details/branch-details.component').then(m => m.BranchDetailsComponent) },
                 ],
               },
+              {
+                path: 'queue',
+                loadChildren: () => import('./pages/queue/queue.routes').then(m => m.queueRoutes),
+              },
             ],
           },
           {
@@ -135,6 +139,13 @@ export const routes: Routes = [
         ],
       },
     ],
+  },
+  {
+    // Admin org-wide overview only. Repo-scoped stats/alerts have no meaning here so are not
+    // exposed at the top level — those live under /repo/:repositoryId/ci-cd/queue/*.
+    path: 'queue',
+    canActivate: [adminGuard],
+    loadComponent: () => import('./pages/queue/queue-overview.component').then(m => m.QueueOverviewComponent),
   },
   {
     path: 'unauthorized',
