@@ -30,7 +30,6 @@ import de.tum.cit.aet.helios.workflow.WorkflowRepository;
 import de.tum.cit.aet.helios.workflow.WorkflowRun;
 import de.tum.cit.aet.helios.workflow.WorkflowRunRepository;
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.transaction.Transactional;
 import java.io.IOException;
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -225,7 +224,6 @@ public class EnvironmentService {
    *     the environment is already locked or if an optimistic locking failure occurs
    * @throws EntityNotFoundException if no environment is found with the specified ID
    */
-  @Transactional
   public Optional<Environment> lockEnvironment(Long id) {
     final User currentUser = authService.getUserFromGithubId();
 
@@ -284,7 +282,6 @@ public class EnvironmentService {
    * @param baseTime the base time from which to calculate expiration
    * @return the calculated expiration time or null if no threshold is set
    */
-  @Transactional
   protected OffsetDateTime calculateLockExpiration(
       Environment environment, OffsetDateTime baseTime) {
     Long lockExpirationThreshold =
@@ -306,7 +303,6 @@ public class EnvironmentService {
    * @param baseTime the base time from which to calculate expiration
    * @return the calculated expiration time or null if no threshold is set
    */
-  @Transactional
   protected OffsetDateTime calculateReservationExpiration(
       Environment environment, OffsetDateTime baseTime) {
     Long lockReservationThreshold =
@@ -321,7 +317,6 @@ public class EnvironmentService {
     return lockReservationThreshold != -1 ? baseTime.plusMinutes(lockReservationThreshold) : null;
   }
 
-  @Transactional
   protected OffsetDateTime getLockWillExpireAt(Environment environment) {
     if (environment.isLocked() && environment.getLockedAt() != null) {
       return calculateLockExpiration(environment, environment.getLockedAt());
@@ -330,7 +325,6 @@ public class EnvironmentService {
     }
   }
 
-  @Transactional
   protected OffsetDateTime getLockReservationExpiresAt(Environment environment) {
     if (environment.isLocked() && environment.getLockedAt() != null) {
       return calculateReservationExpiration(environment, environment.getLockedAt());
@@ -355,7 +349,6 @@ public class EnvironmentService {
    * @throws EntityNotFoundException if no environment is found with the specified ID
    * @throws EnvironmentException if the environment is disabled or isn't a TEST environment
    */
-  @Transactional
   public Optional<Environment> extendEnvironmentLock(Long id) {
     final User currentUser = authService.getUserFromGithubId();
 
@@ -447,7 +440,6 @@ public class EnvironmentService {
    * @param id the ID of the environment to unlock
    * @throws EntityNotFoundException if no environment is found with the specified ID
    */
-  @Transactional
   public EnvironmentDto unlockEnvironment(Long id) {
     final User currentUser = authService.getUserFromGithubId();
 
@@ -537,8 +529,6 @@ public class EnvironmentService {
    *     no environment is found with the specified ID
    * @throws EnvironmentException if the environment is locked and cannot be disabled
    */
-  // Atomic: many field mutations plus lock-expiry recalculation on one environment.
-  @Transactional
   public Optional<EnvironmentDto> updateEnvironment(Long id, EnvironmentDto environmentDto)
       throws EnvironmentException {
     return environmentRepository
@@ -765,8 +755,6 @@ public class EnvironmentService {
   }
 
   // Called by GitRepoSettingsService when lock expiration threshold is updated
-  // Atomic: recompute and persist expiry for every locked environment together.
-  @Transactional
   public void updateLockExpirationAndReservation(Long repositoryId) {
     List<Environment> lockedEnvironments =
         environmentRepository.findByRepositoryRepositoryIdAndLockedTrue(repositoryId);
@@ -959,8 +947,6 @@ public class EnvironmentService {
   /**
    * Synchronizes the environments of the current repository with the GitHub repository.
    */
-  // Atomic: reconciles (creates/updates/deletes) the repository's environments as one unit.
-  @Transactional
   public void syncRepositoryEnvironments() throws IOException {
     Long repoId = RepositoryContext.getRepositoryId();
     GitRepository repo = gitRepoRepository.findById(repoId).orElseThrow();

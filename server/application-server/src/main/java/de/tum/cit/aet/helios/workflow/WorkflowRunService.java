@@ -25,7 +25,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 @Log4j2
@@ -214,14 +213,10 @@ public class WorkflowRunService {
     executeWorkflowRunAction(runId, gitHubService::cancelWorkflowRun, "cancel", false);
   }
 
-  // Atomic: the test-suite delete and the workflow-run reset must commit together.
-  @Transactional
   public void reRunWorkflow(Long runId) {
     executeWorkflowRunAction(runId, gitHubService::reRunWorkflow, "re-run", true);
   }
 
-  // Atomic: the test-suite delete and the workflow-run reset must commit together.
-  @Transactional
   public void reRunFailedJobs(Long runId) {
     executeWorkflowRunAction(runId, gitHubService::reRunFailedJobs, "re-run failed jobs for", true);
   }

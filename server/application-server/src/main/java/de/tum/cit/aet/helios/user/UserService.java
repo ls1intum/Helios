@@ -6,7 +6,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -21,8 +20,6 @@ public class UserService {
    * Handles user-related setup on their first login to Helios.
    * Sets hasLoggedIn = true and initializes notification email if applicable.
    */
-  // Atomic: the user flag/email update and the default-preference rows must persist together.
-  @Transactional
   public void handleFirstLogin() {
     try {
       User loggedInUser = authService.isLoggedIn() ? authService.getUserFromGithubId() : null;

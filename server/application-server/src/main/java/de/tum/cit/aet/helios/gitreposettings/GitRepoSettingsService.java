@@ -3,7 +3,6 @@ package de.tum.cit.aet.helios.gitreposettings;
 import de.tum.cit.aet.helios.environment.EnvironmentService;
 import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
-import jakarta.transaction.Transactional;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Lazy;
@@ -68,8 +67,6 @@ public class GitRepoSettingsService {
             });
   }
 
-  // Atomic: persist the settings change and recalculate all locked-environment expiries together.
-  @Transactional
   public Optional<GitRepoSettingsDto> updateGitRepoSettings(
       @PathVariable Long repositoryId, @RequestBody GitRepoSettingsDto gitRepoSettingsDto) {
     GitRepoSettings gitRepoSettings =

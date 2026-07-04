@@ -30,7 +30,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 @Log4j2
@@ -329,8 +328,6 @@ public class PullRequestService {
         .collect(Collectors.toList());
   }
 
-  // Atomic: create-if-absent preference, mutate its favourites collection, and save together.
-  @Transactional
   public void setPrPinnedByNumberAndUserId(Long prId, Boolean isPinned) {
     final UserPreference userPreference =
         userPreferenceRepository

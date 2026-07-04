@@ -291,8 +291,6 @@ public class ReleaseInfoService {
     return rc;
   }
 
-  // Atomic: publishing persists the Release and links it to the candidate via processRelease.
-  @Transactional
   public void publishReleaseDraft(String tagName) {
     Long repositoryId = RepositoryContext.getRepositoryId();
     GitRepository repository = gitRepoRepository.findById(repositoryId).orElseThrow();

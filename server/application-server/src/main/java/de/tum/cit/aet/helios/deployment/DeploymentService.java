@@ -22,7 +22,6 @@ import de.tum.cit.aet.helios.pullrequest.PullRequestRepository;
 import de.tum.cit.aet.helios.workflow.Workflow;
 import de.tum.cit.aet.helios.workflow.WorkflowRunRepository;
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.transaction.Transactional;
 import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -90,8 +89,6 @@ public class DeploymentService {
         .map(DeploymentDto::fromDeployment);
   }
 
-  // Atomic: locks the environment, creates the HeliosDeployment, and dispatches — all or nothing.
-  @Transactional
   public void deployToEnvironment(DeployRequest deployRequest) {
     validateDeployRequest(deployRequest);
     validateEnvironmentAndPermissions(deployRequest.environmentId());
@@ -431,7 +428,6 @@ public class DeploymentService {
    * @return Basic success message
    * @throws DeploymentException if the deployment cannot be canceled
    */
-  @Transactional
   public String cancelDeployment(CancelDeploymentRequest cancelRequest) {
     Long workflowRunId = cancelRequest.workflowRunId();
 
