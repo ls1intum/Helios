@@ -89,8 +89,11 @@ public class EnvironmentService {
    */
   private Optional<Environment> findScopedById(Long id) {
     Long repositoryId = RepositoryContext.getRepositoryId();
+    // No repository context (missing X-REPOSITORY-ID) → no data. GET /api/** is permitAll, so a
+    // findById fallback here would be an anonymous cross-repo IDOR (the @Filter never covered PK
+    // loads); always scope, mirroring WorkflowRunService.getWorkflowRunById.
     return repositoryId == null
-        ? environmentRepository.findById(id)
+        ? Optional.empty()
         : environmentRepository.findByIdAndRepositoryRepositoryId(id, repositoryId);
   }
 
@@ -229,7 +232,7 @@ public class EnvironmentService {
 
     Environment environment =
         environmentRepository
-            .findById(id)
+            .findByIdAndRepositoryRepositoryId(id, RepositoryContext.getRepositoryId())
             .orElseThrow(() -> new EntityNotFoundException("Environment not found with ID: " + id));
 
     if (!environment.isEnabled()) {
@@ -354,7 +357,7 @@ public class EnvironmentService {
 
     Environment environment =
         environmentRepository
-            .findById(id)
+            .findByIdAndRepositoryRepositoryId(id, RepositoryContext.getRepositoryId())
             .orElseThrow(() -> new EntityNotFoundException("Environment not found with ID: " + id));
 
     // Check environment status
@@ -445,7 +448,7 @@ public class EnvironmentService {
 
     Environment environment =
         environmentRepository
-            .findById(id)
+            .findByIdAndRepositoryRepositoryId(id, RepositoryContext.getRepositoryId())
             .orElseThrow(() -> new EntityNotFoundException("Environment not found with ID: " + id));
 
     if (!environment.isLocked()) {
@@ -532,7 +535,7 @@ public class EnvironmentService {
   public Optional<EnvironmentDto> updateEnvironment(Long id, EnvironmentDto environmentDto)
       throws EnvironmentException {
     return environmentRepository
-        .findById(id)
+        .findByIdAndRepositoryRepositoryId(id, RepositoryContext.getRepositoryId())
         .map(
             environment -> {
               if (!environmentDto.enabled() && environment.isLocked()) {
@@ -659,7 +662,7 @@ public class EnvironmentService {
       Long environmentId, String branch, String sha) {
     Environment environment =
         environmentRepository
-            .findById(environmentId)
+            .findByIdAndRepositoryRepositoryId(environmentId, RepositoryContext.getRepositoryId())
             .orElseThrow(
                 () ->
                     new EntityNotFoundException("Environment not found with ID: " + environmentId));
@@ -779,6 +782,11 @@ public class EnvironmentService {
   }
 
   public List<EnvironmentLockHistoryDto> getLockHistoryByEnvironmentId(Long environmentId) {
+    // Scope to the current repository (lock history is keyed only by environment id, so a foreign
+    // id would otherwise leak its lock/unlock history).
+    if (findScopedById(environmentId).isEmpty()) {
+      return List.of();
+    }
     return lockHistoryRepository.findLockHistoriesByEnvironment(environmentId).stream()
         .map(
             lock ->
@@ -822,6 +830,10 @@ public class EnvironmentService {
   }
 
   public Optional<EnvironmentReviewersDto> getEnvironmentReviewers(Long environmentId) {
+    // Scope to the current repository — protection rules are keyed only by environment id.
+    if (findScopedById(environmentId).isEmpty()) {
+      return Optional.empty();
+    }
     return protectionRuleRepository
         .findByEnvironmentIdAndRuleType(environmentId, ProtectionRule.RuleType.REQUIRED_REVIEWERS)
         .map(
@@ -873,7 +885,7 @@ public class EnvironmentService {
    * constructing the public-facing DTO; returns the GitHub logins / team slugs directly along with
    * whether the rule even exists and whether self-review is prevented.
    *
-   * <p>An {@link Optional#empty()} result means "no {@code REQUIRED_REVIEWERS} rule on this env" —
+   * <p>An {@link Optional#empty()} result means "no {@code REQUIRED_REVIEWERS} rule here" —
    * the deployment is not gated on reviewers (it may still be gated on wait-timer or branch
    * policy, which GitHub handles itself).
    */

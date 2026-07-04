@@ -78,7 +78,7 @@ class EnvironmentScopingIT extends HeliosIntegrationTest {
 
   @Test
   void withoutRepositoryContextReturnsEmpty() throws Exception {
-    // No X-REPOSITORY-ID header → a tenant-scoped read has no repository → empty (never findAll).
+    // No X-REPOSITORY-ID header → tenant-scoped read has no repository → empty (never findAll).
     mockMvc
         .perform(get("/api/environments/enabled"))
         .andExpect(status().isOk())
@@ -87,6 +87,9 @@ class EnvironmentScopingIT extends HeliosIntegrationTest {
         .perform(get("/api/environments"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.length()").value(0));
+    // Detail-by-id with no header must not fall back to an unscoped findById (anonymous IDOR):
+    // GET /api/** is permitAll, so a missing header must yield 404, not another repo's environment.
+    mockMvc.perform(get("/api/environments/{id}", ENV_A1)).andExpect(status().isNotFound());
   }
 
   private static void insertRepo(JdbcTemplate jdbc, long id, String nameWithOwner) {

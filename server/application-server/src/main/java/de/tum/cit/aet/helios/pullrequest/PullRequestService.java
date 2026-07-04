@@ -315,7 +315,7 @@ public class PullRequestService {
     Long repositoryId = RepositoryContext.getRepositoryId();
     Optional<PullRequest> pullRequest =
         repositoryId == null
-            ? pullRequestRepository.findById(id)
+            ? Optional.empty()
             : pullRequestRepository.findByIdAndRepositoryRepositoryId(id, repositoryId);
     return pullRequest.map(PullRequestInfoDto::fromPullRequest);
   }

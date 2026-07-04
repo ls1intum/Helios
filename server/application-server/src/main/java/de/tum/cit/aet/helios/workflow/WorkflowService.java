@@ -24,7 +24,7 @@ public class WorkflowService {
   private Optional<Workflow> findScopedById(Long id) {
     Long repositoryId = RepositoryContext.getRepositoryId();
     return repositoryId == null
-        ? workflowRepository.findById(id)
+        ? Optional.empty()
         : workflowRepository.findByIdAndRepositoryRepositoryId(id, repositoryId);
   }
 
@@ -33,7 +33,9 @@ public class WorkflowService {
     if (repositoryId == null) {
       return List.of();
     }
-    return workflowRepository.findByRepositoryRepositoryIdOrderByCreatedAtDesc(repositoryId).stream()
+    return workflowRepository
+        .findByRepositoryRepositoryIdOrderByCreatedAtDesc(repositoryId)
+        .stream()
         .map(WorkflowDto::fromWorkflow)
         .collect(Collectors.toList());
   }

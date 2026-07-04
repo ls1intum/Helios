@@ -61,7 +61,7 @@ public class DeploymentService {
     Long repositoryId = RepositoryContext.getRepositoryId();
     Optional<Deployment> deployment =
         repositoryId == null
-            ? deploymentRepository.findById(id)
+            ? Optional.empty()
             : deploymentRepository.findByIdAndRepositoryRepositoryId(id, repositoryId);
     return deployment.map(DeploymentDto::fromDeployment);
   }
@@ -77,13 +77,30 @@ public class DeploymentService {
         .collect(Collectors.toList());
   }
 
+  // Deployments/activity are keyed only by environment id; scope to the current repository so a
+  // foreign environment id cannot surface another repository's deployment data (the removed
+  // gitRepositoryFilter used to enforce this on the derived Deployment queries).
+  private boolean environmentInCurrentRepository(Long environmentId) {
+    Long repositoryId = RepositoryContext.getRepositoryId();
+    return repositoryId != null
+        && environmentRepository
+            .findByIdAndRepositoryRepositoryId(environmentId, repositoryId)
+            .isPresent();
+  }
+
   public List<DeploymentDto> getDeploymentsByEnvironmentId(Long environmentId) {
+    if (!environmentInCurrentRepository(environmentId)) {
+      return List.of();
+    }
     return deploymentRepository.findByEnvironmentIdOrderByCreatedAtDesc(environmentId).stream()
         .map(DeploymentDto::fromDeployment)
         .collect(Collectors.toList());
   }
 
   public Optional<DeploymentDto> getLatestDeploymentByEnvironmentId(Long environmentId) {
+    if (!environmentInCurrentRepository(environmentId)) {
+      return Optional.empty();
+    }
     return deploymentRepository
         .findFirstByEnvironmentIdOrderByCreatedAtDesc(environmentId)
         .map(DeploymentDto::fromDeployment);
@@ -306,6 +323,9 @@ public class DeploymentService {
    *     </ul>
    */
   public List<ActivityHistoryDto> getActivityHistoryByEnvironmentId(Long environmentId) {
+    if (!environmentInCurrentRepository(environmentId)) {
+      return List.of();
+    }
     // 1) Real deployments
     List<ActivityHistoryDto> deploymentDtos =
         deploymentRepository.findByEnvironmentIdOrderByCreatedAtDesc(environmentId).stream()
@@ -364,7 +384,9 @@ public class DeploymentService {
    * @throws EntityNotFoundException if the pull request does not exist
    */
   public List<ActivityHistoryDto> getActivityHistoryByPullRequestId(Long pullRequestId) {
-    if (pullRequestRepository.findById(pullRequestId).isEmpty()) {
+    if (pullRequestRepository
+        .findByIdAndRepositoryRepositoryId(pullRequestId, RepositoryContext.getRepositoryId())
+        .isEmpty()) {
       throw new EntityNotFoundException("Pull request not found with id: " + pullRequestId);
     }
 
@@ -530,20 +552,34 @@ public class DeploymentService {
   }
 
   private String resolveWorkflowRunRepositoryName(Long workflowRunId) {
+    // Resolve strictly within the current repository so a foreign run id can never resolve another
+    // repository's name (which would proxy that repo's GitHub job status back to the caller).
+    final Long repositoryId = RepositoryContext.getRepositoryId();
+    if (repositoryId == null) {
+      throw new DeploymentException(
+          "No repository context to resolve workflow run " + workflowRunId);
+    }
     return workflowRunRepository
-        .findById(workflowRunId.longValue())
+        .findByIdAndRepositoryRepositoryId(workflowRunId, repositoryId)
         .map(workflowRun -> workflowRun.getRepository().getNameWithOwner())
         .or(
             () ->
                 heliosDeploymentRepository
                     .findByWorkflowRunId(workflowRunId)
+                    .filter(
+                        heliosDeployment ->
+                            repositoryId.equals(
+                                heliosDeployment
+                                    .getEnvironment()
+                                    .getRepository()
+                                    .getRepositoryId()))
                     .map(
                         heliosDeployment ->
                             heliosDeployment.getEnvironment().getRepository().getNameWithOwner()))
         .or(
             () ->
-                Optional.ofNullable(RepositoryContext.getRepositoryId())
-                    .flatMap(gitRepoRepository::findById)
+                gitRepoRepository
+                    .findById(repositoryId)
                     .map(GitRepository::getNameWithOwner))
         .orElseThrow(
             () ->

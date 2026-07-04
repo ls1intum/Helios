@@ -192,7 +192,15 @@ public class TestResultService {
    * @return the grouped test results
    */
   public TestResultsDto getLatestTestResultsForPr(Long pullRequestId, TestSearchCriteria criteria) {
-    var pullRequest = pullRequestRepository.findById(pullRequestId).orElseThrow();
+    // Scope to the current repository (like the run/branch variants): a PR id from another
+    // repository must not surface its test results. Null context → not found.
+    var pullRequest =
+        pullRequestRepository
+            .findByIdAndRepositoryRepositoryId(pullRequestId, RepositoryContext.getRepositoryId())
+            .orElseThrow(
+                () ->
+                    new EntityNotFoundException(
+                        "Pull request not found with id: " + pullRequestId));
     var defaultContext = getDefaultBranchContext(pullRequest.getRepository());
 
     var latestRuns =
