@@ -63,7 +63,6 @@ public class ReleaseInfoService {
   private final GitHubDataSyncOrchestrator gitHubDataSyncOrchestrator;
   private final GitHubReleaseSyncService gitHubReleaseSyncService;
 
-  @Transactional(readOnly = true)
   public List<ReleaseInfoListDto> getAllReleaseInfos() {
     Long repositoryId = RepositoryContext.getRepositoryId();
     if (repositoryId == null) {
@@ -123,7 +122,6 @@ public class ReleaseInfoService {
     return new ArrayList<>(deploymentsByEnvironment.values());
   }
 
-  @Transactional(readOnly = true)
   public ReleaseInfoDetailsDto getReleaseInfoByName(String name) {
     final Long repositoryId = RepositoryContext.getRepositoryId();
 
@@ -156,7 +154,6 @@ public class ReleaseInfoService {
         .orElseThrow(() -> new ReleaseCandidateException("ReleaseCandidate not found"));
   }
 
-  @Transactional(readOnly = true)
   public CommitsSinceReleaseCandidateDto getCommitsFromBranchSinceLastReleaseCandidate(
       String branchName) {
     final Long repositoryId = RepositoryContext.getRepositoryId();
@@ -335,7 +332,6 @@ public class ReleaseInfoService {
     }
   }
 
-  @Transactional(readOnly = true)
   public String generateReleaseNotes(String tagName) {
     final Long repositoryId = RepositoryContext.getRepositoryId();
     final GitRepository repository =

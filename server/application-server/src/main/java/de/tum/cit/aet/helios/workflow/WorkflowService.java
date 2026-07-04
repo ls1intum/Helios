@@ -6,14 +6,12 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 public class WorkflowService {
   private final WorkflowRepository workflowRepository;
 
-  @Transactional(readOnly = true)
   public Optional<WorkflowDto> getWorkflowById(Long id) {
     return findScopedById(id).map(WorkflowDto::fromWorkflow);
   }
@@ -30,7 +28,6 @@ public class WorkflowService {
         : workflowRepository.findByIdAndRepositoryRepositoryId(id, repositoryId);
   }
 
-  @Transactional(readOnly = true)
   public List<WorkflowDto> getAllWorkflows() {
     Long repositoryId = RepositoryContext.getRepositoryId();
     if (repositoryId == null) {
@@ -43,7 +40,6 @@ public class WorkflowService {
         .collect(Collectors.toList());
   }
 
-  @Transactional(readOnly = true)
   public List<WorkflowDto> getWorkflowsByRepositoryId(Long repositoryId) {
     return workflowRepository
         .findByRepositoryRepositoryIdOrderByCreatedAtDesc(repositoryId)
@@ -52,7 +48,6 @@ public class WorkflowService {
         .collect(Collectors.toList());
   }
 
-  @Transactional(readOnly = true)
   public List<WorkflowDto> getWorkflowsByState(Workflow.State state) {
     Long repositoryId = RepositoryContext.getRepositoryId();
     if (repositoryId == null) {
@@ -74,13 +69,11 @@ public class WorkflowService {
     workflowRepository.save(workflow);
   }
 
-  @Transactional(readOnly = true)
   public List<Workflow> getDeploymentWorkflowsForAllEnv(Long repositoryId) {
     return workflowRepository.findDeploymentWorkflowsForEnabledEnvironmentsByRepositoryId(
         repositoryId);
   }
 
-  @Transactional(readOnly = true)
   public List<Workflow> getTestWorkflows(Long repositoryId) {
     return workflowRepository.findByLabelAndRepositoryRepositoryId(
         Workflow.Label.TEST, repositoryId);

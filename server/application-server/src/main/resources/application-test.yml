@@ -15,6 +15,16 @@ spring:
                     issuer-uri: "url.invalid"
     flyway:
         enabled: true
+    jpa:
+        properties:
+            hibernate:
+                connection:
+                    # zonky's embedded-postgres DataSource hands out auto-commit=true connections and
+                    # ignores spring.datasource.hikari.auto-commit, so the base
+                    # provider_disables_autocommit=true would be a lie here and break tx rollback.
+                    # Let Hibernate manage auto-commit in tests; prod/staging keep the base true (real
+                    # Hikari with auto-commit=false) so Large-Object reads work without @Transactional.
+                    provider_disables_autocommit: false
 
 nats:
     enabled: false

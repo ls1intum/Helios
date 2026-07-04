@@ -48,7 +48,6 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Log4j2
@@ -75,12 +74,10 @@ public class EnvironmentService {
   private final GitHubService gitHubService;
   private final NatsNotificationPublisherService notificationPublisherService;
 
-  @Transactional(readOnly = true)
   public Optional<EnvironmentDto> getEnvironmentById(Long id) {
     return findScopedById(id).map(EnvironmentDto::fromEnvironment);
   }
 
-  @Transactional(readOnly = true)
   public Optional<Environment.Type> getEnvironmentTypeById(Long id) {
     return findScopedById(id).map(Environment::getType);
   }
@@ -100,7 +97,6 @@ public class EnvironmentService {
         : environmentRepository.findByIdAndRepositoryRepositoryId(id, repositoryId);
   }
 
-  @Transactional(readOnly = true)
   public List<EnvironmentDto> getAllEnvironments() {
     Long repositoryId = RepositoryContext.getRepositoryId();
     if (repositoryId == null) {
@@ -118,7 +114,6 @@ public class EnvironmentService {
         .collect(Collectors.toList());
   }
 
-  @Transactional(readOnly = true)
   public List<EnvironmentDto> getAllEnabledEnvironments() {
     Long repositoryId = RepositoryContext.getRepositoryId();
     if (repositoryId == null) {
@@ -138,7 +133,6 @@ public class EnvironmentService {
         .collect(Collectors.toList());
   }
 
-  @Transactional(readOnly = true)
   public List<EnvironmentDto> getEnvironmentsByRepositoryId(Long repositoryId) {
     return environmentRepository
         .findByRepositoryRepositoryIdOrderByCreatedAtDesc(repositoryId)
@@ -185,7 +179,6 @@ public class EnvironmentService {
    * @return A wrapper object containing the latest Deployment or HeliosDeployment, or an empty
    *     result if no deployments exist.
    */
-  @Transactional(readOnly = true)
   public LatestDeploymentUnion findLatestDeployment(Environment env) {
     // Retrieve the latest HeliosDeployment
     Optional<HeliosDeployment> latestHeliosOpt =
@@ -665,7 +658,6 @@ public class EnvironmentService {
     environment.setRequiredPreDeploymentWorkflows(new ArrayList<>(workflows));
   }
 
-  @Transactional(readOnly = true)
   public EnvironmentDeploymentReadinessDto getDeploymentReadiness(
       Long environmentId, String branch, String sha) {
     Environment environment =
@@ -776,7 +768,6 @@ public class EnvironmentService {
     }
   }
 
-  @Transactional(readOnly = true)
   public EnvironmentLockHistoryDto getUsersCurrentLock() {
     final User currentUser = authService.getUserFromGithubId();
     Optional<EnvironmentLockHistory> lockHistory =
@@ -790,7 +781,6 @@ public class EnvironmentService {
         .orElse(null);
   }
 
-  @Transactional(readOnly = true)
   public List<EnvironmentLockHistoryDto> getLockHistoryByEnvironmentId(Long environmentId) {
     // Scope to the current repository (lock history is keyed only by environment id, so a foreign
     // id would otherwise leak its lock/unlock history).
@@ -839,7 +829,6 @@ public class EnvironmentService {
         || status == HeliosDeployment.Status.IN_PROGRESS;
   }
 
-  @Transactional(readOnly = true)
   public Optional<EnvironmentReviewersDto> getEnvironmentReviewers(Long environmentId) {
     // Scope to the current repository — protection rules are keyed only by environment id.
     if (findScopedById(environmentId).isEmpty()) {
@@ -900,7 +889,6 @@ public class EnvironmentService {
    * the deployment is not gated on reviewers (it may still be gated on wait-timer or branch
    * policy, which GitHub handles itself).
    */
-  @Transactional(readOnly = true)
   public Optional<ReviewerResolution> resolveReviewers(Long environmentId) {
     return protectionRuleRepository
         .findByEnvironmentIdAndRuleType(environmentId, ProtectionRule.RuleType.REQUIRED_REVIEWERS)
@@ -947,7 +935,6 @@ public class EnvironmentService {
    * Returns {@code false} if there's no rule, or only Team-type reviewers (which Helios doesn't yet
    * expand to members).
    */
-  @Transactional(readOnly = true)
   public boolean isUserRequiredReviewer(Long environmentId, String userLogin) {
     if (userLogin == null) {
       return false;

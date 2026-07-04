@@ -20,6 +20,20 @@ spring:
             pool:
                 # This sets the maximum number of threads for scheduled tasks.
                 size: 10
+    datasource:
+        hikari:
+            # Hand out pooled connections with auto-commit OFF so reads that run outside an explicit
+            # @Transactional (under Open-Session-in-View) still execute inside a DB transaction.
+            # Required for PostgreSQL Large Objects (the @Lob PR body + oid release/RC bodies), which
+            # cannot be accessed in auto-commit mode — and lets read methods stay annotation-free.
+            auto-commit: false
+    jpa:
+        properties:
+            hibernate:
+                connection:
+                    # The pool already disables auto-commit, so Hibernate skips toggling it per
+                    # transaction (saves a round-trip each way) and delays connection acquisition.
+                    provider_disables_autocommit: true
 
 springdoc:
     default-produces-media-type: application/json

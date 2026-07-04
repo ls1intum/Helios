@@ -36,7 +36,6 @@ import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Log4j2
 @Service
@@ -58,7 +57,6 @@ public class DeploymentService {
   private final HeliosDeploymentWorkflowRunSyncService heliosDeploymentWorkflowRunSyncService;
   private final WorkflowRunRepository workflowRunRepository;
 
-  @Transactional(readOnly = true)
   public Optional<DeploymentDto> getDeploymentById(Long id) {
     Long repositoryId = RepositoryContext.getRepositoryId();
     Optional<Deployment> deployment =
@@ -68,7 +66,6 @@ public class DeploymentService {
     return deployment.map(DeploymentDto::fromDeployment);
   }
 
-  @Transactional(readOnly = true)
   public List<DeploymentDto> getAllDeployments() {
     Long repositoryId = RepositoryContext.getRepositoryId();
     if (repositoryId == null) {
@@ -91,7 +88,6 @@ public class DeploymentService {
             .isPresent();
   }
 
-  @Transactional(readOnly = true)
   public List<DeploymentDto> getDeploymentsByEnvironmentId(Long environmentId) {
     if (!environmentInCurrentRepository(environmentId)) {
       return List.of();
@@ -101,7 +97,6 @@ public class DeploymentService {
         .collect(Collectors.toList());
   }
 
-  @Transactional(readOnly = true)
   public Optional<DeploymentDto> getLatestDeploymentByEnvironmentId(Long environmentId) {
     if (!environmentInCurrentRepository(environmentId)) {
       return Optional.empty();
@@ -204,7 +199,6 @@ public class DeploymentService {
     return workflowParams;
   }
 
-  @Transactional(readOnly = true)
   public boolean canDeployToEnvironment(Environment.Type environmentType) {
     if (null != environmentType) {
       switch (environmentType) {
@@ -328,7 +322,6 @@ public class DeploymentService {
    *       <li>Requires separate environment lookup to verify deployment recency
    *     </ul>
    */
-  @Transactional(readOnly = true)
   public List<ActivityHistoryDto> getActivityHistoryByEnvironmentId(Long environmentId) {
     if (!environmentInCurrentRepository(environmentId)) {
       return List.of();
@@ -390,7 +383,6 @@ public class DeploymentService {
    *     descending
    * @throws EntityNotFoundException if the pull request does not exist
    */
-  @Transactional(readOnly = true)
   public List<ActivityHistoryDto> getActivityHistoryByPullRequestId(Long pullRequestId) {
     if (pullRequestRepository
         .findByIdAndRepositoryRepositoryId(pullRequestId, RepositoryContext.getRepositoryId())
@@ -428,7 +420,6 @@ public class DeploymentService {
    * @return Combined list of {@link ActivityHistoryDto} for the branch, sorted by timestamp
    *     descending
    */
-  @Transactional(readOnly = true)
   public List<ActivityHistoryDto> getActivityHistoryByRepositoryIdAndBranchName(
       Long repositoryId, String branchName) {
     List<ActivityHistoryDto> combined = new ArrayList<>();
@@ -532,7 +523,6 @@ public class DeploymentService {
    * @return List of workflow jobs with their steps
    * @throws DeploymentException if there's an error fetching the workflow job status
    */
-  @Transactional(readOnly = true)
   public WorkflowJobsResponse getWorkflowJobStatus(Long workflowRunId) {
     try {
       String repoNameWithOwner = resolveWorkflowRunRepositoryName(workflowRunId);

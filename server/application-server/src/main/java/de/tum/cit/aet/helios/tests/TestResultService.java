@@ -24,7 +24,6 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -150,9 +149,6 @@ public class TestResultService {
    * @param branchName the branch name
    * @return the grouped test results
    */
-  // readOnly tx: the test-result graph reads Large Objects (PR/release bodies), which Postgres
-  // forbids in auto-commit. No real writes here (setters target @Transient fields).
-  @Transactional(readOnly = true)
   public TestResultsDto getLatestTestResultsForBranch(
       String branchName, TestSearchCriteria criteria) {
     final Long repositoryId = RepositoryContext.getRepositoryId();
@@ -195,7 +191,6 @@ public class TestResultService {
    * @param pullRequestId the pull request ID
    * @return the grouped test results
    */
-  @Transactional(readOnly = true)
   public TestResultsDto getLatestTestResultsForPr(Long pullRequestId, TestSearchCriteria criteria) {
     // Scope to the current repository (like the run/branch variants): a PR id from another
     // repository must not surface its test results. Null context → not found.
@@ -239,7 +234,6 @@ public class TestResultService {
    * @param criteria search and pagination criteria
    * @return the grouped test results
    */
-  @Transactional(readOnly = true)
   public TestResultsDto getTestResultsForWorkflowRun(
       Long workflowRunId, TestSearchCriteria criteria) {
     final Long repositoryId = RepositoryContext.getRepositoryId();

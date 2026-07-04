@@ -30,7 +30,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 @Log4j2
@@ -42,7 +41,6 @@ public class PullRequestService {
   private final UserPreferenceRepository userPreferenceRepository;
   private final AuthService authService;
 
-  @Transactional(readOnly = true)
   public List<PullRequestBaseInfoDto> getAllPullRequests() {
     final Optional<UserPreference> userPreference =
         authService.isLoggedIn()
@@ -68,7 +66,6 @@ public class PullRequestService {
         .collect(Collectors.toList());
   }
 
-  @Transactional(readOnly = true)
   public PaginatedPullRequestsResponse getPaginatedPullRequests(
       PullRequestPageRequest pageRequest) {
     log.debug(
@@ -314,7 +311,6 @@ public class PullRequestService {
     return Sort.by(direction, property);
   }
 
-  @Transactional(readOnly = true)
   public Optional<PullRequestInfoDto> getPullRequestById(Long id) {
     Long repositoryId = RepositoryContext.getRepositoryId();
     Optional<PullRequest> pullRequest =
@@ -324,7 +320,6 @@ public class PullRequestService {
     return pullRequest.map(PullRequestInfoDto::fromPullRequest);
   }
 
-  @Transactional(readOnly = true)
   public List<PullRequestInfoDto> getPullRequestByRepositoryId(Long repositoryId) {
     return pullRequestRepository
         .findByRepositoryRepositoryIdOrderByUpdatedAtDesc(repositoryId)
@@ -358,7 +353,6 @@ public class PullRequestService {
     userPreferenceRepository.save(userPreference);
   }
 
-  @Transactional(readOnly = true)
   public Optional<PullRequestInfoDto> getPullRequestByRepositoryIdAndNumber(
       Long repoId, Integer number) {
     return pullRequestRepository
@@ -366,7 +360,6 @@ public class PullRequestService {
         .map(PullRequestInfoDto::fromPullRequest);
   }
 
-  @Transactional(readOnly = true)
   public PullRequestFilterOptionsDto getPullRequestFilterOptionsByRepositoryId(Long repositoryId) {
     List<PullRequestFilterUserOptionDto> authors =
         pullRequestRepository.findDistinctAuthorsByRepositoryId(repositoryId).stream()
