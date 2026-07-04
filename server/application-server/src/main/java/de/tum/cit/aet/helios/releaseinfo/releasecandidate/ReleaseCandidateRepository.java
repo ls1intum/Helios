@@ -8,8 +8,6 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface ReleaseCandidateRepository extends JpaRepository<ReleaseCandidate, Long> {
-  List<ReleaseCandidate> findAllByOrderByCreatedAtDesc();
-
   List<ReleaseCandidate> findByRepository(GitRepository repository);
 
   List<ReleaseCandidate> findByRepositoryRepositoryIdOrderByCreatedAtDesc(Long repositoryId);
