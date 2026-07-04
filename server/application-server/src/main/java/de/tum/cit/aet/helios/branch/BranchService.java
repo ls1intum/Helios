@@ -27,6 +27,7 @@ public class BranchService {
   private final AuthService authService;
   private final CommitRepository commitRepository;
 
+  @Transactional(readOnly = true)
   public List<BranchInfoDto> getAllBranches(String sortField, String sortDirection) {
     final Optional<UserPreference> userPreference = authService.isLoggedIn()
         ? userPreferenceRepository.findByUser(authService.getUserFromGithubId())
@@ -62,6 +63,7 @@ public class BranchService {
     branchRepository.deleteByNameAndRepositoryRepositoryId(name, repositoryId);
   }
 
+  @Transactional(readOnly = true)
   public Optional<BranchDetailsDto> getBranchByRepositoryIdAndName(Long repositoryId, String name) {
     return branchRepository
         .findByRepositoryRepositoryIdAndName(repositoryId, name)

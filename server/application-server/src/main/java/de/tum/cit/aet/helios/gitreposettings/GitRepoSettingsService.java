@@ -7,6 +7,7 @@ import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 
@@ -48,6 +49,7 @@ public class GitRepoSettingsService {
    * defaults when none exist yet — WITHOUT writing. (getOrCreate persists a row; a plain GET
    * must not do; callers that need the row to exist keep using getOrCreate.)
    */
+  @Transactional(readOnly = true)
   public GitRepoSettingsDto getGitRepoSettingsByRepositoryId(Long repositoryId) {
     return gitRepoRepository
         .findByRepositoryRepositoryId(repositoryId)

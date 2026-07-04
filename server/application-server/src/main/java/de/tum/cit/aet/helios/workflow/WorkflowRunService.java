@@ -25,6 +25,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 @Log4j2
@@ -49,6 +50,7 @@ public class WorkflowRunService {
                 workflowRuns.stream().max(Comparator.comparing(WorkflowRun::getRunNumber)).get());
   }
 
+  @Transactional(readOnly = true)
   public List<WorkflowRunDto> getLatestWorkflowRunsByPullRequestIdAndHeadCommit(
       Long pullRequestId) {
 
@@ -61,6 +63,7 @@ public class WorkflowRunService {
     return getLatestWorkflowRunsByBranchAndHeadCommitSha(pullRequest.getHeadRefName());
   }
 
+  @Transactional(readOnly = true)
   public List<WorkflowRunDto> getLatestWorkflowRunsByBranchAndHeadCommitSha(String branchName) {
     final Long repositoryId = RepositoryContext.getRepositoryId();
 
@@ -78,6 +81,7 @@ public class WorkflowRunService {
     return latestRuns.map(WorkflowRunDto::fromWorkflowRun).toList();
   }
 
+  @Transactional(readOnly = true)
   public PaginatedWorkflowRunsResponse getPaginatedWorkflowRuns(WorkflowRunPageRequest request) {
     Long repositoryId = RepositoryContext.getRepositoryId();
 
@@ -201,6 +205,7 @@ public class WorkflowRunService {
     return Sort.by(direction, property).and(defaultSort);
   }
 
+  @Transactional(readOnly = true)
   public WorkflowRunDto getWorkflowRunById(Long runId) {
     Long repositoryId = RepositoryContext.getRepositoryId();
     return getWorkflowRunForCurrentRepository(runId, repositoryId, false)

@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -50,6 +51,7 @@ public class UserService {
   /**
    * Retrieves the current user's settings (email and global notifications toggle).
    */
+  @Transactional(readOnly = true)
   public UserSettingsDto getCurrentUserSettings() {
     User user = authService.getUserFromGithubId();
     return new UserSettingsDto(user.getNotificationEmail(), user.isNotificationsEnabled());

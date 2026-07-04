@@ -30,7 +30,6 @@ import de.tum.cit.aet.helios.releaseinfo.releasecandidate.ReleaseCandidateReposi
 import de.tum.cit.aet.helios.user.User;
 import de.tum.cit.aet.helios.user.UserInfoDto;
 import de.tum.cit.aet.helios.user.UserRepository;
-import jakarta.transaction.Transactional;
 import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -44,6 +43,7 @@ import org.kohsuke.github.GHCompare.Commit;
 import org.kohsuke.github.GHRelease;
 import org.kohsuke.github.GHRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Log4j2
@@ -63,6 +63,7 @@ public class ReleaseInfoService {
   private final GitHubDataSyncOrchestrator gitHubDataSyncOrchestrator;
   private final GitHubReleaseSyncService gitHubReleaseSyncService;
 
+  @Transactional(readOnly = true)
   public List<ReleaseInfoListDto> getAllReleaseInfos() {
     Long repositoryId = RepositoryContext.getRepositoryId();
     if (repositoryId == null) {
@@ -122,6 +123,7 @@ public class ReleaseInfoService {
     return new ArrayList<>(deploymentsByEnvironment.values());
   }
 
+  @Transactional(readOnly = true)
   public ReleaseInfoDetailsDto getReleaseInfoByName(String name) {
     final Long repositoryId = RepositoryContext.getRepositoryId();
 
@@ -154,6 +156,7 @@ public class ReleaseInfoService {
         .orElseThrow(() -> new ReleaseCandidateException("ReleaseCandidate not found"));
   }
 
+  @Transactional(readOnly = true)
   public CommitsSinceReleaseCandidateDto getCommitsFromBranchSinceLastReleaseCandidate(
       String branchName) {
     final Long repositoryId = RepositoryContext.getRepositoryId();
@@ -332,6 +335,7 @@ public class ReleaseInfoService {
     }
   }
 
+  @Transactional(readOnly = true)
   public String generateReleaseNotes(String tagName) {
     final Long repositoryId = RepositoryContext.getRepositoryId();
     final GitRepository repository =
