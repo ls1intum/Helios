@@ -2081,6 +2081,9 @@ export const PipelineDtoSchema = {
         $ref: '#/components/schemas/Category',
       },
     },
+    gate: {
+      $ref: '#/components/schemas/Node',
+    },
   },
 } as const;
 

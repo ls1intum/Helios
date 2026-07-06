@@ -127,3 +127,12 @@ helios:
             # runs every day at 02:00 (server time)
             cron: "0 0 2 * * *"
             max-age: 1d
+    # Global pipeline defaults. Per-repository categories and nodes are stored in the database (see
+    # PipelineConfigService); this holds only the optional merge-readiness gate — mapped to the CI's
+    # single required-checks job and rendered as a header badge next to the pipeline.
+    pipeline:
+        gate:
+            key: "ci-gate"
+            label: "All required CI passed"
+            job-name-matchers: ["All required CI Passed"]
+            workflow-name-matcher: "CI"

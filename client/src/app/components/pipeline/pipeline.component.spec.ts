@@ -4,12 +4,21 @@ import { PipelineComponent } from './pipeline.component';
 import { provideZonelessChangeDetection } from '@angular/core';
 import { provideQueryClient, QueryClient } from '@tanstack/angular-query-experimental';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
+import { By } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
 import type { PipelineDto } from '@app/core/modules/openapi';
 
 describe('PipelineComponent', () => {
   let component: PipelineComponent;
   let fixture: ComponentFixture<PipelineComponent>;
+
+  // Icon name is a property binding ([name]="..."), so read the rendered i-tabler inputs directly.
+  // TablerIconComponent exposes `name` as a signal input, so unwrap it when it is callable.
+  const renderedIconNames = () =>
+    fixture.debugElement.queryAll(By.css('i-tabler')).map(de => {
+      const n = de.componentInstance.name;
+      return (typeof n === 'function' ? n() : n) as string;
+    });
 
   const pipeline: PipelineDto = {
     categories: [
@@ -70,12 +79,8 @@ describe('PipelineComponent', () => {
     expect(text).toContain('Docker');
     expect(text).toContain('E2E');
 
-    // Success / failure / in-progress / pending each render their distinct icon.
-    expect(el.querySelector('i-tabler[name="circle-check"]')).toBeTruthy();
-    expect(el.querySelector('i-tabler[name="circle-x"]')).toBeTruthy();
-    expect(el.querySelector('i-tabler[name="progress"]')).toBeTruthy();
-    // The always-visible-but-not-started node uses the dashed (non-spinning) icon.
-    expect(el.querySelector('i-tabler[name="circle-dashed"]')).toBeTruthy();
+    // Success / failure / in-progress / not-started each render their distinct icon.
+    expect(renderedIconNames()).toEqual(expect.arrayContaining(['circle-check', 'circle-x', 'progress', 'circle-dashed']));
   });
 
   it('exposes the configured categories via the pipeline signal', () => {
@@ -83,6 +88,45 @@ describe('PipelineComponent', () => {
 
     expect(component.categories().map(c => c.name)).toEqual(['Build', 'Tests']);
     expect(component.hasCategories()).toBe(true);
+  });
+
+  it('nodeIcon maps every state to a distinct icon (queued != running, fail-fast != spinner)', () => {
+    const icon = (status: string | null, conclusion: string | null) => component.nodeIcon({ status, conclusion });
+    expect(icon('COMPLETED', 'SUCCESS').name).toBe('circle-check');
+    // The whole failure family renders red, not just FAILURE.
+    for (const c of ['FAILURE', 'TIMED_OUT', 'STARTUP_FAILURE']) {
+      expect(icon('COMPLETED', c).name).toBe('circle-x');
+    }
+    // Fail-fast: still running, a leg already failed → red X, and NOT spinning.
+    expect(icon('IN_PROGRESS', 'FAILURE').name).toBe('circle-x');
+    expect(icon('IN_PROGRESS', 'FAILURE').class).not.toContain('animate-spin');
+    // Running is the only spinner.
+    expect(icon('IN_PROGRESS', null).name).toBe('progress');
+    expect(icon('IN_PROGRESS', null).class).toContain('animate-spin');
+    // Queued/waiting/pending are "not running yet" (dashed), never a spinner.
+    for (const s of ['QUEUED', 'WAITING', 'REQUESTED', 'PENDING']) {
+      expect(icon(s, null).name).toBe('circle-dashed');
+      expect(icon(s, null).class).not.toContain('animate-spin');
+    }
+    expect(icon('COMPLETED', 'SKIPPED').name).toBe('circle-minus');
+    expect(icon('COMPLETED', 'CANCELLED').name).toBe('ban');
+    // A terminal-but-neutral node is handled explicitly, not left as "Unknown".
+    expect(icon('COMPLETED', 'NEUTRAL').tooltip).toBe('Neutral');
+  });
+
+  it('renders the merge-gate badge when a gate is present', async () => {
+    const p: PipelineDto = {
+      categories: [{ name: 'Build', nodes: [{ key: 'build-native', label: 'Native', status: 'PENDING', conclusion: null, htmlUrl: null }] }],
+      gate: { key: 'ci-gate', label: 'All required CI passed', status: 'COMPLETED', conclusion: 'SUCCESS', htmlUrl: null },
+    };
+    mockPipeline(p);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.textContent ?? '').toContain('All required CI passed');
+    expect(renderedIconNames()).toContain('circle-check');
   });
 
   it('shows the empty state when no categories are configured', async () => {

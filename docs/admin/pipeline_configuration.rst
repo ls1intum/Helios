@@ -73,6 +73,51 @@ Artemis' single ``CI`` orchestrator surfaces ``Build / …``, ``Test / …``, ``
 ``E2E / …``). Matchers therefore use the emitted ``<Stage> / <Job>`` name.
 
 
+Node states
+-----------
+
+For each node, the matched jobs are reduced to one of five human-legible states, chosen so the
+earliest actionable signal is never hidden:
+
+- **Not running yet** (``PENDING``, dashed icon) — either no matching job exists yet, **or** every
+  matching job is still queued/waiting (nothing has started). This is deliberately distinct from
+  *running*: a queued job is **not** shown as a spinner.
+- **Running** (``IN_PROGRESS``, spinner) — at least one matching job has started (or already
+  finished) while others are not yet done.
+- **Failed** (``FAILURE``, red) — *fail-fast*: as soon as **any** matching job fails, times out, or
+  has a startup failure, the node is red, **even while slower legs keep running**. The node then
+  links to the failing job (not an arbitrary passing one).
+- **Passed / Skipped / Cancelled** — once **all** matching jobs are terminal, the *conclusion* is
+  the worst-wins result across them:
+
+  - **CANCELLED** if any job was cancelled;
+  - else **SKIPPED** if every job was skipped (e.g. gated out by change-detection on this change);
+  - else **SUCCESS** if any job succeeded;
+  - else **NEUTRAL**.
+
+The client renders a distinct icon per state: dashed circle (not running yet), yellow spinner
+(running), red ✗ (failed), green ✓ (passed), grey ⊝ (skipped), grey ⃠ (cancelled).
+
+
+Merge gate
+----------
+
+An optional ``helios.pipeline.gate`` node maps to the CI's single required-checks job — the one job
+that reflects "can this PR merge" (for Artemis, ``All required CI Passed``). It is aggregated with
+the same state rules as any node but rendered as a **badge next to the pipeline header** rather than
+inside a category, so merge-readiness is visible at a glance. Omit the key to hide the badge.
+
+.. code-block:: yaml
+
+  helios:
+    pipeline:
+      gate:
+        key: "ci-gate"
+        label: "All required CI passed"
+        job-name-matchers: ["All required CI Passed"]
+        workflow-name-matcher: "CI"
+
+
 Auto-detection
 --------------
 

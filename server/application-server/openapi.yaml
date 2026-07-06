@@ -4359,6 +4359,8 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/Category"
+        gate:
+          $ref: "#/components/schemas/Node"
     EnvironmentReviewersDto:
       type: object
       properties:
