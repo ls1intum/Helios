@@ -1,0 +1,104 @@
+<div class="flex items-center justify-between mb-2">
+  <div>
+    <h3 class="text-xl">Pipeline configuration</h3>
+    <div class="text-sm text-muted-color">
+      Build → Test → Quality stages. Each node maps to CI jobs by name prefix. Use Auto-detect to suggest nodes from this repository's observed jobs.
+    </div>
+  </div>
+  <div class="flex items-center gap-2">
+    <p-button label="Auto-detect" icon="pi" severity="secondary" [loading]="isDetecting()" (onClick)="autoDetect()">
+      <i-tabler name="wand" class="!size-4 mr-1"></i-tabler>
+    </p-button>
+    <p-button label="Save" [loading]="isSaving()" (onClick)="save()"></p-button>
+  </div>
+</div>
+
+@if (isPending()) {
+  <div class="flex gap-4 mt-2">
+    <p-skeleton width="12rem" height="8rem" />
+    <p-skeleton width="12rem" height="8rem" />
+    <p-skeleton width="12rem" height="8rem" />
+  </div>
+} @else {
+  <div class="flex flex-wrap items-start gap-4 mt-2">
+    @for (category of categories(); track $index; let ci = $index; let firstCat = $first; let lastCat = $last) {
+      <p-panel class="min-w-[16rem]">
+        <ng-template pTemplate="header">
+          <div class="flex items-center gap-1 w-full">
+            <input pInputText class="flex-1 text-sm" [ngModel]="category.name" (ngModelChange)="renameCategory(ci, $event)" aria-label="Stage name" />
+            <button type="button" class="p-1 text-muted-color hover:text-primary disabled:opacity-30" pTooltip="Move left" [disabled]="firstCat" (click)="moveCategory(ci, -1)">
+              <i-tabler name="arrow-up" class="!size-4 rotate-[-90deg]"></i-tabler>
+            </button>
+            <button type="button" class="p-1 text-muted-color hover:text-primary disabled:opacity-30" pTooltip="Move right" [disabled]="lastCat" (click)="moveCategory(ci, 1)">
+              <i-tabler name="arrow-down" class="!size-4 rotate-[-90deg]"></i-tabler>
+            </button>
+            <button type="button" class="p-1 text-muted-color hover:text-red-500" pTooltip="Remove stage" (click)="removeCategory(ci)">
+              <i-tabler name="trash" class="!size-4"></i-tabler>
+            </button>
+          </div>
+        </ng-template>
+
+        <div class="flex flex-col gap-2">
+          @for (node of category.nodes; track node.key + $index; let ni = $index; let firstNode = $first; let lastNode = $last) {
+            <div class="flex items-center gap-2 rounded border border-surface-200 dark:border-surface-700 px-2 py-1">
+              <div class="flex-1 min-w-0">
+                <div class="font-medium truncate">{{ node.label }}</div>
+                <div class="text-xs text-muted-color truncate" [pTooltip]="node.jobNameMatchers.join(', ')">{{ node.jobNameMatchers.join(', ') || 'no matchers' }}</div>
+              </div>
+              <button type="button" class="p-1 text-muted-color hover:text-primary disabled:opacity-30" pTooltip="Move up" [disabled]="firstNode" (click)="moveNode(ci, ni, -1)">
+                <i-tabler name="arrow-up" class="!size-4"></i-tabler>
+              </button>
+              <button type="button" class="p-1 text-muted-color hover:text-primary disabled:opacity-30" pTooltip="Move down" [disabled]="lastNode" (click)="moveNode(ci, ni, 1)">
+                <i-tabler name="arrow-down" class="!size-4"></i-tabler>
+              </button>
+              <button type="button" class="p-1 text-muted-color hover:text-primary" pTooltip="Edit" (click)="openEditNode(ci, ni)">
+                <i-tabler name="pencil" class="!size-4"></i-tabler>
+              </button>
+              <button type="button" class="p-1 text-muted-color hover:text-red-500" pTooltip="Remove node" (click)="removeNode(ci, ni)">
+                <i-tabler name="trash" class="!size-4"></i-tabler>
+              </button>
+            </div>
+          } @empty {
+            <div class="text-sm text-muted-color">No nodes yet.</div>
+          }
+          <p-button label="Add node" severity="secondary" size="small" [text]="true" (onClick)="openAddNode(ci)">
+            <i-tabler name="plus" class="!size-4 mr-1"></i-tabler>
+          </p-button>
+        </div>
+      </p-panel>
+
+      @if (!lastCat) {
+        <p-divider layout="vertical" class="!hidden md:!flex" />
+      }
+    } @empty {
+      <div class="text-sm text-muted-color">No pipeline stages configured. Add one or use Auto-detect.</div>
+    }
+  </div>
+
+  <div class="mt-3">
+    <p-button label="Add stage" severity="secondary" [outlined]="true" (onClick)="addCategory()">
+      <i-tabler name="plus" class="!size-4 mr-1"></i-tabler>
+    </p-button>
+  </div>
+}
+
+<p-dialog header="Node" [visible]="dialogVisible()" (visibleChange)="dialogVisible.set($event)" [modal]="true" [style]="{ width: '30rem' }">
+  <div class="flex flex-col gap-3">
+    <div class="flex flex-col gap-1">
+      <label class="text-sm" for="node-label">Label</label>
+      <input pInputText id="node-label" [ngModel]="draftLabel()" (ngModelChange)="draftLabel.set($event)" placeholder="e.g. Client" />
+    </div>
+    <div class="flex flex-col gap-1">
+      <label class="text-sm" for="node-matchers">Job name matchers (comma-separated prefixes)</label>
+      <input pInputText id="node-matchers" [ngModel]="draftMatchers()" (ngModelChange)="draftMatchers.set($event)" placeholder="e.g. Test / Client Tests" />
+    </div>
+    <div class="flex flex-col gap-1">
+      <label class="text-sm" for="node-workflow">Workflow name filter (optional)</label>
+      <input pInputText id="node-workflow" [ngModel]="draftWorkflowMatcher()" (ngModelChange)="draftWorkflowMatcher.set($event)" placeholder="e.g. CI" />
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button label="Cancel" severity="secondary" [text]="true" (onClick)="dialogVisible.set(false)"></p-button>
+    <p-button label="Apply" [disabled]="!draftLabel().trim()" (onClick)="saveNode()"></p-button>
+  </ng-template>
+</p-dialog>
