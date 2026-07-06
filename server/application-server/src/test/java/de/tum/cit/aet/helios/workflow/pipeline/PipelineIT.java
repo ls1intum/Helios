@@ -80,8 +80,8 @@ class PipelineIT extends HeliosIntegrationTest {
 
   @Test
   void withoutRepositoryContextAllNodesArePending() throws Exception {
-    // No X-REPOSITORY-ID → the branch/run lookup is unscoped away → no jobs → every node pending,
-    // structure still fully present (never leaks another repo's runs).
+    // No X-REPOSITORY-ID -> the branch/run lookup is unscoped away -> no jobs -> every node
+    // pending, structure still fully present (never leaks another repo's runs).
     mockMvc
         .perform(get("/api/pipeline/branch").param("branch", BRANCH))
         .andExpect(status().isOk())

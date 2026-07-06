@@ -30,7 +30,8 @@ public class PipelineService {
   }
 
   public PipelineDto getPipelineForPullRequest(Long pullRequestId) {
-    return build(workflowRunService.getLatestWorkflowRunsByPullRequestIdAndHeadCommit(pullRequestId));
+    return build(
+        workflowRunService.getLatestWorkflowRunsByPullRequestIdAndHeadCommit(pullRequestId));
   }
 
   private PipelineDto build(List<WorkflowRunDto> headRuns) {
