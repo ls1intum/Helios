@@ -213,6 +213,38 @@ services:
     networks:
       - helios-network
 
+  # One-shot: enforce the "helios" realm's session lifespans on the RUNNING Keycloak. The realm is
+  # started with --import-realm, which is a no-op once the realm already exists in the DB, so realm
+  # JSON changes never reach a running instance. This idempotent kcadm step re-applies them on every
+  # deploy. It is isolated and non-blocking: it only updates session fields and always exits 0, so a
+  # failure (e.g. Keycloak slow to start) never affects other services or the deploy.
+  keycloak-config:
+    image: ghcr.io/ls1intum/helios/keycloak:${KEYCLOAK_IMAGE_TAG}
+    container_name: keycloak-config
+    restart: "no"
+    depends_on:
+      - keycloak
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KC_BOOTSTRAP_ADMIN_USERNAME}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KC_BOOTSTRAP_ADMIN_PASSWORD}
+    entrypoint: >
+      bash -c "
+        set +e;
+        KCADM=/opt/keycloak/bin/kcadm.sh;
+        for attempt in $$(seq 1 60); do
+          if $$KCADM config credentials --server http://keycloak:8081 --realm master --user \"$$KC_BOOTSTRAP_ADMIN_USERNAME\" --password \"$$KC_BOOTSTRAP_ADMIN_PASSWORD\" >/dev/null 2>&1; then
+            $$KCADM update realms/helios -s ssoSessionIdleTimeout=604800 -s ssoSessionMaxLifespan=2592000 -s offlineSessionIdleTimeout=2592000 && echo 'keycloak-config: applied helios realm session lifespans (7d idle / 30d max)' && exit 0;
+          fi;
+          echo \"keycloak-config: waiting for keycloak (attempt $$attempt/60)\";
+          sleep 5;
+        done;
+        echo 'keycloak-config: keycloak not reachable after ~5m; session lifespans NOT applied (deploy unaffected)';
+        exit 0
+      "
+    logging: *default-logging
+    networks:
+      - helios-network
+
 volumes:
   db-data:
   nats-data:
