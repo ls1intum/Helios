@@ -10,25 +10,37 @@ import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 /**
- * End-to-end guard for the canonical pipeline endpoint {@code GET /api/pipeline/branch}. Seeds one
- * head-commit run with jobs matching several configured nodes and asserts: every canonical node is
- * always present; matched nodes aggregate to the right status/conclusion; unmatched nodes are
- * PENDING; and with no {@code X-REPOSITORY-ID} the runs are unscoped away, so all nodes are PENDING
- * (never a cross-repository leak).
+ * End-to-end guard for {@code GET /api/pipeline/branch}. Covers both modes:
+ *
+ * <ul>
+ *   <li>a canonical repository (in {@code helios.pipeline.repositories}) aggregates its jobs into
+ *       the always-visible Build/Tests/Quality nodes (unmatched → PENDING);
+ *   <li>a non-canonical repository falls back to its workflow-run view (never the Artemis-shaped
+ *       catalog), so it isn't reduced to an all-pending skeleton;
+ *   <li>no {@code X-REPOSITORY-ID} yields an empty pipeline (never a cross-repository leak).
+ * </ul>
  */
 class PipelineIT extends HeliosIntegrationTest {
 
+  // Canonical repo: nameWithOwner must be in helios.pipeline.repositories (default: Artemis).
   private static final long REPO = 1L;
   private static final long WF = 51L;
   private static final long RUN = 61L;
   private static final String BRANCH = "main";
   private static final String SHA = "deadbeef";
 
+  // Non-canonical repo -> group/run fallback.
+  private static final long REPO_B = 2L;
+  private static final long WF_B = 71L;
+  private static final long RUN_B = 81L;
+  private static final String BRANCH_B = "dev";
+  private static final String SHA_B = "cafebabe";
+
   @BeforeEach
   void seed() {
     JdbcTemplate jdbc = new JdbcTemplate(dataSource);
     jdbc.execute("TRUNCATE TABLE repository CASCADE");
-    insertRepo(jdbc, REPO, "ls1intum/repo-a");
+    insertRepo(jdbc, REPO, "ls1intum/Artemis");
     insertBranch(jdbc, REPO, BRANCH, SHA);
     insertWorkflow(jdbc, WF, REPO);
     insertRun(jdbc, RUN, REPO, WF, BRANCH, SHA);
@@ -41,10 +53,15 @@ class PipelineIT extends HeliosIntegrationTest {
     insertJob(jdbc, 103, REPO, RUN, "Test / Client Tests", "COMPLETED", "FAILURE");
     insertJob(jdbc, 104, REPO, RUN, "Test / Server Tests (PostgreSQL)", "COMPLETED", "SUCCESS");
     insertJob(jdbc, 105, REPO, RUN, "Quality / Client Code Style", "COMPLETED", "SUCCESS");
+
+    insertRepo(jdbc, REPO_B, "ls1intum/other");
+    insertBranch(jdbc, REPO_B, BRANCH_B, SHA_B);
+    insertWorkflow(jdbc, WF_B, REPO_B);
+    insertRun(jdbc, RUN_B, REPO_B, WF_B, BRANCH_B, SHA_B);
   }
 
   @Test
-  void pipelineAggregatesJobsIntoCanonicalNodes() throws Exception {
+  void canonicalRepositoryAggregatesJobsIntoCanonicalNodes() throws Exception {
     mockMvc
         .perform(
             get("/api/pipeline/branch")
@@ -79,16 +96,29 @@ class PipelineIT extends HeliosIntegrationTest {
   }
 
   @Test
-  void withoutRepositoryContextAllNodesArePending() throws Exception {
-    // No X-REPOSITORY-ID -> the branch/run lookup is unscoped away -> no jobs -> every node
-    // pending, structure still fully present (never leaks another repo's runs).
+  void nonCanonicalRepositoryFallsBackToItsRunsNotCanonicalNodes() throws Exception {
+    // ls1intum/other is not in the canonical allow-list, so the pipeline shows its workflow runs
+    // (here ungrouped) rather than the Artemis Build/Tests/Quality catalog.
+    mockMvc
+        .perform(
+            get("/api/pipeline/branch")
+                .param("branch", BRANCH_B)
+                .header(X_REPOSITORY_ID, String.valueOf(REPO_B)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.categories.length()").value(1))
+        .andExpect(jsonPath("$.categories[0].name").value("Ungrouped"))
+        .andExpect(jsonPath("$.categories[0].nodes[0].key").value("run-" + RUN_B))
+        .andExpect(jsonPath("$.categories[0].nodes[0].label").value("CI"))
+        .andExpect(jsonPath("$.categories[0].nodes[0].status").value("COMPLETED"));
+  }
+
+  @Test
+  void withoutRepositoryContextPipelineIsEmpty() throws Exception {
+    // No X-REPOSITORY-ID → no repository → nothing to show (never leaks another repo's runs).
     mockMvc
         .perform(get("/api/pipeline/branch").param("branch", BRANCH))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.categories.length()").value(3))
-        .andExpect(jsonPath("$.categories[0].nodes[0].status").value("PENDING"))
-        .andExpect(jsonPath("$.categories[1].nodes[1].status").value("PENDING"))
-        .andExpect(jsonPath("$.categories[2].nodes[0].status").value("PENDING"));
+        .andExpect(jsonPath("$.categories.length()").value(0));
   }
 
   private static void insertRepo(JdbcTemplate jdbc, long id, String nameWithOwner) {
@@ -121,9 +151,9 @@ class PipelineIT extends HeliosIntegrationTest {
   private static void insertRun(
       JdbcTemplate jdbc, long id, long repositoryId, long workflowId, String branch, String sha) {
     jdbc.update(
-        "INSERT INTO workflow_run (id, repository_id, workflow_id, run_attempt, run_number, "
+        "INSERT INTO workflow_run (id, repository_id, workflow_id, run_attempt, run_number, name, "
             + "status, head_branch, head_sha, created_at, updated_at) "
-            + "VALUES (?, ?, ?, 1, ?, 'COMPLETED', ?, ?, now(), now())",
+            + "VALUES (?, ?, ?, 1, ?, 'CI', 'COMPLETED', ?, ?, now(), now())",
         id,
         repositoryId,
         workflowId,

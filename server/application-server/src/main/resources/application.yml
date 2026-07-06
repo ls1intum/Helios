@@ -133,6 +133,10 @@ helios:
     # whose Build/Test/Quality/E2E stages surface as jobs named "<Stage> / <Job>". See the pipeline
     # configuration docs to adapt these matchers to another CI layout.
     pipeline:
+        # Repositories (nameWithOwner) that render the canonical catalog below. Any other repo
+        # falls back to its WorkflowGroup-based pipeline, so a repo whose CI job names don't match
+        # these Artemis-shaped matchers keeps a meaningful view instead of all-pending nodes.
+        repositories: ["ls1intum/Artemis"]
         categories:
             - name: "Build"
               nodes:
