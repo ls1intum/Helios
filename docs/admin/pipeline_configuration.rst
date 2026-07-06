@@ -142,21 +142,46 @@ The defaults above target Artemis' single ``CI`` orchestrator run
 Status aggregation
 ------------------
 
-For each node, the matched jobs are reduced to one status:
+For each node, the matched jobs are reduced to one of five human-legible states, chosen so the
+earliest actionable signal is never hidden:
 
-- **PENDING** — no matching job exists yet. The node is still shown (dashed icon).
-- **IN_PROGRESS** — at least one matching job is queued, waiting, requested, or in progress.
-- **COMPLETED** — all matching jobs have finished. The node's *conclusion* is then the
-  worst-wins result across the jobs:
+- **Not running yet** (``PENDING``, dashed icon) — either no matching job exists yet, **or** every
+  matching job is still queued/waiting (nothing has started). This is deliberately distinct from
+  *running*: a queued job is **not** shown as a spinner.
+- **Running** (``IN_PROGRESS``, spinner) — at least one matching job has started (or already
+  finished) while others are not yet done.
+- **Failed** (``FAILURE``, red) — *fail-fast*: as soon as **any** matching job fails, times out, or
+  has a startup failure, the node is red, **even while slower legs keep running**. The node then
+  links to the failing job (not an arbitrary passing one).
+- **Passed / Skipped / Cancelled** — once **all** matching jobs are terminal, the *conclusion* is
+  the worst-wins result across them:
 
-  - **FAILURE** if any job failed, timed out, or had a startup failure;
-  - else **CANCELLED** if any job was cancelled;
-  - else **SKIPPED** if every job was skipped;
+  - **CANCELLED** if any job was cancelled;
+  - else **SKIPPED** if every job was skipped (e.g. gated out by change-detection on this change);
   - else **SUCCESS** if any job succeeded;
   - else **NEUTRAL**.
 
-The client renders a distinct icon per state, so a not-yet-started node (dashed) is visually
-different from an in-progress one (spinning).
+The client renders a distinct icon per state: dashed circle (not running yet), yellow spinner
+(running), red ✗ (failed), green ✓ (passed), grey ⊝ (skipped), grey ⃠ (cancelled).
+
+
+Merge gate
+----------
+
+An optional ``helios.pipeline.gate`` node maps to the CI's single required-checks job — the one job
+that reflects "can this PR merge" (for Artemis, ``All required CI Passed``). It is aggregated with
+the same state rules as any node but rendered as a **badge next to the pipeline header** rather than
+inside a category, so merge-readiness is visible at a glance. Omit the key to hide the badge.
+
+.. code-block:: yaml
+
+  helios:
+    pipeline:
+      gate:
+        key: "ci-gate"
+        label: "All required CI passed"
+        job-name-matchers: ["All required CI Passed"]
+        workflow-name-matcher: "CI"
 
 
 Adding a node

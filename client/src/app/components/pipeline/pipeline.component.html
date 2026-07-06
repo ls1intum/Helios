@@ -1,10 +1,25 @@
-<!-- Divider -->
 <div class="flex justify-center">
   <p-divider class="w-full mt-4" />
 </div>
 
-<div class="mb-4">
-  <h3 class="text-xl mb-2">Pipeline</h3>
+<!-- Status icon for one node; the state->icon mapping lives in nodeIcon(). -->
+<ng-template #statusIcon let-node>
+  @let icon = nodeIcon(node);
+  <i-tabler [name]="icon.name" [class]="icon.class" [pTooltip]="icon.tooltip"></i-tabler>
+</ng-template>
+
+<div class="mb-4 flex items-center gap-3">
+  <h3 class="text-xl">Pipeline</h3>
+  <!-- Overall merge-readiness gate, when configured -->
+  @if (gate(); as gateNode) {
+    <span class="inline-flex items-center gap-1 text-sm text-muted-color" [pTooltip]="'Merge gate: ' + (gateNode.label ?? '')">
+      <ng-container *ngTemplateOutlet="statusIcon; context: { $implicit: gateNode }"></ng-container>
+      <span class="font-medium">{{ gateNode.label }}</span>
+      @if (gateNode.htmlUrl) {
+        <app-github-link-button [url]="gateNode.htmlUrl" buttonClass="p-1 leading-none" />
+      }
+    </span>
+  }
 </div>
 
 @if (isPending()) {
@@ -38,39 +53,8 @@
               @for (node of category.nodes ?? []; track node.key) {
                 <div class="flex items-center space-x-2">
                   <div class="flex items-center">
-                    @if (node.status === 'COMPLETED') {
-                      @switch (node.conclusion) {
-                        @case ('SUCCESS') {
-                          <i-tabler name="circle-check" class="text-green-600 dark:text-green-400" pTooltip="Success"></i-tabler>
-                        }
-                        @case ('FAILURE') {
-                          <i-tabler name="circle-x" class="text-red-600 dark:text-red-400" pTooltip="Failure"></i-tabler>
-                        }
-                        @case ('TIMED_OUT') {
-                          <i-tabler name="circle-x" class="text-red-600 dark:text-red-400" pTooltip="Timed out"></i-tabler>
-                        }
-                        @case ('STARTUP_FAILURE') {
-                          <i-tabler name="circle-x" class="text-red-600 dark:text-red-400" pTooltip="Startup failure"></i-tabler>
-                        }
-                        @case ('SKIPPED') {
-                          <i-tabler name="minus" class="text-muted-color" pTooltip="Skipped"></i-tabler>
-                        }
-                        @case ('CANCELLED') {
-                          <i-tabler name="minus" class="text-muted-color" pTooltip="Cancelled"></i-tabler>
-                        }
-                        @default {
-                          <i-tabler name="progress-help" class="text-muted-color" pTooltip="Neutral"></i-tabler>
-                        }
-                      }
-                    } @else if (['IN_PROGRESS', 'QUEUED', 'WAITING', 'REQUESTED'].includes(node.status ?? '')) {
-                      <i-tabler name="progress" class="text-yellow-500 dark:text-yellow-400 animate-spin" pTooltip="In progress"></i-tabler>
-                    } @else if (node.status === 'PENDING') {
-                      <i-tabler name="circle-dashed" class="text-muted-color" pTooltip="Not started yet"></i-tabler>
-                    } @else {
-                      <i-tabler name="progress-help" class="text-muted-color" pTooltip="Unknown"></i-tabler>
-                    }
+                    <ng-container *ngTemplateOutlet="statusIcon; context: { $implicit: node }"></ng-container>
                   </div>
-                  <!-- Fixed width to ensure consistent alignment -->
                   <span class="font-medium flex gap-1 items-center w-full min-w-0 overflow-hidden">
                     <span [pTooltip]="node.label ?? ''" class="truncate min-w-0 flex-1">{{ node.label }}</span>
                     @if (node.htmlUrl) {
@@ -84,7 +68,6 @@
             </div>
           </p-panel>
 
-          <!-- Connection line -->
           @if (!lastCategory) {
             <p-divider class="w-10 mt-7"></p-divider>
           }

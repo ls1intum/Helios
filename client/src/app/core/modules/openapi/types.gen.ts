@@ -737,6 +737,7 @@ export type Node = {
 
 export type PipelineDto = {
   categories?: Array<Category>;
+  gate?: Node;
 };
 
 export type EnvironmentReviewersDto = {

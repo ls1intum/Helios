@@ -38,15 +38,6 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class PipelineService {
 
-  /** Statuses that mean a matched job has not finished yet (node is still in progress). */
-  private static final Set<WorkflowRun.Status> ACTIVE_STATUSES =
-      Set.of(
-          WorkflowRun.Status.IN_PROGRESS,
-          WorkflowRun.Status.QUEUED,
-          WorkflowRun.Status.WAITING,
-          WorkflowRun.Status.PENDING,
-          WorkflowRun.Status.REQUESTED);
-
   /** Conclusions that count as a failure for worst-wins aggregation. */
   private static final Set<WorkflowRun.Conclusion> FAILED_CONCLUSIONS =
       Set.of(
@@ -104,32 +95,91 @@ public class PipelineService {
                         category.name(),
                         category.nodes().stream().map(node -> buildNode(node, jobs)).toList()))
             .toList();
-    return new PipelineDto(categories);
+    // Optional overall merge-gate node (e.g. Artemis' "All required CI Passed"), surfaced as a
+    // header badge on the client. Absent for the group fallback.
+    final PipelineDto.Node gate =
+        properties.gate() == null ? null : buildNode(properties.gate(), jobs);
+    return new PipelineDto(categories, gate);
   }
 
+  /**
+   * Aggregates the CI jobs matching a node into a single status. Two boundaries are deliberate:
+   * queued-only jobs stay {@code PENDING} (not-running-yet), distinct from a running node; and a
+   * failing leg flips the node to {@code FAILURE} <i>immediately</i> (fail-fast), even while slower
+   * legs run, so the earliest actionable signal is never hidden behind the spinner.
+   */
   private PipelineDto.Node buildNode(PipelineProperties.Node node, List<WorkflowJob> jobs) {
     final List<WorkflowJob> matched = jobs.stream().filter(job -> matches(node, job)).toList();
     if (matched.isEmpty()) {
-      // Not started yet (or never runs for this PR): always-visible, rendered as pending.
+      // Not started yet (or never runs for this PR): always-visible, rendered as "not running yet".
       return new PipelineDto.Node(
           node.key(), node.label(), WorkflowRun.Status.PENDING.name(), null, null);
     }
 
-    final WorkflowRun.Status status = aggregateStatus(matched);
-    final WorkflowRun.Conclusion conclusion =
-        status == WorkflowRun.Status.COMPLETED ? aggregateConclusion(matched) : null;
-    final String htmlUrl =
-        matched.stream()
-            .map(WorkflowJob::getHtmlUrl)
-            .filter(Objects::nonNull)
-            .findFirst()
-            .orElse(null);
+    final boolean allTerminal =
+        matched.stream().allMatch(job -> job.getStatus() == WorkflowRun.Status.COMPLETED);
+    final boolean anyFailed = matched.stream().anyMatch(PipelineService::isFailed);
+
+    final WorkflowRun.Status status;
+    final WorkflowRun.Conclusion conclusion;
+    if (anyFailed) {
+      // Fail-fast: conclusion reads FAILURE the instant a leg fails; status stays IN_PROGRESS until
+      // every leg is terminal (truthful for other consumers). The client checks conclusion before
+      // status, so a failing node shows a static red X immediately, never a spinner.
+      status = allTerminal ? WorkflowRun.Status.COMPLETED : WorkflowRun.Status.IN_PROGRESS;
+      conclusion = WorkflowRun.Conclusion.FAILURE;
+    } else if (allTerminal) {
+      status = WorkflowRun.Status.COMPLETED;
+      conclusion = aggregateConclusion(matched);
+    } else if (matched.stream().anyMatch(PipelineService::hasStarted)) {
+      status = WorkflowRun.Status.IN_PROGRESS;
+      conclusion = null;
+    } else {
+      status = WorkflowRun.Status.PENDING;
+      conclusion = null;
+    }
+
     return new PipelineDto.Node(
         node.key(),
         node.label(),
         status.name(),
         conclusion == null ? null : conclusion.name(),
-        htmlUrl);
+        pickHtmlUrl(matched, conclusion));
+  }
+
+  private static boolean hasStarted(WorkflowJob job) {
+    return job.getStatus() == WorkflowRun.Status.IN_PROGRESS
+        || job.getStatus() == WorkflowRun.Status.COMPLETED;
+  }
+
+  /** Null-safe failure test; FAILED_CONCLUSIONS is a Set.of that throws on contains(null). */
+  private static boolean isFailed(WorkflowJob job) {
+    return job.getConclusion() != null && FAILED_CONCLUSIONS.contains(job.getConclusion());
+  }
+
+  /**
+   * On a failure, links to a job carrying the failing conclusion so the click-through opens the
+   * failing leg, not an arbitrary passing one; otherwise the first job with a URL.
+   */
+  private static String pickHtmlUrl(
+      List<WorkflowJob> matched, WorkflowRun.Conclusion conclusion) {
+    if (conclusion == WorkflowRun.Conclusion.FAILURE) {
+      final String failing =
+          matched.stream()
+              .filter(PipelineService::isFailed)
+              .map(WorkflowJob::getHtmlUrl)
+              .filter(Objects::nonNull)
+              .findFirst()
+              .orElse(null);
+      if (failing != null) {
+        return failing;
+      }
+    }
+    return matched.stream()
+        .map(WorkflowJob::getHtmlUrl)
+        .filter(Objects::nonNull)
+        .findFirst()
+        .orElse(null);
   }
 
   private static boolean matches(PipelineProperties.Node node, WorkflowJob job) {
@@ -149,23 +199,19 @@ public class PipelineService {
         .anyMatch(prefix -> jobName.startsWith(prefix.toLowerCase(Locale.ROOT)));
   }
 
-  /** Any not-yet-completed matched job keeps the node in progress; otherwise it is completed. */
-  private static WorkflowRun.Status aggregateStatus(List<WorkflowJob> jobs) {
-    final boolean anyActive =
-        jobs.stream().map(WorkflowJob::getStatus).anyMatch(ACTIVE_STATUSES::contains);
-    return anyActive ? WorkflowRun.Status.IN_PROGRESS : WorkflowRun.Status.COMPLETED;
-  }
-
-  /** Worst-wins conclusion across the matched jobs. */
+  /**
+   * Worst-wins conclusion for terminal, non-failing jobs. Failures are handled earlier by
+   * {@link #buildNode} (fail-fast), so this is only reached when no matched job failed. The split
+   * mirrors the client's status colours: {@code CANCELLED} and {@code SKIPPED} render neutral-grey
+   * (unlike {@code TIMED_OUT}/{@code STARTUP_FAILURE}, which are failures), and {@code
+   * ACTION_REQUIRED}/{@code STALE} fold into {@code NEUTRAL} — the model has no warning state.
+   */
   private static WorkflowRun.Conclusion aggregateConclusion(List<WorkflowJob> jobs) {
     final Set<WorkflowRun.Conclusion> present =
         jobs.stream()
             .map(WorkflowJob::getConclusion)
             .filter(Objects::nonNull)
             .collect(Collectors.toSet());
-    if (present.stream().anyMatch(FAILED_CONCLUSIONS::contains)) {
-      return WorkflowRun.Conclusion.FAILURE;
-    }
     if (present.contains(WorkflowRun.Conclusion.CANCELLED)) {
       return WorkflowRun.Conclusion.CANCELLED;
     }
@@ -182,7 +228,7 @@ public class PipelineService {
 
   private PipelineDto buildGrouped(Long repositoryId, List<WorkflowRunDto> headRuns) {
     if (repositoryId == null) {
-      return new PipelineDto(List.of());
+      return new PipelineDto(List.of(), null);
     }
     // getLatest... returns the latest run per workflowId, so a workflowId maps to one run.
     final Map<Long, WorkflowRunDto> runByWorkflowId = new HashMap<>();
@@ -224,7 +270,7 @@ public class PipelineService {
     if (!ungrouped.isEmpty()) {
       categories.add(new PipelineDto.Category("Ungrouped", ungrouped));
     }
-    return new PipelineDto(categories);
+    return new PipelineDto(categories, null);
   }
 
   private static PipelineDto.Node runNode(WorkflowRunDto run) {
