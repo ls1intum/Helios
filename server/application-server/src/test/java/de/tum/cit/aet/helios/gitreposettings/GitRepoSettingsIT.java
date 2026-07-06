@@ -1,13 +1,17 @@
 package de.tum.cit.aet.helios.gitreposettings;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import de.tum.cit.aet.helios.HeliosIntegrationTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 
 /**
  * Guards the write-on-GET fix: {@code GET /api/settings/{id}/settings} must be a pure read. For a
@@ -42,6 +46,32 @@ class GitRepoSettingsIT extends HeliosIntegrationTest {
     // A second GET is still a pure read.
     mockMvc.perform(get("/api/settings/{id}/settings", REPO)).andExpect(status().isOk());
     assertSettingsRowCount(jdbc, 0);
+  }
+
+  @Test
+  void putSettingsCreatesRowForRepositoryWithNoSettings() throws Exception {
+    JdbcTemplate jdbc = new JdbcTemplate(dataSource);
+    assertSettingsRowCount(jdbc, 0);
+
+    mockMvc
+        .perform(
+            put("/api/settings/{id}/settings", REPO)
+                .with(
+                    SecurityMockMvcRequestPostProcessors.jwt()
+                        .authorities(new SimpleGrantedAuthority("ROLE_MAINTAINER")))
+                .with(SecurityMockMvcRequestPostProcessors.csrf())
+                .header(X_REPOSITORY_ID, String.valueOf(REPO))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    "{\"lockExpirationThreshold\":120,\"lockReservationThreshold\":60,"
+                        + "\"packageName\":\"com.example.app\"}"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.lockExpirationThreshold").value(120))
+        .andExpect(jsonPath("$.lockReservationThreshold").value(60))
+        .andExpect(jsonPath("$.packageName").value("com.example.app"));
+
+    // Save on a repo whose settings row was never created must create it (previously a 400).
+    assertSettingsRowCount(jdbc, 1);
   }
 
   private static void assertSettingsRowCount(JdbcTemplate jdbc, int expected) {
