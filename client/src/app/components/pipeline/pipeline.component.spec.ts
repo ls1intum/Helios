@@ -5,28 +5,36 @@ import { provideZonelessChangeDetection } from '@angular/core';
 import { provideQueryClient, QueryClient } from '@tanstack/angular-query-experimental';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { provideRouter } from '@angular/router';
-import type { WorkflowRunDto } from '@app/core/modules/openapi';
-import { PermissionService } from '@app/core/services/permission.service';
+import type { PipelineDto } from '@app/core/modules/openapi';
 
 describe('PipelineComponent', () => {
   let component: PipelineComponent;
   let fixture: ComponentFixture<PipelineComponent>;
-  const permissionServiceMock = {
-    hasWritePermission: () => true,
+
+  const pipeline: PipelineDto = {
+    categories: [
+      {
+        name: 'Build',
+        nodes: [
+          { key: 'build-native', label: 'Native', status: 'COMPLETED', conclusion: 'SUCCESS', htmlUrl: 'https://github.com/org/repo/actions/runs/1' },
+          { key: 'build-docker', label: 'Docker', status: 'IN_PROGRESS', conclusion: null, htmlUrl: null },
+        ],
+      },
+      {
+        name: 'Tests',
+        nodes: [
+          { key: 'test-client', label: 'Client', status: 'COMPLETED', conclusion: 'FAILURE', htmlUrl: null },
+          // No matching job yet → always visible, pending.
+          { key: 'test-e2e', label: 'E2E', status: 'PENDING', conclusion: null, htmlUrl: null },
+        ],
+      },
+    ],
   };
 
   beforeEach(async () => {
-    permissionServiceMock.hasWritePermission = () => true;
-
     await TestBed.configureTestingModule({
       imports: [PipelineComponent],
-      providers: [
-        provideZonelessChangeDetection(),
-        provideRouter([]),
-        provideQueryClient(new QueryClient()),
-        provideNoopAnimations(),
-        { provide: PermissionService, useValue: permissionServiceMock },
-      ],
+      providers: [provideZonelessChangeDetection(), provideRouter([]), provideQueryClient(new QueryClient()), provideNoopAnimations()],
     }).compileComponents();
 
     fixture = TestBed.createComponent(PipelineComponent);
@@ -34,173 +42,57 @@ describe('PipelineComponent', () => {
     await fixture.whenStable();
   });
 
+  // Use a branch selector so branchName flips null -> 'main', invalidating the activeQuery computed
+  // and forcing it to read the overridden branchPipelineQuery.
+  const mockPipeline = (data: PipelineDto | undefined, pending = false) => {
+    Object.defineProperty(component, 'branchPipelineQuery', { configurable: true, value: { isPending: () => pending, data: () => data } });
+    Object.defineProperty(component, 'pullRequestPipelineQuery', { configurable: true, value: { isPending: () => false, data: () => undefined } });
+    fixture.componentRef.setInput('selector', { repositoryId: 7, branchName: 'main' });
+  };
+
   it('should create', () => {
     expect(component).toBeTruthy();
   });
 
-  it('renders workflow logs icon link for each workflow run', async () => {
-    const workflowRun: WorkflowRunDto = {
-      id: 42,
-      workflowId: 5,
-      name: 'CI',
-      displayTitle: 'CI',
-      status: 'COMPLETED',
-      conclusion: 'SUCCESS',
-      htmlUrl: 'https://github.com/org/repo/actions/runs/42',
-      label: 'TEST',
-      createdAt: '2026-01-01T10:00:00Z',
-      updatedAt: '2026-01-01T10:01:00Z',
-    };
-
-    fixture.componentRef.setInput('selector', { repositoryId: 7, pullRequestId: 11 });
-
-    Object.defineProperty(component, 'branchQuery', {
-      configurable: true,
-      value: {
-        isPending: () => false,
-        data: () => [],
-      },
-    });
-    Object.defineProperty(component, 'pullRequestQuery', {
-      configurable: true,
-      value: {
-        isPending: () => false,
-        data: () => [workflowRun],
-      },
-    });
-    Object.defineProperty(component, 'groupsQuery', {
-      configurable: true,
-      value: {
-        data: () => [{ id: 1, name: 'CI Group', memberships: [{ workflowId: 5, orderIndex: 0 }] }],
-      },
-    });
+  it('renders every canonical node with a status icon, including pending nodes', async () => {
+    mockPipeline(pipeline);
 
     fixture.detectChanges();
     await fixture.whenStable();
     fixture.detectChanges();
 
-    const logsLink = fixture.nativeElement.querySelector('a[aria-label="Open workflow logs"]') as HTMLAnchorElement | null;
-    expect(logsLink).toBeTruthy();
-    expect(logsLink?.getAttribute('href')).toContain('/repo/7/ci-cd/runs/42/logs');
+    const el = fixture.nativeElement as HTMLElement;
+    const text = el.textContent ?? '';
+    // Category headers + node labels are all present.
+    expect(text).toContain('Build');
+    expect(text).toContain('Tests');
+    expect(text).toContain('Native');
+    expect(text).toContain('Docker');
+    expect(text).toContain('E2E');
+
+    // Success / failure / in-progress / pending each render their distinct icon.
+    expect(el.querySelector('i-tabler[name="circle-check"]')).toBeTruthy();
+    expect(el.querySelector('i-tabler[name="circle-x"]')).toBeTruthy();
+    expect(el.querySelector('i-tabler[name="progress"]')).toBeTruthy();
+    // The always-visible-but-not-started node uses the dashed (non-spinning) icon.
+    expect(el.querySelector('i-tabler[name="circle-dashed"]')).toBeTruthy();
   });
 
-  it('surfaces runs whose workflow is in no group under an "Ungrouped" fallback', async () => {
-    const groupedRun: WorkflowRunDto = {
-      id: 1,
-      workflowId: 5,
-      name: 'CI',
-      displayTitle: 'CI',
-      status: 'COMPLETED',
-      conclusion: 'SUCCESS',
-      htmlUrl: 'https://github.com/org/repo/actions/runs/1',
-      label: 'TEST',
-      createdAt: '2026-01-01T10:00:00Z',
-      updatedAt: '2026-01-01T10:01:00Z',
-    };
-    const ungroupedRun: WorkflowRunDto = {
-      id: 2,
-      workflowId: 999,
-      name: 'Orphan Workflow',
-      displayTitle: 'Orphan Workflow',
-      status: 'COMPLETED',
-      conclusion: 'SUCCESS',
-      htmlUrl: 'https://github.com/org/repo/actions/runs/2',
-      label: 'NONE',
-      createdAt: '2026-01-01T10:00:00Z',
-      updatedAt: '2026-01-01T10:01:00Z',
-    };
+  it('exposes the configured categories via the pipeline signal', () => {
+    mockPipeline(pipeline);
 
-    fixture.componentRef.setInput('selector', { repositoryId: 7, pullRequestId: 11 });
-    Object.defineProperty(component, 'branchQuery', { configurable: true, value: { isPending: () => false, data: () => [] } });
-    Object.defineProperty(component, 'pullRequestQuery', {
-      configurable: true,
-      value: { isPending: () => false, data: () => [groupedRun, ungroupedRun] },
-    });
-    Object.defineProperty(component, 'groupsQuery', {
-      configurable: true,
-      value: { data: () => [{ id: 1, name: 'CI Group', memberships: [{ workflowId: 5, orderIndex: 0 }] }] },
-    });
-
-    const groups = component.pipeline().groups;
-    const ciGroup = groups.find(g => g.name === 'CI Group');
-    const ungrouped = groups.find(g => g.name === 'Ungrouped');
-    expect(ciGroup?.workflows.map(w => w.id)).toEqual([1]);
-    expect(ungrouped).toBeTruthy();
-    expect(ungrouped?.workflows.map(w => w.id)).toEqual([2]);
+    expect(component.categories().map(c => c.name)).toEqual(['Build', 'Tests']);
+    expect(component.hasCategories()).toBe(true);
   });
 
-  it('does not add an "Ungrouped" fallback when every run belongs to a group', async () => {
-    const groupedRun: WorkflowRunDto = {
-      id: 1,
-      workflowId: 5,
-      name: 'CI',
-      displayTitle: 'CI',
-      status: 'COMPLETED',
-      conclusion: 'SUCCESS',
-      htmlUrl: 'https://github.com/org/repo/actions/runs/1',
-      label: 'TEST',
-      createdAt: '2026-01-01T10:00:00Z',
-      updatedAt: '2026-01-01T10:01:00Z',
-    };
-
-    fixture.componentRef.setInput('selector', { repositoryId: 7, pullRequestId: 11 });
-    Object.defineProperty(component, 'branchQuery', { configurable: true, value: { isPending: () => false, data: () => [] } });
-    Object.defineProperty(component, 'pullRequestQuery', {
-      configurable: true,
-      value: { isPending: () => false, data: () => [groupedRun] },
-    });
-    Object.defineProperty(component, 'groupsQuery', {
-      configurable: true,
-      value: { data: () => [{ id: 1, name: 'CI Group', memberships: [{ workflowId: 5, orderIndex: 0 }] }] },
-    });
-
-    const groups = component.pipeline().groups;
-    expect(groups.find(g => g.name === 'Ungrouped')).toBeUndefined();
-  });
-
-  it('does not render workflow logs icon link without write permission', async () => {
-    const workflowRun: WorkflowRunDto = {
-      id: 42,
-      workflowId: 5,
-      name: 'CI',
-      displayTitle: 'CI',
-      status: 'COMPLETED',
-      conclusion: 'SUCCESS',
-      htmlUrl: 'https://github.com/org/repo/actions/runs/42',
-      label: 'TEST',
-      createdAt: '2026-01-01T10:00:00Z',
-      updatedAt: '2026-01-01T10:01:00Z',
-    };
-
-    permissionServiceMock.hasWritePermission = () => false;
-    fixture.componentRef.setInput('selector', { repositoryId: 7, pullRequestId: 11 });
-
-    Object.defineProperty(component, 'branchQuery', {
-      configurable: true,
-      value: {
-        isPending: () => false,
-        data: () => [],
-      },
-    });
-    Object.defineProperty(component, 'pullRequestQuery', {
-      configurable: true,
-      value: {
-        isPending: () => false,
-        data: () => [workflowRun],
-      },
-    });
-    Object.defineProperty(component, 'groupsQuery', {
-      configurable: true,
-      value: {
-        data: () => [{ id: 1, name: 'CI Group', memberships: [{ workflowId: 5, orderIndex: 0 }] }],
-      },
-    });
+  it('shows the empty state when no categories are configured', async () => {
+    mockPipeline({ categories: [] });
 
     fixture.detectChanges();
     await fixture.whenStable();
     fixture.detectChanges();
 
-    const logsLink = fixture.nativeElement.querySelector('a[aria-label="Open workflow logs"]') as HTMLAnchorElement | null;
-    expect(logsLink).toBeNull();
+    expect(component.hasCategories()).toBe(false);
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('No pipeline configured.');
   });
 });

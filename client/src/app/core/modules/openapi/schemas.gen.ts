@@ -1988,6 +1988,54 @@ export const PullRequestFilterUserOptionDtoSchema = {
   required: ['avatarUrl', 'id', 'login', 'name'],
 } as const;
 
+export const CategorySchema = {
+  type: 'object',
+  properties: {
+    name: {
+      type: 'string',
+    },
+    nodes: {
+      type: 'array',
+      items: {
+        $ref: '#/components/schemas/Node',
+      },
+    },
+  },
+} as const;
+
+export const NodeSchema = {
+  type: 'object',
+  properties: {
+    key: {
+      type: 'string',
+    },
+    label: {
+      type: 'string',
+    },
+    status: {
+      type: 'string',
+    },
+    conclusion: {
+      type: ['string', 'null'],
+    },
+    htmlUrl: {
+      type: ['string', 'null'],
+    },
+  },
+} as const;
+
+export const PipelineDtoSchema = {
+  type: 'object',
+  properties: {
+    categories: {
+      type: 'array',
+      items: {
+        $ref: '#/components/schemas/Category',
+      },
+    },
+  },
+} as const;
+
 export const EnvironmentReviewersDtoSchema = {
   type: 'object',
   properties: {

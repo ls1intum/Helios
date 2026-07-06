@@ -54,6 +54,8 @@ import {
   getLatestWorkflowRunsByPullRequestIdAndHeadCommit,
   getLockHistoryByEnvironmentId,
   getNotificationPreferences,
+  getPipelineByBranch,
+  getPipelineByPullRequest,
   getPullRequestById,
   getPullRequestByRepositoryId,
   getPullRequestByRepositoryIdAndNumber,
@@ -245,6 +247,12 @@ import type {
   GetNotificationPreferencesData,
   GetNotificationPreferencesError,
   GetNotificationPreferencesResponse,
+  GetPipelineByBranchData,
+  GetPipelineByBranchError,
+  GetPipelineByBranchResponse,
+  GetPipelineByPullRequestData,
+  GetPipelineByPullRequestError,
+  GetPipelineByPullRequestResponse,
   GetPullRequestByIdData,
   GetPullRequestByIdError,
   GetPullRequestByIdResponse,
@@ -1816,6 +1824,38 @@ export const getPullRequestByRepositoryIdOptions = (options: Options<GetPullRequ
       return data;
     },
     queryKey: getPullRequestByRepositoryIdQueryKey(options),
+  });
+
+export const getPipelineByPullRequestQueryKey = (options: Options<GetPipelineByPullRequestData>) => createQueryKey('getPipelineByPullRequest', options);
+
+export const getPipelineByPullRequestOptions = (options: Options<GetPipelineByPullRequestData>) =>
+  queryOptions<GetPipelineByPullRequestResponse, GetPipelineByPullRequestError, GetPipelineByPullRequestResponse, ReturnType<typeof getPipelineByPullRequestQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getPipelineByPullRequest({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: getPipelineByPullRequestQueryKey(options),
+  });
+
+export const getPipelineByBranchQueryKey = (options: Options<GetPipelineByBranchData>) => createQueryKey('getPipelineByBranch', options);
+
+export const getPipelineByBranchOptions = (options: Options<GetPipelineByBranchData>) =>
+  queryOptions<GetPipelineByBranchResponse, GetPipelineByBranchError, GetPipelineByBranchResponse, ReturnType<typeof getPipelineByBranchQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getPipelineByBranch({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: getPipelineByBranchQueryKey(options),
   });
 
 export const getAllEnvironmentsQueryKey = (options?: Options<GetAllEnvironmentsData>) => createQueryKey('getAllEnvironments', options);

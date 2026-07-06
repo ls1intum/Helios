@@ -153,6 +153,12 @@ import type {
   GetNotificationPreferencesData,
   GetNotificationPreferencesErrors,
   GetNotificationPreferencesResponses,
+  GetPipelineByBranchData,
+  GetPipelineByBranchErrors,
+  GetPipelineByBranchResponses,
+  GetPipelineByPullRequestData,
+  GetPipelineByPullRequestErrors,
+  GetPipelineByPullRequestResponses,
   GetPullRequestByIdData,
   GetPullRequestByIdErrors,
   GetPullRequestByIdResponses,
@@ -838,6 +844,16 @@ export const getPullRequestByRepositoryId = <ThrowOnError extends boolean = fals
   options: Options<GetPullRequestByRepositoryIdData, ThrowOnError>
 ): RequestResult<GetPullRequestByRepositoryIdResponses, GetPullRequestByRepositoryIdErrors, ThrowOnError> =>
   (options.client ?? client).get<GetPullRequestByRepositoryIdResponses, GetPullRequestByRepositoryIdErrors, ThrowOnError>({ url: '/api/pullrequests/repository/{id}', ...options });
+
+export const getPipelineByPullRequest = <ThrowOnError extends boolean = false>(
+  options: Options<GetPipelineByPullRequestData, ThrowOnError>
+): RequestResult<GetPipelineByPullRequestResponses, GetPipelineByPullRequestErrors, ThrowOnError> =>
+  (options.client ?? client).get<GetPipelineByPullRequestResponses, GetPipelineByPullRequestErrors, ThrowOnError>({ url: '/api/pipeline/pr/{pullRequestId}', ...options });
+
+export const getPipelineByBranch = <ThrowOnError extends boolean = false>(
+  options: Options<GetPipelineByBranchData, ThrowOnError>
+): RequestResult<GetPipelineByBranchResponses, GetPipelineByBranchErrors, ThrowOnError> =>
+  (options.client ?? client).get<GetPipelineByBranchResponses, GetPipelineByBranchErrors, ThrowOnError>({ url: '/api/pipeline/branch', ...options });
 
 export const getAllEnvironments = <ThrowOnError extends boolean = false>(
   options?: Options<GetAllEnvironmentsData, ThrowOnError>
