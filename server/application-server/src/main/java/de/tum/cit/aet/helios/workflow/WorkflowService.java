@@ -61,9 +61,11 @@ public class WorkflowService {
   }
 
   public void updateWorkflowLabel(Long workflowId, Workflow.Label label) {
+    // Scope to the current repository: relabeling a workflow from another repository (or with no
+    // repository context) must fail as not-found, never mutate another tenant's workflow. findById
+    // was never covered by the old gitRepositoryFilter, so this closes a cross-repository write.
     Workflow workflow =
-        workflowRepository
-            .findById(workflowId)
+        findScopedById(workflowId)
             .orElseThrow(() -> new IllegalArgumentException("Workflow not found!"));
     workflow.setLabel(label);
     workflowRepository.save(workflow);
