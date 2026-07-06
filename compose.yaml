@@ -54,6 +54,37 @@ services:
     networks:
       - helios-network
 
+  # One-shot: enforce the "helios-example" realm's session lifespans on the RUNNING Keycloak.
+  # --import-realm is a no-op once the realm exists in the DB, so realm JSON changes never reach a
+  # running instance; this idempotent kcadm step re-applies them on every `up`. Isolated and
+  # non-blocking (updates only session fields, always exits 0).
+  keycloak-config:
+    build:
+      context: keycloakify
+    container_name: keycloak-config
+    restart: "no"
+    depends_on:
+      - keycloak
+    environment:
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+    entrypoint: >
+      bash -c "
+        set +e;
+        KCADM=/opt/keycloak/bin/kcadm.sh;
+        for attempt in $$(seq 1 60); do
+          if $$KCADM config credentials --server http://keycloak:8081 --realm master --user \"$$KEYCLOAK_ADMIN\" --password \"$$KEYCLOAK_ADMIN_PASSWORD\" >/dev/null 2>&1; then
+            $$KCADM update realms/helios-example -s ssoSessionIdleTimeout=604800 -s ssoSessionMaxLifespan=2592000 -s offlineSessionIdleTimeout=2592000 && echo 'keycloak-config: applied helios-example realm session lifespans (7d idle / 30d max)' && exit 0;
+          fi;
+          echo \"keycloak-config: waiting for keycloak (attempt $$attempt/60)\";
+          sleep 5;
+        done;
+        echo 'keycloak-config: keycloak not reachable after ~5m; session lifespans NOT applied';
+        exit 0
+      "
+    networks:
+      - helios-network
+
   webhook-listener:
     build:
       context: server/webhook-listener
