@@ -33,7 +33,8 @@ public class RepositoryInterceptor implements WebRequestInterceptor {
   public void postHandle(@NonNull WebRequest request, @Nullable ModelMap model) {
     // Intentionally empty — clearing happens in afterCompletion so the ThreadLocal is wiped even
     // when the handler threw (postHandle is skipped on exception, afterCompletion runs
-    // unconditionally). Otherwise a Tomcat worker thread keeps a stale repositoryId across requests.
+    // unconditionally). Otherwise a Tomcat worker thread keeps a stale repositoryId between
+    // requests.
   }
 
   @Override
