@@ -128,8 +128,12 @@ public class WorkflowGroupService {
             .map(WorkflowMembershipDto::workflowId)
             .collect(Collectors.toSet());
 
+    // Scope to the request's repository: a workflow id from another repository must be treated as
+    // non-existent here, otherwise a foreign workflow could be pulled into this repo's group
+    // (findAllById/findById were never covered by the removed gitRepositoryFilter).
     Set<Long> existingWorkflowIds =
-        workflowRepository.findAllById(providedWorkflowIds).stream()
+        workflowRepository.findByIdInAndRepositoryRepositoryId(providedWorkflowIds, repositoryId)
+            .stream()
             .map(Workflow::getId)
             .collect(Collectors.toSet());
 
@@ -205,10 +209,10 @@ public class WorkflowGroupService {
                 .findFirst()
                 .orElseGet(
                     () -> {
-                      // create a new membership
+                      // create a new membership (scoped to this repository; validated above)
                       Workflow w =
                           workflowRepository
-                              .findById(memDto.workflowId())
+                              .findByIdAndRepositoryRepositoryId(memDto.workflowId(), repositoryId)
                               .orElseThrow(() -> new IllegalArgumentException("Not found"));
                       WorkflowGroupMembership newMem = new WorkflowGroupMembership();
                       newMem.setWorkflow(w);
