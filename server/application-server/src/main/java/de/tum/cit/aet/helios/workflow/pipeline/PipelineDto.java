@@ -10,6 +10,7 @@ import org.springframework.lang.Nullable;
  */
 public record PipelineDto(List<Category> categories) {
 
+  /** A titled group of pipeline nodes (e.g. "Build", "Tests"), rendered in declaration order. */
   public record Category(String name, List<Node> nodes) {}
 
   /**
