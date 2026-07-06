@@ -596,9 +596,13 @@ public class EnvironmentService {
               }
               if (environmentDto.deploymentWorkflow() != null) {
                 Long workflowId = environmentDto.deploymentWorkflow().id();
+                // The deployment workflow must belong to the same repository as the environment;
+                // an unscoped findById let a foreign-repository workflow be attached here (mirrors
+                // the cross-repository guard already applied to required pre-deployment workflows).
                 Workflow wf =
                     workflowRepository
-                        .findById(workflowId)
+                        .findByIdAndRepositoryRepositoryId(
+                            workflowId, environment.getRepository().getRepositoryId())
                         .orElseThrow(
                             () ->
                                 new EntityNotFoundException(
