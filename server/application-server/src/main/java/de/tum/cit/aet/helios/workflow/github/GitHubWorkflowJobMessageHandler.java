@@ -16,6 +16,7 @@ public class GitHubWorkflowJobMessageHandler
 
   private final GitHubService gitHubService;
   private final GitHubWorkflowJobTimingService gitHubWorkflowJobTimingService;
+  private final GitHubWorkflowJobSyncService gitHubWorkflowJobSyncService;
 
   @Override
   protected Class<GitHubWorkflowJobPayload> getPayloadClass() {
@@ -47,5 +48,6 @@ public class GitHubWorkflowJobMessageHandler
     }
 
     gitHubWorkflowJobTimingService.persistDurations(payload);
+    gitHubWorkflowJobSyncService.syncFromPayload(payload);
   }
 }
