@@ -14,6 +14,8 @@ public record PipelineDto(List<Category> categories) {
   public record Category(String name, List<Node> nodes) {}
 
   /**
+   * A single canonical pipeline node with its aggregated status.
+   *
    * @param status aggregated {@code WorkflowRun.Status} name (e.g. {@code PENDING}, {@code
    *     IN_PROGRESS}, {@code COMPLETED})
    * @param conclusion aggregated {@code WorkflowRun.Conclusion} name when completed, else null
