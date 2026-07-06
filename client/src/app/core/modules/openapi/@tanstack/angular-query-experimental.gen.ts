@@ -56,6 +56,8 @@ import {
   getNotificationPreferences,
   getPipelineByBranch,
   getPipelineByPullRequest,
+  getPipelineConfig,
+  getPipelineConfigSuggestions,
   getPullRequestById,
   getPullRequestByRepositoryId,
   getPullRequestByRepositoryIdAndNumber,
@@ -91,6 +93,7 @@ import {
   updateEnvironment,
   updateGitRepoSettings,
   updateNotificationPreferences,
+  updatePipelineConfig,
   updateReleaseName,
   updateReleaseNotes,
   updateTestType,
@@ -253,6 +256,12 @@ import type {
   GetPipelineByPullRequestData,
   GetPipelineByPullRequestError,
   GetPipelineByPullRequestResponse,
+  GetPipelineConfigData,
+  GetPipelineConfigError,
+  GetPipelineConfigResponse,
+  GetPipelineConfigSuggestionsData,
+  GetPipelineConfigSuggestionsError,
+  GetPipelineConfigSuggestionsResponse,
   GetPullRequestByIdData,
   GetPullRequestByIdError,
   GetPullRequestByIdResponse,
@@ -347,6 +356,9 @@ import type {
   UpdateGitRepoSettingsResponse,
   UpdateNotificationPreferencesData,
   UpdateNotificationPreferencesError,
+  UpdatePipelineConfigData,
+  UpdatePipelineConfigError,
+  UpdatePipelineConfigResponse,
   UpdateReleaseNameData,
   UpdateReleaseNameError,
   UpdateReleaseNotesData,
@@ -498,6 +510,38 @@ export const updateGitRepoSettingsMutation = (
   const mutationOptions: MutationOptions<UpdateGitRepoSettingsResponse, UpdateGitRepoSettingsError, Options<UpdateGitRepoSettingsData>> = {
     mutationFn: async fnOptions => {
       const { data } = await updateGitRepoSettings({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const getPipelineConfigQueryKey = (options: Options<GetPipelineConfigData>) => createQueryKey('getPipelineConfig', options);
+
+export const getPipelineConfigOptions = (options: Options<GetPipelineConfigData>) =>
+  queryOptions<GetPipelineConfigResponse, GetPipelineConfigError, GetPipelineConfigResponse, ReturnType<typeof getPipelineConfigQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getPipelineConfig({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: getPipelineConfigQueryKey(options),
+  });
+
+export const updatePipelineConfigMutation = (
+  options?: Partial<Options<UpdatePipelineConfigData>>
+): MutationOptions<UpdatePipelineConfigResponse, UpdatePipelineConfigError, Options<UpdatePipelineConfigData>> => {
+  const mutationOptions: MutationOptions<UpdatePipelineConfigResponse, UpdatePipelineConfigError, Options<UpdatePipelineConfigData>> = {
+    mutationFn: async fnOptions => {
+      const { data } = await updatePipelineConfig({
         ...options,
         ...fnOptions,
         throwOnError: true,
@@ -1599,6 +1643,27 @@ export const getFailureAnalysisUsageOptions = (options?: Options<GetFailureAnaly
       return data;
     },
     queryKey: getFailureAnalysisUsageQueryKey(options),
+  });
+
+export const getPipelineConfigSuggestionsQueryKey = (options: Options<GetPipelineConfigSuggestionsData>) => createQueryKey('getPipelineConfigSuggestions', options);
+
+export const getPipelineConfigSuggestionsOptions = (options: Options<GetPipelineConfigSuggestionsData>) =>
+  queryOptions<
+    GetPipelineConfigSuggestionsResponse,
+    GetPipelineConfigSuggestionsError,
+    GetPipelineConfigSuggestionsResponse,
+    ReturnType<typeof getPipelineConfigSuggestionsQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getPipelineConfigSuggestions({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: getPipelineConfigSuggestionsQueryKey(options),
   });
 
 export const getGroupsWithWorkflowsQueryKey = (options: Options<GetGroupsWithWorkflowsData>) => createQueryKey('getGroupsWithWorkflows', options);

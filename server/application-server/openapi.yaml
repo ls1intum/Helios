@@ -216,6 +216,61 @@ paths:
             application/json:
               schema:
                 type: object
+  /api/settings/{repositoryId}/pipeline-config:
+    get:
+      tags:
+      - git-repo-settings-controller
+      operationId: getPipelineConfig
+      parameters:
+      - name: repositoryId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PipelineConfigDto"
+    put:
+      tags:
+      - git-repo-settings-controller
+      operationId: updatePipelineConfig
+      parameters:
+      - name: repositoryId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PipelineConfigDto"
+        required: true
+      responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PipelineConfigDto"
   /api/settings/{repositoryId}/groups/update:
     put:
       tags:
@@ -1651,6 +1706,31 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/TestFailureAnalysisUsageDto"
+  /api/settings/{repositoryId}/pipeline-config/suggestions:
+    get:
+      tags:
+      - git-repo-settings-controller
+      operationId: getPipelineConfigSuggestions
+      parameters:
+      - name: repositoryId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PipelineConfigDto"
   /api/settings/{repositoryId}/groups:
     get:
       tags:
@@ -2618,6 +2698,37 @@ components:
           format: int64
         packageName:
           type: string
+    CategoryConfig:
+      type: object
+      properties:
+        name:
+          type: string
+        nodes:
+          type: array
+          items:
+            $ref: "#/components/schemas/NodeConfig"
+    NodeConfig:
+      type: object
+      properties:
+        key:
+          type: string
+        label:
+          type: string
+        jobNameMatchers:
+          type: array
+          items:
+            type: string
+        workflowNameMatcher:
+          type:
+          - string
+          - "null"
+    PipelineConfigDto:
+      type: object
+      properties:
+        categories:
+          type: array
+          items:
+            $ref: "#/components/schemas/CategoryConfig"
     WorkflowGroupDto:
       type: object
       properties:

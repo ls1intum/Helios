@@ -9,6 +9,7 @@ import de.tum.cit.aet.helios.deployment.DeploymentWorkflowConfigDto;
 import de.tum.cit.aet.helios.deployment.DeploymentWorkflowConfigService;
 import de.tum.cit.aet.helios.error.GlobalExceptionHandler;
 import de.tum.cit.aet.helios.gitreposettings.secret.RepoSecretService;
+import de.tum.cit.aet.helios.workflow.pipeline.config.PipelineConfigService;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +35,8 @@ class GitRepoSettingsControllerTest {
   @MockitoBean private RepoSecretService repoSecretService;
 
   @MockitoBean private DeploymentWorkflowConfigService deploymentWorkflowConfigService;
+
+  @MockitoBean private PipelineConfigService pipelineConfigService;
 
   @Test
   void getDeploymentWorkflowConfigReturnsConfig() throws Exception {

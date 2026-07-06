@@ -4,6 +4,8 @@ import de.tum.cit.aet.helios.config.security.annotations.EnforceAtLeastMaintaine
 import de.tum.cit.aet.helios.deployment.DeploymentWorkflowConfigDto;
 import de.tum.cit.aet.helios.deployment.DeploymentWorkflowConfigService;
 import de.tum.cit.aet.helios.gitreposettings.secret.RepoSecretService;
+import de.tum.cit.aet.helios.workflow.pipeline.config.PipelineConfigDto;
+import de.tum.cit.aet.helios.workflow.pipeline.config.PipelineConfigService;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Optional;
@@ -29,6 +31,26 @@ public class GitRepoSettingsController {
   private final GitRepoSettingsService gitRepoSettingsService;
   private final RepoSecretService secrets;
   private final DeploymentWorkflowConfigService deploymentWorkflowConfigService;
+  private final PipelineConfigService pipelineConfigService;
+
+  @GetMapping("/pipeline-config")
+  public ResponseEntity<PipelineConfigDto> getPipelineConfig(@PathVariable Long repositoryId) {
+    return ResponseEntity.ok(pipelineConfigService.getConfig(repositoryId));
+  }
+
+  @EnforceAtLeastMaintainer
+  @PutMapping("/pipeline-config")
+  public ResponseEntity<PipelineConfigDto> updatePipelineConfig(
+      @PathVariable Long repositoryId, @Valid @RequestBody PipelineConfigDto config) {
+    return ResponseEntity.ok(pipelineConfigService.updateConfig(repositoryId, config));
+  }
+
+  @EnforceAtLeastMaintainer
+  @GetMapping("/pipeline-config/suggestions")
+  public ResponseEntity<PipelineConfigDto> getPipelineConfigSuggestions(
+      @PathVariable Long repositoryId) {
+    return ResponseEntity.ok(pipelineConfigService.suggest(repositoryId));
+  }
 
   @GetMapping("/settings")
   public ResponseEntity<GitRepoSettingsDto> getGitRepoSettings(@PathVariable Long repositoryId) {

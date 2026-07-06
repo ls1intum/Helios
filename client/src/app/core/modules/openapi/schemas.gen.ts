@@ -82,6 +82,54 @@ export const GitRepoSettingsDtoSchema = {
   },
 } as const;
 
+export const CategoryConfigSchema = {
+  type: 'object',
+  properties: {
+    name: {
+      type: 'string',
+    },
+    nodes: {
+      type: 'array',
+      items: {
+        $ref: '#/components/schemas/NodeConfig',
+      },
+    },
+  },
+} as const;
+
+export const NodeConfigSchema = {
+  type: 'object',
+  properties: {
+    key: {
+      type: 'string',
+    },
+    label: {
+      type: 'string',
+    },
+    jobNameMatchers: {
+      type: 'array',
+      items: {
+        type: 'string',
+      },
+    },
+    workflowNameMatcher: {
+      type: ['string', 'null'],
+    },
+  },
+} as const;
+
+export const PipelineConfigDtoSchema = {
+  type: 'object',
+  properties: {
+    categories: {
+      type: 'array',
+      items: {
+        $ref: '#/components/schemas/CategoryConfig',
+      },
+    },
+  },
+} as const;
+
 export const WorkflowGroupDtoSchema = {
   type: 'object',
   properties: {
