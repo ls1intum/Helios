@@ -17,9 +17,12 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * Build and Push Docker Image"}.
  */
 @ConfigurationProperties(prefix = "helios.pipeline")
-public record PipelineProperties(List<Category> categories) {
+public record PipelineProperties(List<String> repositories, List<Category> categories) {
 
   public PipelineProperties {
+    // nameWithOwner allow-list: repositories that render the canonical catalog. Others fall back
+    // to the group-based pipeline (PipelineService), so a non-matching repo isn't all-pending.
+    repositories = repositories == null ? List.of() : repositories;
     categories = categories == null ? List.of() : categories;
   }
 
