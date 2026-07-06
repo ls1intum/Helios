@@ -722,6 +722,23 @@ export type PullRequestFilterUserOptionDto = {
   name: string;
 };
 
+export type Category = {
+  name?: string;
+  nodes?: Array<Node>;
+};
+
+export type Node = {
+  key?: string;
+  label?: string;
+  status?: string;
+  conclusion?: string | null;
+  htmlUrl?: string | null;
+};
+
+export type PipelineDto = {
+  categories?: Array<Category>;
+};
+
 export type EnvironmentReviewersDto = {
   preventSelfReview?: boolean;
   reviewers?: Array<Reviewer>;
@@ -2764,6 +2781,60 @@ export type GetPullRequestByRepositoryIdResponses = {
 };
 
 export type GetPullRequestByRepositoryIdResponse = GetPullRequestByRepositoryIdResponses[keyof GetPullRequestByRepositoryIdResponses];
+
+export type GetPipelineByPullRequestData = {
+  body?: never;
+  path: {
+    pullRequestId: number;
+  };
+  query?: never;
+  url: '/api/pipeline/pr/{pullRequestId}';
+};
+
+export type GetPipelineByPullRequestErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type GetPipelineByPullRequestError = GetPipelineByPullRequestErrors[keyof GetPipelineByPullRequestErrors];
+
+export type GetPipelineByPullRequestResponses = {
+  /**
+   * OK
+   */
+  200: PipelineDto;
+};
+
+export type GetPipelineByPullRequestResponse = GetPipelineByPullRequestResponses[keyof GetPipelineByPullRequestResponses];
+
+export type GetPipelineByBranchData = {
+  body?: never;
+  path?: never;
+  query: {
+    branch: string;
+  };
+  url: '/api/pipeline/branch';
+};
+
+export type GetPipelineByBranchErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type GetPipelineByBranchError = GetPipelineByBranchErrors[keyof GetPipelineByBranchErrors];
+
+export type GetPipelineByBranchResponses = {
+  /**
+   * OK
+   */
+  200: PipelineDto;
+};
+
+export type GetPipelineByBranchResponse = GetPipelineByBranchResponses[keyof GetPipelineByBranchResponses];
 
 export type GetAllEnvironmentsData = {
   body?: never;

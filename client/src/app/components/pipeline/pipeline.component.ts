@@ -1,22 +1,14 @@
-import { Component, computed, inject, input } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Component, computed, input } from '@angular/core';
 import { injectQuery } from '@tanstack/angular-query-experimental';
-import { TableModule } from 'primeng/table';
-import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { PanelModule } from 'primeng/panel';
 import { TooltipModule } from 'primeng/tooltip';
-import {
-  getLatestWorkflowRunsByBranchAndHeadCommitOptions,
-  getLatestWorkflowRunsByPullRequestIdAndHeadCommitOptions,
-  getGroupsWithWorkflowsOptions,
-} from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
-import { SkeletonModule } from 'primeng/skeleton';
-import { WorkflowRunDto } from '@app/core/modules/openapi';
 import { DividerModule } from 'primeng/divider';
+import { SkeletonModule } from 'primeng/skeleton';
+import { getPipelineByBranchOptions, getPipelineByPullRequestOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
+import { PipelineDto } from '@app/core/modules/openapi';
 import { GithubLinkButtonComponent } from '@app/components/github-link-button/github-link-button.component';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
-import { IconCircleCheck, IconCircleX, IconExclamationCircle, IconExternalLink, IconFileText, IconInfoCircle, IconProgress, IconProgressHelp } from 'angular-tabler-icons/icons';
-import { PermissionService } from '@app/core/services/permission.service';
+import { IconCircleCheck, IconCircleDashed, IconCircleX, IconExclamationCircle, IconInfoCircle, IconMinus, IconProgress, IconProgressHelp } from 'angular-tabler-icons/icons';
 
 export type PipelineSelector = { repositoryId: number } & (
   | {
@@ -30,34 +22,24 @@ export type PipelineSelector = { repositoryId: number } & (
     }
 );
 
-export interface Pipeline {
-  groups: {
-    name: string;
-    id: number;
-    workflows: WorkflowRunDto[];
-    isLastWithWorkflows: boolean;
-  }[];
-}
-
 @Component({
   selector: 'app-pipeline',
-  imports: [RouterLink, TableModule, DividerModule, ProgressSpinnerModule, PanelModule, TablerIconComponent, TooltipModule, SkeletonModule, GithubLinkButtonComponent],
+  imports: [DividerModule, PanelModule, TablerIconComponent, TooltipModule, SkeletonModule, GithubLinkButtonComponent],
   providers: [
     provideTablerIcons({
       IconInfoCircle,
       IconCircleCheck,
       IconCircleX,
+      IconCircleDashed,
       IconProgressHelp,
       IconProgress,
-      IconExternalLink,
-      IconFileText,
+      IconMinus,
       IconExclamationCircle,
     }),
   ],
   templateUrl: './pipeline.component.html',
 })
 export class PipelineComponent {
-  protected permissions = inject(PermissionService);
   selector = input<PipelineSelector | null>();
 
   branchName = computed(() => {
@@ -70,74 +52,28 @@ export class PipelineComponent {
     if (!selector) return null;
     return 'pullRequestId' in selector ? selector.pullRequestId : null;
   });
-  repositoryId = computed(() => {
-    const selector = this.selector();
-    if (!selector) return null;
-    return selector.repositoryId;
-  });
-  //TODO instead of refetching every 15 seconds, we should use websockets to get real-time updates
-  branchQuery = injectQuery(() => ({
-    ...getLatestWorkflowRunsByBranchAndHeadCommitOptions({ query: { branch: this.branchName()! } }),
+
+  // Canonical, always-visible pipeline (Build/Tests/Quality) resolved server-side from the
+  // configured node catalog. One query per selector kind.
+  // TODO instead of refetching every 15 seconds, we should use websockets for real-time updates
+  branchPipelineQuery = injectQuery(() => ({
+    ...getPipelineByBranchOptions({ query: { branch: this.branchName()! } }),
     enabled: this.branchName() !== null,
     refetchInterval: 15000,
   }));
-  pullRequestQuery = injectQuery(() => ({
-    ...getLatestWorkflowRunsByPullRequestIdAndHeadCommitOptions({ path: { pullRequestId: this.pullRequestId() || 0 } }),
+  pullRequestPipelineQuery = injectQuery(() => ({
+    ...getPipelineByPullRequestOptions({ path: { pullRequestId: this.pullRequestId() || 0 } }),
     enabled: this.pullRequestId() !== null,
     refetchInterval: 15000,
   }));
 
-  groupsQuery = injectQuery(() => ({
-    ...getGroupsWithWorkflowsOptions({ path: { repositoryId: this.repositoryId() || 0 } }),
-    refetchInterval: 15000,
-  }));
+  private activeQuery = computed(() => (this.branchName() !== null ? this.branchPipelineQuery : this.pullRequestPipelineQuery));
 
-  pipeline = computed<Pipeline>(() => {
-    const workflowRuns = (this.branchName() ? this.branchQuery.data() : this.pullRequestQuery.data()) || [];
-    const workflowGroups = this.groupsQuery.data() || [];
+  isPending = computed(() => this.activeQuery().isPending());
 
-    const groupedWorkflowsRuns = workflowGroups.map(group => {
-      const workflowIds = group.memberships?.map(membership => membership.workflowId) || [];
-      const matchingRuns = workflowRuns.filter(run => run.workflowId !== undefined && workflowIds.includes(run.workflowId));
-      return {
-        name: group.name,
-        id: group.id,
-        workflows: matchingRuns,
-        isLastWithWorkflows: false,
-      };
-    });
+  pipeline = computed<PipelineDto>(() => this.activeQuery().data() ?? { categories: [] });
 
-    // Fallback bucket: surface runs whose workflow is not a member of ANY configured
-    // group so a newly added or renamed workflow (e.g. after a CI refactor that
-    // introduces a new orchestrator workflow) stays visible in the pipeline instead of
-    // silently disappearing until someone manually adds it to a group.
-    const groupedWorkflowIds = new Set(workflowGroups.flatMap(group => group.memberships?.map(membership => membership.workflowId) ?? []));
-    const ungroupedRuns = workflowRuns.filter(run => run.workflowId === undefined || !groupedWorkflowIds.has(run.workflowId));
-    if (ungroupedRuns.length > 0) {
-      groupedWorkflowsRuns.push({
-        name: 'Ungrouped',
-        id: -1,
-        workflows: ungroupedRuns,
-        isLastWithWorkflows: false,
-      });
-    }
+  categories = computed(() => this.pipeline().categories ?? []);
 
-    let lastWithWorkflowsFound = false;
-    // For loop in reverse to set isLastWithWorkflows in the correct order
-    groupedWorkflowsRuns.reverse().forEach(group => {
-      group.isLastWithWorkflows = !lastWithWorkflowsFound && group.workflows.length > 0;
-      if (group.isLastWithWorkflows) lastWithWorkflowsFound = true;
-    });
-    // Reverse back to the original order
-    groupedWorkflowsRuns.reverse();
-
-    return {
-      groups: groupedWorkflowsRuns,
-    };
-  });
-
-  allGroupsHaveNoWorkflowRuns = computed(() => {
-    const pipelineData = this.pipeline();
-    return pipelineData.groups.length > 0 && pipelineData.groups.every(group => group.workflows.length === 0);
-  });
+  hasCategories = computed(() => this.categories().some(category => (category.nodes ?? []).length > 0));
 }
