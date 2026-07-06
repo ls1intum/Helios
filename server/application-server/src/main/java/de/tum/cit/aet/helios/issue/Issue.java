@@ -3,6 +3,7 @@ package de.tum.cit.aet.helios.issue;
 import de.tum.cit.aet.helios.github.BaseGitServiceEntity;
 import de.tum.cit.aet.helios.label.Label;
 import de.tum.cit.aet.helios.user.User;
+import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.DiscriminatorType;
 import jakarta.persistence.DiscriminatorValue;
@@ -14,7 +15,6 @@ import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
-import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
@@ -46,7 +46,10 @@ public class Issue extends BaseGitServiceEntity {
 
   @NonNull private String title;
 
-  @Lob private String body;
+  // PR/issue body is plain markdown text (matches Release/ReleaseCandidate.body). NOT @Lob: on
+  // PostgreSQL @Lob String maps to an `oid` Large Object, which cannot be read in auto-commit mode.
+  @Column(columnDefinition = "text")
+  private String body;
 
   @NonNull private String htmlUrl;
 

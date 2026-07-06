@@ -20,11 +20,10 @@ class ContextBootIT extends HeliosIntegrationTest {
 
   @Test
   void hikariAutoCommitIsDisabled() {
-    // Guards the "Large Objects may not be used in auto-commit mode" fix: pooled connections must
-    // start with auto-commit off so reads outside an explicit @Transactional (under OSIV) can read
-    // PostgreSQL Large Objects (the @Lob PR body, oid release bodies). Dropping this property
-    // reintroduces the staging 500s. The zonky test datasource is auto-commit=true and ignores it,
-    // so behaviour is validated on staging; this fails fast if the property is removed.
+    // Pooled connections start with auto-commit off: a Hibernate-recommended optimization (fewer
+    // per-transaction round-trips) and defense-in-depth against a future
+    // accidental @Lob (PostgreSQL Large Objects can't be read in auto-commit mode). The Issue.body
+    // Large Object that originally forced this has since been migrated to a plain text column.
     assertEquals("false", environment.getProperty("spring.datasource.hikari.auto-commit"));
   }
 }

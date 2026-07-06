@@ -51,6 +51,18 @@ class PullRequestScopingIT extends HeliosIntegrationTest {
   }
 
   @Test
+  void pullRequestWithBodyLoadsInAutoCommitMode() throws Exception {
+    // Issue.body is a plain text column (was an accidental @Lob -> oid Large Object). Loading a PR
+    // that HAS a body must work over this test's ordinary auto-commit connection; a Large Object
+    // would throw "Large Objects may not be used in auto-commit mode". Guards the oid->text fix.
+    mockMvc
+        .perform(
+            get("/api/pullrequests/{id}", PR_B1).header(X_REPOSITORY_ID, String.valueOf(REPO_B)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.id").value((int) PR_B1));
+  }
+
+  @Test
   void pullRequestByIdWithoutHeaderIsNotFound() throws Exception {
     // No header → null context → must not fall back to an unscoped findById (anonymous IDOR).
     mockMvc.perform(get("/api/pullrequests/{id}", PR_A1)).andExpect(status().isNotFound());
@@ -118,14 +130,17 @@ class PullRequestScopingIT extends HeliosIntegrationTest {
     jdbc.update(
         "INSERT INTO issue (id, repository_id, issue_type, number, additions, deletions, "
             + "changed_files, commits, comments_count, is_locked, is_draft, is_merged, "
-            + "is_mergeable, maintainer_can_modify, state, title, html_url, created_at, "
+            + "is_mergeable, maintainer_can_modify, state, title, html_url, body, created_at, "
             + "updated_at) VALUES "
             + "(?, ?, 'PULL_REQUEST', ?, 0, 0, 0, 0, 0, false, false, false, false, false, "
-            + "'OPEN', ?, ?, now(), now())",
+            + "'OPEN', ?, ?, ?, now(), now())",
         id,
         repositoryId,
         number,
         title,
-        "https://example/pr/" + id);
+        "https://example/pr/" + id,
+        // A non-null body: if Issue.body were still an @Lob/oid Large Object, loading the PR would
+        // throw in this test's auto-commit connection, so each load here guards the oid->text fix.
+        "PR body markdown for " + id);
   }
 }
