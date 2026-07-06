@@ -31,6 +31,22 @@ export type GitRepoSettingsDto = {
   packageName?: string;
 };
 
+export type CategoryConfig = {
+  name?: string;
+  nodes?: Array<NodeConfig>;
+};
+
+export type NodeConfig = {
+  key?: string;
+  label?: string;
+  jobNameMatchers?: Array<string>;
+  workflowNameMatcher?: string | null;
+};
+
+export type PipelineConfigDto = {
+  categories?: Array<CategoryConfig>;
+};
+
 export type WorkflowGroupDto = {
   id: number;
   name: string;
@@ -1071,6 +1087,60 @@ export type UpdateGitRepoSettingsResponses = {
 };
 
 export type UpdateGitRepoSettingsResponse = UpdateGitRepoSettingsResponses[keyof UpdateGitRepoSettingsResponses];
+
+export type GetPipelineConfigData = {
+  body?: never;
+  path: {
+    repositoryId: number;
+  };
+  query?: never;
+  url: '/api/settings/{repositoryId}/pipeline-config';
+};
+
+export type GetPipelineConfigErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type GetPipelineConfigError = GetPipelineConfigErrors[keyof GetPipelineConfigErrors];
+
+export type GetPipelineConfigResponses = {
+  /**
+   * OK
+   */
+  200: PipelineConfigDto;
+};
+
+export type GetPipelineConfigResponse = GetPipelineConfigResponses[keyof GetPipelineConfigResponses];
+
+export type UpdatePipelineConfigData = {
+  body: PipelineConfigDto;
+  path: {
+    repositoryId: number;
+  };
+  query?: never;
+  url: '/api/settings/{repositoryId}/pipeline-config';
+};
+
+export type UpdatePipelineConfigErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type UpdatePipelineConfigError = UpdatePipelineConfigErrors[keyof UpdatePipelineConfigErrors];
+
+export type UpdatePipelineConfigResponses = {
+  /**
+   * OK
+   */
+  200: PipelineConfigDto;
+};
+
+export type UpdatePipelineConfigResponse = UpdatePipelineConfigResponses[keyof UpdatePipelineConfigResponses];
 
 export type UpdateWorkflowGroupsData = {
   body: Array<WorkflowGroupDto>;
@@ -2500,6 +2570,33 @@ export type GetFailureAnalysisUsageResponses = {
 };
 
 export type GetFailureAnalysisUsageResponse = GetFailureAnalysisUsageResponses[keyof GetFailureAnalysisUsageResponses];
+
+export type GetPipelineConfigSuggestionsData = {
+  body?: never;
+  path: {
+    repositoryId: number;
+  };
+  query?: never;
+  url: '/api/settings/{repositoryId}/pipeline-config/suggestions';
+};
+
+export type GetPipelineConfigSuggestionsErrors = {
+  /**
+   * Conflict
+   */
+  409: ApiError;
+};
+
+export type GetPipelineConfigSuggestionsError = GetPipelineConfigSuggestionsErrors[keyof GetPipelineConfigSuggestionsErrors];
+
+export type GetPipelineConfigSuggestionsResponses = {
+  /**
+   * OK
+   */
+  200: PipelineConfigDto;
+};
+
+export type GetPipelineConfigSuggestionsResponse = GetPipelineConfigSuggestionsResponses[keyof GetPipelineConfigSuggestionsResponses];
 
 export type GetGroupsWithWorkflowsData = {
   body?: never;

@@ -1,5 +1,7 @@
 package de.tum.cit.aet.helios.workflow.pipeline;
 
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.not;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -10,219 +12,215 @@ import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 /**
- * End-to-end guard for {@code GET /api/pipeline/branch}. Covers both modes:
- *
- * <ul>
- *   <li>a canonical repository (in {@code helios.pipeline.repositories}) aggregates its jobs into
- *       the always-visible Build/Tests/Quality nodes (unmatched → PENDING);
- *   <li>a non-canonical repository falls back to its workflow-run view (never the Artemis-shaped
- *       catalog), so it isn't reduced to an all-pending skeleton;
- *   <li>no {@code X-REPOSITORY-ID} yields an empty pipeline (never a cross-repository leak).
- * </ul>
+ * End-to-end guard for {@code GET /api/pipeline/branch}. With no persisted config, a repo's
+ * pipeline is auto-detected from its observed CI jobs into the Build/Test/Quality lanes, each node
+ * aggregating the matching head-commit jobs with distinct states (queued-only = pending; fail-fast
+ * to FAILURE). The optional global {@code gate} badge reflects the required-checks job. No
+ * {@code X-REPOSITORY-ID} → empty (no leak).
  */
 class PipelineIT extends HeliosIntegrationTest {
 
-  // Canonical repo: nameWithOwner must be in helios.pipeline.repositories (default: Artemis).
   private static final long REPO = 1L;
   private static final long WF = 51L;
   private static final long RUN = 61L;
   private static final String BRANCH = "main";
   private static final String SHA = "deadbeef";
 
-  // Non-canonical repo -> group/run fallback.
-  private static final long REPO_B = 2L;
-  private static final long WF_B = 71L;
-  private static final long RUN_B = 81L;
-  private static final String BRANCH_B = "dev";
-  private static final String SHA_B = "cafebabe";
-
   @BeforeEach
   void seed() {
     JdbcTemplate jdbc = new JdbcTemplate(dataSource);
     jdbc.execute("TRUNCATE TABLE repository CASCADE");
-    insertRepo(jdbc, REPO, "ls1intum/Artemis");
+    insertRepo(jdbc, REPO, "ls1intum/repo-a");
     insertBranch(jdbc, REPO, BRANCH, SHA);
     insertWorkflow(jdbc, WF, REPO);
     insertRun(jdbc, RUN, REPO, WF, BRANCH, SHA);
-    // Build: native done+ok, docker running. Tests: client failed, server ok, e2e absent.
-    // Quality: client ok, server absent.
     insertJob(jdbc, 101, REPO, RUN, "Build / Build .war artifact", "COMPLETED", "SUCCESS");
-    insertJob(
-        jdbc, 102, REPO, RUN, "Build / Build and Push Docker Image (PR, amd64)", "IN_PROGRESS",
-        null);
     insertJob(jdbc, 103, REPO, RUN, "Test / Client Tests", "COMPLETED", "FAILURE");
-    insertJob(jdbc, 104, REPO, RUN, "Test / Server Tests (PostgreSQL)", "COMPLETED", "SUCCESS");
-    insertJob(jdbc, 105, REPO, RUN, "Quality / Client Code Style", "COMPLETED", "SUCCESS");
-
-    insertRepo(jdbc, REPO_B, "ls1intum/other");
-    insertBranch(jdbc, REPO_B, BRANCH_B, SHA_B);
-    insertWorkflow(jdbc, WF_B, REPO_B);
-    insertRun(jdbc, RUN_B, REPO_B, WF_B, BRANCH_B, SHA_B);
   }
 
   @Test
-  void canonicalRepositoryAggregatesJobsIntoCanonicalNodes() throws Exception {
+  void pipelineIsAutoDetectedFromJobsIntoBuildTestQualityLanes() throws Exception {
     mockMvc
         .perform(
             get("/api/pipeline/branch")
                 .param("branch", BRANCH)
                 .header(X_REPOSITORY_ID, String.valueOf(REPO)))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.categories.length()").value(3))
-        // Build
-        .andExpect(jsonPath("$.categories[0].name").value("Build"))
-        .andExpect(jsonPath("$.categories[0].nodes[0].key").value("build-native"))
-        .andExpect(jsonPath("$.categories[0].nodes[0].status").value("COMPLETED"))
-        .andExpect(jsonPath("$.categories[0].nodes[0].conclusion").value("SUCCESS"))
-        .andExpect(jsonPath("$.categories[0].nodes[1].key").value("build-docker"))
-        .andExpect(jsonPath("$.categories[0].nodes[1].status").value("IN_PROGRESS"))
-        // Tests
-        .andExpect(jsonPath("$.categories[1].name").value("Tests"))
-        .andExpect(jsonPath("$.categories[1].nodes[0].key").value("test-client"))
-        .andExpect(jsonPath("$.categories[1].nodes[0].status").value("COMPLETED"))
-        .andExpect(jsonPath("$.categories[1].nodes[0].conclusion").value("FAILURE"))
-        .andExpect(jsonPath("$.categories[1].nodes[1].key").value("test-server"))
-        .andExpect(jsonPath("$.categories[1].nodes[1].conclusion").value("SUCCESS"))
-        // e2e has no matching job → always visible, pending
-        .andExpect(jsonPath("$.categories[1].nodes[2].key").value("test-e2e"))
-        .andExpect(jsonPath("$.categories[1].nodes[2].status").value("PENDING"))
-        .andExpect(jsonPath("$.categories[1].nodes[2].conclusion").doesNotExist())
-        // Quality: client matched, server pending
-        .andExpect(jsonPath("$.categories[2].name").value("Quality"))
-        .andExpect(jsonPath("$.categories[2].nodes[0].key").value("quality-client"))
-        .andExpect(jsonPath("$.categories[2].nodes[0].status").value("COMPLETED"))
-        .andExpect(jsonPath("$.categories[2].nodes[1].key").value("quality-server"))
-        .andExpect(jsonPath("$.categories[2].nodes[1].status").value("PENDING"))
-        // Gate is always present for a canonical repo; here no matching job → not running yet.
-        .andExpect(jsonPath("$.gate.key").value("ci-gate"))
-        .andExpect(jsonPath("$.gate.status").value("PENDING"));
+        .andExpect(jsonPath("$.categories[*].name", hasItem("Build")))
+        .andExpect(jsonPath("$.categories[*].name", hasItem("Test")))
+        .andExpect(jsonPath("$.categories[*].name", hasItem("Quality")))
+        .andExpect(buildNodeStatus("Build .war artifact", hasItem("COMPLETED")))
+        .andExpect(buildNodeConclusion("Build .war artifact", hasItem("SUCCESS")))
+        .andExpect(testNodeStatus("Client Tests", hasItem("COMPLETED")))
+        .andExpect(testNodeConclusion("Client Tests", hasItem("FAILURE")))
+        // No required-checks job seeded → the gate badge is hidden (not a permanent PENDING badge).
+        .andExpect(jsonPath("$.gate").doesNotExist());
   }
 
   @Test
-  void nodeStates_queuedIsNotRunning_failFast_andGateReflectRequiredChecks() throws Exception {
+  void gateReflectsTheRequiredChecksJob() throws Exception {
     JdbcTemplate jdbc = new JdbcTemplate(dataSource);
-    final long runC = 62L;
-    final String branchC = "feature";
-    final String shaC = "feedface";
-    insertBranch(jdbc, REPO, branchC, shaC);
-    insertRun(jdbc, runC, REPO, WF, branchC, shaC);
-    // E2E: queued only → the node is "not running yet" (PENDING), not a spinner.
-    insertJob(jdbc, 201, REPO, runC, "E2E / Phase 1", "QUEUED", null);
-    // Native fail-fast + failing-leg link: leg 203 still runs and sorts first; leg 204 already
-    // failed. The node is FAILURE and must link to 204, so a plain "first URL" (203) fails here.
-    insertJob(jdbc, 203, REPO, runC, "Build / Build .war artifact", "IN_PROGRESS", null);
-    insertJob(jdbc, 204, REPO, runC, "Build / Build .war artifact (retry)", "COMPLETED", "FAILURE");
-    // The required-checks gate job failed.
-    insertJob(jdbc, 205, REPO, runC, "All required CI Passed", "COMPLETED", "FAILURE");
+    final long run = 62L;
+    final String branch = "release";
+    final String sha = "d00dfeed";
+    insertBranch(jdbc, REPO, branch, sha);
+    insertRun(jdbc, run, REPO, WF, branch, sha);
+    // The gate maps (globally) to the "All required CI Passed" job in workflow "CI".
+    insertJob(jdbc, 205, REPO, run, "All required CI Passed", "COMPLETED", "FAILURE");
 
     mockMvc
         .perform(
             get("/api/pipeline/branch")
-                .param("branch", branchC)
+                .param("branch", branch)
                 .header(X_REPOSITORY_ID, String.valueOf(REPO)))
         .andExpect(status().isOk())
-        // E2E queued-only → not running yet.
-        .andExpect(jsonPath("$.categories[1].nodes[2].key").value("test-e2e"))
-        .andExpect(jsonPath("$.categories[1].nodes[2].status").value("PENDING"))
-        .andExpect(jsonPath("$.categories[1].nodes[2].conclusion").doesNotExist())
-        // Native fail-fast: FAILURE even though a leg is still IN_PROGRESS, and the link points at
-        // the failing leg (204), not the still-running one (203) that sorts first.
-        .andExpect(jsonPath("$.categories[0].nodes[0].key").value("build-native"))
-        .andExpect(jsonPath("$.categories[0].nodes[0].status").value("IN_PROGRESS"))
-        .andExpect(jsonPath("$.categories[0].nodes[0].conclusion").value("FAILURE"))
-        .andExpect(jsonPath("$.categories[0].nodes[0].htmlUrl").value("https://example/job/204"))
-        // Gate reflects the required-checks job.
+        .andExpect(jsonPath("$.gate.key").value("ci-gate"))
         .andExpect(jsonPath("$.gate.status").value("COMPLETED"))
         .andExpect(jsonPath("$.gate.conclusion").value("FAILURE"));
   }
 
   @Test
-  void worstWinsConclusionPrecedenceAcrossLegs() throws Exception {
+  void nodeStatesQueuedIsPendingAndFailingLegFailsFast() throws Exception {
     JdbcTemplate jdbc = new JdbcTemplate(dataSource);
-    final long runD = 63L;
-    final String branchD = "release";
-    final String shaD = "d00dfeed";
-    insertBranch(jdbc, REPO, branchD, shaD);
-    insertRun(jdbc, runD, REPO, WF, branchD, shaD);
-    // quality-server aggregates style + quality; cancelled beats success.
-    insertJob(jdbc, 301, REPO, runD, "Quality / Server Code Style", "COMPLETED", "SUCCESS");
-    insertJob(jdbc, 302, REPO, runD, "Quality / Server Code Quality", "COMPLETED", "CANCELLED");
-    // quality-client: every leg skipped → the node is skipped (not success).
-    insertJob(jdbc, 303, REPO, runD, "Quality / Client Code Style", "COMPLETED", "SKIPPED");
-    insertJob(jdbc, 304, REPO, runD, "Quality / Client Compilation", "COMPLETED", "SKIPPED");
-    // build-docker: real Artemis shape — PR image ran, release-only leg skipped → success.
-    insertJob(jdbc, 305, REPO, runD, "Build / Build and Push Docker Image (PR, amd64)", "COMPLETED",
-        "SUCCESS");
-    insertJob(jdbc, 306, REPO, runD, "Build / Build and Push Docker Image", "COMPLETED", "SKIPPED");
-    // build-native: a terminal job with no pass/fail/skip verdict folds to NEUTRAL.
-    insertJob(jdbc, 307, REPO, runD, "Build / Build .war artifact", "COMPLETED", "ACTION_REQUIRED");
+    final long run = 63L;
+    final String branch = "feature";
+    final String sha = "feedface";
+    insertBranch(jdbc, REPO, branch, sha);
+    insertRun(jdbc, run, REPO, WF, branch, sha);
+    // One Build node ("Build .war artifact"): a still-running leg plus an already-failed leg (the
+    // "(retry)" suffix is stripped, so both collapse into the same detected node).
+    insertJob(jdbc, 301, REPO, run, "Build / Build .war artifact", "IN_PROGRESS", null);
+    insertJob(jdbc, 302, REPO, run, "Build / Build .war artifact (retry)", "COMPLETED", "FAILURE");
+    // A queued-only E2E node → "not running yet" (PENDING), not a spinner.
+    insertJob(jdbc, 303, REPO, run, "E2E / Phase 1", "QUEUED", null);
 
     mockMvc
         .perform(
             get("/api/pipeline/branch")
-                .param("branch", branchD)
+                .param("branch", branch)
                 .header(X_REPOSITORY_ID, String.valueOf(REPO)))
         .andExpect(status().isOk())
-        // CANCELLED > SUCCESS
-        .andExpect(jsonPath("$.categories[2].nodes[1].key").value("quality-server"))
-        .andExpect(jsonPath("$.categories[2].nodes[1].conclusion").value("CANCELLED"))
-        // all-skipped → SKIPPED
-        .andExpect(jsonPath("$.categories[2].nodes[0].key").value("quality-client"))
-        .andExpect(jsonPath("$.categories[2].nodes[0].conclusion").value("SKIPPED"))
-        // mixed success+skipped → SUCCESS (not skipped)
-        .andExpect(jsonPath("$.categories[0].nodes[1].key").value("build-docker"))
-        .andExpect(jsonPath("$.categories[0].nodes[1].conclusion").value("SUCCESS"))
-        // action_required/stale/neutral fold to NEUTRAL (no warning state)
-        .andExpect(jsonPath("$.categories[0].nodes[0].key").value("build-native"))
-        .andExpect(jsonPath("$.categories[0].nodes[0].conclusion").value("NEUTRAL"));
+        // Fail-fast: FAILURE while a leg is still IN_PROGRESS, linking to the failing leg (302).
+        .andExpect(buildNodeStatus("Build .war artifact", hasItem("IN_PROGRESS")))
+        .andExpect(buildNodeConclusion("Build .war artifact", hasItem("FAILURE")))
+        .andExpect(
+            jsonPath(
+                "$.categories[?(@.name=='Build')].nodes[?(@.label=='Build .war artifact')].htmlUrl",
+                hasItem("https://example/job/302")))
+        // Queued-only E2E node is pending, not in-progress.
+        .andExpect(testNodeStatus("Phase 1", hasItem("PENDING")));
   }
 
   @Test
-  void workflowNameMatcherExcludesJobsFromOtherWorkflows() throws Exception {
+  void aggregatesWorstWinsAndInProgressWhenNoLegFailed() throws Exception {
     JdbcTemplate jdbc = new JdbcTemplate(dataSource);
-    final long runE = 64L;
-    final String branchE = "hotfix";
-    final String shaE = "b16b00b5";
-    insertBranch(jdbc, REPO, branchE, shaE);
-    insertRun(jdbc, runE, REPO, WF, branchE, shaE);
-    // A job whose NAME matches test-client but that ran in a different workflow must not feed the
-    // node — workflow-name-matcher "CI" scopes matching to the CI orchestrator run.
-    insertJob(jdbc, 401, REPO, runE, "Test / Client Tests", "Nightly", "COMPLETED", "SUCCESS");
+    final long run = 64L;
+    final String branch = "aggregate";
+    final String sha = "abadcafe";
+    insertBranch(jdbc, REPO, branch, sha);
+    insertRun(jdbc, run, REPO, WF, branch, sha);
+    // Build "Deploy artifact": a passing leg + a cancelled leg (matrix legs collapse to one node)
+    // → worst-wins is CANCELLED (neutral), and crucially not a failure.
+    insertJob(jdbc, 401, REPO, run, "Build / Deploy artifact", "COMPLETED", "SUCCESS");
+    insertJob(jdbc, 402, REPO, run, "Build / Deploy artifact (2)", "COMPLETED", "CANCELLED");
+    // Test "Server Tests": a passing leg + a still-running leg → IN_PROGRESS (not fail, not done).
+    insertJob(jdbc, 403, REPO, run, "Test / Server Tests", "COMPLETED", "SUCCESS");
+    insertJob(jdbc, 404, REPO, run, "Test / Server Tests (2)", "IN_PROGRESS", null);
+    // Quality "Lint": a single skipped leg → SKIPPED.
+    insertJob(jdbc, 405, REPO, run, "Quality / Lint", "COMPLETED", "SKIPPED");
 
     mockMvc
         .perform(
             get("/api/pipeline/branch")
-                .param("branch", branchE)
+                .param("branch", branch)
                 .header(X_REPOSITORY_ID, String.valueOf(REPO)))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.categories[1].nodes[0].key").value("test-client"))
-        .andExpect(jsonPath("$.categories[1].nodes[0].status").value("PENDING"));
+        .andExpect(buildNodeStatus("Deploy artifact", hasItem("COMPLETED")))
+        .andExpect(buildNodeConclusion("Deploy artifact", hasItem("CANCELLED")))
+        // A still-running leg keeps the node IN_PROGRESS since nothing failed.
+        .andExpect(testNodeStatus("Server Tests", hasItem("IN_PROGRESS")))
+        .andExpect(
+            jsonPath(
+                "$.categories[?(@.name=='Quality')].nodes[?(@.label=='Lint')].conclusion",
+                hasItem("SKIPPED")));
   }
 
   @Test
-  void nonCanonicalRepositoryFallsBackToItsRunsNotCanonicalNodes() throws Exception {
-    // ls1intum/other is not in the canonical allow-list, so the pipeline shows its workflow runs
-    // (here ungrouped) rather than the Artemis Build/Tests/Quality catalog.
+  void gateShowsSuccessWhenRequiredChecksJobPasses() throws Exception {
+    JdbcTemplate jdbc = new JdbcTemplate(dataSource);
+    final long run = 65L;
+    final String branch = "gate-green";
+    final String sha = "600df00d";
+    insertBranch(jdbc, REPO, branch, sha);
+    insertRun(jdbc, run, REPO, WF, branch, sha);
+    insertJob(jdbc, 501, REPO, run, "All required CI Passed", "COMPLETED", "SUCCESS");
+
     mockMvc
         .perform(
             get("/api/pipeline/branch")
-                .param("branch", BRANCH_B)
-                .header(X_REPOSITORY_ID, String.valueOf(REPO_B)))
+                .param("branch", branch)
+                .header(X_REPOSITORY_ID, String.valueOf(REPO)))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.categories.length()").value(1))
-        .andExpect(jsonPath("$.categories[0].name").value("Ungrouped"))
-        .andExpect(jsonPath("$.categories[0].nodes[0].key").value("run-" + RUN_B))
-        .andExpect(jsonPath("$.categories[0].nodes[0].label").value("CI"))
-        .andExpect(jsonPath("$.categories[0].nodes[0].status").value("COMPLETED"));
+        .andExpect(jsonPath("$.gate.key").value("ci-gate"))
+        .andExpect(jsonPath("$.gate.status").value("COMPLETED"))
+        .andExpect(jsonPath("$.gate.conclusion").value("SUCCESS"));
+  }
+
+  @Test
+  void pipelineDoesNotLeakAnotherRepositorysJobs() throws Exception {
+    JdbcTemplate jdbc = new JdbcTemplate(dataSource);
+    final long repoB = 2L;
+    final long wfB = 52L;
+    final long runB = 66L;
+    insertRepo(jdbc, repoB, "ls1intum/repo-b");
+    // Repo B shares the branch name and has an identically-named Build job — but it FAILED.
+    insertBranch(jdbc, repoB, BRANCH, SHA);
+    insertWorkflow(jdbc, wfB, repoB);
+    insertRun(jdbc, runB, repoB, wfB, BRANCH, SHA);
+    insertJob(jdbc, 601, repoB, runB, "Build / Build .war artifact", "COMPLETED", "FAILURE");
+
+    // Repo A's pipeline reflects only A's job (SUCCESS), never B's identically-named FAILURE.
+    mockMvc
+        .perform(
+            get("/api/pipeline/branch")
+                .param("branch", BRANCH)
+                .header(X_REPOSITORY_ID, String.valueOf(REPO)))
+        .andExpect(status().isOk())
+        .andExpect(buildNodeConclusion("Build .war artifact", hasItem("SUCCESS")))
+        .andExpect(buildNodeConclusion("Build .war artifact", not(hasItem("FAILURE"))));
   }
 
   @Test
   void withoutRepositoryContextPipelineIsEmpty() throws Exception {
-    // No X-REPOSITORY-ID → no repository → nothing to show (never leaks another repo's runs).
     mockMvc
         .perform(get("/api/pipeline/branch").param("branch", BRANCH))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.categories.length()").value(0));
+  }
+
+  // --- jsonPath helpers (find category by name, node by label) --------------------------------
+
+  private static org.springframework.test.web.servlet.ResultMatcher buildNodeStatus(
+      String label, org.hamcrest.Matcher<Iterable<? super String>> m) {
+    return jsonPath(
+        "$.categories[?(@.name=='Build')].nodes[?(@.label=='" + label + "')].status", m);
+  }
+
+  private static org.springframework.test.web.servlet.ResultMatcher buildNodeConclusion(
+      String label, org.hamcrest.Matcher<Iterable<? super String>> m) {
+    return jsonPath(
+        "$.categories[?(@.name=='Build')].nodes[?(@.label=='" + label + "')].conclusion", m);
+  }
+
+  private static org.springframework.test.web.servlet.ResultMatcher testNodeStatus(
+      String label, org.hamcrest.Matcher<Iterable<? super String>> m) {
+    return jsonPath("$.categories[?(@.name=='Test')].nodes[?(@.label=='" + label + "')].status", m);
+  }
+
+  private static org.springframework.test.web.servlet.ResultMatcher testNodeConclusion(
+      String label, org.hamcrest.Matcher<Iterable<? super String>> m) {
+    return jsonPath(
+        "$.categories[?(@.name=='Test')].nodes[?(@.label=='" + label + "')].conclusion", m);
   }
 
   private static void insertRepo(JdbcTemplate jdbc, long id, String nameWithOwner) {
@@ -274,26 +272,13 @@ class PipelineIT extends HeliosIntegrationTest {
       String name,
       String statusValue,
       String conclusionValue) {
-    insertJob(jdbc, id, repositoryId, runId, name, "CI", statusValue, conclusionValue);
-  }
-
-  private static void insertJob(
-      JdbcTemplate jdbc,
-      long id,
-      long repositoryId,
-      long runId,
-      String name,
-      String workflowName,
-      String statusValue,
-      String conclusionValue) {
     jdbc.update(
         "INSERT INTO workflow_job (id, repository_id, workflow_run_id, name, workflow_name, "
-            + "status, conclusion, html_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            + "status, conclusion, html_url) VALUES (?, ?, ?, ?, 'CI', ?, ?, ?)",
         id,
         repositoryId,
         runId,
         name,
-        workflowName,
         statusValue,
         conclusionValue,
         "https://example/job/" + id);

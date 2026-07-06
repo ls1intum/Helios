@@ -127,62 +127,12 @@ helios:
             # runs every day at 02:00 (server time)
             cron: "0 0 2 * * *"
             max-age: 1d
-    # Canonical, always-visible pipeline nodes. Each node is rendered for every branch/PR (PENDING
-    # until a matching CI job appears) and maps to GitHub Actions jobs whose name starts with any
-    # job-name-matcher (case-insensitive). Defaults target Artemis' single "CI" orchestrator run,
-    # whose Build/Test/Quality/E2E stages surface as jobs named "<Stage> / <Job>". See the pipeline
-    # configuration docs to adapt these matchers to another CI layout.
+    # Global pipeline defaults. Per-repository categories and nodes are stored in the database (see
+    # PipelineConfigService); this holds only the optional merge-readiness gate — mapped to the CI's
+    # single required-checks job and rendered as a header badge next to the pipeline.
     pipeline:
-        # Repositories (nameWithOwner) that render the canonical catalog below. Any other repo
-        # falls back to its WorkflowGroup-based pipeline, so a repo whose CI job names don't match
-        # these Artemis-shaped matchers keeps a meaningful view instead of all-pending nodes.
-        repositories: ["ls1intum/Artemis"]
-        # Overall merge-readiness gate, rendered as a badge next to the pipeline header (not inside a
-        # category). Maps to the single required-checks job that reflects "can this PR merge".
         gate:
             key: "ci-gate"
             label: "All required CI passed"
             job-name-matchers: ["All required CI Passed"]
             workflow-name-matcher: "CI"
-        # workflow-name-matcher constrains each node to the "CI" orchestrator run, so an identically
-        # named job in another workflow on the same commit can't silently merge into a node.
-        categories:
-            - name: "Build"
-              nodes:
-                  - key: "build-native"
-                    label: "Native"
-                    job-name-matchers: ["Build / Build .war artifact"]
-                    workflow-name-matcher: "CI"
-                  - key: "build-docker"
-                    label: "Docker"
-                    job-name-matchers: ["Build / Build and Push Docker Image"]
-                    workflow-name-matcher: "CI"
-            - name: "Tests"
-              nodes:
-                  - key: "test-client"
-                    label: "Client"
-                    job-name-matchers: ["Test / Client Tests"]
-                    workflow-name-matcher: "CI"
-                  - key: "test-server"
-                    label: "Server"
-                    job-name-matchers: ["Test / Server Tests"]
-                    workflow-name-matcher: "CI"
-                  - key: "test-e2e"
-                    label: "E2E"
-                    job-name-matchers: ["E2E /"]
-                    workflow-name-matcher: "CI"
-            - name: "Quality"
-              nodes:
-                  - key: "quality-client"
-                    label: "Client"
-                    job-name-matchers:
-                        - "Quality / Client Code Style"
-                        - "Quality / Client Compilation"
-                    workflow-name-matcher: "CI"
-                  - key: "quality-server"
-                    label: "Server"
-                    job-name-matchers:
-                        - "Quality / Server Code Style"
-                        - "Quality / Server Code Quality"
-                        - "Quality / Query Quality Check"
-                    workflow-name-matcher: "CI"

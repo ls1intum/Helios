@@ -159,6 +159,12 @@ import type {
   GetPipelineByPullRequestData,
   GetPipelineByPullRequestErrors,
   GetPipelineByPullRequestResponses,
+  GetPipelineConfigData,
+  GetPipelineConfigErrors,
+  GetPipelineConfigResponses,
+  GetPipelineConfigSuggestionsData,
+  GetPipelineConfigSuggestionsErrors,
+  GetPipelineConfigSuggestionsResponses,
   GetPullRequestByIdData,
   GetPullRequestByIdErrors,
   GetPullRequestByIdResponses,
@@ -260,6 +266,9 @@ import type {
   UpdateNotificationPreferencesData,
   UpdateNotificationPreferencesErrors,
   UpdateNotificationPreferencesResponses,
+  UpdatePipelineConfigData,
+  UpdatePipelineConfigErrors,
+  UpdatePipelineConfigResponses,
   UpdateReleaseNameData,
   UpdateReleaseNameErrors,
   UpdateReleaseNameResponses,
@@ -357,6 +366,23 @@ export const updateGitRepoSettings = <ThrowOnError extends boolean = false>(
 ): RequestResult<UpdateGitRepoSettingsResponses, UpdateGitRepoSettingsErrors, ThrowOnError> =>
   (options.client ?? client).put<UpdateGitRepoSettingsResponses, UpdateGitRepoSettingsErrors, ThrowOnError>({
     url: '/api/settings/{repositoryId}/settings',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+
+export const getPipelineConfig = <ThrowOnError extends boolean = false>(
+  options: Options<GetPipelineConfigData, ThrowOnError>
+): RequestResult<GetPipelineConfigResponses, GetPipelineConfigErrors, ThrowOnError> =>
+  (options.client ?? client).get<GetPipelineConfigResponses, GetPipelineConfigErrors, ThrowOnError>({ url: '/api/settings/{repositoryId}/pipeline-config', ...options });
+
+export const updatePipelineConfig = <ThrowOnError extends boolean = false>(
+  options: Options<UpdatePipelineConfigData, ThrowOnError>
+): RequestResult<UpdatePipelineConfigResponses, UpdatePipelineConfigErrors, ThrowOnError> =>
+  (options.client ?? client).put<UpdatePipelineConfigResponses, UpdatePipelineConfigErrors, ThrowOnError>({
+    url: '/api/settings/{repositoryId}/pipeline-config',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -782,6 +808,14 @@ export const getFailureAnalysisUsage = <ThrowOnError extends boolean = false>(
   options?: Options<GetFailureAnalysisUsageData, ThrowOnError>
 ): RequestResult<GetFailureAnalysisUsageResponses, GetFailureAnalysisUsageErrors, ThrowOnError> =>
   (options?.client ?? client).get<GetFailureAnalysisUsageResponses, GetFailureAnalysisUsageErrors, ThrowOnError>({ url: '/api/test-failure-analysis/usage', ...options });
+
+export const getPipelineConfigSuggestions = <ThrowOnError extends boolean = false>(
+  options: Options<GetPipelineConfigSuggestionsData, ThrowOnError>
+): RequestResult<GetPipelineConfigSuggestionsResponses, GetPipelineConfigSuggestionsErrors, ThrowOnError> =>
+  (options.client ?? client).get<GetPipelineConfigSuggestionsResponses, GetPipelineConfigSuggestionsErrors, ThrowOnError>({
+    url: '/api/settings/{repositoryId}/pipeline-config/suggestions',
+    ...options,
+  });
 
 export const getGroupsWithWorkflows = <ThrowOnError extends boolean = false>(
   options: Options<GetGroupsWithWorkflowsData, ThrowOnError>

@@ -1,23 +1,16 @@
 package de.tum.cit.aet.helios.workflow.pipeline;
 
 import de.tum.cit.aet.helios.filters.RepositoryContext;
-import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
-import de.tum.cit.aet.helios.gitrepo.GitRepository;
-import de.tum.cit.aet.helios.gitreposettings.WorkflowGroupDto;
-import de.tum.cit.aet.helios.gitreposettings.WorkflowGroupService;
-import de.tum.cit.aet.helios.gitreposettings.WorkflowMembershipDto;
 import de.tum.cit.aet.helios.workflow.WorkflowJob;
 import de.tum.cit.aet.helios.workflow.WorkflowJobRepository;
 import de.tum.cit.aet.helios.workflow.WorkflowRun;
 import de.tum.cit.aet.helios.workflow.WorkflowRunDto;
 import de.tum.cit.aet.helios.workflow.WorkflowRunService;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
+import de.tum.cit.aet.helios.workflow.pipeline.config.PipelineConfigDto;
+import de.tum.cit.aet.helios.workflow.pipeline.config.PipelineConfigDto.NodeConfig;
+import de.tum.cit.aet.helios.workflow.pipeline.config.PipelineConfigService;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -25,81 +18,74 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 /**
- * Builds the pipeline for a branch or pull request.
+ * Builds the pipeline for a branch or pull request from the current repository's per-repo
+ * configuration ({@link PipelineConfigService}). Every repository gets the Build/Test/Quality
+ * lanes; each configured node aggregates the head-commit runs' {@link WorkflowJob}s that match it.
  *
- * <p>For repositories listed in {@code helios.pipeline.repositories} the canonical, always-visible
- * node catalog (see {@link PipelineProperties}) is used: the head-commit runs' {@link WorkflowJob}s
- * are matched against each configured node and aggregated. Every other repository falls back to
- * the previous behaviour — its {@code WorkflowGroup}s rendered as categories of workflow-run nodes
- * — so a repository whose CI job names don't match the (Artemis-shaped) catalog keeps a meaningful
- * pipeline instead of an all-pending skeleton.
+ * <p>Node states are distinct: a node with no matching job (or only queued jobs) is {@code PENDING}
+ * (not running yet), and a failing leg flips the node to {@code FAILURE} immediately (fail-fast),
+ * even while slower legs run, so the earliest actionable signal isn't hidden behind a spinner. An
+ * optional global {@code gate} node ({@link PipelineProperties}) is surfaced as a header badge.
  */
 @Service
 @RequiredArgsConstructor
 public class PipelineService {
 
-  /** Conclusions that count as a failure for worst-wins aggregation. */
+  /** Conclusions that count as a failure for fail-fast + worst-wins aggregation. */
   private static final Set<WorkflowRun.Conclusion> FAILED_CONCLUSIONS =
       Set.of(
           WorkflowRun.Conclusion.FAILURE,
           WorkflowRun.Conclusion.TIMED_OUT,
           WorkflowRun.Conclusion.STARTUP_FAILURE);
 
-  private final PipelineProperties properties;
   private final WorkflowRunService workflowRunService;
   private final WorkflowJobRepository workflowJobRepository;
-  private final WorkflowGroupService workflowGroupService;
-  private final GitRepoRepository gitRepoRepository;
+  private final PipelineConfigService pipelineConfigService;
+  private final PipelineProperties properties;
 
   public PipelineDto getPipelineForBranch(String branchName) {
-    return buildFor(workflowRunService.getLatestWorkflowRunsByBranchAndHeadCommitSha(branchName));
+    return build(workflowRunService.getLatestWorkflowRunsByBranchAndHeadCommitSha(branchName));
   }
 
   public PipelineDto getPipelineForPullRequest(Long pullRequestId) {
-    return buildFor(
+    return build(
         workflowRunService.getLatestWorkflowRunsByPullRequestIdAndHeadCommit(pullRequestId));
   }
 
-  private PipelineDto buildFor(List<WorkflowRunDto> headRuns) {
+  private PipelineDto build(List<WorkflowRunDto> headRuns) {
     final Long repositoryId = RepositoryContext.getRepositoryId();
-    return isCanonicalRepository(repositoryId)
-        ? buildCanonical(headRuns)
-        : buildGrouped(repositoryId, headRuns);
-  }
-
-  /** Whether the current repository uses the canonical node catalog (vs. the group fallback). */
-  private boolean isCanonicalRepository(Long repositoryId) {
-    if (repositoryId == null || properties.repositories().isEmpty()) {
-      return false;
+    if (repositoryId == null) {
+      return new PipelineDto(List.of(), null);
     }
-    return gitRepoRepository
-        .findByRepositoryId(repositoryId)
-        .map(GitRepository::getNameWithOwner)
-        .map(properties.repositories()::contains)
-        .orElse(false);
-  }
+    final PipelineConfigDto config = pipelineConfigService.getConfig(repositoryId);
 
-  // --- Canonical catalog (config-driven Build/Tests/Quality nodes) -----------------------------
-
-  private PipelineDto buildCanonical(List<WorkflowRunDto> headRuns) {
     final List<Long> runIds = headRuns.stream().map(WorkflowRunDto::id).toList();
     // Runs are already scoped to the current repository, so their jobs are too.
     final List<WorkflowJob> jobs =
         runIds.isEmpty() ? List.of() : workflowJobRepository.findByWorkflowRunIdIn(runIds);
 
     final List<PipelineDto.Category> categories =
-        properties.categories().stream()
+        config.categories().stream()
             .map(
                 category ->
                     new PipelineDto.Category(
                         category.name(),
                         category.nodes().stream().map(node -> buildNode(node, jobs)).toList()))
             .toList();
-    // Optional overall merge-gate node (e.g. Artemis' "All required CI Passed"), surfaced as a
-    // header badge on the client. Absent for the group fallback.
-    final PipelineDto.Node gate =
-        properties.gate() == null ? null : buildNode(properties.gate(), jobs);
+
+    // Optional overall merge-gate node (e.g. Artemis' "All required CI Passed"), a header badge.
+    // Only surfaced when a job actually matches it, so repos without the (globally-configured,
+    // Artemis-shaped) required-checks job don't show a permanently-PENDING gate badge.
+    final PipelineDto.Node gate = buildGate(jobs);
     return new PipelineDto(categories, gate);
+  }
+
+  private PipelineDto.Node buildGate(List<WorkflowJob> jobs) {
+    final NodeConfig gateConfig = properties.gate();
+    if (gateConfig == null || jobs.stream().noneMatch(job -> matches(gateConfig, job))) {
+      return null;
+    }
+    return buildNode(gateConfig, jobs);
   }
 
   /**
@@ -108,7 +94,7 @@ public class PipelineService {
    * failing leg flips the node to {@code FAILURE} <i>immediately</i> (fail-fast), even while slower
    * legs run, so the earliest actionable signal is never hidden behind the spinner.
    */
-  private PipelineDto.Node buildNode(PipelineProperties.Node node, List<WorkflowJob> jobs) {
+  private PipelineDto.Node buildNode(NodeConfig node, List<WorkflowJob> jobs) {
     final List<WorkflowJob> matched = jobs.stream().filter(job -> matches(node, job)).toList();
     if (matched.isEmpty()) {
       // Not started yet (or never runs for this PR): always-visible, rendered as "not running yet".
@@ -161,8 +147,7 @@ public class PipelineService {
    * On a failure, links to a job carrying the failing conclusion so the click-through opens the
    * failing leg, not an arbitrary passing one; otherwise the first job with a URL.
    */
-  private static String pickHtmlUrl(
-      List<WorkflowJob> matched, WorkflowRun.Conclusion conclusion) {
+  private static String pickHtmlUrl(List<WorkflowJob> matched, WorkflowRun.Conclusion conclusion) {
     if (conclusion == WorkflowRun.Conclusion.FAILURE) {
       final String failing =
           matched.stream()
@@ -182,7 +167,7 @@ public class PipelineService {
         .orElse(null);
   }
 
-  private static boolean matches(PipelineProperties.Node node, WorkflowJob job) {
+  private static boolean matches(NodeConfig node, WorkflowJob job) {
     if (job.getName() == null) {
       return false;
     }
@@ -201,10 +186,9 @@ public class PipelineService {
 
   /**
    * Worst-wins conclusion for terminal, non-failing jobs. Failures are handled earlier by
-   * {@link #buildNode} (fail-fast), so this is only reached when no matched job failed. The split
-   * mirrors the client's status colours: {@code CANCELLED} and {@code SKIPPED} render neutral-grey
-   * (unlike {@code TIMED_OUT}/{@code STARTUP_FAILURE}, which are failures), and {@code
-   * ACTION_REQUIRED}/{@code STALE} fold into {@code NEUTRAL} — the model has no warning state.
+   * {@link #buildNode} (fail-fast), so this is only reached when no matched job failed. {@code
+   * CANCELLED}/{@code SKIPPED} render neutral-grey; {@code ACTION_REQUIRED}/{@code STALE} fold into
+   * {@code NEUTRAL} — the model has no warning state.
    */
   private static WorkflowRun.Conclusion aggregateConclusion(List<WorkflowJob> jobs) {
     final Set<WorkflowRun.Conclusion> present =
@@ -222,63 +206,5 @@ public class PipelineService {
       return WorkflowRun.Conclusion.SUCCESS;
     }
     return WorkflowRun.Conclusion.NEUTRAL;
-  }
-
-  // --- Group fallback (previous behaviour for non-canonical repositories) ----------------------
-
-  private PipelineDto buildGrouped(Long repositoryId, List<WorkflowRunDto> headRuns) {
-    if (repositoryId == null) {
-      return new PipelineDto(List.of(), null);
-    }
-    // getLatest... returns the latest run per workflowId, so a workflowId maps to one run.
-    final Map<Long, WorkflowRunDto> runByWorkflowId = new HashMap<>();
-    for (WorkflowRunDto run : headRuns) {
-      runByWorkflowId.putIfAbsent(run.workflowId(), run);
-    }
-
-    final Set<Long> groupedWorkflowIds = new HashSet<>();
-    final List<PipelineDto.Category> categories = new ArrayList<>();
-
-    final List<WorkflowGroupDto> groups =
-        workflowGroupService.getAllWorkflowGroupsByRepositoryId(repositoryId).stream()
-            .sorted(Comparator.comparing(WorkflowGroupDto::orderIndex))
-            .toList();
-    for (WorkflowGroupDto group : groups) {
-      final List<WorkflowMembershipDto> memberships =
-          group.memberships() == null ? List.of() : group.memberships();
-      final List<PipelineDto.Node> nodes = new ArrayList<>();
-      for (WorkflowMembershipDto membership :
-          memberships.stream().sorted(Comparator.comparing(WorkflowMembershipDto::orderIndex))
-              .toList()) {
-        groupedWorkflowIds.add(membership.workflowId());
-        final WorkflowRunDto run = runByWorkflowId.get(membership.workflowId());
-        if (run != null) {
-          nodes.add(runNode(run));
-        }
-      }
-      if (!nodes.isEmpty()) {
-        categories.add(new PipelineDto.Category(group.name(), nodes));
-      }
-    }
-
-    // Runs whose workflow is in no group surface under an "Ungrouped" category (as before).
-    final List<PipelineDto.Node> ungrouped =
-        headRuns.stream()
-            .filter(run -> !groupedWorkflowIds.contains(run.workflowId()))
-            .map(PipelineService::runNode)
-            .toList();
-    if (!ungrouped.isEmpty()) {
-      categories.add(new PipelineDto.Category("Ungrouped", ungrouped));
-    }
-    return new PipelineDto(categories, null);
-  }
-
-  private static PipelineDto.Node runNode(WorkflowRunDto run) {
-    return new PipelineDto.Node(
-        "run-" + run.id(),
-        run.name(),
-        run.status() == null ? null : run.status().name(),
-        run.conclusion() == null ? null : run.conclusion().name(),
-        run.htmlUrl());
   }
 }

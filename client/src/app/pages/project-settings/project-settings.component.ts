@@ -10,6 +10,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { PanelModule } from 'primeng/panel';
 import { TableModule } from 'primeng/table';
 import { LockingThresholdsComponent } from '@app/components/locking-thresholds/locking-thresholds.component';
+import { PipelineConfigComponent } from '@app/components/pipeline-config/pipeline-config.component';
 import { PageHeadingComponent } from '@app/components/page-heading/page-heading.component';
 import { DeploymentWorkflowConfigDto, RotateSecretResponses, TestTypeDto, WorkflowDto, WorkflowGroupDto, WorkflowMembershipDto } from '@app/core/modules/openapi';
 import {
@@ -56,6 +57,7 @@ import { getStatusColors } from '@app/core/utils/status-colors';
     InputTextModule,
     PageHeadingComponent,
     LockingThresholdsComponent,
+    PipelineConfigComponent,
     PanelModule,
     DialogModule,
     TooltipModule,
