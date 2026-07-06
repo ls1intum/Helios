@@ -44,5 +44,6 @@ The Artemis open-source project relies on GitHub Actions for its CI/CD workflows
   :maxdepth: 3
 
   admin/setup
+  admin/pipeline_configuration
   admin/monitoring
   admin/troubleshooting
