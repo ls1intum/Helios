@@ -92,7 +92,111 @@ class PipelineIT extends HeliosIntegrationTest {
         .andExpect(jsonPath("$.categories[2].nodes[0].key").value("quality-client"))
         .andExpect(jsonPath("$.categories[2].nodes[0].status").value("COMPLETED"))
         .andExpect(jsonPath("$.categories[2].nodes[1].key").value("quality-server"))
-        .andExpect(jsonPath("$.categories[2].nodes[1].status").value("PENDING"));
+        .andExpect(jsonPath("$.categories[2].nodes[1].status").value("PENDING"))
+        // Gate is always present for a canonical repo; here no matching job → not running yet.
+        .andExpect(jsonPath("$.gate.key").value("ci-gate"))
+        .andExpect(jsonPath("$.gate.status").value("PENDING"));
+  }
+
+  @Test
+  void nodeStates_queuedIsNotRunning_failFast_andGateReflectRequiredChecks() throws Exception {
+    JdbcTemplate jdbc = new JdbcTemplate(dataSource);
+    final long runC = 62L;
+    final String branchC = "feature";
+    final String shaC = "feedface";
+    insertBranch(jdbc, REPO, branchC, shaC);
+    insertRun(jdbc, runC, REPO, WF, branchC, shaC);
+    // E2E: queued only → the node is "not running yet" (PENDING), not a spinner.
+    insertJob(jdbc, 201, REPO, runC, "E2E / Phase 1", "QUEUED", null);
+    // Native fail-fast + failing-leg link: leg 203 still runs and sorts first; leg 204 already
+    // failed. The node is FAILURE and must link to 204, so a plain "first URL" (203) fails here.
+    insertJob(jdbc, 203, REPO, runC, "Build / Build .war artifact", "IN_PROGRESS", null);
+    insertJob(jdbc, 204, REPO, runC, "Build / Build .war artifact (retry)", "COMPLETED", "FAILURE");
+    // The required-checks gate job failed.
+    insertJob(jdbc, 205, REPO, runC, "All required CI Passed", "COMPLETED", "FAILURE");
+
+    mockMvc
+        .perform(
+            get("/api/pipeline/branch")
+                .param("branch", branchC)
+                .header(X_REPOSITORY_ID, String.valueOf(REPO)))
+        .andExpect(status().isOk())
+        // E2E queued-only → not running yet.
+        .andExpect(jsonPath("$.categories[1].nodes[2].key").value("test-e2e"))
+        .andExpect(jsonPath("$.categories[1].nodes[2].status").value("PENDING"))
+        .andExpect(jsonPath("$.categories[1].nodes[2].conclusion").doesNotExist())
+        // Native fail-fast: FAILURE even though a leg is still IN_PROGRESS, and the link points at
+        // the failing leg (204), not the still-running one (203) that sorts first.
+        .andExpect(jsonPath("$.categories[0].nodes[0].key").value("build-native"))
+        .andExpect(jsonPath("$.categories[0].nodes[0].status").value("IN_PROGRESS"))
+        .andExpect(jsonPath("$.categories[0].nodes[0].conclusion").value("FAILURE"))
+        .andExpect(jsonPath("$.categories[0].nodes[0].htmlUrl").value("https://example/job/204"))
+        // Gate reflects the required-checks job.
+        .andExpect(jsonPath("$.gate.status").value("COMPLETED"))
+        .andExpect(jsonPath("$.gate.conclusion").value("FAILURE"));
+  }
+
+  @Test
+  void worstWinsConclusionPrecedenceAcrossLegs() throws Exception {
+    JdbcTemplate jdbc = new JdbcTemplate(dataSource);
+    final long runD = 63L;
+    final String branchD = "release";
+    final String shaD = "d00dfeed";
+    insertBranch(jdbc, REPO, branchD, shaD);
+    insertRun(jdbc, runD, REPO, WF, branchD, shaD);
+    // quality-server aggregates style + quality; cancelled beats success.
+    insertJob(jdbc, 301, REPO, runD, "Quality / Server Code Style", "COMPLETED", "SUCCESS");
+    insertJob(jdbc, 302, REPO, runD, "Quality / Server Code Quality", "COMPLETED", "CANCELLED");
+    // quality-client: every leg skipped → the node is skipped (not success).
+    insertJob(jdbc, 303, REPO, runD, "Quality / Client Code Style", "COMPLETED", "SKIPPED");
+    insertJob(jdbc, 304, REPO, runD, "Quality / Client Compilation", "COMPLETED", "SKIPPED");
+    // build-docker: real Artemis shape — PR image ran, release-only leg skipped → success.
+    insertJob(jdbc, 305, REPO, runD, "Build / Build and Push Docker Image (PR, amd64)", "COMPLETED",
+        "SUCCESS");
+    insertJob(jdbc, 306, REPO, runD, "Build / Build and Push Docker Image", "COMPLETED", "SKIPPED");
+    // build-native: a terminal job with no pass/fail/skip verdict folds to NEUTRAL.
+    insertJob(jdbc, 307, REPO, runD, "Build / Build .war artifact", "COMPLETED", "ACTION_REQUIRED");
+
+    mockMvc
+        .perform(
+            get("/api/pipeline/branch")
+                .param("branch", branchD)
+                .header(X_REPOSITORY_ID, String.valueOf(REPO)))
+        .andExpect(status().isOk())
+        // CANCELLED > SUCCESS
+        .andExpect(jsonPath("$.categories[2].nodes[1].key").value("quality-server"))
+        .andExpect(jsonPath("$.categories[2].nodes[1].conclusion").value("CANCELLED"))
+        // all-skipped → SKIPPED
+        .andExpect(jsonPath("$.categories[2].nodes[0].key").value("quality-client"))
+        .andExpect(jsonPath("$.categories[2].nodes[0].conclusion").value("SKIPPED"))
+        // mixed success+skipped → SUCCESS (not skipped)
+        .andExpect(jsonPath("$.categories[0].nodes[1].key").value("build-docker"))
+        .andExpect(jsonPath("$.categories[0].nodes[1].conclusion").value("SUCCESS"))
+        // action_required/stale/neutral fold to NEUTRAL (no warning state)
+        .andExpect(jsonPath("$.categories[0].nodes[0].key").value("build-native"))
+        .andExpect(jsonPath("$.categories[0].nodes[0].conclusion").value("NEUTRAL"));
+  }
+
+  @Test
+  void workflowNameMatcherExcludesJobsFromOtherWorkflows() throws Exception {
+    JdbcTemplate jdbc = new JdbcTemplate(dataSource);
+    final long runE = 64L;
+    final String branchE = "hotfix";
+    final String shaE = "b16b00b5";
+    insertBranch(jdbc, REPO, branchE, shaE);
+    insertRun(jdbc, runE, REPO, WF, branchE, shaE);
+    // A job whose NAME matches test-client but that ran in a different workflow must not feed the
+    // node — workflow-name-matcher "CI" scopes matching to the CI orchestrator run.
+    insertJob(jdbc, 401, REPO, runE, "Test / Client Tests", "Nightly", "COMPLETED", "SUCCESS");
+
+    mockMvc
+        .perform(
+            get("/api/pipeline/branch")
+                .param("branch", branchE)
+                .header(X_REPOSITORY_ID, String.valueOf(REPO)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.categories[1].nodes[0].key").value("test-client"))
+        .andExpect(jsonPath("$.categories[1].nodes[0].status").value("PENDING"));
   }
 
   @Test
@@ -170,13 +274,26 @@ class PipelineIT extends HeliosIntegrationTest {
       String name,
       String statusValue,
       String conclusionValue) {
+    insertJob(jdbc, id, repositoryId, runId, name, "CI", statusValue, conclusionValue);
+  }
+
+  private static void insertJob(
+      JdbcTemplate jdbc,
+      long id,
+      long repositoryId,
+      long runId,
+      String name,
+      String workflowName,
+      String statusValue,
+      String conclusionValue) {
     jdbc.update(
         "INSERT INTO workflow_job (id, repository_id, workflow_run_id, name, workflow_name, "
-            + "status, conclusion, html_url) VALUES (?, ?, ?, ?, 'CI', ?, ?, ?)",
+            + "status, conclusion, html_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
         id,
         repositoryId,
         runId,
         name,
+        workflowName,
         statusValue,
         conclusionValue,
         "https://example/job/" + id);

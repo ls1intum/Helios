@@ -1,5 +1,6 @@
 package de.tum.cit.aet.helios.workflow.pipeline;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import java.util.List;
 import org.springframework.lang.Nullable;
 
@@ -7,8 +8,15 @@ import org.springframework.lang.Nullable;
  * The canonical pipeline for a branch or pull request: a fixed set of categories and nodes that are
  * always present. A node with no matching CI job yet reports {@code status = "PENDING"} and a null
  * conclusion, so the client renders it as not-started rather than omitting it.
+ *
+ * <p>{@code gate} is the optional overall merge-readiness node (mapped to the CI's required-checks
+ * job) rendered as a header badge. It is omitted from the payload when not configured or for
+ * fallback repos ({@code @JsonInclude(NON_NULL)}), matching the generated client's optional
+ * {@code gate?: Node}. It is intentionally not {@code @Nullable}: that annotation makes springdoc
+ * mark the shared {@code Node} schema itself {@code type: "null"}, breaking every other Node use.
  */
-public record PipelineDto(List<Category> categories) {
+public record PipelineDto(
+    List<Category> categories, @JsonInclude(JsonInclude.Include.NON_NULL) Node gate) {
 
   /** A titled group of pipeline nodes (e.g. "Build", "Tests"), rendered in declaration order. */
   public record Category(String name, List<Node> nodes) {}
