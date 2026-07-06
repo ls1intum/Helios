@@ -7,7 +7,7 @@
   <h3 class="text-xl mb-2">Pipeline</h3>
 </div>
 
-@if (branchQuery.isPending() && pullRequestQuery.isPending()) {
+@if (isPending()) {
   <div class="flex items-start mt-2 gap-4">
     <p-panel>
       <ng-template pTemplate="header">
@@ -29,78 +29,73 @@
     </p-panel>
   </div>
 } @else {
-  @if (pipeline(); as pipeline) {
+  @if (hasCategories()) {
     <div class="flex flex-wrap items-start gap-y-4 mt-2">
-      <!-- Check if all groups have no workflow runs -->
-      <!-- If so, display a message saying that no workflow runs have been found -->
-      @if (allGroupsHaveNoWorkflowRuns()) {
-        <div class="flex flex-col justify-center items-center p-4">
-          <i-tabler name="info-circle" class="!size-20 text-primary" />
-          <div class="font-semibold text-lg">No workflow runs found.</div>
-          <div class="text-sm">Workflow groups exist, but no runs have been executed yet.</div>
-        </div>
-      }
-      @for (group of pipeline.groups; track group.name) {
-        @if (group.workflows.length > 0) {
-          <ng-container>
-            <p-panel [header]="group.name" class="max-w-[250px]">
-              <div class="flex flex-col gap-4">
-                @for (workflowRun of group.workflows; track workflowRun.id) {
-                  <div class="flex items-center space-x-2">
-                    <div class="flex items-center">
-                      @if (workflowRun.status === 'COMPLETED') {
-                        @switch (workflowRun.conclusion) {
-                          @case ('SUCCESS') {
-                            <i-tabler name="circle-check" class="text-green-600 dark:text-green-400" pTooltip="Success"></i-tabler>
-                          }
-                          @case ('FAILURE') {
-                            <i-tabler name="circle-x" class="text-red-600 dark:text-red-400" pTooltip="Failure"></i-tabler>
-                          }
-                          @default {
-                            <i-tabler name="progress-help" class="text-muted-color" pTooltip="Unknown"></i-tabler>
-                          }
+      @for (category of categories(); track category.name; let lastCategory = $last) {
+        <ng-container>
+          <p-panel [header]="category.name ?? ''" class="max-w-[250px]">
+            <div class="flex flex-col gap-4">
+              @for (node of category.nodes ?? []; track node.key) {
+                <div class="flex items-center space-x-2">
+                  <div class="flex items-center">
+                    @if (node.status === 'COMPLETED') {
+                      @switch (node.conclusion) {
+                        @case ('SUCCESS') {
+                          <i-tabler name="circle-check" class="text-green-600 dark:text-green-400" pTooltip="Success"></i-tabler>
                         }
-                      } @else if (['IN_PROGRESS', 'QUEUED', 'PENDING', 'WAITING', 'REQUESTED'].includes(workflowRun.status)) {
-                        <i-tabler name="progress" class="text-yellow-500 dark:text-yellow-400 animate-spin" pTooltip="In progress"></i-tabler>
-                      } @else {
-                        <i-tabler name="progress-help" class="text-muted-color" pTooltip="Unknown"></i-tabler>
+                        @case ('FAILURE') {
+                          <i-tabler name="circle-x" class="text-red-600 dark:text-red-400" pTooltip="Failure"></i-tabler>
+                        }
+                        @case ('TIMED_OUT') {
+                          <i-tabler name="circle-x" class="text-red-600 dark:text-red-400" pTooltip="Timed out"></i-tabler>
+                        }
+                        @case ('STARTUP_FAILURE') {
+                          <i-tabler name="circle-x" class="text-red-600 dark:text-red-400" pTooltip="Startup failure"></i-tabler>
+                        }
+                        @case ('SKIPPED') {
+                          <i-tabler name="minus" class="text-muted-color" pTooltip="Skipped"></i-tabler>
+                        }
+                        @case ('CANCELLED') {
+                          <i-tabler name="minus" class="text-muted-color" pTooltip="Cancelled"></i-tabler>
+                        }
+                        @default {
+                          <i-tabler name="progress-help" class="text-muted-color" pTooltip="Neutral"></i-tabler>
+                        }
                       }
-                    </div>
-                    <!-- Fixed width to ensure consistent alignment -->
-                    <span class="font-medium flex gap-1 items-center w-full min-w-0 overflow-hidden">
-                      <span [pTooltip]="workflowRun.name" class="truncate min-w-0 flex-1">{{ workflowRun.name }}</span>
-                      <span class="flex items-center gap-1 flex-shrink-0">
-                        @if (permissions.hasWritePermission() && !!workflowRun.id && !!repositoryId()) {
-                          <a
-                            [routerLink]="['/repo', repositoryId(), 'ci-cd', 'runs', workflowRun.id, 'logs']"
-                            class="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-color transition-colors hover:bg-surface-100 hover:text-primary dark:hover:bg-surface-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-400 focus-visible:outline-offset-2"
-                            pTooltip="Open workflow logs"
-                            aria-label="Open workflow logs"
-                          >
-                            <i-tabler name="file-text" class="!size-4"></i-tabler>
-                          </a>
-                        }
-                        <app-github-link-button [url]="workflowRun.htmlUrl" buttonClass="p-1 leading-none" />
-                      </span>
-                    </span>
+                    } @else if (['IN_PROGRESS', 'QUEUED', 'WAITING', 'REQUESTED'].includes(node.status ?? '')) {
+                      <i-tabler name="progress" class="text-yellow-500 dark:text-yellow-400 animate-spin" pTooltip="In progress"></i-tabler>
+                    } @else if (node.status === 'PENDING') {
+                      <i-tabler name="circle-dashed" class="text-muted-color" pTooltip="Not started yet"></i-tabler>
+                    } @else {
+                      <i-tabler name="progress-help" class="text-muted-color" pTooltip="Unknown"></i-tabler>
+                    }
                   </div>
-                }
-              </div>
-            </p-panel>
+                  <!-- Fixed width to ensure consistent alignment -->
+                  <span class="font-medium flex gap-1 items-center w-full min-w-0 overflow-hidden">
+                    <span [pTooltip]="node.label ?? ''" class="truncate min-w-0 flex-1">{{ node.label }}</span>
+                    @if (node.htmlUrl) {
+                      <span class="flex items-center gap-1 flex-shrink-0">
+                        <app-github-link-button [url]="node.htmlUrl" buttonClass="p-1 leading-none" />
+                      </span>
+                    }
+                  </span>
+                </div>
+              }
+            </div>
+          </p-panel>
 
-            <!-- Connection line -->
-            @if (!group.isLastWithWorkflows) {
-              <p-divider class="w-10 mt-7"></p-divider>
-            }
-          </ng-container>
-        }
-      } @empty {
-        <div class="flex flex-col justify-center items-center p-4">
-          <i-tabler name="exclamation-circle" class="!size-20 text-primary" />
-          <div class="font-semibold text-lg">There are no pipeline groups yet.</div>
-          <div class="text-sm">Create one in the repository settings.</div>
-        </div>
+          <!-- Connection line -->
+          @if (!lastCategory) {
+            <p-divider class="w-10 mt-7"></p-divider>
+          }
+        </ng-container>
       }
+    </div>
+  } @else {
+    <div class="flex flex-col justify-center items-center p-4">
+      <i-tabler name="exclamation-circle" class="!size-20 text-primary" />
+      <div class="font-semibold text-lg">No pipeline configured.</div>
+      <div class="text-sm">Define pipeline nodes under <code>helios.pipeline</code> to see them here.</div>
     </div>
   }
 }

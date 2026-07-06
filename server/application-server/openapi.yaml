@@ -1989,6 +1989,55 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/PullRequestInfoDto"
+  /api/pipeline/pr/{pullRequestId}:
+    get:
+      tags:
+      - pipeline-controller
+      operationId: getPipelineByPullRequest
+      parameters:
+      - name: pullRequestId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PipelineDto"
+  /api/pipeline/branch:
+    get:
+      tags:
+      - pipeline-controller
+      operationId: getPipelineByBranch
+      parameters:
+      - name: branch
+        in: query
+        required: true
+        schema:
+          type: string
+      responses:
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PipelineDto"
   /api/environments:
     get:
       tags:
@@ -4166,6 +4215,39 @@ components:
       - id
       - login
       - name
+    Category:
+      type: object
+      properties:
+        name:
+          type: string
+        nodes:
+          type: array
+          items:
+            $ref: "#/components/schemas/Node"
+    Node:
+      type: object
+      properties:
+        key:
+          type: string
+        label:
+          type: string
+        status:
+          type: string
+        conclusion:
+          type:
+          - string
+          - "null"
+        htmlUrl:
+          type:
+          - string
+          - "null"
+    PipelineDto:
+      type: object
+      properties:
+        categories:
+          type: array
+          items:
+            $ref: "#/components/schemas/Category"
     EnvironmentReviewersDto:
       type: object
       properties:
