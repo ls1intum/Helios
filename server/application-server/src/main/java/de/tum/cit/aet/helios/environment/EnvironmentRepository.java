@@ -10,8 +10,6 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface EnvironmentRepository extends JpaRepository<Environment, Long> {
-  List<Environment> findAllByOrderByNameAsc();
-
   List<Environment> findByRepository(GitRepository repository);
 
   @Query("SELECT e FROM Environment e "
@@ -22,7 +20,12 @@ public interface EnvironmentRepository extends JpaRepository<Environment, Long> 
 
   List<Environment> findByRepositoryRepositoryIdOrderByCreatedAtDesc(Long repositoryId);
 
-  List<Environment> findByEnabledTrueOrderByNameAsc();
+  // Explicit per-repository scoped finders (Option B: replaces the ambient gitRepositoryFilter).
+  List<Environment> findByRepositoryRepositoryIdOrderByNameAsc(Long repositoryId);
+
+  List<Environment> findByEnabledTrueAndRepositoryRepositoryIdOrderByNameAsc(Long repositoryId);
+
+  Optional<Environment> findByIdAndRepositoryRepositoryId(Long id, Long repositoryId);
 
   @Query("SELECT DISTINCT e FROM Environment e "
       + "LEFT JOIN FETCH e.statusHistory es "

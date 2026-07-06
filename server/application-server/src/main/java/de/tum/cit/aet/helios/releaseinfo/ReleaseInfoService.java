@@ -30,7 +30,6 @@ import de.tum.cit.aet.helios.releaseinfo.releasecandidate.ReleaseCandidateReposi
 import de.tum.cit.aet.helios.user.User;
 import de.tum.cit.aet.helios.user.UserInfoDto;
 import de.tum.cit.aet.helios.user.UserRepository;
-import jakarta.transaction.Transactional;
 import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -44,9 +43,9 @@ import org.kohsuke.github.GHCompare.Commit;
 import org.kohsuke.github.GHRelease;
 import org.kohsuke.github.GHRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@Transactional
 @Log4j2
 @RequiredArgsConstructor
 public class ReleaseInfoService {
@@ -65,7 +64,13 @@ public class ReleaseInfoService {
   private final GitHubReleaseSyncService gitHubReleaseSyncService;
 
   public List<ReleaseInfoListDto> getAllReleaseInfos() {
-    return releaseCandidateRepository.findAllByOrderByCreatedAtDesc().stream()
+    Long repositoryId = RepositoryContext.getRepositoryId();
+    if (repositoryId == null) {
+      return List.of();
+    }
+    return releaseCandidateRepository
+        .findByRepositoryRepositoryIdOrderByCreatedAtDesc(repositoryId)
+        .stream()
         .map(ReleaseInfoListDto::fromReleaseCandidate)
         .toList();
   }
@@ -269,6 +274,8 @@ public class ReleaseInfoService {
     releaseCandidateEvaluationRepository.save(evaluation);
   }
 
+  // Derived delete query requires an active transaction.
+  @Transactional
   public ReleaseInfoListDto deleteReleaseCandidateByName(String name) {
     final Long repositoryId = RepositoryContext.getRepositoryId();
 

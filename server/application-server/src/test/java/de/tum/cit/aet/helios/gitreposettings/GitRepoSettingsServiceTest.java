@@ -113,6 +113,18 @@ public class GitRepoSettingsServiceTest {
   }
 
   @Test
+  public void getGitRepoSettingsByRepositoryId_returnsDefaultsWithoutWriting() {
+    when(gitRepoRepository.findByRepositoryRepositoryId(1L)).thenReturn(Optional.empty());
+    when(gitRepository.findByRepositoryId(1L)).thenReturn(Optional.of(testGitRepository));
+
+    GitRepoSettingsDto result = gitRepoSettingsService.getGitRepoSettingsByRepositoryId(1L);
+
+    assertNotNull(result);
+    // A plain GET must not persist a settings row.
+    verify(gitRepoRepository, times(0)).save(any(GitRepoSettings.class));
+  }
+
+  @Test
   public void testUpdateGitRepoSettings() {
     when(gitRepoRepository.findByRepositoryRepositoryId(1L))
         .thenReturn(Optional.of(gitRepoSettings));
@@ -128,6 +140,26 @@ public class GitRepoSettingsServiceTest {
     assertEquals(updateDto.lockReservationThreshold(), result.get().lockReservationThreshold());
     assertEquals(updateDto.packageName(), result.get().packageName());
     verify(gitRepoRepository, times(1)).findByRepositoryRepositoryId(1L);
+    verify(gitRepoRepository, times(1)).save(any(GitRepoSettings.class));
+    verify(environmentService, times(1)).updateLockExpirationAndReservation(1L);
+  }
+
+  @Test
+  public void updateGitRepoSettings_createsRowWhenAbsent() {
+    // GET /settings no longer persists a row, so Save must create-on-absent instead of 400ing.
+    when(gitRepoRepository.findByRepositoryRepositoryId(1L)).thenReturn(Optional.empty());
+    when(gitRepository.findByRepositoryId(1L)).thenReturn(Optional.of(testGitRepository));
+    when(gitRepoRepository.save(any(GitRepoSettings.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+
+    GitRepoSettingsDto updateDto = new GitRepoSettingsDto(null, 120L, 60L, "com.example.created");
+
+    Optional<GitRepoSettingsDto> result =
+        gitRepoSettingsService.updateGitRepoSettings(1L, updateDto);
+
+    assertTrue(result.isPresent());
+    assertEquals(120L, result.get().lockExpirationThreshold());
+    assertEquals("com.example.created", result.get().packageName());
     verify(gitRepoRepository, times(1)).save(any(GitRepoSettings.class));
     verify(environmentService, times(1)).updateLockExpirationAndReservation(1L);
   }

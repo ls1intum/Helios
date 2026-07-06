@@ -25,13 +25,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 @Log4j2
 @RequiredArgsConstructor
 @Service
-@Transactional
 public class WorkflowRunService {
 
   private final WorkflowRunRepository workflowRunRepository;
@@ -40,10 +38,6 @@ public class WorkflowRunService {
   private final GitHubService gitHubService;
   private final GitRepoRepository gitRepoRepository;
   private final TestSuiteRepository testSuiteRepository;
-
-  public List<WorkflowRun> getAllWorkflowRuns() {
-    return workflowRunRepository.findAll();
-  }
 
   private Stream<WorkflowRun> getLatestWorkflowRuns(List<WorkflowRun> runs) {
     return runs.stream()

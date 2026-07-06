@@ -189,7 +189,8 @@ class TestResultServiceTest {
     pullRequest.setHeadSha("prSha");
     pullRequest.setRepository(gitRepository);
 
-    when(pullRequestRepository.findById(1L)).thenReturn(Optional.of(pullRequest));
+    when(pullRequestRepository.findByIdAndRepositoryRepositoryId(1L, 1L))
+        .thenReturn(Optional.of(pullRequest));
     when(branchRepository.findFirstByRepositoryRepositoryIdAndIsDefaultTrue(anyLong()))
         .thenReturn(Optional.of(defaultBranch));
     when(workflowRunRepository.findByHeadBranchAndHeadShaAndRepositoryRepositoryId(
@@ -234,6 +235,20 @@ class TestResultServiceTest {
     assertEquals("TestSuite1", testTypeResults.testSuites().get(0).name());
     assertEquals(1, testTypeResults.testSuites().get(0).testCases().size());
     assertEquals("test1", testTypeResults.testSuites().get(0).testCases().get(0).name());
+  }
+
+  @Test
+  void getLatestTestResultsForPr_forAnotherRepository_throwsNotFound() {
+    // A PR id from another repository must not surface its test results (scoped, like the
+    // run/branch variants). Null/foreign context → not found, not a leak.
+    when(pullRequestRepository.findByIdAndRepositoryRepositoryId(99L, 1L))
+        .thenReturn(java.util.Optional.empty());
+
+    org.junit.jupiter.api.Assertions.assertThrows(
+        jakarta.persistence.EntityNotFoundException.class,
+        () ->
+            testResultService.getLatestTestResultsForPr(
+                99L, new TestResultService.TestSearchCriteria(0, 10, null, false)));
   }
 
   @Test

@@ -33,6 +33,7 @@ import java.time.OffsetDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -62,6 +63,11 @@ public class WorkflowRunServiceTest {
   @BeforeEach
   public void setUp() {
     RepositoryContext.setRepositoryId("1");
+  }
+
+  @AfterEach
+  public void tearDown() {
+    RepositoryContext.clear();
   }
 
   @Test

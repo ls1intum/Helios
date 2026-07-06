@@ -100,7 +100,8 @@ public class DeploymentServiceTest {
 
   @Test
   public void testGetDeploymentById() {
-    when(deploymentRepository.findById(1L)).thenReturn(Optional.of(deployment));
+    when(deploymentRepository.findByIdAndRepositoryRepositoryId(1L, 1L))
+        .thenReturn(Optional.of(deployment));
 
     Optional<DeploymentDto> result = deploymentService.getDeploymentById(1L);
 
@@ -109,13 +110,14 @@ public class DeploymentServiceTest {
     assertTrue(result.isPresent());
     assertEquals(deploymentDto, result.get());
 
-    verify(deploymentRepository, times(1)).findById(1L);
+    verify(deploymentRepository, times(1)).findByIdAndRepositoryRepositoryId(1L, 1L);
   }
 
   @Test
   public void testGetAllDeployments() {
 
-    when(deploymentRepository.findAll()).thenReturn(List.of(deployment, deployment));
+    when(deploymentRepository.findByRepositoryRepositoryIdOrderByCreatedAtDesc(1L))
+        .thenReturn(List.of(deployment, deployment));
 
     List<DeploymentDto> result = deploymentService.getAllDeployments();
 
@@ -127,6 +129,8 @@ public class DeploymentServiceTest {
 
   @Test
   public void testGetDeploymentsByEnvironmentId() {
+    when(environmentRepository.findByIdAndRepositoryRepositoryId(1L, 1L))
+        .thenReturn(Optional.of(environment));
     when(deploymentRepository.findByEnvironmentIdOrderByCreatedAtDesc(1L))
         .thenReturn(List.of(deployment));
 
@@ -140,6 +144,8 @@ public class DeploymentServiceTest {
 
   @Test
   public void testGetLatestDeploymentByEnvironmentId() {
+    when(environmentRepository.findByIdAndRepositoryRepositoryId(1L, 1L))
+        .thenReturn(Optional.of(environment));
     when(deploymentRepository.findFirstByEnvironmentIdOrderByCreatedAtDesc(1L))
         .thenReturn(Optional.of(deployment));
 
@@ -149,6 +155,15 @@ public class DeploymentServiceTest {
 
     assertTrue(result.isPresent());
     assertEquals(deploymentDto, result.get());
+  }
+
+  @Test
+  public void getDeploymentsByEnvironmentId_forEnvironmentInAnotherRepository_returnsEmpty() {
+    // Env id from another repo → gate fails → empty (no cross-repo deployment leak).
+    when(environmentRepository.findByIdAndRepositoryRepositoryId(99L, 1L))
+        .thenReturn(Optional.empty());
+
+    assertTrue(deploymentService.getDeploymentsByEnvironmentId(99L).isEmpty());
   }
 
   @Test
@@ -331,6 +346,8 @@ public class DeploymentServiceTest {
     lockHistory.setLockedAt(now.minusMinutes(3));
     lockHistory.setUnlockedAt(now);
 
+    when(environmentRepository.findByIdAndRepositoryRepositoryId(1L, 1L))
+        .thenReturn(Optional.of(environment));
     when(deploymentRepository.findByEnvironmentIdOrderByCreatedAtDesc(1L))
         .thenReturn(List.of(deployment));
     when(lockHistoryRepository.findLockHistoriesByEnvironment(1L)).thenReturn(List.of(lockHistory));
@@ -360,7 +377,8 @@ public class DeploymentServiceTest {
     heliosDeployment.setEnvironment(environment);
     deployment.setCreatedAt(now.minusMinutes(2));
 
-    when(pullRequestRepository.findById(1L)).thenReturn(Optional.of(mock()));
+    when(pullRequestRepository.findByIdAndRepositoryRepositoryId(1L, 1L))
+        .thenReturn(Optional.of(mock()));
     when(deploymentRepository.findByPullRequest_IdOrderByCreatedAtDesc(1L))
         .thenReturn(List.of(deployment));
     when(heliosDeploymentRepository
@@ -442,7 +460,8 @@ public class DeploymentServiceTest {
     workflowRun.setId(42L);
     workflowRun.setRepository(gitRepository);
 
-    when(workflowRunRepository.findById(42L)).thenReturn(Optional.of(workflowRun));
+    when(workflowRunRepository.findByIdAndRepositoryRepositoryId(42L, 1L))
+        .thenReturn(Optional.of(workflowRun));
     when(gitHubService.getWorkflowJobStatus("owner/repo", 42L))
         .thenReturn("{\"total_count\":0,\"jobs\":[]}");
 
@@ -457,12 +476,13 @@ public class DeploymentServiceTest {
   @Test
   public void testGetWorkflowJobStatusFallsBackToHeliosDeploymentRepository() throws IOException {
     GitRepository otherRepository = new GitRepository();
-    otherRepository.setRepositoryId(2L);
+    otherRepository.setRepositoryId(1L);
     otherRepository.setNameWithOwner("other/repo");
     environment.setRepository(otherRepository);
     heliosDeployment.setWorkflowRunId(43L);
 
-    when(workflowRunRepository.findById(43L)).thenReturn(Optional.empty());
+    when(workflowRunRepository.findByIdAndRepositoryRepositoryId(43L, 1L))
+        .thenReturn(Optional.empty());
     when(heliosDeploymentRepository.findByWorkflowRunId(43L))
         .thenReturn(Optional.of(heliosDeployment));
     when(gitHubService.getWorkflowJobStatus("other/repo", 43L))

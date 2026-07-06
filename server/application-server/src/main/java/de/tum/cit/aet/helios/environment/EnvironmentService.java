@@ -30,7 +30,6 @@ import de.tum.cit.aet.helios.workflow.WorkflowRepository;
 import de.tum.cit.aet.helios.workflow.WorkflowRun;
 import de.tum.cit.aet.helios.workflow.WorkflowRunRepository;
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.transaction.Transactional;
 import java.io.IOException;
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -51,7 +50,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 @Service
-@Transactional
 @Log4j2
 @RequiredArgsConstructor
 public class EnvironmentService {
@@ -77,15 +75,34 @@ public class EnvironmentService {
   private final NatsNotificationPublisherService notificationPublisherService;
 
   public Optional<EnvironmentDto> getEnvironmentById(Long id) {
-    return environmentRepository.findById(id).map(EnvironmentDto::fromEnvironment);
+    return findScopedById(id).map(EnvironmentDto::fromEnvironment);
   }
 
   public Optional<Environment.Type> getEnvironmentTypeById(Long id) {
-    return environmentRepository.findById(id).map(Environment::getType);
+    return findScopedById(id).map(Environment::getType);
+  }
+
+  /**
+   * Loads an environment by id, scoped to the current repository when a repository context is
+   * present. Explicit replacement for the ambient gitRepositoryFilter, which never applied to
+   * findById/PK loads — so this also closes a latent cross-repository read.
+   */
+  private Optional<Environment> findScopedById(Long id) {
+    Long repositoryId = RepositoryContext.getRepositoryId();
+    // No repository context (missing X-REPOSITORY-ID) → no data. GET /api/** is permitAll, so a
+    // findById fallback here would be an anonymous cross-repo IDOR (the @Filter never covered PK
+    // loads); always scope, mirroring WorkflowRunService.getWorkflowRunById.
+    return repositoryId == null
+        ? Optional.empty()
+        : environmentRepository.findByIdAndRepositoryRepositoryId(id, repositoryId);
   }
 
   public List<EnvironmentDto> getAllEnvironments() {
-    return environmentRepository.findAllByOrderByNameAsc().stream()
+    Long repositoryId = RepositoryContext.getRepositoryId();
+    if (repositoryId == null) {
+      return List.of();
+    }
+    return environmentRepository.findByRepositoryRepositoryIdOrderByNameAsc(repositoryId).stream()
         .map(
             environment -> {
               LatestDeploymentUnion latest = findLatestDeployment(environment);
@@ -98,7 +115,13 @@ public class EnvironmentService {
   }
 
   public List<EnvironmentDto> getAllEnabledEnvironments() {
-    return environmentRepository.findByEnabledTrueOrderByNameAsc().stream()
+    Long repositoryId = RepositoryContext.getRepositoryId();
+    if (repositoryId == null) {
+      return List.of();
+    }
+    return environmentRepository
+        .findByEnabledTrueAndRepositoryRepositoryIdOrderByNameAsc(repositoryId)
+        .stream()
         .map(
             environment -> {
               LatestDeploymentUnion latest = findLatestDeployment(environment);
@@ -204,13 +227,12 @@ public class EnvironmentService {
    *     the environment is already locked or if an optimistic locking failure occurs
    * @throws EntityNotFoundException if no environment is found with the specified ID
    */
-  @Transactional
   public Optional<Environment> lockEnvironment(Long id) {
     final User currentUser = authService.getUserFromGithubId();
 
     Environment environment =
         environmentRepository
-            .findById(id)
+            .findByIdAndRepositoryRepositoryId(id, RepositoryContext.getRepositoryId())
             .orElseThrow(() -> new EntityNotFoundException("Environment not found with ID: " + id));
 
     if (!environment.isEnabled()) {
@@ -263,7 +285,6 @@ public class EnvironmentService {
    * @param baseTime the base time from which to calculate expiration
    * @return the calculated expiration time or null if no threshold is set
    */
-  @Transactional
   protected OffsetDateTime calculateLockExpiration(
       Environment environment, OffsetDateTime baseTime) {
     Long lockExpirationThreshold =
@@ -285,7 +306,6 @@ public class EnvironmentService {
    * @param baseTime the base time from which to calculate expiration
    * @return the calculated expiration time or null if no threshold is set
    */
-  @Transactional
   protected OffsetDateTime calculateReservationExpiration(
       Environment environment, OffsetDateTime baseTime) {
     Long lockReservationThreshold =
@@ -300,7 +320,6 @@ public class EnvironmentService {
     return lockReservationThreshold != -1 ? baseTime.plusMinutes(lockReservationThreshold) : null;
   }
 
-  @Transactional
   protected OffsetDateTime getLockWillExpireAt(Environment environment) {
     if (environment.isLocked() && environment.getLockedAt() != null) {
       return calculateLockExpiration(environment, environment.getLockedAt());
@@ -309,7 +328,6 @@ public class EnvironmentService {
     }
   }
 
-  @Transactional
   protected OffsetDateTime getLockReservationExpiresAt(Environment environment) {
     if (environment.isLocked() && environment.getLockedAt() != null) {
       return calculateReservationExpiration(environment, environment.getLockedAt());
@@ -334,13 +352,12 @@ public class EnvironmentService {
    * @throws EntityNotFoundException if no environment is found with the specified ID
    * @throws EnvironmentException if the environment is disabled or isn't a TEST environment
    */
-  @Transactional
   public Optional<Environment> extendEnvironmentLock(Long id) {
     final User currentUser = authService.getUserFromGithubId();
 
     Environment environment =
         environmentRepository
-            .findById(id)
+            .findByIdAndRepositoryRepositoryId(id, RepositoryContext.getRepositoryId())
             .orElseThrow(() -> new EntityNotFoundException("Environment not found with ID: " + id));
 
     // Check environment status
@@ -426,13 +443,12 @@ public class EnvironmentService {
    * @param id the ID of the environment to unlock
    * @throws EntityNotFoundException if no environment is found with the specified ID
    */
-  @Transactional
   public EnvironmentDto unlockEnvironment(Long id) {
     final User currentUser = authService.getUserFromGithubId();
 
     Environment environment =
         environmentRepository
-            .findById(id)
+            .findByIdAndRepositoryRepositoryId(id, RepositoryContext.getRepositoryId())
             .orElseThrow(() -> new EntityNotFoundException("Environment not found with ID: " + id));
 
     if (!environment.isLocked()) {
@@ -519,7 +535,7 @@ public class EnvironmentService {
   public Optional<EnvironmentDto> updateEnvironment(Long id, EnvironmentDto environmentDto)
       throws EnvironmentException {
     return environmentRepository
-        .findById(id)
+        .findByIdAndRepositoryRepositoryId(id, RepositoryContext.getRepositoryId())
         .map(
             environment -> {
               if (!environmentDto.enabled() && environment.isLocked()) {
@@ -580,9 +596,13 @@ public class EnvironmentService {
               }
               if (environmentDto.deploymentWorkflow() != null) {
                 Long workflowId = environmentDto.deploymentWorkflow().id();
+                // The deployment workflow must belong to the same repository as the environment;
+                // an unscoped findById let a foreign-repository workflow be attached here (mirrors
+                // the cross-repository guard already applied to required pre-deployment workflows).
                 Workflow wf =
                     workflowRepository
-                        .findById(workflowId)
+                        .findByIdAndRepositoryRepositoryId(
+                            workflowId, environment.getRepository().getRepositoryId())
                         .orElseThrow(
                             () ->
                                 new EntityNotFoundException(
@@ -646,7 +666,7 @@ public class EnvironmentService {
       Long environmentId, String branch, String sha) {
     Environment environment =
         environmentRepository
-            .findById(environmentId)
+            .findByIdAndRepositoryRepositoryId(environmentId, RepositoryContext.getRepositoryId())
             .orElseThrow(
                 () ->
                     new EntityNotFoundException("Environment not found with ID: " + environmentId));
@@ -766,6 +786,11 @@ public class EnvironmentService {
   }
 
   public List<EnvironmentLockHistoryDto> getLockHistoryByEnvironmentId(Long environmentId) {
+    // Scope to the current repository (lock history is keyed only by environment id, so a foreign
+    // id would otherwise leak its lock/unlock history).
+    if (findScopedById(environmentId).isEmpty()) {
+      return List.of();
+    }
     return lockHistoryRepository.findLockHistoriesByEnvironment(environmentId).stream()
         .map(
             lock ->
@@ -809,6 +834,10 @@ public class EnvironmentService {
   }
 
   public Optional<EnvironmentReviewersDto> getEnvironmentReviewers(Long environmentId) {
+    // Scope to the current repository — protection rules are keyed only by environment id.
+    if (findScopedById(environmentId).isEmpty()) {
+      return Optional.empty();
+    }
     return protectionRuleRepository
         .findByEnvironmentIdAndRuleType(environmentId, ProtectionRule.RuleType.REQUIRED_REVIEWERS)
         .map(
@@ -860,7 +889,7 @@ public class EnvironmentService {
    * constructing the public-facing DTO; returns the GitHub logins / team slugs directly along with
    * whether the rule even exists and whether self-review is prevented.
    *
-   * <p>An {@link Optional#empty()} result means "no {@code REQUIRED_REVIEWERS} rule on this env" —
+   * <p>An {@link Optional#empty()} result means "no {@code REQUIRED_REVIEWERS} rule here" —
    * the deployment is not gated on reviewers (it may still be gated on wait-timer or branch
    * policy, which GitHub handles itself).
    */

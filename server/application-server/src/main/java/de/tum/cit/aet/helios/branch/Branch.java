@@ -14,7 +14,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import org.hibernate.annotations.Filter;
 
 @Entity
 @IdClass(BranchId.class)
@@ -22,7 +21,6 @@ import org.hibernate.annotations.Filter;
 @Setter
 @NoArgsConstructor
 @ToString(callSuper = true)
-@Filter(name = "gitRepositoryFilter")
 public class Branch {
 
   @Id private String name;

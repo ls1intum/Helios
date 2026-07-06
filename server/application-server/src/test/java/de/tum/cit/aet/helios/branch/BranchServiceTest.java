@@ -6,6 +6,7 @@ import static org.mockito.Mockito.when;
 
 import de.tum.cit.aet.helios.auth.AuthService;
 import de.tum.cit.aet.helios.commit.CommitRepository;
+import de.tum.cit.aet.helios.filters.RepositoryContext;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import de.tum.cit.aet.helios.releaseinfo.releasecandidate.ReleaseCandidateRepository;
 import de.tum.cit.aet.helios.userpreference.UserPreference;
@@ -14,6 +15,7 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -44,6 +46,7 @@ public class BranchServiceTest {
 
   @BeforeEach
   public void setUp() {
+    RepositoryContext.setRepositoryId("1");
     GitRepository repo = new GitRepository();
     repo.setRepositoryId(1L);
 
@@ -63,8 +66,13 @@ public class BranchServiceTest {
     b3.setUpdatedAt(OffsetDateTime.parse("2025-03-15T10:00:00Z"));
 
     when(commitRepository.findByShaAndRepository(any(), any())).thenReturn(Optional.empty());
-    when(branchRepository.findAll()).thenReturn(List.of(b1, b2, b3));
+    when(branchRepository.findByRepositoryRepositoryId(1L)).thenReturn(List.of(b1, b2, b3));
     when(authService.isLoggedIn()).thenReturn(false);
+  }
+
+  @AfterEach
+  public void tearDown() {
+    RepositoryContext.clear();
   }
 
   @Test

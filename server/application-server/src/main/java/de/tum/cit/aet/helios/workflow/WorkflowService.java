@@ -1,6 +1,6 @@
 package de.tum.cit.aet.helios.workflow;
 
-import jakarta.transaction.Transactional;
+import de.tum.cit.aet.helios.filters.RepositoryContext;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -8,17 +8,34 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
-@Transactional
 @RequiredArgsConstructor
 public class WorkflowService {
   private final WorkflowRepository workflowRepository;
 
   public Optional<WorkflowDto> getWorkflowById(Long id) {
-    return workflowRepository.findById(id).map(WorkflowDto::fromWorkflow);
+    return findScopedById(id).map(WorkflowDto::fromWorkflow);
+  }
+
+  /**
+   * Loads a workflow by id, scoped to the current repository when a repository context is present.
+   * Explicit replacement for the ambient gitRepositoryFilter, which never applied to findById/PK
+   * loads — so this also closes a latent cross-repository read.
+   */
+  private Optional<Workflow> findScopedById(Long id) {
+    Long repositoryId = RepositoryContext.getRepositoryId();
+    return repositoryId == null
+        ? Optional.empty()
+        : workflowRepository.findByIdAndRepositoryRepositoryId(id, repositoryId);
   }
 
   public List<WorkflowDto> getAllWorkflows() {
-    return workflowRepository.findAll().stream()
+    Long repositoryId = RepositoryContext.getRepositoryId();
+    if (repositoryId == null) {
+      return List.of();
+    }
+    return workflowRepository
+        .findByRepositoryRepositoryIdOrderByCreatedAtDesc(repositoryId)
+        .stream()
         .map(WorkflowDto::fromWorkflow)
         .collect(Collectors.toList());
   }
@@ -32,15 +49,23 @@ public class WorkflowService {
   }
 
   public List<WorkflowDto> getWorkflowsByState(Workflow.State state) {
-    return workflowRepository.findByStateOrderByCreatedAtDesc(state).stream()
+    Long repositoryId = RepositoryContext.getRepositoryId();
+    if (repositoryId == null) {
+      return List.of();
+    }
+    return workflowRepository
+        .findByStateAndRepositoryRepositoryIdOrderByCreatedAtDesc(state, repositoryId)
+        .stream()
         .map(WorkflowDto::fromWorkflow)
         .collect(Collectors.toList());
   }
 
   public void updateWorkflowLabel(Long workflowId, Workflow.Label label) {
+    // Scope to the current repository: relabeling a workflow from another repository (or with no
+    // repository context) must fail as not-found, never mutate another tenant's workflow. findById
+    // was never covered by the old gitRepositoryFilter, so this closes a cross-repository write.
     Workflow workflow =
-        workflowRepository
-            .findById(workflowId)
+        findScopedById(workflowId)
             .orElseThrow(() -> new IllegalArgumentException("Workflow not found!"));
     workflow.setLabel(label);
     workflowRepository.save(workflow);

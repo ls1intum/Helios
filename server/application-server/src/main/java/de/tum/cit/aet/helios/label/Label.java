@@ -15,14 +15,12 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.Setter;
 import lombok.ToString;
-import org.hibernate.annotations.Filter;
 
 @Entity
 @Table(name = "label")
 @Getter
 @Setter
 @NoArgsConstructor
-@Filter(name = "gitRepositoryFilter")
 public class Label {
 
   @Id

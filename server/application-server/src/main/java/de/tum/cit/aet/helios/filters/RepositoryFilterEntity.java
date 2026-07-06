@@ -7,11 +7,9 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MappedSuperclass;
 import lombok.Data;
 import lombok.ToString;
-import org.hibernate.annotations.Filter;
 
 @MappedSuperclass
 @Data
-@Filter(name = "gitRepositoryFilter")
 public abstract class RepositoryFilterEntity {
 
   @ManyToOne(fetch = FetchType.LAZY)

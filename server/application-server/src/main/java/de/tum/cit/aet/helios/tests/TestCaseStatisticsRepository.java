@@ -45,18 +45,6 @@ public interface TestCaseStatisticsRepository extends JpaRepository<TestCaseStat
           Long repositoryId);
 
   /**
-   * Find statistics for a specific test case on a specific branch.
-   *
-   * @param testName the name of the test
-   * @param className the class name of the test
-   * @param testSuiteName the test suite name
-   * @param branchName the branch name
-   * @return the statistics if found
-   */
-  Optional<TestCaseStatistics> findByTestNameAndClassNameAndTestSuiteNameAndBranchName(
-      String testName, String className, String testSuiteName, String branchName);
-
-  /**
    * Find all statistics for a specific branch.
    *
    * @param branchName the branch name

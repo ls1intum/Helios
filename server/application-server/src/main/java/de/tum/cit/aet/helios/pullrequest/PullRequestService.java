@@ -30,12 +30,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 @Log4j2
 @Service
-@Transactional
 @RequiredArgsConstructor
 public class PullRequestService {
 
@@ -48,7 +46,12 @@ public class PullRequestService {
         authService.isLoggedIn()
             ? userPreferenceRepository.findByUser(authService.getUserFromGithubId())
             : Optional.empty();
-    return pullRequestRepository.findAllByOrderByUpdatedAtDesc().stream()
+    Long repositoryId = RepositoryContext.getRepositoryId();
+    if (repositoryId == null) {
+      return List.of();
+    }
+    return pullRequestRepository.findByRepositoryRepositoryIdOrderByUpdatedAtDesc(repositoryId)
+        .stream()
         .map((pr) -> PullRequestBaseInfoDto.fromPullRequestAndUserPreference(pr, userPreference))
         .sorted(
             (pr1, pr2) -> {
@@ -89,6 +92,10 @@ public class PullRequestService {
             : Optional.empty();
 
     Long repositoryId = RepositoryContext.getRepositoryId();
+    if (repositoryId == null) {
+      return new PaginatedPullRequestsResponse(
+          List.of(), List.of(), pageRequest.getPage(), pageRequest.getSize(), 0, 0);
+    }
 
     /* ---------- pinned ---------- */
     List<PullRequestBaseInfoDto> pinnedDtos =
@@ -103,7 +110,7 @@ public class PullRequestService {
 
     /* ---------- non-pinned ---------- */
     Specification<PullRequest> nonPinnedSpec =
-        buildNonPinnedPullRequestSpecification(pageRequest, currentUserId);
+        buildNonPinnedPullRequestSpecification(pageRequest, currentUserId, repositoryId);
 
     long totalNonPinned = pullRequestRepository.count(nonPinnedSpec);
     log.debug(
@@ -137,10 +144,13 @@ public class PullRequestService {
   }
 
   private Specification<PullRequest> buildNonPinnedPullRequestSpecification(
-      PullRequestPageRequest pageRequest, String currentUserId) {
+      PullRequestPageRequest pageRequest, String currentUserId, Long repositoryId) {
     return (root, query, cb) -> {
       query.distinct(true);
       List<Predicate> predicates = new ArrayList<>();
+
+      // Scope to the current repository (explicit; replaces the ambient gitRepositoryFilter).
+      predicates.add(cb.equal(root.get("repository").get("repositoryId"), repositoryId));
 
       // Add predicate for pinned status
       if (currentUserId != null) {
@@ -302,7 +312,12 @@ public class PullRequestService {
   }
 
   public Optional<PullRequestInfoDto> getPullRequestById(Long id) {
-    return pullRequestRepository.findById(id).map(PullRequestInfoDto::fromPullRequest);
+    Long repositoryId = RepositoryContext.getRepositoryId();
+    Optional<PullRequest> pullRequest =
+        repositoryId == null
+            ? Optional.empty()
+            : pullRequestRepository.findByIdAndRepositoryRepositoryId(id, repositoryId);
+    return pullRequest.map(PullRequestInfoDto::fromPullRequest);
   }
 
   public List<PullRequestInfoDto> getPullRequestByRepositoryId(Long repositoryId) {

@@ -3,7 +3,6 @@ package de.tum.cit.aet.helios.gitreposettings;
 import de.tum.cit.aet.helios.environment.EnvironmentService;
 import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
-import jakarta.transaction.Transactional;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Lazy;
@@ -13,7 +12,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 @RequiredArgsConstructor
 @Service
-@Transactional
 public class GitRepoSettingsService {
 
   private final GitRepoSettingsRepository gitRepoRepository;
@@ -45,15 +43,51 @@ public class GitRepoSettingsService {
                 }));
   }
 
+  /**
+   * Read-only lookup for the settings GET endpoint: returns the persisted settings, or transient
+   * defaults when none exist yet — WITHOUT writing. (getOrCreate persists a row; a plain GET
+   * must not do; callers that need the row to exist keep using getOrCreate.)
+   */
+  public GitRepoSettingsDto getGitRepoSettingsByRepositoryId(Long repositoryId) {
+    return gitRepoRepository
+        .findByRepositoryRepositoryId(repositoryId)
+        .map(GitRepoSettingsDto::fromGitRepoSettings)
+        .orElseGet(
+            () -> {
+              GitRepository gitRepo =
+                  gitRepository
+                      .findByRepositoryId(repositoryId)
+                      .orElseThrow(
+                          () ->
+                              new IllegalArgumentException(
+                                  "Repository with id " + repositoryId + " not found"));
+              GitRepoSettings defaults = new GitRepoSettings();
+              defaults.setRepository(gitRepo);
+              return GitRepoSettingsDto.fromGitRepoSettings(defaults);
+            });
+  }
+
   public Optional<GitRepoSettingsDto> updateGitRepoSettings(
       @PathVariable Long repositoryId, @RequestBody GitRepoSettingsDto gitRepoSettingsDto) {
+    // Create-on-absent: GET /settings no longer persists a row as a side effect, so Save must be
+    // robust for a repo whose settings row was never lazily created (new repo, no locked env, no
+    // workflow group). The orElseThrow now only fires when the repository itself does not exist.
     GitRepoSettings gitRepoSettings =
         gitRepoRepository
             .findByRepositoryRepositoryId(repositoryId)
-            .orElseThrow(
-                () ->
-                    new IllegalArgumentException(
-                        "GitRepoSettings not found for repository with id " + repositoryId));
+            .orElseGet(
+                () -> {
+                  GitRepository gitRepo =
+                      gitRepository
+                          .findByRepositoryId(repositoryId)
+                          .orElseThrow(
+                              () ->
+                                  new IllegalArgumentException(
+                                      "Repository with id " + repositoryId + " not found"));
+                  GitRepoSettings created = new GitRepoSettings();
+                  created.setRepository(gitRepo);
+                  return created;
+                });
 
     if (gitRepoSettingsDto.lockExpirationThreshold() != null) {
       gitRepoSettings.setLockExpirationThreshold(gitRepoSettingsDto.lockExpirationThreshold());

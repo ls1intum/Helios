@@ -5,3 +5,8 @@ exclude_paths:
   # Generated Gradle wrapper scripts (shipped by Gradle, not hand-maintained)
   - "**/gradlew"
   - "**/gradlew.bat"
+  # Server test sources: Codacy's default Checkstyle ruleset conflicts with the project's own
+  # server/checkstyle.xml (enforced by the "Linting Server (Java)" check) — most notably it
+  # rejects the standard *IT integration-test class suffix (AbbreviationAsWordInName). Let the
+  # repository's checkstyle govern test style rather than Codacy's redundant, stricter default.
+  - "server/**/src/test/**"

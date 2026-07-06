@@ -36,6 +36,7 @@ import de.tum.cit.aet.helios.workflow.WorkflowRunRepository;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -73,6 +74,8 @@ public class EnvironmentServiceTest {
 
   @BeforeEach
   public void setUp() {
+    RepositoryContext.setRepositoryId("1");
+
     gitRepository = new GitRepository();
     gitRepository.setRepositoryId(1L);
 
@@ -86,30 +89,59 @@ public class EnvironmentServiceTest {
     user.setId(1L);
   }
 
+  @AfterEach
+  public void tearDown() {
+    RepositoryContext.clear();
+  }
+
   @Test
   public void testGetEnvironmentById() {
-    when(environmentRepository.findById(1L)).thenReturn(Optional.of(environment));
+    when(environmentRepository.findByIdAndRepositoryRepositoryId(1L, 1L))
+        .thenReturn(Optional.of(environment));
 
     Optional<EnvironmentDto> result = environmentService.getEnvironmentById(1L);
 
     assertTrue(result.isPresent());
-    verify(environmentRepository, times(1)).findById(1L);
+    verify(environmentRepository, times(1)).findByIdAndRepositoryRepositoryId(1L, 1L);
+  }
+
+  @Test
+  public void getLockHistoryByEnvironmentId_forEnvironmentInAnotherRepository_returnsEmpty() {
+    // Env id from another repo → gate fails → empty (lock history is keyed only by env id).
+    when(environmentRepository.findByIdAndRepositoryRepositoryId(99L, 1L))
+        .thenReturn(Optional.empty());
+
+    assertTrue(environmentService.getLockHistoryByEnvironmentId(99L).isEmpty());
+    verify(lockHistoryRepository, never()).findLockHistoriesByEnvironment(99L);
+  }
+
+  @Test
+  public void lockEnvironment_forEnvironmentInAnotherRepository_throwsNotFound() {
+    // Cross-repo write must not reach a foreign environment by id.
+    when(environmentRepository.findByIdAndRepositoryRepositoryId(99L, 1L))
+        .thenReturn(Optional.empty());
+
+    assertThrows(
+        jakarta.persistence.EntityNotFoundException.class,
+        () -> environmentService.lockEnvironment(99L));
   }
 
   @Test
   public void testGetEnvironmentTypeById() {
-    when(environmentRepository.findById(1L)).thenReturn(Optional.of(environment));
+    when(environmentRepository.findByIdAndRepositoryRepositoryId(1L, 1L))
+        .thenReturn(Optional.of(environment));
 
     Optional<Environment.Type> result = environmentService.getEnvironmentTypeById(1L);
 
     assertTrue(result.isPresent());
     assertEquals(Environment.Type.TEST, result.get());
-    verify(environmentRepository, times(1)).findById(1L);
+    verify(environmentRepository, times(1)).findByIdAndRepositoryRepositoryId(1L, 1L);
   }
 
   @Test
   public void testGetAllEnvironments() {
-    when(environmentRepository.findAllByOrderByNameAsc())
+    RepositoryContext.setRepositoryId("1");
+    when(environmentRepository.findByRepositoryRepositoryIdOrderByNameAsc(1L))
         .thenReturn(List.of(environment, environment));
 
     List<EnvironmentDto> result = environmentService.getAllEnvironments();
@@ -118,12 +150,13 @@ public class EnvironmentServiceTest {
 
     assertEquals(2, result.size());
     assertEquals(List.of(dto, dto), result);
-    verify(environmentRepository, times(1)).findAllByOrderByNameAsc();
+    verify(environmentRepository, times(1)).findByRepositoryRepositoryIdOrderByNameAsc(1L);
   }
 
   @Test
   public void testGetAllEnabledEnvironments() {
-    when(environmentRepository.findByEnabledTrueOrderByNameAsc())
+    RepositoryContext.setRepositoryId("1");
+    when(environmentRepository.findByEnabledTrueAndRepositoryRepositoryIdOrderByNameAsc(1L))
         .thenReturn(List.of(environment, environment));
 
     List<EnvironmentDto> result = environmentService.getAllEnabledEnvironments();
@@ -132,13 +165,15 @@ public class EnvironmentServiceTest {
 
     assertEquals(2, result.size());
     assertEquals(List.of(dto, dto), result);
-    verify(environmentRepository, times(1)).findByEnabledTrueOrderByNameAsc();
+    verify(environmentRepository, times(1))
+        .findByEnabledTrueAndRepositoryRepositoryIdOrderByNameAsc(1L);
   }
 
   @Test
   public void testLockEnvironment() {
     when(authService.getUserFromGithubId()).thenReturn(user);
-    when(environmentRepository.findById(1L)).thenReturn(Optional.of(environment));
+    when(environmentRepository.findByIdAndRepositoryRepositoryId(1L, 1L))
+        .thenReturn(Optional.of(environment));
     when(lockHistoryRepository.saveAndFlush(any(EnvironmentLockHistory.class)))
         .thenReturn(new EnvironmentLockHistory());
     when(environmentRepository.save(any(Environment.class))).thenReturn(environment);
@@ -147,7 +182,7 @@ public class EnvironmentServiceTest {
 
     assertTrue(result.isPresent());
     assertTrue(result.get().isLocked());
-    verify(environmentRepository, times(1)).findById(1L);
+    verify(environmentRepository, times(1)).findByIdAndRepositoryRepositoryId(1L, 1L);
     verify(environmentRepository, times(1)).save(any(Environment.class));
   }
 
@@ -158,7 +193,8 @@ public class EnvironmentServiceTest {
     environment.setLockedBy(user);
 
     when(authService.getUserFromGithubId()).thenReturn(user);
-    when(environmentRepository.findById(1L)).thenReturn(Optional.of(environment));
+    when(environmentRepository.findByIdAndRepositoryRepositoryId(1L, 1L))
+        .thenReturn(Optional.of(environment));
 
     Optional<Environment> result = environmentService.lockEnvironment(1L);
 
@@ -166,7 +202,7 @@ public class EnvironmentServiceTest {
     assertTrue(result.get().isLocked());
     // Should not modify lockedAt
     assertTrue(result.get().getLockedAt().isEqual(environment.getLockedAt()));
-    verify(environmentRepository, times(1)).findById(1L);
+    verify(environmentRepository, times(1)).findByIdAndRepositoryRepositoryId(1L, 1L);
   }
 
   @Test
@@ -177,7 +213,8 @@ public class EnvironmentServiceTest {
     environment.setLockedBy(otherUser);
 
     when(authService.getUserFromGithubId()).thenReturn(user);
-    when(environmentRepository.findById(1L)).thenReturn(Optional.of(environment));
+    when(environmentRepository.findByIdAndRepositoryRepositoryId(1L, 1L))
+        .thenReturn(Optional.of(environment));
 
     Exception exception =
         assertThrows(
@@ -187,7 +224,7 @@ public class EnvironmentServiceTest {
             });
 
     assertTrue(exception.getMessage().contains("Environment is locked by another user"));
-    verify(environmentRepository, times(1)).findById(1L);
+    verify(environmentRepository, times(1)).findByIdAndRepositoryRepositoryId(1L, 1L);
   }
 
   @Test
@@ -202,7 +239,8 @@ public class EnvironmentServiceTest {
     environment.setLockReservationThreshold(lockReservationExpirationThreshold);
 
     when(authService.getUserFromGithubId()).thenReturn(user);
-    when(environmentRepository.findById(1L)).thenReturn(Optional.of(environment));
+    when(environmentRepository.findByIdAndRepositoryRepositoryId(1L, 1L))
+        .thenReturn(Optional.of(environment));
     when(environmentRepository.save(any(Environment.class))).thenReturn(environment);
 
     Optional<Environment> result = environmentService.extendEnvironmentLock(1L);
@@ -218,14 +256,15 @@ public class EnvironmentServiceTest {
             .get()
             .getLockReservationExpiresAt()
             .isAfter(dateTimeNow.plusMinutes(lockReservationExpirationThreshold)));
-    verify(environmentRepository, times(1)).findById(1L);
+    verify(environmentRepository, times(1)).findByIdAndRepositoryRepositoryId(1L, 1L);
     verify(environmentRepository, times(1)).save(any(Environment.class));
   }
 
   @Test
   public void testExtendEnvironmentLockNotLockedFails() {
     when(authService.getUserFromGithubId()).thenReturn(user);
-    when(environmentRepository.findById(1L)).thenReturn(Optional.of(environment));
+    when(environmentRepository.findByIdAndRepositoryRepositoryId(1L, 1L))
+        .thenReturn(Optional.of(environment));
 
     Exception exception =
         assertThrows(
@@ -235,7 +274,7 @@ public class EnvironmentServiceTest {
             });
 
     assertEquals("Environment is not locked. Cannot extend lock.", exception.getMessage());
-    verify(environmentRepository, times(1)).findById(1L);
+    verify(environmentRepository, times(1)).findByIdAndRepositoryRepositoryId(1L, 1L);
   }
 
   @Test
@@ -243,7 +282,8 @@ public class EnvironmentServiceTest {
     environment.setType(Environment.Type.PRODUCTION);
 
     when(authService.getUserFromGithubId()).thenReturn(user);
-    when(environmentRepository.findById(1L)).thenReturn(Optional.of(environment));
+    when(environmentRepository.findByIdAndRepositoryRepositoryId(1L, 1L))
+        .thenReturn(Optional.of(environment));
 
     Exception exception =
         assertThrows(
@@ -253,7 +293,7 @@ public class EnvironmentServiceTest {
             });
 
     assertEquals("Only TEST environments can have their locks extended", exception.getMessage());
-    verify(environmentRepository, times(1)).findById(1L);
+    verify(environmentRepository, times(1)).findByIdAndRepositoryRepositoryId(1L, 1L);
   }
 
   @Test
@@ -261,7 +301,8 @@ public class EnvironmentServiceTest {
     environment.setEnabled(false);
 
     when(authService.getUserFromGithubId()).thenReturn(user);
-    when(environmentRepository.findById(1L)).thenReturn(Optional.of(environment));
+    when(environmentRepository.findByIdAndRepositoryRepositoryId(1L, 1L))
+        .thenReturn(Optional.of(environment));
 
     Exception exception =
         assertThrows(
@@ -271,7 +312,7 @@ public class EnvironmentServiceTest {
             });
 
     assertEquals("Environment is disabled", exception.getMessage());
-    verify(environmentRepository, times(1)).findById(1L);
+    verify(environmentRepository, times(1)).findByIdAndRepositoryRepositoryId(1L, 1L);
   }
 
   @Test
@@ -281,7 +322,8 @@ public class EnvironmentServiceTest {
     environment.setLockedAt(OffsetDateTime.now());
 
     when(authService.getUserFromGithubId()).thenReturn(user);
-    when(environmentRepository.findById(1L)).thenReturn(Optional.of(environment));
+    when(environmentRepository.findByIdAndRepositoryRepositoryId(1L, 1L))
+        .thenReturn(Optional.of(environment));
     when(environmentRepository.save(any(Environment.class))).thenReturn(environment);
 
     EnvironmentDto result = environmentService.unlockEnvironment(1L);
@@ -293,7 +335,7 @@ public class EnvironmentServiceTest {
     assertNull(result.lockedAt());
     assertNull(result.lockWillExpireAt());
     assertNull(result.lockReservationWillExpireAt());
-    verify(environmentRepository, times(1)).findById(1L);
+    verify(environmentRepository, times(1)).findByIdAndRepositoryRepositoryId(1L, 1L);
     verify(environmentRepository, times(1)).save(any(Environment.class));
   }
 
@@ -306,7 +348,8 @@ public class EnvironmentServiceTest {
         createHeliosDeployment(HeliosDeployment.Status.IN_PROGRESS, OffsetDateTime.now());
 
     when(authService.getUserFromGithubId()).thenReturn(user);
-    when(environmentRepository.findById(1L)).thenReturn(Optional.of(environment));
+    when(environmentRepository.findByIdAndRepositoryRepositoryId(1L, 1L))
+        .thenReturn(Optional.of(environment));
     when(heliosDeploymentRepository.findTopByEnvironmentOrderByCreatedAtDesc(environment))
         .thenReturn(Optional.of(deployment));
 
@@ -330,7 +373,8 @@ public class EnvironmentServiceTest {
 
     when(authService.getUserFromGithubId()).thenReturn(user);
     when(authService.isAtLeastMaintainer()).thenReturn(true);
-    when(environmentRepository.findById(1L)).thenReturn(Optional.of(environment));
+    when(environmentRepository.findByIdAndRepositoryRepositoryId(1L, 1L))
+        .thenReturn(Optional.of(environment));
     when(heliosDeploymentRepository.findTopByEnvironmentOrderByCreatedAtDesc(environment))
         .thenReturn(Optional.of(deployment));
 
@@ -355,7 +399,8 @@ public class EnvironmentServiceTest {
 
     when(authService.getUserFromGithubId()).thenReturn(user);
     when(authService.isAtLeastMaintainer()).thenReturn(true);
-    when(environmentRepository.findById(1L)).thenReturn(Optional.of(environment));
+    when(environmentRepository.findByIdAndRepositoryRepositoryId(1L, 1L))
+        .thenReturn(Optional.of(environment));
     when(environmentRepository.save(any(Environment.class))).thenReturn(environment);
     when(heliosDeploymentRepository.findTopByEnvironmentOrderByCreatedAtDesc(environment))
         .thenReturn(Optional.of(deployment));
@@ -379,7 +424,8 @@ public class EnvironmentServiceTest {
             HeliosDeployment.Status.IN_PROGRESS, OffsetDateTime.now().minusMinutes(21));
 
     when(authService.getUserFromGithubId()).thenReturn(user);
-    when(environmentRepository.findById(1L)).thenReturn(Optional.of(environment));
+    when(environmentRepository.findByIdAndRepositoryRepositoryId(1L, 1L))
+        .thenReturn(Optional.of(environment));
     when(environmentRepository.save(any(Environment.class))).thenReturn(environment);
     when(heliosDeploymentRepository.findTopByEnvironmentOrderByCreatedAtDesc(environment))
         .thenReturn(Optional.of(deployment));
@@ -408,7 +454,8 @@ public class EnvironmentServiceTest {
       HeliosDeployment deployment = createHeliosDeployment(status, OffsetDateTime.now());
 
       when(authService.getUserFromGithubId()).thenReturn(user);
-      when(environmentRepository.findById(1L)).thenReturn(Optional.of(environment));
+      when(environmentRepository.findByIdAndRepositoryRepositoryId(1L, 1L))
+        .thenReturn(Optional.of(environment));
       when(environmentRepository.save(any(Environment.class))).thenReturn(environment);
       when(heliosDeploymentRepository.findTopByEnvironmentOrderByCreatedAtDesc(environment))
           .thenReturn(Optional.of(deployment));
@@ -424,7 +471,8 @@ public class EnvironmentServiceTest {
   @Test
   public void testUnlockEnvironmentNotLocked() {
     when(authService.getUserFromGithubId()).thenReturn(user);
-    when(environmentRepository.findById(1L)).thenReturn(Optional.of(environment));
+    when(environmentRepository.findByIdAndRepositoryRepositoryId(1L, 1L))
+        .thenReturn(Optional.of(environment));
 
     Exception exception =
         assertThrows(
@@ -434,7 +482,7 @@ public class EnvironmentServiceTest {
             });
 
     assertEquals("Environment is not locked", exception.getMessage());
-    verify(environmentRepository, times(1)).findById(1L);
+    verify(environmentRepository, times(1)).findByIdAndRepositoryRepositoryId(1L, 1L);
   }
 
   @Test
@@ -446,7 +494,8 @@ public class EnvironmentServiceTest {
 
     when(authService.isAtLeastMaintainer()).thenReturn(true);
     when(authService.getUserFromGithubId()).thenReturn(user);
-    when(environmentRepository.findById(1L)).thenReturn(Optional.of(environment));
+    when(environmentRepository.findByIdAndRepositoryRepositoryId(1L, 1L))
+        .thenReturn(Optional.of(environment));
 
     EnvironmentDto result = environmentService.unlockEnvironment(1L);
 
@@ -457,7 +506,7 @@ public class EnvironmentServiceTest {
     assertNull(result.lockedAt());
     assertNull(result.lockWillExpireAt());
     assertNull(result.lockReservationWillExpireAt());
-    verify(environmentRepository, times(1)).findById(1L);
+    verify(environmentRepository, times(1)).findByIdAndRepositoryRepositoryId(1L, 1L);
     verify(environmentRepository, times(1)).save(any(Environment.class));
   }
 
@@ -470,7 +519,8 @@ public class EnvironmentServiceTest {
 
     when(authService.isAtLeastMaintainer()).thenReturn(false);
     when(authService.getUserFromGithubId()).thenReturn(user);
-    when(environmentRepository.findById(1L)).thenReturn(Optional.of(environment));
+    when(environmentRepository.findByIdAndRepositoryRepositoryId(1L, 1L))
+        .thenReturn(Optional.of(environment));
 
     Exception exception =
         assertThrows(
@@ -481,7 +531,7 @@ public class EnvironmentServiceTest {
 
     assertTrue(
         exception.getMessage().contains("You do not have permission to unlock this environment"));
-    verify(environmentRepository, times(1)).findById(1L);
+    verify(environmentRepository, times(1)).findByIdAndRepositoryRepositoryId(1L, 1L);
   }
 
   @Test
@@ -505,7 +555,8 @@ public class EnvironmentServiceTest {
   public void testSetLockedEnvironmentAsDisabled() {
     environment.setLocked(true);
 
-    when(environmentRepository.findById(1L)).thenReturn(Optional.of(environment));
+    when(environmentRepository.findByIdAndRepositoryRepositoryId(1L, 1L))
+        .thenReturn(Optional.of(environment));
 
     environment.setEnabled(false);
 
@@ -517,7 +568,7 @@ public class EnvironmentServiceTest {
             });
 
     assertTrue(exception.getMessage().contains("Environment is locked and can not be disabled"));
-    verify(environmentRepository, times(1)).findById(1L);
+    verify(environmentRepository, times(1)).findByIdAndRepositoryRepositoryId(1L, 1L);
   }
 
   @Test
@@ -527,8 +578,10 @@ public class EnvironmentServiceTest {
     wf.setRepository(gitRepository);
     final Long threshold = 10L;
 
-    when(environmentRepository.findById(1L)).thenReturn(Optional.of(environment));
-    when(workflowRepository.findById(1L)).thenReturn(Optional.of(wf));
+    when(environmentRepository.findByIdAndRepositoryRepositoryId(1L, 1L))
+        .thenReturn(Optional.of(environment));
+    when(workflowRepository.findByIdAndRepositoryRepositoryId(1L, 1L))
+        .thenReturn(Optional.of(wf));
 
     environment.setEnabled(false);
     environment.setType(Environment.Type.PRODUCTION);
@@ -554,8 +607,8 @@ public class EnvironmentServiceTest {
     assertEquals(threshold, environmentDto.get().lockReservationThreshold());
     assertFalse(environmentDto.get().enabled());
 
-    verify(environmentRepository, times(1)).findById(1L);
-    verify(workflowRepository, times(1)).findById(1L);
+    verify(environmentRepository, times(1)).findByIdAndRepositoryRepositoryId(1L, 1L);
+    verify(workflowRepository, times(1)).findByIdAndRepositoryRepositoryId(1L, 1L);
   }
 
   @Test
@@ -591,8 +644,10 @@ public class EnvironmentServiceTest {
     requiredWorkflow.setName("Build");
     requiredWorkflow.setRepository(gitRepository);
 
-    when(environmentRepository.findById(1L)).thenReturn(Optional.of(environment));
-    when(workflowRepository.findById(1L)).thenReturn(Optional.of(deploymentWorkflow));
+    when(environmentRepository.findByIdAndRepositoryRepositoryId(1L, 1L))
+        .thenReturn(Optional.of(environment));
+    when(workflowRepository.findByIdAndRepositoryRepositoryId(1L, 1L))
+        .thenReturn(Optional.of(deploymentWorkflow));
     when(workflowRepository.findById(2L)).thenReturn(Optional.of(requiredWorkflow));
 
     environment.setDeploymentWorkflow(deploymentWorkflow);
@@ -615,7 +670,10 @@ public class EnvironmentServiceTest {
     deploymentWorkflow.setName("Deploy");
     deploymentWorkflow.setRepository(gitRepository);
 
-    when(environmentRepository.findById(1L)).thenReturn(Optional.of(environment));
+    when(environmentRepository.findByIdAndRepositoryRepositoryId(1L, 1L))
+        .thenReturn(Optional.of(environment));
+    when(workflowRepository.findByIdAndRepositoryRepositoryId(1L, 1L))
+        .thenReturn(Optional.of(deploymentWorkflow));
     when(workflowRepository.findById(1L)).thenReturn(Optional.of(deploymentWorkflow));
 
     environment.setDeploymentWorkflow(deploymentWorkflow);
@@ -646,7 +704,8 @@ public class EnvironmentServiceTest {
     workflowRun.setStatus(WorkflowRun.Status.COMPLETED);
     workflowRun.setConclusion(Optional.of(WorkflowRun.Conclusion.SUCCESS));
 
-    when(environmentRepository.findById(1L)).thenReturn(Optional.of(environment));
+    when(environmentRepository.findByIdAndRepositoryRepositoryId(1L, 1L))
+        .thenReturn(Optional.of(environment));
     when(
             workflowRunRepository
                 .findLatestForDeploymentReadiness(
@@ -676,7 +735,8 @@ public class EnvironmentServiceTest {
     workflowRun.setHtmlUrl("https://example.com/run/100");
     workflowRun.setStatus(WorkflowRun.Status.IN_PROGRESS);
 
-    when(environmentRepository.findById(1L)).thenReturn(Optional.of(environment));
+    when(environmentRepository.findByIdAndRepositoryRepositoryId(1L, 1L))
+        .thenReturn(Optional.of(environment));
     when(
             workflowRunRepository
                 .findLatestForDeploymentReadiness(
@@ -700,7 +760,8 @@ public class EnvironmentServiceTest {
     requiredWorkflow.setRepository(gitRepository);
     environment.setRequiredPreDeploymentWorkflows(List.of(requiredWorkflow));
 
-    when(environmentRepository.findById(1L)).thenReturn(Optional.of(environment));
+    when(environmentRepository.findByIdAndRepositoryRepositoryId(1L, 1L))
+        .thenReturn(Optional.of(environment));
     when(
             workflowRunRepository
                 .findLatestForDeploymentReadiness(
