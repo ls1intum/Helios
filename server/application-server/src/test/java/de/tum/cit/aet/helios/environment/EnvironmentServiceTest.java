@@ -580,7 +580,8 @@ public class EnvironmentServiceTest {
 
     when(environmentRepository.findByIdAndRepositoryRepositoryId(1L, 1L))
         .thenReturn(Optional.of(environment));
-    when(workflowRepository.findById(1L)).thenReturn(Optional.of(wf));
+    when(workflowRepository.findByIdAndRepositoryRepositoryId(1L, 1L))
+        .thenReturn(Optional.of(wf));
 
     environment.setEnabled(false);
     environment.setType(Environment.Type.PRODUCTION);
@@ -607,7 +608,7 @@ public class EnvironmentServiceTest {
     assertFalse(environmentDto.get().enabled());
 
     verify(environmentRepository, times(1)).findByIdAndRepositoryRepositoryId(1L, 1L);
-    verify(workflowRepository, times(1)).findById(1L);
+    verify(workflowRepository, times(1)).findByIdAndRepositoryRepositoryId(1L, 1L);
   }
 
   @Test
@@ -645,7 +646,8 @@ public class EnvironmentServiceTest {
 
     when(environmentRepository.findByIdAndRepositoryRepositoryId(1L, 1L))
         .thenReturn(Optional.of(environment));
-    when(workflowRepository.findById(1L)).thenReturn(Optional.of(deploymentWorkflow));
+    when(workflowRepository.findByIdAndRepositoryRepositoryId(1L, 1L))
+        .thenReturn(Optional.of(deploymentWorkflow));
     when(workflowRepository.findById(2L)).thenReturn(Optional.of(requiredWorkflow));
 
     environment.setDeploymentWorkflow(deploymentWorkflow);
@@ -670,6 +672,8 @@ public class EnvironmentServiceTest {
 
     when(environmentRepository.findByIdAndRepositoryRepositoryId(1L, 1L))
         .thenReturn(Optional.of(environment));
+    when(workflowRepository.findByIdAndRepositoryRepositoryId(1L, 1L))
+        .thenReturn(Optional.of(deploymentWorkflow));
     when(workflowRepository.findById(1L)).thenReturn(Optional.of(deploymentWorkflow));
 
     environment.setDeploymentWorkflow(deploymentWorkflow);
