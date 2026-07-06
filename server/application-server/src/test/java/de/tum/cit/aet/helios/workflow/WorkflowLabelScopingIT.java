@@ -37,7 +37,7 @@ class WorkflowLabelScopingIT extends HeliosIntegrationTest {
   void relabelingAWorkflowFromAnotherRepositoryIsRejectedAndDoesNotMutateIt() throws Exception {
     JdbcTemplate jdbc = new JdbcTemplate(dataSource);
 
-    // Maintainer acting in repo A tries to relabel repo B's workflow → not found (400), no mutation.
+    // Maintainer in repo A relabeling repo B's workflow -> 400 not found, no mutation.
     mockMvc
         .perform(
             put("/api/workflows/{id}/label", WF_B)
