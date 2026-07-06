@@ -9,6 +9,7 @@ import de.tum.cit.aet.helios.workflow.pipeline.config.PipelineConfigDto.Category
 import de.tum.cit.aet.helios.workflow.pipeline.config.PipelineConfigDto.NodeConfig;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -56,27 +57,63 @@ public class PipelineConfigService {
     categoryRepository.deleteAll(categoryRepository.findByRepositoryIdOrdered(repositoryId));
     categoryRepository.flush();
 
+    // Sanitize on write: skip nameless categories / keyless-or-labelless nodes and drop null/blank
+    // matchers, so a malformed payload can't persist a NOT-NULL violation or a null matcher that
+    // would then NPE every subsequent read (the 15s pipeline poll included). Keys are made unique
+    // within a category, since the pipeline view tracks nodes by key.
     int categoryOrder = 0;
     for (CategoryConfig categoryConfig : config.categories()) {
+      if (isBlank(categoryConfig.name())) {
+        continue;
+      }
       final PipelineCategory category = new PipelineCategory();
       category.setGitRepoSettings(settings);
-      category.setName(categoryConfig.name());
+      category.setName(categoryConfig.name().trim());
       category.setOrderIndex(categoryOrder++);
 
+      final java.util.Set<String> usedKeys = new java.util.HashSet<>();
       int nodeOrder = 0;
       for (NodeConfig nodeConfig : categoryConfig.nodes()) {
+        if (isBlank(nodeConfig.label())) {
+          continue;
+        }
         final PipelineNode node = new PipelineNode();
         node.setPipelineCategory(category);
-        node.setNodeKey(nodeConfig.key());
-        node.setLabel(nodeConfig.label());
-        node.setWorkflowNameMatcher(nodeConfig.workflowNameMatcher());
-        node.setJobNameMatchers(new ArrayList<>(nodeConfig.jobNameMatchers()));
+        node.setNodeKey(uniqueKey(nodeConfig.key(), nodeConfig.label(), usedKeys));
+        node.setLabel(nodeConfig.label().trim());
+        final String workflowMatcher = nodeConfig.workflowNameMatcher();
+        node.setWorkflowNameMatcher(isBlank(workflowMatcher) ? null : workflowMatcher.trim());
+        node.setJobNameMatchers(
+            nodeConfig.jobNameMatchers().stream()
+                .filter(matcher -> !isBlank(matcher))
+                .map(String::trim)
+                .collect(java.util.stream.Collectors.toCollection(ArrayList::new)));
         node.setOrderIndex(nodeOrder++);
         category.getNodes().add(node);
       }
       categoryRepository.save(category);
     }
     return toDto(categoryRepository.findByRepositoryIdOrdered(repositoryId));
+  }
+
+  private static boolean isBlank(String value) {
+    return value == null || value.isBlank();
+  }
+
+  /** A slug-safe, unique-within-category node key (falls back to the label, then a suffix). */
+  private static String uniqueKey(String key, String label, java.util.Set<String> used) {
+    String base = isBlank(key) ? label : key;
+    base = base.trim().toLowerCase(java.util.Locale.ROOT).replaceAll("[^a-z0-9]+", "-")
+        .replaceAll("(^-+|-+$)", "");
+    if (base.isEmpty()) {
+      base = "node";
+    }
+    String candidate = base;
+    int suffix = 2;
+    while (!used.add(candidate)) {
+      candidate = base + "-" + suffix++;
+    }
+    return candidate;
   }
 
   private GitRepoSettings getOrCreateSettings(Long repositoryId) {
@@ -110,7 +147,11 @@ public class PipelineConfigService {
                                     new NodeConfig(
                                         node.getNodeKey(),
                                         node.getLabel(),
-                                        List.copyOf(node.getJobNameMatchers()),
+                                        // null-safe: a legacy row could hold a null matcher, and
+                                        // List.copyOf throws on null elements.
+                                        node.getJobNameMatchers().stream()
+                                            .filter(Objects::nonNull)
+                                            .toList(),
                                         node.getWorkflowNameMatcher()))
                             .toList()))
             .toList());

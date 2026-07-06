@@ -3,6 +3,7 @@ package de.tum.cit.aet.helios.gitreposettings;
 import de.tum.cit.aet.helios.config.security.annotations.EnforceAtLeastMaintainer;
 import de.tum.cit.aet.helios.deployment.DeploymentWorkflowConfigDto;
 import de.tum.cit.aet.helios.deployment.DeploymentWorkflowConfigService;
+import de.tum.cit.aet.helios.filters.RepositoryContext;
 import de.tum.cit.aet.helios.gitreposettings.secret.RepoSecretService;
 import de.tum.cit.aet.helios.workflow.pipeline.config.PipelineConfigDto;
 import de.tum.cit.aet.helios.workflow.pipeline.config.PipelineConfigService;
@@ -11,6 +12,7 @@ import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -35,6 +37,7 @@ public class GitRepoSettingsController {
 
   @GetMapping("/pipeline-config")
   public ResponseEntity<PipelineConfigDto> getPipelineConfig(@PathVariable Long repositoryId) {
+    verifyRepositoryContext(repositoryId);
     return ResponseEntity.ok(pipelineConfigService.getConfig(repositoryId));
   }
 
@@ -42,6 +45,7 @@ public class GitRepoSettingsController {
   @PutMapping("/pipeline-config")
   public ResponseEntity<PipelineConfigDto> updatePipelineConfig(
       @PathVariable Long repositoryId, @Valid @RequestBody PipelineConfigDto config) {
+    verifyRepositoryContext(repositoryId);
     return ResponseEntity.ok(pipelineConfigService.updateConfig(repositoryId, config));
   }
 
@@ -49,7 +53,26 @@ public class GitRepoSettingsController {
   @GetMapping("/pipeline-config/suggestions")
   public ResponseEntity<PipelineConfigDto> getPipelineConfigSuggestions(
       @PathVariable Long repositoryId) {
+    verifyRepositoryContext(repositoryId);
     return ResponseEntity.ok(pipelineConfigService.suggest(repositoryId));
+  }
+
+  /**
+   * Rejects a request whose {@code X-REPOSITORY-ID} header (from which the maintainer role is
+   * derived — see GitHubJwtAuthenticationConverter) targets a different repository than the path.
+   * Without this, a maintainer of repo A could act on repo B by keeping the header on A. Skipped
+   * when no header is present (the role check then already fails for maintainer endpoints).
+   *
+   * <p>NOTE: the sibling maintainer endpoints in this controller (groups/settings/secret) share the
+   * same header-vs-path decoupling; applying this guard to them centrally is a recommended
+   * follow-up.
+   */
+  private void verifyRepositoryContext(Long repositoryId) {
+    final Long contextRepositoryId = RepositoryContext.getRepositoryId();
+    if (contextRepositoryId != null && !contextRepositoryId.equals(repositoryId)) {
+      throw new AccessDeniedException(
+          "Repository mismatch: the request's repository context does not match the path.");
+    }
   }
 
   @GetMapping("/settings")

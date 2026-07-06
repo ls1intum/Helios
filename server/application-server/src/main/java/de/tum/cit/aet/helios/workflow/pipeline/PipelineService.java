@@ -74,9 +74,18 @@ public class PipelineService {
             .toList();
 
     // Optional overall merge-gate node (e.g. Artemis' "All required CI Passed"), a header badge.
-    final PipelineDto.Node gate =
-        properties.gate() == null ? null : buildNode(properties.gate(), jobs);
+    // Only surfaced when a job actually matches it, so repos without the (globally-configured,
+    // Artemis-shaped) required-checks job don't show a permanently-PENDING gate badge.
+    final PipelineDto.Node gate = buildGate(jobs);
     return new PipelineDto(categories, gate);
+  }
+
+  private PipelineDto.Node buildGate(List<WorkflowJob> jobs) {
+    final NodeConfig gateConfig = properties.gate();
+    if (gateConfig == null || jobs.stream().noneMatch(job -> matches(gateConfig, job))) {
+      return null;
+    }
+    return buildNode(gateConfig, jobs);
   }
 
   /**

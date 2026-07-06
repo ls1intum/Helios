@@ -28,7 +28,7 @@ public class PipelineDetectionService {
   private static final String SEP = " / ";
 
   private static final Set<String> BUILD_KEYWORDS =
-      Set.of("build", "compile", "package", "docker", "war", "assemble", "bundle", "image");
+      Set.of("build", "compile", "package", "docker", "war", "assemble", "bundle");
   private static final Set<String> TEST_KEYWORDS =
       Set.of("test", "spec", "junit", "vitest", "jest", "e2e", "cypress", "playwright");
   private static final Set<String> QUALITY_KEYWORDS =
@@ -48,7 +48,10 @@ public class PipelineDetectionService {
     byCategory.put(TEST, new ArrayList<>());
     byCategory.put(QUALITY, new ArrayList<>());
     final List<NodeConfig> other = new ArrayList<>();
-    final Set<String> seenKeys = new java.util.HashSet<>();
+    // Dedup on the (paren-stripped) name so genuinely distinct jobs aren't dropped; keys are made
+    // unique separately (the pipeline view tracks nodes by key).
+    final Set<String> seenNames = new java.util.HashSet<>();
+    final Set<String> usedKeys = new java.util.HashSet<>();
 
     for (String raw : jobNames) {
       if (raw == null || raw.isBlank()) {
@@ -73,10 +76,10 @@ public class PipelineDetectionService {
         stage = classify(name);
       }
 
-      final String key = slug(name);
-      if (!seenKeys.add(key)) {
+      if (!seenNames.add(name)) {
         continue;
       }
+      final String key = uniqueKey(slug(name), usedKeys);
       // matcher = the (paren-stripped) full name, so it prefix-matches the job and its matrix legs.
       final NodeConfig node =
           new NodeConfig(key, label.isEmpty() ? name : label, List.of(name), null);
@@ -114,4 +117,15 @@ public class PipelineDetectionService {
         value.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9]+", "-").replaceAll("(^-+|-+$)", "");
     return s.isEmpty() ? "node" : s;
   }
+
+  /** Ensures a unique node key across the suggestion (the pipeline view tracks nodes by key). */
+  private static String uniqueKey(String base, Set<String> used) {
+    String candidate = base;
+    int suffix = 2;
+    while (!used.add(candidate)) {
+      candidate = base + "-" + suffix++;
+    }
+    return candidate;
+  }
 }
+

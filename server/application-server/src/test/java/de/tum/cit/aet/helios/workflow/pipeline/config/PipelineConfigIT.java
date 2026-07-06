@@ -1,6 +1,7 @@
 package de.tum.cit.aet.helios.workflow.pipeline.config;
 
 import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.not;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -111,6 +112,166 @@ class PipelineConfigIT extends HeliosIntegrationTest {
             jsonPath(
                 "$.categories[?(@.name=='Build')].nodes[?(@.label=='Build .war artifact')].key",
                 hasItem("build-build-war-artifact")));
+  }
+
+  @Test
+  void configEndpointsAreScopedPerRepository() throws Exception {
+    JdbcTemplate jdbc = new JdbcTemplate(dataSource);
+    final long repoB = 2L;
+    insertRepo(jdbc, repoB, "ls1intum/repo-b");
+
+    // A maintainer saves a config on repo A only.
+    putConfig(REPO, """
+        {"categories":[{"name":"Build","nodes":[
+          {"key":"native","label":"Native","jobNameMatchers":["Build / X"],\
+        "workflowNameMatcher":null}]}]}""");
+
+    // The write touched only repo A's rows — repo B has none.
+    assertCategoryCount(jdbc, REPO, 1);
+    assertCategoryCount(jdbc, repoB, 0);
+
+    // Repo B's GET returns its own (detected, empty) default — never repo A's "native" node.
+    mockMvc
+        .perform(get("/api/settings/{id}/pipeline-config", repoB).with(maintainer()))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.categories[*].nodes[*].key", not(hasItem("native"))));
+  }
+
+  @Test
+  void updateReplacesAndReordersExistingConfig() throws Exception {
+    JdbcTemplate jdbc = new JdbcTemplate(dataSource);
+    // First save: Build (2 nodes) then Tests (1 node).
+    putConfig(REPO, """
+        {"categories":[
+          {"name":"Build","nodes":[
+            {"key":"native","label":"Native","jobNameMatchers":["Build / A"],\
+        "workflowNameMatcher":null},
+            {"key":"docker","label":"Docker","jobNameMatchers":["Build / B","Build / C"],\
+        "workflowNameMatcher":"CI"}]},
+          {"name":"Tests","nodes":[
+            {"key":"client","label":"Client","jobNameMatchers":["Test / X"],\
+        "workflowNameMatcher":null}]}]}""");
+    // Replace: Tests first (reordered), Build dropped to a single node.
+    putConfig(REPO, """
+        {"categories":[
+          {"name":"Tests","nodes":[
+            {"key":"client","label":"Client","jobNameMatchers":["Test / X"],\
+        "workflowNameMatcher":null}]},
+          {"name":"Build","nodes":[
+            {"key":"native","label":"Native","jobNameMatchers":["Build / A"],\
+        "workflowNameMatcher":null}]}]}""");
+
+    mockMvc
+        .perform(get("/api/settings/{id}/pipeline-config", REPO).with(maintainer()))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.categories.length()").value(2))
+        .andExpect(jsonPath("$.categories[0].name").value("Tests"))
+        .andExpect(jsonPath("$.categories[1].name").value("Build"))
+        .andExpect(jsonPath("$.categories[1].nodes.length()").value(1))
+        .andExpect(jsonPath("$.categories[1].nodes[0].key").value("native"));
+    // The replace left no orphaned rows from the larger first config.
+    assertCategoryCount(jdbc, REPO, 2);
+    assertNodeCount(jdbc, REPO, 2);
+    assertMatcherCount(jdbc, REPO, 2);
+  }
+
+  @Test
+  void putWithMismatchedRepositoryContextIsForbidden() throws Exception {
+    // Path repo != X-Repository-Id header repo → the controller's context guard rejects the write,
+    // so a maintainer of one repo can't edit another's config by swapping the path id.
+    mockMvc
+        .perform(
+            put("/api/settings/{id}/pipeline-config", REPO)
+                .with(maintainer())
+                .with(SecurityMockMvcRequestPostProcessors.csrf())
+                .header(X_REPOSITORY_ID, "999")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"categories\":[]}"))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  void nonMaintainerCannotUpdateConfig() throws Exception {
+    mockMvc
+        .perform(
+            put("/api/settings/{id}/pipeline-config", REPO)
+                .with(
+                    SecurityMockMvcRequestPostProcessors.jwt()
+                        .authorities(new SimpleGrantedAuthority("ROLE_USER")))
+                .with(SecurityMockMvcRequestPostProcessors.csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"categories\":[]}"))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  void blankAndNullMatchersAndNodesAreSanitizedOnWrite() throws Exception {
+    // The "native" node keeps only its real matcher; the blank-labelled node is dropped entirely.
+    putConfig(REPO, """
+        {"categories":[{"name":"Build","nodes":[
+          {"key":"native","label":"Native","jobNameMatchers":["Build / A","",null,"  "],\
+        "workflowNameMatcher":null},
+          {"key":"blank","label":"   ","jobNameMatchers":["Build / B"],\
+        "workflowNameMatcher":null}]}]}""");
+
+    mockMvc
+        .perform(get("/api/settings/{id}/pipeline-config", REPO).with(maintainer()))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.categories[0].nodes.length()").value(1))
+        .andExpect(jsonPath("$.categories[0].nodes[0].label").value("Native"))
+        .andExpect(jsonPath("$.categories[0].nodes[0].jobNameMatchers.length()").value(1))
+        .andExpect(jsonPath("$.categories[0].nodes[0].jobNameMatchers[0]").value("Build / A"));
+  }
+
+  private void putConfig(long repositoryId, String body) throws Exception {
+    mockMvc
+        .perform(
+            put("/api/settings/{id}/pipeline-config", repositoryId)
+                .with(maintainer())
+                .with(SecurityMockMvcRequestPostProcessors.csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+        .andExpect(status().isOk());
+  }
+
+  private void assertCategoryCount(JdbcTemplate jdbc, long repositoryId, int expected) {
+    assertCount(
+        jdbc,
+        expected,
+        "SELECT count(*) FROM pipeline_category pc "
+            + "JOIN repository_settings rs ON pc.repository_settings_id = rs.id "
+            + "WHERE rs.repository_id = ?",
+        repositoryId);
+  }
+
+  private void assertNodeCount(JdbcTemplate jdbc, long repositoryId, int expected) {
+    assertCount(
+        jdbc,
+        expected,
+        "SELECT count(*) FROM pipeline_node pn "
+            + "JOIN pipeline_category pc ON pn.pipeline_category_id = pc.id "
+            + "JOIN repository_settings rs ON pc.repository_settings_id = rs.id "
+            + "WHERE rs.repository_id = ?",
+        repositoryId);
+  }
+
+  private void assertMatcherCount(JdbcTemplate jdbc, long repositoryId, int expected) {
+    assertCount(
+        jdbc,
+        expected,
+        "SELECT count(*) FROM pipeline_node_job_matcher m "
+            + "JOIN pipeline_node pn ON m.pipeline_node_id = pn.id "
+            + "JOIN pipeline_category pc ON pn.pipeline_category_id = pc.id "
+            + "JOIN repository_settings rs ON pc.repository_settings_id = rs.id "
+            + "WHERE rs.repository_id = ?",
+        repositoryId);
+  }
+
+  private static void assertCount(JdbcTemplate jdbc, int expected, String sql, Object... args) {
+    final Integer actual = jdbc.queryForObject(sql, Integer.class, args);
+    if (actual == null || actual != expected) {
+      throw new AssertionError("expected count " + expected + " but was " + actual);
+    }
   }
 
   private static SecurityMockMvcRequestPostProcessors.JwtRequestPostProcessor maintainer() {

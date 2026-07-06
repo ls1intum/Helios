@@ -81,4 +81,22 @@ class PipelineDetectionServiceTest {
     CategoryConfig other = category(dto, "Other");
     assertEquals(2, other.nodes().size());
   }
+
+  @Test
+  void prefixThatDoesNotClassifyFallsBackToFullNameKeyword() {
+    // "Deploy" is not a Build/Test/Quality prefix, but the full name contains "test" → Test lane.
+    PipelineConfigDto dto = service.suggest(List.of("Deploy / Run server tests"));
+    assertTrue(node(category(dto, "Test"), "Run server tests").isPresent());
+  }
+
+  @Test
+  void distinctNamesWithTheSameSlugGetDistinctKeys() {
+    // Both names slugify to "build-build" but are genuinely distinct jobs; neither is dropped and
+    // their keys are made unique (the pipeline view tracks nodes by key).
+    PipelineConfigDto dto = service.suggest(List.of("Build / Build", "Build / Build!"));
+    CategoryConfig build = category(dto, "Build");
+    assertEquals(2, build.nodes().size(), "distinct job names must not be de-duplicated");
+    List<String> keys = build.nodes().stream().map(NodeConfig::key).toList();
+    assertEquals(2, keys.stream().distinct().count(), "node keys must be unique within a category");
+  }
 }

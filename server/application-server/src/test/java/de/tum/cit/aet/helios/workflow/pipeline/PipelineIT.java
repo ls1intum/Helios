@@ -1,6 +1,7 @@
 package de.tum.cit.aet.helios.workflow.pipeline;
 
 import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.not;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -52,9 +53,8 @@ class PipelineIT extends HeliosIntegrationTest {
         .andExpect(buildNodeConclusion("Build .war artifact", hasItem("SUCCESS")))
         .andExpect(testNodeStatus("Client Tests", hasItem("COMPLETED")))
         .andExpect(testNodeConclusion("Client Tests", hasItem("FAILURE")))
-        // No required-checks job seeded → the gate is present but not running yet.
-        .andExpect(jsonPath("$.gate.key").value("ci-gate"))
-        .andExpect(jsonPath("$.gate.status").value("PENDING"));
+        // No required-checks job seeded → the gate badge is hidden (not a permanent PENDING badge).
+        .andExpect(jsonPath("$.gate").doesNotExist());
   }
 
   @Test
@@ -109,6 +109,85 @@ class PipelineIT extends HeliosIntegrationTest {
                 hasItem("https://example/job/302")))
         // Queued-only E2E node is pending, not in-progress.
         .andExpect(testNodeStatus("Phase 1", hasItem("PENDING")));
+  }
+
+  @Test
+  void aggregatesWorstWinsAndInProgressWhenNoLegFailed() throws Exception {
+    JdbcTemplate jdbc = new JdbcTemplate(dataSource);
+    final long run = 64L;
+    final String branch = "aggregate";
+    final String sha = "abadcafe";
+    insertBranch(jdbc, REPO, branch, sha);
+    insertRun(jdbc, run, REPO, WF, branch, sha);
+    // Build "Deploy artifact": a passing leg + a cancelled leg (matrix legs collapse to one node)
+    // → worst-wins is CANCELLED (neutral), and crucially not a failure.
+    insertJob(jdbc, 401, REPO, run, "Build / Deploy artifact", "COMPLETED", "SUCCESS");
+    insertJob(jdbc, 402, REPO, run, "Build / Deploy artifact (2)", "COMPLETED", "CANCELLED");
+    // Test "Server Tests": a passing leg + a still-running leg → IN_PROGRESS (not fail, not done).
+    insertJob(jdbc, 403, REPO, run, "Test / Server Tests", "COMPLETED", "SUCCESS");
+    insertJob(jdbc, 404, REPO, run, "Test / Server Tests (2)", "IN_PROGRESS", null);
+    // Quality "Lint": a single skipped leg → SKIPPED.
+    insertJob(jdbc, 405, REPO, run, "Quality / Lint", "COMPLETED", "SKIPPED");
+
+    mockMvc
+        .perform(
+            get("/api/pipeline/branch")
+                .param("branch", branch)
+                .header(X_REPOSITORY_ID, String.valueOf(REPO)))
+        .andExpect(status().isOk())
+        .andExpect(buildNodeStatus("Deploy artifact", hasItem("COMPLETED")))
+        .andExpect(buildNodeConclusion("Deploy artifact", hasItem("CANCELLED")))
+        // A still-running leg keeps the node IN_PROGRESS since nothing failed.
+        .andExpect(testNodeStatus("Server Tests", hasItem("IN_PROGRESS")))
+        .andExpect(
+            jsonPath(
+                "$.categories[?(@.name=='Quality')].nodes[?(@.label=='Lint')].conclusion",
+                hasItem("SKIPPED")));
+  }
+
+  @Test
+  void gateShowsSuccessWhenRequiredChecksJobPasses() throws Exception {
+    JdbcTemplate jdbc = new JdbcTemplate(dataSource);
+    final long run = 65L;
+    final String branch = "gate-green";
+    final String sha = "600df00d";
+    insertBranch(jdbc, REPO, branch, sha);
+    insertRun(jdbc, run, REPO, WF, branch, sha);
+    insertJob(jdbc, 501, REPO, run, "All required CI Passed", "COMPLETED", "SUCCESS");
+
+    mockMvc
+        .perform(
+            get("/api/pipeline/branch")
+                .param("branch", branch)
+                .header(X_REPOSITORY_ID, String.valueOf(REPO)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.gate.key").value("ci-gate"))
+        .andExpect(jsonPath("$.gate.status").value("COMPLETED"))
+        .andExpect(jsonPath("$.gate.conclusion").value("SUCCESS"));
+  }
+
+  @Test
+  void pipelineDoesNotLeakAnotherRepositorysJobs() throws Exception {
+    JdbcTemplate jdbc = new JdbcTemplate(dataSource);
+    final long repoB = 2L;
+    final long wfB = 52L;
+    final long runB = 66L;
+    insertRepo(jdbc, repoB, "ls1intum/repo-b");
+    // Repo B shares the branch name and has an identically-named Build job — but it FAILED.
+    insertBranch(jdbc, repoB, BRANCH, SHA);
+    insertWorkflow(jdbc, wfB, repoB);
+    insertRun(jdbc, runB, repoB, wfB, BRANCH, SHA);
+    insertJob(jdbc, 601, repoB, runB, "Build / Build .war artifact", "COMPLETED", "FAILURE");
+
+    // Repo A's pipeline reflects only A's job (SUCCESS), never B's identically-named FAILURE.
+    mockMvc
+        .perform(
+            get("/api/pipeline/branch")
+                .param("branch", BRANCH)
+                .header(X_REPOSITORY_ID, String.valueOf(REPO)))
+        .andExpect(status().isOk())
+        .andExpect(buildNodeConclusion("Build .war artifact", hasItem("SUCCESS")))
+        .andExpect(buildNodeConclusion("Build .war artifact", not(hasItem("FAILURE"))));
   }
 
   @Test
