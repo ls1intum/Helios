@@ -8,8 +8,14 @@ ALTER TABLE public.issue ADD COLUMN body_text text;
 
 -- Copy existing Large Object contents into the text column. Guard on the oid still pointing at a live
 -- large object so an orphaned reference becomes NULL instead of failing the migration.
+--
+-- Strip NUL bytes (0x00) first: PostgreSQL text columns cannot store NUL, and some historical bodies
+-- contain a stray 0x00. Remove them byte-aligned via the hex representation ((00) drops a NUL byte,
+-- (..) keeps any other byte) before decoding back to bytea and converting to UTF-8 text.
 UPDATE public.issue
-SET body_text = convert_from(lo_get(body), 'UTF8')
+SET body_text = convert_from(
+    decode(regexp_replace(encode(lo_get(body), 'hex'), '(00)|(..)', '\2', 'g'), 'hex'),
+    'UTF8')
 WHERE body IS NOT NULL
   AND EXISTS (SELECT 1 FROM pg_largeobject_metadata m WHERE m.oid = public.issue.body);
 
