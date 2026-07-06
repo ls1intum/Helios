@@ -140,8 +140,11 @@ export class PipelineConfigComponent {
     if (categoryIndex === null) return;
     const label = this.draftLabel().trim();
     if (!label) return;
+    const nodeIndex = this.editingNodeIndex();
+    // Keys must be unique within a category — the pipeline view tracks nodes by key.
+    const usedKeys = new Set((this.categories()[categoryIndex]?.nodes ?? []).filter((_, ni) => ni !== nodeIndex).map(n => n.key));
     const node: EditableNode = {
-      key: this.draftKey().trim() || slug(label),
+      key: uniqueKey(this.draftKey().trim() || slug(label), usedKeys),
       label,
       jobNameMatchers: this.draftMatchers()
         .split(',')
@@ -149,7 +152,6 @@ export class PipelineConfigComponent {
         .filter(s => s.length > 0),
       workflowNameMatcher: this.draftWorkflowMatcher().trim() || null,
     };
-    const nodeIndex = this.editingNodeIndex();
     this.categories.update(cats =>
       cats.map((c, i) => {
         if (i !== categoryIndex) return c;
@@ -171,14 +173,21 @@ export class PipelineConfigComponent {
 
   async autoDetect(): Promise<void> {
     const result = await this.suggestionsQuery.refetch();
-    if (result.data) {
+    // Gate on the outcome, not `data`: on error `refetch` keeps the last successful data, which
+    // would otherwise re-apply a stale suggestion and show a false success.
+    if (result.isSuccess && result.data) {
       // Replaces the editable copy with the suggestion; nothing persists until Save.
       this.categories.set(toEditable(result.data));
       this.messageService.add({ severity: 'info', summary: 'Auto-detected', detail: 'Review the suggested nodes, then Save to apply.' });
+    } else {
+      this.messageService.add({ severity: 'error', summary: 'Auto-detect failed', detail: 'Could not detect pipeline nodes for this repository.' });
     }
   }
 
   save(): void {
+    // Don't save until the current config has loaded — otherwise we'd PUT an empty `categories`
+    // over the repo's saved pipeline (the Save button is live during the initial load window).
+    if (this.isPending()) return;
     this.updateConfigMutation.mutate({
       path: { repositoryId: this.repositoryId() },
       body: { categories: this.categories() } satisfies PipelineConfigDto,
@@ -214,4 +223,13 @@ function slug(value: string): string {
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/(^-+|-+$)/g, '') || 'node'
   );
+}
+
+function uniqueKey(base: string, used: Set<string>): string {
+  let candidate = base;
+  let suffix = 2;
+  while (used.has(candidate)) {
+    candidate = `${base}-${suffix++}`;
+  }
+  return candidate;
 }

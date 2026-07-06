@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { vi } from 'vitest';
 
 import { PipelineConfigComponent } from './pipeline-config.component';
 import { provideZonelessChangeDetection } from '@angular/core';
@@ -67,6 +68,7 @@ describe('PipelineConfigComponent', () => {
       configurable: true,
       value: { isPending: () => false, mutate: (arg: unknown) => (captured = arg) },
     });
+    Object.defineProperty(component, 'isPending', { configurable: true, value: () => false });
     component.categories.set([{ name: 'Build', nodes: [{ key: 'native', label: 'Native', jobNameMatchers: ['Build / native'], workflowNameMatcher: null }] }]);
 
     component.save();
@@ -83,6 +85,7 @@ describe('PipelineConfigComponent', () => {
       value: {
         isFetching: () => false,
         refetch: async () => ({
+          isSuccess: true,
           data: { categories: [{ name: 'Test', nodes: [{ key: 'client', label: 'Client', jobNameMatchers: ['Test / Client'], workflowNameMatcher: null }] }] },
         }),
       },
@@ -92,5 +95,53 @@ describe('PipelineConfigComponent', () => {
 
     expect(component.categories().map(c => c.name)).toEqual(['Test']);
     expect(component.categories()[0].nodes[0].label).toBe('Client');
+  });
+
+  it('autoDetect() keeps the current config and surfaces an error when detection fails', async () => {
+    const existing = [{ name: 'Build', nodes: [] }];
+    component.categories.set(existing);
+    const errors: string[] = [];
+    const messageService = TestBed.inject(MessageService);
+    vi.spyOn(messageService, 'add').mockImplementation((m: { severity?: string }) => errors.push(m.severity ?? ''));
+    // refetch reports failure while still returning the last successful data — we must not re-apply it.
+    Object.defineProperty(component, 'suggestionsQuery', {
+      configurable: true,
+      value: {
+        isFetching: () => false,
+        refetch: async () => ({ isSuccess: false, data: { categories: [{ name: 'Stale', nodes: [] }] } }),
+      },
+    });
+
+    await component.autoDetect();
+
+    expect(component.categories().map(c => c.name)).toEqual(['Build']); // unchanged, not "Stale"
+    expect(errors).toEqual(['error']);
+  });
+
+  it('save() is a no-op while the initial config is still loading', () => {
+    let mutated = false;
+    Object.defineProperty(component, 'updateConfigMutation', {
+      configurable: true,
+      value: { isPending: () => false, mutate: () => (mutated = true) },
+    });
+    Object.defineProperty(component, 'isPending', { configurable: true, value: () => true });
+
+    component.save();
+
+    expect(mutated).toBe(false); // never PUT an empty config over the saved one during load
+  });
+
+  it('saveNode() gives a duplicate label a distinct, unique key', () => {
+    component.categories.set([{ name: 'Build', nodes: [] }]);
+
+    component.openAddNode(0);
+    component.draftLabel.set('Native');
+    component.saveNode();
+    component.openAddNode(0);
+    component.draftLabel.set('Native');
+    component.saveNode();
+
+    const keys = component.categories()[0].nodes.map(n => n.key);
+    expect(keys).toEqual(['native', 'native-2']);
   });
 });
