@@ -7,7 +7,7 @@ import org.springframework.lang.Nullable;
 /**
  * Global pipeline defaults that are not (yet) per-repository. Per-repo categories and nodes live in
  * the database (see {@code PipelineConfigService}); this holds only the optional merge-readiness
- * {@code gate} node — mapped to the CI's single required-checks job and rendered as a header badge.
+ * {@code gate} node — mapped to the CI's required-checks job and shown as a header badge.
  * A per-repository gate is a planned follow-up.
  */
 @ConfigurationProperties(prefix = "helios.pipeline")

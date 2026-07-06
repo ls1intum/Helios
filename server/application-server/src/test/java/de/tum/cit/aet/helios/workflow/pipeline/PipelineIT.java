@@ -11,8 +11,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 /**
- * End-to-end guard for {@code GET /api/pipeline/branch}. With no persisted config, a repo's pipeline
- * is auto-detected from its observed CI jobs into the Build/Test/Quality lanes, each detected node
+ * End-to-end guard for {@code GET /api/pipeline/branch}. With no persisted config, a repo's
+ * pipeline is auto-detected from its observed CI jobs into the Build/Test/Quality lanes, each node
  * aggregating the matching head-commit jobs with distinct states (queued-only = pending; fail-fast
  * to FAILURE). The optional global {@code gate} badge reflects the required-checks job. No
  * {@code X-REPOSITORY-ID} → empty (no leak).
@@ -123,7 +123,8 @@ class PipelineIT extends HeliosIntegrationTest {
 
   private static org.springframework.test.web.servlet.ResultMatcher buildNodeStatus(
       String label, org.hamcrest.Matcher<Iterable<? super String>> m) {
-    return jsonPath("$.categories[?(@.name=='Build')].nodes[?(@.label=='" + label + "')].status", m);
+    return jsonPath(
+        "$.categories[?(@.name=='Build')].nodes[?(@.label=='" + label + "')].status", m);
   }
 
   private static org.springframework.test.web.servlet.ResultMatcher buildNodeConclusion(
