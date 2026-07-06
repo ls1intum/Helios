@@ -54,8 +54,11 @@ public class GitHubWorkflowJobSyncService {
     entity.setRepository(run.getRepository());
     entity.setName(job.name());
     entity.setWorkflowName(job.workflowName());
-    entity.setStatus(mapStatus(job.status()));
-    entity.setConclusion(mapConclusion(job.conclusion()));
+    entity.setStatus(
+        parseOrUnknown(WorkflowRun.Status.class, job.status(), WorkflowRun.Status.UNKNOWN));
+    entity.setConclusion(
+        parseOrUnknown(
+            WorkflowRun.Conclusion.class, job.conclusion(), WorkflowRun.Conclusion.UNKNOWN));
     entity.setStartedAt(job.startedAt());
     entity.setCompletedAt(job.completedAt());
     entity.setHtmlUrl(job.htmlUrl());
@@ -69,25 +72,18 @@ public class GitHubWorkflowJobSyncService {
     workflowJobRepository.save(entity);
   }
 
-  private static WorkflowRun.Status mapStatus(String status) {
-    if (status == null) {
+  /**
+   * Parses a GitHub status/conclusion string into the matching enum constant (case-insensitive),
+   * falling back to {@code unknown} for an unrecognised value and {@code null} for a missing one.
+   */
+  private static <E extends Enum<E>> E parseOrUnknown(Class<E> type, String value, E unknown) {
+    if (value == null) {
       return null;
     }
     try {
-      return WorkflowRun.Status.valueOf(status.toUpperCase(Locale.ROOT));
+      return Enum.valueOf(type, value.toUpperCase(Locale.ROOT));
     } catch (IllegalArgumentException e) {
-      return WorkflowRun.Status.UNKNOWN;
-    }
-  }
-
-  private static WorkflowRun.Conclusion mapConclusion(String conclusion) {
-    if (conclusion == null) {
-      return null;
-    }
-    try {
-      return WorkflowRun.Conclusion.valueOf(conclusion.toUpperCase(Locale.ROOT));
-    } catch (IllegalArgumentException e) {
-      return WorkflowRun.Conclusion.UNKNOWN;
+      return unknown;
     }
   }
 }

@@ -8,6 +8,8 @@ import de.tum.cit.aet.helios.workflow.WorkflowRunService;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -20,6 +22,22 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class PipelineService {
+
+  /** Statuses that mean a matched job has not finished yet (node is still in progress). */
+  private static final Set<WorkflowRun.Status> ACTIVE_STATUSES =
+      Set.of(
+          WorkflowRun.Status.IN_PROGRESS,
+          WorkflowRun.Status.QUEUED,
+          WorkflowRun.Status.WAITING,
+          WorkflowRun.Status.PENDING,
+          WorkflowRun.Status.REQUESTED);
+
+  /** Conclusions that count as a failure for worst-wins aggregation. */
+  private static final Set<WorkflowRun.Conclusion> FAILED_CONCLUSIONS =
+      Set.of(
+          WorkflowRun.Conclusion.FAILURE,
+          WorkflowRun.Conclusion.TIMED_OUT,
+          WorkflowRun.Conclusion.STARTUP_FAILURE);
 
   private final PipelineProperties properties;
   private final WorkflowRunService workflowRunService;
@@ -96,38 +114,27 @@ public class PipelineService {
   /** Any not-yet-completed matched job keeps the node in progress; otherwise it is completed. */
   private static WorkflowRun.Status aggregateStatus(List<WorkflowJob> jobs) {
     final boolean anyActive =
-        jobs.stream()
-            .anyMatch(
-                job -> {
-                  final WorkflowRun.Status s = job.getStatus();
-                  return s == WorkflowRun.Status.IN_PROGRESS
-                      || s == WorkflowRun.Status.QUEUED
-                      || s == WorkflowRun.Status.WAITING
-                      || s == WorkflowRun.Status.PENDING
-                      || s == WorkflowRun.Status.REQUESTED;
-                });
+        jobs.stream().map(WorkflowJob::getStatus).anyMatch(ACTIVE_STATUSES::contains);
     return anyActive ? WorkflowRun.Status.IN_PROGRESS : WorkflowRun.Status.COMPLETED;
   }
 
   /** Worst-wins conclusion across the matched jobs. */
   private static WorkflowRun.Conclusion aggregateConclusion(List<WorkflowJob> jobs) {
-    if (jobs.stream()
-        .anyMatch(
-            job -> {
-              final WorkflowRun.Conclusion c = job.getConclusion();
-              return c == WorkflowRun.Conclusion.FAILURE
-                  || c == WorkflowRun.Conclusion.TIMED_OUT
-                  || c == WorkflowRun.Conclusion.STARTUP_FAILURE;
-            })) {
+    final Set<WorkflowRun.Conclusion> present =
+        jobs.stream()
+            .map(WorkflowJob::getConclusion)
+            .filter(Objects::nonNull)
+            .collect(Collectors.toSet());
+    if (present.stream().anyMatch(FAILED_CONCLUSIONS::contains)) {
       return WorkflowRun.Conclusion.FAILURE;
     }
-    if (jobs.stream().anyMatch(job -> job.getConclusion() == WorkflowRun.Conclusion.CANCELLED)) {
+    if (present.contains(WorkflowRun.Conclusion.CANCELLED)) {
       return WorkflowRun.Conclusion.CANCELLED;
     }
-    if (jobs.stream().allMatch(job -> job.getConclusion() == WorkflowRun.Conclusion.SKIPPED)) {
+    if (present.equals(Set.of(WorkflowRun.Conclusion.SKIPPED))) {
       return WorkflowRun.Conclusion.SKIPPED;
     }
-    if (jobs.stream().anyMatch(job -> job.getConclusion() == WorkflowRun.Conclusion.SUCCESS)) {
+    if (present.contains(WorkflowRun.Conclusion.SUCCESS)) {
       return WorkflowRun.Conclusion.SUCCESS;
     }
     return WorkflowRun.Conclusion.NEUTRAL;
