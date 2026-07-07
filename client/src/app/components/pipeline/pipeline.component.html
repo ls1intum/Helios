@@ -2,10 +2,11 @@
   <p-divider class="w-full mt-4" />
 </div>
 
-<!-- Status icon for one node; the state->icon mapping lives in nodeIcon(). -->
+<!-- Status icon for one node; the state->icon mapping lives in nodeIcon(). aria-label mirrors the
+     tooltip so the state (not just the node name) is exposed to assistive tech. -->
 <ng-template #statusIcon let-node>
   @let icon = nodeIcon(node);
-  <i-tabler [name]="icon.name" [class]="icon.class" [pTooltip]="icon.tooltip"></i-tabler>
+  <i-tabler [name]="icon.name" [class]="icon.class" [pTooltip]="icon.tooltip" [attr.aria-label]="icon.tooltip" role="img"></i-tabler>
 </ng-template>
 
 <div class="mb-4 flex items-center gap-3 flex-wrap">
@@ -23,7 +24,7 @@
   <!-- Freshness anchor: which commit these states reflect, and whether it is the head. -->
   @if (head(); as h) {
     <span class="inline-flex items-center gap-1 text-xs text-muted-color">
-      <i-tabler name="git-commit" class="!size-4" />
+      <i-tabler name="git-commit" class="!size-4" aria-hidden="true" />
       <code class="font-mono">{{ h.sha }}</code>
       @if (!h.upToDate) {
         <span class="text-orange-600 dark:text-orange-400" pTooltip="Your newest commit hasn't produced CI results yet — showing the most recent commit that ran.">
@@ -86,15 +87,19 @@
         </ng-container>
       }
     </div>
-    <!-- Confidence footer: the previous commit's outcome, while the displayed commit is still running. -->
+    <!-- Confidence footer: the last built commit's outcome, while the displayed commit is still
+         running. The icon colour is muted (the text label carries pass/fail) so this reads as
+         context, not as the live pipeline's current state. -->
     @if (previous(); as prev) {
-      @let prevIcon = nodeIcon({ conclusion: prev.conclusion });
-      <div class="mt-3 flex items-center gap-1.5 text-xs text-muted-color border-t border-surface-200 dark:border-surface-700 pt-2">
-        <span>Previous commit</span>
-        <code class="font-mono">{{ prev.sha }}</code>
-        <i-tabler [name]="prevIcon.name" [class]="prevIcon.class + ' !size-4'" />
-        <span>{{ prevIcon.tooltip }}</span>
-      </div>
+      @if (prev.conclusion) {
+        @let prevIcon = nodeIcon({ conclusion: prev.conclusion });
+        <div class="mt-3 flex items-center gap-1.5 text-xs text-muted-color border-t border-surface-200 dark:border-surface-700 pt-2">
+          <span>Last built commit</span>
+          <code class="font-mono">{{ prev.sha }}</code>
+          <i-tabler [name]="prevIcon.name" class="text-muted-color !size-4" aria-hidden="true" />
+          <span>{{ prevIcon.tooltip }}</span>
+        </div>
+      }
     }
   } @else {
     <div class="flex flex-col justify-center items-center p-4">

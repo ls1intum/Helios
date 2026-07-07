@@ -103,15 +103,20 @@ describe('PipelineComponent', () => {
     // Running is the only spinner.
     expect(icon('IN_PROGRESS', null).name).toBe('progress');
     expect(icon('IN_PROGRESS', null).class).toContain('animate-spin');
-    // Queued is a distinct, non-spinning clock — scheduled, not idle and not "not running yet".
+    // Queued is a distinct, non-spinning clock, muted (not the running yellow) — scheduled, not idle.
     expect(icon('QUEUED', null).name).toBe('clock');
     expect(icon('QUEUED', null).tooltip).toBe('Queued');
+    expect(icon('QUEUED', null).class).toBe('text-muted-color');
     expect(icon('QUEUED', null).class).not.toContain('animate-spin');
-    // Awaiting a maintainer's approval is a distinct, actionable state (status or conclusion form).
+    // Awaiting a maintainer's approval is a distinct, actionable state (status or conclusion form),
+    // and always the warning colour (orange) — never the yellow in-progress bucket, whichever form.
     expect(icon('WAITING', null).name).toBe('player-pause');
     expect(icon('WAITING', null).tooltip).toBe('Waiting for approval');
+    expect(icon('WAITING', null).class).toContain('orange');
     expect(icon('ACTION_REQUIRED', null).tooltip).toBe('Waiting for approval');
+    expect(icon('ACTION_REQUIRED', null).class).toContain('orange');
     expect(icon('COMPLETED', 'ACTION_REQUIRED').tooltip).toBe('Waiting for approval');
+    expect(icon('COMPLETED', 'ACTION_REQUIRED').class).toContain('orange');
     // Only a genuinely absent run reads as the muted "not running yet".
     for (const s of ['PENDING', 'REQUESTED']) {
       expect(icon(s, null).name).toBe('circle-dashed');
@@ -121,7 +126,7 @@ describe('PipelineComponent', () => {
     expect(icon('COMPLETED', 'SKIPPED').name).toBe('circle-minus');
     expect(icon('COMPLETED', 'CANCELLED').name).toBe('ban');
     // A terminal-but-neutral node is handled explicitly, not left as "Unknown".
-    expect(icon('COMPLETED', 'NEUTRAL').tooltip).toBe('Neutral');
+    expect(icon('COMPLETED', 'NEUTRAL').tooltip).toBe('No result');
   });
 
   it('shows the commit freshness anchor, flagging when the newest commit is not built yet', async () => {
@@ -151,8 +156,10 @@ describe('PipelineComponent', () => {
     fixture.detectChanges();
 
     const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
-    expect(text).toContain('Previous commit');
+    expect(text).toContain('Last built commit');
     expect(text).toContain('aaa1111');
+    // The outcome is spelled out in words (not colour alone).
+    expect(text).toContain('Passed');
     // "up to date" head does not show the not-built-yet warning.
     expect(text).not.toContain('newest commit not built yet');
   });

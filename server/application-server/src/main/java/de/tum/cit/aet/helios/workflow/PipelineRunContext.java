@@ -4,16 +4,10 @@ import java.util.List;
 import org.springframework.lang.Nullable;
 
 /**
- * The resolved run context a pipeline is built from.
- *
- * <p>Rather than pinning strictly to the branch/PR head commit — which shows an all-"not running
- * yet" skeleton whenever that commit's CI run is still queued, gated, or hasn't been ingested yet —
- * this captures the commit actually worth displaying, whether it is the head ({@code upToDate}), and
- * a coarse outcome for the immediately-preceding commit (rendered as a confidence footer while the
- * displayed commit is still running).
- *
- * <p>Every field is derived purely from ingested {@link WorkflowRun} rows — no GitHub API calls — so
- * the pipeline stays exactly as fresh as the webhook stream.
+ * The resolved run context a pipeline is built from — the commit worth displaying, whether it is
+ * the head, and the preceding commit's outcome. Derived purely from ingested {@link WorkflowRun}
+ * rows (no GitHub API), so it stays exactly as fresh as the webhook stream. See {@code
+ * WorkflowRunService#buildPipelineRunContext} for how the fields are resolved.
  *
  * @param currentRuns the head runs (latest per workflow) for {@code displayedSha}
  * @param displayedSha the commit the node states reflect, or {@code null} when nothing is known

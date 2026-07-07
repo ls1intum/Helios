@@ -17,9 +17,8 @@ import org.springframework.lang.Nullable;
  *
  * <p>{@code head} names the commit the node states reflect and whether it is the branch/PR head, so
  * the client can show a freshness anchor ("up to date" vs "newest commit not built yet") — the key
- * to the view being trustworthy. {@code previous} is the immediately-preceding commit's coarse
- * outcome, shown as a confidence footer only while the displayed commit is still running. Both are
- * omitted for the group fallback and when unknown.
+ * to the view being trustworthy. {@code previous} is the last built commit's outcome (see its
+ * record). Both are {@code @JsonInclude(NON_NULL)} and omitted for the group fallback.
  */
 public record PipelineDto(
     List<Category> categories,

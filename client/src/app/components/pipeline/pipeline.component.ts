@@ -106,40 +106,39 @@ export class PipelineComponent {
   // commit is still running. Null once the displayed commit is terminal (its own row says it all).
   previous = computed(() => this.pipeline().previous ?? null);
 
+  // Terminal (and awaiting-approval) conclusions → icon + tooltip. Colour comes from the shared
+  // status map so it stays consistent with the rest of the app.
+  private static readonly ICON_BY_CONCLUSION: Record<string, { name: string; tooltip: string }> = {
+    FAILURE: { name: 'circle-x', tooltip: 'Failed' },
+    TIMED_OUT: { name: 'circle-x', tooltip: 'Failed' },
+    STARTUP_FAILURE: { name: 'circle-x', tooltip: 'Failed' },
+    SUCCESS: { name: 'circle-check', tooltip: 'Passed' },
+    SKIPPED: { name: 'circle-minus', tooltip: 'Skipped' },
+    CANCELLED: { name: 'ban', tooltip: 'Cancelled' },
+    ACTION_REQUIRED: { name: 'player-pause', tooltip: 'Waiting for approval' },
+    NEUTRAL: { name: 'progress-help', tooltip: 'No result' },
+  };
+
   /**
-   * Resolves a node's aggregated `{status, conclusion}` to its icon, reusing the shared status
-   * colour map. Conclusion is checked before status so a fail-fast node (still running, but a leg
-   * already failed) shows red rather than a spinner.
-   *
-   * The transient states are deliberately distinct so the view is honest and trustworthy: a job
-   * awaiting a maintainer's approval shows "Waiting for approval" (actionable), a scheduled-but-not-
-   * started job shows a "Queued" clock (not idle), and only a genuinely absent CI run reads as the
-   * muted "Not running yet".
+   * Resolves a node's aggregated `{status, conclusion}` to its icon. Conclusion is checked before
+   * status so a fail-fast node (still running, but a leg already failed) shows red rather than a
+   * spinner. The transient states are deliberately distinct: **running** spins yellow, **queued** is
+   * a muted clock (scheduled, not the same yellow as running), **waiting for approval** is a warning
+   * (orange) pause, and only a genuinely absent CI run is the muted "not running yet".
    */
   nodeIcon(node: { status?: string | null; conclusion?: string | null }): { name: string; class: string; tooltip: string } {
     const { status, conclusion } = node;
-    const color = getStatusColors(conclusion, status).icon;
-    switch (conclusion) {
-      case 'FAILURE':
-      case 'TIMED_OUT':
-      case 'STARTUP_FAILURE':
-        return { name: 'circle-x', class: color, tooltip: 'Failed' };
-      case 'SUCCESS':
-        return { name: 'circle-check', class: color, tooltip: 'Passed' };
-      case 'SKIPPED':
-        return { name: 'circle-minus', class: color, tooltip: 'Skipped' };
-      case 'CANCELLED':
-        return { name: 'ban', class: color, tooltip: 'Cancelled' };
-      case 'ACTION_REQUIRED':
-        return { name: 'player-pause', class: color, tooltip: 'Waiting for approval' };
-      case 'NEUTRAL':
-        return { name: 'progress-help', class: color, tooltip: 'Neutral' };
+    const byConclusion = conclusion ? PipelineComponent.ICON_BY_CONCLUSION[conclusion] : undefined;
+    if (byConclusion) return { ...byConclusion, class: getStatusColors(conclusion, status).icon };
+    if (status === 'IN_PROGRESS') {
+      return { name: 'progress', class: `${getStatusColors(conclusion, status).icon} animate-spin`, tooltip: 'Running' };
     }
-    if (status === 'IN_PROGRESS') return { name: 'progress', class: `${color} animate-spin`, tooltip: 'Running' };
-    if (status === 'ACTION_REQUIRED' || status === 'WAITING') {
-      return { name: 'player-pause', class: color, tooltip: 'Waiting for approval' };
+    if (status === 'WAITING' || status === 'ACTION_REQUIRED') {
+      // Force the warning colour so a bare WAITING (no conclusion) matches the ACTION_REQUIRED
+      // conclusion (orange), instead of the yellow in-progress bucket it would otherwise fall into.
+      return { name: 'player-pause', class: getStatusColors('ACTION_REQUIRED').icon, tooltip: 'Waiting for approval' };
     }
-    if (status === 'QUEUED') return { name: 'clock', class: color, tooltip: 'Queued' };
+    if (status === 'QUEUED') return { name: 'clock', class: 'text-muted-color', tooltip: 'Queued' };
     if (status === 'PENDING' || status === 'REQUESTED') {
       return { name: 'circle-dashed', class: 'text-muted-color', tooltip: 'Not running yet' };
     }

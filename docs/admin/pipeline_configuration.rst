@@ -165,13 +165,14 @@ rather than a permanent "not running yet" — so a node is honest about what is 
   not idle, and never a spinner.
 - **Waiting for approval** (``ACTION_REQUIRED``, amber pause) — the run is gated on a maintainer's
   approval (e.g. a first-time contributor). Actionable, not a silent blank.
-- **Didn't run** (``SKIPPED``) — the run finished but this job never appeared (skipped for this
-  change).
+- **No result** (``NEUTRAL``) — the run finished but this job never appeared. We cannot tell an
+  intentional skip from a webhook event we simply never ingested, so we make the weaker, honest
+  claim rather than asserting the job was skipped.
 - **Not running yet** (``PENDING``, dashed) — only when **no** CI run matches the node at all.
 
-The client renders a distinct icon per state: dashed circle (not running yet), clock (queued),
+The client renders a distinct icon per state: dashed circle (not running yet), muted clock (queued),
 amber pause (waiting for approval), yellow spinner (running), red ✗ (failed), green ✓ (passed),
-grey ⊝ (skipped/didn't run), grey ⃠ (cancelled).
+grey ⊝ (skipped), grey ⃠ (cancelled), grey ? (no result / neutral).
 
 
 Freshness and the previous commit
@@ -183,9 +184,19 @@ The pipeline reflects the branch/PR **head commit**, resolved purely from ingest
 - The header shows **which commit** the states are for and whether it is the head. If the newest
   commit has no CI run yet (just pushed, gated, or a missed push webhook), the most recent commit
   that *did* run is shown instead, clearly flagged *"newest commit not built yet"*.
-- While the displayed commit is still running, a footer summarises the **previous commit's**
-  outcome (e.g. *"previous commit abc1234: ✓ passed"*) for at-a-glance confidence. It disappears
-  once the displayed commit is terminal.
+- While the displayed commit is still running, a footer summarises the **last built commit's**
+  outcome (e.g. *"last built commit abc1234: passed"*) for at-a-glance confidence. It is labelled
+  "last built" rather than "previous" because it is the newest commit that ran — after a rebase or
+  a re-run on an older commit, that is not necessarily this commit's parent. It disappears once the
+  displayed commit is terminal.
+
+.. note::
+
+   Freshness is only as current as the branch head Helios has ingested. The head is updated by
+   push webhooks and the periodic repository sync, so a *missed* push webhook can briefly leave the
+   view a commit behind until the next sync heals it — the displayed commit SHA is always shown so
+   this stays visible rather than silent. Tightening this window (a targeted head refresh on the
+   reconciliation cadence) is a natural follow-up.
 
 
 Merge gate

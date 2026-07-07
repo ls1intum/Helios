@@ -88,9 +88,10 @@ public class WorkflowRunService {
       return PipelineRunContext.empty();
     }
     return buildPipelineRunContext(
-        branchName,
         branch.getCommitSha(),
-        repositoryId,
+        sha ->
+            workflowRunRepository.findByHeadBranchAndHeadShaAndRepositoryRepositoryId(
+                branchName, sha, repositoryId),
         exclude ->
             workflowRunRepository.findNthLatestCommitShaBehindHeadByBranchAndRepoId(
                 branchName, repositoryId, 0, exclude));
@@ -98,16 +99,19 @@ public class WorkflowRunService {
 
   /** Resolves the {@link PipelineRunContext} for a pull request's head commit. */
   public PipelineRunContext getPipelineRunContextForPullRequest(Long pullRequestId) {
-    final Long repositoryId = RepositoryContext.getRepositoryId();
+    // No repository scoping needed here: the PR id is globally unique and every run lookup below is
+    // scoped to runs associated with this PR, so there is no cross-tenant leak.
     var pullRequest = pullRequestRepository.findById(pullRequestId).orElse(null);
     if (pullRequest == null) {
       log.error("Pull request with id {} not found!", pullRequestId);
       return PipelineRunContext.empty();
     }
+    // Scope runs and commit history to the same PR-associated universe: the previous/fallback SHAs
+    // are derived from runs joined to this PR, so the runs we then fetch for a SHA must be too — a
+    // branch+sha lookup could resolve to a merge-queue commit whose runs live under another branch.
     return buildPipelineRunContext(
-        pullRequest.getHeadRefName(),
         pullRequest.getHeadSha(),
-        repositoryId,
+        sha -> workflowRunRepository.findByPullRequestsIdAndHeadSha(pullRequestId, sha),
         exclude ->
             workflowRunRepository.findNthLatestCommitShaBehindHeadByPullRequestId(
                 pullRequestId, 0, exclude));
@@ -122,20 +126,20 @@ public class WorkflowRunService {
    * resolves the immediately-preceding commit, but only while the displayed commit is still running
    * (once it is terminal its own node row tells the whole story).
    *
-   * @param previousShaFinder returns the newest commit-with-runs on this branch/PR that differs
-   *     from the given commit (offset 0 of the run-derived commit history)
+   * @param runsForSha returns the ingested runs for a commit SHA; must draw from the same universe
+   *     as {@code previousShaFinder} (both branch-scoped, or both PR-association-scoped) so every
+   *     resolved commit is guaranteed to have runs to render
+   * @param previousShaFinder returns the newest commit-with-runs that differs from the given commit
+   *     (offset 0 of the run-derived commit history)
    */
   private PipelineRunContext buildPipelineRunContext(
-      String branchName,
       String headSha,
-      Long repositoryId,
+      java.util.function.Function<String, List<WorkflowRun>> runsForSha,
       java.util.function.Function<String, Optional<String>> previousShaFinder) {
     if (headSha == null) {
       return PipelineRunContext.empty();
     }
-    List<WorkflowRun> headRuns =
-        workflowRunRepository.findByHeadBranchAndHeadShaAndRepositoryRepositoryId(
-            branchName, headSha, repositoryId);
+    List<WorkflowRun> headRuns = runsForSha.apply(headSha);
 
     final String displayedSha;
     final boolean upToDate;
@@ -144,23 +148,24 @@ public class WorkflowRunService {
       upToDate = true;
     } else {
       final String fallback = previousShaFinder.apply(headSha).orElse(null);
-      if (fallback == null) {
-        // No CI has ever run for this branch/PR — legitimately "not running yet".
+      final List<WorkflowRun> fallbackRuns =
+          fallback == null ? List.of() : runsForSha.apply(fallback);
+      if (fallbackRuns.isEmpty()) {
+        // No runs we can show: either CI has never run for this branch/PR, or the newest commit in
+        // the run history lives in a different scope (e.g. a merge-queue branch). Either way show
+        // the head as a legitimate "not running yet" rather than an empty grid under a stale SHA.
         return new PipelineRunContext(List.of(), headSha, true, null, List.of());
       }
       displayedSha = fallback;
       upToDate = false;
-      headRuns =
-          workflowRunRepository.findByHeadBranchAndHeadShaAndRepositoryRepositoryId(
-              branchName, fallback, repositoryId);
+      headRuns = fallbackRuns;
     }
 
     final List<WorkflowRunDto> currentRuns =
         getLatestWorkflowRuns(headRuns).map(WorkflowRunDto::fromWorkflowRun).toList();
 
     final boolean currentComplete =
-        !currentRuns.isEmpty()
-            && currentRuns.stream().allMatch(r -> r.status() == WorkflowRun.Status.COMPLETED);
+        currentRuns.stream().allMatch(r -> r.status() == WorkflowRun.Status.COMPLETED);
     if (currentComplete) {
       return new PipelineRunContext(currentRuns, displayedSha, upToDate, null, List.of());
     }
@@ -168,9 +173,7 @@ public class WorkflowRunService {
     final List<WorkflowRunDto> previousRuns =
         previousSha == null
             ? List.of()
-            : getLatestWorkflowRuns(
-                    workflowRunRepository.findByHeadBranchAndHeadShaAndRepositoryRepositoryId(
-                        branchName, previousSha, repositoryId))
+            : getLatestWorkflowRuns(runsForSha.apply(previousSha))
                 .map(WorkflowRunDto::fromWorkflowRun)
                 .toList();
     return new PipelineRunContext(currentRuns, displayedSha, upToDate, previousSha, previousRuns);

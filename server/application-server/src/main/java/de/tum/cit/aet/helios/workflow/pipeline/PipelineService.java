@@ -86,7 +86,9 @@ public class PipelineService {
     final List<Long> runIds = currentRuns.stream().map(WorkflowRunDto::id).toList();
     // Runs are already scoped to the current repository, so their jobs are too.
     final List<WorkflowJob> jobs =
-        runIds.isEmpty() ? List.of() : workflowJobRepository.findByWorkflowRunIdIn(runIds);
+        runIds.isEmpty()
+            ? List.of()
+            : latestAttemptPerJob(workflowJobRepository.findByWorkflowRunIdIn(runIds));
 
     final List<PipelineDto.Category> categories =
         properties.categories().stream()
@@ -136,11 +138,12 @@ public class PipelineService {
     if (runs.stream().anyMatch(r -> r.status() != WorkflowRun.Status.COMPLETED)) {
       return null;
     }
-    if (runs.stream().anyMatch(r -> r.conclusion() == WorkflowRun.Conclusion.SUCCESS)) {
-      return WorkflowRun.Conclusion.SUCCESS.name();
-    }
+    // Cancelled before success, mirroring the node-level aggregator's worst-wins precedence.
     if (runs.stream().anyMatch(r -> r.conclusion() == WorkflowRun.Conclusion.CANCELLED)) {
       return WorkflowRun.Conclusion.CANCELLED.name();
+    }
+    if (runs.stream().anyMatch(r -> r.conclusion() == WorkflowRun.Conclusion.SUCCESS)) {
+      return WorkflowRun.Conclusion.SUCCESS.name();
     }
     return WorkflowRun.Conclusion.NEUTRAL.name();
   }
@@ -193,6 +196,23 @@ public class PipelineService {
         status.name(),
         conclusion == null ? null : conclusion.name(),
         pickHtmlUrl(matched, conclusion));
+  }
+
+  /**
+   * Collapses re-run attempts. GitHub assigns a new job id per attempt but keeps the run id, and
+   * ingestion never deletes the prior attempt, so a run can carry both a failed attempt-1 job and a
+   * passed attempt-2 job under the same name. Keep only the latest attempt (highest job id) per
+   * (run, job name) so a green re-run is not reported as a permanent failure.
+   */
+  private static List<WorkflowJob> latestAttemptPerJob(List<WorkflowJob> jobs) {
+    return List.copyOf(
+        jobs.stream()
+            .collect(
+                Collectors.toMap(
+                    job -> job.getWorkflowRun().getId() + " " + job.getName(),
+                    job -> job,
+                    (a, b) -> a.getId() >= b.getId() ? a : b))
+            .values());
   }
 
   private static boolean hasStarted(WorkflowJob job) {
@@ -254,12 +274,13 @@ public class PipelineService {
 
   /**
    * State for a node that has no matching job yet, inferred from the CI run it belongs to so the
-   * view stays honest and up to date rather than showing a permanent "not running yet":
+   * view stays honest rather than showing a permanent "not running yet".
    *
    * <ul>
    *   <li>run awaiting approval → {@code ACTION_REQUIRED} ("waiting for approval") — actionable;
    *   <li>run queued/running → {@code QUEUED} ("queued") — the job is scheduled, not idle;
-   *   <li>run completed but this job never appeared → {@code SKIPPED} ("didn't run this commit");
+   *   <li>run completed but this job never appeared → {@code NEUTRAL} ("no result") — we cannot
+   *       tell an intentional skip from an event we never ingested, so we make the weaker claim;
    *   <li>no run matches this node at all → {@code PENDING} ("not running yet").
    * </ul>
    */
@@ -279,7 +300,7 @@ public class PipelineService {
       status = WorkflowRun.Status.QUEUED;
     } else {
       status = WorkflowRun.Status.COMPLETED;
-      conclusion = WorkflowRun.Conclusion.SKIPPED;
+      conclusion = WorkflowRun.Conclusion.NEUTRAL;
     }
     return new PipelineDto.Node(
         node.key(),

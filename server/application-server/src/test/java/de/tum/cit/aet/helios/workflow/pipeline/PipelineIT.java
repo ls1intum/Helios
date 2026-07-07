@@ -10,7 +10,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 /**
- * End-to-end guard for {@code GET /api/pipeline/branch}. Covers both modes:
+ * End-to-end guard for {@code GET /api/pipeline/branch} and {@code /api/pipeline/pr/{id}}. Covers
+ * both modes:
  *
  * <ul>
  *   <li>a canonical repository (in {@code helios.pipeline.repositories}) aggregates its jobs into
@@ -201,10 +202,10 @@ class PipelineIT extends HeliosIntegrationTest {
                 .header(X_REPOSITORY_ID, String.valueOf(REPO)))
         .andExpect(status().isOk())
         // The Nightly job is excluded, so test-client is not fed by it: the CI run completed with
-        // no matching job → "didn't run" (SKIPPED), never the Nightly job's SUCCESS.
+        // no matching job → the honest NEUTRAL ("no result"), never the Nightly job's SUCCESS.
         .andExpect(jsonPath("$.categories[1].nodes[0].key").value("test-client"))
         .andExpect(jsonPath("$.categories[1].nodes[0].status").value("COMPLETED"))
-        .andExpect(jsonPath("$.categories[1].nodes[0].conclusion").value("SKIPPED"));
+        .andExpect(jsonPath("$.categories[1].nodes[0].conclusion").value("NEUTRAL"));
   }
 
   @Test
@@ -320,6 +321,156 @@ class PipelineIT extends HeliosIntegrationTest {
   }
 
   @Test
+  void rerunReplacesFailedAttemptWithLatestGreenAttempt() throws Exception {
+    JdbcTemplate jdbc = new JdbcTemplate(dataSource);
+    final long runR = 72L;
+    final String branch = "rerun-br";
+    final String sha = "abcdef01";
+    insertBranch(jdbc, REPO, branch, sha);
+    insertRun(jdbc, runR, REPO, WF, branch, sha, "COMPLETED", "SUCCESS", 0);
+    // Attempt 1 of the build job failed; the developer re-ran and attempt 2 (higher job id) passed.
+    // GitHub keeps both rows under the same run; only the latest attempt must count, else the node
+    // is red forever after a green re-run.
+    insertJob(jdbc, 801, REPO, runR, "Build / Build .war artifact", "COMPLETED", "FAILURE");
+    insertJob(jdbc, 802, REPO, runR, "Build / Build .war artifact", "COMPLETED", "SUCCESS");
+
+    mockMvc
+        .perform(
+            get("/api/pipeline/branch")
+                .param("branch", branch)
+                .header(X_REPOSITORY_ID, String.valueOf(REPO)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.categories[0].nodes[0].key").value("build-native"))
+        .andExpect(jsonPath("$.categories[0].nodes[0].status").value("COMPLETED"))
+        .andExpect(jsonPath("$.categories[0].nodes[0].conclusion").value("SUCCESS"));
+  }
+
+  @Test
+  void branchWithNoRunsShowsPendingSkeletonNotFallback() throws Exception {
+    JdbcTemplate jdbc = new JdbcTemplate(dataSource);
+    final String branch = "no-ci-br";
+    // A branch that has never triggered CI: legitimately "not running yet", not a stale fallback.
+    insertBranch(jdbc, REPO, branch, "5555none");
+
+    mockMvc
+        .perform(
+            get("/api/pipeline/branch")
+                .param("branch", branch)
+                .header(X_REPOSITORY_ID, String.valueOf(REPO)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.categories[0].nodes[0].key").value("build-native"))
+        .andExpect(jsonPath("$.categories[0].nodes[0].status").value("PENDING"))
+        .andExpect(jsonPath("$.head.sha").value("5555non"))
+        .andExpect(jsonPath("$.head.upToDate").value(true))
+        .andExpect(jsonPath("$.previous").doesNotExist());
+  }
+
+  @Test
+  void unrelatedWorkflowRunLeavesNodesPending() throws Exception {
+    JdbcTemplate jdbc = new JdbcTemplate(dataSource);
+    final String branch = "nightly-br";
+    final String sha = "6666nite";
+    insertBranch(jdbc, REPO, branch, sha);
+    // The only run on this commit is an unrelated "Nightly" workflow (not the CI orchestrator). It
+    // must not fill the canonical nodes as "queued"; they stay PENDING (their CI run is absent).
+    insertNamedRun(jdbc, 73L, REPO, WF, branch, sha, "Nightly", "COMPLETED", null, 0);
+
+    mockMvc
+        .perform(
+            get("/api/pipeline/branch")
+                .param("branch", branch)
+                .header(X_REPOSITORY_ID, String.valueOf(REPO)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.categories[0].nodes[0].key").value("build-native"))
+        .andExpect(jsonPath("$.categories[0].nodes[0].status").value("PENDING"));
+  }
+
+  @Test
+  void completedRunWithActionRequiredConclusionShowsWaitingForApproval() throws Exception {
+    JdbcTemplate jdbc = new JdbcTemplate(dataSource);
+    final String branch = "gated2-br";
+    final String sha = "7777gate";
+    insertBranch(jdbc, REPO, branch, sha);
+    // A completed run whose conclusion is action_required (gate resolved to "needs approval"),
+    // with no jobs → still surfaced as waiting-for-approval, not "no result".
+    insertRun(jdbc, 74L, REPO, WF, branch, sha, "COMPLETED", "ACTION_REQUIRED", 0);
+
+    mockMvc
+        .perform(
+            get("/api/pipeline/branch")
+                .param("branch", branch)
+                .header(X_REPOSITORY_ID, String.valueOf(REPO)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.categories[0].nodes[0].status").value("WAITING"))
+        .andExpect(jsonPath("$.categories[0].nodes[0].conclusion").value("ACTION_REQUIRED"));
+  }
+
+  @Test
+  void previousCommitFailureShownWhileHeadStillRunning() throws Exception {
+    JdbcTemplate jdbc = new JdbcTemplate(dataSource);
+    final String branch = "prevfail-br";
+    insertBranch(jdbc, REPO, branch, "8888head");
+    insertRun(jdbc, 75L, REPO, WF, branch, "8888head", "IN_PROGRESS", null, 0);
+    insertJob(jdbc, 901, REPO, 75L, "Build / Build .war artifact", "IN_PROGRESS", null);
+    // The previous commit finished and FAILED — worst-wins across its runs.
+    insertRun(jdbc, 76L, REPO, WF, branch, "7777prev", "COMPLETED", "FAILURE", 120);
+
+    mockMvc
+        .perform(
+            get("/api/pipeline/branch")
+                .param("branch", branch)
+                .header(X_REPOSITORY_ID, String.valueOf(REPO)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.previous.sha").value("7777pre"))
+        .andExpect(jsonPath("$.previous.conclusion").value("FAILURE"));
+  }
+
+  @Test
+  void previousCommitStillRunningHidesFooter() throws Exception {
+    JdbcTemplate jdbc = new JdbcTemplate(dataSource);
+    final String branch = "prevrun-br";
+    insertBranch(jdbc, REPO, branch, "aaaanew");
+    insertRun(jdbc, 77L, REPO, WF, branch, "aaaanew", "IN_PROGRESS", null, 0);
+    insertJob(jdbc, 910, REPO, 77L, "Build / Build .war artifact", "IN_PROGRESS", null);
+    // The previous commit is itself still running → no confident outcome → footer hidden.
+    insertRun(jdbc, 78L, REPO, WF, branch, "bbbbrun", "IN_PROGRESS", null, 120);
+
+    mockMvc
+        .perform(
+            get("/api/pipeline/branch")
+                .param("branch", branch)
+                .header(X_REPOSITORY_ID, String.valueOf(REPO)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.previous").doesNotExist());
+  }
+
+  @Test
+  void pullRequestPipelineResolvesFromAssociatedRuns() throws Exception {
+    JdbcTemplate jdbc = new JdbcTemplate(dataSource);
+    final long prId = 5000L;
+    final long runP = 79L;
+    final String prSha = "9999prsh";
+    insertPullRequest(jdbc, prId, REPO, "pr-head", prSha);
+    insertRun(jdbc, runP, REPO, WF, "pr-head", prSha, "IN_PROGRESS", null, 0);
+    // Association carries the run into the PR's universe (mirrors the workflow_run <-> PR join).
+    jdbc.update(
+        "INSERT INTO workflow_run_pull_requests (pull_requests_id, workflow_run_id) VALUES (?, ?)",
+        prId,
+        runP);
+    insertJob(jdbc, 950, REPO, runP, "Build / Build .war artifact", "COMPLETED", "SUCCESS");
+
+    mockMvc
+        .perform(
+            get("/api/pipeline/pr/{pullRequestId}", prId)
+                .header(X_REPOSITORY_ID, String.valueOf(REPO)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.categories[0].nodes[0].key").value("build-native"))
+        .andExpect(jsonPath("$.categories[0].nodes[0].conclusion").value("SUCCESS"))
+        .andExpect(jsonPath("$.head.sha").value("9999prs"))
+        .andExpect(jsonPath("$.head.upToDate").value(true));
+  }
+
+  @Test
   void nonCanonicalRepositoryFallsBackToItsRunsNotCanonicalNodes() throws Exception {
     // ls1intum/other is not in the canonical allow-list, so the pipeline shows its workflow runs
     // (here ungrouped) rather than the Artemis Build/Tests/Quality catalog.
@@ -388,19 +539,53 @@ class PipelineIT extends HeliosIntegrationTest {
       String statusValue,
       String conclusionValue,
       int ageSeconds) {
+    insertNamedRun(
+        jdbc, id, repositoryId, workflowId, branch, sha, "CI", statusValue, conclusionValue,
+        ageSeconds);
+  }
+
+  /** As {@link #insertRun}, but with an explicit workflow {@code name} (e.g. a non-CI workflow). */
+  private static void insertNamedRun(
+      JdbcTemplate jdbc,
+      long id,
+      long repositoryId,
+      long workflowId,
+      String branch,
+      String sha,
+      String name,
+      String statusValue,
+      String conclusionValue,
+      int ageSeconds) {
     jdbc.update(
         "INSERT INTO workflow_run (id, repository_id, workflow_id, run_attempt, run_number, name, "
             + "status, conclusion, head_branch, head_sha, created_at, updated_at) "
-            + "VALUES (?, ?, ?, 1, ?, 'CI', ?, ?, ?, ?, now() - (? * interval '1 second'), now())",
+            + "VALUES (?, ?, ?, 1, ?, ?, ?, ?, ?, ?, now() - (? * interval '1 second'), now())",
         id,
         repositoryId,
         workflowId,
         id,
+        name,
         statusValue,
         conclusionValue,
         branch,
         sha,
         ageSeconds);
+  }
+
+  /** Seeds a pull request (a discriminated {@code issue} row) for the PR pipeline endpoint. */
+  private static void insertPullRequest(
+      JdbcTemplate jdbc, long id, long repositoryId, String headRefName, String headSha) {
+    jdbc.update(
+        "INSERT INTO issue (id, repository_id, issue_type, number, comments_count, is_locked, "
+            + "is_draft, is_merged, maintainer_can_modify, additions, deletions, commits, "
+            + "changed_files, state, title, html_url, head_ref_name, head_sha) "
+            + "VALUES (?, ?, 'PULL_REQUEST', ?, 0, false, false, false, false, 0, 0, 0, 0, 'OPEN', "
+            + "'PR', 'https://example/pr', ?, ?)",
+        id,
+        repositoryId,
+        (int) id,
+        headRefName,
+        headSha);
   }
 
   private static void insertJob(
