@@ -161,8 +161,12 @@ actionable signal is never hidden and a busy branch never looks idle:
 When a node has **no matching job yet**, its state is inferred from the CI *run* it belongs to,
 rather than a permanent "not running yet" — so a node is honest about what is actually happening:
 
-- **Queued** (``QUEUED``, clock) — the run is queued/running but this job hasn't started. Scheduled,
-  not idle, and never a spinner.
+- **Running** (``IN_PROGRESS``, spinner) — the CI run is executing but this stage's job hasn't been
+  ingested yet (job events routinely lag the run on a busy CI). The node mirrors the run so an
+  active pipeline reads as running rather than idle; the exact per-stage state backfills as the
+  job's events arrive.
+- **Queued** (``QUEUED``, muted clock) — the run is queued and nothing has started yet. Scheduled,
+  not idle, and visually distinct from the running spinner.
 - **Waiting for approval** (``ACTION_REQUIRED``, amber pause) — the run is gated on a maintainer's
   approval (e.g. a first-time contributor). Actionable, not a silent blank.
 - **No result** (``NEUTRAL``) — the run finished but this job never appeared. We cannot tell an

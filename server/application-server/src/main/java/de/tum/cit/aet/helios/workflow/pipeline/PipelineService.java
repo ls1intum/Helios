@@ -278,7 +278,10 @@ public class PipelineService {
    *
    * <ul>
    *   <li>run awaiting approval → {@code ACTION_REQUIRED} ("waiting for approval") — actionable;
-   *   <li>run queued/running → {@code QUEUED} ("queued") — the job is scheduled, not idle;
+   *   <li>run in progress → {@code IN_PROGRESS} — mirror the run so an active pipeline reads as
+   *       running, not idle (the job's exact state backfills once its events are ingested; jobs on
+   *       a busy CI often lag the run), rather than under-stating a running stage as merely queued;
+   *   <li>run queued but nothing started → {@code QUEUED} ("queued") — scheduled, not idle;
    *   <li>run completed but this job never appeared → {@code NEUTRAL} ("no result") — we cannot
    *       tell an intentional skip from an event we never ingested, so we make the weaker claim;
    *   <li>no run matches this node at all → {@code PENDING} ("not running yet").
@@ -296,6 +299,8 @@ public class PipelineService {
     } else if (runs.stream().anyMatch(PipelineService::isAwaitingApproval)) {
       status = WorkflowRun.Status.WAITING;
       conclusion = WorkflowRun.Conclusion.ACTION_REQUIRED;
+    } else if (runs.stream().anyMatch(run -> run.status() == WorkflowRun.Status.IN_PROGRESS)) {
+      status = WorkflowRun.Status.IN_PROGRESS;
     } else if (runs.stream().anyMatch(run -> run.status() != WorkflowRun.Status.COMPLETED)) {
       status = WorkflowRun.Status.QUEUED;
     } else {

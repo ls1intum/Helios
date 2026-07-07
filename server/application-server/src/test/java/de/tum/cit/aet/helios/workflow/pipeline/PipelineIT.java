@@ -86,19 +86,20 @@ class PipelineIT extends HeliosIntegrationTest {
         .andExpect(jsonPath("$.categories[1].nodes[0].conclusion").value("FAILURE"))
         .andExpect(jsonPath("$.categories[1].nodes[1].key").value("test-server"))
         .andExpect(jsonPath("$.categories[1].nodes[1].conclusion").value("SUCCESS"))
-        // e2e has no job yet, but the CI run is in progress → inferred as queued (not "pending").
+        // e2e has no job yet, but the CI run is in progress → mirror the run as IN_PROGRESS (a
+        // running pipeline reads as running), not a dead "pending".
         .andExpect(jsonPath("$.categories[1].nodes[2].key").value("test-e2e"))
-        .andExpect(jsonPath("$.categories[1].nodes[2].status").value("QUEUED"))
+        .andExpect(jsonPath("$.categories[1].nodes[2].status").value("IN_PROGRESS"))
         .andExpect(jsonPath("$.categories[1].nodes[2].conclusion").doesNotExist())
-        // Quality: client matched, server has no job yet → queued.
+        // Quality: client matched, server has no job yet but the run is active → in progress.
         .andExpect(jsonPath("$.categories[2].name").value("Quality"))
         .andExpect(jsonPath("$.categories[2].nodes[0].key").value("quality-client"))
         .andExpect(jsonPath("$.categories[2].nodes[0].status").value("COMPLETED"))
         .andExpect(jsonPath("$.categories[2].nodes[1].key").value("quality-server"))
-        .andExpect(jsonPath("$.categories[2].nodes[1].status").value("QUEUED"))
-        // Gate is always present for a canonical repo; no job yet but run active → queued.
+        .andExpect(jsonPath("$.categories[2].nodes[1].status").value("IN_PROGRESS"))
+        // Gate is always present for a canonical repo; no job yet but run active → in progress.
         .andExpect(jsonPath("$.gate.key").value("ci-gate"))
-        .andExpect(jsonPath("$.gate.status").value("QUEUED"))
+        .andExpect(jsonPath("$.gate.status").value("IN_PROGRESS"))
         // Freshness anchor: these states reflect the branch head commit (up to date).
         .andExpect(jsonPath("$.head.sha").value("deadbee"))
         .andExpect(jsonPath("$.head.upToDate").value(true));
@@ -230,6 +231,28 @@ class PipelineIT extends HeliosIntegrationTest {
         .andExpect(jsonPath("$.gate.status").value("QUEUED"))
         .andExpect(jsonPath("$.head.sha").value("0000aaa"))
         .andExpect(jsonPath("$.head.upToDate").value(true));
+  }
+
+  @Test
+  void inProgressRunShowsJoblessNodesAsRunningNotQueued() throws Exception {
+    JdbcTemplate jdbc = new JdbcTemplate(dataSource);
+    final String branch = "running-br";
+    final String sha = "abcd1234";
+    insertBranch(jdbc, REPO, branch, sha);
+    // The run is executing, but this stage's job hasn't been ingested yet (common: job events lag
+    // the run on a busy CI). The node must mirror the running run, not under-state it as queued.
+    insertRun(jdbc, 90L, REPO, WF, branch, sha, "IN_PROGRESS", null, 0);
+
+    mockMvc
+        .perform(
+            get("/api/pipeline/branch")
+                .param("branch", branch)
+                .header(X_REPOSITORY_ID, String.valueOf(REPO)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.categories[0].nodes[0].key").value("build-native"))
+        .andExpect(jsonPath("$.categories[0].nodes[0].status").value("IN_PROGRESS"))
+        .andExpect(jsonPath("$.categories[0].nodes[0].conclusion").doesNotExist())
+        .andExpect(jsonPath("$.gate.status").value("IN_PROGRESS"));
   }
 
   @Test
