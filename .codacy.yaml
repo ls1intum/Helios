@@ -10,3 +10,6 @@ exclude_paths:
   # rejects the standard *IT integration-test class suffix (AbbreviationAsWordInName). Let the
   # repository's checkstyle govern test style rather than Codacy's redundant, stricter default.
   - "server/**/src/test/**"
+  # Client test sources: exclude specs from analysis for symmetry with the server tests above —
+  # a test's setup/assertion branching is not production complexity and should not gate a PR.
+  - "**/*.spec.ts"
