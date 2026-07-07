@@ -102,7 +102,11 @@ class PipelineIT extends HeliosIntegrationTest {
         .andExpect(jsonPath("$.gate.status").value("IN_PROGRESS"))
         // Freshness anchor: these states reflect the branch head commit (up to date).
         .andExpect(jsonPath("$.head.sha").value("deadbee"))
-        .andExpect(jsonPath("$.head.upToDate").value(true));
+        .andExpect(jsonPath("$.head.upToDate").value(true))
+        // The freshness anchor's SHA links to the commit on GitHub (not dead text).
+        .andExpect(
+            jsonPath("$.head.htmlUrl")
+                .value("https://github.com/ls1intum/Artemis/commit/deadbeef"));
   }
 
   @Test
@@ -320,7 +324,52 @@ class PipelineIT extends HeliosIntegrationTest {
         .andExpect(jsonPath("$.head.upToDate").value(true))
         // Confidence footer: the previous commit's outcome, shown while the head is still running.
         .andExpect(jsonPath("$.previous.sha").value("bbbbpre"))
-        .andExpect(jsonPath("$.previous.conclusion").value("SUCCESS"));
+        .andExpect(jsonPath("$.previous.conclusion").value("SUCCESS"))
+        // The footer's SHA links to that commit's CI run.
+        .andExpect(jsonPath("$.previous.htmlUrl").value("https://example/run/69"));
+  }
+
+  @Test
+  void previousFooterWalksPastCancelledToLastDefinitiveResult() throws Exception {
+    JdbcTemplate jdbc = new JdbcTemplate(dataSource);
+    final String branch = "walkback-br";
+    insertBranch(jdbc, REPO, branch, "aaaahead");
+    // Head still building.
+    insertRun(jdbc, 200L, REPO, WF, branch, "aaaahead", "IN_PROGRESS", null, 0);
+    insertJob(jdbc, 620, REPO, 200L, "Build / Build .war artifact", "IN_PROGRESS", null);
+    // The immediately-preceding commit was cancelled (superseded) — no confidence signal...
+    insertRun(jdbc, 201L, REPO, WF, branch, "ccccanc", "COMPLETED", "CANCELLED", 60);
+    // ...so the footer walks further back to the last commit that actually passed/failed.
+    insertRun(jdbc, 202L, REPO, WF, branch, "ddddok", "COMPLETED", "SUCCESS", 120);
+
+    mockMvc
+        .perform(
+            get("/api/pipeline/branch")
+                .param("branch", branch)
+                .header(X_REPOSITORY_ID, String.valueOf(REPO)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.previous.sha").value("ddddok"))
+        .andExpect(jsonPath("$.previous.conclusion").value("SUCCESS"))
+        .andExpect(jsonPath("$.previous.htmlUrl").value("https://example/run/202"));
+  }
+
+  @Test
+  void previousFooterHiddenWhenNoDefiniteResultInHistory() throws Exception {
+    JdbcTemplate jdbc = new JdbcTemplate(dataSource);
+    final String branch = "nodef-br";
+    insertBranch(jdbc, REPO, branch, "aaaahead");
+    insertRun(jdbc, 210L, REPO, WF, branch, "aaaahead", "IN_PROGRESS", null, 0);
+    insertJob(jdbc, 621, REPO, 210L, "Build / Build .war artifact", "IN_PROGRESS", null);
+    // Only a cancelled commit behind the head: no pass/fail to show, so no footer at all.
+    insertRun(jdbc, 211L, REPO, WF, branch, "ccccanc", "COMPLETED", "CANCELLED", 60);
+
+    mockMvc
+        .perform(
+            get("/api/pipeline/branch")
+                .param("branch", branch)
+                .header(X_REPOSITORY_ID, String.valueOf(REPO)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.previous").doesNotExist());
   }
 
   @Test
@@ -581,8 +630,8 @@ class PipelineIT extends HeliosIntegrationTest {
       int ageSeconds) {
     jdbc.update(
         "INSERT INTO workflow_run (id, repository_id, workflow_id, run_attempt, run_number, name, "
-            + "status, conclusion, head_branch, head_sha, created_at, updated_at) "
-            + "VALUES (?, ?, ?, 1, ?, ?, ?, ?, ?, ?, now() - (? * interval '1 second'), now())",
+            + "status, conclusion, head_branch, head_sha, html_url, created_at, updated_at) "
+            + "VALUES (?, ?, ?, 1, ?, ?, ?, ?, ?, ?, ?, now() - (? * interval '1 second'), now())",
         id,
         repositoryId,
         workflowId,
@@ -592,6 +641,7 @@ class PipelineIT extends HeliosIntegrationTest {
         conclusionValue,
         branch,
         sha,
+        "https://example/run/" + id,
         ageSeconds);
   }
 

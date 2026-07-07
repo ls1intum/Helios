@@ -730,6 +730,9 @@ export type Category = {
 export type Head = {
   sha?: string;
   upToDate?: boolean;
+  message?: string | null;
+  authoredAt?: string | null;
+  htmlUrl?: string | null;
 };
 
 export type Node = {
@@ -750,6 +753,7 @@ export type PipelineDto = {
 export type PreviousRun = {
   sha?: string;
   conclusion?: string;
+  htmlUrl?: string | null;
 };
 
 export type EnvironmentReviewersDto = {

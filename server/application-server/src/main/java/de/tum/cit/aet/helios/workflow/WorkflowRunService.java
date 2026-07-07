@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
@@ -92,9 +93,9 @@ public class WorkflowRunService {
         sha ->
             workflowRunRepository.findByHeadBranchAndHeadShaAndRepositoryRepositoryId(
                 branchName, sha, repositoryId),
-        exclude ->
+        (exclude, offset) ->
             workflowRunRepository.findNthLatestCommitShaBehindHeadByBranchAndRepoId(
-                branchName, repositoryId, 0, exclude));
+                branchName, repositoryId, offset, exclude));
   }
 
   /** Resolves the {@link PipelineRunContext} for a pull request's head commit. */
@@ -112,9 +113,9 @@ public class WorkflowRunService {
     return buildPipelineRunContext(
         pullRequest.getHeadSha(),
         sha -> workflowRunRepository.findByPullRequestsIdAndHeadSha(pullRequestId, sha),
-        exclude ->
+        (exclude, offset) ->
             workflowRunRepository.findNthLatestCommitShaBehindHeadByPullRequestId(
-                pullRequestId, 0, exclude));
+                pullRequestId, offset, exclude));
   }
 
   /**
@@ -127,15 +128,15 @@ public class WorkflowRunService {
    * (once it is terminal its own node row tells the whole story).
    *
    * @param runsForSha returns the ingested runs for a commit SHA; must draw from the same universe
-   *     as {@code previousShaFinder} (both branch-scoped, or both PR-association-scoped) so every
+   *     as {@code commitBehind} (both branch-scoped, or both PR-association-scoped) so every
    *     resolved commit is guaranteed to have runs to render
-   * @param previousShaFinder returns the newest commit-with-runs that differs from the given commit
-   *     (offset 0 of the run-derived commit history)
+   * @param commitBehind {@code (excludeSha, offset)} → the offset-th commit-with-runs behind the
+   *     history head, excluding {@code excludeSha} (offset 0 is the newest such commit)
    */
   private PipelineRunContext buildPipelineRunContext(
       String headSha,
       java.util.function.Function<String, List<WorkflowRun>> runsForSha,
-      java.util.function.Function<String, Optional<String>> previousShaFinder) {
+      java.util.function.BiFunction<String, Integer, Optional<String>> commitBehind) {
     if (headSha == null) {
       return PipelineRunContext.empty();
     }
@@ -147,7 +148,7 @@ public class WorkflowRunService {
       displayedSha = headSha;
       upToDate = true;
     } else {
-      final String fallback = previousShaFinder.apply(headSha).orElse(null);
+      final String fallback = commitBehind.apply(headSha, 0).orElse(null);
       final List<WorkflowRun> fallbackRuns =
           fallback == null ? List.of() : runsForSha.apply(fallback);
       if (fallbackRuns.isEmpty()) {
@@ -169,14 +170,54 @@ public class WorkflowRunService {
     if (currentComplete) {
       return new PipelineRunContext(currentRuns, displayedSha, upToDate, null, List.of());
     }
-    final String previousSha = previousShaFinder.apply(displayedSha).orElse(null);
-    final List<WorkflowRunDto> previousRuns =
-        previousSha == null
-            ? List.of()
-            : getLatestWorkflowRuns(runsForSha.apply(previousSha))
-                .map(WorkflowRunDto::fromWorkflowRun)
-                .toList();
+
+    // Walk back to the most recent commit with a *definitive* pass/fail, skipping cancelled/
+    // superseded/skipped/still-running commits — those carry no confidence signal (on PR CI a
+    // cancelled run usually just means a newer push superseded it).
+    String previousSha = null;
+    List<WorkflowRunDto> previousRuns = List.of();
+    for (int offset = 0; offset < MAX_PREVIOUS_LOOKBACK; offset++) {
+      final String candidate = commitBehind.apply(displayedSha, offset).orElse(null);
+      if (candidate == null) {
+        break;
+      }
+      final List<WorkflowRunDto> candidateRuns =
+          getLatestWorkflowRuns(runsForSha.apply(candidate))
+              .map(WorkflowRunDto::fromWorkflowRun)
+              .toList();
+      if (hasDefinitiveOutcome(candidateRuns)) {
+        previousSha = candidate;
+        previousRuns = candidateRuns;
+        break;
+      }
+    }
     return new PipelineRunContext(currentRuns, displayedSha, upToDate, previousSha, previousRuns);
+  }
+
+  /** How far back to look for a definitive previous result before giving up. */
+  private static final int MAX_PREVIOUS_LOOKBACK = 8;
+
+  private static final Set<WorkflowRun.Conclusion> FAILED_CONCLUSIONS =
+      Set.of(
+          WorkflowRun.Conclusion.FAILURE,
+          WorkflowRun.Conclusion.TIMED_OUT,
+          WorkflowRun.Conclusion.STARTUP_FAILURE);
+
+  /** Whether a commit's runs reached a definitive verdict — a clear pass or fail. */
+  private static boolean hasDefinitiveOutcome(List<WorkflowRunDto> runs) {
+    if (runs.isEmpty()) {
+      return false;
+    }
+    if (runs.stream().anyMatch(WorkflowRunService::isFailedRun)) {
+      return true;
+    }
+    return runs.stream().allMatch(r -> r.status() == WorkflowRun.Status.COMPLETED)
+        && runs.stream().noneMatch(r -> r.conclusion() == WorkflowRun.Conclusion.CANCELLED)
+        && runs.stream().anyMatch(r -> r.conclusion() == WorkflowRun.Conclusion.SUCCESS);
+  }
+
+  private static boolean isFailedRun(WorkflowRunDto run) {
+    return run.conclusion() != null && FAILED_CONCLUSIONS.contains(run.conclusion());
   }
 
   public PaginatedWorkflowRunsResponse getPaginatedWorkflowRuns(WorkflowRunPageRequest request) {

@@ -129,10 +129,16 @@ describe('PipelineComponent', () => {
     expect(icon('COMPLETED', 'NEUTRAL').tooltip).toBe('No result');
   });
 
-  it('shows the commit freshness anchor, flagging when the newest commit is not built yet', async () => {
+  it('shows the commit freshness anchor with a clickable SHA, subject and time, flagging when not built yet', async () => {
     mockPipeline({
       categories: [{ name: 'Build', nodes: [{ key: 'build-native', label: 'Native', status: 'QUEUED', conclusion: null, htmlUrl: null }] }],
-      head: { sha: 'abc1234', upToDate: false },
+      head: {
+        sha: 'abc1234',
+        upToDate: false,
+        message: 'fix: correct the thing',
+        authoredAt: new Date().toISOString(),
+        htmlUrl: 'https://github.com/org/repo/commit/abc1234',
+      },
     });
     fixture.detectChanges();
     await fixture.whenStable();
@@ -140,26 +146,33 @@ describe('PipelineComponent', () => {
 
     const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
     expect(text).toContain('abc1234');
+    expect(text).toContain('fix: correct the thing');
     expect(text).toContain('newest commit not built yet');
+    // The SHA is a link to the commit, not dead text.
+    const link = (fixture.nativeElement as HTMLElement).querySelector('a[href="https://github.com/org/repo/commit/abc1234"]');
+    expect(link?.textContent).toContain('abc1234');
     // The queued node renders its clock, not a dead dashed circle.
     expect(renderedIconNames()).toContain('clock');
   });
 
-  it('renders the previous-commit confidence footer when present', async () => {
+  it('renders the last-result confidence footer with a linked SHA when present', async () => {
     mockPipeline({
       categories: [{ name: 'Build', nodes: [{ key: 'build-native', label: 'Native', status: 'QUEUED', conclusion: null, htmlUrl: null }] }],
       head: { sha: 'def5678', upToDate: true },
-      previous: { sha: 'aaa1111', conclusion: 'SUCCESS' },
+      previous: { sha: 'aaa1111', conclusion: 'SUCCESS', htmlUrl: 'https://github.com/org/repo/actions/runs/9' },
     });
     fixture.detectChanges();
     await fixture.whenStable();
     fixture.detectChanges();
 
     const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
-    expect(text).toContain('Last built commit');
+    expect(text).toContain('Last result');
     expect(text).toContain('aaa1111');
     // The outcome is spelled out in words (not colour alone).
     expect(text).toContain('Passed');
+    // The SHA links to the previous run.
+    const link = (fixture.nativeElement as HTMLElement).querySelector('a[href="https://github.com/org/repo/actions/runs/9"]');
+    expect(link?.textContent).toContain('aaa1111');
     // "up to date" head does not show the not-built-yet warning.
     expect(text).not.toContain('newest commit not built yet');
   });

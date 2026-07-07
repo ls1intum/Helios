@@ -1,5 +1,7 @@
 package de.tum.cit.aet.helios.workflow.pipeline;
 
+import de.tum.cit.aet.helios.commit.Commit;
+import de.tum.cit.aet.helios.commit.CommitRepository;
 import de.tum.cit.aet.helios.filters.RepositoryContext;
 import de.tum.cit.aet.helios.gitrepo.GitRepoRepository;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
@@ -51,6 +53,7 @@ public class PipelineService {
   private final WorkflowJobRepository workflowJobRepository;
   private final WorkflowGroupService workflowGroupService;
   private final GitRepoRepository gitRepoRepository;
+  private final CommitRepository commitRepository;
 
   public PipelineDto getPipelineForBranch(String branchName) {
     return buildFor(workflowRunService.getPipelineRunContextForBranch(branchName));
@@ -63,7 +66,7 @@ public class PipelineService {
   private PipelineDto buildFor(PipelineRunContext context) {
     final Long repositoryId = RepositoryContext.getRepositoryId();
     return isCanonicalRepository(repositoryId)
-        ? buildCanonical(context)
+        ? buildCanonical(repositoryId, context)
         : buildGrouped(repositoryId, context.currentRuns());
   }
 
@@ -81,7 +84,7 @@ public class PipelineService {
 
   // --- Canonical catalog (config-driven Build/Tests/Quality nodes) -----------------------------
 
-  private PipelineDto buildCanonical(PipelineRunContext context) {
+  private PipelineDto buildCanonical(Long repositoryId, PipelineRunContext context) {
     final List<WorkflowRunDto> currentRuns = context.currentRuns();
     final List<Long> runIds = currentRuns.stream().map(WorkflowRunDto::id).toList();
     // Runs are already scoped to the current repository, so their jobs are too.
@@ -108,20 +111,76 @@ public class PipelineService {
     final PipelineDto.Head head =
         context.displayedSha() == null
             ? null
-            : new PipelineDto.Head(shortSha(context.displayedSha()), context.upToDate());
+            : buildHead(repositoryId, context.displayedSha(), context.upToDate());
     final PipelineDto.PreviousRun previous = previousRun(context);
     return new PipelineDto(categories, gate, head, previous);
   }
 
-  /** Coarse outcome of the previous commit, or null when there is no confident signal to show. */
+  /** The freshness anchor: short SHA, subject line, author time, and a link to the commit. */
+  private PipelineDto.Head buildHead(Long repositoryId, String fullSha, boolean upToDate) {
+    final String htmlUrl =
+        gitRepoRepository
+            .findByRepositoryId(repositoryId)
+            .map(GitRepository::getNameWithOwner)
+            .map(nameWithOwner -> "https://github.com/" + nameWithOwner + "/commit/" + fullSha)
+            .orElse(null);
+    final var commit = commitRepository.findByShaAndRepositoryRepositoryId(fullSha, repositoryId);
+    return new PipelineDto.Head(
+        shortSha(fullSha),
+        upToDate,
+        commit.map(c -> firstLine(c.getMessage())).orElse(null),
+        commit.map(Commit::getAuthoredAt).orElse(null),
+        htmlUrl);
+  }
+
+  /** Commit subject (first non-blank line), or null. */
+  private static String firstLine(String message) {
+    if (message == null || message.isBlank()) {
+      return null;
+    }
+    final int newline = message.indexOf('\n');
+    return (newline < 0 ? message : message.substring(0, newline)).strip();
+  }
+
+  /**
+   * The previous commit's outcome for the confidence footer — only a <i>definitive</i> pass/fail is
+   * a useful signal, so anything else (the resolver already walks past inconclusive commits, but we
+   * guard here too) yields no footer rather than a meaningless "cancelled".
+   */
   private static PipelineDto.PreviousRun previousRun(PipelineRunContext context) {
     if (context.previousSha() == null) {
       return null;
     }
     final String conclusion = aggregateRunConclusion(context.previousRuns());
-    return conclusion == null
-        ? null
-        : new PipelineDto.PreviousRun(shortSha(context.previousSha()), conclusion);
+    if (!WorkflowRun.Conclusion.SUCCESS.name().equals(conclusion)
+        && !WorkflowRun.Conclusion.FAILURE.name().equals(conclusion)) {
+      return null;
+    }
+    return new PipelineDto.PreviousRun(
+        shortSha(context.previousSha()),
+        conclusion,
+        previousRunUrl(context.previousRuns(), conclusion));
+  }
+
+  /** Links the footer to the previous commit's CI run — the failing run when it failed. */
+  private static String previousRunUrl(List<WorkflowRunDto> runs, String conclusion) {
+    if (WorkflowRun.Conclusion.FAILURE.name().equals(conclusion)) {
+      final String failing =
+          runs.stream()
+              .filter(PipelineService::isFailedRun)
+              .map(WorkflowRunDto::htmlUrl)
+              .filter(Objects::nonNull)
+              .findFirst()
+              .orElse(null);
+      if (failing != null) {
+        return failing;
+      }
+    }
+    return runs.stream()
+        .map(WorkflowRunDto::htmlUrl)
+        .filter(Objects::nonNull)
+        .findFirst()
+        .orElse(null);
   }
 
   /**

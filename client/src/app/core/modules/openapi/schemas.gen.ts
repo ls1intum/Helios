@@ -2012,6 +2012,16 @@ export const HeadSchema = {
     upToDate: {
       type: 'boolean',
     },
+    message: {
+      type: ['string', 'null'],
+    },
+    authoredAt: {
+      type: ['string', 'null'],
+      format: 'date-time',
+    },
+    htmlUrl: {
+      type: ['string', 'null'],
+    },
   },
 } as const;
 
@@ -2065,6 +2075,9 @@ export const PreviousRunSchema = {
     },
     conclusion: {
       type: 'string',
+    },
+    htmlUrl: {
+      type: ['string', 'null'],
     },
   },
 } as const;

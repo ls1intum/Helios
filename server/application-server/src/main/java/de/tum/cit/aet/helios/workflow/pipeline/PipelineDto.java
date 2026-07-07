@@ -1,6 +1,7 @@
 package de.tum.cit.aet.helios.workflow.pipeline;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import java.time.OffsetDateTime;
 import java.util.List;
 import org.springframework.lang.Nullable;
 
@@ -45,20 +46,35 @@ public record PipelineDto(
       @Nullable String htmlUrl) {}
 
   /**
-   * The commit the pipeline's node states reflect.
+   * The commit the pipeline's node states reflect, with enough context to recognise and open it.
    *
    * @param sha the short commit SHA being displayed
    * @param upToDate {@code true} when it is the branch/PR head; {@code false} means the head has no
    *     CI results yet and this is the most recent commit that did run
+   * @param message the commit subject (first line), when known; lets the developer recognise the
+   *     commit without clicking through
+   * @param authoredAt when the commit was authored, when known (rendered as relative time)
+   * @param htmlUrl link to the commit on GitHub, so the SHA is actionable rather than dead text
    */
-  public record Head(String sha, boolean upToDate) {}
+  public record Head(
+      String sha,
+      boolean upToDate,
+      @JsonInclude(JsonInclude.Include.NON_NULL) @Nullable String message,
+      @JsonInclude(JsonInclude.Include.NON_NULL) @Nullable OffsetDateTime authoredAt,
+      @JsonInclude(JsonInclude.Include.NON_NULL) @Nullable String htmlUrl) {}
 
   /**
-   * Coarse outcome of the commit immediately before the displayed one, for at-a-glance confidence
-   * while the displayed commit is still running.
+   * The last <i>definitive</i> result (pass or fail) in recent history, for at-a-glance confidence
+   * while the displayed commit is still running. Inconclusive outcomes — cancelled/superseded,
+   * skipped, still-running — are walked past rather than shown, since they carry no confidence
+   * signal (on PR CI a cancelled run usually just means it was superseded by a newer push).
    *
    * @param sha the short commit SHA
-   * @param conclusion a {@code WorkflowRun.Conclusion} name (e.g. {@code SUCCESS}, {@code FAILURE})
+   * @param conclusion {@code SUCCESS} or {@code FAILURE}
+   * @param htmlUrl link to that commit's CI run on GitHub (the failing run when it failed)
    */
-  public record PreviousRun(String sha, String conclusion) {}
+  public record PreviousRun(
+      String sha,
+      String conclusion,
+      @JsonInclude(JsonInclude.Include.NON_NULL) @Nullable String htmlUrl) {}
 }

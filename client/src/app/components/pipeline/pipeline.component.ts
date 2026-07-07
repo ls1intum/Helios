@@ -23,6 +23,7 @@ import {
   IconProgressHelp,
 } from 'angular-tabler-icons/icons';
 import { getStatusColors } from '@app/core/utils/status-colors';
+import { TimeAgoPipe } from '@app/pipes/time-ago.pipe';
 
 export type PipelineSelector = { repositoryId: number } & (
   | {
@@ -38,7 +39,7 @@ export type PipelineSelector = { repositoryId: number } & (
 
 @Component({
   selector: 'app-pipeline',
-  imports: [DividerModule, PanelModule, TablerIconComponent, TooltipModule, SkeletonModule, GithubLinkButtonComponent, NgTemplateOutlet],
+  imports: [DividerModule, PanelModule, TablerIconComponent, TooltipModule, SkeletonModule, GithubLinkButtonComponent, NgTemplateOutlet, TimeAgoPipe],
   providers: [
     provideTablerIcons({
       IconCircleCheck,
@@ -102,9 +103,10 @@ export class PipelineComponent {
   // that makes the view trustworthy ("up to date" vs "newest commit not built yet").
   head = computed(() => this.pipeline().head ?? null);
 
-  // The last built commit's outcome (newest commit that ran, not necessarily the parent), shown as
-  // a confidence footer while the displayed commit is still running. The server omits it once the
-  // displayed commit is terminal (its own row says it all), so no client-side guard is needed.
+  // The last definitive (pass/fail) result in recent history, shown as a confidence footer while
+  // the displayed commit is still running. The server walks past inconclusive commits (cancelled/
+  // superseded/skipped) and omits it entirely once the displayed commit is terminal, so no
+  // client-side guard is needed.
   previous = computed(() => this.pipeline().previous ?? null);
 
   // Terminal (and awaiting-approval) conclusions → icon + tooltip. Colour comes from the shared

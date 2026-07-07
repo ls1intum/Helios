@@ -185,14 +185,19 @@ Freshness and the previous commit
 The pipeline reflects the branch/PR **head commit**, resolved purely from ingested webhook runs
 (no GitHub API calls). Two behaviours keep it trustworthy on fast-moving branches:
 
-- The header shows **which commit** the states are for and whether it is the head. If the newest
-  commit has no CI run yet (just pushed, gated, or a missed push webhook), the most recent commit
-  that *did* run is shown instead, clearly flagged *"newest commit not built yet"*.
-- While the displayed commit is still running, a footer summarises the **last built commit's**
-  outcome (e.g. *"last built commit abc1234: passed"*) for at-a-glance confidence. It is labelled
-  "last built" rather than "previous" because it is the newest commit that ran — after a rebase or
-  a re-run on an older commit, that is not necessarily this commit's parent. It disappears once the
-  displayed commit is terminal.
+- The header shows **which commit** the states are for and whether it is the head. The commit's
+  short SHA (a **link** to the commit on GitHub), its subject line, and how long ago it was authored
+  are shown so the developer can recognise it at a glance. If the newest commit has no CI run yet
+  (just pushed, gated, or a missed push webhook), the most recent commit that *did* run is shown
+  instead, clearly flagged *"newest commit not built yet"*.
+- While the displayed commit is still running, a footer summarises the **last result** — the most
+  recent commit in history that reached a *definitive* pass or fail (e.g. *"Last result ✓ Passed ·
+  abc1234"*, the SHA linking to that CI run) — for at-a-glance confidence. Inconclusive commits are
+  walked past rather than shown: a *cancelled* run on PR CI almost always just means it was
+  superseded by a newer push (Artemis' ``ci.yml`` sets ``cancel-in-progress`` on pull requests), so
+  it carries no confidence signal; the same applies to skipped or still-running commits. If no
+  definitive result exists in recent history, no footer is shown. It disappears once the displayed
+  commit is terminal (its own row then tells the whole story).
 
 .. note::
 
