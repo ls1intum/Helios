@@ -43,7 +43,9 @@ class PipelineIT extends HeliosIntegrationTest {
     insertRepo(jdbc, REPO, "ls1intum/Artemis");
     insertBranch(jdbc, REPO, BRANCH, SHA);
     insertWorkflow(jdbc, WF, REPO);
-    insertRun(jdbc, RUN, REPO, WF, BRANCH, SHA);
+    // Run still in progress: nodes with a matching job show their job state; nodes with no job yet
+    // are inferred from the run ("queued"), not left as a dead "not running yet".
+    insertRun(jdbc, RUN, REPO, WF, BRANCH, SHA, "IN_PROGRESS", null, 0);
     // Build: native done+ok, docker running. Tests: client failed, server ok, e2e absent.
     // Quality: client ok, server absent.
     insertJob(jdbc, 101, REPO, RUN, "Build / Build .war artifact", "COMPLETED", "SUCCESS");
@@ -83,19 +85,22 @@ class PipelineIT extends HeliosIntegrationTest {
         .andExpect(jsonPath("$.categories[1].nodes[0].conclusion").value("FAILURE"))
         .andExpect(jsonPath("$.categories[1].nodes[1].key").value("test-server"))
         .andExpect(jsonPath("$.categories[1].nodes[1].conclusion").value("SUCCESS"))
-        // e2e has no matching job → always visible, pending
+        // e2e has no job yet, but the CI run is in progress → inferred as queued (not "pending").
         .andExpect(jsonPath("$.categories[1].nodes[2].key").value("test-e2e"))
-        .andExpect(jsonPath("$.categories[1].nodes[2].status").value("PENDING"))
+        .andExpect(jsonPath("$.categories[1].nodes[2].status").value("QUEUED"))
         .andExpect(jsonPath("$.categories[1].nodes[2].conclusion").doesNotExist())
-        // Quality: client matched, server pending
+        // Quality: client matched, server has no job yet → queued.
         .andExpect(jsonPath("$.categories[2].name").value("Quality"))
         .andExpect(jsonPath("$.categories[2].nodes[0].key").value("quality-client"))
         .andExpect(jsonPath("$.categories[2].nodes[0].status").value("COMPLETED"))
         .andExpect(jsonPath("$.categories[2].nodes[1].key").value("quality-server"))
-        .andExpect(jsonPath("$.categories[2].nodes[1].status").value("PENDING"))
-        // Gate is always present for a canonical repo; here no matching job → not running yet.
+        .andExpect(jsonPath("$.categories[2].nodes[1].status").value("QUEUED"))
+        // Gate is always present for a canonical repo; no job yet but run active → queued.
         .andExpect(jsonPath("$.gate.key").value("ci-gate"))
-        .andExpect(jsonPath("$.gate.status").value("PENDING"));
+        .andExpect(jsonPath("$.gate.status").value("QUEUED"))
+        // Freshness anchor: these states reflect the branch head commit (up to date).
+        .andExpect(jsonPath("$.head.sha").value("deadbee"))
+        .andExpect(jsonPath("$.head.upToDate").value(true));
   }
 
   @Test
@@ -121,9 +126,9 @@ class PipelineIT extends HeliosIntegrationTest {
                 .param("branch", branchC)
                 .header(X_REPOSITORY_ID, String.valueOf(REPO)))
         .andExpect(status().isOk())
-        // E2E queued-only → not running yet.
+        // E2E queued-only → "queued" (scheduled), and crucially not a running spinner.
         .andExpect(jsonPath("$.categories[1].nodes[2].key").value("test-e2e"))
-        .andExpect(jsonPath("$.categories[1].nodes[2].status").value("PENDING"))
+        .andExpect(jsonPath("$.categories[1].nodes[2].status").value("QUEUED"))
         .andExpect(jsonPath("$.categories[1].nodes[2].conclusion").doesNotExist())
         // Native fail-fast: FAILURE even though a leg is still IN_PROGRESS, and the link points at
         // the failing leg (204), not the still-running one (203) that sorts first.
@@ -195,8 +200,123 @@ class PipelineIT extends HeliosIntegrationTest {
                 .param("branch", branchE)
                 .header(X_REPOSITORY_ID, String.valueOf(REPO)))
         .andExpect(status().isOk())
+        // The Nightly job is excluded, so test-client is not fed by it: the CI run completed with
+        // no matching job → "didn't run" (SKIPPED), never the Nightly job's SUCCESS.
         .andExpect(jsonPath("$.categories[1].nodes[0].key").value("test-client"))
-        .andExpect(jsonPath("$.categories[1].nodes[0].status").value("PENDING"));
+        .andExpect(jsonPath("$.categories[1].nodes[0].status").value("COMPLETED"))
+        .andExpect(jsonPath("$.categories[1].nodes[0].conclusion").value("SKIPPED"));
+  }
+
+  @Test
+  void queuedRunFillsEveryNodeAsQueuedNotPending() throws Exception {
+    JdbcTemplate jdbc = new JdbcTemplate(dataSource);
+    final String branch = "queued-br";
+    final String sha = "0000aaaa";
+    insertBranch(jdbc, REPO, branch, sha);
+    // A freshly-pushed commit: the CI run is queued and has produced no jobs yet.
+    insertRun(jdbc, 65L, REPO, WF, branch, sha, "QUEUED", null, 0);
+
+    mockMvc
+        .perform(
+            get("/api/pipeline/branch")
+                .param("branch", branch)
+                .header(X_REPOSITORY_ID, String.valueOf(REPO)))
+        .andExpect(status().isOk())
+        // No jobs, but the run is queued → every node is "queued", never a dead "not running yet".
+        .andExpect(jsonPath("$.categories[0].nodes[0].key").value("build-native"))
+        .andExpect(jsonPath("$.categories[0].nodes[0].status").value("QUEUED"))
+        .andExpect(jsonPath("$.categories[0].nodes[0].conclusion").doesNotExist())
+        .andExpect(jsonPath("$.gate.status").value("QUEUED"))
+        .andExpect(jsonPath("$.head.sha").value("0000aaa"))
+        .andExpect(jsonPath("$.head.upToDate").value(true));
+  }
+
+  @Test
+  void runAwaitingApprovalShowsWaitingForApproval() throws Exception {
+    JdbcTemplate jdbc = new JdbcTemplate(dataSource);
+    final String branch = "gated-br";
+    final String sha = "1111bbbb";
+    insertBranch(jdbc, REPO, branch, sha);
+    // Gated run (e.g. first-time contributor): awaiting maintainer approval, no jobs created.
+    insertRun(jdbc, 66L, REPO, WF, branch, sha, "ACTION_REQUIRED", null, 0);
+
+    mockMvc
+        .perform(
+            get("/api/pipeline/branch")
+                .param("branch", branch)
+                .header(X_REPOSITORY_ID, String.valueOf(REPO)))
+        .andExpect(status().isOk())
+        // Actionable state surfaced instead of "not running yet".
+        .andExpect(jsonPath("$.categories[0].nodes[0].status").value("WAITING"))
+        .andExpect(jsonPath("$.categories[0].nodes[0].conclusion").value("ACTION_REQUIRED"))
+        .andExpect(jsonPath("$.gate.conclusion").value("ACTION_REQUIRED"));
+  }
+
+  @Test
+  void headWithoutRunsFallsBackToLatestCommitThatRan() throws Exception {
+    JdbcTemplate jdbc = new JdbcTemplate(dataSource);
+    final String branch = "fallback-br";
+    // The branch head has no CI run yet (just pushed / docs-only / missed push webhook)...
+    insertBranch(jdbc, REPO, branch, "9999head");
+    // ...but an earlier commit did run and passed.
+    insertRun(jdbc, 67L, REPO, WF, branch, "8888prev", "COMPLETED", "SUCCESS", 60);
+    insertJob(jdbc, 501, REPO, 67L, "Build / Build .war artifact", "COMPLETED", "SUCCESS");
+
+    mockMvc
+        .perform(
+            get("/api/pipeline/branch")
+                .param("branch", branch)
+                .header(X_REPOSITORY_ID, String.valueOf(REPO)))
+        .andExpect(status().isOk())
+        // Shows the commit that actually ran, clearly flagged as not the head.
+        .andExpect(jsonPath("$.head.sha").value("8888pre"))
+        .andExpect(jsonPath("$.head.upToDate").value(false))
+        .andExpect(jsonPath("$.categories[0].nodes[0].key").value("build-native"))
+        .andExpect(jsonPath("$.categories[0].nodes[0].conclusion").value("SUCCESS"));
+  }
+
+  @Test
+  void previousCommitOutcomeShownWhileHeadStillRunning() throws Exception {
+    JdbcTemplate jdbc = new JdbcTemplate(dataSource);
+    final String branch = "prevfoot-br";
+    insertBranch(jdbc, REPO, branch, "aaaahead");
+    // Head commit is still building...
+    insertRun(jdbc, 68L, REPO, WF, branch, "aaaahead", "IN_PROGRESS", null, 0);
+    insertJob(jdbc, 601, REPO, 68L, "Build / Build .war artifact", "IN_PROGRESS", null);
+    // ...the previous commit finished and passed.
+    insertRun(jdbc, 69L, REPO, WF, branch, "bbbbprev", "COMPLETED", "SUCCESS", 120);
+
+    mockMvc
+        .perform(
+            get("/api/pipeline/branch")
+                .param("branch", branch)
+                .header(X_REPOSITORY_ID, String.valueOf(REPO)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.head.sha").value("aaaahea"))
+        .andExpect(jsonPath("$.head.upToDate").value(true))
+        // Confidence footer: the previous commit's outcome, shown while the head is still running.
+        .andExpect(jsonPath("$.previous.sha").value("bbbbpre"))
+        .andExpect(jsonPath("$.previous.conclusion").value("SUCCESS"));
+  }
+
+  @Test
+  void completedHeadHasNoPreviousFooter() throws Exception {
+    JdbcTemplate jdbc = new JdbcTemplate(dataSource);
+    final String branch = "done-br";
+    insertBranch(jdbc, REPO, branch, "ccccdone");
+    insertRun(jdbc, 70L, REPO, WF, branch, "ccccdone", "COMPLETED", "SUCCESS", 0);
+    insertJob(jdbc, 701, REPO, 70L, "Build / Build .war artifact", "COMPLETED", "SUCCESS");
+    // An earlier commit exists, but once the head is terminal its own row tells the whole story.
+    insertRun(jdbc, 71L, REPO, WF, branch, "eeeeold", "COMPLETED", "FAILURE", 300);
+
+    mockMvc
+        .perform(
+            get("/api/pipeline/branch")
+                .param("branch", branch)
+                .header(X_REPOSITORY_ID, String.valueOf(REPO)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.head.upToDate").value(true))
+        .andExpect(jsonPath("$.previous").doesNotExist());
   }
 
   @Test
@@ -254,16 +374,33 @@ class PipelineIT extends HeliosIntegrationTest {
 
   private static void insertRun(
       JdbcTemplate jdbc, long id, long repositoryId, long workflowId, String branch, String sha) {
+    insertRun(jdbc, id, repositoryId, workflowId, branch, sha, "COMPLETED", null, 0);
+  }
+
+  /** {@code ageSeconds} pushes {@code created_at} back so commit ordering is deterministic. */
+  private static void insertRun(
+      JdbcTemplate jdbc,
+      long id,
+      long repositoryId,
+      long workflowId,
+      String branch,
+      String sha,
+      String statusValue,
+      String conclusionValue,
+      int ageSeconds) {
     jdbc.update(
         "INSERT INTO workflow_run (id, repository_id, workflow_id, run_attempt, run_number, name, "
-            + "status, head_branch, head_sha, created_at, updated_at) "
-            + "VALUES (?, ?, ?, 1, ?, 'CI', 'COMPLETED', ?, ?, now(), now())",
+            + "status, conclusion, head_branch, head_sha, created_at, updated_at) "
+            + "VALUES (?, ?, ?, 1, ?, 'CI', ?, ?, ?, ?, now() - (? * interval '1 second'), now())",
         id,
         repositoryId,
         workflowId,
         id,
+        statusValue,
+        conclusionValue,
         branch,
-        sha);
+        sha,
+        ageSeconds);
   }
 
   private static void insertJob(

@@ -2003,6 +2003,18 @@ export const CategorySchema = {
   },
 } as const;
 
+export const HeadSchema = {
+  type: 'object',
+  properties: {
+    sha: {
+      type: 'string',
+    },
+    upToDate: {
+      type: 'boolean',
+    },
+  },
+} as const;
+
 export const NodeSchema = {
   type: 'object',
   properties: {
@@ -2035,6 +2047,24 @@ export const PipelineDtoSchema = {
     },
     gate: {
       $ref: '#/components/schemas/Node',
+    },
+    head: {
+      $ref: '#/components/schemas/Head',
+    },
+    previous: {
+      $ref: '#/components/schemas/PreviousRun',
+    },
+  },
+} as const;
+
+export const PreviousRunSchema = {
+  type: 'object',
+  properties: {
+    sha: {
+      type: 'string',
+    },
+    conclusion: {
+      type: 'string',
     },
   },
 } as const;

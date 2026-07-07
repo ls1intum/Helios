@@ -142,14 +142,11 @@ The defaults above target Artemis' single ``CI`` orchestrator run
 Status aggregation
 ------------------
 
-For each node, the matched jobs are reduced to one of five human-legible states, chosen so the
-earliest actionable signal is never hidden:
+For each node, the matched jobs are reduced to one human-legible state, chosen so the earliest
+actionable signal is never hidden and a busy branch never looks idle:
 
-- **Not running yet** (``PENDING``, dashed icon) — either no matching job exists yet, **or** every
-  matching job is still queued/waiting (nothing has started). This is deliberately distinct from
-  *running*: a queued job is **not** shown as a spinner.
-- **Running** (``IN_PROGRESS``, spinner) — at least one matching job has started (or already
-  finished) while others are not yet done.
+- **Running** (``IN_PROGRESS``, spinner) — at least one matching job has started while others are
+  not yet done.
 - **Failed** (``FAILURE``, red) — *fail-fast*: as soon as **any** matching job fails, times out, or
   has a startup failure, the node is red, **even while slower legs keep running**. The node then
   links to the failing job (not an arbitrary passing one).
@@ -161,8 +158,34 @@ earliest actionable signal is never hidden:
   - else **SUCCESS** if any job succeeded;
   - else **NEUTRAL**.
 
-The client renders a distinct icon per state: dashed circle (not running yet), yellow spinner
-(running), red ✗ (failed), green ✓ (passed), grey ⊝ (skipped), grey ⃠ (cancelled).
+When a node has **no matching job yet**, its state is inferred from the CI *run* it belongs to,
+rather than a permanent "not running yet" — so a node is honest about what is actually happening:
+
+- **Queued** (``QUEUED``, clock) — the run is queued/running but this job hasn't started. Scheduled,
+  not idle, and never a spinner.
+- **Waiting for approval** (``ACTION_REQUIRED``, amber pause) — the run is gated on a maintainer's
+  approval (e.g. a first-time contributor). Actionable, not a silent blank.
+- **Didn't run** (``SKIPPED``) — the run finished but this job never appeared (skipped for this
+  change).
+- **Not running yet** (``PENDING``, dashed) — only when **no** CI run matches the node at all.
+
+The client renders a distinct icon per state: dashed circle (not running yet), clock (queued),
+amber pause (waiting for approval), yellow spinner (running), red ✗ (failed), green ✓ (passed),
+grey ⊝ (skipped/didn't run), grey ⃠ (cancelled).
+
+
+Freshness and the previous commit
+---------------------------------
+
+The pipeline reflects the branch/PR **head commit**, resolved purely from ingested webhook runs
+(no GitHub API calls). Two behaviours keep it trustworthy on fast-moving branches:
+
+- The header shows **which commit** the states are for and whether it is the head. If the newest
+  commit has no CI run yet (just pushed, gated, or a missed push webhook), the most recent commit
+  that *did* run is shown instead, clearly flagged *"newest commit not built yet"*.
+- While the displayed commit is still running, a footer summarises the **previous commit's**
+  outcome (e.g. *"previous commit abc1234: ✓ passed"*) for at-a-glance confidence. It disappears
+  once the displayed commit is terminal.
 
 
 Merge gate

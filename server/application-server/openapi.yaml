@@ -4224,6 +4224,13 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/Node"
+    Head:
+      type: object
+      properties:
+        sha:
+          type: string
+        upToDate:
+          type: boolean
     Node:
       type: object
       properties:
@@ -4250,6 +4257,17 @@ components:
             $ref: "#/components/schemas/Category"
         gate:
           $ref: "#/components/schemas/Node"
+        head:
+          $ref: "#/components/schemas/Head"
+        previous:
+          $ref: "#/components/schemas/PreviousRun"
+    PreviousRun:
+      type: object
+      properties:
+        sha:
+          type: string
+        conclusion:
+          type: string
     EnvironmentReviewersDto:
       type: object
       properties:

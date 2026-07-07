@@ -78,6 +78,104 @@ public class WorkflowRunService {
     return latestRuns.map(WorkflowRunDto::fromWorkflowRun).toList();
   }
 
+  /** Resolves the {@link PipelineRunContext} for a branch's head commit (with previous-commit). */
+  public PipelineRunContext getPipelineRunContextForBranch(String branchName) {
+    final Long repositoryId = RepositoryContext.getRepositoryId();
+    var branch =
+        branchRepository.findByNameAndRepositoryRepositoryId(branchName, repositoryId).orElse(null);
+    if (branch == null) {
+      log.error("Branch with name {} not found!", branchName);
+      return PipelineRunContext.empty();
+    }
+    return buildPipelineRunContext(
+        branchName,
+        branch.getCommitSha(),
+        repositoryId,
+        exclude ->
+            workflowRunRepository.findNthLatestCommitShaBehindHeadByBranchAndRepoId(
+                branchName, repositoryId, 0, exclude));
+  }
+
+  /** Resolves the {@link PipelineRunContext} for a pull request's head commit. */
+  public PipelineRunContext getPipelineRunContextForPullRequest(Long pullRequestId) {
+    final Long repositoryId = RepositoryContext.getRepositoryId();
+    var pullRequest = pullRequestRepository.findById(pullRequestId).orElse(null);
+    if (pullRequest == null) {
+      log.error("Pull request with id {} not found!", pullRequestId);
+      return PipelineRunContext.empty();
+    }
+    return buildPipelineRunContext(
+        pullRequest.getHeadRefName(),
+        pullRequest.getHeadSha(),
+        repositoryId,
+        exclude ->
+            workflowRunRepository.findNthLatestCommitShaBehindHeadByPullRequestId(
+                pullRequestId, 0, exclude));
+  }
+
+  /**
+   * Resolves which commit a pipeline should display and its neighbours, using only ingested runs.
+   *
+   * <p>Prefers the head commit; when it has no runs yet — just pushed, gated at the run level, or a
+   * missed push webhook — falls back to the most recent commit that did run CI (flagged {@code
+   * upToDate=false}) so the developer still sees real progress instead of a blank skeleton. Also
+   * resolves the immediately-preceding commit, but only while the displayed commit is still running
+   * (once it is terminal its own node row tells the whole story).
+   *
+   * @param previousShaFinder returns the newest commit-with-runs on this branch/PR that differs
+   *     from the given commit (offset 0 of the run-derived commit history)
+   */
+  private PipelineRunContext buildPipelineRunContext(
+      String branchName,
+      String headSha,
+      Long repositoryId,
+      java.util.function.Function<String, Optional<String>> previousShaFinder) {
+    if (headSha == null) {
+      return PipelineRunContext.empty();
+    }
+    List<WorkflowRun> headRuns =
+        workflowRunRepository.findByHeadBranchAndHeadShaAndRepositoryRepositoryId(
+            branchName, headSha, repositoryId);
+
+    final String displayedSha;
+    final boolean upToDate;
+    if (!headRuns.isEmpty()) {
+      displayedSha = headSha;
+      upToDate = true;
+    } else {
+      final String fallback = previousShaFinder.apply(headSha).orElse(null);
+      if (fallback == null) {
+        // No CI has ever run for this branch/PR — legitimately "not running yet".
+        return new PipelineRunContext(List.of(), headSha, true, null, List.of());
+      }
+      displayedSha = fallback;
+      upToDate = false;
+      headRuns =
+          workflowRunRepository.findByHeadBranchAndHeadShaAndRepositoryRepositoryId(
+              branchName, fallback, repositoryId);
+    }
+
+    final List<WorkflowRunDto> currentRuns =
+        getLatestWorkflowRuns(headRuns).map(WorkflowRunDto::fromWorkflowRun).toList();
+
+    final boolean currentComplete =
+        !currentRuns.isEmpty()
+            && currentRuns.stream().allMatch(r -> r.status() == WorkflowRun.Status.COMPLETED);
+    if (currentComplete) {
+      return new PipelineRunContext(currentRuns, displayedSha, upToDate, null, List.of());
+    }
+    final String previousSha = previousShaFinder.apply(displayedSha).orElse(null);
+    final List<WorkflowRunDto> previousRuns =
+        previousSha == null
+            ? List.of()
+            : getLatestWorkflowRuns(
+                    workflowRunRepository.findByHeadBranchAndHeadShaAndRepositoryRepositoryId(
+                        branchName, previousSha, repositoryId))
+                .map(WorkflowRunDto::fromWorkflowRun)
+                .toList();
+    return new PipelineRunContext(currentRuns, displayedSha, upToDate, previousSha, previousRuns);
+  }
+
   public PaginatedWorkflowRunsResponse getPaginatedWorkflowRuns(WorkflowRunPageRequest request) {
     Long repositoryId = RepositoryContext.getRepositoryId();
 

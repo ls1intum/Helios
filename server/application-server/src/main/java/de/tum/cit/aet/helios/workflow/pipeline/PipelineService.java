@@ -6,6 +6,7 @@ import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import de.tum.cit.aet.helios.gitreposettings.WorkflowGroupDto;
 import de.tum.cit.aet.helios.gitreposettings.WorkflowGroupService;
 import de.tum.cit.aet.helios.gitreposettings.WorkflowMembershipDto;
+import de.tum.cit.aet.helios.workflow.PipelineRunContext;
 import de.tum.cit.aet.helios.workflow.WorkflowJob;
 import de.tum.cit.aet.helios.workflow.WorkflowJobRepository;
 import de.tum.cit.aet.helios.workflow.WorkflowRun;
@@ -52,19 +53,18 @@ public class PipelineService {
   private final GitRepoRepository gitRepoRepository;
 
   public PipelineDto getPipelineForBranch(String branchName) {
-    return buildFor(workflowRunService.getLatestWorkflowRunsByBranchAndHeadCommitSha(branchName));
+    return buildFor(workflowRunService.getPipelineRunContextForBranch(branchName));
   }
 
   public PipelineDto getPipelineForPullRequest(Long pullRequestId) {
-    return buildFor(
-        workflowRunService.getLatestWorkflowRunsByPullRequestIdAndHeadCommit(pullRequestId));
+    return buildFor(workflowRunService.getPipelineRunContextForPullRequest(pullRequestId));
   }
 
-  private PipelineDto buildFor(List<WorkflowRunDto> headRuns) {
+  private PipelineDto buildFor(PipelineRunContext context) {
     final Long repositoryId = RepositoryContext.getRepositoryId();
     return isCanonicalRepository(repositoryId)
-        ? buildCanonical(headRuns)
-        : buildGrouped(repositoryId, headRuns);
+        ? buildCanonical(context)
+        : buildGrouped(repositoryId, context.currentRuns());
   }
 
   /** Whether the current repository uses the canonical node catalog (vs. the group fallback). */
@@ -81,8 +81,9 @@ public class PipelineService {
 
   // --- Canonical catalog (config-driven Build/Tests/Quality nodes) -----------------------------
 
-  private PipelineDto buildCanonical(List<WorkflowRunDto> headRuns) {
-    final List<Long> runIds = headRuns.stream().map(WorkflowRunDto::id).toList();
+  private PipelineDto buildCanonical(PipelineRunContext context) {
+    final List<WorkflowRunDto> currentRuns = context.currentRuns();
+    final List<Long> runIds = currentRuns.stream().map(WorkflowRunDto::id).toList();
     // Runs are already scoped to the current repository, so their jobs are too.
     final List<WorkflowJob> jobs =
         runIds.isEmpty() ? List.of() : workflowJobRepository.findByWorkflowRunIdIn(runIds);
@@ -93,13 +94,59 @@ public class PipelineService {
                 category ->
                     new PipelineDto.Category(
                         category.name(),
-                        category.nodes().stream().map(node -> buildNode(node, jobs)).toList()))
+                        category.nodes().stream()
+                            .map(node -> buildNode(node, jobs, currentRuns))
+                            .toList()))
             .toList();
     // Optional overall merge-gate node (e.g. Artemis' "All required CI Passed"), surfaced as a
     // header badge on the client. Absent for the group fallback.
     final PipelineDto.Node gate =
-        properties.gate() == null ? null : buildNode(properties.gate(), jobs);
-    return new PipelineDto(categories, gate);
+        properties.gate() == null ? null : buildNode(properties.gate(), jobs, currentRuns);
+
+    final PipelineDto.Head head =
+        context.displayedSha() == null
+            ? null
+            : new PipelineDto.Head(shortSha(context.displayedSha()), context.upToDate());
+    final PipelineDto.PreviousRun previous = previousRun(context);
+    return new PipelineDto(categories, gate, head, previous);
+  }
+
+  /** Coarse outcome of the previous commit, or null when there is no confident signal to show. */
+  private static PipelineDto.PreviousRun previousRun(PipelineRunContext context) {
+    if (context.previousSha() == null) {
+      return null;
+    }
+    final String conclusion = aggregateRunConclusion(context.previousRuns());
+    return conclusion == null
+        ? null
+        : new PipelineDto.PreviousRun(shortSha(context.previousSha()), conclusion);
+  }
+
+  /**
+   * Worst-wins outcome over a commit's CI runs, from run-level conclusions only (no job fetch). Any
+   * failure wins; a still-running run yields {@code null} (no confident signal, footer hidden).
+   */
+  private static String aggregateRunConclusion(List<WorkflowRunDto> runs) {
+    if (runs.isEmpty()) {
+      return null;
+    }
+    if (runs.stream().anyMatch(PipelineService::isFailedRun)) {
+      return WorkflowRun.Conclusion.FAILURE.name();
+    }
+    if (runs.stream().anyMatch(r -> r.status() != WorkflowRun.Status.COMPLETED)) {
+      return null;
+    }
+    if (runs.stream().anyMatch(r -> r.conclusion() == WorkflowRun.Conclusion.SUCCESS)) {
+      return WorkflowRun.Conclusion.SUCCESS.name();
+    }
+    if (runs.stream().anyMatch(r -> r.conclusion() == WorkflowRun.Conclusion.CANCELLED)) {
+      return WorkflowRun.Conclusion.CANCELLED.name();
+    }
+    return WorkflowRun.Conclusion.NEUTRAL.name();
+  }
+
+  private static String shortSha(String sha) {
+    return sha.length() <= 7 ? sha : sha.substring(0, 7);
   }
 
   /**
@@ -108,12 +155,12 @@ public class PipelineService {
    * failing leg flips the node to {@code FAILURE} <i>immediately</i> (fail-fast), even while slower
    * legs run, so the earliest actionable signal is never hidden behind the spinner.
    */
-  private PipelineDto.Node buildNode(PipelineProperties.Node node, List<WorkflowJob> jobs) {
+  private PipelineDto.Node buildNode(
+      PipelineProperties.Node node, List<WorkflowJob> jobs, List<WorkflowRunDto> currentRuns) {
     final List<WorkflowJob> matched = jobs.stream().filter(job -> matches(node, job)).toList();
     if (matched.isEmpty()) {
-      // Not started yet (or never runs for this PR): always-visible, rendered as "not running yet".
-      return new PipelineDto.Node(
-          node.key(), node.label(), WorkflowRun.Status.PENDING.name(), null, null);
+      // No job yet — infer a meaningful state from the node's CI run instead of a dead "pending".
+      return emptyNode(node, currentRuns);
     }
 
     final boolean allTerminal =
@@ -135,7 +182,8 @@ public class PipelineService {
       status = WorkflowRun.Status.IN_PROGRESS;
       conclusion = null;
     } else {
-      status = WorkflowRun.Status.PENDING;
+      // Matched jobs exist but none have started — they are scheduled, so "queued", not idle.
+      status = WorkflowRun.Status.QUEUED;
       conclusion = null;
     }
 
@@ -155,6 +203,11 @@ public class PipelineService {
   /** Null-safe failure test; FAILED_CONCLUSIONS is a Set.of that throws on contains(null). */
   private static boolean isFailed(WorkflowJob job) {
     return job.getConclusion() != null && FAILED_CONCLUSIONS.contains(job.getConclusion());
+  }
+
+  /** Null-safe failure test for a run's conclusion (mirrors {@link #isFailed(WorkflowJob)}). */
+  private static boolean isFailedRun(WorkflowRunDto run) {
+    return run.conclusion() != null && FAILED_CONCLUSIONS.contains(run.conclusion());
   }
 
   /**
@@ -200,6 +253,60 @@ public class PipelineService {
   }
 
   /**
+   * State for a node that has no matching job yet, inferred from the CI run it belongs to so the
+   * view stays honest and up to date rather than showing a permanent "not running yet":
+   *
+   * <ul>
+   *   <li>run awaiting approval → {@code ACTION_REQUIRED} ("waiting for approval") — actionable;
+   *   <li>run queued/running → {@code QUEUED} ("queued") — the job is scheduled, not idle;
+   *   <li>run completed but this job never appeared → {@code SKIPPED} ("didn't run this commit");
+   *   <li>no run matches this node at all → {@code PENDING} ("not running yet").
+   * </ul>
+   */
+  private static PipelineDto.Node emptyNode(
+      PipelineProperties.Node node, List<WorkflowRunDto> currentRuns) {
+    final List<WorkflowRunDto> runs =
+        currentRuns.stream().filter(run -> matchesWorkflow(node, run)).toList();
+
+    final WorkflowRun.Status status;
+    WorkflowRun.Conclusion conclusion = null;
+    if (runs.isEmpty()) {
+      status = WorkflowRun.Status.PENDING;
+    } else if (runs.stream().anyMatch(PipelineService::isAwaitingApproval)) {
+      status = WorkflowRun.Status.WAITING;
+      conclusion = WorkflowRun.Conclusion.ACTION_REQUIRED;
+    } else if (runs.stream().anyMatch(run -> run.status() != WorkflowRun.Status.COMPLETED)) {
+      status = WorkflowRun.Status.QUEUED;
+    } else {
+      status = WorkflowRun.Status.COMPLETED;
+      conclusion = WorkflowRun.Conclusion.SKIPPED;
+    }
+    return new PipelineDto.Node(
+        node.key(),
+        node.label(),
+        status.name(),
+        conclusion == null ? null : conclusion.name(),
+        null);
+  }
+
+  /** Whether a run belongs to a node, by the node's {@code workflowNameMatcher} (blank = any). */
+  private static boolean matchesWorkflow(PipelineProperties.Node node, WorkflowRunDto run) {
+    final String matcher = node.workflowNameMatcher();
+    if (matcher == null || matcher.isBlank()) {
+      return true;
+    }
+    final String name = run.name();
+    return name != null
+        && name.toLowerCase(Locale.ROOT).contains(matcher.toLowerCase(Locale.ROOT));
+  }
+
+  private static boolean isAwaitingApproval(WorkflowRunDto run) {
+    return run.status() == WorkflowRun.Status.WAITING
+        || run.status() == WorkflowRun.Status.ACTION_REQUIRED
+        || run.conclusion() == WorkflowRun.Conclusion.ACTION_REQUIRED;
+  }
+
+  /**
    * Worst-wins conclusion for terminal, non-failing jobs. Failures are handled earlier by
    * {@link #buildNode} (fail-fast), so this is only reached when no matched job failed. The split
    * mirrors the client's status colours: {@code CANCELLED} and {@code SKIPPED} render neutral-grey
@@ -228,7 +335,7 @@ public class PipelineService {
 
   private PipelineDto buildGrouped(Long repositoryId, List<WorkflowRunDto> headRuns) {
     if (repositoryId == null) {
-      return new PipelineDto(List.of(), null);
+      return new PipelineDto(List.of(), null, null, null);
     }
     // getLatest... returns the latest run per workflowId, so a workflowId maps to one run.
     final Map<Long, WorkflowRunDto> runByWorkflowId = new HashMap<>();
@@ -270,7 +377,7 @@ public class PipelineService {
     if (!ungrouped.isEmpty()) {
       categories.add(new PipelineDto.Category("Ungrouped", ungrouped));
     }
-    return new PipelineDto(categories, null);
+    return new PipelineDto(categories, null, null, null);
   }
 
   private static PipelineDto.Node runNode(WorkflowRunDto run) {
