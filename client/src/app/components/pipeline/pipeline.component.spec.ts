@@ -103,15 +103,78 @@ describe('PipelineComponent', () => {
     // Running is the only spinner.
     expect(icon('IN_PROGRESS', null).name).toBe('progress');
     expect(icon('IN_PROGRESS', null).class).toContain('animate-spin');
-    // Queued/waiting/pending are "not running yet" (dashed), never a spinner.
-    for (const s of ['QUEUED', 'WAITING', 'REQUESTED', 'PENDING']) {
+    // Queued is a distinct, non-spinning clock, muted (not the running yellow) — scheduled, not idle.
+    expect(icon('QUEUED', null).name).toBe('clock');
+    expect(icon('QUEUED', null).tooltip).toBe('Queued');
+    expect(icon('QUEUED', null).class).toBe('text-muted-color');
+    expect(icon('QUEUED', null).class).not.toContain('animate-spin');
+    // Awaiting a maintainer's approval is a distinct, actionable state (status or conclusion form),
+    // and always the warning colour (orange) — never the yellow in-progress bucket, whichever form.
+    expect(icon('WAITING', null).name).toBe('player-pause');
+    expect(icon('WAITING', null).tooltip).toBe('Waiting for approval');
+    expect(icon('WAITING', null).class).toContain('orange');
+    expect(icon('ACTION_REQUIRED', null).tooltip).toBe('Waiting for approval');
+    expect(icon('ACTION_REQUIRED', null).class).toContain('orange');
+    expect(icon('COMPLETED', 'ACTION_REQUIRED').tooltip).toBe('Waiting for approval');
+    expect(icon('COMPLETED', 'ACTION_REQUIRED').class).toContain('orange');
+    // Only a genuinely absent run reads as the muted "not running yet".
+    for (const s of ['PENDING', 'REQUESTED']) {
       expect(icon(s, null).name).toBe('circle-dashed');
+      expect(icon(s, null).tooltip).toBe('Not running yet');
       expect(icon(s, null).class).not.toContain('animate-spin');
     }
     expect(icon('COMPLETED', 'SKIPPED').name).toBe('circle-minus');
     expect(icon('COMPLETED', 'CANCELLED').name).toBe('ban');
     // A terminal-but-neutral node is handled explicitly, not left as "Unknown".
-    expect(icon('COMPLETED', 'NEUTRAL').tooltip).toBe('Neutral');
+    expect(icon('COMPLETED', 'NEUTRAL').tooltip).toBe('No result');
+  });
+
+  it('shows the commit freshness anchor with a clickable SHA, subject and time, flagging when not built yet', async () => {
+    mockPipeline({
+      categories: [{ name: 'Build', nodes: [{ key: 'build-native', label: 'Native', status: 'QUEUED', conclusion: null, htmlUrl: null }] }],
+      head: {
+        sha: 'abc1234',
+        upToDate: false,
+        message: 'fix: correct the thing',
+        authoredAt: new Date().toISOString(),
+        htmlUrl: 'https://github.com/org/repo/commit/abc1234',
+      },
+    });
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
+    expect(text).toContain('abc1234');
+    expect(text).toContain('fix: correct the thing');
+    expect(text).toContain('newest commit not built yet');
+    // The SHA is a link to the commit, not dead text.
+    const link = (fixture.nativeElement as HTMLElement).querySelector('a[href="https://github.com/org/repo/commit/abc1234"]');
+    expect(link?.textContent).toContain('abc1234');
+    // The queued node renders its clock, not a dead dashed circle.
+    expect(renderedIconNames()).toContain('clock');
+  });
+
+  it('renders the last-result confidence footer with a linked SHA when present', async () => {
+    mockPipeline({
+      categories: [{ name: 'Build', nodes: [{ key: 'build-native', label: 'Native', status: 'QUEUED', conclusion: null, htmlUrl: null }] }],
+      head: { sha: 'def5678', upToDate: true },
+      previous: { sha: 'aaa1111', conclusion: 'SUCCESS', htmlUrl: 'https://github.com/org/repo/actions/runs/9' },
+    });
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
+    expect(text).toContain('Last result');
+    expect(text).toContain('aaa1111');
+    // The outcome is spelled out in words (not colour alone).
+    expect(text).toContain('Passed');
+    // The SHA links to the previous run.
+    const link = (fixture.nativeElement as HTMLElement).querySelector('a[href="https://github.com/org/repo/actions/runs/9"]');
+    expect(link?.textContent).toContain('aaa1111');
+    // "up to date" head does not show the not-built-yet warning.
+    expect(text).not.toContain('newest commit not built yet');
   });
 
   it('renders the merge-gate badge when a gate is present', async () => {

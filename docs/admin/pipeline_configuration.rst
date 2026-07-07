@@ -142,14 +142,11 @@ The defaults above target Artemis' single ``CI`` orchestrator run
 Status aggregation
 ------------------
 
-For each node, the matched jobs are reduced to one of five human-legible states, chosen so the
-earliest actionable signal is never hidden:
+For each node, the matched jobs are reduced to one human-legible state, chosen so the earliest
+actionable signal is never hidden and a busy branch never looks idle:
 
-- **Not running yet** (``PENDING``, dashed icon) — either no matching job exists yet, **or** every
-  matching job is still queued/waiting (nothing has started). This is deliberately distinct from
-  *running*: a queued job is **not** shown as a spinner.
-- **Running** (``IN_PROGRESS``, spinner) — at least one matching job has started (or already
-  finished) while others are not yet done.
+- **Running** (``IN_PROGRESS``, spinner) — at least one matching job has started while others are
+  not yet done.
 - **Failed** (``FAILURE``, red) — *fail-fast*: as soon as **any** matching job fails, times out, or
   has a startup failure, the node is red, **even while slower legs keep running**. The node then
   links to the failing job (not an arbitrary passing one).
@@ -161,8 +158,54 @@ earliest actionable signal is never hidden:
   - else **SUCCESS** if any job succeeded;
   - else **NEUTRAL**.
 
-The client renders a distinct icon per state: dashed circle (not running yet), yellow spinner
-(running), red ✗ (failed), green ✓ (passed), grey ⊝ (skipped), grey ⃠ (cancelled).
+When a node has **no matching job yet**, its state is inferred from the CI *run* it belongs to,
+rather than a permanent "not running yet" — so a node is honest about what is actually happening:
+
+- **Running** (``IN_PROGRESS``, spinner) — the CI run is executing but this stage's job hasn't been
+  ingested yet (job events routinely lag the run on a busy CI). The node mirrors the run so an
+  active pipeline reads as running rather than idle; the exact per-stage state backfills as the
+  job's events arrive.
+- **Queued** (``QUEUED``, muted clock) — the run is queued and nothing has started yet. Scheduled,
+  not idle, and visually distinct from the running spinner.
+- **Waiting for approval** (``ACTION_REQUIRED``, amber pause) — the run is gated on a maintainer's
+  approval (e.g. a first-time contributor). Actionable, not a silent blank.
+- **No result** (``NEUTRAL``) — the run finished but this job never appeared. We cannot tell an
+  intentional skip from a webhook event we simply never ingested, so we make the weaker, honest
+  claim rather than asserting the job was skipped.
+- **Not running yet** (``PENDING``, dashed) — only when **no** CI run matches the node at all.
+
+The client renders a distinct icon per state: dashed circle (not running yet), muted clock (queued),
+amber pause (waiting for approval), yellow spinner (running), red ✗ (failed), green ✓ (passed),
+grey ⊝ (skipped), grey ⃠ (cancelled), grey ? (no result / neutral).
+
+
+Freshness and the previous commit
+---------------------------------
+
+The pipeline reflects the branch/PR **head commit**, resolved purely from ingested webhook runs
+(no GitHub API calls). Two behaviours keep it trustworthy on fast-moving branches:
+
+- The header shows **which commit** the states are for and whether it is the head. The commit's
+  short SHA (a **link** to the commit on GitHub), its subject line, and how long ago it was authored
+  are shown so the developer can recognise it at a glance. If the newest commit has no CI run yet
+  (just pushed, gated, or a missed push webhook), the most recent commit that *did* run is shown
+  instead, clearly flagged *"newest commit not built yet"*.
+- While the displayed commit is still running, a footer summarises the **last result** — the most
+  recent commit in history that reached a *definitive* pass or fail (e.g. *"Last result ✓ Passed ·
+  abc1234"*, the SHA linking to that CI run) — for at-a-glance confidence. Inconclusive commits are
+  walked past rather than shown: a *cancelled* run on PR CI almost always just means it was
+  superseded by a newer push (Artemis' ``ci.yml`` sets ``cancel-in-progress`` on pull requests), so
+  it carries no confidence signal; the same applies to skipped or still-running commits. If no
+  definitive result exists in recent history, no footer is shown. It disappears once the displayed
+  commit is terminal (its own row then tells the whole story).
+
+.. note::
+
+   Freshness is only as current as the branch head Helios has ingested. The head is updated by
+   push webhooks and the periodic repository sync, so a *missed* push webhook can briefly leave the
+   view a commit behind until the next sync heals it — the displayed commit SHA is always shown so
+   this stays visible rather than silent. Tightening this window (a targeted head refresh on the
+   reconciliation cadence) is a natural follow-up.
 
 
 Merge gate

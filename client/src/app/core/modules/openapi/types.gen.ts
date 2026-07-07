@@ -727,6 +727,14 @@ export type Category = {
   nodes?: Array<Node>;
 };
 
+export type Head = {
+  sha?: string;
+  upToDate?: boolean;
+  message?: string | null;
+  authoredAt?: string | null;
+  htmlUrl?: string | null;
+};
+
 export type Node = {
   key?: string;
   label?: string;
@@ -738,6 +746,14 @@ export type Node = {
 export type PipelineDto = {
   categories?: Array<Category>;
   gate?: Node;
+  head?: Head;
+  previous?: PreviousRun;
+};
+
+export type PreviousRun = {
+  sha?: string;
+  conclusion?: string;
+  htmlUrl?: string | null;
 };
 
 export type EnvironmentReviewersDto = {

@@ -30,9 +30,10 @@ public interface WorkflowRunRepository
 
   /**
    * Returns the n-th latest commit SHA from the commit history for a given pull request, excluding
-   * the specified head commit. The commit history is purely based on workflow runs. Potentially, a
-   * workflow run for an old commit could be re-run, so it's not guaranteed that this method
-   * accurately reflects the commit history.
+   * the specified head commit. The commit history is derived purely from workflow runs (ordered by
+   * each commit's most recent run, with the SHA as a deterministic tiebreaker). A fresh run for an
+   * old commit (e.g. {@code workflow_dispatch} or a scheduled run) can therefore reorder history; a
+   * plain re-run cannot, since it keeps the original run's {@code created_at}.
    *
    * @param prId the ID of the pull request for which the commit history is queried
    * @param offset the offset in the commit list (0 for the first commit behind the head, 1 for the
@@ -53,11 +54,11 @@ public interface WorkflowRunRepository
                   JOIN workflow_run_pull_requests wrpr ON wr.id = wrpr.workflow_run_id
                   WHERE wrpr.pull_requests_id = :prId
                   GROUP BY wr.head_sha
-                  ORDER BY latest_run DESC
               )
               SELECT head_sha
               FROM commit_history
               WHERE head_sha != :head
+              ORDER BY latest_run DESC, head_sha DESC
               OFFSET :offset
               LIMIT 1
               """)
@@ -66,9 +67,10 @@ public interface WorkflowRunRepository
 
   /**
    * Returns the n-th latest commit SHA from the commit history for a given pull request, excluding
-   * the specified head commit. The commit history is purely based on workflow runs. Potentially, a
-   * workflow run for an old commit could be re-run, so it's not guaranteed that this method
-   * accurately reflects the commit history.
+   * the specified head commit. The commit history is derived purely from workflow runs (ordered by
+   * each commit's most recent run, with the SHA as a deterministic tiebreaker). A fresh run for an
+   * old commit (e.g. {@code workflow_dispatch} or a scheduled run) can therefore reorder history; a
+   * plain re-run cannot, since it keeps the original run's {@code created_at}.
    *
    * @param headBranch the branch for which the commit history is queried
    * @param repoId the ID of the repository for which the commit history is queried
@@ -95,11 +97,11 @@ public interface WorkflowRunRepository
                       WHERE wr.id = wrpr.workflow_run_id
                   )
                   GROUP BY wr.head_sha
-                  ORDER BY latest_run DESC
               )
               SELECT head_sha
               FROM commit_history
               WHERE head_sha != :head
+              ORDER BY latest_run DESC, head_sha DESC
               OFFSET :offset
               LIMIT 1
               """)

@@ -9,8 +9,21 @@ import { getPipelineByBranchOptions, getPipelineByPullRequestOptions } from '@ap
 import { PipelineDto } from '@app/core/modules/openapi';
 import { GithubLinkButtonComponent } from '@app/components/github-link-button/github-link-button.component';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
-import { IconBan, IconCircleCheck, IconCircleDashed, IconCircleMinus, IconCircleX, IconExclamationCircle, IconProgress, IconProgressHelp } from 'angular-tabler-icons/icons';
+import {
+  IconBan,
+  IconCircleCheck,
+  IconCircleDashed,
+  IconCircleMinus,
+  IconCircleX,
+  IconClock,
+  IconExclamationCircle,
+  IconGitCommit,
+  IconPlayerPause,
+  IconProgress,
+  IconProgressHelp,
+} from 'angular-tabler-icons/icons';
 import { getStatusColors } from '@app/core/utils/status-colors';
+import { TimeAgoPipe } from '@app/pipes/time-ago.pipe';
 
 export type PipelineSelector = { repositoryId: number } & (
   | {
@@ -26,7 +39,7 @@ export type PipelineSelector = { repositoryId: number } & (
 
 @Component({
   selector: 'app-pipeline',
-  imports: [DividerModule, PanelModule, TablerIconComponent, TooltipModule, SkeletonModule, GithubLinkButtonComponent, NgTemplateOutlet],
+  imports: [DividerModule, PanelModule, TablerIconComponent, TooltipModule, SkeletonModule, GithubLinkButtonComponent, NgTemplateOutlet, TimeAgoPipe],
   providers: [
     provideTablerIcons({
       IconCircleCheck,
@@ -34,6 +47,9 @@ export type PipelineSelector = { repositoryId: number } & (
       IconCircleDashed,
       IconCircleMinus,
       IconBan,
+      IconClock,
+      IconPlayerPause,
+      IconGitCommit,
       IconProgressHelp,
       IconProgress,
       IconExclamationCircle,
@@ -83,34 +99,55 @@ export class PipelineComponent {
   // badge. Null for repos/pipelines without a configured gate.
   gate = computed(() => this.pipeline().gate ?? null);
 
+  // The commit the node states reflect, and whether it is the branch/PR head — the freshness anchor
+  // that makes the view trustworthy ("up to date" vs "newest commit not built yet").
+  head = computed(() => this.pipeline().head ?? null);
+
+  // The last definitive (pass/fail) result in recent history, shown as a confidence footer while
+  // the displayed commit is still running. The server walks past inconclusive commits (cancelled/
+  // superseded/skipped) and omits it entirely once the displayed commit is terminal, so no
+  // client-side guard is needed.
+  previous = computed(() => this.pipeline().previous ?? null);
+
+  // Terminal (and awaiting-approval) conclusions → icon + tooltip. Colour comes from the shared
+  // status map so it stays consistent with the rest of the app.
+  private static readonly ICON_BY_CONCLUSION: Record<string, { name: string; tooltip: string }> = {
+    FAILURE: { name: 'circle-x', tooltip: 'Failed' },
+    TIMED_OUT: { name: 'circle-x', tooltip: 'Failed' },
+    STARTUP_FAILURE: { name: 'circle-x', tooltip: 'Failed' },
+    SUCCESS: { name: 'circle-check', tooltip: 'Passed' },
+    SKIPPED: { name: 'circle-minus', tooltip: 'Skipped' },
+    CANCELLED: { name: 'ban', tooltip: 'Cancelled' },
+    ACTION_REQUIRED: { name: 'player-pause', tooltip: 'Waiting for approval' },
+    NEUTRAL: { name: 'progress-help', tooltip: 'No result' },
+  };
+
+  // Warning colour (orange), forced for the awaiting-approval states so a bare WAITING (no
+  // conclusion) matches the ACTION_REQUIRED conclusion rather than the yellow in-progress bucket.
+  private static readonly WARNING_ICON = getStatusColors('ACTION_REQUIRED').icon;
+
+  // A job-less node's state, inferred from its run. Queued is a muted clock (scheduled, distinct
+  // from the running spinner); awaiting-approval is the warning pause; absent is "not running yet".
+  private static readonly ICON_BY_STATUS: Record<string, { name: string; class: string; tooltip: string }> = {
+    ACTION_REQUIRED: { name: 'player-pause', class: PipelineComponent.WARNING_ICON, tooltip: 'Waiting for approval' },
+    WAITING: { name: 'player-pause', class: PipelineComponent.WARNING_ICON, tooltip: 'Waiting for approval' },
+    QUEUED: { name: 'clock', class: 'text-muted-color', tooltip: 'Queued' },
+    PENDING: { name: 'circle-dashed', class: 'text-muted-color', tooltip: 'Not running yet' },
+    REQUESTED: { name: 'circle-dashed', class: 'text-muted-color', tooltip: 'Not running yet' },
+  };
+
   /**
-   * Resolves a node's aggregated `{status, conclusion}` to its icon, reusing the shared status
-   * colour map. Conclusion is checked before status so a fail-fast node (still running, but a leg
-   * already failed) shows red rather than a spinner. "Not running yet" is deliberately muted
-   * instead of the shared map's queued=in_progress colour — separating queued from running is the
-   * whole point of this view.
+   * Resolves a node's aggregated `{status, conclusion}` to its icon. Conclusion is checked before
+   * status so a fail-fast node (still running, but a leg already failed) shows red rather than a
+   * spinner; running spins yellow; every other transient state is table-driven and distinct.
    */
   nodeIcon(node: { status?: string | null; conclusion?: string | null }): { name: string; class: string; tooltip: string } {
     const { status, conclusion } = node;
-    const color = getStatusColors(conclusion, status).icon;
-    switch (conclusion) {
-      case 'FAILURE':
-      case 'TIMED_OUT':
-      case 'STARTUP_FAILURE':
-        return { name: 'circle-x', class: color, tooltip: 'Failed' };
-      case 'SUCCESS':
-        return { name: 'circle-check', class: color, tooltip: 'Passed' };
-      case 'SKIPPED':
-        return { name: 'circle-minus', class: color, tooltip: 'Skipped' };
-      case 'CANCELLED':
-        return { name: 'ban', class: color, tooltip: 'Cancelled' };
-      case 'NEUTRAL':
-        return { name: 'progress-help', class: color, tooltip: 'Neutral' };
+    const byConclusion = conclusion ? PipelineComponent.ICON_BY_CONCLUSION[conclusion] : undefined;
+    if (byConclusion) return { ...byConclusion, class: getStatusColors(conclusion, status).icon };
+    if (status === 'IN_PROGRESS') {
+      return { name: 'progress', class: `${getStatusColors(conclusion, status).icon} animate-spin`, tooltip: 'Running' };
     }
-    if (status === 'IN_PROGRESS') return { name: 'progress', class: `${color} animate-spin`, tooltip: 'Running' };
-    if (status === 'PENDING' || status === 'QUEUED' || status === 'WAITING' || status === 'REQUESTED') {
-      return { name: 'circle-dashed', class: 'text-muted-color', tooltip: 'Not running yet' };
-    }
-    return { name: 'progress-help', class: 'text-muted-color', tooltip: 'Unknown' };
+    return (status ? PipelineComponent.ICON_BY_STATUS[status] : undefined) ?? { name: 'progress-help', class: 'text-muted-color', tooltip: 'Unknown' };
   }
 }
