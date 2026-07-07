@@ -112,25 +112,28 @@ public class PipelineService {
         context.displayedSha() == null
             ? null
             : buildHead(repositoryId, context.displayedSha(), context.upToDate());
-    final PipelineDto.PreviousRun previous = previousRun(context);
+    final PipelineDto.PreviousRun previous = previousRun(repositoryId, context);
     return new PipelineDto(categories, gate, head, previous);
   }
 
   /** The freshness anchor: short SHA, subject line, author time, and a link to the commit. */
   private PipelineDto.Head buildHead(Long repositoryId, String fullSha, boolean upToDate) {
-    final String htmlUrl =
-        gitRepoRepository
-            .findByRepositoryId(repositoryId)
-            .map(GitRepository::getNameWithOwner)
-            .map(nameWithOwner -> "https://github.com/" + nameWithOwner + "/commit/" + fullSha)
-            .orElse(null);
     final var commit = commitRepository.findByShaAndRepositoryRepositoryId(fullSha, repositoryId);
     return new PipelineDto.Head(
         shortSha(fullSha),
         upToDate,
         commit.map(c -> firstLine(c.getMessage())).orElse(null),
         commit.map(Commit::getAuthoredAt).orElse(null),
-        htmlUrl);
+        commitUrl(repositoryId, fullSha));
+  }
+
+  /** Link to a commit on GitHub, or null when the repository's {@code nameWithOwner} is unknown. */
+  private String commitUrl(Long repositoryId, String fullSha) {
+    return gitRepoRepository
+        .findByRepositoryId(repositoryId)
+        .map(GitRepository::getNameWithOwner)
+        .map(nameWithOwner -> "https://github.com/" + nameWithOwner + "/commit/" + fullSha)
+        .orElse(null);
   }
 
   /** Commit subject (first non-blank line), or null. */
@@ -146,20 +149,43 @@ public class PipelineService {
    * The previous commit's outcome for the confidence footer — only a <i>definitive</i> pass/fail is
    * a useful signal, so anything else (the resolver already walks past inconclusive commits, but we
    * guard here too) yields no footer rather than a meaningless "cancelled".
+   *
+   * <p>The outcome and link are scoped to the pipeline's CI run via {@link #pipelineScopedRuns}, so
+   * an unrelated workflow on the same commit (Codacy, PR labeler, coverage) can neither set the
+   * pass/fail label nor be linked in place of the CI run.
    */
-  private static PipelineDto.PreviousRun previousRun(PipelineRunContext context) {
+  private PipelineDto.PreviousRun previousRun(Long repositoryId, PipelineRunContext context) {
     if (context.previousSha() == null) {
       return null;
     }
-    final String conclusion = aggregateRunConclusion(context.previousRuns());
+    final List<WorkflowRunDto> ciRuns = pipelineScopedRuns(context.previousRuns());
+    final String conclusion = aggregateRunConclusion(ciRuns);
     if (!WorkflowRun.Conclusion.SUCCESS.name().equals(conclusion)
         && !WorkflowRun.Conclusion.FAILURE.name().equals(conclusion)) {
       return null;
     }
+    final String runUrl = previousRunUrl(ciRuns, conclusion);
     return new PipelineDto.PreviousRun(
         shortSha(context.previousSha()),
         conclusion,
-        previousRunUrl(context.previousRuns(), conclusion));
+        runUrl != null ? runUrl : commitUrl(repositoryId, context.previousSha()));
+  }
+
+  /**
+   * Narrows a commit's runs to the pipeline's CI workflow — the one the nodes and gate reflect,
+   * identified by the gate's {@code workflowNameMatcher}. Without a configured matcher (a
+   * non-canonical setup) all runs are kept.
+   */
+  private List<WorkflowRunDto> pipelineScopedRuns(List<WorkflowRunDto> runs) {
+    final String matcher =
+        properties.gate() == null ? null : properties.gate().workflowNameMatcher();
+    if (matcher == null || matcher.isBlank()) {
+      return runs;
+    }
+    final String needle = matcher.toLowerCase(Locale.ROOT);
+    return runs.stream()
+        .filter(run -> run.name() != null && run.name().toLowerCase(Locale.ROOT).contains(needle))
+        .toList();
   }
 
   /** Links the footer to the previous commit's CI run — the failing run when it failed. */
