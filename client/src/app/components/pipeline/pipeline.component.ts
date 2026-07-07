@@ -102,8 +102,9 @@ export class PipelineComponent {
   // that makes the view trustworthy ("up to date" vs "newest commit not built yet").
   head = computed(() => this.pipeline().head ?? null);
 
-  // The immediately-preceding commit's outcome, shown as a confidence footer while the displayed
-  // commit is still running. Null once the displayed commit is terminal (its own row says it all).
+  // The last built commit's outcome (newest commit that ran, not necessarily the parent), shown as
+  // a confidence footer while the displayed commit is still running. The server omits it once the
+  // displayed commit is terminal (its own row says it all), so no client-side guard is needed.
   previous = computed(() => this.pipeline().previous ?? null);
 
   // Terminal (and awaiting-approval) conclusions → icon + tooltip. Colour comes from the shared
