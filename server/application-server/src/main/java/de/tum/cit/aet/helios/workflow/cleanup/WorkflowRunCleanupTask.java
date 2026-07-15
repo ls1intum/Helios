@@ -105,7 +105,40 @@ public class WorkflowRunCleanupTask {
       totalDeleted += deleted;
     }
 
+    totalDeleted += applyMaxAgeCap();
+
     log.info("Workflow-run cleanup finished.  Total rows deleted: {}", totalDeleted);
+  }
+
+  /**
+   * Applies the hard retention cap ({@code cleanup.workflow-run.max-age-days}):
+   * deletes every run older than the configured age, regardless of status,
+   * branch (default branches included) or keep-N policy. Runs after the
+   * policies so their logs reflect what the keep-N rules alone would do.
+   *
+   * @return number of rows deleted (0 when disabled or in dry-run mode)
+   */
+  private int applyMaxAgeCap() {
+    Integer maxAgeDays = props.getMaxAgeDays();
+    if (maxAgeDays == null) {
+      return 0;
+    }
+    if (maxAgeDays < 1) {
+      log.warn("Max-age cap skipped: invalid configuration (maxAgeDays={}). Require >= 1.",
+          maxAgeDays);
+      return 0;
+    }
+
+    if (props.isDryRun()) {
+      long count = repo.countRunsOlderThan(maxAgeDays);
+      log.info("DRY-RUN: Max-age cap maxAgeDays={}  →  {} rows will be deleted",
+          maxAgeDays, count);
+      return 0;
+    }
+
+    int deleted = repo.purgeRunsOlderThan(maxAgeDays);
+    log.info("DELETE: Max-age cap  maxAgeDays={}  →  {} rows deleted", maxAgeDays, deleted);
+    return deleted;
   }
 
 

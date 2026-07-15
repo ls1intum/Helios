@@ -52,6 +52,16 @@ public class WorkflowRunCleanupProps {
   private List<Policy> policies = List.of();
 
   /**
+   * Hard retention cap in days, applied after the keep-N policies. Every
+   * workflow run older than this is deleted regardless of its
+   * {@code test_processing_status}, branch (default branches included) or
+   * any {@code keep} window that would otherwise retain it.
+   *
+   * <p>{@code null} (the default) disables the cap.</p>
+   */
+  private Integer maxAgeDays;
+
+  /**
    * Settings for the orphan-branch sweep — deletes workflow runs whose
    * {@code head_branch} no longer exists in the {@code branch} table,
    * with a grace period to avoid races with branch-sync state.
@@ -75,6 +85,10 @@ public class WorkflowRunCleanupProps {
      * Keep this many <em>latest</em> workflow runs per ⟨repository,branch⟩
      * that have the selected status.  Example: a value of 2 keeps the
      * newest two processed runs for every repo + branch combination.
+     *
+     * <p>Runs on a repository's default branch are exempt from keep-N
+     * pruning — they are retained until the global
+     * {@link WorkflowRunCleanupProps#maxAgeDays} cap removes them.</p>
      */
     private int keep;
 

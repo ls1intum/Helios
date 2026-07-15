@@ -198,17 +198,19 @@ public interface WorkflowRunRepository
    */
   @Query(value = """
       WITH ranked AS (
-          SELECT id,
-                 repository_id,
-                 workflow_id,
-                 head_branch,
-                 created_at,
+          SELECT wr.id,
+                 wr.repository_id,
+                 wr.workflow_id,
+                 wr.head_branch,
+                 wr.created_at,
                  row_number() OVER (
-                     PARTITION BY repository_id, workflow_id, head_branch
-                     ORDER BY created_at DESC
+                     PARTITION BY wr.repository_id, wr.workflow_id, wr.head_branch
+                     ORDER BY wr.created_at DESC
                  ) AS rn
-          FROM workflow_run
-          WHERE test_processing_status IS NOT DISTINCT FROM :tps
+          FROM workflow_run wr
+          LEFT JOIN repository gr ON gr.repository_id = wr.repository_id
+          WHERE wr.test_processing_status IS NOT DISTINCT FROM :tps
+            AND wr.head_branch IS DISTINCT FROM gr.default_branch
       ),
       deletable AS (
           SELECT id
@@ -235,17 +237,19 @@ public interface WorkflowRunRepository
       WITH candidates AS (
           SELECT id
           FROM (
-              SELECT id,
-                     repository_id,
-                     workflow_id,
-                     head_branch,
-                     created_at,
+              SELECT wr.id,
+                     wr.repository_id,
+                     wr.workflow_id,
+                     wr.head_branch,
+                     wr.created_at,
                      row_number() OVER (
-                         PARTITION BY repository_id, workflow_id, head_branch
-                         ORDER BY created_at DESC
+                         PARTITION BY wr.repository_id, wr.workflow_id, wr.head_branch
+                         ORDER BY wr.created_at DESC
                      ) AS rn
-              FROM workflow_run
-              WHERE test_processing_status IS NOT DISTINCT FROM :tps
+              FROM workflow_run wr
+              LEFT JOIN repository gr ON gr.repository_id = wr.repository_id
+              WHERE wr.test_processing_status IS NOT DISTINCT FROM :tps
+                AND wr.head_branch IS DISTINCT FROM gr.default_branch
           ) ranked
           WHERE rn > :keep
             AND created_at < now() - (:ageDays * interval '1 day')
@@ -269,6 +273,8 @@ public interface WorkflowRunRepository
        *     keep the newest :keep rows.
        *   • Of the remainder, delete those whose
        *     created_at is at least :ageDays old.
+       *   • Runs on the default branch of a repository are never touched by
+       *     keep-N pruning — only the hard max-age cap removes them.
        *
        * All child rows in test_suite → test_case are removed
        * automatically via ON DELETE CASCADE.
@@ -276,17 +282,19 @@ public interface WorkflowRunRepository
       WITH deletable AS (
           SELECT id
           FROM (
-              SELECT id,
-                     repository_id,
-                     workflow_id,
-                     head_branch,
-                     created_at,
+              SELECT wr.id,
+                     wr.repository_id,
+                     wr.workflow_id,
+                     wr.head_branch,
+                     wr.created_at,
                      row_number() OVER (
-                         PARTITION BY repository_id, workflow_id, head_branch
-                         ORDER BY created_at DESC
+                         PARTITION BY wr.repository_id, wr.workflow_id, wr.head_branch
+                         ORDER BY wr.created_at DESC
                      ) AS rn
-              FROM workflow_run
-              WHERE test_processing_status IS NOT DISTINCT FROM :tps
+              FROM workflow_run wr
+              LEFT JOIN repository gr ON gr.repository_id = wr.repository_id
+              WHERE wr.test_processing_status IS NOT DISTINCT FROM :tps
+                AND wr.head_branch IS DISTINCT FROM gr.default_branch
           ) ranked
           WHERE rn > :keep
             AND created_at < now() - (:ageDays * interval '1 day')
@@ -298,6 +306,31 @@ public interface WorkflowRunRepository
   int purgeObsoleteRuns(@Param("keep") int keepPerCombo,
                         @Param("ageDays") int ageDays,
                         @Param("tps") String testProcessingStatus);
+
+  /**
+   * Number of workflow runs older than {@code maxAgeDays} — dry-run preview of
+   * {@link #purgeRunsOlderThan(int)}.
+   */
+  @Query(value = """
+      SELECT count(*)
+      FROM workflow_run
+      WHERE created_at < now() - (:maxAgeDays * interval '1 day')
+      """, nativeQuery = true)
+  long countRunsOlderThan(@Param("maxAgeDays") int maxAgeDays);
+
+  /**
+   * Hard retention cap: deletes every workflow run older than
+   * {@code maxAgeDays}, regardless of status, branch (default branches
+   * included) or any keep-N policy. Child rows in test_suite → test_case,
+   * workflow_job and workflow_run_pull_requests cascade via their FKs.
+   */
+  @Modifying
+  @Transactional
+  @Query(value = """
+      DELETE FROM workflow_run
+      WHERE created_at < now() - (:maxAgeDays * interval '1 day')
+      """, nativeQuery = true)
+  int purgeRunsOlderThan(@Param("maxAgeDays") int maxAgeDays);
 
   /**
    * Distinct repository ids that currently have at least one orphan-branch
