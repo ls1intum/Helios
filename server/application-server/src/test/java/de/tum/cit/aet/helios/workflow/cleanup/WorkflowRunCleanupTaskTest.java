@@ -7,6 +7,7 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -128,12 +129,27 @@ class WorkflowRunCleanupTaskTest {
   void maxAgeCapDeletesRunsOlderThanConfiguredDays() {
     Fixture f = new Fixture();
     f.maxAgeDays = 90;
-    when(f.repo.purgeRunsOlderThan(90)).thenReturn(1234);
+    when(f.repo.purgeRunsOlderThan(90, WorkflowRunCleanupTask.MAX_AGE_CAP_BATCH_SIZE))
+        .thenReturn(1234);
 
     f.task().purge();
 
-    verify(f.repo).purgeRunsOlderThan(90);
+    verify(f.repo).purgeRunsOlderThan(90, WorkflowRunCleanupTask.MAX_AGE_CAP_BATCH_SIZE);
     verify(f.repo, never()).countRunsOlderThan(anyInt());
+  }
+
+  @Test
+  void maxAgeCapLoopsUntilBatchNotFull() {
+    Fixture f = new Fixture();
+    f.maxAgeDays = 90;
+    when(f.repo.purgeRunsOlderThan(90, WorkflowRunCleanupTask.MAX_AGE_CAP_BATCH_SIZE))
+        .thenReturn(WorkflowRunCleanupTask.MAX_AGE_CAP_BATCH_SIZE)
+        .thenReturn(200);
+
+    f.task().purge();
+
+    verify(f.repo, times(2))
+        .purgeRunsOlderThan(90, WorkflowRunCleanupTask.MAX_AGE_CAP_BATCH_SIZE);
   }
 
   @Test
@@ -146,7 +162,7 @@ class WorkflowRunCleanupTaskTest {
     f.task().purge();
 
     verify(f.repo).countRunsOlderThan(90);
-    verify(f.repo, never()).purgeRunsOlderThan(anyInt());
+    verify(f.repo, never()).purgeRunsOlderThan(anyInt(), anyInt());
   }
 
   @Test
@@ -155,18 +171,29 @@ class WorkflowRunCleanupTaskTest {
 
     f.task().purge();
 
-    verify(f.repo, never()).purgeRunsOlderThan(anyInt());
+    verify(f.repo, never()).purgeRunsOlderThan(anyInt(), anyInt());
     verify(f.repo, never()).countRunsOlderThan(anyInt());
   }
 
   @Test
-  void maxAgeCapSkippedWhenInvalid() {
+  void maxAgeCapDisabledByZero() {
     Fixture f = new Fixture();
     f.maxAgeDays = 0;
 
     f.task().purge();
 
-    verify(f.repo, never()).purgeRunsOlderThan(anyInt());
+    verify(f.repo, never()).purgeRunsOlderThan(anyInt(), anyInt());
+    verify(f.repo, never()).countRunsOlderThan(anyInt());
+  }
+
+  @Test
+  void maxAgeCapSkippedWhenNegative() {
+    Fixture f = new Fixture();
+    f.maxAgeDays = -5;
+
+    f.task().purge();
+
+    verify(f.repo, never()).purgeRunsOlderThan(anyInt(), anyInt());
     verify(f.repo, never()).countRunsOlderThan(anyInt());
   }
 

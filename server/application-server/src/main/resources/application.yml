@@ -78,7 +78,9 @@ cleanup:
               keep: 2
               age-days: 5
         # Hard retention cap: delete every run older than this many days, regardless of status,
-        # branch (default branches included) or the keep-N policies above.
+        # branch (default branches included) or the keep-N policies above. Runs referenced by a
+        # deployment are preserved. Deletes in batches of 5000 runs, each its own transaction.
+        # Set to 0 to disable. The dry-run flag above gates this cap too.
         max-age-days: ${CLEANUP_WORKFLOW_RUN_MAX_AGE_DAYS:90}
         # Sweep workflow runs whose head_branch no longer exists in the branch
         # table (e.g. feature branches deleted after PR merge). Disabled by

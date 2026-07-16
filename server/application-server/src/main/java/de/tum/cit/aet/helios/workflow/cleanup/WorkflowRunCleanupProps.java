@@ -55,9 +55,14 @@ public class WorkflowRunCleanupProps {
    * Hard retention cap in days, applied after the keep-N policies. Every
    * workflow run older than this is deleted regardless of its
    * {@code test_processing_status}, branch (default branches included) or
-   * any {@code keep} window that would otherwise retain it.
+   * any {@code keep} window that would otherwise retain it. Runs still
+   * referenced by a {@code helios_deployment}/{@code deployment} row are
+   * preserved so the deployment → build link never dangles.
    *
-   * <p>{@code null} (the default) disables the cap.</p>
+   * <p>{@code null} or {@code 0} disables the cap. The bare Java default is
+   * {@code null}, but {@code application.yml} binds it to
+   * {@code CLEANUP_WORKFLOW_RUN_MAX_AGE_DAYS} with a default of 90 — so in a
+   * deployed instance the cap is on unless the env var is set to 0.</p>
    */
   private Integer maxAgeDays;
 
@@ -88,7 +93,11 @@ public class WorkflowRunCleanupProps {
      *
      * <p>Runs on a repository's default branch are exempt from keep-N
      * pruning — they are retained until the global
-     * {@link WorkflowRunCleanupProps#maxAgeDays} cap removes them.</p>
+     * {@link WorkflowRunCleanupProps#maxAgeDays} cap removes them. The
+     * exemption matches by branch name, so fork-PR runs whose head branch
+     * happens to share the default branch's name (e.g. a PR from a fork's
+     * {@code develop}) are also exempt; the schema stores no head
+     * repository to tell them apart, and the max-age cap bounds them.</p>
      */
     private int keep;
 

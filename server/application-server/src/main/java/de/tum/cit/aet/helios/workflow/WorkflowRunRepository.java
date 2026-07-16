@@ -203,6 +203,7 @@ public interface WorkflowRunRepository
                  wr.workflow_id,
                  wr.head_branch,
                  wr.created_at,
+                 (wr.head_branch = gr.default_branch) IS TRUE AS is_default_branch,
                  row_number() OVER (
                      PARTITION BY wr.repository_id, wr.workflow_id, wr.head_branch
                      ORDER BY wr.created_at DESC
@@ -210,12 +211,12 @@ public interface WorkflowRunRepository
           FROM workflow_run wr
           LEFT JOIN repository gr ON gr.repository_id = wr.repository_id
           WHERE wr.test_processing_status IS NOT DISTINCT FROM :tps
-            AND wr.head_branch IS DISTINCT FROM gr.default_branch
       ),
       deletable AS (
           SELECT id
           FROM ranked
           WHERE rn > :keep
+            AND NOT is_default_branch
             AND created_at < now() - (:ageDays * interval '1 day')
       )
       SELECT id
@@ -242,6 +243,7 @@ public interface WorkflowRunRepository
                      wr.workflow_id,
                      wr.head_branch,
                      wr.created_at,
+                     (wr.head_branch = gr.default_branch) IS TRUE AS is_default_branch,
                      row_number() OVER (
                          PARTITION BY wr.repository_id, wr.workflow_id, wr.head_branch
                          ORDER BY wr.created_at DESC
@@ -249,9 +251,9 @@ public interface WorkflowRunRepository
               FROM workflow_run wr
               LEFT JOIN repository gr ON gr.repository_id = wr.repository_id
               WHERE wr.test_processing_status IS NOT DISTINCT FROM :tps
-                AND wr.head_branch IS DISTINCT FROM gr.default_branch
           ) ranked
           WHERE rn > :keep
+            AND NOT is_default_branch
             AND created_at < now() - (:ageDays * interval '1 day')
       )
       SELECT id FROM candidates
@@ -274,7 +276,13 @@ public interface WorkflowRunRepository
        *   • Of the remainder, delete those whose
        *     created_at is at least :ageDays old.
        *   • Runs on the default branch of a repository are never touched by
-       *     keep-N pruning — only the hard max-age cap removes them.
+       *     keep-N pruning — only the hard max-age cap removes them. The
+       *     exemption applies only when head_branch equals a non-null
+       *     default_branch ((=) IS TRUE), so NULL branches and repos without
+       *     a default branch stay prunable. It lives in the deletable filter,
+       *     not the ranked scope, so the survivor preview still lists
+       *     default-branch runs. Keep this CTE in sync with the two preview
+       *     queries above.
        *
        * All child rows in test_suite → test_case are removed
        * automatically via ON DELETE CASCADE.
@@ -287,6 +295,7 @@ public interface WorkflowRunRepository
                      wr.workflow_id,
                      wr.head_branch,
                      wr.created_at,
+                     (wr.head_branch = gr.default_branch) IS TRUE AS is_default_branch,
                      row_number() OVER (
                          PARTITION BY wr.repository_id, wr.workflow_id, wr.head_branch
                          ORDER BY wr.created_at DESC
@@ -294,9 +303,9 @@ public interface WorkflowRunRepository
               FROM workflow_run wr
               LEFT JOIN repository gr ON gr.repository_id = wr.repository_id
               WHERE wr.test_processing_status IS NOT DISTINCT FROM :tps
-                AND wr.head_branch IS DISTINCT FROM gr.default_branch
           ) ranked
           WHERE rn > :keep
+            AND NOT is_default_branch
             AND created_at < now() - (:ageDays * interval '1 day')
       )
       DELETE FROM workflow_run wr
@@ -308,29 +317,60 @@ public interface WorkflowRunRepository
                         @Param("tps") String testProcessingStatus);
 
   /**
-   * Number of workflow runs older than {@code maxAgeDays} — dry-run preview of
-   * {@link #purgeRunsOlderThan(int)}.
+   * Number of workflow runs the max-age cap would delete — dry-run preview of
+   * {@link #purgeRunsOlderThan(int, int)}. Same predicate as the delete: older
+   * than {@code maxAgeDays} and not referenced by a deployment.
    */
   @Query(value = """
       SELECT count(*)
-      FROM workflow_run
-      WHERE created_at < now() - (:maxAgeDays * interval '1 day')
+      FROM workflow_run wr
+      WHERE wr.created_at < now() - (:maxAgeDays * interval '1 day')
+        AND NOT EXISTS (
+          SELECT 1 FROM helios_deployment hd
+          WHERE hd.workflow_run_id = wr.id
+        )
+        AND NOT EXISTS (
+          SELECT 1 FROM deployment d
+          WHERE d.workflow_run_id = wr.id
+        )
       """, nativeQuery = true)
   long countRunsOlderThan(@Param("maxAgeDays") int maxAgeDays);
 
   /**
-   * Hard retention cap: deletes every workflow run older than
-   * {@code maxAgeDays}, regardless of status, branch (default branches
-   * included) or any keep-N policy. Child rows in test_suite → test_case,
-   * workflow_job and workflow_run_pull_requests cascade via their FKs.
+   * Hard retention cap: deletes workflow runs older than {@code maxAgeDays},
+   * regardless of status, branch (default branches included) or any keep-N
+   * policy. Runs still referenced by a {@code helios_deployment} or
+   * {@code deployment} row are preserved — same contract as the orphan-branch
+   * sweep — so the deployment → build link never dangles. Child rows in
+   * test_suite → test_case, workflow_job and workflow_run_pull_requests
+   * cascade via their FKs.
+   *
+   * <p>Deletes at most {@code batchSize} runs per call, each call its own
+   * transaction; the caller loops until a call deletes fewer than
+   * {@code batchSize}. This bounds lock-hold time and WAL growth on large
+   * backlogs where the cascade touches millions of {@code test_case} rows.
    */
   @Modifying
   @Transactional
   @Query(value = """
       DELETE FROM workflow_run
-      WHERE created_at < now() - (:maxAgeDays * interval '1 day')
+      WHERE id IN (
+          SELECT wr.id
+          FROM workflow_run wr
+          WHERE wr.created_at < now() - (:maxAgeDays * interval '1 day')
+            AND NOT EXISTS (
+              SELECT 1 FROM helios_deployment hd
+              WHERE hd.workflow_run_id = wr.id
+            )
+            AND NOT EXISTS (
+              SELECT 1 FROM deployment d
+              WHERE d.workflow_run_id = wr.id
+            )
+          LIMIT :batchSize
+      )
       """, nativeQuery = true)
-  int purgeRunsOlderThan(@Param("maxAgeDays") int maxAgeDays);
+  int purgeRunsOlderThan(@Param("maxAgeDays") int maxAgeDays,
+                         @Param("batchSize") int batchSize);
 
   /**
    * Distinct repository ids that currently have at least one orphan-branch
