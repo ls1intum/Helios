@@ -7,6 +7,7 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -125,6 +126,78 @@ class WorkflowRunCleanupTaskTest {
   }
 
   @Test
+  void maxAgeCapDeletesRunsOlderThanConfiguredDays() {
+    Fixture f = new Fixture();
+    f.maxAgeDays = 90;
+    when(f.repo.purgeRunsOlderThan(90, WorkflowRunCleanupTask.MAX_AGE_CAP_BATCH_SIZE))
+        .thenReturn(1234);
+
+    f.task().purge();
+
+    verify(f.repo).purgeRunsOlderThan(90, WorkflowRunCleanupTask.MAX_AGE_CAP_BATCH_SIZE);
+    verify(f.repo, never()).countRunsOlderThan(anyInt());
+  }
+
+  @Test
+  void maxAgeCapLoopsUntilBatchNotFull() {
+    Fixture f = new Fixture();
+    f.maxAgeDays = 90;
+    when(f.repo.purgeRunsOlderThan(90, WorkflowRunCleanupTask.MAX_AGE_CAP_BATCH_SIZE))
+        .thenReturn(WorkflowRunCleanupTask.MAX_AGE_CAP_BATCH_SIZE)
+        .thenReturn(200);
+
+    f.task().purge();
+
+    verify(f.repo, times(2))
+        .purgeRunsOlderThan(90, WorkflowRunCleanupTask.MAX_AGE_CAP_BATCH_SIZE);
+  }
+
+  @Test
+  void maxAgeCapDryRunOnlyCounts() {
+    Fixture f = new Fixture();
+    f.dryRun = true;
+    f.maxAgeDays = 90;
+    when(f.repo.countRunsOlderThan(90)).thenReturn(1234L);
+
+    f.task().purge();
+
+    verify(f.repo).countRunsOlderThan(90);
+    verify(f.repo, never()).purgeRunsOlderThan(anyInt(), anyInt());
+  }
+
+  @Test
+  void maxAgeCapSkippedWhenUnset() {
+    Fixture f = new Fixture();
+
+    f.task().purge();
+
+    verify(f.repo, never()).purgeRunsOlderThan(anyInt(), anyInt());
+    verify(f.repo, never()).countRunsOlderThan(anyInt());
+  }
+
+  @Test
+  void maxAgeCapDisabledByZero() {
+    Fixture f = new Fixture();
+    f.maxAgeDays = 0;
+
+    f.task().purge();
+
+    verify(f.repo, never()).purgeRunsOlderThan(anyInt(), anyInt());
+    verify(f.repo, never()).countRunsOlderThan(anyInt());
+  }
+
+  @Test
+  void maxAgeCapSkippedWhenNegative() {
+    Fixture f = new Fixture();
+    f.maxAgeDays = -5;
+
+    f.task().purge();
+
+    verify(f.repo, never()).purgeRunsOlderThan(anyInt(), anyInt());
+    verify(f.repo, never()).countRunsOlderThan(anyInt());
+  }
+
+  @Test
   void orphanBranchesDefaultsAreSafe() {
     // Defaults must keep the sweep off until an operator explicitly enables it.
     WorkflowRunCleanupProps.OrphanBranches defaults = new WorkflowRunCleanupProps.OrphanBranches();
@@ -159,10 +232,12 @@ class WorkflowRunCleanupTaskTest {
     boolean dryRun = false;
     int graceDays = GRACE;
     int batchSize = BATCH;
+    Integer maxAgeDays = null;
 
     WorkflowRunCleanupTask task() {
       WorkflowRunCleanupProps props = new WorkflowRunCleanupProps();
       props.setDryRun(dryRun);
+      props.setMaxAgeDays(maxAgeDays);
       WorkflowRunCleanupProps.OrphanBranches orphan = new WorkflowRunCleanupProps.OrphanBranches();
       orphan.setEnabled(enabled);
       orphan.setGraceDays(graceDays);
