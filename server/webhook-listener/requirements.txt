@@ -1,5 +1,5 @@
 python-dotenv==1.2.2
 nats-py==2.15.0
 pydantic-settings==2.14.2
-fastapi-cli==0.0.27
-fastapi==0.139.0
+fastapi-cli==0.0.32
+fastapi==0.139.2
