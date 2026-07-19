@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authorization.AuthorizationDeniedException;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.server.ResponseStatusException;
 
 @Log4j2
 @RestControllerAdvice
@@ -136,6 +138,38 @@ public class GlobalExceptionHandler {
     return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
         .header(HttpHeaders.RETRY_AFTER, String.valueOf(ex.getRetryAfterSeconds()))
         .body(error);
+  }
+
+  // -- EXPLICIT STATUS : ResponseStatusException -------
+  // Endpoints throw ResponseStatusException to signal a specific status + reason (e.g. a 502 when
+  // GitHub rejects an approval). Without this handler the generic Exception handler below would
+  // catch it first (advice handlers run before Spring's ResponseStatusExceptionResolver) and
+  // flatten every one of them to a 500 "internal server error", discarding both the status and
+  // the message the caller intended for the user.
+  @ExceptionHandler(ResponseStatusException.class)
+  public ResponseEntity<ApiError> handleResponseStatusException(
+      ResponseStatusException ex, HttpServletRequest request) {
+
+    HttpStatusCode status = ex.getStatusCode();
+    HttpStatus resolved = HttpStatus.resolve(status.value());
+    ApiError error = new ApiError();
+    error.setStatus(status.value());
+    error.setError(resolved != null ? resolved.getReasonPhrase() : "Error");
+    error.setMessage(ex.getReason() != null ? ex.getReason() : "Request failed");
+    error.setPath(request.getRequestURI());
+    error.setTimestamp(Instant.now());
+
+    // These are deliberate, handled outcomes (auth, conflicts, upstream rejections), so keep them
+    // out of Sentry; log server-side faults (5xx) at WARN for visibility, client faults at DEBUG.
+    if (status.is5xxServerError()) {
+      log.warn("Request to {} failed with {}: {}", request.getRequestURI(), status.value(),
+          error.getMessage());
+    } else {
+      log.debug("Request to {} rejected with {}: {}", request.getRequestURI(), status.value(),
+          error.getMessage());
+    }
+
+    return new ResponseEntity<>(error, status);
   }
 
   // -- 500 INTERNAL SERVER ERROR (FALLBACK) -------------
