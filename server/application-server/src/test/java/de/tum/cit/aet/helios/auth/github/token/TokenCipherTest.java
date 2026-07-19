@@ -27,7 +27,10 @@ class TokenCipherTest {
   }
 
   @Test
-  void blankKeyFailsFast() {
-    assertThrows(IllegalStateException.class, () -> new TokenCipher("  "));
+  void blankKeyDoesNotFailConstructionButFailsOnUse() {
+    // A missing key must not crash app startup; it fails only when a token op is attempted.
+    TokenCipher cipher = new TokenCipher("  ");
+    assertThrows(IllegalStateException.class, () -> cipher.encrypt("x"));
+    assertThrows(IllegalStateException.class, () -> cipher.decrypt("aaa:bbb"));
   }
 }
