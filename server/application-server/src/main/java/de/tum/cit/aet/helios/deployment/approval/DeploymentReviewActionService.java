@@ -3,6 +3,7 @@ package de.tum.cit.aet.helios.deployment.approval;
 import de.tum.cit.aet.helios.environment.Environment;
 import de.tum.cit.aet.helios.environment.EnvironmentService;
 import de.tum.cit.aet.helios.environment.EnvironmentService.ReviewerResolution;
+import de.tum.cit.aet.helios.github.GitHubReviewException;
 import de.tum.cit.aet.helios.github.GitHubService;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
@@ -146,8 +147,10 @@ public class DeploymentReviewActionService {
           currentLogin,
           heliosDeploymentId,
           e.getMessage());
-      throw new ResponseStatusException(
-          HttpStatus.BAD_GATEWAY, "GitHub rejected the request: " + e.getMessage(), e);
+      // Keep the client-facing status at 502: this is an upstream GitHub failure, not the Helios
+      // request being unauthenticated. Returning 401 here would make the client treat the user's
+      // Helios session as expired and bounce them to login.
+      throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, gitHubFailureReason(e), e);
     }
 
     // GitHub accepted — finalise this reviewer's row and consume siblings.
@@ -211,6 +214,19 @@ public class DeploymentReviewActionService {
   private static boolean isTerminallyResolved(DeploymentApprovalRequest r) {
     return r.getState() == DeploymentApprovalRequest.State.APPROVED
         || r.getState() == DeploymentApprovalRequest.State.DECLINED;
+  }
+
+  /**
+   * Turns a GitHub review failure into a reviewer-facing message. An {@code HTTP 401} means the
+   * impersonated user's GitHub token (brokered via Keycloak) has expired — the reviewer can only
+   * recover by re-authenticating — so we say so explicitly instead of leaking the raw status.
+   */
+  private static String gitHubFailureReason(IOException e) {
+    if (e instanceof GitHubReviewException gh && gh.getHttpStatus() == 401) {
+      return "GitHub rejected the request because your GitHub authorization has expired. "
+          + "Please sign out of Helios and sign in again, then retry.";
+    }
+    return "GitHub rejected the request: " + e.getMessage();
   }
 
   private static String buildAuditComment(String login, boolean approve, String userComment) {

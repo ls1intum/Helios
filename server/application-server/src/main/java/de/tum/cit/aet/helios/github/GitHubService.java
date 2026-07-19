@@ -578,7 +578,8 @@ public class GitHubService {
             runId,
             response.code(),
             errorBody);
-        throw new IOException(
+        throw new GitHubReviewException(
+            response.code(),
             "GitHub pending-deployment " + state + " failed: HTTP " + response.code());
       }
       log.info("Successfully set deployment state '{}' for run ID {}", state, runId);
