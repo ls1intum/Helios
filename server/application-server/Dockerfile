@@ -1,4 +1,4 @@
-FROM gradle:9.5.1-jdk21-alpine AS build
+FROM gradle:9.6.1-jdk21-alpine AS build
 COPY --chown=gradle:gradle . /home/gradle/src
 WORKDIR /home/gradle/src
 # Skip tests inside the image build — zonky/embedded-postgres integration tests
