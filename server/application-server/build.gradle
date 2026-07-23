@@ -4,8 +4,8 @@ import org.springframework.boot.gradle.tasks.run.BootRun
 // so that it can be used to connect to the database and execute the migrations.
 buildscript {
     dependencies {
-        classpath('org.postgresql:postgresql:42.7.11')
-        classpath('org.flywaydb:flyway-database-postgresql:12.9.0')
+        classpath('org.postgresql:postgresql:42.7.13')
+        classpath('org.flywaydb:flyway-database-postgresql:12.11.0')
     }
 }
 
@@ -13,8 +13,8 @@ plugins {
     id 'org.springframework.boot'
     id 'io.freefair.lombok'
     id 'org.springdoc.openapi-gradle-plugin' version '1.9.0'
-    id 'org.openapi.generator' version '7.23.0'
-    id 'org.flywaydb.flyway' version '12.9.0'
+    id 'org.openapi.generator' version '7.24.0'
+    id 'org.flywaydb.flyway' version '12.11.0'
 }
 
 // The OpenAPI tasks boot the app against the in-memory H2 database, so H2 is
@@ -41,18 +41,18 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-jackson2'
     implementation 'org.springframework.security:spring-security-oauth2-jose'
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3'
-    implementation 'org.openapitools:jackson-databind-nullable:0.2.10'
+    implementation 'org.openapitools:jackson-databind-nullable:0.2.11'
     implementation 'com.github.ben-manes.caffeine:caffeine'
-    implementation 'io.nats:jnats:2.25.3'
+    implementation 'io.nats:jnats:2.26.0'
     implementation 'org.springframework.ai:spring-ai-starter-model-openai'
     implementation 'org.kohsuke:github-api:1.330'
     implementation 'com.squareup.okhttp3:okhttp:5.4.0'
     implementation 'com.squareup.okhttp3:logging-interceptor:5.4.0'
     implementation 'org.flywaydb:flyway-database-postgresql'
     implementation 'io.jsonwebtoken:jjwt-api:0.13.0'
-    implementation 'io.sentry:sentry-spring-boot-4-starter:8.44.1'
+    implementation 'io.sentry:sentry-spring-boot-4-starter:8.50.1'
     // Helios push-based status updates
-    implementation "de.tum.cit.aet:helios-status-spring-starter:1.1.1"
+    implementation "de.tum.cit.aet:helios-status-spring-starter:1.2.0"
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.13.0'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.13.0'
     runtimeOnly 'org.postgresql:postgresql'
