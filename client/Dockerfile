@@ -28,7 +28,7 @@ RUN echo "export const version = { deployed_version: '$DEPLOYED_VERSION', deploy
 RUN pnpm run build --configuration $BUILD_CONFIG
 
 # Stage 2: Serve Angular app using Nginx
-FROM nginx:1.31.2-alpine
+FROM nginx:1.31.3-alpine
 
 # Remove the default Nginx configuration file
 RUN rm /etc/nginx/conf.d/default.conf
