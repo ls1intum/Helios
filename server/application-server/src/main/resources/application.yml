@@ -62,6 +62,9 @@ cleanup:
         dry-run: ${CLEANUP_WORKFLOW_RUN_DRY_RUN:true}
         # runs every day at 01:00 (server time)
         cron: "0 0 1 * * *"
+        # Policies apply per ⟨repository, workflow, branch⟩ — except the repository's default
+        # branch (e.g. develop/main), which is exempt from keep-N pruning: every run there is
+        # retained until the max-age-days cap below removes it.
         policies:
             # Test Status: PROCESSED --> keep newest 2 runs, delete every other one regardless of age
             - test-processing-status: PROCESSED
@@ -74,6 +77,11 @@ cleanup:
             - test-processing-status: null
               keep: 2
               age-days: 5
+        # Hard retention cap: delete every run older than this many days, regardless of status,
+        # branch (default branches included) or the keep-N policies above. Runs referenced by a
+        # deployment are preserved. Deletes in batches of 5000 runs, each its own transaction.
+        # Set to 0 to disable. The dry-run flag above gates this cap too.
+        max-age-days: ${CLEANUP_WORKFLOW_RUN_MAX_AGE_DAYS:90}
         # Sweep workflow runs whose head_branch no longer exists in the branch
         # table (e.g. feature branches deleted after PR merge). Disabled by
         # default so the historical backlog isn't wiped on the first

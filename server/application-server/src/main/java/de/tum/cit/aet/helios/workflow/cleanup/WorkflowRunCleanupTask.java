@@ -19,7 +19,6 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * This class is responsible for cleaning up obsolete workflow runs based on configured policies.
@@ -58,7 +57,6 @@ public class WorkflowRunCleanupTask {
    * configured policies.
    */
   @Scheduled(cron = "${cleanup.workflow-run.cron:0 0 1 * * *}")
-  @Transactional
   public void purge() {
     log.info("Workflow-run cleanup started.");
     int totalDeleted = 0;
@@ -105,7 +103,57 @@ public class WorkflowRunCleanupTask {
       totalDeleted += deleted;
     }
 
+    totalDeleted += applyMaxAgeCap();
+
     log.info("Workflow-run cleanup finished.  Total rows deleted: {}", totalDeleted);
+  }
+
+  /** Runs deleted per max-age-cap batch; each batch commits in its own transaction. */
+  static final int MAX_AGE_CAP_BATCH_SIZE = 5000;
+
+  /**
+   * Applies the hard retention cap ({@code cleanup.workflow-run.max-age-days}):
+   * deletes every run older than the configured age, regardless of status,
+   * branch (default branches included) or keep-N policy. Runs still referenced
+   * by a deployment are preserved (see
+   * {@link WorkflowRunRepository#purgeRunsOlderThan(int, int)}). Runs after the
+   * policies so their logs reflect what the keep-N rules alone would do.
+   *
+   * <p>Deletes in batches of {@link #MAX_AGE_CAP_BATCH_SIZE}, each its own
+   * short transaction, so a large backlog neither blocks concurrent ingestion
+   * for minutes nor rolls back wholesale on failure.
+   *
+   * @return rows deleted, or in dry-run mode the rows that would be deleted
+   *     (counted the same way the keep-N previews feed the total); 0 when
+   *     disabled
+   */
+  private int applyMaxAgeCap() {
+    Integer maxAgeDays = props.getMaxAgeDays();
+    if (maxAgeDays == null || maxAgeDays == 0) {
+      log.debug("Max-age cap disabled (maxAgeDays={}).", maxAgeDays);
+      return 0;
+    }
+    if (maxAgeDays < 0) {
+      log.warn("Max-age cap skipped: invalid configuration (maxAgeDays={}). "
+          + "Use a positive number of days, or 0 to disable.", maxAgeDays);
+      return 0;
+    }
+
+    if (props.isDryRun()) {
+      long count = repo.countRunsOlderThan(maxAgeDays);
+      log.info("DRY-RUN: Max-age cap maxAgeDays={}  →  {} rows will be deleted "
+          + "(may overlap the policy previews above)", maxAgeDays, count);
+      return (int) Math.min(count, Integer.MAX_VALUE);
+    }
+
+    int deleted = 0;
+    int batch;
+    do {
+      batch = repo.purgeRunsOlderThan(maxAgeDays, MAX_AGE_CAP_BATCH_SIZE);
+      deleted += batch;
+    } while (batch == MAX_AGE_CAP_BATCH_SIZE);
+    log.info("DELETE: Max-age cap  maxAgeDays={}  →  {} rows deleted", maxAgeDays, deleted);
+    return deleted;
   }
 
 
