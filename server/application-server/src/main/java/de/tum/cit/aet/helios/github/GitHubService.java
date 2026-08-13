@@ -4,8 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.tum.cit.aet.helios.auth.AuthService;
-import de.tum.cit.aet.helios.auth.github.GitHubAuthBroker;
-import de.tum.cit.aet.helios.auth.github.TokenExchangeResponse;
+import de.tum.cit.aet.helios.auth.github.token.GitHubUserTokenService;
 import de.tum.cit.aet.helios.deployment.github.GitHubDeploymentDto;
 import de.tum.cit.aet.helios.environment.github.GitHubEnvironmentApiResponse;
 import de.tum.cit.aet.helios.environment.github.GitHubEnvironmentDto;
@@ -66,7 +65,7 @@ public class GitHubService {
   private final ObjectMapper objectMapper;
   private final OkHttpClient okHttpClient;
   private final AuthService authService;
-  private final GitHubAuthBroker gitHubAuthBroker;
+  private final GitHubUserTokenService gitHubUserTokenService;
   private final GitHubClientManager clientManager;
   private GHOrganization gitHubOrganization;
 
@@ -544,13 +543,8 @@ public class GitHubService {
     RequestBody requestBody =
         RequestBody.create(jsonPayload, MediaType.get("application/json; charset=utf-8"));
 
-    TokenExchangeResponse tokenExchangeResponse =
-        this.gitHubAuthBroker.exchangeToken(githubUserLogin);
-    if (tokenExchangeResponse == null) {
-      log.error("Token exchange response is null for {}", githubUserLogin);
-      throw new IOException("Failed to exchange GitHub token for user: " + githubUserLogin);
-    }
-    String userGithubToken = tokenExchangeResponse.getAccessToken();
+    // Fetch a valid GitHub user token, refreshing (or re-seeding) it as needed.
+    String userGithubToken = gitHubUserTokenService.getValidAccessToken(githubUserLogin);
 
     Request request =
         new Request.Builder()
@@ -679,13 +673,8 @@ public class GitHubService {
       String githubUserLogin)
       throws IOException {
 
-    // Exchange token for the user
-    TokenExchangeResponse tokenExchangeResponse =
-        this.gitHubAuthBroker.exchangeToken(githubUserLogin);
-    if (tokenExchangeResponse == null) {
-      log.error("Token exchange response is null");
-      throw new IOException("Failed to exchange token for GitHub user: " + githubUserLogin);
-    }
+    // Fetch a valid GitHub user token, refreshing (or re-seeding) it as needed.
+    String userGithubToken = gitHubUserTokenService.getValidAccessToken(githubUserLogin);
 
     // Construct the request payload
     Map<String, Object> requestPayload = new HashMap<>();
@@ -712,8 +701,6 @@ public class GitHubService {
 
     RequestBody requestBody =
         RequestBody.create(jsonPayload, MediaType.get("application/json; charset=utf-8"));
-
-    String userGithubToken = tokenExchangeResponse.getAccessToken();
 
     Request request =
         new Request.Builder()
