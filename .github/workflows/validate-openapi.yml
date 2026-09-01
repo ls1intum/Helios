@@ -70,7 +70,7 @@ jobs:
 
       - name: Post comment about OpenAPI validation failure
         if: failure() && steps.check_changes.outputs.CHANGE_DETECTED == 'true'
-        uses: marocchino/sticky-pull-request-comment@v3.0.4
+        uses: marocchino/sticky-pull-request-comment@v3.0.5
         with:
           header: openapi-validation-yml
           message: |
@@ -86,7 +86,7 @@ jobs:
 
       - name: Remove sticky comment on OpenAPI validation success
         if: success() || steps.check_changes.outputs.CHANGE_DETECTED == 'false'
-        uses: marocchino/sticky-pull-request-comment@v3.0.4
+        uses: marocchino/sticky-pull-request-comment@v3.0.5
         with:
           header: openapi-validation-yml
           delete: true
@@ -146,7 +146,7 @@ jobs:
 
       - name: Post comment about client code validation failure
         if: failure() && env.CHANGE_DETECTED == 'true'
-        uses: marocchino/sticky-pull-request-comment@v3.0.4
+        uses: marocchino/sticky-pull-request-comment@v3.0.5
         with:
           header: client-code-validation
           message: |
@@ -162,7 +162,7 @@ jobs:
 
       - name: Remove sticky comment on client code validation success
         if: success() || env.CHANGE_DETECTED == 'false'
-        uses: marocchino/sticky-pull-request-comment@v3.0.4
+        uses: marocchino/sticky-pull-request-comment@v3.0.5
         with:
           header: client-code-validation
           delete: true
