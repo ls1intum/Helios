@@ -1,5 +1,5 @@
 alabaster==1.0.0
-certifi==2026.6.17
+certifi==2026.7.22
 docutils==0.21.2
 Jinja2==3.1.6
 requests==2.34.2
@@ -7,7 +7,7 @@ sphinx-autobuild==2025.8.25
 sphinx-rtd-theme==3.1.0
 Sphinx==8.2.3
 sphinxcontrib-bibtex==2.7.0
-starlette==1.3.1
+starlette==1.6.0
 urllib3==2.7.0
-uvicorn==0.49.0
+uvicorn==0.52.4
 zipp==4.1.0
