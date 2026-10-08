@@ -11,7 +11,7 @@ overrides:
   undici@7: 8.6.0
   hono: 4.12.27
   tar: 7.5.19
-  piscina: 5.2.0
+  piscina: 5.3.2
   http-proxy-middleware: 4.1.1
   launch-editor: 2.14.1
   js-yaml: 5.2.1
@@ -4738,8 +4738,8 @@ packages:
     resolution: {integrity: sha512-TfySrs/5nm8fQJDcBDuUng3VOUKsd7S+zqvbOTiGXHfxX4wK31ard+hoNuvkicM/2YFzlpDgABOevKSsB4G/FA==}
     engines: {node: '>= 6'}
 
-  piscina@5.2.0:
-    resolution: {integrity: sha512-DszUCKeVN/5G5QKo6jAVHL8fmKnkJvQ0ACiVgY7YGCq3TUB2oznAOayvZPIAdEThvhczkXR+qm3IHsNXpFCYfA==}
+  piscina@5.3.2:
+    resolution: {integrity: sha512-vv7l/mM7B9WgrhDaudIqv1x6v4LOBRYYmpWGdWushhpbCmVHp11sUB2v4hj1CAeTGXVxuZFz6xOU1RalAiPKfQ==}
     engines: {node: '>=20.x'}
 
   pkce-challenge@5.0.1:
@@ -6045,7 +6045,7 @@ snapshots:
       open: 11.0.0
       ora: 9.3.0
       picomatch: 4.0.4
-      piscina: 5.2.0
+      piscina: 5.3.2
       postcss: 8.5.12
       postcss-loader: 8.2.0(postcss@8.5.12)(typescript@5.9.3)(webpack@5.105.2(esbuild@0.28.1)(postcss@8.5.12))
       resolve-url-loader: 5.0.0
@@ -6245,7 +6245,7 @@ snapshots:
       mrmime: 2.0.1
       parse5-html-rewriting-stream: 8.0.0
       picomatch: 4.0.4
-      piscina: 5.2.0
+      piscina: 5.3.2
       rolldown: 1.0.0-rc.4(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)
       sass: 1.97.3
       semver: 7.7.4
@@ -6301,7 +6301,7 @@ snapshots:
       mrmime: 2.0.1
       parse5-html-rewriting-stream: 8.0.0
       picomatch: 4.0.4
-      piscina: 5.2.0
+      piscina: 5.3.2
       rolldown: 1.0.0-rc.4(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)
       sass: 1.97.3
       semver: 7.7.4
@@ -10930,7 +10930,7 @@ snapshots:
 
   pirates@4.0.7: {}
 
-  piscina@5.2.0:
+  piscina@5.3.2:
     optionalDependencies:
       '@napi-rs/nice': 1.1.1
 
