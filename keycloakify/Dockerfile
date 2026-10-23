@@ -1,11 +1,17 @@
-# Stage 1: Build Angular app
-FROM node:24.18.0 AS build
+# Maven and its JDK are build tools for packaging the Keycloak theme.
+FROM maven:3.9.16-eclipse-temurin-17 AS maven
+
+# Stage 1: Build the Keycloak theme
+FROM node:24.22.1 AS build
 
 # Set the working directory
 WORKDIR /app
 
-# Install maven for the build step
-RUN apt-get update && apt-get install maven=3.8.7-1 -y
+# Use the current Maven 3.9 release instead of Debian Bookworm's older package.
+COPY --from=maven /usr/share/maven /usr/share/maven
+COPY --from=maven /opt/java/openjdk /opt/java/openjdk
+ENV JAVA_HOME=/opt/java/openjdk
+ENV PATH="/usr/share/maven/bin:${JAVA_HOME}/bin:${PATH}"
 
 # Enable pnpm via corepack (version pinned by package.json "packageManager")
 RUN corepack enable
@@ -25,7 +31,7 @@ RUN pnpm run build-keycloak-theme
 # Stage 2: Build Keycloak image
 # We use the specific version of Keycloak to avoid any changes in the realm.json file
 # Do NOT update on renovatebot PRs
-FROM quay.io/keycloak/keycloak:26.6.4
+FROM quay.io/keycloak/keycloak:26.8.1
 
 # Copy the built keycloakify theme to keycloak
 COPY --from=build /app/dist_keycloak /opt/keycloak/providers/

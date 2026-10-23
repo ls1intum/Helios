@@ -12,4 +12,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Assign Pull Request to its Author
-        uses: technote-space/assign-author@v1
+        uses: technote-space/assign-author@v1.6.2

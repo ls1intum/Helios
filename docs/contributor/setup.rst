@@ -41,7 +41,7 @@ Before you can start Helios, you need to install and configure some dependencies
 
         corepack enable          # makes the pinned pnpm version available automatically
 
-     Alternatively, install it directly: ``npm install -g pnpm@11.2.2``.
+     Alternatively, install it directly: ``npm install -g pnpm@11.28.8``.
      Verify with ``pnpm --version`` (should print ``11.2.2``).
 
    .. warning::
