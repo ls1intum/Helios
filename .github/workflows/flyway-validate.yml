@@ -41,22 +41,15 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Fetch all branches
-        if: github.event_name == 'pull_request'
-        env:
-          BASE_REF: ${{ github.base_ref }}
-          HEAD_REF: ${{ github.head_ref }}
-        run: |
-          git fetch origin "refs/heads/$BASE_REF:refs/remotes/origin/$BASE_REF"
-          git fetch origin "refs/heads/$HEAD_REF:refs/remotes/origin/$HEAD_REF"
-
       - name: Check existing migrations are unchanged
         if: github.event_name == 'pull_request'
         env:
-          BASE_REF: ${{ github.base_ref }}
-          HEAD_REF: ${{ github.head_ref }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
-          CHANGED_PATHS=$(git diff --name-status "refs/remotes/origin/$BASE_REF" "refs/remotes/origin/$HEAD_REF" -- server/application-server/src/main/resources/db/migration/)
+          # Checkout's full history already includes the PR's base and head commits.
+          # Compare immutable commits without fetching or checking out an untrusted branch.
+          CHANGED_PATHS=$(git diff --name-status "$BASE_SHA...$HEAD_SHA" -- server/application-server/src/main/resources/db/migration/)
 
           if [[ -z "$CHANGED_PATHS" ]]; then
             echo "No Flyway migration changes detected."
