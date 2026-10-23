@@ -1,4 +1,4 @@
-import { Component, input, OnInit, viewChild } from '@angular/core';
+import { Component, input, OnInit, viewChild, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
 import { IconFilter, IconFilterPlus, IconX } from 'angular-tabler-icons/icons';
@@ -22,6 +22,7 @@ const ACTIVE_FILTER_BUTTON_CLASS = 'dark:!border-primary-400 dark:!bg-surface-0/
       IconX,
     }),
   ],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './table-filter-paginated.component.html',
 })
 export class TableFilterPaginatedComponent implements OnInit {

@@ -42,7 +42,7 @@ want a faster feedback loop while working on the frontend, you can run the
 
    This repo uses **pnpm**, not npm or yarn. The version is pinned in
    ``package.json`` (``packageManager``) and is easiest to get via Corepack:
-   run ``corepack enable`` once (or ``npm install -g pnpm@11.28.8``). See the
+   run ``npm install -g pnpm@12.15.0`` once (or install Corepack separately and run ``corepack enable``). See the
    `Setup Guide <../setup#prerequisites>`_ for details. Never run ``npm`` or
    ``yarn`` here — it would create a conflicting lockfile.
 

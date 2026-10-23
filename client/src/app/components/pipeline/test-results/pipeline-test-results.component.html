@@ -134,17 +134,17 @@
                     <div class="flex items-center gap-2 overflow-hidden">
                       @switch (overallSuiteState(suite)) {
                         @case ('SUCCESS') {
-                          <i-tabler name="circle-check" class="text-green-600 dark:text-green-400 flex-shrink-0"></i-tabler>
+                          <i-tabler name="circle-check" class="text-green-600 dark:text-green-400 shrink-0"></i-tabler>
                         }
                         @case ('FAILURE') {
-                          <i-tabler name="circle-x" class="text-red-600 dark:text-red-400 flex-shrink-0"></i-tabler>
+                          <i-tabler name="circle-x" class="text-red-600 dark:text-red-400 shrink-0"></i-tabler>
                         }
                         @case ('SKIPPED') {
-                          <i-tabler name="circle-chevrons-right" class="text-surface-500 dark:text-surface-400 flex-shrink-0"></i-tabler>
+                          <i-tabler name="circle-chevrons-right" class="text-surface-500 dark:text-surface-400 shrink-0"></i-tabler>
                         }
                       }
                       <span class="font-medium truncate">{{ suite.name }}</span>
-                      <span class="text-sm text-muted-color ml-2 flex-shrink-0">
+                      <span class="text-sm text-muted-color ml-2 shrink-0">
                         ({{ suite.tests }} tests, {{ suite.failures + suite.errors }} failed, {{ suite.skipped }} skipped)
                       </span>
                     </div>
@@ -155,16 +155,16 @@
                       <div class="flex items-center gap-2 p-2 border rounded">
                         @switch (testCase.status) {
                           @case ('PASSED') {
-                            <i-tabler name="check" class="text-green-600 dark:text-green-400 w-4 h-4 flex-shrink-0"></i-tabler>
+                            <i-tabler name="check" class="text-green-600 dark:text-green-400 w-4 h-4 shrink-0"></i-tabler>
                           }
                           @case ('FAILED') {
-                            <i-tabler name="x" class="text-red-600 dark:text-red-400 w-4 h-4 flex-shrink-0"></i-tabler>
+                            <i-tabler name="x" class="text-red-600 dark:text-red-400 w-4 h-4 shrink-0"></i-tabler>
                           }
                           @case ('ERROR') {
-                            <i-tabler name="x" class="text-red-600 dark:text-red-400 w-4 h-4 flex-shrink-0"></i-tabler>
+                            <i-tabler name="x" class="text-red-600 dark:text-red-400 w-4 h-4 shrink-0"></i-tabler>
                           }
                           @case ('SKIPPED') {
-                            <i-tabler name="chevrons-right" class="text-muted-color w-4 h-4 flex-shrink-0"></i-tabler>
+                            <i-tabler name="chevrons-right" class="text-muted-color w-4 h-4 shrink-0"></i-tabler>
                           }
                         }
 
@@ -172,7 +172,7 @@
                           <div class="basis-10/12 flex flex-col items-start min-w-0">
                             <div class="flex items-center gap-2 min-w-0 w-full">
                               @if (testCase.previousStatus !== testCase.status && testCase.previousStatus) {
-                                <span class="text-xs text-primary-600 dark:text-primary-300 font-medium flex-shrink-0">previously {{ testCase.previousStatus.toLowerCase() }}</span>
+                                <span class="text-xs text-primary-600 dark:text-primary-300 font-medium shrink-0">previously {{ testCase.previousStatus.toLowerCase() }}</span>
                               }
                               <span class="text-sm truncate overflow-hidden flex-1 min-w-0" [pTooltip]="testCase.name">{{ testCase.name }}</span>
                             </div>
@@ -306,7 +306,7 @@
             <button
               pButton
               class="p-button-sm p-button-secondary"
-              (click)="downloadLogs(selectedTestCase()?.stackTrace?.trimStart() || '', selectedTestCase()?.name + '_stack_trace.txt')"
+              (click)="downloadLogs(selectedTestCase()?.stackTrace?.trimStart() || '', $safeNavigationMigration(selectedTestCase()?.name) + '_stack_trace.txt')"
               [disabled]="!selectedTestCase()?.stackTrace"
             >
               <i-tabler name="download" class="mr-2"></i-tabler>
@@ -368,7 +368,7 @@
                 pButton
                 type="button"
                 class="p-button-sm p-button-outlined"
-                (click)="downloadLogs(selectedTestCase()?.systemOut || '', selectedTestCase()?.name + '_case_logs.txt')"
+                (click)="downloadLogs(selectedTestCase()?.systemOut || '', $safeNavigationMigration(selectedTestCase()?.name) + '_case_logs.txt')"
                 [disabled]="!selectedTestCase()?.systemOut"
               >
                 <i-tabler name="download" class="mr-2"></i-tabler>
@@ -379,7 +379,7 @@
                   pButton
                   type="button"
                   class="p-button-sm p-button-secondary"
-                  (click)="downloadLogs(filteredTestCaseLogs(), selectedTestCase()?.name + '_case_logs_filtered.txt')"
+                  (click)="downloadLogs(filteredTestCaseLogs(), $safeNavigationMigration(selectedTestCase()?.name) + '_case_logs_filtered.txt')"
                   [disabled]="!filteredTestCaseLogs()"
                 >
                   <i-tabler name="download" class="mr-2"></i-tabler>
@@ -418,7 +418,7 @@
                 pButton
                 type="button"
                 class="p-button-sm p-button-outlined"
-                (click)="downloadLogs(selectedTestCase()?.suiteSystemOut || '', selectedTestCase()?.name + '_suite_logs.txt')"
+                (click)="downloadLogs(selectedTestCase()?.suiteSystemOut || '', $safeNavigationMigration(selectedTestCase()?.name) + '_suite_logs.txt')"
                 [disabled]="!selectedTestCase()?.suiteSystemOut"
               >
                 <i-tabler name="download" class="mr-2"></i-tabler>
@@ -429,7 +429,7 @@
                   pButton
                   type="button"
                   class="p-button-sm p-button-secondary"
-                  (click)="downloadLogs(filteredTestSuiteLogs(), selectedTestCase()?.name + '_suite_logs_filtered.txt')"
+                  (click)="downloadLogs(filteredTestSuiteLogs(), $safeNavigationMigration(selectedTestCase()?.name) + '_suite_logs_filtered.txt')"
                   [disabled]="!filteredTestSuiteLogs()"
                 >
                   <i-tabler name="download" class="mr-2"></i-tabler>

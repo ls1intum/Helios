@@ -74,7 +74,7 @@ jobs:
         uses: actions/setup-java@v6.1.0
         with:
           distribution: "temurin"
-          java-version: "21"
+          java-version: "25"
 
       - name: Run Gradle to apply Flyway migrations
         if: steps.check_changes.outputs.CHANGE_DETECTED == 'true' || github.event_name == 'push'

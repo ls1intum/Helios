@@ -1,4 +1,4 @@
-import { Component, computed, input, model, output, signal } from '@angular/core';
+import { Component, computed, input, model, output, signal, ChangeDetectionStrategy } from '@angular/core';
 import { EnvironmentDeploymentReadinessDto, EnvironmentDto, EnvironmentReviewersDto, RequiredWorkflowStatusDto } from '@app/core/modules/openapi';
 import { getDeploymentReadinessOptions, getEnvironmentReviewersOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { injectQuery } from '@tanstack/angular-query-experimental';
@@ -22,6 +22,7 @@ import { InputText } from 'primeng/inputtext';
       IconCloudUpload,
     }),
   ],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './deploy-confirmation.component.html',
 })
 export class DeployConfirmationComponent {

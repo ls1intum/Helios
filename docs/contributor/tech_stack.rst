@@ -19,7 +19,7 @@ It provides a comprehensive set of tools and libraries for developing interactiv
 **pnpm**: Package Manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-`pnpm <https://pnpm.io/>`_ is the package manager for both the ``client`` and ``keycloakify`` apps (it replaced yarn). It is fast, disk-efficient, and strict about dependency resolution. The version is pinned via the ``packageManager`` field in ``package.json`` and is managed through Corepack — run ``corepack enable`` once, then use ``pnpm install`` / ``pnpm dev`` / ``pnpm build``. Do **not** use npm or yarn. See the `Setup Guide <../setup#prerequisites>`_ to get started.
+`pnpm <https://pnpm.io/>`_ is the package manager for both the ``client`` and ``keycloakify`` apps (it replaced yarn). It is fast, disk-efficient, and strict about dependency resolution. The version is pinned via the ``packageManager`` field in ``package.json`` — install it with ``npm install -g pnpm@12.15.0`` (or install Corepack separately and enable it), then use ``pnpm install`` / ``pnpm dev`` / ``pnpm build``. Do **not** use npm or yarn. See the `Setup Guide <../setup#prerequisites>`_ to get started.
 
 **Angular Tanstack Query**: Powerful asynchronous data fetching library
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -30,6 +30,13 @@ It provides a comprehensive set of tools and libraries for developing interactiv
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 `PrimeNG <https://www.primefaces.org/primeng/>`_ is a collection of rich UI components for Angular applications, providing a wide range of features and customization options.
+
+Helios uses Angular 22 with PrimeNG 21 and PrimeIcons 7. The component and icon versions
+are retained under the project's licensing constraint; routine dependency updates must
+not upgrade to PrimeNG 22 or PrimeIcons 8. PrimeNG 21 declares Angular 21 peer ranges,
+so its peer warnings are expected with Angular 22. Compatibility is checked through
+production builds, unit tests, and browser interaction tests.
+
 
 **TailwindCSS**: Styling Framework
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

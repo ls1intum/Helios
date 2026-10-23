@@ -93,7 +93,7 @@ const LOG_LINE_TONE_STYLES: Record<
 export const LOG_VIEW_CLASSES = {
   container: 'max-h-[70vh] overflow-auto rounded-lg border border-surface-200 bg-surface-0 dark:border-surface-800 dark:bg-surface-950',
   toolbar:
-    'sticky top-0 z-10 flex flex-wrap gap-2 border-b border-surface-200 bg-surface-0/95 px-4 py-3 text-xs text-surface-600 backdrop-blur dark:border-surface-800 dark:bg-surface-950/95 dark:text-surface-300',
+    'sticky top-0 z-10 flex flex-wrap gap-2 border-b border-surface-200 bg-surface-0/95 px-4 py-3 text-xs text-surface-600 backdrop-blur-sm dark:border-surface-800 dark:bg-surface-950/95 dark:text-surface-300',
   content: 'font-mono text-sm leading-6 text-surface-900 dark:text-surface-50',
   emptyState: 'px-4 py-6 text-sm text-surface-500 dark:text-surface-400',
   baseRow: 'grid grid-cols-[4rem_minmax(0,1fr)] gap-4 border-b border-surface-100 px-4 dark:border-surface-900',

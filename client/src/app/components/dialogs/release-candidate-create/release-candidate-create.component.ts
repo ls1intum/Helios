@@ -1,5 +1,5 @@
 import { SlicePipe } from '@angular/common';
-import { Component, computed, inject, input, model, signal } from '@angular/core';
+import { Component, computed, inject, input, model, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommitInfoDto } from '@app/core/modules/openapi';
 import {
@@ -28,6 +28,7 @@ import { TooltipModule } from 'primeng/tooltip';
       IconGitCommit,
     }),
   ],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './release-candidate-create.component.html',
 })
 export class ReleaseCandidateCreateComponent {

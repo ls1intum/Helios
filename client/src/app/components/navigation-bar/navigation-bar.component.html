@@ -10,7 +10,11 @@
         <!-- Repository Info (Avatar + Full Name) -->
         <div class="flex items-center gap-2 w-full rounded-xl transition-all" [ngClass]="[isExpanded() ? 'justify-start' : 'justify-center']">
           <!-- Repository Initials Avatar -->
-          <p-avatar label="{{ repositoryQuery.data()?.name | slice: 0 : 1 }}" [pTooltip]="isExpanded() ? undefined : repositoryQuery.data()?.nameWithOwner" size="normal" />
+          <p-avatar
+            label="{{ $safeNavigationMigration(repositoryQuery.data()?.name) | slice: 0 : 1 }}"
+            [pTooltip]="isExpanded() ? undefined : $safeNavigationMigration(repositoryQuery.data()?.nameWithOwner)"
+            size="normal"
+          />
 
           <!-- Show Full Repository Name When Expanded -->
           @if (isExpanded()) {
@@ -45,7 +49,7 @@
           }
         </div>
 
-        <span class="flex-grow"></span>
+        <span class="grow"></span>
 
         <!-- Lock Info -->
         <app-user-lock-info />

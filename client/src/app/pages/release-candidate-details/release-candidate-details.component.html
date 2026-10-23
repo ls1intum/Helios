@@ -24,7 +24,7 @@
                 <i-tabler name="pencil" class="!size-5" />
               </p-button>
             } @else {
-              <app-github-link-button [url]="releaseCandidate.release?.githubUrl" buttonClass="p-1 leading-none" />
+              <app-github-link-button [url]="$safeNavigationMigration(releaseCandidate.release?.githubUrl)" buttonClass="p-1 leading-none" />
             }
           }
           <p-tag class="text-xs">
@@ -49,7 +49,7 @@
         <div class="flex gap-1 items-center text-sm">
           <div class="mr-1">created by</div>
           @if (releaseCandidate.createdBy?.avatarUrl) {
-            <p-avatar class="size-4" shape="circle" [image]="releaseCandidate.createdBy?.avatarUrl" />
+            <p-avatar class="size-4" shape="circle" [image]="$safeNavigationMigration(releaseCandidate.createdBy?.avatarUrl)" />
           } @else {
             <i-tabler name="user" class="size-4 text-muted-color border-2 border-muted-color rounded-full" />
           }

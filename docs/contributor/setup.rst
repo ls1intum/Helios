@@ -12,7 +12,7 @@ Prerequisites
 Before you can start Helios, you need to install and configure some dependencies and tools.
 
 1. `Java JDK <https://www.oracle.com/java/technologies/javase-downloads.html>`__:
-   We use Java (JDK 21) to develop and run the 
+   We use Java (JDK 25) to develop and run the
    server, which is based on `Spring
    Boot <http://projects.spring.io/spring-boot>`__.
 
@@ -31,18 +31,17 @@ Before you can start Helios, you need to install and configure some dependencies
    run the dev server, tests, linting, or to regenerate the OpenAPI client.
    The standard Docker Compose flow does not need a local Node install.
 
-   - Install **Node.js 24** (see ``client/.nvmrc`` for the exact version; ``nvm install`` picks it up automatically).
+   - Install **Node.js 26** (see ``client/.nvmrc`` for the exact version; ``nvm install`` picks it up automatically).
    - This repository uses **pnpm** as its package manager (not npm or yarn).
-     The version is pinned via the ``packageManager`` field in ``package.json``
-     and is best installed through `Corepack <https://nodejs.org/api/corepack.html>`__,
-     which ships with Node.js:
+     The version is pinned via the ``packageManager`` field in ``package.json``.
+     Install that release globally (Node.js 26 does not bundle Corepack):
 
      .. code-block:: shell
 
-        corepack enable          # makes the pinned pnpm version available automatically
+        npm install -g pnpm@12.15.0
 
-     Alternatively, install it directly: ``npm install -g pnpm@11.28.8``.
-     Verify with ``pnpm --version`` (should print ``11.2.2``).
+     Alternatively, install Corepack separately, then run ``corepack enable``.
+     Verify with ``pnpm --version`` (should print ``12.15.0``).
 
    .. warning::
 

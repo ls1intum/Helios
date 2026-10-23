@@ -1,5 +1,5 @@
 import { NgTemplateOutlet } from '@angular/common';
-import { Component, computed, input } from '@angular/core';
+import { Component, computed, input, ChangeDetectionStrategy } from '@angular/core';
 import { injectQuery } from '@tanstack/angular-query-experimental';
 import { PanelModule } from 'primeng/panel';
 import { TooltipModule } from 'primeng/tooltip';
@@ -55,6 +55,7 @@ export type PipelineSelector = { repositoryId: number } & (
       IconExclamationCircle,
     }),
   ],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './pipeline.component.html',
 })
 export class PipelineComponent {

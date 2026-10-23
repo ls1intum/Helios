@@ -22,7 +22,7 @@ jobs:
         - name: Setup pnpm
           uses: pnpm/action-setup@v6.1.0
           with:
-            version: 11.28.8
+            version: 12.15.0
         - name: Setup Node.js
           uses: actions/setup-node@v7.1.0
           with:
@@ -60,7 +60,7 @@ jobs:
         - name: Setup pnpm
           uses: pnpm/action-setup@v6.1.0
           with:
-            version: 11.28.8
+            version: 12.15.0
         - name: Setup Node.js
           uses: actions/setup-node@v7.1.0
           with:
@@ -83,7 +83,7 @@ jobs:
           uses: actions/setup-java@v6.1.0
           with:
             distribution: 'temurin'
-            java-version: '21'
+            java-version: '25'
         - name: Server Tests
           run: set -o pipefail && ./gradlew --console=plain test jacocoTestReport jacocoTestCoverageVerification | tee tests.log        
         - name: Print failed tests

@@ -5,7 +5,7 @@ import org.springframework.boot.gradle.tasks.run.BootRun
 buildscript {
     dependencies {
         classpath('org.postgresql:postgresql:42.7.14')
-        classpath('org.flywaydb:flyway-database-postgresql:12.11.0')
+        classpath('org.flywaydb:flyway-database-postgresql:13.11.1')
     }
 }
 
@@ -14,7 +14,7 @@ plugins {
     id 'io.freefair.lombok'
     id 'org.springdoc.openapi-gradle-plugin' version '1.9.0'
     id 'org.openapi.generator' version '7.26.0'
-    id 'org.flywaydb.flyway' version '12.11.0'
+    id 'org.flywaydb.flyway' version '13.11.1'
 }
 
 // The OpenAPI tasks boot the app against the in-memory H2 database, so H2 is
@@ -29,6 +29,8 @@ if (gradle.startParameter.taskNames.any { requested -> openApiTaskHints.any { re
         runtimeOnly 'com.h2database:h2'
     }
 }
+
+ext['flyway.version'] = '13.11.1'
 
 dependencies {
     implementation(platform("org.springframework.ai:spring-ai-bom:2.0.2"))
@@ -51,8 +53,8 @@ dependencies {
     implementation 'org.flywaydb:flyway-database-postgresql'
     implementation 'io.jsonwebtoken:jjwt-api:0.13.0'
     implementation 'io.sentry:sentry-spring-boot-4-starter:8.61.1'
-    // Helios push-based status updates; 1.2.0 requires Java 25 (this build targets 21).
-    implementation "de.tum.cit.aet:helios-status-spring-starter:1.1.1"
+    // Helios push-based status updates.
+    implementation "de.tum.cit.aet:helios-status-spring-starter:1.2.0"
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.13.0'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.13.0'
     runtimeOnly 'org.postgresql:postgresql'

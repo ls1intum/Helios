@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { version } from 'environments/version';
 import { ButtonModule } from 'primeng/button';
@@ -6,6 +6,7 @@ import { ButtonModule } from 'primeng/button';
 @Component({
   selector: 'app-footer',
   imports: [RouterLink, ButtonModule],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './footer.component.html',
 })
 export class FooterComponent {

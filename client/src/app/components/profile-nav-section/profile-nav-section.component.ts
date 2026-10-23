@@ -1,4 +1,4 @@
-import { Component, inject, input, ViewChild } from '@angular/core';
+import { Component, inject, input, ViewChild, ChangeDetectionStrategy } from '@angular/core';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
@@ -30,6 +30,7 @@ import { filter } from 'rxjs';
       IconSettings,
     }),
   ],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './profile-nav-section.component.html',
 })
 export class ProfileNavSectionComponent {

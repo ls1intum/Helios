@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, signal } from '@angular/core';
+import { Component, computed, inject, input, signal, ChangeDetectionStrategy } from '@angular/core';
 
 import { PipelineComponent, PipelineSelector } from '@app/components/pipeline/pipeline.component';
 import { TagModule } from 'primeng/tag';
@@ -48,6 +48,7 @@ import { Tab, TabList, TabPanel, TabPanels, Tabs } from 'primeng/tabs';
       IconTagPlus,
     }),
   ],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './branch-details.component.html',
 })
 export class BranchDetailsComponent {

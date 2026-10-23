@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 import { client } from '@app/core/modules/openapi/client.gen';
@@ -10,6 +10,7 @@ import { ReportProblemButtonComponent } from './components/report-problem-button
   selector: 'app-root',
   standalone: true,
   imports: [RouterOutlet, ReportProblemButtonComponent],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './app.component.html',
 })
 export class AppComponent {

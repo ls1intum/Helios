@@ -1,4 +1,4 @@
-import { Component, inject, input } from '@angular/core';
+import { Component, inject, input, ChangeDetectionStrategy } from '@angular/core';
 
 import { UserInfoDto } from '@app/core/modules/openapi';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
@@ -11,6 +11,7 @@ import { IconUser } from 'angular-tabler-icons/icons';
   selector: 'app-user-avatar',
   imports: [AvatarModule, TablerIconComponent, Tooltip],
   providers: [provideTablerIcons({ IconUser })],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './user-avatar.component.html',
 })
 export class UserAvatarComponent {

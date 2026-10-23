@@ -1,4 +1,4 @@
-import { Component, inject, input } from '@angular/core';
+import { Component, inject, input, ChangeDetectionStrategy } from '@angular/core';
 import { EnvironmentDto } from '@app/core/modules/openapi';
 import {
   deployToEnvironmentMutation,
@@ -14,6 +14,7 @@ import { celebrateDeployment } from '@app/core/services/particle.service';
 @Component({
   selector: 'app-deployment-selection',
   templateUrl: './deployment-selection.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [EnvironmentListViewComponent],
 })
 export class DeploymentSelectionComponent {

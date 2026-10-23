@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, numberAttribute, signal } from '@angular/core';
+import { Component, computed, inject, input, numberAttribute, signal, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { WorkflowJobDto, WorkflowRunDto } from '@app/core/modules/openapi';
 import {
@@ -71,6 +71,7 @@ import { getStatusColors, getStatusIconClasses } from '@app/core/utils/status-co
       IconX,
     }),
   ],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './workflow-run-details.component.html',
 })
 export class WorkflowRunDetailsComponent {

@@ -4,7 +4,7 @@
       class="w-6 h-6"
       shape="circle"
       size="normal"
-      [image]="user()?.avatarUrl"
+      [image]="$safeNavigationMigration(user()?.avatarUrl)"
       [pTooltip]="getTooltipText()"
       [tooltipPosition]="tooltipPosition()"
       [styleClass]="getAvatarBorderClass(user()?.login || '')"

@@ -1,4 +1,4 @@
-import { Component, inject, input, output } from '@angular/core';
+import { Component, inject, input, output, ChangeDetectionStrategy } from '@angular/core';
 import { EnvironmentDeployment, EnvironmentDto } from '@app/core/modules/openapi';
 import { DeploymentStepperComponent } from '../deployment-stepper/deployment-stepper.component';
 import { EnvironmentActionsComponent } from '../environment-actions/environment-actions.component';
@@ -52,6 +52,7 @@ import { WorkflowJobsStatusComponent } from '../workflow-job-status/workflow-job
       IconExternalLink,
     }),
   ],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './environment-accordion.component.html',
 })
 export class EnvironmentAccordionComponent {

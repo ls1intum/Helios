@@ -1,10 +1,11 @@
-import { Component, input, numberAttribute } from '@angular/core';
+import { Component, input, numberAttribute, ChangeDetectionStrategy } from '@angular/core';
 import { EnvironmentListViewComponent } from '@app/components/environments/environment-list/environment-list-view.component';
 import { PageHeadingComponent } from '@app/components/page-heading/page-heading.component';
 
 @Component({
   selector: 'app-environment-list',
   imports: [EnvironmentListViewComponent, PageHeadingComponent],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './environment-list.component.html',
 })
 export class EnvironmentListComponent {
