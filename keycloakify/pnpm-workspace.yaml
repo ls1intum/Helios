@@ -1,6 +1,3 @@
-# pnpm 11 reads project settings from here (the "pnpm" key in package.json is
-# no longer read). Skip the pre-run dependency check so `pnpm run <script>`
-# doesn't re-trigger an install inside containers where deps are already present.
 verifyDepsBeforeRun: false
 
 # pnpm 11 blocks dependency build scripts by default and, under
@@ -15,7 +12,7 @@ allowBuilds:
 # through the Vite/Storybook toolchain, never used at runtime. Pinned to 0.28.1,
 # the lowest release that clears the advisory.
 overrides:
-  esbuild: 0.28.1
+  esbuild: 0.28.2
 
 # pnpm 11.3+ holds packages younger than the default 24h supply-chain cutoff.
 # keycloakify@11.15.11 was published <24h before this bump, so it is explicitly

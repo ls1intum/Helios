@@ -1,5 +1,5 @@
 # Stage 1: Build Angular app
-FROM node:24.18.0 AS build
+FROM node:24.22.1 AS build
 
 # Set the working directory
 WORKDIR /app
@@ -25,7 +25,7 @@ RUN pnpm run build-keycloak-theme
 # Stage 2: Build Keycloak image
 # We use the specific version of Keycloak to avoid any changes in the realm.json file
 # Do NOT update on renovatebot PRs
-FROM quay.io/keycloak/keycloak:26.6.4
+FROM quay.io/keycloak/keycloak:26.8.1
 
 # Copy the built keycloakify theme to keycloak
 COPY --from=build /app/dist_keycloak /opt/keycloak/providers/
