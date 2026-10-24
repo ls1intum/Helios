@@ -16,6 +16,7 @@ import static org.mockito.Mockito.when;
 import de.tum.cit.aet.helios.environment.Environment;
 import de.tum.cit.aet.helios.environment.EnvironmentService;
 import de.tum.cit.aet.helios.environment.EnvironmentService.ReviewerResolution;
+import de.tum.cit.aet.helios.github.GitHubReviewException;
 import de.tum.cit.aet.helios.github.GitHubService;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
@@ -163,6 +164,33 @@ class DeploymentReviewActionServiceTest {
             ResponseStatusException.class,
             () -> f.service().approveAsCurrentUser(DEPLOYMENT_ID, f.userWithLogin(REVIEWER)));
     assertEquals(HttpStatus.BAD_GATEWAY, e.getStatusCode());
+
+    ArgumentCaptor<DeploymentApprovalRequest> rowCaptor =
+        ArgumentCaptor.forClass(DeploymentApprovalRequest.class);
+    verify(f.approvalRequestRepository).save(rowCaptor.capture());
+    assertEquals(
+        DeploymentApprovalRequest.State.FAILED_AT_GITHUB, rowCaptor.getValue().getState());
+  }
+
+  @Test
+  void returnsActionableExpiredAuthMessageWhenGitHubRejectsWith401() throws IOException {
+    Fixture f = new Fixture();
+    f.reviewersAre("alice", "bob");
+    doThrow(new GitHubReviewException(401, "GitHub pending-deployment approved failed: HTTP 401"))
+        .when(f.gitHubService)
+        .approveDeploymentOnBehalfOfUser(
+            anyString(), anyLong(), any(), anyString(), anyString());
+
+    ResponseStatusException e =
+        assertThrows(
+            ResponseStatusException.class,
+            () -> f.service().approveAsCurrentUser(DEPLOYMENT_ID, f.userWithLogin(REVIEWER)));
+
+    // Still 502 (upstream failure, not a Helios auth failure) but with a reviewer-actionable
+    // reason rather than the raw "HTTP 401".
+    assertEquals(HttpStatus.BAD_GATEWAY, e.getStatusCode());
+    assertEquals(true, e.getReason().contains("expired"));
+    assertEquals(true, e.getReason().contains("sign in again"));
 
     ArgumentCaptor<DeploymentApprovalRequest> rowCaptor =
         ArgumentCaptor.forClass(DeploymentApprovalRequest.class);
