@@ -43,6 +43,11 @@ Before you can start Helios, you need to install and configure some dependencies
      Alternatively, install Corepack separately, then run ``corepack enable``.
      Verify with ``pnpm --version`` (should print ``12.15.0``).
 
+     Both frontend workspaces set ``pmOnFail: ignore`` to keep their lockfiles
+     readable by GitHub's dependency graph and Dependabot. This disables pnpm's
+     automatic version switching, so install the matching version above before
+     running pnpm commands. CI and Docker install the pinned version explicitly.
+
    .. warning::
 
       Do **not** use ``npm`` or ``yarn`` in ``client`` or ``keycloakify`` — it
