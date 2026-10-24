@@ -24,5 +24,5 @@ overrides:
   # Patch transitive lint/Storybook dependencies while retaining their supported major lines.
   'brace-expansion@5': 5.0.12
   'browserslist@4': 4.29.4
-  'baseline-browser-mapping@2': 2.11.31
+  'baseline-browser-mapping@2': 2.11.32
   'zod@4': 4.6.7
