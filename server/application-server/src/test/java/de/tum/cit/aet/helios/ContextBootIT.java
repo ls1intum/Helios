@@ -20,7 +20,7 @@ class ContextBootIT extends HeliosIntegrationTest {
   }
 
   @Test
-  void integrationDatabaseRunsPostgres17_11() {
+  void integrationDatabaseRunsPostgres1711() {
     var jdbc = new JdbcTemplate(dataSource);
     String version = jdbc.queryForObject("SHOW server_version", String.class);
     Integer versionNumber = jdbc.queryForObject("SHOW server_version_num", Integer.class);
