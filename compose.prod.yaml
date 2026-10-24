@@ -132,11 +132,15 @@ services:
       - GITHUB_APP_NAME=${GITHUB_APP_NAME}
       - GITHUB_APP_ID=${GITHUB_APP_ID}
       - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}
+      # OAuth client secret of the login GitHub App — needed to refresh users' GitHub tokens.
+      - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET}
       - GITHUB_INSTALLATION_ID=${GITHUB_INSTALLATION_ID}
       - GITHUB_PRIVATE_KEY_PATH=${GITHUB_PRIVATE_KEY_PATH}
       - SENTRY_DSN=${SENTRY_DSN}
       - HELIOS_TOKEN_EXCHANGE_CLIENT=${HELIOS_TOKEN_EXCHANGE_CLIENT}
       - HELIOS_TOKEN_EXCHANGE_SECRET=${HELIOS_TOKEN_EXCHANGE_SECRET}
+      # Base64 AES key for encrypting stored GitHub user tokens at rest.
+      - HELIOS_TOKEN_ENCRYPTION_KEY=${HELIOS_TOKEN_ENCRYPTION_KEY}
       - DATA_SYNC_RUN_ON_STARTUP=${DATA_SYNC_RUN_ON_STARTUP:-true}
       - CLEANUP_WORKFLOW_RUN_DRY_RUN=${CLEANUP_WORKFLOW_RUN_DRY_RUN}
       # Orphan-branch sweep — off by default; enable per environment once the

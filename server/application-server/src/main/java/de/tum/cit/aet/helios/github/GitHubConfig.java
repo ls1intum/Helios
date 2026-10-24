@@ -23,8 +23,19 @@ public class GitHubConfig {
   @Value("${github.appId:#{null}}")
   private Long appId;
 
+  @Getter
   @Value("${github.clientId}")
   private String clientId;
+
+  /**
+   * OAuth client secret of the GitHub App used for user login (paired with {@link #clientId}).
+   * Needed for the {@code grant_type=refresh_token} call that keeps a user's GitHub token alive;
+   * see {@code auth.github.token}. Optional so instances that do not use in-app approvals still
+   * start.
+   */
+  @Getter
+  @Value("${github.clientSecret:#{null}}")
+  private String clientSecret;
 
   @Value("${github.installationId:#{null}}")
   private Long installationId;

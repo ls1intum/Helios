@@ -23,8 +23,7 @@ import static org.mockito.Mockito.when;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.tum.cit.aet.helios.auth.AuthService;
-import de.tum.cit.aet.helios.auth.github.GitHubAuthBroker;
-import de.tum.cit.aet.helios.auth.github.TokenExchangeResponse;
+import de.tum.cit.aet.helios.auth.github.token.GitHubUserTokenService;
 import de.tum.cit.aet.helios.deployment.github.GitHubDeploymentDto;
 import de.tum.cit.aet.helios.environment.github.GitHubEnvironmentApiResponse;
 import de.tum.cit.aet.helios.environment.github.GitHubEnvironmentDto;
@@ -88,7 +87,7 @@ class GitHubServiceTest {
 
   @Mock private AuthService authService;
 
-  @Mock private GitHubAuthBroker gitHubAuthBroker;
+  @Mock private GitHubUserTokenService gitHubUserTokenService;
 
   @Mock private GitHubClientManager clientManager;
 
@@ -105,7 +104,7 @@ class GitHubServiceTest {
             objectMapper,
             okHttpClient,
             authService,
-            gitHubAuthBroker,
+            gitHubUserTokenService,
             clientManager);
     ReflectionTestUtils.setField(gitHubService, "heliosClientBaseUrl", "http://localhost:4200");
     repositoryContextMockedStatic = mockStatic(RepositoryContext.class);
@@ -899,9 +898,7 @@ class GitHubServiceTest {
         "{\"environment_ids\":[10],\"state\":\"approved\",\"comment\":\"Automatically approved by"
             + " Helios\"}";
 
-    TokenExchangeResponse tokenResponse = new TokenExchangeResponse();
-    tokenResponse.setAccessToken(userGithubToken);
-    when(gitHubAuthBroker.exchangeToken(githubUserLogin)).thenReturn(tokenResponse);
+    when(gitHubUserTokenService.getValidAccessToken(githubUserLogin)).thenReturn(userGithubToken);
     when(objectMapper.writeValueAsString(any())).thenReturn(jsonPayload);
 
     Response mockResponse =
@@ -921,7 +918,7 @@ class GitHubServiceTest {
             gitHubService.approveDeploymentOnBehalfOfUser(
                 repoNameWithOwner, runId, environmentId, githubUserLogin));
 
-    verify(gitHubAuthBroker).exchangeToken(githubUserLogin);
+    verify(gitHubUserTokenService).getValidAccessToken(githubUserLogin);
     verify(objectMapper)
         .writeValueAsString(
             Map.of(
@@ -932,27 +929,26 @@ class GitHubServiceTest {
   }
 
   @Test
-  void approveDeploymentOnBehalfOfUserTokenExchangeNull() throws IOException {
+  void approveDeploymentOnBehalfOfUserPropagatesTokenFailure() throws IOException {
     String repoNameWithOwner = "owner/repo";
     long runId = 1L;
     Long environmentId = 10L;
     String githubUserLogin = "testUser";
 
-    when(gitHubAuthBroker.exchangeToken(githubUserLogin)).thenReturn(null);
-    // objectMapper.writeValueAsString runs before the token check.
+    // objectMapper.writeValueAsString runs before the token is fetched.
     when(objectMapper.writeValueAsString(anyMap())).thenReturn("{}");
+    // A token that can't be obtained/refreshed surfaces as IOException so callers can mark the
+    // approval FAILED_AT_GITHUB and react, instead of a silent no-op.
+    when(gitHubUserTokenService.getValidAccessToken(githubUserLogin))
+        .thenThrow(new IOException("no valid GitHub token for user"));
 
-    // Token-exchange failure now surfaces as an IOException so callers can mark the approval
-    // FAILED_AT_GITHUB and react, instead of the legacy silent return that left deployments
-    // stuck in WAITING with no signal.
     IOException exception =
         assertThrows(
             IOException.class,
             () ->
                 gitHubService.approveDeploymentOnBehalfOfUser(
                     repoNameWithOwner, runId, environmentId, githubUserLogin));
-    assertTrue(exception.getMessage().contains("Failed to exchange GitHub token"));
-    verify(objectMapper, times(1)).writeValueAsString(anyMap());
+    assertTrue(exception.getMessage().contains("no valid GitHub token"));
     verify(okHttpClient, never()).newCall(any(Request.class));
   }
 
@@ -967,9 +963,7 @@ class GitHubServiceTest {
         "{\"environment_ids\":[10],\"state\":\"approved\",\"comment\":\"Automatically approved by"
             + " Helios\"}";
 
-    TokenExchangeResponse tokenResponse = new TokenExchangeResponse();
-    tokenResponse.setAccessToken(userGithubToken);
-    when(gitHubAuthBroker.exchangeToken(githubUserLogin)).thenReturn(tokenResponse);
+    when(gitHubUserTokenService.getValidAccessToken(githubUserLogin)).thenReturn(userGithubToken);
     when(objectMapper.writeValueAsString(any())).thenReturn(jsonPayload);
 
     ResponseBody responseBody =
@@ -1005,9 +999,7 @@ class GitHubServiceTest {
     final String userGithubToken = "user-token";
     final String customComment = "Approved by @alice via Helios (in-app)";
 
-    TokenExchangeResponse tokenResponse = new TokenExchangeResponse();
-    tokenResponse.setAccessToken(userGithubToken);
-    when(gitHubAuthBroker.exchangeToken(githubUserLogin)).thenReturn(tokenResponse);
+    when(gitHubUserTokenService.getValidAccessToken(githubUserLogin)).thenReturn(userGithubToken);
     when(objectMapper.writeValueAsString(any())).thenReturn("{}");
 
     Response mockResponse =
@@ -1043,9 +1035,7 @@ class GitHubServiceTest {
     final String userGithubToken = "user-token";
     final String comment = "Declined by @alice via Helios (in-app)";
 
-    TokenExchangeResponse tokenResponse = new TokenExchangeResponse();
-    tokenResponse.setAccessToken(userGithubToken);
-    when(gitHubAuthBroker.exchangeToken(githubUserLogin)).thenReturn(tokenResponse);
+    when(gitHubUserTokenService.getValidAccessToken(githubUserLogin)).thenReturn(userGithubToken);
     when(objectMapper.writeValueAsString(any())).thenReturn("{}");
 
     Response mockResponse =
@@ -1191,9 +1181,7 @@ class GitHubServiceTest {
     final String userGithubToken = "user-token";
     final long releaseId = 12345L;
 
-    TokenExchangeResponse tokenResponse = new TokenExchangeResponse();
-    tokenResponse.setAccessToken(userGithubToken);
-    when(gitHubAuthBroker.exchangeToken(githubUserLogin)).thenReturn(tokenResponse);
+    when(gitHubUserTokenService.getValidAccessToken(githubUserLogin)).thenReturn(userGithubToken);
 
     Map<String, Object> expectedPayload =
         Map.of(
@@ -1233,7 +1221,7 @@ class GitHubServiceTest {
             repoNameWithOwner, tagName, commitish, name, body, draft, githubUserLogin);
 
     assertEquals(mockRelease, actualRelease);
-    verify(gitHubAuthBroker).exchangeToken(githubUserLogin);
+    verify(gitHubUserTokenService).getValidAccessToken(githubUserLogin);
     verify(objectMapper).writeValueAsString(expectedPayload);
     verify(okHttpClient).newCall(any(Request.class));
     verify(objectMapper).readValue(responseJson, Map.class);
@@ -1241,10 +1229,11 @@ class GitHubServiceTest {
   }
 
   @Test
-  void createReleaseOnBehalfOfUserTokenExchangeFails() throws IOException {
+  void createReleaseOnBehalfOfUserTokenFailurePropagates() throws IOException {
     String repoNameWithOwner = "owner/repo";
     String githubUserLogin = "testUser";
-    when(gitHubAuthBroker.exchangeToken(githubUserLogin)).thenReturn(null);
+    when(gitHubUserTokenService.getValidAccessToken(githubUserLogin))
+        .thenThrow(new IOException("no valid GitHub token for user"));
 
     IOException exception =
         assertThrows(
@@ -1253,8 +1242,7 @@ class GitHubServiceTest {
               gitHubService.createReleaseOnBehalfOfUser(
                   repoNameWithOwner, "v1", "main", "name", "body", false, githubUserLogin);
             });
-    assertEquals(
-        "Failed to exchange token for GitHub user: " + githubUserLogin, exception.getMessage());
+    assertTrue(exception.getMessage().contains("no valid GitHub token"));
   }
 
   @Test
@@ -1263,9 +1251,7 @@ class GitHubServiceTest {
     final String githubUserLogin = "testUser";
     final String userGithubToken = "user-token";
 
-    TokenExchangeResponse tokenResponse = new TokenExchangeResponse();
-    tokenResponse.setAccessToken(userGithubToken);
-    when(gitHubAuthBroker.exchangeToken(githubUserLogin)).thenReturn(tokenResponse);
+    when(gitHubUserTokenService.getValidAccessToken(githubUserLogin)).thenReturn(userGithubToken);
     when(objectMapper.writeValueAsString(anyMap())).thenReturn("{}"); // Dummy JSON
 
     ResponseBody errorResponseBody =
