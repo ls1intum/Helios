@@ -48,7 +48,7 @@ overrides:
   # Patch vulnerable transitive build/lint dependencies within their existing major lines.
   'brace-expansion@1': 1.1.21
   'brace-expansion@5': 5.0.12
-  'fast-uri@3': 3.1.9
+  'fast-uri@3': 4.2.3
   'immutable@5': 5.1.9
   # @angular/build pins Vite exactly; patch its copy as well as the direct dependency.
   'vite@8': 8.3.5
