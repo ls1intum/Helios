@@ -46,7 +46,7 @@ overrides:
   # Angular 22's compiler imports the range-mapping API introduced in 1.6.
   '@jridgewell/sourcemap-codec': 1.6.0
   # Patch vulnerable transitive build/lint dependencies within their existing major lines.
-  'brace-expansion@1': 1.1.21
+  'brace-expansion@1': 5.0.11
   'brace-expansion@5': 5.0.12
   'fast-uri@3': 3.1.9
   'immutable@5': 5.1.9
