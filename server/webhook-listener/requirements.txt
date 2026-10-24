@@ -2,4 +2,4 @@ python-dotenv==1.2.4
 nats-py==2.16.0
 pydantic-settings==2.16.1
 fastapi-cli==0.0.32
-fastapi==0.161.1
+fastapi==0.162.0
