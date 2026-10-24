@@ -1,6 +1,10 @@
 verifyDepsBeforeRun: false
 nodeLinker: hoisted
 
+# Keep a single-document lockfile readable by GitHub's dependency graph (pnpm/pnpm#13805).
+# CI and Docker install the exact pnpm version pinned in package.json explicitly.
+pmOnFail: ignore
+
 # TEMPORARY (2026-05-28): pnpm 11.3+ defaults to a 24h `minimumReleaseAge` supply-chain
 # policy that blocks `pnpm install --frozen-lockfile` on any lockfile entry younger than
 # the cutoff. `@angular/cdk@21.2.13` (in staging since #1093 yesterday) is currently ~16h
@@ -41,3 +45,10 @@ overrides:
   esbuild: 0.28.2
   # Angular 22's compiler imports the range-mapping API introduced in 1.6.
   '@jridgewell/sourcemap-codec': 1.6.0
+  # Patch vulnerable transitive build/lint dependencies within their existing major lines.
+  'brace-expansion@1': 1.1.21
+  'brace-expansion@5': 5.0.12
+  'fast-uri@3': 3.1.9
+  'immutable@5': 5.1.9
+  # @angular/build pins Vite exactly; patch its copy as well as the direct dependency.
+  'vite@8': 8.3.5

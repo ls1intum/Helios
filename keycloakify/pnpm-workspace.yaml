@@ -1,5 +1,9 @@
 nodeLinker: hoisted
 
+# Keep a single-document lockfile readable by GitHub's dependency graph (pnpm/pnpm#13805).
+# CI and Docker install the exact pnpm version pinned in package.json explicitly.
+pmOnFail: ignore
+
 # pnpm 12 reads project settings from here (the "pnpm" key in package.json is
 # no longer read). Skip the pre-run dependency check so `pnpm run <script>`
 # doesn't re-trigger an install inside containers where deps are already present.
@@ -17,3 +21,8 @@ allowBuilds:
 # through the Vite/Storybook toolchain, never used at runtime. Pinned to the patched 0.28.2 release.
 overrides:
   esbuild: 0.28.2
+  # Patch transitive lint/Storybook dependencies while retaining their supported major lines.
+  'brace-expansion@5': 5.0.12
+  'browserslist@4': 4.29.4
+  'baseline-browser-mapping@2': 2.11.31
+  'zod@4': 4.6.7
