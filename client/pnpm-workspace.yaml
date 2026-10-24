@@ -36,7 +36,7 @@ overrides:
   http-proxy-middleware: 4.2.0
   launch-editor: 2.14.2
   js-yaml: 5.5.0
-  '@babel/core@7': 7.29.7
+  '@babel/core@7': 8.0.9
   '@babel/core@8': 8.0.9
   esbuild: 0.28.2
   # Angular 22's compiler imports the range-mapping API introduced in 1.6.
