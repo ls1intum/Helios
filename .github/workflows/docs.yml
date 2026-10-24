@@ -20,7 +20,7 @@ permissions:
 
 jobs:
   docs:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7.0.1
       - name: Setup Python
@@ -47,7 +47,7 @@ jobs:
     environment:
       name: github-pages
       url: "https://ls1intum.github.io/Helios/"
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     needs: docs
     steps:
       - name: Deploy to GitHub Pages
