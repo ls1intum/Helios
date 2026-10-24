@@ -1,4 +1,4 @@
-import { Component, computed, input, model, output } from '@angular/core';
+import { Component, computed, input, model, output, ChangeDetectionStrategy } from '@angular/core';
 import { EnvironmentDto } from '@app/core/modules/openapi';
 import { Button } from 'primeng/button';
 import { Dialog } from 'primeng/dialog';
@@ -13,6 +13,7 @@ import { IconLock } from 'angular-tabler-icons/icons';
       IconLock,
     }),
   ],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './lock-confirmation.component.html',
 })
 export class LockConfirmationComponent {

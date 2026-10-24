@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, input, numberAttribute, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, numberAttribute, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { injectMutation, injectQuery, QueryClient } from '@tanstack/angular-query-experimental';
 import { ConfirmationService } from 'primeng/api';
@@ -76,6 +76,7 @@ import { getStatusColors } from '@app/core/utils/status-colors';
       IconTrash,
     }),
   ],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './project-settings.component.html',
 })
 export class ProjectSettingsComponent {

@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { Router } from '@angular/router';
 import { PageHeadingComponent } from '@app/components/page-heading/page-heading.component';
 import { RepositoryInfoDto } from '@app/core/modules/openapi';
@@ -87,6 +87,7 @@ const ROWS_PER_PAGE_OPTIONS = [6, 12, 24, 48];
       IconSun,
     }),
   ],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './repository-overview.component.html',
 })
 export class RepositoryOverviewComponent {

@@ -22,16 +22,24 @@ jobs:
   docs:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v7
-      - uses: FelixTJDietrich/sphinx-action@f240fcdaaf6fedf6b3f66b29ec34893346f028d8  # java (fork branch head)
+      - uses: actions/checkout@v7.0.1
+      - name: Setup Python
+        uses: actions/setup-python@v7.1.0
         with:
-          docs-folder: "docs/"
-          build-command: make html dirhtml
-      - uses: actions/upload-artifact@v7
+          python-version: '3.15'
+          cache: 'pip'
+          cache-dependency-path: docs/requirements.txt
+      - name: Install documentation dependencies
+        run: python -m pip install -r docs/requirements.txt
+      - name: Build documentation
+        working-directory: docs
+        # Match the previous action: report warnings without promoting them to errors.
+        run: make html dirhtml SPHINXOPTS="--keep-going --no-color"
+      - uses: actions/upload-artifact@v7.0.2
         with:
           name: Documentation
           path: docs/_build/html/
-      - uses: actions/upload-pages-artifact@v5
+      - uses: actions/upload-pages-artifact@v5.0.0
         with:
           path: docs/_build/dirhtml/
   deploy:
@@ -44,4 +52,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v5
+        uses: actions/deploy-pages@v5.0.1

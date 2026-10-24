@@ -1,7 +1,7 @@
 import { MarkdownPipe } from '@app/core/modules/markdown/markdown.pipe';
 import { AvatarGroupModule } from 'primeng/avatargroup';
 import { TooltipModule } from 'primeng/tooltip';
-import { Component, computed, effect, inject, input, numberAttribute, signal, viewChild } from '@angular/core';
+import { Component, computed, effect, inject, input, numberAttribute, signal, viewChild, ChangeDetectionStrategy } from '@angular/core';
 import { TableModule, TablePageEvent } from 'primeng/table';
 import { AvatarModule } from 'primeng/avatar';
 import { TagModule } from 'primeng/tag';
@@ -90,6 +90,7 @@ export function createPullRequestFilterOptions(keycloakService: KeycloakService)
       IconGitPullRequest,
     }),
   ],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './pull-request-table.component.html',
 })
 export class PullRequestTableComponent {

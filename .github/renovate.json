@@ -168,19 +168,31 @@
       "groupSlug": "all-minor-patch-github-actions"
     },
     {
-      "description": "Sphinx 8.x (current docs pin) requires docutils <0.22; cap until the docs toolchain is upgraded.",
-      "matchPackageNames": ["docutils"],
-      "allowedVersions": "<0.22"
+      "description": "sphinx-rtd-theme 3.1 requires docutils <0.23; retain the theme's supported range.",
+      "matchPackageNames": [
+        "docutils"
+      ],
+      "allowedVersions": "<0.23"
     },
     {
-      "description": "Sphinx 9 requires a coordinated upgrade of theme + extensions + docutils; block major bumps until that work happens in its own PR.",
-      "matchPackageNames": ["sphinx"],
-      "matchUpdateTypes": ["major"],
-      "enabled": false
+      "description": "PrimeNG 22 is excluded by the project licensing constraint; retain the 21.x line.",
+      "matchPackageNames": [
+        "primeng"
+      ],
+      "allowedVersions": "<22"
     },
     {
-      "description": "Angular 21's build tooling is not Babel 8 compatible — @babel/core 8.x breaks the production AOT build ('NumericLiterals must be non-negative'). Stay on the patched 7.x (also enforced via the client pnpm override) until Angular supports Babel 8.",
-      "matchPackageNames": ["@babel/core"],
+      "description": "Angular 22 and typescript-eslint 8 require TypeScript below 6.1.",
+      "matchPackageNames": [
+        "typescript"
+      ],
+      "allowedVersions": "<6.1"
+    },
+    {
+      "description": "PrimeIcons 8 uses the same new PrimeUI licensing model excluded for PrimeNG 22.",
+      "matchPackageNames": [
+        "primeicons"
+      ],
       "allowedVersions": "<8"
     }
   ]

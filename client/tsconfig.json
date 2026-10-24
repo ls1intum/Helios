@@ -19,27 +19,14 @@
     "importHelpers": true,
     "target": "es2024",
     "module": "es2022",
-    "lib": [
-      "es2024",
-      "dom",
-      "dom.iterable"
-    ],
-    "baseUrl": "src",
+    "lib": ["es2024", "dom", "dom.iterable"],
     "paths": {
-      "@app/*": [
-        "./app/*"
-      ],
-      // Spartan-NG paths (omitted)
+      "@app/*": ["./src/app/*"],
+      "environments/*": ["./src/environments/*"]
     }
   },
-  "include": [
-    "src/**/*.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "out-tsc"
-  ],
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist", "out-tsc"],
   "angularCompilerOptions": {
     "enableI18nLegacyMessageIdFormat": false,
     "strictInjectionParameters": true,

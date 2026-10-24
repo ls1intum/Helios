@@ -1,4 +1,4 @@
-import { Component, computed, input, signal, viewChild, effect, ViewChild, ElementRef, inject } from '@angular/core';
+import { Component, computed, input, signal, viewChild, effect, ViewChild, ElementRef, inject, ChangeDetectionStrategy } from '@angular/core';
 import { TableModule } from 'primeng/table';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { PanelModule } from 'primeng/panel';
@@ -106,6 +106,7 @@ const LOG_LEVELS: LogLevel[] = [
       IconInfoCircle,
     }),
   ],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './pipeline-test-results.component.html',
 })
 export class PipelineTestResultsComponent {

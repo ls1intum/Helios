@@ -1,4 +1,4 @@
-import { Component, computed, input, OnDestroy, OnInit, signal } from '@angular/core';
+import { Component, computed, input, OnDestroy, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { EnvironmentStatusDto } from '@app/core/modules/openapi';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
 import {
@@ -47,6 +47,7 @@ export type EnvironmentStatusEx = EnvironmentStatusDto & {
       IconX,
     }),
   ],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './environment-status-tag.component.html',
 })
 export class EnvironmentStatusTagComponent implements OnInit, OnDestroy {

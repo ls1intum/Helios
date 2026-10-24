@@ -1,11 +1,11 @@
 # Stage 1: Build Angular app
-FROM node:24.18.0 AS build
+FROM node:26.12.1 AS build
 
 # Set the working directory
 WORKDIR /app
 
-# Enable pnpm via corepack (version pinned by package.json "packageManager")
-RUN corepack enable
+# Install the pnpm version pinned by package.json "packageManager"
+RUN npm install --global pnpm@12.15.0
 
 # Copy manifest, lockfile, and pnpm settings (node-linker + allowed builds)
 COPY package.json pnpm-lock.yaml .npmrc pnpm-workspace.yaml ./
@@ -28,7 +28,7 @@ RUN echo "export const version = { deployed_version: '$DEPLOYED_VERSION', deploy
 RUN pnpm run build --configuration $BUILD_CONFIG
 
 # Stage 2: Serve Angular app using Nginx
-FROM nginx:1.31.2-alpine
+FROM nginx:1.31.8-alpine
 
 # Remove the default Nginx configuration file
 RUN rm /etc/nginx/conf.d/default.conf

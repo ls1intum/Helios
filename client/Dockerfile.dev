@@ -1,13 +1,13 @@
-# Node pinned to 24.18.0 to match client/.nvmrc and the production Dockerfile.
-FROM node:24.18.0-alpine
+# Node pinned to 26.12.1 to match client/.nvmrc and the production Dockerfile.
+FROM node:26.12.1-alpine
 
 # Create app directory
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
 
-# node:alpine already ships node + npm; add git, then enable pnpm via corepack
+# node:alpine already ships node + npm; add git and the pinned pnpm release
 # (version pinned by package.json "packageManager", matching the production Dockerfile)
-RUN apk add --no-cache git && corepack enable
+RUN apk add --no-cache git && npm install --global pnpm@12.15.0
 
 # Copy manifest, lockfile, and pnpm settings, then install
 COPY package.json pnpm-lock.yaml .npmrc pnpm-workspace.yaml /usr/src/app/

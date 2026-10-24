@@ -8,12 +8,14 @@
   },
   "angularCompilerOptions": {
     "fullTemplateTypeCheck": true,
+    "extendedDiagnostics": {
+      "checks": {
+        "nullishCoalescingNotNullable": "suppress",
+        "optionalChainNotNullable": "suppress"
+      }
+    },
     "strictTemplates": true
   },
-  "files": [
-    "src/main.ts"
-  ],
-  "include": [
-    "src/**/*.d.ts"
-  ]
+  "files": ["src/main.ts"],
+  "include": ["src/**/*.d.ts"]
 }

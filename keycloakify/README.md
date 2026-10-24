@@ -31,7 +31,8 @@ This starter is based on Vite. There is also [a Webpack based starter](https://g
 
 ```bash
 cd keycloakify
-pnpm install # This repo uses pnpm; the version is pinned via the "packageManager" field and enforced by corepack.
+npm install -g pnpm@12.15.0 # Node.js 26 does not bundle Corepack.
+pnpm install # The version is pinned via the "packageManager" field.
 ```
 
 # Testing the theme locally
@@ -44,7 +45,7 @@ pnpm install # This repo uses pnpm; the version is pinned via the "packageManage
 
 # Building the theme
 
-You need to have [Maven](https://maven.apache.org/) installed to build the theme (Maven >= 3.1.1, Java >= 7).  
+Use [Maven](https://maven.apache.org/) 3.10 and JDK 25 to build the theme, matching the Docker builder.
 The `mvn` command must be in the $PATH.
 
 -   On macOS: `brew install maven`

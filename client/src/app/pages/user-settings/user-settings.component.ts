@@ -1,4 +1,4 @@
-import { Component, computed, inject, OnInit } from '@angular/core';
+import { Component, computed, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { injectMutation, injectQuery, QueryClient } from '@tanstack/angular-query-experimental';
 import { MessageService } from 'primeng/api';
@@ -20,6 +20,7 @@ import { toObservable } from '@angular/core/rxjs-interop';
 @Component({
   selector: 'app-user-settings',
   imports: [Card, Button, ReactiveFormsModule, InputText, FormsModule, Skeleton, ToggleSwitch],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './user-settings.component.html',
 })
 export class UserSettingsComponent implements OnInit {

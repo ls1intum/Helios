@@ -1,4 +1,4 @@
-import { Component, model, output } from '@angular/core';
+import { Component, model, output, ChangeDetectionStrategy } from '@angular/core';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
 import { Dialog } from 'primeng/dialog';
 import { Button } from 'primeng/button';
@@ -13,6 +13,7 @@ import { IconKey, IconAlertTriangle } from 'angular-tabler-icons/icons';
       IconAlertTriangle,
     }),
   ],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './secret-generate-confirmation.component.html',
 })
 export class SecretGenerateConfirmationComponent {

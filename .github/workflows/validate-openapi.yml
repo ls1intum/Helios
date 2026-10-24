@@ -22,7 +22,7 @@ jobs:
       CHANGE_DETECTED: ${{ steps.check_changes.outputs.CHANGE_DETECTED }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v7
+        uses: actions/checkout@v7.0.1
         with:
           fetch-depth: 0
 
@@ -47,10 +47,10 @@ jobs:
 
       - name: Set up Java
         if: steps.check_changes.outputs.CHANGE_DETECTED == 'true'
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6.1.0
         with:
           distribution: "temurin"
-          java-version: "21"
+          java-version: "25"
 
       - name: Run Gradle to generate OpenAPI docs
         if: steps.check_changes.outputs.CHANGE_DETECTED == 'true'
@@ -70,7 +70,7 @@ jobs:
 
       - name: Post comment about OpenAPI validation failure
         if: failure() && steps.check_changes.outputs.CHANGE_DETECTED == 'true'
-        uses: marocchino/sticky-pull-request-comment@v3.0.4
+        uses: marocchino/sticky-pull-request-comment@v3.0.5
         with:
           header: openapi-validation-yml
           message: |
@@ -86,7 +86,7 @@ jobs:
 
       - name: Remove sticky comment on OpenAPI validation success
         if: success() || steps.check_changes.outputs.CHANGE_DETECTED == 'false'
-        uses: marocchino/sticky-pull-request-comment@v3.0.4
+        uses: marocchino/sticky-pull-request-comment@v3.0.5
         with:
           header: openapi-validation-yml
           delete: true
@@ -103,25 +103,26 @@ jobs:
     steps:
       - name: Checkout code
         if: env.CHANGE_DETECTED == 'true'
-        uses: actions/checkout@v7
+        uses: actions/checkout@v7.0.1
 
       - name: Set up Java
         if: env.CHANGE_DETECTED == 'true'
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6.1.0
         with:
           distribution: "temurin"
-          java-version: "21"
+          java-version: "25"
 
       - name: Set up Node.js
         if: env.CHANGE_DETECTED == 'true'
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7.1.0
         with:
           node-version-file: client/.nvmrc
 
-      - name: Enable Corepack
+      - name: Setup pnpm
         if: env.CHANGE_DETECTED == 'true'
-        working-directory: ./client
-        run: corepack enable
+        uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        with:
+          version: 12.15.0
 
       - name: Install Dependencies
         if: env.CHANGE_DETECTED == 'true'
@@ -146,7 +147,7 @@ jobs:
 
       - name: Post comment about client code validation failure
         if: failure() && env.CHANGE_DETECTED == 'true'
-        uses: marocchino/sticky-pull-request-comment@v3.0.4
+        uses: marocchino/sticky-pull-request-comment@v3.0.5
         with:
           header: client-code-validation
           message: |
@@ -162,7 +163,7 @@ jobs:
 
       - name: Remove sticky comment on client code validation success
         if: success() || env.CHANGE_DETECTED == 'false'
-        uses: marocchino/sticky-pull-request-comment@v3.0.4
+        uses: marocchino/sticky-pull-request-comment@v3.0.5
         with:
           header: client-code-validation
           delete: true

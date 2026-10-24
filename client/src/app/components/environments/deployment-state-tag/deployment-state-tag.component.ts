@@ -1,4 +1,4 @@
-import { Component, inject, input } from '@angular/core';
+import { Component, inject, input, ChangeDetectionStrategy } from '@angular/core';
 import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
 import { EnvironmentDeployment } from '@app/core/modules/openapi';
@@ -38,6 +38,7 @@ type ExtendedDeploymentState = BaseDeploymentState | 'NEVER_DEPLOYED' | 'REPLACE
       IconX,
     }),
   ],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './deployment-state-tag.component.html',
 })
 export class DeploymentStateTagComponent {

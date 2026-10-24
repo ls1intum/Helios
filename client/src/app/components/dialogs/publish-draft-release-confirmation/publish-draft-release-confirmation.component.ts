@@ -1,4 +1,4 @@
-import { Component, input, model, output } from '@angular/core';
+import { Component, input, model, output, ChangeDetectionStrategy } from '@angular/core';
 import { Dialog } from 'primeng/dialog';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
 import { Button } from 'primeng/button';
@@ -12,6 +12,7 @@ import { IconUpload } from 'angular-tabler-icons/icons';
       IconUpload,
     }),
   ],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './publish-draft-release-confirmation.component.html',
 })
 export class PublishDraftReleaseConfirmationComponent {

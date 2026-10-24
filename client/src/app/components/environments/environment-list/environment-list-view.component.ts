@@ -1,5 +1,5 @@
 import { CommonModule, DatePipe } from '@angular/common';
-import { Component, computed, inject, input, OnDestroy, output, signal, viewChild } from '@angular/core';
+import { Component, computed, inject, input, OnDestroy, output, signal, viewChild, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { EnvironmentDto } from '@app/core/modules/openapi';
@@ -66,6 +66,7 @@ export type EnvironmentTypeFilter = 'ALL' | 'TEST' | 'STAGING' | 'PRODUCTION';
     PopoverModule,
   ],
   providers: [DatePipe, provideTablerIcons({ IconRefresh, IconServerCog, IconFilter, IconFilterPlus })],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './environment-list-view.component.html',
 })
 export class EnvironmentListViewComponent implements OnDestroy {

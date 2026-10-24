@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal, viewChild } from '@angular/core';
+import { Component, computed, inject, signal, viewChild, ChangeDetectionStrategy } from '@angular/core';
 import { TableModule } from 'primeng/table';
 import { AvatarModule } from 'primeng/avatar';
 import { TagModule } from 'primeng/tag';
@@ -124,6 +124,7 @@ export function createBranchFilterOptions(keycloakService: KeycloakService): Fil
       IconGitBranch,
     }),
   ],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './branches-table.component.html',
 })
 export class BranchTableComponent {

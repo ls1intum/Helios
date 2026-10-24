@@ -1,4 +1,4 @@
-import { Component, computed, inject, OnInit, signal, effect } from '@angular/core';
+import { Component, computed, inject, OnInit, signal, effect, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 import { AvatarModule } from 'primeng/avatar';
@@ -42,6 +42,7 @@ import { IconMoon, IconSun } from 'angular-tabler-icons/icons';
       IconMoon,
     }),
   ],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './main-layout.component.html',
 })
 export class MainLayoutComponent implements OnInit {

@@ -1,5 +1,5 @@
 import { CommonModule, Location } from '@angular/common';
-import { Component, computed, effect, inject, input, numberAttribute, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, numberAttribute, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { PageHeadingComponent } from '@app/components/page-heading/page-heading.component';
 import { getWorkflowRunLogsQueryKey, getWorkflowRunLogsOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
@@ -84,6 +84,7 @@ import type { LogLevelFilter, WorkflowRunLogLineTone } from './workflow-run-logs
       IconServerOff,
     }),
   ],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './workflow-run-logs.component.html',
 })
 export class WorkflowRunLogsComponent {

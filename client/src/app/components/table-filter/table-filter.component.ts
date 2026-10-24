@@ -1,4 +1,4 @@
-import { Component, computed, input, output, viewChild } from '@angular/core';
+import { Component, computed, input, output, viewChild, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { SearchTable } from '@app/core/services/search-table.service';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
@@ -21,6 +21,7 @@ const ACTIVE_FILTER_BUTTON_CLASS = 'dark:!border-primary-400 dark:!bg-surface-0/
       IconFilterPlus,
     }),
   ],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './table-filter.component.html',
 })
 export class TableFilterComponent {

@@ -1,6 +1,32 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@config "../../tailwind.config.js";
+
+/* Preserve the existing theme's Tailwind 3 layout and palette. */
+@theme {
+    --font-sans:
+        ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+        "Segoe UI Symbol", "Noto Color Emoji";
+    --color-blue-500: #3b82f6;
+    --color-lime-500: #84cc16;
+    --color-yellow-500: #eab308;
+}
+
+@utility container {
+    margin-inline: auto;
+    padding-inline: 2rem;
+    max-width: none;
+
+    @media (width >= 1400px) {
+        max-width: 1400px;
+    }
+}
+
+@layer base {
+    button:not(:disabled),
+    [role="button"]:not(:disabled) {
+        cursor: pointer;
+    }
+}
 
 @layer base {
     :root {
@@ -59,5 +85,5 @@
 }
 
 .icon {
-    @apply size-5 !important;
+    @apply size-5!;
 }

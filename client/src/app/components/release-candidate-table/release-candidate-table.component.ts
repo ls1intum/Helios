@@ -1,4 +1,4 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, ChangeDetectionStrategy } from '@angular/core';
 import { getAllReleaseInfosOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { FILTER_OPTIONS_TOKEN, SearchTableService } from '@app/core/services/search-table.service';
 import { injectQuery } from '@tanstack/angular-query-experimental';
@@ -29,6 +29,7 @@ const FILTER_OPTIONS: { name: string; filter: (prs: ReleaseInfoListDto[]) => Rel
       IconBrandGithub,
     }),
   ],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './release-candidate-table.component.html',
 })
 export class ReleaseCandidateTableComponent {

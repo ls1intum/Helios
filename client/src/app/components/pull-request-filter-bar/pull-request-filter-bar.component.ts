@@ -1,4 +1,4 @@
-import { computed, Component, DestroyRef, effect, inject, Injector, input, OnInit, output, signal, untracked } from '@angular/core';
+import { computed, Component, DestroyRef, effect, inject, Injector, input, OnInit, output, signal, untracked, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { PullRequestFilterLabelOptionDto, PullRequestFilterOptionsDto, PullRequestFilterUserOptionDto } from '@app/core/modules/openapi';
@@ -45,6 +45,7 @@ export type PullRequestQueryFilters = {
       IconArrowsSort,
     }),
   ],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './pull-request-filter-bar.component.html',
 })
 export class PullRequestFilterBarComponent implements OnInit {

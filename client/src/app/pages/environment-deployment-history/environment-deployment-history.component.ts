@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, numberAttribute } from '@angular/core';
+import { Component, computed, inject, input, numberAttribute, ChangeDetectionStrategy } from '@angular/core';
 import { injectQuery } from '@tanstack/angular-query-experimental';
 import { PrimeTemplate } from 'primeng/api';
 import { SkeletonModule } from 'primeng/skeleton';
@@ -25,6 +25,7 @@ import { IconCloudUpload, IconGitBranch, IconGitCommit, IconLock, IconLockOpen, 
       IconGitCommit,
     }),
   ],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './environment-deployment-history.component.html',
 })
 export class EnvironmentDeploymentHistoryComponent {

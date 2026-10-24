@@ -2,6 +2,14 @@
 # every no-default @Value placeholder and disables all external integrations / schedulers so the
 # context boots without credentials, network, NATS, or a running scheduler. Not used in any real
 # deployment (prod/staging/dev activate their own profiles).
+zonky:
+    test:
+        database:
+            postgres:
+                docker:
+                    # Keep every Docker integration-test harness aligned with Compose and CI.
+                    image: postgres:17.11-alpine
+
 spring:
     data:
         jpa:

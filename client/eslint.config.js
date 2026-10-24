@@ -1,5 +1,6 @@
 const tsPlugin = require('@typescript-eslint/eslint-plugin');
-const angularPlugin = require('@angular-eslint/eslint-plugin');
+const angular = require('angular-eslint');
+const angularPlugin = angular.tsPlugin;
 const angularTemplateParser = require('@angular-eslint/template-parser');
 const typescriptParser = require('@typescript-eslint/parser');
 const prettierPlugin = require('eslint-plugin-prettier');
@@ -38,7 +39,7 @@ module.exports = [
     rules: {
       ...prettierPlugin.configs.recommended.rules,
       ...tsPlugin.configs.recommended.rules,
-      ...angularPlugin.configs.recommended.rules,
+      ...Object.assign({}, ...angular.configs.tsRecommended.map(config => config.rules)),
       '@angular-eslint/directive-selector': [
         'warn',
         {
@@ -56,6 +57,8 @@ module.exports = [
         },
       ],
       '@typescript-eslint/no-empty-object-type': 'off',
+      // Angular 22 migrations retain eager change detection to preserve behavior.
+      '@angular-eslint/prefer-on-push-component-change-detection': 'off',
     },
   },
   {

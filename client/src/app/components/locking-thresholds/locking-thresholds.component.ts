@@ -1,4 +1,4 @@
-import { Component, computed, effect, input, signal, inject } from '@angular/core';
+import { Component, computed, effect, input, signal, inject, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 
@@ -19,6 +19,7 @@ import { MessageService } from 'primeng/api';
   selector: 'app-locking-thresholds',
   standalone: true,
   imports: [ToggleSwitchModule, InputNumberModule, DividerModule, IftaLabelModule, FormsModule, ButtonModule],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './locking-thresholds.component.html',
 })
 export class LockingThresholdsComponent {

@@ -1,5 +1,5 @@
 import { DatePipe, NgTemplateOutlet } from '@angular/common';
-import { Component, input, signal } from '@angular/core';
+import { Component, input, signal, ChangeDetectionStrategy } from '@angular/core';
 import { analyzeFailedTest, getFailureAnalysisUsage, getLatestCachedFailureAnalysis, TestCaseDto, TestFailureAnalysisUsageDto } from '@app/core/modules/openapi';
 import type { TestFailureAnalysisResponseDto } from '@app/core/modules/openapi';
 import { ButtonModule } from 'primeng/button';
@@ -15,6 +15,7 @@ type AnalysisStatus = 'idle' | 'submitting' | 'completed' | 'failed';
   selector: 'app-test-failure-ai-analysis-panel',
   imports: [ButtonModule, DatePipe, DialogModule, MessageModule, NgTemplateOutlet, TagModule, TablerIconComponent],
   providers: [provideTablerIcons({ IconProgress })],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './test-failure-ai-analysis-panel.component.html',
 })
 export class TestFailureAiAnalysisPanelComponent {

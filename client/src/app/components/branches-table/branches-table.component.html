@@ -135,7 +135,7 @@
         <td class="lg:whitespace-nowrap hidden lg:table-cell">
           @if (branch.updatedBy && branch.updatedAt) {
             <div class="flex gap-1 items-center text-sm">
-              <p-avatar [image]="branch.updatedBy?.avatarUrl" shape="circle" class="h-5 w-5" />
+              <p-avatar [image]="$safeNavigationMigration(branch.updatedBy?.avatarUrl)" shape="circle" class="h-5 w-5" />
               <span>{{ branch.updatedBy?.name }} updated {{ branch.updatedAt | timeAgo }}</span>
             </div>
           }

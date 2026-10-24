@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, input, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, signal, ChangeDetectionStrategy } from '@angular/core';
 import { EnvironmentDeployment, WorkflowJobDto } from '@app/core/modules/openapi';
 import { getWorkflowJobStatusOptions, getWorkflowJobStatusQueryKey } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { PermissionService } from '@app/core/services/permission.service';
@@ -11,6 +11,7 @@ import { getStatusColors, getStatusIconClasses } from '@app/core/utils/status-co
   selector: 'app-workflow-jobs-status',
   standalone: true,
   imports: [GithubLinkButtonComponent, WorkflowJobListComponent],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './workflow-jobs-status.component.html',
 })
 export class WorkflowJobsStatusComponent {

@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 /** Smoke test: the full application context boots and the servlet stack answers a public GET. */
 class ContextBootIT extends HeliosIntegrationTest {
@@ -16,6 +17,16 @@ class ContextBootIT extends HeliosIntegrationTest {
   @Test
   void contextLoadsAndApiResponds() throws Exception {
     mockMvc.perform(get("/api/repository")).andExpect(status().isOk());
+  }
+
+  @Test
+  void integrationDatabaseRunsPostgres1711() {
+    var jdbc = new JdbcTemplate(dataSource);
+    String version = jdbc.queryForObject("SHOW server_version", String.class);
+    Integer versionNumber = jdbc.queryForObject("SHOW server_version_num", Integer.class);
+    System.out.println("Integration database: PostgreSQL " + version + " (" + versionNumber + ")");
+    assertEquals(
+        170011, versionNumber, "Integration tests must use PostgreSQL 17.11; actual: " + version);
   }
 
   @Test
