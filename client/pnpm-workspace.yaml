@@ -34,14 +34,14 @@ overrides:
   uuid: 14.0.3
   undici@6: 8.12.3
   undici@7: 8.12.3
-  hono: 4.13.13
+  hono: 4.13.14
   tar: 7.5.22
   piscina: 5.3.2
-  http-proxy-middleware: 4.2.0
+  http-proxy-middleware: 4.2.1
   launch-editor: 2.14.2
   js-yaml: 5.5.0
   '@babel/core@7': 7.29.7
-  '@babel/core@8': 8.0.9
+  '@babel/core@8': 8.0.10
   esbuild: 0.28.2
   # Angular 22's compiler imports the range-mapping API introduced in 1.6.
   '@jridgewell/sourcemap-codec': 1.6.0

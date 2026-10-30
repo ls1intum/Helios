@@ -1,5 +1,5 @@
 # Stage 1: Build Angular app
-FROM node:26.12.1 AS build
+FROM node:26.13.0 AS build
 
 # Set the working directory
 WORKDIR /app
