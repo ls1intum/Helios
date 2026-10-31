@@ -2,7 +2,7 @@
 FROM maven:3.10.0-eclipse-temurin-25 AS maven
 
 # Stage 1: Build the Keycloak theme
-FROM node:26.12.1 AS build
+FROM node:26.13.0 AS build
 
 # Set the working directory
 WORKDIR /app
