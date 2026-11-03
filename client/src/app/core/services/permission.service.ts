@@ -12,8 +12,14 @@ export class PermissionService {
   keycloak = inject(KeycloakService);
   repositoryService = inject(RepositoryService);
 
+  // The backend resolves the role per repository (X-Repository-Id header), so the cache key must
+  // include the repository id (the headers option is part of the generated query key). Otherwise a
+  // role loaded for one repository is reused for another. The short staleTime lets GitHub role
+  // changes show up quickly instead of after the global 5 minute default.
   permissionsQuery = injectQuery(() => ({
-    ...getUserPermissionsOptions(),
+    ...getUserPermissionsOptions({ headers: { 'X-Repository-Id': String(this.repositoryService.currentRepositoryId()) } }),
+    staleTime: 1000 * 30,
+    refetchOnWindowFocus: true,
     enabled: () => !!this.repositoryService.currentRepositoryId() && this.keycloak.isLoggedIn(),
   }));
 
