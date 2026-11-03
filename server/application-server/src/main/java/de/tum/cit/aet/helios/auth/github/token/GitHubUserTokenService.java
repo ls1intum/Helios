@@ -71,9 +71,15 @@ public class GitHubUserTokenService {
       }
     }
 
+    GitHubUserTokenRecord seeded = brokerClient.fetchStoredTokens(login);
+    if (seeded.refreshToken() == null) {
+      // Non-expiring GitHub token (the app issues no refresh tokens): nothing to refresh or store,
+      // use it as-is. A revoked one surfaces as GitHub's 401 on use.
+      return seeded.accessToken();
+    }
     // The seeded access token's real age is unknown, so we never use it directly: exchange the
     // seeded refresh token for a known-fresh pair.
-    return refreshAndPersist(row, brokerClient.fetchStoredTokens(login).refreshToken());
+    return refreshAndPersist(row, seeded.refreshToken());
   }
 
   private GitHubUserToken newRow(String login) {

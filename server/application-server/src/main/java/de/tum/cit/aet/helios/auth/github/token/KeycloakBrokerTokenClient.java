@@ -66,10 +66,17 @@ public class KeycloakBrokerTokenClient {
     Map<String, String> fields = parseTokenBody(storedBody);
 
     String refreshToken = fields.get("refresh_token");
-    if (refreshToken == null || refreshToken.isBlank()) {
+    String accessToken = fields.get("access_token");
+    if (accessToken == null || accessToken.isBlank()) {
       throw new GitHubReauthRequiredException(
-          "Keycloak returned no GitHub refresh token for @" + githubLogin
+          "Keycloak returned no GitHub token for @" + githubLogin
               + "; the user must sign in to Helios again.");
+    }
+    // A missing refresh token is valid: GitHub apps/OAuth apps without token expiry hand out
+    // non-expiring access tokens and no refresh token. The caller then uses the access token
+    // as-is.
+    if (refreshToken != null && refreshToken.isBlank()) {
+      refreshToken = null;
     }
     OffsetDateTime now = OffsetDateTime.now();
     OffsetDateTime accessExpiry = now.plusSeconds(parseSeconds(fields.get("expires_in")));
@@ -77,8 +84,7 @@ public class KeycloakBrokerTokenClient {
         fields.containsKey("refresh_token_expires_in")
             ? now.plusSeconds(parseSeconds(fields.get("refresh_token_expires_in")))
             : null;
-    return new GitHubUserTokenRecord(
-        fields.get("access_token"), accessExpiry, refreshToken, refreshExpiry);
+    return new GitHubUserTokenRecord(accessToken, accessExpiry, refreshToken, refreshExpiry);
   }
 
   private String exchangeForInternalToken(String githubLogin) throws IOException {

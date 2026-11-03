@@ -2,6 +2,7 @@ package de.tum.cit.aet.helios.auth.github.token;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -83,10 +84,22 @@ class KeycloakBrokerTokenClientTest {
   }
 
   @Test
-  void noRefreshTokenInStoredBodyThrowsReauthRequired() throws IOException {
+  void noRefreshTokenIsAllowedForNonExpiringGitHubTokens() throws IOException {
     stubExchangeThenRetrieve(
         response(200, "{\"access_token\":\"internal-kc\"}"),
-        response(200, "{\"access_token\":\"ghu_seed\",\"expires_in\":28800}"));
+        response(200, "{\"access_token\":\"ghu_seed\",\"token_type\":\"bearer\"}"));
+
+    GitHubUserTokenRecord record = client.fetchStoredTokens("octocat");
+
+    assertEquals("ghu_seed", record.accessToken());
+    assertNull(record.refreshToken());
+  }
+
+  @Test
+  void noTokenAtAllInStoredBodyThrowsReauthRequired() throws IOException {
+    stubExchangeThenRetrieve(
+        response(200, "{\"access_token\":\"internal-kc\"}"),
+        response(200, "{\"token_type\":\"bearer\"}"));
 
     assertThrows(
         GitHubReauthRequiredException.class, () -> client.fetchStoredTokens("octocat"));

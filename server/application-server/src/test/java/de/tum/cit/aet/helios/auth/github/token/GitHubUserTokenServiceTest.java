@@ -179,6 +179,17 @@ class GitHubUserTokenServiceTest {
   }
 
   @Test
+  void nonExpiringTokenWithoutRefreshTokenIsUsedAsIs() throws IOException {
+    when(repository.findByGithubLogin(LOGIN)).thenReturn(Optional.empty());
+    when(brokerClient.fetchStoredTokens(LOGIN))
+        .thenReturn(new GitHubUserTokenRecord("ghu_forever", OffsetDateTime.now(), null, null));
+
+    assertEquals("ghu_forever", service.getValidAccessToken(LOGIN));
+    verifyNoInteractions(oauthClient);
+    verify(repository, never()).save(any());
+  }
+
+  @Test
   void loginIsNormalizedAndLockedBeforeAnyRead() throws IOException {
     GitHubUserToken row = row();
     row.setAccessTokenEnc(cipher.encrypt("ghu_cached"));
