@@ -47,7 +47,8 @@ class RepositoryAuthorizationServiceTest {
   @Test
   void hasAdminAccessReturnsTrueForRepositoryAdmin() throws Exception {
     when(authService.getPreferredUsername()).thenReturn("repo-admin");
-    when(gitHubService.getRepositoryRole("1", "repo-admin"))
+    when(authService.getGithubId()).thenReturn("42");
+    when(gitHubService.getRepositoryRole("1", "repo-admin", "42"))
         .thenReturn(new GitHubRepositoryRoleDto(RepoPermissionType.ADMIN, "admin"));
 
     boolean hasAdminAccess = repositoryAuthorizationService.hasAdminAccess(1L);
@@ -58,7 +59,8 @@ class RepositoryAuthorizationServiceTest {
   @Test
   void hasAdminAccessReturnsFalseForNonAdminPermission() throws Exception {
     when(authService.getPreferredUsername()).thenReturn("writer");
-    when(gitHubService.getRepositoryRole("1", "writer"))
+    when(authService.getGithubId()).thenReturn("42");
+    when(gitHubService.getRepositoryRole("1", "writer", "42"))
         .thenReturn(new GitHubRepositoryRoleDto(RepoPermissionType.WRITE, "write"));
 
     boolean hasAdminAccess = repositoryAuthorizationService.hasAdminAccess(1L);
@@ -69,7 +71,8 @@ class RepositoryAuthorizationServiceTest {
   @Test
   void hasAdminAccessReturnsFalseWhenPermissionLookupFails() throws Exception {
     when(authService.getPreferredUsername()).thenReturn("repo-admin");
-    when(gitHubService.getRepositoryRole("1", "repo-admin"))
+    when(authService.getGithubId()).thenReturn("42");
+    when(gitHubService.getRepositoryRole("1", "repo-admin", "42"))
         .thenThrow(new IOException("GitHub unavailable"));
 
     boolean hasAdminAccess = repositoryAuthorizationService.hasAdminAccess(1L);
