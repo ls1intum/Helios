@@ -47,6 +47,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Log4j2
@@ -425,9 +426,12 @@ public class EnvironmentService {
    *
    * @param environment the Environment instance whose status has been altered
    */
+  @Transactional
   public void markStatusAsChanged(Environment environment) {
-    environment.setStatusChangedAt(Instant.now());
-    environmentRepository.save(environment);
+    // Targeted update instead of save(): the entity may be stale (e.g. after a workflow dispatch
+    // or in the async status check) and a full save would fail with an optimistic lock error.
+    // The passed entity is intentionally not mutated so no versioned flush can be triggered.
+    environmentRepository.updateStatusChangedAt(environment.getId(), Instant.now());
   }
 
   /**

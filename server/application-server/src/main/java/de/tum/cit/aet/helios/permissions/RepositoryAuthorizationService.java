@@ -33,7 +33,9 @@ public class RepositoryAuthorizationService {
         return true;
       }
 
-      return gitHubService.getRepositoryRole(repositoryId.toString(), username).getPermission()
+      return gitHubService
+              .getRepositoryRole(repositoryId.toString(), username, authService.getGithubId())
+              .getPermission()
           == RepoPermissionType.ADMIN;
     } catch (IOException | IllegalArgumentException | IllegalStateException e) {
       log.warn(

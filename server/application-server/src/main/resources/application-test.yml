@@ -49,6 +49,7 @@ github:
     authToken: "dummy-token"
     appName: "test-app"
     clientId: "dummy-client"
+    clientSecret: "dummy-client-secret"
     privateKeyPath: "dummy-key.pem"
     tokenExchangeClientId: "dummy-exchange-client"
     tokenExchangeClientSecret: "dummy-exchange-secret"
@@ -65,3 +66,7 @@ notification:
 
 reconciliation:
     enabled: false
+
+helios:
+    # Dummy base64 AES-256 key so TokenCipher (fail-fast on blank key) can start in tests.
+    tokenEncryptionKey: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="

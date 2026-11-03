@@ -108,6 +108,8 @@ jobs:
             echo "GITHUB_APP_NAME=${{ vars.GH_APP_NAME }}" >> .env
             echo "GITHUB_APP_ID=${{ secrets.GH_APP_ID }}" >> .env
             echo "GITHUB_CLIENT_ID=${{ secrets.GH_CLIENT_ID }}" >> .env
+            echo "GITHUB_CLIENT_SECRET=${{ secrets.GH_CLIENT_SECRET }}" >> .env
+            echo "HELIOS_TOKEN_ENCRYPTION_KEY=${{ secrets.HELIOS_TOKEN_ENCRYPTION_KEY }}" >> .env
             echo "GITHUB_INSTALLATION_ID=${{ vars.GH_INSTALLATION_ID }}" >> .env
             echo "GITHUB_PRIVATE_KEY_PATH=${{ secrets.GH_PRIVATE_KEY_PATH }}" >> .env
 
