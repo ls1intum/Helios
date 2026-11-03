@@ -675,7 +675,7 @@ public class GitHubService {
       throws IOException {
 
     // Fetch a valid GitHub user token, refreshing (or re-seeding) it as needed.
-    String userGithubToken = gitHubUserTokenService.getValidAccessToken(githubUserLogin);
+    final String userGithubToken = gitHubUserTokenService.getValidAccessToken(githubUserLogin);
 
     // Construct the request payload
     Map<String, Object> requestPayload = new HashMap<>();

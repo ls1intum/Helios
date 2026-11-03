@@ -16,6 +16,7 @@ import static org.mockito.Mockito.when;
 import de.tum.cit.aet.helios.environment.Environment;
 import de.tum.cit.aet.helios.environment.EnvironmentService;
 import de.tum.cit.aet.helios.environment.EnvironmentService.ReviewerResolution;
+import de.tum.cit.aet.helios.auth.github.token.GitHubReauthRequiredException;
 import de.tum.cit.aet.helios.github.GitHubReviewException;
 import de.tum.cit.aet.helios.github.GitHubService;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
@@ -197,6 +198,24 @@ class DeploymentReviewActionServiceTest {
     verify(f.approvalRequestRepository).save(rowCaptor.capture());
     assertEquals(
         DeploymentApprovalRequest.State.FAILED_AT_GITHUB, rowCaptor.getValue().getState());
+  }
+
+  @Test
+  void returnsSignInAgainMessageWhenGitHubTokenCannotBeRefreshed() throws IOException {
+    Fixture f = new Fixture();
+    f.reviewersAre("alice", "bob");
+    doThrow(new GitHubReauthRequiredException("bad_refresh_token"))
+        .when(f.gitHubService)
+        .approveDeploymentOnBehalfOfUser(
+            anyString(), anyLong(), any(), anyString(), anyString());
+
+    ResponseStatusException e =
+        assertThrows(
+            ResponseStatusException.class,
+            () -> f.service().approveAsCurrentUser(DEPLOYMENT_ID, f.userWithLogin(REVIEWER)));
+
+    assertEquals(HttpStatus.BAD_GATEWAY, e.getStatusCode());
+    assertEquals(true, e.getReason().contains("sign in again"));
   }
 
   @Test

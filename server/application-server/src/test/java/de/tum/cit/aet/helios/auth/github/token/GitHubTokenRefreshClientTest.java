@@ -27,18 +27,18 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
-class GitHubOAuthTokenClientTest {
+class GitHubTokenRefreshClientTest {
 
   private final OkHttpClient okHttpClient = mock(OkHttpClient.class);
   private final ObjectMapper objectMapper = new ObjectMapper();
   private final GitHubConfig gitHubConfig = mock(GitHubConfig.class);
-  private GitHubOAuthTokenClient client;
+  private GitHubTokenRefreshClient client;
 
   @BeforeEach
   void setUp() {
     when(gitHubConfig.getClientId()).thenReturn("cid");
     when(gitHubConfig.getClientSecret()).thenReturn("secret");
-    client = new GitHubOAuthTokenClient(okHttpClient, objectMapper, gitHubConfig);
+    client = new GitHubTokenRefreshClient(okHttpClient, objectMapper, gitHubConfig);
   }
 
   private static final String URL = "https://github.com/login/oauth/access_token";
@@ -116,6 +116,22 @@ class GitHubOAuthTokenClientTest {
   @Test
   void serverErrorIsTransientIoExceptionNotReauth() throws IOException {
     stub(500, "upstream boom");
+
+    IOException e = assertThrows(IOException.class, () -> client.refresh("ghr_old"));
+    assertFalse(e instanceof GitHubReauthRequiredException);
+  }
+
+  @Test
+  void appSideOauthErrorIsNotReportedAsReauth() throws IOException {
+    stub(200, "{\"error\":\"incorrect_client_credentials\"}");
+
+    IOException e = assertThrows(IOException.class, () -> client.refresh("ghr_old"));
+    assertFalse(e instanceof GitHubReauthRequiredException);
+  }
+
+  @Test
+  void responseWithoutAccessTokenIsNotReportedAsReauth() throws IOException {
+    stub(200, "{\"token_type\":\"bearer\"}");
 
     IOException e = assertThrows(IOException.class, () -> client.refresh("ghr_old"));
     assertFalse(e instanceof GitHubReauthRequiredException);

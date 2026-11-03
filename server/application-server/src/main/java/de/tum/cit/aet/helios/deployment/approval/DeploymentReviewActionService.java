@@ -3,6 +3,7 @@ package de.tum.cit.aet.helios.deployment.approval;
 import de.tum.cit.aet.helios.environment.Environment;
 import de.tum.cit.aet.helios.environment.EnvironmentService;
 import de.tum.cit.aet.helios.environment.EnvironmentService.ReviewerResolution;
+import de.tum.cit.aet.helios.auth.github.token.GitHubReauthRequiredException;
 import de.tum.cit.aet.helios.github.GitHubReviewException;
 import de.tum.cit.aet.helios.github.GitHubService;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
@@ -222,6 +223,10 @@ public class DeploymentReviewActionService {
    * recover by re-authenticating — so we say so explicitly instead of leaking the raw status.
    */
   private static String gitHubFailureReason(IOException e) {
+    if (e instanceof GitHubReauthRequiredException) {
+      return "Your GitHub authorization can no longer be refreshed. "
+          + "Please sign out of Helios and sign in again, then retry.";
+    }
     if (e instanceof GitHubReviewException gh && gh.getHttpStatus() == 401) {
       return "GitHub rejected the request because your GitHub authorization has expired. "
           + "Please sign out of Helios and sign in again, then retry.";

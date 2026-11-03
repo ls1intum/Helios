@@ -56,6 +56,13 @@ class GitHubUserTokenRepositoryIntegrationTest {
   }
 
   @Test
+  void advisoryLockQueryRunsAndIsReentrantWithinATransaction() {
+    // @DataJpaTest wraps the test in a transaction, so the xact-scoped lock is held until the end.
+    assertThat(repository.lockLogin("octocat")).isEqualTo(1L);
+    assertThat(repository.lockLogin("octocat")).isEqualTo(1L);
+  }
+
+  @Test
   void githubLoginIsUnique() {
     GitHubUserToken first = new GitHubUserToken();
     first.setGithubLogin("dup");

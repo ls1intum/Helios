@@ -21,14 +21,17 @@ import org.springframework.stereotype.Component;
  * the caller must persist.
  *
  * <p>GitHub returns HTTP 200 even for OAuth errors (e.g. {@code bad_refresh_token}), with an
- * {@code error} field in the body — those mean the user must re-authorize and surface as
- * {@link GitHubReauthRequiredException}. Genuine transport/5xx failures surface as plain
- * {@link IOException} so the caller can treat them as transient.
+ * {@code error} field in the body. Only {@code bad_refresh_token} means the user's token is dead
+ * and surfaces as {@link GitHubReauthRequiredException}; every other failure (configuration, 5xx,
+ * transport, malformed body) is a plain {@link IOException}.
  */
 @Log4j2
 @Component
 @RequiredArgsConstructor
-public class GitHubOAuthTokenClient {
+public class GitHubTokenRefreshClient {
+
+  /** The only OAuth error that means "this user's refresh token is dead". */
+  static final String REFRESH_TOKEN_REJECTED = "bad_refresh_token";
 
   private static final String TOKEN_URL = "https://github.com/login/oauth/access_token";
 
@@ -74,12 +77,17 @@ public class GitHubOAuthTokenClient {
 
       JsonNode json = objectMapper.readTree(content);
       if (json.hasNonNull("error")) {
-        throw new GitHubReauthRequiredException(
-            "GitHub refused to refresh the token: " + json.get("error").asText());
+        String error = json.get("error").asText();
+        if (REFRESH_TOKEN_REJECTED.equals(error)) {
+          throw new GitHubReauthRequiredException(
+              "GitHub rejected the stored refresh token: " + error);
+        }
+        // App-side problems (wrong client secret, unsupported grant, ...) cannot be fixed by the
+        // user signing in again, so they must not be reported as re-authorization.
+        throw new IOException("GitHub token refresh failed: " + error);
       }
       if (!json.hasNonNull("access_token") || json.get("access_token").asText().isBlank()) {
-        throw new GitHubReauthRequiredException(
-            "GitHub refresh response contained no access token.");
+        throw new IOException("GitHub refresh response contained no access token.");
       }
 
       OffsetDateTime now = OffsetDateTime.now();
