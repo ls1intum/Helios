@@ -782,9 +782,10 @@ class GitHubServiceTest {
     assertEquals(RepoPermissionType.WRITE, result.getPermission());
     ArgumentCaptor<Request> requests = ArgumentCaptor.forClass(Request.class);
     verify(okHttpClient, times(3)).newCall(requests.capture());
-    assertTrue(requests.getAllValues().get(0).url().toString().contains("/collaborators/old-name/"));
-    assertTrue(requests.getAllValues().get(1).url().toString().endsWith("/user/114578000"));
-    assertTrue(requests.getAllValues().get(2).url().toString().contains("/collaborators/new-name/"));
+    List<Request> sent = requests.getAllValues();
+    assertTrue(sent.get(0).url().toString().contains("/collaborators/old-name/"));
+    assertTrue(sent.get(1).url().toString().endsWith("/user/114578000"));
+    assertTrue(sent.get(2).url().toString().contains("/collaborators/new-name/"));
   }
 
   @Test

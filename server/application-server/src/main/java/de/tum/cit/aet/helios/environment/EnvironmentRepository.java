@@ -2,8 +2,8 @@ package de.tum.cit.aet.helios.environment;
 
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import de.tum.cit.aet.helios.gitreposettings.GitRepoSettings;
-import java.util.List;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -21,7 +21,8 @@ public interface EnvironmentRepository extends JpaRepository<Environment, Long> 
    */
   @Modifying
   @Query("UPDATE Environment e SET e.statusChangedAt = :statusChangedAt WHERE e.id = :id")
-  int updateStatusChangedAt(@Param("id") Long id, @Param("statusChangedAt") Instant statusChangedAt);
+  int updateStatusChangedAt(
+      @Param("id") Long id, @Param("statusChangedAt") Instant statusChangedAt);
 
   List<Environment> findByRepository(GitRepository repository);
 
