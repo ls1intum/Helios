@@ -100,7 +100,7 @@
                 @for (step of job.steps; track step.number) {
                   <div class="step py-1 flex items-center gap-2">
                     <span class="status-indicator size-2 rounded-full" [ngClass]="getStatusIndicatorClass(step.status, step.conclusion)"></span>
-                    <span class="step-name text-sm flex-grow">{{ step.name }}</span>
+                    <span class="step-name text-sm grow">{{ step.name }}</span>
                     <div class="flex items-center gap-2">
                       @if (step.startedAt && step.completedAt) {
                         <span class="text-xs text-gray-500">

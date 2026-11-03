@@ -29,10 +29,10 @@ jobs:
     steps:
       # Checkout first: the job-level working-directory only exists after checkout,
       # so any `run:` step must come after it.
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7.0.1
       - run: echo "Releasing helios-status-spring-starter version $VERSION"
       - name: Set up JDK 25
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6.1.0
         with:
           distribution: 'temurin'
           java-version: '25'

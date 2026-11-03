@@ -1,4 +1,4 @@
-import { Component, input, OnInit, OnDestroy, signal, inject, computed } from '@angular/core';
+import { Component, input, OnInit, OnDestroy, signal, inject, computed, ChangeDetectionStrategy } from '@angular/core';
 import { TagModule } from 'primeng/tag';
 import { DateService } from '@app/core/services/date.service';
 import { TooltipModule } from 'primeng/tooltip';
@@ -6,6 +6,7 @@ import { TooltipModule } from 'primeng/tooltip';
 @Component({
   selector: 'app-lock-time',
   imports: [TagModule, TooltipModule],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './lock-time.component.html',
 })
 export class LockTimeComponent implements OnInit, OnDestroy {

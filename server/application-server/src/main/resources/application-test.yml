@@ -2,6 +2,14 @@
 # every no-default @Value placeholder and disables all external integrations / schedulers so the
 # context boots without credentials, network, NATS, or a running scheduler. Not used in any real
 # deployment (prod/staging/dev activate their own profiles).
+zonky:
+    test:
+        database:
+            postgres:
+                docker:
+                    # Keep every Docker integration-test harness aligned with Compose and CI.
+                    image: postgres:17.11-alpine
+
 spring:
     data:
         jpa:
@@ -41,6 +49,7 @@ github:
     authToken: "dummy-token"
     appName: "test-app"
     clientId: "dummy-client"
+    clientSecret: "dummy-client-secret"
     privateKeyPath: "dummy-key.pem"
     tokenExchangeClientId: "dummy-exchange-client"
     tokenExchangeClientSecret: "dummy-exchange-secret"
@@ -61,3 +70,5 @@ reconciliation:
 helios:
     ai:
         enabled: false
+    # Dummy base64 AES-256 key so TokenCipher (fail-fast on blank key) can start in tests.
+    tokenEncryptionKey: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="

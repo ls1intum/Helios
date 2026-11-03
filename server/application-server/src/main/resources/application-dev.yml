@@ -30,6 +30,8 @@ helios:
               secretKey: ${HELIOS_LOCAL_SECRET_KEY:}
     clientBaseUrl: "http://localhost:4200"
     developers: ${HELIOS_DEVELOPERS_GITHUB_USERNAMES:}
+    # Base64 AES key for encrypting stored GitHub user tokens at rest (see auth.github.token).
+    tokenEncryptionKey: ${HELIOS_TOKEN_ENCRYPTION_KEY:}
 
 logging:
     level:
@@ -57,6 +59,7 @@ github:
     appName: ${GITHUB_APP_NAME:}
     appId: ${GITHUB_APP_ID:}
     clientId: ${GITHUB_CLIENT_ID:}
+    clientSecret: ${GITHUB_CLIENT_SECRET:}
     installationId: ${GITHUB_INSTALLATION_ID:}
     privateKeyPath: ${GITHUB_PRIVATE_KEY_PATH:}
     # GitHub Token exchange credentials

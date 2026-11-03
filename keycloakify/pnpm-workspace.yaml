@@ -1,24 +1,30 @@
-# pnpm 11 reads project settings from here (the "pnpm" key in package.json is
+nodeLinker: hoisted
+
+# Keep a single-document lockfile readable by GitHub's dependency graph (pnpm/pnpm#13805).
+# CI and Docker install the exact pnpm version pinned in package.json explicitly.
+pmOnFail: ignore
+
+# pnpm 12 reads project settings from here (the "pnpm" key in package.json is
 # no longer read). Skip the pre-run dependency check so `pnpm run <script>`
 # doesn't re-trigger an install inside containers where deps are already present.
 verifyDepsBeforeRun: false
 
-# pnpm 11 blocks dependency build scripts by default and, under
+# pnpm 12 blocks dependency build scripts by default and, under
 # --frozen-lockfile, fails hard (ERR_PNPM_IGNORED_BUILDS) unless each package is
-# explicitly approved. `allowBuilds` is pnpm 11's replacement for the old
+# explicitly approved. `allowBuilds` is the replacement for the old
 # `onlyBuiltDependencies` key.
 allowBuilds:
   esbuild: true
 
 # Force the patched esbuild flagged by Dependabot. esbuild 0.27.3-0.28.0 allows
 # arbitrary file read via its dev server on Windows; it is pulled transitively
-# through the Vite/Storybook toolchain, never used at runtime. Pinned to 0.28.1,
-# the lowest release that clears the advisory.
+# through the Vite/Storybook toolchain, never used at runtime. Pinned to the patched 0.28.2 release.
 overrides:
-  esbuild: 0.28.1
-
-# pnpm 11.3+ holds packages younger than the default 24h supply-chain cutoff.
-# keycloakify@11.15.11 was published <24h before this bump, so it is explicitly
-# allowed here. Safe to remove once the version has aged past the cutoff.
-minimumReleaseAgeExclude:
-  - keycloakify@11.15.11
+  esbuild: 0.28.2
+  # Patch transitive lint/Storybook dependencies while retaining their supported major lines.
+  'brace-expansion@5': 5.0.12
+  'browserslist@4': 4.29.4
+  'baseline-browser-mapping@2': 2.11.31
+  'zod@4': 4.6.7
+  # GHSA-g3hv-75wg-m249 (ReDoS via globparts); only patched in 11.x.
+  'minimatch@10': 11.0.1

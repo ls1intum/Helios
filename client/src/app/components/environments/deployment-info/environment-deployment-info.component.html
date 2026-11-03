@@ -3,12 +3,12 @@
   @if (commit(); as commit) {
     <div class="flex gap-4 items-center mb-4 mt-2">
       <span class="font-semibold text-lg">{{ commit.message }}</span>
-      <div class="flex-grow"></div>
+      <div class="grow"></div>
     </div>
     <div class="flex gap-2 items-center text-sm">
       <div class="flex gap-1 items-center">
         @if (commit.author?.avatarUrl) {
-          <p-avatar class="w-6 h-6" shape="circle" [image]="commit.author?.avatarUrl" />
+          <p-avatar class="w-6 h-6" shape="circle" [image]="$safeNavigationMigration(commit.author?.avatarUrl)" />
         } @else {
           <i-tabler name="user" class="w-6 h-6 text-muted-color border-2 border-surface-600 dark:border-surface-400" />
         }
@@ -21,7 +21,7 @@
         <!-- <i-tabler name="git-commit" class="text-surface-600" /> -->
         <span [pTooltip]="deployment().sha">{{ deployment().sha | slice: 0 : 8 }}</span>
       </div>
-      <div class="flex flex-grow"></div>
+      <div class="flex grow"></div>
     </div>
   } @else {
     <div class="font-semibold text-lg">Commit Information Could Not Be Loaded</div>

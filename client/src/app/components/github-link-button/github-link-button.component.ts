@@ -1,4 +1,4 @@
-import { booleanAttribute, Component, input } from '@angular/core';
+import { booleanAttribute, Component, input, ChangeDetectionStrategy } from '@angular/core';
 import { TooltipModule } from 'primeng/tooltip';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
 import { IconBrandGithub } from 'angular-tabler-icons/icons';
@@ -60,6 +60,7 @@ import { IconBrandGithub } from 'angular-tabler-icons/icons';
       IconBrandGithub,
     }),
   ],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './github-link-button.component.html',
 })
 export class GithubLinkButtonComponent {

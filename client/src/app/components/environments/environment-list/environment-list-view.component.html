@@ -86,7 +86,7 @@
             <p-accordion [multiple]="true" class="flex flex-col gap-3">
               @for (environment of group[1]; track environment.id) {
                 <div
-                  class="rounded-xl shadow-sm overflow-hidden"
+                  class="rounded-xl shadow-xs overflow-hidden"
                   [ngClass]="{
                     'ring-2 ring-blue-500': isCurrentUserLocked(environment),
                     'ring-1 ring-surface-200 dark:ring-surface-700': !isCurrentUserLocked(environment),

@@ -38,7 +38,7 @@
 <div class="px-4 pb-6">
   @if (logsQuery.isPending()) {
     <div class="grid gap-4 lg:grid-cols-[20rem_minmax(0,1fr)]">
-      <p-card class="border border-surface-200 shadow-sm dark:border-surface-700">
+      <p-card class="border border-surface-200 shadow-xs dark:border-surface-700">
         <div class="mb-4 flex items-center gap-2">
           <i-tabler name="folder" class="!size-5 text-primary" />
           <span class="font-semibold">Preparing jobs and steps</span>
@@ -52,7 +52,7 @@
         </div>
       </p-card>
 
-      <p-card class="border border-surface-200 shadow-sm dark:border-surface-700">
+      <p-card class="border border-surface-200 shadow-xs dark:border-surface-700">
         <div class="mb-4 flex items-center justify-between">
           <p-skeleton width="14rem" height="1.25rem" />
           <p-skeleton width="7rem" height="1rem" />
@@ -71,7 +71,7 @@
       </p-card>
     </div>
   } @else if (logsQuery.isError()) {
-    <p-card class="border border-red-200 bg-red-50/60 shadow-sm dark:border-red-900/60 dark:bg-red-950/20">
+    <p-card class="border border-red-200 bg-red-50/60 shadow-xs dark:border-red-900/60 dark:bg-red-950/20">
       <div class="mx-auto flex min-h-[26rem] max-w-xl flex-col items-center justify-center text-center">
         <i-tabler name="server-off" class="mb-4 !size-12 text-red-500" />
         <h3 class="mb-4 text-xl font-semibold">Workflow logs could not be loaded</h3>
@@ -92,7 +92,7 @@
       </div>
     </p-card>
   } @else if (!hasLogs()) {
-    <p-card class="border border-surface-200 shadow-sm dark:border-surface-700">
+    <p-card class="border border-surface-200 shadow-xs dark:border-surface-700">
       <div class="mx-auto flex min-h-[26rem] max-w-xl flex-col items-center justify-center text-center">
         <i-tabler name="file-text" class="mb-4 !size-12 text-muted-color" />
         <h3 class="mb-4 text-xl font-semibold">No workflow logs were returned</h3>
@@ -103,7 +103,7 @@
       </div>
     </p-card>
   } @else {
-    <p-toolbar class="mb-4 rounded-xl border border-surface-200 shadow-sm dark:border-surface-700">
+    <p-toolbar class="mb-4 rounded-xl border border-surface-200 shadow-xs dark:border-surface-700">
       <ng-template #start>
         <div class="flex flex-wrap gap-2 text-sm text-muted-color">
           <p-tag severity="secondary" [rounded]="true">
@@ -111,7 +111,7 @@
           </p-tag>
           <p-tag severity="secondary" [rounded]="true"> {{ logsResponse()?.totalFileCount }} files </p-tag>
           @if (logsResponse()?.downloadedAt) {
-            <p-tag severity="secondary" [rounded]="true"> Downloaded {{ logsResponse()?.downloadedAt | date: 'd MMM y, HH:mm:ss' }} </p-tag>
+            <p-tag severity="secondary" [rounded]="true"> Downloaded {{ $safeNavigationMigration(logsResponse()?.downloadedAt) | date: 'd MMM y, HH:mm:ss' }} </p-tag>
           }
         </div>
       </ng-template>
@@ -137,7 +137,7 @@
     </p-message>
 
     <div class="grid gap-4 lg:grid-cols-[22rem_minmax(0,1fr)]">
-      <p-panel styleClass="border border-surface-200 shadow-sm dark:border-surface-700">
+      <p-panel styleClass="border border-surface-200 shadow-xs dark:border-surface-700">
         <ng-template pTemplate="header">
           <div class="flex w-full items-center justify-between gap-3">
             <div class="flex items-center gap-2">
@@ -198,7 +198,7 @@
                       class="flex w-full items-center gap-3 rounded-lg border px-3 py-2 text-left transition"
                       [ngClass]="
                         activeFilePath() === fileView.file.path
-                          ? 'border-primary bg-primary-50 text-primary-900 shadow-sm dark:bg-primary-400/15 dark:text-primary-50'
+                          ? 'border-primary bg-primary-50 text-primary-900 shadow-xs dark:bg-primary-400/15 dark:text-primary-50'
                           : 'border-surface-200 bg-surface-0 dark:border-surface-700 dark:bg-surface-900'
                       "
                       type="button"
@@ -244,7 +244,7 @@
                         class="flex w-full items-center gap-3 rounded-lg border px-3 py-2 text-left transition"
                         [ngClass]="
                           activeFilePath() === fileView.file.path
-                            ? 'border-primary bg-primary-50 text-primary-900 shadow-sm dark:bg-primary-400/15 dark:text-primary-50'
+                            ? 'border-primary bg-primary-50 text-primary-900 shadow-xs dark:bg-primary-400/15 dark:text-primary-50'
                             : 'border-surface-200 bg-surface-0 dark:border-surface-700 dark:bg-surface-900'
                         "
                         type="button"
@@ -269,7 +269,7 @@
         </p-accordion>
       </p-panel>
 
-      <p-panel styleClass="min-w-0 border border-surface-200 shadow-sm dark:border-surface-700">
+      <p-panel styleClass="min-w-0 border border-surface-200 shadow-xs dark:border-surface-700">
         <ng-template pTemplate="header">
           <div class="flex w-full items-center justify-between gap-3">
             <div class="flex items-center gap-2">

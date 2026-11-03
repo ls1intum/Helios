@@ -1,9 +1,10 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, computed, input, ChangeDetectionStrategy } from '@angular/core';
 import { TagModule } from 'primeng/tag';
 
 @Component({
   selector: 'app-lock-tag',
   imports: [TagModule],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './lock-tag.component.html',
 })
 export class LockTagComponent {

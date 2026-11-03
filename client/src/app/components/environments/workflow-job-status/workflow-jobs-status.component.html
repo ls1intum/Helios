@@ -9,7 +9,7 @@
     @if (deploymentUnsuccessful() && !!latestDeployment()?.workflowRunHtmlUrl) {
       <div class="flex-col w-full justify-items-center">
         <div class="text-red-600 text-sm mb-2">Some jobs failed. Please check the details below.</div>
-        <app-github-link-button [url]="latestDeployment()?.workflowRunHtmlUrl" label="Open Workflow Run on GitHub" />
+        <app-github-link-button [url]="$safeNavigationMigration(latestDeployment()?.workflowRunHtmlUrl)" label="Open Workflow Run on GitHub" />
       </div>
     }
   </div>

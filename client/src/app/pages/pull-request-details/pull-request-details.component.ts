@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, signal } from '@angular/core';
+import { Component, computed, inject, input, signal, ChangeDetectionStrategy } from '@angular/core';
 import { MarkdownPipe } from '@app/core/modules/markdown/markdown.pipe';
 import { PipelineComponent, PipelineSelector } from '@app/components/pipeline/pipeline.component';
 import { TagModule } from 'primeng/tag';
@@ -45,6 +45,7 @@ import { Divider } from 'primeng/divider';
       IconGitBranch,
     }),
   ],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './pull-request-details.component.html',
 })
 export class PullRequestDetailsComponent {

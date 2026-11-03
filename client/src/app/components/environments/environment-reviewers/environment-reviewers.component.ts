@@ -1,4 +1,4 @@
-import { Component, computed, inject, input } from '@angular/core';
+import { Component, computed, inject, input, ChangeDetectionStrategy } from '@angular/core';
 import { injectQuery } from '@tanstack/angular-query-experimental';
 import { TooltipModule } from 'primeng/tooltip';
 import { AvatarModule } from 'primeng/avatar';
@@ -21,6 +21,7 @@ import { IconExclamationMark, IconShieldExclamation, IconUser, IconUsersGroup } 
       IconExclamationMark,
     }),
   ],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './environment-reviewers.component.html',
 })
 export class EnvironmentReviewersComponent {

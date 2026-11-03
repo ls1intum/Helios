@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, input, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import {
   deleteReleaseCandidateByNameMutation,
   evaluateMutation,
@@ -73,6 +73,7 @@ import { PublishDraftReleaseConfirmationComponent } from '@app/components/dialog
     }),
     DialogService,
   ],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './release-candidate-details.component.html',
 })
 export class ReleaseCandidateDetailsComponent implements OnInit {

@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
 import { IconBug } from 'angular-tabler-icons/icons';
 import { ButtonModule } from 'primeng/button';
@@ -13,6 +13,7 @@ import { TooltipModule } from 'primeng/tooltip';
       IconBug,
     }),
   ],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './report-problem-button.component.html',
 })
 export class ReportProblemButtonComponent {

@@ -6,7 +6,7 @@ x-logging: &default-logging
 
 services:
   postgres:
-    image: postgres:17.10-alpine
+    image: postgres:17.11-alpine
     environment:
       - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
@@ -53,7 +53,7 @@ services:
       - helios-network
 
   nats-server:
-    image: nats:2.14.3-alpine
+    image: nats:2.15.2-alpine
     ports:
       - "4222:4222"
       - "8222:8222"
@@ -132,11 +132,15 @@ services:
       - GITHUB_APP_NAME=${GITHUB_APP_NAME}
       - GITHUB_APP_ID=${GITHUB_APP_ID}
       - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}
+      # OAuth client secret of the login GitHub App — needed to refresh users' GitHub tokens.
+      - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET}
       - GITHUB_INSTALLATION_ID=${GITHUB_INSTALLATION_ID}
       - GITHUB_PRIVATE_KEY_PATH=${GITHUB_PRIVATE_KEY_PATH}
       - SENTRY_DSN=${SENTRY_DSN}
       - HELIOS_TOKEN_EXCHANGE_CLIENT=${HELIOS_TOKEN_EXCHANGE_CLIENT}
       - HELIOS_TOKEN_EXCHANGE_SECRET=${HELIOS_TOKEN_EXCHANGE_SECRET}
+      # Base64 AES key for encrypting stored GitHub user tokens at rest.
+      - HELIOS_TOKEN_ENCRYPTION_KEY=${HELIOS_TOKEN_ENCRYPTION_KEY}
       - DATA_SYNC_RUN_ON_STARTUP=${DATA_SYNC_RUN_ON_STARTUP:-true}
       - CLEANUP_WORKFLOW_RUN_DRY_RUN=${CLEANUP_WORKFLOW_RUN_DRY_RUN}
       # Orphan-branch sweep — off by default; enable per environment once the
@@ -144,6 +148,9 @@ services:
       - CLEANUP_WORKFLOW_RUN_ORPHAN_BRANCHES_ENABLED=${CLEANUP_WORKFLOW_RUN_ORPHAN_BRANCHES_ENABLED:-false}
       - CLEANUP_WORKFLOW_RUN_ORPHAN_BRANCHES_GRACE_DAYS=${CLEANUP_WORKFLOW_RUN_ORPHAN_BRANCHES_GRACE_DAYS:-7}
       - CLEANUP_WORKFLOW_RUN_ORPHAN_BRANCHES_BATCH_SIZE=${CLEANUP_WORKFLOW_RUN_ORPHAN_BRANCHES_BATCH_SIZE:-5000}
+      # Hard retention cap in days — deletes every run older than this, any branch/status
+      # (deployment-referenced runs are preserved). Set to 0 to disable.
+      - CLEANUP_WORKFLOW_RUN_MAX_AGE_DAYS=${CLEANUP_WORKFLOW_RUN_MAX_AGE_DAYS:-90}
       - HELIOS_ENVIRONMENT_NAME=${HELIOS_ENVIRONMENT_NAME}
       - HELIOS_PROD_SECRET_KEY=${HELIOS_PROD_SECRET_KEY}
       - HELIOS_STAGING_SECRET_KEY=${HELIOS_STAGING_SECRET_KEY}

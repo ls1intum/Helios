@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { PageHeadingComponent } from '@app/components/page-heading/page-heading.component';
 import { NgClass, NgOptimizedImage } from '@angular/common';
 import { UserInfoDto } from '@app/core/modules/openapi';
@@ -26,6 +26,7 @@ export type ExtendedUserInfoDto = UserInfoDto & {
 @Component({
   selector: 'app-about',
   imports: [PageHeadingComponent, ButtonModule, NgOptimizedImage, NgClass, UserAvatarComponent],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './about.component.html',
 })
 export class AboutComponent implements OnInit {

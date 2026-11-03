@@ -89,7 +89,7 @@ export default function Login(props: PageProps<Extract<KcContext, { pageId: "log
                                         <li key={p.alias}>
                                             <Button asChild variant="outline" className="w-full">
                                                 <a id={`social-${p.alias}`} type="button" href={p.loginUrl}>
-                                                    {icon && <FontAwesomeIcon icon={icon} />}
+                                                    {icon && <FontAwesomeIcon icon={icon} className="size-4!" />}
                                                     <span
                                                         className={clsx(
                                                             kcClsx("kcFormSocialAccountNameClass"),

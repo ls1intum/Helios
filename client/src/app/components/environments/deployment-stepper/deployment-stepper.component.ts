@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, signal } from '@angular/core';
+import { Component, computed, inject, input, signal, ChangeDetectionStrategy } from '@angular/core';
 import { DeploymentTimerStepDto, EnvironmentDeployment } from '@app/core/modules/openapi';
 import { DeploymentTimingService } from '@app/core/services/deployment-timing.service';
 import { IconCheck, IconClock, IconProgress, IconX } from 'angular-tabler-icons/icons';
@@ -19,6 +19,7 @@ import { TooltipModule } from 'primeng/tooltip';
       IconX,
     }),
   ],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './deployment-stepper.component.html',
 })
 export class DeploymentStepperComponent {

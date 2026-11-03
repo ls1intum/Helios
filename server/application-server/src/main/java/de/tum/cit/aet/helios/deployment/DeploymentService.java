@@ -528,7 +528,8 @@ public class DeploymentService {
       String repoNameWithOwner = resolveWorkflowRunRepositoryName(workflowRunId);
 
       // Call GitHub service to get raw JSON response
-      String rawJsonResponse = gitHubService.getWorkflowJobStatus(repoNameWithOwner, workflowRunId);
+      final String rawJsonResponse =
+          gitHubService.getWorkflowJobStatus(repoNameWithOwner, workflowRunId);
 
       // Parse JSON response to GitHub API structure
       ObjectMapper objectMapper = new ObjectMapper();

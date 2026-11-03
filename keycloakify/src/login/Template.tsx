@@ -104,10 +104,10 @@ export default function Template(props: TemplateProps<KcContext, I18n>) {
                             {/* App-initiated actions should not see warning messages about the need to complete the action during login. */}
                             {displayMessage && message !== undefined && (message.type !== "warning" || !isAppInitiatedAction) && (
                                 <Alert variant={message.type} className="mb-2">
-                                    {message.type === "error" && <CircleX className="h-4 w-4 flex-shrink-0" />}
-                                    {message.type === "warning" && <CircleAlert className="h-4 w-4 flex-shrink-0" />}
-                                    {message.type === "info" && <Info className="h-4 w-4 flex-shrink-0" />}
-                                    {message.type === "success" && <CircleCheck className="h-4 w-4 flex-shrink-0" />}
+                                    {message.type === "error" && <CircleX className="h-4 w-4 shrink-0" />}
+                                    {message.type === "warning" && <CircleAlert className="h-4 w-4 shrink-0" />}
+                                    {message.type === "info" && <Info className="h-4 w-4 shrink-0" />}
+                                    {message.type === "success" && <CircleCheck className="h-4 w-4 shrink-0" />}
                                     <AlertDescription>
                                         <span
                                             className={kcClsx("kcAlertTitleClass")}

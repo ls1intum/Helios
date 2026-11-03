@@ -1,4 +1,4 @@
-import { Component, computed, inject, input } from '@angular/core';
+import { Component, computed, inject, input, ChangeDetectionStrategy } from '@angular/core';
 import { injectQuery } from '@tanstack/angular-query-experimental';
 import { getActivityHistoryByPullRequestIdOptions, getActivityHistoryByRepositoryIdAndBranchNameOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { DateService } from '@app/core/services/date.service';
@@ -23,6 +23,7 @@ export type DeploymentHistorySelector = { repositoryId: number; branchName: stri
       IconCloudUpload,
     }),
   ],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './deployment-history.component.html',
 })
 export class DeploymentHistoryComponent {

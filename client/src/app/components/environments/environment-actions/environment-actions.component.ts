@@ -1,4 +1,4 @@
-import { Component, inject, input, output, computed } from '@angular/core';
+import { Component, inject, input, output, computed, ChangeDetectionStrategy } from '@angular/core';
 import { UserAvatarComponent } from '@app/components/user-avatar/user-avatar.component';
 import { EnvironmentDeployment, EnvironmentDto } from '@app/core/modules/openapi';
 import { LockTimeComponent } from '../lock-time/lock-time.component';
@@ -32,6 +32,7 @@ const STALE_DEPLOYMENT_UNLOCK_TIMEOUT_MS = 20 * 60 * 1000;
       IconX,
     }),
   ],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './environment-actions.component.html',
 })
 export class EnvironmentActionsComponent {

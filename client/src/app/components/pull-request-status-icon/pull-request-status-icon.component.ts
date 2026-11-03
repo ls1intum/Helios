@@ -1,4 +1,4 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, computed, input, ChangeDetectionStrategy } from '@angular/core';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
 import { Tooltip } from 'primeng/tooltip';
 import { PullRequestInfoDto } from '@app/core/modules/openapi';
@@ -19,6 +19,7 @@ const MERGED_ICON_COLOR = 'text-violet-600 dark:text-violet-400';
       IconGitPullRequest,
     }),
   ],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './pull-request-status-icon.component.html',
 })
 export class PullRequestStatusIconComponent {

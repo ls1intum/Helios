@@ -1,5 +1,5 @@
 import { CommonModule, DatePipe } from '@angular/common';
-import { Component, inject, input, signal } from '@angular/core';
+import { Component, inject, input, signal, ChangeDetectionStrategy } from '@angular/core';
 import { WorkflowJobDto } from '@app/core/modules/openapi';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
 import { IconCircleCheck, IconCircleMinus, IconCircleX, IconClock, IconExternalLink, IconProgress, IconChevronDown, IconChevronRight } from 'angular-tabler-icons/icons';
@@ -24,6 +24,7 @@ import { getStatusColors, getStatusIconClasses } from '@app/core/utils/status-co
       IconChevronRight,
     }),
   ],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './workflow-job-list.component.html',
 })
 export class WorkflowJobListComponent {

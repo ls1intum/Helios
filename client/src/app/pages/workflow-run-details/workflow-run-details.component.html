@@ -77,7 +77,7 @@
               </a>
             }
           }
-          <app-github-link-button [url]="run()?.htmlUrl" label="Open on GitHub" />
+          <app-github-link-button [url]="$safeNavigationMigration(run()?.htmlUrl)" label="Open on GitHub" />
         </div>
       </div>
     </div>

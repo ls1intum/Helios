@@ -37,7 +37,7 @@
             </div>
             <p-skeleton styleClass="!w-32" />
             <p-skeleton styleClass="!w-64 h-4" />
-            <div class="flex-grow"></div>
+            <div class="grow"></div>
             <p-divider class="mb-2 m-0" />
             <div class="text-lg font-medium">Contributors</div>
             <p-avatarGroup class="flex gap-2">
@@ -92,7 +92,7 @@
             </div>
             <div class="flex gap-1 text-sm items-center">updated {{ project.updatedAt | timeAgo }}</div>
             {{ project.description }}
-            <div class="flex-grow"></div>
+            <div class="grow"></div>
             <p-divider class="mb-2 m-0" />
             <div class="text-lg font-medium">Contributors</div>
             <p-avatarGroup>
@@ -150,7 +150,7 @@
 
         @if (step.image) {
           <div class="flex justify-center mt-4">
-            <img [src]="step.image" [alt]="step.title" class="max-w-lg h-auto rounded-lg shadow-sm" />
+            <img [src]="step.image" [alt]="step.title" class="max-w-lg h-auto rounded-lg shadow-xs" />
           </div>
         }
 

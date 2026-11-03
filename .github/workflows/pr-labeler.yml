@@ -11,15 +11,15 @@ jobs:
       pull-requests: write
     steps:
       - name: "Checkout repository"
-        uses: actions/checkout@v7
+        uses: actions/checkout@v7.0.1
 
-      - uses: actions/labeler@v6
+      - uses: actions/labeler@v7.0.0
         with:
           configuration-path: .github/labeler.yml
           sync-labels: true
 
       - name: "Apply size label"
-        uses: actions/github-script@v9
+        uses: actions/github-script@v9.0.0
         with:
           script: |
             console.log("Fetching pull request diff...");

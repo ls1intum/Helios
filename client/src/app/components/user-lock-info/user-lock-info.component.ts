@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, OnDestroy, signal, computed } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, signal, computed, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { getEnvironmentsByUserLockingOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
@@ -16,6 +16,7 @@ import { IconGitBranch, IconLock } from 'angular-tabler-icons/icons';
       IconGitBranch,
     }),
   ],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './user-lock-info.component.html',
 })
 export class UserLockInfoComponent implements OnInit, OnDestroy {

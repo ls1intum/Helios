@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, OnInit } from '@angular/core';
+import { Component, computed, inject, input, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormBuilder, FormGroup, ReactiveFormsModule, ValidationErrors, ValidatorFn } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -42,6 +42,7 @@ import { ToggleSwitch } from 'primeng/toggleswitch';
     TablerIconComponent,
   ],
   providers: [provideTablerIcons({ IconExclamationCircle })],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './environment-edit-form.component.html',
 })
 export class EnvironmentEditFormComponent implements OnInit {

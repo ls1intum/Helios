@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, OnDestroy, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, input, OnDestroy, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { EnvironmentStatusDto } from '@app/core/modules/openapi';
 import { DateService } from '@app/core/services/date.service';
 import { TimeAgoPipe } from '@app/pipes/time-ago.pipe';
@@ -10,6 +10,7 @@ type FlatMetadata = Record<string, string>;
   selector: 'app-environment-status-info',
   providers: [TimeAgoPipe],
   templateUrl: './environment-status-info.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [KeyValuePipe],
 })
 export class EnvironmentStatusInfoComponent implements OnInit, OnDestroy {

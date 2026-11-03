@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, signal } from '@angular/core';
+import { Component, computed, inject, input, signal, ChangeDetectionStrategy } from '@angular/core';
 import { EnvironmentDto, getReleaseInfoByName, ReleaseInfoDetailsDto } from '@app/core/modules/openapi';
 import {
   deployToEnvironmentMutation,
@@ -44,6 +44,7 @@ import { DeployConfirmationComponent } from '@app/components/dialogs/deploy-conf
       IconServerCog,
     }),
   ],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './release-candidate-deployment-table.component.html',
 })
 export class ReleaseCandidateDeploymentTableComponent {

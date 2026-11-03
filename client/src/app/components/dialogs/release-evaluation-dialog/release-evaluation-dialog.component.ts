@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
@@ -26,6 +26,7 @@ export interface ReleaseEvaluationDialogResult {
       IconX,
     }),
   ],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './release-evaluation-dialog.component.html',
 })
 export class ReleaseEvaluationDialogComponent {

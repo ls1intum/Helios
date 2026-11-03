@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, numberAttribute, ViewChild } from '@angular/core';
+import { Component, computed, inject, input, numberAttribute, ViewChild, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Table, TableModule, TablePageEvent } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
@@ -33,6 +33,7 @@ function createFlakinessFilterOptions(): PaginatedFilterOption[] {
     { provide: PAGINATION_STORAGE_KEY_TOKEN, useValue: 'flakyTestsPaginationState' },
     provideTablerIcons({ IconBug, IconAlertTriangle }),
   ],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './flaky-tests-overview.component.html',
 })
 export class FlakyTestsOverviewComponent {

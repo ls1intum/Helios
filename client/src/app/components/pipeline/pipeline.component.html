@@ -24,23 +24,21 @@
   <!-- Freshness anchor: which commit these states reflect, and whether it is the head. -->
   @if (head(); as h) {
     <span class="inline-flex items-center gap-1 text-xs text-muted-color min-w-0">
-      <i-tabler name="git-commit" class="!size-4 flex-shrink-0" aria-hidden="true" />
+      <i-tabler name="git-commit" class="!size-4 shrink-0" aria-hidden="true" />
       @if (h.htmlUrl) {
-        <a [href]="h.htmlUrl" target="_blank" rel="noopener noreferrer" class="font-mono text-primary hover:underline flex-shrink-0" pTooltip="View commit on GitHub">{{
-          h.sha
-        }}</a>
+        <a [href]="h.htmlUrl" target="_blank" rel="noopener noreferrer" class="font-mono text-primary hover:underline shrink-0" pTooltip="View commit on GitHub">{{ h.sha }}</a>
       } @else {
-        <code class="font-mono flex-shrink-0">{{ h.sha }}</code>
+        <code class="font-mono shrink-0">{{ h.sha }}</code>
       }
       @if (h.message) {
         <span class="truncate max-w-[18rem]" [pTooltip]="h.message">{{ h.message }}</span>
       }
       @if (h.authoredAt) {
-        <span class="flex-shrink-0 whitespace-nowrap">· {{ h.authoredAt | timeAgo }}</span>
+        <span class="shrink-0 whitespace-nowrap">· {{ h.authoredAt | timeAgo }}</span>
       }
       @if (!h.upToDate) {
         <span
-          class="text-orange-600 dark:text-orange-400 flex-shrink-0 whitespace-nowrap"
+          class="text-orange-600 dark:text-orange-400 shrink-0 whitespace-nowrap"
           pTooltip="Your newest commit hasn't produced CI results yet — showing the most recent commit that ran."
         >
           · newest commit not built yet
@@ -86,7 +84,7 @@
                   <span class="font-medium flex gap-1 items-center w-full min-w-0 overflow-hidden">
                     <span [pTooltip]="node.label ?? ''" class="truncate min-w-0 flex-1">{{ node.label }}</span>
                     @if (node.htmlUrl) {
-                      <span class="flex items-center gap-1 flex-shrink-0">
+                      <span class="flex items-center gap-1 shrink-0">
                         <app-github-link-button [url]="node.htmlUrl" buttonClass="p-1 leading-none" />
                       </span>
                     }

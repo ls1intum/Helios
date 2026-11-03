@@ -354,6 +354,32 @@ class PipelineIT extends HeliosIntegrationTest {
   }
 
   @Test
+  void previousFooterLinksTheCiRunNotACoRunningWorkflow() throws Exception {
+    JdbcTemplate jdbc = new JdbcTemplate(dataSource);
+    final String branch = "ci-scope-br";
+    insertBranch(jdbc, REPO, branch, "aaaahead");
+    insertRun(jdbc, 300L, REPO, WF, branch, "aaaahead", "IN_PROGRESS", null, 0);
+    insertJob(jdbc, 640, REPO, 300L, "Build / Build .war artifact", "IN_PROGRESS", null);
+    // Previous commit: the CI run passed, and a *separate* workflow (e.g. Code Quality) also ran on
+    // the same commit. The footer must reflect and link the CI run — never the other workflow.
+    insertRun(jdbc, 301L, REPO, WF, branch, "eeeeprev", "COMPLETED", "SUCCESS", 60);
+    insertWorkflow(jdbc, 52L, REPO);
+    insertNamedRun(
+        jdbc, 302L, REPO, 52L, branch, "eeeeprev", "Code Quality", "COMPLETED", "SUCCESS", 60);
+
+    mockMvc
+        .perform(
+            get("/api/pipeline/branch")
+                .param("branch", branch)
+                .header(X_REPOSITORY_ID, String.valueOf(REPO)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.previous.sha").value("eeeepre"))
+        .andExpect(jsonPath("$.previous.conclusion").value("SUCCESS"))
+        // The CI run (301), never the Code Quality run (302), regardless of run ordering.
+        .andExpect(jsonPath("$.previous.htmlUrl").value("https://example/run/301"));
+  }
+
+  @Test
   void previousFooterHiddenWhenNoDefiniteResultInHistory() throws Exception {
     JdbcTemplate jdbc = new JdbcTemplate(dataSource);
     final String branch = "nodef-br";

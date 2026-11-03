@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, signal } from '@angular/core';
+import { Component, computed, inject, input, signal, ChangeDetectionStrategy } from '@angular/core';
 import { Avatar } from 'primeng/avatar';
 import { Divider } from 'primeng/divider';
 import { RouterLink, RouterLinkActive } from '@angular/router';
@@ -29,6 +29,7 @@ import { IconAdjustmentsAlt, IconArrowGuide, IconChevronLeft, IconChevronRight, 
       IconEye,
     }),
   ],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './navigation-bar.component.html',
 })
 export class NavigationBarComponent {

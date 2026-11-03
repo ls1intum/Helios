@@ -1,4 +1,4 @@
-import { Component, effect, ElementRef, inject, signal } from '@angular/core';
+import { Component, effect, ElementRef, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -50,6 +50,7 @@ import { PageHeadingComponent } from '@app/components/page-heading/page-heading.
   ],
   providers: [ConfirmationService, MessageService, provideTablerIcons({ IconCheck, IconX, IconClock, IconGitBranch, IconExternalLink })],
   templateUrl: './pending-approvals.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './pending-approvals.component.css',
 })
 export class PendingApprovalsComponent {

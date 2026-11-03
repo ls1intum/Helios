@@ -5,7 +5,7 @@
         <div class="flex gap-1 items-center mr-3">
           <p-button severity="secondary" text (click)="openExternalLink($event, environment().serverUrl)">
             <span pTooltip="Open Environment" tooltipPosition="bottom">{{ environment().displayName || environment().name }}</span>
-            <i-tabler name="external-link" class="!size-4 flex-shrink-0"></i-tabler>
+            <i-tabler name="external-link" class="!size-4 shrink-0"></i-tabler>
           </p-button>
 
           @if (isLockedByCurrentUser()) {
@@ -21,7 +21,7 @@
 
         @if (environment().latestDeployment; as deployment) {
           <div class="flex gap-1 items-center text-sm mt-2 flex-wrap">
-            <app-user-avatar [user]="environment().latestDeployment?.user" tooltipPosition="top" />
+            <app-user-avatar [user]="$safeNavigationMigration(environment().latestDeployment?.user)" tooltipPosition="top" />
             @if (environment().latestDeployment?.user?.name) {
               {{ environment().latestDeployment?.user?.name }} deployed
             }
@@ -31,7 +31,11 @@
               </span>
             }
             @if (environment().latestDeployment?.workflowRunHtmlUrl && environment().latestDeployment?.workflowRunHtmlUrl !== '') {
-              <app-github-link-button [url]="environment().latestDeployment?.workflowRunHtmlUrl" buttonClass="p-1 leading-none" tooltip="View Workflow Run in GitHub" />
+              <app-github-link-button
+                [url]="$safeNavigationMigration(environment().latestDeployment?.workflowRunHtmlUrl)"
+                buttonClass="p-1 leading-none"
+                tooltip="View Workflow Run in GitHub"
+              />
             }
             <app-deployment-state-tag [state]="deployment.state" [deployment]="deployment" />
 
@@ -46,7 +50,7 @@
               [routerLink]="isRelease(deployment) ? null : getBranchLink()"
             >
               @if (isRelease(deployment)) {
-                <i-tabler name="tag" class="!size-5 flex-shrink-0"></i-tabler>
+                <i-tabler name="tag" class="!size-5 shrink-0"></i-tabler>
               }
               <span class="truncate flex-1">{{ deployment.ref }}</span>
             </p-tag>
@@ -62,7 +66,7 @@
                 (click)="$event.stopPropagation()"
                 [routerLink]="getPrLink()"
               >
-                <i-tabler name="git-pull-request" class="!size-5 flex-shrink-0"></i-tabler>
+                <i-tabler name="git-pull-request" class="!size-5 shrink-0"></i-tabler>
                 <span class="truncate flex-1">#{{ deployment.pullRequestNumber }}</span>
               </p-tag>
             }
@@ -70,7 +74,7 @@
         }
       </div>
 
-      <div class="flex-grow"></div>
+      <div class="grow"></div>
 
       <div class="flex flex-col gap-4 items-end">
         <!-- Environment Actions Component -->
@@ -116,7 +120,7 @@
       <div class="flex w-full">
         @if (showLatestDeployment()) {
           <!-- Direct use of deployment stepper -->
-          <div class="flex-grow">
+          <div class="grow">
             <app-deployment-stepper [deployment]="environment().latestDeployment" class="w-full" />
 
             <app-workflow-jobs-status [latestDeployment]="environment().latestDeployment" />
@@ -131,7 +135,7 @@
         <div class="flex gap-1 mt-2 items-center">
           <a
             icon
-            [routerLink]="'/repo/' + environment().repository?.id + '/environment/' + environment().id + '/history'"
+            [routerLink]="'/repo/' + $safeNavigationMigration(environment().repository?.id) + '/environment/' + environment().id + '/history'"
             class="p-button p-button-secondary p-button-text py-2 flex items-center"
           >
             <i-tabler class="mr-1" name="history" />

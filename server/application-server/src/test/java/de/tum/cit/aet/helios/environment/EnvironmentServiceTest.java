@@ -95,6 +95,16 @@ public class EnvironmentServiceTest {
   }
 
   @Test
+  public void markStatusAsChanged_usesTargetedUpdateInsteadOfVersionedSave() {
+    // A full save() of a stale entity fails with an optimistic lock error when another
+    // transaction touched the row meanwhile (e.g. a deploy racing a status check).
+    environmentService.markStatusAsChanged(environment);
+
+    verify(environmentRepository).updateStatusChangedAt(eq(1L), any(java.time.Instant.class));
+    verify(environmentRepository, never()).save(any());
+  }
+
+  @Test
   public void testGetEnvironmentById() {
     when(environmentRepository.findByIdAndRepositoryRepositoryId(1L, 1L))
         .thenReturn(Optional.of(environment));

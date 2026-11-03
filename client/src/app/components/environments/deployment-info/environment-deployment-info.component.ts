@@ -1,4 +1,4 @@
-import { Component, computed, inject, input } from '@angular/core';
+import { Component, computed, inject, input, ChangeDetectionStrategy } from '@angular/core';
 import { TagModule } from 'primeng/tag';
 import { EnvironmentDeployment } from '@app/core/modules/openapi';
 import { DatePipe, SlicePipe } from '@angular/common';
@@ -20,6 +20,7 @@ import { IconPoint, IconUser } from 'angular-tabler-icons/icons';
       IconPoint,
     }),
   ],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './environment-deployment-info.component.html',
 })
 export class EnvironmentDeploymentInfoComponent {

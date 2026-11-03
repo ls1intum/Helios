@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, numberAttribute, ViewChild } from '@angular/core';
+import { Component, computed, inject, input, numberAttribute, ViewChild, ChangeDetectionStrategy } from '@angular/core';
 import { Router } from '@angular/router';
 import { Table, TableModule, TablePageEvent } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
@@ -62,6 +62,7 @@ export function createWorkflowRunsFilterOptions(): PaginatedFilterOption[] {
       IconPlayerPlay,
     }),
   ],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './workflow-runs-table.component.html',
 })
 export class WorkflowRunsTableComponent {

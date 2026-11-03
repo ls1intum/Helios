@@ -37,11 +37,12 @@ public class GitHubJwtAuthenticationConverter
   public AbstractAuthenticationToken convert(@NonNull Jwt jwt) {
     Collection<GrantedAuthority> authorities = new ArrayList<>();
     String username = jwt.getClaim("preferred_username");
+    String githubId = jwt.getClaimAsString("github_id");
     String repositoryId = request.getHeader("X-Repository-Id");
 
     if (repositoryId != null) {
       try {
-        authorities.addAll(getGithubRepositoryAuthorities(repositoryId, username));
+        authorities.addAll(getGithubRepositoryAuthorities(repositoryId, username, githubId));
       } catch (IOException e) {
         log.error("Failed to fetch GitHub repository permissions", e);
       }
@@ -51,7 +52,7 @@ public class GitHubJwtAuthenticationConverter
   }
 
   private Collection<GrantedAuthority> getGithubRepositoryAuthorities(
-      String repositoryId, String username) throws IOException {
+      String repositoryId, String username, String githubId) throws IOException {
 
     Collection<GrantedAuthority> authorities = new ArrayList<>();
 
@@ -62,7 +63,7 @@ public class GitHubJwtAuthenticationConverter
     }
 
     GitHubRepositoryRoleDto githubRepositoryRole =
-        gitHubService.getRepositoryRole(repositoryId, username);
+        gitHubService.getRepositoryRole(repositoryId, username, githubId);
 
     if (githubRepositoryRole.getPermission() == RepoPermissionType.ADMIN) {
       authorities.add(new SimpleGrantedAuthority(rolePrefix + RepoPermissionType.ADMIN));

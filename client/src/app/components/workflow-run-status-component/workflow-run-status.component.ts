@@ -1,4 +1,4 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, computed, input, ChangeDetectionStrategy } from '@angular/core';
 import { Skeleton } from 'primeng/skeleton';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
 import { Tooltip } from 'primeng/tooltip';
@@ -40,6 +40,7 @@ type WorkflowRunSummary = {
       IconAlertCircle,
     }),
   ],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './workflow-run-status.component.html',
 })
 export class WorkflowRunStatusComponent {

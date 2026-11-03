@@ -24,14 +24,14 @@
             tooltipPosition="top"
           >
             <div class="flex items-center">
-              <i-tabler name="x" class="w-4 h-4 mr-1.5 flex-shrink-0" />
+              <i-tabler name="x" class="w-4 h-4 mr-1.5 shrink-0" />
               <span>Cancel</span>
             </div>
           </p-button>
         } @else if (!isDeploymentInProgress()) {
           <p-button class="border-r-2" (click)="onDeploy($event)" [disabled]="!canUserDeploy()" [pTooltip]="getDeployTooltip()" tooltipPosition="top">
             <div class="flex items-center">
-              <i-tabler name="cloud-upload" class="w-4 h-4 mr-1.5 flex-shrink-0" />
+              <i-tabler name="cloud-upload" class="w-4 h-4 mr-1.5 shrink-0" />
               <span>Deploy</span>
             </div>
           </p-button>
@@ -43,19 +43,19 @@
         @if (!environment().locked) {
           <p-button (click)="onLock($event)" [disabled]="!canUserDeploy()" [pTooltip]="getLockTooltip()" tooltipPosition="top">
             <div class="flex items-center">
-              <i-tabler name="lock" class="w-4 h-4 flex-shrink-0 text-white" />
+              <i-tabler name="lock" class="w-4 h-4 shrink-0 text-white" />
             </div>
           </p-button>
         } @else {
           @if (canUnlockShow()) {
             <p-button severity="danger" class="[&>*]:!rounded-none" (click)="onUnlock($event)" [disabled]="!canUnlock()" [pTooltip]="getUnlockToolTip()" tooltipPosition="top">
               <div class="flex items-center">
-                <i-tabler name="lock-open" class="w-4 h-4 flex-shrink-0" />
+                <i-tabler name="lock-open" class="w-4 h-4 shrink-0" />
               </div>
             </p-button>
             @if (isCurrentUserLocked()) {
               <p-button severity="success" (click)="onExtend($event)" [disabled]="!canExtendLock()" [pTooltip]="'Extend my lock expiration'" tooltipPosition="top">
-                <i-tabler name="lock-plus" class="w-4 h-4 flex-shrink-0" />
+                <i-tabler name="lock-plus" class="w-4 h-4 shrink-0" />
               </p-button>
             }
           }
@@ -66,12 +66,12 @@
       @if (environment().latestDeployment?.state === 'WAITING' && environment().latestDeployment?.workflowRunHtmlUrl) {
         <p-button
           severity="success"
-          (click)="openExternalLink($event, environment().latestDeployment?.workflowRunHtmlUrl)"
+          (click)="openExternalLink($event, $safeNavigationMigration(environment().latestDeployment?.workflowRunHtmlUrl))"
           pTooltip="Approve deployment on GitHub"
           tooltipPosition="top"
         >
           <div class="flex items-center">
-            <i-tabler name="check" class="w-4 h-4 flex-shrink-0" />
+            <i-tabler name="check" class="w-4 h-4 shrink-0" />
           </div>
         </p-button>
       }
@@ -85,7 +85,7 @@
     }
     <a
       icon
-      [routerLink]="'/repo/' + environment().repository?.id + '/environment/' + environment().id + '/edit'"
+      [routerLink]="'/repo/' + $safeNavigationMigration(environment().repository?.id) + '/environment/' + environment().id + '/edit'"
       class="p-button p-button-text p-button-secondary p-2"
       (click)="$event.stopPropagation()"
     >

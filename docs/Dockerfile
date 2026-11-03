@@ -1,4 +1,4 @@
-FROM sphinxdoc/sphinx
+FROM sphinxdoc/sphinx:8.2.3
 
 WORKDIR /docs
 # create non-root user to be able to edit the generated files without root access later
