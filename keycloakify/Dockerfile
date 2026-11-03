@@ -2,7 +2,7 @@
 FROM maven:3.10.0-eclipse-temurin-25 AS maven
 
 # Stage 1: Build the Keycloak theme
-FROM node:26.12.1 AS build
+FROM node:26.13.0 AS build
 
 # Set the working directory
 WORKDIR /app
@@ -14,7 +14,7 @@ ENV JAVA_HOME=/opt/java/openjdk
 ENV PATH="/usr/share/maven/bin:${JAVA_HOME}/bin:${PATH}"
 
 # Node 26 no longer bundles Corepack; match package.json "packageManager".
-RUN npm install --global pnpm@12.15.0
+RUN npm install --global pnpm@12.16.1
 
 # Copy manifest, lockfile, and pnpm settings (node-linker + allowed builds)
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./

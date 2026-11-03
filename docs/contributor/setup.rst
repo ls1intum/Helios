@@ -38,10 +38,10 @@ Before you can start Helios, you need to install and configure some dependencies
 
      .. code-block:: shell
 
-        npm install -g pnpm@12.15.0
+        npm install -g pnpm@12.16.1
 
      Alternatively, install Corepack separately, then run ``corepack enable``.
-     Verify with ``pnpm --version`` (should print ``12.15.0``).
+     Verify with ``pnpm --version`` (should print ``12.16.1``).
 
      Both frontend workspaces set ``pmOnFail: ignore`` to keep their lockfiles
      readable by GitHub's dependency graph and Dependabot. This disables pnpm's
