@@ -3,6 +3,7 @@ import { RouterOutlet } from '@angular/router';
 import { KeycloakService } from '@app/core/services/keycloak/keycloak.service';
 import { client } from '@app/core/modules/openapi/client.gen';
 import { environment } from '../environments/environment';
+import { HANDLED_LOCALLY_HEADER } from '@app/core/utils/error-handling';
 import { MessageService } from 'primeng/api';
 import { ReportProblemButtonComponent } from './components/report-problem-button/report-problem-button.component';
 
@@ -31,8 +32,9 @@ export class AppComponent {
       return request;
     });
 
-    client.interceptors.response.use(async response => {
-      if (!response.ok) {
+    client.interceptors.response.use(async (response, request) => {
+      // Callers that report the failure themselves opt out, so one failure shows one alert.
+      if (!response.ok && request.headers.get(HANDLED_LOCALLY_HEADER) !== 'true') {
         const errorResponse = response.clone();
         // Attempt to parse the response as JSON
         let errorMessage = 'An unexpected error occurred.';

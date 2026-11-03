@@ -21,6 +21,7 @@ import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
 import { IconCheck, IconX, IconClock, IconGitBranch, IconExternalLink } from 'angular-tabler-icons/icons';
 import { QueryClient } from '@tanstack/angular-query-experimental';
 import { PageHeadingComponent } from '@app/components/page-heading/page-heading.component';
+import { handledLocallyHeaders } from '@app/core/utils/error-handling';
 
 /**
  * Cross-repo list of deployments waiting on the current user as a required reviewer. Each row
@@ -115,7 +116,7 @@ export class PendingApprovalsComponent {
   inFlightDeploymentId = signal<number | null>(null);
 
   approveMutation = injectMutation(() => ({
-    mutationFn: (deploymentId: number) => approve({ path: { deploymentId }, throwOnError: true }).then(r => r.data!),
+    mutationFn: (deploymentId: number) => approve({ path: { deploymentId }, headers: handledLocallyHeaders, throwOnError: true }).then(r => r.data!),
     onSuccess: row => {
       this.messageService.add({
         severity: 'success',
@@ -136,6 +137,7 @@ export class PendingApprovalsComponent {
       decline({
         path: { deploymentId: params.deploymentId },
         body: params.comment ? { comment: params.comment } : {},
+        headers: handledLocallyHeaders,
         throwOnError: true,
       }).then(r => r.data!),
     onSuccess: row => {
@@ -199,11 +201,19 @@ export class PendingApprovalsComponent {
     return (value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
 
+  /**
+   * Shows exactly one alert for a failed decision (the global error toast is suppressed for these
+   * calls). A 409 means the request can no longer be acted on, e.g. the run was already decided or
+   * GitHub's approval window expired; the server has already archived it, so this is a notice, not a
+   * failure, and the list refresh in `onSettled` removes the row.
+   */
   private showServerError(summary: string, err: unknown) {
-    const message =
-      typeof err === 'object' && err !== null && 'message' in err && typeof (err as { message: unknown }).message === 'string'
-        ? (err as { message: string }).message
-        : 'See server logs for details.';
-    this.messageService.add({ severity: 'error', summary, detail: message, life: 8000 });
+    const body = typeof err === 'object' && err !== null ? (err as { message?: unknown; status?: unknown }) : {};
+    const message = typeof body.message === 'string' && body.message ? body.message : 'Helios could not complete the request. Please try again later.';
+    if (body.status === 409) {
+      this.messageService.add({ severity: 'info', summary: 'No longer waiting for approval', detail: message, life: 10000 });
+      return;
+    }
+    this.messageService.add({ severity: 'error', summary, detail: message, life: 10000 });
   }
 }

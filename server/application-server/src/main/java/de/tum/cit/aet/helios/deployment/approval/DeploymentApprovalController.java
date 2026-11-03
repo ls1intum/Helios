@@ -3,6 +3,7 @@ package de.tum.cit.aet.helios.deployment.approval;
 import de.tum.cit.aet.helios.auth.AuthService;
 import de.tum.cit.aet.helios.user.User;
 import jakarta.validation.Valid;
+import java.time.OffsetDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -53,7 +54,9 @@ public class DeploymentApprovalController {
                 currentUser.getId(),
                 List.of(
                     DeploymentApprovalRequest.State.PENDING,
-                    DeploymentApprovalRequest.State.FAILED_AT_GITHUB))
+                    DeploymentApprovalRequest.State.FAILED_AT_GITHUB),
+                // Older requests outlived GitHub's approval window and can no longer be decided.
+                OffsetDateTime.now().minus(DeploymentApprovalRequest.GITHUB_APPROVAL_WINDOW))
             .stream()
             .map(PendingApprovalDto::from)
             .toList();
