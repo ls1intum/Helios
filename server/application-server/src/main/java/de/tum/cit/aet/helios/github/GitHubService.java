@@ -369,7 +369,70 @@ public class GitHubService {
       log.error("Error occurred while fetching username: {}", e.getMessage());
       throw new IOException("Failed to fetch username", e);
     }
-    return getRepositoryRole(repositoryId, username);
+    return getRepositoryRole(repositoryId, username, readGithubIdOrNull());
+  }
+
+  private String readGithubIdOrNull() {
+    try {
+      return this.authService.getGithubId();
+    } catch (Exception e) {
+      return null;
+    }
+  }
+
+  /** Thrown when GitHub answers 404 for the user or repository of a permission lookup. */
+  public static class GitHubUserNotFoundException extends IOException {
+    public GitHubUserNotFoundException(String message) {
+      super(message);
+    }
+  }
+
+  /**
+   * Retrieves the GitHub repository role, tolerating renamed GitHub accounts.
+   *
+   * <p>Keycloak only stores the GitHub login from the user's first Helios login and never updates
+   * it, so after a GitHub rename {@code preferred_username} points to a login that no longer
+   * exists and GitHub answers 404. The numeric GitHub id never changes, so on a 404 the current
+   * login is resolved from the id and the lookup is retried once.
+   *
+   * @param repositoryId the ID of the repository.
+   * @param username the login from the token (may be outdated).
+   * @param githubId the immutable GitHub user id from the token, may be null.
+   */
+  public GitHubRepositoryRoleDto getRepositoryRole(
+      String repositoryId, String username, String githubId) throws IOException {
+    try {
+      return fetchRepositoryRole(repositoryId, username);
+    } catch (GitHubUserNotFoundException e) {
+      String currentLogin = resolveLoginByGithubId(githubId);
+      if (currentLogin == null || currentLogin.equalsIgnoreCase(username)) {
+        throw new IOException("Error occurred while fetching permissions", e);
+      }
+      log.info(
+          "GitHub login '{}' from the token no longer exists, using current login '{}' (id {})",
+          username,
+          currentLogin,
+          githubId);
+      return fetchRepositoryRole(repositoryId, currentLogin);
+    }
+  }
+
+  private String resolveLoginByGithubId(String githubId) {
+    if (githubId == null || !githubId.matches("\\d+")) {
+      return null;
+    }
+    Request request =
+        getRequestBuilder().url("https://api.github.com/user/" + githubId).get().build();
+    try (Response response = okHttpClient.newCall(request).execute()) {
+      if (!response.isSuccessful() || response.body() == null) {
+        return null;
+      }
+      String login = objectMapper.readTree(response.body().string()).path("login").asText(null);
+      return login == null || login.isBlank() ? null : login;
+    } catch (IOException e) {
+      log.warn("Failed to resolve GitHub login for id {}: {}", githubId, e.getMessage());
+      return null;
+    }
   }
 
   /**
@@ -382,6 +445,15 @@ public class GitHubService {
    * @throws IllegalArgumentException if the repository ID or username is null or empty.
    */
   public GitHubRepositoryRoleDto getRepositoryRole(String repositoryId, String username)
+      throws IOException, IllegalArgumentException {
+    try {
+      return fetchRepositoryRole(repositoryId, username);
+    } catch (GitHubUserNotFoundException e) {
+      throw new IOException("Error occurred while fetching permissions", e);
+    }
+  }
+
+  private GitHubRepositoryRoleDto fetchRepositoryRole(String repositoryId, String username)
       throws IOException, IllegalArgumentException {
 
     if (repositoryId == null || repositoryId.isEmpty()) {
@@ -399,6 +471,10 @@ public class GitHubService {
     Request request = getRequestBuilder().url(url).get().build();
 
     try (Response response = okHttpClient.newCall(request).execute()) {
+      if (response.code() == 404) {
+        throw new GitHubUserNotFoundException(
+            "GitHub returned 404 for repository " + repositoryId + " and user " + username);
+      }
       if (!response.isSuccessful()) {
         throw new IOException("GitHub API call failed with response code: " + response.code());
       }
@@ -414,6 +490,8 @@ public class GitHubService {
           RepoPermissionType.fromString(permissionResponse.getPermission()),
           permissionResponse.getRoleName());
 
+    } catch (GitHubUserNotFoundException e) {
+      throw e;
     } catch (JsonProcessingException e) {
       log.error("Error processing JSON response: {}", e.getMessage());
       throw new IOException("Error processing JSON response", e);
