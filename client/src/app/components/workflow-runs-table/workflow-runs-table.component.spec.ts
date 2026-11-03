@@ -161,49 +161,6 @@ describe('WorkflowRunsTableComponent', () => {
     });
   });
 
-  describe('getTestStatusIcon', () => {
-    type TestIcon = ReturnType<WorkflowRunsTableComponent['getTestStatusIcon']>;
-
-    const cases: Array<[Partial<WorkflowRunDto>, TestIcon]> = [
-      [{ testProcessingStatus: 'PROCESSED' }, 'circle-check'],
-      [{ testProcessingStatus: 'FAILED' }, 'alert-triangle'],
-      [{ testProcessingStatus: 'PROCESSING' }, 'progress'],
-      [{}, 'circle-check'],
-    ];
-
-    cases.forEach(([overrides, expected]: [Partial<WorkflowRunDto>, TestIcon]) => {
-      it(`returns ${expected} for ${JSON.stringify(overrides)}`, () => {
-        const actual: TestIcon = component.getTestStatusIcon(createRun(overrides));
-        expect(actual).toBe(expected);
-      });
-    });
-  });
-
-  describe('getTestStatusClass', () => {
-    type TestStatusClass = ReturnType<WorkflowRunsTableComponent['getTestStatusClass']>;
-
-    const cases: Array<[Partial<WorkflowRunDto>, TestStatusClass]> = [
-      [{ testProcessingStatus: 'PROCESSED' }, 'text-green-600 dark:text-green-400'],
-      [{ testProcessingStatus: 'FAILED' }, 'text-red-600 dark:text-red-400'],
-      [{}, 'text-muted-color'],
-    ];
-
-    cases.forEach(([overrides, expected]: [Partial<WorkflowRunDto>, TestStatusClass]) => {
-      it(`returns ${expected} for ${JSON.stringify(overrides)}`, () => {
-        const actual: TestStatusClass = component.getTestStatusClass(createRun(overrides));
-        expect(actual).toBe(expected);
-      });
-    });
-
-    it('returns animated yellow class for PROCESSING', () => {
-      const actual: TestStatusClass = component.getTestStatusClass(createRun({ testProcessingStatus: 'PROCESSING' }));
-
-      expect(actual).toContain('text-yellow-500');
-      expect(actual).toContain('dark:text-yellow-400');
-      expect(actual).toContain('animate-spin');
-    });
-  });
-
   describe('statusSeverity', () => {
     type StatusSeverity = ReturnType<WorkflowRunsTableComponent['statusSeverity']>;
 

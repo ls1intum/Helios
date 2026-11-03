@@ -45,7 +45,6 @@ class GitHubDataSyncOrchestratorTest {
             null,
             null,
             null,
-            null,
             null);
     GHRepository repository = mock(GHRepository.class);
     GHPullRequestQueryBuilder builder = mock(GHPullRequestQueryBuilder.class);

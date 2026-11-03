@@ -3,8 +3,6 @@ package de.tum.cit.aet.helios.branch;
 import de.tum.cit.aet.helios.auth.AuthService;
 import de.tum.cit.aet.helios.commit.CommitRepository;
 import de.tum.cit.aet.helios.filters.RepositoryContext;
-import de.tum.cit.aet.helios.releaseinfo.releasecandidate.ReleaseCandidate;
-import de.tum.cit.aet.helios.releaseinfo.releasecandidate.ReleaseCandidateRepository;
 import de.tum.cit.aet.helios.userpreference.UserPreference;
 import de.tum.cit.aet.helios.userpreference.UserPreferenceRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -22,7 +20,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class BranchService {
 
   private final BranchRepository branchRepository;
-  private final ReleaseCandidateRepository releaseCandidateRepository;
   private final UserPreferenceRepository userPreferenceRepository;
   private final AuthService authService;
   private final CommitRepository commitRepository;
@@ -65,14 +62,7 @@ public class BranchService {
   public Optional<BranchDetailsDto> getBranchByRepositoryIdAndName(Long repositoryId, String name) {
     return branchRepository
         .findByRepositoryRepositoryIdAndName(repositoryId, name)
-        .map(
-            branch ->
-                BranchDetailsDto.fromBranch(
-                    branch,
-                    releaseCandidateRepository
-                        .findByRepositoryRepositoryIdAndCommitSha(
-                            repositoryId, branch.getCommitSha()).stream()
-                        .map(ReleaseCandidate::getName).toList()));
+        .map(BranchDetailsDto::fromBranch);
   }
 
   public void setBranchPinnedByRepositoryIdAndName(Long repoId, String name, Boolean isPinned) {

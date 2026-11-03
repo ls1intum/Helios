@@ -18,14 +18,11 @@ import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 /**
- * Integration test for the keep-N retention and max-age-cap native queries in
- * {@link WorkflowRunRepository}.
+ * Integration test for the max-age-cap native queries in {@link WorkflowRunRepository}.
  *
  * <p>Runs against an embedded PostgreSQL (zonky) with the real Flyway schema, exercising the SQL
- * semantics a mocked-repository unit test cannot: the default-branch exemption (including its NULL
- * handling), the keep-N window per ⟨repository, workflow, branch⟩, preview/purge symmetry, the
- * hard age cap with its deployment exclusion and the {@code ON DELETE CASCADE} chain to
- * {@code test_suite}/{@code test_case}.
+ * semantics a mocked-repository unit test cannot: the hard age cap (default branches included) with
+ * its deployment exclusion and batch bound.
  */
 @DataJpaTest(properties = {"spring.flyway.enabled=true", "spring.jpa.hibernate.ddl-auto=none"})
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
@@ -52,17 +49,17 @@ class WorkflowRunRetentionIntegrationTest {
   private static final String FEATURE_BRANCH = "feature-x";
 
   // Repo 1 (default branch 'develop').
-  // develop: three runs, all outside any keep-2 window by age — keep-N must not touch them.
+  // develop: three runs; only the oldest exceeds the max-age cap.
   private static final long DEVELOP_NEWEST = 100L;
   private static final long DEVELOP_MIDDLE = 101L;
   private static final long DEVELOP_OLD = 102L; // 120 days — only the max-age cap removes it
-  // feature branch: three runs — keep-2 leaves the two newest, deletes the third.
+  // feature branch: three runs, none older than the max-age cap.
   private static final long FEATURE_NEWEST = 110L;
   private static final long FEATURE_MIDDLE = 111L;
   private static final long FEATURE_OLD = 112L;
   // 120 days old but referenced by a deployment — the max-age cap must preserve it.
   private static final long DEPLOYED_OLD = 120L;
-  // Repo 2 (default_branch NULL): NULL-head_branch runs must remain keep-N prunable.
+  // Repo 2 (default_branch NULL): NULL-head_branch runs are only removed by the max-age cap.
   private static final long NULL_BRANCH_NEWEST = 130L;
   private static final long NULL_BRANCH_MIDDLE = 131L;
   private static final long NULL_BRANCH_OLD = 132L;
@@ -108,15 +105,6 @@ class WorkflowRunRetentionIntegrationTest {
         "INSERT INTO deployment (id, environment_id, workflow_run_id, state) "
             + "VALUES (1, 1, ?, 'SUCCESS')",
         DEPLOYED_OLD);
-
-    // Child rows under the run the max-age cap deletes, to prove the cascade.
-    jdbc.update(
-        "INSERT INTO test_suite (id, workflow_run_id, name, timestamp, tests, failures, errors, "
-            + "skipped, time) VALUES (200, ?, 'suite', now(), 1, 0, 0, 0, 0.0)",
-        DEVELOP_OLD);
-    jdbc.update(
-        "INSERT INTO test_case (id, test_suite_id, name, time, status) "
-            + "VALUES (300, 200, 'case', 0.0, 'PASSED')");
   }
 
   private void insertRun(long id, long repositoryId, String headBranch, String ageInterval) {
@@ -132,38 +120,7 @@ class WorkflowRunRetentionIntegrationTest {
   }
 
   @Test
-  void keepPolicyPrunesFeatureBranchButExemptsDefaultBranch() {
-    int deleted = repo.purgeObsoleteRuns(2, 0, null);
-
-    // Feature branch keeps its newest two; NULL-branch runs in a repo without a default
-    // branch stay prunable; develop is exempt entirely.
-    assertThat(deleted).isEqualTo(2);
-    assertThat(remainingRunIds())
-        .containsExactlyInAnyOrder(
-            DEVELOP_NEWEST, DEVELOP_MIDDLE, DEVELOP_OLD,
-            FEATURE_NEWEST, FEATURE_MIDDLE, DEPLOYED_OLD,
-            NULL_BRANCH_NEWEST, NULL_BRANCH_MIDDLE);
-  }
-
-  @Test
-  void previewObsoleteRunIdsMatchesKeepPolicySemantics() {
-    assertThat(repo.previewObsoleteRunIds(2, 0, null))
-        .containsExactlyInAnyOrder(FEATURE_OLD, NULL_BRANCH_OLD);
-  }
-
-  @Test
-  void previewSurvivorRunIdsIncludesExemptDefaultBranchRuns() {
-    // Survivors + deletable must partition the full run set: default-branch runs survive
-    // and therefore appear in the survivor preview.
-    assertThat(repo.previewSurvivorRunIds(2, 0, null))
-        .containsExactlyInAnyOrder(
-            DEVELOP_NEWEST, DEVELOP_MIDDLE, DEVELOP_OLD,
-            FEATURE_NEWEST, FEATURE_MIDDLE, DEPLOYED_OLD,
-            NULL_BRANCH_NEWEST, NULL_BRANCH_MIDDLE);
-  }
-
-  @Test
-  void maxAgeCapDeletesOldRunsIncludingDefaultBranchButPreservesDeployedAndCascades() {
+  void maxAgeCapDeletesOldRunsIncludingDefaultBranchButPreservesDeployed() {
     int deleted =
         repo.purgeRunsOlderThan(90, WorkflowRunCleanupTask.MAX_AGE_CAP_BATCH_SIZE);
 
@@ -175,8 +132,6 @@ class WorkflowRunRetentionIntegrationTest {
             DEVELOP_NEWEST, DEVELOP_MIDDLE,
             FEATURE_NEWEST, FEATURE_MIDDLE, FEATURE_OLD, DEPLOYED_OLD,
             NULL_BRANCH_NEWEST, NULL_BRANCH_MIDDLE, NULL_BRANCH_OLD);
-    assertThat(jdbc.queryForObject("SELECT count(*) FROM test_suite", Long.class)).isZero();
-    assertThat(jdbc.queryForObject("SELECT count(*) FROM test_case", Long.class)).isZero();
   }
 
   @Test

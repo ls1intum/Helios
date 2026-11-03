@@ -1,5 +1,5 @@
-import { provideAppInitializer, ApplicationConfig, inject, provideZonelessChangeDetection, ErrorHandler } from '@angular/core';
-import { provideRouter, Router, withComponentInputBinding, withRouterConfig } from '@angular/router';
+import { provideAppInitializer, ApplicationConfig, inject, provideZonelessChangeDetection } from '@angular/core';
+import { provideRouter, withComponentInputBinding, withRouterConfig } from '@angular/router';
 import { provideQueryClient, provideTanStackQuery, QueryClient } from '@tanstack/angular-query-experimental';
 import { withDevtools } from '@tanstack/angular-query-experimental/devtools';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
@@ -12,8 +12,6 @@ import { provideHttpClient, withInterceptorsFromDi, withXhr } from '@angular/com
 import { KeycloakService } from './core/services/keycloak/keycloak.service';
 import { DatePipe } from '@angular/common';
 import { RepositoryFilterGuard } from './core/middlewares/repository-filter.guard';
-import * as Sentry from '@sentry/angular';
-import { TraceService } from '@sentry/angular';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -41,17 +39,6 @@ export const appConfig: ApplicationConfig = {
     provideAppInitializer(() => {
       const keycloakService = inject(KeycloakService);
       return keycloakService.init();
-    }),
-    {
-      provide: ErrorHandler,
-      useValue: Sentry.createErrorHandler(),
-    },
-    { provide: TraceService, deps: [Router] },
-    provideAppInitializer(() => {
-      const initializerFn = (() => () => {
-        inject(TraceService);
-      })();
-      return initializerFn();
     }),
   ],
 };

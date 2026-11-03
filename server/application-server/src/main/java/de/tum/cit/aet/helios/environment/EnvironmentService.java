@@ -23,7 +23,6 @@ import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
 import de.tum.cit.aet.helios.nats.NatsNotificationPublisherService;
 import de.tum.cit.aet.helios.notification.email.LockReleasedPayload;
-import de.tum.cit.aet.helios.releaseinfo.releasecandidate.ReleaseCandidateRepository;
 import de.tum.cit.aet.helios.user.User;
 import de.tum.cit.aet.helios.workflow.Workflow;
 import de.tum.cit.aet.helios.workflow.WorkflowRepository;
@@ -62,7 +61,6 @@ public class EnvironmentService {
   private final EnvironmentRepository environmentRepository;
   private final EnvironmentLockHistoryRepository lockHistoryRepository;
   private final HeliosDeploymentRepository heliosDeploymentRepository;
-  private final ReleaseCandidateRepository releaseCandidateRepository;
   private final DeploymentRepository deploymentRepository;
   @Lazy private final GitRepoSettingsService gitRepoSettingsService;
   private final WorkflowRepository workflowRepository;
@@ -108,8 +106,7 @@ public class EnvironmentService {
               LatestDeploymentUnion latest = findLatestDeployment(environment);
               DeploymentDurationEstimate estimate = computeEstimate(environment);
               return EnvironmentDto.fromEnvironment(
-                  environment, latest, environment.getLatestStatus(), releaseCandidateRepository,
-                  estimate);
+                  environment, latest, environment.getLatestStatus(), estimate);
             })
         .collect(Collectors.toList());
   }
@@ -127,8 +124,7 @@ public class EnvironmentService {
               LatestDeploymentUnion latest = findLatestDeployment(environment);
               DeploymentDurationEstimate estimate = computeEstimate(environment);
               return EnvironmentDto.fromEnvironment(
-                  environment, latest, environment.getLatestStatus(), releaseCandidateRepository,
-                  estimate);
+                  environment, latest, environment.getLatestStatus(), estimate);
             })
         .collect(Collectors.toList());
   }
@@ -781,7 +777,7 @@ public class EnvironmentService {
         .map(
             lock ->
                 EnvironmentLockHistoryDto.fromEnvironmentLockHistory(
-                    lock, this, releaseCandidateRepository))
+                    lock, this))
         .orElse(null);
   }
 
@@ -795,7 +791,7 @@ public class EnvironmentService {
         .map(
             lock ->
                 EnvironmentLockHistoryDto.fromEnvironmentLockHistory(
-                    lock, this, releaseCandidateRepository))
+                    lock, this))
         .collect(Collectors.toList());
   }
 

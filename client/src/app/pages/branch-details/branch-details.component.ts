@@ -1,20 +1,14 @@
-import { Component, computed, inject, input, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, computed, input, signal, ChangeDetectionStrategy } from '@angular/core';
 
 import { PipelineComponent, PipelineSelector } from '@app/components/pipeline/pipeline.component';
-import { TagModule } from 'primeng/tag';
-import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { DeploymentSelectionComponent } from '@app/components/deployment-selection/deployment-selection.component';
 import { injectQuery } from '@tanstack/angular-query-experimental';
 import { SkeletonModule } from 'primeng/skeleton';
 import { getBranchByRepositoryIdAndNameOptions, getCommitByRepositoryIdAndNameOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
-import { ReleaseCandidateCreateComponent } from '@app/components/dialogs/release-candidate-create/release-candidate-create.component';
-import { PermissionService } from '@app/core/services/permission.service';
 import { MarkdownPipe } from '@app/core/modules/markdown/markdown.pipe';
-import { RouterLink } from '@angular/router';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
-import { IconGitBranch, IconTag, IconTagPlus } from 'angular-tabler-icons/icons';
-import { PipelineTestResultsComponent } from '@app/components/pipeline/test-results/pipeline-test-results.component';
+import { IconGitBranch } from 'angular-tabler-icons/icons';
 import { Divider } from 'primeng/divider';
 import { DeploymentHistoryComponent } from '@app/components/deployment-history/deployment-history.component';
 import { Tab, TabList, TabPanel, TabPanels, Tabs } from 'primeng/tabs';
@@ -24,15 +18,10 @@ import { Tab, TabList, TabPanel, TabPanels, Tabs } from 'primeng/tabs';
   imports: [
     DeploymentSelectionComponent,
     InputTextModule,
-    RouterLink,
-    TagModule,
     TablerIconComponent,
-    ButtonModule,
     PipelineComponent,
     SkeletonModule,
-    ReleaseCandidateCreateComponent,
     MarkdownPipe,
-    PipelineTestResultsComponent,
     Divider,
     DeploymentHistoryComponent,
     Tab,
@@ -44,16 +33,12 @@ import { Tab, TabList, TabPanel, TabPanels, Tabs } from 'primeng/tabs';
   providers: [
     provideTablerIcons({
       IconGitBranch,
-      IconTag,
-      IconTagPlus,
     }),
   ],
   changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './branch-details.component.html',
 })
 export class BranchDetailsComponent {
-  private permissionService = inject(PermissionService);
-
   repositoryId = input.required<number>();
   branchName = input.required<string>();
   deploymentTab = signal<'deploy' | 'history'>('deploy');
@@ -63,8 +48,6 @@ export class BranchDetailsComponent {
       this.deploymentTab.set(value);
     }
   }
-
-  isCreateDialogVisible = signal(false);
 
   query = injectQuery(() => ({
     ...getBranchByRepositoryIdAndNameOptions({ path: { repoId: this.repositoryId() }, query: { name: this.branchName() } }),
@@ -76,8 +59,6 @@ export class BranchDetailsComponent {
     enabled: !!this.repositoryId() && !!this.query.data(),
   }));
   commit = computed(() => this.commitQuery.data());
-
-  isAtLeastMaintainer = computed(() => this.permissionService.isAtLeastMaintainer());
 
   pipelineSelector = computed<PipelineSelector | null>(() => {
     const branch = this.query.data();

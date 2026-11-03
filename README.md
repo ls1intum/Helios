@@ -6,7 +6,6 @@
 # Helios 🌞
 
 [![Helios latest](https://img.shields.io/github/v/tag/ls1intum/Helios?label=Helios%20latest&sort=semver&filter=v*)](https://github.com/ls1intum/Helios/releases/latest)
-[![helios-status-spring-starter latest](https://img.shields.io/maven-central/v/de.tum.cit.aet/helios-status-spring-starter.svg?label=helios-status-spring-starter%20latest)](https://central.sonatype.com/artifact/de.tum.cit.aet/helios-status-spring-starter)
 [![Build and Deploy to Prod](https://github.com/ls1intum/Helios/actions/workflows/prod.yml/badge.svg?branch=main)](https://github.com/ls1intum/Helios/actions/workflows/prod.yml)
 [![Deploy to Staging](https://github.com/ls1intum/Helios/actions/workflows/staging.yml/badge.svg?branch=staging)](https://github.com/ls1intum/Helios/actions/workflows/staging.yml)
 [![Tests](https://github.com/ls1intum/Helios/actions/workflows/test.yml/badge.svg?branch=staging)](https://github.com/ls1intum/Helios/actions/workflows/test.yml)
@@ -19,16 +18,10 @@
 Helios brings clarity and control to GitHub Actions based CI/CD workflows. Named after the Greek god of the sun—symbolizing insight, reliability, and visibility—Helios offers:
 
 - 🌟 **Unified Dashboard**  
-  All your branches, PRs, builds, test suites, and deployments in one canvas. Helios automatically syncs with GitHub, so you always see the latest activity.
+  All your branches, PRs, builds, and deployments in one canvas. Helios automatically syncs with GitHub, so you always see the latest activity.
 
 - 🚀 **Smooth Deployment Flow**  
-  Pick from available environments with a friendly UI. Helios locks your chosen environment, prevents collisions, and displays live progress until tests finish or a timeout is reached.
-
-- 🔍 **Test Insights**  
-  No more scrolling through raw logs. Helios ingests structured reports (JUnit XML) so you can click into individual test suites and cases—see pass/fail, error messages, and log snippets. Track flaky tests across branches over time.
-
-- 📦 **Release Management**  
-  Draft, review, and publish release candidates without leaving Helios. Automatically generate release notes, tag your release, and see everything in one timeline.
+  Pick from available environments with a friendly UI. Helios locks your chosen environment, prevents collisions, and displays live progress until the deployment finishes or a timeout is reached.
 
 ---
 

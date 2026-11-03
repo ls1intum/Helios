@@ -54,9 +54,6 @@ public class GitRepoSettingsServiceTest {
     Field lockResField = GitRepoSettings.class.getDeclaredField("lockReservationThreshold");
     lockResField.setAccessible(true);
     lockResField.set(gitRepoSettings, 30L);
-    Field pkgField = GitRepoSettings.class.getDeclaredField("packageName");
-    pkgField.setAccessible(true);
-    pkgField.set(gitRepoSettings, "com.example.app");
 
     gitRepoSettingsDto = GitRepoSettingsDto.fromGitRepoSettings(gitRepoSettings);
   }
@@ -77,9 +74,6 @@ public class GitRepoSettingsServiceTest {
     Field lockResField = GitRepoSettings.class.getDeclaredField("lockReservationThreshold");
     lockResField.setAccessible(true);
     assertEquals(lockResField.get(gitRepoSettings), result.get().lockReservationThreshold());
-    Field pkgField = GitRepoSettings.class.getDeclaredField("packageName");
-    pkgField.setAccessible(true);
-    assertEquals(pkgField.get(gitRepoSettings), result.get().packageName());
     verify(gitRepoRepository, times(1)).findByRepositoryRepositoryId(1L);
   }
 
@@ -130,7 +124,7 @@ public class GitRepoSettingsServiceTest {
         .thenReturn(Optional.of(gitRepoSettings));
     when(gitRepoRepository.save(any(GitRepoSettings.class))).thenReturn(gitRepoSettings);
 
-    GitRepoSettingsDto updateDto = new GitRepoSettingsDto(1L, 120L, 60L, "com.example.updated");
+    GitRepoSettingsDto updateDto = new GitRepoSettingsDto(1L, 120L, 60L);
 
     Optional<GitRepoSettingsDto> result =
         gitRepoSettingsService.updateGitRepoSettings(1L, updateDto);
@@ -138,7 +132,6 @@ public class GitRepoSettingsServiceTest {
     assertTrue(result.isPresent());
     assertEquals(updateDto.lockExpirationThreshold(), result.get().lockExpirationThreshold());
     assertEquals(updateDto.lockReservationThreshold(), result.get().lockReservationThreshold());
-    assertEquals(updateDto.packageName(), result.get().packageName());
     verify(gitRepoRepository, times(1)).findByRepositoryRepositoryId(1L);
     verify(gitRepoRepository, times(1)).save(any(GitRepoSettings.class));
     verify(environmentService, times(1)).updateLockExpirationAndReservation(1L);
@@ -152,14 +145,13 @@ public class GitRepoSettingsServiceTest {
     when(gitRepoRepository.save(any(GitRepoSettings.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
 
-    GitRepoSettingsDto updateDto = new GitRepoSettingsDto(null, 120L, 60L, "com.example.created");
+    GitRepoSettingsDto updateDto = new GitRepoSettingsDto(null, 120L, 60L);
 
     Optional<GitRepoSettingsDto> result =
         gitRepoSettingsService.updateGitRepoSettings(1L, updateDto);
 
     assertTrue(result.isPresent());
     assertEquals(120L, result.get().lockExpirationThreshold());
-    assertEquals("com.example.created", result.get().packageName());
     verify(gitRepoRepository, times(1)).save(any(GitRepoSettings.class));
     verify(environmentService, times(1)).updateLockExpirationAndReservation(1L);
   }
@@ -168,7 +160,7 @@ public class GitRepoSettingsServiceTest {
   public void testUpdateGitRepoSettingsNotFound() {
     when(gitRepoRepository.findByRepositoryRepositoryId(1L)).thenReturn(Optional.empty());
 
-    GitRepoSettingsDto updateDto = new GitRepoSettingsDto(1L, 120L, 60L, "com.example.updated");
+    GitRepoSettingsDto updateDto = new GitRepoSettingsDto(1L, 120L, 60L);
 
     assertThrows(
         IllegalArgumentException.class,
@@ -184,7 +176,7 @@ public class GitRepoSettingsServiceTest {
     when(gitRepoRepository.save(any(GitRepoSettings.class))).thenReturn(gitRepoSettings);
 
     // Only update lockExpirationThreshold
-    GitRepoSettingsDto updateDto = new GitRepoSettingsDto(1L, 120L, null, null);
+    GitRepoSettingsDto updateDto = new GitRepoSettingsDto(1L, 120L, null);
 
     Optional<GitRepoSettingsDto> result =
         gitRepoSettingsService.updateGitRepoSettings(1L, updateDto);
@@ -193,9 +185,6 @@ public class GitRepoSettingsServiceTest {
     Field lockResField = GitRepoSettings.class.getDeclaredField("lockReservationThreshold");
     lockResField.setAccessible(true);
     assertEquals(lockResField.get(gitRepoSettings), result.get().lockReservationThreshold());
-    Field pkgField = GitRepoSettings.class.getDeclaredField("packageName");
-    pkgField.setAccessible(true);
-    assertEquals(pkgField.get(gitRepoSettings), result.get().packageName());
     verify(gitRepoRepository, times(1)).findByRepositoryRepositoryId(1L);
     verify(gitRepoRepository, times(1)).save(any(GitRepoSettings.class));
     verify(environmentService, times(1)).updateLockExpirationAndReservation(1L);

@@ -75,9 +75,4 @@ public class WorkflowService {
     return workflowRepository.findDeploymentWorkflowsForEnabledEnvironmentsByRepositoryId(
         repositoryId);
   }
-
-  public List<Workflow> getTestWorkflows(Long repositoryId) {
-    return workflowRepository.findByLabelAndRepositoryRepositoryId(
-        Workflow.Label.TEST, repositoryId);
-  }
 }

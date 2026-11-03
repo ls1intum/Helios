@@ -74,11 +74,6 @@
               <div class="flex gap-1 items-center min-w-0">
                 <app-github-link-button [url]="project.htmlUrl" buttonClass="p-1 leading-none" />
                 <div class="font-bold hover:underline cursor-pointer leading-none text-xl truncate" (click)="navigateToWorkflowRuns(project)">{{ project.name }}</div>
-                @if (project.latestReleaseTagName) {
-                  <p-tag rounded class="py-0.5 cursor-pointer hover:underline" (click)="navigateToReleases(project)"
-                    ><i-tabler name="tag" class="!size-4" />{{ project.latestReleaseTagName }}</p-tag
-                  >
-                }
               </div>
               <div class="flex items-center gap-2">
                 <div class="flex items-center leading-none gap-1 cursor-default text-secondary-600"><i-tabler name="star" class="!size-4" />{{ project.stargazersCount }}</div>

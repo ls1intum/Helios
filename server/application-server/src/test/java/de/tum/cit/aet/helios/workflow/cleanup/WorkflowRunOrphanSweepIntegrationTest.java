@@ -23,8 +23,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
  *
  * <p>Runs against an embedded PostgreSQL (zonky) with the real Flyway schema, so it exercises the
  * actual SQL semantics that a mocked-repository unit test cannot: the branch-existence join, the
- * grace window, {@code NULL head_branch} handling, the deployment exclusion, and the
- * {@code ON DELETE CASCADE} chain to {@code test_suite}/{@code test_case}.
+ * grace window, {@code NULL head_branch} handling and the deployment exclusion.
  */
 @DataJpaTest(properties = {"spring.flyway.enabled=true", "spring.jpa.hibernate.ddl-auto=none"})
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
@@ -92,15 +91,6 @@ class WorkflowRunOrphanSweepIntegrationTest {
         "INSERT INTO deployment (id, environment_id, workflow_run_id, state) "
             + "VALUES (1, 1, ?, 'SUCCESS')",
         ORPHAN_WITH_DEPLOYMENT);
-
-    // Child rows under the deletable orphan run, to prove the cascade.
-    jdbc.update(
-        "INSERT INTO test_suite (id, workflow_run_id, name, timestamp, tests, failures, errors, "
-            + "skipped, time) VALUES (200, ?, 'suite', now(), 1, 0, 0, 0, 0.0)",
-        ORPHAN_OLD);
-    jdbc.update(
-        "INSERT INTO test_case (id, test_suite_id, name, time, status) "
-            + "VALUES (300, 200, 'case', 0.0, 'PASSED')");
   }
 
   private void insertRun(long id, String headBranch, String ageInterval) {
@@ -133,16 +123,13 @@ class WorkflowRunOrphanSweepIntegrationTest {
   }
 
   @Test
-  void deletingConfirmedOrphanCascadesToItsChildren() {
+  void deletingConfirmedOrphanRemovesOnlyThatRun() {
     // The task confirms candidates against GitHub, then deletes by id; here we
-    // exercise that delete-by-id path and assert the FK cascade.
+    // exercise that delete-by-id path.
     repo.deleteAllByIdInBatch(List.of(ORPHAN_OLD));
 
     assertThat(remainingRunIds())
         .containsExactlyInAnyOrder(LIVE_BRANCH, ORPHAN_YOUNG, NULL_BRANCH, ORPHAN_WITH_DEPLOYMENT);
-    // ON DELETE CASCADE removed the orphan's test suite and case.
-    assertThat(count("test_suite", "workflow_run_id = " + ORPHAN_OLD)).isZero();
-    assertThat(count("test_case", "test_suite_id = 200")).isZero();
   }
 
   @Test
@@ -152,9 +139,5 @@ class WorkflowRunOrphanSweepIntegrationTest {
 
   private List<Long> remainingRunIds() {
     return jdbc.queryForList("SELECT id FROM workflow_run ORDER BY id", Long.class);
-  }
-
-  private int count(String table, String where) {
-    return jdbc.queryForObject("SELECT count(*) FROM " + table + " WHERE " + where, Integer.class);
   }
 }

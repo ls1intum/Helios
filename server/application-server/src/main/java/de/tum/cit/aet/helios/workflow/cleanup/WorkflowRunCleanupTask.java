@@ -21,11 +21,11 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 /**
- * This class is responsible for cleaning up obsolete workflow runs based on configured policies.
- * It is scheduled to run every day at 1 AM.
+ * This class is responsible for cleaning up obsolete workflow runs: a hard max-age cap and an orphan-branch sweep.
+ * Both are scheduled to run daily.
  *
  * <p>It uses the {@link WorkflowRunRepository} to perform the actual deletion of obsolete runs.
- * The policies are defined in the {@link WorkflowRunCleanupProps} class.
+ * The settings are defined in the {@link WorkflowRunCleanupProps} class.
  */
 @RequiredArgsConstructor
 @Component
@@ -53,57 +53,13 @@ public class WorkflowRunCleanupTask {
 
 
   /**
-   * This method is scheduled to run every day at 1 AM. It purges workflow runs based on the
-   * configured policies.
+   * This method is scheduled to run every day at 1 AM. It purges workflow runs older than the
+   * configured max age.
    */
   @Scheduled(cron = "${cleanup.workflow-run.cron:0 0 1 * * *}")
   public void purge() {
     log.info("Workflow-run cleanup started.");
-    int totalDeleted = 0;
-
-    for (WorkflowRunCleanupProps.Policy policy : props.getPolicies()) {
-
-      String tps = policy.getTestProcessingStatus();
-      if (tps != null && tps.trim().isEmpty()) {
-        tps = null;
-      }
-
-      int deleted = 0;
-
-      if (props.isDryRun()) {
-        List<Long> ids = repo.previewObsoleteRunIds(
-            policy.getKeep(), policy.getAgeDays(), tps);
-
-        deleted = ids.size();
-
-        log.info(
-            "DRY-RUN: Cleanup policy tps={} keep={} ageDays={}  →  {} rows will be deleted",
-            tps, policy.getKeep(), policy.getAgeDays(), ids.size());
-
-        List<Long> idsOfSurvivingRuns = repo.previewSurvivorRunIds(
-            policy.getKeep(), policy.getAgeDays(), tps);
-
-        log.info(
-            "DRY-RUN: Cleanup policy tps={} keep={} ageDays={}  →  {} rows will survive: {}",
-            tps, policy.getKeep(), policy.getAgeDays(), idsOfSurvivingRuns.size(),
-            idsOfSurvivingRuns);
-
-      } else {
-        deleted = repo.purgeObsoleteRuns(
-            policy.getKeep(),
-            policy.getAgeDays(),
-            tps
-        );
-
-        log.info("DELETE: Cleanup policy  tps={}  keep={}  ageDays={}  →  {} rows deleted",
-            tps, policy.getKeep(),
-            policy.getAgeDays(), deleted);
-      }
-
-      totalDeleted += deleted;
-    }
-
-    totalDeleted += applyMaxAgeCap();
+    int totalDeleted = applyMaxAgeCap();
 
     log.info("Workflow-run cleanup finished.  Total rows deleted: {}", totalDeleted);
   }
@@ -114,18 +70,16 @@ public class WorkflowRunCleanupTask {
   /**
    * Applies the hard retention cap ({@code cleanup.workflow-run.max-age-days}):
    * deletes every run older than the configured age, regardless of status,
-   * branch (default branches included) or keep-N policy. Runs still referenced
+   * branch (default branches included). Runs still referenced
    * by a deployment are preserved (see
-   * {@link WorkflowRunRepository#purgeRunsOlderThan(int, int)}). Runs after the
-   * policies so their logs reflect what the keep-N rules alone would do.
+   * {@link WorkflowRunRepository#purgeRunsOlderThan(int, int)}).
    *
    * <p>Deletes in batches of {@link #MAX_AGE_CAP_BATCH_SIZE}, each its own
    * short transaction, so a large backlog neither blocks concurrent ingestion
    * for minutes nor rolls back wholesale on failure.
    *
    * @return rows deleted, or in dry-run mode the rows that would be deleted
-   *     (counted the same way the keep-N previews feed the total); 0 when
-   *     disabled
+   *     0 when disabled
    */
   private int applyMaxAgeCap() {
     Integer maxAgeDays = props.getMaxAgeDays();
@@ -141,8 +95,7 @@ public class WorkflowRunCleanupTask {
 
     if (props.isDryRun()) {
       long count = repo.countRunsOlderThan(maxAgeDays);
-      log.info("DRY-RUN: Max-age cap maxAgeDays={}  →  {} rows will be deleted "
-          + "(may overlap the policy previews above)", maxAgeDays, count);
+      log.info("DRY-RUN: Max-age cap maxAgeDays={}  →  {} rows will be deleted", maxAgeDays, count);
       return (int) Math.min(count, Integer.MAX_VALUE);
     }
 
@@ -159,10 +112,10 @@ public class WorkflowRunCleanupTask {
 
   /**
    * Sweeps workflow runs whose {@code head_branch} no longer exists — typically
-   * feature branches deleted after a PR merged. The keep-N policy in
+   * feature branches deleted after a PR merged. The max-age cap in
    * {@link #purge()} cannot detect these, so they would otherwise accumulate.
    *
-   * <p>Runs daily at 03:30, well clear of the keep-N sweep at 01:00. Honours the
+   * <p>Runs daily at 03:30, well clear of the max-age sweep at 01:00. Honours the
    * same {@link WorkflowRunCleanupProps#isDryRun()} flag. Runs younger than
    * {@code graceDays}, with a {@code NULL head_branch} (tag/scheduled/dispatch),
    * with a {@code NULL repository_id}, or still referenced by a
@@ -180,7 +133,7 @@ public class WorkflowRunCleanupTask {
    *
    * <p>Confirmed orphans are deleted by id in batches of
    * {@link WorkflowRunCleanupProps.OrphanBranches#getBatchSize()} (cascading to
-   * {@code test_suite}/{@code test_case}/junction rows via FK constraints); each
+   * child rows via FK constraints); each
    * batch is its own short transaction and the outer loop is non-transactional.
    */
   @Scheduled(cron = "${cleanup.workflow-run.orphan-branches.cron:0 30 3 * * *}")

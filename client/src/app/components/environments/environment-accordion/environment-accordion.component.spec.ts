@@ -171,18 +171,4 @@ describe('EnvironmentAccordionComponent', () => {
     prTag.click();
     expect(router.serializeUrl(navigate.mock.calls[1][0] as Parameters<Router['serializeUrl']>[0])).toBe('/repo/3/ci-cd/pr/12');
   });
-
-  it.each([
-    ['v1.2.3', undefined],
-    ['1.2.3', undefined],
-    ['release/next', ['v1.2.3-rc1']],
-  ])('marks release deployments as tags without branch navigation: %s', async (ref, releaseCandidateNames) => {
-    await updateEnvironment({ latestDeployment: { id: 1, type: 'HELIOS', state: 'SUCCESS', ref, releaseCandidateNames } });
-    const router = TestBed.inject(Router);
-    const navigate = vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
-    const tag = Array.from(host().querySelectorAll('p-tag')).find(item => item.textContent?.trim() === ref) as HTMLElement;
-    expect(tag.querySelector('i-tabler[name="tag"]')).toBeTruthy();
-    tag.click();
-    expect(navigate).not.toHaveBeenCalled();
-  });
 });

@@ -3,7 +3,7 @@ import { ProjectSettingsComponent } from './project-settings.component';
 import { importProvidersFrom, signal } from '@angular/core';
 import { TestModule } from '@app/test.module';
 import { ConfirmationService, MessageService } from 'primeng/api';
-import { DeploymentWorkflowConfigDto, TestTypeDto, WorkflowDto, WorkflowGroupDto } from '@app/core/modules/openapi';
+import { DeploymentWorkflowConfigDto, WorkflowDto, WorkflowGroupDto } from '@app/core/modules/openapi';
 
 describe('Project settings behavior', () => {
   let component: ProjectSettingsComponent;
@@ -23,7 +23,6 @@ describe('Project settings behavior', () => {
     orderIndex: id - 1,
     memberships: ids.map((workflowId, orderIndex) => ({ workflowId, orderIndex })),
   });
-  const type: TestTypeDto = { id: 5, name: 'Unit tests', artifactName: 'unit-results', workflowId: 3 };
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({ imports: [ProjectSettingsComponent], providers: [importProvidersFrom(TestModule)] }).compileComponents();
@@ -39,12 +38,6 @@ describe('Project settings behavior', () => {
     deploymentConfig = signal(undefined);
     component.fetchWorkflowsQuery = { ...component.fetchWorkflowsQuery, data: workflows, isPending: pending, isError: error } as unknown as typeof component.fetchWorkflowsQuery;
     component.groupsQuery = { ...component.groupsQuery, data: groups, isPending: signal(false), isError: signal(false) } as unknown as typeof component.groupsQuery;
-    component.gitRepoSettingsQuery = {
-      ...component.gitRepoSettingsQuery,
-      data: signal({ packageName: 'de.tum.helios' }),
-      isPending: signal(false),
-      isError: signal(false),
-    } as unknown as typeof component.gitRepoSettingsQuery;
     component.deploymentWorkflowConfigQuery = { ...component.deploymentWorkflowConfigQuery, data: deploymentConfig } as unknown as typeof component.deploymentWorkflowConfigQuery;
     fixture.detectChanges();
     await fixture.whenStable();
@@ -56,7 +49,6 @@ describe('Project settings behavior', () => {
 
   it('renders a loading message while settings are pending', () => {
     expect(fixture.nativeElement.textContent).toContain('Loading settings...');
-    expect(fixture.nativeElement.querySelector('#packageName')).toBeNull();
     expect(component.repositoryId()).toBe(42);
   });
   it('combines query errors and hides settings controls on failure', () => {
@@ -64,31 +56,14 @@ describe('Project settings behavior', () => {
     error.set(true);
     fixture.detectChanges();
     expect(component.isError()).toBe(true);
-    expect(fixture.nativeElement.querySelector('#packageName')).toBeNull();
     expect(fixture.nativeElement.textContent).not.toContain('Loading settings...');
   });
-  it('initializes the package name from repository settings and submits the current value', () => {
-    const mutate = vi.spyOn(component.updateGitRepoSettingsMutation, 'mutate').mockImplementation(() => {});
-    expect(component.packageName()).toBe('de.tum.helios');
-    component.packageName.set('org.example.changed');
-    component.updatePackageName();
-    expect(mutate).toHaveBeenCalledExactlyOnceWith({ path: { repositoryId: 42 }, body: { packageName: 'org.example.changed' } });
-  });
-  it('renders loaded settings and saves an edited package name through its Update button', async () => {
-    const mutate = vi.spyOn(component.updateGitRepoSettingsMutation, 'mutate').mockImplementation(() => {});
+  it('renders loaded settings and reveals a generated secret', async () => {
     pending.set(false);
     fixture.detectChanges();
     await fixture.whenStable();
-    const input = fixture.nativeElement.querySelector('#packageName') as HTMLInputElement;
-    expect(input.value).toBe('de.tum.helios');
     expect(fixture.nativeElement.textContent).toContain('No Groups Available');
     expect(fixture.nativeElement.querySelector('input[type="password"]').value).toBe('************');
-    input.value = 'org.example.client';
-    input.dispatchEvent(new Event('input'));
-    fixture.detectChanges();
-    const button = Array.from(fixture.nativeElement.querySelectorAll('button')).find(element => (element as HTMLElement).textContent?.trim() === 'Update') as HTMLButtonElement;
-    button.click();
-    expect(mutate).toHaveBeenCalledExactlyOnceWith({ path: { repositoryId: 42 }, body: { packageName: 'org.example.client' } });
     component.secret.set('generated-secret');
     fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('never');
@@ -228,39 +203,6 @@ describe('Project settings behavior', () => {
     component.setDeploymentConfigField('deployJobName', 'deploy');
     component.saveDeploymentConfig();
     expect(mutate).toHaveBeenCalledExactlyOnceWith({ path: { repositoryId: 42, workflowId: 3 }, body: { workflowId: 3, deployJobName: 'deploy' } });
-  });
-  it.each(['name', 'artifactName', 'workflowId'] as const)('rejects test types missing %s', field => {
-    const add = vi.spyOn(messages, 'add');
-    const mutate = vi.spyOn(component.createTestTypeMutation, 'mutate').mockImplementation(() => {});
-    component.testTypeForm = { ...type, [field]: undefined };
-    component.saveTestType();
-    expect(mutate).not.toHaveBeenCalled();
-    expect(add).toHaveBeenCalledWith(expect.objectContaining({ severity: 'error', detail: 'Please fill in all required fields' }));
-  });
-  it('creates new test types and updates existing types without mutating the original', () => {
-    const create = vi.spyOn(component.createTestTypeMutation, 'mutate').mockImplementation(() => {});
-    const update = vi.spyOn(component.updateTestTypeMutation, 'mutate').mockImplementation(() => {});
-    component.testTypeForm = { ...type };
-    component.saveTestType();
-    expect(create).toHaveBeenCalledExactlyOnceWith({ body: type });
-    component.editTestType(type);
-    component.testTypeForm.name = 'Integration tests';
-    expect(type.name).toBe('Unit tests');
-    component.saveTestType();
-    expect(update).toHaveBeenCalledExactlyOnceWith({ path: { testTypeId: 5 }, body: { ...type, name: 'Integration tests' } });
-    component.resetTestTypeDialog();
-    expect(component.showAddTestTypeDialog).toBe(false);
-    expect(component.editingTestType).toBeNull();
-    expect(component.testTypeForm).toEqual({ name: '', artifactName: '', workflowId: undefined });
-  });
-  it('requires confirmation to delete a test type', () => {
-    const confirm = vi.spyOn(confirmation, 'confirm');
-    const mutate = vi.spyOn(component.deleteTestTypeMutation, 'mutate').mockImplementation(() => {});
-    component.confirmDeleteTestType(type);
-    expect(mutate).not.toHaveBeenCalled();
-    expect(confirm).toHaveBeenCalledWith(expect.objectContaining({ message: expect.stringContaining('Unit tests') }));
-    confirm.mock.calls[0][0].accept!();
-    expect(mutate).toHaveBeenCalledExactlyOnceWith({ path: { testTypeId: 5 } });
   });
   it('masks absent secrets and rotates only after confirmation', () => {
     const mutate = vi.spyOn(component.rotateSecret, 'mutate').mockImplementation(() => {});

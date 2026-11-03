@@ -168,10 +168,6 @@ GitHub App / Repository Sync
   Minimum minutes since last sync to run sync on startup.
   *Used by:* ``application-server``.
 
-- ``SENTRY_DSN``
-  Sentry DSN for error reporting.
-  *Used by:* ``application-server``.
-
 - ``DATA_SYNC_RUN_ON_STARTUP``
   Whether to run repository sync on startup. Deploying a new version takes couple of minutes, setting this value to ``false``is safe since syncing takes quite some time and we do not want to run it on every deployment.
   *Used by:* ``application-server``.

@@ -63,12 +63,10 @@ class GitRepoSettingsIT extends HeliosIntegrationTest {
                 .header(X_REPOSITORY_ID, String.valueOf(REPO))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
-                    "{\"lockExpirationThreshold\":120,\"lockReservationThreshold\":60,"
-                        + "\"packageName\":\"com.example.app\"}"))
+                    "{\"lockExpirationThreshold\":120,\"lockReservationThreshold\":60}"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.lockExpirationThreshold").value(120))
-        .andExpect(jsonPath("$.lockReservationThreshold").value(60))
-        .andExpect(jsonPath("$.packageName").value("com.example.app"));
+        .andExpect(jsonPath("$.lockReservationThreshold").value(60));
 
     // Save on a repo whose settings row was never created must create it (previously a 400).
     assertSettingsRowCount(jdbc, 1);

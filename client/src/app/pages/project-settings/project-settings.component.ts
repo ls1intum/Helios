@@ -11,13 +11,12 @@ import { PanelModule } from 'primeng/panel';
 import { TableModule } from 'primeng/table';
 import { LockingThresholdsComponent } from '@app/components/locking-thresholds/locking-thresholds.component';
 import { PageHeadingComponent } from '@app/components/page-heading/page-heading.component';
-import { DeploymentWorkflowConfigDto, RotateSecretResponses, TestTypeDto, WorkflowDto, WorkflowGroupDto, WorkflowMembershipDto } from '@app/core/modules/openapi';
+import { DeploymentWorkflowConfigDto, RotateSecretResponses, WorkflowDto, WorkflowGroupDto, WorkflowMembershipDto } from '@app/core/modules/openapi';
 import {
   createWorkflowGroupMutation,
   deleteWorkflowGroupMutation,
   getDeploymentWorkflowConfigOptions,
   getDeploymentWorkflowConfigQueryKey,
-  getGitRepoSettingsOptions,
   getGroupsWithWorkflowsOptions,
   getGroupsWithWorkflowsQueryKey,
   getWorkflowsByRepositoryIdOptions,
@@ -25,12 +24,6 @@ import {
   updateWorkflowLabelMutation,
   updateWorkflowGroupsMutation,
   syncWorkflowsByRepositoryIdMutation,
-  updateTestTypeMutation,
-  createTestTypeMutation,
-  deleteTestTypeMutation,
-  getAllTestTypesQueryKey,
-  getAllTestTypesOptions,
-  updateGitRepoSettingsMutation,
   rotateSecretMutation,
   upsertDeploymentWorkflowConfigMutation,
 } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
@@ -40,9 +33,8 @@ import { SelectModule } from 'primeng/select';
 import { TooltipModule } from 'primeng/tooltip';
 import { TagModule } from 'primeng/tag';
 import { MessageModule } from 'primeng/message';
-import { ButtonGroupModule } from 'primeng/buttongroup';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
-import { IconCircleCheck, IconPencil, IconPlus, IconTrash } from 'angular-tabler-icons/icons';
+import { IconCircleCheck, IconPlus } from 'angular-tabler-icons/icons';
 import { SecretGenerateConfirmationComponent } from '@app/components/dialogs/secret-generate-confirmation/secret-generate-confirmation.component';
 import { getStatusColors } from '@app/core/utils/status-colors';
 
@@ -52,7 +44,6 @@ import { getStatusColors } from '@app/core/utils/status-colors';
     FormsModule,
     TableModule,
     ButtonModule,
-    ButtonGroupModule,
     InputTextModule,
     PageHeadingComponent,
     LockingThresholdsComponent,
@@ -72,8 +63,6 @@ import { getStatusColors } from '@app/core/utils/status-colors';
     provideTablerIcons({
       IconCircleCheck,
       IconPlus,
-      IconPencil,
-      IconTrash,
     }),
   ],
   changeDetection: ChangeDetectionStrategy.Eager,
@@ -88,11 +77,8 @@ export class ProjectSettingsComponent {
   repositoryId = input.required({ transform: numberAttribute });
 
   workflowGroups = signal<WorkflowGroupDto[]>([]);
-  isPending = computed(() => this.fetchWorkflowsQuery.isPending() || this.groupsQuery.isPending() || this.gitRepoSettingsQuery.isPending());
-  isError = computed(() => this.fetchWorkflowsQuery.isError() || this.groupsQuery.isError() || this.gitRepoSettingsQuery.isError());
-
-  // Package name signals
-  packageName = signal<string>('');
+  isPending = computed(() => this.fetchWorkflowsQuery.isPending() || this.groupsQuery.isPending());
+  isError = computed(() => this.fetchWorkflowsQuery.isError() || this.groupsQuery.isError());
 
   // --- Shared‑secret state
   secret = signal<string | null>(null);
@@ -133,16 +119,6 @@ export class ProjectSettingsComponent {
       // Set the signal
       this.workflowGroupsMap.set(newMap);
     });
-
-    effect(
-      () => {
-        const gitRepoSettings = this.gitRepoSettingsQuery.data();
-        if (gitRepoSettings) {
-          this.packageName.set(gitRepoSettings.packageName || '');
-        }
-      },
-      { allowSignalWrites: true }
-    );
   }
 
   // Computed property to show 'Grouped Workflows' in the UI
@@ -203,27 +179,6 @@ export class ProjectSettingsComponent {
     // (Optional) If you also want "Ungrouped" logic, handle it here
     return record;
   });
-
-  // Git Repo Settings query for package name
-  gitRepoSettingsQuery = injectQuery(() => ({
-    ...getGitRepoSettingsOptions({ path: { repositoryId: this.repositoryId() } }),
-    enabled: () => !!this.repositoryId(),
-  }));
-
-  updatePackageName() {
-    this.updateGitRepoSettingsMutation.mutate({
-      path: { repositoryId: this.repositoryId() },
-      body: { packageName: this.packageName() },
-    });
-  }
-
-  updateGitRepoSettingsMutation = injectMutation(() => ({
-    ...updateGitRepoSettingsMutation(),
-    onSuccess: () => {
-      this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Package name updated successfully' });
-      this.queryClient.invalidateQueries({ queryKey: ['getGitRepoSettings', { path: { repositoryId: this.repositoryId() } }] });
-    },
-  }));
 
   fetchWorkflowsQuery = injectQuery(() => ({
     ...getWorkflowsByRepositoryIdOptions({ path: { repositoryId: this.repositoryId() } }),
@@ -501,104 +456,6 @@ export class ProjectSettingsComponent {
     // Reset drag state
     this.dragIndex = null;
     this.updateGroups();
-  }
-
-  showAddTestTypeDialog = false;
-  editingTestType: TestTypeDto | null = null;
-  testTypeForm: Partial<TestTypeDto> = {
-    name: '',
-    artifactName: '',
-    workflowId: undefined,
-  };
-
-  testTypesQuery = injectQuery(() => ({
-    ...getAllTestTypesOptions(),
-    enabled: () => !!this.repositoryId(),
-  }));
-
-  testTypes = computed(() => this.testTypesQuery.data() || []);
-
-  createTestTypeMutation = injectMutation(() => ({
-    ...createTestTypeMutation(),
-    onSuccess: () => {
-      this.queryClient.invalidateQueries({ queryKey: getAllTestTypesQueryKey() });
-      this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Test type created successfully' });
-      this.resetTestTypeDialog();
-    },
-  }));
-
-  updateTestTypeMutation = injectMutation(() => ({
-    ...updateTestTypeMutation(),
-    onSuccess: () => {
-      this.queryClient.invalidateQueries({ queryKey: getAllTestTypesQueryKey() });
-      this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Test type updated successfully' });
-      this.resetTestTypeDialog();
-    },
-  }));
-
-  deleteTestTypeMutation = injectMutation(() => ({
-    ...deleteTestTypeMutation(),
-    onSuccess: () => {
-      this.queryClient.invalidateQueries({ queryKey: getAllTestTypesQueryKey() });
-      this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Test type deleted successfully' });
-    },
-  }));
-
-  editTestType(testType: TestTypeDto) {
-    this.editingTestType = testType;
-    this.testTypeForm = { ...testType };
-    this.showAddTestTypeDialog = true;
-  }
-
-  resetTestTypeDialog() {
-    this.showAddTestTypeDialog = false;
-    this.editingTestType = null;
-    this.testTypeForm = {
-      name: '',
-      artifactName: '',
-      workflowId: undefined,
-    };
-  }
-
-  saveTestType() {
-    if (!this.testTypeForm.name || !this.testTypeForm.artifactName || !this.testTypeForm.workflowId) {
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Validation Error',
-        detail: 'Please fill in all required fields',
-      });
-      return;
-    }
-
-    if (this.editingTestType) {
-      this.updateTestTypeMutation.mutate({
-        path: { testTypeId: this.editingTestType.id! },
-        body: this.testTypeForm as TestTypeDto,
-      });
-    } else {
-      this.createTestTypeMutation.mutate({
-        body: this.testTypeForm as TestTypeDto,
-      });
-    }
-  }
-
-  updateTestType(testType: TestTypeDto) {
-    this.updateTestTypeMutation.mutate({
-      path: { testTypeId: testType.id! },
-      body: testType,
-    });
-  }
-
-  confirmDeleteTestType(testType: TestTypeDto) {
-    this.confirmationService.confirm({
-      header: 'Delete Test Type',
-      message: `Are you sure you want to delete the test type "${testType.name}"?`,
-      accept: () => {
-        this.deleteTestTypeMutation.mutate({
-          path: { testTypeId: testType.id! },
-        });
-      },
-    });
   }
 
   // --- mutation

@@ -1,5 +1,5 @@
 import { Component, inject, input, output, ChangeDetectionStrategy } from '@angular/core';
-import { EnvironmentDeployment, EnvironmentDto } from '@app/core/modules/openapi';
+import { EnvironmentDto } from '@app/core/modules/openapi';
 import { DeploymentStepperComponent } from '../deployment-stepper/deployment-stepper.component';
 import { EnvironmentActionsComponent } from '../environment-actions/environment-actions.component';
 import { DeploymentStateTagComponent } from '../deployment-state-tag/deployment-state-tag.component';
@@ -19,7 +19,7 @@ import { signal } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
 import { GithubLinkButtonComponent } from '@app/components/github-link-button/github-link-button.component';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
-import { IconExternalLink, IconGitPullRequest, IconHistory, IconTag } from 'angular-tabler-icons/icons';
+import { IconExternalLink, IconGitPullRequest, IconHistory } from 'angular-tabler-icons/icons';
 import { WorkflowJobsStatusComponent } from '../workflow-job-status/workflow-jobs-status.component';
 
 @Component({
@@ -46,7 +46,6 @@ import { WorkflowJobsStatusComponent } from '../workflow-job-status/workflow-job
   ],
   providers: [
     provideTablerIcons({
-      IconTag,
       IconGitPullRequest,
       IconHistory,
       IconExternalLink,
@@ -112,10 +111,6 @@ export class EnvironmentAccordionComponent {
       return 'http://' + url;
     }
     return url;
-  }
-
-  isRelease(deployment: EnvironmentDeployment): boolean {
-    return (deployment.releaseCandidateNames?.length || 0) > 0 || (!!deployment.ref && /^v?\d+\.\d+\.\d+/.test(deployment.ref));
   }
 
   getPrLink() {
