@@ -372,21 +372,6 @@ public class GitHubService {
     return getRepositoryRole(repositoryId, username, readGithubIdOrNull());
   }
 
-  private String readGithubIdOrNull() {
-    try {
-      return this.authService.getGithubId();
-    } catch (Exception e) {
-      return null;
-    }
-  }
-
-  /** Thrown when GitHub answers 404 for the user or repository of a permission lookup. */
-  public static class GitHubUserNotFoundException extends IOException {
-    public GitHubUserNotFoundException(String message) {
-      super(message);
-    }
-  }
-
   /**
    * Retrieves the GitHub repository role, tolerating renamed GitHub accounts.
    *
@@ -417,24 +402,6 @@ public class GitHubService {
     }
   }
 
-  private String resolveLoginByGithubId(String githubId) {
-    if (githubId == null || !githubId.matches("\\d+")) {
-      return null;
-    }
-    Request request =
-        getRequestBuilder().url("https://api.github.com/user/" + githubId).get().build();
-    try (Response response = okHttpClient.newCall(request).execute()) {
-      if (!response.isSuccessful() || response.body() == null) {
-        return null;
-      }
-      String login = objectMapper.readTree(response.body().string()).path("login").asText(null);
-      return login == null || login.isBlank() ? null : login;
-    } catch (IOException e) {
-      log.warn("Failed to resolve GitHub login for id {}: {}", githubId, e.getMessage());
-      return null;
-    }
-  }
-
   /**
    * Retrieves the GitHub repository role for a given repository ID and username.
    *
@@ -450,6 +417,39 @@ public class GitHubService {
       return fetchRepositoryRole(repositoryId, username);
     } catch (GitHubUserNotFoundException e) {
       throw new IOException("Error occurred while fetching permissions", e);
+    }
+  }
+
+  private String readGithubIdOrNull() {
+    try {
+      return this.authService.getGithubId();
+    } catch (Exception e) {
+      return null;
+    }
+  }
+
+  /** Thrown when GitHub answers 404 for the user or repository of a permission lookup. */
+  public static class GitHubUserNotFoundException extends IOException {
+    public GitHubUserNotFoundException(String message) {
+      super(message);
+    }
+  }
+
+  private String resolveLoginByGithubId(String githubId) {
+    if (githubId == null || !githubId.matches("\\d+")) {
+      return null;
+    }
+    Request request =
+        getRequestBuilder().url("https://api.github.com/user/" + githubId).get().build();
+    try (Response response = okHttpClient.newCall(request).execute()) {
+      if (!response.isSuccessful() || response.body() == null) {
+        return null;
+      }
+      String login = objectMapper.readTree(response.body().string()).path("login").asText(null);
+      return login == null || login.isBlank() ? null : login;
+    } catch (IOException e) {
+      log.warn("Failed to resolve GitHub login for id {}: {}", githubId, e.getMessage());
+      return null;
     }
   }
 
