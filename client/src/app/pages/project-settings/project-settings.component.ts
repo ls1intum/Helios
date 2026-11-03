@@ -1,7 +1,6 @@
 import { Component, computed, effect, inject, input, numberAttribute, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { injectMutation, injectQuery, QueryClient } from '@tanstack/angular-query-experimental';
-import { ConfirmationService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { DividerModule } from 'primeng/divider';
@@ -21,13 +20,11 @@ import {
   getGroupsWithWorkflowsQueryKey,
   getWorkflowsByRepositoryIdOptions,
   getWorkflowsByRepositoryIdQueryKey,
-  updateWorkflowLabelMutation,
   updateWorkflowGroupsMutation,
   syncWorkflowsByRepositoryIdMutation,
   rotateSecretMutation,
   upsertDeploymentWorkflowConfigMutation,
 } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
-import { WorkflowDtoSchema } from '@app/core/modules/openapi/schemas.gen';
 import { MessageService } from 'primeng/api';
 import { SelectModule } from 'primeng/select';
 import { TooltipModule } from 'primeng/tooltip';
@@ -70,7 +67,6 @@ import { getStatusColors } from '@app/core/utils/status-colors';
 })
 export class ProjectSettingsComponent {
   private messageService = inject(MessageService);
-  private confirmationService = inject(ConfirmationService);
   queryClient = inject(QueryClient);
 
   // Signals for repository ID, workflows, and workflow groups
@@ -88,8 +84,6 @@ export class ProjectSettingsComponent {
   // For creating a new group
   showAddGroupDialog = false;
   newGroupName = '';
-  // Store the previous label temporarily for the confirmation dialog
-  private previousLabel: WorkflowDto['label'] = 'NONE';
 
   // Drag & Drop logic for groupedWorkflowsArray
   private dragIndex: number | null = null;
@@ -205,13 +199,6 @@ export class ProjectSettingsComponent {
     enabled: () => !!this.repositoryId(),
   }));
 
-  workflowLabelMutation = injectMutation(() => ({
-    ...updateWorkflowLabelMutation(),
-    onSuccess: () => {
-      this.queryClient.invalidateQueries({ queryKey: getWorkflowsByRepositoryIdQueryKey({ path: { repositoryId: this.repositoryId() } }) });
-      this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Workflow Label updated successfully' });
-    },
-  }));
   deleteWorkflowGroupMutation = injectMutation(() => ({
     ...deleteWorkflowGroupMutation(),
     onSuccess: () => {
@@ -242,8 +229,6 @@ export class ProjectSettingsComponent {
       this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Workflows synced successfully' });
     },
   }));
-
-  workflowLabelOptions = Object.values(WorkflowDtoSchema.properties.label.enum);
 
   // Deployment workflow config: per-workflow job name configuration
   deploymentConfigWorkflowId = signal<number | null>(null);
@@ -293,41 +278,6 @@ export class ProjectSettingsComponent {
     this.upsertDeploymentWorkflowConfigMutation.mutate({
       path: { repositoryId: this.repositoryId(), workflowId },
       body: { ...this.deploymentConfigForm(), workflowId },
-    });
-  }
-
-  storePreviousLabel(workflow: WorkflowDto) {
-    // Store the current label before change
-    this.previousLabel = workflow.label;
-  }
-
-  onChangeLabel(workflow: WorkflowDto) {
-    const label = workflow.label;
-    this.confirmationService.confirm({
-      header: 'Change Label',
-      message: `
-        <div class="max-w-xl w-full">
-          <p class="text-base font-medium mb-4">
-            Are you sure you want to change the workflow label to <strong>${label}</strong>?
-          </p>
-          <div class="flex items-start gap-2 p-3 bg-orange-50 dark:bg-orange-900/30 border border-orange-300 dark:border-orange-700 text-orange-700 dark:text-orange-300 rounded-md">
-            <div>
-              <p class="font-semibold">Note:</p>
-              <ul class="list-disc list-inside text-sm">
-                <li><strong>TEST</strong>: This label sets the workflow to be searched for test artifacts.</li>
-                <li><strong>NONE</strong>: No label is set for this workflow.</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      `,
-      accept: () => {
-        this.workflowLabelMutation.mutate({ path: { workflowId: workflow.id }, body: label });
-      },
-      reject: () => {
-        // Restore the previous label if the user cancels
-        workflow.label = this.previousLabel;
-      },
     });
   }
 

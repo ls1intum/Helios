@@ -212,7 +212,7 @@ public class GitHubDataSyncService {
       log.info("Repository: {} --> Step 6 took: {} ms", repositoryNameWithOwner, step6Duration);
       log.info("Repository: {} --> Step 7 took: {} ms", repositoryNameWithOwner, step7Duration);
       log.info("Repository: {} --> Step 8 took: {} ms", repositoryNameWithOwner, step8Duration);
-      log.info("Repository: {} --> Step 9  took: {} ms", repositoryNameWithOwner, step9Duration);
+      log.info("Repository: {} --> Step 9 took: {} ms", repositoryNameWithOwner, step9Duration);
       log.info(
           "Repository: {} --> Total Duration: {} seconds",
           repositoryNameWithOwner,

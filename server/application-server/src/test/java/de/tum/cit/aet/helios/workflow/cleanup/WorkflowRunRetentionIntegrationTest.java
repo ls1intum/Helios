@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import de.tum.cit.aet.helios.workflow.WorkflowRunRepository;
 import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
+import java.util.List;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -59,6 +60,8 @@ class WorkflowRunRetentionIntegrationTest {
   private static final long FEATURE_OLD = 112L;
   // 120 days old but referenced by a deployment — the max-age cap must preserve it.
   private static final long DEPLOYED_OLD = 120L;
+  // 120 days old but referenced by a helios_deployment — the max-age cap must preserve it too.
+  private static final long HELIOS_DEPLOYED_OLD = 121L;
   // Repo 2 (default_branch NULL): NULL-head_branch runs are only removed by the max-age cap.
   private static final long NULL_BRANCH_NEWEST = 130L;
   private static final long NULL_BRANCH_MIDDLE = 131L;
@@ -96,6 +99,7 @@ class WorkflowRunRetentionIntegrationTest {
     insertRun(FEATURE_MIDDLE, 1, FEATURE_BRANCH, "20 days");
     insertRun(FEATURE_OLD, 1, FEATURE_BRANCH, "30 days");
     insertRun(DEPLOYED_OLD, 1, "deployed-feature", "120 days");
+    insertRun(HELIOS_DEPLOYED_OLD, 1, "helios-deployed-feature", "120 days");
     insertRun(NULL_BRANCH_NEWEST, 2, null, "10 days");
     insertRun(NULL_BRANCH_MIDDLE, 2, null, "20 days");
     insertRun(NULL_BRANCH_OLD, 2, null, "30 days");
@@ -105,6 +109,11 @@ class WorkflowRunRetentionIntegrationTest {
         "INSERT INTO deployment (id, environment_id, workflow_run_id, state) "
             + "VALUES (1, 1, ?, 'SUCCESS')",
         DEPLOYED_OLD);
+    jdbc.update(
+        "INSERT INTO helios_deployment (environment_id, triggering_user, status, "
+            + "status_updated_at, created_at, updated_at, workflow_run_id) "
+            + "VALUES (1, 'user', 'DEPLOYMENT_SUCCESS', now(), now(), now(), ?)",
+        HELIOS_DEPLOYED_OLD);
   }
 
   private void insertRun(long id, long repositoryId, String headBranch, String ageInterval) {
@@ -124,13 +133,13 @@ class WorkflowRunRetentionIntegrationTest {
     int deleted =
         repo.purgeRunsOlderThan(90, WorkflowRunCleanupTask.MAX_AGE_CAP_BATCH_SIZE);
 
-    // DEVELOP_OLD (120 days) goes despite being on the default branch; DEPLOYED_OLD
-    // (also 120 days) stays because a deployment references it.
+    // DEVELOP_OLD (120 days) goes despite being on the default branch; DEPLOYED_OLD and
+    // HELIOS_DEPLOYED_OLD (also 120 days) stay because a deployment references them.
     assertThat(deleted).isEqualTo(1);
     assertThat(remainingRunIds())
         .containsExactlyInAnyOrder(
             DEVELOP_NEWEST, DEVELOP_MIDDLE,
-            FEATURE_NEWEST, FEATURE_MIDDLE, FEATURE_OLD, DEPLOYED_OLD,
+            FEATURE_NEWEST, FEATURE_MIDDLE, FEATURE_OLD, DEPLOYED_OLD, HELIOS_DEPLOYED_OLD,
             NULL_BRANCH_NEWEST, NULL_BRANCH_MIDDLE, NULL_BRANCH_OLD);
   }
 
@@ -144,11 +153,11 @@ class WorkflowRunRetentionIntegrationTest {
   @Test
   void countRunsOlderThanMatchesWhatTheCapWouldDelete() {
     assertThat(repo.countRunsOlderThan(90)).isEqualTo(1L);
-    // All ten runs are older than 5 days; the deployment-referenced one is excluded.
+    // All eleven runs are older than 5 days; the two deployment-referenced ones are excluded.
     assertThat(repo.countRunsOlderThan(5)).isEqualTo(9L);
   }
 
-  private java.util.List<Long> remainingRunIds() {
+  private List<Long> remainingRunIds() {
     return jdbc.queryForList("SELECT id FROM workflow_run", Long.class);
   }
 }

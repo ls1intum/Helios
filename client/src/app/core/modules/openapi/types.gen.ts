@@ -123,7 +123,6 @@ export type RepositoryInfoDto = {
   pullRequestCount?: number;
   branchCount?: number;
   environmentCount?: number;
-  latestReleaseTagName?: string;
   contributors?: Array<UserInfoDto>;
 };
 

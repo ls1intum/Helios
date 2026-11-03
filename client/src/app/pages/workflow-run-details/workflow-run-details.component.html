@@ -26,7 +26,6 @@
               <i-tabler [name]="getWorkflowStatusIcon(runData)" [class]="getWorkflowStatusClass(runData)" class="!size-5" [pTooltip]="runData.conclusion || runData.status" />
               <span class="text-sm font-medium">{{ runData.conclusion || runData.status }}</span>
             </div>
-            <p-tag [value]="runData.label === 'TEST' ? 'Test' : 'General'" [severity]="runData.label === 'TEST' ? 'info' : 'secondary'" rounded class="text-xs" />
           </div>
           @if (runData.headBranch || runData.headSha) {
             <div class="flex flex-wrap items-center gap-2 text-sm text-muted-color">

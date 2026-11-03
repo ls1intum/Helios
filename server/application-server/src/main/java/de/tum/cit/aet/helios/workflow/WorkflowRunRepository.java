@@ -150,9 +150,6 @@ public interface WorkflowRunRepository
 
   List<WorkflowRun> findByPullRequestsIdAndHeadSha(Long pullRequestsId, String headSha);
 
-  @Query("SELECT pr.id FROM WorkflowRun wr JOIN wr.pullRequests pr WHERE wr.id = :workflowRunId")
-  List<Long> findPullRequestIdsByWorkflowRunId(@Param("workflowRunId") Long workflowRunId);
-
   List<WorkflowRun> findByHeadBranchAndHeadShaAndRepositoryRepositoryId(
       String branch, String headSha, Long repositoryId);
 

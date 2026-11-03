@@ -14,7 +14,6 @@ import { PermissionService } from '@app/core/services/permission.service';
 import { WorkflowJobListComponent } from '@app/components/workflow-job-list/workflow-job-list.component';
 import { injectMutation, injectQuery, QueryClient } from '@tanstack/angular-query-experimental';
 import { MessageService } from 'primeng/api';
-import { TagModule } from 'primeng/tag';
 import { ButtonModule } from 'primeng/button';
 import { DividerModule } from 'primeng/divider';
 import { ToastModule } from 'primeng/toast';
@@ -31,7 +30,6 @@ import { getStatusColors, getStatusIconClasses } from '@app/core/utils/status-co
   standalone: true,
   imports: [
     RouterLink,
-    TagModule,
     ButtonModule,
     DividerModule,
     ToastModule,

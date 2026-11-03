@@ -2,13 +2,12 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ProjectSettingsComponent } from './project-settings.component';
 import { importProvidersFrom, signal } from '@angular/core';
 import { TestModule } from '@app/test.module';
-import { ConfirmationService, MessageService } from 'primeng/api';
+import { MessageService } from 'primeng/api';
 import { DeploymentWorkflowConfigDto, WorkflowDto, WorkflowGroupDto } from '@app/core/modules/openapi';
 
 describe('Project settings behavior', () => {
   let component: ProjectSettingsComponent;
   let fixture: ComponentFixture<ProjectSettingsComponent>;
-  let confirmation: ConfirmationService;
   let messages: MessageService;
   let workflows: ReturnType<typeof signal<WorkflowDto[]>>;
   let groups: ReturnType<typeof signal<WorkflowGroupDto[]>>;
@@ -16,7 +15,7 @@ describe('Project settings behavior', () => {
   let error: ReturnType<typeof signal<boolean>>;
   let deploymentConfig: ReturnType<typeof signal<DeploymentWorkflowConfigDto | undefined>>;
   const workflow = (id: number, fileNameWithExtension: string, state: WorkflowDto['state'] = 'ACTIVE'): WorkflowDto =>
-    ({ id, name: fileNameWithExtension, fileNameWithExtension, state, label: 'NONE' }) as WorkflowDto;
+    ({ id, name: fileNameWithExtension, fileNameWithExtension, state }) as WorkflowDto;
   const group = (id: number, name: string, ids: number[] = []): WorkflowGroupDto => ({
     id,
     name,
@@ -29,7 +28,6 @@ describe('Project settings behavior', () => {
     fixture = TestBed.createComponent(ProjectSettingsComponent);
     component = fixture.componentInstance;
     fixture.componentRef.setInput('repositoryId', '42');
-    confirmation = TestBed.inject(ConfirmationService);
     messages = TestBed.inject(MessageService);
     workflows = signal([]);
     groups = signal([]);
@@ -70,6 +68,19 @@ describe('Project settings behavior', () => {
     expect(fixture.nativeElement.querySelector('input[readonly]').type).toBe('text');
   });
 
+  it('renders the workflow table without label, test type or package name controls', async () => {
+    workflows.set([workflow(3, 'ci.yml')]);
+    pending.set(false);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const text = fixture.nativeElement.textContent as string;
+    const headers = Array.from(fixture.nativeElement.querySelectorAll('th')).map(th => (th as HTMLElement).textContent?.trim());
+    expect(headers).toEqual(['File Name', 'Workflow Name', 'Status', 'Assign Group', 'Deployment Job']);
+    expect(text).not.toContain('Test Types');
+    expect(text).not.toContain('Package Name');
+    expect(fixture.nativeElement.querySelector('#packageName')).toBeNull();
+    expect(text).toContain('ci.yml');
+  });
   it('lists active workflows first, sorts filenames, and breaks ties by ID', () => {
     workflows.set([workflow(5, 'a.yml', 'DISABLED_MANUALLY'), workflow(4, 'b.yml'), workflow(3, 'a.yml'), workflow(2, 'a.yml'), workflow(1, 'z.yml', 'DISABLED_MANUALLY')]);
     expect(component.workflows().map(wf => wf.id)).toEqual([2, 3, 4, 5, 1]);
@@ -170,21 +181,6 @@ describe('Project settings behavior', () => {
     expect(mutate).not.toHaveBeenCalled();
     component.deleteGroup({ groupName: 'Empty', workflows: [] });
     expect(mutate).toHaveBeenCalledExactlyOnceWith({ path: { repositoryId: 42, groupId: 1 } });
-  });
-  it('restores the original workflow label when a change is rejected and saves after acceptance', () => {
-    const wf = workflow(3, 'test.yml');
-    const confirm = vi.spyOn(confirmation, 'confirm');
-    const mutate = vi.spyOn(component.workflowLabelMutation, 'mutate').mockImplementation(() => {});
-    component.storePreviousLabel(wf);
-    wf.label = 'TEST';
-    component.onChangeLabel(wf);
-    expect(mutate).not.toHaveBeenCalled();
-    confirm.mock.calls[0][0].reject!();
-    expect(wf.label).toBe('NONE');
-    wf.label = 'TEST';
-    component.onChangeLabel(wf);
-    confirm.mock.calls[1][0].accept!();
-    expect(mutate).toHaveBeenCalledExactlyOnceWith({ path: { workflowId: 3 }, body: 'TEST' });
   });
   it('opens deployment configuration with defaults and applies returned configuration', () => {
     component.openDeploymentConfig(workflow(3, 'deploy.yml'));

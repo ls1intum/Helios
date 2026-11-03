@@ -39,16 +39,19 @@
             }
             <app-deployment-state-tag [state]="deployment.state" [deployment]="deployment" />
 
-            <!-- Branch -->
+            <!-- Branch, or a version tag (tags have no branch page to link to) -->
             <p-tag
               severity="secondary"
               rounded="true"
               class="max-w-[250px] flex items-center"
-              [pTooltip]="'Go to ' + deployment.ref"
+              [pTooltip]="isTagRef(deployment) ? '' : 'Go to ' + deployment.ref"
               tooltipPosition="top"
               (click)="$event.stopPropagation()"
-              [routerLink]="getBranchLink()"
+              [routerLink]="isTagRef(deployment) ? null : getBranchLink()"
             >
+              @if (isTagRef(deployment)) {
+                <i-tabler name="tag" class="!size-5 shrink-0"></i-tabler>
+              }
               <span class="truncate flex-1">{{ deployment.ref }}</span>
             </p-tag>
 

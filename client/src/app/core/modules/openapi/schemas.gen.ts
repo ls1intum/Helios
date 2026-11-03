@@ -394,9 +394,6 @@ export const RepositoryInfoDtoSchema = {
       type: 'integer',
       format: 'int32',
     },
-    latestReleaseTagName: {
-      type: 'string',
-    },
     contributors: {
       type: 'array',
       items: {

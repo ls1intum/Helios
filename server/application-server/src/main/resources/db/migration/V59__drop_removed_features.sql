@@ -26,3 +26,6 @@ ALTER TABLE public.workflow_run DROP COLUMN IF EXISTS test_processing_status;
 
 -- Package name used only to filter test-result logs
 ALTER TABLE public.repository_settings DROP COLUMN IF EXISTS package_name;
+
+-- Latest release tag shown on the repository overview (release management is gone)
+ALTER TABLE public.repository DROP COLUMN IF EXISTS latest_release_tag_name;

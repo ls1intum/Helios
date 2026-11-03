@@ -136,6 +136,8 @@ class WorkflowRunCleanupTaskTest {
 
     verify(f.repo).purgeRunsOlderThan(90, WorkflowRunCleanupTask.MAX_AGE_CAP_BATCH_SIZE);
     verify(f.repo, never()).countRunsOlderThan(anyInt());
+    // The max-age cap is DB-only: it must not consult GitHub or touch the orphan-branch sweep.
+    verifyNoInteractions(f.gitHub, f.branchSync, f.gitRepoRepo);
   }
 
   @Test

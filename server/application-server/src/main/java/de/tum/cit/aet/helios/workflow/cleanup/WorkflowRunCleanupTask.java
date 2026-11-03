@@ -21,8 +21,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 /**
- * This class is responsible for cleaning up obsolete workflow runs: a hard max-age cap and an orphan-branch sweep.
- * Both are scheduled to run daily.
+ * This class is responsible for cleaning up obsolete workflow runs: a hard max-age cap and an
+ * orphan-branch sweep. Both are scheduled to run daily.
  *
  * <p>It uses the {@link WorkflowRunRepository} to perform the actual deletion of obsolete runs.
  * The settings are defined in the {@link WorkflowRunCleanupProps} class.
@@ -78,8 +78,7 @@ public class WorkflowRunCleanupTask {
    * short transaction, so a large backlog neither blocks concurrent ingestion
    * for minutes nor rolls back wholesale on failure.
    *
-   * @return rows deleted, or in dry-run mode the rows that would be deleted
-   *     0 when disabled
+   * @return rows deleted, or in dry-run mode the rows that would be deleted; 0 when disabled
    */
   private int applyMaxAgeCap() {
     Integer maxAgeDays = props.getMaxAgeDays();
@@ -95,7 +94,8 @@ public class WorkflowRunCleanupTask {
 
     if (props.isDryRun()) {
       long count = repo.countRunsOlderThan(maxAgeDays);
-      log.info("DRY-RUN: Max-age cap maxAgeDays={}  →  {} rows will be deleted", maxAgeDays, count);
+      log.info(
+          "DRY-RUN: Max-age cap maxAgeDays={}  →  {} rows will be deleted", maxAgeDays, count);
       return (int) Math.min(count, Integer.MAX_VALUE);
     }
 

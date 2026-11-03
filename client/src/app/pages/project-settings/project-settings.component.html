@@ -134,7 +134,6 @@
           <th>Workflow Name</th>
           <th>Status</th>
           <th>Assign Group</th>
-          <th>Label</th>
           <th>Deployment Job</th>
         </tr>
       </ng-template>
@@ -152,24 +151,6 @@
               (onChange)="onChangeGroup(workflow, $event.value)"
               [appendTo]="'body'"
             />
-          </td>
-          <td>
-            <p-select
-              [options]="workflowLabelOptions"
-              [(ngModel)]="workflow.label"
-              placeholder="Select Label"
-              (onClick)="storePreviousLabel(workflow)"
-              (onChange)="onChangeLabel(workflow)"
-              [appendTo]="'body'"
-            >
-              <ng-template #selectedItem let-selectedOption>
-                @if (selectedOption) {
-                  <div class="flex items-center gap-2">
-                    <div [class]="selectedOption === 'NONE' ? 'text-muted-color' : 'font-bold'">{{ selectedOption }}</div>
-                  </div>
-                }
-              </ng-template>
-            </p-select>
           </td>
           <td>
             <p-button label="Configure" size="small" severity="secondary" (click)="openDeploymentConfig(workflow)" />

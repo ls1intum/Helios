@@ -16,7 +16,7 @@ function createRun(overrides: Partial<WorkflowRunDto> = {}): WorkflowRunDto {
     status: 'COMPLETED',
     workflowId: 10,
     htmlUrl: 'https://github.com/org/repo/actions/runs/1',
-    label: 'TEST',
+    label: 'NONE',
     createdAt: '2025-01-01T00:00:00Z',
     updatedAt: '2025-01-01T00:00:00Z',
     ...overrides,
@@ -78,6 +78,27 @@ describe('WorkflowRunsTableComponent', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  describe('table layout', () => {
+    it('renders Status, Started and Duration columns after the name column, without test processing', () => {
+      const headers = Array.from(fixture.nativeElement.querySelectorAll('thead th')).map(th => (th as HTMLElement).textContent?.trim());
+      expect(headers).toHaveLength(4);
+      expect(headers.slice(1)).toEqual(['Status', 'Started', 'Duration']);
+    });
+
+    it('spans the empty message over all columns', () => {
+      const headerCount = fixture.nativeElement.querySelectorAll('thead th').length;
+      const emptyCell = fixture.nativeElement.querySelector('tbody td[colspan]') as HTMLElement;
+      expect(Number(emptyCell.getAttribute('colspan'))).toBe(headerCount);
+    });
+
+    it('renders one cell per header for a run row', () => {
+      setMockQuery(component, { data: { runs: [createRun({ id: 7 })], totalElements: 1 } });
+      fixture.detectChanges();
+      const headerCount = fixture.nativeElement.querySelectorAll('thead th').length;
+      expect(fixture.nativeElement.querySelectorAll('tbody tr:first-child td')).toHaveLength(headerCount);
+    });
   });
 
   describe('runs() and totalElements()', () => {
