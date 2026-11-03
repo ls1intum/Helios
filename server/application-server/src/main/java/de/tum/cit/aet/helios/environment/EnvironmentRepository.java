@@ -3,13 +3,26 @@ package de.tum.cit.aet.helios.environment;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import de.tum.cit.aet.helios.gitreposettings.GitRepoSettings;
 import java.util.List;
+import java.time.Instant;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 @Repository
 public interface EnvironmentRepository extends JpaRepository<Environment, Long> {
+
+  /**
+   * Updates only the status-changed timestamp. This deliberately bypasses the {@code @Version}
+   * check: callers hold a possibly stale entity, and a concurrent update of an unrelated column
+   * (lock, status check, workflow sync) must not make this write fail.
+   */
+  @Modifying
+  @Query("UPDATE Environment e SET e.statusChangedAt = :statusChangedAt WHERE e.id = :id")
+  int updateStatusChangedAt(@Param("id") Long id, @Param("statusChangedAt") Instant statusChangedAt);
+
   List<Environment> findByRepository(GitRepository repository);
 
   @Query("SELECT e FROM Environment e "
