@@ -31,7 +31,7 @@ This starter is based on Vite. There is also [a Webpack based starter](https://g
 
 ```bash
 cd keycloakify
-npm install -g pnpm@12.15.0 # Node.js 26 does not bundle Corepack.
+npm install -g pnpm@12.16.1 # Node.js 26 does not bundle Corepack.
 pnpm install # The version is pinned via the "packageManager" field.
 ```
 

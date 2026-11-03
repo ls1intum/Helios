@@ -1,11 +1,11 @@
 # Stage 1: Build Angular app
-FROM node:26.12.1 AS build
+FROM node:26.13.0 AS build
 
 # Set the working directory
 WORKDIR /app
 
 # Install the pnpm version pinned by package.json "packageManager"
-RUN npm install --global pnpm@12.15.0
+RUN npm install --global pnpm@12.16.1
 
 # Copy manifest, lockfile, and pnpm settings (node-linker + allowed builds)
 COPY package.json pnpm-lock.yaml .npmrc pnpm-workspace.yaml ./
