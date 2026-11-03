@@ -118,8 +118,31 @@ A successful response will include an access token:
 NOTE:
 --------------
 
-GitHub access tokens are valid for 8 hours. Identity provider tokens are not refreshed automatically in Keycloak.
-In order to make sure you always have a valid token, limit the session to 8 hours.
+GitHub App user access tokens are valid for 8 hours, and Keycloak does **not** refresh brokered
+identity-provider tokens automatically (the ``github`` OAuth2 provider never refreshes on the
+token-exchange path, in any Keycloak version). Plain token exchange therefore returns a token that
+GitHub rejects with ``HTTP 401`` once it is older than 8 hours.
+
+Helios works around this by refreshing GitHub tokens itself (see the ``auth.github.token`` package)
+rather than relying on session limits:
+
+#. It seeds a user's GitHub **refresh token** once from the broker retrieve-token endpoint
+   ``GET /realms/<realm>/broker/github/token``, reached headlessly with an impersonation-exchanged
+   internal token. This requires the token-exchange client to hold the **retrieve-token** permission
+   on the ``github`` identity provider (Identity Providers → github → Permissions → the ``token``
+   permission → add the client policy). Without it the endpoint returns
+   ``403 "Client [...] not authorized to retrieve tokens from identity provider [github]"``.
+#. It then refreshes directly against GitHub
+   (``POST https://github.com/login/oauth/access_token`` with ``grant_type=refresh_token``) using the
+   App's ``client_id``/``client_secret``, caching the ~8h access token and persisting the rotated
+   refresh token (GitHub rotates refresh tokens on every use).
+
+Required configuration for this to work:
+
+* ``GITHUB_CLIENT_SECRET`` — the login GitHub App's OAuth client secret (with "Expire user
+  authorization tokens" enabled so refresh tokens are issued).
+* ``HELIOS_TOKEN_ENCRYPTION_KEY`` — a base64 AES key; stored refresh tokens are encrypted at rest.
+* The ``github`` IdP retrieve-token permission granted to the token-exchange client (above).
 
 Security Considerations
 -----------------------
