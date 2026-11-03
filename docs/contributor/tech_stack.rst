@@ -19,7 +19,7 @@ It provides a comprehensive set of tools and libraries for developing interactiv
 **pnpm**: Package Manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-`pnpm <https://pnpm.io/>`_ is the package manager for both the ``client`` and ``keycloakify`` apps (it replaced yarn). It is fast, disk-efficient, and strict about dependency resolution. The version is pinned via the ``packageManager`` field in ``package.json`` — install it with ``npm install -g pnpm@12.15.0`` (or install Corepack separately and enable it), then use ``pnpm install`` / ``pnpm dev`` / ``pnpm build``. Do **not** use npm or yarn. See the `Setup Guide <../setup#prerequisites>`_ to get started.
+`pnpm <https://pnpm.io/>`_ is the package manager for both the ``client`` and ``keycloakify`` apps (it replaced yarn). It is fast, disk-efficient, and strict about dependency resolution. The version is pinned via the ``packageManager`` field in ``package.json`` — install it with ``npm install -g pnpm@12.16.1`` (or install Corepack separately and enable it), then use ``pnpm install`` / ``pnpm dev`` / ``pnpm build``. Do **not** use npm or yarn. See the `Setup Guide <../setup#prerequisites>`_ to get started.
 
 **Angular Tanstack Query**: Powerful asynchronous data fetching library
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

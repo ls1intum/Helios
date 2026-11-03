@@ -51,3 +51,6 @@ overrides:
   'immutable@5': 5.1.9
   # @angular/build pins Vite exactly; patch its copy as well as the direct dependency.
   'vite@8': 8.3.5
+  # GHSA-g3hv-75wg-m249 (ReDoS via globparts); only patched in 11.x.
+  'minimatch@3': 11.0.1
+  'minimatch@10': 11.0.1
