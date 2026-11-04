@@ -354,7 +354,7 @@ class PipelineIT extends HeliosIntegrationTest {
   }
 
   @Test
-  void previousFooterLinksTheCiRunNotACoRunningWorkflow() throws Exception {
+  void previousFooterLinksTheCiRunNotAnotherRunningWorkflow() throws Exception {
     JdbcTemplate jdbc = new JdbcTemplate(dataSource);
     final String branch = "ci-scope-br";
     insertBranch(jdbc, REPO, branch, "aaaahead");

@@ -14,6 +14,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import java.time.Duration;
 import java.time.OffsetDateTime;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -46,6 +47,13 @@ import lombok.ToString;
 @NoArgsConstructor
 @ToString(exclude = {"heliosDeployment", "reviewer"})
 public class DeploymentApprovalRequest {
+
+  /**
+   * GitHub fails a job that has waited for approval for 30 days, after which the deployment can no
+   * longer be approved or rejected. A request older than this can never be acted on, so it is
+   * hidden from the pending list and swept to {@link State#EXPIRED}.
+   */
+  public static final Duration GITHUB_APPROVAL_WINDOW = Duration.ofDays(30);
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
