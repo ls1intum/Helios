@@ -5,6 +5,7 @@ import { provideZonelessChangeDetection } from '@angular/core';
 import { MessageService } from 'primeng/api';
 import { KeycloakService } from './core/services/keycloak/keycloak.service';
 import { vi } from 'vitest';
+import { HANDLED_LOCALLY_HEADER } from '@app/core/utils/error-handling';
 
 describe('AppComponent', () => {
   afterEach(() => {
@@ -40,5 +41,28 @@ describe('AppComponent', () => {
     await responseInterceptor?.(response, new Request('http://localhost/api/deployments/cancel'), {} as never);
 
     await expect(response.text()).resolves.toBe('{"message":"Backend error"}');
+  });
+
+  it('shows the generic error toast for a failed request', async () => {
+    TestBed.createComponent(AppComponent);
+    const responseInterceptor = client.interceptors.response.fns.at(-1);
+    const add = vi.spyOn(TestBed.inject(MessageService), 'add');
+
+    const response = new Response(JSON.stringify({ message: 'Backend error' }), { status: 502, headers: { 'Content-Type': 'application/json' } });
+    await responseInterceptor?.(response, new Request('http://localhost/api/deployments/1/approve'), {} as never);
+
+    expect(add).toHaveBeenCalledWith(expect.objectContaining({ summary: 'Error 502', detail: 'Backend error' }));
+  });
+
+  it('stays quiet when the caller reports the failure itself', async () => {
+    TestBed.createComponent(AppComponent);
+    const responseInterceptor = client.interceptors.response.fns.at(-1);
+    const add = vi.spyOn(TestBed.inject(MessageService), 'add');
+
+    const response = new Response(JSON.stringify({ message: 'Backend error' }), { status: 409, headers: { 'Content-Type': 'application/json' } });
+    const request = new Request('http://localhost/api/deployments/1/approve', { headers: { [HANDLED_LOCALLY_HEADER]: 'true' } });
+    await responseInterceptor?.(response, request, {} as never);
+
+    expect(add).not.toHaveBeenCalled();
   });
 });

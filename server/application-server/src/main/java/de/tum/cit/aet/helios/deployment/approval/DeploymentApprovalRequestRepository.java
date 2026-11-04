@@ -2,11 +2,13 @@ package de.tum.cit.aet.helios.deployment.approval;
 
 import de.tum.cit.aet.helios.heliosdeployment.HeliosDeployment;
 import jakarta.persistence.LockModeType;
+import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -69,10 +71,31 @@ public interface DeploymentApprovalRequestRepository
           + "join fetch d.environment e "
           + "join fetch e.repository "
           + "where r.reviewer.id = :reviewerId and r.state in :states "
+          + "and r.createdAt >= :notBefore "
           + "order by r.createdAt desc")
   List<DeploymentApprovalRequest> findByReviewerAndStateIn(
       @Param("reviewerId") Long reviewerId,
-      @Param("states") Collection<DeploymentApprovalRequest.State> states);
+      @Param("states") Collection<DeploymentApprovalRequest.State> states,
+      @Param("notBefore") OffsetDateTime notBefore);
+
+  /**
+   * Flips every still-open request created before {@code cutoff} to {@code EXPIRED}. Such a
+   * deployment has outlived GitHub's approval window and can no longer be decided, so the row is
+   * archived instead of staying in the reviewer's list forever.
+   *
+   * @return the number of rows archived
+   */
+  @Modifying
+  @Query(
+      "update DeploymentApprovalRequest r set r.state = :expired, r.respondedAt = :now, "
+          + "r.failureReason = :reason "
+          + "where r.state in :openStates and r.createdAt < :cutoff")
+  int expireOpenRequestsCreatedBefore(
+      @Param("cutoff") OffsetDateTime cutoff,
+      @Param("now") OffsetDateTime now,
+      @Param("reason") String reason,
+      @Param("expired") DeploymentApprovalRequest.State expired,
+      @Param("openStates") Collection<DeploymentApprovalRequest.State> openStates);
 
   long countByReviewerIdAndState(Long reviewerId, DeploymentApprovalRequest.State state);
 }
