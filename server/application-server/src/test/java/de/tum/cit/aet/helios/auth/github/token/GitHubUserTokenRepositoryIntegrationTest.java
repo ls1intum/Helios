@@ -56,7 +56,7 @@ class GitHubUserTokenRepositoryIntegrationTest {
   }
 
   @Test
-  void advisoryLockQueryRunsAndIsReentrantWithinATransaction() {
+  void advisoryLockQueryRunsAndIsReentrantWithinOneTransaction() {
     // @DataJpaTest wraps the test in a transaction, so the xact-scoped lock is held until the end.
     assertThat(repository.lockLogin("octocat")).isEqualTo(1L);
     assertThat(repository.lockLogin("octocat")).isEqualTo(1L);
