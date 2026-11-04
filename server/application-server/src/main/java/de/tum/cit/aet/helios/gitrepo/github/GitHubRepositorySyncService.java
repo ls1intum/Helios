@@ -66,9 +66,6 @@ public class GitHubRepositorySyncService {
               .map(user -> userSyncService.processUser(user))
               .collect(Collectors.toSet()));
       result.setEnvironmentCount(gitHubService.getEnvironments(currentRepository).size());
-      if (currentRepository.getLatestRelease() != null) {
-        result.setLatestReleaseTagName(currentRepository.getLatestRelease().getTagName());
-      }
     } catch (IOException e) {
       log.error("Failed to update repository {}: {}", ghRepository.getId(), e.getMessage());
       throw new RuntimeException(e);

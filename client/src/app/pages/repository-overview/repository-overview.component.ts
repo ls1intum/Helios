@@ -8,7 +8,6 @@ import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { ChipModule } from 'primeng/chip';
 import { DataViewModule } from 'primeng/dataview';
-import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
 import { Skeleton } from 'primeng/skeleton';
 import { TableModule } from 'primeng/table';
@@ -35,7 +34,6 @@ import {
   IconSettings,
   IconStar,
   IconSun,
-  IconTag,
 } from 'angular-tabler-icons/icons';
 import { DialogModule } from 'primeng/dialog';
 import { CarouselModule, CarouselPageEvent } from 'primeng/carousel';
@@ -51,7 +49,6 @@ const ROWS_PER_PAGE_OPTIONS = [6, 12, 24, 48];
   imports: [
     DataViewModule,
     ButtonModule,
-    TagModule,
     DividerModule,
     CardModule,
     AvatarModule,
@@ -75,7 +72,6 @@ const ROWS_PER_PAGE_OPTIONS = [6, 12, 24, 48];
     { provide: FILTER_OPTIONS_TOKEN, useValue: FILTER_OPTIONS },
     provideTablerIcons({
       IconBrandGithub,
-      IconTag,
       IconStar,
       IconGitBranch,
       IconGitPullRequest,
@@ -148,10 +144,6 @@ export class RepositoryOverviewComponent {
 
   openExternalLink(url: string): void {
     window.open(url, '_blank');
-  }
-
-  navigateToReleases(repository: RepositoryInfoDto) {
-    this.router.navigate(['repo', repository.id.toString(), 'release']);
   }
 
   navigateToBranches(repository: RepositoryInfoDto) {

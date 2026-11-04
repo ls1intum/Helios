@@ -114,8 +114,9 @@ export class EnvironmentAccordionComponent {
     return url;
   }
 
-  isRelease(deployment: EnvironmentDeployment): boolean {
-    return (deployment.releaseCandidateNames?.length || 0) > 0 || (!!deployment.ref && /^v?\d+\.\d+\.\d+/.test(deployment.ref));
+  // A semantic-version ref (e.g. v1.2.3) is a git tag, not a branch, so there is no branch page to link to.
+  isTagRef(deployment: EnvironmentDeployment): boolean {
+    return !!deployment.ref && /^v?\d+\.\d+\.\d+/.test(deployment.ref);
   }
 
   getPrLink() {

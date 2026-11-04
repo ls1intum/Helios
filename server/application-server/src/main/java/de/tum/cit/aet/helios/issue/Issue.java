@@ -46,7 +46,7 @@ public class Issue extends BaseGitServiceEntity {
 
   @NonNull private String title;
 
-  // PR/issue body is plain markdown text (matches Release/ReleaseCandidate.body). NOT @Lob: on
+  // PR/issue body is plain markdown text. NOT @Lob: on
   // PostgreSQL @Lob String maps to an `oid` Large Object, which cannot be read in auto-commit mode.
   @Column(columnDefinition = "text")
   private String body;

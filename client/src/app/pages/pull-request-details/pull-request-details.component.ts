@@ -13,7 +13,6 @@ import { UserAvatarComponent } from '@app/components/user-avatar/user-avatar.com
 import { PullRequestStatusIconComponent } from '@app/components/pull-request-status-icon/pull-request-status-icon.component';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
 import { IconGitBranch } from 'angular-tabler-icons/icons';
-import { PipelineTestResultsComponent } from '@app/components/pipeline/test-results/pipeline-test-results.component';
 import { DeploymentHistoryComponent } from '@app/components/deployment-history/deployment-history.component';
 import { Tab, TabList, TabPanel, TabPanels, Tabs } from 'primeng/tabs';
 import { Divider } from 'primeng/divider';
@@ -31,7 +30,6 @@ import { Divider } from 'primeng/divider';
     SkeletonModule,
     UserAvatarComponent,
     PullRequestStatusIconComponent,
-    PipelineTestResultsComponent,
     DeploymentHistoryComponent,
     Tabs,
     TabList,

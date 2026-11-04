@@ -218,7 +218,6 @@ In the event that the Helios database volume is accidentally removed, there is n
    After synchronization completes, each repository admin must log in to the Helios UI and reapply repository-specific settings:
 
    - Repository settings: Workflow UI grouping
-   - Repository settings: Test artifact labeling
    - Environment settings: Setting up environment URLs, labels, etc.
 
    This manual step typically takes **5** `minutes` per repository.

@@ -11,7 +11,6 @@ import io.nats.client.StreamContext;
 import io.nats.client.api.ConsumerConfiguration;
 import io.nats.client.api.ConsumerInfo;
 import io.nats.client.api.DeliverPolicy;
-import io.sentry.Sentry;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.ZonedDateTime;
@@ -241,8 +240,6 @@ public class NatsConsumerService {
         log.info("NATS consumer reinitialized successfully.");
       } catch (Exception e) {
         log.error("Failed to reinitialize the NATS consumer: {}", e.getMessage(), e);
-        // Log error to Sentry
-        Sentry.captureException(e);
       }
     } else {
       log.warn("NATS connection is null. Can not reinitialize consumer.");

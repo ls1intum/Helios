@@ -16,7 +16,7 @@ function createRun(overrides: Partial<WorkflowRunDto> = {}): WorkflowRunDto {
     status: 'COMPLETED',
     workflowId: 10,
     htmlUrl: 'https://github.com/org/repo/actions/runs/1',
-    label: 'TEST',
+    label: 'NONE',
     createdAt: '2025-01-01T00:00:00Z',
     updatedAt: '2025-01-01T00:00:00Z',
     ...overrides,
@@ -78,6 +78,27 @@ describe('WorkflowRunsTableComponent', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  describe('table layout', () => {
+    it('renders Status, Started and Duration columns after the name column, without test processing', () => {
+      const headers = Array.from(fixture.nativeElement.querySelectorAll('thead th')).map(th => (th as HTMLElement).textContent?.trim());
+      expect(headers).toHaveLength(4);
+      expect(headers.slice(1)).toEqual(['Status', 'Started', 'Duration']);
+    });
+
+    it('spans the empty message over all columns', () => {
+      const headerCount = fixture.nativeElement.querySelectorAll('thead th').length;
+      const emptyCell = fixture.nativeElement.querySelector('tbody td[colspan]') as HTMLElement;
+      expect(Number(emptyCell.getAttribute('colspan'))).toBe(headerCount);
+    });
+
+    it('renders one cell per header for a run row', () => {
+      setMockQuery(component, { data: { runs: [createRun({ id: 7 })], totalElements: 1 } });
+      fixture.detectChanges();
+      const headerCount = fixture.nativeElement.querySelectorAll('thead th').length;
+      expect(fixture.nativeElement.querySelectorAll('tbody tr:first-child td')).toHaveLength(headerCount);
+    });
   });
 
   describe('runs() and totalElements()', () => {
@@ -154,49 +175,6 @@ describe('WorkflowRunsTableComponent', () => {
 
     it('returns animated yellow class for IN_PROGRESS', () => {
       const actual: WorkflowStatusClass = component.getWorkflowStatusClass(createRun({ status: 'IN_PROGRESS' }));
-
-      expect(actual).toContain('text-yellow-500');
-      expect(actual).toContain('dark:text-yellow-400');
-      expect(actual).toContain('animate-spin');
-    });
-  });
-
-  describe('getTestStatusIcon', () => {
-    type TestIcon = ReturnType<WorkflowRunsTableComponent['getTestStatusIcon']>;
-
-    const cases: Array<[Partial<WorkflowRunDto>, TestIcon]> = [
-      [{ testProcessingStatus: 'PROCESSED' }, 'circle-check'],
-      [{ testProcessingStatus: 'FAILED' }, 'alert-triangle'],
-      [{ testProcessingStatus: 'PROCESSING' }, 'progress'],
-      [{}, 'circle-check'],
-    ];
-
-    cases.forEach(([overrides, expected]: [Partial<WorkflowRunDto>, TestIcon]) => {
-      it(`returns ${expected} for ${JSON.stringify(overrides)}`, () => {
-        const actual: TestIcon = component.getTestStatusIcon(createRun(overrides));
-        expect(actual).toBe(expected);
-      });
-    });
-  });
-
-  describe('getTestStatusClass', () => {
-    type TestStatusClass = ReturnType<WorkflowRunsTableComponent['getTestStatusClass']>;
-
-    const cases: Array<[Partial<WorkflowRunDto>, TestStatusClass]> = [
-      [{ testProcessingStatus: 'PROCESSED' }, 'text-green-600 dark:text-green-400'],
-      [{ testProcessingStatus: 'FAILED' }, 'text-red-600 dark:text-red-400'],
-      [{}, 'text-muted-color'],
-    ];
-
-    cases.forEach(([overrides, expected]: [Partial<WorkflowRunDto>, TestStatusClass]) => {
-      it(`returns ${expected} for ${JSON.stringify(overrides)}`, () => {
-        const actual: TestStatusClass = component.getTestStatusClass(createRun(overrides));
-        expect(actual).toBe(expected);
-      });
-    });
-
-    it('returns animated yellow class for PROCESSING', () => {
-      const actual: TestStatusClass = component.getTestStatusClass(createRun({ testProcessingStatus: 'PROCESSING' }));
 
       expect(actual).toContain('text-yellow-500');
       expect(actual).toContain('dark:text-yellow-400');

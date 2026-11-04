@@ -3,7 +3,6 @@ import { RepositoryFilterGuard } from './core/middlewares/repository-filter.guar
 import { adminGuard } from './core/routeGuards/admin.guard';
 import { maintainerGuard } from './core/routeGuards/maintainer.guard';
 import { loggedInGuard } from '@app/core/routeGuards/auth.guard';
-import { writePermissionGuard } from '@app/core/routeGuards/write-permission.guard';
 
 export const routes: Routes = [
   {
@@ -64,32 +63,6 @@ export const routes: Routes = [
                 loadComponent: () => import('./pages/environment-deployment-history/environment-deployment-history.component').then(m => m.EnvironmentDeploymentHistoryComponent),
               },
             ],
-          },
-          {
-            path: 'release',
-            loadComponent: () => import('./pages/release/release.component').then(m => m.ReleaseComponent),
-            canActivate: [maintainerGuard],
-            children: [
-              {
-                path: '',
-                redirectTo: 'list',
-                pathMatch: 'full',
-              },
-              { path: 'list', loadComponent: () => import('./pages/release-candidate-list/release-candidate-list.component').then(m => m.ReleaseCanidateListComponent) },
-              {
-                path: ':name',
-                loadComponent: () => import('./pages/release-candidate-details/release-candidate-details.component').then(m => m.ReleaseCandidateDetailsComponent),
-              },
-            ],
-          },
-          {
-            path: 'flaky-tests',
-            loadComponent: () => import('./pages/flaky-tests-overview/flaky-tests-overview.component').then(m => m.FlakyTestsOverviewComponent),
-          },
-          {
-            path: 'ci-cd/runs/:workflowRunId/logs',
-            canActivate: [loggedInGuard, writePermissionGuard],
-            loadComponent: () => import('./pages/workflow-run-logs/workflow-run-logs.component').then(m => m.WorkflowRunLogsComponent),
           },
           {
             path: 'ci-cd',

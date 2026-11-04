@@ -3,7 +3,6 @@ package de.tum.cit.aet.helios.workflow;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
@@ -18,15 +17,6 @@ public interface WorkflowRunRepository
   Optional<WorkflowRun> findById(long id);
 
   Optional<WorkflowRun> findByIdAndRepositoryRepositoryId(long id, Long repositoryId);
-
-  @Query(
-      "SELECT DISTINCT wr FROM WorkflowRun wr "
-          + "JOIN wr.pullRequests pr "
-          + "WHERE pr.id = :pullRequestId "
-          + "AND wr.headSha = :headSha")
-  @EntityGraph(attributePaths = {"testSuites"})
-  List<WorkflowRun> findByPullRequestsIdAndHeadShaWithTestSuites(
-      Long pullRequestId, String headSha);
 
   /**
    * Returns the n-th latest commit SHA from the commit history for a given pull request, excluding
@@ -158,20 +148,7 @@ public interface WorkflowRunRepository
       @Param("cursorId") long cursorId,
       Pageable pageable);
 
-  @Query(
-      "SELECT DISTINCT wr FROM WorkflowRun wr "
-          + "WHERE wr.headBranch = :branch "
-          + "AND wr.headSha = :headSha "
-          + "AND wr.repository.repositoryId = :repositoryId "
-          + "ORDER BY wr.createdAt DESC")
-  @EntityGraph(attributePaths = {"testSuites"})
-  List<WorkflowRun> findByHeadBranchAndHeadShaAndRepositoryIdWithTestSuites(
-      String branch, String headSha, Long repositoryId);
-
   List<WorkflowRun> findByPullRequestsIdAndHeadSha(Long pullRequestsId, String headSha);
-
-  @Query("SELECT pr.id FROM WorkflowRun wr JOIN wr.pullRequests pr WHERE wr.id = :workflowRunId")
-  List<Long> findPullRequestIdsByWorkflowRunId(@Param("workflowRunId") Long workflowRunId);
 
   List<WorkflowRun> findByHeadBranchAndHeadShaAndRepositoryRepositoryId(
       String branch, String headSha, Long repositoryId);
@@ -189,132 +166,6 @@ public interface WorkflowRunRepository
       @Param("headBranch") String headBranch,
       @Param("headSha") String headSha,
       Pageable pageable);
-
-  /**
-   * IDs of workflow-runs that will **NOT** be deleted by the current policy.
-   *
-   * <p>Same ranking logic, but we select the rows whose ID is *not* in the
-   * `deletable` set.
-   */
-  @Query(value = """
-      WITH ranked AS (
-          SELECT wr.id,
-                 wr.repository_id,
-                 wr.workflow_id,
-                 wr.head_branch,
-                 wr.created_at,
-                 (wr.head_branch = gr.default_branch) IS TRUE AS is_default_branch,
-                 row_number() OVER (
-                     PARTITION BY wr.repository_id, wr.workflow_id, wr.head_branch
-                     ORDER BY wr.created_at DESC
-                 ) AS rn
-          FROM workflow_run wr
-          LEFT JOIN repository gr ON gr.repository_id = wr.repository_id
-          WHERE wr.test_processing_status IS NOT DISTINCT FROM :tps
-      ),
-      deletable AS (
-          SELECT id
-          FROM ranked
-          WHERE rn > :keep
-            AND NOT is_default_branch
-            AND created_at < now() - (:ageDays * interval '1 day')
-      )
-      SELECT id
-      FROM ranked
-      WHERE id NOT IN (SELECT id FROM deletable)
-      """, nativeQuery = true)
-  List<Long> previewSurvivorRunIds(@Param("keep") int keep,
-                                   @Param("ageDays") int ageDays,
-                                   @Param("tps") String tps);
-
-
-  /**
-   * IDs of workflow-runs that will be deleted by the current policy.
-   *
-   * <p>Same ranking logic, but we select the rows whose ID is in the
-   * `deletable` set.
-   */
-  @Query(value = """
-      WITH candidates AS (
-          SELECT id
-          FROM (
-              SELECT wr.id,
-                     wr.repository_id,
-                     wr.workflow_id,
-                     wr.head_branch,
-                     wr.created_at,
-                     (wr.head_branch = gr.default_branch) IS TRUE AS is_default_branch,
-                     row_number() OVER (
-                         PARTITION BY wr.repository_id, wr.workflow_id, wr.head_branch
-                         ORDER BY wr.created_at DESC
-                     ) AS rn
-              FROM workflow_run wr
-              LEFT JOIN repository gr ON gr.repository_id = wr.repository_id
-              WHERE wr.test_processing_status IS NOT DISTINCT FROM :tps
-          ) ranked
-          WHERE rn > :keep
-            AND NOT is_default_branch
-            AND created_at < now() - (:ageDays * interval '1 day')
-      )
-      SELECT id FROM candidates
-      """, nativeQuery = true)
-  List<Long> previewObsoleteRunIds(@Param("keep") int keep,
-                                   @Param("ageDays") int ageDays,
-                                   @Param("tps") String tps);
-
-  /**
-   * Custom database clean-up for workflow runs.
-   */
-  @Modifying
-  @Transactional
-  @Query(value = """
-      /* ---------------------------------------------------------------
-       * Custom database clean-up for workflow runs.
-       *
-       *   • For every (repository_id, workflow_id, head_branch) combination
-       *     keep the newest :keep rows.
-       *   • Of the remainder, delete those whose
-       *     created_at is at least :ageDays old.
-       *   • Runs on the default branch of a repository are never touched by
-       *     keep-N pruning — only the hard max-age cap removes them. The
-       *     exemption applies only when head_branch equals a non-null
-       *     default_branch ((=) IS TRUE), so NULL branches and repos without
-       *     a default branch stay prunable. It lives in the deletable filter,
-       *     not the ranked scope, so the survivor preview still lists
-       *     default-branch runs. Keep this CTE in sync with the two preview
-       *     queries above.
-       *
-       * All child rows in test_suite → test_case are removed
-       * automatically via ON DELETE CASCADE.
-       * ------------------------------------------------------------- */
-      WITH deletable AS (
-          SELECT id
-          FROM (
-              SELECT wr.id,
-                     wr.repository_id,
-                     wr.workflow_id,
-                     wr.head_branch,
-                     wr.created_at,
-                     (wr.head_branch = gr.default_branch) IS TRUE AS is_default_branch,
-                     row_number() OVER (
-                         PARTITION BY wr.repository_id, wr.workflow_id, wr.head_branch
-                         ORDER BY wr.created_at DESC
-                     ) AS rn
-              FROM workflow_run wr
-              LEFT JOIN repository gr ON gr.repository_id = wr.repository_id
-              WHERE wr.test_processing_status IS NOT DISTINCT FROM :tps
-          ) ranked
-          WHERE rn > :keep
-            AND NOT is_default_branch
-            AND created_at < now() - (:ageDays * interval '1 day')
-      )
-      DELETE FROM workflow_run wr
-      USING  deletable d
-      WHERE  wr.id = d.id
-      """, nativeQuery = true)
-  int purgeObsoleteRuns(@Param("keep") int keepPerCombo,
-                        @Param("ageDays") int ageDays,
-                        @Param("tps") String testProcessingStatus);
 
   /**
    * Number of workflow runs the max-age cap would delete — dry-run preview of
@@ -338,17 +189,16 @@ public interface WorkflowRunRepository
 
   /**
    * Hard retention cap: deletes workflow runs older than {@code maxAgeDays},
-   * regardless of status, branch (default branches included) or any keep-N
-   * policy. Runs still referenced by a {@code helios_deployment} or
+   * regardless of status, branch (default branches included).
+   * Runs still referenced by a {@code helios_deployment} or
    * {@code deployment} row are preserved — same contract as the orphan-branch
    * sweep — so the deployment → build link never dangles. Child rows in
-   * test_suite → test_case, workflow_job and workflow_run_pull_requests
-   * cascade via their FKs.
+   * workflow_job and workflow_run_pull_requests cascade via their FKs.
    *
    * <p>Deletes at most {@code batchSize} runs per call, each call its own
    * transaction; the caller loops until a call deletes fewer than
    * {@code batchSize}. This bounds lock-hold time and WAL growth on large
-   * backlogs where the cascade touches millions of {@code test_case} rows.
+   * backlogs where the cascade touches many child rows.
    */
   @Modifying
   @Transactional
@@ -416,7 +266,7 @@ public interface WorkflowRunRepository
    * of being swept.
    *
    * <p>Runs with a {@code NULL head_branch} are excluded — they have no branch
-   * identity; the keep-N policy in {@link #purgeObsoleteRuns} handles them.
+   * identity; the max-age cap in {@link #purgeRunsOlderThan} handles them.
    */
   @Query(value = """
       SELECT wr.id          AS "id",

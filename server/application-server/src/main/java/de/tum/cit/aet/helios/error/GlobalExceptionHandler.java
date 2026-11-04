@@ -1,18 +1,13 @@
 package de.tum.cit.aet.helios.error;
 
-import de.tum.cit.aet.helios.ai.testfailure.TestFailureAnalysisRateLimitExceededException;
 import de.tum.cit.aet.helios.deployment.DeploymentException;
 import de.tum.cit.aet.helios.environment.EnvironmentException;
-import de.tum.cit.aet.helios.releaseinfo.releasecandidate.ReleaseCandidateException;
-import de.tum.cit.aet.helios.tests.type.TestTypeNameConflictException;
-import io.sentry.Sentry;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.stream.Collectors;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
@@ -21,7 +16,6 @@ import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.validation.BindException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -124,22 +118,6 @@ public class GlobalExceptionHandler {
     return new ResponseEntity<>(error, HttpStatus.FORBIDDEN);
   }
 
-  @ExceptionHandler(TestFailureAnalysisRateLimitExceededException.class)
-  public ResponseEntity<ApiError> handleTestFailureAnalysisRateLimitException(
-      TestFailureAnalysisRateLimitExceededException ex, HttpServletRequest request) {
-
-    ApiError error = new ApiError();
-    error.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
-    error.setError(HttpStatus.TOO_MANY_REQUESTS.getReasonPhrase());
-    error.setMessage(ex.getMessage());
-    error.setPath(request.getRequestURI());
-    error.setTimestamp(Instant.now());
-
-    return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
-        .header(HttpHeaders.RETRY_AFTER, String.valueOf(ex.getRetryAfterSeconds()))
-        .body(error);
-  }
-
   // -- EXPLICIT STATUS : ResponseStatusException -------
   // Endpoints throw ResponseStatusException to signal a specific status + reason (e.g. a 502 when
   // GitHub rejects an approval). Without this handler the generic Exception handler below would
@@ -160,7 +138,7 @@ public class GlobalExceptionHandler {
     error.setTimestamp(Instant.now());
 
     // These are deliberate, handled outcomes (auth, conflicts, upstream rejections), so keep them
-    // out of Sentry; log server-side faults (5xx) at WARN for visibility, client faults at DEBUG.
+    // out of error reporting; log server-side faults (5xx) at WARN for visibility, client faults at DEBUG.
     if (status.is5xxServerError()) {
       log.warn("Request to {} failed with {}: {}", request.getRequestURI(), status.value(),
           error.getMessage());
@@ -183,7 +161,6 @@ public class GlobalExceptionHandler {
     error.setPath(request.getRequestURI());
     error.setTimestamp(Instant.now());
 
-    Sentry.captureException(ex);
     log.error("An internal server error occurred", ex);
 
     return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
@@ -215,31 +192,5 @@ public class GlobalExceptionHandler {
     error.setTimestamp(Instant.now());
 
     return new ResponseEntity<>(error, HttpStatus.valueOf(error.getStatus()));
-  }
-
-  @ExceptionHandler(ReleaseCandidateException.class)
-  public ResponseEntity<ApiError> handleReleaseCandidateException(
-      ReleaseCandidateException ex, HttpServletRequest request) {
-
-    ApiError error = new ApiError();
-    error.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
-    error.setError("Release Candidate Error");
-    error.setMessage("Release Candidate operation failed: " + ex.getMessage());
-    error.setPath(request.getRequestURI());
-    error.setTimestamp(Instant.now());
-
-    return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
-  }
-
-  @ExceptionHandler(TestTypeNameConflictException.class)
-  @ResponseStatus(HttpStatus.CONFLICT)
-  public ResponseEntity<ApiError> handleTestTypeNameConflict(TestTypeNameConflictException ex) {
-    ApiError error = new ApiError();
-    error.setStatus(HttpStatus.CONFLICT.value());
-    error.setError("Test Type Name Conflict");
-    error.setMessage("Test type name conflict: " + ex.getMessage());
-    error.setTimestamp(Instant.now());
-
-    return new ResponseEntity<>(error, HttpStatus.CONFLICT);
   }
 }

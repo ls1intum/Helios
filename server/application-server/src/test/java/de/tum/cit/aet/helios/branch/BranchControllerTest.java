@@ -44,7 +44,7 @@ public class BranchControllerTest {
               false,
               null,
               null,
-              new RepositoryInfoDto(1L, "repo", "repo", null, "url", null, 0, 0, 0, 0, null, null)),
+              new RepositoryInfoDto(1L, "repo", "repo", null, "url", null, 0, 0, 0, 0, null)),
           new BranchInfoDto("branch2", "sha2", 0, 0, false, false, false, null, null, null));
 
   @SuppressWarnings("null")
@@ -56,10 +56,9 @@ public class BranchControllerTest {
           0,
           false,
           false,
-          List.of("releaseCandidate"),
           null,
           null,
-          new RepositoryInfoDto(1L, "repo", "repo", null, "url", null, 0, 0, 0, 0, null, null));
+          new RepositoryInfoDto(1L, "repo", "repo", null, "url", null, 0, 0, 0, 0, null));
 
   @Test
   void testRejectUnauthenticatedUser() throws Exception {

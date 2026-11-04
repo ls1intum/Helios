@@ -21,7 +21,6 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -42,7 +41,6 @@ import org.kohsuke.github.GHCommitState;
 import org.kohsuke.github.GHContent;
 import org.kohsuke.github.GHOrganization;
 import org.kohsuke.github.GHPullRequest;
-import org.kohsuke.github.GHRelease;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GHWorkflow;
 import org.kohsuke.github.PagedIterable;
@@ -190,7 +188,7 @@ public class GitHubService {
    *
    * @param repoNameWithOwners the repository name with owners
    * @param workflowFileNameOrId the workflow file name or ID
-   * @param ref the reference (branch or releaseCandidate) to run the workflow on
+   * @param ref the reference (branch or tag) to run the workflow on
    * @param inputs the inputs for the workflow
    * @throws IOException if an I/O error occurs
    */
@@ -662,157 +660,6 @@ public class GitHubService {
   }
 
   /**
-   * Generates release notes for a GitHub repository by comparing changes between versions.
-   *
-   * @param repositoryNameWithOwner The repository name including the owner (e.g., "owner/repo")
-   * @param tagName The tag name for the new release
-   * @param targetCommitish The commitish value that determines where the Git tag is created from
-   * @return The generated release notes as a string
-   * @throws IOException If there's an error communicating with the GitHub API
-   */
-  public String generateReleaseNotes(
-      String repositoryNameWithOwner, String tagName, String targetCommitish) throws IOException {
-
-    // Create the request payload with only non-null fields
-    Map<String, String> requestPayload = new HashMap<>();
-    requestPayload.put("tag_name", tagName);
-
-    if (targetCommitish != null && !targetCommitish.isEmpty()) {
-      requestPayload.put("target_commitish", targetCommitish);
-    }
-
-    String jsonPayload = objectMapper.writeValueAsString(requestPayload);
-    log.info("Request payload: {}", jsonPayload);
-
-    // Build the request
-    Request request =
-        getRequestBuilder()
-            .url(
-                "https://api.github.com/repos/"
-                    + repositoryNameWithOwner
-                    + "/releases/generate-notes")
-            .post(
-                RequestBody.create(MediaType.parse("application/json; charset=utf-8"), jsonPayload))
-            .build();
-
-    // Execute the request
-    try (Response response = okHttpClient.newCall(request).execute()) {
-      ResponseBody responseBody = response.body();
-      if (!response.isSuccessful()) {
-        String errorBody = "No error details";
-        if (responseBody != null) {
-          try {
-            errorBody = responseBody.string();
-          } catch (IOException e) {
-            log.warn("Failed to read error response body", e);
-          }
-        }
-
-        log.error(
-            "GitHub API call failed with response code: {} and body: {}",
-            response.code(),
-            errorBody);
-        throw new IOException("GitHub API call failed with response code: " + response.code());
-      }
-
-      if (responseBody == null) {
-        throw new IOException("Response body is null");
-      }
-
-      // Parse the response
-      @SuppressWarnings("unchecked")
-      Map<String, Object> responseMap = objectMapper.readValue(responseBody.string(), Map.class);
-
-      // Return the generated notes
-      log.debug("Successfully generated release notes using the GitHub API");
-      return (String) responseMap.get("body");
-    }
-  }
-
-  /**
-   * Creates and publishes a GitHub release draft on behalf of a user.
-   *
-   * @param repoNameWithOwner the repository name with owner
-   * @param tagName the tag name for the release
-   * @param commitish the commitish value (branch or commit SHA)
-   * @param name the name of the release (title)
-   * @param body the body text of the release (release notes)
-   * @param draft whether this is a draft release (true) or a published release (false)
-   * @param githubUserLogin the GitHub user login
-   * @return the created GHRelease object
-   * @throws IOException if an I/O error occurs during the API call
-   */
-  public GHRelease createReleaseOnBehalfOfUser(
-      String repoNameWithOwner,
-      String tagName,
-      String commitish,
-      String name,
-      String body,
-      boolean draft,
-      String githubUserLogin)
-      throws IOException {
-
-    // Fetch a valid GitHub user token, refreshing (or re-seeding) it as needed.
-    final String userGithubToken = gitHubUserTokenService.getValidAccessToken(githubUserLogin);
-
-    // Construct the request payload
-    Map<String, Object> requestPayload = new HashMap<>();
-    requestPayload.put("tag_name", tagName);
-
-    if (commitish != null && !commitish.isEmpty()) {
-      requestPayload.put("target_commitish", commitish);
-    }
-
-    if (name != null && !name.isEmpty()) {
-      requestPayload.put("name", name);
-    }
-
-    if (body != null) {
-      requestPayload.put("body", body);
-    }
-
-    requestPayload.put("draft", draft);
-
-    String jsonPayload = objectMapper.writeValueAsString(requestPayload);
-
-    // Construct the URL for creating a release
-    String url = String.format("https://api.github.com/repos/%s/releases", repoNameWithOwner);
-
-    RequestBody requestBody =
-        RequestBody.create(jsonPayload, MediaType.get("application/json; charset=utf-8"));
-
-    Request request =
-        new Request.Builder()
-            .url(url)
-            .post(requestBody)
-            .header("Authorization", "Bearer " + userGithubToken)
-            .header("Accept", "application/json")
-            .build();
-
-    // Execute the request
-    try (Response response = okHttpClient.newCall(request).execute()) {
-      if (!response.isSuccessful()) {
-        handleErrorResponse(response, "create release");
-      }
-
-      ResponseBody responseBody = response.body();
-      if (responseBody == null) {
-        throw new IOException("Response body is null");
-      }
-
-      // Log success
-      log.info("Successfully created release for tag: {}, draft: {}", tagName, draft);
-
-      Long id =
-          Long.valueOf(
-              objectMapper.readValue(responseBody.string(), Map.class).get("id").toString());
-      // Return the created release information by fetching the complete release from GitHub
-      GHRelease release = getRepository(repoNameWithOwner).getRelease(id);
-      return release;
-    }
-  }
-
-  /**
    * Extracts workflow context from the workflow-context artifact.
    *
    * @param repositoryId The ID of the repository
@@ -964,51 +811,6 @@ public class GitHubService {
 
       String result = responseBody.string();
       log.debug("Successfully fetched job status for workflow run ID: {}", runId);
-      return result;
-    }
-  }
-
-  /**
-   * Downloads the GitHub Actions log archive for a workflow run.
-   *
-   * @param repoNameWithOwner Repository in format "owner/repo"
-   * @param runId Workflow run ID to fetch logs for
-   * @return ZIP archive bytes returned by GitHub
-   * @throws IOException if the API call fails or the response body is empty
-   */
-  public byte[] downloadWorkflowRunLogs(String repoNameWithOwner, long runId) throws IOException {
-    String url =
-        String.format(
-            "https://api.github.com/repos/%s/actions/runs/%d/logs", repoNameWithOwner, runId);
-
-    Request request = getRequestBuilder().url(url).get().build();
-
-    try (Response response = okHttpClient.newCall(request).execute()) {
-      if (!response.isSuccessful()) {
-        String errorBody = "No error details";
-        ResponseBody responseBody = response.body();
-        if (responseBody != null) {
-          try {
-            errorBody = responseBody.string();
-          } catch (IOException e) {
-            log.warn("Failed to read workflow log error response body", e);
-          }
-        }
-
-        log.error(
-            "GitHub API call failed to fetch workflow run logs with response code: {} and body: {}",
-            response.code(),
-            errorBody);
-        throw new IOException("GitHub API call failed with response code: " + response.code());
-      }
-
-      ResponseBody responseBody = response.body();
-      if (responseBody == null) {
-        throw new IOException("Response body is null");
-      }
-
-      byte[] result = responseBody.bytes();
-      log.debug("Successfully fetched workflow logs for workflow run ID: {}", runId);
       return result;
     }
   }
