@@ -303,6 +303,26 @@ class DeploymentReviewActionServiceTest {
   }
 
   @Test
+  void doesNotGuessStaleWhenGitHubReportsNoRunStatus() throws IOException {
+    Fixture f = new Fixture();
+    f.reviewersAre("alice", "bob");
+    DeploymentApprovalRequest row = failedRowFor(f, REVIEWER);
+    githubRejectsReviewWith422(f);
+    when(f.gitHubService.getWorkflowRunState(REPO, WORKFLOW_RUN_ID))
+        .thenReturn(
+            java.util.Optional.of(
+                new GitHubService.WorkflowRunState(null, null, java.time.OffsetDateTime.now())));
+
+    ResponseStatusException e =
+        assertThrows(
+            ResponseStatusException.class,
+            () -> f.service().approveAsCurrentUser(DEPLOYMENT_ID, f.userWithLogin(REVIEWER)));
+
+    assertEquals(HttpStatus.BAD_GATEWAY, e.getStatusCode());
+    assertEquals(DeploymentApprovalRequest.State.FAILED_AT_GITHUB, row.getState());
+  }
+
+  @Test
   void doesNotGuessStaleWhenTheRunStateCannotBeChecked() throws IOException {
     Fixture f = new Fixture();
     f.reviewersAre("alice", "bob");

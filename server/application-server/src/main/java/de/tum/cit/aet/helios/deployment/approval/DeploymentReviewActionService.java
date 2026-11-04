@@ -11,6 +11,7 @@ import de.tum.cit.aet.helios.heliosdeployment.HeliosDeploymentRepository;
 import de.tum.cit.aet.helios.user.User;
 import java.io.IOException;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -246,7 +247,8 @@ public class DeploymentReviewActionService {
     try {
       return gitHubService
           .getWorkflowRunState(repoNameWithOwner, workflowRunId)
-          .map(state -> !"waiting".equalsIgnoreCase(state.status()))
+          // A response without a status says nothing about the run, so it is never "stale".
+          .map(state -> state.status() != null && !"waiting".equalsIgnoreCase(state.status()))
           .orElse(true);
     } catch (IOException checkFailure) {
       log.warn(
@@ -262,7 +264,7 @@ public class DeploymentReviewActionService {
       DeploymentApprovalRequest reviewerRow,
       IOException cause) {
     OffsetDateTime now = OffsetDateTime.now();
-    List<DeploymentApprovalRequest> rows = new java.util.ArrayList<>(existingRows);
+    List<DeploymentApprovalRequest> rows = new ArrayList<>(existingRows);
     if (!rows.contains(reviewerRow)) {
       rows.add(reviewerRow);
     }
