@@ -1,6 +1,7 @@
 package de.tum.cit.aet.helios.deployment.approval;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -13,10 +14,10 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import de.tum.cit.aet.helios.auth.github.token.GitHubReauthRequiredException;
 import de.tum.cit.aet.helios.environment.Environment;
 import de.tum.cit.aet.helios.environment.EnvironmentService;
 import de.tum.cit.aet.helios.environment.EnvironmentService.ReviewerResolution;
-import de.tum.cit.aet.helios.auth.github.token.GitHubReauthRequiredException;
 import de.tum.cit.aet.helios.github.GitHubReviewException;
 import de.tum.cit.aet.helios.github.GitHubService;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
@@ -216,6 +217,127 @@ class DeploymentReviewActionServiceTest {
 
     assertEquals(HttpStatus.BAD_GATEWAY, e.getStatusCode());
     assertEquals(true, e.getReason().contains("sign in again"));
+  }
+
+  /** A row left behind by the old expired-token outage, as found on production. */
+  private static DeploymentApprovalRequest failedRowFor(Fixture f, String login) {
+    DeploymentApprovalRequest row = new DeploymentApprovalRequest();
+    row.setId(31L);
+    row.setHeliosDeployment(f.heliosDeployment);
+    row.setReviewerLogin(login);
+    row.setState(DeploymentApprovalRequest.State.FAILED_AT_GITHUB);
+    when(f.approvalRequestRepository.findByHeliosDeployment(f.heliosDeployment))
+        .thenReturn(List.of(row));
+    when(f.approvalRequestRepository.lockByDeploymentAndReviewerLogin(eq(DEPLOYMENT_ID), any()))
+        .thenReturn(java.util.Optional.of(row));
+    return row;
+  }
+
+  private static void githubRejectsReviewWith422(Fixture f) throws IOException {
+    doThrow(new GitHubReviewException(422, "GitHub pending-deployment approved failed: HTTP 422"))
+        .when(f.gitHubService)
+        .approveDeploymentOnBehalfOfUser(anyString(), anyLong(), any(), anyString(), anyString());
+  }
+
+  @Test
+  void archivesRequestAndReportsConflictWhenRunIsNoLongerWaiting() throws IOException {
+    Fixture f = new Fixture();
+    f.reviewersAre("alice", "bob");
+    DeploymentApprovalRequest row = failedRowFor(f, REVIEWER);
+    githubRejectsReviewWith422(f);
+    when(f.gitHubService.getWorkflowRunState(REPO, WORKFLOW_RUN_ID))
+        .thenReturn(
+            java.util.Optional.of(
+                new GitHubService.WorkflowRunState(
+                    "completed", "cancelled", java.time.OffsetDateTime.now())));
+
+    ResponseStatusException e =
+        assertThrows(
+            ResponseStatusException.class,
+            () -> f.service().approveAsCurrentUser(DEPLOYMENT_ID, f.userWithLogin(REVIEWER)));
+
+    assertEquals(HttpStatus.CONFLICT, e.getStatusCode());
+    assertEquals(DeploymentReviewActionService.NO_LONGER_WAITING_MESSAGE, e.getReason());
+    assertEquals(DeploymentApprovalRequest.State.EXPIRED, row.getState());
+    assertNotNull(row.getRespondedAt());
+  }
+
+  @Test
+  void treatsRunMissingOnGitHubAsNoLongerWaiting() throws IOException {
+    Fixture f = new Fixture();
+    f.reviewersAre("alice", "bob");
+    DeploymentApprovalRequest row = failedRowFor(f, REVIEWER);
+    githubRejectsReviewWith422(f);
+    when(f.gitHubService.getWorkflowRunState(REPO, WORKFLOW_RUN_ID))
+        .thenReturn(java.util.Optional.empty());
+
+    ResponseStatusException e =
+        assertThrows(
+            ResponseStatusException.class,
+            () -> f.service().approveAsCurrentUser(DEPLOYMENT_ID, f.userWithLogin(REVIEWER)));
+
+    assertEquals(HttpStatus.CONFLICT, e.getStatusCode());
+    assertEquals(DeploymentApprovalRequest.State.EXPIRED, row.getState());
+  }
+
+  @Test
+  void keepsRequestAndExplainsWhenRunIsStillWaitingButGitHubRefuses() throws IOException {
+    Fixture f = new Fixture();
+    f.reviewersAre("alice", "bob");
+    DeploymentApprovalRequest row = failedRowFor(f, REVIEWER);
+    githubRejectsReviewWith422(f);
+    when(f.gitHubService.getWorkflowRunState(REPO, WORKFLOW_RUN_ID))
+        .thenReturn(
+            java.util.Optional.of(
+                new GitHubService.WorkflowRunState(
+                    "waiting", null, java.time.OffsetDateTime.now())));
+
+    ResponseStatusException e =
+        assertThrows(
+            ResponseStatusException.class,
+            () -> f.service().approveAsCurrentUser(DEPLOYMENT_ID, f.userWithLogin(REVIEWER)));
+
+    assertEquals(HttpStatus.BAD_GATEWAY, e.getStatusCode());
+    assertEquals(true, e.getReason().contains("protection rules"));
+    assertEquals(DeploymentApprovalRequest.State.FAILED_AT_GITHUB, row.getState());
+  }
+
+  @Test
+  void doesNotGuessStaleWhenGitHubReportsNoRunStatus() throws IOException {
+    Fixture f = new Fixture();
+    f.reviewersAre("alice", "bob");
+    DeploymentApprovalRequest row = failedRowFor(f, REVIEWER);
+    githubRejectsReviewWith422(f);
+    when(f.gitHubService.getWorkflowRunState(REPO, WORKFLOW_RUN_ID))
+        .thenReturn(
+            java.util.Optional.of(
+                new GitHubService.WorkflowRunState(null, null, java.time.OffsetDateTime.now())));
+
+    ResponseStatusException e =
+        assertThrows(
+            ResponseStatusException.class,
+            () -> f.service().approveAsCurrentUser(DEPLOYMENT_ID, f.userWithLogin(REVIEWER)));
+
+    assertEquals(HttpStatus.BAD_GATEWAY, e.getStatusCode());
+    assertEquals(DeploymentApprovalRequest.State.FAILED_AT_GITHUB, row.getState());
+  }
+
+  @Test
+  void doesNotGuessStaleWhenTheRunStateCannotBeChecked() throws IOException {
+    Fixture f = new Fixture();
+    f.reviewersAre("alice", "bob");
+    DeploymentApprovalRequest row = failedRowFor(f, REVIEWER);
+    githubRejectsReviewWith422(f);
+    when(f.gitHubService.getWorkflowRunState(REPO, WORKFLOW_RUN_ID))
+        .thenThrow(new IOException("GitHub unreachable"));
+
+    ResponseStatusException e =
+        assertThrows(
+            ResponseStatusException.class,
+            () -> f.service().approveAsCurrentUser(DEPLOYMENT_ID, f.userWithLogin(REVIEWER)));
+
+    assertEquals(HttpStatus.BAD_GATEWAY, e.getStatusCode());
+    assertEquals(DeploymentApprovalRequest.State.FAILED_AT_GITHUB, row.getState());
   }
 
   @Test
