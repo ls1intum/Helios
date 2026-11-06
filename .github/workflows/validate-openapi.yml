@@ -47,7 +47,7 @@ jobs:
 
       - name: Set up Java
         if: steps.check_changes.outputs.CHANGE_DETECTED == 'true'
-        uses: actions/setup-java@v6.1.0
+        uses: actions/setup-java@v6.2.0
         with:
           distribution: "temurin"
           java-version: "25"
@@ -107,7 +107,7 @@ jobs:
 
       - name: Set up Java
         if: env.CHANGE_DETECTED == 'true'
-        uses: actions/setup-java@v6.1.0
+        uses: actions/setup-java@v6.2.0
         with:
           distribution: "temurin"
           java-version: "25"
@@ -122,7 +122,7 @@ jobs:
         if: env.CHANGE_DETECTED == 'true'
         uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
         with:
-          version: 12.16.1
+          version: 12.18.0
 
       - name: Install Dependencies
         if: env.CHANGE_DETECTED == 'true'
