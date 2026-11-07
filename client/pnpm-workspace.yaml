@@ -32,16 +32,16 @@ allowBuilds:
 overrides:
   webpack-dev-server: 6.1.0
   uuid: 14.0.3
-  undici@6: 8.12.3
-  undici@7: 8.12.3
-  hono: 4.13.13
+  undici@6: 8.12.4
+  undici@7: 8.12.4
+  hono: 4.13.17
   tar: 7.5.22
   piscina: 5.3.2
-  http-proxy-middleware: 4.2.0
+  http-proxy-middleware: 4.2.1
   launch-editor: 2.14.2
   js-yaml: 5.5.0
-  '@babel/core@7': 7.29.7
-  '@babel/core@8': 8.0.9
+  '@babel/core@7': 7.29.13
+  '@babel/core@8': 8.1.0
   esbuild: 0.28.2
   # Angular 22's compiler imports the range-mapping API introduced in 1.6.
   '@jridgewell/sourcemap-codec': 1.6.0
@@ -51,7 +51,7 @@ overrides:
   'fast-uri@3': 3.1.9
   'immutable@5': 5.1.9
   # @angular/build pins Vite exactly; patch its copy as well as the direct dependency.
-  'vite@8': 8.3.5
+  'vite@8': 8.3.6
   # GHSA-g3hv-75wg-m249 (ReDoS via globparts); only patched in 11.x.
-  'minimatch@3': 11.0.1
-  'minimatch@10': 11.0.1
+  'minimatch@3': 11.0.5
+  'minimatch@10': 11.0.5
