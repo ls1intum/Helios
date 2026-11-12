@@ -5,7 +5,7 @@ import org.springframework.boot.gradle.tasks.run.BootRun
 buildscript {
     dependencies {
         classpath('org.postgresql:postgresql:42.7.14')
-        classpath('org.flywaydb:flyway-database-postgresql:13.12.0')
+        classpath('org.flywaydb:flyway-database-postgresql:13.12.2')
     }
 }
 
@@ -14,7 +14,7 @@ plugins {
     id 'io.freefair.lombok'
     id 'org.springdoc.openapi-gradle-plugin' version '1.9.0'
     id 'org.openapi.generator' version '7.27.0'
-    id 'org.flywaydb.flyway' version '13.12.0'
+    id 'org.flywaydb.flyway' version '13.12.2'
 }
 
 // The OpenAPI tasks boot the app against the in-memory H2 database, so H2 is
@@ -52,7 +52,7 @@ dependencies {
     implementation 'com.squareup.okhttp3:logging-interceptor:5.5.1'
     implementation 'org.flywaydb:flyway-database-postgresql'
     implementation 'io.jsonwebtoken:jjwt-api:0.13.0'
-    implementation 'io.sentry:sentry-spring-boot-4-starter:8.62.0'
+    implementation 'io.sentry:sentry-spring-boot-4-starter:8.64.0'
     // Helios push-based status updates.
     implementation "de.tum.cit.aet:helios-status-spring-starter:1.2.0"
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.13.0'
