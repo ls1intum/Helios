@@ -21,7 +21,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres:17.11-alpine
+        image: postgres:17.12-alpine
 
         env:
           POSTGRES_USER: ${{ env.DATASOURCE_USERNAME }}
@@ -68,7 +68,7 @@ jobs:
       # Dependencies, database images, and configuration can break migrations without SQL changes.
       # Always exercise the complete schema for PRs, pushes, and reusable workflow calls.
       - name: Set up Java
-        uses: actions/setup-java@v6.1.0
+        uses: actions/setup-java@v6.3.0
         with:
           distribution: "temurin"
           java-version: "25"
