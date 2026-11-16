@@ -33,7 +33,7 @@ jobs:
           source: /usr/share/nginx/html
           destination: ./dist
       - name: Create Sentry release for Client
-        uses: getsentry/action-release@v3.7.2
+        uses: getsentry/action-release@v3.8.0
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
@@ -50,7 +50,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Create Sentry release for Server
-        uses: getsentry/action-release@v3.7.2
+        uses: getsentry/action-release@v3.8.0
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
