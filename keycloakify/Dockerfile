@@ -2,7 +2,7 @@
 FROM maven:3.10.0-eclipse-temurin-25 AS maven
 
 # Stage 1: Build the Keycloak theme
-FROM node:26.13.0 AS build
+FROM node:26.13.1 AS build
 
 # Set the working directory
 WORKDIR /app
@@ -34,7 +34,7 @@ FROM eclipse-temurin:25.0.4.1_1-jre-ubi10-minimal AS java-runtime
 # Stage 2: Build Keycloak image
 # We use the specific version of Keycloak to avoid any changes in the realm.json file
 # Do NOT update on renovatebot PRs
-FROM quay.io/keycloak/keycloak:26.8.1
+FROM quay.io/keycloak/keycloak:26.8.2
 
 COPY --from=java-runtime /opt/java/openjdk /opt/java/openjdk
 ENV JAVA_HOME=/opt/java/openjdk
