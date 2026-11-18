@@ -30,7 +30,7 @@ RUN pnpm run build-keycloak-theme
 
 # Keycloak runs on Oracle JDK 25.0.5.1 until a Temurin 25 image of the same update release is published.
 # The archive is pinned by version and verified against Oracle's published SHA-256 checksum.
-FROM ubuntu:24.04 AS java-runtime
+FROM ubuntu:26.04 AS java-runtime
 ARG TARGETARCH
 ARG JDK_VERSION=25.0.5.1
 ARG JDK_SHA256_AMD64=3d40d69461200594380ac84c17be6224539022028730cffe043ac70c41ffd1d5
