@@ -40,15 +40,15 @@ overrides:
   http-proxy-middleware: 4.2.2
   launch-editor: 2.14.2
   js-yaml: 5.5.0
-  '@babel/core@7': 7.29.13
+  '@babel/core@7': 8.1.2
   '@babel/core@8': 8.1.2
   esbuild: 0.28.2
   # Angular 22's compiler imports the range-mapping API introduced in 1.6.
   '@jridgewell/sourcemap-codec': 1.6.0
   # Patch vulnerable transitive build/lint dependencies within their existing major lines.
-  'brace-expansion@1': 1.1.22
+  'brace-expansion@1': 5.0.13
   'brace-expansion@5': 5.0.13
-  'fast-uri@3': 3.1.9
+  'fast-uri@3': 4.2.3
   'immutable@5': 5.2.1
   # @angular/build pins Vite exactly; patch its copy as well as the direct dependency.
   'vite@8': 8.3.8
