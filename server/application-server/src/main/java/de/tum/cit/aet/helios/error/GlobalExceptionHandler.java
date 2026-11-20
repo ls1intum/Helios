@@ -137,8 +137,8 @@ public class GlobalExceptionHandler {
     error.setPath(request.getRequestURI());
     error.setTimestamp(Instant.now());
 
-    // These are deliberate, handled outcomes (auth, conflicts, upstream rejections), so keep them
-    // out of error reporting; log server-side faults (5xx) at WARN for visibility, client faults at DEBUG.
+    // These are deliberate, handled outcomes (auth, conflicts, upstream rejections): log
+    // server-side faults (5xx) at WARN for visibility and client faults at DEBUG.
     if (status.is5xxServerError()) {
       log.warn("Request to {} failed with {}: {}", request.getRequestURI(), status.value(),
           error.getMessage());
