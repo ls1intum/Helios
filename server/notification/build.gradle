@@ -17,7 +17,7 @@ dependencies {
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.2.0'
 	implementation 'org.openapitools:jackson-databind-nullable:0.2.13'
 	implementation 'org.springframework.boot:spring-boot-jackson2'
-	implementation 'io.nats:jnats:2.26.4'
+	implementation 'io.nats:jnats:2.27.0'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }

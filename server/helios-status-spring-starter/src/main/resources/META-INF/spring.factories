@@ -1,0 +1,2 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+de.tum.cit.aet.helios.autoconfig.HeliosStatusAutoConfiguration
