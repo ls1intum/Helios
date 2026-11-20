@@ -22,7 +22,8 @@ class RepoSecretFilterTest {
 
   private static final String TOKEN = "repo-7-" + "a".repeat(43);
 
-  private final GitRepoSettingsRepository settingsRepository = mock(GitRepoSettingsRepository.class);
+  private final GitRepoSettingsRepository settingsRepository =
+      mock(GitRepoSettingsRepository.class);
   private final RepoSecretService secrets = mock(RepoSecretService.class);
   private final RepoSecretFilter filter = new RepoSecretFilter(settingsRepository, secrets);
 
