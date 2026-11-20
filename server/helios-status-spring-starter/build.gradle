@@ -10,7 +10,7 @@ plugins {
 // -PVERSION_NAME=<version>).
 
 ext {
-    springBootVersion = '4.1.2'
+    springBootVersion = '4.2.0'
     lombokVersion = '1.18.48'
     checkstyleVersion = '14.4.0'
     springJavaformatVersion = '0.0.48'
