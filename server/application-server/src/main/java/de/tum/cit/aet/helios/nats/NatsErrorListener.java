@@ -8,8 +8,6 @@ import io.nats.client.Message;
 import io.nats.client.Subscription;
 import io.nats.client.impl.ErrorListenerConsoleImpl;
 import io.nats.client.support.Status;
-import io.sentry.Sentry;
-import io.sentry.SentryLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.context.annotation.Lazy;
@@ -46,8 +44,6 @@ public class NatsErrorListener extends ErrorListenerConsoleImpl {
           "Consumer '{}' was deleted, triggering reinitialization of consumer...",
           sub.getConsumerName());
 
-      // Log error to Sentry
-      Sentry.captureMessage(message, SentryLevel.ERROR);
       // Trigger consumer recreation
       natsConsumerService.reinitializeConsumer();
     }

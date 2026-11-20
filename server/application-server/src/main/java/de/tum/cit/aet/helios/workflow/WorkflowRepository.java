@@ -1,7 +1,6 @@
 package de.tum.cit.aet.helios.workflow;
 
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
-import de.tum.cit.aet.helios.workflow.Workflow.Label;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -25,11 +24,6 @@ public interface WorkflowRepository extends JpaRepository<Workflow, Long> {
   Optional<Workflow> findByIdAndRepositoryRepositoryId(Long id, Long repositoryId);
 
   List<Workflow> findByIdInAndRepositoryRepositoryId(Collection<Long> ids, Long repositoryId);
-
-  List<Workflow> findByLabelAndRepositoryRepositoryId(Label label, Long repositoryId);
-
-  Workflow findFirstByLabelAndRepositoryRepositoryIdOrderByCreatedAtDesc(
-      Label label, Long repositoryId);
 
   @Query(
       "SELECT DISTINCT e.deploymentWorkflow FROM Environment e "

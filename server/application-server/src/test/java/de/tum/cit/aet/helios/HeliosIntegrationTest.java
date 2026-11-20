@@ -22,7 +22,7 @@ import org.springframework.test.web.servlet.MockMvc;
  * {@code gitRepositoryFilter} and with explicit per-query filtering after the migration.
  *
  * <p>External integrations that would otherwise reach out on startup are neutralised: NATS is disabled
- * ({@code nats.enabled=false}), the schedulers/reconciliation/notifications/AI are turned off, and the
+ * ({@code nats.enabled=false}), the schedulers/reconciliation/notifications are turned off, and the
  * GitHub clients are mocked so no credentials or network are required.
  */
 @SpringBootTest

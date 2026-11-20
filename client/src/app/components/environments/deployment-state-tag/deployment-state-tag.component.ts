@@ -47,7 +47,7 @@ export class DeploymentStateTagComponent {
   state = input.required<ExtendedDeploymentState | undefined>();
   verbose = input(false);
   showLatestDeployment = input(false);
-  latestDeployment = input<{ releaseCandidateName?: string; ref?: string } | null | undefined>(null);
+  latestDeployment = input<{ ref?: string } | null | undefined>(null);
   deployment = input<EnvironmentDeployment | null | undefined>(null);
 
   rounded = this.timingService.timeAwareComputed(() => !this.verbose());

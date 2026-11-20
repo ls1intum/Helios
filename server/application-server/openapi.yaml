@@ -35,65 +35,8 @@ paths:
               - TEST
         required: true
       responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
-  /api/test-types/{testTypeId}:
-    put:
-      tags:
-      - test-type-controller
-      operationId: updateTestType
-      parameters:
-      - name: testTypeId
-        in: path
-        required: true
-        schema:
-          type: integer
-          format: int64
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/TestTypeDto"
-        required: true
-      responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/TestTypeDto"
-    delete:
-      tags:
-      - test-type-controller
-      operationId: deleteTestType
-      parameters:
-      - name: testTypeId
-        in: path
-        required: true
-        schema:
-          type: integer
-          format: int64
-      responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
-        "204":
-          description: No Content
   /api/settings/{repositoryId}/workflows/{workflowId}/deployment-config:
     get:
       tags:
@@ -113,12 +56,6 @@ paths:
           type: integer
           format: int64
       responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -149,12 +86,6 @@ paths:
               $ref: "#/components/schemas/DeploymentWorkflowConfigDto"
         required: true
       responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -174,12 +105,6 @@ paths:
           type: integer
           format: int64
       responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -204,12 +129,6 @@ paths:
               $ref: "#/components/schemas/GitRepoSettingsDto"
         required: true
       responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -237,52 +156,6 @@ paths:
                 $ref: "#/components/schemas/WorkflowGroupDto"
         required: true
       responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
-        "200":
-          description: OK
-  /api/release-info/update-name:
-    put:
-      tags:
-      - release-info-controller
-      operationId: updateReleaseName
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/ReleaseCandidateNameUpdateDto"
-        required: true
-      responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
-        "200":
-          description: OK
-  /api/release-info/release-notes:
-    put:
-      tags:
-      - release-info-controller
-      operationId: updateReleaseNotes
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/UpdateReleaseNotesDto"
-        required: true
-      responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
   /api/environments/{id}:
@@ -298,12 +171,6 @@ paths:
           type: integer
           format: int64
       responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -328,12 +195,6 @@ paths:
               $ref: "#/components/schemas/EnvironmentDto"
         required: true
       responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -353,12 +214,6 @@ paths:
           type: integer
           format: int64
       responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -378,12 +233,6 @@ paths:
           type: integer
           format: int64
       responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -403,12 +252,6 @@ paths:
           type: integer
           format: int64
       responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -428,12 +271,6 @@ paths:
           type: integer
           format: int64
       responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
   /api/workflows/runs/{runId}/rerun-failed-jobs:
@@ -449,12 +286,6 @@ paths:
           type: integer
           format: int64
       responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
   /api/workflows/runs/{runId}/cancel:
@@ -470,12 +301,6 @@ paths:
           type: integer
           format: int64
       responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
   /api/workflows/repository/{repositoryId}/sync:
@@ -491,12 +316,6 @@ paths:
           type: integer
           format: int64
       responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
   /api/user/settings:
@@ -505,12 +324,6 @@ paths:
       - user-controller
       operationId: getUserSettings
       responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -528,12 +341,6 @@ paths:
               $ref: "#/components/schemas/UserSettingsDto"
         required: true
       responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
   /api/user/notification-preferences:
@@ -542,12 +349,6 @@ paths:
       - user-controller
       operationId: getNotificationPreferences
       responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -567,83 +368,8 @@ paths:
               $ref: "#/components/schemas/NotificationPreferencesWrapper"
         required: true
       responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
-  /api/tests/flakiness-scores:
-    post:
-      tags:
-      - test-result-controller
-      operationId: getFlakinessScores
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/TestFlakinessScoreRequest"
-        required: true
-      responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/TestFlakinessScoreDto"
-  /api/test-types:
-    get:
-      tags:
-      - test-type-controller
-      operationId: getAllTestTypes
-      responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/TestTypeDto"
-    post:
-      tags:
-      - test-type-controller
-      operationId: createTestType
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/TestTypeDto"
-        required: true
-      responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
-        "201":
-          description: Created
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/TestTypeDto"
   /api/settings/{repositoryId}/secret:
     post:
       tags:
@@ -657,12 +383,6 @@ paths:
           type: integer
           format: int64
       responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -688,209 +408,12 @@ paths:
               $ref: "#/components/schemas/WorkflowGroupDto"
         required: true
       responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/WorkflowGroupDto"
-  /api/repositories/{repositoryId}/test-cases/{testCaseId}/failure-analysis:
-    post:
-      tags:
-      - test-failure-analysis-controller
-      operationId: analyzeFailedTest
-      parameters:
-      - name: repositoryId
-        in: path
-        required: true
-        schema:
-          type: integer
-          format: int64
-      - name: testCaseId
-        in: path
-        required: true
-        schema:
-          type: integer
-          format: int64
-      - name: regenerate
-        in: query
-        required: false
-        schema:
-          type: boolean
-          default: false
-      responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/TestFailureAnalysisResponseDto"
-  /api/release-info:
-    get:
-      tags:
-      - release-info-controller
-      operationId: getAllReleaseInfos
-      responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/ReleaseInfoListDto"
-    post:
-      tags:
-      - release-info-controller
-      operationId: createReleaseCandidate
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/ReleaseCandidateCreateDto"
-        required: true
-      responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ReleaseInfoListDto"
-    delete:
-      tags:
-      - release-info-controller
-      operationId: deleteReleaseCandidateByName
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/ReleaseNameDto"
-        required: true
-      responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ReleaseInfoListDto"
-  /api/release-info/publish:
-    post:
-      tags:
-      - release-info-controller
-      operationId: publishReleaseDraft
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/ReleaseNameDto"
-        required: true
-      responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
-        "200":
-          description: OK
-  /api/release-info/generate-release-notes:
-    post:
-      tags:
-      - release-info-controller
-      operationId: generateReleaseNotes
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/ReleaseNameDto"
-        required: true
-      responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: string
-  /api/release-info/evaluate:
-    post:
-      tags:
-      - release-info-controller
-      operationId: evaluate
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/ReleaseEvaluationDto"
-        required: true
-      responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
-        "200":
-          description: OK
-  /api/release-info/details:
-    post:
-      tags:
-      - release-info-controller
-      operationId: getReleaseInfoByName
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/ReleaseNameDto"
-        required: true
-      responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ReleaseInfoDetailsDto"
   /api/pullrequests/{pr}/pin:
     post:
       tags:
@@ -909,12 +432,6 @@ paths:
         schema:
           type: boolean
       responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
   /api/pullrequests/repository/{repositoryId}/reconcile-state:
@@ -936,12 +453,6 @@ paths:
           type: boolean
           default: false
       responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -954,12 +465,6 @@ paths:
       - environment-controller
       operationId: syncEnvironments
       responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -978,12 +483,6 @@ paths:
               $ref: "#/components/schemas/PushStatusPayload"
         required: true
       responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
   /api/deployments/{deploymentId}/decline:
@@ -1004,12 +503,6 @@ paths:
             schema:
               $ref: "#/components/schemas/ReviewDeploymentRequest"
       responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -1029,12 +522,6 @@ paths:
           type: integer
           format: int64
       responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -1053,12 +540,6 @@ paths:
               $ref: "#/components/schemas/DeployRequest"
         required: true
       responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -1077,12 +558,6 @@ paths:
               $ref: "#/components/schemas/CancelDeploymentRequest"
         required: true
       responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -1112,12 +587,6 @@ paths:
         schema:
           type: boolean
       responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
   /status/health:
@@ -1126,12 +595,6 @@ paths:
       - status-controller
       operationId: healthCheck
       responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -1144,12 +607,6 @@ paths:
       - workflow-controller
       operationId: getAllWorkflows
       responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -1171,12 +628,6 @@ paths:
           type: integer
           format: int64
       responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -1202,12 +653,6 @@ paths:
           - DISABLED_MANUALLY
           - UNKNOWN
       responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -1265,49 +710,12 @@ paths:
         schema:
           type: string
       responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/PaginatedWorkflowRunsResponse"
-  /api/workflows/runs/{workflowRunId}/logs:
-    get:
-      tags:
-      - workflow-run-controller
-      operationId: getWorkflowRunLogs
-      parameters:
-      - name: workflowRunId
-        in: path
-        required: true
-        schema:
-          type: integer
-          format: int64
-      - name: forceRefresh
-        in: query
-        required: false
-        schema:
-          type: boolean
-          default: false
-      responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/WorkflowRunLogsResponse"
   /api/workflows/runs/{runId}:
     get:
       tags:
@@ -1321,12 +729,6 @@ paths:
           type: integer
           format: int64
       responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -1346,12 +748,6 @@ paths:
           type: integer
           format: int64
       responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -1373,12 +769,6 @@ paths:
           type: integer
           format: int64
       responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -1399,12 +789,6 @@ paths:
         schema:
           type: string
       responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -1419,238 +803,12 @@ paths:
       - user-permissions-controller
       operationId: getUserPermissions
       responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/GitHubRepositoryRoleDto"
-  /api/tests/run/{workflowRunId}:
-    get:
-      tags:
-      - test-result-controller
-      operationId: getTestResultsByWorkflowRunId
-      parameters:
-      - name: workflowRunId
-        in: path
-        required: true
-        schema:
-          type: integer
-          format: int64
-      - name: page
-        in: query
-        required: false
-        schema:
-          type: integer
-          format: int32
-          default: 0
-      - name: size
-        in: query
-        required: false
-        schema:
-          type: integer
-          format: int32
-          default: 10
-      - name: search
-        in: query
-        required: false
-        schema:
-          type: string
-      - name: onlyFailed
-        in: query
-        required: false
-        schema:
-          type: boolean
-          default: false
-      responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/TestResultsDto"
-  /api/tests/pr/{pullRequestId}:
-    get:
-      tags:
-      - test-result-controller
-      operationId: getLatestTestResultsByPullRequestId
-      parameters:
-      - name: pullRequestId
-        in: path
-        required: true
-        schema:
-          type: integer
-          format: int64
-      - name: page
-        in: query
-        required: false
-        schema:
-          type: integer
-          format: int32
-          default: 0
-      - name: size
-        in: query
-        required: false
-        schema:
-          type: integer
-          format: int32
-          default: 10
-      - name: search
-        in: query
-        required: false
-        schema:
-          type: string
-      - name: onlyFailed
-        in: query
-        required: false
-        schema:
-          type: boolean
-          default: false
-      responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/TestResultsDto"
-  /api/tests/flaky:
-    get:
-      tags:
-      - test-result-controller
-      operationId: getFlakyTestsOverview
-      parameters:
-      - name: page
-        in: query
-        required: false
-        schema:
-          type: integer
-          format: int32
-          default: 1
-      - name: size
-        in: query
-        required: false
-        schema:
-          type: integer
-          format: int32
-          default: 20
-      - name: sortDirection
-        in: query
-        required: false
-        schema:
-          type: string
-      - name: filterType
-        in: query
-        required: false
-        schema:
-          type: string
-          enum:
-          - ALL
-          - HIGH
-          - MEDIUM
-          - LOW
-      - name: searchTerm
-        in: query
-        required: false
-        schema:
-          type: string
-      responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/FlakyTestOverviewDto"
-  /api/tests/branch:
-    get:
-      tags:
-      - test-result-controller
-      operationId: getLatestTestResultsByBranch
-      parameters:
-      - name: branch
-        in: query
-        required: true
-        schema:
-          type: string
-      - name: page
-        in: query
-        required: false
-        schema:
-          type: integer
-          format: int32
-          default: 0
-      - name: size
-        in: query
-        required: false
-        schema:
-          type: integer
-          format: int32
-          default: 10
-      - name: search
-        in: query
-        required: false
-        schema:
-          type: string
-      - name: onlyFailed
-        in: query
-        required: false
-        schema:
-          type: boolean
-          default: false
-      responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/TestResultsDto"
-  /api/test-failure-analysis/usage:
-    get:
-      tags:
-      - test-failure-analysis-usage-controller
-      operationId: getFailureAnalysisUsage
-      responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/TestFailureAnalysisUsageDto"
   /api/settings/{repositoryId}/groups:
     get:
       tags:
@@ -1664,12 +822,6 @@ paths:
           type: integer
           format: int64
       responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -1684,12 +836,6 @@ paths:
       - repository-controller
       operationId: getAllRepositories
       responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -1711,73 +857,12 @@ paths:
           type: integer
           format: int64
       responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/RepositoryInfoDto"
-  /api/repositories/{repositoryId}/test-cases/{testCaseId}/failure-analysis/latest:
-    get:
-      tags:
-      - test-failure-analysis-controller
-      operationId: getLatestCachedFailureAnalysis
-      parameters:
-      - name: repositoryId
-        in: path
-        required: true
-        schema:
-          type: integer
-          format: int64
-      - name: testCaseId
-        in: path
-        required: true
-        schema:
-          type: integer
-          format: int64
-      responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/TestFailureAnalysisCacheLookupDto"
-  /api/release-info/newcommits:
-    get:
-      tags:
-      - release-info-controller
-      operationId: getCommitsSinceLastReleaseCandidate
-      parameters:
-      - name: branch
-        in: query
-        required: true
-        schema:
-          type: string
-      responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/CommitsSinceReleaseCandidateDto"
   /api/pullrequests:
     get:
       tags:
@@ -1869,12 +954,6 @@ paths:
         schema:
           type: string
       responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -1894,12 +973,6 @@ paths:
           type: integer
           format: int64
       responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -1925,12 +998,6 @@ paths:
           type: integer
           format: int32
       responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -1950,12 +1017,6 @@ paths:
           type: integer
           format: int64
       responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -1975,12 +1036,6 @@ paths:
           type: integer
           format: int64
       responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -2002,12 +1057,6 @@ paths:
           type: integer
           format: int64
       responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -2026,12 +1075,6 @@ paths:
         schema:
           type: string
       responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -2044,12 +1087,6 @@ paths:
       - environment-controller
       operationId: getAllEnvironments
       responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -2071,12 +1108,6 @@ paths:
           type: integer
           format: int64
       responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -2106,12 +1137,6 @@ paths:
         schema:
           type: string
       responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -2124,12 +1149,6 @@ paths:
       - environment-controller
       operationId: getEnvironmentsByUserLocking
       responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -2149,12 +1168,6 @@ paths:
           type: integer
           format: int64
       responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -2176,12 +1189,6 @@ paths:
           type: integer
           format: int64
       responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -2196,12 +1203,6 @@ paths:
       - environment-controller
       operationId: getAllEnabledEnvironments
       responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -2216,12 +1217,6 @@ paths:
       - deployment-controller
       operationId: getAllDeployments
       responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -2243,12 +1238,6 @@ paths:
           type: integer
           format: int64
       responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -2268,12 +1257,6 @@ paths:
           type: integer
           format: int64
       responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -2298,12 +1281,6 @@ paths:
         schema:
           type: string
       responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -2325,12 +1302,6 @@ paths:
           type: integer
           format: int64
       responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -2345,12 +1316,6 @@ paths:
       - deployment-approval-controller
       operationId: myPendingApprovals
       responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -2372,12 +1337,6 @@ paths:
           type: integer
           format: int64
       responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -2399,12 +1358,6 @@ paths:
           type: integer
           format: int64
       responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -2424,12 +1377,6 @@ paths:
           type: integer
           format: int64
       responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -2456,12 +1403,6 @@ paths:
         schema:
           type: string
       responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -2487,12 +1428,6 @@ paths:
           type: string
           default: desc
       responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -2519,12 +1454,6 @@ paths:
         schema:
           type: string
       responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
           content:
@@ -2550,52 +1479,10 @@ paths:
           type: integer
           format: int64
       responses:
-        "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
         "200":
           description: OK
 components:
   schemas:
-    ApiError:
-      type: object
-      properties:
-        status:
-          type: integer
-          format: int32
-        error:
-          type: string
-        message:
-          type: string
-        path:
-          type: string
-        timestamp:
-          type: string
-          format: date-time
-    TestTypeDto:
-      type: object
-      properties:
-        id:
-          type: integer
-          format: int64
-        name:
-          type: string
-          maxLength: 255
-          minLength: 0
-        artifactName:
-          type: string
-          maxLength: 255
-          minLength: 0
-        workflowId:
-          type: integer
-          format: int64
-      required:
-      - artifactName
-      - name
-      - workflowId
     DeploymentWorkflowConfigDto:
       type: object
       properties:
@@ -2616,8 +1503,6 @@ components:
         lockReservationThreshold:
           type: integer
           format: int64
-        packageName:
-          type: string
     WorkflowGroupDto:
       type: object
       properties:
@@ -2649,20 +1534,6 @@ components:
       required:
       - orderIndex
       - workflowId
-    ReleaseCandidateNameUpdateDto:
-      type: object
-      properties:
-        oldName:
-          type: string
-        newName:
-          type: string
-    UpdateReleaseNotesDto:
-      type: object
-      properties:
-        name:
-          type: string
-        notes:
-          type: string
     DeploymentTimerDto:
       type: object
       properties:
@@ -2766,10 +1637,6 @@ components:
           type: string
         workflowRunHtmlUrl:
           type: string
-        releaseCandidateNames:
-          type: array
-          items:
-            type: string
         prName:
           type: string
         user:
@@ -2958,8 +1825,6 @@ components:
         environmentCount:
           type: integer
           format: int32
-        latestReleaseTagName:
-          type: string
         contributors:
           type: array
           items:
@@ -3062,265 +1927,6 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/NotificationPreferenceDto"
-    TestCaseIdentifier:
-      type: object
-      properties:
-        testName:
-          type: string
-          minLength: 1
-        className:
-          type: string
-          minLength: 1
-        testSuiteName:
-          type: string
-          minLength: 1
-      required:
-      - className
-      - testName
-      - testSuiteName
-    TestFlakinessScoreRequest:
-      type: object
-      properties:
-        testCases:
-          type: array
-          items:
-            $ref: "#/components/schemas/TestCaseIdentifier"
-          minItems: 1
-      required:
-      - testCases
-    TestFlakinessScoreDto:
-      type: object
-      properties:
-        testName:
-          type: string
-        className:
-          type: string
-        testSuiteName:
-          type: string
-        flakinessScore:
-          type: number
-          format: double
-        defaultBranchFailureRate:
-          type: number
-          format: double
-        combinedFailureRate:
-          type: number
-          format: double
-      required:
-      - className
-      - testName
-      - testSuiteName
-    TestFailureAnalysisResponseDto:
-      type: object
-      properties:
-        repositoryId:
-          type: integer
-          format: int64
-        status:
-          type: string
-          enum:
-          - COMPLETED
-          - FAILED
-        result:
-          $ref: "#/components/schemas/TestFailureAnalysisResultDto"
-        errorMessage:
-          type: string
-        analyzedAt:
-          type: string
-          format: date-time
-        durationMs:
-          type: integer
-          format: int64
-        cacheHit:
-          type: boolean
-    TestFailureAnalysisResultDto:
-      type: object
-      properties:
-        summary:
-          type: string
-        rootCauseHypotheses:
-          type: array
-          items:
-            type: string
-        evidence:
-          type: array
-          items:
-            type: string
-        recommendedFixes:
-          type: array
-          items:
-            type: string
-        confidence:
-          type: number
-          format: double
-        provider:
-          type: string
-        model:
-          type: string
-    ReleaseCandidateCreateDto:
-      type: object
-      properties:
-        name:
-          type: string
-        commitSha:
-          type: string
-        branchName:
-          type: string
-      required:
-      - branchName
-      - commitSha
-      - name
-    ReleaseInfoListDto:
-      type: object
-      properties:
-        name:
-          type: string
-        commitSha:
-          type: string
-        branchName:
-          type: string
-        isPublished:
-          type: boolean
-    ReleaseNameDto:
-      type: object
-      properties:
-        name:
-          type: string
-    ReleaseEvaluationDto:
-      type: object
-      properties:
-        name:
-          type: string
-        isWorking:
-          type: boolean
-        comment:
-          type: string
-          maxLength: 500
-          minLength: 0
-    BranchInfoDto:
-      type: object
-      properties:
-        name:
-          type: string
-        commitSha:
-          type: string
-        aheadBy:
-          type: integer
-          format: int32
-        behindBy:
-          type: integer
-          format: int32
-        isDefault:
-          type: boolean
-        isProtected:
-          type: boolean
-        isPinned:
-          type: boolean
-        updatedAt:
-          type: string
-          format: date-time
-        updatedBy:
-          $ref: "#/components/schemas/UserInfoDto"
-        repository:
-          $ref: "#/components/schemas/RepositoryInfoDto"
-      required:
-      - commitSha
-      - name
-    CommitInfoDto:
-      type: object
-      properties:
-        sha:
-          type: string
-        author:
-          $ref: "#/components/schemas/UserInfoDto"
-        message:
-          type: string
-        authoredAt:
-          type: string
-          format: date-time
-        repository:
-          $ref: "#/components/schemas/RepositoryInfoDto"
-      required:
-      - sha
-    ReleaseCandidateDeploymentDto:
-      type: object
-      properties:
-        id:
-          type: integer
-          format: int64
-        type:
-          type: string
-          enum:
-          - GITHUB
-          - HELIOS
-        environmentId:
-          type: integer
-          format: int64
-      required:
-      - environmentId
-      - id
-      - type
-    ReleaseCandidateEvaluationDto:
-      type: object
-      properties:
-        user:
-          $ref: "#/components/schemas/UserInfoDto"
-        isWorking:
-          type: boolean
-        comment:
-          type: string
-      required:
-      - user
-    ReleaseDto:
-      type: object
-      properties:
-        isDraft:
-          type: boolean
-        isPrerelease:
-          type: boolean
-        body:
-          type: string
-        githubUrl:
-          type: string
-        creator:
-          $ref: "#/components/schemas/UserInfoDto"
-      required:
-      - body
-      - githubUrl
-      - isDraft
-      - isPrerelease
-    ReleaseInfoDetailsDto:
-      type: object
-      properties:
-        name:
-          type: string
-        commit:
-          $ref: "#/components/schemas/CommitInfoDto"
-        branch:
-          $ref: "#/components/schemas/BranchInfoDto"
-        deployments:
-          type: array
-          items:
-            $ref: "#/components/schemas/ReleaseCandidateDeploymentDto"
-        evaluations:
-          type: array
-          items:
-            $ref: "#/components/schemas/ReleaseCandidateEvaluationDto"
-        release:
-          $ref: "#/components/schemas/ReleaseDto"
-        createdBy:
-          $ref: "#/components/schemas/UserInfoDto"
-        createdAt:
-          type: string
-          format: date-time
-        body:
-          type: string
-      required:
-      - commit
-      - createdAt
-      - deployments
-      - evaluations
-      - name
     PullRequestStateReconciliationResultDto:
       type: object
       properties:
@@ -3506,14 +2112,6 @@ components:
           enum:
           - NONE
           - TEST
-        testProcessingStatus:
-          type:
-          - string
-          - "null"
-          enum:
-          - PROCESSING
-          - PROCESSED
-          - FAILED
         headBranch:
           type:
           - string
@@ -3543,151 +2141,6 @@ components:
       - status
       - updatedAt
       - workflowId
-    WorkflowRunLogFileDto:
-      type: object
-      properties:
-        path:
-          type: string
-          description: The relative path of the log file inside the workflow log archive
-        displayName:
-          type: string
-          description: A display name for the log file
-        stepNumber:
-          type: integer
-          format: int32
-          description: The GitHub step number matched to this log file when available
-        stepName:
-          type: string
-          description: The GitHub step name matched to this log file when available
-        stepStatus:
-          type: string
-          description: The GitHub step status matched to this log file when available
-        stepConclusion:
-          type: string
-          description: The GitHub step conclusion matched to this log file when available
-        stepStartedAt:
-          type: string
-          format: date-time
-          description: The GitHub step start timestamp matched to this log file when
-            available
-        stepCompletedAt:
-          type: string
-          format: date-time
-          description: The GitHub step completion timestamp matched to this log file
-            when available
-        content:
-          type: string
-          description: The processed text content of the log file
-      required:
-      - content
-      - displayName
-      - path
-    WorkflowRunLogGroupDto:
-      type: object
-      properties:
-        name:
-          type: string
-          description: "The name of the log group, usually derived from the top-level\
-            \ archive directory"
-        jobName:
-          type: string
-          description: The exact GitHub job name matched to this log group when available
-        jobStatus:
-          type: string
-          description: The GitHub job status matched to this log group when available
-        jobConclusion:
-          type: string
-          description: The GitHub job conclusion matched to this log group when available
-        steps:
-          type: array
-          description: The GitHub job steps matched to this log group when available
-          items:
-            $ref: "#/components/schemas/WorkflowRunLogStepDto"
-        files:
-          type: array
-          description: The log files belonging to this group
-          items:
-            $ref: "#/components/schemas/WorkflowRunLogFileDto"
-      required:
-      - files
-      - name
-      - steps
-    WorkflowRunLogStepDto:
-      type: object
-      properties:
-        number:
-          type: integer
-          format: int32
-          description: The GitHub step number when available
-        name:
-          type: string
-          description: The GitHub step name when available
-        status:
-          type: string
-          description: The GitHub step status when available
-        conclusion:
-          type: string
-          description: The GitHub step conclusion when available
-        startedAt:
-          type: string
-          format: date-time
-          description: The GitHub step start timestamp when available
-        completedAt:
-          type: string
-          format: date-time
-          description: The GitHub step completion timestamp when available
-    WorkflowRunLogsResponse:
-      type: object
-      properties:
-        workflowRunId:
-          type: integer
-          format: int64
-          description: The workflow run identifier
-        workflowName:
-          type: string
-          description: The workflow run name
-          example: deploy
-        displayTitle:
-          type: string
-          description: The workflow run display title
-        conclusion:
-          type: string
-          description: The workflow run conclusion when available
-          enum:
-          - ACTION_REQUIRED
-          - CANCELLED
-          - FAILURE
-          - NEUTRAL
-          - SUCCESS
-          - SKIPPED
-          - STALE
-          - TIMED_OUT
-          - STARTUP_FAILURE
-          - UNKNOWN
-        htmlUrl:
-          type: string
-          description: The HTML URL of the workflow run on GitHub
-        cacheHit:
-          type: boolean
-          description: Whether the workflow logs were already cached before this request
-        downloadedAt:
-          type: string
-          format: date-time
-          description: When the workflow logs were downloaded and stored
-        totalFileCount:
-          type: integer
-          format: int32
-          description: The number of extracted log files
-        groups:
-          type: array
-          description: The processed log groups
-          items:
-            $ref: "#/components/schemas/WorkflowRunLogGroupDto"
-      required:
-      - downloadedAt
-      - groups
-      - workflowName
-      - workflowRunId
     GitHubRepositoryRoleDto:
       type: object
       properties:
@@ -3700,293 +2153,6 @@ components:
           - NONE
         roleName:
           type: string
-    TestCaseDto:
-      type: object
-      properties:
-        id:
-          type: integer
-          format: int64
-        name:
-          type: string
-        className:
-          type: string
-        status:
-          type: string
-          enum:
-          - PASSED
-          - FAILED
-          - ERROR
-          - SKIPPED
-        previousStatus:
-          type: string
-          enum:
-          - PASSED
-          - FAILED
-          - ERROR
-          - SKIPPED
-        time:
-          type: number
-          format: double
-        message:
-          type: string
-        stackTrace:
-          type: string
-        systemOut:
-          type: string
-        errorType:
-          type: string
-        flakinessScore:
-          type: number
-          format: double
-        defaultBranchFailureRate:
-          type: number
-          format: double
-        combinedFailureRate:
-          type: number
-          format: double
-        failsInDefaultBranch:
-          type: boolean
-      required:
-      - className
-      - id
-      - name
-      - status
-      - time
-    TestResultsDto:
-      type: object
-      properties:
-        testResults:
-          type: array
-          items:
-            $ref: "#/components/schemas/TestTypeResults"
-        isProcessing:
-          type: boolean
-      required:
-      - testResults
-    TestSuiteDto:
-      type: object
-      properties:
-        id:
-          type: integer
-          format: int64
-        name:
-          type: string
-        timestamp:
-          type: string
-          format: date-time
-        tests:
-          type: integer
-          format: int32
-        failures:
-          type: integer
-          format: int32
-        errors:
-          type: integer
-          format: int32
-        skipped:
-          type: integer
-          format: int32
-        time:
-          type: number
-          format: double
-        systemOut:
-          type: string
-        testCases:
-          type: array
-          items:
-            $ref: "#/components/schemas/TestCaseDto"
-      required:
-      - errors
-      - failures
-      - id
-      - name
-      - skipped
-      - testCases
-      - tests
-      - time
-      - timestamp
-    TestTypeResults:
-      type: object
-      properties:
-        testTypeId:
-          type: integer
-          format: int64
-        testTypeName:
-          type: string
-        testSuites:
-          type: array
-          items:
-            $ref: "#/components/schemas/TestSuiteDto"
-        isProcessing:
-          type: boolean
-        stats:
-          $ref: "#/components/schemas/TestTypeStats"
-      required:
-      - isProcessing
-      - stats
-      - testSuites
-      - testTypeId
-      - testTypeName
-    TestTypeStats:
-      type: object
-      properties:
-        totalSuites:
-          type: integer
-          format: int32
-        totalTests:
-          type: integer
-          format: int32
-        passed:
-          type: integer
-          format: int32
-        failures:
-          type: integer
-          format: int32
-        errors:
-          type: integer
-          format: int32
-        skipped:
-          type: integer
-          format: int32
-        totalTime:
-          type: number
-          format: double
-        totalUpdates:
-          type: integer
-          format: int32
-      required:
-      - errors
-      - failures
-      - passed
-      - skipped
-      - totalSuites
-      - totalTests
-      - totalTime
-      - totalUpdates
-    FlakyTestDto:
-      type: object
-      properties:
-        testName:
-          type: string
-        className:
-          type: string
-        testSuiteName:
-          type: string
-        flakinessScore:
-          type: number
-          format: double
-        defaultBranchFailureRate:
-          type: number
-          format: double
-        combinedFailureRate:
-          type: number
-          format: double
-        lastUpdated:
-          type: string
-          format: date-time
-      required:
-      - className
-      - lastUpdated
-      - testName
-      - testSuiteName
-    FlakyTestOverviewDto:
-      type: object
-      properties:
-        summary:
-          $ref: "#/components/schemas/FlakyTestSummary"
-        flakyTests:
-          type: array
-          items:
-            $ref: "#/components/schemas/FlakyTestDto"
-        filteredCount:
-          type: integer
-          format: int64
-      required:
-      - flakyTests
-      - summary
-    FlakyTestSummary:
-      type: object
-      properties:
-        totalTrackedTests:
-          type: integer
-          format: int32
-        flakyTestCount:
-          type: integer
-          format: int32
-        highFlakinessCount:
-          type: integer
-          format: int32
-        mediumFlakinessCount:
-          type: integer
-          format: int32
-        lowFlakinessCount:
-          type: integer
-          format: int32
-    TestFailureAnalysisUsageDto:
-      type: object
-      properties:
-        rateLimitEnabled:
-          type: boolean
-        dailyUsed:
-          type: integer
-          format: int32
-        dailyLimit:
-          type: integer
-          format: int32
-        burstUsed:
-          type: integer
-          format: int32
-        burstLimit:
-          type: integer
-          format: int32
-        burstWindowSeconds:
-          type: integer
-          format: int64
-    TestFailureAnalysisCacheLookupDto:
-      type: object
-      properties:
-        hasCachedResult:
-          type: boolean
-        cachedResult:
-          $ref: "#/components/schemas/TestFailureAnalysisResponseDto"
-    CommitsSinceReleaseCandidateDto:
-      type: object
-      properties:
-        aheadBy:
-          type: integer
-          format: int32
-        behindBy:
-          type: integer
-          format: int32
-        commits:
-          type: array
-          items:
-            $ref: "#/components/schemas/CompareCommitInfoDto"
-        compareUrl:
-          type: string
-      required:
-      - aheadBy
-      - behindBy
-      - commits
-    CompareCommitInfoDto:
-      type: object
-      properties:
-        sha:
-          type: string
-        message:
-          type: string
-        authorName:
-          type: string
-        authorEmail:
-          type: string
-        url:
-          type: string
-      required:
-      - authorEmail
-      - authorName
-      - message
-      - sha
-      - url
     LabelInfoDto:
       type: object
       properties:
@@ -4598,6 +2764,51 @@ components:
         requestedAt:
           type: string
           format: date-time
+    CommitInfoDto:
+      type: object
+      properties:
+        sha:
+          type: string
+        author:
+          $ref: "#/components/schemas/UserInfoDto"
+        message:
+          type: string
+        authoredAt:
+          type: string
+          format: date-time
+        repository:
+          $ref: "#/components/schemas/RepositoryInfoDto"
+      required:
+      - sha
+    BranchInfoDto:
+      type: object
+      properties:
+        name:
+          type: string
+        commitSha:
+          type: string
+        aheadBy:
+          type: integer
+          format: int32
+        behindBy:
+          type: integer
+          format: int32
+        isDefault:
+          type: boolean
+        isProtected:
+          type: boolean
+        isPinned:
+          type: boolean
+        updatedAt:
+          type: string
+          format: date-time
+        updatedBy:
+          $ref: "#/components/schemas/UserInfoDto"
+        repository:
+          $ref: "#/components/schemas/RepositoryInfoDto"
+      required:
+      - commitSha
+      - name
     BranchDetailsDto:
       type: object
       properties:
@@ -4615,10 +2826,6 @@ components:
           type: boolean
         isProtected:
           type: boolean
-        releaseCandidateNames:
-          type: array
-          items:
-            type: string
         updatedAt:
           type: string
           format: date-time

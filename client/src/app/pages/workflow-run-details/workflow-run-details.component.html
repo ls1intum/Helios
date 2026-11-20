@@ -26,7 +26,6 @@
               <i-tabler [name]="getWorkflowStatusIcon(runData)" [class]="getWorkflowStatusClass(runData)" class="!size-5" [pTooltip]="runData.conclusion || runData.status" />
               <span class="text-sm font-medium">{{ runData.conclusion || runData.status }}</span>
             </div>
-            <p-tag [value]="runData.label === 'TEST' ? 'Test' : 'General'" [severity]="runData.label === 'TEST' ? 'info' : 'secondary'" rounded class="text-xs" />
           </div>
           @if (runData.headBranch || runData.headSha) {
             <div class="flex flex-wrap items-center gap-2 text-sm text-muted-color">
@@ -36,12 +35,6 @@
               @if (runData.headSha) {
                 <span class="font-mono">({{ runData.headSha.slice(0, 7) }})</span>
               }
-            </div>
-          }
-          @if (runData.testProcessingStatus) {
-            <div class="flex items-center gap-2 text-sm text-muted-color">
-              <span>Test Processing:</span>
-              <span class="font-medium text-foreground">{{ runData.testProcessingStatus }}</span>
             </div>
           }
           <div class="flex flex-wrap items-center gap-4 text-sm text-muted-color">
@@ -67,14 +60,6 @@
               <p-button (click)="onReRun()" label="Re-run All" severity="secondary" [disabled]="reRunMutation.isPending()" pTooltip="Re-run all jobs in this workflow">
                 <i-tabler name="player-play" class="!size-4" />
               </p-button>
-              <a
-                [routerLink]="['/repo', repositoryId(), 'ci-cd', 'runs', runId(), 'logs']"
-                class="inline-flex items-center gap-2 rounded-md border border-surface-300 px-3 py-2 text-sm font-semibold text-color transition-colors hover:bg-surface-100 dark:border-surface-600 dark:hover:bg-surface-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-400 focus-visible:outline-offset-2"
-                aria-label="View workflow logs"
-              >
-                <i-tabler name="file-text" class="!size-4" />
-                <span>Open Workflow Logs</span>
-              </a>
             }
           }
           <app-github-link-button [url]="$safeNavigationMigration(run()?.htmlUrl)" label="Open on GitHub" />
@@ -92,6 +77,4 @@
       <app-workflow-job-list [jobs]="jobs()" [isPending]="workflowJobsQuery.isPending()" [isError]="workflowJobsQuery.isError()" />
     </div>
   }
-
-  <app-pipeline-test-results [selector]="pipelineSelector()" />
 </div>

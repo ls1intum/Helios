@@ -8,7 +8,6 @@ import de.tum.cit.aet.helios.auth.AuthService;
 import de.tum.cit.aet.helios.commit.CommitRepository;
 import de.tum.cit.aet.helios.filters.RepositoryContext;
 import de.tum.cit.aet.helios.gitrepo.GitRepository;
-import de.tum.cit.aet.helios.releaseinfo.releasecandidate.ReleaseCandidateRepository;
 import de.tum.cit.aet.helios.userpreference.UserPreference;
 import de.tum.cit.aet.helios.userpreference.UserPreferenceRepository;
 import java.time.OffsetDateTime;
@@ -31,8 +30,6 @@ public class BranchServiceTest {
   private BranchService branchService;
   @Mock
   private BranchRepository branchRepository;
-  @Mock
-  private ReleaseCandidateRepository releaseCandidateRepository;
   @Mock
   private UserPreferenceRepository userPreferenceRepository;
   @Mock
