@@ -17,7 +17,6 @@ import de.tum.cit.aet.helios.workflow.WorkflowRepository;
 import de.tum.cit.aet.helios.workflow.WorkflowRun;
 import de.tum.cit.aet.helios.workflow.WorkflowRunRepository;
 import de.tum.cit.aet.helios.workflow.WorkflowService;
-import jakarta.transaction.Transactional;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.HashSet;
@@ -30,6 +29,7 @@ import org.kohsuke.github.GHPullRequest;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GHWorkflowRun;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.support.TransactionTemplate;
 
 @Log4j2
 @Service
@@ -46,16 +46,45 @@ public class GitHubWorkflowRunSyncService {
   private final NatsNotificationPublisherService notificationPublisherService;
   private final GitHubFacade github;
   private final GitHubClientManager clientManager;
+  private final TransactionTemplate transactionTemplate;
 
-  @Transactional
+  /**
+   * Serializes concurrent processing of the same run and retries a lost duplicate-key race. The
+   * public entry points deliberately open their own transaction through the template (instead of
+   * {@code @Transactional}) so that the commit happens inside the guard.
+   */
+  private final WorkflowRunProcessingGuard processingGuard = new WorkflowRunProcessingGuard();
+
+  /**
+   * Creates or updates the workflow run and its related deployment state.
+   *
+   * <p>Safe to call concurrently for the same run: the calls are serialized per run id.
+   *
+   * @param ghWorkflowRun the workflow run as reported by GitHub
+   * @return the stored run, or {@code null} if the run is not tracked
+   */
   public WorkflowRun processRun(GHWorkflowRun ghWorkflowRun) {
-    return process(ghWorkflowRun, null);
+    return processInTransaction(ghWorkflowRun, null);
   }
 
-  @Transactional
+  /**
+   * Like {@link #processRun(GHWorkflowRun)}, additionally applying the workflow context artifact
+   * (triggering run, head branch and sha).
+   *
+   * @param ghWorkflowRun the workflow run as reported by GitHub
+   * @param context the context extracted from the run's artifact
+   * @return the stored run, or {@code null} if the run is not tracked
+   */
   public WorkflowRun processRunWithContext(
       GHWorkflowRun ghWorkflowRun, GitHubWorkflowContext context) {
-    return process(ghWorkflowRun, context);
+    return processInTransaction(ghWorkflowRun, context);
+  }
+
+  private WorkflowRun processInTransaction(
+      GHWorkflowRun ghWorkflowRun, GitHubWorkflowContext context) {
+    return processingGuard.execute(
+        ghWorkflowRun.getId(),
+        () -> transactionTemplate.execute(status -> process(ghWorkflowRun, context)));
   }
 
   private WorkflowRun process(GHWorkflowRun ghWorkflowRun,
