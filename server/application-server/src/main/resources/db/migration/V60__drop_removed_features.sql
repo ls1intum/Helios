@@ -24,6 +24,12 @@ DROP TABLE IF EXISTS public.release CASCADE;
 -- workflow_run_test_processing_status_check constraint)
 ALTER TABLE public.workflow_run DROP COLUMN IF EXISTS test_processing_status;
 
+-- Dropping the column also dropped idx_workflow_run_branch_repo_status, which was the only index
+-- on (head_branch, repository_id). The branch pipeline queries still filter on those columns,
+-- so recreate that prefix without the removed column.
+CREATE INDEX IF NOT EXISTS idx_workflow_run_branch_repo
+    ON public.workflow_run (head_branch, repository_id);
+
 -- Package name used only to filter test-result logs
 ALTER TABLE public.repository_settings DROP COLUMN IF EXISTS package_name;
 
