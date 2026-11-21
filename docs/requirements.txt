@@ -1,5 +1,5 @@
 alabaster==1.0.0
-certifi==2026.10.23
+certifi==2026.11.20
 docutils==0.22.4
 Jinja2==3.1.6
 requests==2.34.2
