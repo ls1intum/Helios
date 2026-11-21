@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: postgres:18.7-alpine
+    image: postgres:19.0-alpine
     environment:
       - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
