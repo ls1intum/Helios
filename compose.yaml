@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: postgres:18.7-alpine
+    image: postgres:19.0-alpine
     environment:
       - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
@@ -9,9 +9,10 @@ services:
       - '5432:5432'
     volumes:
       # PostgreSQL 18+ images keep the (versioned) data directory below /var/lib/postgresql,
-      # so the volume is mounted there. This is a new volume: the PostgreSQL 17 data in
-      # db-data is not readable by a newer major version and is left untouched.
-      - db-data-pg18:/var/lib/postgresql
+      # so the volume is mounted there. Each major version gets its own volume: the
+      # PostgreSQL 18 data in db-data-pg18 is not readable by a newer major version and is
+      # left untouched.
+      - db-data-pg19:/var/lib/postgresql
     command: >
       bash -c "
         set -m
@@ -209,7 +210,7 @@ services:
       - helios-network
 
 volumes:
-  db-data-pg18:
+  db-data-pg19:
   nats-data:
   keycloak_data:
 

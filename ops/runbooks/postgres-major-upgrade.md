@@ -6,8 +6,14 @@ images from version 18 on keep the versioned data directory below `/var/lib/post
 logical dump and restore. The old volume is never modified, which makes rollback a configuration
 change.
 
-Used for 17 to 18 (staging, then production). For the next major version repeat the procedure with a
-volume named `db-data-pg<major>`.
+Used for 17 to 18 and 18 to 19 (staging first, then production). For every major version the data lives in
+a volume named `db-data-pg<major>`; the commands below use these variables:
+
+```sh
+NEW_MAJOR=19                      # target major version
+NEW_IMAGE=postgres:19.0-alpine    # the same tag the compose file uses
+NEW_VOL=helios_db-data-pg$NEW_MAJOR
+```
 
 > **Do not merge the compose change before the data is in the new volume.** The compose file points
 > the `postgres` service at the new, empty volume; merging it to `staging` makes CI redeploy
@@ -15,8 +21,8 @@ volume named `db-data-pg<major>`.
 > empty schema). Restore the data first (steps 3 to 5), then merge or copy the compose file.
 
 All commands run on the Docker host in the compose project directory (`/opt/helios`). The services
-use the project name `helios`, so the volumes are `helios_db-data` (old) and `helios_db-data-pg18`
-(new). Variables come from `.env` (`POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`).
+use the project name `helios`, so the volumes are `helios_db-data-pg<previous major>` (old; `helios_db-data` for
+17) and `$NEW_VOL` (new). Variables come from `.env` (`POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`).
 
 ## 0. Before you start
 
@@ -28,6 +34,22 @@ use the project name `helios`, so the volumes are `helios_db-data` (old) and `he
   `vacuumlo` and `VACUUM FULL pg_largeobject`.
 - Extensions that the target image does not ship must be dropped in the source first
   (`DROP EXTENSION pg_repack;`). `pgstattuple` is part of the image and is restored as is.
+
+## Practical notes (from the 17 to 18 and 18 to 19 runs)
+
+- **Rehearse first, without downtime:** take an online dump of the running database, restore it into a
+  temporary volume with the target image, compare row counts and remove the temporary volume. Only
+  then do the real run with the writers stopped.
+- **`pg_repack` and other extensions that the stock image does not ship:** do not drop them in the
+  source. Filter them out of the restore instead, which leaves the old database unchanged for a
+  rollback: `pg_restore --list dump | grep -vi pg_repack > toc` and `pg_restore -L toc ...`.
+- **Run scripts as files on the host**, not piped into `ssh host 'bash -s'`: every `docker exec -i`
+  inside such a script reads the rest of the script from stdin. Copy the script
+  (`ssh host 'cat > /tmp/x.sh' < x.sh`) and run `sudo bash /tmp/x.sh`.
+- `.env` is not valid shell syntax; never `source` it. Read single variables with
+  `grep ^VAR= .env | cut -d= -f2-`.
+- Compare **exact** `count(*)` per table (not estimates) before and after, and make sure they are not
+  trivially empty.
 
 ## 1. Record the state of the old database
 
@@ -73,7 +95,7 @@ and its password match what the applications use.
 ```sh
 docker run -d --name pg-restore \
   -e POSTGRES_USER="$POSTGRES_USER" -e POSTGRES_PASSWORD="$POSTGRES_PASSWORD" -e POSTGRES_DB=helios \
-  -v helios_db-data-pg18:/var/lib/postgresql postgres:18.7-alpine
+  -v $NEW_VOL:/var/lib/postgresql $NEW_IMAGE
 until docker exec pg-restore pg_isready -U "$POSTGRES_USER" -d helios; do sleep 2; done
 docker exec pg-restore psql -U "$POSTGRES_USER" -d postgres -c "CREATE DATABASE keycloak;"
 for db in helios keycloak; do
@@ -116,12 +138,12 @@ Check `docker compose ps`, the application log (`Successfully validated NN migra
 
 ## 7. Roll back
 
-Until the old volume is deleted, rollback is: restore the previous compose file (image
-`postgres:17.12-alpine`, mount `db-data:/var/lib/postgresql/data`) and run `docker compose up -d`.
+Until the old volume is deleted, rollback is: restore the previous compose file (previous image tag and
+volume) and run `docker compose up -d`.
 Changes made after the switch-over are not in the old volume. If they matter, dump the new database
 and restore it into the old one before switching back.
 
 ## 8. Clean up
 
 After the soak period (a few days on staging, at least a week on production): remove the old volume
-(`docker volume rm helios_db-data`) and the dumps in `/opt/backups/pg-upgrade`.
+(`docker volume rm helios_db-data-pg<previous major>`) and the dumps in `/opt/backups/pg-upgrade`.
