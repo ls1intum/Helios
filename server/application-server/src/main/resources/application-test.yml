@@ -8,7 +8,7 @@ zonky:
             postgres:
                 docker:
                     # Keep every Docker integration-test harness aligned with Compose and CI.
-                    image: postgres:17.11-alpine
+                    image: postgres:18.7-alpine
 
 spring:
     data:
