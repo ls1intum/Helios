@@ -6,7 +6,7 @@ x-logging: &default-logging
 
 services:
   postgres:
-    image: postgres:17.12-alpine
+    image: postgres:18.7-alpine
     environment:
       - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
@@ -14,7 +14,10 @@ services:
     ports:
       - '5432:5432'
     volumes:
-      - db-data:/var/lib/postgresql/data
+      # PostgreSQL 18+ images keep the (versioned) data directory below /var/lib/postgresql,
+      # so the volume is mounted there. This is a new volume: the PostgreSQL 17 data in
+      # db-data is not readable by a newer major version and is left untouched.
+      - db-data-pg18:/var/lib/postgresql
     logging: *default-logging
     command: >
       bash -c "
@@ -245,7 +248,7 @@ services:
       - helios-network
 
 volumes:
-  db-data:
+  db-data-pg18:
   nats-data:
 
 
