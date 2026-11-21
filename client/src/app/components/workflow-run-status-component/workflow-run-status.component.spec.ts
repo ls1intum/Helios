@@ -18,7 +18,7 @@ function workflow(overrides: Partial<WorkflowRunDto> = {}): WorkflowRunDto {
     conclusion: 'SUCCESS',
     workflowId: 10,
     htmlUrl: 'https://github.com/org/repo/actions/runs/1',
-    label: 'TEST',
+    label: 'NONE',
     createdAt: '2026-10-23T12:00:00Z',
     updatedAt: '2026-10-23T12:00:00Z',
     ...overrides,

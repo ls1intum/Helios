@@ -16,8 +16,6 @@ public interface DeploymentRepository extends JpaRepository<Deployment, Long> {
   @SuppressWarnings("checkstyle:MethodName")
   List<Deployment> findByPullRequest_IdOrderByCreatedAtDesc(Long pullRequestId);
 
-  List<Deployment> findByRepositoryRepositoryIdAndSha(Long repositoryId, String sha);
-
   // Explicit per-repository scoped finders (Option B).
   List<Deployment> findByRepositoryRepositoryIdOrderByCreatedAtDesc(Long repositoryId);
 

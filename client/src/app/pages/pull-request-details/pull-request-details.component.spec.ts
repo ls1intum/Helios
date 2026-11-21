@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { PullRequestDetailsComponent } from './pull-request-details.component';
 import { importProvidersFrom, signal } from '@angular/core';
+import { By } from '@angular/platform-browser';
 import { TestModule } from '@app/test.module';
 
 describe('Integration Test Pull Request Details Page', () => {
@@ -49,10 +50,11 @@ describe('Integration Test Pull Request Details Page', () => {
     expect(component).toBeTruthy();
   });
 
-  // it('should render pipeline component', async () => {
-  //   // Check if child components get the correct input properties
-  //   const pipelineComponent = fixture.debugElement.query(By.css('app-pipeline'));
-  //   expect(pipelineComponent).toBeTruthy();
-  //   expect(pipelineComponent.properties['selector']).toEqual({ pullRequestId: 1, repositoryId: 1 });
-  // });
+  it('passes a pull request selector to the pipeline and renders no test-result section', async () => {
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(component.pipelineSelector()).toEqual({ repositoryId: 1, pullRequestId: 1 });
+    expect(fixture.debugElement.query(By.css('app-pipeline'))).toBeTruthy();
+    expect(fixture.debugElement.query(By.css('app-pipeline-test-results'))).toBeNull();
+  });
 });

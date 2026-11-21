@@ -12,11 +12,8 @@ import {
 } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { PermissionService } from '@app/core/services/permission.service';
 import { WorkflowJobListComponent } from '@app/components/workflow-job-list/workflow-job-list.component';
-import { PipelineTestResultsComponent } from '@app/components/pipeline/test-results/pipeline-test-results.component';
-import { PipelineSelector } from '@app/components/pipeline/pipeline.component';
 import { injectMutation, injectQuery, QueryClient } from '@tanstack/angular-query-experimental';
 import { MessageService } from 'primeng/api';
-import { TagModule } from 'primeng/tag';
 import { ButtonModule } from 'primeng/button';
 import { DividerModule } from 'primeng/divider';
 import { ToastModule } from 'primeng/toast';
@@ -24,18 +21,7 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { TimeAgoPipe } from '@app/pipes/time-ago.pipe';
 import { GithubLinkButtonComponent } from '@app/components/github-link-button/github-link-button.component';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
-import {
-  IconAlertTriangle,
-  IconArrowLeft,
-  IconCircleCheck,
-  IconCircleX,
-  IconClockHour4,
-  IconFileText,
-  IconPlayerPlay,
-  IconProgress,
-  IconRefresh,
-  IconX,
-} from 'angular-tabler-icons/icons';
+import { IconAlertTriangle, IconArrowLeft, IconCircleCheck, IconCircleX, IconClockHour4, IconPlayerPlay, IconProgress, IconRefresh, IconX } from 'angular-tabler-icons/icons';
 import { TooltipModule } from 'primeng/tooltip';
 import { getStatusColors, getStatusIconClasses } from '@app/core/utils/status-colors';
 
@@ -44,7 +30,6 @@ import { getStatusColors, getStatusIconClasses } from '@app/core/utils/status-co
   standalone: true,
   imports: [
     RouterLink,
-    TagModule,
     ButtonModule,
     DividerModule,
     ToastModule,
@@ -53,7 +38,6 @@ import { getStatusColors, getStatusIconClasses } from '@app/core/utils/status-co
     TablerIconComponent,
     TooltipModule,
     WorkflowJobListComponent,
-    PipelineTestResultsComponent,
     GithubLinkButtonComponent,
   ],
   providers: [
@@ -65,7 +49,6 @@ import { getStatusColors, getStatusIconClasses } from '@app/core/utils/status-co
       IconClockHour4,
       IconProgress,
       IconAlertTriangle,
-      IconFileText,
       IconPlayerPlay,
       IconRefresh,
       IconX,
@@ -104,12 +87,6 @@ export class WorkflowRunDetailsComponent {
   });
 
   run = computed(() => this.runQuery.data() ?? null);
-
-  pipelineSelector = computed<PipelineSelector | null>(() => {
-    const r = this.run();
-    if (!r || r.label !== 'TEST') return null;
-    return { repositoryId: this.repositoryId(), workflowRunId: this.runId() };
-  });
 
   workflowJobsQuery = injectQuery(() => {
     const actionAt = this.actionTriggeredAt();

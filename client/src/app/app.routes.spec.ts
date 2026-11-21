@@ -1,14 +1,41 @@
 import { describe, expect, it } from 'vitest';
+import { Route } from '@angular/router';
 import { routes } from './app.routes';
-import { loggedInGuard } from './core/routeGuards/auth.guard';
-import { writePermissionGuard } from './core/routeGuards/write-permission.guard';
+import { maintainerGuard } from './core/routeGuards/maintainer.guard';
+
+function collectPaths(list: Route[], prefix = ''): string[] {
+  return list.flatMap(route => {
+    const path = [prefix, route.path].filter(Boolean).join('/');
+    return [path, ...collectPaths(route.children ?? [], path)];
+  });
+}
+
+function findRoute(list: Route[], path: string): Route | undefined {
+  for (const route of list) {
+    if (route.path === path) return route;
+    const nested = findRoute(route.children ?? [], path);
+    if (nested) return nested;
+  }
+  return undefined;
+}
 
 describe('app routes', () => {
-  it('protects the workflow run logs page with login and write-permission guards', () => {
-    const mainLayoutRoute = routes.find(route => route.path === '');
-    const repositoryRoute = mainLayoutRoute?.children?.find(route => route.path === 'repo/:repositoryId');
-    const workflowRunLogsRoute = repositoryRoute?.children?.find(route => route.path === 'ci-cd/runs/:workflowRunId/logs');
+  const paths = collectPaths(routes);
 
-    expect(workflowRunLogsRoute?.canActivate).toEqual([loggedInGuard, writePermissionGuard]);
+  it.each(['release', 'flaky-tests', 'logs'])('does not register any route containing "%s"', fragment => {
+    expect(paths.filter(path => path.includes(fragment))).toEqual([]);
+  });
+
+  it('keeps the repository pages reachable', () => {
+    expect(paths).toEqual(expect.arrayContaining(['repo/:repositoryId/environment', 'repo/:repositoryId/ci-cd', 'repo/:repositoryId/settings']));
+  });
+
+  it('keeps the repository settings page restricted to maintainers', () => {
+    const repositoryRoute = findRoute(routes, 'repo/:repositoryId');
+    expect(findRoute(repositoryRoute?.children ?? [], 'settings')?.canActivate).toEqual([maintainerGuard]);
+  });
+
+  it('falls back to the not-found page for removed URLs', () => {
+    expect(routes[routes.length - 1].path).toBe('**');
   });
 });

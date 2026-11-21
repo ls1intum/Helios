@@ -22,6 +22,9 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class GitHubWorkflowJobSyncService {
 
+  /** Length of the {@code varchar(255)} columns of {@code workflow_job}. */
+  private static final int MAX_COLUMN_LENGTH = 255;
+
   private final WorkflowJobRepository workflowJobRepository;
   private final WorkflowRunRepository workflowRunRepository;
 
@@ -52,8 +55,8 @@ public class GitHubWorkflowJobSyncService {
     entity.setId(job.id());
     entity.setWorkflowRun(run);
     entity.setRepository(run.getRepository());
-    entity.setName(job.name());
-    entity.setWorkflowName(job.workflowName());
+    entity.setName(truncate(job.name(), "name", job.id()));
+    entity.setWorkflowName(truncate(job.workflowName(), "workflowName", job.id()));
     entity.setStatus(
         parseOrUnknown(WorkflowRun.Status.class, job.status(), WorkflowRun.Status.UNKNOWN));
     entity.setConclusion(
@@ -61,15 +64,40 @@ public class GitHubWorkflowJobSyncService {
             WorkflowRun.Conclusion.class, job.conclusion(), WorkflowRun.Conclusion.UNKNOWN));
     entity.setStartedAt(job.startedAt());
     entity.setCompletedAt(job.completedAt());
-    entity.setHtmlUrl(job.htmlUrl());
-    entity.setHeadBranch(job.headBranch());
-    entity.setHeadSha(job.headSha());
+    entity.setHtmlUrl(truncate(job.htmlUrl(), "htmlUrl", job.id()));
+    entity.setHeadBranch(truncate(job.headBranch(), "headBranch", job.id()));
+    entity.setHeadSha(truncate(job.headSha(), "headSha", job.id()));
     if (entity.getCreatedAt() == null) {
       entity.setCreatedAt(job.createdAt());
     }
     entity.setUpdatedAt(job.completedAt() != null ? job.completedAt() : job.startedAt());
 
     workflowJobRepository.save(entity);
+  }
+
+  /**
+   * Cuts a text value to the {@code varchar(255)} column length. GitHub does not bound these
+   * values; for example, a job whose {@code name:} is an expression that GitHub could not
+   * evaluate is reported with the raw expression text (445 characters in Artemis' CI), which would
+   * otherwise make the insert fail and drop the whole job event. Prefixes are preserved, so
+   * matching jobs by name prefix keeps working.
+   */
+  static String truncate(String value, String fieldName, long jobId) {
+    if (value == null || value.length() <= MAX_COLUMN_LENGTH) {
+      return value;
+    }
+    int end = MAX_COLUMN_LENGTH;
+    // Do not leave half of a surrogate pair at the end.
+    if (Character.isHighSurrogate(value.charAt(end - 1))) {
+      end--;
+    }
+    log.info(
+        "Truncated workflow job field '{}' from {} to {} characters for job {}",
+        fieldName,
+        value.length(),
+        end,
+        jobId);
+    return value.substring(0, end);
   }
 
   /**

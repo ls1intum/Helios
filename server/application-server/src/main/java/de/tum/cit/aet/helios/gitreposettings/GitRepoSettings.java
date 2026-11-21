@@ -39,10 +39,6 @@ public class GitRepoSettings extends RepositoryFilterEntity {
   // After this period, any user can unlock the environment.
   private Long lockReservationThreshold = 30L; // Default value: 30 minutes
 
-  // The package name of the application. This will be used to get the relevant logs from the test
-  // results.
-  private String packageName;
-
   @Column(name = "secret_hash")
   private String secretHash;
 }

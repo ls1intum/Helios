@@ -8,8 +8,6 @@ import de.tum.cit.aet.helios.environment.status.LifecycleState;
 import de.tum.cit.aet.helios.environment.status.StatusCheckType;
 import de.tum.cit.aet.helios.gitrepo.RepositoryInfoDto;
 import de.tum.cit.aet.helios.heliosdeployment.DeploymentDurationEstimate;
-import de.tum.cit.aet.helios.releaseinfo.releasecandidate.ReleaseCandidate;
-import de.tum.cit.aet.helios.releaseinfo.releasecandidate.ReleaseCandidateRepository;
 import de.tum.cit.aet.helios.user.UserInfoDto;
 import de.tum.cit.aet.helios.workflow.WorkflowDto;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -84,7 +82,6 @@ public record EnvironmentDto(
     private final String ref;
     private final String task;
     private final String workflowRunHtmlUrl;
-    private final List<String> releaseCandidateNames;
     private final String prName;
     private final UserInfoDto user;
     private final Integer pullRequestNumber;
@@ -109,7 +106,6 @@ public record EnvironmentDto(
     /** Builds an EnvironmentDeployment from a LatestDeploymentUnion. */
     public static EnvironmentDeployment fromUnion(
         LatestDeploymentUnion union,
-        ReleaseCandidateRepository releaseCandidateRepository,
         DeploymentDurationEstimate estimate) {
       Integer estimatedPreDeploy = null;
       Integer estimatedDeploy = null;
@@ -132,11 +128,6 @@ public record EnvironmentDto(
           union.getRef(),
           union.getTask(),
           union.getWorkflowRunHtmlUrl(),
-          releaseCandidateRepository
-              .findByRepositoryRepositoryIdAndCommitSha(union.getRepository().id(), union.getSha())
-              .stream()
-              .map(ReleaseCandidate::getName)
-              .toList(),
           union.getPullRequestName(),
           UserInfoDto.fromUser(union.getCreator()),
           union.getPullRequestNumber(),
@@ -160,10 +151,8 @@ public record EnvironmentDto(
   public static EnvironmentDto fromEnvironment(
       Environment environment,
       LatestDeploymentUnion latestUnion,
-      Optional<EnvironmentStatus> latestStatus,
-      ReleaseCandidateRepository releaseCandidateRepository) {
-    return fromEnvironment(
-        environment, latestUnion, latestStatus, releaseCandidateRepository, null);
+      Optional<EnvironmentStatus> latestStatus) {
+    return fromEnvironment(environment, latestUnion, latestStatus, null);
   }
 
   /**
@@ -173,13 +162,12 @@ public record EnvironmentDto(
       Environment environment,
       LatestDeploymentUnion latestUnion,
       Optional<EnvironmentStatus> latestStatus,
-      ReleaseCandidateRepository releaseCandidateRepository,
       DeploymentDurationEstimate estimate) {
     // If union is null or none(), we won't have a 'latestDeployment'
     EnvironmentDeployment envDeployment = null;
     if (latestUnion != null && !latestUnion.isNone()) {
       envDeployment =
-          EnvironmentDeployment.fromUnion(latestUnion, releaseCandidateRepository, estimate);
+          EnvironmentDeployment.fromUnion(latestUnion, estimate);
     }
 
     return new EnvironmentDto(

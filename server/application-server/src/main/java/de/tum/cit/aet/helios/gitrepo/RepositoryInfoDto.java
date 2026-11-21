@@ -18,7 +18,6 @@ public record RepositoryInfoDto(
     int pullRequestCount,
     int branchCount,
     int environmentCount,
-    String latestReleaseTagName,
     List<UserInfoDto> contributors) {
 
   public static RepositoryInfoDto fromRepository(GitRepository repository) {
@@ -33,7 +32,6 @@ public record RepositoryInfoDto(
         repository.getPullRequestCount(),
         repository.getBranchCount(),
         repository.getEnvironmentCount(),
-        repository.getLatestReleaseTagName(),
         repository.getContributors().stream().map(user -> UserInfoDto.fromUser(user)).toList());
   }
 }

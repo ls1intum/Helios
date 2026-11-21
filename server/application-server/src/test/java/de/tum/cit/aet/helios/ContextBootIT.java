@@ -20,13 +20,13 @@ class ContextBootIT extends HeliosIntegrationTest {
   }
 
   @Test
-  void integrationDatabaseRunsPostgres1711() {
+  void integrationDatabaseRunsPostgres190() {
     var jdbc = new JdbcTemplate(dataSource);
     String version = jdbc.queryForObject("SHOW server_version", String.class);
     Integer versionNumber = jdbc.queryForObject("SHOW server_version_num", Integer.class);
     System.out.println("Integration database: PostgreSQL " + version + " (" + versionNumber + ")");
     assertEquals(
-        170011, versionNumber, "Integration tests must use PostgreSQL 17.11; actual: " + version);
+        190000, versionNumber, "Integration tests must use PostgreSQL 19.0; actual: " + version);
   }
 
   @Test

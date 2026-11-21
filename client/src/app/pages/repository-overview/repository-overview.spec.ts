@@ -24,7 +24,6 @@ describe('Integration Test Repository Overview Page', () => {
     pullRequestCount: index,
     branchCount: index,
     environmentCount: index,
-    latestReleaseTagName: index % 2 === 0 ? `v${index + 1}.0.0` : undefined,
     contributors: [],
   }));
 

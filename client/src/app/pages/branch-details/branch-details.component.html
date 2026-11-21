@@ -4,14 +4,6 @@
       <div class="mb-1 flex gap-2 items-center flex-wrap">
         <i-tabler name="git-branch" class="text-muted-color !size-5" />
         <h2 class="text-2xl">{{ branch.name }}</h2>
-        <div class="flex flex-wrap gap-1">
-          @for (releaseCandidateName of branch.releaseCandidateNames; track releaseCandidateName) {
-            <p-tag class="text-xs cursor-pointer hover:underline" [routerLink]="['/repo', repositoryId(), 'release', releaseCandidateName]">
-              <i-tabler name="tag" class="!size-4" />
-              {{ releaseCandidateName }}
-            </p-tag>
-          }
-        </div>
       </div>
       <div class="flex items-center gap-2">
         <h4 class="text-xl">Last commit:</h4>
@@ -20,20 +12,6 @@
           <h4 class="font-mono">({{ commit()!.sha.substring(0, 7) }})</h4>
         }
       </div>
-      <div class="block md:hidden">
-        @if (isAtLeastMaintainer()) {
-          <p-button label="Create Release" (onClick)="isCreateDialogVisible.set(true)">
-            <i-tabler name="tag-plus" class="!size-4" />
-          </p-button>
-        }
-      </div>
-    </div>
-    <div class="hidden md:block">
-      @if (isAtLeastMaintainer()) {
-        <p-button label="Create Release" (onClick)="isCreateDialogVisible.set(true)">
-          <i-tabler name="tag-plus" class="!size-4" />
-        </p-button>
-      }
     </div>
   } @else {
     <div class="flex flex-col items-start gap-2">
@@ -45,7 +23,6 @@
 
 <div class="flex flex-col gap-6">
   <app-pipeline [selector]="pipelineSelector()" />
-  <app-pipeline-test-results [selector]="pipelineSelector()" />
   @if (query.data(); as branch) {
     <p-divider />
     <p-tabs [value]="deploymentTab()" (valueChange)="onDeploymentTabChange($event)">
@@ -64,7 +41,3 @@
     </p-tabs>
   }
 </div>
-
-@if (commit() !== undefined) {
-  <app-release-candidate-create [(isVisible)]="isCreateDialogVisible" [branchName]="branchName()" [headCommit]="commit()!" [repositoryId]="repositoryId()" />
-}

@@ -6,7 +6,7 @@ x-logging: &default-logging
 
 services:
   postgres:
-    image: postgres:17.12-alpine
+    image: postgres:19.0-alpine
     environment:
       - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
@@ -14,7 +14,11 @@ services:
     ports:
       - '5432:5432'
     volumes:
-      - db-data:/var/lib/postgresql/data
+      # PostgreSQL 18+ images keep the (versioned) data directory below /var/lib/postgresql,
+      # so the volume is mounted there. Each major version gets its own volume: the
+      # PostgreSQL 18 data in db-data-pg18 is not readable by a newer major version and is
+      # left untouched.
+      - db-data-pg19:/var/lib/postgresql
     logging: *default-logging
     command: >
       bash -c "
@@ -136,7 +140,6 @@ services:
       - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET}
       - GITHUB_INSTALLATION_ID=${GITHUB_INSTALLATION_ID}
       - GITHUB_PRIVATE_KEY_PATH=${GITHUB_PRIVATE_KEY_PATH}
-      - SENTRY_DSN=${SENTRY_DSN}
       - HELIOS_TOKEN_EXCHANGE_CLIENT=${HELIOS_TOKEN_EXCHANGE_CLIENT}
       - HELIOS_TOKEN_EXCHANGE_SECRET=${HELIOS_TOKEN_EXCHANGE_SECRET}
       # Base64 AES key for encrypting stored GitHub user tokens at rest.
@@ -155,13 +158,6 @@ services:
       - HELIOS_PROD_SECRET_KEY=${HELIOS_PROD_SECRET_KEY}
       - HELIOS_STAGING_SECRET_KEY=${HELIOS_STAGING_SECRET_KEY}
       - HELIOS_DEVELOPERS_GITHUB_USERNAMES=${HELIOS_DEVELOPERS_GITHUB_USERNAMES}
-      - HELIOS_AI_ENABLED=${HELIOS_AI_ENABLED}
-      - HELIOS_AI_DEFAULT_PROVIDER=${HELIOS_AI_DEFAULT_PROVIDER}
-      - HELIOS_AI_TEST_FAILURE_MAX_SECTION_CHARS=${HELIOS_AI_TEST_FAILURE_MAX_SECTION_CHARS}
-      - HELIOS_AI_PROVIDER_OPENAI_ENABLED=${HELIOS_AI_PROVIDER_OPENAI_ENABLED}
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - OPENAI_BASE_URL=${OPENAI_BASE_URL}
-      - OPENAI_MODEL=${OPENAI_MODEL}
       - JAVA_TOOL_OPTIONS=-XX:+HeapDumpOnOutOfMemoryError -XX:+ExitOnOutOfMemoryError -XX:HeapDumpPath=/dumps -Xlog:gc*:file=/logs/gc.log:time,uptime,level,tags
     depends_on:
       - postgres
@@ -253,7 +249,7 @@ services:
       - helios-network
 
 volumes:
-  db-data:
+  db-data-pg19:
   nats-data:
 
 

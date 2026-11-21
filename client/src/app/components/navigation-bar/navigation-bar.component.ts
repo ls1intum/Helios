@@ -11,7 +11,7 @@ import { PermissionService } from '@app/core/services/permission.service';
 import { injectQuery } from '@tanstack/angular-query-experimental';
 import { getRepositoryByIdOptions } from '@app/core/modules/openapi/@tanstack/angular-query-experimental.gen';
 import { ButtonModule } from 'primeng/button';
-import { IconAdjustmentsAlt, IconArrowGuide, IconChevronLeft, IconChevronRight, IconRocket, IconServerCog, IconEyeOff, IconEye, IconBug } from 'angular-tabler-icons/icons';
+import { IconAdjustmentsAlt, IconArrowGuide, IconChevronLeft, IconChevronRight, IconServerCog, IconEyeOff, IconEye } from 'angular-tabler-icons/icons';
 
 @Component({
   selector: 'app-navigation-bar',
@@ -19,9 +19,7 @@ import { IconAdjustmentsAlt, IconArrowGuide, IconChevronLeft, IconChevronRight, 
   providers: [
     provideTablerIcons({
       IconArrowGuide,
-      IconBug,
       IconServerCog,
-      IconRocket,
       IconAdjustmentsAlt,
       IconChevronLeft,
       IconChevronRight,
@@ -56,14 +54,6 @@ export class NavigationBarComponent {
         icon: 'arrow-guide',
         path: ['repo', this.repositoryId(), 'ci-cd'],
       },
-      /*
-      // TODO: Re-enable once the flaky tests page is fixed
-      {
-        label: 'Flaky Tests',
-        icon: 'bug',
-        path: ['repo', this.repositoryId(), 'flaky-tests'],
-      },
-       */
       {
         label: 'Environments',
         icon: 'server-cog',
@@ -71,11 +61,6 @@ export class NavigationBarComponent {
       },
       ...(this.keycloakService.profile && this.permissionService.isAtLeastMaintainer()
         ? [
-            {
-              label: 'Release Management',
-              icon: 'rocket',
-              path: ['repo', this.repositoryId(), 'release'],
-            },
             {
               label: 'Repository Settings',
               icon: 'adjustments-alt',

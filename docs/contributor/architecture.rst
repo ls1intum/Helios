@@ -23,7 +23,7 @@ Communication paths and protocols:
 - `nginx-proxy → client`: HTTP for static assets.
 - `nginx-proxy → application-server`: HTTP.
 - `nginx-proxy → webhook-listener`: HTTP.
-- `application-server → GitHub / Sentry`: HTTPS.
+- `application-server → GitHub`: HTTPS.
 - `webhook-listener ↔ application-server`: NATS (publish / subscribe).
 - `application-server → notification-server`: NATS (publish / subscribe).
 - `notification-server → Postfix`: SMTP
@@ -35,13 +35,13 @@ Communication paths and protocols:
 Design Goals
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-1. *Centralization and Integration*: Helios aims to unify fragmented CI/CD processes by offering a centralized platform that consolidates deployment management, test result visualization, and release tracking. This integration reduces cognitive load and eliminates the need to switch between different tools like GitHub Actions and Bamboo.
+1. *Centralization and Integration*: Helios aims to unify fragmented CI/CD processes by offering a centralized platform that consolidates deployment management and workflow visibility. This integration reduces cognitive load and eliminates the need to switch between different tools like GitHub Actions and Bamboo.
 
 2. *Modularity and Scalability*: To support evolving requirements and diverse workloads, the system is built using a microservice architecture. Each component—such as webhook processing, notification handling, and authentication—is independently deployable and scalable. This separation of concerns enhances fault tolerance and facilitates continuous evolution of the platform.
 
-3. *User-Centered Interaction*: The design emphasizes accessibility and simplicity across user roles. Whether interacting via the web interface or mobile client, developers, testers, and release managers are provided with intuitive workflows and real-time feedback mechanisms. Features such as environment locking, visual deployment history, and filtered test views support efficient decision-making and reduce onboarding complexity.
+3. *User-Centered Interaction*: The design emphasizes accessibility and simplicity across user roles. Whether interacting via the web interface or mobile client, developers, testers, and maintainers are provided with intuitive workflows and real-time feedback mechanisms. Features such as environment locking, and visual deployment history support efficient decision-making and reduce onboarding complexity.
 
-4. *Observability and Reliability*: Built-in integration with observability tools like Sentry and Grafana enables real-time monitoring, performance tracking, and failure diagnostics. These capabilities ensure system transparency and support proactive maintenance, which are essential for reliable CI/CD pipelines.
+4. *Observability and Reliability*: Built-in integration with observability tools like Grafana enables real-time monitoring, performance tracking, and failure diagnostics. These capabilities ensure system transparency and support proactive maintenance, which are essential for reliable CI/CD pipelines.
 
 5. *Security and Access Control*: Helios enforces secure access through delegated authentication services and a fine-grained role management system. Permissions are aligned with user responsibilities to minimize the risk of accidental deployments or unauthorized operations.
 
@@ -50,13 +50,13 @@ Design Goals
 
 Subsystem Decomposition
 -------------------------
-At the center, the *Application Server* exposes a small, versioned API and implements every workflow around deployments, release candidates, repository synchronization, and user authorization. It persists authoritative state, publishes domain events, and enforces `RBAC` using information supplied by Keycloak.
+At the center, the *Application Server* exposes a small, versioned API and implements every workflow around deployments, repository synchronization, and user authorization. It persists authoritative state, publishes domain events, and enforces `RBAC` using information supplied by Keycloak.
 
 The *Webhook Listener* sits at the boundary with GitHub. Its only job is to accept raw webhook payloads, validate their signatures, and translate them into structured domain events that can be routed internally. By keeping this service slim, we isolate the core from bursts of inbound traffic and from any changes in GitHub’s webhook format.
 
 The *Notification Server* handles everything that leaves the system for human consumption (e-mails). It subscribes to notification events and pushes concise, channel-specific notifications. This lets the core remain agnostic of outbound protocols and rate limits.
 
-The *Client* is the user interface, delivered as a web application that speaks only to the Application Server’s API. All user interaction such as deployments, promoting release candidates, inspecting logs go to the *Application Server*.
+The *Client* is the user interface, delivered as a web application that speaks only to the Application Server’s API. All user interaction such as deployments and environment locking go to the *Application Server*.
 
 *Keycloak* provides identity and access management. Users authenticate with Keycloak, receive signed JWTs, and present those tokens to the Application Server. The server’s Auth services validate the token, derive effective roles, and enforce fine-grained permissions.
 
@@ -180,11 +180,7 @@ Access Control Matrix
     +------------------------------------+-----+---------+----------+
     |Deploy to Protected Environment     |     |         |✓         |
     +------------------------------------+-----+---------+----------+
-    |See Test Results for PRs            |✓    |✓        |✓         |
-    +------------------------------------+-----+---------+----------+
     |See Deployment Status               |✓    |✓        |✓         |
-    +------------------------------------+-----+---------+----------+
-    |See Stacktrace and logs             |✓    |✓        |✓         |
     +------------------------------------+-----+---------+----------+
     |Unlock Environment (first 30 min)   |     |         |✓         |
     +------------------------------------+-----+---------+----------+
@@ -200,8 +196,6 @@ Access Control Matrix
     +------------------------------------+-----+---------+----------+
     |Project Settings                    |     |         |          |
     +------------------------------------+-----+---------+----------+
-    |Define Test Workflows               |     |         |✓         |
-    +------------------------------------+-----+---------+----------+
     |Create Pipeline View                |     |         |✓         |
     +------------------------------------+-----+---------+----------+
     |Set Lock Expiration Threshold       |     |         |✓         |
@@ -209,26 +203,6 @@ Access Control Matrix
     |Set Lock Reservation Threshold      |     |         |✓         |
     +------------------------------------+-----+---------+----------+
     |Sync Workflows with GitHub          |     |         |✓         |
-    +------------------------------------+-----+---------+----------+
-    |Release Management                  |     |         |          |
-    +------------------------------------+-----+---------+----------+
-    |Create Release Candidates           |     |         |✓         |
-    +------------------------------------+-----+---------+----------+
-    |See GitHub Releases List            |     |         |✓         |
-    +------------------------------------+-----+---------+----------+
-    |Publish Release Candidate as Draft  |     |         |✓         |
-    +------------------------------------+-----+---------+----------+
-    |Add comment on release evaluation   |     |         |✓         |
-    +------------------------------------+-----+---------+----------+
-    |Test Analytics                      |     |         |          |
-    +------------------------------------+-----+---------+----------+
-    |See test results                    |✓    |✓        |✓         |
-    +------------------------------------+-----+---------+----------+
-    |See test logs                       |✓    |✓        |✓         |
-    +------------------------------------+-----+---------+----------+
-    |Filter logs by severity             |✓    |✓        |✓         |
-    +------------------------------------+-----+---------+----------+
-    |Get insights about test stability   |✓    |✓        |✓         |
     +------------------------------------+-----+---------+----------+
 
 

@@ -35,7 +35,7 @@ Docker Compose Configuration
 
    services:
      postgres:
-       image: postgres:17.11-alpine
+       image: postgres:19.0-alpine
        environment:
          - POSTGRES_DB=${POSTGRES_DB}
          - POSTGRES_USER=${POSTGRES_USER}

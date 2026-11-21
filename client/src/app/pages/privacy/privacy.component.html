@@ -84,7 +84,7 @@
       on the settings page or exercise your right to object under Art. 21 GDPR (see &ldquo;Your rights&rdquo; below).
     </p>
 
-    <h3 class="text-base font-semibold mt-3">Server access logs and self-hosted error reports</h3>
+    <h3 class="text-base font-semibold mt-3">Server access logs</h3>
     <p class="mt-1">
       <strong>Why we may do this:</strong> AET has a legitimate interest in running Helios securely and reliably, in finding and diagnosing errors, and in defending against
       attacks. The same purpose applies whether you are signed in or not.
@@ -160,12 +160,6 @@
       </li>
       <li><strong>Self-hosted Keycloak</strong> (the sign-in service, run on TUM infrastructure) &mdash; for authentication.</li>
       <li>
-        <strong>Self-hosted Sentry</strong> (an error-reporting tool, run on TUM infrastructure at
-        <a href="https://sentry.ase.in.tum.de" class="text-primary" target="_blank" rel="noopener noreferrer">sentry.ase.in.tum.de</a>) &mdash; for error reports. Each error report
-        may include your IP address, your user-agent, the URL you were on, and the stack trace; if a JavaScript error occurs, a short replay of the page state at that moment may
-        also be captured to help with debugging. We do not use any external Sentry cloud service.
-      </li>
-      <li>
         <strong>TUM SMTP / AET mail relay</strong> (TUM&apos;s outgoing-mail servers) &mdash; for delivering notification emails. Notification emails wait briefly on TUM-internal
         infrastructure before they are sent.
       </li>
@@ -191,8 +185,6 @@
         <strong>Workflow run records (database):</strong> a nightly cleanup at 01:00 keeps the two newest <code>PROCESSED</code> runs (finished successfully) per repository and
         branch, and deletes runs in state <code>FAILED</code> (errored) or with no terminal state that are older than five days.
       </li>
-      <li><strong>Workflow run logs (filesystem):</strong> a nightly cleanup at 02:00 deletes log files older than one day.</li>
-      <li><strong>Self-hosted Sentry error reports:</strong> kept for at most 30 days.</li>
       <li><strong>Database backups:</strong> daily backups, kept for 7 days.</li>
       <li>
         <strong>Server access logs:</strong> rotated by the host system under TUM-internal log-retention policy; not retained for longer than necessary to detect and diagnose
@@ -246,8 +238,7 @@
       </li>
       <li><strong>Right to data portability</strong> (Art. 20 GDPR) &mdash; receive your data in a portable format.</li>
       <li>
-        <strong>Right to object</strong> (Art. 21 GDPR) &mdash; in particular against processing based on legitimate interests (Art. 6(1)(f) GDPR), namely server access logs and
-        self-hosted Sentry error reports.
+        <strong>Right to object</strong> (Art. 21 GDPR) &mdash; in particular against processing based on legitimate interests (Art. 6(1)(f) GDPR), namely server access logs.
       </li>
       <li>
         <strong>Right to withdraw consent</strong> (Art. 7(3) GDPR) &mdash; in particular for the optional notification email and preferences. Withdrawal does not affect the

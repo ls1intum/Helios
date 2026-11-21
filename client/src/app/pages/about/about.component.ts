@@ -68,11 +68,6 @@ export class AboutComponent implements OnInit {
       title: 'Deployment Management',
       description: 'Track and control deployments through a user-friendly interface.',
     },
-    {
-      icon: 'pi pi-chart-bar',
-      title: 'Test Analytics (Coming Soon)',
-      description: 'Detailed analytics on test results, coverage, and performance trends.',
-    },
   ];
 
   ngOnInit(): void {

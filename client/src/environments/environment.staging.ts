@@ -1,10 +1,5 @@
 export const environment = {
   production: false,
-  aiAnalysisEnabled: true,
-  sentry: {
-    enabled: false,
-    dsn: '',
-  },
   serverUrl: 'https://helios-staging.aet.cit.tum.de',
   keycloak: {
     url: 'https://helios-staging.aet.cit.tum.de',

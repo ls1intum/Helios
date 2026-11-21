@@ -20,7 +20,6 @@ import de.tum.cit.aet.helios.gitrepo.GitRepository;
 import de.tum.cit.aet.helios.gitrepo.github.GitHubRepositorySyncService;
 import de.tum.cit.aet.helios.label.github.GitHubLabelSyncService;
 import de.tum.cit.aet.helios.pullrequest.github.GitHubPullRequestSyncService;
-import de.tum.cit.aet.helios.releaseinfo.release.github.GitHubReleaseSyncService;
 import de.tum.cit.aet.helios.user.User;
 import de.tum.cit.aet.helios.user.UserRepository;
 import de.tum.cit.aet.helios.user.github.GitHubUserSyncService;
@@ -34,7 +33,6 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.jetbrains.annotations.NotNull;
@@ -43,7 +41,6 @@ import org.kohsuke.github.GHDirection;
 import org.kohsuke.github.GHEvent;
 import org.kohsuke.github.GHIssueState;
 import org.kohsuke.github.GHPullRequestQueryBuilder;
-import org.kohsuke.github.GHRelease;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GHWorkflow;
 import org.kohsuke.github.GHWorkflowRun;
@@ -55,7 +52,6 @@ import org.springframework.stereotype.Service;
 public class GitHubDataSyncOrchestrator {
   private final GitHubRepositorySyncService repositorySyncService;
   private final GitHubPullRequestSyncService pullRequestSyncService;
-  private final GitHubReleaseSyncService releaseSyncService;
   private final GitHubWorkflowRunSyncService workflowRunSyncService;
   private final GitHubWorkflowSyncService workflowSyncService;
   private final GitHubBranchSyncService branchSyncService;
@@ -353,30 +349,6 @@ public class GitHubDataSyncOrchestrator {
     //  .filter(dbCommit -> commits.stream().noneMatch(b -> b.getSHA1().equals(dbCommit.getSha())))
     //     .forEach(dbCommit -> commitRepository.delete(dbCommit));
     return commits;
-  }
-
-  /**
-   * Synchronizes all releases from a specific GitHub repository.
-   *
-   * @param repository the GitHub repository to sync releases from
-   */
-  public void syncReleasesOfRepository(GHRepository repository) {
-    try {
-      var iterator = repository.listReleases().withPageSize(100).iterator();
-
-      while (iterator.hasNext()) {
-        var ghReleases = iterator.nextPage();
-        // Only process non-draft releases, because drafts are not unique in GitHub
-        ghReleases.stream()
-            .filter(Predicate.not(GHRelease::isDraft))
-            .forEach((ghRelease) -> releaseSyncService.processRelease(ghRelease, repository));
-      }
-    } catch (IOException e) {
-      log.error(
-          "Failed to fetch releases for repository {}: {}",
-          repository.getFullName(),
-          e.getMessage());
-    }
   }
 
   /**

@@ -48,10 +48,7 @@
                   "maximumError": "10kb"
                 }
               ],
-              "outputHashing": "all",
-              "sourceMap": {
-                "scripts": true
-              }
+              "outputHashing": "all"
             },
             "staging": {
               "fileReplacements": [
@@ -72,8 +69,7 @@
                   "maximumError": "10kb"
                 }
               ],
-              "outputHashing": "all",
-              "sourceMap": true
+              "outputHashing": "all"
             },
             "development": {
               "optimization": false,

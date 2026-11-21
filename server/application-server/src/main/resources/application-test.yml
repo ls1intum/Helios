@@ -8,7 +8,7 @@ zonky:
             postgres:
                 docker:
                     # Keep every Docker integration-test harness aligned with Compose and CI.
-                    image: postgres:17.11-alpine
+                    image: postgres:19.0-alpine
 
 spring:
     data:
@@ -31,7 +31,7 @@ spring:
                     # ignores spring.datasource.hikari.auto-commit, so the base
                     # provider_disables_autocommit=true would be a lie here and break tx rollback.
                     # Let Hibernate manage auto-commit in tests; prod/staging keep the base true (real
-                    # Hikari with auto-commit=false) so Large-Object reads work without @Transactional.
+                    # Hikari with auto-commit=false).
                     provider_disables_autocommit: false
 
 nats:
@@ -68,7 +68,5 @@ reconciliation:
     enabled: false
 
 helios:
-    ai:
-        enabled: false
     # Dummy base64 AES-256 key so TokenCipher (fail-fast on blank key) can start in tests.
     tokenEncryptionKey: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="

@@ -72,8 +72,6 @@ public class GitRepository {
 
   private int environmentCount;
 
-  private String latestReleaseTagName;
-
   @ManyToMany
   @JoinTable(
       name = "repository_contributor",

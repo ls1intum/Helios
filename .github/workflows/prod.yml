@@ -30,9 +30,3 @@ jobs:
       notification_server_image_tag: "latest"
       webhook_listener_image_tag: "latest"
       keycloak_image_tag: "latest"
-  release-sentry:
-    needs: deploy-prod-container
-    uses: ./.github/workflows/release-sentry.yml
-    secrets: inherit
-    with:
-      client_image_tag: "latest"

@@ -4,21 +4,6 @@ export type ClientOptions = {
   baseUrl: `${string}://${string}` | (string & {});
 };
 
-export type ApiError = {
-  status?: number;
-  error?: string;
-  message?: string;
-  path?: string;
-  timestamp?: string;
-};
-
-export type TestTypeDto = {
-  id?: number;
-  name: string;
-  artifactName: string;
-  workflowId: number;
-};
-
 export type DeploymentWorkflowConfigDto = {
   workflowId?: number;
   deployJobName?: string;
@@ -28,7 +13,6 @@ export type GitRepoSettingsDto = {
   id?: number;
   lockExpirationThreshold?: number;
   lockReservationThreshold?: number;
-  packageName?: string;
 };
 
 export type WorkflowGroupDto = {
@@ -41,16 +25,6 @@ export type WorkflowGroupDto = {
 export type WorkflowMembershipDto = {
   workflowId: number;
   orderIndex: number;
-};
-
-export type ReleaseCandidateNameUpdateDto = {
-  oldName?: string;
-  newName?: string;
-};
-
-export type UpdateReleaseNotesDto = {
-  name?: string;
-  notes?: string;
 };
 
 export type DeploymentTimerDto = {
@@ -82,7 +56,6 @@ export type EnvironmentDeployment = {
   ref?: string;
   task?: string;
   workflowRunHtmlUrl?: string;
-  releaseCandidateNames?: Array<string>;
   prName?: string;
   user?: UserInfoDto;
   pullRequestNumber?: number;
@@ -150,7 +123,6 @@ export type RepositoryInfoDto = {
   pullRequestCount?: number;
   branchCount?: number;
   environmentCount?: number;
-  latestReleaseTagName?: string;
   contributors?: Array<UserInfoDto>;
 };
 
@@ -189,121 +161,6 @@ export type NotificationPreferenceDto = {
 
 export type NotificationPreferencesWrapper = {
   preferences?: Array<NotificationPreferenceDto>;
-};
-
-export type TestCaseIdentifier = {
-  testName: string;
-  className: string;
-  testSuiteName: string;
-};
-
-export type TestFlakinessScoreRequest = {
-  testCases: Array<TestCaseIdentifier>;
-};
-
-export type TestFlakinessScoreDto = {
-  testName: string;
-  className: string;
-  testSuiteName: string;
-  flakinessScore?: number;
-  defaultBranchFailureRate?: number;
-  combinedFailureRate?: number;
-};
-
-export type TestFailureAnalysisResponseDto = {
-  repositoryId?: number;
-  status?: 'COMPLETED' | 'FAILED';
-  result?: TestFailureAnalysisResultDto;
-  errorMessage?: string;
-  analyzedAt?: string;
-  durationMs?: number;
-  cacheHit?: boolean;
-};
-
-export type TestFailureAnalysisResultDto = {
-  summary?: string;
-  rootCauseHypotheses?: Array<string>;
-  evidence?: Array<string>;
-  recommendedFixes?: Array<string>;
-  confidence?: number;
-  provider?: string;
-  model?: string;
-};
-
-export type ReleaseCandidateCreateDto = {
-  name: string;
-  commitSha: string;
-  branchName: string;
-};
-
-export type ReleaseInfoListDto = {
-  name?: string;
-  commitSha?: string;
-  branchName?: string;
-  isPublished?: boolean;
-};
-
-export type ReleaseNameDto = {
-  name?: string;
-};
-
-export type ReleaseEvaluationDto = {
-  name?: string;
-  isWorking?: boolean;
-  comment?: string;
-};
-
-export type BranchInfoDto = {
-  name: string;
-  commitSha: string;
-  aheadBy?: number;
-  behindBy?: number;
-  isDefault?: boolean;
-  isProtected?: boolean;
-  isPinned?: boolean;
-  updatedAt?: string;
-  updatedBy?: UserInfoDto;
-  repository?: RepositoryInfoDto;
-};
-
-export type CommitInfoDto = {
-  sha: string;
-  author?: UserInfoDto;
-  message?: string;
-  authoredAt?: string;
-  repository?: RepositoryInfoDto;
-};
-
-export type ReleaseCandidateDeploymentDto = {
-  id: number;
-  type: 'GITHUB' | 'HELIOS';
-  environmentId: number;
-};
-
-export type ReleaseCandidateEvaluationDto = {
-  user: UserInfoDto;
-  isWorking?: boolean;
-  comment?: string;
-};
-
-export type ReleaseDto = {
-  isDraft: boolean;
-  isPrerelease: boolean;
-  body: string;
-  githubUrl: string;
-  creator?: UserInfoDto;
-};
-
-export type ReleaseInfoDetailsDto = {
-  name: string;
-  commit: CommitInfoDto;
-  branch?: BranchInfoDto;
-  deployments: Array<ReleaseCandidateDeploymentDto>;
-  evaluations: Array<ReleaseCandidateEvaluationDto>;
-  release?: ReleaseDto;
-  createdBy?: UserInfoDto;
-  createdAt: string;
-  body?: string;
 };
 
 export type PullRequestStateReconciliationResultDto = {
@@ -381,7 +238,6 @@ export type WorkflowRunDto = {
   conclusion?: 'ACTION_REQUIRED' | 'CANCELLED' | 'FAILURE' | 'NEUTRAL' | 'SUCCESS' | 'SKIPPED' | 'STALE' | 'TIMED_OUT' | 'STARTUP_FAILURE' | 'UNKNOWN';
   htmlUrl: string;
   label: 'NONE' | 'TEST';
-  testProcessingStatus?: 'PROCESSING' | 'PROCESSED' | 'FAILED';
   headBranch?: string | null;
   headSha?: string | null;
   runStartedAt?: string | null;
@@ -389,248 +245,9 @@ export type WorkflowRunDto = {
   updatedAt: string;
 };
 
-export type WorkflowRunLogFileDto = {
-  /**
-   * The relative path of the log file inside the workflow log archive
-   */
-  path: string;
-  /**
-   * A display name for the log file
-   */
-  displayName: string;
-  /**
-   * The GitHub step number matched to this log file when available
-   */
-  stepNumber?: number;
-  /**
-   * The GitHub step name matched to this log file when available
-   */
-  stepName?: string;
-  /**
-   * The GitHub step status matched to this log file when available
-   */
-  stepStatus?: string;
-  /**
-   * The GitHub step conclusion matched to this log file when available
-   */
-  stepConclusion?: string;
-  /**
-   * The GitHub step start timestamp matched to this log file when available
-   */
-  stepStartedAt?: string;
-  /**
-   * The GitHub step completion timestamp matched to this log file when available
-   */
-  stepCompletedAt?: string;
-  /**
-   * The processed text content of the log file
-   */
-  content: string;
-};
-
-export type WorkflowRunLogGroupDto = {
-  /**
-   * The name of the log group, usually derived from the top-level archive directory
-   */
-  name: string;
-  /**
-   * The exact GitHub job name matched to this log group when available
-   */
-  jobName?: string;
-  /**
-   * The GitHub job status matched to this log group when available
-   */
-  jobStatus?: string;
-  /**
-   * The GitHub job conclusion matched to this log group when available
-   */
-  jobConclusion?: string;
-  /**
-   * The GitHub job steps matched to this log group when available
-   */
-  steps: Array<WorkflowRunLogStepDto>;
-  /**
-   * The log files belonging to this group
-   */
-  files: Array<WorkflowRunLogFileDto>;
-};
-
-export type WorkflowRunLogStepDto = {
-  /**
-   * The GitHub step number when available
-   */
-  number?: number;
-  /**
-   * The GitHub step name when available
-   */
-  name?: string;
-  /**
-   * The GitHub step status when available
-   */
-  status?: string;
-  /**
-   * The GitHub step conclusion when available
-   */
-  conclusion?: string;
-  /**
-   * The GitHub step start timestamp when available
-   */
-  startedAt?: string;
-  /**
-   * The GitHub step completion timestamp when available
-   */
-  completedAt?: string;
-};
-
-export type WorkflowRunLogsResponse = {
-  /**
-   * The workflow run identifier
-   */
-  workflowRunId: number;
-  /**
-   * The workflow run name
-   */
-  workflowName: string;
-  /**
-   * The workflow run display title
-   */
-  displayTitle?: string;
-  /**
-   * The workflow run conclusion when available
-   */
-  conclusion?: 'ACTION_REQUIRED' | 'CANCELLED' | 'FAILURE' | 'NEUTRAL' | 'SUCCESS' | 'SKIPPED' | 'STALE' | 'TIMED_OUT' | 'STARTUP_FAILURE' | 'UNKNOWN';
-  /**
-   * The HTML URL of the workflow run on GitHub
-   */
-  htmlUrl?: string;
-  /**
-   * Whether the workflow logs were already cached before this request
-   */
-  cacheHit?: boolean;
-  /**
-   * When the workflow logs were downloaded and stored
-   */
-  downloadedAt: string;
-  /**
-   * The number of extracted log files
-   */
-  totalFileCount?: number;
-  /**
-   * The processed log groups
-   */
-  groups: Array<WorkflowRunLogGroupDto>;
-};
-
 export type GitHubRepositoryRoleDto = {
   permission?: 'ADMIN' | 'WRITE' | 'READ' | 'NONE';
   roleName?: string;
-};
-
-export type TestCaseDto = {
-  id: number;
-  name: string;
-  className: string;
-  status: 'PASSED' | 'FAILED' | 'ERROR' | 'SKIPPED';
-  previousStatus?: 'PASSED' | 'FAILED' | 'ERROR' | 'SKIPPED';
-  time: number;
-  message?: string;
-  stackTrace?: string;
-  systemOut?: string;
-  errorType?: string;
-  flakinessScore?: number;
-  defaultBranchFailureRate?: number;
-  combinedFailureRate?: number;
-  failsInDefaultBranch?: boolean;
-};
-
-export type TestResultsDto = {
-  testResults: Array<TestTypeResults>;
-  isProcessing?: boolean;
-};
-
-export type TestSuiteDto = {
-  id: number;
-  name: string;
-  timestamp: string;
-  tests: number;
-  failures: number;
-  errors: number;
-  skipped: number;
-  time: number;
-  systemOut?: string;
-  testCases: Array<TestCaseDto>;
-};
-
-export type TestTypeResults = {
-  testTypeId: number;
-  testTypeName: string;
-  testSuites: Array<TestSuiteDto>;
-  isProcessing: boolean;
-  stats: TestTypeStats;
-};
-
-export type TestTypeStats = {
-  totalSuites: number;
-  totalTests: number;
-  passed: number;
-  failures: number;
-  errors: number;
-  skipped: number;
-  totalTime: number;
-  totalUpdates: number;
-};
-
-export type FlakyTestDto = {
-  testName: string;
-  className: string;
-  testSuiteName: string;
-  flakinessScore?: number;
-  defaultBranchFailureRate?: number;
-  combinedFailureRate?: number;
-  lastUpdated: string;
-};
-
-export type FlakyTestOverviewDto = {
-  summary: FlakyTestSummary;
-  flakyTests: Array<FlakyTestDto>;
-  filteredCount?: number;
-};
-
-export type FlakyTestSummary = {
-  totalTrackedTests?: number;
-  flakyTestCount?: number;
-  highFlakinessCount?: number;
-  mediumFlakinessCount?: number;
-  lowFlakinessCount?: number;
-};
-
-export type TestFailureAnalysisUsageDto = {
-  rateLimitEnabled?: boolean;
-  dailyUsed?: number;
-  dailyLimit?: number;
-  burstUsed?: number;
-  burstLimit?: number;
-  burstWindowSeconds?: number;
-};
-
-export type TestFailureAnalysisCacheLookupDto = {
-  hasCachedResult?: boolean;
-  cachedResult?: TestFailureAnalysisResponseDto;
-};
-
-export type CommitsSinceReleaseCandidateDto = {
-  aheadBy: number;
-  behindBy: number;
-  commits: Array<CompareCommitInfoDto>;
-  compareUrl?: string;
-};
-
-export type CompareCommitInfoDto = {
-  sha: string;
-  message: string;
-  authorName: string;
-  authorEmail: string;
-  url: string;
 };
 
 export type LabelInfoDto = {
@@ -884,6 +501,27 @@ export type PendingApprovalDto = {
   requestedAt?: string;
 };
 
+export type CommitInfoDto = {
+  sha: string;
+  author?: UserInfoDto;
+  message?: string;
+  authoredAt?: string;
+  repository?: RepositoryInfoDto;
+};
+
+export type BranchInfoDto = {
+  name: string;
+  commitSha: string;
+  aheadBy?: number;
+  behindBy?: number;
+  isDefault?: boolean;
+  isProtected?: boolean;
+  isPinned?: boolean;
+  updatedAt?: string;
+  updatedBy?: UserInfoDto;
+  repository?: RepositoryInfoDto;
+};
+
 export type BranchDetailsDto = {
   name: string;
   commitSha: string;
@@ -891,7 +529,6 @@ export type BranchDetailsDto = {
   behindBy?: number;
   isDefault?: boolean;
   isProtected?: boolean;
-  releaseCandidateNames?: Array<string>;
   updatedAt?: string;
   updatedBy?: UserInfoDto;
   repository?: RepositoryInfoDto;
@@ -906,75 +543,12 @@ export type UpdateWorkflowLabelData = {
   url: '/api/workflows/{workflowId}/label';
 };
 
-export type UpdateWorkflowLabelErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type UpdateWorkflowLabelError = UpdateWorkflowLabelErrors[keyof UpdateWorkflowLabelErrors];
-
 export type UpdateWorkflowLabelResponses = {
   /**
    * OK
    */
   200: unknown;
 };
-
-export type DeleteTestTypeData = {
-  body?: never;
-  path: {
-    testTypeId: number;
-  };
-  query?: never;
-  url: '/api/test-types/{testTypeId}';
-};
-
-export type DeleteTestTypeErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type DeleteTestTypeError = DeleteTestTypeErrors[keyof DeleteTestTypeErrors];
-
-export type DeleteTestTypeResponses = {
-  /**
-   * No Content
-   */
-  204: void;
-};
-
-export type DeleteTestTypeResponse = DeleteTestTypeResponses[keyof DeleteTestTypeResponses];
-
-export type UpdateTestTypeData = {
-  body: TestTypeDto;
-  path: {
-    testTypeId: number;
-  };
-  query?: never;
-  url: '/api/test-types/{testTypeId}';
-};
-
-export type UpdateTestTypeErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type UpdateTestTypeError = UpdateTestTypeErrors[keyof UpdateTestTypeErrors];
-
-export type UpdateTestTypeResponses = {
-  /**
-   * OK
-   */
-  200: TestTypeDto;
-};
-
-export type UpdateTestTypeResponse = UpdateTestTypeResponses[keyof UpdateTestTypeResponses];
 
 export type GetDeploymentWorkflowConfigData = {
   body?: never;
@@ -985,15 +559,6 @@ export type GetDeploymentWorkflowConfigData = {
   query?: never;
   url: '/api/settings/{repositoryId}/workflows/{workflowId}/deployment-config';
 };
-
-export type GetDeploymentWorkflowConfigErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type GetDeploymentWorkflowConfigError = GetDeploymentWorkflowConfigErrors[keyof GetDeploymentWorkflowConfigErrors];
 
 export type GetDeploymentWorkflowConfigResponses = {
   /**
@@ -1014,15 +579,6 @@ export type UpsertDeploymentWorkflowConfigData = {
   url: '/api/settings/{repositoryId}/workflows/{workflowId}/deployment-config';
 };
 
-export type UpsertDeploymentWorkflowConfigErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type UpsertDeploymentWorkflowConfigError = UpsertDeploymentWorkflowConfigErrors[keyof UpsertDeploymentWorkflowConfigErrors];
-
 export type UpsertDeploymentWorkflowConfigResponses = {
   /**
    * OK
@@ -1041,15 +597,6 @@ export type GetGitRepoSettingsData = {
   url: '/api/settings/{repositoryId}/settings';
 };
 
-export type GetGitRepoSettingsErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type GetGitRepoSettingsError = GetGitRepoSettingsErrors[keyof GetGitRepoSettingsErrors];
-
 export type GetGitRepoSettingsResponses = {
   /**
    * OK
@@ -1067,15 +614,6 @@ export type UpdateGitRepoSettingsData = {
   query?: never;
   url: '/api/settings/{repositoryId}/settings';
 };
-
-export type UpdateGitRepoSettingsErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type UpdateGitRepoSettingsError = UpdateGitRepoSettingsErrors[keyof UpdateGitRepoSettingsErrors];
 
 export type UpdateGitRepoSettingsResponses = {
   /**
@@ -1097,62 +635,7 @@ export type UpdateWorkflowGroupsData = {
   url: '/api/settings/{repositoryId}/groups/update';
 };
 
-export type UpdateWorkflowGroupsErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type UpdateWorkflowGroupsError = UpdateWorkflowGroupsErrors[keyof UpdateWorkflowGroupsErrors];
-
 export type UpdateWorkflowGroupsResponses = {
-  /**
-   * OK
-   */
-  200: unknown;
-};
-
-export type UpdateReleaseNameData = {
-  body: ReleaseCandidateNameUpdateDto;
-  path?: never;
-  query?: never;
-  url: '/api/release-info/update-name';
-};
-
-export type UpdateReleaseNameErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type UpdateReleaseNameError = UpdateReleaseNameErrors[keyof UpdateReleaseNameErrors];
-
-export type UpdateReleaseNameResponses = {
-  /**
-   * OK
-   */
-  200: unknown;
-};
-
-export type UpdateReleaseNotesData = {
-  body: UpdateReleaseNotesDto;
-  path?: never;
-  query?: never;
-  url: '/api/release-info/release-notes';
-};
-
-export type UpdateReleaseNotesErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type UpdateReleaseNotesError = UpdateReleaseNotesErrors[keyof UpdateReleaseNotesErrors];
-
-export type UpdateReleaseNotesResponses = {
   /**
    * OK
    */
@@ -1167,15 +650,6 @@ export type GetEnvironmentByIdData = {
   query?: never;
   url: '/api/environments/{id}';
 };
-
-export type GetEnvironmentByIdErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type GetEnvironmentByIdError = GetEnvironmentByIdErrors[keyof GetEnvironmentByIdErrors];
 
 export type GetEnvironmentByIdResponses = {
   /**
@@ -1194,15 +668,6 @@ export type UpdateEnvironmentData = {
   query?: never;
   url: '/api/environments/{id}';
 };
-
-export type UpdateEnvironmentErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type UpdateEnvironmentError = UpdateEnvironmentErrors[keyof UpdateEnvironmentErrors];
 
 export type UpdateEnvironmentResponses = {
   /**
@@ -1224,15 +689,6 @@ export type UnlockEnvironmentData = {
   url: '/api/environments/{id}/unlock';
 };
 
-export type UnlockEnvironmentErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type UnlockEnvironmentError = UnlockEnvironmentErrors[keyof UnlockEnvironmentErrors];
-
 export type UnlockEnvironmentResponses = {
   /**
    * OK
@@ -1252,15 +708,6 @@ export type LockEnvironmentData = {
   query?: never;
   url: '/api/environments/{id}/lock';
 };
-
-export type LockEnvironmentErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type LockEnvironmentError = LockEnvironmentErrors[keyof LockEnvironmentErrors];
 
 export type LockEnvironmentResponses = {
   /**
@@ -1282,15 +729,6 @@ export type ExtendEnvironmentLockData = {
   url: '/api/environments/{id}/extend-lock';
 };
 
-export type ExtendEnvironmentLockErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type ExtendEnvironmentLockError = ExtendEnvironmentLockErrors[keyof ExtendEnvironmentLockErrors];
-
 export type ExtendEnvironmentLockResponses = {
   /**
    * OK
@@ -1311,15 +749,6 @@ export type ReRunWorkflowData = {
   url: '/api/workflows/runs/{runId}/rerun';
 };
 
-export type ReRunWorkflowErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type ReRunWorkflowError = ReRunWorkflowErrors[keyof ReRunWorkflowErrors];
-
 export type ReRunWorkflowResponses = {
   /**
    * OK
@@ -1335,15 +764,6 @@ export type ReRunFailedJobsData = {
   query?: never;
   url: '/api/workflows/runs/{runId}/rerun-failed-jobs';
 };
-
-export type ReRunFailedJobsErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type ReRunFailedJobsError = ReRunFailedJobsErrors[keyof ReRunFailedJobsErrors];
 
 export type ReRunFailedJobsResponses = {
   /**
@@ -1361,15 +781,6 @@ export type CancelWorkflowRunData = {
   url: '/api/workflows/runs/{runId}/cancel';
 };
 
-export type CancelWorkflowRunErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type CancelWorkflowRunError = CancelWorkflowRunErrors[keyof CancelWorkflowRunErrors];
-
 export type CancelWorkflowRunResponses = {
   /**
    * OK
@@ -1386,15 +797,6 @@ export type SyncWorkflowsByRepositoryIdData = {
   url: '/api/workflows/repository/{repositoryId}/sync';
 };
 
-export type SyncWorkflowsByRepositoryIdErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type SyncWorkflowsByRepositoryIdError = SyncWorkflowsByRepositoryIdErrors[keyof SyncWorkflowsByRepositoryIdErrors];
-
 export type SyncWorkflowsByRepositoryIdResponses = {
   /**
    * OK
@@ -1408,15 +810,6 @@ export type GetUserSettingsData = {
   query?: never;
   url: '/api/user/settings';
 };
-
-export type GetUserSettingsErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type GetUserSettingsError = GetUserSettingsErrors[keyof GetUserSettingsErrors];
 
 export type GetUserSettingsResponses = {
   /**
@@ -1434,15 +827,6 @@ export type UpdateUserSettingsData = {
   url: '/api/user/settings';
 };
 
-export type UpdateUserSettingsErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type UpdateUserSettingsError = UpdateUserSettingsErrors[keyof UpdateUserSettingsErrors];
-
 export type UpdateUserSettingsResponses = {
   /**
    * OK
@@ -1456,15 +840,6 @@ export type GetNotificationPreferencesData = {
   query?: never;
   url: '/api/user/notification-preferences';
 };
-
-export type GetNotificationPreferencesErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type GetNotificationPreferencesError = GetNotificationPreferencesErrors[keyof GetNotificationPreferencesErrors];
 
 export type GetNotificationPreferencesResponses = {
   /**
@@ -1482,96 +857,12 @@ export type UpdateNotificationPreferencesData = {
   url: '/api/user/notification-preferences';
 };
 
-export type UpdateNotificationPreferencesErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type UpdateNotificationPreferencesError = UpdateNotificationPreferencesErrors[keyof UpdateNotificationPreferencesErrors];
-
 export type UpdateNotificationPreferencesResponses = {
   /**
    * OK
    */
   200: unknown;
 };
-
-export type GetFlakinessScoresData = {
-  body: TestFlakinessScoreRequest;
-  path?: never;
-  query?: never;
-  url: '/api/tests/flakiness-scores';
-};
-
-export type GetFlakinessScoresErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type GetFlakinessScoresError = GetFlakinessScoresErrors[keyof GetFlakinessScoresErrors];
-
-export type GetFlakinessScoresResponses = {
-  /**
-   * OK
-   */
-  200: Array<TestFlakinessScoreDto>;
-};
-
-export type GetFlakinessScoresResponse = GetFlakinessScoresResponses[keyof GetFlakinessScoresResponses];
-
-export type GetAllTestTypesData = {
-  body?: never;
-  path?: never;
-  query?: never;
-  url: '/api/test-types';
-};
-
-export type GetAllTestTypesErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type GetAllTestTypesError = GetAllTestTypesErrors[keyof GetAllTestTypesErrors];
-
-export type GetAllTestTypesResponses = {
-  /**
-   * OK
-   */
-  200: Array<TestTypeDto>;
-};
-
-export type GetAllTestTypesResponse = GetAllTestTypesResponses[keyof GetAllTestTypesResponses];
-
-export type CreateTestTypeData = {
-  body: TestTypeDto;
-  path?: never;
-  query?: never;
-  url: '/api/test-types';
-};
-
-export type CreateTestTypeErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type CreateTestTypeError = CreateTestTypeErrors[keyof CreateTestTypeErrors];
-
-export type CreateTestTypeResponses = {
-  /**
-   * Created
-   */
-  201: TestTypeDto;
-};
-
-export type CreateTestTypeResponse = CreateTestTypeResponses[keyof CreateTestTypeResponses];
 
 export type RotateSecretData = {
   body?: never;
@@ -1581,15 +872,6 @@ export type RotateSecretData = {
   query?: never;
   url: '/api/settings/{repositoryId}/secret';
 };
-
-export type RotateSecretErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type RotateSecretError = RotateSecretErrors[keyof RotateSecretErrors];
 
 export type RotateSecretResponses = {
   /**
@@ -1609,15 +891,6 @@ export type CreateWorkflowGroupData = {
   url: '/api/settings/{repositoryId}/groups/create';
 };
 
-export type CreateWorkflowGroupErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type CreateWorkflowGroupError = CreateWorkflowGroupErrors[keyof CreateWorkflowGroupErrors];
-
 export type CreateWorkflowGroupResponses = {
   /**
    * OK
@@ -1626,207 +899,6 @@ export type CreateWorkflowGroupResponses = {
 };
 
 export type CreateWorkflowGroupResponse = CreateWorkflowGroupResponses[keyof CreateWorkflowGroupResponses];
-
-export type AnalyzeFailedTestData = {
-  body?: never;
-  path: {
-    repositoryId: number;
-    testCaseId: number;
-  };
-  query?: {
-    regenerate?: boolean;
-  };
-  url: '/api/repositories/{repositoryId}/test-cases/{testCaseId}/failure-analysis';
-};
-
-export type AnalyzeFailedTestErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type AnalyzeFailedTestError = AnalyzeFailedTestErrors[keyof AnalyzeFailedTestErrors];
-
-export type AnalyzeFailedTestResponses = {
-  /**
-   * OK
-   */
-  200: TestFailureAnalysisResponseDto;
-};
-
-export type AnalyzeFailedTestResponse = AnalyzeFailedTestResponses[keyof AnalyzeFailedTestResponses];
-
-export type DeleteReleaseCandidateByNameData = {
-  body: ReleaseNameDto;
-  path?: never;
-  query?: never;
-  url: '/api/release-info';
-};
-
-export type DeleteReleaseCandidateByNameErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type DeleteReleaseCandidateByNameError = DeleteReleaseCandidateByNameErrors[keyof DeleteReleaseCandidateByNameErrors];
-
-export type DeleteReleaseCandidateByNameResponses = {
-  /**
-   * OK
-   */
-  200: ReleaseInfoListDto;
-};
-
-export type DeleteReleaseCandidateByNameResponse = DeleteReleaseCandidateByNameResponses[keyof DeleteReleaseCandidateByNameResponses];
-
-export type GetAllReleaseInfosData = {
-  body?: never;
-  path?: never;
-  query?: never;
-  url: '/api/release-info';
-};
-
-export type GetAllReleaseInfosErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type GetAllReleaseInfosError = GetAllReleaseInfosErrors[keyof GetAllReleaseInfosErrors];
-
-export type GetAllReleaseInfosResponses = {
-  /**
-   * OK
-   */
-  200: Array<ReleaseInfoListDto>;
-};
-
-export type GetAllReleaseInfosResponse = GetAllReleaseInfosResponses[keyof GetAllReleaseInfosResponses];
-
-export type CreateReleaseCandidateData = {
-  body: ReleaseCandidateCreateDto;
-  path?: never;
-  query?: never;
-  url: '/api/release-info';
-};
-
-export type CreateReleaseCandidateErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type CreateReleaseCandidateError = CreateReleaseCandidateErrors[keyof CreateReleaseCandidateErrors];
-
-export type CreateReleaseCandidateResponses = {
-  /**
-   * OK
-   */
-  200: ReleaseInfoListDto;
-};
-
-export type CreateReleaseCandidateResponse = CreateReleaseCandidateResponses[keyof CreateReleaseCandidateResponses];
-
-export type PublishReleaseDraftData = {
-  body: ReleaseNameDto;
-  path?: never;
-  query?: never;
-  url: '/api/release-info/publish';
-};
-
-export type PublishReleaseDraftErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type PublishReleaseDraftError = PublishReleaseDraftErrors[keyof PublishReleaseDraftErrors];
-
-export type PublishReleaseDraftResponses = {
-  /**
-   * OK
-   */
-  200: unknown;
-};
-
-export type GenerateReleaseNotesData = {
-  body: ReleaseNameDto;
-  path?: never;
-  query?: never;
-  url: '/api/release-info/generate-release-notes';
-};
-
-export type GenerateReleaseNotesErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type GenerateReleaseNotesError = GenerateReleaseNotesErrors[keyof GenerateReleaseNotesErrors];
-
-export type GenerateReleaseNotesResponses = {
-  /**
-   * OK
-   */
-  200: string;
-};
-
-export type GenerateReleaseNotesResponse = GenerateReleaseNotesResponses[keyof GenerateReleaseNotesResponses];
-
-export type EvaluateData = {
-  body: ReleaseEvaluationDto;
-  path?: never;
-  query?: never;
-  url: '/api/release-info/evaluate';
-};
-
-export type EvaluateErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type EvaluateError = EvaluateErrors[keyof EvaluateErrors];
-
-export type EvaluateResponses = {
-  /**
-   * OK
-   */
-  200: unknown;
-};
-
-export type GetReleaseInfoByNameData = {
-  body: ReleaseNameDto;
-  path?: never;
-  query?: never;
-  url: '/api/release-info/details';
-};
-
-export type GetReleaseInfoByNameErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type GetReleaseInfoByNameError = GetReleaseInfoByNameErrors[keyof GetReleaseInfoByNameErrors];
-
-export type GetReleaseInfoByNameResponses = {
-  /**
-   * OK
-   */
-  200: ReleaseInfoDetailsDto;
-};
-
-export type GetReleaseInfoByNameResponse = GetReleaseInfoByNameResponses[keyof GetReleaseInfoByNameResponses];
 
 export type SetPrPinnedByNumberData = {
   body?: never;
@@ -1838,15 +910,6 @@ export type SetPrPinnedByNumberData = {
   };
   url: '/api/pullrequests/{pr}/pin';
 };
-
-export type SetPrPinnedByNumberErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type SetPrPinnedByNumberError = SetPrPinnedByNumberErrors[keyof SetPrPinnedByNumberErrors];
 
 export type SetPrPinnedByNumberResponses = {
   /**
@@ -1866,15 +929,6 @@ export type ReconcilePullRequestStateData = {
   url: '/api/pullrequests/repository/{repositoryId}/reconcile-state';
 };
 
-export type ReconcilePullRequestStateErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type ReconcilePullRequestStateError = ReconcilePullRequestStateErrors[keyof ReconcilePullRequestStateErrors];
-
 export type ReconcilePullRequestStateResponses = {
   /**
    * OK
@@ -1890,15 +944,6 @@ export type SyncEnvironmentsData = {
   query?: never;
   url: '/api/environments/sync';
 };
-
-export type SyncEnvironmentsErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type SyncEnvironmentsError = SyncEnvironmentsErrors[keyof SyncEnvironmentsErrors];
 
 export type SyncEnvironmentsResponses = {
   /**
@@ -1918,15 +963,6 @@ export type UpdateData = {
   url: '/api/environments/status';
 };
 
-export type UpdateErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type UpdateError = UpdateErrors[keyof UpdateErrors];
-
 export type UpdateResponses = {
   /**
    * OK
@@ -1942,15 +978,6 @@ export type DeclineData = {
   query?: never;
   url: '/api/deployments/{deploymentId}/decline';
 };
-
-export type DeclineErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type DeclineError = DeclineErrors[keyof DeclineErrors];
 
 export type DeclineResponses = {
   /**
@@ -1970,15 +997,6 @@ export type ApproveData = {
   url: '/api/deployments/{deploymentId}/approve';
 };
 
-export type ApproveErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type ApproveError = ApproveErrors[keyof ApproveErrors];
-
 export type ApproveResponses = {
   /**
    * OK
@@ -1995,15 +1013,6 @@ export type DeployToEnvironmentData = {
   url: '/api/deployments/deploy';
 };
 
-export type DeployToEnvironmentErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type DeployToEnvironmentError = DeployToEnvironmentErrors[keyof DeployToEnvironmentErrors];
-
 export type DeployToEnvironmentResponses = {
   /**
    * OK
@@ -2019,15 +1028,6 @@ export type CancelDeploymentData = {
   query?: never;
   url: '/api/deployments/cancel';
 };
-
-export type CancelDeploymentErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type CancelDeploymentError = CancelDeploymentErrors[keyof CancelDeploymentErrors];
 
 export type CancelDeploymentResponses = {
   /**
@@ -2050,15 +1050,6 @@ export type SetBranchPinnedByRepositoryIdAndNameAndUserIdData = {
   url: '/api/branches/repository/{repoId}/pin';
 };
 
-export type SetBranchPinnedByRepositoryIdAndNameAndUserIdErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type SetBranchPinnedByRepositoryIdAndNameAndUserIdError = SetBranchPinnedByRepositoryIdAndNameAndUserIdErrors[keyof SetBranchPinnedByRepositoryIdAndNameAndUserIdErrors];
-
 export type SetBranchPinnedByRepositoryIdAndNameAndUserIdResponses = {
   /**
    * OK
@@ -2072,15 +1063,6 @@ export type HealthCheckData = {
   query?: never;
   url: '/status/health';
 };
-
-export type HealthCheckErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type HealthCheckError = HealthCheckErrors[keyof HealthCheckErrors];
 
 export type HealthCheckResponses = {
   /**
@@ -2097,15 +1079,6 @@ export type GetAllWorkflowsData = {
   query?: never;
   url: '/api/workflows';
 };
-
-export type GetAllWorkflowsErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type GetAllWorkflowsError = GetAllWorkflowsErrors[keyof GetAllWorkflowsErrors];
 
 export type GetAllWorkflowsResponses = {
   /**
@@ -2125,15 +1098,6 @@ export type GetWorkflowByIdData = {
   url: '/api/workflows/{id}';
 };
 
-export type GetWorkflowByIdErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type GetWorkflowByIdError = GetWorkflowByIdErrors[keyof GetWorkflowByIdErrors];
-
 export type GetWorkflowByIdResponses = {
   /**
    * OK
@@ -2151,15 +1115,6 @@ export type GetWorkflowsByStateData = {
   query?: never;
   url: '/api/workflows/state/{state}';
 };
-
-export type GetWorkflowsByStateErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type GetWorkflowsByStateError = GetWorkflowsByStateErrors[keyof GetWorkflowsByStateErrors];
 
 export type GetWorkflowsByStateResponses = {
   /**
@@ -2184,15 +1139,6 @@ export type GetWorkflowRunsData = {
   url: '/api/workflows/runs';
 };
 
-export type GetWorkflowRunsErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type GetWorkflowRunsError = GetWorkflowRunsErrors[keyof GetWorkflowRunsErrors];
-
 export type GetWorkflowRunsResponses = {
   /**
    * OK
@@ -2202,35 +1148,6 @@ export type GetWorkflowRunsResponses = {
 
 export type GetWorkflowRunsResponse = GetWorkflowRunsResponses[keyof GetWorkflowRunsResponses];
 
-export type GetWorkflowRunLogsData = {
-  body?: never;
-  path: {
-    workflowRunId: number;
-  };
-  query?: {
-    forceRefresh?: boolean;
-  };
-  url: '/api/workflows/runs/{workflowRunId}/logs';
-};
-
-export type GetWorkflowRunLogsErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type GetWorkflowRunLogsError = GetWorkflowRunLogsErrors[keyof GetWorkflowRunLogsErrors];
-
-export type GetWorkflowRunLogsResponses = {
-  /**
-   * OK
-   */
-  200: WorkflowRunLogsResponse;
-};
-
-export type GetWorkflowRunLogsResponse = GetWorkflowRunLogsResponses[keyof GetWorkflowRunLogsResponses];
-
 export type GetWorkflowRunByIdData = {
   body?: never;
   path: {
@@ -2239,15 +1156,6 @@ export type GetWorkflowRunByIdData = {
   query?: never;
   url: '/api/workflows/runs/{runId}';
 };
-
-export type GetWorkflowRunByIdErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type GetWorkflowRunByIdError = GetWorkflowRunByIdErrors[keyof GetWorkflowRunByIdErrors];
 
 export type GetWorkflowRunByIdResponses = {
   /**
@@ -2267,15 +1175,6 @@ export type GetWorkflowsByRepositoryIdData = {
   url: '/api/workflows/repository/{repositoryId}';
 };
 
-export type GetWorkflowsByRepositoryIdErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type GetWorkflowsByRepositoryIdError = GetWorkflowsByRepositoryIdErrors[keyof GetWorkflowsByRepositoryIdErrors];
-
 export type GetWorkflowsByRepositoryIdResponses = {
   /**
    * OK
@@ -2293,16 +1192,6 @@ export type GetLatestWorkflowRunsByPullRequestIdAndHeadCommitData = {
   query?: never;
   url: '/api/workflows/pr/{pullRequestId}';
 };
-
-export type GetLatestWorkflowRunsByPullRequestIdAndHeadCommitErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type GetLatestWorkflowRunsByPullRequestIdAndHeadCommitError =
-  GetLatestWorkflowRunsByPullRequestIdAndHeadCommitErrors[keyof GetLatestWorkflowRunsByPullRequestIdAndHeadCommitErrors];
 
 export type GetLatestWorkflowRunsByPullRequestIdAndHeadCommitResponses = {
   /**
@@ -2323,15 +1212,6 @@ export type GetLatestWorkflowRunsByBranchAndHeadCommitData = {
   url: '/api/workflows/branch';
 };
 
-export type GetLatestWorkflowRunsByBranchAndHeadCommitErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type GetLatestWorkflowRunsByBranchAndHeadCommitError = GetLatestWorkflowRunsByBranchAndHeadCommitErrors[keyof GetLatestWorkflowRunsByBranchAndHeadCommitErrors];
-
 export type GetLatestWorkflowRunsByBranchAndHeadCommitResponses = {
   /**
    * OK
@@ -2348,15 +1228,6 @@ export type GetUserPermissionsData = {
   url: '/api/user-permissions';
 };
 
-export type GetUserPermissionsErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type GetUserPermissionsError = GetUserPermissionsErrors[keyof GetUserPermissionsErrors];
-
 export type GetUserPermissionsResponses = {
   /**
    * OK
@@ -2366,157 +1237,6 @@ export type GetUserPermissionsResponses = {
 
 export type GetUserPermissionsResponse = GetUserPermissionsResponses[keyof GetUserPermissionsResponses];
 
-export type GetTestResultsByWorkflowRunIdData = {
-  body?: never;
-  path: {
-    workflowRunId: number;
-  };
-  query?: {
-    page?: number;
-    size?: number;
-    search?: string;
-    onlyFailed?: boolean;
-  };
-  url: '/api/tests/run/{workflowRunId}';
-};
-
-export type GetTestResultsByWorkflowRunIdErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type GetTestResultsByWorkflowRunIdError = GetTestResultsByWorkflowRunIdErrors[keyof GetTestResultsByWorkflowRunIdErrors];
-
-export type GetTestResultsByWorkflowRunIdResponses = {
-  /**
-   * OK
-   */
-  200: TestResultsDto;
-};
-
-export type GetTestResultsByWorkflowRunIdResponse = GetTestResultsByWorkflowRunIdResponses[keyof GetTestResultsByWorkflowRunIdResponses];
-
-export type GetLatestTestResultsByPullRequestIdData = {
-  body?: never;
-  path: {
-    pullRequestId: number;
-  };
-  query?: {
-    page?: number;
-    size?: number;
-    search?: string;
-    onlyFailed?: boolean;
-  };
-  url: '/api/tests/pr/{pullRequestId}';
-};
-
-export type GetLatestTestResultsByPullRequestIdErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type GetLatestTestResultsByPullRequestIdError = GetLatestTestResultsByPullRequestIdErrors[keyof GetLatestTestResultsByPullRequestIdErrors];
-
-export type GetLatestTestResultsByPullRequestIdResponses = {
-  /**
-   * OK
-   */
-  200: TestResultsDto;
-};
-
-export type GetLatestTestResultsByPullRequestIdResponse = GetLatestTestResultsByPullRequestIdResponses[keyof GetLatestTestResultsByPullRequestIdResponses];
-
-export type GetFlakyTestsOverviewData = {
-  body?: never;
-  path?: never;
-  query?: {
-    page?: number;
-    size?: number;
-    sortDirection?: string;
-    filterType?: 'ALL' | 'HIGH' | 'MEDIUM' | 'LOW';
-    searchTerm?: string;
-  };
-  url: '/api/tests/flaky';
-};
-
-export type GetFlakyTestsOverviewErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type GetFlakyTestsOverviewError = GetFlakyTestsOverviewErrors[keyof GetFlakyTestsOverviewErrors];
-
-export type GetFlakyTestsOverviewResponses = {
-  /**
-   * OK
-   */
-  200: FlakyTestOverviewDto;
-};
-
-export type GetFlakyTestsOverviewResponse = GetFlakyTestsOverviewResponses[keyof GetFlakyTestsOverviewResponses];
-
-export type GetLatestTestResultsByBranchData = {
-  body?: never;
-  path?: never;
-  query: {
-    branch: string;
-    page?: number;
-    size?: number;
-    search?: string;
-    onlyFailed?: boolean;
-  };
-  url: '/api/tests/branch';
-};
-
-export type GetLatestTestResultsByBranchErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type GetLatestTestResultsByBranchError = GetLatestTestResultsByBranchErrors[keyof GetLatestTestResultsByBranchErrors];
-
-export type GetLatestTestResultsByBranchResponses = {
-  /**
-   * OK
-   */
-  200: TestResultsDto;
-};
-
-export type GetLatestTestResultsByBranchResponse = GetLatestTestResultsByBranchResponses[keyof GetLatestTestResultsByBranchResponses];
-
-export type GetFailureAnalysisUsageData = {
-  body?: never;
-  path?: never;
-  query?: never;
-  url: '/api/test-failure-analysis/usage';
-};
-
-export type GetFailureAnalysisUsageErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type GetFailureAnalysisUsageError = GetFailureAnalysisUsageErrors[keyof GetFailureAnalysisUsageErrors];
-
-export type GetFailureAnalysisUsageResponses = {
-  /**
-   * OK
-   */
-  200: TestFailureAnalysisUsageDto;
-};
-
-export type GetFailureAnalysisUsageResponse = GetFailureAnalysisUsageResponses[keyof GetFailureAnalysisUsageResponses];
-
 export type GetGroupsWithWorkflowsData = {
   body?: never;
   path: {
@@ -2525,15 +1245,6 @@ export type GetGroupsWithWorkflowsData = {
   query?: never;
   url: '/api/settings/{repositoryId}/groups';
 };
-
-export type GetGroupsWithWorkflowsErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type GetGroupsWithWorkflowsError = GetGroupsWithWorkflowsErrors[keyof GetGroupsWithWorkflowsErrors];
 
 export type GetGroupsWithWorkflowsResponses = {
   /**
@@ -2550,15 +1261,6 @@ export type GetAllRepositoriesData = {
   query?: never;
   url: '/api/repository';
 };
-
-export type GetAllRepositoriesErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type GetAllRepositoriesError = GetAllRepositoriesErrors[keyof GetAllRepositoriesErrors];
 
 export type GetAllRepositoriesResponses = {
   /**
@@ -2578,15 +1280,6 @@ export type GetRepositoryByIdData = {
   url: '/api/repository/{id}';
 };
 
-export type GetRepositoryByIdErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type GetRepositoryByIdError = GetRepositoryByIdErrors[keyof GetRepositoryByIdErrors];
-
 export type GetRepositoryByIdResponses = {
   /**
    * OK
@@ -2595,61 +1288,6 @@ export type GetRepositoryByIdResponses = {
 };
 
 export type GetRepositoryByIdResponse = GetRepositoryByIdResponses[keyof GetRepositoryByIdResponses];
-
-export type GetLatestCachedFailureAnalysisData = {
-  body?: never;
-  path: {
-    repositoryId: number;
-    testCaseId: number;
-  };
-  query?: never;
-  url: '/api/repositories/{repositoryId}/test-cases/{testCaseId}/failure-analysis/latest';
-};
-
-export type GetLatestCachedFailureAnalysisErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type GetLatestCachedFailureAnalysisError = GetLatestCachedFailureAnalysisErrors[keyof GetLatestCachedFailureAnalysisErrors];
-
-export type GetLatestCachedFailureAnalysisResponses = {
-  /**
-   * OK
-   */
-  200: TestFailureAnalysisCacheLookupDto;
-};
-
-export type GetLatestCachedFailureAnalysisResponse = GetLatestCachedFailureAnalysisResponses[keyof GetLatestCachedFailureAnalysisResponses];
-
-export type GetCommitsSinceLastReleaseCandidateData = {
-  body?: never;
-  path?: never;
-  query: {
-    branch: string;
-  };
-  url: '/api/release-info/newcommits';
-};
-
-export type GetCommitsSinceLastReleaseCandidateErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type GetCommitsSinceLastReleaseCandidateError = GetCommitsSinceLastReleaseCandidateErrors[keyof GetCommitsSinceLastReleaseCandidateErrors];
-
-export type GetCommitsSinceLastReleaseCandidateResponses = {
-  /**
-   * OK
-   */
-  200: CommitsSinceReleaseCandidateDto;
-};
-
-export type GetCommitsSinceLastReleaseCandidateResponse = GetCommitsSinceLastReleaseCandidateResponses[keyof GetCommitsSinceLastReleaseCandidateResponses];
 
 export type GetPullRequestsData = {
   body?: never;
@@ -2672,15 +1310,6 @@ export type GetPullRequestsData = {
   url: '/api/pullrequests';
 };
 
-export type GetPullRequestsErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type GetPullRequestsError = GetPullRequestsErrors[keyof GetPullRequestsErrors];
-
 export type GetPullRequestsResponses = {
   /**
    * OK
@@ -2698,15 +1327,6 @@ export type GetPullRequestByIdData = {
   query?: never;
   url: '/api/pullrequests/{id}';
 };
-
-export type GetPullRequestByIdErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type GetPullRequestByIdError = GetPullRequestByIdErrors[keyof GetPullRequestByIdErrors];
 
 export type GetPullRequestByIdResponses = {
   /**
@@ -2727,15 +1347,6 @@ export type GetPullRequestByRepositoryIdAndNumberData = {
   url: '/api/pullrequests/repository/{repoId}/pr/{number}';
 };
 
-export type GetPullRequestByRepositoryIdAndNumberErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type GetPullRequestByRepositoryIdAndNumberError = GetPullRequestByRepositoryIdAndNumberErrors[keyof GetPullRequestByRepositoryIdAndNumberErrors];
-
 export type GetPullRequestByRepositoryIdAndNumberResponses = {
   /**
    * OK
@@ -2753,15 +1364,6 @@ export type GetPullRequestFilterOptionsByRepositoryIdData = {
   query?: never;
   url: '/api/pullrequests/repository/{repoId}/filter-options';
 };
-
-export type GetPullRequestFilterOptionsByRepositoryIdErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type GetPullRequestFilterOptionsByRepositoryIdError = GetPullRequestFilterOptionsByRepositoryIdErrors[keyof GetPullRequestFilterOptionsByRepositoryIdErrors];
 
 export type GetPullRequestFilterOptionsByRepositoryIdResponses = {
   /**
@@ -2781,15 +1383,6 @@ export type GetPullRequestByRepositoryIdData = {
   url: '/api/pullrequests/repository/{id}';
 };
 
-export type GetPullRequestByRepositoryIdErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type GetPullRequestByRepositoryIdError = GetPullRequestByRepositoryIdErrors[keyof GetPullRequestByRepositoryIdErrors];
-
 export type GetPullRequestByRepositoryIdResponses = {
   /**
    * OK
@@ -2807,15 +1400,6 @@ export type GetPipelineByPullRequestData = {
   query?: never;
   url: '/api/pipeline/pr/{pullRequestId}';
 };
-
-export type GetPipelineByPullRequestErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type GetPipelineByPullRequestError = GetPipelineByPullRequestErrors[keyof GetPipelineByPullRequestErrors];
 
 export type GetPipelineByPullRequestResponses = {
   /**
@@ -2835,15 +1419,6 @@ export type GetPipelineByBranchData = {
   url: '/api/pipeline/branch';
 };
 
-export type GetPipelineByBranchErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type GetPipelineByBranchError = GetPipelineByBranchErrors[keyof GetPipelineByBranchErrors];
-
 export type GetPipelineByBranchResponses = {
   /**
    * OK
@@ -2859,15 +1434,6 @@ export type GetAllEnvironmentsData = {
   query?: never;
   url: '/api/environments';
 };
-
-export type GetAllEnvironmentsErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type GetAllEnvironmentsError = GetAllEnvironmentsErrors[keyof GetAllEnvironmentsErrors];
 
 export type GetAllEnvironmentsResponses = {
   /**
@@ -2886,15 +1452,6 @@ export type GetEnvironmentReviewersData = {
   query?: never;
   url: '/api/environments/{environmentId}/reviewers';
 };
-
-export type GetEnvironmentReviewersErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type GetEnvironmentReviewersError = GetEnvironmentReviewersErrors[keyof GetEnvironmentReviewersErrors];
 
 export type GetEnvironmentReviewersResponses = {
   /**
@@ -2917,15 +1474,6 @@ export type GetDeploymentReadinessData = {
   url: '/api/environments/{environmentId}/deployment-readiness';
 };
 
-export type GetDeploymentReadinessErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type GetDeploymentReadinessError = GetDeploymentReadinessErrors[keyof GetDeploymentReadinessErrors];
-
 export type GetDeploymentReadinessResponses = {
   /**
    * OK
@@ -2941,15 +1489,6 @@ export type GetEnvironmentsByUserLockingData = {
   query?: never;
   url: '/api/environments/userLocking';
 };
-
-export type GetEnvironmentsByUserLockingErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type GetEnvironmentsByUserLockingError = GetEnvironmentsByUserLockingErrors[keyof GetEnvironmentsByUserLockingErrors];
 
 export type GetEnvironmentsByUserLockingResponses = {
   /**
@@ -2969,15 +1508,6 @@ export type GetEnvironmentsByRepositoryIdData = {
   url: '/api/environments/repository/{repositoryId}';
 };
 
-export type GetEnvironmentsByRepositoryIdErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type GetEnvironmentsByRepositoryIdError = GetEnvironmentsByRepositoryIdErrors[keyof GetEnvironmentsByRepositoryIdErrors];
-
 export type GetEnvironmentsByRepositoryIdResponses = {
   /**
    * OK
@@ -2996,15 +1526,6 @@ export type GetLockHistoryByEnvironmentIdData = {
   url: '/api/environments/environment/{environmentId}/lockHistory';
 };
 
-export type GetLockHistoryByEnvironmentIdErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type GetLockHistoryByEnvironmentIdError = GetLockHistoryByEnvironmentIdErrors[keyof GetLockHistoryByEnvironmentIdErrors];
-
 export type GetLockHistoryByEnvironmentIdResponses = {
   /**
    * OK
@@ -3021,15 +1542,6 @@ export type GetAllEnabledEnvironmentsData = {
   url: '/api/environments/enabled';
 };
 
-export type GetAllEnabledEnvironmentsErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type GetAllEnabledEnvironmentsError = GetAllEnabledEnvironmentsErrors[keyof GetAllEnabledEnvironmentsErrors];
-
 export type GetAllEnabledEnvironmentsResponses = {
   /**
    * OK
@@ -3045,15 +1557,6 @@ export type GetAllDeploymentsData = {
   query?: never;
   url: '/api/deployments';
 };
-
-export type GetAllDeploymentsErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type GetAllDeploymentsError = GetAllDeploymentsErrors[keyof GetAllDeploymentsErrors];
 
 export type GetAllDeploymentsResponses = {
   /**
@@ -3073,15 +1576,6 @@ export type GetDeploymentByIdData = {
   url: '/api/deployments/{id}';
 };
 
-export type GetDeploymentByIdErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type GetDeploymentByIdError = GetDeploymentByIdErrors[keyof GetDeploymentByIdErrors];
-
 export type GetDeploymentByIdResponses = {
   /**
    * OK
@@ -3099,15 +1593,6 @@ export type GetWorkflowJobStatusData = {
   query?: never;
   url: '/api/deployments/workflowJobStatus/{runId}';
 };
-
-export type GetWorkflowJobStatusErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type GetWorkflowJobStatusError = GetWorkflowJobStatusErrors[keyof GetWorkflowJobStatusErrors];
 
 export type GetWorkflowJobStatusResponses = {
   /**
@@ -3129,15 +1614,6 @@ export type GetActivityHistoryByRepositoryIdAndBranchNameData = {
   url: '/api/deployments/repository/{repositoryId}/branch/activity-history';
 };
 
-export type GetActivityHistoryByRepositoryIdAndBranchNameErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type GetActivityHistoryByRepositoryIdAndBranchNameError = GetActivityHistoryByRepositoryIdAndBranchNameErrors[keyof GetActivityHistoryByRepositoryIdAndBranchNameErrors];
-
 export type GetActivityHistoryByRepositoryIdAndBranchNameResponses = {
   /**
    * OK
@@ -3157,15 +1633,6 @@ export type GetActivityHistoryByPullRequestIdData = {
   url: '/api/deployments/pr/{pullRequestId}/activity-history';
 };
 
-export type GetActivityHistoryByPullRequestIdErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type GetActivityHistoryByPullRequestIdError = GetActivityHistoryByPullRequestIdErrors[keyof GetActivityHistoryByPullRequestIdErrors];
-
 export type GetActivityHistoryByPullRequestIdResponses = {
   /**
    * OK
@@ -3181,15 +1648,6 @@ export type MyPendingApprovalsData = {
   query?: never;
   url: '/api/deployments/pending-approvals';
 };
-
-export type MyPendingApprovalsErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type MyPendingApprovalsError = MyPendingApprovalsErrors[keyof MyPendingApprovalsErrors];
 
 export type MyPendingApprovalsResponses = {
   /**
@@ -3209,15 +1667,6 @@ export type GetDeploymentsByEnvironmentIdData = {
   url: '/api/deployments/environment/{environmentId}';
 };
 
-export type GetDeploymentsByEnvironmentIdErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type GetDeploymentsByEnvironmentIdError = GetDeploymentsByEnvironmentIdErrors[keyof GetDeploymentsByEnvironmentIdErrors];
-
 export type GetDeploymentsByEnvironmentIdResponses = {
   /**
    * OK
@@ -3236,15 +1685,6 @@ export type GetLatestDeploymentByEnvironmentIdData = {
   url: '/api/deployments/environment/{environmentId}/latest';
 };
 
-export type GetLatestDeploymentByEnvironmentIdErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type GetLatestDeploymentByEnvironmentIdError = GetLatestDeploymentByEnvironmentIdErrors[keyof GetLatestDeploymentByEnvironmentIdErrors];
-
 export type GetLatestDeploymentByEnvironmentIdResponses = {
   /**
    * OK
@@ -3262,15 +1702,6 @@ export type GetActivityHistoryByEnvironmentIdData = {
   query?: never;
   url: '/api/deployments/environment/{environmentId}/activity-history';
 };
-
-export type GetActivityHistoryByEnvironmentIdErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type GetActivityHistoryByEnvironmentIdError = GetActivityHistoryByEnvironmentIdErrors[keyof GetActivityHistoryByEnvironmentIdErrors];
 
 export type GetActivityHistoryByEnvironmentIdResponses = {
   /**
@@ -3291,15 +1722,6 @@ export type GetCommitByRepositoryIdAndNameData = {
   url: '/api/commits/repository/{repoId}/commit/{sha}';
 };
 
-export type GetCommitByRepositoryIdAndNameErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type GetCommitByRepositoryIdAndNameError = GetCommitByRepositoryIdAndNameErrors[keyof GetCommitByRepositoryIdAndNameErrors];
-
 export type GetCommitByRepositoryIdAndNameResponses = {
   /**
    * OK
@@ -3318,15 +1740,6 @@ export type GetAllBranchesData = {
   };
   url: '/api/branches';
 };
-
-export type GetAllBranchesErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type GetAllBranchesError = GetAllBranchesErrors[keyof GetAllBranchesErrors];
 
 export type GetAllBranchesResponses = {
   /**
@@ -3348,15 +1761,6 @@ export type GetBranchByRepositoryIdAndNameData = {
   url: '/api/branches/repository/{repoId}/branch';
 };
 
-export type GetBranchByRepositoryIdAndNameErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type GetBranchByRepositoryIdAndNameError = GetBranchByRepositoryIdAndNameErrors[keyof GetBranchByRepositoryIdAndNameErrors];
-
 export type GetBranchByRepositoryIdAndNameResponses = {
   /**
    * OK
@@ -3375,15 +1779,6 @@ export type DeleteWorkflowGroupData = {
   query?: never;
   url: '/api/settings/{repositoryId}/groups/{groupId}';
 };
-
-export type DeleteWorkflowGroupErrors = {
-  /**
-   * Conflict
-   */
-  409: ApiError;
-};
-
-export type DeleteWorkflowGroupError = DeleteWorkflowGroupErrors[keyof DeleteWorkflowGroupErrors];
 
 export type DeleteWorkflowGroupResponses = {
   /**

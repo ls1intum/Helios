@@ -17,7 +17,7 @@ import { MessageService, SortMeta } from 'primeng/api';
 import { GithubLinkButtonComponent } from '@app/components/github-link-button/github-link-button.component';
 import { provideTablerIcons, TablerIconComponent } from 'angular-tabler-icons';
 import { IconAlertTriangle, IconCircleCheck, IconCircleX, IconClockHour4, IconFilterPlus, IconPlayerPlay, IconProgress } from 'angular-tabler-icons/icons';
-import { getStatusColors, getStatusIconClasses } from '@app/core/utils/status-colors';
+import { getStatusIconClasses } from '@app/core/utils/status-colors';
 
 export function createWorkflowRunsFilterOptions(): PaginatedFilterOption[] {
   return [
@@ -167,26 +167,6 @@ export class WorkflowRunsTableComponent {
 
   getWorkflowStatusClass(run: WorkflowRunDto): string {
     return getStatusIconClasses(run.conclusion, run.status);
-  }
-
-  getTestStatusIcon(run: WorkflowRunDto): string {
-    if (run.testProcessingStatus === 'PROCESSED') {
-      return 'circle-check';
-    }
-    if (run.testProcessingStatus === 'FAILED') {
-      return 'alert-triangle';
-    }
-    if (run.testProcessingStatus === 'PROCESSING') {
-      return 'progress';
-    }
-    return 'circle-check';
-  }
-
-  getTestStatusClass(run: WorkflowRunDto): string {
-    if (run.testProcessingStatus === 'PROCESSED') return getStatusColors('success').icon;
-    if (run.testProcessingStatus === 'FAILED') return getStatusColors('failure').icon;
-    if (run.testProcessingStatus === 'PROCESSING') return getStatusIconClasses(null, 'in_progress');
-    return getStatusColors().icon;
   }
 
   formatExactDate(dateStr: string | null | undefined): string | undefined {

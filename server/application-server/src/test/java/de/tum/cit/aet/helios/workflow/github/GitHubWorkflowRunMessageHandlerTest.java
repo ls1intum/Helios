@@ -6,7 +6,6 @@ import static org.mockito.Mockito.when;
 
 import de.tum.cit.aet.helios.github.GitHubService;
 import de.tum.cit.aet.helios.gitrepo.github.GitHubRepositorySyncService;
-import de.tum.cit.aet.helios.tests.TestResultProcessor;
 import java.util.Collections;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,7 +23,6 @@ class GitHubWorkflowRunMessageHandlerTest {
 
   @Mock private GitHubRepositorySyncService repositorySyncService;
   @Mock private GitHubWorkflowRunSyncService workflowSyncService;
-  @Mock private TestResultProcessor testResultProcessor;
   @Mock private GitHubService gitHubService;
   @Mock private TaskScheduler taskScheduler;
 
@@ -36,7 +34,6 @@ class GitHubWorkflowRunMessageHandlerTest {
         new GitHubWorkflowRunMessageHandler(
             repositorySyncService,
             workflowSyncService,
-            testResultProcessor,
             gitHubService,
             taskScheduler);
   }
