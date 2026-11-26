@@ -7,6 +7,7 @@ x-logging: &default-logging
 services:
   postgres:
     image: postgres:19.0-alpine
+    restart: unless-stopped
     environment:
       - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
@@ -44,6 +45,7 @@ services:
 
   webhook-listener:
     image: "ghcr.io/ls1intum/helios/webhook-listener:${WEBHOOK_LISTENER_IMAGE_TAG}"
+    restart: unless-stopped
     ports:
       - '4200:4200'
     environment:
@@ -58,6 +60,7 @@ services:
 
   nats-server:
     image: nats:2.15.3-alpine
+    restart: unless-stopped
     ports:
       - "127.0.0.1:4222:4222"
       - "127.0.0.1:8222:8222"
@@ -116,7 +119,7 @@ services:
     image: "ghcr.io/ls1intum/helios/application-server:${APPLICATION_SERVER_IMAGE_TAG}"
     ports:
       - '8080:8080'
-    restart: on-failure
+    restart: unless-stopped
     environment:
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
       - DATASOURCE_URL=${DATASOURCE_URL}
@@ -173,6 +176,7 @@ services:
 
   notification:
     image: "ghcr.io/ls1intum/helios/notification:${NOTIFICATION_SERVER_IMAGE_TAG}"
+    restart: unless-stopped
     environment:
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
       - NATS_SERVER=${NATS_SERVER}
@@ -195,6 +199,7 @@ services:
 
   keycloak:
     image: ghcr.io/ls1intum/helios/keycloak:${KEYCLOAK_IMAGE_TAG}
+    restart: unless-stopped
     container_name: keycloak
     environment:
       KC_BOOTSTRAP_ADMIN_USERNAME: ${KC_BOOTSTRAP_ADMIN_USERNAME}
