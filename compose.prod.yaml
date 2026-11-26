@@ -47,7 +47,7 @@ services:
     image: "ghcr.io/ls1intum/helios/webhook-listener:${WEBHOOK_LISTENER_IMAGE_TAG}"
     restart: unless-stopped
     ports:
-      - '4200:4200'
+      - "127.0.0.1:4200:4200"
     environment:
       - NATS_AUTH_TOKEN=${NATS_AUTH_TOKEN}
       - WEBHOOK_SECRET=${WEBHOOK_SECRET}
@@ -109,7 +109,7 @@ services:
     image: "ghcr.io/ls1intum/helios/client:${CLIENT_IMAGE_TAG}"
     ports:
       # Do not expose the client to 80 or 443
-      - "90:80"
+      - "127.0.0.1:90:80"
     restart: always
     logging: *default-logging
     networks:
@@ -211,7 +211,7 @@ services:
       KC_HOSTNAME: ${KC_HOSTNAME}
       KC_HTTP_ENABLED: ${KC_HTTP_ENABLED}
     ports:
-      - '8081:8081'
+      - "127.0.0.1:8081:8081"
     depends_on:
       - postgres
     volumes:
