@@ -118,7 +118,7 @@ services:
   application-server:
     image: "ghcr.io/ls1intum/helios/application-server:${APPLICATION_SERVER_IMAGE_TAG}"
     ports:
-      - '8080:8080'
+      - "127.0.0.1:8080:8080"
     restart: unless-stopped
     environment:
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
