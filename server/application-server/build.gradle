@@ -4,7 +4,7 @@ import org.springframework.boot.gradle.tasks.run.BootRun
 // so that it can be used to connect to the database and execute the migrations.
 buildscript {
     dependencies {
-        classpath('org.postgresql:postgresql:42.7.14')
+        classpath('org.postgresql:postgresql:42.7.15')
         classpath('org.flywaydb:flyway-database-postgresql:13.13.0')
     }
 }
@@ -13,7 +13,7 @@ plugins {
     id 'org.springframework.boot'
     id 'io.freefair.lombok'
     id 'org.springdoc.openapi-gradle-plugin' version '2.1.0'
-    id 'org.openapi.generator' version '7.27.0'
+    id 'org.openapi.generator' version '7.28.0'
     id 'org.flywaydb.flyway' version '13.13.0'
 }
 
