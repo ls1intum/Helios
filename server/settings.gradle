@@ -1,3 +1,15 @@
+pluginManagement {
+    repositories {
+        // Preferred Maven Central mirror hosted in TUM AET infrastructure (avoids upstream 429 rate-limit errors during plugin resolution)
+        maven {
+            name = "reposiliteRepository"
+            url = "https://reposilite.aet.cit.tum.de/releases"
+        }
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+
 rootProject.name = 'Helios'
 
 include 'application-server'
