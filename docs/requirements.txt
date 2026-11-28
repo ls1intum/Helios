@@ -9,5 +9,5 @@ Sphinx==9.2.0
 sphinxcontrib-bibtex==2.7.0
 starlette==1.10.0
 urllib3==2.8.0
-uvicorn==0.54.0
+uvicorn==0.55.0
 zipp==4.1.2
