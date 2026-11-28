@@ -1,5 +1,5 @@
 # Maven and its JDK are build tools for packaging the Keycloak theme.
-FROM maven:3.10.0-eclipse-temurin-25 AS maven
+FROM maven:3.10.2-eclipse-temurin-25 AS maven
 
 # Stage 1: Build the Keycloak theme
 FROM node:26.13.1 AS build
